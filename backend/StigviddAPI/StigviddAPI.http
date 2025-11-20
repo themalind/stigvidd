@@ -1,0 +1,6 @@
+@StigviddAPI_HostAddress = http://localhost:5265
+
+GET {{StigviddAPI_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
