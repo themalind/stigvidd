@@ -14,7 +14,7 @@ import {
   View,
 } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
-import { Button, Surface, TextInput } from "react-native-paper";
+import { Button, Surface, TextInput, useTheme } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { z } from "zod";
 
@@ -31,6 +31,7 @@ const loginFields = z.object({
 type FormFields = z.infer<typeof loginFields>;
 
 export default function LoginScreen() {
+  const theme = useTheme();
   const [userTheme] = useAtom(userThemeAtom);
   const colorScheme = Appearance.getColorScheme();
 
@@ -39,7 +40,7 @@ export default function LoginScreen() {
 
   const background =
     finalTheme === "dark"
-      ? require("../../assets/images/register-dark-background.jpg")
+      ? require("../../assets/images/login-dark-background.jpg")
       : require("../../assets/images/login-background.jpg");
 
   const {
@@ -92,9 +93,19 @@ export default function LoginScreen() {
                 )}
                 name="email"
               />
-              {errors && (
-                <Text style={s.errorMsg}>{errors.email?.message}</Text>
-              )}
+              <View style={s.errorContainer}>
+                {errors.email && (
+                  <Text
+                    style={{
+                      color: theme.colors.onErrorContainer,
+                      backgroundColor: theme.colors.errorContainer,
+                      fontWeight: 600,
+                    }}
+                  >
+                    {errors.email.message}
+                  </Text>
+                )}
+              </View>
               <Controller
                 control={control}
                 render={({ field: { onChange, onBlur, value } }) => (
@@ -111,9 +122,19 @@ export default function LoginScreen() {
                 )}
                 name="password"
               />
-              {errors && (
-                <Text style={s.errorMsg}>{errors.password?.message}</Text>
-              )}
+              <View style={s.errorContainer}>
+                {errors.password && (
+                  <Text
+                    style={{
+                      color: theme.colors.onErrorContainer,
+                      backgroundColor: theme.colors.errorContainer,
+                      fontWeight: 600,
+                    }}
+                  >
+                    {errors.password.message}
+                  </Text>
+                )}
+              </View>
             </View>
             <View style={s.actionContainer}>
               <Button
@@ -149,15 +170,6 @@ const s = StyleSheet.create({
     alignItems: "center",
     minHeight: HEIGHT,
   },
-  outerLogoContainer: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    zIndex: 10,
-    alignItems: "center",
-    paddingTop: 20,
-  },
   logoContainer: {
     flexDirection: "row",
     gap: 5,
@@ -172,7 +184,6 @@ const s = StyleSheet.create({
   },
   textInputContainer: {
     flex: 1,
-    gap: 10,
   },
   textInput: {
     flex: 1,
@@ -183,15 +194,12 @@ const s = StyleSheet.create({
     alignItems: "center",
   },
   surface: {
-    gap: 5,
+    gap: 15,
     padding: 30,
     borderRadius: 10,
     alignItems: "center",
     backgroundColor: "#ffffff90",
     width: WIDTH * 0.8,
-  },
-  button: {
-    width: WIDTH * 0.5,
   },
   linkText: {
     fontWeight: 600,
@@ -199,15 +207,19 @@ const s = StyleSheet.create({
   },
   text: {
     fontWeight: 600,
+    paddingBottom: 15,
+    paddingTop: 15,
     fontSize: 20,
     alignSelf: "flex-start",
   },
   actionContainer: {
-    gap: 10,
+    gap: 15,
     alignItems: "center",
   },
-  errorMsg: {
-    color: " rgb(147, 0, 10)",
-    fontWeight: 600,
+  button: {
+    width: WIDTH * 0.5,
+  },
+  errorContainer: {
+    height: 30,
   },
 });
