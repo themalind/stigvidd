@@ -1,0 +1,36 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.2.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Infrastructure", "Infrastructure\Infrastructure.csproj", "{BFF44250-7256-4B47-985A-5A76A417D171}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Core", "Core\Core.csproj", "{9D0EEDCD-A09F-4F3F-BEB5-04FE95332FD8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StigviddAPI", "StigviddAPI\StigviddAPI.csproj", "{CD06A5DF-AD17-47A8-B195-DA90903E7E4C}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{BFF44250-7256-4B47-985A-5A76A417D171}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BFF44250-7256-4B47-985A-5A76A417D171}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BFF44250-7256-4B47-985A-5A76A417D171}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BFF44250-7256-4B47-985A-5A76A417D171}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9D0EEDCD-A09F-4F3F-BEB5-04FE95332FD8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9D0EEDCD-A09F-4F3F-BEB5-04FE95332FD8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9D0EEDCD-A09F-4F3F-BEB5-04FE95332FD8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9D0EEDCD-A09F-4F3F-BEB5-04FE95332FD8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CD06A5DF-AD17-47A8-B195-DA90903E7E4C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CD06A5DF-AD17-47A8-B195-DA90903E7E4C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CD06A5DF-AD17-47A8-B195-DA90903E7E4C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CD06A5DF-AD17-47A8-B195-DA90903E7E4C}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {35453764-A015-4176-B118-A6084B77F301}
+	EndGlobalSection
+EndGlobal
