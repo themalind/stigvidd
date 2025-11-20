@@ -14,7 +14,7 @@ import {
   View,
 } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
-import { Button, Surface, TextInput } from "react-native-paper";
+import { Button, Surface, TextInput, useTheme } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { z } from "zod";
 
@@ -47,12 +47,8 @@ const registerFields = z
   });
 type FormFields = z.infer<typeof registerFields>;
 
-const light = require("../../assets/images/register-background.jpg");
-const dark = require("../../assets/images/register-dark-background.jpg");
-console.log("Light", light);
-console.log("Dark", dark);
-
 export default function LoginScreen() {
+  const theme = useTheme();
   const [userTheme] = useAtom(userThemeAtom);
   const colorScheme = Appearance.getColorScheme();
 
@@ -113,9 +109,19 @@ export default function LoginScreen() {
                 )}
                 name="nickName"
               />
-              {errors && (
-                <Text style={s.errorMsg}>{errors.nickName?.message}</Text>
-              )}
+              <View style={s.errorContainer}>
+                {errors.nickName && (
+                  <Text
+                    style={{
+                      color: theme.colors.onErrorContainer,
+                      backgroundColor: theme.colors.errorContainer,
+                      fontWeight: 600,
+                    }}
+                  >
+                    {errors.nickName?.message}
+                  </Text>
+                )}
+              </View>
               <Controller
                 control={control}
                 render={({ field: { onChange, onBlur, value } }) => (
@@ -132,9 +138,19 @@ export default function LoginScreen() {
                 )}
                 name="email"
               />
-              {errors && (
-                <Text style={s.errorMsg}>{errors.email?.message}</Text>
-              )}
+              <View style={s.errorContainer}>
+                {errors.email && (
+                  <Text
+                    style={{
+                      color: theme.colors.onErrorContainer,
+                      backgroundColor: theme.colors.errorContainer,
+                      fontWeight: 600,
+                    }}
+                  >
+                    {errors.email?.message}
+                  </Text>
+                )}
+              </View>
               <Controller
                 control={control}
                 render={({ field: { onChange, onBlur, value } }) => (
@@ -151,9 +167,19 @@ export default function LoginScreen() {
                 )}
                 name="password"
               />
-              {errors && (
-                <Text style={s.errorMsg}>{errors.password?.message}</Text>
-              )}
+              <View style={s.errorContainer}>
+                {errors.password && (
+                  <Text
+                    style={{
+                      color: theme.colors.onErrorContainer,
+                      backgroundColor: theme.colors.errorContainer,
+                      fontWeight: 600,
+                    }}
+                  >
+                    {errors.password?.message}
+                  </Text>
+                )}
+              </View>
               <Controller
                 control={control}
                 render={({ field: { onChange, onBlur, value } }) => (
@@ -170,11 +196,19 @@ export default function LoginScreen() {
                 )}
                 name="confirmPassword"
               />
-              {errors && (
-                <Text style={s.errorMsg}>
-                  {errors.confirmPassword?.message}
-                </Text>
-              )}
+              <View style={s.errorContainer}>
+                {errors.confirmPassword && (
+                  <Text
+                    style={{
+                      color: theme.colors.onErrorContainer,
+                      backgroundColor: theme.colors.errorContainer,
+                      fontWeight: 600,
+                    }}
+                  >
+                    {errors.confirmPassword?.message}
+                  </Text>
+                )}
+              </View>
               <View style={s.actionContainer}>
                 <Button
                   mode="contained"
@@ -224,18 +258,19 @@ const s = StyleSheet.create({
   },
   text: {
     fontWeight: 600,
+    paddingBottom: 15,
+    paddingTop: 15,
     fontSize: 20,
     alignSelf: "flex-start",
   },
   textInputContainer: {
     flex: 1,
-    gap: 8,
   },
   textInput: {
     width: WIDTH * 0.65,
   },
   surface: {
-    gap: 5,
+    gap: 15,
     padding: 30,
     borderRadius: 10,
     alignItems: "center",
@@ -243,7 +278,8 @@ const s = StyleSheet.create({
     width: WIDTH * 0.8,
   },
   actionContainer: {
-    gap: 10,
+    paddingTop: 20,
+    gap: 15,
     alignItems: "center",
   },
   button: {
@@ -253,8 +289,7 @@ const s = StyleSheet.create({
     fontWeight: 600,
     fontSize: 15,
   },
-  errorMsg: {
-    color: "rgb(147, 0, 10)",
-    fontWeight: 600,
+  errorContainer: {
+    height: 30,
   },
 });
