@@ -21,6 +21,10 @@ import { z } from "zod";
 const HEIGHT = Dimensions.get("screen").height;
 const WIDTH = Dimensions.get("screen").width;
 
+const addOpacity = (rgbColor: string, opacity: number): string => {
+  return rgbColor.replace("rgb", "rgba").replace(")", `, ${opacity})`);
+};
+
 const loginFields = z.object({
   email: z
     .string({ required_error: "Email is required" })
@@ -34,14 +38,12 @@ export default function LoginScreen() {
   const theme = useTheme();
   const [userTheme] = useAtom(userThemeAtom);
   const colorScheme = Appearance.getColorScheme();
-
   const finalTheme =
     userTheme === "auto" ? (colorScheme ?? "light") : userTheme;
-
   const background =
     finalTheme === "dark"
-      ? require("../../assets/images/login-dark-background.jpg")
-      : require("../../assets/images/login-background.jpg");
+      ? require("../../assets/images/login-dark-background-2.jpg")
+      : require("../../assets/images/login-background-2.jpg");
 
   const {
     control,
@@ -54,7 +56,7 @@ export default function LoginScreen() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#0C290F" }}>
+    <SafeAreaView style={{ backgroundColor: "#0C290F" }}>
       <KeyboardAwareScrollView
         keyboardShouldPersistTaps="handled"
         enableOnAndroid={true}
@@ -66,9 +68,19 @@ export default function LoginScreen() {
           source={background}
           style={s.backgroundImage}
         >
-          <Surface elevation={5} style={s.surface}>
+          <Surface
+            elevation={5}
+            style={[
+              s.surface,
+              {
+                backgroundColor: addOpacity(theme.colors.surface, 0.9),
+              },
+            ]}
+          >
             <View style={s.logoContainer}>
-              <Text style={s.title}>Stigvidd</Text>
+              <Text style={[s.title, { color: theme.colors.onSurface }]}>
+                Stigvidd
+              </Text>
               <Image
                 source={require("../../assets/images/mammaapp.png")}
                 style={s.logo}
@@ -76,7 +88,9 @@ export default function LoginScreen() {
               />
             </View>
             <View style={s.textInputContainer}>
-              <Text style={s.text}>Logga in</Text>
+              <Text style={[s.text, { color: theme.colors.onSurface }]}>
+                Logga in
+              </Text>
               <Controller
                 control={control}
                 render={({ field: { onChange, onBlur, value } }) => (
@@ -145,10 +159,18 @@ export default function LoginScreen() {
               >
                 {isSubmitting ? "Loggar in..." : "Logga in"}
               </Button>
-              <Link style={s.linkText} replace href="./register">
+              <Link
+                style={[s.linkText, { color: theme.colors.onSurface }]}
+                replace
+                href="./register"
+              >
                 <Text>Inte medlem? </Text>
-                <Text style={{ textDecorationLine: "underline" }}>
-                  Registrera dig här.
+                <Text
+                  style={{
+                    color: theme.colors.tertiary,
+                  }}
+                >
+                  Skapa konto här.
                 </Text>
               </Link>
             </View>
@@ -198,7 +220,6 @@ const s = StyleSheet.create({
     padding: 30,
     borderRadius: 10,
     alignItems: "center",
-    backgroundColor: "#ffffff90",
     width: WIDTH * 0.8,
   },
   linkText: {
@@ -206,11 +227,11 @@ const s = StyleSheet.create({
     fontSize: 15,
   },
   text: {
-    fontWeight: 600,
+    fontWeight: 400,
     paddingBottom: 15,
     paddingTop: 15,
-    fontSize: 20,
-    alignSelf: "flex-start",
+    fontSize: 25,
+    alignSelf: "center",
   },
   actionContainer: {
     gap: 15,

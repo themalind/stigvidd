@@ -47,6 +47,10 @@ const registerFields = z
   });
 type FormFields = z.infer<typeof registerFields>;
 
+const addOpacity = (rgbColor: string, opacity: number): string => {
+  return rgbColor.replace("rgb", "rgba").replace(")", `, ${opacity})`);
+};
+
 export default function LoginScreen() {
   const theme = useTheme();
   const [userTheme] = useAtom(userThemeAtom);
@@ -57,8 +61,8 @@ export default function LoginScreen() {
 
   const background =
     finalTheme === "dark"
-      ? require("../../assets/images/register-dark-background.jpg")
-      : require("../../assets/images/register-background.jpg");
+      ? require("../../assets/images/register-dark-background-2.jpg")
+      : require("../../assets/images/register-background-2.jpg");
 
   const {
     control,
@@ -83,9 +87,17 @@ export default function LoginScreen() {
           source={background}
           style={s.backgroundImage}
         >
-          <Surface elevation={5} style={s.surface}>
+          <Surface
+            elevation={5}
+            style={[
+              s.surface,
+              { backgroundColor: addOpacity(theme.colors.surface, 0.9) },
+            ]}
+          >
             <View style={s.logoContainer}>
-              <Text style={s.title}>Stigvidd</Text>
+              <Text style={[s.title, { color: theme.colors.onSurface }]}>
+                Stigvidd
+              </Text>
               <Image
                 source={require("../../assets/images/mammaapp.png")}
                 style={s.logo}
@@ -93,7 +105,9 @@ export default function LoginScreen() {
               />
             </View>
             <View style={s.textInputContainer}>
-              <Text style={s.text}>Registrera</Text>
+              <Text style={[s.text, { color: theme.colors.onSurface }]}>
+                Skapa konto
+              </Text>
               <Controller
                 control={control}
                 render={({ field: { onChange, onBlur, value } }) => (
@@ -216,11 +230,19 @@ export default function LoginScreen() {
                   onPress={handleSubmit(onSubmit)}
                   disabled={isSubmitting}
                 >
-                  {isSubmitting ? "Registrerar..." : "Registrera"}
+                  {isSubmitting ? "Skapar konto..." : "Skapa konto"}
                 </Button>
-                <Link style={s.linkText} replace href="./login">
+                <Link
+                  style={[s.linkText, { color: theme.colors.onSurface }]}
+                  replace
+                  href="./login"
+                >
                   <Text>Redan medlem? </Text>
-                  <Text style={{ textDecorationLine: "underline" }}>
+                  <Text
+                    style={{
+                      color: theme.colors.tertiary,
+                    }}
+                  >
                     Logga in här.
                   </Text>
                 </Link>
@@ -240,8 +262,8 @@ const s = StyleSheet.create({
   },
   backgroundImage: {
     flex: 1,
-    justifyContent: "center",
     alignItems: "center",
+    justifyContent: "center",
     minHeight: HEIGHT,
   },
   logoContainer: {
@@ -257,11 +279,11 @@ const s = StyleSheet.create({
     fontWeight: "bold",
   },
   text: {
-    fontWeight: 600,
+    fontWeight: 400,
     paddingBottom: 15,
     paddingTop: 15,
-    fontSize: 20,
-    alignSelf: "flex-start",
+    fontSize: 25,
+    alignSelf: "center",
   },
   textInputContainer: {
     flex: 1,
