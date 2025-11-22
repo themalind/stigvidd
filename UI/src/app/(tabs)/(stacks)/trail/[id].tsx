@@ -2,26 +2,30 @@ import ImageCarousel from "@/components/image-carousel";
 import { mockTrails } from "@/data/mock-data";
 import { useLocalSearchParams } from "expo-router";
 import React from "react";
-import { StyleSheet, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { ScrollView, StyleSheet, Text } from "react-native";
 
 export default function TrailDetailsScreen() {
   const { id } = useLocalSearchParams();
   const trail = mockTrails.find((t) => t.id === id);
   const images = trail?.trailImages || [];
-
+  // TODO Fixa android-bakåtknappen, när man backar med den härifrån hamnar man på tokiga ställen!
+  // TODO När man trycker på en bild i karusellen ska man få upp en förstoring i en modal.
   return (
-    <SafeAreaView>
-      <View style={s.container}>
-        <Text>{`${trail?.name}`}</Text>
-        <ImageCarousel data={images} />
-      </View>
-    </SafeAreaView>
+    <ScrollView style={s.container}>
+      <Text style={s.sectionTitle}>{`${trail?.name}`}</Text>
+      <ImageCarousel data={images} />
+    </ScrollView>
   );
 }
 
 const s = StyleSheet.create({
   container: {
-    padding: 10,
+    flex: 1,
+    padding: 20,
+    gap: 10,
+  },
+  sectionTitle: {
+    fontWeight: 700,
+    fontSize: 15,
   },
 });
