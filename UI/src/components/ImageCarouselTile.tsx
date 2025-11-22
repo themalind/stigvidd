@@ -12,14 +12,14 @@ import Animated, {
 } from "react-native-reanimated";
 
 const { width } = Dimensions.get("screen");
-const ITEM_WIDTH = Math.round(width * 0.8);
+const ITEM_WIDTH = Math.round(width * 0.9); // Matchar ImageCarousel
 
 // Type guard för att kolla om item är Trail
 function isTrail(item: Trail | TrailImage): item is Trail {
   return "name" in item && "trailLenght" in item;
 }
 
-// Ny interface för tile-props
+// Interface för tile-props
 interface CarouselTileProps<T extends Trail | TrailImage> {
   item: T;
   index: number;
@@ -27,8 +27,8 @@ interface CarouselTileProps<T extends Trail | TrailImage> {
   itemWidth: number;
   itemSpacing?: number;
   itemKey?: string | number;
-  showText?: boolean; // styr om text ska visas
-  onPress?: (item: T) => void; // custom onPress-handler
+  showText?: boolean;
+  onPress?: (item: T) => void;
 }
 
 function ImageCarouselTileInner<T extends Trail | TrailImage>({
@@ -36,35 +36,31 @@ function ImageCarouselTileInner<T extends Trail | TrailImage>({
   index,
   scrollX,
   itemWidth,
-  itemSpacing = 12,
+  itemSpacing = 5, // Matchar ImageCarousel
   itemKey,
   showText = true,
   onPress,
 }: CarouselTileProps<T>) {
   const fullItem = itemWidth + itemSpacing;
 
+  // Animerad stil - ENDAST scale, INGEN translateX för perfekt centrering
   const rnAnimatedStyle = useAnimatedStyle(() => ({
     transform: [
       {
-        translateX: interpolate(
-          scrollX.value,
-          [(index - 1) * fullItem, index * fullItem, (index + 1) * fullItem],
-          [-fullItem * 0.35, 0, fullItem * 0.35],
-          Extrapolation.CLAMP,
-        ),
-      },
-      {
+        // Skalar (zoomar) objektet - centrerade objekt är större (1.0), omgivande mindre (0.85)
         scale: interpolate(
           scrollX.value,
           [(index - 1) * fullItem, index * fullItem, (index + 1) * fullItem],
-          [0.7, 1, 0.7],
+          [0.85, 1, 0.85], // Ändrat från 0.7 till 0.85 för subtilare effekt
           Extrapolation.CLAMP,
         ),
       },
     ],
   }));
 
-  const imageSize = Math.round(itemWidth * 0.92);
+  // Beräknar bildens storlek
+  const imageSize = itemWidth; // Använd hela itemWidth
+  const imageHeight = Math.round(imageSize * 0.6);
 
   // Hämta bild-URL beroende på typ
   const getImageSource = () => {
@@ -73,17 +69,16 @@ function ImageCarouselTileInner<T extends Trail | TrailImage>({
         ? item.trailImages[0].imageUrl
         : require("../assets/images/noImage.png");
     } else {
-      // TrailImage
       return item.imageUrl || require("../assets/images/noImage.png");
     }
   };
 
-  // Default onPress-handler
+  // Handler för när användaren trycker på objektet
   const handlePress = () => {
     if (onPress) {
       onPress(item);
     } else if (isTrail(item)) {
-      router.push({
+      router.replace({
         pathname: "/(tabs)/(stacks)/trail/[id]",
         params: { id: item.id },
       });
@@ -102,14 +97,22 @@ function ImageCarouselTileInner<T extends Trail | TrailImage>({
     <Animated.View
       style={[
         s.tile,
-        { width: itemWidth, marginHorizontal: itemSpacing / 2 },
+        {
+          width: itemWidth,
+          marginHorizontal: itemSpacing / 2,
+          overflow: "hidden", // Lägg till detta för att se vad som händer
+        },
         rnAnimatedStyle,
       ]}
     >
-      <TouchableOpacity onPress={handlePress}>
+      <TouchableOpacity onPress={handlePress} style={{ alignItems: "center" }}>
         <ExpoImage
           source={getImageSource()}
-          style={{ width: imageSize, height: imageSize, borderRadius: 12 }}
+          style={{
+            width: imageSize,
+            height: imageHeight,
+            borderRadius: 12,
+          }}
           contentFit="cover"
           cachePolicy="disk"
           priority="high"
@@ -121,7 +124,7 @@ function ImageCarouselTileInner<T extends Trail | TrailImage>({
   );
 }
 
-// Memoize med generic type
+// Memoized version av komponenten
 export const CarouselTile = React.memo(ImageCarouselTileInner, (prev, next) => {
   const sameIndex = prev.index === next.index;
   const sameKey =
