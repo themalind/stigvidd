@@ -30,7 +30,6 @@ export default function RootLayout() {
   return (
     <PaperProvider theme={theme}>
       <StatusBar style={statusBarStyle} />
-      {/*Test för karusell*/}
       <GestureHandlerRootView>
         <View
           style={[

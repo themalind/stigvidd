@@ -1,15 +1,19 @@
 import { userThemeAtom } from "@/providers/user-theme-atom";
 import { Link } from "expo-router";
 import { useAtom } from "jotai";
-import { Text, View } from "react-native";
-import { SegmentedButtons, Button } from "react-native-paper";
+import { ScrollView, StyleSheet } from "react-native";
+import { Button, SegmentedButtons, useTheme } from "react-native-paper";
 
 export default function ProfilePageScreen() {
   const [userTheme, setUserTheme] = useAtom(userThemeAtom);
-
+  const theme = useTheme();
   return (
-    <View>
-      <Text>Profilsida</Text>
+    <ScrollView
+      contentContainerStyle={[
+        s.container,
+        { backgroundColor: theme.colors.background },
+      ]}
+    >
       <SegmentedButtons
         value={userTheme}
         onValueChange={setUserTheme}
@@ -17,12 +21,18 @@ export default function ProfilePageScreen() {
           {
             value: "light",
             label: "Light",
+            labelStyle: { color: theme.colors.onBackground },
           },
           {
             value: "dark",
             label: "Dark",
+            labelStyle: { color: theme.colors.onBackground },
           },
-          { value: "auto", label: "Auto" },
+          {
+            value: "auto",
+            label: "Auto",
+            labelStyle: { color: theme.colors.onBackground },
+          },
         ]}
       />
       <Link href="../../(auth)/register">
@@ -31,6 +41,14 @@ export default function ProfilePageScreen() {
       <Link href="../../(auth)/login">
         <Button mode="contained">Login</Button>
       </Link>
-    </View>
+    </ScrollView>
   );
 }
+
+const s = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 20,
+    gap: 10,
+  },
+});
