@@ -100,7 +100,7 @@ function ImageCarouselTileInner<T extends Trail | TrailImage>({
         {
           width: itemWidth,
           marginHorizontal: itemSpacing / 2,
-          overflow: "hidden", // Lägg till detta för att se vad som händer
+          overflow: "hidden",
         },
         rnAnimatedStyle,
       ]}

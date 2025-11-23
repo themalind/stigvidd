@@ -83,7 +83,7 @@ export default function ImageCarousel<T extends Trail | TrailImage>({
         keyExtractor={(item) => item.id}
         pagingEnabled={false}
         snapToOffsets={snapOffsets}
-        snapToAlignment="start" // ÄNDRAT: Tillbaka till "start"
+        snapToAlignment="start"
         decelerationRate="fast"
         scrollEventThrottle={16}
         windowSize={5}
@@ -92,8 +92,8 @@ export default function ImageCarousel<T extends Trail | TrailImage>({
         removeClippedSubviews={true}
         getItemLayout={getItemLayout}
         contentContainerStyle={{
-          paddingLeft: leftPadding, // Endast vänster padding
-          paddingRight: 20, // Lite padding till höger för sista bilden
+          paddingLeft: leftPadding,
+          paddingRight: 20,
         }}
         showsHorizontalScrollIndicator={false}
         onScroll={onScrollHandler}
@@ -101,9 +101,3 @@ export default function ImageCarousel<T extends Trail | TrailImage>({
     </View>
   );
 }
-
-/*
- LOG  VirtualizedList: You have a large list that is slow to update - 
- make sure your renderItem function renders components that follow React performance best practices like PureComponent, 
- shouldComponentUpdate, etc. {"contentLength": 2189.155517578125, "dt": 515, "prevDt": 642}
-› Reloading apps*/
