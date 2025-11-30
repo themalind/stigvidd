@@ -50,6 +50,8 @@ export default function Header() {
                       onPress={handleSubmit(onSubmit)}
                     />
                   }
+                  returnKeyType="search" // <-- Visar "Search" på tangentbordet
+                  onSubmitEditing={handleSubmit(onSubmit)} // <-- Kör sökfunktionen vid enter
                 />
               )}
               name="searchString"

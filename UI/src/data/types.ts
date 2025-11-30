@@ -8,23 +8,19 @@ export interface Trail {
   trailSymbol: string;
   trailSymbolImage: string;
   trailImages?: TrailImage[];
+  description: string;
+  coordinates: string;
 }
 
 export interface TrailImage {
   id: string;
-  imageUrl: number;
+  imageUrl: string;
   trailId: string;
 }
 
 export interface TrailLink {
   id: string;
   link: string;
-  trailId: string;
-}
-
-export interface Coordinates {
-  id: string;
-  jsonblob: string[]; // Jag vill ha alla kordinater i en array
   trailId: string;
 }
 
