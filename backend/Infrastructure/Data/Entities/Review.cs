@@ -4,7 +4,7 @@ public class Review
 {
     public int Id { get; set; }
     public string? TrailReview { get; set; }
-    public int Grade { get; set; }
+    public float Grade { get; set; }
     public int TrailId { get; set; }
     public int UserId { get; set; }
 

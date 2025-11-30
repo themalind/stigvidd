@@ -12,7 +12,6 @@ public class StigViddDbContext : DbContext
     }
 
     public DbSet<Trail> Trails { get; set; }
-    public DbSet<Coordinate> Coordinates { get; set; }
     public DbSet<TrailImage> TrailImages { get; set; }
     public DbSet<TrailLink> TrailLinks { get; set; }
     public DbSet<Review> Reviews { get; set; }
@@ -24,17 +23,17 @@ public class StigViddDbContext : DbContext
     {
         modelBuilder.Entity<Trail>().HasData(
         new Trail
-        {
-            Id = 1,
-            Name = "Tiveden",
-            TrailLenght = 9.5,
-            Classification = "Svår",
-            Accessability = false,
-            AccessabilityInfo = "Delvis väldigt svår terräng, kräver god fysik",
-            TrailSymbol = "Röd markering",
-            TrailSymbolImage = "../assets/images/mock-trail-symbol.png",
-
-        },
+         {
+             Id = 1,
+             Name = "Tiveden",
+             TrailLenght = 9.5,
+             Classification = "Svår",
+             Accessability = false,
+             AccessabilityInfo = "Delvis väldigt svår terräng, kräver god fysik",
+             TrailSymbol = "Röd markering",
+             TrailSymbolImage = "https://inkaben.se/stigvidd/mock/mock-trail-symbol.png",
+             Description = "En dramatisk och utmanande vandring genom djupa skogar, höga klippor och stenformationer."
+         },
         new Trail
         {
             Id = 2,
@@ -44,8 +43,8 @@ public class StigViddDbContext : DbContext
             Accessability = false,
             AccessabilityInfo = "Delvis väldigt svår terräng, kräver god fysik",
             TrailSymbol = "Blå markering",
-            TrailSymbolImage = "../assets/images/mock-trail-symbol.png",
-
+            TrailSymbolImage = "https://inkaben.se/stigvidd/mock/mock-trail-symbol.png",
+            Description = "En varierad och bitvis krävande led som slingrar sig runt Storsjöns skogsområden."
         },
         new Trail
         {
@@ -56,7 +55,8 @@ public class StigViddDbContext : DbContext
             Accessability = false,
             AccessabilityInfo = "Stigar, spångar och grusväg, vacker utsikt",
             TrailSymbol = "Orange markering",
-            TrailSymbolImage = "../assets/images/mock-trail-symbol.png",
+            TrailSymbolImage = "https://inkaben.se/stigvidd/mock/mock-trail-symbol.png",
+            Description = "En naturskön rundslinga genom Hofsnäsområdet med blandning av stigar, spångar och öppna utsikter."
         },
         new Trail
         {
@@ -67,7 +67,8 @@ public class StigViddDbContext : DbContext
             Accessability = true,
             AccessabilityInfo = "Naturstigar, beteshagar, spång och grusväg",
             TrailSymbol = "Grön markering",
-            TrailSymbolImage = "../assets/images/mock-trail-symbol.png",
+            TrailSymbolImage = "https://inkaben.se/stigvidd/mock/mock-trail-symbol.png",
+            Description = "En inbjudande led som tar dig genom beteshagar, skogar och kulturmiljöer kring Årås."
         },
         new Trail
         {
@@ -78,7 +79,8 @@ public class StigViddDbContext : DbContext
             Accessability = false,
             AccessabilityInfo = "Asfalt, stig och grusväg",
             TrailSymbol = "Röd markering med en 6:a på",
-            TrailSymbolImage = "../assets/images/mock-trail-symbol.png",
+            TrailSymbolImage = "https://inkaben.se/stigvidd/mock/mock-trail-symbol.png",
+            Description = "En lättvandrad slinga som kombinerar skogsstigar, grusväg och kortare asfaltspartier."
         },
         new Trail
         {
@@ -88,8 +90,9 @@ public class StigViddDbContext : DbContext
             Classification = "Medel",
             Accessability = false,
             AccessabilityInfo = "Asfalt, stigar och grusväg",
-            TrailSymbol = "Blå markering ",
-            TrailSymbolImage = "../assets/images/mock-trail-symbol.png",
+            TrailSymbol = "Blå markering",
+            TrailSymbolImage = "https://inkaben.se/stigvidd/mock/mock-trail-symbol.png",
+            Description = "En medelsvår led med både skogsstigar, grusvägar och öppnare partier."
         },
         new Trail
         {
@@ -100,7 +103,8 @@ public class StigViddDbContext : DbContext
             Accessability = true,
             AccessabilityInfo = "Asfalt och grusväg",
             TrailSymbol = "Nässla",
-            TrailSymbolImage = "../assets/images/nassla.png",
+            TrailSymbolImage = "https://inkaben.se/stigvidd/mock/nassla.png",
+            Description = "En lätt och tillgänglig led på asfalt och grusväg som passar för alla."
         },
         new Trail
         {
@@ -111,8 +115,57 @@ public class StigViddDbContext : DbContext
             Accessability = true,
             AccessabilityInfo = "Asfalt, stig och grusväg",
             TrailSymbol = "Läderbagge",
-            TrailSymbolImage = "../assets/images/mock-trail-symbol.png",
+            TrailSymbolImage = "https://inkaben.se/stigvidd/mock/mock-trail-symbol.png",
+            Description = "En kort och lättvandrad slinga i det vackra området kring Hofsnäs."
         });
+
+        modelBuilder.Entity<TrailImage>().HasData(
+        // Tiveden
+        new TrailImage { Id = 1, TrailId = 1, ImageUrl = "https://inkaben.se/stigvidd/mock/tiveden/20250925122257.jpg" },
+        new TrailImage { Id = 2, TrailId = 1, ImageUrl = "https://inkaben.se/stigvidd/mock/tiveden/20250925122143.jpg" },
+        new TrailImage { Id = 3, TrailId = 1, ImageUrl = "https://inkaben.se/stigvidd/mock/tiveden/20250925110314.jpg" },
+
+        // Storsjöleden
+        new TrailImage { Id = 4, TrailId = 2, ImageUrl = "https://inkaben.se/stigvidd/mock/storsjon/20241102113934.jpg" },
+        new TrailImage { Id = 5, TrailId = 2, ImageUrl = "https://inkaben.se/stigvidd/mock/storsjon/20241102121010.jpg" },
+        new TrailImage { Id = 6, TrailId = 2, ImageUrl = "https://inkaben.se/stigvidd/mock/storsjon/20241102112335.jpg" },
+
+        // Tångaleden
+        new TrailImage { Id = 7, TrailId = 3, ImageUrl = "https://inkaben.se/stigvidd/mock/tangaleden/20250902122917.jpg" },
+        new TrailImage { Id = 8, TrailId = 3, ImageUrl = "https://inkaben.se/stigvidd/mock/tangaleden/20250902130421.jpg" },
+        new TrailImage { Id = 9, TrailId = 3, ImageUrl = "https://inkaben.se/stigvidd/mock/hofsnas/20250822093635.jpg" },
+
+        // Vildmarksleden Årås
+        new TrailImage { Id = 10, TrailId = 4, ImageUrl = "https://inkaben.se/stigvidd/mock/aras/20250818102417.jpg" },
+        new TrailImage { Id = 11, TrailId = 4, ImageUrl = "https://inkaben.se/stigvidd/mock/aras/20250818094810.jpg" },
+        new TrailImage { Id = 12, TrailId = 4, ImageUrl = "https://inkaben.se/stigvidd/mock/aras/20250818103640.jpg" },
+        new TrailImage { Id = 13, TrailId = 4, ImageUrl = "https://inkaben.se/stigvidd/mock/aras/20250818112639.jpg" },
+
+        // Gesebol
+        new TrailImage { Id = 14, TrailId = 5, ImageUrl = "https://inkaben.se/stigvidd/mock/gesebol/20250824100243.jpg" },
+        new TrailImage { Id = 15, TrailId = 5, ImageUrl = "https://inkaben.se/stigvidd/mock/gesebol/20250824105053.jpg" },
+        new TrailImage { Id = 16, TrailId = 5, ImageUrl = "https://inkaben.se/stigvidd/mock/gesebol/20250824095946.jpg" },
+        new TrailImage { Id = 17, TrailId = 5, ImageUrl = "https://inkaben.se/stigvidd/mock/gesebol/20250824110936.jpg" },
+
+        // Hultafors
+        new TrailImage { Id = 18, TrailId = 6, ImageUrl = "https://inkaben.se/stigvidd/mock/hultafors/20240217105404.jpg" },
+        new TrailImage { Id = 19, TrailId = 6, ImageUrl = "https://inkaben.se/stigvidd/mock/hultafors/20240217105412.jpg" },
+        new TrailImage { Id = 20, TrailId = 6, ImageUrl = "https://inkaben.se/stigvidd/mock/hultafors/20240217111003.jpg" },
+
+        // Nässehult
+        new TrailImage { Id = 21, TrailId = 7, ImageUrl = "https://inkaben.se/stigvidd/mock/nasslehult/20240119131715.jpg" },
+        new TrailImage { Id = 22, TrailId = 7, ImageUrl = "https://inkaben.se/stigvidd/mock/nasslehult/20240119132416.jpg" },
+        new TrailImage { Id = 23, TrailId = 7, ImageUrl = "https://inkaben.se/stigvidd/mock/nasslehult/20240120103723.jpg" },
+
+        // Hoffsnäs 
+        new TrailImage { Id = 24, TrailId = 8, ImageUrl = "https://inkaben.se/stigvidd/mock/hoffsnas/20240912150635.jpg" },
+        new TrailImage { Id = 25, TrailId = 8, ImageUrl = "https://inkaben.se/stigvidd/mock/hoffsnas/20250524103240.jpg" },
+        new TrailImage { Id = 26, TrailId = 8, ImageUrl = "https://inkaben.se/stigvidd/mock/hoffsnas/20250524104329.jpg" },
+        new TrailImage { Id = 27, TrailId = 8, ImageUrl = "https://inkaben.se/stigvidd/mock/hoffsnas/20250822090107.jpg" },
+        new TrailImage { Id = 28, TrailId = 8, ImageUrl = "https://inkaben.se/stigvidd/mock/hoffsnas/20250822090109.jpg" },
+        new TrailImage { Id = 29, TrailId = 8, ImageUrl = "https://inkaben.se/stigvidd/mock/hoffsnas/20250822092315.jpg" },
+        new TrailImage { Id = 30, TrailId = 8, ImageUrl = "https://inkaben.se/stigvidd/mock/hoffsnas/20250822093635.jpg" }
+    );
 
         modelBuilder.Entity<Review>().HasData(
         new Review
@@ -381,6 +434,25 @@ public class StigViddDbContext : DbContext
         new User { Id = 6, NickName = "VildmarksViktor", Email = "vildmark@example.local" }
         );
 
+        modelBuilder.Entity<ReviewImage>().HasData(
+        new ReviewImage
+        {
+            Id = 1,
+            ImageUrl = "https://inkaben.se/stigvidd/mock/mock-review/review0011.jpg",
+            ReviewId = 1,
+        },
+         new ReviewImage
+         {
+             Id = 2,
+             ImageUrl = "https://inkaben.se/stigvidd/mock/mock-review/review0012.jpg",
+             ReviewId = 1,
+         },
+         new ReviewImage
+         {
+             Id = 3,
+             ImageUrl = "https://inkaben.se/stigvidd/mock/mock-review/review0031.jpg",
+             ReviewId = 3,
+         });
 
 
     }
