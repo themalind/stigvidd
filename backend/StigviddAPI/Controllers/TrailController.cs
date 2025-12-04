@@ -29,7 +29,7 @@ public class TrailController(ITrailService service) : Controller
     [Route("{identifier}")]
     public async Task<ActionResult<TrailDTO?>> GetTrailByIdentifierAsync(string identifier, CancellationToken ctoken)
     {
-        var trail = await _service.GetTrailByIdAsync(identifier, ctoken);
+        var trail = await _service.GetTrailByIdentifierAsync(identifier, ctoken);
 
         if (trail is null)
         {
