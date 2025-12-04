@@ -15,7 +15,7 @@ export default function TrailInfo({ trail }: TrailinfoProps) {
       style={[s.container, { backgroundColor: theme.colors.surface }]}
     >
       <Text style={[s.sectionTitle, { color: theme.colors.onSurface }]}>
-        Information:
+        Information
       </Text>
       <View style={s.infoDetailContainer}>
         <Text style={[s.title, { color: theme.colors.onSurface }]}>

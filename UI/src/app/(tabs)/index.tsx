@@ -1,11 +1,39 @@
+import { getPopularTrails } from "@/api/trails";
 import ImageCarousel from "@/components/image-carousel";
-import { mockTrails } from "@/data/mock-data";
+import { useQuery } from "@tanstack/react-query";
+import { Image } from "expo-image";
 import React from "react";
-import { ScrollView, StyleSheet, Text } from "react-native";
+import { Dimensions, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useTheme } from "react-native-paper";
+
+const HEIGHT = Dimensions.get("screen").height;
 
 export default function HomeScreen() {
   const theme = useTheme();
+  const image = require("../../assets/images/mock-map-trails.png");
+
+  const query = useQuery({
+    queryKey: ["trails", "popular"],
+    queryFn: getPopularTrails,
+  });
+
+  if (query.isPending) {
+    return (
+      <View>
+        <Text>Loading...</Text>
+      </View>
+    );
+  }
+
+  if (query.error) {
+    console.log(query.error);
+    return (
+      <View>
+        <Text>Fel vid hämtning</Text>
+      </View>
+    );
+  }
+
   return (
     <ScrollView
       contentContainerStyle={[
@@ -16,7 +44,12 @@ export default function HomeScreen() {
       <Text style={[s.sectionTitle, { color: theme.colors.onBackground }]}>
         Populära promenader nära dig
       </Text>
-      <ImageCarousel data={mockTrails} />
+
+      <ImageCarousel data={query.data} />
+      <Text style={[s.sectionTitle, { color: theme.colors.onBackground }]}>
+        Hitta på kartan
+      </Text>
+      <Image contentFit="contain" source={image} style={s.image} />
     </ScrollView>
   );
 }
@@ -30,5 +63,11 @@ const s = StyleSheet.create({
   sectionTitle: {
     fontWeight: 700,
     fontSize: 15,
+  },
+  image: {
+    width: "auto",
+    height: HEIGHT * 0.3,
+    marginTop: -40,
+    borderRadius: 20,
   },
 });

@@ -1,8 +1,8 @@
-import { Trail, TrailImage } from "@/data/types";
+import { TrailImage, TrailOverviewViewModel } from "@/data/types";
 import { Image as ExpoImage } from "expo-image";
 import { router } from "expo-router";
 import React from "react";
-import { Dimensions, StyleSheet, TouchableOpacity } from "react-native";
+import { Dimensions, Pressable, StyleSheet } from "react-native";
 import { Text } from "react-native-paper";
 import Animated, {
   Extrapolation,
@@ -15,12 +15,14 @@ const { width } = Dimensions.get("screen");
 const ITEM_WIDTH = Math.round(width * 0.9); // Matchar ImageCarousel
 
 // Type guard för att kolla om item är Trail
-function isTrail(item: Trail | TrailImage): item is Trail {
-  return "name" in item && "trailLenght" in item;
+function isTrail(
+  item: TrailOverviewViewModel | TrailImage,
+): item is TrailOverviewViewModel {
+  return "name" in item && "trailLength" in item;
 }
 
 // Interface för tile-props
-interface CarouselTileProps<T extends Trail | TrailImage> {
+interface CarouselTileProps<T extends TrailOverviewViewModel | TrailImage> {
   item: T;
   index: number;
   scrollX: SharedValue<number>;
@@ -31,7 +33,7 @@ interface CarouselTileProps<T extends Trail | TrailImage> {
   onPress?: (item: T) => void;
 }
 
-function ImageCarouselTileInner<T extends Trail | TrailImage>({
+function ImageCarouselTileInner<T extends TrailOverviewViewModel | TrailImage>({
   item,
   index,
   scrollX,
@@ -65,22 +67,21 @@ function ImageCarouselTileInner<T extends Trail | TrailImage>({
   // Hämta bild-URL beroende på typ
   const getImageSource = () => {
     if (isTrail(item)) {
-      return item.trailImages && item.trailImages.length > 0
-        ? item.trailImages[0].imageUrl
+      return item.trailImageDTOs && item.trailImageDTOs.length > 0
+        ? item.trailImageDTOs[0].imageUrl
         : require("../assets/images/noImage.png");
     } else {
       return item.imageUrl || require("../assets/images/noImage.png");
     }
   };
 
-  // Handler för när användaren trycker på objektet
   const handlePress = () => {
     if (onPress) {
       onPress(item);
     } else if (isTrail(item)) {
       router.replace({
-        pathname: "/(tabs)/(stacks)/trail/[id]",
-        params: { id: item.id },
+        pathname: "/(tabs)/(stacks)/trail/[identifier]",
+        params: { identifier: item.identifier },
       });
     }
   };
@@ -88,7 +89,7 @@ function ImageCarouselTileInner<T extends Trail | TrailImage>({
   // Hämta text att visa (endast för Trail)
   const getDisplayText = () => {
     if (!showText || !isTrail(item)) return null;
-    return `${item.name} ${item.trailLenght} km`;
+    return `${item.name} ${item.trailLength} km`;
   };
 
   const displayText = getDisplayText();
@@ -105,7 +106,7 @@ function ImageCarouselTileInner<T extends Trail | TrailImage>({
         rnAnimatedStyle,
       ]}
     >
-      <TouchableOpacity onPress={handlePress} style={{ alignItems: "center" }}>
+      <Pressable onPress={handlePress} style={{ alignItems: "center" }}>
         <ExpoImage
           source={getImageSource()}
           style={{
@@ -119,7 +120,7 @@ function ImageCarouselTileInner<T extends Trail | TrailImage>({
         />
 
         {displayText && <Text style={s.trailDetails}>{displayText}</Text>}
-      </TouchableOpacity>
+      </Pressable>
     </Animated.View>
   );
 }
@@ -135,7 +136,7 @@ export const CarouselTile = React.memo(ImageCarouselTileInner, (prev, next) => {
     prev.itemWidth === next.itemWidth && prev.itemSpacing === next.itemSpacing;
   const sameShowText = prev.showText === next.showText;
   return sameIndex && sameKey && sameLayout && sameShowText;
-}) as <T extends Trail | TrailImage>(
+}) as <T extends TrailOverviewViewModel | TrailImage>(
   props: CarouselTileProps<T>,
 ) => React.ReactElement;
 

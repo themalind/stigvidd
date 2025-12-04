@@ -1,45 +1,55 @@
 export interface Trail {
-  id: string;
+  identifier: string;
   name: string;
-  trailLenght: string;
+  trailLenght: number;
   classification: string;
   accessability: boolean;
   accessabilityInfo: string;
   trailSymbol: string;
   trailSymbolImage: string;
-  trailImages?: TrailImage[];
+  trailImageDTO?: TrailImage[];
+  trailLinkDTO?: TrailLink[];
+  reviewDTO?: Review[];
   description: string;
-  coordinates: string;
+  coordinatesJson: string;
+}
+
+export interface TrailOverviewViewModel {
+  identifier: string;
+  name: string;
+  trailLength: number;
+  trailImageDTOs?: TrailImage[];
 }
 
 export interface TrailImage {
-  id: string;
+  identifier: string;
   imageUrl: string;
   trailId: string;
 }
 
 export interface TrailLink {
-  id: string;
+  identifier: string;
   link: string;
   trailId: string;
 }
 
 export interface Review {
-  id: string;
+  identifier: string;
   review: string;
   grade: number;
   trailId: string;
   userId: string;
+  reviewImage: ReviewImage[];
 }
 
 export interface ReviewImage {
-  id: string;
+  identifier: string;
   ImageUrl: string;
   reviewId: string;
 }
 
 export interface User {
-  id: string;
+  identifier: string;
   nickName: string;
   email: string;
 }

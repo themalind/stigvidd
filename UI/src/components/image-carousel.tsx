@@ -1,4 +1,4 @@
-import { Trail, TrailImage } from "@/data/types";
+import { Trail, TrailImage, TrailOverviewViewModel } from "@/data/types";
 import React, { useCallback } from "react";
 import { useWindowDimensions, View } from "react-native";
 import Animated, {
@@ -8,14 +8,16 @@ import Animated, {
 import { CarouselTile } from "./ImageCarouselTile";
 
 // Interface för komponentens props - använder generisk typ T som kan vara antingen Trail eller TrailImage
-interface CarouselProps<T extends Trail | TrailImage> {
+interface CarouselProps<T extends TrailOverviewViewModel | TrailImage> {
   data: T[]; // Array med objekt att visa i karusellen
   showText?: boolean; // Valfri prop - bestämmer om text ska visas på objekten
   onItemPress?: (item: T) => void; // Valfri callback-funktion som körs när användaren trycker på ett objekt
 }
 
 // Huvudkomponenten - en generisk bildkarusell som fungerar med olika datatyper
-export default function ImageCarousel<T extends Trail | TrailImage>({
+export default function ImageCarousel<
+  T extends TrailOverviewViewModel | TrailImage,
+>({
   data,
   showText = true, // Default-värde: visa text
   onItemPress,
@@ -55,7 +57,7 @@ export default function ImageCarousel<T extends Trail | TrailImage>({
         scrollX={scrollX} // Scroll-position för animationer
         itemWidth={itemWidth} // Bredd på objektet
         itemSpacing={itemSpacing} // Mellanrum mellan objekt
-        itemKey={item.id} // Unik nyckel för objektet
+        itemKey={item.identifier} // Unik nyckel för objektet
         showText={showText} // Om text ska visas
         onPress={onItemPress} // Press-handler
       />
@@ -80,7 +82,7 @@ export default function ImageCarousel<T extends Trail | TrailImage>({
         data={data}
         horizontal
         renderItem={renderItem}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item, index) => String(item.identifier)}
         pagingEnabled={false}
         snapToOffsets={snapOffsets}
         snapToAlignment="start"
