@@ -32,6 +32,10 @@ namespace Infrastructure.Migrations
                     b.Property<float>("Grade")
                         .HasColumnType("real");
 
+                    b.Property<string>("Identifier")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int>("TrailId")
                         .HasColumnType("int");
 
@@ -54,6 +58,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = 1,
                             Grade = 5f,
+                            Identifier = "901a1a1a-0101-4111-8111-000000000101",
                             TrailId = 1,
                             TrailReview = "Tiveden är verkligen utmanande! Branta klippor och fantastisk natur. Mina ben känner fortfarande av det!",
                             UserId = 1
@@ -62,6 +67,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = 2,
                             Grade = 4f,
+                            Identifier = "901a1a1a-0102-4112-8112-000000000102",
                             TrailId = 2,
                             TrailReview = "Storsjöleden var tuffare än förväntat men så vacker! Perfekt träning.",
                             UserId = 2
@@ -70,6 +76,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = 3,
                             Grade = 5f,
+                            Identifier = "901a1a1a-0103-4113-8113-000000000103",
                             TrailId = 3,
                             TrailReview = "Tångaleden är en favorit! Spångarna gör det enklare och utsikten är magisk.",
                             UserId = 1
@@ -78,6 +85,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = 4,
                             Grade = 4f,
+                            Identifier = "901a1a1a-0104-4114-8114-000000000104",
                             TrailId = 4,
                             TrailReview = "Vildmarksleden Årås är mysig! Såg både kor och får längs vägen. Barnvänlig.",
                             UserId = 2
@@ -86,6 +94,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = 5,
                             Grade = 4f,
+                            Identifier = "901a1a1a-0105-4115-8115-000000000105",
                             TrailId = 1,
                             TrailReview = "Tiveden är inget för nybörjare. Ta med vatten och ta det lugnt!",
                             UserId = 3
@@ -94,6 +103,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = 6,
                             Grade = 5f,
+                            Identifier = "901a1a1a-0106-4116-8116-000000000106",
                             TrailId = 1,
                             TrailReview = "Bästa leden i området! Tiveden är krävande men så otroligt vacker med alla klippformationer.",
                             UserId = 4
@@ -102,6 +112,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = 7,
                             Grade = 5f,
+                            Identifier = "901a1a1a-0107-4117-8117-000000000107",
                             TrailId = 2,
                             TrailReview = "Storsjöleden passerar vackra vyer över sjön. Värt ansträngningen!",
                             UserId = 5
@@ -110,6 +121,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = 8,
                             Grade = 4f,
+                            Identifier = "901a1a1a-0108-4118-8118-000000000108",
                             TrailId = 2,
                             TrailReview = "Lite hala stenar på vissa ställen i Storsjöleden, men annars toppen!",
                             UserId = 6
@@ -118,6 +130,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = 9,
                             Grade = 4f,
+                            Identifier = "901a1a1a-0109-4119-8119-000000000109",
                             TrailId = 3,
                             TrailReview = "Tångaleden är perfekt för en avslappnad vandring. Spångarna är välbyggda.",
                             UserId = 3
@@ -126,6 +139,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = 10,
                             Grade = 5f,
+                            Identifier = "901a1a1a-0110-4120-8120-000000000110",
                             TrailId = 3,
                             TrailReview = "Gick Tångaleden i solnedgången - magiskt! Rekommenderas starkt.",
                             UserId = 4
@@ -134,6 +148,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = 11,
                             Grade = 5f,
+                            Identifier = "901a1a1a-0111-4121-8121-000000000111",
                             TrailId = 4,
                             TrailReview = "Årås är superbra för hela familjen! Kan till och med cykla delar av sträckan.",
                             UserId = 5
@@ -142,6 +157,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = 12,
                             Grade = 4f,
+                            Identifier = "901a1a1a-0112-4122-8122-000000000112",
                             TrailId = 4,
                             TrailReview = "Fin blandning av natur och lantbrukslandskap på Vildmarksleden. Väldigt trivsamt!",
                             UserId = 1
@@ -150,6 +166,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = 13,
                             Grade = 4f,
+                            Identifier = "901a1a1a-0113-4123-8123-000000000113",
                             TrailId = 1,
                             TrailReview = "Tiveden utmanade verkligen min kondition. Ta med snacks och vatten!",
                             UserId = 6
@@ -158,6 +175,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = 14,
                             Grade = 4f,
+                            Identifier = "901a1a1a-0114-4124-8124-000000000114",
                             TrailId = 2,
                             TrailReview = "Storsjöleden hade vackra höstfärger när vi gick den. Lite lerig efter regn.",
                             UserId = 3
@@ -166,6 +184,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = 15,
                             Grade = 5f,
+                            Identifier = "901a1a1a-0115-4125-8125-000000000115",
                             TrailId = 3,
                             TrailReview = "Tångaleden är min go-to för en snabb eftermiddagspromenad. Lugnt och skönt!",
                             UserId = 6
@@ -174,6 +193,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = 16,
                             Grade = 5f,
+                            Identifier = "901a1a1a-0116-4126-8126-000000000116",
                             TrailId = 4,
                             TrailReview = "Årås är en underbar led! Grusvägen gör det enkelt och naturen är vacker.",
                             UserId = 4
@@ -182,6 +202,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = 17,
                             Grade = 4f,
+                            Identifier = "901a1a1a-0117-4127-8127-000000000117",
                             TrailId = 1,
                             TrailReview = "Tiveden kräver bra skor med bra grepp. Klipporna kan vara hala!",
                             UserId = 5
@@ -190,6 +211,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = 18,
                             Grade = 3f,
+                            Identifier = "901a1a1a-0118-4128-8128-000000000118",
                             TrailId = 2,
                             TrailReview = "Lite för tuff för mig personligen men vacker natur i Storsjöleden.",
                             UserId = 4
@@ -198,6 +220,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = 19,
                             Grade = 3f,
+                            Identifier = "901a1a1a-0119-4129-8129-000000000119",
                             TrailId = 5,
                             TrailReview = "Gesebol är perfekt för en lugn promenad! Bara asfalt och grusväg men fin natur.",
                             UserId = 1
@@ -206,6 +229,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = 20,
                             Grade = 3f,
+                            Identifier = "901a1a1a-0120-4130-8130-000000000120",
                             TrailId = 5,
                             TrailReview = "Enkel och trevlig led, passar bra för joggingrundan också, mycket platt underlag!",
                             UserId = 2
@@ -214,6 +238,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = 21,
                             Grade = 2f,
+                            Identifier = "901a1a1a-0121-4131-8131-000000000121",
                             TrailId = 5,
                             TrailReview = "Kort och halvmysig tur. Barnen tyckte det var tråkigt med så mkt asfalt.",
                             UserId = 3
@@ -222,6 +247,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = 22,
                             Grade = 5f,
+                            Identifier = "901a1a1a-0122-4132-8132-000000000122",
                             TrailId = 5,
                             TrailReview = "Gesebol är en favorit för kvällspromenader. Lugnt och fridfullt!",
                             UserId = 6
@@ -230,6 +256,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = 23,
                             Grade = 4f,
+                            Identifier = "901a1a1a-0123-4133-8133-000000000123",
                             TrailId = 6,
                             TrailReview = "Hultafors har lite mer utmaning än man tror! Fina stigar genom skogen.",
                             UserId = 4
@@ -238,6 +265,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = 24,
                             Grade = 4f,
+                            Identifier = "901a1a1a-0124-4134-8134-000000000124",
                             TrailId = 6,
                             TrailReview = "Bra träningsrunda! Lite variation i terrängen gör det intressant.",
                             UserId = 5
@@ -246,6 +274,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = 25,
                             Grade = 5f,
+                            Identifier = "901a1a1a-0125-4135-8135-000000000125",
                             TrailId = 6,
                             TrailReview = "Hultafors överraskade positivt. Vacker skogsmark och bra skyltning.",
                             UserId = 1
@@ -254,6 +283,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = 26,
                             Grade = 3f,
+                            Identifier = "901a1a1a-0126-4136-8136-000000000126",
                             TrailId = 6,
                             TrailReview = "Lite för korta stigdelar för min smak men annars trevlig led.",
                             UserId = 3
@@ -262,6 +292,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = 27,
                             Grade = 5f,
+                            Identifier = "901a1a1a-0127-4137-8137-000000000127",
                             TrailId = 7,
                             TrailReview = "Nässehult är absolut bäst för barnvagn! Släta vägar hela vägen.",
                             UserId = 2
@@ -270,6 +301,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = 28,
                             Grade = 5f,
+                            Identifier = "901a1a1a-0128-4138-8138-000000000128",
                             TrailId = 7,
                             TrailReview = "Perfekt tillgänglig led. Kunde köra rullstol utan problem!",
                             UserId = 6
@@ -278,6 +310,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = 29,
                             Grade = 4f,
+                            Identifier = "901a1a1a-0129-4139-8139-000000000129",
                             TrailId = 7,
                             TrailReview = "Enkelt och lättgått. Bra för äldre eller de som behöver tillgänglighet.",
                             UserId = 4
@@ -286,6 +319,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = 30,
                             Grade = 4f,
+                            Identifier = "901a1a1a-0130-4140-8140-000000000130",
                             TrailId = 7,
                             TrailReview = "Nässehult är mysig! Fin promenad längs med bra underlag.",
                             UserId = 5
@@ -294,6 +328,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = 31,
                             Grade = 3f,
+                            Identifier = "901a1a1a-0131-4141-8141-000000000131",
                             TrailId = 5,
                             TrailReview = "Gesebol är på 6 km. Lagom längd men tråkigt med så mkt bilvägar!",
                             UserId = 4
@@ -302,6 +337,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = 32,
                             Grade = 4f,
+                            Identifier = "901a1a1a-0132-4142-8142-000000000132",
                             TrailId = 6,
                             TrailReview = "Hultafors ger lite träning trots att den är kort. Sköna stigar!",
                             UserId = 2
@@ -315,6 +351,10 @@ namespace Infrastructure.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Identifier")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ImageUrl")
                         .HasColumnType("nvarchar(max)");
@@ -332,18 +372,21 @@ namespace Infrastructure.Migrations
                         new
                         {
                             Id = 1,
+                            Identifier = "b01b01b0-2001-4201-8201-000000002001",
                             ImageUrl = "https://inkaben.se/stigvidd/mock/mock-review/review0011.jpg",
                             ReviewId = 1
                         },
                         new
                         {
                             Id = 2,
+                            Identifier = "b02b02b0-2002-4202-8202-000000002002",
                             ImageUrl = "https://inkaben.se/stigvidd/mock/mock-review/review0012.jpg",
                             ReviewId = 1
                         },
                         new
                         {
                             Id = 3,
+                            Identifier = "b03b03b0-2003-4203-8203-000000002003",
                             ImageUrl = "https://inkaben.se/stigvidd/mock/mock-review/review0031.jpg",
                             ReviewId = 3
                         });
@@ -356,6 +399,10 @@ namespace Infrastructure.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Identifier")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<double>("TotalKilometers")
                         .HasColumnType("float");
@@ -403,11 +450,15 @@ namespace Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("Identifier")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<double>("TrailLenght")
+                    b.Property<double>("TrailLength")
                         .HasColumnType("float");
 
                     b.Property<string>("TrailSymbol")
@@ -430,8 +481,9 @@ namespace Infrastructure.Migrations
                             AccessabilityInfo = "Delvis väldigt svår terräng, kräver god fysik",
                             Classification = "Svår",
                             Description = "En dramatisk och utmanande vandring genom djupa skogar, höga klippor och stenformationer.",
+                            Identifier = "0f8fad5b-d9cb-469f-a165-70867728950e",
                             Name = "Tiveden",
-                            TrailLenght = 9.5,
+                            TrailLength = 9.5,
                             TrailSymbol = "Röd markering",
                             TrailSymbolImage = "https://inkaben.se/stigvidd/mock/mock-trail-symbol.png"
                         },
@@ -442,8 +494,9 @@ namespace Infrastructure.Migrations
                             AccessabilityInfo = "Delvis väldigt svår terräng, kräver god fysik",
                             Classification = "Svår",
                             Description = "En varierad och bitvis krävande led som slingrar sig runt Storsjöns skogsområden.",
+                            Identifier = "1a2b3c4d-5e6f-4789-0123-456789abcdef",
                             Name = "Storsjöleden",
-                            TrailLenght = 8.5,
+                            TrailLength = 8.5,
                             TrailSymbol = "Blå markering",
                             TrailSymbolImage = "https://inkaben.se/stigvidd/mock/mock-trail-symbol.png"
                         },
@@ -454,8 +507,9 @@ namespace Infrastructure.Migrations
                             AccessabilityInfo = "Stigar, spångar och grusväg, vacker utsikt",
                             Classification = "Medel",
                             Description = "En naturskön rundslinga genom Hofsnäsområdet med blandning av stigar, spångar och öppna utsikter.",
+                            Identifier = "2b3c4d5e-6f70-4891-1234-56789abcdef0",
                             Name = "Tångaleden",
-                            TrailLenght = 9.0999999999999996,
+                            TrailLength = 9.0999999999999996,
                             TrailSymbol = "Orange markering",
                             TrailSymbolImage = "https://inkaben.se/stigvidd/mock/mock-trail-symbol.png"
                         },
@@ -466,8 +520,9 @@ namespace Infrastructure.Migrations
                             AccessabilityInfo = "Naturstigar, beteshagar, spång och grusväg",
                             Classification = "Medel",
                             Description = "En inbjudande led som tar dig genom beteshagar, skogar och kulturmiljöer kring Årås.",
+                            Identifier = "3c4d5e6f-7f01-4a92-2345-6789abcdef01",
                             Name = "Vildmarksleden Årås",
-                            TrailLenght = 8.5,
+                            TrailLength = 8.5,
                             TrailSymbol = "Grön markering",
                             TrailSymbolImage = "https://inkaben.se/stigvidd/mock/mock-trail-symbol.png"
                         },
@@ -478,8 +533,9 @@ namespace Infrastructure.Migrations
                             AccessabilityInfo = "Asfalt, stig och grusväg",
                             Classification = "Lätt",
                             Description = "En lättvandrad slinga som kombinerar skogsstigar, grusväg och kortare asfaltspartier.",
+                            Identifier = "4d5e6f70-8012-4b93-3456-789abcdef012",
                             Name = "Gesebol",
-                            TrailLenght = 6.0,
+                            TrailLength = 6.0,
                             TrailSymbol = "Röd markering med en 6:a på",
                             TrailSymbolImage = "https://inkaben.se/stigvidd/mock/mock-trail-symbol.png"
                         },
@@ -490,8 +546,9 @@ namespace Infrastructure.Migrations
                             AccessabilityInfo = "Asfalt, stigar och grusväg",
                             Classification = "Medel",
                             Description = "En medelsvår led med både skogsstigar, grusvägar och öppnare partier.",
+                            Identifier = "5e6f7081-9123-4c94-4567-89abcdef0123",
                             Name = "Hultafors",
-                            TrailLenght = 4.5,
+                            TrailLength = 4.5,
                             TrailSymbol = "Blå markering",
                             TrailSymbolImage = "https://inkaben.se/stigvidd/mock/mock-trail-symbol.png"
                         },
@@ -502,8 +559,9 @@ namespace Infrastructure.Migrations
                             AccessabilityInfo = "Asfalt och grusväg",
                             Classification = "Lätt",
                             Description = "En lätt och tillgänglig led på asfalt och grusväg som passar för alla.",
+                            Identifier = "6f708192-a234-4d95-5678-9abcdef01234",
                             Name = "Nässehult",
-                            TrailLenght = 4.5,
+                            TrailLength = 4.5,
                             TrailSymbol = "Nässla",
                             TrailSymbolImage = "https://inkaben.se/stigvidd/mock/nassla.png"
                         },
@@ -514,8 +572,9 @@ namespace Infrastructure.Migrations
                             AccessabilityInfo = "Asfalt, stig och grusväg",
                             Classification = "Lätt",
                             Description = "En kort och lättvandrad slinga i det vackra området kring Hofsnäs.",
+                            Identifier = "708192a3-b345-4e96-6789-abcdef012345",
                             Name = "Hoffsnäs",
-                            TrailLenght = 4.7999999999999998,
+                            TrailLength = 4.7999999999999998,
                             TrailSymbol = "Läderbagge",
                             TrailSymbolImage = "https://inkaben.se/stigvidd/mock/mock-trail-symbol.png"
                         });
@@ -528,6 +587,10 @@ namespace Infrastructure.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Identifier")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ImageUrl")
                         .HasColumnType("nvarchar(max)");
@@ -545,181 +608,211 @@ namespace Infrastructure.Migrations
                         new
                         {
                             Id = 1,
+                            Identifier = "810a1a1a-0001-4001-8001-000000000001",
                             ImageUrl = "https://inkaben.se/stigvidd/mock/tiveden/20250925122257.jpg",
                             TrailId = 1
                         },
                         new
                         {
                             Id = 2,
+                            Identifier = "810a1a1a-0002-4002-8002-000000000002",
                             ImageUrl = "https://inkaben.se/stigvidd/mock/tiveden/20250925122143.jpg",
                             TrailId = 1
                         },
                         new
                         {
                             Id = 3,
+                            Identifier = "810a1a1a-0003-4003-8003-000000000003",
                             ImageUrl = "https://inkaben.se/stigvidd/mock/tiveden/20250925110314.jpg",
                             TrailId = 1
                         },
                         new
                         {
                             Id = 4,
+                            Identifier = "810a1a1a-0004-4004-8004-000000000004",
                             ImageUrl = "https://inkaben.se/stigvidd/mock/storsjon/20241102113934.jpg",
                             TrailId = 2
                         },
                         new
                         {
                             Id = 5,
+                            Identifier = "810a1a1a-0005-4005-8005-000000000005",
                             ImageUrl = "https://inkaben.se/stigvidd/mock/storsjon/20241102121010.jpg",
                             TrailId = 2
                         },
                         new
                         {
                             Id = 6,
+                            Identifier = "810a1a1a-0006-4006-8006-000000000006",
                             ImageUrl = "https://inkaben.se/stigvidd/mock/storsjon/20241102112335.jpg",
                             TrailId = 2
                         },
                         new
                         {
                             Id = 7,
+                            Identifier = "810a1a1a-0007-4007-8007-000000000007",
                             ImageUrl = "https://inkaben.se/stigvidd/mock/tangaleden/20250902122917.jpg",
                             TrailId = 3
                         },
                         new
                         {
                             Id = 8,
+                            Identifier = "810a1a1a-0008-4008-8008-000000000008",
                             ImageUrl = "https://inkaben.se/stigvidd/mock/tangaleden/20250902130421.jpg",
                             TrailId = 3
                         },
                         new
                         {
                             Id = 9,
+                            Identifier = "810a1a1a-0009-4009-8009-000000000009",
                             ImageUrl = "https://inkaben.se/stigvidd/mock/hofsnas/20250822093635.jpg",
                             TrailId = 3
                         },
                         new
                         {
                             Id = 10,
+                            Identifier = "810a1a1a-0010-4010-8010-000000000010",
                             ImageUrl = "https://inkaben.se/stigvidd/mock/aras/20250818102417.jpg",
                             TrailId = 4
                         },
                         new
                         {
                             Id = 11,
+                            Identifier = "810a1a1a-0011-4011-8011-000000000011",
                             ImageUrl = "https://inkaben.se/stigvidd/mock/aras/20250818094810.jpg",
                             TrailId = 4
                         },
                         new
                         {
                             Id = 12,
+                            Identifier = "810a1a1a-0012-4012-8012-000000000012",
                             ImageUrl = "https://inkaben.se/stigvidd/mock/aras/20250818103640.jpg",
                             TrailId = 4
                         },
                         new
                         {
                             Id = 13,
+                            Identifier = "810a1a1a-0013-4013-8013-000000000013",
                             ImageUrl = "https://inkaben.se/stigvidd/mock/aras/20250818112639.jpg",
                             TrailId = 4
                         },
                         new
                         {
                             Id = 14,
+                            Identifier = "810a1a1a-0014-4014-8014-000000000014",
                             ImageUrl = "https://inkaben.se/stigvidd/mock/gesebol/20250824100243.jpg",
                             TrailId = 5
                         },
                         new
                         {
                             Id = 15,
+                            Identifier = "810a1a1a-0015-4015-8015-000000000015",
                             ImageUrl = "https://inkaben.se/stigvidd/mock/gesebol/20250824105053.jpg",
                             TrailId = 5
                         },
                         new
                         {
                             Id = 16,
+                            Identifier = "810a1a1a-0016-4016-8016-000000000016",
                             ImageUrl = "https://inkaben.se/stigvidd/mock/gesebol/20250824095946.jpg",
                             TrailId = 5
                         },
                         new
                         {
                             Id = 17,
+                            Identifier = "810a1a1a-0017-4017-8017-000000000017",
                             ImageUrl = "https://inkaben.se/stigvidd/mock/gesebol/20250824110936.jpg",
                             TrailId = 5
                         },
                         new
                         {
                             Id = 18,
+                            Identifier = "810a1a1a-0018-4018-8018-000000000018",
                             ImageUrl = "https://inkaben.se/stigvidd/mock/hultafors/20240217105404.jpg",
                             TrailId = 6
                         },
                         new
                         {
                             Id = 19,
+                            Identifier = "810a1a1a-0019-4019-8019-000000000019",
                             ImageUrl = "https://inkaben.se/stigvidd/mock/hultafors/20240217105412.jpg",
                             TrailId = 6
                         },
                         new
                         {
                             Id = 20,
+                            Identifier = "810a1a1a-0020-4020-8020-000000000020",
                             ImageUrl = "https://inkaben.se/stigvidd/mock/hultafors/20240217111003.jpg",
                             TrailId = 6
                         },
                         new
                         {
                             Id = 21,
+                            Identifier = "810a1a1a-0021-4021-8021-000000000021",
                             ImageUrl = "https://inkaben.se/stigvidd/mock/nasslehult/20240119131715.jpg",
                             TrailId = 7
                         },
                         new
                         {
                             Id = 22,
+                            Identifier = "810a1a1a-0022-4022-8022-000000000022",
                             ImageUrl = "https://inkaben.se/stigvidd/mock/nasslehult/20240119132416.jpg",
                             TrailId = 7
                         },
                         new
                         {
                             Id = 23,
+                            Identifier = "810a1a1a-0023-4023-8023-000000000023",
                             ImageUrl = "https://inkaben.se/stigvidd/mock/nasslehult/20240120103723.jpg",
                             TrailId = 7
                         },
                         new
                         {
                             Id = 24,
-                            ImageUrl = "https://inkaben.se/stigvidd/mock/hoffsnas/20240912150635.jpg",
+                            Identifier = "810a1a1a-0024-4024-8024-000000000024",
+                            ImageUrl = "https://inkaben.se/stigvidd/mock/hofsnas/20240912150635.jpg",
                             TrailId = 8
                         },
                         new
                         {
                             Id = 25,
-                            ImageUrl = "https://inkaben.se/stigvidd/mock/hoffsnas/20250524103240.jpg",
+                            Identifier = "810a1a1a-0025-4025-8025-000000000025",
+                            ImageUrl = "https://inkaben.se/stigvidd/mock/hofsnas/20250524103240.jpg",
                             TrailId = 8
                         },
                         new
                         {
                             Id = 26,
-                            ImageUrl = "https://inkaben.se/stigvidd/mock/hoffsnas/20250524104329.jpg",
+                            Identifier = "810a1a1a-0026-4026-8026-000000000026",
+                            ImageUrl = "https://inkaben.se/stigvidd/mock/hofsnas/20250524104329.jpg",
                             TrailId = 8
                         },
                         new
                         {
                             Id = 27,
-                            ImageUrl = "https://inkaben.se/stigvidd/mock/hoffsnas/20250822090107.jpg",
+                            Identifier = "810a1a1a-0027-4027-8027-000000000027",
+                            ImageUrl = "https://inkaben.se/stigvidd/mock/hofsnas/20250822090107.jpg",
                             TrailId = 8
                         },
                         new
                         {
                             Id = 28,
-                            ImageUrl = "https://inkaben.se/stigvidd/mock/hoffsnas/20250822090109.jpg",
+                            Identifier = "810a1a1a-0028-4028-8028-000000000028",
+                            ImageUrl = "https://inkaben.se/stigvidd/mock/hofsnas/20250822090109.jpg",
                             TrailId = 8
                         },
                         new
                         {
                             Id = 29,
-                            ImageUrl = "https://inkaben.se/stigvidd/mock/hoffsnas/20250822092315.jpg",
+                            Identifier = "810a1a1a-0029-4029-8029-000000000029",
+                            ImageUrl = "https://inkaben.se/stigvidd/mock/hofsnas/20250822092315.jpg",
                             TrailId = 8
                         },
                         new
                         {
                             Id = 30,
-                            ImageUrl = "https://inkaben.se/stigvidd/mock/hoffsnas/20250822093635.jpg",
+                            Identifier = "810a1a1a-0030-4030-8030-000000000030",
+                            ImageUrl = "https://inkaben.se/stigvidd/mock/hofsnas/20250822093635.jpg",
                             TrailId = 8
                         });
                 });
@@ -731,6 +824,10 @@ namespace Infrastructure.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Identifier")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Link")
                         .HasColumnType("nvarchar(max)");
@@ -757,6 +854,10 @@ namespace Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("Identifier")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("NickName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -770,36 +871,42 @@ namespace Infrastructure.Migrations
                         {
                             Id = 1,
                             Email = "natur@example.local",
+                            Identifier = "a01a01a0-1001-4101-8101-000000001001",
                             NickName = "NaturElskaren"
                         },
                         new
                         {
                             Id = 2,
                             Email = "vandrar@example.local",
+                            Identifier = "a02a02a0-1002-4102-8102-000000001002",
                             NickName = "VandrarVennen"
                         },
                         new
                         {
                             Id = 3,
                             Email = "fjall@example.local",
+                            Identifier = "a03a03a0-1003-4103-8103-000000001003",
                             NickName = "FjällFanatikern"
                         },
                         new
                         {
                             Id = 4,
                             Email = "skog@example.local",
+                            Identifier = "a04a04a0-1004-4104-8104-000000001004",
                             NickName = "SkogsSpringaren"
                         },
                         new
                         {
                             Id = 5,
                             Email = "aventyr@example.local",
+                            Identifier = "a05a05a0-1005-4105-8105-000000001005",
                             NickName = "ÄventyrAnna"
                         },
                         new
                         {
                             Id = 6,
                             Email = "vildmark@example.local",
+                            Identifier = "a06a06a0-1006-4106-8106-000000001006",
                             NickName = "VildmarksViktor"
                         });
                 });
@@ -807,7 +914,7 @@ namespace Infrastructure.Migrations
             modelBuilder.Entity("Infrastructure.Data.Entities.Review", b =>
                 {
                     b.HasOne("Infrastructure.Data.Entities.Trail", "Trail")
-                        .WithMany()
+                        .WithMany("Reviews")
                         .HasForeignKey("TrailId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -826,7 +933,7 @@ namespace Infrastructure.Migrations
             modelBuilder.Entity("Infrastructure.Data.Entities.ReviewImage", b =>
                 {
                     b.HasOne("Infrastructure.Data.Entities.Review", "Review")
-                        .WithMany()
+                        .WithMany("ReviewImages")
                         .HasForeignKey("ReviewId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -867,8 +974,15 @@ namespace Infrastructure.Migrations
                     b.Navigation("Trail");
                 });
 
+            modelBuilder.Entity("Infrastructure.Data.Entities.Review", b =>
+                {
+                    b.Navigation("ReviewImages");
+                });
+
             modelBuilder.Entity("Infrastructure.Data.Entities.Trail", b =>
                 {
+                    b.Navigation("Reviews");
+
                     b.Navigation("TrailImages");
 
                     b.Navigation("TrailLinks");
