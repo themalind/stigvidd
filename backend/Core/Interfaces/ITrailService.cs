@@ -1,11 +1,13 @@
-﻿
-using Infrastructure.Data.Entities;
+﻿using WebDataContracts.ResponseModels;
+using WebDataContracts.ViewModels;
 
 namespace Core.Interfaces;
 
 public interface ITrailService
 {
-    Task<IReadOnlyCollection<Trail?>> GetTrailsAsync(CancellationToken ctoken);
-    Task<IReadOnlyCollection<Trail?>> GetPopularTrailsAsync(CancellationToken ctoken);
+    Task<IReadOnlyCollection<TrailDTO?>> GetTrailsAsync(CancellationToken ctoken);
+    Task<TrailDTO?> GetTrailByIdAsync(string identifier, CancellationToken ctoken);
+    Task<IReadOnlyCollection<TrailOverviewViewModel?>> GetPopularTrailOverviewsAsync(CancellationToken ctoken);
+
 }
 
