@@ -6,7 +6,7 @@ namespace Core.Interfaces;
 public interface ITrailService
 {
     Task<IReadOnlyCollection<TrailDTO?>> GetTrailsAsync(CancellationToken ctoken);
-    Task<TrailDTO?> GetTrailByIdAsync(string identifier, CancellationToken ctoken);
+    Task<TrailDTO?> GetTrailByIdentifierAsync(string identifier, CancellationToken ctoken);
     Task<IReadOnlyCollection<TrailOverviewViewModel?>> GetPopularTrailOverviewsAsync(CancellationToken ctoken);
 
 }

@@ -50,7 +50,7 @@ public class TrailService(IDbContextFactory<StigViddDbContext> context) : ITrail
         return list;
     }
 
-    public async Task<TrailDTO?> GetTrailByIdAsync(string identifier, CancellationToken ctoken)
+    public async Task<TrailDTO?> GetTrailByIdentifierAsync(string identifier, CancellationToken ctoken)
     {
         using var context = await _context.CreateDbContextAsync();
 
@@ -116,6 +116,5 @@ public class TrailService(IDbContextFactory<StigViddDbContext> context) : ITrail
 
         return trailOverview;
     }
-
 }
 
