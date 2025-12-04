@@ -1,6 +1,5 @@
 ﻿using Infrastructure.Data;
 using Infrastructure.Data.Entities;
-using System.Diagnostics;
 using System.Globalization;
 using System.Text.Json;
 
@@ -56,7 +55,7 @@ internal class TransmogrifyBorasData
                 Name = properties.TryGetProperty("namn", out var namn)
                     ? namn.GetString() ?? string.Empty
                     : string.Empty,
-                TrailLenght = properties.TryGetProperty("sparlangd", out var sparlangd)
+                TrailLength = properties.TryGetProperty("sparlangd", out var sparlangd)
                     ? ParseTrailLength(sparlangd.GetString())
                     : 0,
                 Classification = properties.TryGetProperty("klassning", out var klassning)

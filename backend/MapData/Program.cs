@@ -26,7 +26,7 @@ internal class Program
 
         var transMogrifier = new TransmogrifyBorasData(context); 
         var cancellationToken = new CancellationTokenSource().Token;
-        await transMogrifier.TransmogrifyAsync("C:\\projekt\\suvnet24\\examensarbete\\stigvidd\\UI\\src\\assets\\spar_leder.json", ct: cancellationToken);
+        await transMogrifier.TransmogrifyAsync("C:\\projekt\\suvnet24\\examensarbete\\spar_leder.json", ct: cancellationToken);
         Console.WriteLine("Färdigt!");
         Console.ReadLine();
     }

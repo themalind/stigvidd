@@ -10,6 +10,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StigviddAPI", "StigviddAPI\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MapData", "MapData\MapData.csproj", "{52CAF564-4600-4175-AA60-938A27282669}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebDataContracts", "WebDataContracts\WebDataContracts.csproj", "{17B659E0-FFEC-4DBE-BFCA-066B4B0A44FC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -32,6 +34,10 @@ Global
 		{52CAF564-4600-4175-AA60-938A27282669}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{52CAF564-4600-4175-AA60-938A27282669}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{52CAF564-4600-4175-AA60-938A27282669}.Release|Any CPU.Build.0 = Release|Any CPU
+		{17B659E0-FFEC-4DBE-BFCA-066B4B0A44FC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{17B659E0-FFEC-4DBE-BFCA-066B4B0A44FC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{17B659E0-FFEC-4DBE-BFCA-066B4B0A44FC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{17B659E0-FFEC-4DBE-BFCA-066B4B0A44FC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
