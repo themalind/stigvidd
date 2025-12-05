@@ -1,10 +1,9 @@
 ﻿namespace Infrastructure.Data.Entities;
 
-public class TrailImage
+public class TrailImage : BaseEntity
 {
-    public int Id { get; set; }
-    public string Identifier { get; set; } = Guid.NewGuid().ToString();
     public string? ImageUrl { get; set; }
-    public int TrailId { get; set; } = 0;
+    public int TrailId { get; set; } 
+
     public Trail? Trail { get; set; }
 }

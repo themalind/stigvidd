@@ -1,9 +1,7 @@
 ﻿namespace Infrastructure.Data.Entities;
 
-public class Review
+public class Review : BaseEntity
 {
-    public int Id { get; set; }
-    public string Identifier { get; set; } = Guid.NewGuid().ToString();
     public string? TrailReview { get; set; }
     public float Grade { get; set; }
     public int TrailId { get; set; }
