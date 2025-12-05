@@ -1,19 +1,20 @@
 ﻿using Core.Interfaces;
 using Infrastructure.Data;
-using Infrastructure.Data.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using WebDataContracts.ResponseModels;
 using WebDataContracts.ViewModels;
 
 namespace Core.Services;
 
-public class TrailService(IDbContextFactory<StigViddDbContext> context) : ITrailService
+public class TrailService(IDbContextFactory<StigViddDbContext> context, ILogger<TrailService> logger) : ITrailService
 {
     private readonly IDbContextFactory<StigViddDbContext> _context = context;
+    private readonly ILogger<TrailService> _logger = logger;
 
     public async Task<IReadOnlyCollection<TrailDTO?>> GetTrailsAsync(CancellationToken ctoken)
     {
-        using var context = await _context.CreateDbContextAsync();
+        using var context = await _context.CreateDbContextAsync(ctoken);
 
         var trails = await context.Trails
              .AsNoTracking()
@@ -22,13 +23,14 @@ public class TrailService(IDbContextFactory<StigViddDbContext> context) : ITrail
              .Include(r => r.Reviews)
              .ToListAsync(ctoken);
 
-        var list = new List<TrailDTO>();
+        var dtoList = new List<TrailDTO>();
 
         foreach (var trail in trails)
         {
             var images = trail.TrailImages?.Select(ti => TrailImageDTO.Create(ti.Identifier, ti.ImageUrl, ti.TrailId));
             var links = trail.TrailLinks?.Select(tl => TrailLinkDTO.Create(tl.Identifier, tl.Link, tl.TrailId));
             var reviews = trail.Reviews?.Select(r => ReviewDTO.Create(r.Identifier, r.TrailReview, r.Grade, r.TrailId, r.UserId, null));
+
             var trailDto = TrailDTO.Create
             (trail.Identifier,
             trail.Name,
@@ -45,34 +47,37 @@ public class TrailService(IDbContextFactory<StigViddDbContext> context) : ITrail
             reviews
             );
 
-            list.Add(trailDto);
-        } 
-        return list;
+            dtoList.Add(trailDto);
+        }
+        return dtoList;
     }
 
     public async Task<TrailDTO?> GetTrailByIdentifierAsync(string identifier, CancellationToken ctoken)
     {
-        using var context = await _context.CreateDbContextAsync();
+        using var context = await _context.CreateDbContextAsync(ctoken);
 
         var trail = await context.Trails
               .AsNoTracking()
               .Include(t => t.TrailImages)
               .Include(t => t.TrailLinks)
               .Include(r => r.Reviews!)
-                 .ThenInclude(rv => rv.ReviewImages)
+                .ThenInclude(rv => rv.ReviewImages)
               .FirstOrDefaultAsync(t => t.Identifier == identifier, ctoken);
 
         if (trail == null)
         {
+            _logger.LogInformation(
+                "TrailService -> GetTrailByIdentifierAsync: Trail with identifier {Identifier} not found.", identifier);
+
             return null;
         }
 
         var images = trail.TrailImages?.Select(ti => TrailImageDTO.Create(ti.Identifier ?? string.Empty, ti.ImageUrl ?? string.Empty, ti.TrailId))
-                           ?? Enumerable.Empty<TrailImageDTO>();
+                           ?? [];
         var links = trail.TrailLinks?.Select(tl => TrailLinkDTO.Create(tl.Identifier ?? string.Empty, tl.Link ?? string.Empty, tl.TrailId))
-                    ?? Enumerable.Empty<TrailLinkDTO>();
+                    ?? [];
         var reviews = trail.Reviews?.Select(r => ReviewDTO.Create(r.Identifier ?? string.Empty, r.TrailReview ?? string.Empty, r.Grade, r.TrailId, r.UserId, null))
-                      ?? Enumerable.Empty<ReviewDTO>();
+                      ?? [];
 
         var trailDto = TrailDTO.Create
         (trail.Identifier,
@@ -98,23 +103,20 @@ public class TrailService(IDbContextFactory<StigViddDbContext> context) : ITrail
         using var context = await _context.CreateDbContextAsync(ctoken);
 
         var trails = await context.Trails
-            .AsNoTracking()
-            .Include(i => i.TrailImages)
-            .Take(8)
-            .ToListAsync(ctoken);
-            
-        var trailOverview = trails.Select(t => 
-            TrailOverviewViewModel.Create(
-                t.Identifier, 
-                t.Name, 
-                t.TrailLength, 
-                t.TrailImages?
+            .Select(trail => new TrailOverviewViewModel
+            {
+                Identifier = trail.Identifier,
+                Name = trail.Name,
+                TrailLength = trail.TrailLength,
+                TrailImageDTOs = trail.TrailImages!
                     .Select(ti => TrailImageDTO.Create(ti.Identifier, ti.ImageUrl, ti.TrailId))
                     .Take(1)
+                    .ToList()
+            })
+            .Take(8)
+            .ToListAsync(ctoken);
 
-            )).ToList();
-
-        return trailOverview;
+        return trails;
     }
 }
 

@@ -4,10 +4,10 @@ public class ReviewDTO
     public required string Identifier { get; set; }
     public string? TrailReview { get; set; }
     public float Grade { get; set; }
+    public DateTime CreatedAt { get; set; }
     public int TrailId { get; set; }
     public int UserId { get; set; }
     public IReadOnlyCollection<ReviewImageDTO>? ReviewImageDTOs { get; set; }
-
 
     public static ReviewDTO Create(
         string identifier,
