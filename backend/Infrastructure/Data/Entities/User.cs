@@ -2,10 +2,8 @@
 
 namespace Infrastructure.Data.Entities;
 
-public class User
+public class User : BaseEntity
 {
-    public int Id { get; set; }
-    public string Identifier { get; set; } = Guid.NewGuid().ToString();
     public required string NickName { get; set; }
     public required string Email { get; set; }
 

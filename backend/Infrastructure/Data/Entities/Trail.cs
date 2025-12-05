@@ -1,9 +1,7 @@
 ﻿namespace Infrastructure.Data.Entities;
 
-public class Trail
+public class Trail : BaseEntity
 {
-    public int Id { get; set; }
-    public string Identifier { get; set; } = Guid.NewGuid().ToString();
     public required string Name { get; set; }
     public required double TrailLength { get; set; }
     public string Classification { get; set; } = string.Empty;
