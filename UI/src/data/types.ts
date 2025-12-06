@@ -7,16 +7,16 @@ export interface Trail {
   accessabilityInfo: string;
   trailSymbol: string;
   trailSymbolImage: string;
+  description: string;
+  coordinatesJson: string;
   trailImageDTO?: TrailImage[];
   trailLinkDTO?: TrailLink[];
   reviewDTO?: Review[];
-  description: string;
-  coordinatesJson: string;
 }
 
 export interface TrailOverviewViewModel {
   identifier: string;
-  name: string;
+  name?: string;
   trailLength: number;
   trailImageDTOs?: TrailImage[];
 }
@@ -24,28 +24,30 @@ export interface TrailOverviewViewModel {
 export interface TrailImage {
   identifier: string;
   imageUrl: string;
-  trailId: string;
+  trailIdentifier: string;
 }
 
 export interface TrailLink {
   identifier: string;
   link: string;
-  trailId: string;
+  trailIdentifier: string;
 }
 
 export interface Review {
   identifier: string;
-  review: string;
+  trailReview?: string;
   grade: number;
-  trailId: string;
-  userId: string;
-  reviewImage: ReviewImage[];
+  userName: string;
+  createdAt: Date;
+  userIdentifier: string;
+  trailIdentifier: string;
+  reviewImage?: ReviewImage[];
 }
 
 export interface ReviewImage {
   identifier: string;
   ImageUrl: string;
-  reviewId: string;
+  reviewIdentifier: string;
 }
 
 export interface User {

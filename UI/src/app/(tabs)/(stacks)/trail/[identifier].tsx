@@ -4,7 +4,7 @@ import ImageModal from "@/components/imageModal";
 import TrailDescription from "@/components/trail/trail-description";
 import TrailInfo from "@/components/trail/trail-info";
 import TrailMap from "@/components/trail/trail-map";
-import UserBar from "@/components/trail/user-bar";
+import UserBar from "@/components/trail/user-action-bar/user-bar";
 import { Review } from "@/data/types";
 import { useImage } from "@/providers/image-atoms";
 import { useQuery } from "@tanstack/react-query";

@@ -1,5 +1,5 @@
 import { Dimensions, StyleSheet, View } from "react-native";
-import UserRating from "./user-rating";
+import UserRating from "../user-rating";
 import UserShare from "./user-share";
 import AddToUserList from "./add-to-user-list";
 import AddUserFavorite from "./add-user-favorite";
