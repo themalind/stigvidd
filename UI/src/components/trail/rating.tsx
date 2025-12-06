@@ -10,7 +10,6 @@ interface RatingProps {
 
 export const Rating = ({ review, trailReviews, starSize }: RatingProps) => {
   const theme = useTheme();
-
   let rating = 0;
 
   if (trailReviews && trailReviews.length > 0) {
