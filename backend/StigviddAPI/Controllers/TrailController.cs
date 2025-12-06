@@ -1,7 +1,5 @@
 ﻿using Core.Interfaces;
-using Infrastructure.Data.Entities;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using WebDataContracts.ResponseModels;
 using WebDataContracts.ViewModels;
 

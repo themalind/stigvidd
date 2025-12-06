@@ -4,7 +4,7 @@ namespace Infrastructure.Data.Entities;
 
 public class TrailLink : BaseEntity
 {
-    public string? Link { get; set; }
+    public required string Link { get; set; }
     public int TrailId { get; set; }
 
     public Trail? Trail { get; set; }

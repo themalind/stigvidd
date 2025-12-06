@@ -20,16 +20,39 @@ public class TrailService(IDbContextFactory<StigViddDbContext> context, ILogger<
              .AsNoTracking()
              .Include(t => t.TrailImages)
              .Include(t => t.TrailLinks)
-             .Include(r => r.Reviews)
+             .Include(r => r.Reviews!)
+                .ThenInclude(r => r.User)
              .ToListAsync(ctoken);
 
         var dtoList = new List<TrailDTO>();
 
         foreach (var trail in trails)
         {
-            var images = trail.TrailImages?.Select(ti => TrailImageDTO.Create(ti.Identifier, ti.ImageUrl, ti.TrailId));
-            var links = trail.TrailLinks?.Select(tl => TrailLinkDTO.Create(tl.Identifier, tl.Link, tl.TrailId));
-            var reviews = trail.Reviews?.Select(r => ReviewDTO.Create(r.Identifier, r.TrailReview, r.Grade, r.TrailId, r.UserId, null));
+            var images = trail.TrailImages?.Select(ti => 
+                TrailImageDTO.Create(
+                    ti.Identifier, 
+                    ti.ImageUrl, 
+                    ti.Identifier));
+
+            var links = trail.TrailLinks?.Select(tl => 
+            TrailLinkDTO.Create(
+                tl.Identifier, 
+                tl.Link, 
+                tl.Identifier));
+
+            var reviews = trail.Reviews?.Select(r =>
+                ReviewDTO.Create(
+                    r.Identifier,
+                    r.TrailReview,
+                    r.Grade,
+                    r.User!.NickName,
+                    r.Identifier,
+                    r.Identifier,
+                    r.ReviewImages?.Select(ri =>
+                        ReviewImageDTO.Create(
+                            ri.Identifier,
+                            ri.ImageUrl,
+                            ri.Review!.Identifier))));
 
             var trailDto = TrailDTO.Create
             (trail.Identifier,
@@ -61,6 +84,8 @@ public class TrailService(IDbContextFactory<StigViddDbContext> context, ILogger<
               .Include(t => t.TrailImages)
               .Include(t => t.TrailLinks)
               .Include(r => r.Reviews!)
+                .ThenInclude(r => r.User)
+              .Include(r => r.Reviews!)
                 .ThenInclude(rv => rv.ReviewImages)
               .FirstOrDefaultAsync(t => t.Identifier == identifier, ctoken);
 
@@ -72,12 +97,31 @@ public class TrailService(IDbContextFactory<StigViddDbContext> context, ILogger<
             return null;
         }
 
-        var images = trail.TrailImages?.Select(ti => TrailImageDTO.Create(ti.Identifier ?? string.Empty, ti.ImageUrl ?? string.Empty, ti.TrailId))
-                           ?? [];
-        var links = trail.TrailLinks?.Select(tl => TrailLinkDTO.Create(tl.Identifier ?? string.Empty, tl.Link ?? string.Empty, tl.TrailId))
-                    ?? [];
-        var reviews = trail.Reviews?.Select(r => ReviewDTO.Create(r.Identifier ?? string.Empty, r.TrailReview ?? string.Empty, r.Grade, r.TrailId, r.UserId, null))
-                      ?? [];
+        var images = trail.TrailImages?.Select(ti =>
+            TrailImageDTO.Create(
+                ti.Identifier,
+                ti.ImageUrl,
+                trail.Identifier)) ?? null;
+
+        var links = trail.TrailLinks?.Select(tl =>
+            TrailLinkDTO.Create(
+                tl.Identifier,
+                tl.Link,
+                trail.Identifier)) ?? null;
+
+        var reviews = trail.Reviews?.Select(r =>
+            ReviewDTO.Create(
+                r.Identifier,
+                r.TrailReview ?? string.Empty,
+                r.Grade,
+                r.User!.NickName,
+                trail.Identifier,
+                r.User.Identifier,
+                r.ReviewImages?.Select(ri =>
+                    ReviewImageDTO.Create(
+                        ri.Identifier,
+                        ri.ImageUrl,
+                        ri.Review!.Identifier)))) ?? null;
 
         var trailDto = TrailDTO.Create
         (trail.Identifier,
@@ -109,14 +153,13 @@ public class TrailService(IDbContextFactory<StigViddDbContext> context, ILogger<
                 Name = trail.Name,
                 TrailLength = trail.TrailLength,
                 TrailImageDTOs = trail.TrailImages!
-                    .Select(ti => TrailImageDTO.Create(ti.Identifier, ti.ImageUrl, ti.TrailId))
+                    .Select(ti => TrailImageDTO.Create(ti.Identifier, ti.ImageUrl, ti.Trail!.Identifier))
                     .Take(1)
                     .ToList()
             })
-            .Take(8)
+            .Take(9)
             .ToListAsync(ctoken);
 
         return trails;
     }
 }
-
