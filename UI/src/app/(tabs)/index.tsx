@@ -1,10 +1,11 @@
 import { getPopularTrails } from "@/api/trails";
 import ImageCarousel from "@/components/image-carousel";
+import LoadingIndicator from "@/components/loading-indicator";
 import { useQuery } from "@tanstack/react-query";
 import { Image } from "expo-image";
 import React from "react";
 import { Dimensions, ScrollView, StyleSheet, Text, View } from "react-native";
-import { useTheme } from "react-native-paper";
+import { ActivityIndicator, useTheme } from "react-native-paper";
 
 const HEIGHT = Dimensions.get("screen").height;
 
@@ -22,11 +23,7 @@ export default function HomeScreen() {
   // shouldComponentUpdate, etc. {"contentLength": 2460.0888671875, "dt": 13181, "prevDt": 586}
 
   if (query.isPending) {
-    return (
-      <View>
-        <Text>Loading...</Text>
-      </View>
-    );
+    return <LoadingIndicator />;
   }
 
   if (query.error) {
@@ -59,6 +56,11 @@ export default function HomeScreen() {
 }
 
 const s = StyleSheet.create({
+  loading: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
   container: {
     flex: 1,
     padding: 20,

@@ -1,6 +1,7 @@
 import { fetchTrailByIdentifier } from "@/api/trails";
 import ImageCarousel from "@/components/image-carousel";
 import ImageModal from "@/components/imageModal";
+import LoadingIndicator from "@/components/loading-indicator";
 import { Rating } from "@/components/trail/rating";
 import TrailDescription from "@/components/trail/trail-description";
 import TrailInfo from "@/components/trail/trail-info";
@@ -8,6 +9,7 @@ import TrailMap from "@/components/trail/trail-map";
 import TrailReviews from "@/components/trail/trail-reviews";
 import UserBar from "@/components/trail/user-action-bar/user-bar";
 import { useImage } from "@/providers/image-atoms";
+import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useRef } from "react";
@@ -58,7 +60,7 @@ export default function TrailDetailsScreen() {
   }, []);
 
   if (isLoading) {
-    return <Text style={{ padding: 20 }}>Laddar…</Text>;
+    return <LoadingIndicator />;
   }
 
   if (isError) {
@@ -124,11 +126,30 @@ export default function TrailDetailsScreen() {
           <Text style={[s.title, { color: theme.colors.tertiary }]}>
             Recensioner
           </Text>
+          <Rating trailReviews={trail?.reviewDTO} starSize={17} />
+          <View
+            style={{
+              flexDirection: "row",
+              gap: 15,
+              justifyContent: "flex-end",
+              alignItems: "flex-end",
+            }}
+          >
+            <MaterialIcons
+              name="filter-list"
+              size={25}
+              color={theme.colors.onBackground}
+            />
+            <Ionicons
+              name="create-outline"
+              size={25}
+              color={theme.colors.onBackground}
+            />
+          </View>
           <TrailReviews reviews={trail.reviewDTO} />
         </Surface>
       ) : (
         <Surface
-          ref={surfaceToScrollToRef}
           elevation={4}
           mode="elevated"
           style={[s.surface, { backgroundColor: theme.colors.surface }]}
@@ -139,14 +160,7 @@ export default function TrailDetailsScreen() {
         </Surface>
       )}
       <Pressable style={s.backToTop} onPress={onPressScrollToTop}>
-        <Text
-          style={[
-            s.text,
-            {
-              color: theme.colors.tertiary,
-            },
-          ]}
-        >
+        <Text style={[s.text, { color: theme.colors.tertiary }]}>
           Tillbaka till toppen
         </Text>
       </Pressable>
