@@ -4,13 +4,13 @@ namespace WebDataContracts.ViewModels;
 
 public class TrailOverviewViewModel
 {
-    public string? Identifier { get; set; }
+    public required string Identifier { get; set; }
     public string? Name { get; set; }
     public double TrailLength { get; set; }
     public IReadOnlyCollection<TrailImageDTO>? TrailImageDTOs { get; set; }
 
     public static TrailOverviewViewModel Create(
-        string? identifier,
+        string identifier,
         string? name,
         double trailLength,
         IEnumerable<TrailImageDTO>? trailImageDTOs)
