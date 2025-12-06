@@ -11,6 +11,7 @@ export default function AddUserFavorite() {
     </View>
   );
 }
+
 const s = StyleSheet.create({
   container: {
     flexDirection: "column",
