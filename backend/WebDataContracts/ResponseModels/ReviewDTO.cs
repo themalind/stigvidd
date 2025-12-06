@@ -16,6 +16,7 @@ public class ReviewDTO
         string? trailReview,
         float grade,
         string username,
+        DateTime createdAt,
         string trailIdentifier,
         string userIdentifier,
         IEnumerable<ReviewImageDTO>? imageDTOs)
@@ -26,6 +27,7 @@ public class ReviewDTO
             TrailReview = trailReview,
             Grade = grade,
             UserName = username,
+            CreatedAt = createdAt,
             TrailIdentifier = trailIdentifier,
             UserIdentifier = userIdentifier,
             ReviewImageDTOs = imageDTOs?.ToList(),

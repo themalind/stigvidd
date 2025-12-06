@@ -1,18 +1,26 @@
 import { fetchTrailByIdentifier } from "@/api/trails";
 import ImageCarousel from "@/components/image-carousel";
 import ImageModal from "@/components/imageModal";
+import { Rating } from "@/components/trail/rating";
 import TrailDescription from "@/components/trail/trail-description";
 import TrailInfo from "@/components/trail/trail-info";
 import TrailMap from "@/components/trail/trail-map";
+import TrailReviews from "@/components/trail/trail-reviews";
 import UserBar from "@/components/trail/user-action-bar/user-bar";
-import { Review } from "@/data/types";
 import { useImage } from "@/providers/image-atoms";
 import { useQuery } from "@tanstack/react-query";
-import { Link, router, useLocalSearchParams } from "expo-router";
-import React, { useEffect } from "react";
-import { BackHandler, ScrollView, StyleSheet, Text, View } from "react-native";
-import { useTheme } from "react-native-paper";
-import { StarRatingDisplay } from "react-native-star-rating-widget";
+import { router, useLocalSearchParams } from "expo-router";
+import { useEffect, useRef } from "react";
+import {
+  BackHandler,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { Surface, useTheme } from "react-native-paper";
 
 export default function TrailDetailsScreen() {
   const theme = useTheme();
@@ -21,6 +29,9 @@ export default function TrailDetailsScreen() {
   const normalizedIdentifier = Array.isArray(identifier)
     ? identifier[0]
     : identifier;
+
+  const scrollViewRef = useRef<ScrollView>(null);
+  const surfaceToScrollToRef = useRef<View>(null);
 
   const {
     data: trail,
@@ -34,29 +45,6 @@ export default function TrailDetailsScreen() {
   });
 
   const images = trail?.trailImageDTO || [];
-
-  const Rating = () => {
-    if (!trail?.reviewDTO || trail.reviewDTO.length === 0) {
-      return (
-        <StarRatingDisplay
-          starSize={17}
-          color={theme.colors.tertiary}
-          rating={0}
-        />
-      );
-    }
-    const average =
-      trail.reviewDTO.reduce((sum: number, r: Review) => sum + r.grade, 0) /
-      trail.reviewDTO.length;
-
-    return (
-      <StarRatingDisplay
-        starSize={17}
-        color={theme.colors.tertiary}
-        rating={average}
-      />
-    );
-  };
 
   useEffect(() => {
     const backHandler = BackHandler.addEventListener(
@@ -81,8 +69,24 @@ export default function TrailDetailsScreen() {
     );
   }
 
+  const onPressScrollToRatings = () => {
+    surfaceToScrollToRef.current?.measure(
+      (_x, _y, _width, _height, _pageX, pageY) => {
+        scrollViewRef.current?.scrollTo({ y: pageY, animated: true });
+      },
+    );
+  };
+
+  const onPressScrollToTop = () => {
+    scrollViewRef.current?.scrollTo({
+      y: 0,
+      animated: true,
+    });
+  };
+
   return (
     <ScrollView
+      ref={scrollViewRef}
       contentContainerStyle={[
         s.container,
         { backgroundColor: theme.colors.background },
@@ -99,17 +103,53 @@ export default function TrailDetailsScreen() {
         }}
       />
       <View style={s.rating}>
-        <Rating />
-        <Link href={"/"}>
-          <Text style={[s.ratingLink, { color: theme.colors.tertiary }]}>
+        <Rating trailReviews={trail?.reviewDTO} starSize={17} />
+        <TouchableOpacity onPress={onPressScrollToRatings}>
+          <Text style={[s.text, { color: theme.colors.tertiary }]}>
             Läs betyg och kommentarer
           </Text>
-        </Link>
+        </TouchableOpacity>
       </View>
       {trail ? <TrailInfo trail={trail} /> : null}
       <UserBar />
       {trail ? <TrailDescription trail={trail} /> : null}
       {trail ? <TrailMap trail={trail} /> : null}
+      {trail?.reviewDTO?.length ? (
+        <Surface
+          ref={surfaceToScrollToRef}
+          elevation={4}
+          mode="elevated"
+          style={[s.surface, { backgroundColor: theme.colors.surface }]}
+        >
+          <Text style={[s.title, { color: theme.colors.tertiary }]}>
+            Recensioner
+          </Text>
+          <TrailReviews reviews={trail.reviewDTO} />
+        </Surface>
+      ) : (
+        <Surface
+          ref={surfaceToScrollToRef}
+          elevation={4}
+          mode="elevated"
+          style={[s.surface, { backgroundColor: theme.colors.surface }]}
+        >
+          <Text style={{ color: theme.colors.onBackground }}>
+            Det finns inga recensioner här ännu.
+          </Text>
+        </Surface>
+      )}
+      <Pressable style={s.backToTop} onPress={onPressScrollToTop}>
+        <Text
+          style={[
+            s.text,
+            {
+              color: theme.colors.tertiary,
+            },
+          ]}
+        >
+          Tillbaka till toppen
+        </Text>
+      </Pressable>
     </ScrollView>
   );
 }
@@ -131,4 +171,27 @@ const s = StyleSheet.create({
     fontSize: 13,
     textDecorationLine: "underline",
   },
+  surface: {
+    justifyContent: "center",
+    gap: 10,
+    borderRadius: 20,
+    padding: 15,
+  },
+  title: {
+    fontWeight: 700,
+    fontSize: 20,
+  },
+  backToTop: {
+    alignSelf: "center",
+    justifyContent: "center",
+    flexDirection: "row",
+  },
+  text: {
+    textDecorationLine: "underline",
+    fontSize: 15,
+  },
 });
+
+// https://reactnative.dev/docs/the-new-architecture/layout-measurements
+// https://stackoverflow.com/questions/67250477/how-to-scroll-to-a-particular-view-inside-react-native-scrollview-hierarchy
+// https://stackoverflow.com/questions/31883211/scroll-to-top-of-scrollview

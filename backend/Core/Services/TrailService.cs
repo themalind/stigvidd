@@ -46,6 +46,7 @@ public class TrailService(IDbContextFactory<StigViddDbContext> context, ILogger<
                     r.TrailReview,
                     r.Grade,
                     r.User!.NickName,
+                    r.CreatedAt,
                     r.Identifier,
                     r.Identifier,
                     r.ReviewImages?.Select(ri =>
@@ -115,6 +116,7 @@ public class TrailService(IDbContextFactory<StigViddDbContext> context, ILogger<
                 r.TrailReview ?? string.Empty,
                 r.Grade,
                 r.User!.NickName,
+                r.CreatedAt,
                 trail.Identifier,
                 r.User.Identifier,
                 r.ReviewImages?.Select(ri =>
