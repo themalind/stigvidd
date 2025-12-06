@@ -3,16 +3,16 @@
 public class TrailLinkDTO
 {
     public required string Identifier { get; set; }
-    public string? Link { get; set; }
-    public int TrailId { get; set; }
+    public required string Link { get; set; }
+    public required string TrailIdentifier { get; set; }
 
-    public static TrailLinkDTO Create(string identifier, string? link, int trailId)
+    public static TrailLinkDTO Create(string identifier, string link, string trailIdentifier)
     {
         return new TrailLinkDTO
         {
             Identifier = identifier,
             Link = link,
-            TrailId = trailId
+            TrailIdentifier = trailIdentifier
         };
     }
 }
