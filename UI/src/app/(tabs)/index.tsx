@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Image } from "expo-image";
 import React from "react";
 import { Dimensions, ScrollView, StyleSheet, Text, View } from "react-native";
-import { ActivityIndicator, useTheme } from "react-native-paper";
+import { useTheme } from "react-native-paper";
 
 const HEIGHT = Dimensions.get("screen").height;
 
