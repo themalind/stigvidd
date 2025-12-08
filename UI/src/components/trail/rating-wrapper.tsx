@@ -40,18 +40,16 @@ export default function RatingWrapper({
       mode="elevated"
       style={[s.surface, { backgroundColor: theme.colors.surface }]}
     >
-      <Text style={[s.title, { color: theme.colors.tertiary }]}>
-        Recensioner
-      </Text>
+      <View style={s.ratingSection}>
+        <Text style={[s.title, { color: theme.colors.tertiary }]}>
+          Recensioner
+        </Text>
+        <Text style={[s.ratingNumber, { color: theme.colors.tertiary }]}>
+          {`(${reviews.length})`}
+        </Text>
+      </View>
       <Rating trailReviews={trail?.reviewDTO} starSize={17} />
-      <View
-        style={{
-          flexDirection: "row",
-          gap: 15,
-          justifyContent: "flex-end",
-          alignItems: "flex-end",
-        }}
-      >
+      <View style={s.iconSection}>
         <MaterialIcons
           name="filter-list"
           size={25}
@@ -78,5 +76,20 @@ const s = StyleSheet.create({
   title: {
     fontWeight: 700,
     fontSize: 20,
+  },
+  iconSection: {
+    flexDirection: "row",
+    gap: 15,
+    justifyContent: "flex-end",
+    alignItems: "flex-end",
+  },
+  ratingNumber: {
+    fontSize: 15,
+  },
+  ratingSection: {
+    flexDirection: "row",
+    justifyContent: "flex-start",
+    alignItems: "center",
+    gap: 5,
   },
 });
