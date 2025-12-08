@@ -3,13 +3,12 @@ import ImageCarousel from "@/components/image-carousel";
 import ImageModal from "@/components/imageModal";
 import LoadingIndicator from "@/components/loading-indicator";
 import { Rating } from "@/components/trail/rating";
+import RatingWrapper from "@/components/trail/rating-wrapper";
 import TrailDescription from "@/components/trail/trail-description";
 import TrailInfo from "@/components/trail/trail-info";
 import TrailMap from "@/components/trail/trail-map";
-import TrailReviews from "@/components/trail/trail-reviews";
 import UserBar from "@/components/trail/user-action-bar/user-bar";
 import { useImage } from "@/providers/image-atoms";
-import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useRef } from "react";
@@ -22,7 +21,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { Surface, useTheme } from "react-native-paper";
+import { useTheme } from "react-native-paper";
 
 export default function TrailDetailsScreen() {
   const theme = useTheme();
@@ -116,49 +115,12 @@ export default function TrailDetailsScreen() {
       <UserBar />
       {trail ? <TrailDescription trail={trail} /> : null}
       {trail ? <TrailMap trail={trail} /> : null}
-      {trail?.reviewDTO?.length ? (
-        <Surface
-          ref={surfaceToScrollToRef}
-          elevation={4}
-          mode="elevated"
-          style={[s.surface, { backgroundColor: theme.colors.surface }]}
-        >
-          <Text style={[s.title, { color: theme.colors.tertiary }]}>
-            Recensioner
-          </Text>
-          <Rating trailReviews={trail?.reviewDTO} starSize={17} />
-          <View
-            style={{
-              flexDirection: "row",
-              gap: 15,
-              justifyContent: "flex-end",
-              alignItems: "flex-end",
-            }}
-          >
-            <MaterialIcons
-              name="filter-list"
-              size={25}
-              color={theme.colors.onBackground}
-            />
-            <Ionicons
-              name="create-outline"
-              size={25}
-              color={theme.colors.onBackground}
-            />
-          </View>
-          <TrailReviews reviews={trail.reviewDTO} />
-        </Surface>
-      ) : (
-        <Surface
-          elevation={4}
-          mode="elevated"
-          style={[s.surface, { backgroundColor: theme.colors.surface }]}
-        >
-          <Text style={{ color: theme.colors.onBackground }}>
-            Det finns inga recensioner här ännu.
-          </Text>
-        </Surface>
-      )}
+      {trail?.reviewDTO ? (
+        <RatingWrapper
+          trail={trail}
+          surfaceToScrollToRef={surfaceToScrollToRef}
+        />
+      ) : null}
       <Pressable style={s.backToTop} onPress={onPressScrollToTop}>
         <Text style={[s.text, { color: theme.colors.tertiary }]}>
           Tillbaka till toppen
@@ -184,16 +146,6 @@ const s = StyleSheet.create({
   ratingLink: {
     fontSize: 13,
     textDecorationLine: "underline",
-  },
-  surface: {
-    justifyContent: "center",
-    gap: 10,
-    borderRadius: 20,
-    padding: 15,
-  },
-  title: {
-    fontWeight: 700,
-    fontSize: 20,
   },
   backToTop: {
     alignSelf: "center",
