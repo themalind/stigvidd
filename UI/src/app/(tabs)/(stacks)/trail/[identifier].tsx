@@ -103,8 +103,13 @@ export default function TrailDetailsScreen() {
           showImage(image.imageUrl);
         }}
       />
-      <View style={s.rating}>
-        <Rating trailReviews={trail?.reviewDTO} starSize={17} />
+      <View style={s.ratingSection}>
+        <View style={s.rating}>
+          <Rating trailReviews={trail?.reviewDTO} starSize={17} />
+          <Text
+            style={[s.ratingNumber, { color: theme.colors.tertiary }]}
+          >{`(${trail?.reviewDTO?.length})`}</Text>
+        </View>
         <TouchableOpacity onPress={onPressScrollToRatings}>
           <Text style={[s.text, { color: theme.colors.tertiary }]}>
             Läs betyg och kommentarer
@@ -137,7 +142,8 @@ const s = StyleSheet.create({
   },
   rating: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "flex-start",
+    gap: 3,
   },
   sectionTitle: {
     fontWeight: "700",
@@ -154,7 +160,14 @@ const s = StyleSheet.create({
   },
   text: {
     textDecorationLine: "underline",
-    fontSize: 15,
+    fontSize: 13,
+  },
+  ratingNumber: {
+    fontSize: 13,
+  },
+  ratingSection: {
+    flexDirection: "row",
+    justifyContent: "space-between",
   },
 });
 
