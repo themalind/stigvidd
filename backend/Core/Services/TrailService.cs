@@ -86,7 +86,7 @@ public class TrailService(IDbContextFactory<StigViddDbContext> context, ILogger<
               .Include(t => t.TrailLinks)
               .Include(r => r.Reviews!)
                 .ThenInclude(r => r.User)
-              .Include(r => r.Reviews!)
+              .Include(r => r.Reviews!) // lägga till  = []; på entitet?
                 .ThenInclude(rv => rv.ReviewImages)
               .FirstOrDefaultAsync(t => t.Identifier == identifier, ctoken);
 
