@@ -1,4 +1,4 @@
-import { Trail, TrailImage, TrailOverviewViewModel } from "@/data/types";
+import { TrailImage, TrailOverviewViewModel } from "@/data/types";
 import React, { useCallback } from "react";
 import { useWindowDimensions, View } from "react-native";
 import Animated, {
@@ -7,7 +7,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { CarouselTile } from "./ImageCarouselTile";
 
-// Interface för komponentens props - använder generisk typ T som kan vara antingen Trail eller TrailImage
+// Interface för komponentens props - använder generisk typ T som kan vara antingen TrailOverviewViewModel eller TrailImage
 interface CarouselProps<T extends TrailOverviewViewModel | TrailImage> {
   data: T[]; // Array med objekt att visa i karusellen
   showText?: boolean; // Valfri prop - bestämmer om text ska visas på objekten

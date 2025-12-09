@@ -14,8 +14,8 @@ import Animated, {
 const { width } = Dimensions.get("screen");
 const ITEM_WIDTH = Math.round(width * 0.9); // Matchar ImageCarousel
 
-// Type guard för att kolla om item är Trail
-function isTrail(
+// Type guard för att kolla om item är TrailOverviewViewModel
+function isTrailOverviewViewModel(
   item: TrailOverviewViewModel | TrailImage,
 ): item is TrailOverviewViewModel {
   return "name" in item && "trailLength" in item;
@@ -66,7 +66,7 @@ function ImageCarouselTileInner<T extends TrailOverviewViewModel | TrailImage>({
 
   // Hämta bild-URL beroende på typ
   const getImageSource = () => {
-    if (isTrail(item)) {
+    if (isTrailOverviewViewModel(item)) {
       return item.trailImageDTOs && item.trailImageDTOs.length > 0
         ? item.trailImageDTOs[0].imageUrl
         : require("../assets/images/noImage.png");
@@ -78,7 +78,7 @@ function ImageCarouselTileInner<T extends TrailOverviewViewModel | TrailImage>({
   const handlePress = () => {
     if (onPress) {
       onPress(item);
-    } else if (isTrail(item)) {
+    } else if (isTrailOverviewViewModel(item)) {
       router.replace({
         pathname: "/(tabs)/(stacks)/trail/[identifier]",
         params: { identifier: item.identifier },
@@ -86,9 +86,9 @@ function ImageCarouselTileInner<T extends TrailOverviewViewModel | TrailImage>({
     }
   };
 
-  // Hämta text att visa (endast för Trail)
+  // Hämta text att visa (endast för TrailOverviewViewModel)
   const getDisplayText = () => {
-    if (!showText || !isTrail(item)) return null;
+    if (!showText || !isTrailOverviewViewModel(item)) return null;
     return `${item.name} ${item.trailLength} km`;
   };
 

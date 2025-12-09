@@ -86,7 +86,7 @@ public class TrailService(IDbContextFactory<StigViddDbContext> context, ILogger<
               .Include(t => t.TrailLinks)
               .Include(r => r.Reviews!)
                 .ThenInclude(r => r.User)
-              .Include(r => r.Reviews!) // lägga till  = []; på entitet?
+              .Include(r => r.Reviews!) // Man talar om för EF att vi även vill inkludera ReviewImages ingen nullkoll behövs här, nullforgiving är ok här. Att den ka vara null är oväsentligt.
                 .ThenInclude(rv => rv.ReviewImages)
               .FirstOrDefaultAsync(t => t.Identifier == identifier, ctoken);
 
