@@ -1,17 +1,17 @@
 ﻿namespace WebDataContracts.ResponseModels;
 
-public class TrailImageDTO
+public class TrailLinkResponse
 {
     public required string Identifier { get; set; }
-    public required string ImageUrl { get; set; }
+    public required string Link { get; set; }
     public required string TrailIdentifier { get; set; }
 
-    public static TrailImageDTO Create(string identifier, string imageUrl, string trailIdentifier)
+    public static TrailLinkResponse Create(string identifier, string link, string trailIdentifier)
     {
-        return new TrailImageDTO
+        return new TrailLinkResponse
         {
             Identifier = identifier,
-            ImageUrl = imageUrl,
+            Link = link,
             TrailIdentifier = trailIdentifier
         };
     }

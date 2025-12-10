@@ -30,5 +30,4 @@ internal class Program
         Console.WriteLine("Färdigt!");
         Console.ReadLine();
     }
-
 }

@@ -1,6 +1,6 @@
 ﻿namespace WebDataContracts.ResponseModels;
 
-public class ReviewDTO
+public class ReviewResponse
 {
     public required string Identifier { get; set; }
     public string? TrailReview { get; set; }
@@ -9,9 +9,9 @@ public class ReviewDTO
     public DateTime CreatedAt { get; set; }
     public required string UserIdentifier { get; set; }
     public required string TrailIdentifier { get; set; }
-    public IReadOnlyCollection<ReviewImageDTO>? ReviewImageDTOs { get; set; }
+    public IReadOnlyCollection<ReviewImageResponse>? ReviewImagesResponse { get; set; }
 
-    public static ReviewDTO Create(
+    public static ReviewResponse Create(
         string identifier,
         string? trailReview,
         float grade,
@@ -19,9 +19,9 @@ public class ReviewDTO
         DateTime createdAt,
         string trailIdentifier,
         string userIdentifier,
-        IEnumerable<ReviewImageDTO>? imageDTOs)
+        IEnumerable<ReviewImageResponse>? reviewImages)
     {
-        return new ReviewDTO
+        return new ReviewResponse
         {
             Identifier = identifier,
             TrailReview = trailReview,
@@ -30,9 +30,8 @@ public class ReviewDTO
             CreatedAt = createdAt,
             TrailIdentifier = trailIdentifier,
             UserIdentifier = userIdentifier,
-            ReviewImageDTOs = imageDTOs?.ToList(),
+            ReviewImagesResponse = reviewImages?.ToList(),
         };
     }
-
 }
 
