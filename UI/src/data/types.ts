@@ -9,16 +9,16 @@ export interface Trail {
   trailSymbolImage: string;
   description: string;
   coordinatesJson: string;
-  trailImageDTO?: TrailImage[];
-  trailLinkDTO?: TrailLink[];
-  reviewDTO?: Review[];
+  trailImagesResponse?: TrailImage[];
+  trailLinksResponse?: TrailLink[];
+  reviewsResponse?: Review[];
 }
 
 export interface TrailOverviewViewModel {
   identifier: string;
   name?: string;
   trailLength: number;
-  trailImageDTOs?: TrailImage[];
+  trailImagesResponse?: TrailImage[];
 }
 
 export interface TrailImage {
@@ -41,7 +41,7 @@ export interface Review {
   createdAt: Date;
   userIdentifier: string;
   trailIdentifier: string;
-  reviewImage?: ReviewImage[];
+  reviewImagesResponse?: ReviewImage[];
 }
 
 export interface ReviewImage {

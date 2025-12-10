@@ -16,7 +16,7 @@ export default function RatingWrapper({
   surfaceToScrollToRef,
 }: RatingProps) {
   const theme = useTheme();
-  const reviews = trail?.reviewDTO ?? [];
+  const reviews = trail?.reviewsResponse ?? [];
 
   if (reviews.length === 0) {
     return (
@@ -48,7 +48,7 @@ export default function RatingWrapper({
           {`(${reviews.length})`}
         </Text>
       </View>
-      <Rating trailReviews={trail?.reviewDTO} starSize={17} />
+      <Rating trailReviews={trail?.reviewsResponse} starSize={17} />
       <View style={s.iconSection}>
         <MaterialIcons
           name="filter-list"
