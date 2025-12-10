@@ -1,6 +1,6 @@
 ﻿namespace WebDataContracts.ResponseModels;
 
-public class TrailDTO
+public class TrailResponse
 {
     public required string Identifier { get; set; }
     public string? Name { get; set; }
@@ -12,11 +12,11 @@ public class TrailDTO
     public string? TrailSymbolImage { get; set; }
     public string? Description { get; set; }
     public string? CoordinatesJson { get; set; }
-    public IReadOnlyCollection<TrailImageDTO>? TrailImageDTO { get; set; }
-    public IReadOnlyCollection<TrailLinkDTO>? TrailLinkDTO { get; set; }
-    public IReadOnlyCollection<ReviewDTO>? ReviewDTO { get; set; }
+    public IReadOnlyCollection<TrailImageResponse>? trailImagesResponse { get; set; }
+    public IReadOnlyCollection<TrailLinkResponse>? TrailLinksResponse { get; set; }
+    public IReadOnlyCollection<ReviewResponse>? ReviewsResponse { get; set; }
 
-    public static TrailDTO Create(
+    public static TrailResponse Create(
         string identifier,
         string name,
         double trailLenght,
@@ -27,11 +27,11 @@ public class TrailDTO
         string trailSymbolImage,
         string description,
         string coordinatesJson,
-        IEnumerable<TrailImageDTO>? trailImagesDTO,
-        IEnumerable<TrailLinkDTO>? trailLinksDTO,
-        IEnumerable<ReviewDTO>? reviewDTOs)
+        IEnumerable<TrailImageResponse>? trailImages,
+        IEnumerable<TrailLinkResponse>? trailLinks,
+        IEnumerable<ReviewResponse>? reviews)
     {
-        return new TrailDTO
+        return new TrailResponse
         {
             Identifier = identifier,
             Name = name,
@@ -43,9 +43,9 @@ public class TrailDTO
             TrailSymbolImage = trailSymbolImage,
             Description = description,
             CoordinatesJson = coordinatesJson,
-            TrailImageDTO = trailImagesDTO?.ToList(),
-            TrailLinkDTO = trailLinksDTO?.ToList(),
-            ReviewDTO = reviewDTOs?.ToList(),
+            trailImagesResponse = trailImages?.ToList(),
+            TrailLinksResponse = trailLinks?.ToList(),
+            ReviewsResponse = reviews?.ToList(),
         };
     }
 }

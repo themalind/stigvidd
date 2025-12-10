@@ -12,7 +12,7 @@ public class TrailService(IDbContextFactory<StigViddDbContext> context, ILogger<
     private readonly IDbContextFactory<StigViddDbContext> _context = context;
     private readonly ILogger<TrailService> _logger = logger;
 
-    public async Task<IReadOnlyCollection<TrailDTO?>> GetTrailsAsync(CancellationToken ctoken)
+    public async Task<IReadOnlyCollection<TrailResponse?>> GetTrailsAsync(CancellationToken ctoken)
     {
         using var context = await _context.CreateDbContextAsync(ctoken);
 
@@ -24,24 +24,24 @@ public class TrailService(IDbContextFactory<StigViddDbContext> context, ILogger<
                 .ThenInclude(r => r.User)
              .ToListAsync(ctoken);
 
-        var dtoList = new List<TrailDTO>();
+        var dtoList = new List<TrailResponse>();
 
         foreach (var trail in trails)
         {
             var images = trail.TrailImages?.Select(ti => 
-                TrailImageDTO.Create(
+                TrailImageResponse.Create(
                     ti.Identifier, 
                     ti.ImageUrl, 
                     ti.Identifier));
 
             var links = trail.TrailLinks?.Select(tl => 
-            TrailLinkDTO.Create(
+            TrailLinkResponse.Create(
                 tl.Identifier, 
                 tl.Link, 
                 tl.Identifier));
 
             var reviews = trail.Reviews?.Select(r =>
-                ReviewDTO.Create(
+                ReviewResponse.Create(
                     r.Identifier,
                     r.TrailReview,
                     r.Grade,
@@ -50,12 +50,12 @@ public class TrailService(IDbContextFactory<StigViddDbContext> context, ILogger<
                     r.Identifier,
                     r.Identifier,
                     r.ReviewImages?.Select(ri =>
-                        ReviewImageDTO.Create(
+                        ReviewImageResponse.Create(
                             ri.Identifier,
                             ri.ImageUrl,
                             ri.Review!.Identifier))));
 
-            var trailDto = TrailDTO.Create
+            var trailDto = TrailResponse.Create
             (trail.Identifier,
             trail.Name,
             trail.TrailLength,
@@ -76,7 +76,7 @@ public class TrailService(IDbContextFactory<StigViddDbContext> context, ILogger<
         return dtoList;
     }
 
-    public async Task<TrailDTO?> GetTrailByIdentifierAsync(string identifier, CancellationToken ctoken)
+    public async Task<TrailResponse?> GetTrailByIdentifierAsync(string identifier, CancellationToken ctoken)
     {
         using var context = await _context.CreateDbContextAsync(ctoken);
 
@@ -99,19 +99,19 @@ public class TrailService(IDbContextFactory<StigViddDbContext> context, ILogger<
         }
 
         var images = trail.TrailImages?.Select(ti =>
-            TrailImageDTO.Create(
+            TrailImageResponse.Create(
                 ti.Identifier,
                 ti.ImageUrl,
                 trail.Identifier)) ?? null;
 
         var links = trail.TrailLinks?.Select(tl =>
-            TrailLinkDTO.Create(
+            TrailLinkResponse.Create(
                 tl.Identifier,
                 tl.Link,
                 trail.Identifier)) ?? null;
 
         var reviews = trail.Reviews?.Select(r =>
-            ReviewDTO.Create(
+            ReviewResponse.Create(
                 r.Identifier,
                 r.TrailReview ?? string.Empty,
                 r.Grade,
@@ -120,12 +120,12 @@ public class TrailService(IDbContextFactory<StigViddDbContext> context, ILogger<
                 trail.Identifier,
                 r.User.Identifier,
                 r.ReviewImages?.Select(ri =>
-                    ReviewImageDTO.Create(
+                    ReviewImageResponse.Create(
                         ri.Identifier,
                         ri.ImageUrl,
                         ri.Review!.Identifier)))) ?? null;
 
-        var trailDto = TrailDTO.Create
+        var trailDto = TrailResponse.Create
         (trail.Identifier,
         trail.Name,
         trail.TrailLength,
@@ -154,8 +154,8 @@ public class TrailService(IDbContextFactory<StigViddDbContext> context, ILogger<
                 Identifier = trail.Identifier,
                 Name = trail.Name,
                 TrailLength = trail.TrailLength,
-                TrailImageDTOs = trail.TrailImages!
-                    .Select(ti => TrailImageDTO.Create(ti.Identifier, ti.ImageUrl, ti.Trail!.Identifier))
+                TrailImagesResponse = trail.TrailImages!
+                    .Select(ti => TrailImageResponse.Create(ti.Identifier, ti.ImageUrl, ti.Trail!.Identifier))
                     .Take(1)
                     .ToList()
             })

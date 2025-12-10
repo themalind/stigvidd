@@ -13,7 +13,7 @@ public class TrailController(ITrailService service, ILogger<TrailController> log
     private readonly ILogger<TrailController> _logger = logger;
 
     [HttpGet]
-    public async Task<ActionResult<IReadOnlyCollection<TrailDTO>>> GetAllTrails(CancellationToken ctoken)
+    public async Task<ActionResult<IReadOnlyCollection<TrailResponse>>> GetAllTrails(CancellationToken ctoken)
     {
         var trails = await _service.GetTrailsAsync(ctoken);
 
@@ -29,7 +29,7 @@ public class TrailController(ITrailService service, ILogger<TrailController> log
     }
 
     [Route("{identifier}")]
-    public async Task<ActionResult<TrailDTO?>> GetTrailByIdentifierAsync(string identifier, CancellationToken ctoken)
+    public async Task<ActionResult<TrailResponse?>> GetTrailByIdentifierAsync(string identifier, CancellationToken ctoken)
     {
         var trail = await _service.GetTrailByIdentifierAsync(identifier, ctoken);
 

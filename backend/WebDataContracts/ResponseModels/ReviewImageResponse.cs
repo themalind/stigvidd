@@ -1,18 +1,18 @@
 ﻿namespace WebDataContracts.ResponseModels;
 
-public class ReviewImageDTO
+public class ReviewImageResponse
 {
     public required string Identifier { get; set; }
     public required string ImageUrl { get; set; }
     public required string ReviewIdentifier { get; set; }
 
-    public static ReviewImageDTO Create(
+    public static ReviewImageResponse Create(
         string identifier,
         string imageUrl,
         string reviewIdentifier
         )
     {
-        return new ReviewImageDTO
+        return new ReviewImageResponse
         {
             Identifier = identifier,
             ImageUrl = imageUrl,
