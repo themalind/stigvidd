@@ -67,8 +67,8 @@ function ImageCarouselTileInner<T extends TrailOverviewViewModel | TrailImage>({
   // Hämta bild-URL beroende på typ
   const getImageSource = () => {
     if (isTrailOverviewViewModel(item)) {
-      return item.trailImageDTOs && item.trailImageDTOs.length > 0
-        ? item.trailImageDTOs[0].imageUrl
+      return item.trailImagesResponse && item.trailImagesResponse.length > 0
+        ? item.trailImagesResponse[0].imageUrl
         : require("../assets/images/noImage.png");
     } else {
       return item.imageUrl || require("../assets/images/noImage.png");

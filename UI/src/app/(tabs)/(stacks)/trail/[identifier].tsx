@@ -1,4 +1,4 @@
-import { fetchTrailByIdentifier } from "@/api/trails";
+import { getTrailByIdentifier } from "@/api/trails";
 import ImageCarousel from "@/components/image-carousel";
 import ImageModal from "@/components/imageModal";
 import LoadingIndicator from "@/components/loading-indicator";
@@ -41,11 +41,11 @@ export default function TrailDetailsScreen() {
     error,
   } = useQuery({
     queryKey: ["trail", normalizedIdentifier],
-    queryFn: () => fetchTrailByIdentifier(normalizedIdentifier),
+    queryFn: () => getTrailByIdentifier(normalizedIdentifier),
     enabled: !!normalizedIdentifier && typeof normalizedIdentifier === "string",
   });
 
-  const images = trail?.trailImageDTO || [];
+  const images = trail?.trailImagesResponse || [];
 
   useEffect(() => {
     const backHandler = BackHandler.addEventListener(
@@ -105,10 +105,10 @@ export default function TrailDetailsScreen() {
       />
       <View style={s.ratingSection}>
         <View style={s.rating}>
-          <Rating trailReviews={trail?.reviewDTO} starSize={17} />
+          <Rating trailReviews={trail?.reviewsResponse} starSize={17} />
           <Text
             style={[s.ratingNumber, { color: theme.colors.tertiary }]}
-          >{`(${trail?.reviewDTO?.length})`}</Text>
+          >{`(${trail?.reviewsResponse?.length})`}</Text>
         </View>
         <TouchableOpacity onPress={onPressScrollToRatings}>
           <Text style={[s.text, { color: theme.colors.tertiary }]}>
@@ -120,7 +120,7 @@ export default function TrailDetailsScreen() {
       <UserBar />
       {trail ? <TrailDescription trail={trail} /> : null}
       {trail ? <TrailMap trail={trail} /> : null}
-      {trail?.reviewDTO ? (
+      {trail?.reviewsResponse ? (
         <RatingWrapper
           trail={trail}
           surfaceToScrollToRef={surfaceToScrollToRef}
