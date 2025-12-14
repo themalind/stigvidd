@@ -1,4 +1,4 @@
-import { TrailImage, TrailOverviewViewModel } from "@/data/types";
+import { TrailImage, TrailOverview } from "@/data/types";
 import React, { useCallback } from "react";
 import { useWindowDimensions, View } from "react-native";
 import Animated, {
@@ -8,16 +8,14 @@ import Animated, {
 import { CarouselTile } from "./ImageCarouselTile";
 
 // Interface för komponentens props - använder generisk typ T som kan vara antingen TrailOverviewViewModel eller TrailImage
-interface CarouselProps<T extends TrailOverviewViewModel | TrailImage> {
+interface CarouselProps<T extends TrailOverview | TrailImage> {
   data: T[]; // Array med objekt att visa i karusellen
   showText?: boolean; // Valfri prop - bestämmer om text ska visas på objekten
   onItemPress?: (item: T) => void; // Valfri callback-funktion som körs när användaren trycker på ett objekt
 }
 
 // Huvudkomponenten - en generisk bildkarusell som fungerar med olika datatyper
-export default function ImageCarousel<
-  T extends TrailOverviewViewModel | TrailImage,
->({
+export default function ImageCarousel<T extends TrailOverview | TrailImage>({
   data,
   showText = true, // Default-värde: visa text
   onItemPress,

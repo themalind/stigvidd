@@ -14,7 +14,7 @@ export interface Trail {
   reviewsResponse?: Review[];
 }
 
-export interface TrailOverviewViewModel {
+export interface TrailOverview {
   identifier: string;
   name?: string;
   trailLength: number;
@@ -24,13 +24,11 @@ export interface TrailOverviewViewModel {
 export interface TrailImage {
   identifier: string;
   imageUrl: string;
-  trailIdentifier: string;
 }
 
 export interface TrailLink {
   identifier: string;
   link: string;
-  trailIdentifier: string;
 }
 
 export interface Review {
@@ -47,7 +45,6 @@ export interface Review {
 export interface ReviewImage {
   identifier: string;
   ImageUrl: string;
-  reviewIdentifier: string;
 }
 
 export interface User {

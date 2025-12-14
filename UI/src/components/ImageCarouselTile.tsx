@@ -1,4 +1,4 @@
-import { TrailImage, TrailOverviewViewModel } from "@/data/types";
+import { TrailImage, TrailOverview } from "@/data/types";
 import { Image as ExpoImage } from "expo-image";
 import { router } from "expo-router";
 import React from "react";
@@ -16,13 +16,13 @@ const ITEM_WIDTH = Math.round(width * 0.9); // Matchar ImageCarousel
 
 // Type guard för att kolla om item är TrailOverviewViewModel
 function isTrailOverviewViewModel(
-  item: TrailOverviewViewModel | TrailImage,
-): item is TrailOverviewViewModel {
+  item: TrailOverview | TrailImage,
+): item is TrailOverview {
   return "name" in item && "trailLength" in item;
 }
 
 // Interface för tile-props
-interface CarouselTileProps<T extends TrailOverviewViewModel | TrailImage> {
+interface CarouselTileProps<T extends TrailOverview | TrailImage> {
   item: T;
   index: number;
   scrollX: SharedValue<number>;
@@ -33,7 +33,7 @@ interface CarouselTileProps<T extends TrailOverviewViewModel | TrailImage> {
   onPress?: (item: T) => void;
 }
 
-function ImageCarouselTileInner<T extends TrailOverviewViewModel | TrailImage>({
+function ImageCarouselTileInner<T extends TrailOverview | TrailImage>({
   item,
   index,
   scrollX,
@@ -136,7 +136,7 @@ export const CarouselTile = React.memo(ImageCarouselTileInner, (prev, next) => {
     prev.itemWidth === next.itemWidth && prev.itemSpacing === next.itemSpacing;
   const sameShowText = prev.showText === next.showText;
   return sameIndex && sameKey && sameLayout && sameShowText;
-}) as <T extends TrailOverviewViewModel | TrailImage>(
+}) as <T extends TrailOverview | TrailImage>(
   props: CarouselTileProps<T>,
 ) => React.ReactElement;
 
