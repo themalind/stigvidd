@@ -12,8 +12,8 @@ public class Trail : BaseEntity
     public string Description { get; set; } = string.Empty;
     public string? CoordinatesJson { get; set; }
 
-    public IReadOnlyCollection<TrailImage>? TrailImages { get; set; }
-    public IReadOnlyCollection<Review>? Reviews { get; set; }
-    public IReadOnlyCollection<TrailLink>? TrailLinks { get; set; }
+    public ICollection<TrailImage>? TrailImages { get; set; }
+    public ICollection<Review>? Reviews { get; set; }
+    public ICollection<TrailLink>? TrailLinks { get; set; }
 }
 

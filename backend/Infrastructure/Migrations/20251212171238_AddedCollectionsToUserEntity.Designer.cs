@@ -4,6 +4,7 @@ using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(StigViddDbContext))]
-    partial class StigViddDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251212171238_AddedCollectionsToUserEntity")]
+    partial class AddedCollectionsToUserEntity
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -182,7 +185,17 @@ namespace Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("UserId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("UserId1")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("UserId1");
 
                     b.ToTable("Trails");
                 });
@@ -282,36 +295,6 @@ namespace Infrastructure.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("UserFavorites", b =>
-                {
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("TrailId")
-                        .HasColumnType("int");
-
-                    b.HasKey("UserId", "TrailId");
-
-                    b.HasIndex("TrailId");
-
-                    b.ToTable("UserFavorites", (string)null);
-                });
-
-            modelBuilder.Entity("UserWishList", b =>
-                {
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("TrailId")
-                        .HasColumnType("int");
-
-                    b.HasKey("UserId", "TrailId");
-
-                    b.HasIndex("TrailId");
-
-                    b.ToTable("UserWishList", (string)null);
-                });
-
             modelBuilder.Entity("Infrastructure.Data.Entities.Review", b =>
                 {
                     b.HasOne("Infrastructure.Data.Entities.Trail", "Trail")
@@ -353,6 +336,17 @@ namespace Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Infrastructure.Data.Entities.Trail", b =>
+                {
+                    b.HasOne("Infrastructure.Data.Entities.User", null)
+                        .WithMany("MyFavorites")
+                        .HasForeignKey("UserId");
+
+                    b.HasOne("Infrastructure.Data.Entities.User", null)
+                        .WithMany("MyWishList")
+                        .HasForeignKey("UserId1");
+                });
+
             modelBuilder.Entity("Infrastructure.Data.Entities.TrailImage", b =>
                 {
                     b.HasOne("Infrastructure.Data.Entities.Trail", "Trail")
@@ -375,36 +369,6 @@ namespace Infrastructure.Migrations
                     b.Navigation("Trail");
                 });
 
-            modelBuilder.Entity("UserFavorites", b =>
-                {
-                    b.HasOne("Infrastructure.Data.Entities.Trail", null)
-                        .WithMany()
-                        .HasForeignKey("TrailId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Infrastructure.Data.Entities.User", null)
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("UserWishList", b =>
-                {
-                    b.HasOne("Infrastructure.Data.Entities.Trail", null)
-                        .WithMany()
-                        .HasForeignKey("TrailId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Infrastructure.Data.Entities.User", null)
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("Infrastructure.Data.Entities.Review", b =>
                 {
                     b.Navigation("ReviewImages");
@@ -421,7 +385,11 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Infrastructure.Data.Entities.User", b =>
                 {
+                    b.Navigation("MyFavorites");
+
                     b.Navigation("MyStatistics");
+
+                    b.Navigation("MyWishList");
                 });
 #pragma warning restore 612, 618
         }

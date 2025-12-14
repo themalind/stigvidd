@@ -1,12 +1,14 @@
-﻿using Infrastructure.Data;
+﻿using Core.Interfaces;
+using Core.Services;
+using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Infrastructure;
+namespace Core;
 
 public static class ServiceCollectionExtensions
 {
-    public static void AddInfrastructure(this IServiceCollection services, string connectionString)
+    public static void AddStigVidd(this IServiceCollection services, string connectionString)
     {
         if (string.IsNullOrWhiteSpace(connectionString))
         {
@@ -15,6 +17,10 @@ public static class ServiceCollectionExtensions
 
         services.AddDbContextFactory<StigViddDbContext>(o => o.UseSqlServer(connectionString));
 
+        // Bra att börja med transient. Märker man att en annan livstid behövs är det lättare att ändra till längre livstid än kortare.
+        // Transient: En ny instans skapas varje gång tjänsten begärs. Garbage collected när den inte längre används.
+        services.AddTransient<ITrailService, TrailService>(); 
+        services.AddTransient<IUserService, UserService>();
     }
 }
 
