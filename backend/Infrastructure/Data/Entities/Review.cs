@@ -8,7 +8,7 @@ public class Review : BaseEntity
     public int UserId { get; set; }
 
     public Trail? Trail { get; set; }
-    public IReadOnlyCollection<ReviewImage>? ReviewImages { get; set; }
+    public ICollection<ReviewImage>? ReviewImages { get; set; }
     public User? User { get; set; }
 }
 

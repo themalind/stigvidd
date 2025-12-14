@@ -1,7 +1,6 @@
 ﻿using Core.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using WebDataContracts.ResponseModels;
-using WebDataContracts.ViewModels;
 
 namespace StigviddAPI.Controllers;
 
@@ -46,7 +45,7 @@ public class TrailController(ITrailService service, ILogger<TrailController> log
 
     [HttpGet]
     [Route("popular")]
-    public async Task<ActionResult<IReadOnlyCollection<TrailOverviewViewModel>>> GetPopularTrails(CancellationToken ctoken)
+    public async Task<ActionResult<IReadOnlyCollection<TrailOverviewResponse>>> GetPopularTrails(CancellationToken ctoken)
     {
         var trails = await _service.GetPopularTrailOverviewsAsync(ctoken);
 

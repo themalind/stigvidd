@@ -3,7 +3,6 @@ using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using WebDataContracts.ResponseModels;
-using WebDataContracts.ViewModels;
 
 namespace Core.Services;
 
@@ -28,17 +27,15 @@ public class TrailService(IDbContextFactory<StigViddDbContext> context, ILogger<
 
         foreach (var trail in trails)
         {
-            var images = trail.TrailImages?.Select(ti => 
+            var images = trail.TrailImages?.Select(ti =>
                 TrailImageResponse.Create(
-                    ti.Identifier, 
-                    ti.ImageUrl, 
-                    ti.Identifier));
+                    ti.Identifier,
+                    ti.ImageUrl));
 
-            var links = trail.TrailLinks?.Select(tl => 
+            var links = trail.TrailLinks?.Select(tl =>
             TrailLinkResponse.Create(
-                tl.Identifier, 
-                tl.Link, 
-                tl.Identifier));
+                tl.Identifier,
+                tl.Link));
 
             var reviews = trail.Reviews?.Select(r =>
                 ReviewResponse.Create(
@@ -52,8 +49,7 @@ public class TrailService(IDbContextFactory<StigViddDbContext> context, ILogger<
                     r.ReviewImages?.Select(ri =>
                         ReviewImageResponse.Create(
                             ri.Identifier,
-                            ri.ImageUrl,
-                            ri.Review!.Identifier))));
+                            ri.ImageUrl))));
 
             var trailDto = TrailResponse.Create
             (trail.Identifier,
@@ -101,14 +97,12 @@ public class TrailService(IDbContextFactory<StigViddDbContext> context, ILogger<
         var images = trail.TrailImages?.Select(ti =>
             TrailImageResponse.Create(
                 ti.Identifier,
-                ti.ImageUrl,
-                trail.Identifier)) ?? null;
+                ti.ImageUrl)) ?? null;
 
         var links = trail.TrailLinks?.Select(tl =>
             TrailLinkResponse.Create(
                 tl.Identifier,
-                tl.Link,
-                trail.Identifier)) ?? null;
+                tl.Link)) ?? null;
 
         var reviews = trail.Reviews?.Select(r =>
             ReviewResponse.Create(
@@ -122,8 +116,7 @@ public class TrailService(IDbContextFactory<StigViddDbContext> context, ILogger<
                 r.ReviewImages?.Select(ri =>
                     ReviewImageResponse.Create(
                         ri.Identifier,
-                        ri.ImageUrl,
-                        ri.Review!.Identifier)))) ?? null;
+                        ri.ImageUrl)))) ?? null;
 
         var trailDto = TrailResponse.Create
         (trail.Identifier,
@@ -144,18 +137,18 @@ public class TrailService(IDbContextFactory<StigViddDbContext> context, ILogger<
         return trailDto;
     }
 
-    public async Task<IReadOnlyCollection<TrailOverviewViewModel?>> GetPopularTrailOverviewsAsync(CancellationToken ctoken)
+    public async Task<IReadOnlyCollection<TrailOverviewResponse?>> GetPopularTrailOverviewsAsync(CancellationToken ctoken)
     {
         using var context = await _context.CreateDbContextAsync(ctoken);
 
         var trails = await context.Trails
-            .Select(trail => new TrailOverviewViewModel
+            .Select(trail => new TrailOverviewResponse
             {
                 Identifier = trail.Identifier,
                 Name = trail.Name,
                 TrailLength = trail.TrailLength,
                 TrailImagesResponse = trail.TrailImages!
-                    .Select(ti => TrailImageResponse.Create(ti.Identifier, ti.ImageUrl, ti.Trail!.Identifier))
+                    .Select(ti => TrailImageResponse.Create(ti.Identifier, ti.ImageUrl))
                     .Take(1)
                     .ToList()
             })

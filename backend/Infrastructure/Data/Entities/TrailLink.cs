@@ -1,6 +1,4 @@
-﻿using System.Text.Json.Serialization;
-
-namespace Infrastructure.Data.Entities;
+﻿namespace Infrastructure.Data.Entities;
 
 public class TrailLink : BaseEntity
 {
