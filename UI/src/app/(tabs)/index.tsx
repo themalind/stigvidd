@@ -17,6 +17,7 @@ export default function HomeScreen() {
     queryKey: ["trails", "popular"],
     queryFn: getPopularTrails,
   });
+
   // Fixa
   // LOG  VirtualizedList: You have a large list that is slow to update
   // - make sure your renderItem function renders components that follow React performance best practices like PureComponent,

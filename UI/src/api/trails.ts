@@ -1,4 +1,4 @@
-import { Trail, TrailOverviewViewModel } from "@/data/types";
+import { Trail, TrailOverview } from "@/data/types";
 
 export async function getTrails(): Promise<Trail[]> {
   try {
@@ -14,10 +14,10 @@ export async function getTrails(): Promise<Trail[]> {
   }
 }
 
-export async function getPopularTrails(): Promise<TrailOverviewViewModel[]> {
+export async function getPopularTrails(): Promise<TrailOverview[]> {
   try {
     const response = await fetch(
-      "http://10.239.183.219:5265/api/v1/Trail/popular",
+      "http://10.10.240.140:5265/api/v1/Trail/popular",
     );
 
     if (!response.ok) {
@@ -33,7 +33,7 @@ export async function getPopularTrails(): Promise<TrailOverviewViewModel[]> {
 export async function getTrailByIdentifier(identifier: string): Promise<Trail> {
   try {
     const response = await fetch(
-      `http://10.239.183.219:5265/api/v1/Trail/${identifier}`,
+      `http://10.10.240.140:5265/api/v1/Trail/${identifier}`,
     );
 
     if (!response.ok) {
