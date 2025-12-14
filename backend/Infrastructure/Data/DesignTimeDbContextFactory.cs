@@ -10,7 +10,7 @@ namespace Infrastructure.Data
         public StigViddDbContext CreateDbContext(string[] args)
         {
             var optionsBuilder = new DbContextOptionsBuilder<StigViddDbContext>();
-            optionsBuilder.UseSqlServer("");
+            optionsBuilder.UseSqlServer("Server=theresedb.swedencentral.cloudapp.azure.com;Database=StigVidd;User Id=therese;Password=RgAgJsLm9J8erj3QD28whc;Encrypt=False;TrustServercertificate=True;");
 
             return new StigViddDbContext(optionsBuilder.Options);
         }

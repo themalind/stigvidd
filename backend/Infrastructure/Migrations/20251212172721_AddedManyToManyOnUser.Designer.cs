@@ -4,6 +4,7 @@ using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(StigViddDbContext))]
-    partial class StigViddDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251212172721_AddedManyToManyOnUser")]
+    partial class AddedManyToManyOnUser
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -282,34 +285,34 @@ namespace Infrastructure.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("UserFavorites", b =>
+            modelBuilder.Entity("TrailUser", b =>
                 {
+                    b.Property<int>("MyWishListId")
+                        .HasColumnType("int");
+
                     b.Property<int>("UserId")
                         .HasColumnType("int");
 
-                    b.Property<int>("TrailId")
-                        .HasColumnType("int");
+                    b.HasKey("MyWishListId", "UserId");
 
-                    b.HasKey("UserId", "TrailId");
+                    b.HasIndex("UserId");
 
-                    b.HasIndex("TrailId");
-
-                    b.ToTable("UserFavorites", (string)null);
+                    b.ToTable("UserWishLists", (string)null);
                 });
 
-            modelBuilder.Entity("UserWishList", b =>
+            modelBuilder.Entity("TrailUser1", b =>
                 {
-                    b.Property<int>("UserId")
+                    b.Property<int>("MyFavoritesId")
                         .HasColumnType("int");
 
-                    b.Property<int>("TrailId")
+                    b.Property<int>("User1Id")
                         .HasColumnType("int");
 
-                    b.HasKey("UserId", "TrailId");
+                    b.HasKey("MyFavoritesId", "User1Id");
 
-                    b.HasIndex("TrailId");
+                    b.HasIndex("User1Id");
 
-                    b.ToTable("UserWishList", (string)null);
+                    b.ToTable("UserFavorites", (string)null);
                 });
 
             modelBuilder.Entity("Infrastructure.Data.Entities.Review", b =>
@@ -375,11 +378,11 @@ namespace Infrastructure.Migrations
                     b.Navigation("Trail");
                 });
 
-            modelBuilder.Entity("UserFavorites", b =>
+            modelBuilder.Entity("TrailUser", b =>
                 {
                     b.HasOne("Infrastructure.Data.Entities.Trail", null)
                         .WithMany()
-                        .HasForeignKey("TrailId")
+                        .HasForeignKey("MyWishListId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -390,17 +393,17 @@ namespace Infrastructure.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("UserWishList", b =>
+            modelBuilder.Entity("TrailUser1", b =>
                 {
                     b.HasOne("Infrastructure.Data.Entities.Trail", null)
                         .WithMany()
-                        .HasForeignKey("TrailId")
+                        .HasForeignKey("MyFavoritesId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("Infrastructure.Data.Entities.User", null)
                         .WithMany()
-                        .HasForeignKey("UserId")
+                        .HasForeignKey("User1Id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
