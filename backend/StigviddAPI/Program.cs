@@ -1,11 +1,13 @@
 using Core;
+using SharpGrip.FluentValidation.AutoValidation.Mvc.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
 builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+builder.Services.AddFluentValidationAutoValidation();
+
 builder.Services.AddOpenApi();
 
 var connectionString = builder.Configuration.GetConnectionString("StigVidd")

@@ -1,12 +1,10 @@
-﻿using WebDataContracts.ResponseModels;
+﻿using WebDataContracts.ResponseModels.Trail;
 
 namespace Core.Interfaces;
 
 public interface ITrailService
 {
-    Task<IReadOnlyCollection<TrailResponse?>> GetTrailsAsync(CancellationToken ctoken);
-    Task<TrailResponse?> GetTrailByIdentifierAsync(string identifier, CancellationToken ctoken);
-    Task<IReadOnlyCollection<TrailOverviewResponse?>> GetPopularTrailOverviewsAsync(CancellationToken ctoken);
-
+    Task<Result<TrailResponse?>> GetTrailByIdentifierAsync(string identifier, CancellationToken ctoken);
+    Task<Result<IReadOnlyCollection<TrailOverviewResponse?>>> GetPopularTrailOverviewsAsync(CancellationToken ctoken);
 }
 

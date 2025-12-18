@@ -1,63 +1,47 @@
 ﻿using Core.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using WebDataContracts.ResponseModels;
+using WebDataContracts.ResponseModels.Trail;
 
 namespace StigviddAPI.Controllers;
 
 [ApiController]
 [Route("api/v1/[controller]")]
-public class TrailController(ITrailService service, ILogger<TrailController> logger) : Controller
+public class TrailController(ITrailService service, ILogger<TrailController> logger) : StigViddController
 {
     private readonly ITrailService _service = service;
     private readonly ILogger<TrailController> _logger = logger;
 
-    [HttpGet]
-    public async Task<ActionResult<IReadOnlyCollection<TrailResponse>>> GetAllTrails(CancellationToken ctoken)
-    {
-        var trails = await _service.GetTrailsAsync(ctoken);
-
-        if (trails is null)
-        {
-            _logger.LogInformation(
-                "TrailController -> GetAllTrails: Failed to fetch any trails. Trails are null");
-
-            return NotFound();
-        }
-
-        return Ok(trails);
-    }
-
     [Route("{identifier}")]
     public async Task<ActionResult<TrailResponse?>> GetTrailByIdentifierAsync(string identifier, CancellationToken ctoken)
     {
-        var trail = await _service.GetTrailByIdentifierAsync(identifier, ctoken);
+        var result = await _service.GetTrailByIdentifierAsync(identifier, ctoken);
 
-        if (trail is null)
+        if (!result.Success && result.Message != null)
         {
             _logger.LogInformation(
-                "TrailController -> GetTrailByIdentifierAsync: Trail with identifier: {identifier} not found.", identifier);
+                "GetTrailByIdentifierAsync: Trail with identifier: {identifier} not found.", identifier);
 
-            return NotFound();
+            return ToActionResult(result.Message);
         }
 
-        return Ok(trail);
+        return Ok(result.Value);
     }
 
     [HttpGet]
     [Route("popular")]
-    public async Task<ActionResult<IReadOnlyCollection<TrailOverviewResponse>>> GetPopularTrails(CancellationToken ctoken)
+    public async Task<ActionResult<IReadOnlyCollection<TrailOverviewResponse?>>> GetPopularTrailsAsync(CancellationToken ctoken)
     {
-        var trails = await _service.GetPopularTrailOverviewsAsync(ctoken);
+        var result = await _service.GetPopularTrailOverviewsAsync(ctoken);
 
-        if (trails is null)
+        if (!result.Success && result.Message != null)
         {
             _logger.LogInformation(
-               "TrailController -> GetPopularTrails: Failed to fetch popular trails. Trails are null");
+               "GetPopularTrailsAsync: Failed to fetch popular trails. Trails are null");
 
-            return NotFound();
+            return ToActionResult(result.Message);
         }
 
-        return Ok(trails);
+        return Ok(result.Value);
     }
 }
 

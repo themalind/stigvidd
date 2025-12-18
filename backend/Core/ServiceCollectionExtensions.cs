@@ -1,8 +1,11 @@
 ﻿using Core.Interfaces;
 using Core.Services;
+using Core.Validators;
+using FluentValidation;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using WebDataContracts.RequestModels;
 
 namespace Core;
 
@@ -21,6 +24,8 @@ public static class ServiceCollectionExtensions
         // Transient: En ny instans skapas varje gång tjänsten begärs. Garbage collected när den inte längre används.
         services.AddTransient<ITrailService, TrailService>(); 
         services.AddTransient<IUserService, UserService>();
+
+        services.AddScoped<IValidator<AddToUserFavoritesRequest>, AddFavoriteValidator>();
     }
 }
 
