@@ -104,6 +104,27 @@ public class UserControllerIntegrationTests : IClassFixture<StigViddWebApplicati
     }
 
     [Fact]
+    public async Task AddUserFavorite_WithInvalidIdentifierFormat_ReturnsBadRequest()
+    {
+        // Arrange
+        var userRequest = new AddToUserFavoritesRequest
+        {
+            UserIdentifier = "b6a7-4b8c-9d01f2a3b4c5d6e",
+            TrailIdentifier = "55e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a"
+        };
+
+        var request = new HttpRequestMessage(HttpMethod.Post, "/api/v1/user/favorites");
+        request.Content = JsonContent.Create(userRequest);
+
+        // Act
+
+        var response = await _client.SendAsync(request);
+        // Assert
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
     public async Task AddUserFavorite_WithInvalidUser_ReturnsNotFound()
     {
         // Arrange
@@ -339,6 +360,27 @@ public class UserControllerIntegrationTests : IClassFixture<StigViddWebApplicati
         // Assert
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task AddUserWislist_WithInvalidIdentifierFormat_ReturnsBadRequest()
+    {
+        // Arrange
+        var userRequest = new AddToUserWishlistRequest
+        {
+            UserIdentifier = "b6a7-4b8c-9d01f2a3b4c5d6e",
+            TrailIdentifier = "55e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a"
+        };
+
+        var request = new HttpRequestMessage(HttpMethod.Post, "/api/v1/user/wishlist");
+        request.Content = JsonContent.Create(userRequest);
+
+        // Act
+
+        var response = await _client.SendAsync(request);
+        // Assert
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
     [Fact]
