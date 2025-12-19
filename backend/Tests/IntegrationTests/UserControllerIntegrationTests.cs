@@ -1,7 +1,6 @@
 ﻿using System.Net;
 using System.Net.Http.Json;
 using WebDataContracts.RequestModels;
-using WebDataContracts.ResponseModels.Trail;
 using WebDataContracts.ResponseModels.User;
 
 namespace IntegrationTests;
