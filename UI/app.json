@@ -37,6 +37,13 @@
             "backgroundColor": "#68AE82"
           }
         }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Tillåt att $(PRODUCT_NAME) använder din plats.",
+          "locationWhenInUsePermission": "Tillåt att $(PRODUCT_NAME) använder din plats när appen används."
+        }
       ]
     ],
     "experiments": {

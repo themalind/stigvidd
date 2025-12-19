@@ -52,3 +52,8 @@ export interface User {
   nickName: string;
   email: string;
 }
+
+export interface Coordinate {
+  latitude: number;
+  longitude: number;
+}
