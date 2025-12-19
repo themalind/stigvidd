@@ -1,7 +1,7 @@
 ﻿using Core.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using WebDataContracts.RequestModels;
-using WebDataContracts.ResponseModels.Trail;
+using WebDataContracts.ResponseModels.User;
 
 namespace StigviddAPI.Controllers;
 
@@ -20,7 +20,7 @@ public class UserController : StigViddController
 
     [HttpGet]
     [Route("{userIdentifier}/favorites")]
-    public async Task<ActionResult<IReadOnlyCollection<TrailOverviewResponse>>> GetFavoritesByUserIdentifierAsync(
+    public async Task<ActionResult<IReadOnlyCollection<UserTrailCollectionResponse>>> GetFavoritesByUserIdentifierAsync(
         string userIdentifier,
         CancellationToken ctoken)
     {
@@ -36,7 +36,7 @@ public class UserController : StigViddController
 
     [HttpGet]
     [Route("{userIdentifier}/wishlist")]
-    public async Task<ActionResult<IReadOnlyCollection<TrailOverviewResponse>>> GetWishListByUserIdentifierAsync(
+    public async Task<ActionResult<IReadOnlyCollection<UserTrailCollectionResponse>>> GetWishListByUserIdentifierAsync(
         string userIdentifier,
         CancellationToken ctoken)
     {
@@ -52,7 +52,7 @@ public class UserController : StigViddController
 
     [HttpPost]
     [Route("favorites")]
-    public async Task<ActionResult<TrailOverviewResponse?>> AddTrailToUserFavoritesListAsync(
+    public async Task<ActionResult<UserTrailCollectionResponse?>> AddTrailToUserFavoritesListAsync(
        [FromBody] AddToUserFavoritesRequest favoriteRequest,
        CancellationToken ctoken)
     {
@@ -68,7 +68,7 @@ public class UserController : StigViddController
 
     [HttpPost]
     [Route("wishlist")]
-    public async Task<ActionResult<TrailOverviewResponse?>> AddTrailToUserWishListAsync(
+    public async Task<ActionResult<UserTrailCollectionResponse?>> AddTrailToUserWishListAsync(
        [FromBody] AddToUserWishlistRequest addToUserWishlistRequest,
        CancellationToken ctoken)
     {

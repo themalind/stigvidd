@@ -4,7 +4,7 @@ using System.Net;
 
 namespace StigviddAPI.Controllers;
 
-abstract class StigViddController : Controller
+public abstract class StigViddController : Controller
 {
     // För att alla controllers ska ha tillgång till denna metod.
     public ActionResult ToActionResult(Message message)

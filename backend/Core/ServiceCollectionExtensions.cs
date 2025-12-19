@@ -22,10 +22,8 @@ public static class ServiceCollectionExtensions
 
         // Bra att börja med transient. Märker man att en annan livstid behövs är det lättare att ändra till längre livstid än kortare.
         // Transient: En ny instans skapas varje gång tjänsten begärs. Garbage collected när den inte längre används.
-        services.AddTransient<ITrailService, TrailService>(); 
+        services.AddTransient<ITrailService, TrailService>();
         services.AddTransient<IUserService, UserService>();
-
-        services.AddScoped<IValidator<AddToUserFavoritesRequest>, AddFavoriteValidator>();
     }
 }
 
