@@ -1,8 +1,9 @@
 import { Trail, TrailOverview } from "@/data/types";
+import { IP } from "@/../ipconfig";
 
 export async function getTrails(): Promise<Trail[]> {
   try {
-    const response = await fetch("http://10.10.240.140:5265/api/v1/Trail");
+    const response = await fetch("http://" + IP + "/api/v1/Trail");
 
     if (!response.ok) {
       throw new Error(`HTTP error ${response.status}`);
@@ -17,7 +18,7 @@ export async function getTrails(): Promise<Trail[]> {
 export async function getPopularTrails(): Promise<TrailOverview[]> {
   try {
     const response = await fetch(
-      "http://10.10.240.140:5265/api/v1/Trail/popular",
+      "http://" + IP + "/api/v1/Trail/popular",
     );
 
     if (!response.ok) {
@@ -33,7 +34,7 @@ export async function getPopularTrails(): Promise<TrailOverview[]> {
 export async function getTrailByIdentifier(identifier: string): Promise<Trail> {
   try {
     const response = await fetch(
-      `http://10.10.240.140:5265/api/v1/Trail/${identifier}`,
+      "http://" + IP + `api/v1/Trail/${identifier}`,
     );
 
     if (!response.ok) {
