@@ -35,11 +35,17 @@ export default function ProfilePageScreen() {
           },
         ]}
       />
-      <Link href="../../(auth)/register">
-        <Button mode="contained">Register</Button>
+      <Link href="../(stacks)/favorites">
+        <Button mode="contained">Favorites</Button>
+      </Link>
+      <Link href="../(stacks)/wishlist">
+        <Button mode="contained">Wishlist</Button>
       </Link>
       <Link href="../../(auth)/login">
         <Button mode="contained">Login</Button>
+      </Link>
+      <Link href="../../(auth)/register">
+        <Button mode="contained">Register</Button>
       </Link>
     </ScrollView>
   );
