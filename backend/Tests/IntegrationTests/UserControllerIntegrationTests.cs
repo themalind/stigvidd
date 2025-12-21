@@ -25,13 +25,13 @@ public class UserControllerIntegrationTests : IClassFixture<StigViddWebApplicati
 
         // Act
         var response = await _client.GetAsync($"/api/v1/user/{userIdentifier}/favorites");
-        var favorites = await response.Content.ReadFromJsonAsync<List<UserTrailCollectionResponse>>();
+        var favorites = await response.Content.ReadFromJsonAsync<List<UserFavoritesTrailCollectionResponse>>();
     
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.NotNull(favorites);
         Assert.Equal(2, favorites.Count);
-        Assert.IsAssignableFrom<IEnumerable<UserTrailCollectionResponse>>(favorites);
+        Assert.IsAssignableFrom<IEnumerable<UserFavoritesTrailCollectionResponse>>(favorites);
     }
 
     [Fact]
@@ -42,13 +42,13 @@ public class UserControllerIntegrationTests : IClassFixture<StigViddWebApplicati
 
         // Act
         var response = await _client.GetAsync($"/api/v1/user/{userIdentifier}/favorites");
-        var favorites = await response.Content.ReadFromJsonAsync<List<UserTrailCollectionResponse>>();
+        var favorites = await response.Content.ReadFromJsonAsync<List<UserFavoritesTrailCollectionResponse>>();
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.NotNull(favorites);
         Assert.Empty(favorites);
-        Assert.IsAssignableFrom<IEnumerable<UserTrailCollectionResponse>>(favorites);
+        Assert.IsAssignableFrom<IEnumerable<UserFavoritesTrailCollectionResponse>>(favorites);
     }
 
     [Fact]
@@ -72,7 +72,7 @@ public class UserControllerIntegrationTests : IClassFixture<StigViddWebApplicati
 
         // Act
         var response = await _client.GetAsync($"/api/v1/user/{userIdentifier}/favorites");
-        var favorites = await response.Content.ReadFromJsonAsync<List<UserTrailCollectionResponse>>();
+        var favorites = await response.Content.ReadFromJsonAsync<List<UserFavoritesTrailCollectionResponse>>();
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -242,13 +242,13 @@ public class UserControllerIntegrationTests : IClassFixture<StigViddWebApplicati
 
         // Act
         var response = await _client.GetAsync($"/api/v1/user/{userIdentifier}/wishlist");
-        var wishlist = await response.Content.ReadFromJsonAsync<List<UserTrailCollectionResponse>>();
+        var wishlist = await response.Content.ReadFromJsonAsync<List<UserWishlistTrailCollectionResponse>>();
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.NotNull(wishlist);
         Assert.Equal(2, wishlist.Count);
-        Assert.IsAssignableFrom<IEnumerable<UserTrailCollectionResponse>>(wishlist);
+        Assert.IsAssignableFrom<IEnumerable<UserWishlistTrailCollectionResponse>>(wishlist);
     }
 
     [Fact]
@@ -259,13 +259,13 @@ public class UserControllerIntegrationTests : IClassFixture<StigViddWebApplicati
 
         // Act
         var response = await _client.GetAsync($"/api/v1/user/{userIdentifier}/wishlist");
-        var wishlist = await response.Content.ReadFromJsonAsync<List<UserTrailCollectionResponse>>();
+        var wishlist = await response.Content.ReadFromJsonAsync<List<UserWishlistTrailCollectionResponse>>();
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.NotNull(wishlist);
         Assert.Empty(wishlist);
-        Assert.IsAssignableFrom<IEnumerable<UserTrailCollectionResponse>>(wishlist);
+        Assert.IsAssignableFrom<IEnumerable<UserWishlistTrailCollectionResponse>>(wishlist);
     }
 
     [Fact]
@@ -276,7 +276,7 @@ public class UserControllerIntegrationTests : IClassFixture<StigViddWebApplicati
 
         // Act
         var response = await _client.GetAsync($"/api/v1/user/{userIdentifier}/wishlist");
-        var wishList = await response.Content.ReadFromJsonAsync<List<UserTrailCollectionResponse>>();
+        var wishList = await response.Content.ReadFromJsonAsync<List<UserWishlistTrailCollectionResponse>>();
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
