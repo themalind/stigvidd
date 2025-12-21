@@ -1,17 +1,17 @@
-﻿using Core.Interfaces;
+﻿using Core.Factories;
+using Core.Interfaces;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using WebDataContracts.ResponseModels.Review;
 using WebDataContracts.ResponseModels.Trail;
 
 namespace Core.Services;
 
-public class TrailService(IDbContextFactory<StigViddDbContext> context, ILogger<TrailService> logger) : ITrailService
+public class TrailService(IDbContextFactory<StigViddDbContext> context, ILogger<TrailService> logger, TrailResponseFactory factory) : ITrailService
 {
     private readonly IDbContextFactory<StigViddDbContext> _context = context;
     private readonly ILogger<TrailService> _logger = logger;
-
+    private readonly TrailResponseFactory _trailResponseFactory = factory;
 
     public async Task<Result<TrailResponse?>> GetTrailByIdentifierAsync(string identifier, CancellationToken ctoken)
     {
@@ -35,45 +35,7 @@ public class TrailService(IDbContextFactory<StigViddDbContext> context, ILogger<
             return Result.Fail<TrailResponse?>(new Message(404, $"Trail with identifier { identifier } not found."));
         }
 
-        var images = trail.TrailImages?.Select(ti =>
-            TrailImageResponse.Create(
-                ti.Identifier,
-                ti.ImageUrl)) ?? null;
-
-        var links = trail.TrailLinks?.Select(tl =>
-            TrailLinkResponse.Create(
-                tl.Identifier,
-                tl.Link)) ?? null;
-
-        var reviews = trail.Reviews?.Select(r =>
-            ReviewResponse.Create(
-                r.Identifier,
-                r.TrailReview ?? string.Empty,
-                r.Grade,
-                r.User!.NickName,
-                r.CreatedAt,
-                trail.Identifier,
-                r.User.Identifier,
-                r.ReviewImages?.Select(ri =>
-                    ReviewImageResponse.Create(
-                        ri.Identifier,
-                        ri.ImageUrl)))) ?? null;
-
-        var trailResponse = TrailResponse.Create
-        (trail.Identifier,
-        trail.Name,
-        trail.TrailLength,
-        trail.Classification ?? string.Empty,
-        trail.Accessability,
-        trail.AccessabilityInfo ?? string.Empty,
-        trail.TrailSymbol ?? string.Empty,
-        trail.TrailSymbolImage ?? string.Empty,
-        trail.Description ?? string.Empty,
-        trail.CoordinatesJson ?? string.Empty,
-        images,
-        links,
-        reviews
-        );
+        var trailResponse = _trailResponseFactory.Create(trail);
 
         return Result.Ok<TrailResponse?>(trailResponse);
     }

@@ -20,7 +20,7 @@ public class UserController : StigViddController
 
     [HttpGet]
     [Route("{userIdentifier}/favorites")]
-    public async Task<ActionResult<IReadOnlyCollection<UserTrailCollectionResponse>>> GetFavoritesByUserIdentifierAsync(
+    public async Task<ActionResult<IReadOnlyCollection<UserFavoritesTrailCollectionResponse>>> GetFavoritesByUserIdentifierAsync(
         string userIdentifier,
         CancellationToken ctoken)
     {
@@ -36,7 +36,7 @@ public class UserController : StigViddController
 
     [HttpGet]
     [Route("{userIdentifier}/wishlist")]
-    public async Task<ActionResult<IReadOnlyCollection<UserTrailCollectionResponse>>> GetWishListByUserIdentifierAsync(
+    public async Task<ActionResult<IReadOnlyCollection<UserWishlistTrailCollectionResponse>>> GetWishListByUserIdentifierAsync(
         string userIdentifier,
         CancellationToken ctoken)
     {
@@ -52,7 +52,7 @@ public class UserController : StigViddController
 
     [HttpPost]
     [Route("favorites")]
-    public async Task<ActionResult<UserTrailCollectionResponse?>> AddTrailToUserFavoritesListAsync(
+    public async Task<ActionResult<UserFavoritesTrailCollectionResponse?>> AddTrailToUserFavoritesListAsync(
        [FromBody] AddToUserFavoritesRequest favoriteRequest,
        CancellationToken ctoken)
     {
@@ -68,7 +68,7 @@ public class UserController : StigViddController
 
     [HttpPost]
     [Route("wishlist")]
-    public async Task<ActionResult<UserTrailCollectionResponse?>> AddTrailToUserWishListAsync(
+    public async Task<ActionResult<UserWishlistTrailCollectionResponse?>> AddTrailToUserWishListAsync(
        [FromBody] AddToUserWishlistRequest addToUserWishlistRequest,
        CancellationToken ctoken)
     {

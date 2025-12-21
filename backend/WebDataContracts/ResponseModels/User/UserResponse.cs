@@ -8,15 +8,15 @@ public class UserResponse
     public required string NickName { get; set; }
     public required string Email { get; set; }
 
-    public ICollection<TrailOverviewResponse>? MyWishList { get; set; }
-    public ICollection<TrailOverviewResponse>? MyFavorites { get; set; }
+    public ICollection<UserWishlistTrailCollectionResponse>? MyWishList { get; set; }
+    public ICollection<UserFavoritesTrailCollectionResponse>? MyFavorites { get; set; }
 
     public static UserResponse Create(
         string identifier,
         string nickName,
         string email,
-        ICollection<TrailOverviewResponse>? myWishList,
-        ICollection<TrailOverviewResponse>? myFavorites)
+        ICollection<UserWishlistTrailCollectionResponse>? myWishList,
+        ICollection<UserFavoritesTrailCollectionResponse>? myFavorites)
     {
         return new UserResponse
         {

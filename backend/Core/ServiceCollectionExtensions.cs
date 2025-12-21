@@ -1,11 +1,9 @@
-﻿using Core.Interfaces;
+﻿using Core.Factories;
+using Core.Interfaces;
 using Core.Services;
-using Core.Validators;
-using FluentValidation;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using WebDataContracts.RequestModels;
 
 namespace Core;
 
@@ -22,8 +20,15 @@ public static class ServiceCollectionExtensions
 
         // Bra att börja med transient. Märker man att en annan livstid behövs är det lättare att ändra till längre livstid än kortare.
         // Transient: En ny instans skapas varje gång tjänsten begärs. Garbage collected när den inte längre används.
+
+        // Services
         services.AddTransient<ITrailService, TrailService>();
         services.AddTransient<IUserService, UserService>();
+
+        // Factories
+        services.AddTransient<TrailResponseFactory>();
+        services.AddTransient<UserFavoritesResponseFactory>();
+        services.AddTransient<UserWishlistResponseFactory>();
     }
 }
 

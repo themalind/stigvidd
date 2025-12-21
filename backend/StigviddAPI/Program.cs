@@ -2,6 +2,7 @@ using Core;
 using Core.Validators;
 using FluentValidation;
 using SharpGrip.FluentValidation.AutoValidation.Mvc.Extensions;
+using System.Text.Json;
 
 public class Program
 {
@@ -9,9 +10,11 @@ public class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
-        // Add services to the container.
-
-        builder.Services.AddControllers();
+        builder.Services.AddControllers()
+            .AddJsonOptions(options =>
+             {
+                 options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+             });
 
         // Automatically register all validators from the assembly
         builder.Services.AddValidatorsFromAssemblyContaining<AddToUserFavoriteValidator>();
