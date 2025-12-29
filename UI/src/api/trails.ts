@@ -1,20 +1,6 @@
 import { IP } from "@/../ipconfig";
 import { Trail, TrailOverview } from "@/data/types";
 
-export async function getTrails(): Promise<Trail[]> {
-  try {
-    const response = await fetch("http://" + IP + "/api/v1/Trail");
-
-    if (!response.ok) {
-      throw new Error(`HTTP error ${response.status}`);
-    }
-
-    return response.json();
-  } catch {
-    throw new Error("Invalid JSON response from server");
-  }
-}
-
 export async function getPopularTrails(): Promise<TrailOverview[]> {
   try {
     const response = await fetch("http://" + IP + "/api/v1/Trail/popular");
@@ -24,8 +10,9 @@ export async function getPopularTrails(): Promise<TrailOverview[]> {
     }
 
     return response.json();
-  } catch {
-    throw new Error("Invalid JSON response from server");
+  } catch (error) {
+    console.log(error);
+    throw error;
   }
 }
 
@@ -40,7 +27,8 @@ export async function getTrailByIdentifier(identifier: string): Promise<Trail> {
     }
 
     return await response.json();
-  } catch {
-    throw new Error("Invalid JSON response from server");
+  } catch (error) {
+    console.log(error);
+    throw error;
   }
 }

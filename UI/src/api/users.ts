@@ -22,7 +22,7 @@ export async function getUserFavorites(
     return await response.json();
   } catch (error) {
     console.log(error);
-    throw new Error("Could not fetch data.");
+    throw error;
   }
 }
 
@@ -44,7 +44,7 @@ export async function getUserWishlist(
     return await response.json();
   } catch (error) {
     console.log(error);
-    throw new Error("Could not fetch data.");
+    throw error;
   }
 }
 
@@ -72,7 +72,7 @@ export async function addToUserFavorite(
     return await response.json();
   } catch (error) {
     console.log(error);
-    throw new Error("Something went wrong");
+    throw error;
   }
 }
 
@@ -98,7 +98,7 @@ export async function addToUserWishlist(
     return await response.json();
   } catch (error) {
     console.log(error);
-    throw new Error("Something went wrong");
+    throw error;
   }
 }
 
@@ -118,7 +118,7 @@ export async function removeUserFavorite(
     }
   } catch (error) {
     console.log(error);
-    throw new Error("Something went wrong!");
+    throw error;
   }
 }
 
@@ -138,6 +138,6 @@ export async function removeUserWishlist(
     }
   } catch (error) {
     console.log(error);
-    throw new Error("Something went wrong!");
+    throw error;
   }
 }
