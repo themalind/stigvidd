@@ -64,10 +64,10 @@ export const AppDefaultTheme = merge(CombinedDefaultTheme, {
 
 export const AppDarkTheme = merge(CombinedDarkTheme, {
   colors: {
-    primary: "rgb(140, 216, 140)",
-    onPrimary: "rgb(0, 57, 14)",
-    primaryContainer: "rgb(0, 83, 24)",
-    onPrimaryContainer: "rgb(168, 245, 166)",
+    primary: "rgba(23, 104, 113, 1)",
+    onPrimary: "rgb(255,255,255)",
+    primaryContainer: "rgb(31, 77, 83)",
+    onPrimaryContainer: "rgb(188, 235, 241)",
     secondary: "rgb(185, 204, 180)",
     onSecondary: "rgb(37, 52, 36)",
     secondaryContainer: "rgb(59, 75, 57)",
@@ -80,11 +80,11 @@ export const AppDarkTheme = merge(CombinedDarkTheme, {
     onError: "rgb(105, 0, 5)",
     errorContainer: "rgb(147, 0, 10)",
     onErrorContainer: "rgb(255, 180, 171)",
-    background: "rgb(26, 28, 25)",
+    background: "rgb(0,0,0)",
     onBackground: "rgb(226, 227, 221)",
     surface: "rgb(26, 28, 25)",
     onSurface: "rgb(226, 227, 221)",
-    surfaceVariant: "rgb(66, 73, 64)",
+    surfaceVariant: "rgba(72, 78, 71, 1)",
     onSurfaceVariant: "rgb(194, 201, 189)",
     outline: "rgb(140, 147, 136)",
     outlineVariant: "rgb(66, 73, 64)",
