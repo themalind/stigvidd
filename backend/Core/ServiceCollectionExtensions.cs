@@ -33,7 +33,7 @@ public static class ServiceCollectionExtensions
 }
 
 // Extension-metoder används för att utöka IServiceCollection, vilket gör konfigurationen modulär och enkel att hantera.
-// vilket gör att vi kan anropa den på en IServiceCollection-instans som om den var en inbyggd metod.
+// Vi kan anropa den på en IServiceCollection-instans som om den var en inbyggd metod.
 
 // AddDbContextFactory<StigViddDbContext>: Registrerar en DbContext Factory, 
 // vilket innebär att StigViddDbContext kan skapas vid behov istället för att ha en enda instans per Scoped request.

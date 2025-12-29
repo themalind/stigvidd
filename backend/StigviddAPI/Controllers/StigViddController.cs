@@ -7,7 +7,7 @@ namespace StigviddAPI.Controllers;
 public abstract class StigViddController : Controller
 {
     // För att alla controllers ska ha tillgång till denna metod.
-    public ActionResult ToActionResult(Message message)
+    protected ActionResult ToActionResult(Message message)
     {
         return message.StatusCode switch
         {
