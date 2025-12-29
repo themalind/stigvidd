@@ -1,6 +1,6 @@
 import { Dimensions, StyleSheet, View } from "react-native";
 import { useTheme } from "react-native-paper";
-import AddToUserList from "./add-to-user-list";
+import AddToUserWishlist from "./add-to-user-wishlist";
 import AddUserFavorite from "./add-user-favorite";
 import UserRating from "./user-rating";
 import UserShare from "./user-share";
@@ -15,7 +15,7 @@ export default function UserBar({ trailIdentifier }: Props) {
   const theme = useTheme();
   return (
     <View style={[s.container, { backgroundColor: theme.colors.primary }]}>
-      <AddToUserList />
+      <AddToUserWishlist trailIdentifier={trailIdentifier} />
       <UserShare />
       <UserRating />
       <AddUserFavorite trailIdentifier={trailIdentifier} />

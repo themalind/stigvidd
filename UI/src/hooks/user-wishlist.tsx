@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 export const useUserWishlist = (userIdentifier: string) => {
   const queryClient = useQueryClient();
+
   const wishlistQuery = useQuery({
     queryKey: ["userWishlist", userIdentifier],
     queryFn: () => getUserWishlist(userIdentifier),
@@ -34,15 +35,15 @@ export const useUserWishlist = (userIdentifier: string) => {
     onError: (error: Error, trailIdentifier: string, context) => {
       if (context?.previousWishlist) {
         queryClient.setQueryData(
-          ["userFavorites", userIdentifier],
+          ["userWishlist", userIdentifier],
           context.previousWishlist,
         );
       }
-      console.error("Failed to remove favorite:", error);
+      console.error("Failed to remove trail from wishlist:", error);
     },
     onSettled: () => {
       queryClient.invalidateQueries({
-        queryKey: ["userFavorites", userIdentifier],
+        queryKey: ["userWishlist", userIdentifier],
       });
     },
   });
