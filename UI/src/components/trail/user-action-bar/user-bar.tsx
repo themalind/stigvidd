@@ -1,19 +1,24 @@
 import { Dimensions, StyleSheet, View } from "react-native";
-import UserRating from "./user-rating";
-import UserShare from "./user-share";
+import { useTheme } from "react-native-paper";
 import AddToUserList from "./add-to-user-list";
 import AddUserFavorite from "./add-user-favorite";
+import UserRating from "./user-rating";
+import UserShare from "./user-share";
 
 const WIDTH = Dimensions.get("screen").width;
 const HEIGHT = Dimensions.get("screen").height;
+interface Props {
+  trailIdentifier: string;
+}
 
-export default function UserBar() {
+export default function UserBar({ trailIdentifier }: Props) {
+  const theme = useTheme();
   return (
-    <View style={[s.container, { backgroundColor: "rgb(12, 41, 15)" }]}>
+    <View style={[s.container, { backgroundColor: theme.colors.primary }]}>
       <AddToUserList />
       <UserShare />
       <UserRating />
-      <AddUserFavorite />
+      <AddUserFavorite trailIdentifier={trailIdentifier} />
     </View>
   );
 }

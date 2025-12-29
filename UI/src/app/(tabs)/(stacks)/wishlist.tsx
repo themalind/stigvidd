@@ -1,43 +1,32 @@
-import { getUserWishlist } from "@/api/users";
 import LoadingIndicator from "@/components/loading-indicator";
-import { useQuery } from "@tanstack/react-query";
-import { View } from "react-native";
-import { Text } from "react-native-paper";
+import UserTrailCollection from "@/components/trail/user-trail-collection";
+import { useUserWishlist } from "@/hooks/user-wishlist";
+import { MaterialIcons } from "@expo/vector-icons";
+import { Text, useTheme } from "react-native-paper";
 
 export default function WishlistScreen() {
-  //   const { identifier } = useLocalSearchParams<{ identifier: string }>();
-  //   const normalizedIdentifier = Array.isArray(identifier)
-  //     ? identifier[0]
-  //     : identifier;
-
+  const theme = useTheme();
   const userIdentifier: string = "D3AC6D71-B2AA-4B83-B15A-05C610BEBA8E";
-
-  const {
-    data: wishlist,
-    isLoading,
-    isError,
-    error,
-  } = useQuery({
-    queryKey: ["userWishlist", userIdentifier],
-    queryFn: () => getUserWishlist(userIdentifier),
-    enabled: !!userIdentifier && typeof userIdentifier === "string",
-  });
+  const { wishlist, isLoading, isError, error, onDelete } =
+    useUserWishlist(userIdentifier);
 
   if (isLoading) {
     return <LoadingIndicator />;
   }
 
-  if (isError) {
-    return <Text style={{ color: "red" }}>{error.message}</Text>;
+  if (isError && error) {
+    return <Text style={{ color: theme.colors.error }}>{error.message}</Text>;
   }
 
   return (
-    <View>
-      {wishlist?.map((fav) => (
-        <View key={fav.identifier}>
-          <Text style={{ color: "black" }}>{fav.description}</Text>
-        </View>
-      ))}
-    </View>
+    <UserTrailCollection
+      title="Vill gå"
+      noTrailsSavedInfo="Du har inga sparade promenader som du vill gå än."
+      onDelete={onDelete}
+      trails={wishlist ?? []}
+      icon={
+        <MaterialIcons name="star" size={24} color={theme.colors.tertiary} />
+      }
+    />
   );
 }
