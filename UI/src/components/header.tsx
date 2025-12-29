@@ -3,7 +3,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import React from "react";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
 import { Image, StyleSheet, View } from "react-native";
-import { HelperText, TextInput } from "react-native-paper";
+import { HelperText, TextInput, useTheme } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { z } from "zod";
 
@@ -13,6 +13,7 @@ const search = z.object({
 type FormFields = z.infer<typeof search>;
 
 export default function Header() {
+  const theme = useTheme();
   const {
     control,
     handleSubmit,
@@ -21,11 +22,11 @@ export default function Header() {
   const onSubmit: SubmitHandler<FormFields> = async (data) => {};
   return (
     <SafeAreaView
-      style={{ backgroundColor: "#0C290F" }}
+      style={{ backgroundColor: theme.colors.primary }}
       edges={["top", "left", "right"]}
     >
       <View>
-        <View style={[s.container, { backgroundColor: "#0C290F" }]}>
+        <View style={[s.container, { backgroundColor: theme.colors.primary }]}>
           <Image
             style={s.image}
             source={require("../assets/images/mammaapp.png")}
@@ -35,7 +36,10 @@ export default function Header() {
               control={control}
               render={({ field: { onChange, onBlur, value } }) => (
                 <TextInput
-                  style={s.textInput}
+                  style={[
+                    s.textInput,
+                    { backgroundColor: theme.colors.surface },
+                  ]}
                   onChangeText={onChange}
                   onBlur={onBlur}
                   value={value}
