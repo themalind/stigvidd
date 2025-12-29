@@ -1,4 +1,4 @@
-import { addToUserFavorite, ApiError } from "@/api/users";
+import { addToUserWishlist, ApiError } from "@/api/users";
 import {
   showErrorAtom,
   showSuccessAtom,
@@ -13,26 +13,27 @@ import { useTheme } from "react-native-paper";
 interface Props {
   trailIdentifier: string;
 }
-export default function AddUserFavorite({ trailIdentifier }: Props) {
+
+export default function AddToUserWishlist({ trailIdentifier }: Props) {
   const theme = useTheme();
   const showSuccess = useSetAtom(showSuccessAtom);
-  const showError = useSetAtom(showErrorAtom);
   const showWarning = useSetAtom(showWarningAtom);
-  const userIdentifier: string = "D3AC6D71-B2AA-4B83-B15A-05C610BEBA8E";
+  const showError = useSetAtom(showErrorAtom);
   const queryClient = useQueryClient();
+  const userIdentifier: string = "D3AC6D71-B2AA-4B83-B15A-05C610BEBA8E";
 
   const addMutation = useMutation({
     mutationFn: (trailIdentifier: string) =>
-      addToUserFavorite(userIdentifier, trailIdentifier),
+      addToUserWishlist(userIdentifier, trailIdentifier),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["favorites"] });
-      showSuccess("Leden har lagts till, du hittar listan under din profil.");
+      queryClient.invalidateQueries({ queryKey: ["userWishlist"] });
+      showSuccess("Leden har lagts till, du hittar listan under min profil!");
     },
     onError: (error: Error) => {
       if (error instanceof ApiError && error.status === 409) {
-        showWarning("Leden finns redan i din favoritlista!");
+        showWarning("Leden finns redan i din önskelista!");
       } else {
-        showError("Kunde inte lägga till leden i din favoritlista.");
+        showError("Kunde inte lägga till leden i din önskelista.");
       }
     },
   });
@@ -43,12 +44,8 @@ export default function AddUserFavorite({ trailIdentifier }: Props) {
         style={s.touchable}
         onPress={() => addMutation.mutate(trailIdentifier)}
       >
-        <MaterialIcons
-          name="favorite-border"
-          size={24}
-          color={theme.colors.onPrimary}
-        />
-        <Text style={[s.text, { color: theme.colors.onPrimary }]}>Favorit</Text>
+        <MaterialIcons name="add" size={30} color={theme.colors.onPrimary} />
+        <Text style={[s.text, { color: theme.colors.onPrimary }]}>Vill gå</Text>
       </TouchableOpacity>
     </View>
   );
