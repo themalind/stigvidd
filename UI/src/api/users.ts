@@ -4,6 +4,16 @@ import {
 } from "@/data/types";
 import { IP } from "../../ipconfig";
 
+export class ApiError extends Error {
+  status?: number;
+
+  constructor(message: string, status?: number) {
+    super(message); // Super är samma som base i c#. Så det blir errors message som används.
+    this.name = "ApiError";
+    this.status = status;
+  }
+}
+
 export async function getUserFavorites(
   userIdentifier: string,
 ): Promise<UserFavoritesTrailCollection[]> {
@@ -16,7 +26,7 @@ export async function getUserFavorites(
     );
 
     if (!response.ok) {
-      throw new Error(`HTTP error ${response.status}`);
+      throw new ApiError(`HTTP error ${response.status}`, response.status);
     }
 
     return await response.json();
@@ -38,7 +48,7 @@ export async function getUserWishlist(
     );
 
     if (!response.ok) {
-      throw new Error(`HTTP error ${response.status}`);
+      throw new ApiError(`HTTP error ${response.status}`, response.status);
     }
 
     return await response.json();
@@ -66,7 +76,7 @@ export async function addToUserFavorite(
     });
 
     if (!response.ok) {
-      throw new Error(`HTTP error ${response.status}`);
+      throw new ApiError(`HTTP error ${response.status}`, response.status);
     }
 
     return await response.json();
@@ -91,8 +101,9 @@ export async function addToUserWishlist(
         trailIdentifier,
       }),
     });
+
     if (!response.ok) {
-      throw new Error(`HTTP error ${response.status}`);
+      throw new ApiError(`HTTP error ${response.status}`, response.status);
     }
 
     return await response.json();
@@ -114,7 +125,7 @@ export async function removeUserFavorite(
       },
     );
     if (!response.ok) {
-      throw new Error(`HTTP error ${response.status}`);
+      throw new ApiError(`HTTP error ${response.status}`, response.status);
     }
   } catch (error) {
     console.log(error);
@@ -134,7 +145,7 @@ export async function removeUserWishlist(
       },
     );
     if (!response.ok) {
-      throw new Error(`HTTP error ${response.status}`);
+      throw new ApiError(`HTTP error ${response.status}`, response.status);
     }
   } catch (error) {
     console.log(error);
