@@ -46,6 +46,9 @@ export default function UserTrailCollection({
       <ScrollView
         showsVerticalScrollIndicator={false}
         showsHorizontalScrollIndicator={false}
+        contentContainerStyle={
+          trails?.length ? undefined : s.scrollContentCenter
+        }
       >
         {trails?.length ? (
           trails?.map((trail) => (
@@ -95,7 +98,9 @@ export default function UserTrailCollection({
             </Pressable>
           ))
         ) : (
-          <Text>{noTrailsSavedInfo}</Text>
+          <View style={s.noTrailMsgContainer}>
+            <Text style={s.noTrailMsg}>{noTrailsSavedInfo}</Text>
+          </View>
         )}
       </ScrollView>
       <LinearGradient
@@ -169,5 +174,19 @@ const s = StyleSheet.create({
     bottom: 0,
     height: 80,
     zIndex: 1,
+  },
+  noTrailMsgContainer: {
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  noTrailMsg: {
+    fontSize: 15,
+    textAlign: "center",
+    paddingHorizontal: 20,
+  },
+  scrollContentCenter: {
+    flexGrow: 1,
+    justifyContent: "center",
+    alignItems: "center",
   },
 });
