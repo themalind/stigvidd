@@ -53,6 +53,29 @@ export interface User {
   email: string;
 }
 
+export interface UserFavoritesTrailCollection {
+  identifier: string;
+  name: string;
+  trailLength: number;
+  description: string;
+  ratingResponse?: RatingResponse[];
+  trailImages?: TrailImage[];
+}
+
+export interface UserWishlistTrailCollection {
+  identifier: string;
+  name: string;
+  trailLength: number;
+  description: string;
+  ratingResponse?: RatingResponse[];
+  trailImages?: TrailImage[];
+}
+
+export interface RatingResponse {
+  identifier: string;
+  rating: number;
+}
+
 export interface Coordinate {
   latitude: number;
   longitude: number;

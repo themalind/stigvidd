@@ -117,7 +117,9 @@ export default function TrailDetailsScreen() {
         </TouchableOpacity>
       </View>
       {trail ? <TrailInfo trail={trail} /> : null}
-      <UserBar />
+      {trail?.identifier ? (
+        <UserBar trailIdentifier={trail?.identifier} />
+      ) : null}
       {trail ? <TrailDescription trail={trail} /> : null}
       {trail ? <TrailMap trail={trail} /> : null}
       {trail?.reviewsResponse ? (

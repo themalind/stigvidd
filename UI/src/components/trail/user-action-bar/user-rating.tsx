@@ -1,12 +1,20 @@
 import FontAwesome from "@expo/vector-icons/FontAwesome";
-import { TouchableOpacity, View, StyleSheet, Text } from "react-native";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useTheme } from "react-native-paper";
 
 export default function UserRating() {
+  const theme = useTheme();
   return (
     <View style={s.container}>
       <TouchableOpacity style={s.touchable}>
-        <FontAwesome name="thumbs-o-up" size={24} color="white" />
-        <Text style={s.text}>Betygsätt</Text>
+        <FontAwesome
+          name="thumbs-o-up"
+          size={24}
+          color={theme.colors.onPrimary}
+        />
+        <Text style={[s.text, { color: theme.colors.onPrimary }]}>
+          Betygsätt
+        </Text>
       </TouchableOpacity>
     </View>
   );
@@ -21,7 +29,6 @@ const s = StyleSheet.create({
     alignItems: "center",
   },
   text: {
-    color: "#ffffff",
     fontSize: 12,
   },
 });

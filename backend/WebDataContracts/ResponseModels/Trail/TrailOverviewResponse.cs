@@ -1,4 +1,4 @@
-﻿namespace WebDataContracts.ResponseModels;
+﻿namespace WebDataContracts.ResponseModels.Trail;
 
 public class TrailOverviewResponse
 {

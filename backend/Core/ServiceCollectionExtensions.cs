@@ -1,4 +1,5 @@
-﻿using Core.Interfaces;
+﻿using Core.Factories;
+using Core.Interfaces;
 using Core.Services;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
@@ -19,13 +20,20 @@ public static class ServiceCollectionExtensions
 
         // Bra att börja med transient. Märker man att en annan livstid behövs är det lättare att ändra till längre livstid än kortare.
         // Transient: En ny instans skapas varje gång tjänsten begärs. Garbage collected när den inte längre används.
-        services.AddTransient<ITrailService, TrailService>(); 
+
+        // Services
+        services.AddTransient<ITrailService, TrailService>();
         services.AddTransient<IUserService, UserService>();
+
+        // Factories
+        services.AddTransient<TrailResponseFactory>();
+        services.AddTransient<UserFavoritesResponseFactory>();
+        services.AddTransient<UserWishlistResponseFactory>();
     }
 }
 
 // Extension-metoder används för att utöka IServiceCollection, vilket gör konfigurationen modulär och enkel att hantera.
-// vilket gör att vi kan anropa den på en IServiceCollection-instans som om den var en inbyggd metod.
+// Vi kan anropa den på en IServiceCollection-instans som om den var en inbyggd metod.
 
 // AddDbContextFactory<StigViddDbContext>: Registrerar en DbContext Factory, 
 // vilket innebär att StigViddDbContext kan skapas vid behov istället för att ha en enda instans per Scoped request.

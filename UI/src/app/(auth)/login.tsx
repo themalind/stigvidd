@@ -28,8 +28,8 @@ const addOpacity = (rgbColor: string, opacity: number): string => {
 const loginFields = z.object({
   email: z
     .string({ required_error: "Email is required" })
-    .email("You must enter an email!"),
-  password: z.string().min(8, "Password must contain minimum of 8 characters!"),
+    .email("You must enter an email"),
+  password: z.string().min(8, "Password must contain 8 characters"),
 });
 
 type FormFields = z.infer<typeof loginFields>;
@@ -56,7 +56,7 @@ export default function LoginScreen() {
   };
 
   return (
-    <SafeAreaView style={{ backgroundColor: "#0C290F" }}>
+    <SafeAreaView style={{ backgroundColor: "rgb(0,0,0)" }}>
       <KeyboardAwareScrollView
         keyboardShouldPersistTaps="handled"
         enableOnAndroid={true}
@@ -194,6 +194,7 @@ const s = StyleSheet.create({
   },
   logoContainer: {
     flexDirection: "row",
+    alignItems: "center",
     gap: 5,
   },
   logo: {

@@ -1,78 +1,19 @@
-﻿using Core.Interfaces;
+﻿using Core.Factories;
+using Core.Interfaces;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using WebDataContracts.ResponseModels;
+using WebDataContracts.ResponseModels.Trail;
 
 namespace Core.Services;
 
-public class TrailService(IDbContextFactory<StigViddDbContext> context, ILogger<TrailService> logger) : ITrailService
+public class TrailService(IDbContextFactory<StigViddDbContext> context, ILogger<TrailService> logger, TrailResponseFactory factory) : ITrailService
 {
     private readonly IDbContextFactory<StigViddDbContext> _context = context;
     private readonly ILogger<TrailService> _logger = logger;
+    private readonly TrailResponseFactory _trailResponseFactory = factory;
 
-    public async Task<IReadOnlyCollection<TrailResponse?>> GetTrailsAsync(CancellationToken ctoken)
-    {
-        using var context = await _context.CreateDbContextAsync(ctoken);
-
-        var trails = await context.Trails
-             .AsNoTracking()
-             .Include(t => t.TrailImages)
-             .Include(t => t.TrailLinks)
-             .Include(r => r.Reviews!)
-                .ThenInclude(r => r.User)
-             .ToListAsync(ctoken);
-
-        var dtoList = new List<TrailResponse>();
-
-        foreach (var trail in trails)
-        {
-            var images = trail.TrailImages?.Select(ti =>
-                TrailImageResponse.Create(
-                    ti.Identifier,
-                    ti.ImageUrl));
-
-            var links = trail.TrailLinks?.Select(tl =>
-            TrailLinkResponse.Create(
-                tl.Identifier,
-                tl.Link));
-
-            var reviews = trail.Reviews?.Select(r =>
-                ReviewResponse.Create(
-                    r.Identifier,
-                    r.TrailReview,
-                    r.Grade,
-                    r.User!.NickName,
-                    r.CreatedAt,
-                    r.Identifier,
-                    r.Identifier,
-                    r.ReviewImages?.Select(ri =>
-                        ReviewImageResponse.Create(
-                            ri.Identifier,
-                            ri.ImageUrl))));
-
-            var trailDto = TrailResponse.Create
-            (trail.Identifier,
-            trail.Name,
-            trail.TrailLength,
-            trail.Classification,
-            trail.Accessability,
-            trail.AccessabilityInfo,
-            trail.TrailSymbol,
-            trail.TrailSymbolImage,
-            trail.Description,
-            trail.CoordinatesJson ?? "",
-            images,
-            links,
-            reviews
-            );
-
-            dtoList.Add(trailDto);
-        }
-        return dtoList;
-    }
-
-    public async Task<TrailResponse?> GetTrailByIdentifierAsync(string identifier, CancellationToken ctoken)
+    public async Task<Result<TrailResponse?>> GetTrailByIdentifierAsync(string identifier, CancellationToken ctoken)
     {
         using var context = await _context.CreateDbContextAsync(ctoken);
 
@@ -91,53 +32,15 @@ public class TrailService(IDbContextFactory<StigViddDbContext> context, ILogger<
             _logger.LogInformation(
                 "TrailService -> GetTrailByIdentifierAsync: Trail with identifier {Identifier} not found.", identifier);
 
-            return null;
+            return Result.Fail<TrailResponse?>(new Message(404, $"Trail with identifier { identifier } not found."));
         }
 
-        var images = trail.TrailImages?.Select(ti =>
-            TrailImageResponse.Create(
-                ti.Identifier,
-                ti.ImageUrl)) ?? null;
+        var trailResponse = _trailResponseFactory.Create(trail);
 
-        var links = trail.TrailLinks?.Select(tl =>
-            TrailLinkResponse.Create(
-                tl.Identifier,
-                tl.Link)) ?? null;
-
-        var reviews = trail.Reviews?.Select(r =>
-            ReviewResponse.Create(
-                r.Identifier,
-                r.TrailReview ?? string.Empty,
-                r.Grade,
-                r.User!.NickName,
-                r.CreatedAt,
-                trail.Identifier,
-                r.User.Identifier,
-                r.ReviewImages?.Select(ri =>
-                    ReviewImageResponse.Create(
-                        ri.Identifier,
-                        ri.ImageUrl)))) ?? null;
-
-        var trailDto = TrailResponse.Create
-        (trail.Identifier,
-        trail.Name,
-        trail.TrailLength,
-        trail.Classification ?? string.Empty,
-        trail.Accessability,
-        trail.AccessabilityInfo ?? string.Empty,
-        trail.TrailSymbol ?? string.Empty,
-        trail.TrailSymbolImage ?? string.Empty,
-        trail.Description ?? string.Empty,
-        trail.CoordinatesJson ?? string.Empty,
-        images,
-        links,
-        reviews
-        );
-
-        return trailDto;
+        return Result.Ok<TrailResponse?>(trailResponse);
     }
 
-    public async Task<IReadOnlyCollection<TrailOverviewResponse?>> GetPopularTrailOverviewsAsync(CancellationToken ctoken)
+    public async Task<Result<IReadOnlyCollection<TrailOverviewResponse?>>> GetPopularTrailOverviewsAsync(CancellationToken ctoken)
     {
         using var context = await _context.CreateDbContextAsync(ctoken);
 
@@ -155,6 +58,6 @@ public class TrailService(IDbContextFactory<StigViddDbContext> context, ILogger<
             .Take(9)
             .ToListAsync(ctoken);
 
-        return trails;
+        return Result.Ok<IReadOnlyCollection<TrailOverviewResponse?>>(trails);
     }
 }

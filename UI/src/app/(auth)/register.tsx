@@ -28,12 +28,12 @@ const registerFields = z
       .min(1, "You need to enter a nickname!"),
     email: z
       .string({ required_error: "Email is required" })
-      .email("You must enter an email!"),
+      .email("You must enter an email"),
     password: z
       .string({ required_error: "Password is required" })
-      .min(8, "Password must contain minimum of 8 characters!"),
+      .min(8, "Password must contain 8 characters"),
     confirmPassword: z.string({
-      required_error: "You must confirm your password!",
+      required_error: "You must confirm your password",
     }),
   })
   .superRefine(({ confirmPassword, password }, ctx) => {
@@ -75,7 +75,7 @@ export default function LoginScreen() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#0C290F" }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "rgb(0,0,0)" }}>
       <KeyboardAwareScrollView
         keyboardShouldPersistTaps="handled"
         enableOnAndroid={true}
@@ -268,6 +268,7 @@ const s = StyleSheet.create({
   },
   logoContainer: {
     flexDirection: "row",
+    alignItems: "center",
     gap: 5,
   },
   logo: {

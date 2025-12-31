@@ -1,3 +1,4 @@
+import { GlobalSnackbar } from "@/components/global-snackbar";
 import { useAppState } from "@/hooks/appUseState";
 import { useUserTheme } from "@/hooks/appUserTheme";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -32,6 +33,7 @@ export default function RootLayout() {
               <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
               <Stack.Screen name="(auth)" options={{ headerShown: false }} />
             </Stack>
+            <GlobalSnackbar />
           </View>
         </GestureHandlerRootView>
       </PaperProvider>
