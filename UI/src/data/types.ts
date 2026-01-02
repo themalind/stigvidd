@@ -53,7 +53,7 @@ export interface User {
   email: string;
 }
 
-export interface UserFavoritesTrailCollection {
+export interface UserFavoritesTrail {
   identifier: string;
   name: string;
   trailLength: number;
@@ -62,7 +62,7 @@ export interface UserFavoritesTrailCollection {
   trailImages?: TrailImage[];
 }
 
-export interface UserWishlistTrailCollection {
+export interface UserWishlistTrail {
   identifier: string;
   name: string;
   trailLength: number;
