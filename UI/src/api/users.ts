@@ -1,7 +1,4 @@
-import {
-  UserFavoritesTrailCollection,
-  UserWishlistTrailCollection,
-} from "@/data/types";
+import { UserFavoritesTrail, UserWishlistTrail } from "@/data/types";
 import { IP } from "../../ipconfig";
 
 export class ApiError extends Error {
@@ -16,7 +13,7 @@ export class ApiError extends Error {
 
 export async function getUserFavorites(
   userIdentifier: string,
-): Promise<UserFavoritesTrailCollection[]> {
+): Promise<UserFavoritesTrail[]> {
   try {
     const response = await fetch(
       "http://" + IP + `/api/v1/User/${userIdentifier}/favorites`,
@@ -38,7 +35,7 @@ export async function getUserFavorites(
 
 export async function getUserWishlist(
   userIdentifier: string,
-): Promise<UserWishlistTrailCollection[]> {
+): Promise<UserWishlistTrail[]> {
   try {
     const response = await fetch(
       "http://" + IP + `/api/v1/User/${userIdentifier}/wishlist`,
@@ -61,7 +58,7 @@ export async function getUserWishlist(
 export async function addToUserFavorite(
   userIdentifier: string,
   trailIdentifier: string,
-): Promise<UserFavoritesTrailCollection> {
+): Promise<UserFavoritesTrail> {
   try {
     const response = await fetch(`http://${IP}/api/v1/user/favorites`, {
       method: "POST",
@@ -89,7 +86,7 @@ export async function addToUserFavorite(
 export async function addToUserWishlist(
   userIdentifier: string,
   trailIdentifier: string,
-): Promise<UserFavoritesTrailCollection> {
+): Promise<UserFavoritesTrail> {
   try {
     const response = await fetch(`http://${IP}/api/v1/user/wishlist`, {
       method: "POST",
