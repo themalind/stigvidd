@@ -3,7 +3,7 @@ using WebDataContracts.ResponseModels.Trail;
 
 namespace WebDataContracts.ResponseModels.User;
 
-public class UserFavoritesTrailCollectionResponse
+public class UserFavoritesTrailResponse
 {
     public required string Identifier { get; set; }
     public string Name { get; set; } = string.Empty;
@@ -12,7 +12,7 @@ public class UserFavoritesTrailCollectionResponse
     public IReadOnlyCollection<RatingResponse>? RatingResponse { get; set; }
     public IReadOnlyCollection<TrailImageResponse>? TrailImages { get; set; }
 
-    public static UserFavoritesTrailCollectionResponse Create(
+    public static UserFavoritesTrailResponse Create(
         string identifier,
         string? name,
         double trailLength,
@@ -21,7 +21,7 @@ public class UserFavoritesTrailCollectionResponse
         IEnumerable<TrailImageResponse>? trailImages
         )
     {
-        return new UserFavoritesTrailCollectionResponse
+        return new UserFavoritesTrailResponse
         {
             Identifier = identifier,
             Name = name ?? string.Empty,
