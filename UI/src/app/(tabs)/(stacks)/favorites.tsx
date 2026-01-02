@@ -11,7 +11,7 @@ import { Text, useTheme } from "react-native-paper";
 
 export default function FavoritesScreen() {
   const theme = useTheme();
-  const [{ data, isLoading, isError, error }] = useAtom(userFavoritesAtom);
+  const [{ data, isLoading, isError, error }] = useAtom(userFavoritesAtom); // useAtom är likt useState och retunerar både get och setfunktioner
   const [, removeFromFavorites] = useAtom(removeFromFavoritesAtom);
 
   if (isLoading) {

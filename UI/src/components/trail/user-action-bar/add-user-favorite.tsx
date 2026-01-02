@@ -9,7 +9,7 @@ interface Props {
 }
 export default function AddUserFavorite({ trailIdentifier }: Props) {
   const theme = useTheme();
-  const addFavorite = useSetAtom(addToFavoritesAtom);
+  const addFavorite = useSetAtom(addToFavoritesAtom); // useSetAtom retunerar bara setfunktionen
 
   return (
     <View style={s.container}>
