@@ -1,7 +1,4 @@
-import {
-  UserFavoritesTrailCollection,
-  UserWishlistTrailCollection,
-} from "@/data/types";
+import { UserFavoritesTrail, UserWishlistTrail } from "@/data/types";
 import { Entypo, Feather, FontAwesome } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
@@ -13,7 +10,7 @@ import { Rating } from "./rating";
 interface UserTrailCollectionProps {
   title: string;
   noTrailsSavedInfo: string;
-  trails: UserFavoritesTrailCollection[] | UserWishlistTrailCollection[];
+  trails: UserFavoritesTrail[] | UserWishlistTrail[];
   onDelete: (identifier: string) => void;
   icon?: React.ReactNode;
 }
