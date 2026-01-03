@@ -1,14 +1,17 @@
 import LoadingIndicator from "@/components/loading-indicator";
 import UserTrailCollection from "@/components/trail/user-trail-collection";
-import { useUserWishlist } from "@/hooks/user-wishlist";
+import {
+  removeFromWishlistAtom,
+  userWishlistAtom,
+} from "@/providers/user-atoms";
 import { MaterialIcons } from "@expo/vector-icons";
+import { useAtom } from "jotai";
 import { Text, useTheme } from "react-native-paper";
 
 export default function WishlistScreen() {
   const theme = useTheme();
-  const userIdentifier: string = "D3AC6D71-B2AA-4B83-B15A-05C610BEBA8E";
-  const { wishlist, isLoading, isError, error, onDelete } =
-    useUserWishlist(userIdentifier);
+  const [{ data, isLoading, isError, error }] = useAtom(userWishlistAtom);
+  const [, removeFromWishlist] = useAtom(removeFromWishlistAtom);
 
   if (isLoading) {
     return <LoadingIndicator />;
@@ -22,8 +25,8 @@ export default function WishlistScreen() {
     <UserTrailCollection
       title="Vill gå"
       noTrailsSavedInfo="Du har inga sparade promenader som du vill gå än."
-      onDelete={onDelete}
-      trails={wishlist ?? []}
+      onDelete={removeFromWishlist}
+      trails={data ?? []}
       icon={
         <MaterialIcons name="star" size={24} color={theme.colors.tertiary} />
       }

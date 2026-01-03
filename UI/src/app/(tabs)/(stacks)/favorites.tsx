@@ -1,15 +1,18 @@
 import LoadingIndicator from "@/components/loading-indicator";
 import UserTrailCollection from "@/components/trail/user-trail-collection";
-import { useUserFavorites } from "@/hooks/user-favorites";
+import {
+  removeFromFavoritesAtom,
+  userFavoritesAtom,
+} from "@/providers/user-atoms";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { useAtom } from "jotai";
 import React from "react";
 import { Text, useTheme } from "react-native-paper";
 
 export default function FavoritesScreen() {
   const theme = useTheme();
-  const userIdentifier: string = "D3AC6D71-B2AA-4B83-B15A-05C610BEBA8E";
-  const { favorites, isLoading, isError, error, onDelete } =
-    useUserFavorites(userIdentifier);
+  const [{ data, isLoading, isError, error }] = useAtom(userFavoritesAtom); // useAtom är likt useState och retunerar både get och setfunktioner
+  const [, removeFromFavorites] = useAtom(removeFromFavoritesAtom);
 
   if (isLoading) {
     return <LoadingIndicator />;
@@ -23,8 +26,8 @@ export default function FavoritesScreen() {
     <UserTrailCollection
       title="Mina favoriter"
       noTrailsSavedInfo="Inga Favoriter sparade än."
-      onDelete={onDelete}
-      trails={favorites ?? []}
+      onDelete={removeFromFavorites}
+      trails={data ?? []}
       icon={
         <MaterialCommunityIcons
           name="cards-heart"
