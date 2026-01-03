@@ -1,23 +1,19 @@
 import {
   addToUserFavorite,
   addToUserWishlist,
-  ApiError,
   getUserFavorites,
   getUserWishlist,
   removeUserFavorite,
   removeUserWishlist,
 } from "@/api/users";
-import {
-  UserFavoritesTrailCollection,
-  UserWishlistTrailCollection,
-} from "@/data/types";
+import { UserFavoritesTrail, UserWishlistTrail } from "@/data/types";
 import { atom } from "jotai";
-import { atomWithQuery, queryClientAtom } from "jotai-tanstack-query";
 import {
-  showErrorAtom,
-  showSuccessAtom,
-  showWarningAtom,
-} from "./snackbar-atoms";
+  atomWithMutation,
+  atomWithQuery,
+  queryClientAtom,
+} from "jotai-tanstack-query";
+import { showErrorAtom } from "./snackbar-atoms";
 
 const USER_IDENTIFIER = "D3AC6D71-B2AA-4B83-B15A-05C610BEBA8E";
 
@@ -48,51 +44,103 @@ export const userWishlistAtom = atomWithQuery((get) => {
 });
 
 // Lägga till en ny i favorit-listan
-export const addToFavoritesAtom = atom(
-  null,
-  async (get, set, trailIdentifier: string) => {
-    const queryClient = get(queryClientAtom);
+// Här används atomWithMutation för att man tex ska kunna komma åt isPending för att disabla knappen när en request sker.
+export const addToFavoritesAtom = atomWithMutation((get) => {
+  const queryClient = get(queryClientAtom);
+  const userIdentifier = get(userIdentifierAtom);
+  return {
+    mutationFn: async (trailIdentifier: string) => {
+      await addToUserFavorite(userIdentifier, trailIdentifier);
+    },
 
-    try {
-      await addToUserFavorite(USER_IDENTIFIER, trailIdentifier);
-      queryClient.invalidateQueries({ queryKey: ["userFavorites"] });
-      set(
-        showSuccessAtom,
-        "Leden har lagts till, du hittar listan under din profil.",
+    onMutate: async (trailIdentifier: string) => {
+      queryClient.cancelQueries({
+        queryKey: ["userFavorites", userIdentifier],
+      });
+
+      const previousFavoritesList = queryClient.getQueryData<
+        UserFavoritesTrail[]
+      >(["userFavorites", userIdentifier]);
+
+      queryClient.setQueryData<UserFavoritesTrail[]>(
+        ["userFavorites", userIdentifier],
+        (old) => {
+          if (!old) return old;
+          return [
+            ...old,
+            { identifier: trailIdentifier } as UserFavoritesTrail,
+          ];
+        },
       );
-    } catch (error) {
-      if (error instanceof ApiError && error.status === 409) {
-        set(showWarningAtom, "Leden finns redan bland dina favoriter!");
-      } else {
-        set(showErrorAtom, "Kunde inte lägga till i din favoritlista.");
+
+      return { previousFavoritesList };
+    },
+    onError: (
+      context: { previousFavoritesList: UserFavoritesTrail[] } | undefined,
+    ) => {
+      if (context?.previousFavoritesList) {
+        queryClient.setQueryData(
+          ["userFavorites", userIdentifier],
+          context.previousFavoritesList,
+        );
       }
-    }
-  },
-);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["userFavorites", userIdentifier],
+      });
+    },
+  };
+});
 
 // Lägga till en ny i "vill gå"-listan
-export const addToWishlistAtom = atom(
-  null,
-  async (get, set, trailIdentifier: string) => {
-    const queryClient = get(queryClientAtom);
+export const addToWishlistAtom = atomWithMutation((get) => {
+  const queryClient = get(queryClientAtom);
+  const userIdentifier = get(userIdentifierAtom);
 
-    try {
-      await addToUserWishlist(USER_IDENTIFIER, trailIdentifier);
+  return {
+    mutationFn: async (trailIdentifier: string) => {
+      return addToUserWishlist(userIdentifier, trailIdentifier);
+    },
 
-      queryClient.invalidateQueries({ queryKey: ["userWishlist"] });
-      set(
-        showSuccessAtom,
-        "Leden har lagts till, du hittar listan under min profil!",
+    onMutate: async (trailIdentifier: string) => {
+      queryClient.cancelQueries({ queryKey: ["userWishlist", userIdentifier] });
+
+      // Hämtar det som är sparat i cachen och sparar det i en egen variable ifall nåt går snett
+      const previousWishlist = queryClient.getQueryData<UserWishlistTrail[]>([
+        "userWishlist",
+        userIdentifier,
+      ]);
+
+      // Lägg till innan amnropet är klart för att det ska se fräckt ut
+      queryClient.setQueryData<UserWishlistTrail[]>(
+        ["userWishlist", userIdentifier],
+        (old) => {
+          if (!old) return old;
+          return [...old, { identifier: trailIdentifier } as UserWishlistTrail];
+        },
       );
-    } catch (error) {
-      if (error instanceof ApiError && error.status === 409) {
-        set(showWarningAtom, "Leden finns redan i din önskelista!");
-      } else {
-        set(showErrorAtom, "Kunde inte lägga till i din önskelista.");
+
+      return { previousWishlist };
+    },
+
+    onError: (
+      context: { previousWishlist: UserWishlistTrail[] } | undefined,
+    ) => {
+      if (context?.previousWishlist) {
+        queryClient.setQueryData(
+          ["userWishlist", userIdentifier],
+          context.previousWishlist,
+        );
       }
-    }
-  },
-);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["userWishlist", userIdentifier],
+      });
+    },
+  };
+});
 
 // Ta bort från lista med optimistiska uppdateringar
 // https://tanstack.com/query/v4/docs/framework/react/guides/optimistic-updates
@@ -100,30 +148,32 @@ export const removeFromWishlistAtom = atom(
   null,
   async (get, set, trailIdentifier: string) => {
     const queryClient = get(queryClientAtom);
+    const userIdentifier = get(userIdentifierAtom);
     // Avbryt om det finns några pågående queries
     await queryClient.cancelQueries({
-      queryKey: ["userWishlist", USER_IDENTIFIER],
+      queryKey: ["userWishlist", userIdentifier],
     });
 
     // Hämtar det som är sparat i cachen och sparar det i en egen variable ifall nåt går snett
-    const previousWishlist = queryClient.getQueryData<
-      UserWishlistTrailCollection[]
-    >(["userWishlist", USER_IDENTIFIER]);
+    const previousWishlist = queryClient.getQueryData<UserWishlistTrail[]>([
+      "userWishlist",
+      userIdentifier,
+    ]);
 
     // Filtera bort den som ska tas bort innan den tas bort för att det ska se fräckt ut
-    queryClient.setQueryData<UserWishlistTrailCollection[]>(
-      ["userWishlist", USER_IDENTIFIER],
+    queryClient.setQueryData<UserWishlistTrail[]>(
+      ["userWishlist", userIdentifier],
       (old) => old?.filter((trail) => trail.identifier !== trailIdentifier),
     );
 
     try {
       // Försöker ta bort promenaden användaren kryssat
-      await removeUserWishlist(USER_IDENTIFIER, trailIdentifier);
+      await removeUserWishlist(userIdentifier, trailIdentifier);
     } catch (error) {
       // Går något fel så återsälls listan men bara om listan inte är undefined.
       if (previousWishlist) {
         queryClient.setQueryData(
-          ["userWishlist", USER_IDENTIFIER],
+          ["userWishlist", userIdentifier],
           previousWishlist,
         );
       }
@@ -133,7 +183,7 @@ export const removeFromWishlistAtom = atom(
     } finally {
       // Hämta om på nytt
       queryClient.invalidateQueries({
-        queryKey: ["userWishlist", USER_IDENTIFIER],
+        queryKey: ["userWishlist", userIdentifier],
       });
     }
   },
@@ -143,26 +193,27 @@ export const removeFromFavoritesAtom = atom(
   null,
   async (get, set, trailIdentifier: string) => {
     const queryClient = get(queryClientAtom);
+    const userIdentifier = get(userIdentifierAtom);
 
     await queryClient.cancelQueries({
-      queryKey: ["userFavorites", USER_IDENTIFIER],
+      queryKey: ["userFavorites", userIdentifier],
     });
 
     const previousFavoritesList = queryClient.getQueryData<
-      UserFavoritesTrailCollection[]
-    >(["userFavorites", USER_IDENTIFIER]);
+      UserFavoritesTrail[]
+    >(["userFavorites", userIdentifier]);
 
-    queryClient.setQueryData<UserFavoritesTrailCollection[]>(
-      ["userFavorites", USER_IDENTIFIER],
+    queryClient.setQueryData<UserFavoritesTrail[]>(
+      ["userFavorites", userIdentifier],
       (old) => old?.filter((trail) => trail.identifier !== trailIdentifier),
     );
 
     try {
-      await removeUserFavorite(USER_IDENTIFIER, trailIdentifier);
+      await removeUserFavorite(userIdentifier, trailIdentifier);
     } catch (error) {
       if (previousFavoritesList) {
         queryClient.setQueryData(
-          ["userFavorites", USER_IDENTIFIER],
+          ["userFavorites", userIdentifier],
           previousFavoritesList,
         );
       }
@@ -170,7 +221,7 @@ export const removeFromFavoritesAtom = atom(
       console.error("Failed to remove trail from favorites", error);
     } finally {
       queryClient.invalidateQueries({
-        queryKey: ["userFavorites", USER_IDENTIFIER],
+        queryKey: ["userFavorites", userIdentifier],
       });
     }
   },

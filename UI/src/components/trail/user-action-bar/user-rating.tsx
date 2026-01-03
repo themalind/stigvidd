@@ -9,7 +9,7 @@ export default function UserRating() {
       <TouchableOpacity style={s.touchable}>
         <FontAwesome
           name="thumbs-o-up"
-          size={24}
+          size={30}
           color={theme.colors.onPrimary}
         />
         <Text style={[s.text, { color: theme.colors.onPrimary }]}>

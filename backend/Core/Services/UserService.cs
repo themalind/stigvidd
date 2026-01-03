@@ -7,7 +7,7 @@ using WebDataContracts.ResponseModels.User;
 
 namespace Core.Services;
 
-public class UserService: IUserService
+public class UserService : IUserService
 {
     private readonly IDbContextFactory<StigViddDbContext> _context;
     private readonly ILogger<UserService> _logger;
@@ -25,7 +25,7 @@ public class UserService: IUserService
         _wishlistResponseFactory = wishlistFactory;
     }
 
-    public async Task<Result<IReadOnlyCollection<UserFavoritesTrailCollectionResponse?>>> GetFavoritesByUserIdentifierAsync(string userIdentifier, CancellationToken ctoken)
+    public async Task<Result<IReadOnlyCollection<UserFavoritesTrailResponse?>>> GetFavoritesByUserIdentifierAsync(string userIdentifier, CancellationToken ctoken)
     {
         using var context = await _context.CreateDbContextAsync(ctoken);
 
@@ -40,15 +40,15 @@ public class UserService: IUserService
         {
             _logger.LogWarning("User with identifier {userIdentifier} not found.", userIdentifier);
 
-            return Result.Fail<IReadOnlyCollection<UserFavoritesTrailCollectionResponse?>>(new Message(404, $"No user found with identifier {userIdentifier}"));
+            return Result.Fail<IReadOnlyCollection<UserFavoritesTrailResponse?>>(new Message(404, $"No user found with identifier {userIdentifier}"));
         }
 
-        var favorites = _favoritesResponseFactory.Create(user.MyFavorites);      
+        var favorites = _favoritesResponseFactory.Create(user.MyFavorites);
 
-        return Result.Ok<IReadOnlyCollection<UserFavoritesTrailCollectionResponse?>>(favorites?.ToList() ?? []);
+        return Result.Ok<IReadOnlyCollection<UserFavoritesTrailResponse?>>(favorites?.ToList() ?? []);
     }
 
-    public async Task<Result<IReadOnlyCollection<UserWishlistTrailCollectionResponse?>>> GetWishListByUserIdentifierAsync(string userIdentifier, CancellationToken ctoken)
+    public async Task<Result<IReadOnlyCollection<UserWishlistTrailResponse?>>> GetWishListByUserIdentifierAsync(string userIdentifier, CancellationToken ctoken)
     {
         using var context = await _context.CreateDbContextAsync(ctoken);
 
@@ -56,22 +56,22 @@ public class UserService: IUserService
             .Include(wl => wl.MyWishList!)
                 .ThenInclude(ti => ti.TrailImages!)
             .Include(wl => wl.MyWishList!)
-                .ThenInclude(ri => ri.Reviews!)                    
+                .ThenInclude(ri => ri.Reviews!)
             .FirstOrDefaultAsync(u => u.Identifier == userIdentifier, ctoken);
 
         if (user is null)
         {
             _logger.LogWarning("User with identifier {userIdentifier} not found.", userIdentifier);
 
-            return Result.Fail<IReadOnlyCollection<UserWishlistTrailCollectionResponse?>>(new Message(404, $"No user found with identifier {userIdentifier}"));
+            return Result.Fail<IReadOnlyCollection<UserWishlistTrailResponse?>>(new Message(404, $"No user found with identifier {userIdentifier}"));
         }
 
         var wishList = _wishlistResponseFactory.Create(user.MyWishList);
 
-        return Result.Ok<IReadOnlyCollection<UserWishlistTrailCollectionResponse?>>(wishList?.ToList()  ?? []);
+        return Result.Ok<IReadOnlyCollection<UserWishlistTrailResponse?>>(wishList?.ToList() ?? []);
     }
 
-    public async Task<Result<UserFavoritesTrailCollectionResponse?>> AddTrailToUserFavoritesListAsync(string userIdentifier, string trailIdentifier, CancellationToken ctoken)
+    public async Task<Result<UserFavoritesTrailResponse?>> AddTrailToUserFavoritesListAsync(string userIdentifier, string trailIdentifier, CancellationToken ctoken)
     {
         using var context = await _context.CreateDbContextAsync(ctoken);
 
@@ -83,7 +83,7 @@ public class UserService: IUserService
         {
             _logger.LogWarning("User with identifier {userIdentifier} not found.", userIdentifier);
 
-            return Result.Fail<UserFavoritesTrailCollectionResponse?>(new Message(404, $"User with identifier {userIdentifier} not found."));
+            return Result.Fail<UserFavoritesTrailResponse?>(new Message(404, $"User with identifier {userIdentifier} not found."));
         }
 
         var trail = await context.Trails
@@ -95,7 +95,7 @@ public class UserService: IUserService
         {
             _logger.LogWarning("Trail with identifier: {trailIdentifier} not found", trailIdentifier);
 
-            return Result.Fail<UserFavoritesTrailCollectionResponse?>(new Message(404, $"Trail with identifier: {trailIdentifier} not found."));
+            return Result.Fail<UserFavoritesTrailResponse?>(new Message(404, $"Trail with identifier: {trailIdentifier} not found."));
         }
 
         user.MyFavorites ??= [];
@@ -104,18 +104,26 @@ public class UserService: IUserService
         {
             _logger.LogDebug("Trail {trailIdentifier} already in user favorites", trailIdentifier);
 
-            return Result.Fail<UserFavoritesTrailCollectionResponse?>(new Message(409, $"Trail {trailIdentifier} already in user favorites"));
+            return Result.Fail<UserFavoritesTrailResponse?>(new Message(409, $"Trail {trailIdentifier} already in user favorites"));
         }
 
         user.MyFavorites.Add(trail);
-        await context.SaveChangesAsync(ctoken);
+
+        try
+        {
+            await context.SaveChangesAsync(ctoken);
+        }
+        catch(DbUpdateException)
+        {
+           
+        }
 
         var response = _favoritesResponseFactory.Create(trail);
 
-        return Result.Ok<UserFavoritesTrailCollectionResponse?>(response);
+        return Result.Ok<UserFavoritesTrailResponse?>(response);
     }
 
-    public async Task<Result<UserWishlistTrailCollectionResponse?>> AddTrailToUserWishListAsync(string userIdentifier, string trailIdentifier, CancellationToken ctoken)
+    public async Task<Result<UserWishlistTrailResponse?>> AddTrailToUserWishListAsync(string userIdentifier, string trailIdentifier, CancellationToken ctoken)
     {
         using var context = await _context.CreateDbContextAsync(ctoken);
 
@@ -127,7 +135,7 @@ public class UserService: IUserService
         {
             _logger.LogWarning("User with identifier {userIdentifier} not found.", userIdentifier);
 
-            return Result.Fail<UserWishlistTrailCollectionResponse?>(new Message(404, $"User with identifier {userIdentifier} not found."));
+            return Result.Fail<UserWishlistTrailResponse?>(new Message(404, $"User with identifier {userIdentifier} not found."));
         }
 
         var trail = await context.Trails
@@ -139,7 +147,7 @@ public class UserService: IUserService
         {
             _logger.LogWarning("Trail with identifier: {trailIdentifier} not found", trailIdentifier);
 
-            return Result.Fail<UserWishlistTrailCollectionResponse?>(new Message(404, $"Trail with identifier: {trailIdentifier} not found"));
+            return Result.Fail<UserWishlistTrailResponse?>(new Message(404, $"Trail with identifier: {trailIdentifier} not found"));
         }
 
         user.MyWishList ??= [];
@@ -148,16 +156,23 @@ public class UserService: IUserService
         {
             _logger.LogDebug("Trail {trailIdentifier} already in user wishlist", trailIdentifier);
 
-            return Result.Fail<UserWishlistTrailCollectionResponse?>(new Message(409, $"Trail {trailIdentifier} already in user wishlist"));
+            return Result.Fail<UserWishlistTrailResponse?>(new Message(409, $"Trail {trailIdentifier} already in user wishlist"));
         }
 
         user.MyWishList.Add(trail);
 
-        await context.SaveChangesAsync(ctoken);
+        try
+        {
+            await context.SaveChangesAsync(ctoken);
+        }
+        catch (DbUpdateException)
+        {
+
+        }
 
         var response = _wishlistResponseFactory.Create(trail);
 
-        return Result.Ok<UserWishlistTrailCollectionResponse?>(response);
+        return Result.Ok<UserWishlistTrailResponse?>(response);
     }
 
     public async Task<Result> RemoveTrailFromUserFavoritesListAsync(string userIdentifier, string trailIdentifier, CancellationToken ctoken)
@@ -209,7 +224,7 @@ public class UserService: IUserService
         {
             _logger.LogWarning("User with identifier {userIdentifier} not found.", userIdentifier);
 
-           return Result.Fail(new Message(404, $"No user found with identifier {userIdentifier}"));
+            return Result.Fail(new Message(404, $"No user found with identifier {userIdentifier}"));
         }
 
         if (user.MyWishList is null)

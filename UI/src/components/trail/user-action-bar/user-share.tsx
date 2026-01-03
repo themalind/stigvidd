@@ -6,7 +6,7 @@ export default function UserShare() {
   return (
     <View style={s.container}>
       <TouchableOpacity style={s.touchable}>
-        <MaterialIcons name="share" size={25} color={theme.colors.onPrimary} />
+        <MaterialIcons name="share" size={30} color={theme.colors.onPrimary} />
         <Text style={[s.text, { color: theme.colors.onPrimary }]}>Dela</Text>
       </TouchableOpacity>
     </View>

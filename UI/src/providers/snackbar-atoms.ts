@@ -27,6 +27,18 @@ export const showSuccessAtom = atom(
   },
 );
 
+export const showRemovedAtom = atom(
+  null,
+  (get, set, message: string, icon?: string) => {
+    set(snackbarAtom, {
+      visible: true,
+      message,
+      type: "success",
+      icon: icon || "check-circle",
+    });
+  },
+);
+
 export const showErrorAtom = atom(
   null,
   (get, set, message: string, icon?: string) => {

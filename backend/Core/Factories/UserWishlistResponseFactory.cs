@@ -7,10 +7,10 @@ namespace Core.Factories;
 
 public class UserWishlistResponseFactory
 {
-    public IEnumerable<UserWishlistTrailCollectionResponse>? Create(ICollection<Trail>? trails)
+    public IEnumerable<UserWishlistTrailResponse>? Create(ICollection<Trail>? trails)
     {
         return trails?.Select(
-                trail => UserWishlistTrailCollectionResponse.Create(
+                trail => UserWishlistTrailResponse.Create(
                 trail.Identifier,
                 trail.Name,
                 trail.TrailLength,
@@ -26,9 +26,9 @@ public class UserWishlistResponseFactory
             .ToList()));
     }
 
-    public UserWishlistTrailCollectionResponse Create(Trail trail)
+    public UserWishlistTrailResponse Create(Trail trail)
     {
-        return UserWishlistTrailCollectionResponse.Create(
+        return UserWishlistTrailResponse.Create(
             trail.Identifier,
             trail.Name,
             trail.TrailLength,
