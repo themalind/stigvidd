@@ -213,9 +213,11 @@ public class UserServiceUnitTests
     {
         // Arrange
         var userService = CreateUserService();
+
         // Act
         var result = await userService.RemoveTrailFromUserFavoritesListAsync(
             "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d22", "77a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c", CancellationToken.None);
+
         // Assert
         result.Success.Should().BeFalse();
         result.Message.Should().NotBeNull();
@@ -228,9 +230,11 @@ public class UserServiceUnitTests
     {
         // Arrange
         var userService = CreateUserService();
+
         // Act
         var result = await userService.RemoveTrailFromUserFavoritesListAsync(
             "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5a33", "77a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c", CancellationToken.None);
+
         // Assert
         result.Success.Should().BeFalse();
         result.Message.Should().NotBeNull();
@@ -424,9 +428,11 @@ public class UserServiceUnitTests
     {
         // Arrange
         var userService = CreateUserService();
+
         // Act
         var result = await userService.RemoveTrailFromUserWishListAsync(
             "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d67", "77a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c", CancellationToken.None);
+
         // Assert
         result.Success.Should().BeFalse();
         result.Message.Should().NotBeNull();
@@ -439,9 +445,11 @@ public class UserServiceUnitTests
     {
         // Arrange
         var userService = CreateUserService();
+
         // Act
         var result = await userService.RemoveTrailFromUserWishListAsync(
             "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5a44", "77a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c", CancellationToken.None);
+
         // Assert
         result.Success.Should().BeFalse();
         result.Message.Should().NotBeNull();
