@@ -22,8 +22,8 @@ public class UserServiceUnitTests
         var result = await userService.GetFavoritesByUserIdentifierAsync("a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d", CancellationToken.None);
 
         // Assert
-        Assert.True(result.Success);
-        Assert.NotNull(result.Value);
+        result.Success.Should().BeTrue();
+        result.Value.Should().NotBeNull();
     }
 
     [Fact]
@@ -36,9 +36,9 @@ public class UserServiceUnitTests
         var result = await userService.GetFavoritesByUserIdentifierAsync("b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e", CancellationToken.None);
 
         // Assert
-        Assert.True(result.Success);
-        Assert.NotNull(result.Value);
-        Assert.Equal(2, result.Value.Count);
+        result.Success.Should().BeTrue();
+        result.Value.Should().NotBeNull();
+        result.Value.Should().HaveCount(2);
     }
 
     [Fact]
@@ -73,8 +73,8 @@ public class UserServiceUnitTests
         var result = await userService.GetFavoritesByUserIdentifierAsync("77a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c", CancellationToken.None);
 
         // Assert
-        Assert.False(result.Success);
-        Assert.Null(result.Value);
+        result.Success.Should().BeFalse();
+        result.Value.Should().BeNull();
     }
 
     [Fact]
@@ -107,7 +107,7 @@ public class UserServiceUnitTests
         // Assert
         result.Success.Should().BeTrue();
         result.Value.Should().NotBeNull();
-        result.Should().BeOfType<Result<UserFavoritesTrailResponse>>();       
+        result.Should().BeOfType<Result<UserFavoritesTrailResponse>>();
     }
 
     [Fact]
@@ -123,7 +123,7 @@ public class UserServiceUnitTests
         // Assert
         result.Success.Should().BeFalse();
         result.Value.Should().BeNull();
-     }
+    }
 
     [Fact]
     public async Task AddToUserFavorites_WithInvalidTrailIdentifier_ReturnsCorrectErrorMessage()
@@ -248,9 +248,9 @@ public class UserServiceUnitTests
         var result = await userService.GetWishListByUserIdentifierAsync("a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d", CancellationToken.None);
 
         // Assert
-        Assert.True(result.Success);
-        Assert.NotNull(result.Value);
-        Assert.Equal(2, result.Value.Count);
+        result.Success.Should().BeTrue();
+        result.Value.Should().NotBeNull();
+        result.Value.Should().HaveCount(2);
     }
 
     [Fact]
@@ -285,9 +285,9 @@ public class UserServiceUnitTests
         var result = await userService.GetWishListByUserIdentifierAsync("b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e", CancellationToken.None);
 
         // Assert
-        Assert.True(result.Success);
-        Assert.NotNull(result.Value);
-        Assert.Empty(result.Value);
+        result.Success.Should().BeTrue();
+        result.Value.Should().NotBeNull();
+        result.Value.Should().BeEmpty();
     }
 
     [Fact]
@@ -300,8 +300,8 @@ public class UserServiceUnitTests
         var result = await userService.GetWishListByUserIdentifierAsync("77a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c", CancellationToken.None);
 
         // Assert
-        Assert.False(result.Success);
-        Assert.Null(result.Value);
+        result.Success.Should().BeFalse();
+        result.Value.Should().BeNull();
     }
 
     [Fact]
