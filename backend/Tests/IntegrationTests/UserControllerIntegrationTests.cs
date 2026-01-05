@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using FluentAssertions;
+using System.Net;
 using System.Net.Http.Json;
 using WebDataContracts.RequestModels;
 using WebDataContracts.ResponseModels.User;
@@ -26,12 +27,12 @@ public class UserControllerIntegrationTests : IClassFixture<StigViddWebApplicati
         // Act
         var response = await _client.GetAsync($"/api/v1/user/{userIdentifier}/favorites");
         var favorites = await response.Content.ReadFromJsonAsync<List<UserFavoritesTrailResponse>>();
-    
+
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.NotNull(favorites);
-        Assert.Equal(2, favorites.Count);
-        Assert.IsAssignableFrom<IEnumerable<UserFavoritesTrailResponse>>(favorites);
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        favorites.Should().NotBeNull();
+        favorites.Should().HaveCount(2);
+        favorites.Should().BeAssignableTo<IEnumerable<UserFavoritesTrailResponse>>();
     }
 
     [Fact]
@@ -45,10 +46,10 @@ public class UserControllerIntegrationTests : IClassFixture<StigViddWebApplicati
         var favorites = await response.Content.ReadFromJsonAsync<List<UserFavoritesTrailResponse>>();
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.NotNull(favorites);
-        Assert.Empty(favorites);
-        Assert.IsAssignableFrom<IEnumerable<UserFavoritesTrailResponse>>(favorites);
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        favorites.Should().NotBeNull();
+        favorites.Should().BeEmpty();
+        favorites.Should().BeAssignableTo<IEnumerable<UserFavoritesTrailResponse>>();
     }
 
     [Fact]
@@ -61,7 +62,7 @@ public class UserControllerIntegrationTests : IClassFixture<StigViddWebApplicati
         var response = await _client.GetAsync($"/api/v1/user/{invalidUserIdentifier}/favorites");
 
         // Assert
-        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
 
     [Fact]
@@ -75,10 +76,10 @@ public class UserControllerIntegrationTests : IClassFixture<StigViddWebApplicati
         var favorites = await response.Content.ReadFromJsonAsync<List<UserFavoritesTrailResponse>>();
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.NotNull(favorites);
-        Assert.NotEmpty(favorites);
-        Assert.NotEmpty(favorites[0].TrailImages!);
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        favorites.Should().NotBeNull();
+        favorites.Should().NotBeEmpty();
+        favorites[0].TrailImages.Should().NotBeEmpty();
     }
 
     [Fact]
@@ -99,7 +100,7 @@ public class UserControllerIntegrationTests : IClassFixture<StigViddWebApplicati
         var response = await _client.SendAsync(request);
         // Assert
 
-        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        response.StatusCode.Should().Be(HttpStatusCode.Created);
     }
 
     [Fact]
@@ -120,7 +121,7 @@ public class UserControllerIntegrationTests : IClassFixture<StigViddWebApplicati
         var response = await _client.SendAsync(request);
         // Assert
 
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
 
     [Fact]
@@ -141,7 +142,7 @@ public class UserControllerIntegrationTests : IClassFixture<StigViddWebApplicati
         var response = await _client.SendAsync(request);
         // Assert
 
-        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
 
     [Fact]
@@ -162,7 +163,7 @@ public class UserControllerIntegrationTests : IClassFixture<StigViddWebApplicati
         var response = await _client.SendAsync(request);
         // Assert
 
-        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
 
     [Fact]
@@ -183,7 +184,7 @@ public class UserControllerIntegrationTests : IClassFixture<StigViddWebApplicati
         var response = await _client.SendAsync(request);
         // Assert
 
-        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+        response.StatusCode.Should().Be(HttpStatusCode.Conflict);
     }
 
     [Fact]
@@ -199,7 +200,7 @@ public class UserControllerIntegrationTests : IClassFixture<StigViddWebApplicati
         var response = await _client.SendAsync(request);
 
         // Assert
-        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
     }
 
     [Fact]
@@ -215,7 +216,7 @@ public class UserControllerIntegrationTests : IClassFixture<StigViddWebApplicati
         var response = await _client.SendAsync(request);
 
         // Assert
-        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+        response.StatusCode.Should().Be(HttpStatusCode.Conflict);
     }
 
     [Fact]
@@ -231,7 +232,7 @@ public class UserControllerIntegrationTests : IClassFixture<StigViddWebApplicati
         var response = await _client.SendAsync(request);
 
         // Assert
-        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
 
     [Fact]
@@ -245,10 +246,10 @@ public class UserControllerIntegrationTests : IClassFixture<StigViddWebApplicati
         var wishlist = await response.Content.ReadFromJsonAsync<List<UserWishlistTrailResponse>>();
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.NotNull(wishlist);
-        Assert.Equal(2, wishlist.Count);
-        Assert.IsAssignableFrom<IEnumerable<UserWishlistTrailResponse>>(wishlist);
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        wishlist.Should().NotBeNull();
+        wishlist.Should().HaveCount(2);
+        wishlist.Should().BeAssignableTo<IEnumerable<UserWishlistTrailResponse>>();
     }
 
     [Fact]
@@ -262,10 +263,10 @@ public class UserControllerIntegrationTests : IClassFixture<StigViddWebApplicati
         var wishlist = await response.Content.ReadFromJsonAsync<List<UserWishlistTrailResponse>>();
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.NotNull(wishlist);
-        Assert.Empty(wishlist);
-        Assert.IsAssignableFrom<IEnumerable<UserWishlistTrailResponse>>(wishlist);
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        wishlist.Should().NotBeNull();
+        wishlist.Should().BeEmpty();
+        wishlist.Should().BeAssignableTo<IEnumerable<UserWishlistTrailResponse>>();
     }
 
     [Fact]
@@ -279,10 +280,10 @@ public class UserControllerIntegrationTests : IClassFixture<StigViddWebApplicati
         var wishList = await response.Content.ReadFromJsonAsync<List<UserWishlistTrailResponse>>();
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.NotNull(wishList);
-        Assert.NotEmpty(wishList);
-        Assert.NotEmpty(wishList[0].TrailImages!);    
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        wishList.Should().NotBeNull();
+        wishList.Should().NotBeEmpty();
+        wishList[0].TrailImages.Should().NotBeEmpty();
     }
 
     [Fact]
@@ -295,7 +296,7 @@ public class UserControllerIntegrationTests : IClassFixture<StigViddWebApplicati
         var response = await _client.GetAsync($"/api/v1/user/{invalidUserIdentifier}/wishlist");
 
         // Assert
-        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
 
     [Fact]
@@ -316,7 +317,7 @@ public class UserControllerIntegrationTests : IClassFixture<StigViddWebApplicati
         var response = await _client.SendAsync(request);
         // Assert
 
-        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        response.StatusCode.Should().Be(HttpStatusCode.Created);
     }
 
     [Fact]
@@ -337,7 +338,7 @@ public class UserControllerIntegrationTests : IClassFixture<StigViddWebApplicati
         var response = await _client.SendAsync(request);
         // Assert
 
-        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+       response.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
 
     [Fact]
@@ -358,7 +359,7 @@ public class UserControllerIntegrationTests : IClassFixture<StigViddWebApplicati
         var response = await _client.SendAsync(request);
         // Assert
 
-        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
 
     [Fact]
@@ -379,7 +380,7 @@ public class UserControllerIntegrationTests : IClassFixture<StigViddWebApplicati
         var response = await _client.SendAsync(request);
         // Assert
 
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
 
     [Fact]
@@ -400,7 +401,7 @@ public class UserControllerIntegrationTests : IClassFixture<StigViddWebApplicati
         var response = await _client.SendAsync(request);
         // Assert
 
-        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+        response.StatusCode.Should().Be(HttpStatusCode.Conflict);
     }
 
     [Fact]
@@ -416,7 +417,7 @@ public class UserControllerIntegrationTests : IClassFixture<StigViddWebApplicati
         var response = await _client.SendAsync(request);
 
         // Assert
-        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
     }
 
     [Fact]
@@ -432,7 +433,7 @@ public class UserControllerIntegrationTests : IClassFixture<StigViddWebApplicati
         var response = await _client.SendAsync(request);
 
         // Assert
-        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+        response.StatusCode.Should().Be(HttpStatusCode.Conflict);
     }
 
     [Fact]
@@ -448,7 +449,6 @@ public class UserControllerIntegrationTests : IClassFixture<StigViddWebApplicati
         var response = await _client.SendAsync(request);
 
         // Assert
-        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
-
 }
