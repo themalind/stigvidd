@@ -2,7 +2,7 @@ import { Coordinate } from "@/data/types";
 import { StyleSheet, } from "react-native";
 import MapView, { Marker } from "react-native-maps";
 import * as Location from "expo-location";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 
 export default function MapScreen() {
   const START_COORDINATE_BORAS = {
@@ -12,9 +12,9 @@ export default function MapScreen() {
     longitudeDelta: 0.1,
   };
 
-  const proffs: Coordinate = {
-    latitude: 57.67372,
-    longitude: 12.56592
+  const gesebol: Coordinate = {
+    latitude: 57.73,
+    longitude: 12.70
   };
 
   useEffect(() => {
@@ -33,9 +33,9 @@ export default function MapScreen() {
       toolbarEnabled={false}
     >
       <Marker
-        coordinate={proffs}
-        title="Proffs"
-        image={require("@/assets/map/marker.png")}
+        coordinate={gesebol}
+        title="Gesebol"
+        image={require("@/assets/map/marker/vindskydd-100-159.png")}
       />
     </MapView>
   );
@@ -44,5 +44,10 @@ export default function MapScreen() {
 const s = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  marker: {
+    flex: 1,
+    width: 50,
+    height: 50,
   },
 });
