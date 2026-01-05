@@ -113,9 +113,9 @@ public class UserService : IUserService
         {
             await context.SaveChangesAsync(ctoken);
         }
-        catch(DbUpdateException)
+        catch (DbUpdateException)
         {
-           
+
         }
 
         var response = _favoritesResponseFactory.Create(trail);
@@ -180,7 +180,7 @@ public class UserService : IUserService
         using var context = await _context.CreateDbContextAsync(ctoken);
 
         var user = await context.Users
-            .Include(user => user.MyFavorites!)
+            .Include(user => user.MyFavorites)
             .FirstOrDefaultAsync(user => user.Identifier == userIdentifier, ctoken);
 
         if (user is null)
@@ -190,11 +190,18 @@ public class UserService : IUserService
             return Result.Fail(new Message(404, $"No user found with identifier {userIdentifier}"));
         }
 
+        if (!user.MyFavorites?.Any() ?? true)
+        {
+            _logger.LogWarning("User {userIdentifier} favorites list is empty", userIdentifier);
+
+            return Result.Fail(new Message(404, "User has no favorites"));
+        }
+
         if (user.MyFavorites is null)
         {
             _logger.LogWarning("User {userIdentifier} favorites list is null", userIdentifier);
 
-            return Result.Fail(new Message(404, "User favorites list is null"));
+            return Result.Fail(new Message(404, "User has no favorites"));
         }
 
         var trail = user.MyFavorites.FirstOrDefault(t => t.Identifier == trailIdentifier);
@@ -227,18 +234,24 @@ public class UserService : IUserService
             return Result.Fail(new Message(404, $"No user found with identifier {userIdentifier}"));
         }
 
+        if (!user.MyWishList?.Any() ?? true)
+        {
+            _logger.LogWarning("User {userIdentifier} wishlist is empty", userIdentifier);
+
+            return Result.Fail(new Message(404, "User has no wishlist"));
+        }
+
         if (user.MyWishList is null)
         {
-            _logger.LogWarning("User {userIdentifier} favorites list is null", userIdentifier);
-
-            return Result.Fail(new Message(404, "User favorites list is null"));
+            _logger.LogWarning("User {userIdentifier} wishlist is null", userIdentifier);
+            return Result.Fail(new Message(404, "User has no wishlist"));
         }
 
         var trail = user.MyWishList.FirstOrDefault(trail => trail.Identifier == trailIdentifier);
 
         if (trail is null)
         {
-            _logger.LogInformation("Trail {trailIdentifier} not in user favorites", trailIdentifier);
+            _logger.LogInformation("Trail {trailIdentifier} not in user wishlist", trailIdentifier);
 
             return Result.Fail(new Message(409, $"Trail {trailIdentifier} not in user wishlist"));
         }
