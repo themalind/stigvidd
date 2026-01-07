@@ -14,7 +14,7 @@ public class TrailResponse
     public string? TrailSymbolImage { get; set; }
     public string? Description { get; set; }
     public string? CoordinatesJson { get; set; }
-    public IReadOnlyCollection<TrailImageResponse>? trailImagesResponse { get; set; }
+    public IReadOnlyCollection<TrailImageResponse>? TrailImagesResponse { get; set; }
     public IReadOnlyCollection<TrailLinkResponse>? TrailLinksResponse { get; set; }
     public IReadOnlyCollection<ReviewResponse>? ReviewsResponse { get; set; }
 
@@ -45,7 +45,7 @@ public class TrailResponse
             TrailSymbolImage = trailSymbolImage,
             Description = description,
             CoordinatesJson = coordinatesJson,
-            trailImagesResponse = trailImages?.ToList(),
+            TrailImagesResponse = trailImages?.ToList(),
             TrailLinksResponse = trailLinks?.ToList(),
             ReviewsResponse = reviews?.ToList(),
         };
