@@ -1,12 +1,32 @@
+import { signOutUser } from "@/api/auth";
+import { authStateAtom } from "@/providers/auth-atoms";
+import { stigviddUserAtom } from "@/providers/user-atoms";
 import { userThemeAtom } from "@/providers/user-theme-atom";
-import { Link } from "expo-router";
+import { Link, Redirect, router } from "expo-router";
 import { useAtom } from "jotai";
 import { ScrollView, StyleSheet } from "react-native";
-import { Button, SegmentedButtons, useTheme } from "react-native-paper";
+import { Button, SegmentedButtons, Text, useTheme } from "react-native-paper";
 
 export default function ProfilePageScreen() {
   const [userTheme, setUserTheme] = useAtom(userThemeAtom);
+  const [{ data }] = useAtom(stigviddUserAtom);
   const theme = useTheme();
+  const [authState] = useAtom(authStateAtom);
+
+  // Fixa så man inte måste avsluta appen när man ångrar sig och inte vill logga in efter man tryckt på profilpage
+  if (!authState.isAuthenticated) {
+    return <Redirect href="/login?redirect=(tabs)/profile-page" />;
+  }
+
+  async function handleSignOut() {
+    try {
+      await signOutUser();
+    } catch (e) {
+      console.log(e);
+    }
+    router.replace("/(tabs)");
+  }
+
   return (
     <ScrollView
       contentContainerStyle={[
@@ -14,6 +34,8 @@ export default function ProfilePageScreen() {
         { backgroundColor: theme.colors.background },
       ]}
     >
+      <Text>Inloggad som:</Text>
+      <Text>{data?.nickName}</Text>
       <SegmentedButtons
         value={userTheme}
         onValueChange={setUserTheme}
@@ -35,10 +57,10 @@ export default function ProfilePageScreen() {
           },
         ]}
       />
-      <Link href="../(stacks)/favorites">
+      <Link href="../(stacks)/user/favorites">
         <Button mode="contained">Favorites</Button>
       </Link>
-      <Link href="../(stacks)/wishlist">
+      <Link href="../(stacks)/user/wishlist">
         <Button mode="contained">Wishlist</Button>
       </Link>
       <Link href="../../(auth)/login">
@@ -47,6 +69,10 @@ export default function ProfilePageScreen() {
       <Link href="../../(auth)/register">
         <Button mode="contained">Register</Button>
       </Link>
+
+      <Button mode="contained" onPress={handleSignOut}>
+        Logga ut
+      </Button>
     </ScrollView>
   );
 }
