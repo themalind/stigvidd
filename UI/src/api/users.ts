@@ -1,4 +1,9 @@
-import { UserFavoritesTrail, UserWishlistTrail } from "@/data/types";
+import {
+  CreateStigViddUserCredentials,
+  User,
+  UserFavoritesTrail,
+  UserWishlistTrail,
+} from "@/data/types";
 import { IP } from "../../ipconfig";
 
 export class ApiError extends Error {
@@ -11,12 +16,57 @@ export class ApiError extends Error {
   }
 }
 
+export async function createStigViddUser({
+  email,
+  nickname,
+  firebaseUid,
+}: CreateStigViddUserCredentials): Promise<User> {
+  try {
+    const response = await fetch(`http://${IP}/api/v1/user/create`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email,
+        nickname,
+        firebaseUid,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new ApiError(`HTTP error ${response.status}`, response.status);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+}
+export async function getStigViddUser(firebaseUid: string): Promise<User> {
+  try {
+    const response = await fetch(`http://${IP}/api/v1/user/${firebaseUid}`, {
+      method: "GET",
+    });
+
+    if (!response.ok) {
+      throw new ApiError(`HTTP error ${response.status}`, response.status);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+}
+
 export async function getUserFavorites(
   userIdentifier: string,
 ): Promise<UserFavoritesTrail[]> {
   try {
     const response = await fetch(
-      "http://" + IP + `/api/v1/User/${userIdentifier}/favorites`,
+      `http://${IP}/api/v1/user/${userIdentifier}/favorites`,
       {
         method: "GET",
       },
@@ -38,7 +88,7 @@ export async function getUserWishlist(
 ): Promise<UserWishlistTrail[]> {
   try {
     const response = await fetch(
-      "http://" + IP + `/api/v1/User/${userIdentifier}/wishlist`,
+      "http://" + IP + `/api/v1/user/${userIdentifier}/wishlist`,
       {
         method: "GET",
       },
@@ -116,7 +166,7 @@ export async function removeUserFavorite(
 ): Promise<void> {
   try {
     const response = await fetch(
-      `http://${IP}/api/v1/users/${userIdentifier}/favorites/${trailIdentifier}`,
+      `http://${IP}/api/v1/user/${userIdentifier}/favorites/${trailIdentifier}`,
       {
         method: "DELETE",
       },
@@ -136,7 +186,7 @@ export async function removeUserWishlist(
 ): Promise<void> {
   try {
     const response = await fetch(
-      `http://${IP}/api/v1/users/${userIdentifier}/wishlist/${trailIdentifier}`,
+      `http://${IP}/api/v1/user/${userIdentifier}/wishlist/${trailIdentifier}`,
       {
         method: "DELETE",
       },
