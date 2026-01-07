@@ -1,10 +1,5 @@
 import { ApiError } from "@/api/users";
-import {
-  showErrorAtom,
-  showRemovedAtom,
-  showSuccessAtom,
-  showWarningAtom,
-} from "@/providers/snackbar-atoms";
+import { showErrorAtom, showWarningAtom } from "@/providers/snackbar-atoms";
 import {
   addToWishlistAtom,
   removeFromWishlistAtom,
@@ -24,27 +19,19 @@ export default function AddToUserWishlist({ trailIdentifier }: Props) {
   const { data } = useAtomValue(userWishlistAtom);
   const removeFromWishlist = useSetAtom(removeFromWishlistAtom);
   const [{ mutate, isPending }] = useAtom(addToWishlistAtom);
-  const setSuccess = useSetAtom(showSuccessAtom);
   const setWarning = useSetAtom(showWarningAtom);
   const setError = useSetAtom(showErrorAtom);
-  const setRemoved = useSetAtom(showRemovedAtom);
 
   const handlePress = () => {
     if (data?.some((trail) => trail.identifier === trailIdentifier)) {
       removeFromWishlist(trailIdentifier);
-      setRemoved("Leden har tagits bort från din lista");
     } else {
       mutate(trailIdentifier, {
-        onSuccess: () => {
-          setSuccess(
-            "Leden har lagts till, du hittar listan under din profil.",
-          );
-        },
         onError: (error) => {
           if (error instanceof ApiError && error.status === 409) {
             setWarning("Leden finns redan i listan!");
           } else {
-            setError("Kunde inte lägga till i din önskelista.");
+            setError(`${error}`);
           }
         },
       });
@@ -54,6 +41,7 @@ export default function AddToUserWishlist({ trailIdentifier }: Props) {
   const isInWishlist = data?.some(
     (trail) => trail.identifier === trailIdentifier,
   );
+
   return (
     <View style={s.container}>
       <TouchableOpacity
