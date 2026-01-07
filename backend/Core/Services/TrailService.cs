@@ -7,12 +7,18 @@ using WebDataContracts.ResponseModels.Trail;
 
 namespace Core.Services;
 
-public class TrailService(IDbContextFactory<StigViddDbContext> context, ILogger<TrailService> logger, TrailResponseFactory factory) : ITrailService
+public class TrailService : ITrailService
 {
-    private readonly IDbContextFactory<StigViddDbContext> _context = context;
-    private readonly ILogger<TrailService> _logger = logger;
-    private readonly TrailResponseFactory _trailResponseFactory = factory;
+    private readonly IDbContextFactory<StigViddDbContext> _context;
+    private readonly ILogger<TrailService> _logger;
+    private readonly TrailResponseFactory _trailResponseFactory;
 
+    public TrailService(IDbContextFactory<StigViddDbContext> context, ILogger<TrailService> logger, TrailResponseFactory factory)
+    {
+        _context = context;
+        _logger = logger;
+        _trailResponseFactory = factory;
+    }
     public async Task<Result<TrailResponse?>> GetTrailByIdentifierAsync(string identifier, CancellationToken ctoken)
     {
         using var context = await _context.CreateDbContextAsync(ctoken);
@@ -45,16 +51,18 @@ public class TrailService(IDbContextFactory<StigViddDbContext> context, ILogger<
         using var context = await _context.CreateDbContextAsync(ctoken);
 
         var trails = await context.Trails
-            .Select(trail => new TrailOverviewResponse
-            {
-                Identifier = trail.Identifier,
-                Name = trail.Name,
-                TrailLength = trail.TrailLength,
-                TrailImagesResponse = trail.TrailImages!
-                    .Select(ti => TrailImageResponse.Create(ti.Identifier, ti.ImageUrl))
+            .Select(trail => TrailOverviewResponse.Create
+            (
+                trail.Identifier,
+                trail.Name,
+                trail.TrailLength,
+                trail.TrailImages!
+                    .Select(ti => TrailImageResponse.Create(
+                        ti.Identifier, 
+                        ti.ImageUrl))
                     .Take(1)
                     .ToList()
-            })
+            ))
             .Take(9)
             .ToListAsync(ctoken);
 
