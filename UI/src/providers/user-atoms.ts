@@ -182,13 +182,11 @@ export const removeFromWishlistAtom = atom(
     const queryClient = get(queryClientAtom);
     const userQuery = get(stigviddUserAtom);
     const userIdentifier = userQuery.data?.identifier;
-    console.log(
-      `userIdentifier that wants to remove trail: ${userQuery.data?.identifier}`,
-    );
-    console.log(`TrailIdentifier to be removed: ${trailIdentifier}`);
+
     if (!userIdentifier) {
       throw new Error("No user identifier");
     }
+
     // Avbryt om det finns några pågående queries
     await queryClient.cancelQueries({
       queryKey: ["userWishlist", userIdentifier],
