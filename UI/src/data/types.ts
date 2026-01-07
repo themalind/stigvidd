@@ -75,8 +75,3 @@ export interface RatingResponse {
   identifier: string;
   rating: number;
 }
-
-export interface Coordinate {
-  latitude: number;
-  longitude: number;
-}
