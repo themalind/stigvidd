@@ -47,12 +47,6 @@ export interface ReviewImage {
   ImageUrl: string;
 }
 
-export interface User {
-  identifier: string;
-  nickName: string;
-  email: string;
-}
-
 export interface UserFavoritesTrail {
   identifier: string;
   name: string;
@@ -79,4 +73,18 @@ export interface RatingResponse {
 export interface Coordinate {
   latitude: number;
   longitude: number;
+}
+
+export interface User {
+  identifier: string;
+  nickName: string;
+  email: string;
+  myWishList: UserWishlistTrail[];
+  myFavorites: UserFavoritesTrail[];
+}
+
+export interface CreateStigViddUserCredentials {
+  email: string;
+  nickname: string;
+  firebaseUid: string;
 }
