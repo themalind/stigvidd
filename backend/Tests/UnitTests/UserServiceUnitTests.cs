@@ -470,13 +470,15 @@ public class UserServiceUnitTests
         var mockLogger = new Mock<ILogger<UserService>>();
         var mockFavoritesFactory = new Mock<UserFavoritesResponseFactory>();
         var mockWishlistFactory = new Mock<UserWishlistResponseFactory>();
+        var mockUserFactory = new Mock<UserResponseFactory>();
 
         // Skapa service
         var service = new UserService(
             mockContextFactory.Object,
             mockLogger.Object,
             mockFavoritesFactory.Object,
-            mockWishlistFactory.Object
+            mockWishlistFactory.Object,
+            mockUserFactory.Object
         );
 
         return service;

@@ -29,6 +29,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<TrailResponseFactory>();
         services.AddTransient<UserFavoritesResponseFactory>();
         services.AddTransient<UserWishlistResponseFactory>();
+        services.AddTransient<UserResponseFactory>();
     }
 }
 

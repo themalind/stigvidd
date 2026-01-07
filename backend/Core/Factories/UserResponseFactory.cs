@@ -1,0 +1,54 @@
+﻿using Infrastructure.Data.Entities;
+using WebDataContracts.ResponseModels.Review;
+using WebDataContracts.ResponseModels.Trail;
+using WebDataContracts.ResponseModels.User;
+
+namespace Core.Factories;
+
+public class UserResponseFactory
+{
+    public UserResponse Create(User user)
+    {
+        return UserResponse.Create(
+            user.Identifier,
+            user.Email,
+            user.NickName,
+
+            user.MyWishList?.Select(wish =>
+                UserWishlistTrailResponse.Create(
+                    wish.Identifier,
+                    wish.Name,
+                    wish.TrailLength,
+                    wish.Description,
+                    wish.Reviews?.Select(r =>
+                        RatingResponse.Create(
+                            r.Identifier,
+                            r.Grade)).ToList(),
+                    wish.TrailImages?.Select(ti =>
+                        TrailImageResponse.Create(
+                            ti.Identifier,
+                            ti.ImageUrl)
+                    ).ToList()
+                )
+            ).ToList(),
+
+            user.MyFavorites?.Select(fav =>
+                UserFavoritesTrailResponse.Create(
+                    fav.Identifier,
+                    fav.Name,
+                    fav.TrailLength,
+                    fav.Description,
+                    fav.Reviews?.Select(r =>
+                        RatingResponse.Create(
+                            r.Identifier,
+                            r.Grade)).ToList(),
+                    fav.TrailImages?.Select(ti =>
+                        TrailImageResponse.Create(
+                            ti.Identifier,
+                            ti.ImageUrl)
+                    ).ToList()
+                )
+            ).ToList());
+    }
+}
+
