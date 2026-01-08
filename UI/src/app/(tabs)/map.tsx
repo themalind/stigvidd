@@ -1,8 +1,7 @@
-import { Coordinate } from "@/data/types";
-import { StyleSheet, } from "react-native";
-import MapView, { Marker } from "react-native-maps";
-import * as Location from "expo-location";
-import { useEffect } from "react";
+import { StyleSheet } from "react-native";
+import { LatLng } from "react-native-maps";
+import Map from "@/components/map/map";
+import Marker from "@/components/map/marker";
 
 export default function MapScreen() {
   const START_COORDINATE_BORAS = {
@@ -12,32 +11,22 @@ export default function MapScreen() {
     longitudeDelta: 0.1,
   };
 
-  const gesebol: Coordinate = {
+  const gesebol: LatLng = {
     latitude: 57.73,
     longitude: 12.70
   };
 
-  useEffect(() => {
-    (async () => {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if ( status !== "granted" ) return;
-    })();
-  }, []);
-
   return (
-    <MapView 
-      style={s.container}
-      initialRegion={START_COORDINATE_BORAS}
-      showsUserLocation
-      showsMyLocationButton={false}
-      toolbarEnabled={false}
-    >
-      <Marker
-        coordinate={gesebol}
-        title="Gesebol"
-        image={require("@/assets/map/marker/vindskydd-100-159.png")}
-      />
-    </MapView>
+      <Map
+        style={s.container}
+        initialRegion={START_COORDINATE_BORAS}
+      >
+        <Marker
+          coordinate={gesebol}
+          title="Gesebol"
+          variant="campsite"
+        />
+      </Map>
   );
 }
 
