@@ -1,9 +1,11 @@
+import { signInUser } from "@/api/auth";
+import { getLoginErrorMessage } from "@/api/firebase-errors";
 import { userThemeAtom } from "@/providers/user-theme-atom";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Image } from "expo-image";
-import { Link } from "expo-router";
+import { Link, router } from "expo-router";
 import { useAtom } from "jotai";
-import React from "react";
+import { useState } from "react";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
 import {
   Appearance,
@@ -27,23 +29,24 @@ const addOpacity = (rgbColor: string, opacity: number): string => {
 
 const loginFields = z.object({
   email: z
-    .string({ required_error: "Email is required" })
-    .email("You must enter an email"),
-  password: z.string().min(8, "Password must contain 8 characters"),
+    .string({ required_error: "Email is required." })
+    .email("You must enter an email."),
+  password: z.string().min(8, "Password must contain 8 characters."),
 });
 
 type FormFields = z.infer<typeof loginFields>;
 
 export default function LoginScreen() {
   const theme = useTheme();
+  const [firebaseError, setFirebaseError] = useState("");
   const [userTheme] = useAtom(userThemeAtom);
   const colorScheme = Appearance.getColorScheme();
   const finalTheme =
     userTheme === "auto" ? (colorScheme ?? "light") : userTheme;
   const background =
     finalTheme === "dark"
-      ? require("../../assets/images/login-dark-background-2.jpg")
-      : require("../../assets/images/login-background-2.jpg");
+      ? require("../../../assets/images/login-dark-background-2.jpg")
+      : require("../../../assets/images/login-background-2.jpg");
 
   const {
     control,
@@ -52,11 +55,21 @@ export default function LoginScreen() {
   } = useForm<FormFields>({ resolver: zodResolver(loginFields) });
 
   const onSubmit: SubmitHandler<FormFields> = async (data) => {
-    // Logga in.
+    setFirebaseError("");
+
+    const result = await signInUser(data);
+    if (!result.success || !result.user) {
+      const errorCode = result.error?.code || "unknown";
+      setFirebaseError(getLoginErrorMessage(errorCode));
+      return;
+    }
+
+    console.log("Inloggad", result.user.email);
+    router.replace("/(tabs)");
   };
 
   return (
-    <SafeAreaView style={{ backgroundColor: "rgb(0,0,0)" }}>
+    <SafeAreaView style={{ backgroundColor: "rgb(0,0,0)" }} edges={["top"]}>
       <KeyboardAwareScrollView
         keyboardShouldPersistTaps="handled"
         enableOnAndroid={true}
@@ -82,7 +95,7 @@ export default function LoginScreen() {
                 Stigvidd
               </Text>
               <Image
-                source={require("../../assets/images/mammaapp.png")}
+                source={require("../../../assets/images/mammaapp.png")}
                 style={s.logo}
                 contentFit="contain"
               />
@@ -159,6 +172,11 @@ export default function LoginScreen() {
               >
                 {isSubmitting ? "Loggar in..." : "Logga in"}
               </Button>
+              {firebaseError && (
+                <Text style={[s.errorText, { color: theme.colors.error }]}>
+                  {firebaseError}
+                </Text>
+              )}
               <Link
                 style={[s.linkText, { color: theme.colors.onSurface }]}
                 replace
@@ -243,5 +261,9 @@ const s = StyleSheet.create({
   },
   errorContainer: {
     height: 30,
+  },
+  errorText: {
+    fontSize: 15,
+    fontWeight: 600,
   },
 });

@@ -15,7 +15,7 @@ export default function ProfilePageScreen() {
 
   // Fixa så man inte måste avsluta appen när man ångrar sig och inte vill logga in efter man tryckt på profilpage
   if (!authState.isAuthenticated) {
-    return <Redirect href="/login?redirect=(tabs)/profile-page" />;
+    return <Redirect href="/(tabs)/(auth)/login" />;
   }
 
   async function handleSignOut() {

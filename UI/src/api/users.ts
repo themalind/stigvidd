@@ -44,6 +44,7 @@ export async function createStigViddUser({
     throw error;
   }
 }
+
 export async function getStigViddUser(firebaseUid: string): Promise<User> {
   try {
     const response = await fetch(`http://${IP}/api/v1/user/${firebaseUid}`, {

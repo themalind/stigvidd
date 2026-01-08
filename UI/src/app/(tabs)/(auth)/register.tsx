@@ -1,9 +1,11 @@
+import { registerUser } from "@/api/auth";
+import { getRegisterErrorMessage } from "@/api/firebase-errors";
 import { userThemeAtom } from "@/providers/user-theme-atom";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Image } from "expo-image";
-import { Link } from "expo-router";
+import { Link, router } from "expo-router";
 import { useAtom } from "jotai";
-import React from "react";
+import React, { useState } from "react";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
 import {
   Appearance,
@@ -18,29 +20,30 @@ import { Button, Surface, TextInput, useTheme } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { z } from "zod";
 
-const HEIGHT = Dimensions.get("screen").height;
 const WIDTH = Dimensions.get("screen").width;
 
 const registerFields = z
   .object({
     nickName: z
-      .string({ required_error: "Nickname is required" })
-      .min(1, "You need to enter a nickname!"),
+      .string({ required_error: "Nickname is required." })
+      .min(1, "You need to enter a nickname.")
+      .max(20, "NickName too long, 20 chars max.")
+      .regex(/^[a-zA-Z0-9_-]+$/, "Endast a–z, 0–9, _ och - är tillåtna"),
     email: z
       .string({ required_error: "Email is required" })
-      .email("You must enter an email"),
+      .email("You must enter an email."),
     password: z
-      .string({ required_error: "Password is required" })
-      .min(8, "Password must contain 8 characters"),
+      .string({ required_error: "Password is required." })
+      .min(8, "Password must contain 8 characters."),
     confirmPassword: z.string({
-      required_error: "You must confirm your password",
+      required_error: "You must confirm your password.",
     }),
   })
   .superRefine(({ confirmPassword, password }, ctx) => {
     if (confirmPassword !== password) {
       ctx.addIssue({
         code: "custom",
-        message: "Passwords do not match",
+        message: "Passwords do not match.",
         path: ["confirmPassword"],
       });
     }
@@ -51,8 +54,9 @@ const addOpacity = (rgbColor: string, opacity: number): string => {
   return rgbColor.replace("rgb", "rgba").replace(")", `, ${opacity})`);
 };
 
-export default function LoginScreen() {
+export default function RegisterScreen() {
   const theme = useTheme();
+  const [firebaseError, setFirebaseError] = useState("");
   const [userTheme] = useAtom(userThemeAtom);
   const colorScheme = Appearance.getColorScheme();
 
@@ -61,8 +65,8 @@ export default function LoginScreen() {
 
   const background =
     finalTheme === "dark"
-      ? require("../../assets/images/register-dark-background-2.jpg")
-      : require("../../assets/images/register-background-2.jpg");
+      ? require("../../../assets/images/register-dark-background-2.jpg")
+      : require("../../../assets/images/register-background-2.jpg");
 
   const {
     control,
@@ -71,11 +75,25 @@ export default function LoginScreen() {
   } = useForm<FormFields>({ resolver: zodResolver(registerFields) });
 
   const onSubmit: SubmitHandler<FormFields> = async (data) => {
-    // Skapa och spara registrerad användare.
+    setFirebaseError("");
+
+    const result = await registerUser(data);
+
+    if (!result.success || !result.user) {
+      console.log("if i onsubmitt !result.success");
+      const errorCode = result.error?.code || "unknown";
+      setFirebaseError(getRegisterErrorMessage(errorCode));
+      return;
+    }
+    router.replace("/(tabs)/profile-page");
+    console.log("Registrerad", result.user.email, result.user.displayName);
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "rgb(0,0,0)" }}>
+    <SafeAreaView
+      style={{ flex: 1, backgroundColor: "rgb(0,0,0)" }}
+      edges={["top"]}
+    >
       <KeyboardAwareScrollView
         keyboardShouldPersistTaps="handled"
         enableOnAndroid={true}
@@ -99,7 +117,7 @@ export default function LoginScreen() {
                 Stigvidd
               </Text>
               <Image
-                source={require("../../assets/images/mammaapp.png")}
+                source={require("../../../assets/images/mammaapp.png")}
                 style={s.logo}
                 contentFit="contain"
               />
@@ -232,6 +250,11 @@ export default function LoginScreen() {
                 >
                   {isSubmitting ? "Skapar konto..." : "Skapa konto"}
                 </Button>
+                {firebaseError && (
+                  <Text style={[s.errorText, { color: theme.colors.error }]}>
+                    {firebaseError}
+                  </Text>
+                )}
                 <Link
                   style={[s.linkText, { color: theme.colors.onSurface }]}
                   replace
@@ -258,13 +281,11 @@ export default function LoginScreen() {
 const s = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
-    minHeight: HEIGHT,
   },
   backgroundImage: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    minHeight: HEIGHT,
   },
   logoContainer: {
     flexDirection: "row",
@@ -314,5 +335,9 @@ const s = StyleSheet.create({
   },
   errorContainer: {
     height: 30,
+  },
+  errorText: {
+    fontSize: 15,
+    fontWeight: 600,
   },
 });

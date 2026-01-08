@@ -1,3 +1,4 @@
+import { router } from "expo-router";
 import { FirebaseError } from "firebase/app";
 import {
   createUserWithEmailAndPassword,
@@ -82,6 +83,7 @@ export const registerUser = async (data: RegisterData): Promise<AuthResult> => {
     }
 
     await userCredential.user.reload();
+    router.replace("/(tabs)");
 
     return { success: true, user: userCredential.user, error: null };
   } catch (error) {
