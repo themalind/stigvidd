@@ -1,8 +1,9 @@
-import { darkMapTheme } from "@/constants/theme";
+import { nightMapTheme, retroMapTheme } from "@/constants/theme";
 import { userThemeAtom } from "@/providers/user-theme-atom";
+import * as Location from "expo-location";
 import { useAtom } from "jotai";
-import React from "react";
-import { StyleProp, ViewStyle } from "react-native"
+import React, { useEffect } from "react";
+import { StyleProp, useColorScheme, ViewStyle } from "react-native"
 import MapView, { MapViewProps, Region } from "react-native-maps";
 
 interface Props extends MapViewProps {
@@ -19,11 +20,24 @@ export default function Map({
   children
 }: Props) {
   const [theme] = useAtom(userThemeAtom);
+  const deviceScheme = useColorScheme();
+  let mapStyle = "dark";
+
+  if (theme === "auto") {
+    mapStyle = deviceScheme === "light" ? "light" : "dark";
+  }
+  
+  useEffect(() => {
+    (async () => {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if ( status !== "granted" ) return;
+    })();
+  }, []);
 
   return (
     <MapView
       style={style}
-      customMapStyle={theme === "dark" ? darkMapTheme : []}
+      customMapStyle={mapStyle === "dark" ? nightMapTheme : retroMapTheme}
       initialRegion={initialRegion}
       showsUserLocation={showsUserLocation}
       showsMyLocationButton={false}
