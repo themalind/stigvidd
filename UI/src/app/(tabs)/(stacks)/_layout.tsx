@@ -5,6 +5,7 @@ import { useAtom } from "jotai";
 export default function StackLayout() {
   const [authState] = useAtom(authStateAtom);
   console.log("StackLayout authState:", authState);
+
   return (
     <Stack
       screenOptions={{
@@ -13,7 +14,7 @@ export default function StackLayout() {
       }}
     >
       <Stack.Screen name="trail/[identifier]" />
-      <Stack.Protected guard={authState.isAuthenticated === true}>
+      <Stack.Protected guard={authState.isAuthenticated}>
         <Stack.Screen name="user/favorites" />
         <Stack.Screen name="user/wishlist" />
       </Stack.Protected>

@@ -4,15 +4,18 @@ import {
   Ionicons,
   MaterialCommunityIcons,
 } from "@expo/vector-icons";
-import { Tabs } from "expo-router";
+import { Tabs, usePathname } from "expo-router";
 import { useTheme } from "react-native-paper";
 
 export default function TabsLayout() {
   const theme = useTheme();
+  const pathname = usePathname();
 
+  const shouldShowHeader =
+    !pathname.includes("/login") && !pathname.includes("/register");
   return (
     <>
-      <Header />
+      {shouldShowHeader && <Header />}
       <Tabs
         screenOptions={{
           tabBarStyle: {
@@ -104,12 +107,17 @@ export default function TabsLayout() {
               ),
           }}
         />
-
-        {/* Dölj stack-screens från tabs */}
+        {/* Dölj alla stack-screens från tabs */}
         <Tabs.Screen
           name="(stacks)"
           options={{
-            href: null, // Gömmer från tabs
+            href: null,
+          }}
+        />
+        <Tabs.Screen
+          name="(auth)"
+          options={{
+            href: null,
           }}
         />
       </Tabs>
