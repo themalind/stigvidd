@@ -37,7 +37,7 @@ public class UserController : StigViddController
     [Route("{firebaseUid}")]
     public async Task<ActionResult<UserResponse?>> GetStigViddUserByFirebaseUid(string firebaseUid, CancellationToken ctoken)
     {
-        var result = await _userService.GetUserAsync(firebaseUid, ctoken);
+        var result = await _userService.GetUserByFirebaseUidAsync(firebaseUid, ctoken);
 
         if(!result.Success && result.Message != null)
         {

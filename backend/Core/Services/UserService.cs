@@ -289,6 +289,8 @@ public class UserService : IUserService
             FirebaseUid = firebaseUid,
             NickName = nickName,
             Email = email,
+            MyFavorites = [],
+            MyWishList = []
         };
 
         context.Users.Add(newUser);
@@ -299,7 +301,7 @@ public class UserService : IUserService
         return Result.Ok<UserResponse?>(userResponse);
     }
 
-    public async Task<Result<UserResponse?>> GetUserAsync(string firebaseUid, CancellationToken ctoken)
+    public async Task<Result<UserResponse?>> GetUserByFirebaseUidAsync(string firebaseUid, CancellationToken ctoken)
     {
         using var context = await _context.CreateDbContextAsync(ctoken);
 
@@ -312,6 +314,12 @@ public class UserService : IUserService
                 null,
                 null))
             .FirstOrDefaultAsync(ctoken);
+
+        if (user is null)
+        {
+            _logger.LogWarning("User with Firebase UID {firebaseUid} not found.", firebaseUid);
+            return Result.Fail<UserResponse?>(new Message(404, $"User with Firebase UID {firebaseUid} not found."));
+        }
 
         return Result.Ok<UserResponse?>(user);
     }

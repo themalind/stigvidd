@@ -11,8 +11,8 @@ public class UserResponseFactory
     {
         return UserResponse.Create(
             user.Identifier,
-            user.Email,
             user.NickName,
+            user.Email,           
 
             user.MyWishList?.Select(wish =>
                 UserWishlistTrailResponse.Create(

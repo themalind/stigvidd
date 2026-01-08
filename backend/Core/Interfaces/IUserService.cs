@@ -11,5 +11,5 @@ public interface IUserService
     public Task<Result> RemoveTrailFromUserFavoritesListAsync(string userIdentifier, string trailIdentifier, CancellationToken ctoken);
     public Task<Result> RemoveTrailFromUserWishListAsync(string userIdentifier, string trailIdentifier, CancellationToken ctoken);
     public Task<Result<UserResponse?>> CreateUserAsync(string email, string nickName, string firebaseuid, CancellationToken ctoken);
-    public Task<Result<UserResponse?>> GetUserAsync(string firebaseUid, CancellationToken ctoken);
+    public Task<Result<UserResponse?>> GetUserByFirebaseUidAsync(string firebaseUid, CancellationToken ctoken);
 }
