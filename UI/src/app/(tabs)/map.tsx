@@ -12,14 +12,9 @@ export default function MapScreen() {
     longitudeDelta: 0.1,
   };
 
-  const sam: Coordinate = {
+  const proffs: Coordinate = {
     latitude: 57.67372,
     longitude: 12.56592,
-  };
-
-  const frodo: Coordinate = {
-    latitude: 57.72141010663575,
-    longitude: 12.905517126805371,
   };
 
   useEffect(() => {
@@ -38,13 +33,8 @@ export default function MapScreen() {
       toolbarEnabled={false}
     >
       <Marker
-        coordinate={sam}
-        title="Sam"
-        image={require("@/assets/map/marker.png")}
-      />
-      <Marker
-        coordinate={frodo}
-        title="Frodo"
+        coordinate={proffs}
+        title="Proffs"
         image={require("@/assets/map/marker.png")}
       />
     </MapView>
@@ -54,5 +44,10 @@ export default function MapScreen() {
 const s = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  marker: {
+    flex: 1,
+    width: 50,
+    height: 50,
   },
 });

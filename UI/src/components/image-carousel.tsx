@@ -7,75 +7,58 @@ import Animated, {
 } from "react-native-reanimated";
 import { CarouselTile } from "./ImageCarouselTile";
 
-// Interface för komponentens props - använder generisk typ T som kan vara antingen TrailOverviewViewModel eller TrailImage
 interface CarouselProps<T extends TrailOverview | TrailImage> {
-  data: T[]; // Array med objekt att visa i karusellen
-  showText?: boolean; // Valfri prop - bestämmer om text ska visas på objekten
-  onItemPress?: (item: T) => void; // Valfri callback-funktion som körs när användaren trycker på ett objekt
+  data: T[];
+  showText?: boolean;
+  onItemPress?: (item: T) => void;
 }
 
-// Huvudkomponenten - en generisk bildkarusell som fungerar med olika datatyper
 export default function ImageCarousel<T extends TrailOverview | TrailImage>({
   data,
-  showText = true, // Default-värde: visa text
+  showText = true,
   onItemPress,
 }: CarouselProps<T>) {
-  // Shared value för att spåra scroll-position (används för animationer)
   const scrollX = useSharedValue(0);
-
-  // Hämtar skärmens bredd
   const { width } = useWindowDimensions();
-
-  // Beräknar varje objekts bredd som 90% av skärmbredden (avrundat)
-  const itemWidth = Math.round(width * 0.7); // Öka från 0.9 till 0.95
-
-  // Mellanrum mellan objekten
-  const itemSpacing = 2;
-
-  // Total bredd för ett objekt inklusive mellanrum
+  const itemWidth = Math.round(width * 0.7);
+  const itemSpacing = 0;
   const fullItem = itemWidth + itemSpacing;
-  const leftPadding = 1;
 
-  // Beräkna snap-punkter för varje objekt (för exakt centrering)
   const snapOffsets = data.map((_, index) => {
-    return index * fullItem;
+    return index * fullItem - (width * 0.1);
   });
 
-  // Scroll-handler som uppdaterar scrollX-värdet när användaren scrollar
   const onScrollHandler = useAnimatedScrollHandler({
     onScroll: (event) => (scrollX.value = event.contentOffset.x),
   });
 
-  // Memoized render-funktion för varje objekt i listan (optimerar prestanda)
   const renderItem = useCallback(
     ({ item, index }: { item: T; index: number }) => (
       <CarouselTile
-        item={item} // Objektet som ska visas
-        index={index} // Index i listan
-        scrollX={scrollX} // Scroll-position för animationer
-        itemWidth={itemWidth} // Bredd på objektet
-        itemSpacing={itemSpacing} // Mellanrum mellan objekt
-        itemKey={item.identifier} // Unik nyckel för objektet
-        showText={showText} // Om text ska visas
-        onPress={onItemPress} // Press-handler
+        item={item}
+        index={index}
+        scrollX={scrollX}
+        itemWidth={itemWidth}
+        itemSpacing={itemSpacing}
+        itemKey={item.identifier}
+        showText={showText}
+        onPress={onItemPress}
       />
     ),
-    [scrollX, itemWidth, showText, onItemPress], // Dependencies - funktionen återskapas endast om dessa ändras
+    [scrollX, itemWidth, showText, onItemPress],
   );
 
-  // Optimerad layout-beräkning som hjälper FlatList att förstå objektens position och storlek
-  // Detta förbättrar scroll-prestanda och virtualisering
   const getItemLayout = useCallback(
     (_data: any, index: number) => ({
-      length: fullItem, // Objektets totala bredd
-      offset: fullItem * index, // Objektets position från start
-      index, // Objektets index
+      length: fullItem,
+      offset: fullItem * index,
+      index,
     }),
-    [fullItem], // Återskapas endast om fullItem ändras
+    [fullItem],
   );
 
   return (
-    <View style={{ width: "100%" }}>
+    <View style={{ width: "100%", alignContent: "center"}}>
       <Animated.FlatList
         data={data}
         horizontal
@@ -83,7 +66,8 @@ export default function ImageCarousel<T extends TrailOverview | TrailImage>({
         keyExtractor={(item, index) => String(item.identifier)}
         pagingEnabled={false}
         snapToOffsets={snapOffsets}
-        snapToAlignment="start"
+        snapToInterval={1}
+        snapToAlignment="center"
         decelerationRate="fast"
         scrollEventThrottle={16}
         windowSize={5}
@@ -92,8 +76,8 @@ export default function ImageCarousel<T extends TrailOverview | TrailImage>({
         removeClippedSubviews={true}
         getItemLayout={getItemLayout}
         contentContainerStyle={{
-          paddingLeft: leftPadding,
-          paddingRight: 20,
+          paddingLeft: 0,
+          paddingRight: 0,
         }}
         showsHorizontalScrollIndicator={false}
         onScroll={onScrollHandler}
