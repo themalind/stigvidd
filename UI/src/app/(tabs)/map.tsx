@@ -12,9 +12,14 @@ export default function MapScreen() {
     longitudeDelta: 0.1,
   };
 
-  const proffs: Coordinate = {
+  const sam: Coordinate = {
     latitude: 57.67372,
     longitude: 12.56592,
+  };
+
+  const frodo: Coordinate = {
+    latitude: 57.72141010663575,
+    longitude: 12.905517126805371,
   };
 
   useEffect(() => {
@@ -33,7 +38,12 @@ export default function MapScreen() {
       toolbarEnabled={false}
     >
       <Marker
-        coordinate={proffs}
+        coordinate={frodo}
+        title="Proffs"
+        image={require("@/assets/map/marker.png")}
+      />
+      <Marker
+        coordinate={sam}
         title="Proffs"
         image={require("@/assets/map/marker.png")}
       />
