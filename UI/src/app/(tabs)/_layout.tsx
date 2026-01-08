@@ -85,7 +85,7 @@ export default function TabsLayout() {
           }}
         />
         <Tabs.Screen
-          name="(protected)/profile-page"
+          name="profile-page"
           options={{
             title: "Profil",
             tabBarIcon: ({ focused }) =>

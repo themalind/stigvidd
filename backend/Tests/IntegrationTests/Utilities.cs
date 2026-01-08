@@ -244,6 +244,7 @@ public static class Utilities
             {
                 Id = 1,
                 Identifier = "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+                FirebaseUid = "firebase-uid-12345",
                 Email = "natur@example.local",
                 NickName = "NaturElskaren",
                 CreatedAt = SeedDates.Created,
@@ -258,6 +259,7 @@ public static class Utilities
             {
                 Id = 2,
                 Identifier = "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e",
+                FirebaseUid = "firebase-uid-12345",
                 Email = "vandrar@example.local",
                 NickName = "VandrarVennen",
                 CreatedAt = SeedDates.Created,

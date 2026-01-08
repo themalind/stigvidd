@@ -1,8 +1,8 @@
 import { Coordinate } from "@/data/types";
-import { StyleSheet, } from "react-native";
-import MapView, { Marker } from "react-native-maps";
 import * as Location from "expo-location";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
+import { StyleSheet } from "react-native";
+import MapView, { Marker } from "react-native-maps";
 
 export default function MapScreen() {
   const START_COORDINATE_BORAS = {
@@ -12,20 +12,25 @@ export default function MapScreen() {
     longitudeDelta: 0.1,
   };
 
-  const proffs: Coordinate = {
+  const sam: Coordinate = {
     latitude: 57.67372,
-    longitude: 12.56592
+    longitude: 12.56592,
+  };
+
+  const frodo: Coordinate = {
+    latitude: 57.72141010663575,
+    longitude: 12.905517126805371,
   };
 
   useEffect(() => {
     (async () => {
       const { status } = await Location.requestForegroundPermissionsAsync();
-      if ( status !== "granted" ) return;
+      if (status !== "granted") return;
     })();
   }, []);
 
   return (
-    <MapView 
+    <MapView
       style={s.container}
       initialRegion={START_COORDINATE_BORAS}
       showsUserLocation
@@ -33,8 +38,13 @@ export default function MapScreen() {
       toolbarEnabled={false}
     >
       <Marker
-        coordinate={proffs}
-        title="Proffs"
+        coordinate={sam}
+        title="Sam"
+        image={require("@/assets/map/marker.png")}
+      />
+      <Marker
+        coordinate={frodo}
+        title="Frodo"
         image={require("@/assets/map/marker.png")}
       />
     </MapView>
