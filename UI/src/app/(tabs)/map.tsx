@@ -39,13 +39,13 @@ export default function MapScreen() {
     >
       <Marker
         coordinate={frodo}
-        title="Proffs"
-        image={require("@/assets/map/marker.png")}
+        title="Frodo"
+        image={require("../../assets/map/marker/smultronstalle-101-159.png")}
       />
       <Marker
         coordinate={sam}
-        title="Proffs"
-        image={require("@/assets/map/marker.png")}
+        title="Sam"
+        image={require("../../assets/map/marker/smultronstalle-101-159.png")}
       />
     </MapView>
   );
