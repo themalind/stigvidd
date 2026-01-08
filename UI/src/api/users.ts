@@ -40,7 +40,7 @@ export async function createStigViddUser({
 
     return await response.json();
   } catch (error) {
-    console.log(error);
+    console.log(`createStigViddUser: ${error}`);
     throw error;
   }
 }
@@ -57,7 +57,7 @@ export async function getStigViddUser(firebaseUid: string): Promise<User> {
 
     return await response.json();
   } catch (error) {
-    console.error(error);
+    console.log(`getStigViddUser: ${error}`);
     throw error;
   }
 }

@@ -70,17 +70,16 @@ export default function LoginScreen() {
 
   return (
     <SafeAreaView style={{ backgroundColor: "rgb(0,0,0)" }} edges={["top"]}>
-      <ImageBackground
-        resizeMode="cover"
-        source={background}
-        style={s.backgroundImage}
+      <KeyboardAwareScrollView
+        keyboardShouldPersistTaps="handled"
+        enableOnAndroid={true}
+        scrollEnabled={false}
+        contentContainerStyle={s.scrollContent}
       >
-        {" "}
-        <KeyboardAwareScrollView
-          keyboardShouldPersistTaps="handled"
-          enableOnAndroid={true}
-          scrollEnabled={false}
-          contentContainerStyle={s.scrollContent}
+        <ImageBackground
+          resizeMode="cover"
+          source={background}
+          style={s.backgroundImage}
         >
           <Surface
             elevation={5}
@@ -194,8 +193,8 @@ export default function LoginScreen() {
               </Link>
             </View>
           </Surface>
-        </KeyboardAwareScrollView>
-      </ImageBackground>
+        </ImageBackground>
+      </KeyboardAwareScrollView>
     </SafeAreaView>
   );
 }
