@@ -460,8 +460,7 @@ public class UserServiceUnitTests
 
     private UserService CreateUserService()
     {
-        // Mocka factory
-        var dbContext = CreateContextAndSqliteInMemoryDb();
+        var dbContext = CreateContextAndSqliteDb();
 
         var mockContextFactory = new Mock<IDbContextFactory<StigViddDbContext>>();
         mockContextFactory.Setup(f => f.CreateDbContextAsync(It.IsAny<CancellationToken>()))
@@ -485,7 +484,7 @@ public class UserServiceUnitTests
         return service;
     }
 
-    private StigViddDbContext CreateContextAndSqliteInMemoryDb()
+    private StigViddDbContext CreateContextAndSqliteDb()
     {       
         var connection = new SqliteConnection("DataSource=:memory:");
         connection.Open(); 
