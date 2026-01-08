@@ -1,6 +1,6 @@
+import { initAuthAtom } from "@/atoms/auth-atoms";
 import { GlobalSnackbar } from "@/components/global-snackbar";
 import { useUserTheme } from "@/hooks/appUserTheme";
-import { initAuthAtom } from "@/providers/auth-atoms";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";

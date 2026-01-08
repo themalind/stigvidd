@@ -1,6 +1,6 @@
 import { signInUser } from "@/api/auth";
 import { getLoginErrorMessage } from "@/api/firebase-errors";
-import { userThemeAtom } from "@/providers/user-theme-atom";
+import { userThemeAtom } from "@/atoms/user-theme-atom";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Image } from "expo-image";
 import { Link, router } from "expo-router";

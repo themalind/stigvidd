@@ -1,5 +1,6 @@
 import { User as firebaseUser } from "firebase/auth";
 
+// Response types
 export interface Trail {
   identifier: string;
   name: string;
@@ -85,6 +86,7 @@ export interface User {
   myFavorites: UserFavoritesTrail[];
 }
 
+// Frontend types
 export interface CreateStigViddUserCredentials {
   email: string;
   nickname: string;

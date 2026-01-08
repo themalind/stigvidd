@@ -30,6 +30,7 @@ export const stigviddUserAtom = atomWithQuery((get) => {
       return await getStigViddUser(firebaseUid);
     },
     enabled: !!firebaseUid,
+    retry: 3,
   };
 });
 

@@ -1,6 +1,6 @@
-import { registerUser } from "@/api/auth";
 import { getRegisterErrorMessage } from "@/api/firebase-errors";
-import { userThemeAtom } from "@/providers/user-theme-atom";
+import { registerUserAtom } from "@/atoms/auth-atoms";
+import { userThemeAtom } from "@/atoms/user-theme-atom";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Image } from "expo-image";
 import { Link, router } from "expo-router";
@@ -58,6 +58,7 @@ export default function RegisterScreen() {
   const theme = useTheme();
   const [firebaseError, setFirebaseError] = useState("");
   const [userTheme] = useAtom(userThemeAtom);
+  const [, registerUser] = useAtom(registerUserAtom);
   const colorScheme = Appearance.getColorScheme();
 
   const finalTheme =

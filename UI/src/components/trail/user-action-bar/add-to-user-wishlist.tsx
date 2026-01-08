@@ -1,10 +1,10 @@
 import { ApiError } from "@/api/users";
-import { showErrorAtom, showWarningAtom } from "@/providers/snackbar-atoms";
+import { showErrorAtom, showWarningAtom } from "@/atoms/snackbar-atoms";
 import {
   addToWishlistAtom,
   removeFromWishlistAtom,
   userWishlistAtom,
-} from "@/providers/user-atoms";
+} from "@/atoms/user-atoms";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";

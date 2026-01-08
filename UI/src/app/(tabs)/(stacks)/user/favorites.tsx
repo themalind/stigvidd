@@ -1,10 +1,7 @@
+import { authStateAtom } from "@/atoms/auth-atoms";
+import { removeFromFavoritesAtom, userFavoritesAtom } from "@/atoms/user-atoms";
 import LoadingIndicator from "@/components/loading-indicator";
 import UserTrailCollection from "@/components/trail/user-trail-collection";
-import { authStateAtom } from "@/providers/auth-atoms";
-import {
-  removeFromFavoritesAtom,
-  userFavoritesAtom,
-} from "@/providers/user-atoms";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Redirect } from "expo-router";
 import { useAtom } from "jotai";
@@ -18,7 +15,7 @@ export default function FavoritesScreen() {
   const [authState] = useAtom(authStateAtom);
 
   if (!authState.isAuthenticated) {
-    return <Redirect href="/(auth)/login" />;
+    return <Redirect href="/(tabs)/(auth)/login" />;
   }
 
   if (isLoading) {

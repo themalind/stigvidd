@@ -1,4 +1,5 @@
 import { getTrailByIdentifier } from "@/api/trails";
+import { useImage } from "@/atoms/image-atoms";
 import ImageCarousel from "@/components/image-carousel";
 import ImageModal from "@/components/imageModal";
 import LoadingIndicator from "@/components/loading-indicator";
@@ -8,7 +9,6 @@ import TrailDescription from "@/components/trail/trail-description";
 import TrailInfo from "@/components/trail/trail-info";
 import TrailMap from "@/components/trail/trail-map";
 import UserBar from "@/components/trail/user-action-bar/user-bar";
-import { useImage } from "@/providers/image-atoms";
 import { useQuery } from "@tanstack/react-query";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useRef } from "react";

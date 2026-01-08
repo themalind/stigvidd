@@ -1,7 +1,7 @@
 import { signOutUser } from "@/api/auth";
-import { authStateAtom } from "@/providers/auth-atoms";
-import { stigviddUserAtom } from "@/providers/user-atoms";
-import { userThemeAtom } from "@/providers/user-theme-atom";
+import { authStateAtom } from "@/atoms/auth-atoms";
+import { stigviddUserAtom } from "@/atoms/user-atoms";
+import { userThemeAtom } from "@/atoms/user-theme-atom";
 import { Link, Redirect, router } from "expo-router";
 import { useAtom } from "jotai";
 import { ScrollView, StyleSheet } from "react-native";

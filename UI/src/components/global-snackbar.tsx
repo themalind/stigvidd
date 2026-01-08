@@ -3,7 +3,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { useAtom, useSetAtom } from "jotai";
 import { StyleSheet, View } from "react-native";
 import { Snackbar, Text, useTheme } from "react-native-paper";
-import { hideSnackbarAtom, snackbarAtom } from "../providers/snackbar-atoms";
+import { hideSnackbarAtom, snackbarAtom } from "../atoms/snackbar-atoms";
 
 export function GlobalSnackbar() {
   const theme = useTheme();
