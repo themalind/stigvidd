@@ -24,10 +24,12 @@ public class UserController : StigViddController
                CancellationToken ctoken)
     {
         var result = await _userService.CreateUserAsync(createUserRequest.Email, createUserRequest.NickName, createUserRequest.FirebaseUid, ctoken);
+
         if (!result.Success && result.Message != null)
         {
             return ToActionResult(result.Message);
         }
+
         return Created($"/api/v1/user/{result.Value!.Identifier}", result.Value);
     }
 
