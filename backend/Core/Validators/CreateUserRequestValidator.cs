@@ -1,5 +1,5 @@
 ﻿using FluentValidation;
-using WebDataContracts.RequestModels;
+using WebDataContracts.RequestModels.User;
 
 namespace Core.Validators;
 

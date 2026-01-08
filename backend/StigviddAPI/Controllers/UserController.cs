@@ -1,6 +1,6 @@
 ﻿using Core.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using WebDataContracts.RequestModels;
+using WebDataContracts.RequestModels.User;
 using WebDataContracts.ResponseModels.User;
 
 namespace StigviddAPI.Controllers;

@@ -1,4 +1,4 @@
-﻿namespace WebDataContracts.RequestModels;
+﻿namespace WebDataContracts.RequestModels.User;
 
 public class CreateUserRequest
 {
