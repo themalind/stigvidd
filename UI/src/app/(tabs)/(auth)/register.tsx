@@ -80,7 +80,6 @@ export default function RegisterScreen() {
     const result = await registerUser(data);
 
     if (!result.success || !result.user) {
-      console.log("if i onsubmitt !result.success");
       const errorCode = result.error?.code || "unknown";
       setFirebaseError(getRegisterErrorMessage(errorCode));
       return;

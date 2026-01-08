@@ -70,16 +70,17 @@ export default function LoginScreen() {
 
   return (
     <SafeAreaView style={{ backgroundColor: "rgb(0,0,0)" }} edges={["top"]}>
-      <KeyboardAwareScrollView
-        keyboardShouldPersistTaps="handled"
-        enableOnAndroid={true}
-        extraScrollHeight={20}
-        contentContainerStyle={s.scrollContent}
+      <ImageBackground
+        resizeMode="cover"
+        source={background}
+        style={s.backgroundImage}
       >
-        <ImageBackground
-          resizeMode="cover"
-          source={background}
-          style={s.backgroundImage}
+        {" "}
+        <KeyboardAwareScrollView
+          keyboardShouldPersistTaps="handled"
+          enableOnAndroid={true}
+          scrollEnabled={false}
+          contentContainerStyle={s.scrollContent}
         >
           <Surface
             elevation={5}
@@ -193,8 +194,8 @@ export default function LoginScreen() {
               </Link>
             </View>
           </Surface>
-        </ImageBackground>
-      </KeyboardAwareScrollView>
+        </KeyboardAwareScrollView>
+      </ImageBackground>
     </SafeAreaView>
   );
 }
@@ -205,10 +206,9 @@ const s = StyleSheet.create({
     minHeight: HEIGHT,
   },
   backgroundImage: {
-    flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    minHeight: HEIGHT,
+    flex: 1,
   },
   logoContainer: {
     flexDirection: "row",
