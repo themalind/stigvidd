@@ -1,15 +1,10 @@
 import { ApiError } from "@/api/users";
-import {
-  showErrorAtom,
-  showRemovedAtom,
-  showSuccessAtom,
-  showWarningAtom,
-} from "@/providers/snackbar-atoms";
+import { showErrorAtom, showWarningAtom } from "@/atoms/snackbar-atoms";
 import {
   addToFavoritesAtom,
   removeFromFavoritesAtom,
   userFavoritesAtom,
-} from "@/providers/user-atoms";
+} from "@/atoms/user-atoms";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
@@ -23,27 +18,19 @@ export default function AddUserFavorite({ trailIdentifier }: Props) {
   const { data } = useAtomValue(userFavoritesAtom);
   const removeFromFavorites = useSetAtom(removeFromFavoritesAtom);
   const [{ mutate, isPending }] = useAtom(addToFavoritesAtom);
-  const setSuccess = useSetAtom(showSuccessAtom);
   const setWarning = useSetAtom(showWarningAtom);
   const setError = useSetAtom(showErrorAtom);
-  const setRemoved = useSetAtom(showRemovedAtom);
 
   const handlePress = () => {
     if (data?.some((trail) => trail.identifier === trailIdentifier)) {
       removeFromFavorites(trailIdentifier);
-      setRemoved("Leden har tagits bort från din lista");
     } else {
       mutate(trailIdentifier, {
-        onSuccess: () => {
-          setSuccess(
-            "Leden har lagts till, du hittar listan under din profil.",
-          );
-        },
         onError: (error) => {
           if (error instanceof ApiError && error.status === 409) {
             setWarning("Leden finns redan i listan!");
           } else {
-            setError("Kunde inte lägga till i din favoritlista.");
+            setError(`${error}`);
           }
         },
       });

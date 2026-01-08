@@ -1,4 +1,4 @@
-import { imageStateAtom } from "@/providers/image-atoms";
+import { imageStateAtom } from "@/atoms/image-atoms";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { Zoomable } from "@likashefqet/react-native-image-zoom";
 import { Image } from "expo-image";

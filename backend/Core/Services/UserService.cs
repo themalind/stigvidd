@@ -1,8 +1,11 @@
 ﻿using Core.Factories;
 using Core.Interfaces;
 using Infrastructure.Data;
+using Infrastructure.Data.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using WebDataContracts.ResponseModels.Review;
+using WebDataContracts.ResponseModels.Trail;
 using WebDataContracts.ResponseModels.User;
 
 namespace Core.Services;
@@ -13,62 +16,67 @@ public class UserService : IUserService
     private readonly ILogger<UserService> _logger;
     private readonly UserFavoritesResponseFactory _favoritesResponseFactory;
     private readonly UserWishlistResponseFactory _wishlistResponseFactory;
+    private readonly UserResponseFactory _userResponseFactory;
 
     public UserService(IDbContextFactory<StigViddDbContext> context,
     ILogger<UserService> logger,
     UserFavoritesResponseFactory favoritesFactory,
-    UserWishlistResponseFactory wishlistFactory)
+    UserWishlistResponseFactory wishlistFactory,
+    UserResponseFactory userResponseFactory)
     {
         _context = context;
         _logger = logger;
         _favoritesResponseFactory = favoritesFactory;
         _wishlistResponseFactory = wishlistFactory;
+        _userResponseFactory = userResponseFactory;
     }
 
     public async Task<Result<IReadOnlyCollection<UserFavoritesTrailResponse?>>> GetFavoritesByUserIdentifierAsync(string userIdentifier, CancellationToken ctoken)
     {
         using var context = await _context.CreateDbContextAsync(ctoken);
 
-        var user = await context.Users
-            .Include(mf => mf.MyFavorites!)
-                .ThenInclude(ti => ti.TrailImages!)
-            .Include(mf => mf.MyFavorites!)
-                .ThenInclude(ri => ri.Reviews!)
-            .FirstOrDefaultAsync(u => u.Identifier == userIdentifier, ctoken);
+        var favorites = await context.Users
+            .Where(u => u.Identifier == userIdentifier)
+            .SelectMany(u => u.MyFavorites!.Select(f => UserFavoritesTrailResponse.Create(
+                    f.Identifier,
+                    f.Name,
+                    f.TrailLength,
+                    f.Description,
+                    f.Reviews!.Select(
+                        r => RatingResponse.Create(
+                            r.Identifier,
+                            r.Grade)).ToList(),
+                   f.TrailImages!.Select(
+                       ti => TrailImageResponse.Create(
+                           ti.Identifier,
+                           ti.ImageUrl)).Take(1).ToList()
+                   ))).ToListAsync(ctoken);
 
-        if (user is null)
-        {
-            _logger.LogWarning("User with identifier {userIdentifier} not found.", userIdentifier);
-
-            return Result.Fail<IReadOnlyCollection<UserFavoritesTrailResponse?>>(new Message(404, $"No user found with identifier {userIdentifier}"));
-        }
-
-        var favorites = _favoritesResponseFactory.Create(user.MyFavorites);
-
-        return Result.Ok<IReadOnlyCollection<UserFavoritesTrailResponse?>>(favorites?.ToList() ?? []);
+        return Result.Ok<IReadOnlyCollection<UserFavoritesTrailResponse?>>(favorites);
     }
 
     public async Task<Result<IReadOnlyCollection<UserWishlistTrailResponse?>>> GetWishListByUserIdentifierAsync(string userIdentifier, CancellationToken ctoken)
     {
         using var context = await _context.CreateDbContextAsync(ctoken);
 
-        var user = await context.Users
-            .Include(wl => wl.MyWishList!)
-                .ThenInclude(ti => ti.TrailImages!)
-            .Include(wl => wl.MyWishList!)
-                .ThenInclude(ri => ri.Reviews!)
-            .FirstOrDefaultAsync(u => u.Identifier == userIdentifier, ctoken);
+        var wishlist = await context.Users
+                .Where(user => user.Identifier == userIdentifier)
+                .SelectMany(user => user.MyWishList!.Select(wishlist => UserWishlistTrailResponse.Create(
+                        wishlist.Identifier,
+                        wishlist.Name,
+                        wishlist.TrailLength,
+                        wishlist.Description,
+                        wishlist.Reviews!.Select(
+                            reviews => RatingResponse.Create(
+                                reviews.Identifier,
+                                reviews.Grade)).ToList(),
+                       wishlist.TrailImages!.Select(
+                           trailImage => TrailImageResponse.Create(
+                               trailImage.Identifier,
+                               trailImage.ImageUrl)).Take(1).ToList()
+                       ))).ToListAsync(ctoken);
 
-        if (user is null)
-        {
-            _logger.LogWarning("User with identifier {userIdentifier} not found.", userIdentifier);
-
-            return Result.Fail<IReadOnlyCollection<UserWishlistTrailResponse?>>(new Message(404, $"No user found with identifier {userIdentifier}"));
-        }
-
-        var wishList = _wishlistResponseFactory.Create(user.MyWishList);
-
-        return Result.Ok<IReadOnlyCollection<UserWishlistTrailResponse?>>(wishList?.ToList() ?? []);
+        return Result.Ok<IReadOnlyCollection<UserWishlistTrailResponse?>>(wishlist);
     }
 
     public async Task<Result<UserFavoritesTrailResponse?>> AddTrailToUserFavoritesListAsync(string userIdentifier, string trailIdentifier, CancellationToken ctoken)
@@ -260,5 +268,59 @@ public class UserService : IUserService
         await context.SaveChangesAsync(ctoken);
 
         return Result.Ok();
+    }
+
+    public async Task<Result<UserResponse?>> CreateUserAsync(string email, string nickName, string firebaseUid, CancellationToken ctoken)
+    {
+        using var context = await _context.CreateDbContextAsync(ctoken);
+
+        var existingUser = await context.Users
+            .FirstOrDefaultAsync(u => u.FirebaseUid == firebaseUid, ctoken);
+
+        if (existingUser is not null)
+        {
+            _logger.LogWarning("User with identifier {firebaseUid} already exists.", firebaseUid);
+
+            return Result.Fail<UserResponse?>(new Message(409, $"User with identifier {firebaseUid} already exists."));
+        }
+
+        var newUser = new User
+        {
+            FirebaseUid = firebaseUid,
+            NickName = nickName,
+            Email = email,
+            MyFavorites = [],
+            MyWishList = []
+        };
+
+        context.Users.Add(newUser);
+
+        await context.SaveChangesAsync(ctoken);
+
+        var userResponse = _userResponseFactory.Create(newUser);
+        return Result.Ok<UserResponse?>(userResponse);
+    }
+
+    public async Task<Result<UserResponse?>> GetUserByFirebaseUidAsync(string firebaseUid, CancellationToken ctoken)
+    {
+        using var context = await _context.CreateDbContextAsync(ctoken);
+
+        var user = await context.Users
+            .Where(u => u.FirebaseUid == firebaseUid)
+            .Select(u => UserResponse.Create(
+                u.Identifier,
+                u.NickName,
+                u.Email,
+                null,
+                null))
+            .FirstOrDefaultAsync(ctoken);
+
+        if (user is null)
+        {
+            _logger.LogWarning("User with Firebase UID {firebaseUid} not found.", firebaseUid);
+            return Result.Fail<UserResponse?>(new Message(404, $"User with Firebase UID {firebaseUid} not found."));
+        }
+
+        return Result.Ok<UserResponse?>(user);
     }
 }

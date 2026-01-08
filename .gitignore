@@ -2,6 +2,7 @@
 
 ipconfig.ts
 TestResults/
+.env
 
 # dependencies
 node_modules/

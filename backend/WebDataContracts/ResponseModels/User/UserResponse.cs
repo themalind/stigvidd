@@ -1,6 +1,4 @@
-﻿using WebDataContracts.ResponseModels.Trail;
-
-namespace WebDataContracts.ResponseModels.User;
+﻿namespace WebDataContracts.ResponseModels.User;
 
 public class UserResponse
 {

@@ -1,6 +1,6 @@
 ﻿using Core.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using WebDataContracts.RequestModels;
+using WebDataContracts.RequestModels.User;
 using WebDataContracts.ResponseModels.User;
 
 namespace StigviddAPI.Controllers;
@@ -16,6 +16,34 @@ public class UserController : StigViddController
     {
         _userService = userService;
         _logger = logger;
+    }
+
+    [HttpPost]
+    [Route("create")]
+    public async Task<ActionResult<UserResponse?>> CreateUserAsync([FromBody] CreateUserRequest createUserRequest,
+               CancellationToken ctoken)
+    {
+        var result = await _userService.CreateUserAsync(createUserRequest.Email, createUserRequest.NickName, createUserRequest.FirebaseUid, ctoken);
+
+        if (!result.Success && result.Message != null)
+        {
+            return ToActionResult(result.Message);
+        }
+
+        return Created($"/api/v1/user/{result.Value!.Identifier}", result.Value);
+    }
+
+    [HttpGet]
+    [Route("{firebaseUid}")]
+    public async Task<ActionResult<UserResponse?>> GetStigViddUserByFirebaseUid(string firebaseUid, CancellationToken ctoken)
+    {
+        var result = await _userService.GetUserByFirebaseUidAsync(firebaseUid, ctoken);
+
+        if(!result.Success && result.Message != null)
+        {
+            return ToActionResult(result.Message);
+        }
+        return Ok(result.Value);
     }
 
     [HttpGet]
@@ -63,7 +91,7 @@ public class UserController : StigViddController
             return ToActionResult(result.Message);
         }
 
-        return Created($"/api/v1/users/{favoriteRequest.UserIdentifier}/favorites/{favoriteRequest.TrailIdentifier}", result.Value);
+        return Created($"/api/v1/user/{favoriteRequest.UserIdentifier}/favorites/{favoriteRequest.TrailIdentifier}", result.Value);
     }
 
     [HttpPost]
@@ -79,11 +107,11 @@ public class UserController : StigViddController
             return ToActionResult(result.Message);
         }
 
-        return Created($"/api/v1/users/{addToUserWishlistRequest.UserIdentifier}/wishlist/{addToUserWishlistRequest.TrailIdentifier}", result.Value);
+        return Created($"/api/v1/user/{addToUserWishlistRequest.UserIdentifier}/wishlist/{addToUserWishlistRequest.TrailIdentifier}", result.Value);
     }
 
     [HttpDelete]
-    [Route("/api/v1/users/{userIdentifier}/favorites/{trailIdentifier}")]
+    [Route("/api/v1/user/{userIdentifier}/favorites/{trailIdentifier}")]
     public async Task<ActionResult> RemoveTrailFromUserFavoritesListAsync(
        [FromRoute] string userIdentifier,
        [FromRoute] string trailIdentifier,
@@ -100,7 +128,7 @@ public class UserController : StigViddController
     }
 
     [HttpDelete]
-    [Route("/api/v1/users/{userIdentifier}/wishlist/{trailIdentifier}")]
+    [Route("/api/v1/user/{userIdentifier}/wishlist/{trailIdentifier}")]
     public async Task<ActionResult> RemoveTrailFromUserWishListAsync(
        [FromRoute] string userIdentifier,
        [FromRoute] string trailIdentifier,

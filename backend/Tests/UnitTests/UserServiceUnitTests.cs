@@ -3,6 +3,7 @@ using Core.Factories;
 using Core.Services;
 using FluentAssertions;
 using Infrastructure.Data;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -73,8 +74,8 @@ public class UserServiceUnitTests
         var result = await userService.GetFavoritesByUserIdentifierAsync("77a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c", CancellationToken.None);
 
         // Assert
-        result.Success.Should().BeFalse();
-        result.Value.Should().BeNull();
+        result.Success.Should().BeTrue();
+        result.Value.Should().BeEmpty();
     }
 
     [Fact]
@@ -304,8 +305,8 @@ public class UserServiceUnitTests
         var result = await userService.GetWishListByUserIdentifierAsync("77a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c", CancellationToken.None);
 
         // Assert
-        result.Success.Should().BeFalse();
-        result.Value.Should().BeNull();
+        result.Success.Should().BeTrue();
+        result.Value.Should().BeEmpty();
     }
 
     [Fact]
@@ -459,8 +460,7 @@ public class UserServiceUnitTests
 
     private UserService CreateUserService()
     {
-        // Mocka factory
-        var dbContext = CreateContextAndInMemoryDb();
+        var dbContext = CreateContextAndSqliteDb();
 
         var mockContextFactory = new Mock<IDbContextFactory<StigViddDbContext>>();
         mockContextFactory.Setup(f => f.CreateDbContextAsync(It.IsAny<CancellationToken>()))
@@ -470,26 +470,32 @@ public class UserServiceUnitTests
         var mockLogger = new Mock<ILogger<UserService>>();
         var mockFavoritesFactory = new Mock<UserFavoritesResponseFactory>();
         var mockWishlistFactory = new Mock<UserWishlistResponseFactory>();
+        var mockUserFactory = new Mock<UserResponseFactory>();
 
         // Skapa service
         var service = new UserService(
             mockContextFactory.Object,
             mockLogger.Object,
             mockFavoritesFactory.Object,
-            mockWishlistFactory.Object
+            mockWishlistFactory.Object,
+            mockUserFactory.Object
         );
 
         return service;
     }
 
-    private StigViddDbContext CreateContextAndInMemoryDb()
-    {
-        // Skapa in-memory databas
+    private StigViddDbContext CreateContextAndSqliteDb()
+    {       
+        var connection = new SqliteConnection("DataSource=:memory:");
+        connection.Open(); 
+
         var options = new DbContextOptionsBuilder<StigViddDbContext>()
-            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .UseSqlite(connection)
             .Options;
 
         var dbContext = new StigViddDbContext(options);
+
+        dbContext.Database.EnsureCreated();
 
         Utilities.InitializeDbForTests(dbContext);
 

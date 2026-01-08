@@ -1,7 +1,8 @@
+import { Coordinate } from "@/data/types";
+import * as Location from "expo-location";
+import { useEffect } from "react";
 import { StyleSheet } from "react-native";
-import { LatLng } from "react-native-maps";
-import Map from "@/components/map/map";
-import Marker from "@/components/map/marker";
+import MapView, { Marker } from "react-native-maps";
 
 export default function MapScreen() {
   const START_COORDINATE_BORAS = {
@@ -11,22 +12,42 @@ export default function MapScreen() {
     longitudeDelta: 0.1,
   };
 
-  const gesebol: LatLng = {
-    latitude: 57.73,
-    longitude: 12.70
+  const sam: Coordinate = {
+    latitude: 57.67372,
+    longitude: 12.56592,
   };
 
+  const frodo: Coordinate = {
+    latitude: 57.72141010663575,
+    longitude: 12.905517126805371,
+  };
+
+  useEffect(() => {
+    (async () => {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") return;
+    })();
+  }, []);
+
   return (
-      <Map
-        style={s.container}
-        initialRegion={START_COORDINATE_BORAS}
-      >
-        <Marker
-          coordinate={gesebol}
-          title="Gesebol"
-          variant="campsite"
-        />
-      </Map>
+    <MapView
+      style={s.container}
+      initialRegion={START_COORDINATE_BORAS}
+      showsUserLocation
+      showsMyLocationButton={false}
+      toolbarEnabled={false}
+    >
+      <Marker
+        coordinate={frodo}
+        title="Frodo"
+        image={require("../../assets/map/marker/smultronstalle-101-159.png")}
+      />
+      <Marker
+        coordinate={sam}
+        title="Sam"
+        image={require("../../assets/map/marker/smultronstalle-101-159.png")}
+      />
+    </MapView>
   );
 }
 

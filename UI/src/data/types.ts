@@ -1,3 +1,6 @@
+import { User as firebaseUser } from "firebase/auth";
+
+// Response types
 export interface Trail {
   identifier: string;
   name: string;
@@ -47,12 +50,6 @@ export interface ReviewImage {
   ImageUrl: string;
 }
 
-export interface User {
-  identifier: string;
-  nickName: string;
-  email: string;
-}
-
 export interface UserFavoritesTrail {
   identifier: string;
   name: string;
@@ -74,4 +71,42 @@ export interface UserWishlistTrail {
 export interface RatingResponse {
   identifier: string;
   rating: number;
+}
+
+export interface Coordinate {
+  latitude: number;
+  longitude: number;
+}
+
+export interface User {
+  identifier: string;
+  nickName: string;
+  email: string;
+  myWishList: UserWishlistTrail[];
+  myFavorites: UserFavoritesTrail[];
+}
+
+// Frontend types
+export interface CreateStigViddUserCredentials {
+  email: string;
+  nickname: string;
+  firebaseUid: string;
+}
+
+export interface RegisterData {
+  nickName: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+}
+
+export interface LoginData {
+  email: string;
+  password: string;
+}
+
+export interface AuthResult {
+  success: boolean;
+  user: firebaseUser | null;
+  error: { code: string; message: string } | null;
 }
