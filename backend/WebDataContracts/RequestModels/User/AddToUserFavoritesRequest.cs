@@ -1,6 +1,6 @@
-﻿namespace WebDataContracts.RequestModels;
+﻿namespace WebDataContracts.RequestModels.User;
 
-public class AddToUserWishlistRequest
+public class AddToUserFavoritesRequest
 {
     public required string UserIdentifier { get; set; }
     public required string TrailIdentifier { get; set; }

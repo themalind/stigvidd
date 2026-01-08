@@ -1,10 +1,9 @@
+import { authStateAtom } from "@/atoms/auth-atoms";
+import { removeFromFavoritesAtom, userFavoritesAtom } from "@/atoms/user-atoms";
 import LoadingIndicator from "@/components/loading-indicator";
 import UserTrailCollection from "@/components/trail/user-trail-collection";
-import {
-  removeFromFavoritesAtom,
-  userFavoritesAtom,
-} from "@/providers/user-atoms";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { Redirect } from "expo-router";
 import { useAtom } from "jotai";
 import React from "react";
 import { Text, useTheme } from "react-native-paper";
@@ -13,6 +12,11 @@ export default function FavoritesScreen() {
   const theme = useTheme();
   const [{ data, isLoading, isError, error }] = useAtom(userFavoritesAtom); // useAtom är likt useState och retunerar både get och setfunktioner
   const [, removeFromFavorites] = useAtom(removeFromFavoritesAtom);
+  const [authState] = useAtom(authStateAtom);
+
+  if (!authState.isAuthenticated) {
+    return <Redirect href="/(tabs)/(auth)/login" />;
+  }
 
   if (isLoading) {
     return <LoadingIndicator />;
@@ -25,7 +29,7 @@ export default function FavoritesScreen() {
   return (
     <UserTrailCollection
       title="Mina favoriter"
-      noTrailsSavedInfo="Inga Favoriter sparade än."
+      noTrailsSavedInfo="Inga Favoriter sparade än. Gå till en promenad och tryck på hjärtat för att lägga till."
       onDelete={removeFromFavorites}
       trails={data ?? []}
       icon={

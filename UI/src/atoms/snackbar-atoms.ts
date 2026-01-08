@@ -1,11 +1,5 @@
+import { SnackbarState } from "@/data/atoms";
 import { atom } from "jotai";
-
-type SnackbarState = {
-  visible: boolean;
-  message: string;
-  type: "success" | "error" | "warning";
-  icon?: string;
-};
 
 export const snackbarAtom = atom<SnackbarState>({
   visible: false,

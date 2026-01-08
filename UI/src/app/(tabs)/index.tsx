@@ -18,11 +18,6 @@ export default function HomeScreen() {
     queryFn: getPopularTrails,
   });
 
-  // Fixa
-  // LOG  VirtualizedList: You have a large list that is slow to update
-  // - make sure your renderItem function renders components that follow React performance best practices like PureComponent,
-  // shouldComponentUpdate, etc. {"contentLength": 2460.0888671875, "dt": 13181, "prevDt": 586}
-
   if (query.isPending) {
     return <LoadingIndicator />;
   }

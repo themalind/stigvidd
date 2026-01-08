@@ -1,9 +1,9 @@
+import { userThemeAtom } from "@/atoms/user-theme-atom";
 import { AppDarkTheme, AppDefaultTheme } from "@/constants/theme";
-import { useEffect } from "react";
-import { Platform, useColorScheme } from "react-native";
-import { userThemeAtom } from "@/providers/user-theme-atom";
 import * as NavigationBar from "expo-navigation-bar";
 import { useAtom } from "jotai";
+import { useEffect } from "react";
+import { Platform, useColorScheme } from "react-native";
 
 export function useUserTheme() {
   const [userTheme] = useAtom(userThemeAtom);

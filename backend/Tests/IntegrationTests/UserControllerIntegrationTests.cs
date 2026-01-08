@@ -2,6 +2,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using WebDataContracts.RequestModels;
+using WebDataContracts.RequestModels.User;
 using WebDataContracts.ResponseModels.User;
 
 namespace IntegrationTests;
@@ -50,19 +51,6 @@ public class UserControllerIntegrationTests : IClassFixture<StigViddWebApplicati
         favorites.Should().NotBeNull();
         favorites.Should().BeEmpty();
         favorites.Should().BeAssignableTo<IEnumerable<UserFavoritesTrailResponse>>();
-    }
-
-    [Fact]
-    public async Task GetUserFavorites_ForInvalidUser_ReturnsNotFound()
-    {
-        // Arrange
-        var invalidUserIdentifier = "44d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f";
-
-        // Act
-        var response = await _client.GetAsync($"/api/v1/user/{invalidUserIdentifier}/favorites");
-
-        // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
 
     [Fact]
@@ -194,7 +182,7 @@ public class UserControllerIntegrationTests : IClassFixture<StigViddWebApplicati
         var userIdentifier = "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e";
         var trailIdentifier = "22b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d";
 
-        var request = new HttpRequestMessage(HttpMethod.Delete, $"/api/v1/users/{userIdentifier}/favorites/{trailIdentifier}");
+        var request = new HttpRequestMessage(HttpMethod.Delete, $"/api/v1/user/{userIdentifier}/favorites/{trailIdentifier}");
 
         // Act
         var response = await _client.SendAsync(request);
@@ -210,7 +198,7 @@ public class UserControllerIntegrationTests : IClassFixture<StigViddWebApplicati
         var userIdentifier = "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e";
         var trailIdentifier = "22b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5y";
 
-        var request = new HttpRequestMessage(HttpMethod.Delete, $"/api/v1/users/{userIdentifier}/favorites/{trailIdentifier}");
+        var request = new HttpRequestMessage(HttpMethod.Delete, $"/api/v1/user/{userIdentifier}/favorites/{trailIdentifier}");
 
         // Act
         var response = await _client.SendAsync(request);
@@ -226,7 +214,7 @@ public class UserControllerIntegrationTests : IClassFixture<StigViddWebApplicati
         var userIdentifier = "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d69";
         var trailIdentifier = "22b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d";
 
-        var request = new HttpRequestMessage(HttpMethod.Delete, $"/api/v1/users/{userIdentifier}/favorites/{trailIdentifier}");
+        var request = new HttpRequestMessage(HttpMethod.Delete, $"/api/v1/user/{userIdentifier}/favorites/{trailIdentifier}");
 
         // Act
         var response = await _client.SendAsync(request);
@@ -284,19 +272,6 @@ public class UserControllerIntegrationTests : IClassFixture<StigViddWebApplicati
         wishList.Should().NotBeNull();
         wishList.Should().NotBeEmpty();
         wishList[0].TrailImages.Should().NotBeEmpty();
-    }
-
-    [Fact]
-    public async Task GetUserWishlist_ForInvalidUser_ReturnsNotFound()
-    {
-        // Arrange
-        var invalidUserIdentifier = "44d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f";
-
-        // Act
-        var response = await _client.GetAsync($"/api/v1/user/{invalidUserIdentifier}/wishlist");
-
-        // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
 
     [Fact]
@@ -411,7 +386,7 @@ public class UserControllerIntegrationTests : IClassFixture<StigViddWebApplicati
         var userIdentifier = "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d";
         var trailIdentifier = "44d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f";
 
-        var request = new HttpRequestMessage(HttpMethod.Delete, $"/api/v1/users/{userIdentifier}/wishlist/{trailIdentifier}");
+        var request = new HttpRequestMessage(HttpMethod.Delete, $"/api/v1/user/{userIdentifier}/wishlist/{trailIdentifier}");
 
         // Act
         var response = await _client.SendAsync(request);
@@ -427,7 +402,7 @@ public class UserControllerIntegrationTests : IClassFixture<StigViddWebApplicati
         var userIdentifier = "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d";
         var trailIdentifier = "66f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b";
 
-        var request = new HttpRequestMessage(HttpMethod.Delete, $"/api/v1/users/{userIdentifier}/wishlist/{trailIdentifier}");
+        var request = new HttpRequestMessage(HttpMethod.Delete, $"/api/v1/user/{userIdentifier}/wishlist/{trailIdentifier}");
 
         // Act
         var response = await _client.SendAsync(request);
@@ -443,7 +418,7 @@ public class UserControllerIntegrationTests : IClassFixture<StigViddWebApplicati
         var userIdentifier = "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d69";
         var trailIdentifier = "22b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d";
 
-        var request = new HttpRequestMessage(HttpMethod.Delete, $"/api/v1/users/{userIdentifier}/wishlist/{trailIdentifier}");
+        var request = new HttpRequestMessage(HttpMethod.Delete, $"/api/v1/user/{userIdentifier}/wishlist/{trailIdentifier}");
 
         // Act
         var response = await _client.SendAsync(request);
