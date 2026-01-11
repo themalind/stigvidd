@@ -76,7 +76,7 @@ export const registerUserAtom = atom(
     if (result.success && result.user) {
       set(userAtom, result.user);
       set(authLoadingAtom, false);
-      router.replace("/(tabs)");
+      router.replace("/(tabs)/profile-page");
     }
 
     return result;
