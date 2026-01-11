@@ -10,7 +10,7 @@ import { Text, useTheme } from "react-native-paper";
 export default function WishlistScreen() {
   const theme = useTheme();
   const [{ data, isLoading, isError, error }] = useAtom(userWishlistAtom);
-  const [, removeFromWishlist] = useAtom(removeFromWishlistAtom);
+  const [removeUserWishlist] = useAtom(removeFromWishlistAtom);
   const [authState] = useAtom(authStateAtom);
 
   if (!authState.isAuthenticated) {
@@ -25,11 +25,15 @@ export default function WishlistScreen() {
     return <Text style={{ color: theme.colors.error }}>{error.message}</Text>;
   }
 
+  const handleDelete = (trailIdentifier: string) => {
+    removeUserWishlist.mutate(trailIdentifier);
+  };
+
   return (
     <UserTrailCollection
       title="Vill gå"
       noTrailsSavedInfo="Du har inga sparade promenader som du vill gå än. Gå till en promenad och tryck på plusset för att lägga till."
-      onDelete={removeFromWishlist}
+      onDelete={handleDelete}
       trails={data ?? []}
       icon={
         <MaterialIcons name="star" size={24} color={theme.colors.tertiary} />

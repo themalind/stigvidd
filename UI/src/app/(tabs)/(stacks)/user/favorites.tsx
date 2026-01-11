@@ -11,7 +11,7 @@ import { Text, useTheme } from "react-native-paper";
 export default function FavoritesScreen() {
   const theme = useTheme();
   const [{ data, isLoading, isError, error }] = useAtom(userFavoritesAtom); // useAtom är likt useState och retunerar både get och setfunktioner
-  const [, removeFromFavorites] = useAtom(removeFromFavoritesAtom);
+  const [removeFromFavorite] = useAtom(removeFromFavoritesAtom);
   const [authState] = useAtom(authStateAtom);
 
   if (!authState.isAuthenticated) {
@@ -26,11 +26,15 @@ export default function FavoritesScreen() {
     return <Text style={{ color: theme.colors.error }}>{error.message}</Text>;
   }
 
+  const handleDelete = (trailIdentifier: string) => {
+    removeFromFavorite.mutate(trailIdentifier);
+  };
+
   return (
     <UserTrailCollection
       title="Mina favoriter"
       noTrailsSavedInfo="Inga Favoriter sparade än. Gå till en promenad och tryck på hjärtat för att lägga till."
-      onDelete={removeFromFavorites}
+      onDelete={handleDelete}
       trails={data ?? []}
       icon={
         <MaterialCommunityIcons
