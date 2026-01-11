@@ -1,11 +1,13 @@
 ﻿using Infrastructure.Data;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
 using System.Data.Common;
+using System.Net.Http.Headers;
 
 namespace IntegrationTests;
 
@@ -40,7 +42,25 @@ public class StigViddWebApplicationFactory<TProgram>
             });
         });
 
+        // Register test authentication scheme for the test server
+        // https://learn.microsoft.com/en-us/aspnet/core/test/integration-tests?view=aspnetcore-9.0&pivots=xunit#mock-authentication
+        builder.ConfigureTestServices(services =>
+        {
+            services.AddAuthentication("Test")
+                .AddScheme<Microsoft.AspNetCore.Authentication.AuthenticationSchemeOptions, TestAuthHandler>(
+                    "Test", options => { });
+        });
+
         builder.UseEnvironment("Development");
+    }
+
+    // This is called for every HttpClient created by the factory
+    // We set the Authorization header to use the test authentication scheme
+    protected override void ConfigureClient(HttpClient client)
+    {
+        base.ConfigureClient(client);
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue(scheme: "TestScheme");
     }
 
     public void SeedDatabase()

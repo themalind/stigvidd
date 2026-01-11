@@ -1,7 +1,9 @@
 ﻿using FluentAssertions;
+using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
+using StigviddAPI;
 using System.Net;
 using System.Net.Http.Json;
-using WebDataContracts.RequestModels;
 using WebDataContracts.RequestModels.User;
 using WebDataContracts.ResponseModels.User;
 
@@ -16,7 +18,7 @@ public class UserControllerIntegrationTests : IClassFixture<StigViddWebApplicati
     {
         _factory = factory;
         _factory.SeedDatabase();
-        _client = _factory.CreateClient();
+        _client = _factory.CreateClient(); // Authentication header is set in ConfigureClient method in the factory.
     }
 
     [Fact]
