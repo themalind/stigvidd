@@ -1,8 +1,12 @@
 using Core;
 using Core.Validators;
 using FluentValidation;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 using SharpGrip.FluentValidation.AutoValidation.Mvc.Extensions;
 using System.Text.Json;
+
+namespace StigviddAPI;
 
 public class Program
 {
@@ -10,11 +14,26 @@ public class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
-        builder.Services.AddControllers()
-            .AddJsonOptions(options =>
+        builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+         .AddJwtBearer(options =>
+         {
+             options.Authority = "https://securetoken.google.com/stigvidd-b4cd0";
+             options.TokenValidationParameters = new TokenValidationParameters
              {
-                 options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
-             });
+                 ValidateIssuer = true,
+                 ValidateAudience = true,
+                 ValidateLifetime = true,
+                 ValidIssuer = "https://securetoken.google.com/stigvidd-b4cd0",
+                 ValidAudience = "stigvidd-b4cd0",
+             };
+         });
+
+        builder.Services.AddControllers()
+        .AddJsonOptions(options =>
+        {
+            options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+        });
+
 
         // Automatically register all validators from the assembly
         builder.Services.AddValidatorsFromAssemblyContaining<AddToUserFavoriteValidator>();
@@ -42,6 +61,7 @@ public class Program
 
         app.UseHttpsRedirection();
 
+        app.UseAuthentication();
         app.UseAuthorization();
 
         app.MapControllers();

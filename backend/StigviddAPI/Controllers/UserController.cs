@@ -1,10 +1,12 @@
 ﻿using Core.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WebDataContracts.RequestModels.User;
 using WebDataContracts.ResponseModels.User;
 
 namespace StigviddAPI.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("/api/v1/[controller]")]
 public class UserController : StigViddController
@@ -21,7 +23,7 @@ public class UserController : StigViddController
     [HttpPost]
     [Route("create")]
     public async Task<ActionResult<UserResponse?>> CreateUserAsync([FromBody] CreateUserRequest createUserRequest,
-               CancellationToken ctoken)
+              CancellationToken ctoken)
     {
         var result = await _userService.CreateUserAsync(createUserRequest.Email, createUserRequest.NickName, createUserRequest.FirebaseUid, ctoken);
 
@@ -39,7 +41,7 @@ public class UserController : StigViddController
     {
         var result = await _userService.GetUserByFirebaseUidAsync(firebaseUid, ctoken);
 
-        if(!result.Success && result.Message != null)
+        if (!result.Success && result.Message != null)
         {
             return ToActionResult(result.Message);
         }
@@ -65,8 +67,8 @@ public class UserController : StigViddController
     [HttpGet]
     [Route("{userIdentifier}/wishlist")]
     public async Task<ActionResult<IReadOnlyCollection<UserWishlistTrailResponse>>> GetWishListByUserIdentifierAsync(
-        string userIdentifier,
-        CancellationToken ctoken)
+       string userIdentifier,
+       CancellationToken ctoken)
     {
         var result = await _userService.GetWishListByUserIdentifierAsync(userIdentifier, ctoken);
 
@@ -97,8 +99,8 @@ public class UserController : StigViddController
     [HttpPost]
     [Route("wishlist")]
     public async Task<ActionResult<UserWishlistTrailResponse?>> AddTrailToUserWishListAsync(
-       [FromBody] AddToUserWishlistRequest addToUserWishlistRequest,
-       CancellationToken ctoken)
+      [FromBody] AddToUserWishlistRequest addToUserWishlistRequest,
+      CancellationToken ctoken)
     {
         var result = await _userService.AddTrailToUserWishListAsync(addToUserWishlistRequest.UserIdentifier, addToUserWishlistRequest.TrailIdentifier, ctoken);
 
@@ -113,9 +115,9 @@ public class UserController : StigViddController
     [HttpDelete]
     [Route("/api/v1/user/{userIdentifier}/favorites/{trailIdentifier}")]
     public async Task<ActionResult> RemoveTrailFromUserFavoritesListAsync(
-       [FromRoute] string userIdentifier,
-       [FromRoute] string trailIdentifier,
-       CancellationToken ctoken)
+      [FromRoute] string userIdentifier,
+      [FromRoute] string trailIdentifier,
+      CancellationToken ctoken)
     {
         var result = await _userService.RemoveTrailFromUserFavoritesListAsync(userIdentifier, trailIdentifier, ctoken);
 
@@ -130,9 +132,9 @@ public class UserController : StigViddController
     [HttpDelete]
     [Route("/api/v1/user/{userIdentifier}/wishlist/{trailIdentifier}")]
     public async Task<ActionResult> RemoveTrailFromUserWishListAsync(
-       [FromRoute] string userIdentifier,
-       [FromRoute] string trailIdentifier,
-       CancellationToken ctoken)
+      [FromRoute] string userIdentifier,
+      [FromRoute] string trailIdentifier,
+      CancellationToken ctoken)
     {
         var result = await _userService.RemoveTrailFromUserWishListAsync(userIdentifier, trailIdentifier, ctoken);
 
