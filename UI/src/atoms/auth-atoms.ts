@@ -1,13 +1,7 @@
-import { createStigViddUser } from "@/api/users";
-import { AuthResult, RegisterData } from "@/data/types";
+import { RegisterData } from "@/data/types";
+import { registerUser } from "@/services/auth";
 import { router } from "expo-router";
-import { FirebaseError } from "firebase/app";
-import {
-  createUserWithEmailAndPassword,
-  onAuthStateChanged,
-  updateProfile,
-  User,
-} from "firebase/auth";
+import { onAuthStateChanged, User } from "firebase/auth";
 import { atom } from "jotai";
 import { auth } from "../../firebase-config";
 
@@ -70,59 +64,21 @@ export const initAuthAtom = atom(null, (get, set) => {
   return unsubscribe;
 });
 
-// TODO Fundera lite över den här, är detta bästa lösningen?
 export const registerUserAtom = atom(
   null,
-  async (_, set, data: RegisterData): Promise<AuthResult> => {
-    try {
-      set(isRegisteringAtom, true);
+  async (_, set, data: RegisterData) => {
+    set(isRegisteringAtom, true);
 
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
-        data.email,
-        data.password,
-      );
+    const result = await registerUser(data);
 
-      // Bör ha nån transaktion här?
-      await updateProfile(userCredential.user, {
-        displayName: data.nickName,
-      });
+    set(isRegisteringAtom, false);
 
-      await createStigViddUser({
-        email: data.email,
-        nickname: data.nickName,
-        firebaseUid: userCredential.user.uid,
-      });
-
-      await userCredential.user.reload();
-
-      set(isRegisteringAtom, false);
-      set(userAtom, userCredential.user);
+    if (result.success && result.user) {
+      set(userAtom, result.user);
       set(authLoadingAtom, false);
-
       router.replace("/(tabs)");
-      return { success: true, user: userCredential.user, error: null };
-    } catch (error) {
-      set(isRegisteringAtom, false);
-      if (error instanceof FirebaseError) {
-        return {
-          success: false,
-          user: null,
-          error: {
-            code: error.code,
-            message: error.message,
-          },
-        };
-      }
-      console.error(`registerUserAtom: ${error}`);
-      return {
-        success: false,
-        user: null,
-        error: {
-          code: "unknown",
-          message: "Ett oväntat fel inträffade",
-        },
-      };
     }
+
+    return result;
   },
 );
