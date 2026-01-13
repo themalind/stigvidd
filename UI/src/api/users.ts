@@ -28,6 +28,11 @@ export async function createStigViddUser({
   firebaseUid,
 }: CreateStigViddUserCredentials): Promise<User> {
   const token = await getUserToken();
+
+  if (!token) {
+    throw new Error("User not authenticated");
+  }
+
   try {
     const response = await fetch(`http://${IP}/api/v1/user/create`, {
       method: "POST",
@@ -55,6 +60,11 @@ export async function createStigViddUser({
 
 export async function getStigViddUser(firebaseUid: string): Promise<User> {
   const token = await getUserToken();
+
+  if (!token) {
+    throw new Error("User not authenticated");
+  }
+
   try {
     const response = await fetch(`http://${IP}/api/v1/user/${firebaseUid}`, {
       method: "GET",
@@ -79,6 +89,11 @@ export async function getUserFavorites(
   userIdentifier: string,
 ): Promise<UserFavoritesTrail[]> {
   const token = await getUserToken();
+
+  if (!token) {
+    throw new Error("User not authenticated");
+  }
+
   try {
     const response = await fetch(
       `http://${IP}/api/v1/user/${userIdentifier}/favorites`,
@@ -106,6 +121,11 @@ export async function getUserWishlist(
   userIdentifier: string,
 ): Promise<UserWishlistTrail[]> {
   const token = await getUserToken();
+
+  if (!token) {
+    throw new Error("User not authenticated");
+  }
+
   try {
     const response = await fetch(
       "http://" + IP + `/api/v1/user/${userIdentifier}/wishlist`,
@@ -134,6 +154,11 @@ export async function addToUserFavorite(
   trailIdentifier: string,
 ): Promise<UserFavoritesTrail> {
   const token = await getUserToken();
+
+  if (!token) {
+    throw new Error("User not authenticated");
+  }
+
   try {
     const response = await fetch(`http://${IP}/api/v1/user/favorites`, {
       method: "POST",
@@ -164,6 +189,11 @@ export async function addToUserWishlist(
   trailIdentifier: string,
 ): Promise<UserFavoritesTrail> {
   const token = await getUserToken();
+
+  if (!token) {
+    throw new Error("User not authenticated");
+  }
+
   try {
     const response = await fetch(`http://${IP}/api/v1/user/wishlist`, {
       method: "POST",
@@ -193,6 +223,11 @@ export async function removeUserFavorite(
   trailIdentifier: string,
 ): Promise<void> {
   const token = await getUserToken();
+
+  if (!token) {
+    throw new Error("User not authenticated");
+  }
+
   try {
     const response = await fetch(
       `http://${IP}/api/v1/user/${userIdentifier}/favorites/${trailIdentifier}`,
@@ -204,6 +239,7 @@ export async function removeUserFavorite(
         },
       },
     );
+
     if (!response.ok) {
       throw new ApiError(`HTTP error ${response.status}`, response.status);
     }
@@ -218,6 +254,11 @@ export async function removeUserWishlist(
   trailIdentifier: string,
 ): Promise<void> {
   const token = await getUserToken();
+
+  if (!token) {
+    throw new Error("User not authenticated");
+  }
+
   try {
     const response = await fetch(
       `http://${IP}/api/v1/user/${userIdentifier}/wishlist/${trailIdentifier}`,
@@ -229,6 +270,7 @@ export async function removeUserWishlist(
         },
       },
     );
+
     if (!response.ok) {
       throw new ApiError(`HTTP error ${response.status}`, response.status);
     }
