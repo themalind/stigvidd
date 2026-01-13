@@ -173,6 +173,6 @@ const s = StyleSheet.create({
   },
 });
 
-// https://reactnative.dev/docs/the-new-architecture/layout-measurements
-// https://stackoverflow.com/questions/67250477/how-to-scroll-to-a-particular-view-inside-react-native-scrollview-hierarchy
-// https://stackoverflow.com/questions/31883211/scroll-to-top-of-scrollview
+// TODO https://reactnative.dev/docs/the-new-architecture/layout-measurements
+// TODO https://stackoverflow.com/questions/67250477/how-to-scroll-to-a-particular-view-inside-react-native-scrollview-hierarchy
+// TODO https://stackoverflow.com/questions/31883211/scroll-to-top-of-scrollview
