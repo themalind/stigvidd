@@ -1,4 +1,5 @@
 ﻿using Infrastructure.Data;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
@@ -15,7 +16,6 @@ public class StigViddWebApplicationFactory<TProgram>
     : WebApplicationFactory<TProgram> where TProgram : class
 {
     private SqliteConnection? _connection;
-
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.ConfigureServices(services =>
@@ -47,7 +47,7 @@ public class StigViddWebApplicationFactory<TProgram>
         builder.ConfigureTestServices(services =>
         {
             services.AddAuthentication("Test")
-                .AddScheme<Microsoft.AspNetCore.Authentication.AuthenticationSchemeOptions, TestAuthHandler>(
+                .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(
                     "Test", options => { });
         });
 
@@ -60,7 +60,7 @@ public class StigViddWebApplicationFactory<TProgram>
     {
         base.ConfigureClient(client);
         client.DefaultRequestHeaders.Authorization =
-            new AuthenticationHeaderValue(scheme: "TestScheme");
+            new AuthenticationHeaderValue(scheme: "Test");
     }
 
     public void SeedDatabase()

@@ -47,7 +47,25 @@ public class Program
 
         builder.Services.AddStigVidd(connectionString);
 
-        builder.Services.AddOpenApiDocument();
+        // Swagger auth
+        builder.Services.AddOpenApiDocument(config =>
+        {
+            config.Title = "StigVidd";
+
+            config.AddSecurity("Bearer", new NSwag.OpenApiSecurityScheme
+            {
+                Type = NSwag.OpenApiSecuritySchemeType.Http,
+                Scheme = "bearer",
+                BearerFormat = "JWT",
+                In = NSwag.OpenApiSecurityApiKeyLocation.Header,
+                Name = "Authorization",
+                Description = "Skriv: Bearer {din Firebase idToken}"
+            });
+
+            config.OperationProcessors.Add(
+                 new NSwag.Generation.Processors.Security.OperationSecurityScopeProcessor("Bearer")
+            );
+        });
 
         var app = builder.Build();
 
