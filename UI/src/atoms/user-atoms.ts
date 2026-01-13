@@ -75,7 +75,7 @@ export const addToFavoritesAtom = atomWithMutation((get) => {
   return {
     mutationFn: async (trailIdentifier: string) => {
       if (!userIdentifier) {
-        throw new Error("Du behöver logga in för att spara en promenad");
+        throw new Error("userIdentifier required");
       }
       await addToUserFavorite(userIdentifier, trailIdentifier);
     },
@@ -129,7 +129,7 @@ export const addToWishlistAtom = atomWithMutation((get) => {
   return {
     mutationFn: async (trailIdentifier: string) => {
       if (!userIdentifier) {
-        throw new Error("Du behöver logga in för att spara en promenad");
+        throw new Error("userIdentifier required");
       }
       return addToUserWishlist(userIdentifier, trailIdentifier);
     },
@@ -183,7 +183,7 @@ export const removeFromWishlistAtom = atomWithMutation((get) => {
   return {
     mutationFn: async (trailIdentifier: string) => {
       if (!userIdentifier) {
-        throw new Error("No user identifier");
+        throw new Error("userIdentifier required");
       }
       return await removeUserWishlist(userIdentifier, trailIdentifier);
     },
@@ -239,7 +239,7 @@ export const removeFromFavoritesAtom = atomWithMutation((get) => {
   return {
     mutationFn: async (trailIdentifier: string) => {
       if (!userIdentifier) {
-        throw new Error("No user identifier");
+        throw new Error("userIdentifier required");
       }
       return await removeUserFavorite(userIdentifier, trailIdentifier);
     },
