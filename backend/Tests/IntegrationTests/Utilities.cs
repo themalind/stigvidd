@@ -28,22 +28,6 @@ public static class Utilities
     }
 
     /// <summary>
-    /// Clears and reinitializes the database with fresh seed data.
-    /// Removes all existing users and trails, then repopulates with seed data.
-    /// Useful for resetting the database state between test runs.
-    /// </summary>
-    /// <param name="db">The database context to reinitialize.</param>
-    public static void ReinitializeDbForTests(StigViddDbContext db)
-    {
-        // Remove all existing data to ensure a clean state
-        db.Users.RemoveRange(db.Users);
-        db.Trails.RemoveRange(db.Trails);
-
-        db.SaveChanges();
-        InitializeDbForTests(db);
-    }
-
-    /// <summary>
     /// Contains consistent date values used across seed data.
     /// Ensures all test entities have the same creation and update timestamps.
     /// </summary>

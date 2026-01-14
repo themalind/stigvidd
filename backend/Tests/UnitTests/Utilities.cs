@@ -5,8 +5,17 @@ namespace UnitTests;
 
 // https://github.com/dotnet/AspNetCore.Docs.Samples/blob/main/test/integration-tests/10.x/IntegrationTestsSample/tests/RazorPagesProject.Tests/Helpers/Utilities.cs
 
+/// <summary>
+/// Utility class for managing test database seeding and initialization for unit tests.
+/// Provides methods to populate the database with predefined test data including various user configurations.
+/// </summary>
 public static class Utilities
 {
+    /// <summary>
+    /// Initializes the database with seed data for unit tests.
+    /// Populates the database with predefined trails and multiple test users with different configurations.
+    /// </summary>
+    /// <param name="db">The database context to initialize.</param>
     public static void InitializeDbForTests(StigViddDbContext db)
     {
         var trails = GetSeedingTrails();
@@ -18,21 +27,21 @@ public static class Utilities
         db.SaveChanges();
     }
 
-    public static void ReinitializeDbForTests(StigViddDbContext db)
-    {
-        db.Users.RemoveRange(db.Users);
-        db.Trails.RemoveRange(db.Trails);
-
-        db.SaveChanges();
-        InitializeDbForTests(db);
-    }
-
+    /// <summary>
+    /// Contains consistent date values used across seed data.
+    /// Ensures all test entities have the same creation and update timestamps.
+    /// </summary>
     public static class SeedDates
     {
         public static readonly DateTime Created = new DateTime(2025, 1, 1);
         public static readonly DateTime Updated = new DateTime(2025, 1, 1);
     }
 
+    /// <summary>
+    /// Creates a collection of predefined trail entities for testing.
+    /// Includes various trail types with different classifications, lengths, and accessibility options.
+    /// </summary>
+    /// <returns>A list of Trail entities with complete test data including images where applicable.</returns>
     public static List<Trail> GetSeedingTrails()
     {
         return
@@ -227,11 +236,18 @@ public static class Utilities
         ];
     }
 
+    /// <summary>
+    /// Creates a collection of predefined user entities for testing various scenarios.
+    /// Includes 6 different users with different combinations of wishlists and favorites
+    /// to test edge cases and different data states.
+    /// </summary>
+    /// <param name="trails">The list of trails to reference when creating user relationships.</param>
+    /// <returns>A list of User entities with varying configurations of wishlists and favorites for comprehensive testing.</returns>
     public static List<User> GetSeedingUsers(List<Trail> trails)
     {
         return new List<User>
         {
-            // User 1 har inga Favoriter bara wishlist
+            // User 1: Has wishlist items only (no favorites property set)
             new User
             {
                 Id = 1,
@@ -247,7 +263,7 @@ public static class Utilities
                     trails.First(t => t.Id == 7)  // Nässehult
                 }
             },
-            // User 2 har bara Favoriter ingen wishlist
+            // User 2: Has favorite items only (no wishlist property set)
             new User
             {
                 Id = 2,
@@ -263,6 +279,7 @@ public static class Utilities
                     trails.First(t => t.Id == 2)
                 }
             },
+            // User 3: Has favorites and explicitly null wishlist
             new User
             {
                 Id = 3,
@@ -280,6 +297,7 @@ public static class Utilities
                 MyWishList = null,
 
             },
+            // User 4: Has wishlist and explicitly null favorites
             new User
             {
                 Id = 4,
@@ -296,6 +314,7 @@ public static class Utilities
                     trails.First(t => t.Id == 5)
                 },
             },
+            // User 5: Has wishlist and empty favorites list
             new User
             {
                 Id = 5,
@@ -312,6 +331,7 @@ public static class Utilities
                     trails.First(t => t.Id == 5)
                 },
             },
+            // User 6: Has favorites and empty wishlist list
             new User
             {
                 Id = 6,
