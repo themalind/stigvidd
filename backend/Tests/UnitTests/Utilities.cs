@@ -7,7 +7,6 @@ namespace UnitTests;
 
 public static class Utilities
 {
-
     public static void InitializeDbForTests(StigViddDbContext db)
     {
         var trails = GetSeedingTrails();
@@ -19,7 +18,6 @@ public static class Utilities
         db.SaveChanges();
     }
 
-
     public static void ReinitializeDbForTests(StigViddDbContext db)
     {
         db.Users.RemoveRange(db.Users);
@@ -29,13 +27,11 @@ public static class Utilities
         InitializeDbForTests(db);
     }
 
-
     public static class SeedDates
     {
         public static readonly DateTime Created = new DateTime(2025, 1, 1);
         public static readonly DateTime Updated = new DateTime(2025, 1, 1);
     }
-
 
     public static List<Trail> GetSeedingTrails()
     {
@@ -114,7 +110,6 @@ public static class Utilities
                     }
                 }
             },
-
             new Trail
             {
                 Id = 3,
@@ -131,7 +126,6 @@ public static class Utilities
                 CreatedAt = DateTime.UtcNow,
                 LastUpdatedAt = DateTime.UtcNow
             },
-
             new Trail
             {
                 Id = 4,
@@ -165,7 +159,6 @@ public static class Utilities
                     }
                 }
             },
-
             new Trail
             {
                 Id = 5,
@@ -182,7 +175,6 @@ public static class Utilities
                 CreatedAt = DateTime.UtcNow,
                 LastUpdatedAt = DateTime.UtcNow
             },
-
             new Trail
             {
                 Id = 6,
@@ -199,7 +191,6 @@ public static class Utilities
                 CreatedAt = DateTime.UtcNow,
                 LastUpdatedAt = DateTime.UtcNow
             },
-
             new Trail
             {
                 Id = 7,
@@ -232,8 +223,8 @@ public static class Utilities
                         TrailId = 2
                     }
                 }
-            }];
-
+            }
+        ];
     }
 
     public static List<User> GetSeedingUsers(List<Trail> trails)
@@ -272,7 +263,6 @@ public static class Utilities
                     trails.First(t => t.Id == 2)
                 }
             },
-
             new User
             {
                 Id = 3,
@@ -288,7 +278,7 @@ public static class Utilities
                     trails.First(t => t.Id == 3)
                 },
                 MyWishList = null,
-               
+
             },
             new User
             {
@@ -304,7 +294,7 @@ public static class Utilities
                 {
                     trails.First(t => t.Id == 1),
                     trails.First(t => t.Id == 5)
-                }, 
+                },
             },
             new User
             {

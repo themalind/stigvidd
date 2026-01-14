@@ -43,7 +43,7 @@ public class StigViddWebApplicationFactory<TProgram>
         });
 
         // Register test authentication scheme for the test server
-        // https://learn.microsoft.com/en-us/aspnet/core/test/integration-tests?view=aspnetcore-9.0&pivots=xunit#mock-authentication
+        // TODO https://learn.microsoft.com/en-us/aspnet/core/test/integration-tests?view=aspnetcore-9.0&pivots=xunit#mock-authentication
         builder.ConfigureTestServices(services =>
         {
             services.AddAuthentication("Test")

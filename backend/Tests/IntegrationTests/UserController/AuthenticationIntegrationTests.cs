@@ -134,7 +134,6 @@ public class AuthenticationIntegrationTests : IClassFixture<StigViddWebApplicati
         };
 
         // Act
-
         var response = await client.PostAsJsonAsync("/api/v1/user/wishlist", wishlistRequest);
 
         // Assert
