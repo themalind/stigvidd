@@ -1,7 +1,7 @@
 import { authStateAtom } from "@/atoms/auth-atoms";
 import { removeFromWishlistAtom, userWishlistAtom } from "@/atoms/user-atoms";
 import LoadingIndicator from "@/components/loading-indicator";
-import UserTrailCollection from "@/components/trail/user-trail-collection";
+import UserTrailCollection from "@/components/user/user-trail-collection";
 import { MaterialIcons } from "@expo/vector-icons";
 import { Redirect } from "expo-router";
 import { useAtom } from "jotai";
