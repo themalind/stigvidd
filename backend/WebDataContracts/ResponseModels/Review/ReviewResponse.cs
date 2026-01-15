@@ -9,7 +9,7 @@ public class ReviewResponse
     public DateTime CreatedAt { get; set; }
     public required string UserIdentifier { get; set; }
     public required string TrailIdentifier { get; set; }
-    public IReadOnlyCollection<ReviewImageResponse>? ReviewImagesResponse { get; set; }
+    public IReadOnlyCollection<ReviewImageResponse>? ReviewImages { get; set; }
 
     public static ReviewResponse Create(
         string identifier,
@@ -30,7 +30,7 @@ public class ReviewResponse
             CreatedAt = createdAt,
             TrailIdentifier = trailIdentifier,
             UserIdentifier = userIdentifier,
-            ReviewImagesResponse = reviewImages?.ToList(),
+            ReviewImages = reviewImages?.ToList(),
         };
     }
 }
