@@ -1,9 +1,10 @@
+import { showSuccessAtom } from "@/atoms/snackbar-atoms";
 import { Trail } from "@/data/types";
-import { Ionicons, MaterialIcons } from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
+import { useSetAtom } from "jotai";
 import { RefObject } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Surface, useTheme } from "react-native-paper";
-import { Rating } from "./rating";
 import TrailReviews from "./trail-reviews";
 
 interface RatingProps {
@@ -17,6 +18,11 @@ export default function RatingWrapper({
 }: RatingProps) {
   const theme = useTheme();
   const reviews = trail?.reviewsResponse ?? [];
+  const setCreateReviewMsg = useSetAtom(showSuccessAtom);
+
+  const handlePress = () => {
+    setCreateReviewMsg("Din recension är tillagd!");
+  };
 
   if (reviews.length === 0) {
     return (
@@ -40,26 +46,24 @@ export default function RatingWrapper({
       mode="elevated"
       style={[s.surface, { backgroundColor: theme.colors.surface }]}
     >
-      <View style={s.ratingSection}>
-        <Text style={[s.title, { color: theme.colors.tertiary }]}>
-          Recensioner
-        </Text>
-        <Text style={[s.ratingNumber, { color: theme.colors.tertiary }]}>
-          {`(${reviews.length})`}
-        </Text>
-      </View>
-      <Rating trailReviews={trail?.reviewsResponse} starSize={17} />
-      <View style={s.iconSection}>
-        <MaterialIcons
-          name="filter-list"
-          size={25}
-          color={theme.colors.onBackground}
-        />
-        <Ionicons
-          name="create-outline"
-          size={25}
-          color={theme.colors.onBackground}
-        />
+      <View style={{ flexDirection: "row" }}>
+        <View style={s.ratingSection}>
+          <Text style={[s.title, { color: theme.colors.tertiary }]}>
+            Recensioner
+          </Text>
+          <Text style={[s.ratingNumber, { color: theme.colors.tertiary }]}>
+            {`(${reviews.length})`}
+          </Text>
+        </View>
+        <View style={s.iconSection}>
+          <Pressable onPress={handlePress}>
+            <Ionicons
+              name="create-outline"
+              size={30}
+              color={theme.colors.onBackground}
+            />
+          </Pressable>
+        </View>
       </View>
       <TrailReviews reviews={reviews} />
     </Surface>
@@ -69,27 +73,31 @@ export default function RatingWrapper({
 const s = StyleSheet.create({
   surface: {
     justifyContent: "center",
-    gap: 10,
     borderRadius: 20,
-    padding: 15,
+    padding: 25,
   },
   title: {
     fontWeight: 700,
     fontSize: 20,
   },
   iconSection: {
-    flexDirection: "row",
     gap: 15,
-    justifyContent: "flex-end",
+    paddingRight: 5,
+    justifyContent: "flex-start",
     alignItems: "flex-end",
+    flex: 1,
   },
   ratingNumber: {
     fontSize: 15,
+  },
+  ratingContainer: {
+    transform: [{ translateX: -5 }],
+    paddingTop: 10,
   },
   ratingSection: {
     flexDirection: "row",
     justifyContent: "flex-start",
     alignItems: "center",
-    gap: 5,
+    gap: 15,
   },
 });

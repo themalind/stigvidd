@@ -39,15 +39,15 @@ export interface Review {
   trailReview?: string;
   grade: number;
   userName: string;
-  createdAt: Date;
+  createdAt: string;
   userIdentifier: string;
   trailIdentifier: string;
-  reviewImagesResponse?: ReviewImage[];
+  reviewImages?: ReviewImage[];
 }
 
 export interface ReviewImage {
   identifier: string;
-  ImageUrl: string;
+  imageUrl: string;
 }
 
 export interface UserFavoritesTrail {
