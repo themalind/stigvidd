@@ -25,7 +25,7 @@ export default function ImageCarousel<T extends TrailOverview | TrailImage>({
   const fullItem = itemWidth + itemSpacing;
 
   const snapOffsets = data.map((_, index) => {
-    return index * fullItem - (width * 0.1);
+    return index * fullItem - width * 0.1;
   });
 
   const onScrollHandler = useAnimatedScrollHandler({
@@ -58,7 +58,7 @@ export default function ImageCarousel<T extends TrailOverview | TrailImage>({
   );
 
   return (
-    <View style={{ width: "100%", alignContent: "center"}}>
+    <View style={{ width: "100%", alignContent: "center" }}>
       <Animated.FlatList
         data={data}
         horizontal

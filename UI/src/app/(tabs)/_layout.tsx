@@ -13,6 +13,7 @@ export default function TabsLayout() {
 
   const shouldShowHeader =
     !pathname.includes("/login") && !pathname.includes("/register");
+
   return (
     <>
       {shouldShowHeader && <Header />}

@@ -2,6 +2,7 @@ import { signOutUser } from "@/api/auth";
 import { authStateAtom } from "@/atoms/auth-atoms";
 import { stigviddUserAtom } from "@/atoms/user-atoms";
 import { userThemeAtom } from "@/atoms/user-theme-atom";
+import LoadingIndicator from "@/components/loading-indicator";
 import { Link, Redirect, router } from "expo-router";
 import { useAtom } from "jotai";
 import { ScrollView, StyleSheet } from "react-native";
@@ -9,13 +10,20 @@ import { Button, SegmentedButtons, Text, useTheme } from "react-native-paper";
 
 export default function ProfilePageScreen() {
   const [userTheme, setUserTheme] = useAtom(userThemeAtom);
-  const [{ data }] = useAtom(stigviddUserAtom);
+  const [{ data, isLoading, isError, error }] = useAtom(stigviddUserAtom);
   const theme = useTheme();
   const [authState] = useAtom(authStateAtom);
 
-  // Fixa så man inte måste avsluta appen när man ångrar sig och inte vill logga in efter man tryckt på profilpage
   if (!authState.isAuthenticated) {
     return <Redirect href="/(tabs)/(auth)/login" />;
+  }
+
+  if (isLoading) {
+    return <LoadingIndicator />;
+  }
+
+  if (isError && error) {
+    return <Text style={{ color: theme.colors.error }}>{error.message}</Text>;
   }
 
   async function handleSignOut() {

@@ -8,14 +8,12 @@ import {
   removeUserWishlist,
 } from "@/api/users";
 import { UserFavoritesTrail, UserWishlistTrail } from "@/data/types";
-import { atom } from "jotai";
 import {
   atomWithMutation,
   atomWithQuery,
   queryClientAtom,
 } from "jotai-tanstack-query";
 import { userAtom } from "./auth-atoms";
-import { showErrorAtom } from "./snackbar-atoms";
 
 export const stigviddUserAtom = atomWithQuery((get) => {
   const firebaseUser = get(userAtom);
@@ -77,7 +75,7 @@ export const addToFavoritesAtom = atomWithMutation((get) => {
   return {
     mutationFn: async (trailIdentifier: string) => {
       if (!userIdentifier) {
-        throw new Error("Du behöver logga in för att spara en promenad");
+        throw new Error("userIdentifier required");
       }
       await addToUserFavorite(userIdentifier, trailIdentifier);
     },
@@ -131,7 +129,7 @@ export const addToWishlistAtom = atomWithMutation((get) => {
   return {
     mutationFn: async (trailIdentifier: string) => {
       if (!userIdentifier) {
-        throw new Error("Du behöver logga in för att spara en promenad");
+        throw new Error("userIdentifier required");
       }
       return addToUserWishlist(userIdentifier, trailIdentifier);
     },
@@ -177,96 +175,109 @@ export const addToWishlistAtom = atomWithMutation((get) => {
 
 // Ta bort från lista med optimistiska uppdateringar
 // https://tanstack.com/query/v4/docs/framework/react/guides/optimistic-updates
-export const removeFromWishlistAtom = atom(
-  null,
-  async (get, set, trailIdentifier: string) => {
-    const queryClient = get(queryClientAtom);
-    const userQuery = get(stigviddUserAtom);
-    const userIdentifier = userQuery.data?.identifier;
+export const removeFromWishlistAtom = atomWithMutation((get) => {
+  const queryClient = get(queryClientAtom);
+  const userQuery = get(stigviddUserAtom);
+  const userIdentifier = userQuery.data?.identifier;
 
-    if (!userIdentifier) {
-      throw new Error("No user identifier");
-    }
+  return {
+    mutationFn: async (trailIdentifier: string) => {
+      if (!userIdentifier) {
+        throw new Error("userIdentifier required");
+      }
+      return await removeUserWishlist(userIdentifier, trailIdentifier);
+    },
 
     // Avbryt om det finns några pågående queries
-    await queryClient.cancelQueries({
-      queryKey: ["userWishlist", userIdentifier],
-    });
+    onMutate: async (trailIdentifier: string) => {
+      await queryClient.cancelQueries({
+        queryKey: ["userWishlist", userIdentifier],
+      });
 
-    // Hämtar det som är sparat i cachen och sparar det i en egen variable ifall nåt går snett
-    const previousWishlist = queryClient.getQueryData<UserWishlistTrail[]>([
-      "userWishlist",
-      userIdentifier,
-    ]);
+      // Hämtar det som är sparat i cachen och sparar det i en egen variable ifall nåt går snett
+      const previousWishlist = queryClient.getQueryData<UserWishlistTrail[]>([
+        "userWishlist",
+        userIdentifier,
+      ]);
 
-    // Filtera bort den som ska tas bort innan den tas bort för att det ska se fräckt ut
-    queryClient.setQueryData<UserWishlistTrail[]>(
-      ["userWishlist", userIdentifier],
-      (old) => old?.filter((trail) => trail.identifier !== trailIdentifier),
-    );
+      // Filtera bort den som ska tas bort innan den tas bort för att det ska se fräckt ut
+      queryClient.setQueryData<UserWishlistTrail[]>(
+        ["userWishlist", userIdentifier],
+        (old) => old?.filter((trail) => trail.identifier !== trailIdentifier),
+      );
 
-    try {
-      // Försöker ta bort promenaden användaren kryssat
-      await removeUserWishlist(userIdentifier, trailIdentifier);
-    } catch (error) {
-      // Går något fel så återsälls listan men bara om listan inte är undefined.
-      if (previousWishlist) {
-        queryClient.setQueryData(
+      return { previousWishlist };
+    },
+
+    onError: (
+      error,
+      _,
+      context: { previousWishlist?: UserWishlistTrail[] } | undefined,
+    ) => {
+      if (context?.previousWishlist) {
+        queryClient.setQueryData<UserWishlistTrail[]>(
           ["userWishlist", userIdentifier],
-          previousWishlist,
+          context?.previousWishlist,
         );
       }
-      set(showErrorAtom, "Kunde inte ta bort leden från listan.");
-      console.error("Failed to remove trail from wishlist:", error);
-      throw error;
-    } finally {
+      console.error("Failed to remove from wishlist", error);
+    },
+    onSettled: () => {
       // Hämta om på nytt
       queryClient.invalidateQueries({
         queryKey: ["userWishlist", userIdentifier],
       });
-    }
-  },
-);
+    },
+  };
+});
 
-export const removeFromFavoritesAtom = atom(
-  null,
-  async (get, set, trailIdentifier: string) => {
-    const queryClient = get(queryClientAtom);
-    const userQuery = get(stigviddUserAtom);
-    const userIdentifier = userQuery.data?.identifier;
+export const removeFromFavoritesAtom = atomWithMutation((get) => {
+  const queryClient = get(queryClientAtom);
+  const userQuery = get(stigviddUserAtom);
+  const userIdentifier = userQuery.data?.identifier;
 
-    if (!userIdentifier) {
-      throw new Error("No user identifier");
-    }
+  return {
+    mutationFn: async (trailIdentifier: string) => {
+      if (!userIdentifier) {
+        throw new Error("userIdentifier required");
+      }
+      return await removeUserFavorite(userIdentifier, trailIdentifier);
+    },
 
-    await queryClient.cancelQueries({
-      queryKey: ["userFavorites", userIdentifier],
-    });
+    onMutate: async (trailIdentifier: string) => {
+      await queryClient.cancelQueries({
+        queryKey: ["userFavorites", userIdentifier],
+      });
 
-    const previousFavoritesList = queryClient.getQueryData<
-      UserFavoritesTrail[]
-    >(["userFavorites", userIdentifier]);
+      const previousFavoritesList = queryClient.getQueryData<
+        UserFavoritesTrail[]
+      >(["userFavorites", userIdentifier]);
 
-    queryClient.setQueryData<UserFavoritesTrail[]>(
-      ["userFavorites", userIdentifier],
-      (old) => old?.filter((trail) => trail.identifier !== trailIdentifier),
-    );
+      queryClient.setQueryData<UserFavoritesTrail[]>(
+        ["userFavorites", userIdentifier],
+        (old) => old?.filter((trail) => trail.identifier !== trailIdentifier),
+      );
 
-    try {
-      await removeUserFavorite(userIdentifier, trailIdentifier);
-    } catch (error) {
-      if (previousFavoritesList) {
+      return { previousFavoritesList };
+    },
+
+    onError: (
+      error,
+      _,
+      context: { previousFavoritesList?: UserFavoritesTrail[] } | undefined,
+    ) => {
+      if (context?.previousFavoritesList) {
         queryClient.setQueryData(
           ["userFavorites", userIdentifier],
-          previousFavoritesList,
+          context.previousFavoritesList,
         );
       }
-      set(showErrorAtom, "Kunde inta ta bort från listan!");
       console.error("Failed to remove trail from favorites", error);
-    } finally {
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({
         queryKey: ["userFavorites", userIdentifier],
       });
-    }
-  },
-);
+    },
+  };
+});

@@ -19,18 +19,18 @@ export default function TrailMap({ trail }: TrailMapProps) {
   const trailCoordinates: LatLng[] = mock;
 
   useEffect(() => {
-  if (!mapRef.current || trailCoordinates.length === 0) return;
+    if (!mapRef.current || trailCoordinates.length === 0) return;
 
-  mapRef.current.fitToCoordinates(trailCoordinates, {
-    edgePadding: {
-      top: initialPadding,
-      right: initialPadding,
-      bottom: initialPadding,
-      left: initialPadding,
-    },
-    animated: true,
-  });
-}, [trailCoordinates]);
+    mapRef.current.fitToCoordinates(trailCoordinates, {
+      edgePadding: {
+        top: initialPadding,
+        right: initialPadding,
+        bottom: initialPadding,
+        left: initialPadding,
+      },
+      animated: true,
+    });
+  }, [trailCoordinates]);
 
   return (
     <Surface style={s.container}>
@@ -58,55 +58,55 @@ const s = StyleSheet.create({
 });
 
 const mock: LatLng[] = [
-  { latitude: 57.7300, longitude: 12.7030 },
-  { latitude: 57.7300, longitude: 12.7020 },
-  { latitude: 57.7310, longitude: 12.7020 },
-  { latitude: 57.7310, longitude: 12.7010 },
-  { latitude: 57.7300, longitude: 12.7010 },
-  { latitude: 57.7300, longitude: 12.7000 },
-  { latitude: 57.7325, longitude: 12.7000 },
-  { latitude: 57.7325, longitude: 12.7010 },
-  { latitude: 57.7315, longitude: 12.7010 },
-  { latitude: 57.7315, longitude: 12.7020 },
-  { latitude: 57.7325, longitude: 12.7020 },
-  { latitude: 57.7325, longitude: 12.7030 },
-  { latitude: 57.7300, longitude: 12.7030 },
+  { latitude: 57.73, longitude: 12.703 },
+  { latitude: 57.73, longitude: 12.702 },
+  { latitude: 57.731, longitude: 12.702 },
+  { latitude: 57.731, longitude: 12.701 },
+  { latitude: 57.73, longitude: 12.701 },
+  { latitude: 57.73, longitude: 12.7 },
+  { latitude: 57.7325, longitude: 12.7 },
+  { latitude: 57.7325, longitude: 12.701 },
+  { latitude: 57.7315, longitude: 12.701 },
+  { latitude: 57.7315, longitude: 12.702 },
+  { latitude: 57.7325, longitude: 12.702 },
+  { latitude: 57.7325, longitude: 12.703 },
+  { latitude: 57.73, longitude: 12.703 },
 
-  { latitude: 57.7300, longitude: 12.7045 },
+  { latitude: 57.73, longitude: 12.7045 },
 
   { latitude: 57.7325, longitude: 12.7045 },
   { latitude: 57.7325, longitude: 12.7075 },
-  { latitude: 57.7320, longitude: 12.7075 },
-  { latitude: 57.7320, longitude: 12.7055 },
+  { latitude: 57.732, longitude: 12.7075 },
+  { latitude: 57.732, longitude: 12.7055 },
   { latitude: 57.7315, longitude: 12.7055 },
   { latitude: 57.7315, longitude: 12.7075 },
-  { latitude: 57.7310, longitude: 12.7075 },
-  { latitude: 57.7310, longitude: 12.7055 },
+  { latitude: 57.731, longitude: 12.7075 },
+  { latitude: 57.731, longitude: 12.7055 },
   { latitude: 57.7305, longitude: 12.7055 },
   { latitude: 57.7305, longitude: 12.7075 },
-  { latitude: 57.7300, longitude: 12.7075 },
-  { latitude: 57.7300, longitude: 12.7045 },
-  { latitude: 57.7300, longitude: 12.7075 },
+  { latitude: 57.73, longitude: 12.7075 },
+  { latitude: 57.73, longitude: 12.7045 },
+  { latitude: 57.73, longitude: 12.7075 },
 
-  { latitude: 57.7300, longitude: 12.7090 },
-  
-  { latitude: 57.7325, longitude: 12.7090 },
-  { latitude: 57.7325, longitude: 12.7100 },
-  { latitude: 57.7305, longitude: 12.7100 },
-  { latitude: 57.7305, longitude: 12.7120 },
-  { latitude: 57.7300, longitude: 12.7120 },
-  { latitude: 57.7300, longitude: 12.7090 },
-  
-  { latitude: 57.7300, longitude: 12.7135 },
-  
+  { latitude: 57.73, longitude: 12.709 },
+
+  { latitude: 57.7325, longitude: 12.709 },
+  { latitude: 57.7325, longitude: 12.71 },
+  { latitude: 57.7305, longitude: 12.71 },
+  { latitude: 57.7305, longitude: 12.712 },
+  { latitude: 57.73, longitude: 12.712 },
+  { latitude: 57.73, longitude: 12.709 },
+
+  { latitude: 57.73, longitude: 12.7135 },
+
   { latitude: 57.7325, longitude: 12.7135 },
   { latitude: 57.7325, longitude: 12.7165 },
-  { latitude: 57.7310, longitude: 12.7165 },
-  { latitude: 57.7310, longitude: 12.7145 },
-  { latitude: 57.7320, longitude: 12.7145 },
-  { latitude: 57.7320, longitude: 12.7155 },
+  { latitude: 57.731, longitude: 12.7165 },
+  { latitude: 57.731, longitude: 12.7145 },
+  { latitude: 57.732, longitude: 12.7145 },
+  { latitude: 57.732, longitude: 12.7155 },
   { latitude: 57.7315, longitude: 12.7155 },
   { latitude: 57.7315, longitude: 12.7145 },
-  { latitude: 57.7300, longitude: 12.7145 },
-  { latitude: 57.7300, longitude: 12.7135 },
+  { latitude: 57.73, longitude: 12.7145 },
+  { latitude: 57.73, longitude: 12.7135 },
 ];

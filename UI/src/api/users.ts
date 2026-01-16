@@ -4,6 +4,7 @@ import {
   UserFavoritesTrail,
   UserWishlistTrail,
 } from "@/data/types";
+import { getAuth, getIdToken } from "@firebase/auth";
 import { IP } from "../../ipconfig";
 
 export class ApiError extends Error {
@@ -16,16 +17,28 @@ export class ApiError extends Error {
   }
 }
 
+async function getUserToken(): Promise<string | null> {
+  const auth = getAuth();
+  return auth.currentUser ? await getIdToken(auth.currentUser) : null;
+}
+
 export async function createStigViddUser({
   email,
   nickname,
   firebaseUid,
 }: CreateStigViddUserCredentials): Promise<User> {
+  const token = await getUserToken();
+
+  if (!token) {
+    throw new Error("User not authenticated");
+  }
+
   try {
     const response = await fetch(`http://${IP}/api/v1/user/create`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({
         email,
@@ -46,9 +59,19 @@ export async function createStigViddUser({
 }
 
 export async function getStigViddUser(firebaseUid: string): Promise<User> {
+  const token = await getUserToken();
+
+  if (!token) {
+    throw new Error("User not authenticated");
+  }
+
   try {
     const response = await fetch(`http://${IP}/api/v1/user/${firebaseUid}`, {
       method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
     });
 
     if (!response.ok) {
@@ -65,11 +88,21 @@ export async function getStigViddUser(firebaseUid: string): Promise<User> {
 export async function getUserFavorites(
   userIdentifier: string,
 ): Promise<UserFavoritesTrail[]> {
+  const token = await getUserToken();
+
+  if (!token) {
+    throw new Error("User not authenticated");
+  }
+
   try {
     const response = await fetch(
       `http://${IP}/api/v1/user/${userIdentifier}/favorites`,
       {
         method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
       },
     );
 
@@ -87,11 +120,21 @@ export async function getUserFavorites(
 export async function getUserWishlist(
   userIdentifier: string,
 ): Promise<UserWishlistTrail[]> {
+  const token = await getUserToken();
+
+  if (!token) {
+    throw new Error("User not authenticated");
+  }
+
   try {
     const response = await fetch(
       "http://" + IP + `/api/v1/user/${userIdentifier}/wishlist`,
       {
         method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
       },
     );
 
@@ -110,11 +153,18 @@ export async function addToUserFavorite(
   userIdentifier: string,
   trailIdentifier: string,
 ): Promise<UserFavoritesTrail> {
+  const token = await getUserToken();
+
+  if (!token) {
+    throw new Error("User not authenticated");
+  }
+
   try {
     const response = await fetch(`http://${IP}/api/v1/user/favorites`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
       },
       // Matchar request i backenden
       body: JSON.stringify({
@@ -138,11 +188,18 @@ export async function addToUserWishlist(
   userIdentifier: string,
   trailIdentifier: string,
 ): Promise<UserFavoritesTrail> {
+  const token = await getUserToken();
+
+  if (!token) {
+    throw new Error("User not authenticated");
+  }
+
   try {
     const response = await fetch(`http://${IP}/api/v1/user/wishlist`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({
         userIdentifier,
@@ -165,13 +222,24 @@ export async function removeUserFavorite(
   userIdentifier: string,
   trailIdentifier: string,
 ): Promise<void> {
+  const token = await getUserToken();
+
+  if (!token) {
+    throw new Error("User not authenticated");
+  }
+
   try {
     const response = await fetch(
       `http://${IP}/api/v1/user/${userIdentifier}/favorites/${trailIdentifier}`,
       {
         method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
       },
     );
+
     if (!response.ok) {
       throw new ApiError(`HTTP error ${response.status}`, response.status);
     }
@@ -185,13 +253,24 @@ export async function removeUserWishlist(
   userIdentifier: string,
   trailIdentifier: string,
 ): Promise<void> {
+  const token = await getUserToken();
+
+  if (!token) {
+    throw new Error("User not authenticated");
+  }
+
   try {
     const response = await fetch(
       `http://${IP}/api/v1/user/${userIdentifier}/wishlist/${trailIdentifier}`,
       {
         method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
       },
     );
+
     if (!response.ok) {
       throw new ApiError(`HTTP error ${response.status}`, response.status);
     }

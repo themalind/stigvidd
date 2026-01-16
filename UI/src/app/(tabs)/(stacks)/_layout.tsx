@@ -4,7 +4,6 @@ import { useAtom } from "jotai";
 
 export default function StackLayout() {
   const [authState] = useAtom(authStateAtom);
-  console.log("StackLayout authState:", authState);
 
   return (
     <Stack
