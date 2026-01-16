@@ -4,7 +4,7 @@ import ImageCarousel from "@/components/image-carousel";
 import ImageModal from "@/components/imageModal";
 import LoadingIndicator from "@/components/loading-indicator";
 import { Rating } from "@/components/rating";
-import RatingWrapper from "@/components/review/rating-wrapper";
+import ReviewWrapper from "@/components/review/review-wrapper";
 import TrailDescription from "@/components/trail/trail-description";
 import TrailInfo from "@/components/trail/trail-info";
 import TrailMap from "@/components/trail/trail-map";
@@ -123,7 +123,7 @@ export default function TrailDetailsScreen() {
       {trail ? <TrailDescription trail={trail} /> : null}
       {trail ? <TrailMap trail={trail} /> : null}
       {trail?.reviewsResponse ? (
-        <RatingWrapper
+        <ReviewWrapper
           trail={trail}
           surfaceToScrollToRef={surfaceToScrollToRef}
         />

@@ -12,7 +12,7 @@ interface RatingProps {
   surfaceToScrollToRef: RefObject<View | null>;
 }
 
-export default function RatingWrapper({
+export default function ReviewWrapper({
   trail,
   surfaceToScrollToRef,
 }: RatingProps) {
