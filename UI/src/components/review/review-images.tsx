@@ -2,7 +2,7 @@ import { ReviewImage } from "@/data/types";
 import { Image } from "expo-image";
 import { useState } from "react";
 import { Pressable, View } from "react-native";
-import ImageModal from "./modal";
+import ImageModal from "./image-modal";
 
 interface ReviewImageProps {
   reviewImages: ReviewImage[];

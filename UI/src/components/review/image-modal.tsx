@@ -1,4 +1,4 @@
-import { TrailImage } from "@/data/types";
+import { ReviewImage } from "@/data/types";
 import { BlurView } from "expo-blur";
 import { Image } from "expo-image";
 import React, { useState } from "react";
@@ -13,7 +13,7 @@ import {
 import { Modal, Portal, useTheme } from "react-native-paper";
 
 interface ModalProps {
-  images: TrailImage[];
+  images: ReviewImage[]; // Borde vi ändra så att det inte finns trailimage och reviewimage, bara Image?
   visible: boolean;
   onDismiss: () => void;
 }
