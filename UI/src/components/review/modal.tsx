@@ -13,15 +13,15 @@ import {
 import { Modal, Portal, useTheme } from "react-native-paper";
 
 interface ModalProps {
-  images: TrailImage[] | TrailImage;
+  images: TrailImage[];
   visible: boolean;
   onDismiss: () => void;
 }
+
+const { width, height } = Dimensions.get("screen");
 const DOT_SIZE = 8;
 const DOT_SPACING = 8;
 const DOT_INDICATOR_SIZE = DOT_SIZE + DOT_SPACING;
-
-const { width, height } = Dimensions.get("screen");
 const ITEM_HEIGHT = height * 0.5;
 const ITEM_WIDTH = width * 0.7;
 
@@ -30,12 +30,6 @@ export default function ImageModal({ images, visible, onDismiss }: ModalProps) {
   const scrollX = React.useRef(new Animated.Value(0)).current;
   const [currentIndex, setCurrentIndex] = useState(0);
   const itemWidth = width - 40;
-
-  function isTrailImageArray(
-    images: TrailImage[] | TrailImage,
-  ): images is TrailImage[] {
-    return Array.isArray(images);
-  }
 
   // För att synka pagination med rätt bild, när man kommer tillbaka för att se bilderna igen.
   const onMomentumScrollEnd = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -62,82 +56,71 @@ export default function ImageModal({ images, visible, onDismiss }: ModalProps) {
           borderRadius: 20,
         }}
       >
-        {isTrailImageArray(images) ? (
-          <View>
-            <Animated.FlatList
-              horizontal
-              pagingEnabled // Gör att bilderna "snappar" på plats
-              showsHorizontalScrollIndicator={false}
-              bounces={false}
-              contentContainerStyle={{ paddingBottom: 0 }}
-              keyExtractor={(image) => image.identifier}
-              data={images}
-              initialScrollIndex={currentIndex}
-              getItemLayout={(_, index) => ({
-                length: itemWidth,
-                offset: itemWidth * index,
-                index,
-              })}
-              onMomentumScrollEnd={onMomentumScrollEnd}
-              onScroll={Animated.event(
-                [{ nativeEvent: { contentOffset: { x: scrollX } } }],
-                { useNativeDriver: true },
-              )}
-              renderItem={({ item }) => (
-                <View
-                  style={{
-                    alignItems: "center",
-                    justifyContent: "center",
-                    width: width - 40, // För att bildrna ska ligga snyggt i modalen
-                  }}
-                >
-                  <Image
-                    source={item.imageUrl}
-                    contentFit="contain"
-                    style={{ height: ITEM_HEIGHT, width: ITEM_WIDTH }}
-                  />
-                </View>
-              )}
-            />
-            {images.length > 1 && ( // Dölj pagination när det bara finns en bild att visa
-              <View style={s.pagination}>
-                {images.map((_, index) => (
-                  <View
-                    key={index}
-                    style={[s.dot, { backgroundColor: theme.colors.tertiary }]}
-                  />
-                ))}
-                <Animated.View
-                  style={[
-                    s.dotIndicator,
-                    {
-                      transform: [
-                        {
-                          translateX: scrollX.interpolate({
-                            inputRange: images.map((_, i) => i * (width - 40)),
-                            outputRange: images.map(
-                              (_, i) => i * DOT_INDICATOR_SIZE,
-                            ),
-                          }),
-                        },
-                      ],
-                      borderColor: theme.colors.primary,
-                    },
-                  ]}
+        <View>
+          <Animated.FlatList
+            horizontal
+            pagingEnabled // Gör att bilderna "snappar" på plats
+            showsHorizontalScrollIndicator={false}
+            bounces={false}
+            contentContainerStyle={{ paddingBottom: 0 }}
+            keyExtractor={(image) => image.identifier}
+            data={images}
+            initialScrollIndex={currentIndex}
+            getItemLayout={(_, index) => ({
+              length: itemWidth,
+              offset: itemWidth * index,
+              index,
+            })}
+            onMomentumScrollEnd={onMomentumScrollEnd}
+            onScroll={Animated.event(
+              [{ nativeEvent: { contentOffset: { x: scrollX } } }],
+              { useNativeDriver: true },
+            )}
+            renderItem={({ item }) => (
+              <View
+                style={{
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width: width - 40, // För att bildrna ska ligga snyggt i modalen
+                }}
+              >
+                <Image
+                  source={item.imageUrl}
+                  contentFit="contain"
+                  style={{ height: ITEM_HEIGHT, width: ITEM_WIDTH }}
                 />
               </View>
             )}
-          </View>
-        ) : (
-          <Image
-            contentFit="contain"
-            source={{ uri: images.imageUrl }}
-            style={{
-              width: ITEM_WIDTH,
-              height: ITEM_HEIGHT,
-            }}
           />
-        )}
+          {images.length > 1 && ( // Dölj pagination när det bara finns en bild att visa
+            <View style={s.pagination}>
+              {images.map((_, index) => (
+                <View
+                  key={index}
+                  style={[s.dot, { backgroundColor: theme.colors.tertiary }]}
+                />
+              ))}
+              <Animated.View
+                style={[
+                  s.dotIndicator,
+                  {
+                    transform: [
+                      {
+                        translateX: scrollX.interpolate({
+                          inputRange: images.map((_, i) => i * (width - 40)),
+                          outputRange: images.map(
+                            (_, i) => i * DOT_INDICATOR_SIZE,
+                          ),
+                        }),
+                      },
+                    ],
+                    borderColor: theme.colors.primary,
+                  },
+                ]}
+              />
+            </View>
+          )}
+        </View>
       </Modal>
     </Portal>
   );
