@@ -18,10 +18,7 @@ const formatDate = (dateString: string): string => {
 export default function TrailReviews({ reviews }: ReviewProps) {
   const theme = useTheme();
   const setReportMsg = useSetAtom(showSuccessAtom);
-  console.log("Reviews:", reviews);
-  reviews.forEach((r) => {
-    console.log("Review images:", r.reviewImages);
-  });
+
   const handlePress = () => {
     // Hej admin här kommer en olämplig review
     setReportMsg("For Gnomeregan!");

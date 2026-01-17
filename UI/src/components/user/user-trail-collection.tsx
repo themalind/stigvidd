@@ -5,7 +5,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { Divider, Text, useTheme } from "react-native-paper";
-import { Rating } from "../trail/rating";
+import { Rating } from "../rating";
 
 interface UserTrailCollectionProps {
   title: string;
