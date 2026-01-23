@@ -37,16 +37,16 @@ public class UserService : IUserService
 
         var favorites = await context.Users
             .Where(u => u.Identifier == userIdentifier)
-            .SelectMany(u => u.MyFavorites!.Select(f => UserFavoritesTrailResponse.Create(
-                    f.Identifier,
-                    f.Name,
-                    f.TrailLength,
-                    f.Description,
-                    f.Reviews!.Select(
+            .SelectMany(u => u.MyFavorites!.Select(trail => UserFavoritesTrailResponse.Create(
+                    trail.Identifier,
+                    trail.Name,
+                    trail.TrailLength,
+                    trail.Description,
+                    trail.Reviews!.Select(
                         r => RatingResponse.Create(
                             r.Identifier,
                             r.Grade)).ToList(),
-                   f.TrailImages!.Select(
+                   trail.TrailImages!.Select(
                        ti => TrailImageResponse.Create(
                            ti.Identifier,
                            ti.ImageUrl)).Take(1).ToList()
@@ -61,16 +61,16 @@ public class UserService : IUserService
 
         var wishlist = await context.Users
                 .Where(user => user.Identifier == userIdentifier)
-                .SelectMany(user => user.MyWishList!.Select(wishlist => UserWishlistTrailResponse.Create(
-                        wishlist.Identifier,
-                        wishlist.Name,
-                        wishlist.TrailLength,
-                        wishlist.Description,
-                        wishlist.Reviews!.Select(
+                .SelectMany(user => user.MyWishList!.Select(trail => UserWishlistTrailResponse.Create(
+                        trail.Identifier,
+                        trail.Name,
+                        trail.TrailLength,
+                        trail.Description,
+                        trail.Reviews!.Select(
                             reviews => RatingResponse.Create(
                                 reviews.Identifier,
                                 reviews.Grade)).ToList(),
-                       wishlist.TrailImages!.Select(
+                       trail.TrailImages!.Select(
                            trailImage => TrailImageResponse.Create(
                                trailImage.Identifier,
                                trailImage.ImageUrl)).Take(1).ToList()
@@ -306,11 +306,11 @@ public class UserService : IUserService
         using var context = await _context.CreateDbContextAsync(ctoken);
 
         var user = await context.Users
-            .Where(u => u.FirebaseUid == firebaseUid)
-            .Select(u => UserResponse.Create(
-                u.Identifier,
-                u.NickName,
-                u.Email,
+            .Where(user => user.FirebaseUid == firebaseUid)
+            .Select(user => UserResponse.Create(
+                user.Identifier,
+                user.NickName,
+                user.Email,
                 null,
                 null))
             .FirstOrDefaultAsync(ctoken);
