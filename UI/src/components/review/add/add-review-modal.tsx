@@ -10,12 +10,12 @@ interface AddReviewProps {
   trailName: string;
   trailLenght: number;
   visible: boolean;
-  onDismiss: () => void; // ← Ändra från onSuccess
+  onDismiss: () => void;
 }
 
 export default function AddReview({
   visible,
-  onDismiss, // ← Ändra från onSuccess
+  onDismiss,
   trailIdentifier,
   trailName,
   trailLenght,
@@ -32,7 +32,7 @@ export default function AddReview({
           { backgroundColor: theme.colors.surface },
         ]}
         visible={visible}
-        onDismiss={onDismiss} // ← Ändra
+        onDismiss={onDismiss}
       >
         <KeyboardAwareScrollView
           keyboardShouldPersistTaps="handled"
@@ -46,7 +46,7 @@ export default function AddReview({
           </View>
           <AddReviewForm
             trailIdentifier={trailIdentifier}
-            onSuccess={onDismiss} // ← Ändra
+            onSuccess={onDismiss}
           />
         </KeyboardAwareScrollView>
       </Modal>

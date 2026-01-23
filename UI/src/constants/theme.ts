@@ -37,7 +37,7 @@ export const AppDefaultTheme = merge(CombinedDefaultTheme, {
     onErrorContainer: "rgb(65, 0, 2)",
     background: "hsl(39, 19%, 90%)",
     onBackground: "rgb(26, 28, 25)",
-    surface: "hsl(39, 19%, 95%)",
+    surface: "rgb(255, 255, 255)",
     onSurface: "rgb(26, 28, 25)",
     surfaceVariant: "rgb(222, 229, 217)",
     onSurfaceVariant: "rgb(66, 73, 64)",
