@@ -17,7 +17,7 @@ export class ApiError extends Error {
   }
 }
 
-async function getUserToken(): Promise<string | null> {
+export async function getUserToken(): Promise<string | null> {
   const auth = getAuth();
   return auth.currentUser ? await getIdToken(auth.currentUser) : null;
 }
