@@ -100,6 +100,14 @@ export interface RegisterData {
   confirmPassword: string;
 }
 
+export interface CreateReviewRequest {
+  review: string;
+  grade: number;
+  userIdentifier: string;
+  trailIdentifier: string;
+  imageUris?: string[];
+}
+
 export interface LoginData {
   email: string;
   password: string;
