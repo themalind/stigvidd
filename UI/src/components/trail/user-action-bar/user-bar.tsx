@@ -1,3 +1,4 @@
+import { Trail } from "@/data/types";
 import { Dimensions, StyleSheet, View } from "react-native";
 import { useTheme } from "react-native-paper";
 import AddToUserWishlist from "./add-to-user-wishlist";
@@ -8,17 +9,17 @@ import UserShare from "./user-share";
 const WIDTH = Dimensions.get("screen").width;
 const HEIGHT = Dimensions.get("screen").height;
 interface Props {
-  trailIdentifier: string;
+  trail: Trail;
 }
 
-export default function UserBar({ trailIdentifier }: Props) {
+export default function UserBar({ trail }: Props) {
   const theme = useTheme();
   return (
     <View style={[s.container, { backgroundColor: theme.colors.primary }]}>
-      <AddToUserWishlist trailIdentifier={trailIdentifier} />
+      <AddToUserWishlist trailIdentifier={trail.identifier} />
       <UserShare />
-      <UserRating />
-      <AddUserFavorite trailIdentifier={trailIdentifier} />
+      <UserRating trail={trail} />
+      <AddUserFavorite trailIdentifier={trail.identifier} />
     </View>
   );
 }
