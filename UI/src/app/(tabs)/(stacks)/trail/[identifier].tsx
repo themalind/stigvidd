@@ -111,7 +111,7 @@ export default function TrailDetailsScreen() {
             starColor={theme.colors.secondary}
           />
           <Text
-            style={[s.ratingNumber, { color: theme.colors.onPrimary }]}
+            style={[s.ratingNumber, { color: theme.colors.onBackground }]}
           >{`(${trail?.reviewsResponse?.length})`}</Text>
         </View>
         <TouchableOpacity onPress={onPressScrollToRatings}>
@@ -120,18 +120,16 @@ export default function TrailDetailsScreen() {
           </Text>
         </TouchableOpacity>
       </View>
-      {trail ? <TrailInfo trail={trail} /> : null}
-      {trail?.identifier ? (
-        <UserBar trailIdentifier={trail?.identifier} />
-      ) : null}
-      {trail ? <TrailDescription trail={trail} /> : null}
-      {trail ? <TrailMap trail={trail} /> : null}
-      {trail?.reviewsResponse ? (
+      {trail && <TrailInfo trail={trail} />}
+      {trail && <UserBar trail={trail} />}
+      {trail && <TrailDescription trail={trail} />}
+      {trail && <TrailMap trail={trail} />}
+      {trail?.reviewsResponse && (
         <ReviewWrapper
           trail={trail}
           surfaceToScrollToRef={surfaceToScrollToRef}
         />
-      ) : null}
+      )}
       <Pressable style={s.backToTop} onPress={onPressScrollToTop}>
         <Text style={[s.text, { color: theme.colors.tertiary }]}>
           Tillbaka till toppen
