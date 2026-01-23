@@ -19,7 +19,7 @@ const CombinedDarkTheme = merge(MD3DarkTheme, DarkTheme);
 
 export const AppDefaultTheme = merge(CombinedDefaultTheme, {
   colors: {
-    primary: "rgb(12, 41, 15)",
+    primary: "hsl(100, 45%, 12%)",
     onPrimary: "rgb(255, 255, 255)",
     primaryContainer: "rgb(168, 245, 166)",
     onPrimaryContainer: "rgb(0, 33, 5)",
@@ -35,9 +35,9 @@ export const AppDefaultTheme = merge(CombinedDefaultTheme, {
     onError: "rgb(255, 255, 255)",
     errorContainer: "rgb(255, 218, 214)",
     onErrorContainer: "rgb(65, 0, 2)",
-    background: "rgb(252, 253, 247)",
+    background: "hsl(39, 19%, 90%)",
     onBackground: "rgb(26, 28, 25)",
-    surface: "rgb(252, 253, 247)",
+    surface: "hsl(39, 19%, 95%)",
     onSurface: "rgb(26, 28, 25)",
     surfaceVariant: "rgb(222, 229, 217)",
     onSurfaceVariant: "rgb(66, 73, 64)",
@@ -45,7 +45,7 @@ export const AppDefaultTheme = merge(CombinedDefaultTheme, {
     outlineVariant: "rgb(194, 201, 189)",
     shadow: "rgb(0, 0, 0)",
     scrim: "rgb(0, 0, 0)",
-    inverseSurface: "rgb(47, 49, 45)",
+    inverseSurface: "hsl(90, 4%, 18%)",
     inverseOnSurface: "rgb(240, 241, 235)",
     inversePrimary: "rgb(140, 216, 140)",
     elevation: {
