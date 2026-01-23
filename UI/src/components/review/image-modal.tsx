@@ -45,16 +45,10 @@ export default function ImageModal({ images, visible, onDismiss }: ModalProps) {
       <Modal
         visible={visible}
         onDismiss={onDismiss}
-        contentContainerStyle={{
-          backgroundColor: theme.colors.inverseOnSurface,
-          margin: 20,
-          justifyContent: "center",
-          alignItems: "center",
-          flexDirection: "row",
-          maxHeight: height * 0.6,
-          maxWidth: width,
-          borderRadius: 20,
-        }}
+        contentContainerStyle={[
+          s.modalContainerStyle,
+          { backgroundColor: theme.colors.inverseOnSurface },
+        ]}
       >
         <View>
           <Animated.FlatList
@@ -62,7 +56,7 @@ export default function ImageModal({ images, visible, onDismiss }: ModalProps) {
             pagingEnabled // Gör att bilderna "snappar" på plats
             showsHorizontalScrollIndicator={false}
             bounces={false}
-            contentContainerStyle={{ paddingBottom: 0 }}
+            contentContainerStyle={s.flatListContainerStyle}
             keyExtractor={(image) => image.identifier}
             data={images}
             initialScrollIndex={currentIndex}
@@ -77,17 +71,11 @@ export default function ImageModal({ images, visible, onDismiss }: ModalProps) {
               { useNativeDriver: true },
             )}
             renderItem={({ item }) => (
-              <View
-                style={{
-                  alignItems: "center",
-                  justifyContent: "center",
-                  width: width - 40, // För att bildrna ska ligga snyggt i modalen
-                }}
-              >
+              <View style={s.imageContainer}>
                 <Image
                   source={item.imageUrl}
                   contentFit="contain"
-                  style={{ height: ITEM_HEIGHT, width: ITEM_WIDTH }}
+                  style={s.image}
                 />
               </View>
             )}
@@ -104,9 +92,11 @@ export default function ImageModal({ images, visible, onDismiss }: ModalProps) {
                 style={[
                   s.dotIndicator,
                   {
+                    borderColor: theme.colors.primary,
                     transform: [
                       {
                         translateX: scrollX.interpolate({
+                          // Ren grekiska
                           inputRange: images.map((_, i) => i * (width - 40)),
                           outputRange: images.map(
                             (_, i) => i * DOT_INDICATOR_SIZE,
@@ -114,7 +104,6 @@ export default function ImageModal({ images, visible, onDismiss }: ModalProps) {
                         }),
                       },
                     ],
-                    borderColor: theme.colors.primary,
                   },
                 ]}
               />
@@ -127,6 +116,27 @@ export default function ImageModal({ images, visible, onDismiss }: ModalProps) {
 }
 
 const s = StyleSheet.create({
+  modalContainerStyle: {
+    margin: 20,
+    justifyContent: "center",
+    alignItems: "center",
+    flexDirection: "row",
+    maxHeight: height * 0.6,
+    maxWidth: width,
+    borderRadius: 20,
+  },
+  flatListContainerStyle: {
+    paddingBottom: 0,
+  },
+  imageContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    width: width - 40, // För att bildrna ska ligga snyggt i modalen
+  },
+  image: {
+    height: ITEM_HEIGHT,
+    width: ITEM_WIDTH,
+  },
   pagination: {
     flexDirection: "row",
     alignSelf: "center",

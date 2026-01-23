@@ -51,7 +51,11 @@ export default function TrailReviews({ reviews }: ReviewProps) {
                   transform: [{ translateX: -5 }],
                 }}
               >
-                <Rating review={r} starSize={13} />
+                <Rating
+                  review={r}
+                  starSize={13}
+                  starColor={theme.colors.secondary}
+                />
               </View>
             }
           >

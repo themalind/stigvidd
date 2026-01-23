@@ -84,7 +84,11 @@ export default function UserTrailCollection({
                       {trail.name}
                     </Text>
                     {trail.ratingResponse ? (
-                      <Rating starSize={13} ratings={trail.ratingResponse} />
+                      <Rating
+                        starSize={13}
+                        ratings={trail.ratingResponse}
+                        starColor={theme.colors.tertiary}
+                      />
                     ) : null}
                   </View>
                   <Text>{trail.trailLength} km</Text>

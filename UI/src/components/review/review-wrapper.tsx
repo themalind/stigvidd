@@ -1,43 +1,43 @@
-import { showSuccessAtom } from "@/atoms/snackbar-atoms";
+import { authStateAtom } from "@/atoms/auth-atoms";
 import { Trail } from "@/data/types";
 import { Ionicons } from "@expo/vector-icons";
-import { useSetAtom } from "jotai";
-import { RefObject } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { useQueryClient } from "@tanstack/react-query";
+import { useAtom } from "jotai";
+import React, { RefObject, useState } from "react";
+import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
 import { Surface, useTheme } from "react-native-paper";
+import AddReview from "./add/add-review-modal";
 import TrailReviews from "./trail-reviews";
 
-interface RatingProps {
-  trail?: Trail;
+interface ReviewWrapperProps {
+  trail: Trail;
   surfaceToScrollToRef: RefObject<View | null>;
 }
 
 export default function ReviewWrapper({
   trail,
   surfaceToScrollToRef,
-}: RatingProps) {
+}: ReviewWrapperProps) {
+  const [authState] = useAtom(authStateAtom);
+  const [showModal, setShowModal] = useState(false);
   const theme = useTheme();
+  const queryClient = useQueryClient();
   const reviews = trail?.reviewsResponse ?? [];
-  const setCreateReviewMsg = useSetAtom(showSuccessAtom);
 
   const handlePress = () => {
-    setCreateReviewMsg("Din recension är tillagd!");
+    if (!authState.isAuthenticated) {
+      Alert.alert("Du är inte inloggad");
+      return;
+    }
+
+    setShowModal(true);
   };
 
-  if (reviews.length === 0) {
-    return (
-      <Surface
-        elevation={4}
-        ref={surfaceToScrollToRef}
-        mode="elevated"
-        style={[s.surface, { backgroundColor: theme.colors.surface }]}
-      >
-        <Text style={{ color: theme.colors.onBackground }}>
-          Det finns inga recensioner här ännu.
-        </Text>
-      </Surface>
-    );
-  }
+  const handleReviewAdded = () => {
+    setShowModal(false);
+    // Invalidera queryn så att trail-data hämtas igen
+    queryClient.invalidateQueries({ queryKey: ["trail", trail.identifier] });
+  };
 
   return (
     <Surface
@@ -48,7 +48,7 @@ export default function ReviewWrapper({
     >
       <View style={{ flexDirection: "row" }}>
         <View style={s.ratingSection}>
-          <Text style={[s.title, { color: theme.colors.tertiary }]}>
+          <Text style={[s.title, { color: theme.colors.onSurface }]}>
             Recensioner
           </Text>
           <Text style={[s.ratingNumber, { color: theme.colors.tertiary }]}>
@@ -62,10 +62,30 @@ export default function ReviewWrapper({
               size={30}
               color={theme.colors.onBackground}
             />
+            <AddReview
+              trailIdentifier={trail.identifier}
+              trailName={trail.name}
+              trailLenght={trail.trailLenght}
+              visible={showModal}
+              onDismiss={handleReviewAdded}
+            />
           </Pressable>
         </View>
       </View>
-      <TrailReviews reviews={reviews} />
+      {reviews.length === 0 ? (
+        <Surface
+          elevation={4}
+          ref={surfaceToScrollToRef}
+          mode="elevated"
+          style={[s.surface, { backgroundColor: theme.colors.surface }]}
+        >
+          <Text style={{ color: theme.colors.onBackground }}>
+            Det finns inga recensioner här ännu.
+          </Text>
+        </Surface>
+      ) : (
+        <TrailReviews reviews={reviews} />
+      )}
     </Surface>
   );
 }
