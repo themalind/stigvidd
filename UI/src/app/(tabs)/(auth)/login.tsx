@@ -58,6 +58,7 @@ export default function LoginScreen() {
     setFirebaseError("");
 
     const result = await signInUser(data);
+
     if (!result.success || !result.user) {
       const errorCode = result.error?.code || "unknown";
       setFirebaseError(getLoginErrorMessage(errorCode));

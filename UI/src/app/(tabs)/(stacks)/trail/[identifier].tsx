@@ -105,13 +105,17 @@ export default function TrailDetailsScreen() {
       />
       <View style={s.ratingSection}>
         <View style={s.rating}>
-          <Rating trailReviews={trail?.reviewsResponse} starSize={17} />
+          <Rating
+            trailReviews={trail?.reviewsResponse}
+            starSize={17}
+            starColor={theme.colors.secondary}
+          />
           <Text
-            style={[s.ratingNumber, { color: theme.colors.tertiary }]}
+            style={[s.ratingNumber, { color: theme.colors.onPrimary }]}
           >{`(${trail?.reviewsResponse?.length})`}</Text>
         </View>
         <TouchableOpacity onPress={onPressScrollToRatings}>
-          <Text style={[s.text, { color: theme.colors.tertiary }]}>
+          <Text style={[s.text, { color: theme.colors.secondary }]}>
             Läs betyg och kommentarer
           </Text>
         </TouchableOpacity>
