@@ -34,10 +34,10 @@ public class Program
             options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
         });
 
-        // Automatically register all validators from the assembly
-        builder.Services.AddValidatorsFromAssemblyContaining<AddToUserFavoriteValidator>();
-
         builder.Services.AddFluentValidationAutoValidation();
+
+        // Automatically register all validators from the assembly
+        builder.Services.AddValidatorsFromAssemblyContaining<AddToUserFavoriteValidator>();        
 
         builder.Services.AddOpenApi();
 

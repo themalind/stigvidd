@@ -12,12 +12,10 @@ namespace StigviddAPI.Controllers;
 public class UserController : StigViddController
 {
     private readonly IUserService _userService;
-    private readonly ILogger<UserController> _logger;
 
     public UserController(IUserService userService, ILogger<UserController> logger)
     {
         _userService = userService;
-        _logger = logger;
     }
 
     [HttpPost]
@@ -37,7 +35,8 @@ public class UserController : StigViddController
 
     [HttpGet]
     [Route("{firebaseUid}")]
-    public async Task<ActionResult<UserResponse?>> GetStigViddUserByFirebaseUid(string firebaseUid, CancellationToken ctoken)
+    public async Task<ActionResult<UserResponse?>> GetStigViddUserByFirebaseUid(
+        [FromRoute] string firebaseUid, CancellationToken ctoken)
     {
         var result = await _userService.GetUserByFirebaseUidAsync(firebaseUid, ctoken);
 
@@ -51,7 +50,7 @@ public class UserController : StigViddController
     [HttpGet]
     [Route("{userIdentifier}/favorites")]
     public async Task<ActionResult<IReadOnlyCollection<UserFavoritesTrailResponse>>> GetFavoritesByUserIdentifierAsync(
-        string userIdentifier,
+        [FromRoute] string userIdentifier,
         CancellationToken ctoken)
     {
         var result = await _userService.GetFavoritesByUserIdentifierAsync(userIdentifier, ctoken);
@@ -67,7 +66,7 @@ public class UserController : StigViddController
     [HttpGet]
     [Route("{userIdentifier}/wishlist")]
     public async Task<ActionResult<IReadOnlyCollection<UserWishlistTrailResponse>>> GetWishListByUserIdentifierAsync(
-       string userIdentifier,
+       [FromRoute] string userIdentifier,
        CancellationToken ctoken)
     {
         var result = await _userService.GetWishListByUserIdentifierAsync(userIdentifier, ctoken);

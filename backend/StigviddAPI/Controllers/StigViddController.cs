@@ -14,7 +14,7 @@ public abstract class StigViddController : Controller
             (int)HttpStatusCode.NotFound => NotFound(message.ResultMessage),
             (int)HttpStatusCode.BadRequest => BadRequest(message.ResultMessage),
             (int)HttpStatusCode.Conflict => Conflict(message.ResultMessage),
-            _ => StatusCode((int)HttpStatusCode.InternalServerError, "An unexpected error occurred.")
+             _ => StatusCode(message.StatusCode, message.ResultMessage)
         };
 
     }

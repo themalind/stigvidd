@@ -6,5 +6,4 @@ public class CreateReviewRequest
     public string? TrailReview { get; set; }
     public required string UserIdentifier { get; set; }
     public required string TrailIdentifier { get; set; }
-    public IReadOnlyList<ReviewImageRequest>? Images { get; set; }
 }
