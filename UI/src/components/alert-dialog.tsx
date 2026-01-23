@@ -9,7 +9,11 @@ interface AlertDialogProps {
   infoText: string;
   backgroundColor?: string;
   textColor?: string;
+  confirmText?: string;
+  onConfirm?: () => void;
+  cancelText?: string;
 }
+
 export default function AlertDialog({
   visible,
   onDismiss,
@@ -17,6 +21,9 @@ export default function AlertDialog({
   title,
   backgroundColor,
   textColor,
+  confirmText,
+  onConfirm,
+  cancelText = "Ok",
 }: AlertDialogProps) {
   return (
     <Portal>
@@ -34,8 +41,15 @@ export default function AlertDialog({
           </View>
         </Dialog.Content>
         <Dialog.Actions>
+          {confirmText && onConfirm && (
+            <Button onPress={onConfirm}>
+              <Text style={{ fontSize: 18, color: textColor }}>
+                {confirmText}
+              </Text>
+            </Button>
+          )}
           <Button onPress={onDismiss}>
-            <Text style={{ fontSize: 20, color: textColor }}>Ok</Text>
+            <Text style={{ fontSize: 18, color: textColor }}>{cancelText}</Text>
           </Button>
         </Dialog.Actions>
       </Dialog>
