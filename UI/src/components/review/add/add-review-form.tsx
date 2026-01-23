@@ -77,15 +77,15 @@ export default function AddReviewForm({
   };
   const onSubmit: SubmitHandler<FormFields> = async (data) => {
     try {
-      // if (!user?.identifier) {
-      //   setError("Användare saknas");
-      //   return;
-      // }
+      if (!user?.identifier) {
+        setError("Error: No UserIdentifier");
+        return;
+      }
 
-      // if (!trailIdentifier) {
-      //   setError("Promenad-ID saknas");
-      //   return;
-      // }
+      if (!trailIdentifier) {
+        setError("Error: No TrailIdentifier");
+        return;
+      }
       await createReview({
         userIdentifier: data.userIdentifier,
         trailIdentifier: data.trailIdentifier,
@@ -208,12 +208,7 @@ export default function AddReviewForm({
         <Button
           mode="contained"
           onPress={handleSubmit(onSubmit, (errors) => {
-            console.log("❌ Validation failed:", errors);
-            console.log("Current form values:", {
-              userIdentifier: user?.identifier,
-              trailIdentifier: trailIdentifier,
-              rating: rating,
-            });
+            console.log("Validation failed:", errors);
           })}
           disabled={isSubmitting}
         >
