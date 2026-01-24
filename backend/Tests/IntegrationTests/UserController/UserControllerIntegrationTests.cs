@@ -12,6 +12,11 @@ public class UserControllerIntegrationTests : IClassFixture<StigViddWebApplicati
 {
     private readonly StigViddWebApplicationFactory<Program> _factory;
 
+    // Test user identifiers matching seeded data in Utilities.cs
+    private const string UserWithWishlist = "firebase-uid-12345";  // User 1: NaturElskaren
+    private const string UserWithFavorites = "firebase-uid-12346"; // User 2: VandrarVennen
+    private const string NonExistingUser = "firebase-uid-99999";   // No matching user in DB
+
     public UserControllerIntegrationTests(StigViddWebApplicationFactory<Program> factory)
     {
         _factory = factory;
@@ -24,12 +29,10 @@ public class UserControllerIntegrationTests : IClassFixture<StigViddWebApplicati
         // Arrange
         var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Authorization =
-            new AuthenticationHeaderValue("Bearer", "test-token");
+            new AuthenticationHeaderValue("Bearer", UserWithFavorites);
 
-        var userIdentifier = "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e";
-
-        // Act
-        var response = await client.GetAsync($"/api/v1/user/{userIdentifier}/favorites");
+       // Act
+        var response = await client.GetAsync($"/api/v1/user/favorites");
         var favorites = await response.Content.ReadFromJsonAsync<List<UserFavoritesTrailResponse>>();
 
         // Assert
@@ -44,12 +47,10 @@ public class UserControllerIntegrationTests : IClassFixture<StigViddWebApplicati
         // Arrange
         var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Authorization =
-         new AuthenticationHeaderValue("Bearer", "test-token");
-
-        var userIdentifier = "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d";
+         new AuthenticationHeaderValue("Bearer", UserWithWishlist);
 
         // Act
-        var response = await client.GetAsync($"/api/v1/user/{userIdentifier}/favorites");
+        var response = await client.GetAsync($"/api/v1/user/favorites");
         var favorites = await response.Content.ReadFromJsonAsync<List<UserFavoritesTrailResponse>>();
 
         // Assert
@@ -61,15 +62,13 @@ public class UserControllerIntegrationTests : IClassFixture<StigViddWebApplicati
     [Fact]
     public async Task GetFavorites_WithValidUser_ReturnsWishListWithImages()
     {
-        // Arrange 
+        // Arrange
         var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Authorization =
-         new AuthenticationHeaderValue("Bearer", "test-token");
-
-        var userIdentifier = "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e";
+         new AuthenticationHeaderValue("Bearer", UserWithFavorites);
 
         // Act
-        var response = await client.GetAsync($"/api/v1/user/{userIdentifier}/favorites");
+        var response = await client.GetAsync($"/api/v1/user/favorites");
         var favorites = await response.Content.ReadFromJsonAsync<List<UserFavoritesTrailResponse>>();
 
         // Assert
@@ -85,11 +84,10 @@ public class UserControllerIntegrationTests : IClassFixture<StigViddWebApplicati
         // Arrange
         var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Authorization =
-         new AuthenticationHeaderValue("Bearer", "test-token");
+         new AuthenticationHeaderValue("Bearer", UserWithFavorites);
 
         var userRequest = new AddToUserFavoritesRequest
         {
-            UserIdentifier = "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e",
             TrailIdentifier = "55e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a"
         };
 
@@ -106,12 +104,11 @@ public class UserControllerIntegrationTests : IClassFixture<StigViddWebApplicati
         // Arrange
         var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Authorization =
-         new AuthenticationHeaderValue("Bearer", "test-token");
+         new AuthenticationHeaderValue("Bearer", UserWithFavorites);
 
         var userRequest = new AddToUserFavoritesRequest
         {
-            UserIdentifier = "b6a7-4b8c-9d01f2a3b4c5d6e",
-            TrailIdentifier = "55e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a"
+            TrailIdentifier = "invalid-format"
         };
 
         // Act
@@ -122,24 +119,23 @@ public class UserControllerIntegrationTests : IClassFixture<StigViddWebApplicati
     }
 
     [Fact]
-    public async Task AddUserFavorite_WithInvalidUser_ReturnsNotFound()
+    public async Task AddUserFavorite_WithNonExistingUser_ReturnsUnauthorized()
     {
         // Arrange
         var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Authorization =
-         new AuthenticationHeaderValue("Bearer", "test-token");
+         new AuthenticationHeaderValue("Bearer", NonExistingUser);
 
         var userRequest = new AddToUserFavoritesRequest
         {
-            UserIdentifier = "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6y",
-            TrailIdentifier = "88b8c9d0-e1f2-4a3b-4c5d-6e7f8a9b0c1d"
+            TrailIdentifier = "55e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a"
         };
 
         // Act
         var response = await client.PostAsJsonAsync("/api/v1/user/favorites", userRequest);
 
-        // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        // Assert 
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
 
     [Fact]
@@ -148,12 +144,11 @@ public class UserControllerIntegrationTests : IClassFixture<StigViddWebApplicati
         // Arrange
         var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Authorization =
-         new AuthenticationHeaderValue("Bearer", "test-token");
+         new AuthenticationHeaderValue("Bearer", UserWithFavorites);
 
         var userRequest = new AddToUserFavoritesRequest
         {
-            UserIdentifier = "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e",
-            TrailIdentifier = "88b8c9d0-e1f2-4a3b-4c5d-6e7f8a9b0c1u"
+            TrailIdentifier = "88b8c9d0-e1f2-4a3b-4c5d-6e7f8a9b0c1d"
         };
 
         // Act
@@ -169,11 +164,11 @@ public class UserControllerIntegrationTests : IClassFixture<StigViddWebApplicati
         // Arrange
         var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Authorization =
-         new AuthenticationHeaderValue("Bearer", "test-token");
+         new AuthenticationHeaderValue("Bearer", UserWithFavorites);
 
+        // Trail "22b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d" is already in UserWithFavorites' favorites
         var userRequest = new AddToUserFavoritesRequest
         {
-            UserIdentifier = "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e",
             TrailIdentifier = "22b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d"
         };
 
@@ -190,13 +185,13 @@ public class UserControllerIntegrationTests : IClassFixture<StigViddWebApplicati
         // Arrange
         var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Authorization =
-         new AuthenticationHeaderValue("Bearer", "test-token");
+         new AuthenticationHeaderValue("Bearer", UserWithFavorites);
 
-        var userIdentifier = "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e";
+        // Trail "22b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d" is in UserWithFavorites' favorites
         var trailIdentifier = "22b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d";
 
         // Act
-        var request = new HttpRequestMessage(HttpMethod.Delete, $"/api/v1/user/{userIdentifier}/favorites/{trailIdentifier}");
+        var request = new HttpRequestMessage(HttpMethod.Delete, $"/api/v1/user/favorites/{trailIdentifier}");
         var response = await client.SendAsync(request);
 
         // Assert
@@ -209,13 +204,12 @@ public class UserControllerIntegrationTests : IClassFixture<StigViddWebApplicati
         // Arrange
         var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Authorization =
-         new AuthenticationHeaderValue("Bearer", "test-token");
+         new AuthenticationHeaderValue("Bearer", UserWithFavorites);
 
-        var userIdentifier = "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e";
         var trailIdentifier = "22b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5y";
 
         // Act
-        var request = new HttpRequestMessage(HttpMethod.Delete, $"/api/v1/user/{userIdentifier}/favorites/{trailIdentifier}");
+        var request = new HttpRequestMessage(HttpMethod.Delete, $"/api/v1/user/favorites/{trailIdentifier}");
         var response = await client.SendAsync(request);
 
         // Assert
@@ -223,22 +217,21 @@ public class UserControllerIntegrationTests : IClassFixture<StigViddWebApplicati
     }
 
     [Fact]
-    public async Task RemoveFromUserFavorites_WithInvalidUserIdentifier_ReturnsNotfound()
+    public async Task RemoveFromUserFavorites_WithNonExistingUser_ReturnsUnauthorized()
     {
         // Arrange
         var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Authorization =
-         new AuthenticationHeaderValue("Bearer", "test-token");
+         new AuthenticationHeaderValue("Bearer", NonExistingUser);
 
-        var userIdentifier = "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d69";
         var trailIdentifier = "22b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d";
 
         // Act
-        var request = new HttpRequestMessage(HttpMethod.Delete, $"/api/v1/user/{userIdentifier}/favorites/{trailIdentifier}");
+        var request = new HttpRequestMessage(HttpMethod.Delete, $"/api/v1/user/favorites/{trailIdentifier}");
         var response = await client.SendAsync(request);
 
         // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
 
     [Fact]
@@ -247,12 +240,10 @@ public class UserControllerIntegrationTests : IClassFixture<StigViddWebApplicati
         // Arrange
         var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Authorization =
-         new AuthenticationHeaderValue("Bearer", "test-token");
-
-        var userIdentifier = "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d";
+         new AuthenticationHeaderValue("Bearer", UserWithWishlist);
 
         // Act
-        var response = await client.GetAsync($"/api/v1/user/{userIdentifier}/wishlist");
+        var response = await client.GetAsync($"/api/v1/user/wishlist");
         var wishlist = await response.Content.ReadFromJsonAsync<List<UserWishlistTrailResponse>>();
 
         // Assert
@@ -267,12 +258,10 @@ public class UserControllerIntegrationTests : IClassFixture<StigViddWebApplicati
         // Arrange
         var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Authorization =
-         new AuthenticationHeaderValue("Bearer", "test-token");
-
-        var userIdentifier = "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e";
+         new AuthenticationHeaderValue("Bearer", UserWithFavorites);
 
         // Act
-        var response = await client.GetAsync($"/api/v1/user/{userIdentifier}/wishlist");
+        var response = await client.GetAsync($"/api/v1/user/wishlist");
         var wishlist = await response.Content.ReadFromJsonAsync<List<UserWishlistTrailResponse>>();
 
         // Assert
@@ -284,15 +273,13 @@ public class UserControllerIntegrationTests : IClassFixture<StigViddWebApplicati
     [Fact]
     public async Task GetWishList_WithValidUser_ReturnsWishListWithImages()
     {
-        // Arrange 
+        // Arrange
         var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Authorization =
-         new AuthenticationHeaderValue("Bearer", "test-token");
-
-        var userIdentifier = "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d";
+         new AuthenticationHeaderValue("Bearer", UserWithWishlist);
 
         // Act
-        var response = await client.GetAsync($"/api/v1/user/{userIdentifier}/wishlist");
+        var response = await client.GetAsync($"/api/v1/user/wishlist");
         var wishList = await response.Content.ReadFromJsonAsync<List<UserWishlistTrailResponse>>();
 
         // Assert
@@ -308,11 +295,10 @@ public class UserControllerIntegrationTests : IClassFixture<StigViddWebApplicati
         // Arrange
         var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Authorization =
-         new AuthenticationHeaderValue("Bearer", "test-token");
+         new AuthenticationHeaderValue("Bearer", UserWithWishlist);
 
         var userRequest = new AddToUserWishlistRequest
         {
-            UserIdentifier = "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
             TrailIdentifier = "55e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a"
         };
 
@@ -324,24 +310,23 @@ public class UserControllerIntegrationTests : IClassFixture<StigViddWebApplicati
     }
 
     [Fact]
-    public async Task AddUserWishlist_WithInvalidUser_ReturnsNotFound()
+    public async Task AddUserWishlist_WithNonExistingUser_ReturnsUnauthorized()
     {
         // Arrange
         var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Authorization =
-         new AuthenticationHeaderValue("Bearer", "test-token");
+         new AuthenticationHeaderValue("Bearer", NonExistingUser);
 
         var userRequest = new AddToUserWishlistRequest
         {
-            UserIdentifier = "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6u",
-            TrailIdentifier = "88b8c9d0-e1f2-4a3b-4c5d-6e7f8a9b0c1d"
+            TrailIdentifier = "55e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a"
         };
 
         // Act
         var response = await client.PostAsJsonAsync("/api/v1/user/wishlist", userRequest);
 
         // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
 
     [Fact]
@@ -350,12 +335,11 @@ public class UserControllerIntegrationTests : IClassFixture<StigViddWebApplicati
         // Arrange
         var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Authorization =
-         new AuthenticationHeaderValue("Bearer", "test-token");
+         new AuthenticationHeaderValue("Bearer", UserWithWishlist);
 
         var userRequest = new AddToUserWishlistRequest
         {
-            UserIdentifier = "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e",
-            TrailIdentifier = "88b8c9d0-e1f2-4a3b-4c5d-6e7f8a9b0c1u"
+            TrailIdentifier = "88b8c9d0-e1f2-4a3b-4c5d-6e7f8a9b0c1d"
         };
 
         // Act
@@ -371,12 +355,11 @@ public class UserControllerIntegrationTests : IClassFixture<StigViddWebApplicati
         // Arrange
         var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Authorization =
-         new AuthenticationHeaderValue("Bearer", "test-token");
+         new AuthenticationHeaderValue("Bearer", UserWithWishlist);
 
         var userRequest = new AddToUserWishlistRequest
         {
-            UserIdentifier = "b6a7-4b8c-9d01f2a3b4c5d6e",
-            TrailIdentifier = "55e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a"
+            TrailIdentifier = "invalid-format"
         };
 
         // Act
@@ -392,11 +375,11 @@ public class UserControllerIntegrationTests : IClassFixture<StigViddWebApplicati
         // Arrange
         var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Authorization =
-         new AuthenticationHeaderValue("Bearer", "test-token");
+         new AuthenticationHeaderValue("Bearer", UserWithWishlist);
 
+        // Trail "44d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f" is already in UserWithWishlist's wishlist
         var userRequest = new AddToUserWishlistRequest
         {
-            UserIdentifier = "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
             TrailIdentifier = "44d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f"
         };
 
@@ -413,13 +396,13 @@ public class UserControllerIntegrationTests : IClassFixture<StigViddWebApplicati
         // Arrange
         var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Authorization =
-         new AuthenticationHeaderValue("Bearer", "test-token");
+         new AuthenticationHeaderValue("Bearer", UserWithWishlist);
 
-        var userIdentifier = "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d";
+        // Trail "44d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f" is in UserWithWishlist's wishlist
         var trailIdentifier = "44d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f";
 
         // Act
-        var request = new HttpRequestMessage(HttpMethod.Delete, $"/api/v1/user/{userIdentifier}/wishlist/{trailIdentifier}");
+        var request = new HttpRequestMessage(HttpMethod.Delete, $"/api/v1/user/wishlist/{trailIdentifier}");
         var response = await client.SendAsync(request);
 
         // Assert
@@ -432,13 +415,12 @@ public class UserControllerIntegrationTests : IClassFixture<StigViddWebApplicati
         // Arrange
         var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Authorization =
-         new AuthenticationHeaderValue("Bearer", "test-token");
+         new AuthenticationHeaderValue("Bearer", UserWithWishlist);
 
-        var userIdentifier = "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d";
         var trailIdentifier = "66f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b";
 
         // Act
-        var request = new HttpRequestMessage(HttpMethod.Delete, $"/api/v1/user/{userIdentifier}/wishlist/{trailIdentifier}");
+        var request = new HttpRequestMessage(HttpMethod.Delete, $"/api/v1/user/wishlist/{trailIdentifier}");
         var response = await client.SendAsync(request);
 
         // Assert
@@ -446,22 +428,21 @@ public class UserControllerIntegrationTests : IClassFixture<StigViddWebApplicati
     }
 
     [Fact]
-    public async Task RemoveFromUserWishlist_WithInvalidUserIdentifier_ReturnsNotfound()
+    public async Task RemoveFromUserWishlist_WithNonExistingUser_ReturnsUnauthorized()
     {
         // Arrange
         var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Authorization =
-         new AuthenticationHeaderValue("Bearer", "test-token");
+         new AuthenticationHeaderValue("Bearer", NonExistingUser);
 
-        var userIdentifier = "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d69";
-        var trailIdentifier = "22b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d";
+        var trailIdentifier = "44d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f";
 
         // Act
-        var request = new HttpRequestMessage(HttpMethod.Delete, $"/api/v1/user/{userIdentifier}/wishlist/{trailIdentifier}");
+        var request = new HttpRequestMessage(HttpMethod.Delete, $"/api/v1/user/wishlist/{trailIdentifier}");
         var response = await client.SendAsync(request);
 
         // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
 
     [Fact]
@@ -469,12 +450,12 @@ public class UserControllerIntegrationTests : IClassFixture<StigViddWebApplicati
     {
         // Arrange
         var client = _factory.CreateClient();
+        // Use a new firebase UID for creating a new user
         client.DefaultRequestHeaders.Authorization =
-         new AuthenticationHeaderValue("Bearer", "test-token");
+         new AuthenticationHeaderValue("Bearer", "firebase-uid-new-user-1");
 
         var userRequest = new CreateUserRequest
         {
-            FirebaseUid = "d4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a",
             NickName = "newuser",
             Email = "newuser@test.local"
         };
@@ -492,17 +473,17 @@ public class UserControllerIntegrationTests : IClassFixture<StigViddWebApplicati
         // Arrange
         var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Authorization =
-         new AuthenticationHeaderValue("Bearer", "test-token");
+         new AuthenticationHeaderValue("Bearer", "firebase-uid-new-user-2");
 
         var userRequest = new CreateUserRequest
         {
-            FirebaseUid = "a3e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a",
             NickName = "invaliduser",
             Email = "invalid.email.com"
         };
 
         // Act
         var response = await client.PostAsJsonAsync("/api/v1/user/create", userRequest);
+
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
@@ -513,11 +494,10 @@ public class UserControllerIntegrationTests : IClassFixture<StigViddWebApplicati
         // Arrange
         var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Authorization =
-         new AuthenticationHeaderValue("Bearer", "test-token");
+         new AuthenticationHeaderValue("Bearer", "firebase-uid-new-user-3");
 
         var userRequest = new CreateUserRequest
         {
-            FirebaseUid = "a3e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a",
             NickName = "",
             Email = "test@test.local"
         };

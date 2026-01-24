@@ -28,7 +28,6 @@ public class AuthenticationIntegrationTests : IClassFixture<StigViddWebApplicati
         {
             Email = "test1@test.local",
             NickName = "Testsson",
-            FirebaseUid = "firebase-uid-12345"
         };
 
         // Act
@@ -50,7 +49,6 @@ public class AuthenticationIntegrationTests : IClassFixture<StigViddWebApplicati
         {
             Email = "test2@test.local",
             NickName = "Test",
-            FirebaseUid = "firebase-uid-112233"
         };
 
         // Act
@@ -64,11 +62,10 @@ public class AuthenticationIntegrationTests : IClassFixture<StigViddWebApplicati
     public async Task GetStigViddUser_WhenNotAuthenticated_ReturnsUnauthorized()
     {
         // Arrange
-        var client = _factory.CreateClient();     
-        var identifier = "firebase-uid-12345";
-
+        var client = _factory.CreateClient();
+      
         // Act
-        var response = await client.GetAsync($"/api/v1/user/{identifier}");
+        var response = await client.GetAsync($"/api/v1/user/");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
@@ -79,10 +76,9 @@ public class AuthenticationIntegrationTests : IClassFixture<StigViddWebApplicati
     {
         // Arrange
         var client = _factory.CreateClient();
-        var userIdentifier = "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e";
-
+        
         // Act
-        var response = await client.GetAsync($"/api/v1/user/{userIdentifier}/favorites");
+        var response = await client.GetAsync($"/api/v1/user/favorites");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
@@ -93,10 +89,9 @@ public class AuthenticationIntegrationTests : IClassFixture<StigViddWebApplicati
     {
         // Arrange 
         var client = _factory.CreateClient();
-        var userIdentifier = "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e";
-
+     
         // Act
-        var response = await client.GetAsync($"/api/v1/user/{userIdentifier}/wishlist");
+        var response = await client.GetAsync($"/api/v1/user/wishlist");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
@@ -110,8 +105,7 @@ public class AuthenticationIntegrationTests : IClassFixture<StigViddWebApplicati
 
         var favoriteRequest = new AddToUserFavoritesRequest
         {
-            TrailIdentifier = "77a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c",
-            UserIdentifier = "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e"
+            TrailIdentifier = "77a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c"
         };
 
         // Act
@@ -130,7 +124,6 @@ public class AuthenticationIntegrationTests : IClassFixture<StigViddWebApplicati
         var wishlistRequest = new AddToUserWishlistRequest
         {
             TrailIdentifier = "11a2b3c4-d5e6-7f8a-9b0c-1d2e3f4a5b6c",
-            UserIdentifier = "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e"
         };
 
         // Act
@@ -147,10 +140,9 @@ public class AuthenticationIntegrationTests : IClassFixture<StigViddWebApplicati
         var client = _factory.CreateClient();
 
         var trailIdentifier = "11a1b2c3-d4e5-4f6a-7b8c-9d0e1f2a3b4c";
-        var userIdentifier = "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e";
-
+      
         // Act
-        var response = await client.DeleteAsync($"/api/v1/user/{userIdentifier}/favorites/{trailIdentifier}");
+        var response = await client.DeleteAsync($"/api/v1/user/favorites/{trailIdentifier}");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
@@ -163,10 +155,9 @@ public class AuthenticationIntegrationTests : IClassFixture<StigViddWebApplicati
         var client = _factory.CreateClient();
 
         var trailIdentifier = "77a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c";
-        var userIdentifier = "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d";
-
+      
         // Act
-        var response = await client.DeleteAsync($"/api/v1/user/{userIdentifier}/wishlist/{trailIdentifier}");
+        var response = await client.DeleteAsync($"/api/v1/user/wishlist/{trailIdentifier}");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);

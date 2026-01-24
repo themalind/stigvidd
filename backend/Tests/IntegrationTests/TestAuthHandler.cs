@@ -23,7 +23,8 @@ public class TestAuthHandler : AuthenticationHandler<AuthenticationSchemeOptions
 
     /// <summary>
     /// Handles authentication for incoming requests.
-    /// Validates the Authorization header and creates an authenticated user if the test token is present.
+    /// Extracts the user identifier from the token (format: "Bearer {firebaseUid}")
+    /// and creates a test user principal with that identifier.
     /// </summary>
     /// <returns>
     /// An AuthenticateResult indicating success with a test user principal,
@@ -31,34 +32,36 @@ public class TestAuthHandler : AuthenticationHandler<AuthenticationSchemeOptions
     /// </returns>
     protected override Task<AuthenticateResult> HandleAuthenticateAsync()
     {
-        // Check if the Authorization header is present in the request
         if (!Request.Headers.ContainsKey("Authorization"))
         {
             return Task.FromResult(AuthenticateResult.Fail("Missing Authorization header"));
         }
 
-        // Extract the Authorization header value
         var authHeader = Request.Headers["Authorization"].ToString();
 
-        // Validate that the header contains the expected test bearer token
-        if (authHeader != "Bearer test-token")
+        if (!authHeader.StartsWith("Bearer "))
         {
-            return Task.FromResult(AuthenticateResult.Fail("Invalid Authorization header"));
+            return Task.FromResult(AuthenticateResult.Fail("Invalid Authorization header format"));
         }
 
-        // Create a set of claims for the test user
+        // Extract the firebase UID from the token (everything after "Bearer ")
+        var firebaseUid = authHeader["Bearer ".Length..];
+
+        if (string.IsNullOrWhiteSpace(firebaseUid))
+        {
+            return Task.FromResult(AuthenticateResult.Fail("Missing user identifier in token"));
+        }
+
         var claims = new[]
         {
             new Claim(ClaimTypes.Name, "Test User"),
-            new Claim(ClaimTypes.NameIdentifier, "test-user-id")
+            new Claim(ClaimTypes.NameIdentifier, firebaseUid)
         };
 
-        // Build the authentication objects: identity, principal, and ticket
         var identity = new ClaimsIdentity(claims, "Test");
         var principal = new ClaimsPrincipal(identity);
         var ticket = new AuthenticationTicket(principal, "Test");
 
-        // Return successful authentication with the test user
         return Task.FromResult(AuthenticateResult.Success(ticket));
     }
 }
