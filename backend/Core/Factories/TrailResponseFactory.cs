@@ -1,4 +1,5 @@
 ﻿using Infrastructure.Data.Entities;
+using Microsoft.Extensions.Configuration;
 using WebDataContracts.ResponseModels.Review;
 using WebDataContracts.ResponseModels.Trail;
 
@@ -6,6 +7,13 @@ namespace Core.Factories;
 
 public class TrailResponseFactory
 {
+    private string _presentableBaseUrl;
+
+    public TrailResponseFactory(IConfiguration configuration)
+    {
+        _presentableBaseUrl = configuration["PresentableBaseUrl"] ?? throw new InvalidOperationException("PresentableBaseUrl configuration is missing");
+    }
+
     public TrailResponse Create(Trail trail)
     {
         var images = trail.TrailImages?.Select(ti =>
@@ -29,6 +37,7 @@ public class TrailResponseFactory
                 r.User.Identifier,
                 r.ReviewImages?.Select(ri =>
                     ReviewImageResponse.Create(
+                        _presentableBaseUrl,
                         ri.Identifier,
                         ri.ImageUrl)))) ?? null;
 

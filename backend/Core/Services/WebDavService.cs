@@ -37,9 +37,10 @@ public class WebDavService : IWebDavService
 
     public async Task<string> UploadFileAsync(Stream stream, string? subDirectory)
     {
-        var fileName = $"{Guid.NewGuid()}.jpeg"; // "-526449ee-01d0-4ace-8be0-3a750a516819.jpeg"
+        // Skapar en sträng ex "reviews/guid.jpeg"
+        var fileName = $"{Guid.NewGuid()}.jpeg"; 
 
-        var remotePath = subDirectory != null // "reviews/-526449ee-01d0-4ace-8be0-3a750a516819.jpeg"
+        var remotePath = subDirectory != null
            ? $"{subDirectory.TrimEnd('/')}/{fileName}"
            : fileName;
 
@@ -53,33 +54,28 @@ public class WebDavService : IWebDavService
                 throw new Exception($"Failed to upload file. Status code: {result.StatusCode}");
             }
 
-            return $"{_presentableBaseUrl.TrimEnd('/')}/{remotePath}";
+            return $"{remotePath}";
         }
         catch (Exception ex)
         {
             throw new Exception("Error uploading file", ex);
         }
-
     }
 
-    public async Task<bool> DeleteFileAsync(string fileUrl)
+    public async Task<bool> DeleteFileAsync(string relativePath)
     {
-        var uri = new Uri(fileUrl);
-        var relativePath = uri.AbsolutePath.TrimStart('/');
-
         try
         {
             using var client = CreateClient();
             {
-                var result = await client.Delete(relativePath);
+                var result = await client.Delete(relativePath); // relativePath ex "reviews/guid.jpeg"
                 return result.IsSuccessful;
             }
         }
         catch (Exception ex)
         {
-            throw new Exception("Error deleting file", ex);
+            throw new Exception($"DeleteFileAsync: Error deleting {relativePath}", ex);
         }
-
     }
 
     public async Task EnsureDirectoryExistsAsync(string directoryPath)

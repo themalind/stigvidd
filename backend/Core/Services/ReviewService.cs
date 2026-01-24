@@ -4,6 +4,7 @@ using Infrastructure.Data;
 using Infrastructure.Data.Entities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using WebDataContracts.ResponseModels.Review;
 
@@ -11,13 +12,15 @@ namespace Core.Services;
 
 public class ReviewService : IReviewService
 {
+    private readonly string _presentableBaseUrl;
     private readonly IDbContextFactory<StigViddDbContext> _context;
     private readonly IWebDavService _webDavService;
     private readonly ReviewResponseFactory _reviewResponseFactory;
     private readonly ILogger<ReviewService> _logger;
 
-    public ReviewService(IDbContextFactory<StigViddDbContext> context, IWebDavService webDavService, ReviewResponseFactory reviewResponseFactory, ILogger<ReviewService> logger)
+    public ReviewService(IDbContextFactory<StigViddDbContext> context, IWebDavService webDavService, ReviewResponseFactory reviewResponseFactory, ILogger<ReviewService> logger, IConfiguration configuration)
     {
+        _presentableBaseUrl = configuration["PresentableBaseUrl"] ?? throw new InvalidOperationException("PresentableBaseUrl configuration is missing");
         _context = context;
         _webDavService = webDavService;
         _reviewResponseFactory = reviewResponseFactory;
@@ -39,6 +42,7 @@ public class ReviewService : IReviewService
                 review.Trail!.Identifier,
                 review.User.Identifier,
                 review.ReviewImages!.Select(reviewImage => ReviewImageResponse.Create(
+                    _presentableBaseUrl,
                     reviewImage.Identifier,
                     reviewImage.ImageUrl)).ToList()
             ))
@@ -136,7 +140,7 @@ public class ReviewService : IReviewService
         }
     }
 
-    public async Task<Result> RemoveReviewAsync(string reviewIdentifier, string userIdentifer, CancellationToken ctoken)
+    public async Task<Result> DeleteReviewAsync(string reviewIdentifier, string userIdentifer, CancellationToken ctoken)
     {
         using var context = await _context.CreateDbContextAsync(ctoken);
 
