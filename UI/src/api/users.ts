@@ -64,7 +64,7 @@ export async function getStigViddUser(): Promise<User> {
   }
 
   try {
-    const response = await fetch(`http://${IP}/api/v1/User`, {
+    const response = await fetch(`http://${IP}/api/v1/user`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
