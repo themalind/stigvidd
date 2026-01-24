@@ -1,9 +1,9 @@
 import { createReview } from "@/api/review";
 import { showErrorAtom, showSuccessAtom } from "@/atoms/snackbar-atoms";
-import { stigviddUserAtom } from "@/atoms/user-atoms";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useAtomValue, useSetAtom } from "jotai";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useSetAtom } from "jotai";
 import { useState } from "react";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
 import { StyleSheet, View } from "react-native";
@@ -39,11 +39,11 @@ export default function AddReviewForm({
   const [showStarInfoModal, setShowStarInfoModal] = useState(false);
   const [showReviewInfoModal, setShowReviewInfoModal] = useState(false);
   const [height, setHeight] = useState(40);
-  const { data: user } = useAtomValue(stigviddUserAtom);
   const [rating, setRating] = useState(1);
   const [reviewImages, setReviewImages] = useState<string[]>([]);
   const setError = useSetAtom(showErrorAtom);
   const setSuccess = useSetAtom(showSuccessAtom);
+  const queryClient = useQueryClient();
 
   function handleReviewImages(data: string[]) {
     setReviewImages(data);
@@ -60,6 +60,44 @@ export default function AddReviewForm({
     },
   });
 
+  // Flytta ut till egen hook?
+  const createReviewMutation = useMutation({
+    mutationFn: async ({
+      trailIdentifier,
+      review,
+      grade,
+      imageUris,
+    }: {
+      trailIdentifier: string;
+      review: string;
+      grade: number;
+      imageUris: string[];
+    }) => {
+      return await createReview({
+        trailIdentifier,
+        review,
+        grade,
+        imageUris,
+      });
+    },
+    onSuccess: (result, variables) => {
+      if (result.success) {
+        queryClient.invalidateQueries({
+          queryKey: ["trail", variables.trailIdentifier],
+        });
+        setSuccess("Recensionen har lagts till");
+        onSuccess();
+      } else {
+        console.error("Error creating review");
+        setError("Kunde inte spara recensionen");
+      }
+    },
+    onError: (error) => {
+      console.error("Error creating review: ", error);
+      setError("Kunde inte spara recensionen");
+    },
+  });
+
   const onImageInfoPress = () => {
     setShowImageInfoModal(true);
   };
@@ -71,36 +109,25 @@ export default function AddReviewForm({
   const onReviewInfoPress = () => {
     setShowReviewInfoModal(true);
   };
+
   const onSubmit: SubmitHandler<FormFields> = async (data) => {
-    try {
-      if (!user?.identifier) {
-        setError("Error: No UserIdentifier");
-        return;
-      }
-
-      if (!trailIdentifier) {
-        setError("Error: No TrailIdentifier");
-        return;
-      }
-      await createReview({
-        trailIdentifier: data.trailIdentifier,
-        review: data.trailReview ? data.trailReview : "",
-        grade: rating,
-        imageUris: reviewImages,
-      });
-
-      setSuccess("Recensionen har lagts till");
-      onSuccess();
-    } catch (error) {
-      console.error("Error creating review: ", error);
-      setError("Kunde inte spara recensionen");
+    if (!trailIdentifier) {
+      setError("Error: No TrailIdentifier");
+      return;
     }
+
+    createReviewMutation.mutate({
+      trailIdentifier: data.trailIdentifier,
+      review: data.trailReview ?? "",
+      grade: rating,
+      imageUris: reviewImages,
+    });
   };
 
   return (
     <View style={s.formContainer}>
       <Divider />
-      <View style={{ flexDirection: "row", gap: 10 }}>
+      <View style={s.rowGap}>
         <Text>Väl ett betyg *</Text>
         <MaterialCommunityIcons
           name="information-slab-circle-outline"
@@ -112,9 +139,9 @@ export default function AddReviewForm({
           visible={showStarInfoModal}
           onDismiss={() => setShowStarInfoModal(false)}
           title="Sätt ett betyg"
-          infoText="Hur nöjd är du med promenaden? ⭐️ Välj mellan 1 och 5 stjärnor."
-          backgroundColor={theme.colors.secondaryContainer}
-          textColor={theme.colors.onSecondaryContainer}
+          infoText="Hur nöjd är du med promenaden? ⭐️⭐️ Välj mellan 1 och 5 stjärnor."
+          backgroundColor={theme.colors.background}
+          textColor={theme.colors.onBackground}
         />
       </View>
       <View>
@@ -137,7 +164,7 @@ export default function AddReviewForm({
         {errors.grade && <Text>{errors.grade.message}</Text>}
       </View>
       <Divider />
-      <View style={{ flexDirection: "row", gap: 10 }}>
+      <View style={s.rowGap}>
         <Text>Lägg till bild (valfritt)</Text>
         <MaterialCommunityIcons
           name="information-slab-circle-outline"
@@ -150,17 +177,16 @@ export default function AddReviewForm({
           onDismiss={() => setShowImageInfoModal(false)}
           title="Lägg till bilder"
           infoText="Visa oss dina promenadäventyr! Lägg gärna till bilder från promenaden, men undvik bilder som kan vara stötande eller olämpliga. Max 3 bilder per promenad."
-          backgroundColor={theme.colors.secondaryContainer}
-          textColor={theme.colors.onSecondaryContainer}
+          backgroundColor={theme.colors.background}
+          textColor={theme.colors.onBackground}
         />
       </View>
-
-      <View style={s.imageContainer}>
+      <View style={s.rowGap}>
         <AddReviewImages reviewImageCallback={handleReviewImages} />
       </View>
       <Divider />
-      <View style={{ gap: 20 }}>
-        <View style={{ flexDirection: "row", gap: 10 }}>
+      <View style={s.gap}>
+        <View style={s.rowGap}>
           <Text>Skriv en recension eller kommentar</Text>
           <MaterialCommunityIcons
             name="information-slab-circle-outline"
@@ -173,8 +199,8 @@ export default function AddReviewForm({
             onDismiss={() => setShowReviewInfoModal(false)}
             title="Skriv något"
             infoText="Berätta för oss om promenaden! Skriv en kommentar eller recension om dina upplevelser. Tänk på att hålla texten trevlig och respektfull."
-            backgroundColor={theme.colors.secondaryContainer}
-            textColor={theme.colors.onSecondaryContainer}
+            backgroundColor={theme.colors.background}
+            textColor={theme.colors.onBackground}
           />
         </View>
         <Controller
@@ -216,11 +242,14 @@ export default function AddReviewForm({
 
 const s = StyleSheet.create({
   formContainer: {
-    padding: 20,
+    padding: 10,
     gap: 20,
   },
-  imageContainer: {
+  rowGap: {
     flexDirection: "row",
     gap: 10,
+  },
+  gap: {
+    gap: 20,
   },
 });

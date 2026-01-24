@@ -1,6 +1,9 @@
-import { showSuccessAtom } from "@/atoms/snackbar-atoms";
+import { deleteReview } from "@/api/review";
+import { showErrorAtom, showSuccessAtom } from "@/atoms/snackbar-atoms";
+import { stigviddUserAtom } from "@/atoms/user-atoms";
 import { Review } from "@/data/types";
-import { useSetAtom } from "jotai";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useAtom, useSetAtom } from "jotai";
 import { Fragment } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { Divider, List, Text, useTheme } from "react-native-paper";
@@ -17,7 +20,35 @@ const formatDate = (dateString: string): string => {
 
 export default function TrailReviews({ reviews }: ReviewProps) {
   const theme = useTheme();
+  const [{ data: user }] = useAtom(stigviddUserAtom);
   const setReportMsg = useSetAtom(showSuccessAtom);
+  const setError = useSetAtom(showErrorAtom);
+  const queryClient = useQueryClient();
+
+  // Flytta ut till egen hook?
+  const deleteMutation = useMutation({
+    mutationFn: ({
+      reviewIdentifier,
+    }: {
+      reviewIdentifier: string;
+      trailIdentifier: string;
+    }) => deleteReview(reviewIdentifier),
+    onSuccess: (result, { trailIdentifier }) => {
+      if (result.success) {
+        queryClient.invalidateQueries({ queryKey: ["trail", trailIdentifier] });
+        setReportMsg("Recensionen har tagits bort");
+      } else {
+        setError("Kunde inte ta bort recensionen.");
+      }
+    },
+  });
+
+  const handleDelete = async (
+    reviewIdentifier: string,
+    trailIdentifier: string,
+  ) => {
+    deleteMutation.mutate({ reviewIdentifier, trailIdentifier });
+  };
 
   const handlePress = () => {
     // Hej admin här kommer en olämplig review
@@ -72,14 +103,33 @@ export default function TrailReviews({ reviews }: ReviewProps) {
             </View>
             <View
               style={[
-                s.reportContainer,
+                s.bottomContainer,
                 { backgroundColor: theme.colors.surface },
               ]}
             >
               <Text>{formatDate(r.createdAt)}</Text>
-              <Pressable onPress={handlePress}>
-                <List.Icon color={theme.colors.outline} icon="alert-circle" />
-              </Pressable>
+              <View style={s.actionContainer}>
+                <Pressable onPress={handlePress}>
+                  <List.Icon color={theme.colors.outline} icon="alert-circle" />
+                </Pressable>
+                {user?.identifier === r.userIdentifier && (
+                  <Pressable
+                    disabled={deleteMutation.isPending}
+                    onPress={() =>
+                      handleDelete(r.identifier, r.trailIdentifier)
+                    }
+                  >
+                    <List.Icon
+                      color={
+                        deleteMutation.isPending
+                          ? theme.colors.surfaceDisabled
+                          : theme.colors.outline
+                      }
+                      icon="trash-can-outline"
+                    />
+                  </Pressable>
+                )}
+              </View>
             </View>
           </List.Accordion>
           <Divider />
@@ -102,7 +152,11 @@ const s = StyleSheet.create({
   reviewTextContainer: {
     alignItems: "flex-start",
   },
-  reportContainer: {
+  actionContainer: {
+    flexDirection: "row",
+    gap: 40,
+  },
+  bottomContainer: {
     alignItems: "flex-end",
     justifyContent: "space-between",
     flexDirection: "row",

@@ -113,7 +113,7 @@ export default function AddReviewImages({
           style={[
             s.imageButton,
             {
-              backgroundColor: theme.colors.tertiary,
+              backgroundColor: theme.colors.surface,
               borderColor: theme.colors.primary,
               borderWidth: 2,
             },
@@ -140,6 +140,6 @@ const s = StyleSheet.create({
   image: {
     width: width * 0.25,
     aspectRatio: 3 / 4,
-    resizeMode: "contain",
+    resizeMode: "cover",
   },
 });

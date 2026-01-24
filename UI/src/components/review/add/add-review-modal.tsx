@@ -42,7 +42,7 @@ export default function AddReview({
         >
           <View style={s.topTextContainer}>
             <Text style={s.title}>Skapa en recension</Text>
-            <Text>{`Du recenserar: ${trailName} ${trailLenght} km`}</Text>
+            <Text style={s.text}>{`${trailName} ${trailLenght} km`}</Text>
           </View>
           <AddReviewForm
             trailIdentifier={trailIdentifier}
@@ -69,5 +69,8 @@ const s = StyleSheet.create({
   title: {
     fontSize: 25,
     fontWeight: 600,
+  },
+  text: {
+    fontSize: 20,
   },
 });
