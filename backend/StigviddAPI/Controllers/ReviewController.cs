@@ -68,7 +68,7 @@ public class ReviewController : StigViddController
     [Authorize]
     [HttpDelete]
     [Route("{reviewIdentifier}")]
-    public async Task<ActionResult> RemoveReviewAsync(
+    public async Task<ActionResult> DeleteReviewAsync(
         [FromRoute] DeleteReviewRequest request,
         CancellationToken ctoken)
     {
@@ -79,7 +79,7 @@ public class ReviewController : StigViddController
             return Unauthorized("User not found");
         }
 
-        var result = await _reviewService.RemoveReviewAsync(
+        var result = await _reviewService.DeleteReviewAsync(
             request.ReviewIdentifier,
             userResponse.Identifier,
             ctoken
