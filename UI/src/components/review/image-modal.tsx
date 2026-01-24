@@ -129,6 +129,7 @@ const s = StyleSheet.create({
     paddingBottom: 0,
   },
   imageContainer: {
+    padding: 30,
     alignItems: "center",
     justifyContent: "center",
     width: width - 40, // För att bildrna ska ligga snyggt i modalen
