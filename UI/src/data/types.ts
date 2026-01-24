@@ -90,7 +90,6 @@ export interface User {
 export interface CreateStigViddUserCredentials {
   email: string;
   nickname: string;
-  firebaseUid: string;
 }
 
 export interface RegisterData {
@@ -103,9 +102,13 @@ export interface RegisterData {
 export interface CreateReviewRequest {
   review: string;
   grade: number;
-  userIdentifier: string;
   trailIdentifier: string;
   imageUris?: string[];
+}
+
+export interface DeleteReviewRequest {
+  reviewIdentifier: string;
+  userIdentifier: string;
 }
 
 export interface LoginData {

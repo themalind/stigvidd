@@ -5,10 +5,7 @@ using Infrastructure.Data.Entities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Microsoft.IdentityModel.Tokens;
-using System.Linq.Expressions;
 using WebDataContracts.ResponseModels.Review;
-using WebDav;
 
 namespace Core.Services;
 
@@ -137,5 +134,41 @@ public class ReviewService : IReviewService
                 _logger.LogWarning(ex, "Failed to cleanup uploaded image: {Url}", url);
             }
         }
+    }
+
+    public async Task<Result> RemoveReviewAsync(string reviewIdentifier, string userIdentifer, CancellationToken ctoken)
+    {
+        using var context = await _context.CreateDbContextAsync(ctoken);
+
+        var review = await context.Reviews
+            .Include(review => review.ReviewImages)
+            .Where(review => review.Identifier == reviewIdentifier && review.User!.Identifier == userIdentifer)
+            .FirstOrDefaultAsync(ctoken);
+
+        if (review is null)
+        {
+            return Result.Fail(new Message(404, $"RemoveReviewAsync: Could not find review with identifier: {reviewIdentifier} and user identifier: {userIdentifer} "));
+        }
+
+        // Släng bilder från reviewn i webdaven
+        if (review.ReviewImages != null && review.ReviewImages.Any())
+        {
+            foreach (var image in review.ReviewImages)
+            {
+                try
+                {
+                    await _webDavService.DeleteFileAsync(image.ImageUrl);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, $"RemoveReviewAsync: Failed to remove image {image.ImageUrl}. UserIdentifier: {userIdentifer}, ReviewIdentifer: {reviewIdentifier}");
+                }
+            }
+        }
+
+        context.Remove(review);
+        await context.SaveChangesAsync(ctoken);
+
+        return Result.Ok();
     }
 }

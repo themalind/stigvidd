@@ -1,6 +1,7 @@
 ﻿using Core.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 using WebDataContracts.RequestModels.User;
 using WebDataContracts.ResponseModels.User;
 
@@ -17,27 +18,40 @@ public class UserController : StigViddController
     {
         _userService = userService;
     }
-
+    
     [HttpPost]
     [Route("create")]
-    public async Task<ActionResult<UserResponse?>> CreateUserAsync([FromBody] CreateUserRequest createUserRequest,
+    public async Task<ActionResult<UserResponse?>> CreateUserAsync(
+        [FromBody] CreateUserRequest createUserRequest,
               CancellationToken ctoken)
     {
-        var result = await _userService.CreateUserAsync(createUserRequest.Email, createUserRequest.NickName, createUserRequest.FirebaseUid, ctoken);
+        var firebaseUid = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(firebaseUid))
+        {
+            return Unauthorized("Firebase UID not found in token.");
+        }
+
+        var result = await _userService.CreateUserAsync(createUserRequest.Email, createUserRequest.NickName, firebaseUid, ctoken);
 
         if (!result.Success && result.Message != null)
         {
             return ToActionResult(result.Message);
         }
 
-        return Created($"/api/v1/user/{result.Value!.Identifier}", result.Value);
+        return Created($"{result.Value!.Identifier}", result.Value);
     }
 
     [HttpGet]
-    [Route("{firebaseUid}")]
-    public async Task<ActionResult<UserResponse?>> GetStigViddUserByFirebaseUid(
-        [FromRoute] string firebaseUid, CancellationToken ctoken)
+    [Route("")]
+    public async Task<ActionResult<UserResponse?>> GetStigViddUserAsync(
+       CancellationToken ctoken)
     {
+        var firebaseUid = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(firebaseUid))
+        {
+            return Unauthorized("Firebase UID not found in token.");
+        }
+
         var result = await _userService.GetUserByFirebaseUidAsync(firebaseUid, ctoken);
 
         if (!result.Success && result.Message != null)
@@ -48,12 +62,18 @@ public class UserController : StigViddController
     }
 
     [HttpGet]
-    [Route("{userIdentifier}/favorites")]
-    public async Task<ActionResult<IReadOnlyCollection<UserFavoritesTrailResponse>>> GetFavoritesByUserIdentifierAsync(
-        [FromRoute] string userIdentifier,
-        CancellationToken ctoken)
+    [Route("favorites")]
+    public async Task<ActionResult<IReadOnlyCollection<UserFavoritesTrailResponse>>> GetAuthenticatedUsersFavoritesAsync(
+              CancellationToken ctoken)
     {
-        var result = await _userService.GetFavoritesByUserIdentifierAsync(userIdentifier, ctoken);
+        var userResponse = await GetAuthenticatedUserAsync(_userService, ctoken);
+
+        if (userResponse == null)
+        {
+            return Unauthorized("User not found");
+        }
+
+        var result = await _userService.GetFavoritesByUserIdentifierAsync(userResponse.Identifier, ctoken);
 
         if (!result.Success && result.Message != null)
         {
@@ -64,12 +84,18 @@ public class UserController : StigViddController
     }
 
     [HttpGet]
-    [Route("{userIdentifier}/wishlist")]
-    public async Task<ActionResult<IReadOnlyCollection<UserWishlistTrailResponse>>> GetWishListByUserIdentifierAsync(
-       [FromRoute] string userIdentifier,
-       CancellationToken ctoken)
+    [Route("wishlist")]
+    public async Task<ActionResult<IReadOnlyCollection<UserWishlistTrailResponse>>> GetAuthenticatedUsersWishListAsync(
+           CancellationToken ctoken)
     {
-        var result = await _userService.GetWishListByUserIdentifierAsync(userIdentifier, ctoken);
+        var userResponse = await GetAuthenticatedUserAsync(_userService, ctoken);
+
+        if (userResponse == null)
+        {
+            return Unauthorized("User not found");
+        }
+
+        var result = await _userService.GetWishListByUserIdentifierAsync(userResponse.Identifier, ctoken);
 
         if (!result.Success && result.Message != null)
         {
@@ -85,14 +111,21 @@ public class UserController : StigViddController
        [FromBody] AddToUserFavoritesRequest favoriteRequest,
        CancellationToken ctoken)
     {
-        var result = await _userService.AddTrailToUserFavoritesListAsync(favoriteRequest.UserIdentifier, favoriteRequest.TrailIdentifier, ctoken);
+        var userResponse = await GetAuthenticatedUserAsync(_userService, ctoken);
+
+        if (userResponse == null)
+        {
+            return Unauthorized("User not found");
+        }
+
+        var result = await _userService.AddTrailToUserFavoritesListAsync(userResponse.Identifier, favoriteRequest.TrailIdentifier, ctoken);
 
         if (!result.Success && result.Message != null)
         {
             return ToActionResult(result.Message);
         }
 
-        return Created($"/api/v1/user/{favoriteRequest.UserIdentifier}/favorites/{favoriteRequest.TrailIdentifier}", result.Value);
+        return Created($"{favoriteRequest.TrailIdentifier}", result.Value);
     }
 
     [HttpPost]
@@ -101,24 +134,37 @@ public class UserController : StigViddController
       [FromBody] AddToUserWishlistRequest addToUserWishlistRequest,
       CancellationToken ctoken)
     {
-        var result = await _userService.AddTrailToUserWishListAsync(addToUserWishlistRequest.UserIdentifier, addToUserWishlistRequest.TrailIdentifier, ctoken);
+        var userResponse = await GetAuthenticatedUserAsync(_userService, ctoken);
+
+        if (userResponse == null)
+        {
+            return Unauthorized("User not found");
+        }
+
+        var result = await _userService.AddTrailToUserWishListAsync(userResponse.Identifier, addToUserWishlistRequest.TrailIdentifier, ctoken);
 
         if (!result.Success && result.Message != null)
         {
             return ToActionResult(result.Message);
         }
 
-        return Created($"/api/v1/user/{addToUserWishlistRequest.UserIdentifier}/wishlist/{addToUserWishlistRequest.TrailIdentifier}", result.Value);
+        return Created($"{addToUserWishlistRequest.TrailIdentifier}", result.Value);
     }
 
     [HttpDelete]
-    [Route("/api/v1/user/{userIdentifier}/favorites/{trailIdentifier}")]
+    [Route("favorites/{trailIdentifier}")]
     public async Task<ActionResult> RemoveTrailFromUserFavoritesListAsync(
-      [FromRoute] string userIdentifier,
-      [FromRoute] string trailIdentifier,
+      [FromRoute] RemoveFromUserFavoriteRequest request,
       CancellationToken ctoken)
     {
-        var result = await _userService.RemoveTrailFromUserFavoritesListAsync(userIdentifier, trailIdentifier, ctoken);
+        var userResponse = await GetAuthenticatedUserAsync(_userService, ctoken);
+
+        if (userResponse == null)
+        {
+            return Unauthorized("User not found");
+        }
+
+        var result = await _userService.RemoveTrailFromUserFavoritesListAsync(userResponse.Identifier, request.TrailIdentifier, ctoken);
 
         if (!result.Success && result.Message != null)
         {
@@ -129,13 +175,19 @@ public class UserController : StigViddController
     }
 
     [HttpDelete]
-    [Route("/api/v1/user/{userIdentifier}/wishlist/{trailIdentifier}")]
+    [Route("wishlist/{trailIdentifier}")]
     public async Task<ActionResult> RemoveTrailFromUserWishListAsync(
-      [FromRoute] string userIdentifier,
-      [FromRoute] string trailIdentifier,
+      [FromRoute] RemoveFromUserwishListRequest request,
       CancellationToken ctoken)
     {
-        var result = await _userService.RemoveTrailFromUserWishListAsync(userIdentifier, trailIdentifier, ctoken);
+        var userResponse = await GetAuthenticatedUserAsync(_userService, ctoken);
+
+        if (userResponse == null)
+        {
+            return Unauthorized("User not found");
+        }
+
+        var result = await _userService.RemoveTrailFromUserWishListAsync(userResponse.Identifier, request.TrailIdentifier, ctoken);
 
         if (!result.Success && result.Message != null)
         {

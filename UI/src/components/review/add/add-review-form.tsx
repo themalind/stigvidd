@@ -19,9 +19,6 @@ interface ReviewFormProps {
 }
 
 const newReviewForm = z.object({
-  userIdentifier: z
-    .string({ required_error: "userIdentifier is required." })
-    .uuid({ message: "userIdentifier must be of type uuid." }),
   trailReview: z.optional(
     z.string().max(500, "Review is too long. Max char 500."),
   ),
@@ -59,7 +56,6 @@ export default function AddReviewForm({
   } = useForm<FormFields>({
     resolver: zodResolver(newReviewForm),
     defaultValues: {
-      userIdentifier: user?.identifier,
       trailIdentifier: trailIdentifier,
     },
   });
@@ -87,7 +83,6 @@ export default function AddReviewForm({
         return;
       }
       await createReview({
-        userIdentifier: data.userIdentifier,
         trailIdentifier: data.trailIdentifier,
         review: data.trailReview ? data.trailReview : "",
         grade: rating,

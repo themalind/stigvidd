@@ -10,11 +10,13 @@ namespace StigviddAPI.Controllers;
 [Route("/api/v1/[controller]")]
 public class ReviewController : StigViddController
 {
-    private readonly IReviewService _service;
+    private readonly IReviewService _reviewService;
+    private readonly IUserService _userService;
 
-    public ReviewController(IReviewService service)
+    public ReviewController(IReviewService service, IUserService userService)
     {
-        _service = service;
+        _reviewService = service;
+        _userService = userService;
     }
 
     [HttpGet]
@@ -23,7 +25,7 @@ public class ReviewController : StigViddController
         [FromRoute] string trailIdentifier,
         CancellationToken ctoken)
     {
-        var result = await _service.GetReviewsByTrailIdentifierAsync(trailIdentifier, ctoken);
+        var result = await _reviewService.GetReviewsByTrailIdentifierAsync(trailIdentifier, ctoken);
 
         if (!result.Success && result.Message != null)
         {
@@ -38,11 +40,17 @@ public class ReviewController : StigViddController
     [Route("create")]
     public async Task<ActionResult> AddReviewAsync(
         [FromForm] CreateReviewRequest request,
-        [FromForm] IFormFileCollection? images, 
+        [FromForm] IFormFileCollection? images,
         CancellationToken ctoken)
     {
+        var userResponse = await GetAuthenticatedUserAsync(_userService, ctoken);
 
-        var result = await _service.AddReviewAsync(request.UserIdentifier, request.TrailIdentifier, request.TrailReview, request.Grade, images, ctoken);
+        if (userResponse == null)
+        {
+            return Unauthorized("User not found");
+        }
+
+        var result = await _reviewService.AddReviewAsync(userResponse.Identifier, request.TrailIdentifier, request.TrailReview, request.Grade, images, ctoken);
 
         if (!result.Success && result.Message != null)
         {
@@ -56,6 +64,34 @@ public class ReviewController : StigViddController
 
         return Created($"/api/v1/review/{result.Value.Identifier}", result.Value);
     }
+
+    [Authorize]
+    [HttpDelete]
+    [Route("{reviewIdentifier}")]
+    public async Task<ActionResult> RemoveReviewAsync(
+        [FromRoute] DeleteReviewRequest request,
+        CancellationToken ctoken)
+    {
+        var userResponse = await GetAuthenticatedUserAsync(_userService, ctoken);
+
+        if (userResponse == null)
+        {
+            return Unauthorized("User not found");
+        }
+
+        var result = await _reviewService.RemoveReviewAsync(
+            request.ReviewIdentifier,
+            userResponse.Identifier,
+            ctoken
+        );
+
+        if (!result.Success && result.Message != null)
+        {
+            return ToActionResult(result.Message);
+        }
+
+        return NoContent();
+    }
 }
 
-    
+

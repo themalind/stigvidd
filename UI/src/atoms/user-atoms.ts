@@ -20,12 +20,9 @@ export const stigviddUserAtom = atomWithQuery((get) => {
   const firebaseUid = firebaseUser?.uid;
 
   return {
-    queryKey: ["user", firebaseUid],
+    queryKey: ["currentUser", firebaseUid],
     queryFn: async () => {
-      if (!firebaseUid) {
-        throw new Error("firebaseUid is required");
-      }
-      return await getStigViddUser(firebaseUid);
+      return await getStigViddUser();
     },
     enabled: !!firebaseUid,
     retry: 3,
@@ -33,35 +30,27 @@ export const stigviddUserAtom = atomWithQuery((get) => {
 });
 
 export const userFavoritesAtom = atomWithQuery((get) => {
-  const userQuery = get(stigviddUserAtom);
-  const userIdentifier = userQuery.data?.identifier;
+  const firebaseUser = get(userAtom);
 
   return {
-    queryKey: ["userFavorites", userIdentifier],
+    queryKey: ["userFavorites"],
     queryFn: async () => {
-      if (!userIdentifier) {
-        throw new Error("firebaseUid is required");
-      }
-      return getUserFavorites(userIdentifier);
+      return getUserFavorites();
     },
-    enabled: !!userIdentifier,
+    enabled: !!firebaseUser,
   };
 });
 
 // För att få tillgång till en global lista med "vill gå"
 export const userWishlistAtom = atomWithQuery((get) => {
-  const userQuery = get(stigviddUserAtom);
-  const userIdentifier = userQuery.data?.identifier;
+  const firebaseUser = get(userAtom);
 
   return {
-    queryKey: ["userWishlist", userIdentifier],
+    queryKey: ["userWishlist"],
     queryFn: async () => {
-      if (!userIdentifier) {
-        throw new Error("firebaseUid is required");
-      }
-      return getUserWishlist(userIdentifier);
+      return getUserWishlist();
     },
-    enabled: !!userIdentifier,
+    enabled: !!firebaseUser,
   };
 });
 
@@ -69,28 +58,23 @@ export const userWishlistAtom = atomWithQuery((get) => {
 // Här används atomWithMutation för att man tex ska kunna komma åt isPending för att disabla knappen när en request sker.
 export const addToFavoritesAtom = atomWithMutation((get) => {
   const queryClient = get(queryClientAtom);
-  const userQuery = get(stigviddUserAtom);
-  const userIdentifier = userQuery.data?.identifier;
 
   return {
     mutationFn: async (trailIdentifier: string) => {
-      if (!userIdentifier) {
-        throw new Error("userIdentifier required");
-      }
-      await addToUserFavorite(userIdentifier, trailIdentifier);
+      await addToUserFavorite(trailIdentifier);
     },
 
     onMutate: async (trailIdentifier: string) => {
       queryClient.cancelQueries({
-        queryKey: ["userFavorites", userIdentifier],
+        queryKey: ["userFavorites"],
       });
 
       const previousFavoritesList = queryClient.getQueryData<
         UserFavoritesTrail[]
-      >(["userFavorites", userIdentifier]);
+      >(["userFavorites"]);
 
       queryClient.setQueryData<UserFavoritesTrail[]>(
-        ["userFavorites", userIdentifier],
+        ["userFavorites"],
         (old) => {
           if (!old) return old;
           return [
@@ -107,14 +91,14 @@ export const addToFavoritesAtom = atomWithMutation((get) => {
     ) => {
       if (context?.previousFavoritesList) {
         queryClient.setQueryData(
-          ["userFavorites", userIdentifier],
+          ["userFavorites"],
           context.previousFavoritesList,
         );
       }
     },
     onSettled: () => {
       queryClient.invalidateQueries({
-        queryKey: ["userFavorites", userIdentifier],
+        queryKey: ["userFavorites"],
       });
     },
   };
@@ -123,34 +107,25 @@ export const addToFavoritesAtom = atomWithMutation((get) => {
 // Lägga till en ny i "vill gå"-listan
 export const addToWishlistAtom = atomWithMutation((get) => {
   const queryClient = get(queryClientAtom);
-  const userQuery = get(stigviddUserAtom);
-  const userIdentifier = userQuery.data?.identifier;
 
   return {
     mutationFn: async (trailIdentifier: string) => {
-      if (!userIdentifier) {
-        throw new Error("userIdentifier required");
-      }
-      return addToUserWishlist(userIdentifier, trailIdentifier);
+      return addToUserWishlist(trailIdentifier);
     },
 
     onMutate: async (trailIdentifier: string) => {
-      queryClient.cancelQueries({ queryKey: ["userWishlist", userIdentifier] });
+      queryClient.cancelQueries({ queryKey: ["userWishlist"] });
 
       // Hämtar det som är sparat i cachen och sparar det i en egen variable ifall nåt går snett
       const previousWishlist = queryClient.getQueryData<UserWishlistTrail[]>([
         "userWishlist",
-        userIdentifier,
       ]);
 
       // Lägg till innan anropet är klart för att det ska se fräckt ut
-      queryClient.setQueryData<UserWishlistTrail[]>(
-        ["userWishlist", userIdentifier],
-        (old) => {
-          if (!old) return old;
-          return [...old, { identifier: trailIdentifier } as UserWishlistTrail];
-        },
-      );
+      queryClient.setQueryData<UserWishlistTrail[]>(["userWishlist"], (old) => {
+        if (!old) return old;
+        return [...old, { identifier: trailIdentifier } as UserWishlistTrail];
+      });
 
       return { previousWishlist };
     },
@@ -159,15 +134,12 @@ export const addToWishlistAtom = atomWithMutation((get) => {
       context: { previousWishlist: UserWishlistTrail[] } | undefined,
     ) => {
       if (context?.previousWishlist) {
-        queryClient.setQueryData(
-          ["userWishlist", userIdentifier],
-          context.previousWishlist,
-        );
+        queryClient.setQueryData(["userWishlist"], context.previousWishlist);
       }
     },
     onSettled: () => {
       queryClient.invalidateQueries({
-        queryKey: ["userWishlist", userIdentifier],
+        queryKey: ["userWishlist"],
       });
     },
   };
@@ -177,33 +149,26 @@ export const addToWishlistAtom = atomWithMutation((get) => {
 // https://tanstack.com/query/v4/docs/framework/react/guides/optimistic-updates
 export const removeFromWishlistAtom = atomWithMutation((get) => {
   const queryClient = get(queryClientAtom);
-  const userQuery = get(stigviddUserAtom);
-  const userIdentifier = userQuery.data?.identifier;
 
   return {
     mutationFn: async (trailIdentifier: string) => {
-      if (!userIdentifier) {
-        throw new Error("userIdentifier required");
-      }
-      return await removeUserWishlist(userIdentifier, trailIdentifier);
+      return await removeUserWishlist(trailIdentifier);
     },
 
     // Avbryt om det finns några pågående queries
     onMutate: async (trailIdentifier: string) => {
       await queryClient.cancelQueries({
-        queryKey: ["userWishlist", userIdentifier],
+        queryKey: ["userWishlist"],
       });
 
       // Hämtar det som är sparat i cachen och sparar det i en egen variable ifall nåt går snett
       const previousWishlist = queryClient.getQueryData<UserWishlistTrail[]>([
         "userWishlist",
-        userIdentifier,
       ]);
 
       // Filtera bort den som ska tas bort innan den tas bort för att det ska se fräckt ut
-      queryClient.setQueryData<UserWishlistTrail[]>(
-        ["userWishlist", userIdentifier],
-        (old) => old?.filter((trail) => trail.identifier !== trailIdentifier),
+      queryClient.setQueryData<UserWishlistTrail[]>(["userWishlist"], (old) =>
+        old?.filter((trail) => trail.identifier !== trailIdentifier),
       );
 
       return { previousWishlist };
@@ -216,7 +181,7 @@ export const removeFromWishlistAtom = atomWithMutation((get) => {
     ) => {
       if (context?.previousWishlist) {
         queryClient.setQueryData<UserWishlistTrail[]>(
-          ["userWishlist", userIdentifier],
+          ["userWishlist"],
           context?.previousWishlist,
         );
       }
@@ -225,7 +190,7 @@ export const removeFromWishlistAtom = atomWithMutation((get) => {
     onSettled: () => {
       // Hämta om på nytt
       queryClient.invalidateQueries({
-        queryKey: ["userWishlist", userIdentifier],
+        queryKey: ["userWishlist"],
       });
     },
   };
@@ -233,29 +198,23 @@ export const removeFromWishlistAtom = atomWithMutation((get) => {
 
 export const removeFromFavoritesAtom = atomWithMutation((get) => {
   const queryClient = get(queryClientAtom);
-  const userQuery = get(stigviddUserAtom);
-  const userIdentifier = userQuery.data?.identifier;
 
   return {
     mutationFn: async (trailIdentifier: string) => {
-      if (!userIdentifier) {
-        throw new Error("userIdentifier required");
-      }
-      return await removeUserFavorite(userIdentifier, trailIdentifier);
+      return await removeUserFavorite(trailIdentifier);
     },
 
     onMutate: async (trailIdentifier: string) => {
       await queryClient.cancelQueries({
-        queryKey: ["userFavorites", userIdentifier],
+        queryKey: ["userFavorites"],
       });
 
       const previousFavoritesList = queryClient.getQueryData<
         UserFavoritesTrail[]
-      >(["userFavorites", userIdentifier]);
+      >(["userFavorites"]);
 
-      queryClient.setQueryData<UserFavoritesTrail[]>(
-        ["userFavorites", userIdentifier],
-        (old) => old?.filter((trail) => trail.identifier !== trailIdentifier),
+      queryClient.setQueryData<UserFavoritesTrail[]>(["userFavorites"], (old) =>
+        old?.filter((trail) => trail.identifier !== trailIdentifier),
       );
 
       return { previousFavoritesList };
@@ -268,7 +227,7 @@ export const removeFromFavoritesAtom = atomWithMutation((get) => {
     ) => {
       if (context?.previousFavoritesList) {
         queryClient.setQueryData(
-          ["userFavorites", userIdentifier],
+          ["userFavorites"],
           context.previousFavoritesList,
         );
       }
@@ -276,7 +235,7 @@ export const removeFromFavoritesAtom = atomWithMutation((get) => {
     },
     onSettled: () => {
       queryClient.invalidateQueries({
-        queryKey: ["userFavorites", userIdentifier],
+        queryKey: ["userFavorites"],
       });
     },
   };

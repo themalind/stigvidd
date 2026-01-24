@@ -1,6 +1,6 @@
 ﻿namespace WebDataContracts.RequestModels.User;
 
-public class AddToUserFavoritesRequest
+public class RemoveFromUserwishListRequest
 {
     public required string TrailIdentifier { get; set; }
 }

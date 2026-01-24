@@ -1,7 +1,7 @@
-import { CreateReviewRequest } from "@/data/types";
+import { CreateReviewRequest, DeleteReviewRequest } from "@/data/types";
 import uuid from "react-native-uuid";
 import { IP } from "../../ipconfig";
-import { getUserToken } from "./users";
+import { ApiError, getUserToken } from "./users";
 
 export async function createReview(
   request: CreateReviewRequest,
@@ -25,7 +25,6 @@ export async function createReview(
     } as any); // Hittar vi ett annat sätt att typ så byter vi.
   });
 
-  formData.append("userIdentifier", request.userIdentifier);
   formData.append("trailIdentifier", request.trailIdentifier);
   formData.append("trailReview", request.review);
   formData.append("grade", `${request.grade}`);
@@ -50,6 +49,30 @@ export async function createReview(
     return { success: true };
   } catch (error) {
     console.error("Fel vid uppladdning:", error);
+    throw error;
+  }
+}
+
+export async function DeleteReview(request: DeleteReviewRequest) {
+  const token = await getUserToken();
+
+  if (!token) {
+    throw new Error("User not authenticated");
+  }
+  try {
+    const response = await fetch(`http://${IP}/api/v1/review/delete`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new ApiError(`HTTP error ${response.status}`, response.status);
+    }
+  } catch (error) {
+    console.log(error);
     throw error;
   }
 }
