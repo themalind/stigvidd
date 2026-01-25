@@ -8,8 +8,8 @@ public class CreateReviewRequestValidator : AbstractValidator<CreateReviewReques
     public CreateReviewRequestValidator()
     {
         RuleFor(createReviewRequest => createReviewRequest.TrailIdentifier)
-            .NotEmpty().WithMessage("UserIdentifier is required.")
-            .Length(36).WithMessage("UserIdentifier must be at least 36 characters long.");   
+            .NotEmpty().WithMessage("TrailIdentifier is required.")
+            .Length(36).WithMessage("TrailIdentifier must be at least 36 characters long.");   
         RuleFor(createReviewRequest => createReviewRequest.TrailReview)
             .MaximumLength(500);
         RuleFor(createReviewRequest => createReviewRequest.Grade)

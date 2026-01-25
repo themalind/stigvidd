@@ -48,6 +48,13 @@ public class ReviewService : IReviewService
             ))
             .ToListAsync(ctoken);
 
+        if (reviews == null || !reviews.Any())
+        {
+            _logger.LogInformation("No reviews found for trail with identifier: {TrailIdentifier}", trailIdentifier);
+
+            return Result.Fail<IReadOnlyCollection<ReviewResponse?>>(new Message(404, "No reviews found for trail."));
+        }
+
         return Result.Ok<IReadOnlyCollection<ReviewResponse?>>(reviews);
     }
 
@@ -59,6 +66,11 @@ public class ReviewService : IReviewService
 
         try
         {
+            if(grade < 1 || grade > 5)
+            {
+                return Result.Fail<ReviewResponse?>(new Message(400, "Grade must be between 0 and 5."));
+            }
+
             if (imageUrls != null)
             {
                 foreach (var image in imageUrls)
@@ -87,7 +99,7 @@ public class ReviewService : IReviewService
                 TrailReview = trailReview,
                 Grade = grade,
                 TrailId = trail.Id,
-                UserId = user.Id
+                UserId = user.Id,
             };
 
             if (uploadedUrls.Any())
