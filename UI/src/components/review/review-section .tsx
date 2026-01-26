@@ -5,10 +5,10 @@ import { Review } from "@/data/types";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAtom, useSetAtom } from "jotai";
 import { Fragment } from "react";
-import { Pressable, StyleSheet, View } from "react-native";
+import { Alert, Pressable, StyleSheet, View } from "react-native";
 import { Divider, List, Text, useTheme } from "react-native-paper";
 import { Rating } from "../rating";
-import ReviewImages from "./review-images";
+import ReviewImageGrid from "./review-image-grid ";
 
 interface ReviewProps {
   reviews: Review[];
@@ -18,10 +18,10 @@ const formatDate = (dateString: string): string => {
   return dateString.split("T")[0];
 };
 
-export default function TrailReviews({ reviews }: ReviewProps) {
+export default function ReviewSection({ reviews }: ReviewProps) {
   const theme = useTheme();
   const [{ data: user }] = useAtom(stigviddUserAtom);
-  const setReportMsg = useSetAtom(showSuccessAtom);
+  const setSuccessMessage = useSetAtom(showSuccessAtom);
   const setError = useSetAtom(showErrorAtom);
   const queryClient = useQueryClient();
 
@@ -36,7 +36,7 @@ export default function TrailReviews({ reviews }: ReviewProps) {
     onSuccess: (result, { trailIdentifier }) => {
       if (result.success) {
         queryClient.invalidateQueries({ queryKey: ["trail", trailIdentifier] });
-        setReportMsg("Recensionen har tagits bort");
+        setSuccessMessage("Recensionen har tagits bort");
       } else {
         setError("Kunde inte ta bort recensionen.");
       }
@@ -47,18 +47,34 @@ export default function TrailReviews({ reviews }: ReviewProps) {
     reviewIdentifier: string,
     trailIdentifier: string,
   ) => {
-    deleteMutation.mutate({ reviewIdentifier, trailIdentifier });
+    Alert.alert(
+      "Ta bort recension",
+      "Är du säker på att du vill ta bort din recension?",
+      [
+        {
+          text: "Avbryt",
+          style: "cancel",
+        },
+        {
+          text: "Ta bort",
+          style: "destructive",
+          onPress: () => {
+            deleteMutation.mutate({ reviewIdentifier, trailIdentifier });
+          },
+        },
+      ],
+    );
   };
 
-  const handlePress = () => {
+  const handleReportReview = () => {
     // Hej admin här kommer en olämplig review
-    setReportMsg("For Gnomeregan!");
+    setSuccessMessage("For Gnomeregan!");
   };
 
   return (
     <List.Section style={{ borderRadius: 20 }}>
-      {reviews.map((r) => (
-        <Fragment key={r.identifier}>
+      {reviews.map((review) => (
+        <Fragment key={review.identifier}>
           <List.Accordion
             style={{
               backgroundColor: theme.colors.surface,
@@ -75,7 +91,7 @@ export default function TrailReviews({ reviews }: ReviewProps) {
                 icon={props.isExpanded ? "chevron-up" : "chevron-down"}
               />
             )}
-            title={r.userName}
+            title={review.userName}
             description={
               <View
                 style={{
@@ -83,7 +99,7 @@ export default function TrailReviews({ reviews }: ReviewProps) {
                 }}
               >
                 <Rating
-                  review={r}
+                  review={review}
                   starSize={13}
                   starColor={theme.colors.secondary}
                 />
@@ -97,9 +113,11 @@ export default function TrailReviews({ reviews }: ReviewProps) {
               ]}
             >
               <View style={{ gap: 20 }}>
-                {r.trailReview && <Text>{r.trailReview}</Text>}
+                {review.trailReview && <Text>{review.trailReview}</Text>}
               </View>
-              {r.reviewImages && <ReviewImages reviewImages={r.reviewImages} />}
+              {review.reviewImages && (
+                <ReviewImageGrid reviewImages={review.reviewImages} />
+              )}
             </View>
             <View
               style={[
@@ -107,16 +125,16 @@ export default function TrailReviews({ reviews }: ReviewProps) {
                 { backgroundColor: theme.colors.surface },
               ]}
             >
-              <Text>{formatDate(r.createdAt)}</Text>
+              <Text>{formatDate(review.createdAt)}</Text>
               <View style={s.actionContainer}>
-                <Pressable onPress={handlePress}>
+                <Pressable onPress={handleReportReview}>
                   <List.Icon color={theme.colors.outline} icon="alert-circle" />
                 </Pressable>
-                {user?.identifier === r.userIdentifier && (
+                {user?.identifier === review.userIdentifier && (
                   <Pressable
                     disabled={deleteMutation.isPending}
                     onPress={() =>
-                      handleDelete(r.identifier, r.trailIdentifier)
+                      handleDelete(review.identifier, review.trailIdentifier)
                     }
                   >
                     <List.Icon

@@ -8,35 +8,35 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Surface, useTheme } from "react-native-paper";
 import NotAuthenticatedDialog from "../not-authenticated-msg-dialog";
 import AddReview from "./add/add-review-modal";
-import TrailReviews from "./trail-reviews";
+import ReviewSection from "./review-section ";
 
 interface ReviewWrapperProps {
   trail: Trail;
   surfaceToScrollToRef: RefObject<View | null>;
 }
 
-export default function ReviewWrapper({
+export default function TrailReviewsContainer({
   trail,
   surfaceToScrollToRef,
 }: ReviewWrapperProps) {
   const [authState] = useAtom(authStateAtom);
-  const [showModal, setShowModal] = useState(false);
-  const [showAuthDialog, setAuthDialog] = useState(false);
+  const [isReviewModalVisible, setIsReviewModalVisible] = useState(false);
+  const [isAuthDialogVisible, setIsAuthDialogVisible] = useState(false);
   const theme = useTheme();
   const queryClient = useQueryClient();
   const reviews = trail?.reviewsResponse ?? [];
 
-  const handlePress = () => {
+  const handleAddReviewPress = () => {
     if (!authState.isAuthenticated) {
-      setAuthDialog(true);
+      setIsAuthDialogVisible(true);
       return;
     }
 
-    setShowModal(true);
+    setIsReviewModalVisible(true);
   };
 
   const handleReviewAdded = () => {
-    setShowModal(false);
+    setIsReviewModalVisible(false);
     // Invalidera queryn så att trail-data hämtas igen
     queryClient.invalidateQueries({ queryKey: ["trail", trail.identifier] });
   };
@@ -59,7 +59,7 @@ export default function ReviewWrapper({
             </Text>
           </View>
           <View style={s.iconSection}>
-            <Pressable onPress={handlePress}>
+            <Pressable onPress={handleAddReviewPress}>
               <Ionicons
                 name="create-outline"
                 size={30}
@@ -69,7 +69,7 @@ export default function ReviewWrapper({
                 trailIdentifier={trail.identifier}
                 trailName={trail.name}
                 trailLenght={trail.trailLenght}
-                visible={showModal}
+                visible={isReviewModalVisible}
                 onDismiss={handleReviewAdded}
               />
             </Pressable>
@@ -87,12 +87,12 @@ export default function ReviewWrapper({
             </Text>
           </Surface>
         ) : (
-          <TrailReviews reviews={reviews} />
+          <ReviewSection reviews={reviews} />
         )}
       </Surface>
       <NotAuthenticatedDialog
-        visible={showAuthDialog}
-        onDissmiss={() => setAuthDialog(false)}
+        visible={isAuthDialogVisible}
+        onDissmiss={() => setIsAuthDialogVisible(false)}
         infoMessage="Du behöver vara inloggad för att lägga till en recension."
       />
     </>

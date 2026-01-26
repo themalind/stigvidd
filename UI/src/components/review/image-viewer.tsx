@@ -25,7 +25,11 @@ const DOT_INDICATOR_SIZE = DOT_SIZE + DOT_SPACING;
 const ITEM_HEIGHT = height * 0.5;
 const ITEM_WIDTH = width * 0.7;
 
-export default function ImageModal({ images, visible, onDismiss }: ModalProps) {
+export default function ImageViewer({
+  images,
+  visible,
+  onDismiss,
+}: ModalProps) {
   const theme = useTheme();
   const scrollX = React.useRef(new Animated.Value(0)).current;
   const [currentIndex, setCurrentIndex] = useState(0);
