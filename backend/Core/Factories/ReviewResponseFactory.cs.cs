@@ -8,11 +8,6 @@ public class ReviewResponseFactory
 {
     private string _presentableBaseUrl;
 
-#pragma warning disable CS8618 // For testing purposes
-    public ReviewResponseFactory() { }
-#pragma warning restore CS8618 
-
-
     public ReviewResponseFactory(IConfiguration configuration)
     {
         _presentableBaseUrl = configuration["PresentableBaseUrl"] ?? throw new InvalidOperationException("PresentableBaseUrl configuration is missing");
