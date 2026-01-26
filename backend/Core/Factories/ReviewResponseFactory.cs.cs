@@ -15,11 +15,11 @@ public class ReviewResponseFactory
 
     public ReviewResponse Create(Review review)
     {
-        var images = review.ReviewImages?.Select(ri =>
+        var images = review.ReviewImages?.Select(reviewImage =>
             ReviewImageResponse.Create(
                 _presentableBaseUrl, // "https://stigvidd.se/files/"
-                ri.Identifier,
-                ri.ImageUrl)) ?? null; // reviews/guid.jpeg
+                reviewImage.Identifier,
+                reviewImage.ImageUrl)); // reviews/guid.jpeg
         return ReviewResponse.Create(
             review.Identifier,
             review.TrailReview ?? string.Empty,

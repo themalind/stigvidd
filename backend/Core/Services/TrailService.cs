@@ -57,9 +57,9 @@ public class TrailService : ITrailService
                 trail.Name,
                 trail.TrailLength,
                 trail.TrailImages!
-                    .Select(ti => TrailImageResponse.Create(
-                        ti.Identifier, 
-                        ti.ImageUrl))
+                    .Select(trailImages => TrailImageResponse.Create(
+                        trailImages.Identifier, 
+                        trailImages.ImageUrl))
                     .Take(1)
                     .ToList()
             ))

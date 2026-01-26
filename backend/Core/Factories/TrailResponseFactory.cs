@@ -16,26 +16,26 @@ public class TrailResponseFactory
 
     public TrailResponse Create(Trail trail)
     {
-        var images = trail.TrailImages?.Select(ti =>
+        var images = trail.TrailImages?.Select(trailImage =>
             TrailImageResponse.Create(
-                ti.Identifier,
-                ti.ImageUrl)) ?? null;
+                trailImage.Identifier,
+                trailImage.ImageUrl)) ?? null;
 
-        var links = trail.TrailLinks?.Select(tl =>
+        var links = trail.TrailLinks?.Select(trailLink =>
             TrailLinkResponse.Create(
-                tl.Identifier,
-                tl.Link)) ?? null;
+                trailLink.Identifier,
+                trailLink.Link)) ?? null;
 
-        var reviews = trail.Reviews?.Select(r =>
+        var reviews = trail.Reviews?.Select(review =>
             ReviewResponse.Create(
-                r.Identifier,
-                r.TrailReview ?? string.Empty,
-                r.Grade,
-                r.User!.NickName,
-                r.CreatedAt,
+                review.Identifier,
+                review.TrailReview ?? string.Empty,
+                review.Grade,
+                review.User!.NickName,
+                review.CreatedAt,
                 trail.Identifier,
-                r.User.Identifier,
-                r.ReviewImages?.Select(ri =>
+                review.User.Identifier,
+                review.ReviewImages?.Select(ri =>
                     ReviewImageResponse.Create(
                         _presentableBaseUrl,
                         ri.Identifier,

@@ -32,20 +32,20 @@ public class UserResponseFactory
                 )
             ).ToList(),
 
-            user.MyFavorites?.Select(fav =>
+            user.MyFavorites?.Select(favorite =>
                 UserFavoritesTrailResponse.Create(
-                    fav.Identifier,
-                    fav.Name,
-                    fav.TrailLength,
-                    fav.Description,
-                    fav.Reviews?.Select(r =>
+                    favorite.Identifier,
+                    favorite.Name,
+                    favorite.TrailLength,
+                    favorite.Description,
+                    favorite.Reviews?.Select(review =>
                         RatingResponse.Create(
-                            r.Identifier,
-                            r.Grade)).ToList(),
-                    fav.TrailImages?.Select(ti =>
+                            review.Identifier,
+                            review.Grade)).ToList(),
+                    favorite.TrailImages?.Select(trailImage =>
                         TrailImageResponse.Create(
-                            ti.Identifier,
-                            ti.ImageUrl)
+                            trailImage.Identifier,
+                            trailImage.ImageUrl)
                     ).ToList()
                 )
             ).ToList());

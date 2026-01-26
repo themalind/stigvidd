@@ -7,7 +7,7 @@ public class AddToUserFavoriteValidator : AbstractValidator<AddToUserFavoritesRe
 {
     public AddToUserFavoriteValidator()
     {
-        RuleFor(af => af.TrailIdentifier)
+        RuleFor(addToFavoriteRequest => addToFavoriteRequest.TrailIdentifier)
            .NotEmpty().WithMessage("TrailIdentifier is required.")
            .Length(36).WithMessage("TrailIdentifier must be at least 36 characters long.");
     }

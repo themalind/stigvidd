@@ -7,7 +7,7 @@ public class AddToUserWishlistValidator : AbstractValidator<AddToUserWishlistReq
 {
     public AddToUserWishlistValidator()
     {
-        RuleFor(af => af.TrailIdentifier)
+        RuleFor(addToUserWishlistRequest => addToUserWishlistRequest.TrailIdentifier)
             .NotEmpty().WithMessage("TrailIdentifier is required.")
             .Length(36).WithMessage("TrailIdentifier must be at least 36 characters long.");
     }

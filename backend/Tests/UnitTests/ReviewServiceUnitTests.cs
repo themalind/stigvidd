@@ -86,7 +86,6 @@ public class ReviewServiceUnitTests
         result.Value.Should().BeNull();
     }
 
-
     [Fact]
     public async Task AddReview_WithInvalidTrailIdentifier_ShouldReturnNotFound()
     {
@@ -143,7 +142,6 @@ public class ReviewServiceUnitTests
         result.Success.Should().BeTrue();
     }
 
-
     [Fact]
     public async Task DeleteReview_WithInvalid_ReviewIdentifier_ShouldReturnNotFound()
     {
@@ -159,7 +157,6 @@ public class ReviewServiceUnitTests
         result.Message.Should().NotBeNull();
         result.Message.StatusCode.Should().Be(404);
     }
-
 
     [Fact]
     public async Task DeleteReview_WithInvalid_UserIdentifier_ShouldReturnNotFound()

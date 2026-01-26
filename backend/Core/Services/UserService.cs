@@ -43,13 +43,13 @@ public class UserService : IUserService
                     trail.TrailLength,
                     trail.Description,
                     trail.Reviews!.Select(
-                        r => RatingResponse.Create(
-                            r.Identifier,
-                            r.Grade)).ToList(),
+                        rating => RatingResponse.Create(
+                            rating.Identifier,
+                            rating.Grade)).ToList(),
                    trail.TrailImages!.Select(
-                       ti => TrailImageResponse.Create(
-                           ti.Identifier,
-                           ti.ImageUrl)).Take(1).ToList()
+                       trailImage => TrailImageResponse.Create(
+                           trailImage.Identifier,
+                           trailImage.ImageUrl)).Take(1).ToList()
                    ))).ToListAsync(ctoken);
 
         return Result.Ok<IReadOnlyCollection<UserFavoritesTrailResponse?>>(favorites);
