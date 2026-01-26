@@ -6,6 +6,7 @@ public class ReviewImageResponse
     public required string ImageUrl { get; set; }
 
     public static ReviewImageResponse Create(
+        string baseUrl,
         string identifier,
         string imageUrl
         )
@@ -13,7 +14,7 @@ public class ReviewImageResponse
         return new ReviewImageResponse
         {
             Identifier = identifier,
-            ImageUrl = imageUrl,
+            ImageUrl = $"{baseUrl}{imageUrl}",
         };
     }
 }

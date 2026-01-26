@@ -10,19 +10,20 @@ namespace UnitTests;
 /// Provides methods to populate the database with predefined test data including various user configurations.
 /// </summary>
 public static class Utilities
-{
-    /// <summary>
+{   /// <summary>
     /// Initializes the database with seed data for unit tests.
-    /// Populates the database with predefined trails and multiple test users with different configurations.
+    /// Populates the database with predefined trails, users and reviews.
     /// </summary>
     /// <param name="db">The database context to initialize.</param>
     public static void InitializeDbForTests(StigViddDbContext db)
     {
         var trails = GetSeedingTrails();
         var users = GetSeedingUsers(trails);
+        var reviews = GetSeedingReviews(trails, users);
 
         db.Trails.AddRange(trails);
         db.Users.AddRange(users);
+        db.Reviews.AddRange(reviews);
 
         db.SaveChanges();
     }
@@ -349,5 +350,142 @@ public static class Utilities
                 },
             },
         };
+    }
+
+    /// <summary>
+    /// Creates a collection of predefined review entities for testing.
+    /// Includes reviews with varying grades, some with images and different review texts.
+    /// </summary>
+    /// <param name="trails">The list of trails to reference when creating reviews.</param>
+    /// <param name="users">The list of users to reference when creating reviews.</param>
+    /// <returns>A list of Review entities with varying configurations for comprehensive testing.</returns>
+    public static List<Review> GetSeedingReviews(List<Trail> trails, List<User> users)
+    {
+        return new List<Review>
+    {
+        // Review 1: Detailed review with images
+        new Review
+        {
+            Id = 1,
+            Identifier = "r1a1b2c3-d4e5-4f6a-7b8c-9d0e1f2a3b4c",
+            TrailReview = "Fantastisk led! Utmanande terräng men väl värd ansträngningen. Otroliga vyer från klipporna.",
+            Grade = 4.5f,
+            TrailId = 1, // Tiveden
+            UserId = 2,  // VandrarVennen
+            CreatedAt = SeedDates.Created,
+            LastUpdatedAt = SeedDates.Updated,
+            ReviewImages = new List<ReviewImage>
+            {
+                new ReviewImage
+                {
+                    Id = 1,
+                    Identifier = "rev-img-1",
+                    ImageUrl = "https://inkaben.se/stigvidd/mock/review-tiveden-1.jpg",
+                    ReviewId = 1
+                },
+                new ReviewImage
+                {
+                    Id = 2,
+                    Identifier = "rev-img-2",
+                    ImageUrl = "https://inkaben.se/stigvidd/mock/review-tiveden-2.jpg",
+                    ReviewId = 1
+                }
+            }
+        },
+        // Review 2: Short review without images
+        new Review
+        {
+            Id = 2,
+            Identifier = "r2b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+            TrailReview = "Fin led, lite hal i vissa partier.",
+            Grade = 3.5f,
+            TrailId = 2, // Storsjöleden
+            UserId = 1,  // NaturElskaren
+            CreatedAt = SeedDates.Created,
+            LastUpdatedAt = SeedDates.Updated
+        },
+        // Review 3: High rating with detailed feedback
+        new Review
+        {
+            Id = 3,
+            Identifier = "r3c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e",
+            TrailReview = "Perfekt för en avkopplande söndagspromenad. Väl markerad och lättgången.",
+            Grade = 5.0f,
+            TrailId = 7, // Nässehult
+            UserId = 6,  // Molgan75
+            CreatedAt = SeedDates.Created,
+            LastUpdatedAt = SeedDates.Updated
+        },
+        // Review 4: Medium rating
+        new Review
+        {
+            Id = 4,
+            Identifier = "r4d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f",
+            TrailReview = "Bra blandning av terräng. Skulle önska bättre skyltning vid några korsningar.",
+            Grade = 3.0f,
+            TrailId = 3, // Tångaleden
+            UserId = 3,  // SkogsGreven
+            CreatedAt = SeedDates.Created,
+            LastUpdatedAt = SeedDates.Updated
+        },
+        // Review 5: Review without text (only grade)
+        new Review
+        {
+            Id = 5,
+            Identifier = "r5e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a",
+            TrailReview = null,
+            Grade = 4.0f,
+            TrailId = 4, // Vildmarksleden Årås
+            UserId = 5,  // Kattleten
+            CreatedAt = SeedDates.Created,
+            LastUpdatedAt = SeedDates.Updated
+        },
+        // Review 6: Multiple reviews on same trail
+        new Review
+        {
+            Id = 6,
+            Identifier = "r6f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b",
+            TrailReview = "Mysig led genom vacker natur. Tog med barnen och de älskade det!",
+            Grade = 4.5f,
+            TrailId = 7, // Nässehult (samma som review 3)
+            UserId = 1,  // NaturElskaren
+            CreatedAt = SeedDates.Created,
+            LastUpdatedAt = SeedDates.Updated
+        },
+        // Review 7: Lower rating with constructive feedback
+        new Review
+        {
+            Id = 7,
+            Identifier = "r7a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c",
+            TrailReview = "Leden är okej men lite för mycket grus och asfalt för min smak. Saknar mer naturstigar.",
+            Grade = 2.5f,
+            TrailId = 5, // Gesebol
+            UserId = 4,  // Eremiten
+            CreatedAt = SeedDates.Created,
+            LastUpdatedAt = SeedDates.Updated
+        },
+        // Review 8: Another detailed review with images
+        new Review
+        {
+            Id = 8,
+            Identifier = "r8b8c9d0-e1f2-4a3b-4c5d-6e7f8a9b0c1d",
+            TrailReview = "Underbar upplevelse! Såg både älg och rådjur. Rekommenderar starkt!",
+            Grade = 5.0f,
+            TrailId = 1, // Tiveden (samma som review 1)
+            UserId = 3,  // SkogsGreven
+            CreatedAt = SeedDates.Created,
+            LastUpdatedAt = SeedDates.Updated,
+            ReviewImages = new List<ReviewImage>
+            {
+                new ReviewImage
+                {
+                    Id = 3,
+                    Identifier = "rev-img-3",
+                    ImageUrl = "https://inkaben.se/stigvidd/mock/review-wildlife.jpg",
+                    ReviewId = 8
+                }
+            }
+        }
+    };
     }
 }

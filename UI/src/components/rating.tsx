@@ -7,13 +7,15 @@ interface RatingProps {
   review?: Review; // För enskilda recensioner
   ratings?: RatingResponse[];
   starSize: number;
+  starColor: string;
 }
 
 export const Rating = ({
-  review,
   trailReviews,
-  starSize,
+  review,
   ratings,
+  starSize,
+  starColor,
 }: RatingProps) => {
   const theme = useTheme();
   let rating = 0;
@@ -29,10 +31,6 @@ export const Rating = ({
   }
 
   return (
-    <StarRatingDisplay
-      starSize={starSize}
-      color={theme.colors.tertiary}
-      rating={rating}
-    />
+    <StarRatingDisplay starSize={starSize} color={starColor} rating={rating} />
   );
 };

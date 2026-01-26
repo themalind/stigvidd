@@ -25,8 +25,9 @@ export async function getTrailByIdentifier(identifier: string): Promise<Trail> {
     if (!response.ok) {
       throw new Error(`HTTP error ${response.status}`);
     }
+    const json = await response.json();
 
-    return await response.json();
+    return json;
   } catch (error) {
     console.log(error);
     throw error;

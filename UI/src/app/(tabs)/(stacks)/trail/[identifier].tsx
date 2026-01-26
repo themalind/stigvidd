@@ -3,8 +3,8 @@ import { useImage } from "@/atoms/image-atoms";
 import ImageCarousel from "@/components/image-carousel";
 import ImageModal from "@/components/imageModal";
 import LoadingIndicator from "@/components/loading-indicator";
-import { Rating } from "@/components/trail/rating";
-import RatingWrapper from "@/components/trail/rating-wrapper";
+import { Rating } from "@/components/rating";
+import TrailReviewsContainer from "@/components/review/trail-reviews-container ";
 import TrailDescription from "@/components/trail/trail-description";
 import TrailInfo from "@/components/trail/trail-info";
 import TrailMap from "@/components/trail/trail-map";
@@ -105,29 +105,31 @@ export default function TrailDetailsScreen() {
       />
       <View style={s.ratingSection}>
         <View style={s.rating}>
-          <Rating trailReviews={trail?.reviewsResponse} starSize={17} />
+          <Rating
+            trailReviews={trail?.reviewsResponse}
+            starSize={17}
+            starColor={theme.colors.secondary}
+          />
           <Text
-            style={[s.ratingNumber, { color: theme.colors.tertiary }]}
+            style={[s.ratingNumber, { color: theme.colors.onBackground }]}
           >{`(${trail?.reviewsResponse?.length})`}</Text>
         </View>
         <TouchableOpacity onPress={onPressScrollToRatings}>
-          <Text style={[s.text, { color: theme.colors.tertiary }]}>
+          <Text style={[s.text, { color: theme.colors.secondary }]}>
             Läs betyg och kommentarer
           </Text>
         </TouchableOpacity>
       </View>
-      {trail ? <TrailInfo trail={trail} /> : null}
-      {trail?.identifier ? (
-        <UserBar trailIdentifier={trail?.identifier} />
-      ) : null}
-      {trail ? <TrailDescription trail={trail} /> : null}
-      {trail ? <TrailMap trail={trail} /> : null}
-      {trail?.reviewsResponse ? (
-        <RatingWrapper
+      {trail && <TrailInfo trail={trail} />}
+      {trail && <UserBar trail={trail} />}
+      {trail && <TrailDescription trail={trail} />}
+      {trail && <TrailMap trail={trail} />}
+      {trail?.reviewsResponse && (
+        <TrailReviewsContainer
           trail={trail}
           surfaceToScrollToRef={surfaceToScrollToRef}
         />
-      ) : null}
+      )}
       <Pressable style={s.backToTop} onPress={onPressScrollToTop}>
         <Text style={[s.text, { color: theme.colors.tertiary }]}>
           Tillbaka till toppen

@@ -5,7 +5,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { Divider, Text, useTheme } from "react-native-paper";
-import { Rating } from "../trail/rating";
+import { Rating } from "../rating";
 
 interface UserTrailCollectionProps {
   title: string;
@@ -84,7 +84,11 @@ export default function UserTrailCollection({
                       {trail.name}
                     </Text>
                     {trail.ratingResponse ? (
-                      <Rating starSize={13} ratings={trail.ratingResponse} />
+                      <Rating
+                        starSize={13}
+                        ratings={trail.ratingResponse}
+                        starColor={theme.colors.tertiary}
+                      />
                     ) : null}
                   </View>
                   <Text>{trail.trailLength} km</Text>

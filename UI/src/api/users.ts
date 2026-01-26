@@ -17,7 +17,7 @@ export class ApiError extends Error {
   }
 }
 
-async function getUserToken(): Promise<string | null> {
+export async function getUserToken(): Promise<string | null> {
   const auth = getAuth();
   return auth.currentUser ? await getIdToken(auth.currentUser) : null;
 }
@@ -25,7 +25,6 @@ async function getUserToken(): Promise<string | null> {
 export async function createStigViddUser({
   email,
   nickname,
-  firebaseUid,
 }: CreateStigViddUserCredentials): Promise<User> {
   const token = await getUserToken();
 
@@ -43,7 +42,6 @@ export async function createStigViddUser({
       body: JSON.stringify({
         email,
         nickname,
-        firebaseUid,
       }),
     });
 
@@ -58,7 +56,7 @@ export async function createStigViddUser({
   }
 }
 
-export async function getStigViddUser(firebaseUid: string): Promise<User> {
+export async function getStigViddUser(): Promise<User> {
   const token = await getUserToken();
 
   if (!token) {
@@ -66,7 +64,7 @@ export async function getStigViddUser(firebaseUid: string): Promise<User> {
   }
 
   try {
-    const response = await fetch(`http://${IP}/api/v1/user/${firebaseUid}`, {
+    const response = await fetch(`http://${IP}/api/v1/user`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -85,9 +83,7 @@ export async function getStigViddUser(firebaseUid: string): Promise<User> {
   }
 }
 
-export async function getUserFavorites(
-  userIdentifier: string,
-): Promise<UserFavoritesTrail[]> {
+export async function getUserFavorites(): Promise<UserFavoritesTrail[]> {
   const token = await getUserToken();
 
   if (!token) {
@@ -95,16 +91,13 @@ export async function getUserFavorites(
   }
 
   try {
-    const response = await fetch(
-      `http://${IP}/api/v1/user/${userIdentifier}/favorites`,
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
+    const response = await fetch(`http://${IP}/api/v1/user/favorites`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
       },
-    );
+    });
 
     if (!response.ok) {
       throw new ApiError(`HTTP error ${response.status}`, response.status);
@@ -117,9 +110,7 @@ export async function getUserFavorites(
   }
 }
 
-export async function getUserWishlist(
-  userIdentifier: string,
-): Promise<UserWishlistTrail[]> {
+export async function getUserWishlist(): Promise<UserWishlistTrail[]> {
   const token = await getUserToken();
 
   if (!token) {
@@ -127,16 +118,13 @@ export async function getUserWishlist(
   }
 
   try {
-    const response = await fetch(
-      "http://" + IP + `/api/v1/user/${userIdentifier}/wishlist`,
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
+    const response = await fetch("http://" + IP + `/api/v1/user/wishlist`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
       },
-    );
+    });
 
     if (!response.ok) {
       throw new ApiError(`HTTP error ${response.status}`, response.status);
@@ -150,7 +138,6 @@ export async function getUserWishlist(
 }
 
 export async function addToUserFavorite(
-  userIdentifier: string,
   trailIdentifier: string,
 ): Promise<UserFavoritesTrail> {
   const token = await getUserToken();
@@ -168,7 +155,6 @@ export async function addToUserFavorite(
       },
       // Matchar request i backenden
       body: JSON.stringify({
-        userIdentifier,
         trailIdentifier,
       }),
     });
@@ -185,7 +171,6 @@ export async function addToUserFavorite(
 }
 
 export async function addToUserWishlist(
-  userIdentifier: string,
   trailIdentifier: string,
 ): Promise<UserFavoritesTrail> {
   const token = await getUserToken();
@@ -202,7 +187,6 @@ export async function addToUserWishlist(
         Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({
-        userIdentifier,
         trailIdentifier,
       }),
     });
@@ -219,7 +203,6 @@ export async function addToUserWishlist(
 }
 
 export async function removeUserFavorite(
-  userIdentifier: string,
   trailIdentifier: string,
 ): Promise<void> {
   const token = await getUserToken();
@@ -230,7 +213,7 @@ export async function removeUserFavorite(
 
   try {
     const response = await fetch(
-      `http://${IP}/api/v1/user/${userIdentifier}/favorites/${trailIdentifier}`,
+      `http://${IP}/api/v1/user/favorites/${trailIdentifier}`,
       {
         method: "DELETE",
         headers: {
@@ -250,7 +233,6 @@ export async function removeUserFavorite(
 }
 
 export async function removeUserWishlist(
-  userIdentifier: string,
   trailIdentifier: string,
 ): Promise<void> {
   const token = await getUserToken();
@@ -261,7 +243,7 @@ export async function removeUserWishlist(
 
   try {
     const response = await fetch(
-      `http://${IP}/api/v1/user/${userIdentifier}/wishlist/${trailIdentifier}`,
+      `http://${IP}/api/v1/user/wishlist/${trailIdentifier}`,
       {
         method: "DELETE",
         headers: {

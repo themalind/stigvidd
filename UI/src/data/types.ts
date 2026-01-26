@@ -39,15 +39,15 @@ export interface Review {
   trailReview?: string;
   grade: number;
   userName: string;
-  createdAt: Date;
+  createdAt: string;
   userIdentifier: string;
   trailIdentifier: string;
-  reviewImagesResponse?: ReviewImage[];
+  reviewImages?: ReviewImage[];
 }
 
 export interface ReviewImage {
   identifier: string;
-  ImageUrl: string;
+  imageUrl: string;
 }
 
 export interface UserFavoritesTrail {
@@ -90,7 +90,6 @@ export interface User {
 export interface CreateStigViddUserCredentials {
   email: string;
   nickname: string;
-  firebaseUid: string;
 }
 
 export interface RegisterData {
@@ -98,6 +97,18 @@ export interface RegisterData {
   email: string;
   password: string;
   confirmPassword: string;
+}
+
+export interface CreateReviewRequest {
+  review: string;
+  grade: number;
+  trailIdentifier: string;
+  imageUris?: string[];
+}
+
+export interface DeleteReviewRequest {
+  reviewIdentifier: string;
+  userIdentifier: string;
 }
 
 export interface LoginData {

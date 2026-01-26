@@ -24,12 +24,15 @@ public static class ServiceCollectionExtensions
         // Services
         services.AddTransient<ITrailService, TrailService>();
         services.AddTransient<IUserService, UserService>();
+        services.AddTransient<IReviewService, ReviewService>();
+        services.AddTransient<IWebDavService, WebDavService>();
 
         // Factories
         services.AddTransient<TrailResponseFactory>();
         services.AddTransient<UserFavoritesResponseFactory>();
         services.AddTransient<UserWishlistResponseFactory>();
         services.AddTransient<UserResponseFactory>();
+        services.AddTransient<ReviewResponseFactory>();
     }
 }
 

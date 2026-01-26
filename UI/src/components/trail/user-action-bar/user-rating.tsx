@@ -1,12 +1,41 @@
+import { authStateAtom } from "@/atoms/auth-atoms";
+import NotAuthenticatedDialog from "@/components/not-authenticated-msg-dialog";
+import AddReview from "@/components/review/add/add-review-modal";
+import { Trail } from "@/data/types";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
+import { useQueryClient } from "@tanstack/react-query";
+import { useAtom } from "jotai";
+import { useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useTheme } from "react-native-paper";
 
-export default function UserRating() {
+interface UserRatingProps {
+  trail: Trail;
+}
+
+export default function UserRating({ trail }: UserRatingProps) {
   const theme = useTheme();
+  const [authState] = useAtom(authStateAtom);
+  const [showAuthDialog, setAuthDialog] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const queryClient = useQueryClient();
+
+  const onPress = () => {
+    if (!authState.isAuthenticated) {
+      setAuthDialog(true);
+      return;
+    }
+    setShowModal(true);
+  };
+
+  const handleReviewAdded = () => {
+    setShowModal(false);
+    queryClient.invalidateQueries({ queryKey: ["trail", trail.identifier] });
+  };
+
   return (
     <View style={s.container}>
-      <TouchableOpacity style={s.touchable}>
+      <TouchableOpacity onPress={onPress} style={s.touchable}>
         <FontAwesome
           name="thumbs-o-up"
           size={30}
@@ -16,6 +45,18 @@ export default function UserRating() {
           Betygsätt
         </Text>
       </TouchableOpacity>
+      <AddReview
+        trailIdentifier={trail.identifier}
+        trailName={trail.name}
+        trailLenght={trail.trailLenght}
+        visible={showModal}
+        onDismiss={handleReviewAdded}
+      />
+      <NotAuthenticatedDialog
+        visible={showAuthDialog}
+        onDissmiss={() => setAuthDialog(false)}
+        infoMessage="Du behöver vara inloggad för att lägga till en recension."
+      />
     </View>
   );
 }
