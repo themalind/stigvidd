@@ -10,9 +10,12 @@
   <ItemGroup>
     <PackageReference Include="FluentValidation" Version="12.1.1" />
     <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.11" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.0" />
     <PackageReference Include="NSwag.AspNetCore" Version="14.6.2" />
+    <PackageReference Include="NSwag.Core" Version="14.6.3" />
+    <PackageReference Include="NSwag.Generation" Version="14.6.3" />
   </ItemGroup>
 
   <ItemGroup>

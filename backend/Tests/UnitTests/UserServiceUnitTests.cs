@@ -61,7 +61,6 @@ public class UserServiceUnitTests
         result.Value.Select(t => t!.Name)
                 .Should()
                 .ContainInOrder(["Tiveden", "Storsjöleden"]);
-
     }
 
     [Fact]

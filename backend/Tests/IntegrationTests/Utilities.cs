@@ -3,11 +3,19 @@ using Infrastructure.Data.Entities;
 
 namespace IntegrationTests;
 
-// https://github.com/dotnet/AspNetCore.Docs.Samples/blob/main/test/integration-tests/10.x/IntegrationTestsSample/tests/RazorPagesProject.Tests/Helpers/Utilities.cs
+// TODO https://github.com/dotnet/AspNetCore.Docs.Samples/blob/main/test/integration-tests/10.x/IntegrationTestsSample/tests/RazorPagesProject.Tests/Helpers/Utilities.cs
 
+/// <summary>
+/// Utility class for managing test database seeding and initialization.
+/// Provides methods to populate the database with predefined test data for integration tests.
+/// </summary>
 public static class Utilities
 {
-
+    /// <summary>
+    /// Initializes the database with seed data for integration tests.
+    /// Populates the database with predefined trails and users for testing purposes.
+    /// </summary>
+    /// <param name="db">The database context to initialize.</param>
     public static void InitializeDbForTests(StigViddDbContext db)
     {
         var trails = GetSeedingTrails();
@@ -19,24 +27,21 @@ public static class Utilities
         db.SaveChanges();
     }
 
-
-    public static void ReinitializeDbForTests(StigViddDbContext db)
-    {
-        db.Users.RemoveRange(db.Users);
-        db.Trails.RemoveRange(db.Trails);
-
-        db.SaveChanges();
-        InitializeDbForTests(db);
-    }
-
-
+    /// <summary>
+    /// Contains consistent date values used across seed data.
+    /// Ensures all test entities have the same creation and update timestamps.
+    /// </summary>
     public static class SeedDates
     {
-        public static readonly DateTime Created = new DateTime(2025, 1, 1);
-        public static readonly DateTime Updated = new DateTime(2025, 1, 1);
+        public static readonly DateTime Created = new(2025, 1, 1);
+        public static readonly DateTime Updated = new(2025, 1, 1);
     }
 
-
+    /// <summary>
+    /// Creates a collection of predefined trail entities for testing.
+    /// Includes various trail types with different classifications, lengths, and accessibility options.
+    /// </summary>
+    /// <returns>A list of Trail entities with complete test data including images where applicable.</returns>
     public static List<Trail> GetSeedingTrails()
     {
         return
@@ -114,7 +119,6 @@ public static class Utilities
                     }
                 }
             },
-
             new Trail
             {
                 Id = 3,
@@ -131,7 +135,6 @@ public static class Utilities
                 CreatedAt = DateTime.UtcNow,
                 LastUpdatedAt = DateTime.UtcNow
             },
-
             new Trail
             {
                 Id = 4,
@@ -165,7 +168,6 @@ public static class Utilities
                     }
                 }
             },
-
             new Trail
             {
                 Id = 5,
@@ -182,7 +184,6 @@ public static class Utilities
                 CreatedAt = DateTime.UtcNow,
                 LastUpdatedAt = DateTime.UtcNow
             },
-
             new Trail
             {
                 Id = 6,
@@ -199,7 +200,6 @@ public static class Utilities
                 CreatedAt = DateTime.UtcNow,
                 LastUpdatedAt = DateTime.UtcNow
             },
-
             new Trail
             {
                 Id = 7,
@@ -232,14 +232,21 @@ public static class Utilities
                         TrailId = 2
                     }
                 }
-            }];
-
+            }
+        ];
     }
 
+    /// <summary>
+    /// Creates a collection of predefined user entities for testing.
+    /// Users are linked to trails through wishlists and favorites to test relationship functionality.
+    /// </summary>
+    /// <param name="trails">The list of trails to reference when creating user relationships.</param>
+    /// <returns>A list of User entities with test data including trail wishlists and favorites.</returns>
     public static List<User> GetSeedingUsers(List<Trail> trails)
     {
         return new List<User>
         {
+            // Test user with wishlist items
             new User
             {
                 Id = 1,
@@ -255,19 +262,20 @@ public static class Utilities
                     trails.First(t => t.Id == 7)  // Nässehult
                 }
             },
+            // Test user with favorite trails
             new User
             {
                 Id = 2,
                 Identifier = "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e",
-                FirebaseUid = "firebase-uid-12345",
+                FirebaseUid = "firebase-uid-12346",
                 Email = "vandrar@example.local",
                 NickName = "VandrarVennen",
                 CreatedAt = SeedDates.Created,
                 LastUpdatedAt = SeedDates.Updated,
                 MyFavorites = new List<Trail>
                 {
-                    trails.First(t => t.Id == 1), 
-                    trails.First(t => t.Id == 2)  
+                    trails.First(t => t.Id == 1),
+                    trails.First(t => t.Id == 2)
                 }
             },
         };

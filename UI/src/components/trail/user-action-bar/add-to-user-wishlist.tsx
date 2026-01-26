@@ -17,16 +17,16 @@ interface Props {
 export default function AddToUserWishlist({ trailIdentifier }: Props) {
   const theme = useTheme();
   const { data } = useAtomValue(userWishlistAtom);
-  const removeFromWishlist = useSetAtom(removeFromWishlistAtom);
-  const [{ mutate, isPending }] = useAtom(addToWishlistAtom);
+  const [removeUserWishlist] = useAtom(removeFromWishlistAtom);
+  const [addToUserWishlist] = useAtom(addToWishlistAtom);
   const setWarning = useSetAtom(showWarningAtom);
   const setError = useSetAtom(showErrorAtom);
 
   const handlePress = () => {
     if (data?.some((trail) => trail.identifier === trailIdentifier)) {
-      removeFromWishlist(trailIdentifier);
+      removeUserWishlist.mutate(trailIdentifier);
     } else {
-      mutate(trailIdentifier, {
+      addToUserWishlist.mutate(trailIdentifier, {
         onError: (error) => {
           if (error instanceof ApiError && error.status === 409) {
             setWarning("Leden finns redan i listan!");
@@ -41,6 +41,8 @@ export default function AddToUserWishlist({ trailIdentifier }: Props) {
   const isInWishlist = data?.some(
     (trail) => trail.identifier === trailIdentifier,
   );
+
+  const isPending = removeUserWishlist.isPending || addToUserWishlist.isPending;
 
   return (
     <View style={s.container}>

@@ -1,16 +1,18 @@
 import { authStateAtom } from "@/atoms/auth-atoms";
-import { Stack } from "expo-router";
+import { Redirect, Stack } from "expo-router";
 import { useAtom } from "jotai";
 
 export default function AuthLayout() {
   const [authState] = useAtom(authStateAtom);
 
+  if (authState.isAuthenticated) {
+    return <Redirect href="/" />;
+  }
+
   return (
     <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Protected guard={authState.isAuthenticated === false}>
-        <Stack.Screen name="login" />
-        <Stack.Screen name="register" />
-      </Stack.Protected>
+      <Stack.Screen name="login" />
+      <Stack.Screen name="register" />
     </Stack>
   );
 }

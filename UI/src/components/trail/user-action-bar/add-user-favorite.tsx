@@ -16,16 +16,16 @@ interface Props {
 export default function AddUserFavorite({ trailIdentifier }: Props) {
   const theme = useTheme();
   const { data } = useAtomValue(userFavoritesAtom);
-  const removeFromFavorites = useSetAtom(removeFromFavoritesAtom);
-  const [{ mutate, isPending }] = useAtom(addToFavoritesAtom);
+  const [removeUserFavorite] = useAtom(removeFromFavoritesAtom);
+  const [addToUserFavorite] = useAtom(addToFavoritesAtom);
   const setWarning = useSetAtom(showWarningAtom);
   const setError = useSetAtom(showErrorAtom);
 
   const handlePress = () => {
     if (data?.some((trail) => trail.identifier === trailIdentifier)) {
-      removeFromFavorites(trailIdentifier);
+      removeUserFavorite.mutate(trailIdentifier);
     } else {
-      mutate(trailIdentifier, {
+      addToUserFavorite.mutate(trailIdentifier, {
         onError: (error) => {
           if (error instanceof ApiError && error.status === 409) {
             setWarning("Leden finns redan i listan!");
@@ -40,6 +40,8 @@ export default function AddUserFavorite({ trailIdentifier }: Props) {
   const isInFavorites = data?.some(
     (trail) => trail.identifier === trailIdentifier,
   );
+
+  const isPending = removeUserFavorite.isPending || addToUserFavorite.isPending;
 
   return (
     <View style={s.container}>
