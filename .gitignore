@@ -46,6 +46,12 @@ app-example
 /ios
 /android
 
+# web (vite)
+web/node_modules
+web/dist
+web/dist-ssr
+web/*.local
+
 .vs/
 .vscode/
 obj/
