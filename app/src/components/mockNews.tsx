@@ -38,7 +38,7 @@ const news: News[] = [
 ];
 
 const { width } = Dimensions.get("window");
-const PAGE_PADDING = 10;
+
 const CARD_WIDTH = width * 0.85;
 const CARD_SPACING = 15;
 
@@ -79,7 +79,7 @@ export default function MockNews() {
         onScroll={handleScroll}
         scrollEventThrottle={16}
         contentContainerStyle={{
-          paddingHorizontal: PAGE_PADDING,
+          paddingHorizontal: 0,
         }}
       >
         {news.map((newsItem, index) => (

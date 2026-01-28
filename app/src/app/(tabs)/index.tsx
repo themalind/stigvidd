@@ -84,12 +84,12 @@ export default function HomeScreen() {
       </View>
       <Image contentFit="contain" source={image} style={s.image} />
       <Divider />
-      <View style={{ marginHorizontal: -10, gap: 20 }}>
+      <View style={{ gap: 20 }}>
         <View
           style={{
             flexDirection: "row",
             gap: 10,
-            paddingHorizontal: 10,
+            paddingHorizontal: 5,
           }}
         >
           <Ionicons
