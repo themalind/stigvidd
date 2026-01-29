@@ -1,3 +1,4 @@
+import Map from "@/components/map/map";
 import { Coordinate } from "@/data/types";
 import * as Location from "expo-location";
 import { useEffect } from "react";
@@ -30,12 +31,10 @@ export default function MapScreen() {
   }, []);
 
   return (
-    <MapView
+    <Map
       style={s.container}
       initialRegion={START_COORDINATE_BORAS}
       showsUserLocation
-      showsMyLocationButton={false}
-      toolbarEnabled={false}
     >
       <Marker
         coordinate={frodo}
@@ -47,7 +46,7 @@ export default function MapScreen() {
         title="Sam"
         image={require("../../assets/map/marker/smultronstalle-101-159.png")}
       />
-    </MapView>
+    </Map>
   );
 }
 
