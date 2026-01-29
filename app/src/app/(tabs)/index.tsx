@@ -2,6 +2,7 @@ import { getPopularTrails } from "@/api/trails";
 import { userThemeAtom } from "@/atoms/user-theme-atom";
 import ImageCarousel from "@/components/image-carousel";
 import LoadingIndicator from "@/components/loading-indicator";
+import Map from "@/components/map/map";
 import MockNews from "@/components/mockNews";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
@@ -17,7 +18,7 @@ import {
   Text,
   View,
 } from "react-native";
-import { Divider, useTheme } from "react-native-paper";
+import { Divider, Surface, useTheme } from "react-native-paper";
 
 const HEIGHT = Dimensions.get("screen").height;
 
@@ -27,7 +28,6 @@ export default function HomeScreen() {
   const colorScheme = Appearance.getColorScheme();
   const finalTheme =
     userTheme === "auto" ? (colorScheme ?? "light") : userTheme;
-  const image = require("../../assets/images/mock-map-trails.png");
   const hikers =
     finalTheme === "dark"
       ? require("../../assets/images/mrHike-light.png")
@@ -71,7 +71,9 @@ export default function HomeScreen() {
         </Text>
       </View>
       <ImageCarousel data={query.data} />
+
       <Divider />
+
       <View style={{ flexDirection: "row", gap: 10 }}>
         <MaterialCommunityIcons
           name="map-marker-radius-outline"
@@ -82,14 +84,26 @@ export default function HomeScreen() {
           Hitta på kartan
         </Text>
       </View>
-      <Image contentFit="contain" source={image} style={s.image} />
+      <Surface style={s.mapContainer}>
+        <Map
+          style={s.map}
+          initialRegion={{
+            latitude: 57.7210,
+            longitude: 12.9401,
+            latitudeDelta: 0.0922,
+            longitudeDelta: 0.0421,
+          }}
+        />
+      </Surface>
+
       <Divider />
-      <View style={{ marginHorizontal: -10, gap: 20 }}>
+
+      <View style={{ gap: 20 }}>
         <View
           style={{
             flexDirection: "row",
             gap: 10,
-            paddingHorizontal: 10,
+            paddingHorizontal: 5,
           }}
         >
           <Ionicons
@@ -124,12 +138,13 @@ const s = StyleSheet.create({
     fontWeight: 700,
     fontSize: 15,
   },
-  image: {
-    width: "auto",
-    height: HEIGHT * 0.3,
-    marginTop: -40,
-    marginBottom: -40,
+  map: {
+    flex: 1,
+  },
+  mapContainer: {
+    height: HEIGHT * 0.25,
     borderRadius: 20,
+    overflow: "hidden",
   },
   hikers: {
     height: 25,
