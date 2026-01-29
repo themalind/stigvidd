@@ -4,8 +4,8 @@ import { showErrorAtom } from "@/atoms/snackbar-atoms";
 import { stigviddUserAtom } from "@/atoms/user-atoms";
 import { userThemeAtom } from "@/atoms/user-theme-atom";
 import LoadingIndicator from "@/components/loading-indicator";
-import PressableProfileChoice from "@/components/profile-page/pressable-profile-choice";
 import ThemeToggle from "@/components/theme-toggle";
+import ProfileMenuItem from "@/components/user/profile-page/profile-menu-item";
 import { MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { Redirect, router } from "expo-router";
@@ -49,53 +49,26 @@ export default function ProfilePageScreen() {
         { backgroundColor: theme.colors.background },
       ]}
     >
-      <Text
-        style={{ fontSize: 20, alignSelf: "flex-start", paddingBottom: 10 }}
-      >
-        Mitt Stigvidd
-      </Text>
-      <View
-        style={{
-          flexDirection: "row",
-          gap: 20,
-          paddingBottom: 20,
-        }}
-      >
+      <Text style={s.topTitle}>Mitt Stigvidd</Text>
+      <View style={s.userInfoContainer}>
         <Image
           source={
             userTheme === "dark"
-              ? require("../../assets/images/wizard-lightmode.png")
+              ? require("../../assets/images/wizard-darkmode.png")
               : require("../../assets/images/wizard-lightmode.png")
           }
-          style={{
-            height: 80,
-            width: 80,
-            borderColor: theme.colors.outline,
-            borderWidth: 1,
-            borderRadius: 50,
-          }}
+          style={[s.image, { borderColor: theme.colors.outline }]}
         />
-        <View style={{ flexDirection: "column", justifyContent: "center" }}>
+        <View style={s.userProfileInfoText}>
           <Text>{user?.nickName}</Text>
           <Text>{user?.email}</Text>
         </View>
-        <View style={{ justifyContent: "space-around", paddingLeft: 30 }}>
+        <View style={s.themeToggleContainer}>
           <ThemeToggle />
         </View>
       </View>
-      <View style={{ flexDirection: "column", gap: 15 }}>
-        <PressableProfileChoice
-          text="Vill gå"
-          route="/(tabs)/(stacks)/user/wishlist"
-          icon={
-            <MaterialIcons
-              name="star"
-              size={24}
-              color={theme.colors.tertiary}
-            />
-          }
-        />
-        <PressableProfileChoice
+      <View style={s.pressableChoicesContainer}>
+        <ProfileMenuItem
           text="Favoriter"
           route="/(tabs)/(stacks)/user/favorites"
           icon={
@@ -106,7 +79,40 @@ export default function ProfilePageScreen() {
             />
           }
         />
-        <PressableProfileChoice
+        <ProfileMenuItem
+          text="Vill gå"
+          route="/(tabs)/(stacks)/user/wishlist"
+          icon={
+            <MaterialIcons
+              name="star"
+              size={24}
+              color={theme.colors.tertiary}
+            />
+          }
+        />
+        <ProfileMenuItem
+          text="Skapa en promenad"
+          route="/(tabs)/profile-page"
+          icon={
+            <MaterialIcons
+              name="hiking"
+              size={24}
+              color={theme.colors.tertiary}
+            />
+          }
+        />
+        <ProfileMenuItem
+          text="Mina egna promenader"
+          route="/(tabs)/profile-page"
+          icon={
+            <MaterialCommunityIcons
+              name="map-legend"
+              size={24}
+              color={theme.colors.tertiary}
+            />
+          }
+        />
+        <ProfileMenuItem
           text="Utmärkelser"
           route="/(tabs)/profile-page"
           icon={
@@ -117,7 +123,7 @@ export default function ProfilePageScreen() {
             />
           }
         />
-        <PressableProfileChoice
+        <ProfileMenuItem
           text="Statistik"
           route="/(tabs)/profile-page"
           icon={
@@ -128,16 +134,23 @@ export default function ProfilePageScreen() {
             />
           }
         />
-        <View style={{ alignItems: "center", gap: 20, paddingTop: 30 }}>
+        <ProfileMenuItem
+          text="Om Stigvidd"
+          route="/(tabs)/(stacks)/about"
+          icon={
+            <MaterialIcons
+              name="perm-device-info"
+              size={24}
+              color={theme.colors.tertiary}
+            />
+          }
+        />
+        <View style={s.accountActionsContainer}>
           <Pressable onPress={handleSignOut}>
-            <Text style={{ textDecorationLine: "underline", fontSize: 16 }}>
-              Logga ut
-            </Text>
+            <Text style={s.actionText}>Logga ut</Text>
           </Pressable>
           <Pressable onPress={handleSignOut}>
-            <Text style={{ textDecorationLine: "underline", fontSize: 16 }}>
-              Avsluta konto
-            </Text>
+            <Text style={s.actionText}>Avsluta konto</Text>
           </Pressable>
         </View>
       </View>
@@ -150,5 +163,42 @@ const s = StyleSheet.create({
     flexGrow: 1,
     padding: 20,
     gap: 10,
+  },
+  topTitle: {
+    fontSize: 20,
+    alignSelf: "flex-start",
+    paddingBottom: 10,
+  },
+  userInfoContainer: {
+    flexDirection: "row",
+    gap: 20,
+    paddingBottom: 20,
+  },
+  image: {
+    height: 80,
+    width: 80,
+    borderWidth: 1,
+    borderRadius: 50,
+  },
+  userProfileInfoText: {
+    flexDirection: "column",
+    justifyContent: "center",
+  },
+  themeToggleContainer: {
+    justifyContent: "space-around",
+    paddingLeft: 30,
+  },
+  pressableChoicesContainer: {
+    flexDirection: "column",
+    gap: 15,
+  },
+  accountActionsContainer: {
+    alignItems: "center",
+    gap: 20,
+    paddingTop: 30,
+  },
+  actionText: {
+    textDecorationLine: "underline",
+    fontSize: 16,
   },
 });
