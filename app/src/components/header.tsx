@@ -22,11 +22,16 @@ export default function Header() {
   const onSubmit: SubmitHandler<FormFields> = async (data) => {};
   return (
     <SafeAreaView
-      style={{ backgroundColor: theme.colors.primary }}
+      style={{ backgroundColor: theme.colors.outlineVariant }}
       edges={["top", "left", "right"]}
     >
       <View>
-        <View style={[s.container, { backgroundColor: theme.colors.primary }]}>
+        <View
+          style={[
+            s.container,
+            { backgroundColor: theme.colors.outlineVariant },
+          ]}
+        >
           <Image
             style={s.image}
             source={require("../assets/images/mammaapp.png")}
