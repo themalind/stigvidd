@@ -10,10 +10,9 @@ import TrailInfo from "@/components/trail/trail-info";
 import TrailMap from "@/components/trail/trail-map";
 import UserBar from "@/components/trail/user-action-bar/user-bar";
 import { useQuery } from "@tanstack/react-query";
-import { router, useLocalSearchParams } from "expo-router";
-import { useEffect, useRef } from "react";
+import { useLocalSearchParams } from "expo-router";
+import { useRef } from "react";
 import {
-  BackHandler,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -47,16 +46,17 @@ export default function TrailDetailsScreen() {
 
   const images = trail?.trailImagesResponse || [];
 
-  useEffect(() => {
-    const backHandler = BackHandler.addEventListener(
-      "hardwareBackPress",
-      () => {
-        router.replace("/");
-        return true;
-      },
-    );
-    return () => backHandler.remove();
-  }, []);
+  // TODO Fundera över hur bakåtknappen ska fungera
+  // useEffect(() => {
+  //   const backHandler = BackHandler.addEventListener(
+  //     "hardwareBackPress",
+  //     () => {
+  //       router.replace("/");
+  //       return true;
+  //     },
+  //   );
+  //   return () => backHandler.remove();
+  // }, []);
 
   if (isLoading) {
     return <LoadingIndicator />;

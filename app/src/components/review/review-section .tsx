@@ -47,6 +47,7 @@ export default function ReviewSection({ reviews }: ReviewProps) {
     reviewIdentifier: string,
     trailIdentifier: string,
   ) => {
+    // Byt till nåt snyggare typ alertdialogen
     Alert.alert(
       "Ta bort recension",
       "Är du säker på att du vill ta bort din recension?",

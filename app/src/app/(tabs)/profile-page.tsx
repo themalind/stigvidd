@@ -1,16 +1,22 @@
 import { signOutUser } from "@/api/auth";
 import { authStateAtom } from "@/atoms/auth-atoms";
+import { showErrorAtom } from "@/atoms/snackbar-atoms";
 import { stigviddUserAtom } from "@/atoms/user-atoms";
 import { userThemeAtom } from "@/atoms/user-theme-atom";
 import LoadingIndicator from "@/components/loading-indicator";
-import { Link, Redirect, router } from "expo-router";
-import { useAtom } from "jotai";
-import { ScrollView, StyleSheet } from "react-native";
-import { Button, SegmentedButtons, Text, useTheme } from "react-native-paper";
+import ThemeToggle from "@/components/theme-toggle";
+import ProfileMenuItem from "@/components/user/profile-page/profile-menu-item";
+import { MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
+import { Image } from "expo-image";
+import { Redirect, router } from "expo-router";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
+import { Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { Text, useTheme } from "react-native-paper";
 
 export default function ProfilePageScreen() {
-  const [userTheme, setUserTheme] = useAtom(userThemeAtom);
-  const [{ data, isLoading, isError, error }] = useAtom(stigviddUserAtom);
+  const [{ data: user, isLoading, isError, error }] = useAtom(stigviddUserAtom);
+  const setError = useSetAtom(showErrorAtom);
+  const userTheme = useAtomValue(userThemeAtom);
   const theme = useTheme();
   const [authState] = useAtom(authStateAtom);
 
@@ -31,6 +37,7 @@ export default function ProfilePageScreen() {
       await signOutUser();
     } catch (e) {
       console.log(e);
+      setError("Kunde inte logga ut.");
     }
     router.replace("/(tabs)");
   }
@@ -42,53 +49,156 @@ export default function ProfilePageScreen() {
         { backgroundColor: theme.colors.background },
       ]}
     >
-      <Text>Inloggad som:</Text>
-      <Text>{data?.nickName}</Text>
-      <SegmentedButtons
-        value={userTheme}
-        onValueChange={setUserTheme}
-        buttons={[
-          {
-            value: "light",
-            label: "Light",
-            labelStyle: { color: theme.colors.onBackground },
-          },
-          {
-            value: "dark",
-            label: "Dark",
-            labelStyle: { color: theme.colors.onBackground },
-          },
-          {
-            value: "auto",
-            label: "Auto",
-            labelStyle: { color: theme.colors.onBackground },
-          },
-        ]}
-      />
-      <Link href="../(stacks)/user/favorites">
-        <Button mode="contained">Favorites</Button>
-      </Link>
-      <Link href="../(stacks)/user/wishlist">
-        <Button mode="contained">Wishlist</Button>
-      </Link>
-      <Link href="../../(auth)/login">
-        <Button mode="contained">Login</Button>
-      </Link>
-      <Link href="../../(auth)/register">
-        <Button mode="contained">Register</Button>
-      </Link>
-
-      <Button mode="contained" onPress={handleSignOut}>
-        Logga ut
-      </Button>
+      <Text style={s.topTitle}>Mitt Stigvidd</Text>
+      <View style={s.userInfoContainer}>
+        <Image
+          source={
+            userTheme === "dark"
+              ? require("../../assets/images/wizard-darkmode.png")
+              : require("../../assets/images/wizard-lightmode.png")
+          }
+          style={[s.image, { borderColor: theme.colors.outline }]}
+        />
+        <View style={s.userProfileInfoText}>
+          <Text>{user?.nickName}</Text>
+          <Text>{user?.email}</Text>
+        </View>
+        <View style={s.themeToggleContainer}>
+          <ThemeToggle />
+        </View>
+      </View>
+      <View style={s.pressableChoicesContainer}>
+        <ProfileMenuItem
+          text="Favoriter"
+          route="/(tabs)/(stacks)/user/favorites"
+          icon={
+            <MaterialCommunityIcons
+              name="cards-heart"
+              size={24}
+              color={theme.colors.tertiary}
+            />
+          }
+        />
+        <ProfileMenuItem
+          text="Vill gå"
+          route="/(tabs)/(stacks)/user/wishlist"
+          icon={
+            <MaterialIcons
+              name="star"
+              size={24}
+              color={theme.colors.tertiary}
+            />
+          }
+        />
+        <ProfileMenuItem
+          text="Skapa en promenad"
+          route="/(tabs)/profile-page"
+          icon={
+            <MaterialIcons
+              name="hiking"
+              size={24}
+              color={theme.colors.tertiary}
+            />
+          }
+        />
+        <ProfileMenuItem
+          text="Mina egna promenader"
+          route="/(tabs)/profile-page"
+          icon={
+            <MaterialCommunityIcons
+              name="map-legend"
+              size={24}
+              color={theme.colors.tertiary}
+            />
+          }
+        />
+        <ProfileMenuItem
+          text="Utmärkelser"
+          route="/(tabs)/profile-page"
+          icon={
+            <MaterialIcons
+              name="emoji-events"
+              size={24}
+              color={theme.colors.tertiary}
+            />
+          }
+        />
+        <ProfileMenuItem
+          text="Statistik"
+          route="/(tabs)/profile-page"
+          icon={
+            <MaterialIcons
+              name="bar-chart"
+              size={24}
+              color={theme.colors.tertiary}
+            />
+          }
+        />
+        <ProfileMenuItem
+          text="Om Stigvidd"
+          route="/(tabs)/(stacks)/about"
+          icon={
+            <MaterialIcons
+              name="perm-device-info"
+              size={24}
+              color={theme.colors.tertiary}
+            />
+          }
+        />
+        <View style={s.accountActionsContainer}>
+          <Pressable onPress={handleSignOut}>
+            <Text style={s.actionText}>Logga ut</Text>
+          </Pressable>
+          <Pressable onPress={handleSignOut}>
+            <Text style={s.actionText}>Avsluta konto</Text>
+          </Pressable>
+        </View>
+      </View>
     </ScrollView>
   );
 }
 
 const s = StyleSheet.create({
   container: {
-    flex: 1,
+    flexGrow: 1,
     padding: 20,
     gap: 10,
+  },
+  topTitle: {
+    fontSize: 20,
+    alignSelf: "flex-start",
+    paddingBottom: 10,
+  },
+  userInfoContainer: {
+    flexDirection: "row",
+    gap: 20,
+    paddingBottom: 20,
+  },
+  image: {
+    height: 80,
+    width: 80,
+    borderWidth: 1,
+    borderRadius: 50,
+  },
+  userProfileInfoText: {
+    flexDirection: "column",
+    justifyContent: "center",
+  },
+  themeToggleContainer: {
+    justifyContent: "space-around",
+    paddingLeft: 30,
+  },
+  pressableChoicesContainer: {
+    flexDirection: "column",
+    gap: 15,
+  },
+  accountActionsContainer: {
+    alignItems: "center",
+    gap: 20,
+    paddingTop: 30,
+  },
+  actionText: {
+    textDecorationLine: "underline",
+    fontSize: 16,
   },
 });

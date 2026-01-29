@@ -11,13 +11,11 @@ public class WebDavService : IWebDavService
     private readonly string _baseUrl;
     private readonly string _userName;
     private readonly string _password;
-    private readonly string _presentableBaseUrl;
     public WebDavService(IConfiguration configuration)
     {
         _baseUrl = configuration["WebDav:BaseUrl"] ?? throw new InvalidOperationException("WebDav:BaseUrl configuration is missing");
         _userName = configuration["WebDav:Username"] ?? throw new InvalidOperationException("WebDav:Username configuration is missing");
         _password = configuration["WebDav:Password"] ?? throw new InvalidOperationException("WebDav:Password configuration is missing");
-        _presentableBaseUrl = configuration["PresentableBaseUrl"] ?? throw new InvalidOperationException("PresentableBaseUrl configuration is missing");
     }
 
     private IWebDavClient CreateClient()
