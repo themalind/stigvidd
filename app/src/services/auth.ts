@@ -30,7 +30,6 @@ export async function registerUser(data: RegisterData): Promise<AuthResult> {
     const result = await createStigViddUser({
       email: data.email,
       nickname: data.nickName,
-      firebaseUid: response.user.uid,
     });
 
     if (!result) {
