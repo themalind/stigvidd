@@ -1,9 +1,9 @@
 import Map from "@/components/map/map";
+import Marker from "@/components/map/marker";
 import { Coordinate } from "@/data/types";
 import * as Location from "expo-location";
 import { useEffect } from "react";
 import { StyleSheet } from "react-native";
-import MapView, { Marker } from "react-native-maps";
 
 export default function MapScreen() {
   const START_COORDINATE_BORAS = {
@@ -36,16 +36,8 @@ export default function MapScreen() {
       initialRegion={START_COORDINATE_BORAS}
       showsUserLocation
     >
-      <Marker
-        coordinate={frodo}
-        title="Frodo"
-        image={require("../../assets/map/marker/smultronstalle-101-159.png")}
-      />
-      <Marker
-        coordinate={sam}
-        title="Sam"
-        image={require("../../assets/map/marker/smultronstalle-101-159.png")}
-      />
+      <Marker coordinate={frodo} title="Frodo" variant="favourite" />
+      <Marker coordinate={sam} title="Sam" variant="favourite" />
     </Map>
   );
 }
