@@ -3,7 +3,7 @@ import { useLocationTracking } from "@/services/use-location-tracking";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Dimensions, Pressable, StyleSheet, View } from "react-native";
 import MapView, { Polyline, Region } from "react-native-maps";
-import { Button, Text, useTheme } from "react-native-paper";
+import { Text, useTheme } from "react-native-paper";
 import * as Location from "expo-location";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -45,14 +45,6 @@ export default function TrailCreator() {
       { duration: 500 },
     );
   }, [polylineCoords]);
-
-  function dumpTrailToLog() {
-    const chunkSize = 50;
-
-    for (let i = 0; i < polylineCoords.length; i += chunkSize) {
-      console.log(JSON.stringify(polylineCoords.slice(i, i + chunkSize)));
-    }
-  }
 
   if (!initialRegion) return <Text>Loading Map...</Text>;
 
