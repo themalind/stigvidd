@@ -9,29 +9,22 @@ import TrailDescription from "@/components/trail/trail-description";
 import TrailInfo from "@/components/trail/trail-info";
 import TrailMap from "@/components/trail/trail-map";
 import UserBar from "@/components/trail/user-action-bar/user-bar";
+import { Review } from "@/data/types";
 import { useQuery } from "@tanstack/react-query";
 import { useLocalSearchParams } from "expo-router";
-import { useRef } from "react";
-import {
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { useRef, useState } from "react";
+import { Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useTheme } from "react-native-paper";
 
 export default function TrailDetailsScreen() {
   const theme = useTheme();
   const { showImage } = useImage();
   const { identifier } = useLocalSearchParams<{ identifier: string }>();
-  const normalizedIdentifier = Array.isArray(identifier)
-    ? identifier[0]
-    : identifier;
+  const normalizedIdentifier: string = Array.isArray(identifier) ? identifier[0] : identifier;
 
   const scrollViewRef = useRef<ScrollView>(null);
   const surfaceToScrollToRef = useRef<View>(null);
+  const [reviews, setReviews] = useState<Review[]>([]); // callback
 
   const {
     data: trail,
@@ -46,36 +39,18 @@ export default function TrailDetailsScreen() {
 
   const images = trail?.trailImagesResponse || [];
 
-  // TODO Fundera över hur bakåtknappen ska fungera
-  // useEffect(() => {
-  //   const backHandler = BackHandler.addEventListener(
-  //     "hardwareBackPress",
-  //     () => {
-  //       router.replace("/");
-  //       return true;
-  //     },
-  //   );
-  //   return () => backHandler.remove();
-  // }, []);
-
   if (isLoading) {
     return <LoadingIndicator />;
   }
 
   if (isError) {
-    return (
-      <Text style={{ padding: 20, color: "red" }}>
-        Fel: {(error as Error).message}
-      </Text>
-    );
+    return <Text style={{ padding: 20, color: theme.colors.error }}>{error?.message}</Text>;
   }
 
   const onPressScrollToRatings = () => {
-    surfaceToScrollToRef.current?.measure(
-      (_x, _y, _width, _height, _pageX, pageY) => {
-        scrollViewRef.current?.scrollTo({ y: pageY, animated: true });
-      },
-    );
+    surfaceToScrollToRef.current?.measure((_x, _y, _width, _height, _pageX, pageY) => {
+      scrollViewRef.current?.scrollTo({ y: pageY, animated: true });
+    });
   };
 
   const onPressScrollToTop = () => {
@@ -86,17 +61,9 @@ export default function TrailDetailsScreen() {
   };
 
   return (
-    <ScrollView
-      ref={scrollViewRef}
-      contentContainerStyle={[
-        s.container,
-        { backgroundColor: theme.colors.background },
-      ]}
-    >
+    <ScrollView ref={scrollViewRef} contentContainerStyle={[s.container, { backgroundColor: theme.colors.background }]}>
       <ImageModal />
-      <Text style={[s.sectionTitle, { color: theme.colors.onBackground }]}>
-        {trail?.name}
-      </Text>
+      <Text style={[s.sectionTitle, { color: theme.colors.onBackground }]}>{trail?.name}</Text>
       <ImageCarousel
         data={images}
         onItemPress={(image) => {
@@ -105,35 +72,24 @@ export default function TrailDetailsScreen() {
       />
       <View style={s.ratingSection}>
         <View style={s.rating}>
-          <Rating
-            trailReviews={trail?.reviewsResponse}
-            starSize={17}
-            starColor={theme.colors.secondary}
-          />
-          <Text
-            style={[s.ratingNumber, { color: theme.colors.onBackground }]}
-          >{`(${trail?.reviewsResponse?.length})`}</Text>
+          <Rating trailReviews={reviews} starSize={20} starColor={theme.colors.secondary} />
+          <Text style={[s.ratingNumber, { color: theme.colors.onBackground }]}>{`(${reviews.length})`}</Text>
         </View>
-        <TouchableOpacity onPress={onPressScrollToRatings}>
-          <Text style={[s.text, { color: theme.colors.secondary }]}>
-            Läs betyg och kommentarer
-          </Text>
-        </TouchableOpacity>
+        <View style={s.paddingLeft}>
+          <TouchableOpacity onPress={onPressScrollToRatings}>
+            <Text style={[s.text, { color: theme.colors.secondary }]}>Läs recensioner</Text>
+          </TouchableOpacity>
+        </View>
       </View>
       {trail && <TrailInfo trail={trail} />}
       {trail && <UserBar trail={trail} />}
       {trail && <TrailDescription trail={trail} />}
       {trail && <TrailMap trail={trail} />}
-      {trail?.reviewsResponse && (
-        <TrailReviewsContainer
-          trail={trail}
-          surfaceToScrollToRef={surfaceToScrollToRef}
-        />
+      {trail && (
+        <TrailReviewsContainer trail={trail} surfaceToScrollToRef={surfaceToScrollToRef} onReviewsLoaded={setReviews} />
       )}
       <Pressable style={s.backToTop} onPress={onPressScrollToTop}>
-        <Text style={[s.text, { color: theme.colors.tertiary }]}>
-          Tillbaka till toppen
-        </Text>
+        <Text style={[s.text, { color: theme.colors.secondary }]}>Tillbaka till toppen</Text>
       </Pressable>
     </ScrollView>
   );
@@ -151,7 +107,7 @@ const s = StyleSheet.create({
   },
   sectionTitle: {
     fontWeight: "700",
-    fontSize: 15,
+    fontSize: 18,
   },
   ratingLink: {
     fontSize: 13,
@@ -164,14 +120,17 @@ const s = StyleSheet.create({
   },
   text: {
     textDecorationLine: "underline",
-    fontSize: 13,
+    fontSize: 15,
   },
   ratingNumber: {
-    fontSize: 13,
+    fontSize: 15,
   },
   ratingSection: {
     flexDirection: "row",
     justifyContent: "space-between",
+  },
+  paddingLeft: {
+    paddingRight: 20,
   },
 });
 

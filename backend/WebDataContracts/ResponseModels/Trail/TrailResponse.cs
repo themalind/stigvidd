@@ -16,7 +16,6 @@ public class TrailResponse
     public string? CoordinatesJson { get; set; }
     public IReadOnlyCollection<TrailImageResponse>? TrailImagesResponse { get; set; }
     public IReadOnlyCollection<TrailLinkResponse>? TrailLinksResponse { get; set; }
-    public IReadOnlyCollection<ReviewResponse>? ReviewsResponse { get; set; }
 
     public static TrailResponse Create(
         string identifier,
@@ -30,8 +29,8 @@ public class TrailResponse
         string description,
         string coordinatesJson,
         IEnumerable<TrailImageResponse>? trailImages,
-        IEnumerable<TrailLinkResponse>? trailLinks,
-        IEnumerable<ReviewResponse>? reviews)
+        IEnumerable<TrailLinkResponse>? trailLinks)
+
     {
         return new TrailResponse
         {
@@ -47,7 +46,6 @@ public class TrailResponse
             CoordinatesJson = coordinatesJson,
             TrailImagesResponse = trailImages?.ToList(),
             TrailLinksResponse = trailLinks?.ToList(),
-            ReviewsResponse = reviews?.ToList(),
         };
     }
 }

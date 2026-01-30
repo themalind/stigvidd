@@ -1,11 +1,13 @@
+import { getReviewsByTrailIdentifier } from "@/api/review";
 import { authStateAtom } from "@/atoms/auth-atoms";
-import { Trail } from "@/data/types";
+import { Review, Trail } from "@/data/types";
 import { Ionicons } from "@expo/vector-icons";
-import { useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import { useAtom } from "jotai";
-import React, { RefObject, useState } from "react";
+import React, { RefObject, useEffect, useMemo, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { Surface, useTheme } from "react-native-paper";
+import { Button, Surface, useTheme } from "react-native-paper";
+import LoadingIndicator from "../loading-indicator";
 import NotAuthenticatedDialog from "../not-authenticated-msg-dialog";
 import AddReview from "./add/add-review-modal";
 import ReviewSection from "./review-section ";
@@ -13,58 +15,71 @@ import ReviewSection from "./review-section ";
 interface ReviewWrapperProps {
   trail: Trail;
   surfaceToScrollToRef: RefObject<View | null>;
+  onReviewsLoaded?: (reviews: Review[]) => void;
 }
 
-export default function TrailReviewsContainer({
-  trail,
-  surfaceToScrollToRef,
-}: ReviewWrapperProps) {
+export default function TrailReviewsContainer({ trail, surfaceToScrollToRef, onReviewsLoaded }: ReviewWrapperProps) {
   const [authState] = useAtom(authStateAtom);
   const [isReviewModalVisible, setIsReviewModalVisible] = useState(false);
   const [isAuthDialogVisible, setIsAuthDialogVisible] = useState(false);
   const theme = useTheme();
-  const queryClient = useQueryClient();
-  const reviews = trail?.reviewsResponse ?? [];
+
+  const {
+    data: reviewResponse,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+    isError,
+    error,
+  } = useInfiniteQuery({
+    queryKey: ["reviews", trail.identifier],
+    queryFn: ({ pageParam }) => getReviewsByTrailIdentifier(trail.identifier, pageParam, 5), // pageParam är vilken omgång av hämtningar
+    getNextPageParam: (lastPage, allPages) => (lastPage.hasMore ? allPages.length : undefined),
+    initialPageParam: 0, // Startparamvärde
+  });
+
+  const reviews = useMemo(() => {
+    return reviewResponse?.pages.flatMap((page) => page.reviews) ?? [];
+  }, [reviewResponse]);
+
+  useEffect(() => {
+    if (onReviewsLoaded) {
+      onReviewsLoaded(reviews);
+    }
+  }, [reviews, onReviewsLoaded]);
+
+  if (isLoading) {
+    return <LoadingIndicator />;
+  }
+
+  if (isError) {
+    return <Text style={{ padding: 20, color: theme.colors.error }}>{error?.message}</Text>;
+  }
 
   const handleAddReviewPress = () => {
     if (!authState.isAuthenticated) {
       setIsAuthDialogVisible(true);
       return;
     }
-
     setIsReviewModalVisible(true);
   };
 
   const handleReviewAdded = () => {
     setIsReviewModalVisible(false);
-    // Invalidera queryn så att trail-data hämtas igen
-    queryClient.invalidateQueries({ queryKey: ["trail", trail.identifier] });
   };
 
   return (
-    <>
-      <Surface
-        ref={surfaceToScrollToRef}
-        elevation={4}
-        mode="elevated"
-        style={[s.surface, { backgroundColor: theme.colors.surface }]}
-      >
+    <View ref={surfaceToScrollToRef}>
+      <Surface elevation={4} mode="elevated" style={[s.surface, { backgroundColor: theme.colors.surface }]}>
         <View style={{ flexDirection: "row" }}>
           <View style={s.ratingSection}>
-            <Text style={[s.title, { color: theme.colors.onSurface }]}>
-              Recensioner
-            </Text>
-            <Text style={[s.ratingNumber, { color: theme.colors.tertiary }]}>
-              {`(${reviews.length})`}
-            </Text>
+            <Text style={[s.title, { color: theme.colors.onSurface }]}>Recensioner</Text>
+            <Text style={[s.ratingNumber, { color: theme.colors.tertiary }]}>{`(${reviews.length})`}</Text>
           </View>
           <View style={s.iconSection}>
             <Pressable onPress={handleAddReviewPress}>
-              <Ionicons
-                name="create-outline"
-                size={30}
-                color={theme.colors.onBackground}
-              />
+              <Ionicons name="create-outline" size={30} color={theme.colors.onBackground} />
               <AddReview
                 trailIdentifier={trail.identifier}
                 trailName={trail.name}
@@ -82,20 +97,23 @@ export default function TrailReviewsContainer({
             mode="elevated"
             style={[s.surface, { backgroundColor: theme.colors.surface }]}
           >
-            <Text style={{ color: theme.colors.onBackground }}>
-              Det finns inga recensioner här ännu.
-            </Text>
+            <Text style={{ color: theme.colors.onBackground }}>Det finns inga recensioner här ännu.</Text>
           </Surface>
         ) : (
           <ReviewSection reviews={reviews} />
         )}
+        <Button onPress={() => fetchNextPage()} disabled={!hasNextPage || isFetchingNextPage}>
+          <Text style={{ color: theme.colors.onSurface }}>
+            {isFetchingNextPage ? "Laddar fler..." : hasNextPage ? "Ladda fler" : "Inga fler recensioner"}
+          </Text>
+        </Button>
       </Surface>
       <NotAuthenticatedDialog
         visible={isAuthDialogVisible}
         onDissmiss={() => setIsAuthDialogVisible(false)}
         infoMessage="Du behöver vara inloggad för att lägga till en recension."
       />
-    </>
+    </View>
   );
 }
 
@@ -130,3 +148,6 @@ const s = StyleSheet.create({
     gap: 15,
   },
 });
+
+//TODO https://tanstack.com/query/v5/docs/framework/react/examples/load-more-infinite-scroll
+// TODO https://tanstack.com/query/v5/docs/framework/react/guides/infinite-queries

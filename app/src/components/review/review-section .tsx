@@ -27,15 +27,12 @@ export default function ReviewSection({ reviews }: ReviewProps) {
 
   // Flytta ut till egen hook?
   const deleteMutation = useMutation({
-    mutationFn: ({
-      reviewIdentifier,
-    }: {
-      reviewIdentifier: string;
-      trailIdentifier: string;
-    }) => deleteReview(reviewIdentifier),
+    mutationFn: ({ reviewIdentifier }: { reviewIdentifier: string; trailIdentifier: string }) =>
+      deleteReview(reviewIdentifier),
     onSuccess: (result, { trailIdentifier }) => {
       if (result.success) {
         queryClient.invalidateQueries({ queryKey: ["trail", trailIdentifier] });
+        queryClient.invalidateQueries({ queryKey: ["reviews", trailIdentifier] });
         setSuccessMessage("Recensionen har tagits bort");
       } else {
         setError("Kunde inte ta bort recensionen.");
@@ -43,28 +40,21 @@ export default function ReviewSection({ reviews }: ReviewProps) {
     },
   });
 
-  const handleDelete = async (
-    reviewIdentifier: string,
-    trailIdentifier: string,
-  ) => {
+  const handleDelete = async (reviewIdentifier: string, trailIdentifier: string) => {
     // Byt till nåt snyggare typ alertdialogen
-    Alert.alert(
-      "Ta bort recension",
-      "Är du säker på att du vill ta bort din recension?",
-      [
-        {
-          text: "Avbryt",
-          style: "cancel",
+    Alert.alert("Ta bort recension", "Är du säker på att du vill ta bort din recension?", [
+      {
+        text: "Avbryt",
+        style: "cancel",
+      },
+      {
+        text: "Ta bort",
+        style: "destructive",
+        onPress: () => {
+          deleteMutation.mutate({ reviewIdentifier, trailIdentifier });
         },
-        {
-          text: "Ta bort",
-          style: "destructive",
-          onPress: () => {
-            deleteMutation.mutate({ reviewIdentifier, trailIdentifier });
-          },
-        },
-      ],
-    );
+      },
+    ]);
   };
 
   const handleReportReview = () => {
@@ -99,33 +89,15 @@ export default function ReviewSection({ reviews }: ReviewProps) {
                   transform: [{ translateX: -5 }],
                 }}
               >
-                <Rating
-                  review={review}
-                  starSize={13}
-                  starColor={theme.colors.secondary}
-                />
+                <Rating review={review} starSize={13} starColor={theme.colors.secondary} />
               </View>
             }
           >
-            <View
-              style={[
-                s.reviewTextContainer,
-                { backgroundColor: theme.colors.surface },
-              ]}
-            >
-              <View style={{ gap: 20 }}>
-                {review.trailReview && <Text>{review.trailReview}</Text>}
-              </View>
-              {review.reviewImages && (
-                <ReviewImageGrid reviewImages={review.reviewImages} />
-              )}
+            <View style={[s.reviewTextContainer, { backgroundColor: theme.colors.surface }]}>
+              <View style={{ gap: 20 }}>{review.trailReview && <Text>{review.trailReview}</Text>}</View>
+              {review.reviewImages && <ReviewImageGrid reviewImages={review.reviewImages} />}
             </View>
-            <View
-              style={[
-                s.bottomContainer,
-                { backgroundColor: theme.colors.surface },
-              ]}
-            >
+            <View style={[s.bottomContainer, { backgroundColor: theme.colors.surface }]}>
               <Text>{formatDate(review.createdAt)}</Text>
               <View style={s.actionContainer}>
                 <Pressable onPress={handleReportReview}>
@@ -134,16 +106,10 @@ export default function ReviewSection({ reviews }: ReviewProps) {
                 {user?.identifier === review.userIdentifier && (
                   <Pressable
                     disabled={deleteMutation.isPending}
-                    onPress={() =>
-                      handleDelete(review.identifier, review.trailIdentifier)
-                    }
+                    onPress={() => handleDelete(review.identifier, review.trailIdentifier)}
                   >
                     <List.Icon
-                      color={
-                        deleteMutation.isPending
-                          ? theme.colors.surfaceDisabled
-                          : theme.colors.outline
-                      }
+                      color={deleteMutation.isPending ? theme.colors.surfaceDisabled : theme.colors.outline}
                       icon="trash-can-outline"
                     />
                   </Pressable>

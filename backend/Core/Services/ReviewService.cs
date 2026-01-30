@@ -3,6 +3,7 @@ using Core.Interfaces;
 using Infrastructure.Data;
 using Infrastructure.Data.Entities;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -26,14 +27,19 @@ public class ReviewService : IReviewService
         _reviewResponseFactory = reviewResponseFactory;
         _logger = logger;
     }
-    public async Task<Result<IReadOnlyCollection<ReviewResponse?>>> GetReviewsByTrailIdentifierAsync(string trailIdentifier, CancellationToken ctoken)
+    public async Task<Result<PagedReviewResponse>> GetReviewsByTrailIdentifierAsync(string trailIdentifier, int page, int limit, CancellationToken ctoken)
     {
         using var context = await _context.CreateDbContextAsync(ctoken);
+
+        var offset = page * limit; 
 
         var reviews = await context.Reviews
             .AsNoTracking()
             .Where(review => review.Trail!.Identifier == trailIdentifier)
-                .Select(review => ReviewResponse.Create(
+            .OrderByDescending(review => review.CreatedAt)
+            .Skip(offset)
+            .Take(limit+1)
+            .Select(review => ReviewResponse.Create(
                 review.Identifier,
                 review.TrailReview,
                 review.Grade,
@@ -52,10 +58,15 @@ public class ReviewService : IReviewService
         {
             _logger.LogInformation("No reviews found for trail with identifier: {TrailIdentifier}", trailIdentifier);
 
-            return Result.Fail<IReadOnlyCollection<ReviewResponse?>>(new Message(404, "No reviews found for trail."));
+            return Result.Fail<PagedReviewResponse>(new Message(404, "No reviews found for trail."));
         }
 
-        return Result.Ok<IReadOnlyCollection<ReviewResponse?>>(reviews);
+        var hasMore = reviews.Count > limit;
+
+        var result = hasMore ? reviews.Take(limit).ToList() : reviews; // Finns det fler recensioner? Om ja ta bara så många som limit är satt till, annars behålla alla. 
+        var pagedReviewResponse = _reviewResponseFactory.Create(result, page, hasMore);
+
+        return Result.Ok(pagedReviewResponse);
     }
 
     public async Task<Result<ReviewResponse?>> AddReviewAsync(string userIdentifier, string trailIdentifier, string? trailReview, float grade, IFormFileCollection? imageUrls, CancellationToken ctoken)

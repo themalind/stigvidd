@@ -4,14 +4,7 @@ import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import { useSetAtom } from "jotai";
 import { useState } from "react";
-import {
-  Alert,
-  Dimensions,
-  Pressable,
-  StyleSheet,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { Alert, Dimensions, Pressable, StyleSheet, TouchableOpacity, View } from "react-native";
 import { useTheme } from "react-native-paper";
 
 const { width } = Dimensions.get("screen");
@@ -20,9 +13,7 @@ interface ReviewImageProp {
   reviewImageCallback?: (data: string[]) => void; // För att retunera bilderna till formuläret
 }
 
-export default function AddReviewImages({
-  reviewImageCallback,
-}: ReviewImageProp) {
+export default function AddReviewImages({ reviewImageCallback }: ReviewImageProp) {
   const theme = useTheme();
   const setError = useSetAtom(showErrorAtom);
   const [images, setImages] = useState<ImagePicker.ImagePickerAsset[]>([]);
@@ -42,13 +33,9 @@ export default function AddReviewImages({
   };
 
   const pickImage = async () => {
-    const permissionResult =
-      await ImagePicker.requestMediaLibraryPermissionsAsync();
+    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permissionResult.granted) {
-      Alert.alert(
-        "Permission required",
-        "Permission to access the media library is required.",
-      );
+      Alert.alert("Permission required", "Permission to access the media library is required.");
       return;
     }
 
@@ -57,8 +44,6 @@ export default function AddReviewImages({
       quality: 0.3,
       allowsEditing: true,
     });
-
-    console.log(result);
 
     if (!result.canceled) {
       if (!result.assets[0].mimeType?.includes("image/jpeg")) {
@@ -97,11 +82,7 @@ export default function AddReviewImages({
                 opacity: 1,
               }}
             >
-              <MaterialCommunityIcons
-                name="close"
-                size={25}
-                color={theme.colors.onBackground}
-              />
+              <MaterialCommunityIcons name="close" size={25} color={theme.colors.onBackground} />
             </Pressable>
             <Image source={{ uri: image.uri }} style={s.image} />
           </View>
@@ -119,11 +100,7 @@ export default function AddReviewImages({
             },
           ]}
         >
-          <MaterialCommunityIcons
-            name="file-image-plus-outline"
-            size={40}
-            color={theme.colors.primary}
-          />
+          <MaterialCommunityIcons name="file-image-plus-outline" size={40} color={theme.colors.primary} />
         </TouchableOpacity>
       )}
     </View>

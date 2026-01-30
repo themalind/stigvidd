@@ -14,7 +14,6 @@ export interface Trail {
   coordinatesJson: string;
   trailImagesResponse?: TrailImage[];
   trailLinksResponse?: TrailLink[];
-  reviewsResponse?: Review[];
 }
 
 export interface TrailOverview {
@@ -84,6 +83,13 @@ export interface User {
   email: string;
   myWishList: UserWishlistTrail[];
   myFavorites: UserFavoritesTrail[];
+}
+
+export interface PagedReviewResponse {
+  reviews: Review[];
+  hasMore: boolean;
+  page: number;
+  total?: number;
 }
 
 // Frontend types

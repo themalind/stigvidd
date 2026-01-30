@@ -1,11 +1,33 @@
-import { CreateReviewRequest } from "@/data/types";
+import { CreateReviewRequest, PagedReviewResponse } from "@/data/types";
 import uuid from "react-native-uuid";
 import { IP } from "../../ipconfig";
 import { ApiError, getUserToken } from "./users";
 
-export async function createReview(
-  request: CreateReviewRequest,
-): Promise<{ success: boolean }> {
+export async function getReviewsByTrailIdentifier(
+  trailIdentifier: string,
+  page: number,
+  limit: number,
+): Promise<PagedReviewResponse> {
+  try {
+    const response = await fetch(`http://${IP}/api/v1/review/trail/${trailIdentifier}?page=${page}&limit=${limit}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      throw new ApiError(`HTTP error: getReviewsByTrailIdentifier:  ${response.status}`, response.status);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+}
+
+export async function createReview(request: CreateReviewRequest): Promise<{ success: boolean }> {
   const token = await getUserToken();
 
   if (!token) {
@@ -38,10 +60,6 @@ export async function createReview(
       },
     });
 
-    // Läs response body för att se felmeddelandet
-    const responseText = await response.text();
-    console.log("Server response:", responseText);
-
     if (!response.ok) {
       console.log(response.body);
     }
@@ -53,9 +71,7 @@ export async function createReview(
   }
 }
 
-export async function deleteReview(
-  reviewIdentifier: string,
-): Promise<{ success: boolean }> {
+export async function deleteReview(reviewIdentifier: string): Promise<{ success: boolean }> {
   const token = await getUserToken();
 
   if (!token) {
@@ -63,16 +79,13 @@ export async function deleteReview(
   }
 
   try {
-    const response = await fetch(
-      `http://${IP}/api/v1/review/${reviewIdentifier}`,
-      {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
+    const response = await fetch(`http://${IP}/api/v1/review/${reviewIdentifier}`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
       },
-    );
+    });
 
     if (!response.ok) {
       throw new ApiError(`HTTP error ${response.status}`, response.status);
