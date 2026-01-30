@@ -30,26 +30,9 @@ export function useLocationTracking() {
       return;
     }
 
-    intervalRef.current = setInterval(async () => {
-      try {
-        const location = await Location.getCurrentPositionAsync();
+    await recordPosition();
 
-        setCoordinates((prev) => [
-          ...prev,
-          {
-            coordinates: {
-              latitude: location.coords.latitude,
-              longitude: location.coords.longitude,
-            },
-            timeStamp: location.timestamp,
-          },
-        ]);
-      } catch {
-        stopTracking();
-        setError("Lost access to location.");
-        console.log("crash");
-      }
-    }, SAMPLE_INTERVAL);
+    intervalRef.current = setInterval(recordPosition, SAMPLE_INTERVAL);
 
     setIsTracking(true);
   };
@@ -64,6 +47,26 @@ export function useLocationTracking() {
 
   const resetTracking = () => {
     setCoordinates([]);
+  };
+
+  const recordPosition = async () => {
+    try {
+      const location = await Location.getCurrentPositionAsync();
+
+      setCoordinates((prev) => [
+        ...prev,
+        {
+          coordinates: {
+            latitude: location.coords.latitude,
+            longitude: location.coords.longitude,
+          },
+          timeStamp: location.timestamp,
+        },
+      ]);
+    } catch {
+      stopTracking();
+      setError("Lost access to location.");
+    }
   };
 
   return { startTracking, stopTracking, resetTracking, isTracking, coordinates };
