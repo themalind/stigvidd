@@ -1,10 +1,11 @@
 import Map from "@/components/map/map";
 import { useLocationTracking } from "@/services/use-location-tracking";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Dimensions, StyleSheet, View } from "react-native";
+import { Dimensions, Pressable, StyleSheet, View } from "react-native";
 import MapView, { Polyline, Region } from "react-native-maps";
-import { Button, Text } from "react-native-paper";
+import { Button, Text, useTheme } from "react-native-paper";
 import * as Location from "expo-location";
+import { Ionicons } from "@expo/vector-icons";
 
 const HEIGHT = Dimensions.get("screen").height;
 
@@ -12,6 +13,7 @@ export default function TrailCreator() {
   const mapRef = useRef<MapView>(null);
   const { startTracking, stopTracking, resetTracking, isTracking, coordinates } = useLocationTracking();
   const [initialRegion, setInitialRegion] = useState<Region | undefined>(undefined);
+  const theme = useTheme();
 
   const polylineCoords = useMemo(() => coordinates.map((locationData) => locationData.coordinates), [coordinates]);
 
@@ -55,35 +57,74 @@ export default function TrailCreator() {
   if (!initialRegion) return <Text>Loading Map...</Text>;
 
   return (
-    <View style={{}}>
+    <View style={s.content}>
+      {/* MAP */}
       <View style={s.mapContainer}>
         <Map ref={mapRef} style={s.map} initialRegion={initialRegion} showsUserLocation>
           <Polyline coordinates={polylineCoords} strokeColor="#ff0000" strokeWidth={4} />
         </Map>
       </View>
 
-      <View style={s.buttons}>
-        <Button mode="contained-tonal" onPress={() => dumpTrailToLog()}>
-          DUMP
-        </Button>
-        <Button
-          mode={!isTracking ? "outlined" : "contained-tonal"}
-          onPress={!isTracking ? () => startTracking() : () => stopTracking()}
-        >
-          {!isTracking ? "START" : "PAUSE"}
-        </Button>
-        <Button mode="contained-tonal" onPress={() => resetTracking()}>
-          NOLLSTÄLL ({coordinates.length})
-        </Button>
+      {/* TIME */}
+
+      <View style={s.placeholderSection}>
+        <Text>TIME</Text>
+      </View>
+
+      {/* DISTANCE */}
+
+      <View style={s.placeholderSection}>
+        <Text>DISTANCE</Text>
+        <Text>(debug: {polylineCoords.length} noder sparade)</Text>
+      </View>
+
+      {/* ACTIONS */}
+
+      <View style={s.actions}>
+        {polylineCoords.length === 0 ? (
+          <Pressable
+            style={[s.actionButton, { backgroundColor: theme.colors.surface }]}
+            onPress={() => startTracking()}
+          >
+            <Ionicons name="walk-outline" size={30} color={theme.colors.onSurface} />
+            <Text style={{ color: theme.colors.onSurface }}>Starta vandring</Text>
+          </Pressable>
+        ) : isTracking ? (
+          <Pressable style={[s.actionButton, { backgroundColor: theme.colors.surface }]} onPress={() => stopTracking()}>
+            <Ionicons name="pause" size={30} color={theme.colors.onSurface} />
+          </Pressable>
+        ) : (
+          <>
+            <Pressable
+              style={[s.actionButton, { backgroundColor: theme.colors.errorContainer }]}
+              onPress={() => resetTracking()}
+            >
+              <Ionicons name="close" size={30} color={theme.colors.onSurface} />
+            </Pressable>
+            <Pressable
+              style={[s.actionButton, { backgroundColor: theme.colors.surface }]}
+              onPress={() => startTracking()}
+            >
+              <Ionicons name="play" size={30} color={theme.colors.onSurface} />
+            </Pressable>
+          </>
+        )}
       </View>
     </View>
   );
 }
 
 const s = StyleSheet.create({
-  red: {
-    borderColor: "red",
-    borderWidth: 1,
+  placeholderSection: {
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#555500",
+    borderRadius: 20,
+    height: 80,
+    marginBottom: 20,
+  },
+  content: {
+    flex: 1,
   },
   buttons: {
     flexDirection: "row",
@@ -94,9 +135,24 @@ const s = StyleSheet.create({
     flex: 1,
   },
   mapContainer: {
-    height: HEIGHT * 0.25,
+    height: HEIGHT * 0.2,
     borderRadius: 20,
     overflow: "hidden",
     marginBottom: 20,
+  },
+  actions: {
+    flexDirection: "row",
+    marginTop: "auto",
+    gap: 20,
+  },
+  actionButton: {
+    flex: 1,
+    flexBasis: 0,
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: 20,
+    gap: 10,
+    height: 60,
   },
 });
