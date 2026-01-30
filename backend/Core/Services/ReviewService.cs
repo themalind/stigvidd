@@ -31,14 +31,20 @@ public class ReviewService : IReviewService
     {
         using var context = await _context.CreateDbContextAsync(ctoken);
 
-        var offset = page * limit; 
+        var offset = page * limit;
+
+        // För att få veta hur många reviews det finns totalt
+        var totalCount = await context.Reviews
+            .AsNoTracking()
+            .Where(review => review.Trail!.Identifier == trailIdentifier)
+            .CountAsync(ctoken);
 
         var reviews = await context.Reviews
             .AsNoTracking()
             .Where(review => review.Trail!.Identifier == trailIdentifier)
             .OrderByDescending(review => review.CreatedAt)
             .Skip(offset)
-            .Take(limit+1)
+            .Take(limit + 1)
             .Select(review => ReviewResponse.Create(
                 review.Identifier,
                 review.TrailReview,
@@ -54,17 +60,10 @@ public class ReviewService : IReviewService
             ))
             .ToListAsync(ctoken);
 
-        if (reviews == null || !reviews.Any())
-        {
-            _logger.LogInformation("No reviews found for trail with identifier: {TrailIdentifier}", trailIdentifier);
-
-            return Result.Fail<PagedReviewResponse>(new Message(404, "No reviews found for trail."));
-        }
-
         var hasMore = reviews.Count > limit;
 
         var result = hasMore ? reviews.Take(limit).ToList() : reviews; // Finns det fler recensioner? Om ja ta bara så många som limit är satt till, annars behålla alla. 
-        var pagedReviewResponse = _reviewResponseFactory.Create(result, page, hasMore);
+        var pagedReviewResponse = _reviewResponseFactory.Create(result, page, hasMore, totalCount);
 
         return Result.Ok(pagedReviewResponse);
     }
@@ -77,7 +76,7 @@ public class ReviewService : IReviewService
 
         try
         {
-            if(grade < 1 || grade > 5)
+            if (grade < 1 || grade > 5)
             {
                 return Result.Fail<ReviewResponse?>(new Message(400, "Grade must be between 0 and 5."));
             }

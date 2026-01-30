@@ -4,7 +4,7 @@ import ImageCarousel from "@/components/image-carousel";
 import ImageModal from "@/components/imageModal";
 import LoadingIndicator from "@/components/loading-indicator";
 import { Rating } from "@/components/rating";
-import TrailReviewsContainer from "@/components/review/trail-reviews-container ";
+import TrailReviewsContainer from "@/components/review/trail-reviews-container";
 import TrailDescription from "@/components/trail/trail-description";
 import TrailInfo from "@/components/trail/trail-info";
 import TrailMap from "@/components/trail/trail-map";
@@ -25,6 +25,7 @@ export default function TrailDetailsScreen() {
   const scrollViewRef = useRef<ScrollView>(null);
   const surfaceToScrollToRef = useRef<View>(null);
   const [reviews, setReviews] = useState<Review[]>([]); // callback
+  const [reviewCount, setReviewCount] = useState(0);
 
   const {
     data: trail,
@@ -73,7 +74,7 @@ export default function TrailDetailsScreen() {
       <View style={s.ratingSection}>
         <View style={s.rating}>
           <Rating trailReviews={reviews} starSize={20} starColor={theme.colors.secondary} />
-          <Text style={[s.ratingNumber, { color: theme.colors.onBackground }]}>{`(${reviews.length})`}</Text>
+          <Text style={[s.ratingNumber, { color: theme.colors.onBackground }]}>{`(${reviewCount})`}</Text>
         </View>
         <View style={s.paddingLeft}>
           <TouchableOpacity onPress={onPressScrollToRatings}>
@@ -86,7 +87,15 @@ export default function TrailDetailsScreen() {
       {trail && <TrailDescription trail={trail} />}
       {trail && <TrailMap trail={trail} />}
       {trail && (
-        <TrailReviewsContainer trail={trail} surfaceToScrollToRef={surfaceToScrollToRef} onReviewsLoaded={setReviews} />
+        <TrailReviewsContainer
+          trail={trail}
+          surfaceToScrollToRef={surfaceToScrollToRef}
+          onReviewsLoaded={(reviews, total) => {
+            // Use total here
+            setReviewCount(total);
+            setReviews(reviews);
+          }}
+        />
       )}
       <Pressable style={s.backToTop} onPress={onPressScrollToTop}>
         <Text style={[s.text, { color: theme.colors.secondary }]}>Tillbaka till toppen</Text>

@@ -71,7 +71,7 @@ export default function ReviewSection({ reviews }: ReviewProps) {
               backgroundColor: theme.colors.surface,
             }}
             contentStyle={{ paddingLeft: 0 }}
-            titleStyle={[s.title, { backgroundColor: theme.colors.surface }]}
+            titleStyle={[s.title, { backgroundColor: theme.colors.surface, color: theme.colors.onSurface }]}
             right={(props) => (
               <List.Icon
                 style={{

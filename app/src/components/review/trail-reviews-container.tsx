@@ -15,7 +15,7 @@ import ReviewSection from "./review-section ";
 interface ReviewWrapperProps {
   trail: Trail;
   surfaceToScrollToRef: RefObject<View | null>;
-  onReviewsLoaded?: (reviews: Review[]) => void;
+  onReviewsLoaded?: (reviews: Review[], total: number) => void;
 }
 
 export default function TrailReviewsContainer({ trail, surfaceToScrollToRef, onReviewsLoaded }: ReviewWrapperProps) {
@@ -42,12 +42,13 @@ export default function TrailReviewsContainer({ trail, surfaceToScrollToRef, onR
   const reviews = useMemo(() => {
     return reviewResponse?.pages.flatMap((page) => page.reviews) ?? [];
   }, [reviewResponse]);
+  const totalReviewsCount: number = reviewResponse?.pages[0]?.total ?? 0;
 
   useEffect(() => {
     if (onReviewsLoaded) {
-      onReviewsLoaded(reviews);
+      onReviewsLoaded(reviews, totalReviewsCount);
     }
-  }, [reviews, onReviewsLoaded]);
+  }, [reviews, totalReviewsCount, onReviewsLoaded]);
 
   if (isLoading) {
     return <LoadingIndicator />;
@@ -75,7 +76,7 @@ export default function TrailReviewsContainer({ trail, surfaceToScrollToRef, onR
         <View style={{ flexDirection: "row" }}>
           <View style={s.ratingSection}>
             <Text style={[s.title, { color: theme.colors.onSurface }]}>Recensioner</Text>
-            <Text style={[s.ratingNumber, { color: theme.colors.tertiary }]}>{`(${reviews.length})`}</Text>
+            <Text style={[s.ratingNumber, { color: theme.colors.tertiary }]}>{`(${totalReviewsCount})`}</Text>
           </View>
           <View style={s.iconSection}>
             <Pressable onPress={handleAddReviewPress}>
