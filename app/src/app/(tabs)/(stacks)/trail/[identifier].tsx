@@ -130,7 +130,7 @@ const s = StyleSheet.create({
     justifyContent: "space-between",
   },
   paddingLeft: {
-    paddingRight: 20,
+    paddingRight: 10,
   },
 });
 
