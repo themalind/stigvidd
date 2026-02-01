@@ -85,8 +85,16 @@ public class ReviewService : IReviewService
             {
                 foreach (var image in imageUrls)
                 {
-                    var url = await _webDavService.UploadFileAsync(image.OpenReadStream(), "reviews");
-                    uploadedUrls.Add(url);
+                    var result = await _webDavService.UploadFileAsync(image.OpenReadStream(), "reviews");
+
+                    if (result.IsFailure)
+                    {
+                        return Result.Fail<ReviewResponse?>(new Message(500, "Something went wrong, could not create review. Try again later."));
+                    }
+                    if(result.Value != null)
+                    {
+                        uploadedUrls.Add(result.Value);
+                    }                   
                 }
             }
 
@@ -183,11 +191,16 @@ public class ReviewService : IReviewService
             {
                 try
                 {
-                    await _webDavService.DeleteFileAsync(image.ImageUrl);
+                   var result = await _webDavService.DeleteFileAsync(image.ImageUrl);
+
+                    if (result.IsFailure)
+                    {
+                        return Result.Fail(new Message(500, "Could not remove file. Try again later."));
+                    }
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogWarning(ex, $"RemoveReviewAsync: Failed to remove image {image.ImageUrl}. UserIdentifier: {userIdentifer}, ReviewIdentifer: {reviewIdentifier}");
+                    _logger.LogWarning(ex, "RemoveReviewAsync: Failed to remove image {image.ImageUrl}. UserIdentifier: {userIdentifer}, ReviewIdentifer: {reviewIdentifier}", image.ImageUrl, userIdentifer, reviewIdentifier);
                 }
             }
         }

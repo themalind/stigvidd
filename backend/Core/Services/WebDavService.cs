@@ -1,5 +1,6 @@
 ﻿using Core.Interfaces;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using System.Net;
 using WebDav;
 
@@ -11,11 +12,15 @@ public class WebDavService : IWebDavService
     private readonly string _baseUrl;
     private readonly string _userName;
     private readonly string _password;
-    public WebDavService(IConfiguration configuration)
+    private readonly ILogger<WebDavService> _logger;
+
+    public WebDavService(IConfiguration configuration, ILogger<WebDavService> logger)
     {
+
         _baseUrl = configuration["WebDav:BaseUrl"] ?? throw new InvalidOperationException("WebDav:BaseUrl configuration is missing");
         _userName = configuration["WebDav:Username"] ?? throw new InvalidOperationException("WebDav:Username configuration is missing");
         _password = configuration["WebDav:Password"] ?? throw new InvalidOperationException("WebDav:Password configuration is missing");
+        _logger = logger;
     }
 
     private IWebDavClient CreateClient()
@@ -30,13 +35,11 @@ public class WebDavService : IWebDavService
     }
 
     // https://github.com/skazantsev/WebDavClient/tree/main/src/WebDav.Client/Request
-    // Utseende på uri från imagepicker
-    // "file:///data/user/0/host.exp.exponent/cache/ImagePicker/0784f2f8-9b6a-4589-aadf-561bd89873aa.jpeg"
 
-    public async Task<string> UploadFileAsync(Stream stream, string? subDirectory)
+    public async Task<Result<string?>> UploadFileAsync(Stream stream, string? subDirectory)
     {
         // Skapar en sträng ex "reviews/guid.jpeg"
-        var fileName = $"{Guid.NewGuid()}.jpeg"; 
+        var fileName = $"{Guid.NewGuid()}.jpeg";
 
         var remotePath = subDirectory != null
            ? $"{subDirectory.TrimEnd('/')}/{fileName}"
@@ -49,26 +52,38 @@ public class WebDavService : IWebDavService
 
             if (!result.IsSuccessful)
             {
-                throw new Exception($"Failed to upload file. Status code: {result.StatusCode}");
+                _logger.LogError("UploadFileAsync: Could not upload image {remotePath}", remotePath);
+
+                Result.Fail<string?>(new Message(result.StatusCode, $"UploadFileAsync: Could not upload files. {result.StatusCode}"));
             }
 
-            return $"{remotePath}";
+            return Result.Ok<string?>($"{remotePath}");
         }
         catch (Exception ex)
         {
+            _logger.LogError("UploadFileAsync: Could not upload image. Threw exception: {ex}", ex);
+
             throw new Exception("Error uploading file", ex);
         }
     }
 
-    public async Task<bool> DeleteFileAsync(string relativePath)
+    public async Task<Result<bool>> DeleteFileAsync(string relativePath)
     {
         try
         {
             using var client = CreateClient();
+
+            var result = await client.Delete(relativePath); // relativePath ex "reviews/guid.jpeg"
+
+            if (!result.IsSuccessful)
             {
-                var result = await client.Delete(relativePath); // relativePath ex "reviews/guid.jpeg"
-                return result.IsSuccessful;
+                _logger.LogError("DeleteFileAsync: Could not delete file with path: {relativePath}", relativePath);
+
+                Result.Fail<bool>(new Message(result.StatusCode, $"DeleteFileAsync: Could not delete file"));
             }
+
+            return Result.Ok(result.IsSuccessful);
+
         }
         catch (Exception ex)
         {
