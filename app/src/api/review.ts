@@ -44,7 +44,7 @@ export async function createReview(request: CreateReviewRequest): Promise<{ succ
       uri: uri,
       type: "image/jpeg",
       name: fileName,
-    } as any); // Hittar vi ett annat sätt att typ så byter vi.
+    } as any); // Hittar vi ett annat sätt att typa så byter vi.
   });
 
   formData.append("trailIdentifier", request.trailIdentifier);

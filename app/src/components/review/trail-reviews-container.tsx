@@ -42,6 +42,7 @@ export default function TrailReviewsContainer({ trail, surfaceToScrollToRef, onR
   const reviews = useMemo(() => {
     return reviewResponse?.pages.flatMap((page) => page.reviews) ?? [];
   }, [reviewResponse]);
+
   const totalReviewsCount: number = reviewResponse?.pages[0]?.total ?? 0;
 
   useEffect(() => {
@@ -105,14 +106,14 @@ export default function TrailReviewsContainer({ trail, surfaceToScrollToRef, onR
         )}
         <Button onPress={() => fetchNextPage()} disabled={!hasNextPage || isFetchingNextPage}>
           <Text style={{ color: theme.colors.onSurface }}>
-            {isFetchingNextPage ? "Laddar fler..." : hasNextPage ? "Ladda fler" : "Inga fler recensioner"}
+            {isFetchingNextPage ? "Laddar fler..." : hasNextPage ? "Ladda fler" : ""}
           </Text>
         </Button>
       </Surface>
       <NotAuthenticatedDialog
         visible={isAuthDialogVisible}
         onDissmiss={() => setIsAuthDialogVisible(false)}
-        infoMessage="Du behöver vara inloggad för att lägga till en recension."
+        infoMessage="Du behöver vara inloggad för att skriva en recension."
       />
     </View>
   );

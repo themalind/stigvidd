@@ -549,7 +549,9 @@ public class ReviewServiceUnitTests
 
         var mockConfiguration = new Mock<IConfiguration>();
         mockConfiguration.Setup(config => config["PresentableBaseUrl"]).Returns("http://stigvidd.se/testing/");
+
         var reviewResponseFactory = new ReviewResponseFactory(mockConfiguration.Object);
+
         var reviewService = new ReviewService(
             mockContextFactory.Object,
             mockWebDavService.Object,
