@@ -77,13 +77,13 @@ internal class TransmogrifyBorasData
             if (!string.IsNullOrWhiteSpace(linkValue) && linkValue != "-")
             {
                 trail.TrailLinks = new List<TrailLink>
-            {
-                new TrailLink
                 {
-                    Link = linkValue,
-                    Trail = trail
-                }
-            };
+                    new TrailLink
+                    {
+                        Link = linkValue,
+                        Trail = trail
+                    }
+                };
             }
 
             stigViddDbContext.Trails.Add(trail);

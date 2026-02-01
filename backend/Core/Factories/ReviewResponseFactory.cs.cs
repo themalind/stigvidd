@@ -30,4 +30,17 @@ public class ReviewResponseFactory
             review.User.Identifier,
             images);
     }
+
+    public PagedReviewResponse Create(List<ReviewResponse> reviews, int page, bool hasMore, int total = 0)
+    {
+        return new PagedReviewResponse
+        {
+            Reviews = reviews ?? [],
+            Page = page,
+            HasMore = hasMore,
+            Total = total
+        };
+    }
 }
+
+

@@ -19,9 +19,7 @@ interface ReviewFormProps {
 }
 
 const newReviewForm = z.object({
-  trailReview: z.optional(
-    z.string().max(500, "Review is too long. Max char 500."),
-  ),
+  trailReview: z.optional(z.string().max(500, "Review is too long. Max char 500.")),
   grade: z.number().min(1).max(5),
   trailIdentifier: z
     .string({ required_error: "trailIdentifier is required." })
@@ -30,10 +28,7 @@ const newReviewForm = z.object({
 
 type FormFields = z.infer<typeof newReviewForm>;
 
-export default function AddReviewForm({
-  trailIdentifier,
-  onSuccess,
-}: ReviewFormProps) {
+export default function AddReviewForm({ trailIdentifier, onSuccess }: ReviewFormProps) {
   const theme = useTheme();
   const [showImageInfoModal, setShowImageInfoModal] = useState(false);
   const [showStarInfoModal, setShowStarInfoModal] = useState(false);
@@ -83,7 +78,12 @@ export default function AddReviewForm({
     onSuccess: (result, variables) => {
       if (result.success) {
         queryClient.invalidateQueries({
+          // Uppdatera medelbetyget i trail
           queryKey: ["trail", variables.trailIdentifier],
+        });
+        queryClient.invalidateQueries({
+          // Uppdatera listan i recensionsfältet
+          queryKey: ["reviews", variables.trailIdentifier],
         });
         setSuccess("Recensionen har lagts till");
         onSuccess();
@@ -214,9 +214,7 @@ export default function AddReviewForm({
               onChangeText={onChange}
               value={value}
               label="Recension"
-              onContentSizeChange={(event) =>
-                setHeight(event.nativeEvent.contentSize.height)
-              }
+              onContentSizeChange={(event) => setHeight(event.nativeEvent.contentSize.height)}
               style={{ height: Math.max(40, height) }}
             />
           )}
@@ -231,9 +229,9 @@ export default function AddReviewForm({
           onPress={handleSubmit(onSubmit, (errors) => {
             console.log("Validation failed:", errors);
           })}
-          disabled={isSubmitting}
+          disabled={isSubmitting || createReviewMutation.isPending}
         >
-          {isSubmitting ? "Sparar..." : "Spara"}
+          {createReviewMutation.isPending ? "Sparar..." : "Spara"}
         </Button>
       </View>
     </View>

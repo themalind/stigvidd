@@ -21,11 +21,13 @@ public class ReviewController : StigViddController
 
     [HttpGet]
     [Route("trail/{trailIdentifier}")]
-    public async Task<ActionResult<IReadOnlyCollection<ReviewResponse>>> GetReviewsByTrailIdentifierAsync(
+    public async Task<ActionResult<PagedReviewResponse>> GetReviewsByTrailIdentifierAsync(
         [FromRoute] string trailIdentifier,
+        [FromQuery] int page, // Vilken omgång
+        [FromQuery] int limit, // Hur många per omgång
         CancellationToken ctoken)
     {
-        var result = await _reviewService.GetReviewsByTrailIdentifierAsync(trailIdentifier, ctoken);
+        var result = await _reviewService.GetReviewsByTrailIdentifierAsync(trailIdentifier, page, limit, ctoken);
 
         if (!result.Success && result.Message != null)
         {

@@ -1,15 +1,9 @@
 import { ReviewImage } from "@/data/types";
 import { BlurView } from "expo-blur";
 import { Image } from "expo-image";
+import { LinearGradient } from "expo-linear-gradient";
 import React, { useState } from "react";
-import {
-  Animated,
-  Dimensions,
-  NativeScrollEvent,
-  NativeSyntheticEvent,
-  StyleSheet,
-  View,
-} from "react-native";
+import { Animated, Dimensions, NativeScrollEvent, NativeSyntheticEvent, StyleSheet, View } from "react-native";
 import { Modal, Portal, useTheme } from "react-native-paper";
 
 interface ModalProps {
@@ -25,11 +19,7 @@ const DOT_INDICATOR_SIZE = DOT_SIZE + DOT_SPACING;
 const ITEM_HEIGHT = height * 0.5;
 const ITEM_WIDTH = width * 0.7;
 
-export default function ImageViewer({
-  images,
-  visible,
-  onDismiss,
-}: ModalProps) {
+export default function ImageViewer({ images, visible, onDismiss }: ModalProps) {
   const theme = useTheme();
   const scrollX = React.useRef(new Animated.Value(0)).current;
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -43,76 +33,76 @@ export default function ImageViewer({
 
   return (
     <Portal>
-      {visible && (
-        <BlurView intensity={100} tint="dark" style={StyleSheet.absoluteFill} />
-      )}
+      {visible && <BlurView intensity={100} tint="dark" style={StyleSheet.absoluteFill} />}
       <Modal
         visible={visible}
         onDismiss={onDismiss}
-        contentContainerStyle={[
-          s.modalContainerStyle,
-          { backgroundColor: theme.colors.inverseOnSurface },
-        ]}
+        contentContainerStyle={[s.modalContainerStyle, { backgroundColor: theme.colors.inverseOnSurface }]}
       >
-        <View>
-          <Animated.FlatList
-            horizontal
-            pagingEnabled // Gör att bilderna "snappar" på plats
-            showsHorizontalScrollIndicator={false}
-            bounces={false}
-            contentContainerStyle={s.flatListContainerStyle}
-            keyExtractor={(image) => image.identifier}
-            data={images}
-            initialScrollIndex={currentIndex}
-            getItemLayout={(_, index) => ({
-              length: itemWidth,
-              offset: itemWidth * index,
-              index,
-            })}
-            onMomentumScrollEnd={onMomentumScrollEnd}
-            onScroll={Animated.event(
-              [{ nativeEvent: { contentOffset: { x: scrollX } } }],
-              { useNativeDriver: true },
-            )}
-            renderItem={({ item }) => (
-              <View style={s.imageContainer}>
-                <Image
-                  source={item.imageUrl}
-                  contentFit="contain"
-                  style={s.image}
+        <View style={{ position: "relative", overflow: "hidden", borderRadius: 20 }}>
+          <View>
+            <Animated.FlatList
+              horizontal
+              pagingEnabled
+              showsHorizontalScrollIndicator={false}
+              bounces={false}
+              contentContainerStyle={s.flatListContainerStyle}
+              keyExtractor={(image) => image.identifier}
+              data={images}
+              initialScrollIndex={currentIndex}
+              getItemLayout={(_, index) => ({
+                length: itemWidth,
+                offset: itemWidth * index,
+                index,
+              })}
+              onMomentumScrollEnd={onMomentumScrollEnd}
+              onScroll={Animated.event([{ nativeEvent: { contentOffset: { x: scrollX } } }], { useNativeDriver: true })}
+              renderItem={({ item }) => (
+                <View style={s.imageContainer}>
+                  <Image source={item.imageUrl} contentFit="contain" style={s.image} />
+                </View>
+              )}
+            />
+            {images.length > 1 && (
+              <View style={s.pagination}>
+                {images.map((_, index) => (
+                  <View key={index} style={[s.dot, { backgroundColor: theme.colors.tertiary }]} />
+                ))}
+                <Animated.View
+                  style={[
+                    s.dotIndicator,
+                    {
+                      borderColor: theme.colors.primary,
+                      transform: [
+                        {
+                          translateX: scrollX.interpolate({
+                            inputRange: images.map((_, i) => i * (width - 40)),
+                            outputRange: images.map((_, i) => i * DOT_INDICATOR_SIZE),
+                          }),
+                        },
+                      ],
+                    },
+                  ]}
                 />
               </View>
             )}
+          </View>
+
+          {/* Gradienterna ligger här - på samma nivå som View ovan */}
+          <LinearGradient
+            colors={[theme.colors.inverseOnSurface, "transparent"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={s.leftGradient}
+            pointerEvents="none"
           />
-          {images.length > 1 && ( // Dölj pagination när det bara finns en bild att visa
-            <View style={s.pagination}>
-              {images.map((_, index) => (
-                <View
-                  key={index}
-                  style={[s.dot, { backgroundColor: theme.colors.tertiary }]}
-                />
-              ))}
-              <Animated.View
-                style={[
-                  s.dotIndicator,
-                  {
-                    borderColor: theme.colors.primary,
-                    transform: [
-                      {
-                        translateX: scrollX.interpolate({
-                          // Ren grekiska
-                          inputRange: images.map((_, i) => i * (width - 40)),
-                          outputRange: images.map(
-                            (_, i) => i * DOT_INDICATOR_SIZE,
-                          ),
-                        }),
-                      },
-                    ],
-                  },
-                ]}
-              />
-            </View>
-          )}
+          <LinearGradient
+            colors={["transparent", theme.colors.inverseOnSurface]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={s.rightGradient}
+            pointerEvents="none"
+          />
         </View>
       </Modal>
     </Portal>
@@ -161,6 +151,20 @@ const s = StyleSheet.create({
     position: "absolute",
     top: -DOT_SPACING / 2,
     left: -DOT_SPACING / 2,
+  },
+  leftGradient: {
+    position: "absolute",
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: 30,
+  },
+  rightGradient: {
+    position: "absolute",
+    right: 0,
+    top: 0,
+    bottom: 0,
+    width: 30,
   },
 });
 
