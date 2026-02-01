@@ -8,11 +8,7 @@ import {
   removeUserWishlist,
 } from "@/api/users";
 import { UserFavoritesTrail, UserWishlistTrail } from "@/data/types";
-import {
-  atomWithMutation,
-  atomWithQuery,
-  queryClientAtom,
-} from "jotai-tanstack-query";
+import { atomWithMutation, atomWithQuery, queryClientAtom } from "jotai-tanstack-query";
 import { userAtom } from "./auth-atoms";
 
 export const stigviddUserAtom = atomWithQuery((get) => {
@@ -60,6 +56,7 @@ export const addToFavoritesAtom = atomWithMutation((get) => {
   const queryClient = get(queryClientAtom);
 
   return {
+    mutationKey: ["addToFavorites"],
     mutationFn: async (trailIdentifier: string) => {
       await addToUserFavorite(trailIdentifier);
     },
@@ -69,31 +66,24 @@ export const addToFavoritesAtom = atomWithMutation((get) => {
         queryKey: ["userFavorites"],
       });
 
-      const previousFavoritesList = queryClient.getQueryData<
-        UserFavoritesTrail[]
-      >(["userFavorites"]);
+      const previousFavoritesList = queryClient.getQueryData<UserFavoritesTrail[]>(["userFavorites"]);
 
-      queryClient.setQueryData<UserFavoritesTrail[]>(
-        ["userFavorites"],
-        (old) => {
-          if (!old) return old;
-          return [
-            ...old,
-            { identifier: trailIdentifier } as UserFavoritesTrail,
-          ];
-        },
-      );
+      queryClient.setQueryData<UserFavoritesTrail[]>(["userFavorites"], (old) => {
+        if (!old) return old;
+        const alreadyExists = old.some((fav) => fav.identifier === trailIdentifier);
+
+        if (alreadyExists) {
+          return old; // Gör ingenting om den redan är favorit
+        }
+
+        return [...old, { identifier: trailIdentifier } as UserFavoritesTrail];
+      });
 
       return { previousFavoritesList };
     },
-    onError: (
-      context: { previousFavoritesList: UserFavoritesTrail[] } | undefined,
-    ) => {
+    onError: (context: { previousFavoritesList: UserFavoritesTrail[] } | undefined) => {
       if (context?.previousFavoritesList) {
-        queryClient.setQueryData(
-          ["userFavorites"],
-          context.previousFavoritesList,
-        );
+        queryClient.setQueryData(["userFavorites"], context.previousFavoritesList);
       }
     },
     onSettled: () => {
@@ -109,6 +99,7 @@ export const addToWishlistAtom = atomWithMutation((get) => {
   const queryClient = get(queryClientAtom);
 
   return {
+    mutationKey: ["addToWishlist"],
     mutationFn: async (trailIdentifier: string) => {
       return addToUserWishlist(trailIdentifier);
     },
@@ -117,22 +108,23 @@ export const addToWishlistAtom = atomWithMutation((get) => {
       queryClient.cancelQueries({ queryKey: ["userWishlist"] });
 
       // Hämtar det som är sparat i cachen och sparar det i en egen variable ifall nåt går snett
-      const previousWishlist = queryClient.getQueryData<UserWishlistTrail[]>([
-        "userWishlist",
-      ]);
+      const previousWishlist = queryClient.getQueryData<UserWishlistTrail[]>(["userWishlist"]);
 
       // Lägg till innan anropet är klart för att det ska se fräckt ut
       queryClient.setQueryData<UserWishlistTrail[]>(["userWishlist"], (old) => {
         if (!old) return old;
+        const alreadyExists = old.some((fav) => fav.identifier === trailIdentifier);
+
+        if (alreadyExists) {
+          return old; // Gör ingenting om den redan är favorit
+        }
         return [...old, { identifier: trailIdentifier } as UserWishlistTrail];
       });
 
       return { previousWishlist };
     },
 
-    onError: (
-      context: { previousWishlist: UserWishlistTrail[] } | undefined,
-    ) => {
+    onError: (context: { previousWishlist: UserWishlistTrail[] } | undefined) => {
       if (context?.previousWishlist) {
         queryClient.setQueryData(["userWishlist"], context.previousWishlist);
       }
@@ -151,6 +143,7 @@ export const removeFromWishlistAtom = atomWithMutation((get) => {
   const queryClient = get(queryClientAtom);
 
   return {
+    mutationKey: ["removeFromWishlist"],
     mutationFn: async (trailIdentifier: string) => {
       return await removeUserWishlist(trailIdentifier);
     },
@@ -162,9 +155,7 @@ export const removeFromWishlistAtom = atomWithMutation((get) => {
       });
 
       // Hämtar det som är sparat i cachen och sparar det i en egen variable ifall nåt går snett
-      const previousWishlist = queryClient.getQueryData<UserWishlistTrail[]>([
-        "userWishlist",
-      ]);
+      const previousWishlist = queryClient.getQueryData<UserWishlistTrail[]>(["userWishlist"]);
 
       // Filtera bort den som ska tas bort innan den tas bort för att det ska se fräckt ut
       queryClient.setQueryData<UserWishlistTrail[]>(["userWishlist"], (old) =>
@@ -174,16 +165,9 @@ export const removeFromWishlistAtom = atomWithMutation((get) => {
       return { previousWishlist };
     },
 
-    onError: (
-      error,
-      _,
-      context: { previousWishlist?: UserWishlistTrail[] } | undefined,
-    ) => {
+    onError: (error, _, context: { previousWishlist?: UserWishlistTrail[] } | undefined) => {
       if (context?.previousWishlist) {
-        queryClient.setQueryData<UserWishlistTrail[]>(
-          ["userWishlist"],
-          context?.previousWishlist,
-        );
+        queryClient.setQueryData<UserWishlistTrail[]>(["userWishlist"], context?.previousWishlist);
       }
       console.error("Failed to remove from wishlist", error);
     },
@@ -200,6 +184,7 @@ export const removeFromFavoritesAtom = atomWithMutation((get) => {
   const queryClient = get(queryClientAtom);
 
   return {
+    mutationKey: ["removeFromFavorites"],
     mutationFn: async (trailIdentifier: string) => {
       return await removeUserFavorite(trailIdentifier);
     },
@@ -209,9 +194,7 @@ export const removeFromFavoritesAtom = atomWithMutation((get) => {
         queryKey: ["userFavorites"],
       });
 
-      const previousFavoritesList = queryClient.getQueryData<
-        UserFavoritesTrail[]
-      >(["userFavorites"]);
+      const previousFavoritesList = queryClient.getQueryData<UserFavoritesTrail[]>(["userFavorites"]);
 
       queryClient.setQueryData<UserFavoritesTrail[]>(["userFavorites"], (old) =>
         old?.filter((trail) => trail.identifier !== trailIdentifier),
@@ -220,16 +203,9 @@ export const removeFromFavoritesAtom = atomWithMutation((get) => {
       return { previousFavoritesList };
     },
 
-    onError: (
-      error,
-      _,
-      context: { previousFavoritesList?: UserFavoritesTrail[] } | undefined,
-    ) => {
+    onError: (error, _, context: { previousFavoritesList?: UserFavoritesTrail[] } | undefined) => {
       if (context?.previousFavoritesList) {
-        queryClient.setQueryData(
-          ["userFavorites"],
-          context.previousFavoritesList,
-        );
+        queryClient.setQueryData(["userFavorites"], context.previousFavoritesList);
       }
       console.error("Failed to remove trail from favorites", error);
     },
