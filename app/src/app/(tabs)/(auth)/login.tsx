@@ -1,20 +1,14 @@
 import { signInUser } from "@/api/auth";
 import { getLoginErrorMessage } from "@/api/firebase-errors";
 import { userThemeAtom } from "@/atoms/user-theme-atom";
+import PasswordInputField from "@/components/password-input-field";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Image } from "expo-image";
 import { Link, router } from "expo-router";
 import { useAtom } from "jotai";
 import { useState } from "react";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
-import {
-  Appearance,
-  Dimensions,
-  ImageBackground,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { Appearance, Dimensions, ImageBackground, StyleSheet, Text, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { Button, Surface, TextInput, useTheme } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -28,10 +22,8 @@ const addOpacity = (rgbColor: string, opacity: number): string => {
 };
 
 const loginFields = z.object({
-  email: z
-    .string({ required_error: "Email is required." })
-    .email("You must enter an email."),
-  password: z.string().min(8, "Password must contain 8 characters."),
+  email: z.string({ required_error: "Du måste ange en e-post" }).email("Ange en giltig e-post"),
+  password: z.string({ required_error: "Ange ett lösenord" }).min(8, "Lösenordet måste vara minst 8 tecken"),
 });
 
 type FormFields = z.infer<typeof loginFields>;
@@ -41,11 +33,10 @@ export default function LoginScreen() {
   const [firebaseError, setFirebaseError] = useState("");
   const [userTheme] = useAtom(userThemeAtom);
   const colorScheme = Appearance.getColorScheme();
-  const finalTheme =
-    userTheme === "auto" ? (colorScheme ?? "light") : userTheme;
+  const finalTheme = userTheme === "auto" ? (colorScheme ?? "light") : userTheme;
   const background =
     finalTheme === "dark"
-      ? require("../../../assets/images/login-dark-background-2.jpg")
+      ? require("../../../assets/images/aurora_borealis2.jpg")
       : require("../../../assets/images/login-background-2.jpg");
 
   const {
@@ -77,11 +68,7 @@ export default function LoginScreen() {
         scrollEnabled={false}
         contentContainerStyle={s.scrollContent}
       >
-        <ImageBackground
-          resizeMode="cover"
-          source={background}
-          style={s.backgroundImage}
-        >
+        <ImageBackground resizeMode="cover" source={background} style={s.backgroundImage}>
           <Surface
             elevation={5}
             style={[
@@ -92,19 +79,11 @@ export default function LoginScreen() {
             ]}
           >
             <View style={s.logoContainer}>
-              <Text style={[s.title, { color: theme.colors.onSurface }]}>
-                Stigvidd
-              </Text>
-              <Image
-                source={require("../../../assets/images/mammaapp.png")}
-                style={s.logo}
-                contentFit="contain"
-              />
+              <Text style={[s.title, { color: theme.colors.onSurface }]}>Stigvidd</Text>
+              <Image source={require("../../../assets/images/mammaapp.png")} style={s.logo} contentFit="contain" />
             </View>
             <View style={s.textInputContainer}>
-              <Text style={[s.text, { color: theme.colors.onSurface }]}>
-                Logga in
-              </Text>
+              <Text style={[s.text, { color: theme.colors.onSurface }]}>Logga in</Text>
               <Controller
                 control={control}
                 render={({ field: { onChange, onBlur, value } }) => (
@@ -117,6 +96,11 @@ export default function LoginScreen() {
                     label="Epost"
                     autoCapitalize="none"
                     keyboardType="email-address"
+                    theme={{
+                      colors: {
+                        primary: theme.colors.onSurface,
+                      },
+                    }}
                   />
                 )}
                 name="email"
@@ -136,16 +120,12 @@ export default function LoginScreen() {
               </View>
               <Controller
                 control={control}
-                render={({ field: { onChange, onBlur, value } }) => (
-                  <TextInput
+                render={({ field: { onChange, onBlur } }) => (
+                  <PasswordInputField
+                    passwordCallback={onChange}
                     error={!!errors.password}
-                    style={s.textInput}
                     onBlur={onBlur}
-                    onChangeText={onChange}
-                    value={value}
                     label="Lösenord"
-                    autoCapitalize="none"
-                    secureTextEntry={true}
                   />
                 )}
                 name="password"
@@ -165,24 +145,11 @@ export default function LoginScreen() {
               </View>
             </View>
             <View style={s.actionContainer}>
-              <Button
-                mode="contained"
-                style={s.button}
-                onPress={handleSubmit(onSubmit)}
-                disabled={isSubmitting}
-              >
+              <Button mode="contained" style={s.button} onPress={handleSubmit(onSubmit)} disabled={isSubmitting}>
                 {isSubmitting ? "Loggar in..." : "Logga in"}
               </Button>
-              {firebaseError && (
-                <Text style={[s.errorText, { color: theme.colors.error }]}>
-                  {firebaseError}
-                </Text>
-              )}
-              <Link
-                style={[s.linkText, { color: theme.colors.onSurface }]}
-                replace
-                href="./register"
-              >
+              {firebaseError && <Text style={[s.errorText, { color: theme.colors.error }]}>{firebaseError}</Text>}
+              <Link style={[s.linkText, { color: theme.colors.onSurface }]} replace href="./register">
                 <Text>Inte medlem? </Text>
                 <Text
                   style={{
@@ -206,9 +173,10 @@ const s = StyleSheet.create({
     minHeight: HEIGHT,
   },
   backgroundImage: {
-    justifyContent: "center",
+    justifyContent: "flex-start",
     alignItems: "center",
     flex: 1,
+    paddingTop: HEIGHT * 0.15,
   },
   logoContainer: {
     flexDirection: "row",

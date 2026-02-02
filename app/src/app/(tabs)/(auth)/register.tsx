@@ -1,20 +1,14 @@
 import { getRegisterErrorMessage } from "@/api/firebase-errors";
 import { registerUserAtom } from "@/atoms/auth-atoms";
 import { userThemeAtom } from "@/atoms/user-theme-atom";
+import PasswordInputField from "@/components/password-input-field";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Image } from "expo-image";
 import { Link, router } from "expo-router";
 import { useAtom } from "jotai";
 import React, { useState } from "react";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
-import {
-  Appearance,
-  Dimensions,
-  ImageBackground,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { Appearance, Dimensions, ImageBackground, StyleSheet, Text, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { Button, Surface, TextInput, useTheme } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -25,25 +19,23 @@ const WIDTH = Dimensions.get("screen").width;
 const registerFields = z
   .object({
     nickName: z
-      .string({ required_error: "Nickname is required." })
-      .min(1, "You need to enter a nickname.")
-      .max(20, "NickName too long, 20 chars max.")
+      .string({ required_error: "Ange ett användarnamn" })
+      .min(1)
+      .max(20, "Namn för långt. Max 20 tecken")
       .regex(/^[a-zA-Z0-9_-]+$/, "Endast a–z, 0–9, _ och - är tillåtna"),
-    email: z
-      .string({ required_error: "Email is required" })
-      .email("You must enter an email."),
-    password: z
-      .string({ required_error: "Password is required." })
-      .min(8, "Password must contain 8 characters."),
-    confirmPassword: z.string({
-      required_error: "You must confirm your password.",
-    }),
+    email: z.string({ required_error: "Du måste ange en e-post" }).email("Ange en giltig e-post"),
+    password: z.string({ required_error: "Ange ett lösenord" }).min(8, "Lösenordet måste vara minst 8 tecken"),
+    confirmPassword: z
+      .string({
+        required_error: "Upprepa lösenord",
+      })
+      .min(8, "Lösenordet måste vara minst 8 tecken"),
   })
   .superRefine(({ confirmPassword, password }, ctx) => {
     if (confirmPassword !== password) {
       ctx.addIssue({
         code: "custom",
-        message: "Passwords do not match.",
+        message: "Lösenorden matchar inte",
         path: ["confirmPassword"],
       });
     }
@@ -61,8 +53,7 @@ export default function RegisterScreen() {
   const [, registerUser] = useAtom(registerUserAtom);
   const colorScheme = Appearance.getColorScheme();
 
-  const finalTheme =
-    userTheme === "auto" ? (colorScheme ?? "light") : userTheme;
+  const finalTheme = userTheme === "auto" ? (colorScheme ?? "light") : userTheme;
 
   const background =
     finalTheme === "dark"
@@ -90,42 +81,21 @@ export default function RegisterScreen() {
   };
 
   return (
-    <SafeAreaView
-      style={{ flex: 1, backgroundColor: "rgb(0,0,0)" }}
-      edges={["top"]}
-    >
+    <SafeAreaView style={{ flex: 1, backgroundColor: "rgb(0,0,0)" }} edges={["top"]}>
       <KeyboardAwareScrollView
         keyboardShouldPersistTaps="handled"
         enableOnAndroid={true}
         extraScrollHeight={20}
         contentContainerStyle={s.scrollContent}
       >
-        <ImageBackground
-          resizeMode="cover"
-          source={background}
-          style={s.backgroundImage}
-        >
-          <Surface
-            elevation={5}
-            style={[
-              s.surface,
-              { backgroundColor: addOpacity(theme.colors.surface, 0.9) },
-            ]}
-          >
+        <ImageBackground resizeMode="cover" source={background} style={s.backgroundImage}>
+          <Surface elevation={5} style={[s.surface, { backgroundColor: addOpacity(theme.colors.surface, 0.9) }]}>
             <View style={s.logoContainer}>
-              <Text style={[s.title, { color: theme.colors.onSurface }]}>
-                Stigvidd
-              </Text>
-              <Image
-                source={require("../../../assets/images/mammaapp.png")}
-                style={s.logo}
-                contentFit="contain"
-              />
+              <Text style={[s.title, { color: theme.colors.onSurface }]}>Stigvidd</Text>
+              <Image source={require("../../../assets/images/mammaapp.png")} style={s.logo} contentFit="contain" />
             </View>
             <View style={s.textInputContainer}>
-              <Text style={[s.text, { color: theme.colors.onSurface }]}>
-                Skapa konto
-              </Text>
+              <Text style={[s.text, { color: theme.colors.onSurface }]}>Skapa konto</Text>
               <Controller
                 control={control}
                 render={({ field: { onChange, onBlur, value } }) => (
@@ -137,6 +107,11 @@ export default function RegisterScreen() {
                     value={value}
                     label="Smeknamn"
                     autoCapitalize="words"
+                    theme={{
+                      colors: {
+                        primary: theme.colors.onSurface,
+                      },
+                    }}
                   />
                 )}
                 name="nickName"
@@ -166,6 +141,11 @@ export default function RegisterScreen() {
                     label="Epost"
                     autoCapitalize="none"
                     keyboardType="email-address"
+                    theme={{
+                      colors: {
+                        primary: theme.colors.onSurface,
+                      },
+                    }}
                   />
                 )}
                 name="email"
@@ -185,16 +165,12 @@ export default function RegisterScreen() {
               </View>
               <Controller
                 control={control}
-                render={({ field: { onChange, onBlur, value } }) => (
-                  <TextInput
+                render={({ field: { onChange, onBlur } }) => (
+                  <PasswordInputField
+                    passwordCallback={onChange}
                     error={!!errors.password}
-                    style={s.textInput}
                     onBlur={onBlur}
-                    onChangeText={onChange}
-                    value={value}
                     label="Lösenord"
-                    autoCapitalize="none"
-                    secureTextEntry={true}
                   />
                 )}
                 name="password"
@@ -214,16 +190,12 @@ export default function RegisterScreen() {
               </View>
               <Controller
                 control={control}
-                render={({ field: { onChange, onBlur, value } }) => (
-                  <TextInput
-                    error={!!errors.confirmPassword}
-                    style={s.textInput}
+                render={({ field: { onChange, onBlur } }) => (
+                  <PasswordInputField
+                    passwordCallback={onChange}
+                    error={!!errors.password}
                     onBlur={onBlur}
-                    onChangeText={onChange}
-                    value={value}
-                    label="Upprepa lösenord"
-                    autoCapitalize="none"
-                    secureTextEntry={true}
+                    label=" Upprepa Lösenord"
                   />
                 )}
                 name="confirmPassword"
@@ -242,24 +214,11 @@ export default function RegisterScreen() {
                 )}
               </View>
               <View style={s.actionContainer}>
-                <Button
-                  mode="contained"
-                  style={s.button}
-                  onPress={handleSubmit(onSubmit)}
-                  disabled={isSubmitting}
-                >
+                <Button mode="contained" style={s.button} onPress={handleSubmit(onSubmit)} disabled={isSubmitting}>
                   {isSubmitting ? "Skapar konto..." : "Skapa konto"}
                 </Button>
-                {firebaseError && (
-                  <Text style={[s.errorText, { color: theme.colors.error }]}>
-                    {firebaseError}
-                  </Text>
-                )}
-                <Link
-                  style={[s.linkText, { color: theme.colors.onSurface }]}
-                  replace
-                  href="./login"
-                >
+                {firebaseError && <Text style={[s.errorText, { color: theme.colors.error }]}>{firebaseError}</Text>}
+                <Link style={[s.linkText, { color: theme.colors.onSurface }]} replace href="./login">
                   <Text>Redan medlem? </Text>
                   <Text
                     style={{
