@@ -1,4 +1,5 @@
 import { getTrailByIdentifier } from "@/api/trails";
+import CoordinateParser from "@/app/utils/coordinate-parser";
 import { useImage } from "@/atoms/image-atoms";
 import ImageCarousel from "@/components/image-carousel";
 import ImageModal from "@/components/imageModal";
@@ -9,11 +10,12 @@ import TrailDescription from "@/components/trail/trail-description";
 import TrailInfo from "@/components/trail/trail-info";
 import TrailMap from "@/components/trail/trail-map";
 import UserBar from "@/components/trail/user-action-bar/user-bar";
-import { Review } from "@/data/types";
+import { Coordinate, Review } from "@/data/types";
 import { useQuery } from "@tanstack/react-query";
 import { useLocalSearchParams } from "expo-router";
 import { useRef, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { LatLng } from "react-native-maps";
 import { useTheme } from "react-native-paper";
 
 export default function TrailDetailsScreen() {
@@ -38,8 +40,6 @@ export default function TrailDetailsScreen() {
     enabled: !!normalizedIdentifier && typeof normalizedIdentifier === "string",
   });
 
-  const images = trail?.trailImagesResponse || [];
-
   if (isLoading) {
     return <LoadingIndicator />;
   }
@@ -47,6 +47,9 @@ export default function TrailDetailsScreen() {
   if (isError) {
     return <Text style={{ padding: 20, color: theme.colors.error }}>{error?.message}</Text>;
   }
+
+  const images = trail?.trailImagesResponse || [];
+  const coordinates = CoordinateParser(trail!.coordinates);
 
   const onPressScrollToRatings = () => {
     surfaceToScrollToRef.current?.measure((_x, _y, _width, _height, _pageX, pageY) => {
@@ -85,7 +88,7 @@ export default function TrailDetailsScreen() {
       {trail && <TrailInfo trail={trail} />}
       {trail && <UserBar trail={trail} />}
       {trail && <TrailDescription trail={trail} />}
-      {trail && <TrailMap trail={trail} />}
+      {coordinates.length > 0 && <TrailMap trail={coordinates} />}
       {trail && (
         <TrailReviewsContainer
           trail={trail}
