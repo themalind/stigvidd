@@ -156,8 +156,8 @@ private Classification ParseClassification(string? classification)
         {
             var coordinates = jsonData.Select(c => new Coordinate
             {
-                Latitude =c[1],
-                Longitude = c[0]
+                latitude = c[1],
+                longitude = c[0]
             }).ToList();
 
             return JsonSerializer.Serialize(coordinates);
@@ -171,8 +171,8 @@ private Classification ParseClassification(string? classification)
 
 internal class Coordinate
 {
-    public double Latitude { get; set; }
-    public double Longitude { get; set; }
+    public double latitude { get; set; }
+    public double longitude { get; set; }
 }
 
 /*
