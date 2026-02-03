@@ -59,11 +59,11 @@ public class ReviewServiceUnitTests
         var userIdentifier = "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d"; // NaturElskaren
         var trailIdentifier = "77a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c"; // Nässehult trail
         var trailReview = "Great trail!";
-        var grade = 4.5f;
+        var rating = 4.5M;
         var imageUrls = GetFormFileCollection();
 
         // Act
-        var result = await reviewService.AddReviewAsync(userIdentifier, trailIdentifier, trailReview, grade, imageUrls, CancellationToken.None);
+        var result = await reviewService.AddReviewAsync(userIdentifier, trailIdentifier, trailReview, rating, imageUrls, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -78,11 +78,11 @@ public class ReviewServiceUnitTests
         var userIdentifier = "i-am-an-invalid-user-identifier";
         var trailIdentifier = "77a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c"; // Nässehult trail
         var trailReview = "Great trail!";
-        var grade = 4.5f;
+        var rating = 4.5M;
         var imageUrls = GetFormFileCollection();
 
         // Act
-        var result = await reviewService.AddReviewAsync(userIdentifier, trailIdentifier, trailReview, grade, imageUrls, CancellationToken.None);
+        var result = await reviewService.AddReviewAsync(userIdentifier, trailIdentifier, trailReview, rating, imageUrls, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -99,11 +99,11 @@ public class ReviewServiceUnitTests
         var userIdentifier = "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d"; // NaturElskaren
         var trailIdentifier = "i-am-an-invalid-trail-identifier";
         var trailReview = "Great trail!";
-        var grade = 4.5f;
+        var rating = 4.5M;
         var imageUrls = GetFormFileCollection();
 
         // Act
-        var result = await reviewService.AddReviewAsync(userIdentifier, trailIdentifier, trailReview, grade, imageUrls, CancellationToken.None);
+        var result = await reviewService.AddReviewAsync(userIdentifier, trailIdentifier, trailReview, rating, imageUrls, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -113,18 +113,18 @@ public class ReviewServiceUnitTests
     }
 
     [Fact]
-    public async Task AddReview_WithInvalidGrade_ShouldReturnBadRequest()
+    public async Task AddReview_WithInvalidRating_ShouldReturnBadRequest()
     {
         // Arrange
         var reviewService = CreateReviewService();
         var userIdentifier = "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d"; // NaturElskaren
         var trailIdentifier = "77a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c"; // Nässehult trail
         var trailReview = "Great trail!";
-        var grade = 1337f;
+        var rating = 1337M;
         var imageUrls = GetFormFileCollection();
 
         // Act
-        var result = await reviewService.AddReviewAsync(userIdentifier, trailIdentifier, trailReview, grade, imageUrls, CancellationToken.None);
+        var result = await reviewService.AddReviewAsync(userIdentifier, trailIdentifier, trailReview, rating, imageUrls, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -261,17 +261,17 @@ public class ReviewServiceUnitTests
     }
 
     [Fact]
-    public async Task AddReview_WithGradeBelowMinValue_ShouldReturnBadRequest()
+    public async Task AddReview_WithRatingBelowMinValue_ShouldReturnBadRequest()
     {
         // Arrange
         var reviewService = CreateReviewService();
         var userIdentifier = "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d";
         var trailIdentifier = "77a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c";
         var trailReview = "Test review";
-        var grade = 0.5f;
+        var rating = 0.5M;
 
         // Act
-        var result = await reviewService.AddReviewAsync(userIdentifier, trailIdentifier, trailReview, grade, null, CancellationToken.None);
+        var result = await reviewService.AddReviewAsync(userIdentifier, trailIdentifier, trailReview, rating, null, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -280,55 +280,55 @@ public class ReviewServiceUnitTests
     }
 
     [Fact]
-    public async Task AddReview_WithGradeAtMinValue_ShouldReturnSuccess()
+    public async Task AddReview_WithRatingAtMinValue_ShouldReturnSuccess()
     {
         // Arrange
         var reviewService = CreateReviewService();
         var userIdentifier = "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d";
         var trailIdentifier = "77a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c";
-        var trailReview = "Minimum grade review";
-        var grade = 1.0f;
+        var trailReview = "Minimum rating review";
+        var rating = 1.0M;
 
         // Act
-        var result = await reviewService.AddReviewAsync(userIdentifier, trailIdentifier, trailReview, grade, null, CancellationToken.None);
+        var result = await reviewService.AddReviewAsync(userIdentifier, trailIdentifier, trailReview, rating, null, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeTrue();
         result.Value.Should().NotBeNull();
-        result.Value!.Grade.Should().Be(1.0f);
+        result.Value!.Rating.Should().Be(1.0M);
     }
 
     [Fact]
-    public async Task AddReview_WithGradeAtMaxValue_ShouldReturnSuccess()
+    public async Task AddReview_WithRatingAtMaxValue_ShouldReturnSuccess()
     {
         // Arrange
         var reviewService = CreateReviewService();
         var userIdentifier = "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d";
         var trailIdentifier = "77a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c";
-        var trailReview = "Maximum grade review";
-        var grade = 5.0f;
+        var trailReview = "Maximum rating review";
+        var rating = 5.0M;
 
         // Act
-        var result = await reviewService.AddReviewAsync(userIdentifier, trailIdentifier, trailReview, grade, null, CancellationToken.None);
+        var result = await reviewService.AddReviewAsync(userIdentifier, trailIdentifier, trailReview, rating, null, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeTrue();
         result.Value.Should().NotBeNull();
-        result.Value!.Grade.Should().Be(5.0f);
+        result.Value!.Rating.Should().Be(5.0M);
     }
 
     [Fact]
-    public async Task AddReview_WithGradeAboveMaxValue_ShouldReturnBadRequest()
+    public async Task AddReview_WithRatingAboveMaxValue_ShouldReturnBadRequest()
     {
         // Arrange
         var reviewService = CreateReviewService();
         var userIdentifier = "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d";
         var trailIdentifier = "77a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c";
         var trailReview = "Test review";
-        var grade = 5.1f;
+        var rating = 5.1M;
 
         // Act
-        var result = await reviewService.AddReviewAsync(userIdentifier, trailIdentifier, trailReview, grade, null, CancellationToken.None);
+        var result = await reviewService.AddReviewAsync(userIdentifier, trailIdentifier, trailReview, rating, null, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -344,10 +344,10 @@ public class ReviewServiceUnitTests
         var userIdentifier = "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d";
         var trailIdentifier = "77a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c";
         var trailReview = "Review without images";
-        var grade = 4.0f;
+        var rating = 4.0M;
 
         // Act
-        var result = await reviewService.AddReviewAsync(userIdentifier, trailIdentifier, trailReview, grade, null, CancellationToken.None);
+        var result = await reviewService.AddReviewAsync(userIdentifier, trailIdentifier, trailReview, rating, null, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -362,11 +362,11 @@ public class ReviewServiceUnitTests
         var userIdentifier = "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d";
         var trailIdentifier = "77a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c";
         var trailReview = "Review with empty images";
-        var grade = 4.0f;
+        var rating = 4.0M;
         var emptyImages = new FormFileCollection();
 
         // Act
-        var result = await reviewService.AddReviewAsync(userIdentifier, trailIdentifier, trailReview, grade, emptyImages, CancellationToken.None);
+        var result = await reviewService.AddReviewAsync(userIdentifier, trailIdentifier, trailReview, rating, emptyImages, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -381,10 +381,10 @@ public class ReviewServiceUnitTests
         var userIdentifier = "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d";
         var trailIdentifier = "77a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c";
         string? trailReview = null;
-        var grade = 4.0f;
+        var rating = 4.0M;
 
         // Act
-        var result = await reviewService.AddReviewAsync(userIdentifier, trailIdentifier, trailReview, grade, null, CancellationToken.None);
+        var result = await reviewService.AddReviewAsync(userIdentifier, trailIdentifier, trailReview, rating, null, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -400,11 +400,11 @@ public class ReviewServiceUnitTests
         var userIdentifier = "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d";
         var trailIdentifier = "77a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c";
         var trailReview = "Review with failed upload";
-        var grade = 4.0f;
+        var rating = 4.0M;
         var imageUrls = GetFormFileCollection();
 
         // Act
-        var result = await reviewService.AddReviewAsync(userIdentifier, trailIdentifier, trailReview, grade, imageUrls, CancellationToken.None);
+        var result = await reviewService.AddReviewAsync(userIdentifier, trailIdentifier, trailReview, rating, imageUrls, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -420,11 +420,11 @@ public class ReviewServiceUnitTests
         var userIdentifier = "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d";
         var trailIdentifier = "77a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c";
         var trailReview = "Review with exception during upload";
-        var grade = 4.0f;
+        var rating = 4.0M;
         var imageUrls = GetFormFileCollection();
 
         // Act
-        var result = await reviewService.AddReviewAsync(userIdentifier, trailIdentifier, trailReview, grade, imageUrls, CancellationToken.None);
+        var result = await reviewService.AddReviewAsync(userIdentifier, trailIdentifier, trailReview, rating, imageUrls, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeFalse();

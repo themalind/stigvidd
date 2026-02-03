@@ -23,7 +23,7 @@ public class ReviewResponseFactory
         return ReviewResponse.Create(
             review.Identifier,
             review.TrailReview ?? string.Empty,
-            review.Grade,
+            review.Rating,
             review.User!.NickName,
             review.CreatedAt,
             review.Trail!.Identifier,

@@ -48,7 +48,7 @@ public class ReviewService : IReviewService
             .Select(review => ReviewResponse.Create(
                 review.Identifier,
                 review.TrailReview,
-                review.Grade,
+                review.Rating,
                 review.User!.NickName,
                 review.CreatedAt,
                 review.Trail!.Identifier,
@@ -68,7 +68,7 @@ public class ReviewService : IReviewService
         return Result.Ok(pagedReviewResponse);
     }
 
-    public async Task<Result<ReviewResponse?>> AddReviewAsync(string userIdentifier, string trailIdentifier, string? trailReview, float grade, IFormFileCollection? imageUrls, CancellationToken ctoken)
+    public async Task<Result<ReviewResponse?>> AddReviewAsync(string userIdentifier, string trailIdentifier, string? trailReview, decimal rating, IFormFileCollection? imageUrls, CancellationToken ctoken)
     {
         using var context = await _context.CreateDbContextAsync(ctoken);
 
@@ -76,9 +76,9 @@ public class ReviewService : IReviewService
 
         try
         {
-            if (grade < 1 || grade > 5)
+            if (rating < 1M || rating > 5M)
             {
-                return Result.Fail<ReviewResponse?>(new Message(400, "Grade must be between 0 and 5."));
+                return Result.Fail<ReviewResponse?>(new Message(400, "Rating must be between 0 and 5."));
             }
 
             if (imageUrls != null)
@@ -115,7 +115,7 @@ public class ReviewService : IReviewService
             var review = new Review
             {
                 TrailReview = trailReview,
-                Grade = grade,
+                Rating = rating,
                 TrailId = trail.Id,
                 UserId = user.Id,
             };

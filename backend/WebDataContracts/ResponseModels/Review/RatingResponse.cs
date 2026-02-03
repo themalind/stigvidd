@@ -3,11 +3,11 @@
 public class RatingResponse
 {
     public required string Identifier { get; set; }
-    public double Rating { get; set; }
+    public decimal Rating { get; set; }
 
     public static RatingResponse Create(
         string identifier,
-        double rating)
+        decimal rating)
     {
         return new RatingResponse
         {

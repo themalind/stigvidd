@@ -52,7 +52,7 @@ public class ReviewController : StigViddController
             return Unauthorized("User not found");
         }
 
-        var result = await _reviewService.AddReviewAsync(userResponse.Identifier, request.TrailIdentifier, request.TrailReview, request.Grade, images, ctoken);
+        var result = await _reviewService.AddReviewAsync(userResponse.Identifier, request.TrailIdentifier, request.TrailReview, request.Rating, images, ctoken);
 
         if (!result.Success && result.Message != null)
         {

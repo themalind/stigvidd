@@ -2,7 +2,7 @@
 
 public class CreateReviewRequest
 {
-    public float Grade { get; set; }
+    public decimal Rating { get; set; }
     public string? TrailReview { get; set; }
     public required string TrailIdentifier { get; set; }
 }
