@@ -14,13 +14,28 @@ export default function ImageGallery({ images }: GalleryProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const scrollViewRef = useRef<ScrollView>(null);
   const theme = useTheme();
-
   const ITEM_WIDTH = 80;
+  const GAP = 15;
 
   const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const scrollPosition = event.nativeEvent.contentOffset.x;
-    const index = Math.round(scrollPosition / ITEM_WIDTH);
+    const index = Math.round(scrollPosition / (ITEM_WIDTH + GAP));
+
+    if (index !== currentIndex) {
+      setCurrentIndex(index);
+      setSelectedImage(images[index]);
+    }
+  };
+
+  const handleImagePress = (image: TrailImage, index: number) => {
+    setSelectedImage(image);
     setCurrentIndex(index);
+
+    // Scrolla till den valda bilden
+    scrollViewRef.current?.scrollTo({
+      x: index * (ITEM_WIDTH + GAP),
+      animated: true,
+    });
   };
 
   return (
@@ -28,7 +43,6 @@ export default function ImageGallery({ images }: GalleryProps) {
       <View style={s.focusImageConatiner}>
         <Image source={selectedImage.imageUrl} style={s.focusImage} contentFit="cover" />
       </View>
-
       <View style={{ flex: 1 }}>
         <ScrollView
           ref={scrollViewRef}
@@ -37,17 +51,11 @@ export default function ImageGallery({ images }: GalleryProps) {
           onScroll={handleScroll}
           scrollEventThrottle={16}
           showsHorizontalScrollIndicator={false}
-          snapToInterval={ITEM_WIDTH}
+          snapToInterval={ITEM_WIDTH + GAP}
           decelerationRate="fast"
         >
           {images.map((image, index) => (
-            <Pressable
-              key={image.identifier}
-              onPress={() => {
-                setSelectedImage(image);
-                setCurrentIndex(index);
-              }}
-            >
+            <Pressable key={image.identifier} onPress={() => handleImagePress(image, index)}>
               <View>
                 <Image source={image.imageUrl} style={s.scrollImage} contentFit="cover" />
               </View>
@@ -94,7 +102,6 @@ const s = StyleSheet.create({
     borderRadius: 5,
   },
   scrollView: {
-    flexGrow: 0,
     gap: 15,
   },
   paginationContainer: {
