@@ -4,20 +4,13 @@ import { router } from "expo-router";
 import React from "react";
 import { Dimensions, Pressable, StyleSheet } from "react-native";
 import { Text } from "react-native-paper";
-import Animated, {
-  Extrapolation,
-  interpolate,
-  SharedValue,
-  useAnimatedStyle,
-} from "react-native-reanimated";
+import Animated, { Extrapolation, interpolate, SharedValue, useAnimatedStyle } from "react-native-reanimated";
 
 const { width } = Dimensions.get("screen");
 const ITEM_WIDTH = Math.round(width * 0.9); // Matchar ImageCarousel
 
 // Type guard för att kolla om item är TrailOverviewViewModel
-function isTrailOverviewViewModel(
-  item: TrailOverview | TrailImage,
-): item is TrailOverview {
+function isTrailOverviewViewModel(item: TrailOverview | TrailImage): item is TrailOverview {
   return "name" in item && "trailLength" in item;
 }
 
@@ -112,7 +105,7 @@ function ImageCarouselTileInner<T extends TrailOverview | TrailImage>({
           style={{
             width: imageSize,
             height: imageHeight,
-            borderRadius: 12,
+            borderRadius: 8,
           }}
           contentFit="cover"
           cachePolicy="disk"
@@ -129,16 +122,11 @@ function ImageCarouselTileInner<T extends TrailOverview | TrailImage>({
 export const CarouselTile = React.memo(ImageCarouselTileInner, (prev, next) => {
   const sameIndex = prev.index === next.index;
   const sameKey =
-    prev.itemKey !== undefined || next.itemKey !== undefined
-      ? prev.itemKey === next.itemKey
-      : prev.item === next.item;
-  const sameLayout =
-    prev.itemWidth === next.itemWidth && prev.itemSpacing === next.itemSpacing;
+    prev.itemKey !== undefined || next.itemKey !== undefined ? prev.itemKey === next.itemKey : prev.item === next.item;
+  const sameLayout = prev.itemWidth === next.itemWidth && prev.itemSpacing === next.itemSpacing;
   const sameShowText = prev.showText === next.showText;
   return sameIndex && sameKey && sameLayout && sameShowText;
-}) as <T extends TrailOverview | TrailImage>(
-  props: CarouselTileProps<T>,
-) => React.ReactElement;
+}) as <T extends TrailOverview | TrailImage>(props: CarouselTileProps<T>) => React.ReactElement;
 
 const s = StyleSheet.create({
   background: {
@@ -146,7 +134,7 @@ const s = StyleSheet.create({
     width: ITEM_WIDTH,
     height: ITEM_WIDTH,
     padding: 20,
-    borderRadius: 20,
+    borderRadius: 10,
   },
   trailDetails: {
     position: "absolute",

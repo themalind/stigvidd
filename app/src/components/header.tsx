@@ -21,41 +21,25 @@ export default function Header() {
   } = useForm<FormFields>({ resolver: zodResolver(search) });
   const onSubmit: SubmitHandler<FormFields> = async (data) => {};
   return (
-    <SafeAreaView
-      style={{ backgroundColor: theme.colors.outlineVariant }}
-      edges={["top", "left", "right"]}
-    >
+    <SafeAreaView style={{ backgroundColor: theme.colors.outlineVariant }} edges={["top", "left", "right"]}>
       <View>
-        <View
-          style={[
-            s.container,
-            { backgroundColor: theme.colors.outlineVariant },
-          ]}
-        >
-          <Image
-            style={s.image}
-            source={require("../assets/images/mammaapp.png")}
-          />
+        <View style={[s.container, { backgroundColor: theme.colors.outlineVariant }]}>
+          <Image style={s.image} source={require("../assets/images/mammaapp.png")} />
           <View style={s.inputContainer}>
             <Controller
               control={control}
               render={({ field: { onChange, onBlur, value } }) => (
                 <TextInput
-                  style={[
-                    s.textInput,
-                    { backgroundColor: theme.colors.surface },
-                  ]}
+                  style={[s.textInput, { backgroundColor: theme.colors.surface }]}
                   onChangeText={onChange}
                   onBlur={onBlur}
                   value={value}
                   placeholder="Starta din sökning här.."
                   mode="outlined"
-                  theme={{ roundness: 25 }}
+                  theme={{ roundness: 10 }}
                   right={
                     <TextInput.Icon
-                      icon={() => (
-                        <MaterialIcons name="search" size={24} color="grey" />
-                      )}
+                      icon={() => <MaterialIcons name="search" size={24} color="grey" />}
                       onPress={handleSubmit(onSubmit)}
                     />
                   }
@@ -68,11 +52,7 @@ export default function Header() {
           </View>
         </View>
 
-        <HelperText
-          type="error"
-          visible={!!errors.searchString}
-          style={{ textAlign: "center" }}
-        >
+        <HelperText type="error" visible={!!errors.searchString} style={{ textAlign: "center" }}>
           {errors.searchString?.message}
         </HelperText>
       </View>

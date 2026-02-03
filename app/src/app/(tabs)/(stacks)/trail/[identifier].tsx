@@ -1,8 +1,6 @@
 import { getTrailByIdentifier } from "@/api/trails";
+import ImageGallery from "@/components/image-gallery";
 import CoordinateParser from "@/app/utils/coordinate-parser";
-import { useImage } from "@/atoms/image-atoms";
-import ImageCarousel from "@/components/image-carousel";
-import ImageModal from "@/components/imageModal";
 import LoadingIndicator from "@/components/loading-indicator";
 import { Rating } from "@/components/rating";
 import TrailReviewsContainer from "@/components/review/trail-reviews-container";
@@ -10,17 +8,15 @@ import TrailDescription from "@/components/trail/trail-description";
 import TrailInfo from "@/components/trail/trail-info";
 import TrailMap from "@/components/trail/trail-map";
 import UserBar from "@/components/trail/user-action-bar/user-bar";
-import { Coordinate, Review } from "@/data/types";
+import { Review } from "@/data/types";
 import { useQuery } from "@tanstack/react-query";
 import { useLocalSearchParams } from "expo-router";
 import { useRef, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { LatLng } from "react-native-maps";
 import { useTheme } from "react-native-paper";
 
 export default function TrailDetailsScreen() {
   const theme = useTheme();
-  const { showImage } = useImage();
   const { identifier } = useLocalSearchParams<{ identifier: string }>();
   const normalizedIdentifier: string = Array.isArray(identifier) ? identifier[0] : identifier;
 
@@ -66,14 +62,10 @@ export default function TrailDetailsScreen() {
 
   return (
     <ScrollView ref={scrollViewRef} contentContainerStyle={[s.container, { backgroundColor: theme.colors.background }]}>
-      <ImageModal />
       <Text style={[s.sectionTitle, { color: theme.colors.onBackground }]}>{trail?.name}</Text>
-      <ImageCarousel
-        data={images}
-        onItemPress={(image) => {
-          showImage(image.imageUrl);
-        }}
-      />
+      <View style={{ alignItems: "center", justifyContent: "center" }}>
+        <ImageGallery images={images} />
+      </View>
       <View style={s.ratingSection}>
         <View style={s.rating}>
           <Rating trailReviews={reviews} starSize={20} starColor={theme.colors.secondary} />

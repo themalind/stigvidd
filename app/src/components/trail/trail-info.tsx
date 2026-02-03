@@ -41,7 +41,7 @@ export default function TrailInfo({ trail }: TrailinfoProps) {
 const s = StyleSheet.create({
   container: {
     padding: 20,
-    borderRadius: 20,
+    borderRadius: 10,
     gap: 5,
   },
   sectionTitle: {
