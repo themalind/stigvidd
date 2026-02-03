@@ -6,28 +6,32 @@ public class TrailResponse
 {
     public required string Identifier { get; set; }
     public string? Name { get; set; }
-    public double? TrailLenght { get; set; }
-    public string? Classification { get; set; }
-    public bool? Accessability { get; set; }
-    public string? AccessabilityInfo { get; set; }
+    public decimal? TrailLenght { get; set; }
+    public int? Classification { get; set; }
+    public bool? Accessibility { get; set; }
+    public string? AccessibilityInfo { get; set; }
     public string? TrailSymbol { get; set; }
     public string? TrailSymbolImage { get; set; }
     public string? Description { get; set; }
-    public string? CoordinatesJson { get; set; }
+    public string? FullDescription { get; set; }
+    public string? Coordinates { get; set; }
+    public string? City { get; set; }
     public IReadOnlyCollection<TrailImageResponse>? TrailImagesResponse { get; set; }
     public IReadOnlyCollection<TrailLinkResponse>? TrailLinksResponse { get; set; }
 
     public static TrailResponse Create(
         string identifier,
         string name,
-        double trailLenght,
-        string classification,
-        bool accessability,
-        string accessabilityInfo,
+        decimal trailLenght,
+        int classification,
+        bool accessibility,
+        string accessibilityInfo,
         string trailSymbol,
         string trailSymbolImage,
         string description,
-        string coordinatesJson,
+        string fullDescription,
+        string coordinates,
+        string city,
         IEnumerable<TrailImageResponse>? trailImages,
         IEnumerable<TrailLinkResponse>? trailLinks)
 
@@ -38,12 +42,14 @@ public class TrailResponse
             Name = name,
             TrailLenght = trailLenght,
             Classification = classification,
-            Accessability = accessability,
-            AccessabilityInfo = accessabilityInfo,
+            Accessibility = accessibility,
+            AccessibilityInfo = accessibilityInfo,
             TrailSymbol = trailSymbol,
             TrailSymbolImage = trailSymbolImage,
             Description = description,
-            CoordinatesJson = coordinatesJson,
+            FullDescription = fullDescription,
+            Coordinates = coordinates,
+            City = city,
             TrailImagesResponse = trailImages?.ToList(),
             TrailLinksResponse = trailLinks?.ToList(),
         };

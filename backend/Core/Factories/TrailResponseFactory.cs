@@ -1,4 +1,5 @@
-﻿using Infrastructure.Data.Entities;
+﻿using Core.Enums;
+using Infrastructure.Data.Entities;
 using Microsoft.Extensions.Configuration;
 using WebDataContracts.ResponseModels.Review;
 using WebDataContracts.ResponseModels.Trail;
@@ -30,13 +31,15 @@ public class TrailResponseFactory
         (trail.Identifier,
         trail.Name,
         trail.TrailLength,
-        trail.Classification ?? string.Empty,
-        trail.Accessability,
-        trail.AccessabilityInfo ?? string.Empty,
+        trail.Classification,
+        trail.Accessibility,
+        trail.AccessibilityInfo ?? string.Empty,
         trail.TrailSymbol ?? string.Empty,
         trail.TrailSymbolImage ?? string.Empty,
         trail.Description ?? string.Empty,
-        trail.CoordinatesJson ?? string.Empty,
+        trail.FullDescription ?? string.Empty,
+        trail.Coordinates ?? string.Empty,
+        trail.City ?? string.Empty,
         images,
         links);
     }
