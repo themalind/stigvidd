@@ -1,6 +1,6 @@
 import { getTrailByIdentifier } from "@/api/trails";
 import ImageGallery from "@/components/image-gallery";
-import CoordinateParser from "@/app/utils/coordinate-parser";
+import CoordinateParser from "@/utils/coordinate-parser";
 import LoadingIndicator from "@/components/loading-indicator";
 import { Rating } from "@/components/rating";
 import TrailReviewsContainer from "@/components/review/trail-reviews-container";
