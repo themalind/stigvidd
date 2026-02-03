@@ -12,6 +12,7 @@ public class Trail : BaseEntity
     public string Description { get; set; } = string.Empty;
     public string FullDescription { get; set; } = string.Empty;
     public string? Coordinates { get; set; }
+    public string City { get; set; } = string.Empty;
     public string? CreatedBy { get; set; }
 
     public ICollection<TrailImage>? TrailImages { get; set; }
