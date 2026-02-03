@@ -117,7 +117,7 @@ const s = StyleSheet.create({
     flexDirection: "row",
     maxHeight: height * 0.6,
     maxWidth: width,
-    borderRadius: 20,
+    borderRadius: 10,
   },
   flatListContainerStyle: {
     paddingBottom: 0,

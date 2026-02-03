@@ -27,25 +27,17 @@ export default function AlertDialog({
 }: AlertDialogProps) {
   return (
     <Portal>
-      <Dialog
-        style={{ backgroundColor: backgroundColor }}
-        visible={visible}
-        onDismiss={onDismiss}
-      >
+      <Dialog style={{ backgroundColor: backgroundColor, borderRadius: 10 }} visible={visible} onDismiss={onDismiss}>
         <Dialog.Title>{title}</Dialog.Title>
         <Dialog.Content>
           <View>
-            <Text style={{ fontSize: 15, lineHeight: 24, color: textColor }}>
-              {infoText}
-            </Text>
+            <Text style={{ fontSize: 15, lineHeight: 24, color: textColor }}>{infoText}</Text>
           </View>
         </Dialog.Content>
         <Dialog.Actions>
           {confirmText && onConfirm && (
             <Button onPress={onConfirm}>
-              <Text style={{ fontSize: 18, color: textColor }}>
-                {confirmText}
-              </Text>
+              <Text style={{ fontSize: 18, color: textColor }}>{confirmText}</Text>
             </Button>
           )}
           <Button onPress={onDismiss}>

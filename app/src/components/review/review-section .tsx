@@ -63,7 +63,7 @@ export default function ReviewSection({ reviews }: ReviewProps) {
   };
 
   return (
-    <List.Section style={{ borderRadius: 20 }}>
+    <List.Section style={s.listSection}>
       {reviews.map((review) => (
         <Fragment key={review.identifier}>
           <List.Accordion
@@ -125,6 +125,9 @@ export default function ReviewSection({ reviews }: ReviewProps) {
 }
 
 const s = StyleSheet.create({
+  listSection: {
+    borderRadius: 10,
+  },
   ratingContainer: {
     flexDirection: "row",
     alignItems: "center",

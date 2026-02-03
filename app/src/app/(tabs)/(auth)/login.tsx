@@ -126,6 +126,7 @@ export default function LoginScreen() {
                     error={!!errors.password}
                     onBlur={onBlur}
                     label="Lösenord"
+                    onSubmitEditing={handleSubmit(onSubmit)}
                   />
                 )}
                 name="password"
@@ -171,6 +172,7 @@ const s = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     minHeight: HEIGHT,
+    paddingBottom: 50,
   },
   backgroundImage: {
     justifyContent: "flex-start",

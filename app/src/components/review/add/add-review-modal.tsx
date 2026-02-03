@@ -13,24 +13,13 @@ interface AddReviewProps {
   onDismiss: () => void;
 }
 
-export default function AddReview({
-  visible,
-  onDismiss,
-  trailIdentifier,
-  trailName,
-  trailLenght,
-}: AddReviewProps) {
+export default function AddReview({ visible, onDismiss, trailIdentifier, trailName, trailLenght }: AddReviewProps) {
   const theme = useTheme();
   return (
     <Portal>
-      {visible && (
-        <BlurView intensity={100} tint="dark" style={StyleSheet.absoluteFill} />
-      )}
+      {visible && <BlurView intensity={100} tint="dark" style={StyleSheet.absoluteFill} />}
       <Modal
-        contentContainerStyle={[
-          s.modalContainerStyle,
-          { backgroundColor: theme.colors.surface },
-        ]}
+        contentContainerStyle={[s.modalContainerStyle, { backgroundColor: theme.colors.surface }]}
         visible={visible}
         onDismiss={onDismiss}
       >
@@ -44,10 +33,7 @@ export default function AddReview({
             <Text style={s.title}>Skapa en recension</Text>
             <Text style={s.text}>{`${trailName} ${trailLenght} km`}</Text>
           </View>
-          <AddReviewForm
-            trailIdentifier={trailIdentifier}
-            onSuccess={onDismiss}
-          />
+          <AddReviewForm trailIdentifier={trailIdentifier} onSuccess={onDismiss} />
         </KeyboardAwareScrollView>
       </Modal>
     </Portal>
@@ -56,7 +42,7 @@ export default function AddReview({
 const s = StyleSheet.create({
   modalContainerStyle: {
     height: height * 0.8,
-    borderRadius: 20,
+    borderRadius: 10,
     padding: 10,
   },
   topTextContainer: {

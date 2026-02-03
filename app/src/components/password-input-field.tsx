@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Dimensions, StyleSheet } from "react-native";
+import { Dimensions, ReturnKeyTypeOptions, StyleSheet } from "react-native";
 import { TextInput, useTheme } from "react-native-paper";
 
 interface FieldProps {
@@ -7,11 +7,19 @@ interface FieldProps {
   error?: boolean;
   onBlur?: () => void;
   label: string;
+  onSubmitEditing?: () => void;
+  returnKeyType?: ReturnKeyTypeOptions;
 }
-
 const WIDTH = Dimensions.get("screen").width;
 
-export default function PasswordInputField({ passwordCallback, error, onBlur, label }: FieldProps) {
+export default function PasswordInputField({
+  passwordCallback,
+  error,
+  onBlur,
+  label,
+  onSubmitEditing,
+  returnKeyType,
+}: FieldProps) {
   const [password, setPassword] = useState("");
   const theme = useTheme();
   const [showPassword, setShowPassword] = useState(false);
@@ -43,6 +51,8 @@ export default function PasswordInputField({ passwordCallback, error, onBlur, la
         },
       }}
       right={<TextInput.Icon icon={showPassword ? "eye-off" : "eye"} onPress={toggleShowPassword} />}
+      onSubmitEditing={onSubmitEditing}
+      returnKeyType={returnKeyType || "done"}
     />
   );
 }

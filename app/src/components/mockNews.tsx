@@ -1,12 +1,5 @@
 import { useState } from "react";
-import {
-  Dimensions,
-  NativeScrollEvent,
-  NativeSyntheticEvent,
-  ScrollView,
-  StyleSheet,
-  View,
-} from "react-native";
+import { Dimensions, NativeScrollEvent, NativeSyntheticEvent, ScrollView, StyleSheet, View } from "react-native";
 import { Button, Card, Text, useTheme } from "react-native-paper";
 
 interface News {
@@ -54,17 +47,14 @@ export default function MockNews() {
 
   return (
     <View>
-      <View style={styles.dots}>
+      <View style={s.dots}>
         {news.map((_, index) => (
           <View
             key={index}
             style={[
-              styles.dot,
+              s.dot,
               {
-                backgroundColor:
-                  index === activeIndex
-                    ? theme.colors.primary
-                    : theme.colors.outlineVariant,
+                backgroundColor: index === activeIndex ? theme.colors.primary : theme.colors.outlineVariant,
               },
             ]}
           />
@@ -86,29 +76,20 @@ export default function MockNews() {
           <Card
             key={newsItem.date}
             style={{
+              borderRadius: 10,
               width: CARD_WIDTH,
               marginRight: index < news.length - 1 ? CARD_SPACING : 0,
             }}
           >
-            <View style={{ height: 450, padding: 10, position: "relative" }}>
-              <Text
-                variant="titleMedium"
-                style={{ fontWeight: "bold", paddingVertical: 8 }}
-              >
+            <View style={s.cardContentContainer}>
+              <Text variant="titleMedium" style={s.title}>
                 {newsItem.title}
               </Text>
-              <Card.Cover source={newsItem.image} style={{ height: 200 }} />
-              <View style={{ paddingHorizontal: 0, paddingTop: 15 }}>
-                <Text style={{ lineHeight: 20 }}>{newsItem.text}</Text>
+              <Card.Cover source={newsItem.image} style={s.cardCover} />
+              <View style={s.newsText}>
+                <Text style={s.lineHeight}>{newsItem.text}</Text>
               </View>
-              <Button
-                mode="contained"
-                style={{
-                  position: "absolute",
-                  bottom: 8,
-                  right: 8,
-                }}
-              >
+              <Button mode="contained" style={s.button}>
                 Läs mer här!
               </Button>
             </View>
@@ -119,7 +100,12 @@ export default function MockNews() {
   );
 }
 
-const styles = StyleSheet.create({
+const s = StyleSheet.create({
+  cardContentContainer: {
+    height: 450,
+    padding: 10,
+    position: "relative",
+  },
   dots: {
     flexDirection: "row",
     justifyContent: "center",
@@ -131,5 +117,24 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
+  },
+  title: {
+    fontWeight: "bold",
+    paddingVertical: 8,
+  },
+  newsText: {
+    paddingHorizontal: 0,
+    paddingTop: 15,
+  },
+  lineHeight: {
+    lineHeight: 20,
+  },
+  cardCover: {
+    height: 200,
+  },
+  button: {
+    position: "absolute",
+    bottom: 8,
+    right: 8,
   },
 });
