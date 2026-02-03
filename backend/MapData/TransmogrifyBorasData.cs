@@ -43,7 +43,7 @@ internal class TransmogrifyBorasData
                 geometry.TryGetProperty("coordinates", out var coordinates) &&
                 coordinates.ValueKind == JsonValueKind.Array)
             {
-                var rawCoordinates = JsonSerializer.Deserialize<string[][]>(coordinates.GetRawText());
+                var rawCoordinates = JsonSerializer.Deserialize<double[][]>(coordinates.ToString());
                 coordinatesJson = rawCoordinates is null
                     ? null
                     : CleanCoordinates(rawCoordinates);
@@ -73,7 +73,9 @@ internal class TransmogrifyBorasData
                     : string.Empty,
                 TrailSymbolImage = string.Empty,
                 Description = string.Empty,
-                Coordinates = coordinatesJson
+                FullDescription = string.Empty,
+                Coordinates = coordinatesJson,
+                CreatedBy = "Borås Stad"
             };
 
             // Lägg till TrailLinks direkt innan save
@@ -148,14 +150,14 @@ private Classification ParseClassification(string? classification)
         return string.Empty;
     }
 
-    private string CleanCoordinates(string[][] jsonData)
+    private string CleanCoordinates(double[][] jsonData)
     {
         try
         {
             var coordinates = jsonData.Select(c => new Coordinate
             {
-                Latitude = double.Parse(c[1], CultureInfo.InvariantCulture),
-                Longitude = double.Parse(c[0], CultureInfo.InvariantCulture)
+                Latitude =c[1],
+                Longitude = c[0]
             }).ToList();
 
             return JsonSerializer.Serialize(coordinates);
