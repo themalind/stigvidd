@@ -1,4 +1,5 @@
 import { initAuthAtom, userAtom } from "@/atoms/auth-atoms";
+import { loadUserTheme, userThemeAtom } from "@/atoms/user-theme-atom";
 import { GlobalSnackbar } from "@/components/global-snackbar";
 import { useUserTheme } from "@/hooks/appUserTheme";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -13,6 +14,7 @@ import "react-native-reanimated";
 
 export default function RootLayout() {
   const initAuth = useSetAtom(initAuthAtom);
+  const setUserTheme = useSetAtom(userThemeAtom);
   const theme = useUserTheme();
   const user = useAtom(userAtom);
   const statusBarStyle = "light";
@@ -33,6 +35,11 @@ export default function RootLayout() {
     }
   }, [user, queryClient]);
 
+  // Ladda temat när komponenten mountas
+  useEffect(() => {
+    loadUserTheme().then(setUserTheme);
+  }, [setUserTheme]);
+
   // Create a unique key based on the current user
   // When this key changes (user logs in/out), React will unmount and remount
   // the entire component tree, resetting all local state
@@ -43,12 +50,7 @@ export default function RootLayout() {
       <PaperProvider theme={theme}>
         <StatusBar style={statusBarStyle} />
         <GestureHandlerRootView key={appKey}>
-          <View
-            style={[
-              styles.container,
-              { backgroundColor: theme.colors.background },
-            ]}
-          >
+          <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
             <Stack>
               <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
             </Stack>
