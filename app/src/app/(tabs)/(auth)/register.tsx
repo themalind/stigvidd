@@ -196,6 +196,7 @@ export default function RegisterScreen() {
                     error={!!errors.password}
                     onBlur={onBlur}
                     label=" Upprepa Lösenord"
+                    onSubmitEditing={handleSubmit(onSubmit)}
                   />
                 )}
                 name="confirmPassword"
