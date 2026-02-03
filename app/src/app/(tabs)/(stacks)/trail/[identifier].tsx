@@ -45,7 +45,7 @@ export default function TrailDetailsScreen() {
   }
 
   const images = trail?.trailImagesResponse || [];
-  const coordinates = CoordinateParser(trail!.coordinates);
+  const coordinates = CoordinateParser({ data: trail!.coordinates, identifier: trail!.identifier });
 
   const onPressScrollToRatings = () => {
     surfaceToScrollToRef.current?.measure((_x, _y, _width, _height, _pageX, pageY) => {
