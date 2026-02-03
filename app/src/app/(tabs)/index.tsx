@@ -8,14 +8,16 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useQuery } from "@tanstack/react-query";
 import { Image } from "expo-image";
+import { useFocusEffect } from "expo-router";
 import { useAtom } from "jotai";
-import React from "react";
+import React, { useRef } from "react";
 import { Appearance, Dimensions, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Divider, Surface, useTheme } from "react-native-paper";
 
 const HEIGHT = Dimensions.get("screen").height;
 
 export default function HomeScreen() {
+  const scrollViewRef = useRef<ScrollView>(null);
   const theme = useTheme();
   const [userTheme] = useAtom(userThemeAtom);
   const colorScheme = Appearance.getColorScheme();
@@ -29,6 +31,13 @@ export default function HomeScreen() {
     queryKey: ["trails", "popular"],
     queryFn: getPopularTrails,
   });
+
+  // Scrolla till toppen när skärmen fokuseras (vid tab-tryck)
+  useFocusEffect(
+    React.useCallback(() => {
+      scrollViewRef.current?.scrollTo({ y: 0, animated: false });
+    }, []),
+  );
 
   if (query.isPending) {
     return <LoadingIndicator />;
@@ -44,7 +53,7 @@ export default function HomeScreen() {
   }
 
   return (
-    <ScrollView contentContainerStyle={[s.container, { backgroundColor: theme.colors.background }]}>
+    <ScrollView ref={scrollViewRef} contentContainerStyle={[s.container, { backgroundColor: theme.colors.background }]}>
       <View
         style={{
           flexDirection: "row",
@@ -56,9 +65,7 @@ export default function HomeScreen() {
         <Text style={[s.sectionTitle, { color: theme.colors.onBackground }]}>Populära promenader nära dig</Text>
       </View>
       <ImageCarousel data={query.data} />
-
       <Divider />
-
       <View style={{ flexDirection: "row", gap: 10 }}>
         <MaterialCommunityIcons name="map-marker-radius-outline" size={24} color={theme.colors.onBackground} />
         <Text style={[s.sectionTitle, { color: theme.colors.onBackground }]}>Hitta på kartan</Text>
@@ -74,9 +81,7 @@ export default function HomeScreen() {
           }}
         />
       </Surface>
-
       <Divider />
-
       <View style={{ gap: 20 }}>
         <View
           style={{
@@ -93,7 +98,6 @@ export default function HomeScreen() {
     </ScrollView>
   );
 }
-
 const s = StyleSheet.create({
   loading: {
     flex: 1,
