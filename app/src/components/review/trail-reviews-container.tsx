@@ -122,7 +122,7 @@ export default function TrailReviewsContainer({ trail, surfaceToScrollToRef, onR
 const s = StyleSheet.create({
   surface: {
     justifyContent: "center",
-    borderRadius: 20,
+    borderRadius: 10,
     padding: 25,
   },
   title: {

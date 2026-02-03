@@ -1,9 +1,9 @@
 import { Trail } from "@/data/types";
-import { Dimensions, StyleSheet } from "react-native";
-import Map from "../map/map";
-import { Surface } from "react-native-paper";
-import MapView, { LatLng, Polyline } from "react-native-maps";
 import { useEffect, useRef } from "react";
+import { Dimensions, StyleSheet } from "react-native";
+import MapView, { LatLng, Polyline } from "react-native-maps";
+import { Surface } from "react-native-paper";
+import Map from "../map/map";
 
 interface TrailMapProps {
   trail: Trail;
@@ -35,11 +35,7 @@ export default function TrailMap({ trail }: TrailMapProps) {
   return (
     <Surface style={s.container}>
       <Map style={s.map} ref={mapRef}>
-        <Polyline
-          coordinates={trailCoordinates}
-          strokeWidth={3}
-          strokeColor="#eb3204"
-        />
+        <Polyline coordinates={trailCoordinates} strokeWidth={3} strokeColor="#eb3204" />
       </Map>
     </Surface>
   );
@@ -49,7 +45,7 @@ const s = StyleSheet.create({
   container: {
     width: WIDTH * 0.9,
     height: HEIGHT * 0.3,
-    borderRadius: 20,
+    borderRadius: 10,
     overflow: "hidden",
   },
   map: {

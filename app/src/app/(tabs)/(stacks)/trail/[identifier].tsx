@@ -1,7 +1,5 @@
 import { getTrailByIdentifier } from "@/api/trails";
-import { useImage } from "@/atoms/image-atoms";
-import ImageCarousel from "@/components/image-carousel";
-import ImageModal from "@/components/imageModal";
+import ImageGallery from "@/components/image-gallery";
 import LoadingIndicator from "@/components/loading-indicator";
 import { Rating } from "@/components/rating";
 import TrailReviewsContainer from "@/components/review/trail-reviews-container";
@@ -18,7 +16,6 @@ import { useTheme } from "react-native-paper";
 
 export default function TrailDetailsScreen() {
   const theme = useTheme();
-  const { showImage } = useImage();
   const { identifier } = useLocalSearchParams<{ identifier: string }>();
   const normalizedIdentifier: string = Array.isArray(identifier) ? identifier[0] : identifier;
 
@@ -63,14 +60,10 @@ export default function TrailDetailsScreen() {
 
   return (
     <ScrollView ref={scrollViewRef} contentContainerStyle={[s.container, { backgroundColor: theme.colors.background }]}>
-      <ImageModal />
       <Text style={[s.sectionTitle, { color: theme.colors.onBackground }]}>{trail?.name}</Text>
-      <ImageCarousel
-        data={images}
-        onItemPress={(image) => {
-          showImage(image.imageUrl);
-        }}
-      />
+      <View style={{ alignItems: "center", justifyContent: "center" }}>
+        <ImageGallery images={images} />
+      </View>
       <View style={s.ratingSection}>
         <View style={s.rating}>
           <Rating trailReviews={reviews} starSize={20} starColor={theme.colors.secondary} />
