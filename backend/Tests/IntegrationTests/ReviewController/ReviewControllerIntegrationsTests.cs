@@ -97,7 +97,7 @@ public class ReviewControllerIntegrationsTests : IClassFixture<StigViddWebApplic
         {
             { new StringContent(trailIdentifier), "TrailIdentifier" },
             { new StringContent("An amazing trail with breathtaking views!"), "TrailReview" },
-            { new StringContent("4.5"), "Grade" }
+            { new StringContent("4.5"), "Rating" }
         };
 
         // Act
@@ -119,7 +119,7 @@ public class ReviewControllerIntegrationsTests : IClassFixture<StigViddWebApplic
         {
             { new StringContent(trailIdentifier), "TrailIdentifier" },
             { new StringContent("An amazing trail with breathtaking views!"), "TrailReview" },
-            { new StringContent("4.5"), "Grade" }
+            { new StringContent("4.5"), "Rating" }
         };
 
         // Act
@@ -130,7 +130,7 @@ public class ReviewControllerIntegrationsTests : IClassFixture<StigViddWebApplic
     }
 
     [Fact]
-    public async Task AddReview_WithInvalidGrade_ShouldReturnBadRequest()
+    public async Task AddReview_WithInvalidRating_ShouldReturnBadRequest()
     {
         // Arrange
         var client = _factory.CreateClient();
@@ -142,7 +142,7 @@ public class ReviewControllerIntegrationsTests : IClassFixture<StigViddWebApplic
         {
             { new StringContent(trailIdentifier), "TrailIdentifier" },
             { new StringContent("An amazing trail with breathtaking views!"), "TrailReview" },
-            { new StringContent("1337"), "Grade" }
+            { new StringContent("1337"), "Rating" }
         };
 
         // Act
@@ -165,7 +165,7 @@ public class ReviewControllerIntegrationsTests : IClassFixture<StigViddWebApplic
         {
             { new StringContent(invalidTrailIdentifier), "TrailIdentifier" },
             { new StringContent("An amazing trail with breathtaking views!"), "TrailReview" },
-            { new StringContent("4.5"), "Grade" }
+            { new StringContent("4.5"), "Rating" }
         };
 
         // Act
@@ -304,7 +304,7 @@ public class ReviewControllerIntegrationsTests : IClassFixture<StigViddWebApplic
     }
 
     [Fact]
-    public async Task AddReview_WithGradeBelowMinValue_ShouldReturnBadRequest()
+    public async Task AddReview_WithRatingBelowMinValue_ShouldReturnBadRequest()
     {
         // Arrange
         var client = _factory.CreateClient();
@@ -316,7 +316,7 @@ public class ReviewControllerIntegrationsTests : IClassFixture<StigViddWebApplic
         {
             { new StringContent(trailIdentifier), "TrailIdentifier" },
             { new StringContent("Test review"), "TrailReview" },
-            { new StringContent("0.5"), "Grade" }
+            { new StringContent("0.5"), "Rating" }
         };
 
         // Act
@@ -327,7 +327,7 @@ public class ReviewControllerIntegrationsTests : IClassFixture<StigViddWebApplic
     }
 
     [Fact]
-    public async Task AddReview_WithGradeAtMinValue_ShouldReturnCreated()
+    public async Task AddReview_WithRatingAtMinValue_ShouldReturnCreated()
     {
         // Arrange
         var client = _factory.CreateClient();
@@ -338,8 +338,8 @@ public class ReviewControllerIntegrationsTests : IClassFixture<StigViddWebApplic
         var formData = new MultipartFormDataContent
         {
             { new StringContent(trailIdentifier), "TrailIdentifier" },
-            { new StringContent("Minimum grade review"), "TrailReview" },
-            { new StringContent("1"), "Grade" }
+            { new StringContent("Minimum rating review"), "TrailReview" },
+            { new StringContent("1"), "Rating" }
         };
 
         // Act
@@ -350,7 +350,7 @@ public class ReviewControllerIntegrationsTests : IClassFixture<StigViddWebApplic
     }
 
     [Fact]
-    public async Task AddReview_WithGradeAtMaxValue_ShouldReturnCreated()
+    public async Task AddReview_WithRatingAtMaxValue_ShouldReturnCreated()
     {
         // Arrange
         var client = _factory.CreateClient();
@@ -361,8 +361,8 @@ public class ReviewControllerIntegrationsTests : IClassFixture<StigViddWebApplic
         var formData = new MultipartFormDataContent
         {
             { new StringContent(trailIdentifier), "TrailIdentifier" },
-            { new StringContent("Maximum grade review"), "TrailReview" },
-            { new StringContent("5"), "Grade" }
+            { new StringContent("Maximum rating review"), "TrailReview" },
+            { new StringContent("5"), "Rating" }
         };
 
         // Act
@@ -373,7 +373,7 @@ public class ReviewControllerIntegrationsTests : IClassFixture<StigViddWebApplic
     }
 
     [Fact]
-    public async Task AddReview_WithGradeAboveMaxValue_ShouldReturnBadRequest()
+    public async Task AddReview_WithRatingAboveMaxValue_ShouldReturnBadRequest()
     {
         // Arrange
         var client = _factory.CreateClient();
@@ -385,7 +385,7 @@ public class ReviewControllerIntegrationsTests : IClassFixture<StigViddWebApplic
         {
             { new StringContent(trailIdentifier), "TrailIdentifier" },
             { new StringContent("Test review"), "TrailReview" },
-            { new StringContent("5.1"), "Grade" }
+            { new StringContent("5.1"), "Rating" }
         };
 
         // Act
@@ -407,7 +407,7 @@ public class ReviewControllerIntegrationsTests : IClassFixture<StigViddWebApplic
         var formData = new MultipartFormDataContent
         {
             { new StringContent(trailIdentifier), "TrailIdentifier" },
-            { new StringContent("4"), "Grade" }
+            { new StringContent("4"), "Rating" }
         };
 
         // Act

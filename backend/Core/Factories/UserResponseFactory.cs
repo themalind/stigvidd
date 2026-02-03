@@ -23,7 +23,7 @@ public class UserResponseFactory
                     wish.Reviews?.Select(r =>
                         RatingResponse.Create(
                             r.Identifier,
-                            r.Grade)).ToList(),
+                            r.Rating)).ToList(),
                     wish.TrailImages?.Select(ti =>
                         TrailImageResponse.Create(
                             ti.Identifier,
@@ -41,7 +41,7 @@ public class UserResponseFactory
                     favorite.Reviews?.Select(review =>
                         RatingResponse.Create(
                             review.Identifier,
-                            review.Grade)).ToList(),
+                            review.Rating)).ToList(),
                     favorite.TrailImages?.Select(trailImage =>
                         TrailImageResponse.Create(
                             trailImage.Identifier,

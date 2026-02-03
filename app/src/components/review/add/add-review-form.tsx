@@ -20,7 +20,7 @@ interface ReviewFormProps {
 
 const newReviewForm = z.object({
   trailReview: z.optional(z.string().max(500, "Review is too long. Max char 500.")),
-  grade: z.number().min(1).max(5),
+  rating: z.number().min(1).max(5),
   trailIdentifier: z
     .string({ required_error: "trailIdentifier is required." })
     .uuid({ message: "trailIdentifier must be of type uuid." }),
@@ -60,18 +60,18 @@ export default function AddReviewForm({ trailIdentifier, onSuccess }: ReviewForm
     mutationFn: async ({
       trailIdentifier,
       review,
-      grade,
+      rating,
       imageUris,
     }: {
       trailIdentifier: string;
       review: string;
-      grade: number;
+      rating: number;
       imageUris: string[];
     }) => {
       return await createReview({
         trailIdentifier,
         review,
-        grade,
+        rating,
         imageUris,
       });
     },
@@ -119,7 +119,7 @@ export default function AddReviewForm({ trailIdentifier, onSuccess }: ReviewForm
     createReviewMutation.mutate({
       trailIdentifier: data.trailIdentifier,
       review: data.trailReview ?? "",
-      grade: rating,
+      rating: rating,
       imageUris: reviewImages,
     });
   };
@@ -158,10 +158,10 @@ export default function AddReviewForm({ trailIdentifier, onSuccess }: ReviewForm
               starSize={25}
             />
           )}
-          name="grade"
+          name="rating"
           defaultValue={1}
         />
-        {errors.grade && <Text>{errors.grade.message}</Text>}
+        {errors.rating && <Text>{errors.rating.message}</Text>}
       </View>
       <Divider />
       <View style={s.rowGap}>

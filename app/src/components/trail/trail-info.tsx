@@ -27,12 +27,12 @@ export default function TrailInfo({ trail }: TrailinfoProps) {
       <View style={s.infoDetailContainer}>
         <Text style={[s.title, { color: theme.colors.onSurface }]}>Tillgänglighet:</Text>
         <Text style={{ color: theme.colors.onSurface }}>
-          {trail.accessability ? "Tillgänglighetsanpassad" : "Ej tillgänglighetsanpassad."}
+          {trail.accessibility ? "Tillgänglighetsanpassad" : "Ej tillgänglighetsanpassad."}
         </Text>
       </View>
       <View style={s.infoDetailContainer}>
         <Text style={[s.title, { color: theme.colors.onSurface }]}>Variation:</Text>
-        <Text style={{ color: theme.colors.onSurface }}>{trail.accessabilityInfo}</Text>
+        <Text style={{ color: theme.colors.onSurface }}>{trail.accessibilityInfo}</Text>
       </View>
     </Surface>
   );

@@ -1,5 +1,6 @@
 import { getTrailByIdentifier } from "@/api/trails";
 import ImageGallery from "@/components/image-gallery";
+import CoordinateParser from "@/app/utils/coordinate-parser";
 import LoadingIndicator from "@/components/loading-indicator";
 import { Rating } from "@/components/rating";
 import TrailReviewsContainer from "@/components/review/trail-reviews-container";
@@ -35,8 +36,6 @@ export default function TrailDetailsScreen() {
     enabled: !!normalizedIdentifier && typeof normalizedIdentifier === "string",
   });
 
-  const images = trail?.trailImagesResponse || [];
-
   if (isLoading) {
     return <LoadingIndicator />;
   }
@@ -44,6 +43,9 @@ export default function TrailDetailsScreen() {
   if (isError) {
     return <Text style={{ padding: 20, color: theme.colors.error }}>{error?.message}</Text>;
   }
+
+  const images = trail?.trailImagesResponse || [];
+  const coordinates = CoordinateParser(trail!.coordinates);
 
   const onPressScrollToRatings = () => {
     surfaceToScrollToRef.current?.measure((_x, _y, _width, _height, _pageX, pageY) => {
@@ -78,7 +80,7 @@ export default function TrailDetailsScreen() {
       {trail && <TrailInfo trail={trail} />}
       {trail && <UserBar trail={trail} />}
       {trail && <TrailDescription trail={trail} />}
-      {trail && <TrailMap trail={trail} />}
+      {coordinates.length > 0 && <TrailMap trail={coordinates} />}
       {trail && (
         <TrailReviewsContainer
           trail={trail}

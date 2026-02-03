@@ -49,7 +49,7 @@ export async function createReview(request: CreateReviewRequest): Promise<{ succ
 
   formData.append("trailIdentifier", request.trailIdentifier);
   formData.append("trailReview", request.review);
-  formData.append("grade", `${request.grade}`);
+  formData.append("rating", `${request.rating}`);
 
   try {
     const response = await fetch("http://" + IP + "/api/v1/review/create", {

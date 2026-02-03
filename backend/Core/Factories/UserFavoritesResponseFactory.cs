@@ -17,7 +17,7 @@ public class UserFavoritesResponseFactory
                 trail.Description,
                 trail.Reviews?.Select(r => RatingResponse.Create(
                      r.Identifier,
-                     r.Grade)).ToList(),
+                     r.Rating)).ToList(),
                 trail.TrailImages?
                     .Select(trailImage => TrailImageResponse.Create(
                         trailImage.Identifier,
@@ -36,7 +36,7 @@ public class UserFavoritesResponseFactory
             trail.Reviews?
                 .Select(rating => RatingResponse.Create(
                     rating.Identifier,
-                    rating.Grade))
+                    rating.Rating))
                 .ToList(),
             trail.TrailImages?
                 .Select(trailImage => TrailImageResponse.Create(

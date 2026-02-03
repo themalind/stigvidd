@@ -4,13 +4,13 @@ public class TrailOverviewResponse
 {
     public required string Identifier { get; set; }
     public string? Name { get; set; }
-    public double TrailLength { get; set; }
+    public decimal TrailLength { get; set; }
     public IReadOnlyCollection<TrailImageResponse>? TrailImagesResponse { get; set; }
 
     public static TrailOverviewResponse Create(
         string identifier,
         string? name,
-        double trailLength,
+        decimal trailLength,
         IEnumerable<TrailImageResponse>? trailImages)
     {
         return new TrailOverviewResponse
