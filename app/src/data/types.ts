@@ -75,8 +75,8 @@ export interface RatingResponse {
 }
 
 export interface Coordinate {
-  latitude: number;
-  longitude: number;
+  Latitude: number;
+  Longitude: number;
 }
 
 export interface User {
