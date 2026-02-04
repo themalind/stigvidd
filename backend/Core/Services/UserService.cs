@@ -45,7 +45,7 @@ public class UserService : IUserService
                     trail.Reviews!.Select(
                         rating => RatingResponse.Create(
                             rating.Identifier,
-                            rating.Grade)).ToList(),
+                            rating.Rating)).ToList(),
                    trail.TrailImages!.Select(
                        trailImage => TrailImageResponse.Create(
                            trailImage.Identifier,
@@ -69,7 +69,7 @@ public class UserService : IUserService
                         trail.Reviews!.Select(
                             reviews => RatingResponse.Create(
                                 reviews.Identifier,
-                                reviews.Grade)).ToList(),
+                                reviews.Rating)).ToList(),
                        trail.TrailImages!.Select(
                            trailImage => TrailImageResponse.Create(
                                trailImage.Identifier,

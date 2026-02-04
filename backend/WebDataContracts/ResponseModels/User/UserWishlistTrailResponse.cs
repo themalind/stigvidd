@@ -7,7 +7,7 @@ public class UserWishlistTrailResponse
 {
     public required string Identifier { get; set; }
     public string Name { get; set; } = string.Empty;
-    public double TrailLength { get; set; }
+    public decimal TrailLength { get; set; }
     public string Description { get; set; } = string.Empty;
     public IReadOnlyCollection<RatingResponse>? RatingResponse { get; set; }
     public IReadOnlyCollection<TrailImageResponse>? TrailImages { get; set; }
@@ -15,7 +15,7 @@ public class UserWishlistTrailResponse
     public static UserWishlistTrailResponse Create(
         string identifier,
         string? name,
-        double trailLength,
+        decimal trailLength,
         string? description,
         IEnumerable<RatingResponse>? ratingResponses,
         IEnumerable<TrailImageResponse>? trailImages

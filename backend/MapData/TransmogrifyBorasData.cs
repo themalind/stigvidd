@@ -2,6 +2,7 @@
 using Infrastructure.Data.Entities;
 using System.Globalization;
 using System.Text.Json;
+using Core.Enums;
 
 namespace MapData;
 
@@ -39,11 +40,13 @@ internal class TransmogrifyBorasData
             string? coordinatesJson = null;
             if (feature.TryGetProperty("geometry", out var geometry) &&
                 geometry.ValueKind == JsonValueKind.Object &&
-                geometry.TryGetProperty("coordinates", out var coordinates))
+                geometry.TryGetProperty("coordinates", out var coordinates) &&
+                coordinates.ValueKind == JsonValueKind.Array)
             {
-                coordinatesJson = coordinates.ValueKind is JsonValueKind.Undefined or JsonValueKind.Null
+                var rawCoordinates = JsonSerializer.Deserialize<double[][]>(coordinates.ToString());
+                coordinatesJson = rawCoordinates is null
                     ? null
-                    : coordinates.ToString();
+                    : CleanCoordinates(rawCoordinates);
             }
 
             // Hämta länk för TrailLink
@@ -58,32 +61,34 @@ internal class TransmogrifyBorasData
                 TrailLength = properties.TryGetProperty("sparlangd", out var sparlangd)
                     ? ParseTrailLength(sparlangd.GetString())
                     : 0,
-                Classification = properties.TryGetProperty("klassning", out var klassning)
-                    ? klassning.GetString() ?? string.Empty
-                    : string.Empty,
-                Accessability = properties.TryGetProperty("tillganglighet", out var tillganglighet)
+                Classification = (int)(properties.TryGetProperty("klassning", out var klassning)
+                    ? ParseClassification(klassning.GetString())
+                    : Classification.NotClassified),
+                Accessibility = properties.TryGetProperty("tillganglighet", out var tillganglighet)
                     ? ParseAccessibility(tillganglighet.GetString())
                     : false, // eller default värde
-                AccessabilityInfo = GetStringOrEmpty(properties, "tillg_text"),
+                AccessibilityInfo = GetStringOrEmpty(properties, "tillg_text"),
                 TrailSymbol = properties.TryGetProperty("sparmarkering", out var sparmarkering)
                     ? sparmarkering.GetString() ?? string.Empty
                     : string.Empty,
                 TrailSymbolImage = string.Empty,
                 Description = string.Empty,
-                CoordinatesJson = coordinatesJson
+                FullDescription = string.Empty,
+                Coordinates = coordinatesJson,
+                CreatedBy = "Borås Stad"
             };
 
             // Lägg till TrailLinks direkt innan save
             if (!string.IsNullOrWhiteSpace(linkValue) && linkValue != "-")
             {
                 trail.TrailLinks = new List<TrailLink>
-            {
-                new TrailLink
                 {
-                    Link = linkValue,
-                    Trail = trail
-                }
-            };
+                    new TrailLink
+                    {
+                        Link = linkValue,
+                        Trail = trail
+                    }
+                };
             }
 
             stigViddDbContext.Trails.Add(trail);
@@ -94,7 +99,7 @@ internal class TransmogrifyBorasData
     }
 
     // Hjälpmetod för att konvertera sparlangd från "31,5 km" till double
-    private double ParseTrailLength(string? lengthString)
+    private decimal ParseTrailLength(string? lengthString)
     {
         if (string.IsNullOrWhiteSpace(lengthString))
             return 0;
@@ -105,11 +110,25 @@ internal class TransmogrifyBorasData
         // Byt ut komma mot punkt för att hantera svensk decimalseparator
         cleaned = cleaned.Replace(",", ".");
 
-        if (double.TryParse(cleaned, NumberStyles.Any, CultureInfo.InvariantCulture, out double result))
+        if (decimal.TryParse(cleaned, NumberStyles.Any, CultureInfo.InvariantCulture, out decimal result))
             return result;
 
         return 0;
     }
+
+private Classification ParseClassification(string? classification)
+{
+    if (string.IsNullOrWhiteSpace(classification))
+        return Classification.NotClassified;
+
+    return classification.Trim().ToLowerInvariant() switch
+    {
+        "lätt"  => Classification.Easy,
+        "medel" => Classification.Medium,
+        "svår"  => Classification.Hard,
+        _       => Classification.NotClassified
+    };
+}
 
     // Hjälpmetod för att konvertera tillgänglighet från "NEJ"/"JA" till bool
     private bool ParseAccessibility(string? accessString)
@@ -130,6 +149,30 @@ internal class TransmogrifyBorasData
         }
         return string.Empty;
     }
+
+    private string CleanCoordinates(double[][] jsonData)
+    {
+        try
+        {
+            var coordinates = jsonData.Select(c => new Coordinate
+            {
+                latitude = c[1],
+                longitude = c[0]
+            }).ToList();
+
+            return JsonSerializer.Serialize(coordinates);
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException("An error occurred while converting coordinates", ex);
+        }
+    }
+}
+
+internal class Coordinate
+{
+    public double latitude { get; set; }
+    public double longitude { get; set; }
 }
 
 /*

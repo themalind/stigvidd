@@ -4,7 +4,7 @@ public class ReviewResponse
 {
     public required string Identifier { get; set; }
     public string? TrailReview { get; set; }
-    public float Grade { get; set; }
+    public decimal Rating { get; set; }
     public required string UserName { get; set; }
     public DateTime CreatedAt { get; set; }
     public required string UserIdentifier { get; set; }
@@ -14,7 +14,7 @@ public class ReviewResponse
     public static ReviewResponse Create(
         string identifier,
         string? trailReview,
-        float grade,
+        decimal rating,
         string username,
         DateTime createdAt,
         string trailIdentifier,
@@ -25,7 +25,7 @@ public class ReviewResponse
         {
             Identifier = identifier,
             TrailReview = trailReview,
-            Grade = grade,
+            Rating = rating,
             UserName = username,
             CreatedAt = createdAt,
             TrailIdentifier = trailIdentifier,

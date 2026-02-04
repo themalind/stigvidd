@@ -1,9 +1,9 @@
 import Map from "@/components/map/map";
 import Marker from "@/components/map/marker";
-import { Coordinate } from "@/data/types";
 import * as Location from "expo-location";
 import { useEffect } from "react";
 import { StyleSheet } from "react-native";
+import { LatLng } from "react-native-maps";
 
 export default function MapScreen() {
   const START_COORDINATE_BORAS = {
@@ -13,12 +13,12 @@ export default function MapScreen() {
     longitudeDelta: 0.1,
   };
 
-  const sam: Coordinate = {
+  const sam: LatLng = {
     latitude: 57.67372,
     longitude: 12.56592,
   };
 
-  const frodo: Coordinate = {
+  const frodo: LatLng = {
     latitude: 57.72141010663575,
     longitude: 12.905517126805371,
   };
@@ -31,11 +31,7 @@ export default function MapScreen() {
   }, []);
 
   return (
-    <Map
-      style={s.container}
-      initialRegion={START_COORDINATE_BORAS}
-      showsUserLocation
-    >
+    <Map style={s.container} initialRegion={START_COORDINATE_BORAS} showsUserLocation>
       <Marker coordinate={frodo} title="Frodo" variant="favourite" />
       <Marker coordinate={sam} title="Sam" variant="favourite" />
     </Map>

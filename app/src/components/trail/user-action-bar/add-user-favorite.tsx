@@ -1,11 +1,7 @@
 import { ApiError } from "@/api/users";
 import { authStateAtom } from "@/atoms/auth-atoms";
 import { showErrorAtom, showWarningAtom } from "@/atoms/snackbar-atoms";
-import {
-  addToFavoritesAtom,
-  removeFromFavoritesAtom,
-  userFavoritesAtom,
-} from "@/atoms/user-atoms";
+import { addToFavoritesAtom, removeFromFavoritesAtom, userFavoritesAtom } from "@/atoms/user-atoms";
 import NotAuthenticatedDialog from "@/components/not-authenticated-msg-dialog";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
@@ -26,45 +22,35 @@ export default function AddUserFavorite({ trailIdentifier }: Props) {
   const setWarning = useSetAtom(showWarningAtom);
   const setError = useSetAtom(showErrorAtom);
 
+  const isInFavorites = data?.some((trail) => trail.identifier === trailIdentifier);
+
+  const isPending = removeUserFavorite.isPending || addToUserFavorite.isPending;
+
   const handlePress = () => {
     if (!authState.isAuthenticated) {
       setAuthDialog(true);
       return;
     }
 
-    if (data?.some((trail) => trail.identifier === trailIdentifier)) {
-      removeUserFavorite.mutate(trailIdentifier);
+    const onError = (error: unknown) => {
+      if (error instanceof ApiError && error.status === 409) {
+        setWarning("Leden finns redan i listan!");
+      } else {
+        setError(error instanceof Error ? error.message : "Ett fel uppstod");
+      }
+    };
+
+    if (isInFavorites) {
+      removeUserFavorite.mutate(trailIdentifier, { onError });
     } else {
-      addToUserFavorite.mutate(trailIdentifier, {
-        onError: (error) => {
-          if (error instanceof ApiError && error.status === 409) {
-            setWarning("Leden finns redan i listan!");
-          } else {
-            setError(`${error}`);
-          }
-        },
-      });
+      addToUserFavorite.mutate(trailIdentifier, { onError });
     }
   };
 
-  const isInFavorites = data?.some(
-    (trail) => trail.identifier === trailIdentifier,
-  );
-
-  const isPending = removeUserFavorite.isPending || addToUserFavorite.isPending;
-
   return (
     <View style={s.container}>
-      <TouchableOpacity
-        style={s.touchable}
-        onPress={handlePress}
-        disabled={isPending}
-      >
-        <MaterialIcons
-          name={isInFavorites ? "favorite" : "favorite-border"}
-          size={30}
-          color={theme.colors.onPrimary}
-        />
+      <TouchableOpacity style={s.touchable} onPress={handlePress} disabled={isPending}>
+        <MaterialIcons name={isInFavorites ? "favorite" : "favorite-border"} size={30} color={theme.colors.onPrimary} />
         <Text style={[s.text, { color: theme.colors.onPrimary }]}>Favorit</Text>
       </TouchableOpacity>
       <NotAuthenticatedDialog

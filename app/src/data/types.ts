@@ -5,16 +5,17 @@ export interface Trail {
   identifier: string;
   name: string;
   trailLenght: number;
-  classification: string;
-  accessability: boolean;
-  accessabilityInfo: string;
+  classification: number;
+  accessibility: boolean;
+  accessibilityInfo: string;
   trailSymbol: string;
   trailSymbolImage: string;
   description: string;
-  coordinatesJson: string;
+  fullDescription: string;
+  coordinates: string;
+  city: string;
   trailImagesResponse?: TrailImage[];
   trailLinksResponse?: TrailLink[];
-  reviewsResponse?: Review[];
 }
 
 export interface TrailOverview {
@@ -37,7 +38,7 @@ export interface TrailLink {
 export interface Review {
   identifier: string;
   trailReview?: string;
-  grade: number;
+  rating: number;
   userName: string;
   createdAt: string;
   userIdentifier: string;
@@ -74,8 +75,8 @@ export interface RatingResponse {
 }
 
 export interface Coordinate {
-  latitude: number;
-  longitude: number;
+  Latitude: number;
+  Longitude: number;
 }
 
 export interface User {
@@ -84,6 +85,13 @@ export interface User {
   email: string;
   myWishList: UserWishlistTrail[];
   myFavorites: UserFavoritesTrail[];
+}
+
+export interface PagedReviewResponse {
+  reviews: Review[];
+  hasMore: boolean;
+  page: number;
+  total?: number;
 }
 
 // Frontend types
@@ -101,7 +109,7 @@ export interface RegisterData {
 
 export interface CreateReviewRequest {
   review: string;
-  grade: number;
+  rating: number;
   trailIdentifier: string;
   imageUris?: string[];
 }

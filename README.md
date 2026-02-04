@@ -1,3 +1,3 @@
 <figure>
-  <img src="UI/src/assets/images/mammaapp.png">
+  <img src="app/src/assets/images/mammaapp.png">
 </figure>

@@ -8,18 +8,26 @@ import ThemeToggle from "@/components/theme-toggle";
 import ProfileMenuItem from "@/components/user/profile-page/profile-menu-item";
 import { MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
 import { Image } from "expo-image";
-import { Redirect, router } from "expo-router";
+import { Redirect, router, useFocusEffect } from "expo-router";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
+import React, { useRef } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { Text, useTheme } from "react-native-paper";
 
 export default function ProfilePageScreen() {
   const [{ data: user, isLoading, isError, error }] = useAtom(stigviddUserAtom);
   const setError = useSetAtom(showErrorAtom);
+  const scrollViewRef = useRef<ScrollView>(null);
   const userTheme = useAtomValue(userThemeAtom);
   const theme = useTheme();
   const [authState] = useAtom(authStateAtom);
 
+  // Scrolla till toppen när skärmen fokuseras (vid tab-tryck)
+  useFocusEffect(
+    React.useCallback(() => {
+      scrollViewRef.current?.scrollTo({ y: 0, animated: false });
+    }, []),
+  );
   if (!authState.isAuthenticated) {
     return <Redirect href="/(tabs)/(auth)/login" />;
   }
@@ -43,12 +51,7 @@ export default function ProfilePageScreen() {
   }
 
   return (
-    <ScrollView
-      contentContainerStyle={[
-        s.container,
-        { backgroundColor: theme.colors.background },
-      ]}
-    >
+    <ScrollView ref={scrollViewRef} contentContainerStyle={[s.container, { backgroundColor: theme.colors.background }]}>
       <Text style={s.topTitle}>Mitt Stigvidd</Text>
       <View style={s.userInfoContainer}>
         <Image
@@ -71,79 +74,37 @@ export default function ProfilePageScreen() {
         <ProfileMenuItem
           text="Favoriter"
           route="/(tabs)/(stacks)/user/favorites"
-          icon={
-            <MaterialCommunityIcons
-              name="cards-heart"
-              size={24}
-              color={theme.colors.tertiary}
-            />
-          }
+          icon={<MaterialCommunityIcons name="cards-heart" size={24} color={theme.colors.tertiary} />}
         />
         <ProfileMenuItem
           text="Vill gå"
           route="/(tabs)/(stacks)/user/wishlist"
-          icon={
-            <MaterialIcons
-              name="star"
-              size={24}
-              color={theme.colors.tertiary}
-            />
-          }
+          icon={<MaterialIcons name="star" size={24} color={theme.colors.tertiary} />}
         />
         <ProfileMenuItem
           text="Skapa en promenad"
           route="/(tabs)/profile-page"
-          icon={
-            <MaterialIcons
-              name="hiking"
-              size={24}
-              color={theme.colors.tertiary}
-            />
-          }
+          icon={<MaterialIcons name="hiking" size={24} color={theme.colors.tertiary} />}
         />
         <ProfileMenuItem
           text="Mina egna promenader"
           route="/(tabs)/profile-page"
-          icon={
-            <MaterialCommunityIcons
-              name="map-legend"
-              size={24}
-              color={theme.colors.tertiary}
-            />
-          }
+          icon={<MaterialCommunityIcons name="map-legend" size={24} color={theme.colors.tertiary} />}
         />
         <ProfileMenuItem
           text="Utmärkelser"
           route="/(tabs)/profile-page"
-          icon={
-            <MaterialIcons
-              name="emoji-events"
-              size={24}
-              color={theme.colors.tertiary}
-            />
-          }
+          icon={<MaterialIcons name="emoji-events" size={24} color={theme.colors.tertiary} />}
         />
         <ProfileMenuItem
           text="Statistik"
           route="/(tabs)/profile-page"
-          icon={
-            <MaterialIcons
-              name="bar-chart"
-              size={24}
-              color={theme.colors.tertiary}
-            />
-          }
+          icon={<MaterialIcons name="bar-chart" size={24} color={theme.colors.tertiary} />}
         />
         <ProfileMenuItem
           text="Om Stigvidd"
           route="/(tabs)/(stacks)/about"
-          icon={
-            <MaterialIcons
-              name="perm-device-info"
-              size={24}
-              color={theme.colors.tertiary}
-            />
-          }
+          icon={<MaterialIcons name="perm-device-info" size={24} color={theme.colors.tertiary} />}
         />
         <View style={s.accountActionsContainer}>
           <Pressable onPress={handleSignOut}>

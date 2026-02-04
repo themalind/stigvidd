@@ -19,10 +19,8 @@ interface ReviewFormProps {
 }
 
 const newReviewForm = z.object({
-  trailReview: z.optional(
-    z.string().max(500, "Review is too long. Max char 500."),
-  ),
-  grade: z.number().min(1).max(5),
+  trailReview: z.optional(z.string().max(500, "Review is too long. Max char 500.")),
+  rating: z.number().min(1).max(5),
   trailIdentifier: z
     .string({ required_error: "trailIdentifier is required." })
     .uuid({ message: "trailIdentifier must be of type uuid." }),
@@ -30,10 +28,7 @@ const newReviewForm = z.object({
 
 type FormFields = z.infer<typeof newReviewForm>;
 
-export default function AddReviewForm({
-  trailIdentifier,
-  onSuccess,
-}: ReviewFormProps) {
+export default function AddReviewForm({ trailIdentifier, onSuccess }: ReviewFormProps) {
   const theme = useTheme();
   const [showImageInfoModal, setShowImageInfoModal] = useState(false);
   const [showStarInfoModal, setShowStarInfoModal] = useState(false);
@@ -65,25 +60,30 @@ export default function AddReviewForm({
     mutationFn: async ({
       trailIdentifier,
       review,
-      grade,
+      rating,
       imageUris,
     }: {
       trailIdentifier: string;
       review: string;
-      grade: number;
+      rating: number;
       imageUris: string[];
     }) => {
       return await createReview({
         trailIdentifier,
         review,
-        grade,
+        rating,
         imageUris,
       });
     },
     onSuccess: (result, variables) => {
       if (result.success) {
         queryClient.invalidateQueries({
+          // Uppdatera medelbetyget i trail
           queryKey: ["trail", variables.trailIdentifier],
+        });
+        queryClient.invalidateQueries({
+          // Uppdatera listan i recensionsfältet
+          queryKey: ["reviews", variables.trailIdentifier],
         });
         setSuccess("Recensionen har lagts till");
         onSuccess();
@@ -119,7 +119,7 @@ export default function AddReviewForm({
     createReviewMutation.mutate({
       trailIdentifier: data.trailIdentifier,
       review: data.trailReview ?? "",
-      grade: rating,
+      rating: rating,
       imageUris: reviewImages,
     });
   };
@@ -158,10 +158,10 @@ export default function AddReviewForm({
               starSize={25}
             />
           )}
-          name="grade"
+          name="rating"
           defaultValue={1}
         />
-        {errors.grade && <Text>{errors.grade.message}</Text>}
+        {errors.rating && <Text>{errors.rating.message}</Text>}
       </View>
       <Divider />
       <View style={s.rowGap}>
@@ -214,9 +214,7 @@ export default function AddReviewForm({
               onChangeText={onChange}
               value={value}
               label="Recension"
-              onContentSizeChange={(event) =>
-                setHeight(event.nativeEvent.contentSize.height)
-              }
+              onContentSizeChange={(event) => setHeight(event.nativeEvent.contentSize.height)}
               style={{ height: Math.max(40, height) }}
             />
           )}
@@ -231,9 +229,9 @@ export default function AddReviewForm({
           onPress={handleSubmit(onSubmit, (errors) => {
             console.log("Validation failed:", errors);
           })}
-          disabled={isSubmitting}
+          disabled={isSubmitting || createReviewMutation.isPending}
         >
-          {isSubmitting ? "Sparar..." : "Spara"}
+          {createReviewMutation.isPending ? "Sparar..." : "Spara"}
         </Button>
       </View>
     </View>

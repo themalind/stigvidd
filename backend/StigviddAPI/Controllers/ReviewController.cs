@@ -21,11 +21,13 @@ public class ReviewController : StigViddController
 
     [HttpGet]
     [Route("trail/{trailIdentifier}")]
-    public async Task<ActionResult<IReadOnlyCollection<ReviewResponse>>> GetReviewsByTrailIdentifierAsync(
+    public async Task<ActionResult<PagedReviewResponse>> GetReviewsByTrailIdentifierAsync(
         [FromRoute] string trailIdentifier,
+        [FromQuery] int page, // Vilken omgång
+        [FromQuery] int limit, // Hur många per omgång
         CancellationToken ctoken)
     {
-        var result = await _reviewService.GetReviewsByTrailIdentifierAsync(trailIdentifier, ctoken);
+        var result = await _reviewService.GetReviewsByTrailIdentifierAsync(trailIdentifier, page, limit, ctoken);
 
         if (!result.Success && result.Message != null)
         {
@@ -50,7 +52,7 @@ public class ReviewController : StigViddController
             return Unauthorized("User not found");
         }
 
-        var result = await _reviewService.AddReviewAsync(userResponse.Identifier, request.TrailIdentifier, request.TrailReview, request.Grade, images, ctoken);
+        var result = await _reviewService.AddReviewAsync(userResponse.Identifier, request.TrailIdentifier, request.TrailReview, request.Rating, images, ctoken);
 
         if (!result.Success && result.Message != null)
         {

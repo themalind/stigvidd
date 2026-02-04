@@ -3,7 +3,7 @@
 public class Review : BaseEntity
 {
     public string? TrailReview { get; set; }
-    public float Grade { get; set; }
+    public decimal Rating { get; set; }
     public int TrailId { get; set; }
     public int UserId { get; set; }
 
@@ -11,4 +11,3 @@ public class Review : BaseEntity
     public ICollection<ReviewImage>? ReviewImages { get; set; }
     public User? User { get; set; }
 }
-

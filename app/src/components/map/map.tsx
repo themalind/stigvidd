@@ -8,7 +8,7 @@ import MapView, { MapViewProps, Region } from "react-native-maps";
 
 interface Props extends MapViewProps {
   style?: StyleProp<ViewStyle>;
-  initialRegion?: Region;
+  initialRegion: Region;
   showsUserLocation?: boolean;
   children?: React.ReactNode;
 }

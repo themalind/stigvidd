@@ -3,6 +3,7 @@ using Core.Interfaces;
 using Infrastructure.Data;
 using Infrastructure.Data.Entities;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -26,17 +27,28 @@ public class ReviewService : IReviewService
         _reviewResponseFactory = reviewResponseFactory;
         _logger = logger;
     }
-    public async Task<Result<IReadOnlyCollection<ReviewResponse?>>> GetReviewsByTrailIdentifierAsync(string trailIdentifier, CancellationToken ctoken)
+    public async Task<Result<PagedReviewResponse>> GetReviewsByTrailIdentifierAsync(string trailIdentifier, int page, int limit, CancellationToken ctoken)
     {
         using var context = await _context.CreateDbContextAsync(ctoken);
+
+        var offset = page * limit;
+
+        // För att få veta hur många reviews det finns totalt
+        var totalCount = await context.Reviews
+            .AsNoTracking()
+            .Where(review => review.Trail!.Identifier == trailIdentifier)
+            .CountAsync(ctoken);
 
         var reviews = await context.Reviews
             .AsNoTracking()
             .Where(review => review.Trail!.Identifier == trailIdentifier)
-                .Select(review => ReviewResponse.Create(
+            .OrderByDescending(review => review.CreatedAt)
+            .Skip(offset)
+            .Take(limit + 1)
+            .Select(review => ReviewResponse.Create(
                 review.Identifier,
                 review.TrailReview,
-                review.Grade,
+                review.Rating,
                 review.User!.NickName,
                 review.CreatedAt,
                 review.Trail!.Identifier,
@@ -48,17 +60,15 @@ public class ReviewService : IReviewService
             ))
             .ToListAsync(ctoken);
 
-        if (reviews == null || !reviews.Any())
-        {
-            _logger.LogInformation("No reviews found for trail with identifier: {TrailIdentifier}", trailIdentifier);
+        var hasMore = reviews.Count > limit;
 
-            return Result.Fail<IReadOnlyCollection<ReviewResponse?>>(new Message(404, "No reviews found for trail."));
-        }
+        var result = hasMore ? reviews.Take(limit).ToList() : reviews; // Finns det fler recensioner? Om ja ta bara så många som limit är satt till, annars behålla alla. 
+        var pagedReviewResponse = _reviewResponseFactory.Create(result, page, hasMore, totalCount);
 
-        return Result.Ok<IReadOnlyCollection<ReviewResponse?>>(reviews);
+        return Result.Ok(pagedReviewResponse);
     }
 
-    public async Task<Result<ReviewResponse?>> AddReviewAsync(string userIdentifier, string trailIdentifier, string? trailReview, float grade, IFormFileCollection? imageUrls, CancellationToken ctoken)
+    public async Task<Result<ReviewResponse?>> AddReviewAsync(string userIdentifier, string trailIdentifier, string? trailReview, decimal rating, IFormFileCollection? imageUrls, CancellationToken ctoken)
     {
         using var context = await _context.CreateDbContextAsync(ctoken);
 
@@ -66,17 +76,25 @@ public class ReviewService : IReviewService
 
         try
         {
-            if(grade < 1 || grade > 5)
+            if (rating < 1M || rating > 5M)
             {
-                return Result.Fail<ReviewResponse?>(new Message(400, "Grade must be between 0 and 5."));
+                return Result.Fail<ReviewResponse?>(new Message(400, "Rating must be between 0 and 5."));
             }
 
             if (imageUrls != null)
             {
                 foreach (var image in imageUrls)
                 {
-                    var url = await _webDavService.UploadFileAsync(image.OpenReadStream(), "reviews");
-                    uploadedUrls.Add(url);
+                    var result = await _webDavService.UploadFileAsync(image.OpenReadStream(), "reviews");
+
+                    if (result.IsFailure)
+                    {
+                        return Result.Fail<ReviewResponse?>(new Message(500, "Something went wrong, could not create review. Try again later."));
+                    }
+                    if(result.Value != null)
+                    {
+                        uploadedUrls.Add(result.Value);
+                    }                   
                 }
             }
 
@@ -97,7 +115,7 @@ public class ReviewService : IReviewService
             var review = new Review
             {
                 TrailReview = trailReview,
-                Grade = grade,
+                Rating = rating,
                 TrailId = trail.Id,
                 UserId = user.Id,
             };
@@ -173,11 +191,16 @@ public class ReviewService : IReviewService
             {
                 try
                 {
-                    await _webDavService.DeleteFileAsync(image.ImageUrl);
+                   var result = await _webDavService.DeleteFileAsync(image.ImageUrl);
+
+                    if (result.IsFailure)
+                    {
+                        return Result.Fail(new Message(500, "Could not remove file. Try again later."));
+                    }
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogWarning(ex, $"RemoveReviewAsync: Failed to remove image {image.ImageUrl}. UserIdentifier: {userIdentifer}, ReviewIdentifer: {reviewIdentifier}");
+                    _logger.LogWarning(ex, "RemoveReviewAsync: Failed to remove image {image.ImageUrl}. UserIdentifier: {userIdentifer}, ReviewIdentifer: {reviewIdentifier}", image.ImageUrl, userIdentifer, reviewIdentifier);
                 }
             }
         }
