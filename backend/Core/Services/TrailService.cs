@@ -47,6 +47,8 @@ public class TrailService : ITrailService
         using var context = await _context.CreateDbContextAsync(ctoken);
 
         var trails = await context.Trails
+            .AsNoTracking()
+            .Where(trail => trail.IsVerified == true)
             .Select(trail => TrailOverviewResponse.Create
             (
                 trail.Identifier,
@@ -59,7 +61,7 @@ public class TrailService : ITrailService
                     .Take(1)
                     .ToList()
             ))
-            .Take(12)
+            .Take(10)
             .ToListAsync(ctoken);
 
         return Result.Ok<IReadOnlyCollection<TrailOverviewResponse?>>(trails);
