@@ -59,7 +59,7 @@ public class TrailService : ITrailService
                     .Take(1)
                     .ToList()
             ))
-            .Take(9)
+            .Take(12)
             .ToListAsync(ctoken);
 
         return Result.Ok<IReadOnlyCollection<TrailOverviewResponse?>>(trails);
