@@ -77,14 +77,14 @@ namespace Infrastructure.Migrations
                 name: "IsVerified",
                 table: "Trails");
 
+            migrationBuilder.DropColumn(
+              name: "City",
+              table: "Trails");
+
             migrationBuilder.RenameColumn(
                 name: "Tags",
                 table: "Trails",
                 newName: "City");
-
-            migrationBuilder.DropColumn(
-                name: "City",
-                table: "Trails");
 
             migrationBuilder.DropColumn(
                 name: "Title",
