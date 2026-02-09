@@ -3,7 +3,6 @@ using Core.Interfaces;
 using Infrastructure.Data;
 using Infrastructure.Data.Entities;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;

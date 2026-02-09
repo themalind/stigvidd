@@ -44,4 +44,3 @@ public class TrailController(ITrailService service, ILogger<TrailController> log
         return Ok(result.Value);
     }
 }
-
