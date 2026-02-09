@@ -36,7 +36,24 @@ public class TrailController(ITrailService service, ILogger<TrailController> log
         if (!result.Success && result.Message != null)
         {
             _logger.LogInformation(
-               "GetPopularTrailsAsync: Failed to fetch popular trails. Trails are null");
+               "GetPopularTrailsAsync: Failed to fetch popular trails.");
+
+            return ToActionResult(result.Message);
+        }
+
+        return Ok(result.Value);
+    }
+
+    [HttpGet]
+    [Route("")]
+    public async Task<ActionResult<IReadOnlyCollection<TrailShortInfoResponse>>> GetAllTrailsAsync(CancellationToken ctoken)
+    {
+        var result = await _service.GetAllTrailsWithBasicInfoAsync(ctoken);
+
+        if(!result.Success && result.Message != null)
+        {
+            _logger.LogInformation(
+              "GetAllTrailsAsync: Failed to fetch trails.");
 
             return ToActionResult(result.Message);
         }

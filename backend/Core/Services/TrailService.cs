@@ -66,4 +66,24 @@ public class TrailService : ITrailService
 
         return Result.Ok<IReadOnlyCollection<TrailOverviewResponse?>>(trails);
     }
+
+    public async Task<Result<IReadOnlyCollection<TrailShortInfoResponse>>> GetAllTrailsWithBasicInfoAsync(CancellationToken ctoken)
+    {
+       using var context = await _context.CreateDbContextAsync(ctoken);
+
+        var trailsWithShortInfo = await context.Trails
+            .AsNoTracking()
+            //.Where(trail => trail.IsVerified == true)
+            .Select(trail => TrailShortInfoResponse.Create(
+                trail.Identifier,
+                trail.Name,
+                trail.TrailLength,
+                trail.Accessibility,
+                trail.Classification,
+                trail.City
+            ))
+            .ToListAsync(ctoken);
+
+        return Result.Ok<IReadOnlyCollection<TrailShortInfoResponse>>(trailsWithShortInfo);
+    }
 }
