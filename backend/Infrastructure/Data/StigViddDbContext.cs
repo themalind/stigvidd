@@ -12,6 +12,7 @@ public class StigViddDbContext(DbContextOptions<StigViddDbContext> options) : Db
     public DbSet<ReviewImage> ReviewImages { get; set; }
     public DbSet<User> Users { get; set; }
     public DbSet<Statistics> Statistics { get; set; }
+    public DbSet<VisitorInformation> VisitorInformations { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
