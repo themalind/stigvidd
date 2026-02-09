@@ -3,7 +3,7 @@ namespace WebDataContracts.RequestModels.Trail;
 public class CreateTrailRequest
 {
     public required string Name { get; set; }
-    public required double TrailLength { get; set; }
+    public required decimal TrailLength { get; set; }
     public int? Classification { get; set; }
     public bool? Accessibility { get; set; }
     public string? AccessibilityInfo { get; set; }
