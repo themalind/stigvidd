@@ -1,5 +1,5 @@
 import { IP } from "@/../ipconfig";
-import { Trail, TrailOverview } from "@/data/types";
+import { Trail, TrailOverview, TrailShortInfoResponse } from "@/data/types";
 
 export async function getPopularTrails(): Promise<TrailOverview[]> {
   try {
@@ -16,11 +16,23 @@ export async function getPopularTrails(): Promise<TrailOverview[]> {
   }
 }
 
+export async function getAllTrails(): Promise<TrailShortInfoResponse[]> {
+  try {
+    const response = await fetch("http://" + IP + `/api/v1/trail`);
+    if (!response.ok) {
+      throw new Error(`HTTP error ${response.status}`);
+    }
+
+    return response.json();
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+}
+
 export async function getTrailByIdentifier(identifier: string): Promise<Trail> {
   try {
-    const response = await fetch(
-      "http://" + IP + `/api/v1/Trail/${identifier}`,
-    );
+    const response = await fetch("http://" + IP + `/api/v1/Trail/${identifier}`);
 
     if (!response.ok) {
       throw new Error(`HTTP error ${response.status}`);
