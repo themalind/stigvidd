@@ -83,7 +83,7 @@ export default function ProfilePageScreen() {
         />
         <ProfileMenuItem
           text="Skapa en promenad"
-          route="/(tabs)/profile-page"
+          route="/(tabs)/(stacks)/user/create-trail-screen"
           icon={<MaterialIcons name="hiking" size={24} color={theme.colors.tertiary} />}
         />
         <ProfileMenuItem
