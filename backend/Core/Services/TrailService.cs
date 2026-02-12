@@ -19,14 +19,17 @@ public class TrailService : ITrailService
         _logger = logger;
         _trailResponseFactory = factory;
     }
+
     public async Task<Result<TrailResponse?>> GetTrailByIdentifierAsync(string identifier, CancellationToken ctoken)
     {
         using var context = await _context.CreateDbContextAsync(ctoken);
 
         var trail = await context.Trails
               .AsNoTracking()
+              //.Where(trail => trail.IsVerified == true)
               .Include(t => t.TrailImages)
               .Include(t => t.TrailLinks)
+              .Include(t => t.VisitorInformation)
               .FirstOrDefaultAsync(t => t.Identifier == identifier, ctoken);
 
         if (trail == null)

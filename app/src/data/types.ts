@@ -14,6 +14,9 @@ export interface Trail {
   fullDescription: string;
   coordinates: string;
   city: string;
+  tags?: string;
+  isVerified: boolean;
+  visitorInformation?: VisitorInformation;
   trailImagesResponse?: TrailImage[];
   trailLinksResponse?: TrailLink[];
 }
@@ -33,6 +36,14 @@ export interface TrailImage {
 export interface TrailLink {
   identifier: string;
   link: string;
+  title: string;
+}
+
+export interface VisitorInformation {
+  identifier: string;
+  gettingThere: string;
+  publicTransport: string;
+  parking: string;
 }
 
 export interface Review {
