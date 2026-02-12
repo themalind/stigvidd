@@ -19,6 +19,7 @@ public class TrailService : ITrailService
         _logger = logger;
         _trailResponseFactory = factory;
     }
+
     public async Task<Result<TrailResponse?>> GetTrailByIdentifierAsync(string identifier, CancellationToken ctoken)
     {
         using var context = await _context.CreateDbContextAsync(ctoken);

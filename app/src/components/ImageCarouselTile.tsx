@@ -72,7 +72,7 @@ function ImageCarouselTileInner<T extends TrailOverview | TrailImage>({
     if (onPress) {
       onPress(item);
     } else if (isTrailOverviewViewModel(item)) {
-      router.replace({
+      router.navigate({
         pathname: "/(tabs)/(stacks)/trail/[identifier]",
         params: { identifier: item.identifier },
       });

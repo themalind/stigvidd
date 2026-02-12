@@ -1,4 +1,3 @@
-﻿
 namespace WebDataContracts.ResponseModels.Trail;
 
 public class TrailShortInfoResponse

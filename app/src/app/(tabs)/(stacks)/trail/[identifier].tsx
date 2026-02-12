@@ -1,6 +1,5 @@
 import { getTrailByIdentifier } from "@/api/trails";
 import ImageGallery from "@/components/image-gallery";
-import CoordinateParser from "@/utils/coordinate-parser";
 import LoadingIndicator from "@/components/loading-indicator";
 import { Rating } from "@/components/rating";
 import TrailReviewsContainer from "@/components/review/trail-reviews-container";
@@ -9,6 +8,7 @@ import TrailInfo from "@/components/trail/trail-info";
 import TrailMap from "@/components/trail/trail-map";
 import UserBar from "@/components/trail/user-action-bar/user-bar";
 import { Review } from "@/data/types";
+import CoordinateParser from "@/utils/coordinate-parser";
 import { useQuery } from "@tanstack/react-query";
 import { useLocalSearchParams } from "expo-router";
 import { useRef, useState } from "react";
@@ -79,7 +79,7 @@ export default function TrailDetailsScreen() {
       </View>
       {trail && <TrailInfo trail={trail} />}
       {trail && <UserBar trail={trail} />}
-      {trail && <TrailDescription trail={trail} />}
+      {trail?.description && <TrailDescription trail={trail} />}
       {coordinates.length > 0 && <TrailMap trail={coordinates} />}
       {trail && (
         <TrailReviewsContainer
