@@ -14,7 +14,7 @@ public class TrailController : StigViddController
     private readonly IUserService _userService;
     private readonly ILogger<TrailController> _logger;
 
-    public TrailController(ITrailService trailService, IUserService userService, Logger<TrailController> logger)
+    public TrailController(ITrailService trailService, IUserService userService, ILogger<TrailController> logger)
     {
         _trailService = trailService;
         _userService = userService;
