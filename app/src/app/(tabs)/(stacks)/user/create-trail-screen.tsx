@@ -1,17 +1,15 @@
 import { authStateAtom } from "@/atoms/auth-atoms";
-import { showErrorAtom } from "@/atoms/snackbar-atoms";
 import { stigviddUserAtom } from "@/atoms/user-atoms";
 import LoadingIndicator from "@/components/loading-indicator";
 import TrailCreator from "@/components/trail/trail-creator/trail-creator";
 import { Redirect, useFocusEffect } from "expo-router";
-import { useAtom, useSetAtom } from "jotai";
+import { useAtom } from "jotai";
 import React, { useRef } from "react";
 import { ScrollView, StyleSheet } from "react-native";
 import { Text, useTheme } from "react-native-paper";
 
 export default function CreateTrailScreen() {
-  const [{ data: user, isLoading, isError, error }] = useAtom(stigviddUserAtom);
-  const setError = useSetAtom(showErrorAtom);
+  const [{ isLoading, isError, error }] = useAtom(stigviddUserAtom);
   const theme = useTheme();
   const scrollViewRef = useRef<ScrollView>(null);
   const [authState] = useAtom(authStateAtom);
@@ -47,7 +45,7 @@ const s = StyleSheet.create({
     // borderWidth: 1,
     flexGrow: 1,
     gap: 10,
-    padding: 10,
-    paddingTop: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 20,
   },
 });
