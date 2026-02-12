@@ -1,7 +1,5 @@
-﻿using Core.Enums;
-using Infrastructure.Data.Entities;
+﻿using Infrastructure.Data.Entities;
 using Microsoft.Extensions.Configuration;
-using WebDataContracts.ResponseModels.Review;
 using WebDataContracts.ResponseModels.Trail;
 
 namespace Core.Factories;
@@ -23,9 +21,18 @@ public class TrailResponseFactory
                 trailImage.ImageUrl)) ?? null;
 
         var links = trail.TrailLinks?.Select(trailLink =>
-            TrailLinkResponse.Create(
+            TrailLinkResponse.Create( // Här kommer vi behöva skicka presentableUrl
                 trailLink.Identifier,
-                trailLink.Link)) ?? null;
+                trailLink.Link,
+                trailLink.Title)) ?? null;
+
+        var visitorInformation = trail.VisitorInformation != null
+            ? VisitorInformationResponse.Create(
+                trail.VisitorInformation.Identifier,
+                trail.VisitorInformation.GettingThere,
+                trail.VisitorInformation.PublicTransport,
+                trail.VisitorInformation.Parking)
+            : null;
 
         return TrailResponse.Create
         (trail.Identifier,
@@ -40,7 +47,10 @@ public class TrailResponseFactory
         trail.FullDescription ?? string.Empty,
         trail.Coordinates ?? string.Empty,
         trail.City ?? string.Empty,
+        trail.Tags ?? string.Empty,
+        trail.IsVerified,
         images,
-        links);
+        links,
+        visitorInformation);
     }
 }

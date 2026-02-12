@@ -26,8 +26,10 @@ public class TrailService : ITrailService
 
         var trail = await context.Trails
               .AsNoTracking()
+              //.Where(trail => trail.IsVerified == true)
               .Include(t => t.TrailImages)
               .Include(t => t.TrailLinks)
+              .Include(t => t.VisitorInformation)
               .FirstOrDefaultAsync(t => t.Identifier == identifier, ctoken);
 
         if (trail == null)

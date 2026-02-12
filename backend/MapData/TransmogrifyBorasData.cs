@@ -86,7 +86,8 @@ internal class TransmogrifyBorasData
                     new TrailLink
                     {
                         Link = linkValue,
-                        Trail = trail
+                        Trail = trail,
+                        Title = "Borås Stad"
                     }
                 };
             }
@@ -116,19 +117,19 @@ internal class TransmogrifyBorasData
         return 0;
     }
 
-private Classification ParseClassification(string? classification)
-{
-    if (string.IsNullOrWhiteSpace(classification))
-        return Classification.NotClassified;
-
-    return classification.Trim().ToLowerInvariant() switch
+    private Classification ParseClassification(string? classification)
     {
-        "lätt"  => Classification.Easy,
-        "medel" => Classification.Medium,
-        "svår"  => Classification.Hard,
-        _       => Classification.NotClassified
-    };
-}
+        if (string.IsNullOrWhiteSpace(classification))
+            return Classification.NotClassified;
+
+        return classification.Trim().ToLowerInvariant() switch
+        {
+            "lätt" => Classification.Easy,
+            "medel" => Classification.Medium,
+            "svår" => Classification.Hard,
+            _ => Classification.NotClassified
+        };
+    }
 
     // Hjälpmetod för att konvertera tillgänglighet från "NEJ"/"JA" till bool
     private bool ParseAccessibility(string? accessString)
