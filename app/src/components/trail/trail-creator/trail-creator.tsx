@@ -1,21 +1,55 @@
 import Map from "@/components/map/map";
 import { useLocationTracking } from "@/services/use-location-tracking";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Dimensions, Pressable, StyleSheet, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import MapView, { Polyline, Region } from "react-native-maps";
 import { Text, useTheme } from "react-native-paper";
 import * as Location from "expo-location";
 import { Ionicons } from "@expo/vector-icons";
 
-const HEIGHT = Dimensions.get("screen").height;
-
 export default function TrailCreator() {
   const mapRef = useRef<MapView>(null);
-  const { startTracking, stopTracking, resetTracking, isTracking, coordinates } = useLocationTracking();
+  const { startTracking, stopTracking, resetTracking, isTracking, hike, currentSegment, getActiveTime } =
+    useLocationTracking();
+  const [tick, setTick] = useState(0);
   const [initialRegion, setInitialRegion] = useState<Region | undefined>(undefined);
   const theme = useTheme();
 
-  const polylineCoords = useMemo(() => coordinates.map((locationData) => locationData.coordinates), [coordinates]);
+  const polylineCoords = useMemo(() => {
+    const finished = hike.segments.flatMap((segment) => segment.coordinates.map((locationData) => locationData.data));
+
+    const current = currentSegment ? currentSegment.coordinates.map((locationData) => locationData.data) : [];
+
+    return [...finished, ...current];
+  }, [hike.segments, currentSegment]);
+
+  useEffect(() => {
+    if (!isTracking) return;
+
+    const interval = setInterval(() => {
+      setTick((t) => t + 1);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [isTracking]);
+
+  const formattedTime = (() => {
+    const ms = getActiveTime();
+    const totalSeconds = Math.floor(ms / 1000);
+
+    const seconds = totalSeconds % 60;
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const hours = Math.floor(totalSeconds / 3600);
+
+    return `${hours.toString().padStart(2, "0")}:${minutes
+      .toString()
+      .padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+  })();
+
+  const formattedDistance = useMemo(() => {
+    const km = hike.totalDistance / 1000;
+    return `${km.toFixed(2)} km`;
+  }, [hike.totalDistance]);
 
   useEffect(() => {
     (async () => {
@@ -46,34 +80,29 @@ export default function TrailCreator() {
     );
   }, [polylineCoords]);
 
+  const hasData = hike.segments.length > 0 || (currentSegment && currentSegment.coordinates.length > 0);
+
   if (!initialRegion) return <Text>Loading Map...</Text>;
 
   return (
     <View style={s.content}>
-      {/* MAP */}
       <View style={s.mapContainer}>
         <Map ref={mapRef} style={s.map} initialRegion={initialRegion} showsUserLocation>
           <Polyline coordinates={polylineCoords} strokeColor="#ff0000" strokeWidth={4} />
         </Map>
       </View>
+      <Text style={{ alignSelf: "center", paddingBottom: 20 }}>(debug: {polylineCoords.length} noder sparade)</Text>
 
-      {/* TIME */}
-
-      <View style={s.placeholderSection}>
-        <Text>TIME</Text>
+      <View style={[s.infoSection, { backgroundColor: theme.colors.surface }]}>
+        <Text style={s.InfoText}>{formattedTime}</Text>
       </View>
 
-      {/* DISTANCE */}
-
-      <View style={s.placeholderSection}>
-        <Text>DISTANCE</Text>
-        <Text>(debug: {polylineCoords.length} noder sparade)</Text>
+      <View style={[s.infoSection, { backgroundColor: theme.colors.surface }]}>
+        <Text style={s.InfoText}>{formattedDistance}</Text>
       </View>
-
-      {/* ACTIONS */}
 
       <View style={s.actions}>
-        {polylineCoords.length === 0 ? (
+        {!hasData ? (
           <Pressable
             style={[s.actionButton, { backgroundColor: theme.colors.surface }]}
             onPress={() => startTracking()}
@@ -107,14 +136,6 @@ export default function TrailCreator() {
 }
 
 const s = StyleSheet.create({
-  placeholderSection: {
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#555500",
-    borderRadius: 10,
-    height: 80,
-    marginBottom: 20,
-  },
   content: {
     flex: 1,
   },
@@ -127,10 +148,20 @@ const s = StyleSheet.create({
     flex: 1,
   },
   mapContainer: {
-    height: HEIGHT * 0.2,
+    flex: 1,
     borderRadius: 10,
     overflow: "hidden",
     marginBottom: 20,
+  },
+  infoSection: {
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: 10,
+    height: 80,
+    marginBottom: 20,
+  },
+  InfoText: {
+    fontSize: 40,
   },
   actions: {
     flexDirection: "row",
