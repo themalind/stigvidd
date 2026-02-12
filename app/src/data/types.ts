@@ -99,6 +99,15 @@ export interface PagedReviewResponse {
   total?: number;
 }
 
+export interface TrailShortInfoResponse {
+  identifier: string;
+  name: string;
+  trailLength: number;
+  accessibility: boolean;
+  classification: number;
+  city: string;
+}
+
 // Frontend types
 export interface CreateStigViddUserCredentials {
   email: string;

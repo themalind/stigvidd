@@ -1,6 +1,4 @@
-﻿using WebDataContracts.ResponseModels.Review;
-
-namespace WebDataContracts.ResponseModels.Trail;
+﻿namespace WebDataContracts.ResponseModels.Trail;
 
 public class TrailResponse
 {

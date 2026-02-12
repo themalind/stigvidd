@@ -32,20 +32,14 @@ export default function UserTrailCollection({
         </View>
         <View style={s.icons}>
           <Feather name="filter" size={20} color={theme.colors.onBackground} />
-          <FontAwesome
-            name="sort-amount-desc"
-            size={20}
-            color={theme.colors.onBackground}
-          />
+          <FontAwesome name="sort-amount-desc" size={20} color={theme.colors.onBackground} />
         </View>
       </View>
       <Divider bold={true} />
       <ScrollView
         showsVerticalScrollIndicator={false}
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={
-          trails?.length ? undefined : s.scrollContentCenter
-        }
+        contentContainerStyle={trails?.length ? undefined : s.scrollContentCenter}
       >
         {trails?.length ? (
           trails?.map((trail) => (
@@ -59,24 +53,13 @@ export default function UserTrailCollection({
               }
             >
               <View style={s.trash}>
-                <Pressable
-                  onPress={() => onDelete(trail.identifier)}
-                  style={s.trash}
-                >
-                  <Entypo
-                    name="cross"
-                    size={24}
-                    color={theme.colors.onBackground}
-                  />
+                <Pressable onPress={() => onDelete(trail.identifier)} style={s.trash}>
+                  <Entypo name="cross" size={24} color={theme.colors.onBackground} />
                 </Pressable>
               </View>
               <View style={s.favoriteContainer}>
                 {trail.trailImages ? (
-                  <Image
-                    style={s.trailImage}
-                    source={trail.trailImages[0].imageUrl}
-                    contentFit="cover"
-                  />
+                  <Image style={s.trailImage} source={trail.trailImages[0].imageUrl} contentFit="cover" />
                 ) : null}
                 <View style={s.padding}>
                   <View style={s.titleRatingContainer}>
@@ -84,11 +67,7 @@ export default function UserTrailCollection({
                       {trail.name}
                     </Text>
                     {trail.ratingResponse ? (
-                      <Rating
-                        starSize={13}
-                        ratings={trail.ratingResponse}
-                        starColor={theme.colors.tertiary}
-                      />
+                      <Rating starSize={13} ratings={trail.ratingResponse} starColor={theme.colors.tertiary} />
                     ) : null}
                   </View>
                   <Text>{trail.trailLength} km</Text>
@@ -159,14 +138,6 @@ const s = StyleSheet.create({
     height: 100,
     aspectRatio: 0.7,
     borderRadius: 10,
-  },
-  fadeGradientTop: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    top: 0,
-    height: 60,
-    zIndex: 1,
   },
   fadeGradientBottom: {
     position: "absolute",

@@ -52,6 +52,8 @@ public class TrailService : ITrailService
         using var context = await _context.CreateDbContextAsync(ctoken);
 
         var trails = await context.Trails
+            .AsNoTracking()
+            .Where(trail => trail.IsVerified == true)
             .Select(trail => TrailOverviewResponse.Create
             (
                 trail.Identifier,
@@ -64,7 +66,7 @@ public class TrailService : ITrailService
                     .Take(1)
                     .ToList()
             ))
-            .Take(9)
+            .Take(10)
             .ToListAsync(ctoken);
 
         return Result.Ok<IReadOnlyCollection<TrailOverviewResponse?>>(trails);
@@ -188,5 +190,25 @@ public class TrailService : ITrailService
                 _logger.LogWarning(ex, "Failed to cleanup uploaded image: {Url}", url);
             }
         }
+    }
+
+    public async Task<Result<IReadOnlyCollection<TrailShortInfoResponse>>> GetAllTrailsWithBasicInfoAsync(CancellationToken ctoken)
+    {
+       using var context = await _context.CreateDbContextAsync(ctoken);
+
+        var trailsWithShortInfo = await context.Trails
+            .AsNoTracking()
+            //.Where(trail => trail.IsVerified == true)
+            .Select(trail => TrailShortInfoResponse.Create(
+                trail.Identifier,
+                trail.Name,
+                trail.TrailLength,
+                trail.Accessibility,
+                trail.Classification,
+                trail.City
+            ))
+            .ToListAsync(ctoken);
+
+        return Result.Ok<IReadOnlyCollection<TrailShortInfoResponse>>(trailsWithShortInfo);
     }
 }

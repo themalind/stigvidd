@@ -1,5 +1,5 @@
 import { IP } from "@/../ipconfig";
-import { CreateTrailRequest, Trail, TrailOverview } from "@/data/types";
+import { CreateTrailRequest, Trail, TrailOverview, TrailShortInfoResponse } from "@/data/types";
 import { getUserToken } from "./users";
 import uuid from "react-native-uuid";
 
@@ -7,6 +7,20 @@ export async function getPopularTrails(): Promise<TrailOverview[]> {
   try {
     const response = await fetch("http://" + IP + "/api/v1/Trail/popular");
 
+    if (!response.ok) {
+      throw new Error(`HTTP error ${response.status}`);
+    }
+
+    return response.json();
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+}
+
+export async function getAllTrails(): Promise<TrailShortInfoResponse[]> {
+  try {
+    const response = await fetch("http://" + IP + `/api/v1/trail`);
     if (!response.ok) {
       throw new Error(`HTTP error ${response.status}`);
     }

@@ -12,11 +12,11 @@ public class StigViddDbContext(DbContextOptions<StigViddDbContext> options) : Db
     public DbSet<ReviewImage> ReviewImages { get; set; }
     public DbSet<User> Users { get; set; }
     public DbSet<Statistics> Statistics { get; set; }
+    public DbSet<VisitorInformation> VisitorInformations { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         // https://learn.microsoft.com/en-us/ef/core/modeling/relationships/many-to-many
-
 
         // WishList relation
         modelBuilder.Entity<User>()
@@ -45,5 +45,14 @@ public class StigViddDbContext(DbContextOptions<StigViddDbContext> options) : Db
                     j.HasKey("UserId", "TrailId");
                     j.ToTable("UserFavorites");
                 });
+
+        // Configures a one-to-one relationship where Trail has a VisitorInformation,
+        // but VisitorInformation is the dependent side with TrailId as foreign key.
+        // The Trail table won't have a VisitorInformationId. Deleting a Trail cascades to VisitorInformation.
+        modelBuilder.Entity<Trail>()
+            .HasOne(t => t.VisitorInformation)
+            .WithOne()
+            .HasForeignKey<VisitorInformation>("TrailId")
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

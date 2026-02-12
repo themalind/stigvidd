@@ -46,7 +46,24 @@ public class TrailController : StigViddController
         if (!result.Success && result.Message != null)
         {
             _logger.LogInformation(
-               "GetPopularTrailsAsync: Failed to fetch popular trails. Trails are null");
+               "GetPopularTrailsAsync: Failed to fetch popular trails.");
+
+            return ToActionResult(result.Message);
+        }
+
+        return Ok(result.Value);
+    }
+
+    [HttpGet]
+    [Route("")]
+    public async Task<ActionResult<IReadOnlyCollection<TrailShortInfoResponse>>> GetAllTrailsAsync(CancellationToken ctoken)
+    {
+        var result = await _trailService.GetAllTrailsWithBasicInfoAsync(ctoken);
+
+        if(!result.Success && result.Message != null)
+        {
+            _logger.LogInformation(
+              "GetAllTrailsAsync: Failed to fetch trails.");
 
             return ToActionResult(result.Message);
         }
@@ -85,4 +102,3 @@ public class TrailController : StigViddController
         return Created($"/api/v1/trail/{result.Value.Identifier}", result.Value);
     }
 }
-
