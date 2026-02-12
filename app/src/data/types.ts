@@ -87,6 +87,11 @@ export interface User {
   myFavorites: UserFavoritesTrail[];
 }
 
+export interface UserName {
+  identifier: string;
+  nickName: string;
+}
+
 export interface PagedReviewResponse {
   reviews: Review[];
   hasMore: boolean;
@@ -118,6 +123,28 @@ export interface DeleteReviewRequest {
   reviewIdentifier: string;
   userIdentifier: string;
 }
+
+export interface CreateTrailRequest {
+  name: string;
+  trailLength: number;
+  classification: 0 | 1 | 2 | 3;
+  accessibility: boolean;
+  accessibilityInfo: string;
+  trailSymbol: string;
+  trailSymbolImage: string;
+  description: string;
+  fullDescription: string;
+  coordinates: string;
+  tags: string[];
+  createdBy: UserName;
+  city: string;
+  isVerified: boolean;
+  images: TrailImage[];
+}
+
+// export interface DeleteTrailRequest {
+//
+// }
 
 export interface LoginData {
   email: string;
