@@ -138,8 +138,8 @@ export default function AddReviewForm({ trailIdentifier, onSuccess }: ReviewForm
         <AlertDialog
           visible={showStarInfoModal}
           onDismiss={() => setShowStarInfoModal(false)}
-          title="Sätt ett betyg"
-          infoText="Hur nöjd är du med promenaden? ⭐️⭐️ Välj mellan 1 och 5 stjärnor."
+          title="Sätt ett betyg ⭐️⭐️"
+          infoText={["Hur nöjd är du med promenaden?", "Ge upp till 5 stjärnor!"]}
           backgroundColor={theme.colors.background}
           textColor={theme.colors.onBackground}
         />
@@ -176,7 +176,11 @@ export default function AddReviewForm({ trailIdentifier, onSuccess }: ReviewForm
           visible={showImageInfoModal}
           onDismiss={() => setShowImageInfoModal(false)}
           title="Lägg till bilder"
-          infoText="Visa oss dina promenadäventyr! Lägg gärna till bilder från promenaden, men undvik bilder som kan vara stötande eller olämpliga. Max 3 bilder per promenad."
+          infoText={[
+            "Visa oss dina promenadäventyr!",
+            "Lägg gärna till bilder från promenaden, men undvik bilder som kan vara stötande eller olämpliga.",
+            "Max 3 bilder per promenad.",
+          ]}
           backgroundColor={theme.colors.background}
           textColor={theme.colors.onBackground}
         />
@@ -198,7 +202,10 @@ export default function AddReviewForm({ trailIdentifier, onSuccess }: ReviewForm
             visible={showReviewInfoModal}
             onDismiss={() => setShowReviewInfoModal(false)}
             title="Skriv något"
-            infoText="Berätta för oss om promenaden! Skriv en kommentar eller recension om dina upplevelser. Tänk på att hålla texten trevlig och respektfull."
+            infoText={[
+              "Berätta för oss om promenaden!",
+              "Skriv en kommentar eller recension om dina upplevelser. Tänk på att hålla texten trevlig och respektfull.",
+            ]}
             backgroundColor={theme.colors.background}
             textColor={theme.colors.onBackground}
           />

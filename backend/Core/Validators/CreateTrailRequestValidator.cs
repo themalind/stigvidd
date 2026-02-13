@@ -27,7 +27,7 @@ public class CreateTrailRequestValidator : AbstractValidator<CreateTrailRequest>
         RuleFor(CreateTrailRequest => CreateTrailRequest.FullDescription)
             .MaximumLength(1024);
         RuleFor(CreateTrailRequest => CreateTrailRequest.City)
-            .NotEmpty().WithMessage("City is requierd")
+            .NotEmpty().WithMessage("City is required")
             .MaximumLength(128);
     }
 }

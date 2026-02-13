@@ -9,11 +9,7 @@ interface DialogProps {
   onDissmiss: () => void;
 }
 
-export default function NotAuthenticatedDialog({
-  infoMessage,
-  visible,
-  onDissmiss,
-}: DialogProps) {
+export default function NotAuthenticatedDialog({ infoMessage, visible, onDissmiss }: DialogProps) {
   const theme = useTheme();
   return (
     <View>
@@ -21,7 +17,7 @@ export default function NotAuthenticatedDialog({
         visible={visible}
         onDismiss={() => onDissmiss()}
         title="Du är inte inloggad"
-        infoText={infoMessage}
+        infoText={[infoMessage]}
         confirmText="Logga in"
         backgroundColor={theme.colors.surface}
         textColor={theme.colors.onSurface}
