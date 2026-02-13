@@ -1,9 +1,6 @@
-import CommingSoonPage from "./pages/comming-soon/comming-soon-page";
+import { RouterProvider } from "react-router";
+import { router } from "./router/router";
 
 export default function App() {
-  return (
-    <div className="h-full">
-      <CommingSoonPage />
-    </div>
-  );
+  return <RouterProvider router={router} />;
 }
