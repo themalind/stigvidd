@@ -72,19 +72,27 @@ public class TrailService : ITrailService
 
     public async Task<Result<IReadOnlyCollection<TrailShortInfoResponse>>> GetAllTrailsWithBasicInfoAsync(CancellationToken ctoken)
     {
-       using var context = await _context.CreateDbContextAsync(ctoken);
+        using var context = await _context.CreateDbContextAsync(ctoken);
 
-        var trailsWithShortInfo = await context.Trails
+        // Raw SQL is used here to extract only the first coordinate from the JSON array
+        // using JSON_VALUE directly in SQL Server. This avoids fetching the entire Coordinates
+        // blob (which can contain thousands of points per trail) into memory.
+        // This to determine distance to user when filtering on distance.
+        var trailsWithShortInfo = await context.Database
+            .SqlQueryRaw<TrailShortInfoResponse>(
+                """
+                SELECT
+                    Identifier,
+                    Name,
+                    TrailLength,
+                    Accessibility,
+                    Classification,
+                    City,
+                    CAST(JSON_VALUE(Coordinates, '$[0].latitude') AS decimal(18,10)) AS StartLatitude,
+                    CAST(JSON_VALUE(Coordinates, '$[0].longitude') AS decimal(18,10)) AS StartLongitude
+                FROM Trails
+                """)
             .AsNoTracking()
-            //.Where(trail => trail.IsVerified == true)
-            .Select(trail => TrailShortInfoResponse.Create(
-                trail.Identifier,
-                trail.Name,
-                trail.TrailLength,
-                trail.Accessibility,
-                trail.Classification,
-                trail.City
-            ))
             .ToListAsync(ctoken);
 
         return Result.Ok<IReadOnlyCollection<TrailShortInfoResponse>>(trailsWithShortInfo);
