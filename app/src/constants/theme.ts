@@ -77,7 +77,7 @@ export const AppDarkTheme = merge(CombinedDarkTheme, {
     onBackground: "rgb(226, 227, 221)",
     surface: "rgb(26, 28, 25)",
     onSurface: "rgb(226, 227, 221)",
-    surfaceVariant: "rgba(72, 78, 71, 1)",
+    surfaceVariant: "rgb(71, 71, 78)",
     onSurfaceVariant: "rgb(194, 201, 189)",
     outline: "rgb(140, 147, 136)",
     outlineVariant: "rgb(66, 73, 64)",

@@ -1,24 +1,10 @@
 import { Trail } from "@/data/types";
+import { classificationParser } from "@/utils/classification-parser";
 import { StyleSheet, Text, View } from "react-native";
 import { Surface, useTheme } from "react-native-paper";
 
 interface TrailinfoProps {
   trail: Trail;
-}
-
-function getClassification(classificationNumber: number): string {
-  switch (classificationNumber) {
-    case 0:
-      return "Inte klassificerad";
-    case 1:
-      return "Lätt";
-    case 2:
-      return "Medel";
-    case 3:
-      return "Svår";
-    default:
-      return "Inte klassificerad";
-  }
 }
 
 export default function TrailInfo({ trail }: TrailinfoProps) {
@@ -37,7 +23,7 @@ export default function TrailInfo({ trail }: TrailinfoProps) {
       </View>
       <View style={s.infoDetailContainer}>
         <Text style={[s.title, { color: theme.colors.onSurface }]}>Svårighetsgrad:</Text>
-        <Text style={{ color: theme.colors.onSurface }}>{getClassification(trail.classification)}</Text>
+        <Text style={{ color: theme.colors.onSurface }}>{classificationParser(trail.classification)}</Text>
       </View>
       <View style={s.infoDetailContainer}>
         <Text style={[s.title, { color: theme.colors.onSurface }]}>Tillgänglighet:</Text>

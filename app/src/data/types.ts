@@ -112,6 +112,8 @@ export interface TrailShortInfoResponse {
   accessibility: boolean;
   classification: number;
   city: string;
+  startLatitude?: number;
+  startLongitude?: number;
 }
 
 // Frontend types

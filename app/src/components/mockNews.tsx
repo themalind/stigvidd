@@ -54,7 +54,7 @@ export default function MockNews() {
             style={[
               s.dot,
               {
-                backgroundColor: index === activeIndex ? theme.colors.primary : theme.colors.outlineVariant,
+                backgroundColor: index === activeIndex ? theme.colors.tertiary : theme.colors.primary,
               },
             ]}
           />
