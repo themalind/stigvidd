@@ -1,8 +1,8 @@
 import { Trail } from "@/data/types";
 import { classificationParser } from "@/utils/classification-parser";
+import { getDifficultyIcon } from "@/utils/getDifficultyIcon";
 import { StyleSheet, Text, View } from "react-native";
 import { Surface, useTheme } from "react-native-paper";
-import { blobMaker } from "./trail-list/trail-item";
 
 interface TrailinfoProps {
   trail: Trail;
@@ -25,7 +25,7 @@ export default function TrailInfo({ trail }: TrailinfoProps) {
       <View style={s.infoDetailContainer}>
         <Text style={[s.title, { color: theme.colors.onSurface }]}>Svårighetsgrad:</Text>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
-          <Text>{blobMaker(classificationParser(trail.classification))}</Text>
+          <Text>{getDifficultyIcon(classificationParser(trail.classification))}</Text>
           <Text style={{ color: theme.colors.onSurface }}>{classificationParser(trail.classification)}</Text>
         </View>
       </View>

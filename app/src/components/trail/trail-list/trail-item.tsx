@@ -1,7 +1,8 @@
 import { userThemeAtom } from "@/atoms/user-theme-atom";
 import { TrailShortInfoResponse } from "@/data/types";
 import { classificationParser } from "@/utils/classification-parser";
-import { FontAwesome6, Ionicons, MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
+import { getDifficultyIcon } from "@/utils/getDifficultyIcon";
+import { MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { useAtom } from "jotai";
 import React, { memo } from "react";
@@ -11,19 +12,6 @@ import { Text, useTheme } from "react-native-paper";
 interface TrailItemProps {
   item: TrailShortInfoResponse;
   handlePress: (identifier: string) => void;
-}
-
-export function blobMaker(classification: string) {
-  switch (classification) {
-    case "Svår":
-      return <Ionicons name="triangle" size={10} color="#f50" />;
-    case "Medel":
-      return <FontAwesome6 name="diamond" size={10} color="#bbaa00" />;
-    case "Lätt":
-      return <MaterialIcons name="circle" size={10} color="green" />;
-    case "Inte klassificerad":
-      return <MaterialIcons name="circle" size={10} color="grey" />;
-  }
 }
 
 function TrailItem({ item, handlePress }: TrailItemProps) {
@@ -58,9 +46,9 @@ function TrailItem({ item, handlePress }: TrailItemProps) {
           {item.trailLength} km
         </Text>
         <View style={{ width: 100, flexDirection: "row", gap: 5, alignItems: "center", justifyContent: "center" }}>
-          {item.classification != null && (
+          {item.classification != null && item.classification !== 0 && (
             <>
-              <Text>{blobMaker(classificationParser(item.classification))}</Text>
+              <Text>{getDifficultyIcon(classificationParser(item.classification))}</Text>
               <Text style={[s.infoText]}>{classificationParser(item.classification)}</Text>
             </>
           )}

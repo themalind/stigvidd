@@ -143,7 +143,7 @@ export default function TrailsScreen() {
               </Text>
               {Object.keys(filters).length > 0 ? (
                 <Pressable onPress={clearFilters}>
-                  <Text style={s.clearFilters}>Rensa filter</Text>
+                  <Text style={[s.clearFilters, { color: theme.colors.tertiary }]}>Rensa filter</Text>
                 </Pressable>
               ) : null}
             </View>
@@ -208,6 +208,7 @@ const s = StyleSheet.create({
     fontSize: 14,
   },
   filterContainer: {
+    padding: 5,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
@@ -216,8 +217,7 @@ const s = StyleSheet.create({
     fontSize: 14,
   },
   clearFilters: {
-    fontSize: 14,
-    color: "#007AFF",
+    fontSize: 16,
     fontWeight: "600",
   },
   listContent: {

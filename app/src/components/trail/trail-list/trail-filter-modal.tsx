@@ -48,12 +48,15 @@ export const TrailFilterModal: React.FC<TrailFilterModalProps> = ({
       <SafeAreaView style={[s.modalContainer, { backgroundColor: theme.colors.background }]}>
         {/* Header */}
         <View style={s.header}>
-          <Pressable onPress={onClearFilters}>
-            <Text style={s.clearButton}>Rensa</Text>
+          <Pressable style={{ backgroundColor: theme.colors.secondary, borderRadius: 10 }} onPress={onClearFilters}>
+            <Text style={[s.clearButton, { color: theme.colors.onSecondary }]}>Rensa</Text>
           </Pressable>
           <Text style={s.headerTitle}>Filter & Sortering</Text>
-          <Pressable onPress={onClose}>
-            <Text style={s.doneButton}>Klar</Text>
+          <Pressable
+            style={{ backgroundColor: theme.colors.primary, paddingLeft: 10, paddingRight: 10, borderRadius: 10 }}
+            onPress={onClose}
+          >
+            <Text style={[s.doneButton, { color: theme.colors.onPrimary }]}>Klar</Text>
           </Pressable>
         </View>
         <Divider />
@@ -90,27 +93,55 @@ export const TrailFilterModal: React.FC<TrailFilterModalProps> = ({
             <Text style={s.sectionTitle}>Tillgänglighet</Text>
             <View style={s.buttonGroup}>
               <Pressable
-                style={[s.filterButton, filters.accessibility === undefined && s.activeButton]}
+                style={[
+                  s.filterButton,
+                  filters.accessibility === undefined
+                    ? { backgroundColor: theme.colors.primary }
+                    : { backgroundColor: theme.colors.surface },
+                ]}
                 onPress={() => onUpdateFilter("accessibility", undefined)}
               >
-                <Text style={s.buttonText}>Alla</Text>
+                <Text
+                  style={[
+                    s.buttonText,
+                    filters.accessibility === undefined
+                      ? { color: theme.colors.onPrimary }
+                      : { color: theme.colors.onSurface },
+                  ]}
+                >
+                  Alla
+                </Text>
               </Pressable>
 
               <Pressable
-                style={[s.filterButton, filters.accessibility === true && s.activeButton]}
+                style={[
+                  s.filterButton,
+                  filters.accessibility === true
+                    ? { backgroundColor: theme.colors.primary }
+                    : { backgroundColor: theme.colors.surface },
+                ]}
                 onPress={() => onUpdateFilter("accessibility", true)}
               >
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
+                <View style={s.accessibilityButton}>
                   <Text style={s.buttonText}>
                     {
                       <MaterialCommunityIcons
                         name="wheelchair-accessibility"
                         size={18}
-                        color={theme.colors.onPrimary}
+                        color={filters.accessibility === true ? theme.colors.onPrimary : theme.colors.onSurface}
                       />
                     }
                   </Text>
-                  <Text style={s.buttonText}>Anpassad</Text>
+                  <Text
+                    style={[
+                      s.buttonText,
+                      filters.accessibility === true
+                        ? { color: theme.colors.onPrimary }
+                        : { color: theme.colors.onSurface },
+                    ]}
+                  >
+                    Anpassad
+                  </Text>
                 </View>
               </Pressable>
             </View>
@@ -164,16 +195,40 @@ export const TrailFilterModal: React.FC<TrailFilterModalProps> = ({
               <Text style={s.sectionTitle}>Nära mig</Text>
               <View style={s.buttonGroup}>
                 <Pressable
-                  style={[s.filterButton, !filters.nearMe && s.activeButton]}
+                  style={[
+                    s.filterButton,
+                    !filters.nearMe
+                      ? { backgroundColor: theme.colors.primary }
+                      : { backgroundColor: theme.colors.surface },
+                  ]}
                   onPress={() => onUpdateFilter("nearMe", undefined)}
                 >
-                  <Text style={s.buttonText}>Alla</Text>
+                  <Text
+                    style={[
+                      s.buttonText,
+                      filters.nearMe === true ? { color: theme.colors.onSurface } : { color: theme.colors.onPrimary },
+                    ]}
+                  >
+                    Alla
+                  </Text>
                 </Pressable>
                 <Pressable
-                  style={[s.filterButton, filters.nearMe === true && s.activeButton]}
+                  style={[
+                    s.filterButton,
+                    filters.nearMe === true
+                      ? { backgroundColor: theme.colors.primary }
+                      : { backgroundColor: theme.colors.surface },
+                  ]}
                   onPress={() => onUpdateFilter("nearMe", true)}
                 >
-                  <Text style={s.buttonText}>Nära mig</Text>
+                  <Text
+                    style={[
+                      s.buttonText,
+                      filters.nearMe === true ? { color: theme.colors.onPrimary } : { color: theme.colors.onSurface },
+                    ]}
+                  >
+                    Nära mig
+                  </Text>
                 </Pressable>
               </View>
               {filters.nearMe && (
@@ -186,8 +241,9 @@ export const TrailFilterModal: React.FC<TrailFilterModalProps> = ({
                     step={5}
                     value={filters.maxDistance || 50}
                     onValueChange={(value) => onUpdateFilter("maxDistance", value)}
-                    minimumTrackTintColor="#007AFF"
-                    maximumTrackTintColor="#d3d3d3"
+                    minimumTrackTintColor={theme.colors.onPrimary}
+                    maximumTrackTintColor={theme.colors.onPrimary}
+                    thumbTintColor={theme.colors.tertiary}
                   />
                 </>
               )}
@@ -195,36 +251,6 @@ export const TrailFilterModal: React.FC<TrailFilterModalProps> = ({
           )}
           <Divider />
 
-          {/* Trail Length Filter */}
-          <View style={s.section}>
-            <Text style={s.sectionTitle}>
-              Ledlängd: {filters.minLength || 0} - {filters.maxLenght || 50} km
-            </Text>
-            <Text style={s.label}>Min längd</Text>
-            <Slider
-              style={s.slider}
-              minimumValue={0}
-              maximumValue={50}
-              step={1}
-              value={filters.minLength || 0}
-              onValueChange={(value) => onUpdateFilter("minLength", value)}
-              minimumTrackTintColor="#007AFF"
-              maximumTrackTintColor="#d3d3d3"
-            />
-
-            <Text style={s.label}>Max längd</Text>
-            <Slider
-              style={s.slider}
-              minimumValue={0}
-              maximumValue={50}
-              step={1}
-              value={filters.maxLenght || 50}
-              onValueChange={(value) => onUpdateFilter("maxLenght", value)}
-              minimumTrackTintColor="#007AFF"
-              maximumTrackTintColor="#d3d3d3"
-            />
-          </View>
-          <Divider />
           {/* Classification Filter */}
           <View style={s.section}>
             <Text style={s.sectionTitle}>Svårighetsgrad</Text>
@@ -251,6 +277,39 @@ export const TrailFilterModal: React.FC<TrailFilterModalProps> = ({
             </Picker>
           </View>
           <Divider />
+
+          {/* Trail Length Filter */}
+          <View style={s.section}>
+            <Text style={s.sectionTitle}>
+              Ledlängd: {filters.minLength || 0} - {filters.maxLenght || 50} km
+            </Text>
+            <Text style={s.label}>Min längd</Text>
+            <Slider
+              style={s.slider}
+              minimumValue={0}
+              maximumValue={50}
+              step={1}
+              value={filters.minLength || 0}
+              onValueChange={(value) => onUpdateFilter("minLength", value)}
+              minimumTrackTintColor={theme.colors.onPrimary}
+              maximumTrackTintColor={theme.colors.onPrimary}
+              thumbTintColor={theme.colors.tertiary}
+            />
+
+            <Text style={s.label}>Max längd</Text>
+            <Slider
+              style={s.slider}
+              minimumValue={0}
+              maximumValue={50}
+              step={1}
+              value={filters.maxLenght || 50}
+              onValueChange={(value) => onUpdateFilter("maxLenght", value)}
+              minimumTrackTintColor={theme.colors.onPrimary}
+              maximumTrackTintColor={theme.colors.onPrimary}
+              thumbTintColor={theme.colors.tertiary}
+            />
+          </View>
+          <Divider />
         </ScrollView>
       </SafeAreaView>
     </Modal>
@@ -272,15 +331,12 @@ const s = StyleSheet.create({
     fontWeight: "700",
   },
   clearButton: {
-    fontSize: 18,
+    fontSize: 16,
     padding: 5,
-    color: "#ff3b30",
   },
   doneButton: {
     padding: 5,
-    fontSize: 18,
-    color: "#007AFF",
-    fontWeight: "700",
+    fontSize: 16,
   },
   content: {
     flex: 1,
@@ -290,12 +346,11 @@ const s = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: "700",
     marginBottom: 10,
   },
   label: {
     fontSize: 14,
-
     marginTop: 10,
     marginBottom: 5,
   },
@@ -314,13 +369,14 @@ const s = StyleSheet.create({
     borderRadius: 8,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "grey",
-  },
-  activeButton: {
-    backgroundColor: "#007AFF",
   },
   buttonText: {
     fontSize: 14,
     fontWeight: "700",
+  },
+  accessibilityButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
   },
 });
