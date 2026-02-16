@@ -75,8 +75,7 @@ public class TrailService : ITrailService
         using var context = await _context.CreateDbContextAsync(ctoken);
 
         // Raw SQL is used here to extract only the first coordinate from the JSON array
-        // using JSON_VALUE directly in SQL Server. This avoids fetching the entire Coordinates
-        // blob (which can contain thousands of points per trail) into memory.
+        // using JSON_VALUE directly in SQL Server. This avoids fetching the entire Coordinates blob
         // This to determine distance to user when filtering on distance.
         var trailsWithShortInfo = await context.Database
             .SqlQueryRaw<TrailShortInfoResponse>(
@@ -90,9 +89,10 @@ public class TrailService : ITrailService
                     City,
                     CAST(JSON_VALUE(Coordinates, '$[0].latitude') AS decimal(18,10)) AS StartLatitude,
                     CAST(JSON_VALUE(Coordinates, '$[0].longitude') AS decimal(18,10)) AS StartLongitude
-                FROM Trails
+                FROM Trails 
+                WHERE IsVerified = 1
                 """)
-            .AsNoTracking()
+            .AsNoTracking()          
             .ToListAsync(ctoken);
 
         return Result.Ok<IReadOnlyCollection<TrailShortInfoResponse>>(trailsWithShortInfo);

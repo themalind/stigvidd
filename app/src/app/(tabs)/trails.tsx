@@ -1,44 +1,18 @@
 import { userThemeAtom } from "@/atoms/user-theme-atom";
 import LoadingIndicator from "@/components/loading-indicator";
-import { TrailFilterModal } from "@/components/trail/trail-filter-modal";
+import { TrailFilterModal } from "@/components/trail/trail-list/trail-filter-modal";
+import TrailItem from "@/components/trail/trail-list/trail-item";
 import { TrailShortInfoResponse } from "@/data/types";
 import { useTrailFilters } from "@/hooks/trail/useTrailFilters";
 import { useTrails } from "@/hooks/trail/useTrails";
-import { classificationParser } from "@/utils/classification-parser";
 import { MaterialIcons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import * as Location from "expo-location";
 import { router, useFocusEffect } from "expo-router";
 import { useAtom } from "jotai";
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { Appearance, FlatList, Pressable, RefreshControl, StyleSheet, TouchableOpacity, View } from "react-native";
+import { Appearance, FlatList, Pressable, RefreshControl, StyleSheet, View } from "react-native";
 import { Text, useTheme } from "react-native-paper";
-
-const TrailItem = React.memo(function TrailItem({
-  item,
-  handlePress,
-}: {
-  item: TrailShortInfoResponse;
-  handlePress: (identifier: string) => void;
-}) {
-  const theme = useTheme();
-  return (
-    <Pressable
-      onPress={() => handlePress(item.identifier)}
-      style={[s.trailCard, { backgroundColor: theme.colors.surface }]}
-    >
-      <View>
-        <Text style={s.trailName}>{item.name}</Text>
-        {item.accessibility ? <Text style={s.accessibilityBadge}>♿</Text> : null}
-      </View>
-      <View style={s.trailInfo}>
-        <Text style={s.infoText}> {item.city}</Text>
-        <Text style={s.infoText}> {item.trailLength} km</Text>
-        {item.classification != null && <Text style={s.infoText}>{classificationParser(item.classification)}</Text>}
-      </View>
-    </Pressable>
-  );
-});
 
 export default function TrailsScreen() {
   const theme = useTheme();
@@ -95,7 +69,7 @@ export default function TrailsScreen() {
   const handlePress = useCallback((identifier: string) => {
     router.navigate({
       pathname: "/(tabs)/(stacks)/trail/[identifier]",
-      params: { identifier: identifier },
+      params: { identifier, returnTo: "/(tabs)/trails" },
     });
   }, []);
 
@@ -112,9 +86,9 @@ export default function TrailsScreen() {
     return (
       <View>
         <Text>Kunde inte ladda leder</Text>
-        <TouchableOpacity onPress={() => refetch()} style={s.retryButton}>
+        <Pressable onPress={() => refetch()} style={s.retryButton}>
           <Text>Försök igen</Text>
-        </TouchableOpacity>
+        </Pressable>
       </View>
     );
   }
@@ -146,32 +120,33 @@ export default function TrailsScreen() {
                 <Image contentFit="contain" source={hikers} style={s.hikers} />
                 <Text style={{ fontSize: 20, color: theme.colors.onBackground }}>Vandringsleder</Text>
               </View>
-
-              <Pressable onPress={() => setFilterModalVisible(true)} style={s.filterButton}>
-                <View
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: 5,
-                    backgroundColor: theme.colors.surface,
-                    padding: 10,
-                    borderRadius: 8,
-                  }}
-                >
-                  <MaterialIcons name="filter-list" size={24} color={theme.colors.onBackground} />
-                  <Text style={{ color: theme.colors.onBackground, fontWeight: "600", fontSize: 16 }}>Filtrera</Text>
-                </View>
-              </Pressable>
+              <View>
+                <Pressable onPress={() => setFilterModalVisible(true)} style={s.filterButton}>
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 5,
+                      backgroundColor: theme.colors.primary,
+                      padding: 10,
+                      borderRadius: 8,
+                    }}
+                  >
+                    <MaterialIcons name="filter-list" size={24} color={theme.colors.onPrimary} />
+                    <Text style={{ color: theme.colors.onPrimary, fontWeight: "600", fontSize: 16 }}>Filtrera</Text>
+                  </View>
+                </Pressable>
+              </View>
             </View>
             <View style={s.filterContainer}>
               <Text style={s.resultText}>
                 Visar {filteredCount} av {totalCount} leder
               </Text>
               {Object.keys(filters).length > 0 ? (
-                <TouchableOpacity onPress={clearFilters}>
+                <Pressable onPress={clearFilters}>
                   <Text style={s.clearFilters}>Rensa filter</Text>
-                </TouchableOpacity>
+                </Pressable>
               ) : null}
             </View>
           </>
@@ -219,35 +194,9 @@ const s = StyleSheet.create({
     width: 25,
   },
   filterButton: {
-    paddingHorizontal: 15,
-    paddingVertical: 8,
     borderRadius: 8,
   },
-  trailCard: {
-    borderRadius: 12,
-    padding: 15,
-    gap: 10,
-  },
-  trailName: {
-    fontSize: 15,
-    fontWeight: "700",
-  },
-  accessibilityBadge: {
-    fontSize: 12,
-    fontWeight: "600",
-    backgroundColor: "#E8F8ED",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-  },
-  trailInfo: {
-    flexDirection: "row",
-    alignItems: "flex-end",
-    gap: 15,
-  },
-  infoText: {
-    fontSize: 14,
-  },
+
   emptyContainer: {
     alignItems: "center",
     padding: 40,

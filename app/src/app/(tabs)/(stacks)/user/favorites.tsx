@@ -3,9 +3,10 @@ import { removeFromFavoritesAtom, userFavoritesAtom } from "@/atoms/user-atoms";
 import LoadingIndicator from "@/components/loading-indicator";
 import UserTrailCollection from "@/components/user/user-trail-collection";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { Redirect } from "expo-router";
+import { Redirect, router, useFocusEffect } from "expo-router";
 import { useAtom } from "jotai";
-import React from "react";
+import React, { useCallback } from "react";
+import { BackHandler } from "react-native";
 import { Text, useTheme } from "react-native-paper";
 
 export default function FavoritesScreen() {
@@ -13,6 +14,16 @@ export default function FavoritesScreen() {
   const [{ data, isLoading, isError, error }] = useAtom(userFavoritesAtom); // useAtom är likt useState och retunerar både get och setfunktioner
   const [removeFromFavorite] = useAtom(removeFromFavoritesAtom);
   const [authState] = useAtom(authStateAtom);
+
+  useFocusEffect(
+    useCallback(() => {
+      const handler = BackHandler.addEventListener("hardwareBackPress", () => {
+        router.navigate("/(tabs)/profile-page");
+        return true;
+      });
+      return () => handler.remove();
+    }, []),
+  );
 
   if (!authState.isAuthenticated) {
     return <Redirect href="/(tabs)/(auth)/login" />;
@@ -36,6 +47,7 @@ export default function FavoritesScreen() {
       noTrailsSavedInfo="Inga Favoriter sparade än. Gå till en promenad och tryck på hjärtat för att lägga till."
       onDelete={handleDelete}
       trails={data ?? []}
+      returnTo="/(tabs)/(stacks)/user/favorites"
       icon={
         <MaterialCommunityIcons
           name="cards-heart"

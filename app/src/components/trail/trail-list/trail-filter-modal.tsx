@@ -1,9 +1,11 @@
 import { classificationParser } from "@/utils/classification-parser";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import Slider from "@react-native-community/slider";
 import { Picker } from "@react-native-picker/picker";
 import React from "react";
-import { Modal, ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
-import { Text, useTheme } from "react-native-paper";
+import { Modal, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { Divider, Text, useTheme } from "react-native-paper";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 interface FilterOptions {
   city?: string;
@@ -43,161 +45,50 @@ export const TrailFilterModal: React.FC<TrailFilterModalProps> = ({
   const theme = useTheme();
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
-      <View style={[s.modalContainer, { backgroundColor: theme.colors.surface }]}>
+      <SafeAreaView style={[s.modalContainer, { backgroundColor: theme.colors.background }]}>
         {/* Header */}
         <View style={s.header}>
-          <TouchableOpacity onPress={onClearFilters}>
+          <Pressable onPress={onClearFilters}>
             <Text style={s.clearButton}>Rensa</Text>
-          </TouchableOpacity>
+          </Pressable>
           <Text style={s.headerTitle}>Filter & Sortering</Text>
-          <TouchableOpacity onPress={onClose}>
+          <Pressable onPress={onClose}>
             <Text style={s.doneButton}>Klar</Text>
-          </TouchableOpacity>
+          </Pressable>
         </View>
-
+        <Divider />
         <ScrollView style={s.content}>
-          {/* City Filter */}
-          <View style={s.section}>
-            <Text style={s.sectionTitle}>Stad</Text>
-            <Picker
-              dropdownIconColor={theme.colors.onSurface}
-              style={{ color: theme.colors.onSurface, backgroundColor: theme.colors.surface }}
-              selectedValue={filters.city || ""}
-              onValueChange={(value) => onUpdateFilter("city", value === "" ? undefined : value)}
-            >
-              <Picker.Item
-                style={{ color: theme.colors.onSurface, backgroundColor: theme.colors.surface }}
-                label="Alla städer"
-                value=""
-              />
-              {cities.map((city) => (
-                <Picker.Item
-                  key={city}
-                  label={city}
-                  value={city}
-                  style={{ color: theme.colors.onSurface, backgroundColor: theme.colors.surface }}
-                />
-              ))}
-            </Picker>
-          </View>
-
-          {/* Near Me Filter*/}
-          {hasLocation && (
-            <View style={s.section}>
-              <Text style={s.sectionTitle}>Nära mig</Text>
-              <View style={s.buttonGroup}>
-                <TouchableOpacity
-                  style={[s.filterButton, !filters.nearMe && s.activeButton]}
-                  onPress={() => onUpdateFilter("nearMe", undefined)}
-                >
-                  <Text style={s.buttonText}>Alla</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[s.filterButton, filters.nearMe === true && s.activeButton]}
-                  onPress={() => onUpdateFilter("nearMe", true)}
-                >
-                  <Text style={s.buttonText}>Nära mig</Text>
-                </TouchableOpacity>
-              </View>
-              {filters.nearMe && (
-                <>
-                  <Text style={[s.label, { marginTop: 15 }]}>Max avstånd: {filters.maxDistance || 50} km</Text>
-                  <Slider
-                    style={s.slider}
-                    minimumValue={5}
-                    maximumValue={200}
-                    step={5}
-                    value={filters.maxDistance || 50}
-                    onValueChange={(value) => onUpdateFilter("maxDistance", value)}
-                    minimumTrackTintColor="#007AFF"
-                    maximumTrackTintColor="#d3d3d3"
-                  />
-                </>
-              )}
-            </View>
-          )}
-          {/* Classification Filter */}
-          <View style={s.section}>
-            <Text style={s.sectionTitle}>Svårighetsgrad</Text>
-            <Picker
-              dropdownIconColor={theme.colors.onSurface}
-              style={{ color: theme.colors.onSurface, backgroundColor: theme.colors.surface }}
-              selectedValue={filters.classification || ""}
-              onValueChange={(value) => onUpdateFilter("classification", value === "" ? undefined : value)}
-            >
-              <Picker.Item
-                style={{ color: theme.colors.onSurface, backgroundColor: theme.colors.surface }}
-                label="Alla svårighetsgrader"
-                value=""
-              />
-              {classifications.map((classification, index) => (
-                <Picker.Item
-                  key={index}
-                  label={classificationParser(classification)}
-                  value={classification}
-                  style={{ color: theme.colors.onSurface, backgroundColor: theme.colors.surface }}
-                />
-              ))}
-            </Picker>
-          </View>
-
-          {/* Trail Length Filter */}
-          <View style={s.section}>
-            <Text style={s.sectionTitle}>
-              Ledlängd: {filters.minLength || 0} - {filters.maxLenght || 50} km
-            </Text>
-            <Text style={s.label}>Min längd</Text>
-            <Slider
-              style={s.slider}
-              minimumValue={0}
-              maximumValue={50}
-              step={1}
-              value={filters.minLength || 0}
-              onValueChange={(value) => onUpdateFilter("minLength", value)}
-              minimumTrackTintColor="#007AFF"
-              maximumTrackTintColor="#d3d3d3"
-            />
-
-            <Text style={s.label}>Max längd</Text>
-            <Slider
-              style={s.slider}
-              minimumValue={0}
-              maximumValue={50}
-              step={1}
-              value={filters.maxLenght || 50}
-              onValueChange={(value) => onUpdateFilter("maxLenght", value)}
-              minimumTrackTintColor="#007AFF"
-              maximumTrackTintColor="#d3d3d3"
-            />
-          </View>
-
           {/* Accessibility Filter */}
           <View style={s.section}>
             <Text style={s.sectionTitle}>Tillgänglighet</Text>
             <View style={s.buttonGroup}>
-              <TouchableOpacity
+              <Pressable
                 style={[s.filterButton, filters.accessibility === undefined && s.activeButton]}
                 onPress={() => onUpdateFilter("accessibility", undefined)}
               >
                 <Text style={s.buttonText}>Alla</Text>
-              </TouchableOpacity>
+              </Pressable>
 
-              <TouchableOpacity
+              <Pressable
                 style={[s.filterButton, filters.accessibility === true && s.activeButton]}
                 onPress={() => onUpdateFilter("accessibility", true)}
               >
-                <Text style={s.buttonText}>Tillgänglig</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[s.filterButton, filters.accessibility === false && s.activeButton]}
-                onPress={() => onUpdateFilter("accessibility", false)}
-              >
-                <Text style={s.buttonText}>Ej tillgänglig</Text>
-              </TouchableOpacity>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
+                  <Text style={s.buttonText}>
+                    {
+                      <MaterialCommunityIcons
+                        name="wheelchair-accessibility"
+                        size={24}
+                        color={theme.colors.onPrimary}
+                      />
+                    }
+                  </Text>
+                  <Text style={s.buttonText}>Anpassad</Text>
+                </View>
+              </Pressable>
             </View>
           </View>
-
+          <Divider />
           {/* Sort Options */}
           <View style={s.section}>
             <Text style={s.sectionTitle}>Sortera efter</Text>
@@ -237,8 +128,127 @@ export const TrailFilterModal: React.FC<TrailFilterModalProps> = ({
               )}
             </Picker>
           </View>
+          <Divider />
+
+          {/* City Filter */}
+          <View style={s.section}>
+            <Text style={s.sectionTitle}>Stad</Text>
+
+            <Picker
+              dropdownIconColor={theme.colors.onSurface}
+              style={{ color: theme.colors.onSurface, backgroundColor: theme.colors.surface }}
+              selectedValue={filters.city || ""}
+              onValueChange={(value) => onUpdateFilter("city", value === "" ? undefined : value)}
+            >
+              <Picker.Item
+                style={{ color: theme.colors.onSurface, backgroundColor: theme.colors.surface }}
+                label="Alla städer"
+                value=""
+              />
+              {cities.map((city) => (
+                <Picker.Item
+                  key={city}
+                  label={city}
+                  value={city}
+                  style={{ color: theme.colors.onSurface, backgroundColor: theme.colors.surface }}
+                />
+              ))}
+            </Picker>
+          </View>
+          <Divider />
+          {/* Near Me Filter*/}
+          {hasLocation && (
+            <View style={s.section}>
+              <Text style={s.sectionTitle}>Nära mig</Text>
+              <View style={s.buttonGroup}>
+                <Pressable
+                  style={[s.filterButton, !filters.nearMe && s.activeButton]}
+                  onPress={() => onUpdateFilter("nearMe", undefined)}
+                >
+                  <Text style={s.buttonText}>Alla</Text>
+                </Pressable>
+                <Pressable
+                  style={[s.filterButton, filters.nearMe === true && s.activeButton]}
+                  onPress={() => onUpdateFilter("nearMe", true)}
+                >
+                  <Text style={s.buttonText}>Nära mig</Text>
+                </Pressable>
+              </View>
+              {filters.nearMe && (
+                <>
+                  <Text style={[s.label, { marginTop: 15 }]}>Max avstånd: {filters.maxDistance || 50} km</Text>
+                  <Slider
+                    style={s.slider}
+                    minimumValue={5}
+                    maximumValue={200}
+                    step={5}
+                    value={filters.maxDistance || 50}
+                    onValueChange={(value) => onUpdateFilter("maxDistance", value)}
+                    minimumTrackTintColor="#007AFF"
+                    maximumTrackTintColor="#d3d3d3"
+                  />
+                </>
+              )}
+            </View>
+          )}
+          <Divider />
+          {/* Trail Length Filter */}
+          <View style={s.section}>
+            <Text style={s.sectionTitle}>
+              Ledlängd: {filters.minLength || 0} - {filters.maxLenght || 50} km
+            </Text>
+            <Text style={s.label}>Min längd</Text>
+            <Slider
+              style={s.slider}
+              minimumValue={0}
+              maximumValue={50}
+              step={1}
+              value={filters.minLength || 0}
+              onValueChange={(value) => onUpdateFilter("minLength", value)}
+              minimumTrackTintColor="#007AFF"
+              maximumTrackTintColor="#d3d3d3"
+            />
+
+            <Text style={s.label}>Max längd</Text>
+            <Slider
+              style={s.slider}
+              minimumValue={0}
+              maximumValue={50}
+              step={1}
+              value={filters.maxLenght || 50}
+              onValueChange={(value) => onUpdateFilter("maxLenght", value)}
+              minimumTrackTintColor="#007AFF"
+              maximumTrackTintColor="#d3d3d3"
+            />
+          </View>
+          <Divider />
+          {/* Classification Filter */}
+          <View style={s.section}>
+            <Text style={s.sectionTitle}>Svårighetsgrad</Text>
+            <Picker
+              dropdownIconColor={theme.colors.onSurface}
+              style={{ color: theme.colors.onSurface, backgroundColor: theme.colors.surface }}
+              selectedValue={filters.classification || ""}
+              onValueChange={(value) => onUpdateFilter("classification", value === "" ? undefined : value)}
+            >
+              <Picker.Item
+                style={{ color: theme.colors.onSurface, backgroundColor: theme.colors.surface }}
+                label="Alla svårighetsgrader"
+                value=""
+              />
+              {classifications.map((classification, index) => (
+                <Picker.Item
+                  key={index}
+                  label={classificationParser(classification)}
+                  value={classification}
+                  style={{ color: theme.colors.onSurface, backgroundColor: theme.colors.surface }}
+                />
+              ))}
+            </Picker>
+          </View>
+          <Divider />
         </ScrollView>
-      </View>
+      </SafeAreaView>
     </Modal>
   );
 };
@@ -258,19 +268,20 @@ const s = StyleSheet.create({
     fontWeight: "700",
   },
   clearButton: {
-    fontSize: 16,
+    fontSize: 18,
+    padding: 5,
     color: "#ff3b30",
   },
   doneButton: {
-    fontSize: 16,
+    padding: 5,
+    fontSize: 18,
     color: "#007AFF",
-    fontWeight: "600",
+    fontWeight: "700",
   },
   content: {
     flex: 1,
   },
   section: {
-    marginTop: 20,
     padding: 15,
   },
   sectionTitle: {
@@ -298,12 +309,14 @@ const s = StyleSheet.create({
     paddingHorizontal: 15,
     borderRadius: 8,
     alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "grey",
   },
   activeButton: {
     backgroundColor: "#007AFF",
   },
   buttonText: {
     fontSize: 14,
-    fontWeight: "600",
+    fontWeight: "700",
   },
 });

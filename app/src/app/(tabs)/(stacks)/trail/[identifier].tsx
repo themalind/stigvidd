@@ -10,15 +10,28 @@ import UserBar from "@/components/trail/user-action-bar/user-bar";
 import { Review } from "@/data/types";
 import CoordinateParser from "@/utils/coordinate-parser";
 import { useQuery } from "@tanstack/react-query";
-import { useLocalSearchParams } from "expo-router";
-import { useRef, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
+import { useCallback, useRef, useState } from "react";
+import { BackHandler, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useTheme } from "react-native-paper";
 
 export default function TrailDetailsScreen() {
   const theme = useTheme();
-  const { identifier } = useLocalSearchParams<{ identifier: string }>();
+  const { identifier, returnTo } = useLocalSearchParams<{ identifier: string; returnTo?: string }>();
   const normalizedIdentifier: string = Array.isArray(identifier) ? identifier[0] : identifier;
+
+  useFocusEffect(
+    useCallback(() => {
+      const handler = BackHandler.addEventListener("hardwareBackPress", () => {
+        if (returnTo) {
+          router.navigate(Array.isArray(returnTo) ? returnTo[0] : returnTo);
+          return true;
+        }
+        return false;
+      });
+      return () => handler.remove();
+    }, [returnTo]),
+  );
 
   const scrollViewRef = useRef<ScrollView>(null);
   const surfaceToScrollToRef = useRef<View>(null);

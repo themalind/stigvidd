@@ -35,7 +35,7 @@ export default function RootLayout() {
     }
   }, [user, queryClient]);
 
-  // Ladda temat när komponenten mountas
+  // Load theme
   useEffect(() => {
     loadUserTheme().then(setUserTheme);
   }, [setUserTheme]);
