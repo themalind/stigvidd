@@ -169,6 +169,53 @@ export function useLocationTracking() {
     return completedTime + (Date.now() - currentSegment.startTime);
   };
 
+  const debugAddPoint = () => {
+    setCurrentSegment((prev) => {
+      if (!prev) {
+        return prev;
+      }
+
+      const lastPoint = prev.coordinates.at(-1);
+      const prevLng = lastPoint?.data.longitude ?? 12;
+      const prevLat = lastPoint?.data.latitude ?? 57;
+
+      let distanceToAdd = 0;
+
+      const newPoint: LocationData = {
+        data: {
+          longitude: prevLng + (Math.random() - 0.5) * 0.0005,
+          latitude: prevLat + (Math.random() - 0.5) * 0.0005,
+        },
+        timeStamp: Date.now(),
+      };
+
+      if (lastPoint) {
+        const distance = getDistance(lastPoint.data, newPoint.data);
+
+        if (distance < MIN_DISTANCE || distance > MAX_DISTANCE) {
+          return prev;
+        }
+
+        distanceToAdd = distance;
+      }
+
+      if (distanceToAdd > 0) {
+        setHike((h) => ({
+          ...h,
+          totalDistance: h.totalDistance + distanceToAdd,
+        }));
+      }
+
+      return {
+        ...prev,
+        coordinates: [...prev.coordinates, newPoint],
+        distance: prev.distance + distanceToAdd,
+      };
+    });
+
+    return null;
+  };
+
   return {
     startTracking,
     stopTracking,
@@ -177,5 +224,6 @@ export function useLocationTracking() {
     hike,
     currentSegment,
     getActiveTime,
+    debugAddPoint,
   };
 }

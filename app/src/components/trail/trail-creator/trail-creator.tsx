@@ -1,7 +1,7 @@
 import Map from "@/components/map/map";
 import { useLocationTracking } from "@/services/use-location-tracking";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Pressable, StyleSheet, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import MapView, { Polyline, Region } from "react-native-maps";
 import { Text, useTheme } from "react-native-paper";
 import * as Location from "expo-location";
@@ -9,7 +9,7 @@ import { Ionicons } from "@expo/vector-icons";
 
 export default function TrailCreator() {
   const mapRef = useRef<MapView>(null);
-  const { startTracking, stopTracking, resetTracking, isTracking, hike, currentSegment, getActiveTime } =
+  const { startTracking, stopTracking, resetTracking, isTracking, hike, currentSegment, getActiveTime, debugAddPoint } =
     useLocationTracking();
   const [tick, setTick] = useState(0);
   const [initialRegion, setInitialRegion] = useState<Region | undefined>(undefined);
@@ -85,13 +85,22 @@ export default function TrailCreator() {
   if (!initialRegion) return <Text>Loading Map...</Text>;
 
   return (
-    <View style={s.content}>
+    <ScrollView contentContainerStyle={s.content}>
+      <View style={s.debug}>
+        <Text>
+          debug: {polylineCoords.length} noder, {hike.segments.length} segments
+        </Text>
+
+        <Pressable onPress={() => debugAddPoint()}>
+          <Text>Add</Text>
+        </Pressable>
+      </View>
+
       <View style={s.mapContainer}>
         <Map ref={mapRef} style={s.map} initialRegion={initialRegion} showsUserLocation>
           <Polyline coordinates={polylineCoords} strokeColor="#ff0000" strokeWidth={4} />
         </Map>
       </View>
-      <Text style={{ alignSelf: "center", paddingBottom: 20 }}>(debug: {polylineCoords.length} noder sparade)</Text>
 
       <View style={[s.infoSection, { backgroundColor: theme.colors.surface }]}>
         <Text style={s.InfoText}>{formattedTime}</Text>
@@ -122,6 +131,9 @@ export default function TrailCreator() {
             >
               <Ionicons name="close" size={30} color={theme.colors.onSurface} />
             </Pressable>
+            <Pressable style={[s.actionButton, { backgroundColor: theme.colors.inversePrimary }]}>
+              <Ionicons name="fish-outline" size={30} color={theme.colors.onSurface} />
+            </Pressable>
             <Pressable
               style={[s.actionButton, { backgroundColor: theme.colors.surface }]}
               onPress={() => startTracking()}
@@ -131,11 +143,17 @@ export default function TrailCreator() {
           </>
         )}
       </View>
-    </View>
+    </ScrollView>
   );
 }
 
 const s = StyleSheet.create({
+  debug: {
+    backgroundColor: "#a00",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    padding: 5,
+  },
   content: {
     flex: 1,
   },
@@ -149,6 +167,7 @@ const s = StyleSheet.create({
   },
   mapContainer: {
     flex: 1,
+    minHeight: 200,
     borderRadius: 10,
     overflow: "hidden",
     marginBottom: 20,
