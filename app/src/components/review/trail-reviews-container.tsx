@@ -73,7 +73,7 @@ export default function TrailReviewsContainer({ trail, surfaceToScrollToRef, onR
 
   return (
     <View ref={surfaceToScrollToRef}>
-      <Surface elevation={4} mode="elevated" style={[s.surface, { backgroundColor: theme.colors.surface }]}>
+      <Surface elevation={4} mode="elevated" style={[s.surface, { backgroundColor: theme.colors.surface, gap: 10 }]}>
         <View style={{ flexDirection: "row" }}>
           <View style={s.ratingSection}>
             <Text style={[s.title, { color: theme.colors.onSurface }]}>Recensioner</Text>

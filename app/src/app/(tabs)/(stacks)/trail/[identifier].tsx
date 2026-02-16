@@ -99,7 +99,6 @@ export default function TrailDetailsScreen() {
           trail={trail}
           surfaceToScrollToRef={surfaceToScrollToRef}
           onReviewsLoaded={(reviews, total) => {
-            // Use total here
             setReviewCount(total);
             setReviews(reviews);
           }}

@@ -120,24 +120,22 @@ export default function TrailsScreen() {
                 <Image contentFit="contain" source={hikers} style={s.hikers} />
                 <Text style={{ fontSize: 20, color: theme.colors.onBackground }}>Vandringsleder</Text>
               </View>
-              <View>
-                <Pressable onPress={() => setFilterModalVisible(true)} style={s.filterButton}>
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: 5,
-                      backgroundColor: theme.colors.primary,
-                      padding: 10,
-                      borderRadius: 8,
-                    }}
-                  >
-                    <MaterialIcons name="filter-list" size={24} color={theme.colors.onPrimary} />
-                    <Text style={{ color: theme.colors.onPrimary, fontWeight: "600", fontSize: 16 }}>Filtrera</Text>
-                  </View>
-                </Pressable>
-              </View>
+              <Pressable onPress={() => setFilterModalVisible(true)} style={s.filterButton}>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 5,
+                    backgroundColor: theme.colors.primary,
+                    padding: 10,
+                    borderRadius: 8,
+                  }}
+                >
+                  <MaterialIcons name="filter-list" size={24} color={theme.colors.onPrimary} />
+                  <Text style={{ color: theme.colors.onPrimary, fontWeight: "600", fontSize: 16 }}>Filtrera</Text>
+                </View>
+              </Pressable>
             </View>
             <View style={s.filterContainer}>
               <Text style={s.resultText}>

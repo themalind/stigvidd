@@ -58,6 +58,33 @@ export const TrailFilterModal: React.FC<TrailFilterModalProps> = ({
         </View>
         <Divider />
         <ScrollView style={s.content}>
+          {/* City Filter */}
+          <View style={s.section}>
+            <Text style={s.sectionTitle}>Orter</Text>
+
+            <Picker
+              dropdownIconColor={theme.colors.onSurface}
+              style={{ color: theme.colors.onSurface, backgroundColor: theme.colors.surface }}
+              selectedValue={filters.city || ""}
+              onValueChange={(value) => onUpdateFilter("city", value === "" ? undefined : value)}
+              mode="dropdown"
+            >
+              <Picker.Item
+                style={{ color: theme.colors.onSurface, backgroundColor: theme.colors.surface }}
+                label="Alla orter"
+                value=""
+              />
+              {cities.map((city) => (
+                <Picker.Item
+                  key={city}
+                  label={city}
+                  value={city}
+                  style={{ color: theme.colors.onSurface, backgroundColor: theme.colors.surface }}
+                />
+              ))}
+            </Picker>
+          </View>
+          <Divider />
           {/* Accessibility Filter */}
           <View style={s.section}>
             <Text style={s.sectionTitle}>Tillgänglighet</Text>
@@ -78,7 +105,7 @@ export const TrailFilterModal: React.FC<TrailFilterModalProps> = ({
                     {
                       <MaterialCommunityIcons
                         name="wheelchair-accessibility"
-                        size={24}
+                        size={18}
                         color={theme.colors.onPrimary}
                       />
                     }
@@ -89,6 +116,7 @@ export const TrailFilterModal: React.FC<TrailFilterModalProps> = ({
             </View>
           </View>
           <Divider />
+
           {/* Sort Options */}
           <View style={s.section}>
             <Text style={s.sectionTitle}>Sortera efter</Text>
@@ -130,32 +158,6 @@ export const TrailFilterModal: React.FC<TrailFilterModalProps> = ({
           </View>
           <Divider />
 
-          {/* City Filter */}
-          <View style={s.section}>
-            <Text style={s.sectionTitle}>Stad</Text>
-
-            <Picker
-              dropdownIconColor={theme.colors.onSurface}
-              style={{ color: theme.colors.onSurface, backgroundColor: theme.colors.surface }}
-              selectedValue={filters.city || ""}
-              onValueChange={(value) => onUpdateFilter("city", value === "" ? undefined : value)}
-            >
-              <Picker.Item
-                style={{ color: theme.colors.onSurface, backgroundColor: theme.colors.surface }}
-                label="Alla städer"
-                value=""
-              />
-              {cities.map((city) => (
-                <Picker.Item
-                  key={city}
-                  label={city}
-                  value={city}
-                  style={{ color: theme.colors.onSurface, backgroundColor: theme.colors.surface }}
-                />
-              ))}
-            </Picker>
-          </View>
-          <Divider />
           {/* Near Me Filter*/}
           {hasLocation && (
             <View style={s.section}>
@@ -192,6 +194,7 @@ export const TrailFilterModal: React.FC<TrailFilterModalProps> = ({
             </View>
           )}
           <Divider />
+
           {/* Trail Length Filter */}
           <View style={s.section}>
             <Text style={s.sectionTitle}>
@@ -230,6 +233,7 @@ export const TrailFilterModal: React.FC<TrailFilterModalProps> = ({
               style={{ color: theme.colors.onSurface, backgroundColor: theme.colors.surface }}
               selectedValue={filters.classification || ""}
               onValueChange={(value) => onUpdateFilter("classification", value === "" ? undefined : value)}
+              mode="dropdown"
             >
               <Picker.Item
                 style={{ color: theme.colors.onSurface, backgroundColor: theme.colors.surface }}
