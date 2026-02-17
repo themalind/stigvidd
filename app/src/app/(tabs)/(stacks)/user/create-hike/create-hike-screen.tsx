@@ -8,7 +8,7 @@ import React, { useRef } from "react";
 import { ScrollView, StyleSheet } from "react-native";
 import { Text, useTheme } from "react-native-paper";
 
-export default function CreateTrailScreen() {
+export default function CreateHikeScreen() {
   const [{ isLoading, isError, error }] = useAtom(stigviddUserAtom);
   const theme = useTheme();
   const scrollViewRef = useRef<ScrollView>(null);
