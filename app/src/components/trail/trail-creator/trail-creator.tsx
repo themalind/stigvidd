@@ -6,12 +6,15 @@ import MapView, { Polyline, Region } from "react-native-maps";
 import { Text, useTheme } from "react-native-paper";
 import * as Location from "expo-location";
 import { Ionicons } from "@expo/vector-icons";
+import AlertDialog from "@/components/alert-dialog";
 
 export default function TrailCreator() {
   const mapRef = useRef<MapView>(null);
   const { startTracking, stopTracking, resetTracking, isTracking, hike, currentSegment, getActiveTime, debugAddPoint } =
     useLocationTracking();
   const [tick, setTick] = useState(0);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [initialRegion, setInitialRegion] = useState<Region | undefined>(undefined);
   const theme = useTheme();
 
@@ -127,22 +130,57 @@ export default function TrailCreator() {
           <>
             <Pressable
               style={[s.actionButton, { backgroundColor: theme.colors.errorContainer }]}
-              onPress={() => resetTracking()}
+              onPress={() => setShowDeleteDialog(true)}
             >
               <Ionicons name="close" size={30} color={theme.colors.onSurface} />
+              <Text>Nollställ</Text>
             </Pressable>
-            <Pressable style={[s.actionButton, { backgroundColor: theme.colors.inversePrimary }]}>
-              <Ionicons name="fish-outline" size={30} color={theme.colors.onSurface} />
+            <Pressable
+              style={[s.actionButton, { backgroundColor: theme.colors.inversePrimary }]}
+              onPress={() => setShowSaveDialog(true)}
+            >
+              <Ionicons name="checkmark-sharp" size={30} color={theme.colors.onSurface} />
+              <Text>Spara</Text>
             </Pressable>
             <Pressable
               style={[s.actionButton, { backgroundColor: theme.colors.surface }]}
               onPress={() => startTracking()}
             >
               <Ionicons name="play" size={30} color={theme.colors.onSurface} />
+              <Text>Återuppta</Text>
             </Pressable>
           </>
         )}
       </View>
+
+      <AlertDialog
+        visible={showDeleteDialog}
+        onDismiss={() => setShowDeleteDialog(false)}
+        onConfirm={() => {
+          resetTracking();
+          setShowDeleteDialog(false);
+        }}
+        title={"Avbryt pågående promenad"}
+        infoText={["Vill du verkligen avbryta den pågående promenad?", "Detta går inte att ångra."]}
+        backgroundColor={theme.colors.backdrop}
+        textColor={theme.colors.onBackground}
+        cancelText={"Nej"}
+        confirmText={"Ja"}
+      />
+      <AlertDialog
+        visible={showSaveDialog}
+        onDismiss={() => setShowSaveDialog(false)}
+        onConfirm={() => {
+          resetTracking();
+          setShowSaveDialog(false);
+        }}
+        title={"Spara promenad"}
+        infoText={["Vill du spara din promenad?", 'Sparade promenader kan hittas under "Mina egna promenader"']}
+        backgroundColor={theme.colors.backdrop}
+        textColor={theme.colors.onBackground}
+        cancelText={"Nej"}
+        confirmText={"Ja"}
+      />
     </ScrollView>
   );
 }
