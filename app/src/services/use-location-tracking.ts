@@ -1,33 +1,15 @@
 import { showErrorAtom } from "@/atoms/snackbar-atoms";
+import { Hike, LocationData, Segment } from "@/data/types";
 import * as Location from "expo-location";
 import { getDistance } from "geolib";
 import { useSetAtom } from "jotai";
 import { useCallback, useRef, useState } from "react";
-import { LatLng } from "react-native-maps";
 
 const SAMPLE_INTERVAL = 3000;
 const MIN_DISTANCE = 3;
 const MAX_DISTANCE = 100;
 const MAX_ACCURACY = 20;
 const MIN_SEGMENT_DISTANCE = 10;
-
-type LocationData = {
-  data: LatLng;
-  timeStamp: number;
-};
-
-type Segment = {
-  coordinates: LocationData[];
-  distance: number;
-  startTime: number;
-  endTime?: number;
-};
-
-type Hike = {
-  segments: Segment[];
-  totalDistance: number;
-  totalTime: number;
-};
 
 export function useLocationTracking() {
   const locationSubscriptionRef = useRef<Location.LocationSubscription | null>(null);

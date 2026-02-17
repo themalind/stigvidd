@@ -1,4 +1,5 @@
 import { User as firebaseUser } from "firebase/auth";
+import { LatLng } from "react-native-maps";
 
 // Response types
 export interface Trail {
@@ -165,3 +166,21 @@ export interface AuthResult {
   user: firebaseUser | null;
   error: { code: string; message: string } | null;
 }
+
+export type LocationData = {
+  data: LatLng;
+  timeStamp: number;
+};
+
+export type Segment = {
+  coordinates: LocationData[];
+  distance: number;
+  startTime: number;
+  endTime?: number;
+};
+
+export type Hike = {
+  segments: Segment[];
+  totalDistance: number;
+  totalTime: number;
+};
