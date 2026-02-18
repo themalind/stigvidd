@@ -17,7 +17,7 @@ export default function RootLayout() {
   const setUserTheme = useSetAtom(userThemeAtom);
   const theme = useUserTheme();
   const user = useAtom(userAtom);
-  const statusBarStyle = "light";
+  const statusBarStyle = theme.dark ? "light" : "dark";
 
   // Create a QueryClient with useMemo to avoid recreating on every render.
   const queryClient = useMemo(() => new QueryClient(), []);
