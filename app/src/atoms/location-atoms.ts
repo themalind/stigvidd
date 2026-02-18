@@ -1,9 +1,5 @@
 import { atom } from "jotai";
+import { LatLng } from "react-native-maps";
 
-interface UserLocation {
-  latitude: number;
-  longitude: number;
-}
-
-export const userLocationAtom = atom<UserLocation | null>(null);
+export const userLocationAtom = atom<LatLng | null>(null);
 export const locationResolvedAtom = atom(false);
