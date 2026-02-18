@@ -29,9 +29,12 @@ public class TrailController(ITrailService service, ILogger<TrailController> log
 
     [HttpGet]
     [Route("popular")]
-    public async Task<ActionResult<IReadOnlyCollection<TrailOverviewResponse?>>> GetPopularTrailsAsync(CancellationToken ctoken)
+    public async Task<ActionResult<IReadOnlyCollection<TrailOverviewResponse?>>> GetPopularTrailsAsync(
+        [FromQuery] double? latitude,
+        [FromQuery] double? longitude,
+        CancellationToken ctoken)
     {
-        var result = await _service.GetPopularTrailOverviewsAsync(ctoken);
+        var result = await _service.GetPopularTrailOverviewsAsync(latitude, longitude, ctoken);
 
         if (!result.Success && result.Message != null)
         {

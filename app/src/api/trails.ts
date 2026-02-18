@@ -1,9 +1,18 @@
 import { IP } from "@/../ipconfig";
 import { Trail, TrailOverview, TrailShortInfoResponse } from "@/data/types";
 
-export async function getPopularTrails(): Promise<TrailOverview[]> {
+export async function getPopularTrails(latitude?: number, longitude?: number): Promise<TrailOverview[]> {
   try {
-    const response = await fetch("http://" + IP + "/api/v1/Trail/popular");
+    const params = new URLSearchParams();
+    if (latitude !== undefined && longitude !== undefined) {
+      params.append("latitude", latitude.toString());
+      params.append("longitude", longitude.toString());
+    }
+    // Se över om vi ska ha någon API-nyckel här för att autentisera appen
+    // och för att undvika att någon kan spamma och döda servern?
+    const query = params.toString();
+    const url = `http://${IP}/api/v1/Trail/popular${query ? `?${query}` : ""}`;
+    const response = await fetch(url);
 
     if (!response.ok) {
       throw new Error(`HTTP error ${response.status}`);

@@ -25,6 +25,7 @@ export interface TrailOverview {
   identifier: string;
   name?: string;
   trailLength: number;
+  averageRating: number;
   trailImagesResponse?: TrailImage[];
 }
 
