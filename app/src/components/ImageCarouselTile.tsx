@@ -1,77 +1,57 @@
-import { TrailImage, TrailOverview } from "@/data/types";
+import { TrailOverview } from "@/data/types";
 import { Image as ExpoImage } from "expo-image";
 import { router } from "expo-router";
 import React from "react";
-import { Dimensions, Pressable, StyleSheet } from "react-native";
+import { Pressable, StyleSheet } from "react-native";
 import { Text } from "react-native-paper";
 import Animated, { Extrapolation, interpolate, SharedValue, useAnimatedStyle } from "react-native-reanimated";
 
-const { width } = Dimensions.get("screen");
-const ITEM_WIDTH = Math.round(width * 0.9); // Matchar ImageCarousel
-
-// Type guard för att kolla om item är TrailOverviewViewModel
-function isTrailOverviewViewModel(item: TrailOverview | TrailImage): item is TrailOverview {
-  return "name" in item && "trailLength" in item;
-}
-
-// Interface för tile-props
-interface CarouselTileProps<T extends TrailOverview | TrailImage> {
-  item: T;
+interface CarouselTileProps {
+  item: TrailOverview;
   index: number;
   scrollX: SharedValue<number>;
   itemWidth: number;
   itemSpacing?: number;
-  itemKey?: string | number;
   showText?: boolean;
-  onPress?: (item: T) => void;
+  onPress?: (item: TrailOverview) => void;
 }
 
-function ImageCarouselTileInner<T extends TrailOverview | TrailImage>({
+function ImageCarouselTileInner({
   item,
   index,
   scrollX,
   itemWidth,
-  itemSpacing = 5, // Matchar ImageCarousel
-  itemKey,
+  itemSpacing = 5,
   showText = true,
   onPress,
-}: CarouselTileProps<T>) {
+}: CarouselTileProps) {
   const fullItem = itemWidth + itemSpacing;
 
-  // Animerad stil - ENDAST scale, INGEN translateX för perfekt centrering
   const rnAnimatedStyle = useAnimatedStyle(() => ({
     transform: [
       {
-        // Skalar (zoomar) objektet - centrerade objekt är större (1.0), omgivande mindre (0.85)
         scale: interpolate(
           scrollX.value,
           [(index - 1) * fullItem, index * fullItem, (index + 1) * fullItem],
-          [0.85, 1, 0.85], // Ändrat från 0.7 till 0.85 för subtilare effekt
+          [0.85, 1, 0.85],
           Extrapolation.CLAMP,
         ),
       },
     ],
   }));
 
-  // Beräknar bildens storlek
-  const imageSize = itemWidth; // Använd hela itemWidth
+  const imageSize = itemWidth;
   const imageHeight = Math.round(imageSize * 0.78);
 
-  // Hämta bild-URL beroende på typ
-  const getImageSource = () => {
-    if (isTrailOverviewViewModel(item)) {
-      return item.trailImagesResponse && item.trailImagesResponse.length > 0
-        ? item.trailImagesResponse[0].imageUrl
-        : require("../assets/images/noImage.png");
-    } else {
-      return item.imageUrl || require("../assets/images/noImage.png");
-    }
-  };
+  const imageSource =
+    item.trailImagesResponse && item.trailImagesResponse.length > 0
+      ? item.trailImagesResponse[0].imageUrl
+      : require("../assets/images/noImage.png");
 
   const handlePress = () => {
     if (onPress) {
       onPress(item);
-    } else if (isTrailOverviewViewModel(item)) {
+    } else {
       router.navigate({
         pathname: "/(tabs)/(stacks)/trail/[identifier]",
         params: { identifier: item.identifier, returnTo: "/" },
@@ -79,13 +59,7 @@ function ImageCarouselTileInner<T extends TrailOverview | TrailImage>({
     }
   };
 
-  // Hämta text att visa (endast för TrailOverviewViewModel)
-  const getDisplayText = () => {
-    if (!showText || !isTrailOverviewViewModel(item)) return null;
-    return `${item.name} ${item.trailLength} km`;
-  };
-
-  const displayText = getDisplayText();
+  const displayText = showText ? `${item.name} ${item.trailLength} km` : null;
 
   return (
     <Animated.View
@@ -101,7 +75,7 @@ function ImageCarouselTileInner<T extends TrailOverview | TrailImage>({
     >
       <Pressable onPress={handlePress} style={{ alignItems: "center" }}>
         <ExpoImage
-          source={getImageSource()}
+          source={imageSource}
           style={{
             width: imageSize,
             height: imageHeight,
@@ -118,24 +92,17 @@ function ImageCarouselTileInner<T extends TrailOverview | TrailImage>({
   );
 }
 
-// Memoized version av komponenten
 export const CarouselTile = React.memo(ImageCarouselTileInner, (prev, next) => {
-  const sameIndex = prev.index === next.index;
-  const sameKey =
-    prev.itemKey !== undefined || next.itemKey !== undefined ? prev.itemKey === next.itemKey : prev.item === next.item;
-  const sameLayout = prev.itemWidth === next.itemWidth && prev.itemSpacing === next.itemSpacing;
-  const sameShowText = prev.showText === next.showText;
-  return sameIndex && sameKey && sameLayout && sameShowText;
-}) as <T extends TrailOverview | TrailImage>(props: CarouselTileProps<T>) => React.ReactElement;
+  return (
+    prev.index === next.index &&
+    prev.item.identifier === next.item.identifier &&
+    prev.itemWidth === next.itemWidth &&
+    prev.itemSpacing === next.itemSpacing &&
+    prev.showText === next.showText
+  );
+});
 
 const s = StyleSheet.create({
-  background: {
-    position: "absolute",
-    width: ITEM_WIDTH,
-    height: ITEM_WIDTH,
-    padding: 20,
-    borderRadius: 10,
-  },
   trailDetails: {
     position: "absolute",
     bottom: 10,

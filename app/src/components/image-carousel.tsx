@@ -1,4 +1,4 @@
-import { TrailImage, TrailOverview } from "@/data/types";
+import { TrailOverview } from "@/data/types";
 import React, { useCallback } from "react";
 import { useWindowDimensions, View } from "react-native";
 import Animated, {
@@ -7,40 +7,37 @@ import Animated, {
 } from "react-native-reanimated";
 import { CarouselTile } from "./ImageCarouselTile";
 
-interface CarouselProps<T extends TrailOverview | TrailImage> {
-  data: T[];
+interface CarouselProps {
+  data: TrailOverview[];
   showText?: boolean;
-  onItemPress?: (item: T) => void;
+  onItemPress?: (item: TrailOverview) => void;
 }
 
-export default function ImageCarousel<T extends TrailOverview | TrailImage>({
+export default function ImageCarousel({
   data,
   showText = true,
   onItemPress,
-}: CarouselProps<T>) {
+}: CarouselProps) {
   const scrollX = useSharedValue(0);
   const { width } = useWindowDimensions();
   const itemWidth = Math.round(width * 0.7);
   const itemSpacing = 0;
   const fullItem = itemWidth + itemSpacing;
 
-  const snapOffsets = data.map((_, index) => {
-    return index * fullItem - width * 0.1;
-  });
+  const snapOffsets = data.map((_, index) => index * fullItem - width * 0.1);
 
   const onScrollHandler = useAnimatedScrollHandler({
     onScroll: (event) => (scrollX.value = event.contentOffset.x),
   });
 
   const renderItem = useCallback(
-    ({ item, index }: { item: T; index: number }) => (
+    ({ item, index }: { item: TrailOverview; index: number }) => (
       <CarouselTile
         item={item}
         index={index}
         scrollX={scrollX}
         itemWidth={itemWidth}
         itemSpacing={itemSpacing}
-        itemKey={item.identifier}
         showText={showText}
         onPress={onItemPress}
       />
@@ -63,7 +60,7 @@ export default function ImageCarousel<T extends TrailOverview | TrailImage>({
         data={data}
         horizontal
         renderItem={renderItem}
-        keyExtractor={(item, index) => String(item.identifier)}
+        keyExtractor={(item) => String(item.identifier)}
         pagingEnabled={false}
         snapToOffsets={snapOffsets}
         snapToInterval={1}
