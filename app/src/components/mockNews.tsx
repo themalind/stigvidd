@@ -78,6 +78,7 @@ export default function MockNews() {
             style={{
               borderRadius: 10,
               width: CARD_WIDTH,
+              backgroundColor: theme.colors.surface,
               marginRight: index < news.length - 1 ? CARD_SPACING : 0,
             }}
           >
