@@ -29,27 +29,27 @@ function TrailItem({ item, handlePress }: TrailItemProps) {
       onPress={() => handlePress(item.identifier)}
       style={[s.trailCard, { backgroundColor: theme.colors.surface }]}
     >
-      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 5, flex: 1, flexShrink: 1 }}>
-          <Image source={wizardPin} style={{ height: 20, width: 20 }} contentFit="contain" />
-          <Text style={[s.trailName, { flexShrink: 1 }]} numberOfLines={1}>
+      <View style={s.topRow}>
+        <View style={s.nameRow}>
+          <Image source={wizardPin} style={s.pinIcon} contentFit="contain" />
+          <Text style={s.trailName} numberOfLines={1}>
             {item.name}
           </Text>
         </View>
         <MaterialIcons name="chevron-right" size={22} color={theme.colors.onSurfaceVariant} />
       </View>
-      <View style={{ flexDirection: "row", alignItems: "center" }}>
-        <Text style={[s.infoText, { flex: 1 }]} numberOfLines={1}>
+      <View style={s.bottomRow}>
+        <Text style={[s.infoText, s.cityText]} numberOfLines={1}>
           {item.city}
         </Text>
-        <Text style={[s.infoText, { width: 60, textAlign: "right" }]} numberOfLines={1}>
+        <Text style={[s.infoText, s.lengthText]} numberOfLines={1}>
           {item.trailLength} km
         </Text>
-        <View style={{ width: 100, flexDirection: "row", gap: 5, alignItems: "center", justifyContent: "center" }}>
+        <View style={s.classificationContainer}>
           {item.classification != null && item.classification !== 0 && (
             <>
               <Text>{getDifficultyIcon(classificationParser(item.classification))}</Text>
-              <Text style={[s.infoText]}>{classificationParser(item.classification)}</Text>
+              <Text style={s.infoText}>{classificationParser(item.classification)}</Text>
             </>
           )}
         </View>
@@ -68,14 +68,47 @@ export default memo(TrailItem);
 const s = StyleSheet.create({
   trailCard: {
     flex: 1,
-    flexDirection: "column",
     borderRadius: 10,
     padding: 10,
     gap: 5,
   },
+  topRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  nameRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    flex: 1,
+  },
+  pinIcon: {
+    height: 20,
+    width: 20,
+  },
   trailName: {
     fontSize: 13,
     fontWeight: "700",
+    flexShrink: 1,
+  },
+  bottomRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  cityText: {
+    flex: 1,
+  },
+  lengthText: {
+    width: 60,
+    textAlign: "right",
+  },
+  classificationContainer: {
+    width: 100,
+    flexDirection: "row",
+    gap: 5,
+    alignItems: "center",
+    justifyContent: "center",
   },
   accessibilityBadge: {
     padding: 4,

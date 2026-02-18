@@ -1,3 +1,4 @@
+import { userLocationAtom } from "@/atoms/location-atoms";
 import { userThemeAtom } from "@/atoms/user-theme-atom";
 import LoadingIndicator from "@/components/loading-indicator";
 import { TrailFilterModal } from "@/components/trail/trail-list/trail-filter-modal";
@@ -7,44 +8,23 @@ import { useTrailFilters } from "@/hooks/trail/useTrailFilters";
 import { useTrails } from "@/hooks/trail/useTrails";
 import { MaterialIcons } from "@expo/vector-icons";
 import { Image } from "expo-image";
-import * as Location from "expo-location";
-import { router, useFocusEffect } from "expo-router";
-import { useAtom } from "jotai";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import { router } from "expo-router";
+import { useAtom, useAtomValue } from "jotai";
+import React, { useCallback, useRef, useState } from "react";
 import { Appearance, FlatList, Pressable, RefreshControl, StyleSheet, View } from "react-native";
-import { Text, useTheme } from "react-native-paper";
+import { Text, TextInput, useTheme } from "react-native-paper";
 
 export default function TrailsScreen() {
   const theme = useTheme();
   const listRef = useRef<FlatList>(null);
   const [userTheme] = useAtom(userThemeAtom);
+  const userLocation = useAtomValue(userLocationAtom);
   const colorScheme = Appearance.getColorScheme();
   const finalTheme = userTheme === "auto" ? (colorScheme ?? "light") : userTheme;
   const hikers =
     finalTheme === "dark"
       ? require("../../assets/images/mrHike-light.png")
       : require("../../assets/images/mrHike-dark.png");
-
-  // Scrolla till toppen när skärmen fokuseras (vid tab-tryck)
-  useFocusEffect(
-    React.useCallback(() => {
-      listRef.current?.scrollToOffset({ offset: 0, animated: false });
-    }, []),
-  );
-
-  const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
-
-  useEffect(() => {
-    (async () => {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== "granted") return;
-      const location = await Location.getCurrentPositionAsync({});
-      setUserLocation({
-        latitude: location.coords.latitude,
-        longitude: location.coords.longitude,
-      });
-    })();
-  }, []);
 
   const { data: trails, isLoading, isError, refetch, isFetching } = useTrails();
   const onRefresh = () => {
@@ -62,6 +42,8 @@ export default function TrailsScreen() {
     classifications,
     totalCount,
     filteredCount,
+    searchQuery,
+    setSearchQuery,
   } = useTrailFilters(trails, userLocation);
 
   const [filterModalVisible, setFilterModalVisible] = useState(false);
@@ -94,7 +76,7 @@ export default function TrailsScreen() {
   }
 
   return (
-    <View style={[{ backgroundColor: theme.colors.background, flex: 1 }]}>
+    <View style={[s.container, { backgroundColor: theme.colors.background }]}>
       <FlatList
         ref={listRef}
         data={filteredTrails}
@@ -108,40 +90,37 @@ export default function TrailsScreen() {
         removeClippedSubviews
         ListHeaderComponent={
           <>
-            <View
-              style={{
-                flexDirection: "row",
-                justifyContent: "space-between",
-                alignItems: "center",
-                paddingBottom: 20,
-              }}
-            >
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+            <View style={s.headerRow}>
+              <View style={s.titleRow}>
                 <Image contentFit="contain" source={hikers} style={s.hikers} />
-                <Text style={{ fontSize: 20, color: theme.colors.onBackground }}>Vandringsleder</Text>
+                <Text style={[s.titleText, { color: theme.colors.onBackground }]}>Vandringsleder</Text>
               </View>
-              <Pressable onPress={() => setFilterModalVisible(true)} style={s.filterButton}>
-                <View
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: 5,
-                    backgroundColor: theme.colors.primary,
-                    padding: 10,
-                    borderRadius: 8,
-                  }}
-                >
+              <Pressable onPress={() => setFilterModalVisible(true)}>
+                <View style={[s.filterButtonInner, { backgroundColor: theme.colors.primary }]}>
                   <MaterialIcons name="filter-list" size={24} color={theme.colors.onPrimary} />
-                  <Text style={{ color: theme.colors.onPrimary, fontWeight: "600", fontSize: 16 }}>Filtrera</Text>
+                  <Text style={[s.filterButtonText, { color: theme.colors.onPrimary }]}>Filtrera</Text>
                 </View>
               </Pressable>
             </View>
+            <TextInput
+              mode="outlined"
+              placeholder="Sök efter led eller ort..."
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              left={<TextInput.Icon icon="magnify" />}
+              right={searchQuery ? <TextInput.Icon icon="close" onPress={() => setSearchQuery("")} /> : undefined}
+              style={[s.searchInput, { backgroundColor: theme.colors.surface }]}
+              theme={{
+                colors: {
+                  primary: theme.colors.outlineVariant,
+                },
+              }}
+            />
             <View style={s.filterContainer}>
               <Text style={s.resultText}>
                 Visar {filteredCount} av {totalCount} leder
               </Text>
-              {Object.keys(filters).length > 0 ? (
+              {Object.keys(filters).length > 0 || searchQuery ? (
                 <Pressable onPress={clearFilters}>
                   <Text style={[s.clearFilters, { color: theme.colors.tertiary }]}>Rensa filter</Text>
                 </Pressable>
@@ -182,6 +161,9 @@ export default function TrailsScreen() {
 }
 
 const s = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
   retryButton: {
     paddingHorizontal: 20,
     paddingVertical: 10,
@@ -191,10 +173,33 @@ const s = StyleSheet.create({
     height: 25,
     width: 25,
   },
-  filterButton: {
+  headerRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingBottom: 20,
+  },
+  titleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  titleText: {
+    fontSize: 20,
+  },
+  filterButtonInner: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 5,
+    padding: 5,
+    paddingRight: 10,
     borderRadius: 8,
   },
-
+  filterButtonText: {
+    fontWeight: "600",
+    fontSize: 16,
+  },
   emptyContainer: {
     alignItems: "center",
     padding: 40,
@@ -220,8 +225,25 @@ const s = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
   },
+  searchInput: {
+    marginBottom: 5,
+    height: 40,
+  },
   listContent: {
     padding: 10,
     gap: 10,
+  },
+  scrollTopButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    padding: 12,
+    borderRadius: 8,
+    marginTop: 10,
+  },
+  scrollTopText: {
+    fontWeight: "600",
+    fontSize: 16,
   },
 });

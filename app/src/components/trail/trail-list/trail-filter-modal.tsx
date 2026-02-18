@@ -43,19 +43,20 @@ export const TrailFilterModal: React.FC<TrailFilterModalProps> = ({
   hasLocation,
 }) => {
   const theme = useTheme();
+  const pickerStyle = { color: theme.colors.onSurface, backgroundColor: theme.colors.surface };
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
       <SafeAreaView style={[s.modalContainer, { backgroundColor: theme.colors.background }]}>
         {/* Header */}
         <View style={s.header}>
-          <Pressable style={{ backgroundColor: theme.colors.secondary, borderRadius: 10 }} onPress={onClearFilters}>
+          <Pressable
+            style={[s.clearButtonWrapper, { backgroundColor: theme.colors.secondary }]}
+            onPress={onClearFilters}
+          >
             <Text style={[s.clearButton, { color: theme.colors.onSecondary }]}>Rensa</Text>
           </Pressable>
           <Text style={s.headerTitle}>Filter & Sortering</Text>
-          <Pressable
-            style={{ backgroundColor: theme.colors.primary, paddingLeft: 10, paddingRight: 10, borderRadius: 10 }}
-            onPress={onClose}
-          >
+          <Pressable style={[s.doneButtonWrapper, { backgroundColor: theme.colors.primary }]} onPress={onClose}>
             <Text style={[s.doneButton, { color: theme.colors.onPrimary }]}>Klar</Text>
           </Pressable>
         </View>
@@ -64,30 +65,21 @@ export const TrailFilterModal: React.FC<TrailFilterModalProps> = ({
           {/* City Filter */}
           <View style={s.section}>
             <Text style={s.sectionTitle}>Orter</Text>
-
             <Picker
               dropdownIconColor={theme.colors.onSurface}
-              style={{ color: theme.colors.onSurface, backgroundColor: theme.colors.surface }}
+              style={pickerStyle}
               selectedValue={filters.city || ""}
               onValueChange={(value) => onUpdateFilter("city", value === "" ? undefined : value)}
               mode="dropdown"
             >
-              <Picker.Item
-                style={{ color: theme.colors.onSurface, backgroundColor: theme.colors.surface }}
-                label="Alla orter"
-                value=""
-              />
+              <Picker.Item style={pickerStyle} label="Alla orter" value="" />
               {cities.map((city) => (
-                <Picker.Item
-                  key={city}
-                  label={city}
-                  value={city}
-                  style={{ color: theme.colors.onSurface, backgroundColor: theme.colors.surface }}
-                />
+                <Picker.Item key={city} label={city} value={city} style={pickerStyle} />
               ))}
             </Picker>
           </View>
           <Divider />
+
           {/* Accessibility Filter */}
           <View style={s.section}>
             <Text style={s.sectionTitle}>Tillgänglighet</Text>
@@ -112,7 +104,6 @@ export const TrailFilterModal: React.FC<TrailFilterModalProps> = ({
                   Alla
                 </Text>
               </Pressable>
-
               <Pressable
                 style={[
                   s.filterButton,
@@ -145,47 +136,6 @@ export const TrailFilterModal: React.FC<TrailFilterModalProps> = ({
                 </View>
               </Pressable>
             </View>
-          </View>
-          <Divider />
-
-          {/* Sort Options */}
-          <View style={s.section}>
-            <Text style={s.sectionTitle}>Sortera efter</Text>
-            <Picker
-              mode="dropdown"
-              dropdownIconColor={theme.colors.onSurface}
-              style={{ color: theme.colors.onSurface, backgroundColor: theme.colors.surface }}
-              selectedValue={sortBy}
-              onValueChange={onUpdateSort}
-            >
-              <Picker.Item
-                style={{ color: theme.colors.onSurface, backgroundColor: theme.colors.surface }}
-                label="Namn (A-Ö)"
-                value="name-asc"
-              />
-              <Picker.Item
-                style={{ color: theme.colors.onSurface, backgroundColor: theme.colors.surface }}
-                label="Namn (Ö-A)"
-                value="name-desc"
-              />
-              <Picker.Item
-                style={{ color: theme.colors.onSurface, backgroundColor: theme.colors.surface }}
-                label="Längd (Kortast först)"
-                value="length-asc"
-              />
-              <Picker.Item
-                style={{ color: theme.colors.onSurface, backgroundColor: theme.colors.surface }}
-                label="Längd (Längst först)"
-                value="length-desc"
-              />
-              {hasLocation && (
-                <Picker.Item
-                  style={{ color: theme.colors.onSurface, backgroundColor: theme.colors.surface }}
-                  label="Närmast först"
-                  value="distance-asc"
-                />
-              )}
-            </Picker>
           </View>
           <Divider />
 
@@ -256,22 +206,18 @@ export const TrailFilterModal: React.FC<TrailFilterModalProps> = ({
             <Text style={s.sectionTitle}>Svårighetsgrad</Text>
             <Picker
               dropdownIconColor={theme.colors.onSurface}
-              style={{ color: theme.colors.onSurface, backgroundColor: theme.colors.surface }}
+              style={pickerStyle}
               selectedValue={filters.classification || ""}
               onValueChange={(value) => onUpdateFilter("classification", value === "" ? undefined : value)}
               mode="dropdown"
             >
-              <Picker.Item
-                style={{ color: theme.colors.onSurface, backgroundColor: theme.colors.surface }}
-                label="Alla svårighetsgrader"
-                value=""
-              />
+              <Picker.Item style={pickerStyle} label="Alla svårighetsgrader" value="" />
               {classifications.map((classification, index) => (
                 <Picker.Item
                   key={index}
                   label={classificationParser(classification)}
                   value={classification}
-                  style={{ color: theme.colors.onSurface, backgroundColor: theme.colors.surface }}
+                  style={pickerStyle}
                 />
               ))}
             </Picker>
@@ -310,6 +256,25 @@ export const TrailFilterModal: React.FC<TrailFilterModalProps> = ({
             />
           </View>
           <Divider />
+
+          {/* Sort Options */}
+          <View style={s.section}>
+            <Text style={s.sectionTitle}>Sortera efter</Text>
+            <Picker
+              mode="dropdown"
+              dropdownIconColor={theme.colors.onSurface}
+              style={pickerStyle}
+              selectedValue={sortBy}
+              onValueChange={onUpdateSort}
+            >
+              <Picker.Item style={pickerStyle} label="Namn (A-Ö)" value="name-asc" />
+              <Picker.Item style={pickerStyle} label="Namn (Ö-A)" value="name-desc" />
+              <Picker.Item style={pickerStyle} label="Längd (Kortast först)" value="length-asc" />
+              <Picker.Item style={pickerStyle} label="Längd (Längst först)" value="length-desc" />
+              {hasLocation && <Picker.Item style={pickerStyle} label="Närmast först" value="distance-asc" />}
+            </Picker>
+          </View>
+          <Divider />
         </ScrollView>
       </SafeAreaView>
     </Modal>
@@ -330,9 +295,16 @@ const s = StyleSheet.create({
     fontSize: 18,
     fontWeight: "700",
   },
+  clearButtonWrapper: {
+    borderRadius: 10,
+  },
   clearButton: {
     fontSize: 16,
     padding: 5,
+  },
+  doneButtonWrapper: {
+    paddingHorizontal: 10,
+    borderRadius: 10,
   },
   doneButton: {
     padding: 5,
