@@ -1,6 +1,7 @@
 import { initAuthAtom, userAtom } from "@/atoms/auth-atoms";
 import { loadUserTheme, userThemeAtom } from "@/atoms/user-theme-atom";
 import { GlobalSnackbar } from "@/components/global-snackbar";
+import { useInitLocation } from "@/hooks/useInitLocation";
 import { useUserTheme } from "@/hooks/useUserTheme";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
@@ -21,6 +22,9 @@ export default function RootLayout() {
 
   // Create a QueryClient with useMemo to avoid recreating on every render.
   const queryClient = useMemo(() => new QueryClient(), []);
+
+  // Fetch location on mount and re-check when app returns to foreground
+  useInitLocation();
 
   useEffect(() => {
     const unsubscribe = initAuth();

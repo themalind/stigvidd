@@ -1,7 +1,5 @@
 import Map from "@/components/map/map";
 import Marker from "@/components/map/marker";
-import * as Location from "expo-location";
-import { useEffect } from "react";
 import { StyleSheet } from "react-native";
 import { LatLng } from "react-native-maps";
 
@@ -22,13 +20,6 @@ export default function MapScreen() {
     latitude: 57.72141010663575,
     longitude: 12.905517126805371,
   };
-
-  useEffect(() => {
-    (async () => {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== "granted") return;
-    })();
-  }, []);
 
   return (
     <Map style={s.container} initialRegion={START_COORDINATE_BORAS} showsUserLocation>

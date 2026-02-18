@@ -1,4 +1,5 @@
 import { getPopularTrails } from "@/api/trails";
+import { locationResolvedAtom, userLocationAtom } from "@/atoms/location-atoms";
 import { userThemeAtom } from "@/atoms/user-theme-atom";
 import ImageCarousel from "@/components/image-carousel";
 import LoadingIndicator from "@/components/loading-indicator";
@@ -8,10 +9,9 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useQuery } from "@tanstack/react-query";
 import { Image } from "expo-image";
-import * as Location from "expo-location";
 import { useFocusEffect } from "expo-router";
-import { useAtom } from "jotai";
-import React, { useEffect, useRef, useState } from "react";
+import { useAtom, useAtomValue } from "jotai";
+import React, { useRef } from "react";
 import { Appearance, Dimensions, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Divider, Surface, useTheme } from "react-native-paper";
 
@@ -21,38 +21,14 @@ export default function HomeScreen() {
   const scrollViewRef = useRef<ScrollView>(null);
   const theme = useTheme();
   const [userTheme] = useAtom(userThemeAtom);
+  const userLocation = useAtomValue(userLocationAtom);
+  const locationResolved = useAtomValue(locationResolvedAtom);
   const colorScheme = Appearance.getColorScheme();
   const finalTheme = userTheme === "auto" ? (colorScheme ?? "light") : userTheme;
   const hikers =
     finalTheme === "dark"
       ? require("../../assets/images/mrHike-light.png")
       : require("../../assets/images/mrHike-dark.png");
-
-  const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
-  const [locationResolved, setLocationResolved] = useState(false);
-
-  useEffect(() => {
-    (async () => {
-      try {
-        // Ask for permission
-        const { status } = await Location.requestForegroundPermissionsAsync();
-        // If granted get user location
-        if (status === "granted") {
-          const location = await Location.getCurrentPositionAsync({});
-          // Set user location in state
-          setUserLocation({
-            latitude: location.coords.latitude,
-            longitude: location.coords.longitude,
-          });
-        }
-      } catch (error) {
-        console.log("Kunde inte hämta position:", error);
-      } finally {
-        // First when resolved, tanstack will try and fetch with or without coordinates
-        setLocationResolved(true);
-      }
-    })();
-  }, []);
 
   const query = useQuery({
     queryKey: ["trails", "popular", userLocation?.latitude, userLocation?.longitude],
