@@ -2,9 +2,9 @@ import { getPopularTrails } from "@/api/trails";
 import { locationResolvedAtom, userLocationAtom } from "@/atoms/location-atoms";
 import { userThemeAtom } from "@/atoms/user-theme-atom";
 import ImageCarousel from "@/components/image-carousel";
-import LoadingIndicator from "@/components/loading-indicator";
 import Map from "@/components/map/map";
 import MockNews from "@/components/mockNews";
+import CarouselSkeleton from "@/components/skeleton/carousel-skeleton";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useQuery } from "@tanstack/react-query";
@@ -43,19 +43,6 @@ export default function HomeScreen() {
     }, []),
   );
 
-  if (query.isPending) {
-    return <LoadingIndicator />;
-  }
-
-  if (query.error) {
-    console.log(query.error);
-    return (
-      <View>
-        <Text>Fel vid hämtning</Text>
-      </View>
-    );
-  }
-
   return (
     <ScrollView ref={scrollViewRef} contentContainerStyle={[s.container, { backgroundColor: theme.colors.background }]}>
       <View
@@ -68,7 +55,7 @@ export default function HomeScreen() {
         <Image contentFit="contain" source={hikers} style={s.hikers} />
         <Text style={[s.sectionTitle, { color: theme.colors.onBackground }]}>Populära promenader nära dig</Text>
       </View>
-      <ImageCarousel data={query.data} />
+      {query.data ? <ImageCarousel data={query.data} /> : <CarouselSkeleton />}
       <Divider />
       <View style={{ flexDirection: "row", gap: 10 }}>
         <MaterialCommunityIcons name="map-marker-radius-outline" size={24} color={theme.colors.onBackground} />
@@ -103,11 +90,6 @@ export default function HomeScreen() {
   );
 }
 const s = StyleSheet.create({
-  loading: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
   container: {
     flexGrow: 1,
     padding: 10,

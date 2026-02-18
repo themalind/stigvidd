@@ -21,10 +21,22 @@ export default function MapScreen() {
     longitude: 12.905517126805371,
   };
 
+  const shelter: LatLng = {
+    latitude: 57.72141010663575,
+    longitude: 12.705517126805371,
+  };
+
+  const campsite: LatLng = {
+    latitude: 57.62141010663575,
+    longitude: 12.805517126805371,
+  };
+
   return (
     <Map style={s.container} initialRegion={START_COORDINATE_BORAS} showsUserLocation>
       <Marker coordinate={frodo} title="Frodo" variant="favourite" />
-      <Marker coordinate={sam} title="Sam" variant="favourite" />
+      <Marker coordinate={sam} title="Sam" variant="trail" />
+      <Marker coordinate={shelter} title="shelter" variant="shelter" />
+      <Marker coordinate={campsite} title="campsite" variant="campsite" />
     </Map>
   );
 }

@@ -55,7 +55,7 @@ function ImageCarouselTileInner<T extends TrailOverview | TrailImage>({
 
   // Beräknar bildens storlek
   const imageSize = itemWidth; // Använd hela itemWidth
-  const imageHeight = Math.round(imageSize * 0.6);
+  const imageHeight = Math.round(imageSize * 0.78);
 
   // Hämta bild-URL beroende på typ
   const getImageSource = () => {
