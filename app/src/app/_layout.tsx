@@ -1,7 +1,8 @@
 import { initAuthAtom, userAtom } from "@/atoms/auth-atoms";
 import { loadUserTheme, userThemeAtom } from "@/atoms/user-theme-atom";
 import { GlobalSnackbar } from "@/components/global-snackbar";
-import { useUserTheme } from "@/hooks/appUserTheme";
+import { useInitLocation } from "@/hooks/useInitLocation";
+import { useUserTheme } from "@/hooks/useUserTheme";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
@@ -17,10 +18,13 @@ export default function RootLayout() {
   const setUserTheme = useSetAtom(userThemeAtom);
   const theme = useUserTheme();
   const user = useAtom(userAtom);
-  const statusBarStyle = "light";
+  const statusBarStyle = theme.dark ? "light" : "dark";
 
   // Create a QueryClient with useMemo to avoid recreating on every render.
   const queryClient = useMemo(() => new QueryClient(), []);
+
+  // Fetch location on mount and re-check when app returns to foreground
+  useInitLocation();
 
   useEffect(() => {
     const unsubscribe = initAuth();
@@ -35,7 +39,7 @@ export default function RootLayout() {
     }
   }, [user, queryClient]);
 
-  // Ladda temat när komponenten mountas
+  // Load theme
   useEffect(() => {
     loadUserTheme().then(setUserTheme);
   }, [setUserTheme]);

@@ -25,6 +25,7 @@ export interface TrailOverview {
   identifier: string;
   name?: string;
   trailLength: number;
+  averageRating: number;
   trailImagesResponse?: TrailImage[];
 }
 
@@ -112,9 +113,21 @@ export interface TrailShortInfoResponse {
   accessibility: boolean;
   classification: number;
   city: string;
+  startLatitude?: number;
+  startLongitude?: number;
 }
 
 // Frontend types
+export interface FilterOptions {
+  city?: string;
+  minLength?: number;
+  maxLength?: number;
+  accessibility?: boolean;
+  classification?: number;
+  nearMe?: boolean;
+  maxDistance?: number;
+}
+
 export interface CreateStigViddUserCredentials {
   email: string;
   nickname: string;

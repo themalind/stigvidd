@@ -13,6 +13,7 @@ interface UserTrailCollectionProps {
   trails: UserFavoritesTrail[] | UserWishlistTrail[];
   onDelete: (identifier: string) => void;
   icon?: React.ReactNode;
+  returnTo: string;
 }
 
 export default function UserTrailCollection({
@@ -21,6 +22,7 @@ export default function UserTrailCollection({
   noTrailsSavedInfo,
   onDelete,
   icon,
+  returnTo,
 }: UserTrailCollectionProps) {
   const theme = useTheme();
   return (
@@ -48,7 +50,7 @@ export default function UserTrailCollection({
               onPress={() =>
                 router.push({
                   pathname: "/(tabs)/(stacks)/trail/[identifier]",
-                  params: { identifier: trail.identifier },
+                  params: { identifier: trail.identifier, returnTo },
                 })
               }
             >

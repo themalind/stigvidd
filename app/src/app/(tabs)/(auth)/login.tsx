@@ -61,7 +61,7 @@ export default function LoginScreen() {
   };
 
   return (
-    <SafeAreaView style={{ backgroundColor: "rgb(0,0,0)" }} edges={["top"]}>
+    <SafeAreaView style={{ backgroundColor: "transparent" }} edges={["top"]}>
       <KeyboardAwareScrollView
         keyboardShouldPersistTaps="handled"
         enableOnAndroid={true}

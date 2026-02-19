@@ -70,7 +70,7 @@ export default function ImageGallery({ images }: GalleryProps) {
                 style={[
                   s.dots,
                   {
-                    backgroundColor: currentIndex === index ? theme.colors.primary : theme.colors.onBackground,
+                    backgroundColor: currentIndex === index ? theme.colors.tertiary : theme.colors.onBackground,
                   },
                 ]}
               />

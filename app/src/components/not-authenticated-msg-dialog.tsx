@@ -9,11 +9,7 @@ interface DialogProps {
   onDissmiss: () => void;
 }
 
-export default function NotAuthenticatedDialog({
-  infoMessage,
-  visible,
-  onDissmiss,
-}: DialogProps) {
+export default function NotAuthenticatedDialog({ infoMessage, visible, onDissmiss }: DialogProps) {
   const theme = useTheme();
   return (
     <View>
@@ -27,7 +23,7 @@ export default function NotAuthenticatedDialog({
         textColor={theme.colors.onSurface}
         onConfirm={() => {
           onDissmiss();
-          router.push("/(tabs)/(auth)/login");
+          router.navigate("/(tabs)/(auth)/login");
         }}
       />
     </View>
