@@ -7,6 +7,7 @@ import { Text, useTheme } from "react-native-paper";
 import * as Location from "expo-location";
 import { Ionicons } from "@expo/vector-icons";
 import AlertDialog from "@/components/alert-dialog";
+import SaveHikeModal from "./save-hike-modal";
 import FormattedTime from "@/utils/format-time-from-ms";
 
 export default function TrailCreator() {
@@ -15,7 +16,7 @@ export default function TrailCreator() {
     useLocationTracking();
   const [tick, setTick] = useState(0);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [showSaveDialog, setShowSaveDialog] = useState(false);
+  const [showSaveModal, setShowSaveModal] = useState(false);
   const [initialRegion, setInitialRegion] = useState<Region | undefined>(undefined);
   const theme = useTheme();
 
@@ -96,11 +97,11 @@ export default function TrailCreator() {
       </View>
 
       <View style={[s.infoSection, { backgroundColor: theme.colors.surface }]}>
-        <Text style={s.InfoText}>{formattedTime}</Text>
+        <Text style={s.infoText}>{formattedTime}</Text>
       </View>
 
       <View style={[s.infoSection, { backgroundColor: theme.colors.surface }]}>
-        <Text style={s.InfoText}>{formattedDistance}</Text>
+        <Text style={s.infoText}>{formattedDistance}</Text>
       </View>
 
       <View style={s.actions}>
@@ -127,7 +128,7 @@ export default function TrailCreator() {
             </Pressable>
             <Pressable
               style={[s.actionButton, { backgroundColor: theme.colors.inversePrimary }]}
-              onPress={() => setShowSaveDialog(true)}
+              onPress={() => setShowSaveModal(true)}
             >
               <Ionicons name="checkmark-sharp" size={30} color={theme.colors.onSurface} />
               <Text>Spara</Text>
@@ -152,24 +153,17 @@ export default function TrailCreator() {
         }}
         title={"Avbryt pågående promenad"}
         infoText={["Vill du verkligen avbryta den pågående promenad?", "Detta går inte att ångra."]}
-        backgroundColor={theme.colors.backdrop}
+        backgroundColor={theme.colors.background}
         textColor={theme.colors.onBackground}
         cancelText={"Nej"}
         confirmText={"Ja"}
       />
-      <AlertDialog
-        visible={showSaveDialog}
-        onDismiss={() => setShowSaveDialog(false)}
-        onConfirm={() => {
-          resetTracking();
-          setShowSaveDialog(false);
-        }}
-        title={"Spara promenad"}
-        infoText={["Vill du spara din promenad?", 'Sparade promenader kan hittas under "Mina egna promenader"']}
-        backgroundColor={theme.colors.backdrop}
-        textColor={theme.colors.onBackground}
-        cancelText={"Nej"}
-        confirmText={"Ja"}
+
+      <SaveHikeModal
+        visible={showSaveModal}
+        onDismiss={() => setShowSaveModal(false)}
+        onConfirm={() => setShowSaveModal(false)}
+        hike={hike}
       />
     </ScrollView>
   );
@@ -207,7 +201,7 @@ const s = StyleSheet.create({
     height: 80,
     marginBottom: 20,
   },
-  InfoText: {
+  infoText: {
     fontSize: 40,
   },
   actions: {
