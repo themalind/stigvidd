@@ -7,6 +7,7 @@ import { Text, useTheme } from "react-native-paper";
 import * as Location from "expo-location";
 import { Ionicons } from "@expo/vector-icons";
 import AlertDialog from "@/components/alert-dialog";
+import FormattedTime from "@/utils/format-time-from-ms";
 
 export default function TrailCreator() {
   const mapRef = useRef<MapView>(null);
@@ -36,18 +37,7 @@ export default function TrailCreator() {
     return () => clearInterval(interval);
   }, [isTracking]);
 
-  const formattedTime = (() => {
-    const ms = getActiveTime();
-    const totalSeconds = Math.floor(ms / 1000);
-
-    const seconds = totalSeconds % 60;
-    const minutes = Math.floor((totalSeconds % 3600) / 60);
-    const hours = Math.floor(totalSeconds / 3600);
-
-    return `${hours.toString().padStart(2, "0")}:${minutes
-      .toString()
-      .padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
-  })();
+  const formattedTime = FormattedTime(getActiveTime());
 
   const formattedDistance = useMemo(() => {
     const km = hike.totalDistance / 1000;
