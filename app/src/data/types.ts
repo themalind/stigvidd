@@ -118,6 +118,16 @@ export interface TrailShortInfoResponse {
 }
 
 // Frontend types
+export interface FilterOptions {
+  city?: string;
+  minLength?: number;
+  maxLength?: number;
+  accessibility?: boolean;
+  classification?: number;
+  nearMe?: boolean;
+  maxDistance?: number;
+}
+
 export interface CreateStigViddUserCredentials {
   email: string;
   nickname: string;

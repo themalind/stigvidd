@@ -1,19 +1,9 @@
-import { TrailShortInfoResponse } from "@/data/types";
+import { FilterOptions, TrailShortInfoResponse } from "@/data/types";
 import { getDistance } from "geolib";
 import { useMemo, useState } from "react";
 import { LatLng } from "react-native-maps";
 
 export type SortOption = "name-asc" | "name-desc" | "length-asc" | "length-desc" | "distance-asc";
-
-interface FilterOptions {
-  city?: string;
-  minLength?: number;
-  maxLength?: number;
-  accessibility?: boolean;
-  classification?: number;
-  nearMe?: boolean;
-  maxDistance?: number;
-}
 
 export const useTrailFilters = (trails: TrailShortInfoResponse[] | undefined, userLocation: LatLng | null) => {
   const [filters, setFilters] = useState<FilterOptions>({});
@@ -127,12 +117,15 @@ export const useTrailFilters = (trails: TrailShortInfoResponse[] | undefined, us
   // Updates a single filter and auto-selects a relevant sort order
   const updateFilter = (key: keyof FilterOptions, value: any) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
-    if (key === "minLength" || key === "maxLength") {
-      setSortBy("length-asc");
-    }
     if (key === "nearMe" && value === true) {
       setSortBy("distance-asc");
     }
+  };
+
+  // Updates min and max length in a single state update
+  const updateLengthFilter = (min: number, max: number) => {
+    setFilters((prev) => ({ ...prev, minLength: min, maxLength: max }));
+    setSortBy("length-asc");
   };
 
   // Resets all filters and restores the default sort order
@@ -145,6 +138,7 @@ export const useTrailFilters = (trails: TrailShortInfoResponse[] | undefined, us
   return {
     filters,
     updateFilter,
+    updateLengthFilter,
     clearFilters,
     sortBy,
     setSortBy,

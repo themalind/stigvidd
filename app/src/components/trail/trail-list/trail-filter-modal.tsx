@@ -1,3 +1,4 @@
+import { FilterOptions } from "@/data/types";
 import { classificationParser } from "@/utils/classification-parser";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Slider as RangeSlider } from "@miblanchard/react-native-slider";
@@ -7,16 +8,6 @@ import { Modal, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { Divider, Text, useTheme } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-interface FilterOptions {
-  city?: string;
-  minLength?: number;
-  maxLength?: number;
-  accessibility?: boolean;
-  classification?: number;
-  nearMe?: boolean;
-  maxDistance?: number;
-}
-
 interface TrailFilterModalProps {
   visible: boolean;
   onClose: () => void;
@@ -25,6 +16,7 @@ interface TrailFilterModalProps {
   filters: FilterOptions;
   sortBy: string;
   onUpdateFilter: (key: keyof FilterOptions, value: any) => void;
+  onUpdateLengthFilter: (min: number, max: number) => void;
   onUpdateSort: (value: string) => void;
   onClearFilters: () => void;
   hasLocation: boolean;
@@ -38,6 +30,7 @@ export const TrailFilterModal: React.FC<TrailFilterModalProps> = ({
   filters,
   sortBy,
   onUpdateFilter,
+  onUpdateLengthFilter,
   onUpdateSort,
   onClearFilters,
   hasLocation,
@@ -234,10 +227,7 @@ export const TrailFilterModal: React.FC<TrailFilterModalProps> = ({
               minimumValue={0}
               maximumValue={150}
               step={1}
-              onValueChange={(values: number[]) => {
-                onUpdateFilter("minLength", values[0]);
-                onUpdateFilter("maxLength", values[1]);
-              }}
+              onValueChange={(values: number[]) => onUpdateLengthFilter(values[0], values[1])}
               minimumTrackTintColor={theme.colors.secondary}
               maximumTrackTintColor={theme.colors.outlineVariant}
               thumbTintColor={theme.colors.primary}

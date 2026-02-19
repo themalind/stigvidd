@@ -35,6 +35,7 @@ export default function TrailsScreen() {
     filteredTrails,
     filters,
     updateFilter,
+    updateLengthFilter,
     clearFilters,
     sortBy,
     setSortBy,
@@ -120,7 +121,7 @@ export default function TrailsScreen() {
               <Text style={s.resultText}>
                 Visar {filteredCount} av {totalCount} leder
               </Text>
-              {Object.keys(filters).length > 0 || searchQuery ? (
+              {Object.values(filters).some((v) => v !== undefined) || searchQuery ? (
                 <Pressable onPress={clearFilters}>
                   <Text style={[s.clearFilters, { color: theme.colors.tertiary }]}>Rensa filter</Text>
                 </Pressable>
@@ -152,6 +153,7 @@ export default function TrailsScreen() {
         filters={filters}
         sortBy={sortBy}
         onUpdateFilter={updateFilter}
+        onUpdateLengthFilter={updateLengthFilter}
         onUpdateSort={setSortBy}
         onClearFilters={clearFilters}
         hasLocation={userLocation !== null}
@@ -232,18 +234,5 @@ const s = StyleSheet.create({
   listContent: {
     padding: 10,
     gap: 10,
-  },
-  scrollTopButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    padding: 12,
-    borderRadius: 8,
-    marginTop: 10,
-  },
-  scrollTopText: {
-    fontWeight: "600",
-    fontSize: 16,
   },
 });
