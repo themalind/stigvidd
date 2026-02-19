@@ -15,7 +15,7 @@ public class CreateTrailRequestValidator : AbstractValidator<CreateTrailRequest>
             .LessThan(decimal.MaxValue);
         RuleFor(CreateTrailRequest => CreateTrailRequest.Classification)
             .NotEmpty().WithMessage("Must contain a classification")
-            .GreaterThan(0)
+            .GreaterThan(-1)
             .LessThan(4);
         RuleFor(CreateTrailRequest => CreateTrailRequest.AccessibilityInfo)
             .MaximumLength(1024);
