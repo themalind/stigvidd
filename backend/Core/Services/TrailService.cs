@@ -137,6 +137,9 @@ public class TrailService : ITrailService
                 Description = request.Description ?? string.Empty,
                 FullDescription = request.FullDescription ?? string.Empty,
                 Coordinates = request.Coordinates,
+                Tags = request.Tags ?? string.Empty,
+                CreatedBy = user.Identifier,
+                IsVerified = false,
                 City = request.City ?? string.Empty,
                 CreatedBy = user.Identifier
             };

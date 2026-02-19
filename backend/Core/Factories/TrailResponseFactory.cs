@@ -39,6 +39,9 @@ public class TrailResponseFactory
         trail.Description ?? string.Empty,
         trail.FullDescription ?? string.Empty,
         trail.Coordinates ?? string.Empty,
+        trail.Tags ?? string.Empty,
+        trail.CreatedBy ?? string.Empty,
+        trail.IsVerified,
         trail.City ?? string.Empty,
         images,
         links);

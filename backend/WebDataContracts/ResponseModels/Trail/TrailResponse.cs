@@ -13,6 +13,9 @@ public class TrailResponse
     public string? Description { get; set; }
     public string? FullDescription { get; set; }
     public string? Coordinates { get; set; }
+    public string? Tags { get; set; }
+    public string? CreatedBy { get; set; }
+    public bool IsVerified { get; set; }
     public string? City { get; set; }
     public IReadOnlyCollection<TrailImageResponse>? TrailImagesResponse { get; set; }
     public IReadOnlyCollection<TrailLinkResponse>? TrailLinksResponse { get; set; }
@@ -29,10 +32,12 @@ public class TrailResponse
         string description,
         string fullDescription,
         string coordinates,
+        string tags,
+        string createdBy,
+        bool IsVerified,
         string city,
         IEnumerable<TrailImageResponse>? trailImages,
         IEnumerable<TrailLinkResponse>? trailLinks)
-
     {
         return new TrailResponse
         {
@@ -47,6 +52,9 @@ public class TrailResponse
             Description = description,
             FullDescription = fullDescription,
             Coordinates = coordinates,
+            Tags = tags,
+            CreatedBy = createdBy,
+            IsVerified = IsVerified,
             City = city,
             TrailImagesResponse = trailImages?.ToList(),
             TrailLinksResponse = trailLinks?.ToList(),
