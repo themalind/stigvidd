@@ -8,7 +8,7 @@ export type SortOption = "name-asc" | "name-desc" | "length-asc" | "length-desc"
 interface FilterOptions {
   city?: string;
   minLength?: number;
-  maxLenght?: number;
+  maxLength?: number;
   accessibility?: boolean;
   classification?: number;
   nearMe?: boolean;
@@ -87,7 +87,7 @@ export const useTrailFilters = (trails: TrailShortInfoResponse[] | undefined, us
       result = result.filter((trail) => trail.trailLength >= minLength);
     }
 
-    const maxLength = filters.maxLenght;
+    const maxLength = filters.maxLength;
     if (maxLength !== undefined) {
       result = result.filter((trail) => trail.trailLength <= maxLength);
     }
@@ -127,7 +127,7 @@ export const useTrailFilters = (trails: TrailShortInfoResponse[] | undefined, us
   // Updates a single filter and auto-selects a relevant sort order
   const updateFilter = (key: keyof FilterOptions, value: any) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
-    if (key === "minLength" || key === "maxLenght") {
+    if (key === "minLength" || key === "maxLength") {
       setSortBy("length-asc");
     }
     if (key === "nearMe" && value === true) {

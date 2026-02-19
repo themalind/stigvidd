@@ -1,6 +1,6 @@
 import { classificationParser } from "@/utils/classification-parser";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import Slider from "@react-native-community/slider";
+import { Slider as RangeSlider } from "@miblanchard/react-native-slider";
 import { Picker } from "@react-native-picker/picker";
 import React from "react";
 import { Modal, Pressable, ScrollView, StyleSheet, View } from "react-native";
@@ -10,7 +10,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 interface FilterOptions {
   city?: string;
   minLength?: number;
-  maxLenght?: number;
+  maxLength?: number;
   accessibility?: boolean;
   classification?: number;
   nearMe?: boolean;
@@ -184,16 +184,16 @@ export const TrailFilterModal: React.FC<TrailFilterModalProps> = ({
               {filters.nearMe && (
                 <>
                   <Text style={[s.label, { marginTop: 15 }]}>Max avstånd: {filters.maxDistance || 50} km</Text>
-                  <Slider
-                    style={s.slider}
+                  <RangeSlider
+                    value={[filters.maxDistance || 50]}
                     minimumValue={5}
                     maximumValue={200}
                     step={5}
-                    value={filters.maxDistance || 50}
-                    onValueChange={(value) => onUpdateFilter("maxDistance", value)}
-                    minimumTrackTintColor={theme.colors.onPrimary}
-                    maximumTrackTintColor={theme.colors.onPrimary}
-                    thumbTintColor={theme.colors.tertiary}
+                    onValueChange={(values: number[]) => onUpdateFilter("maxDistance", values[0])}
+                    minimumTrackTintColor={theme.colors.secondary}
+                    maximumTrackTintColor={theme.colors.outlineVariant}
+                    thumbTintColor={theme.colors.primary}
+                    containerStyle={s.rangeSliderContainer}
                   />
                 </>
               )}
@@ -227,32 +227,21 @@ export const TrailFilterModal: React.FC<TrailFilterModalProps> = ({
           {/* Trail Length Filter */}
           <View style={s.section}>
             <Text style={s.sectionTitle}>
-              Ledlängd: {filters.minLength || 0} - {filters.maxLenght || 50} km
+              Ledlängd: {filters.minLength || 0} - {filters.maxLength || 150} km
             </Text>
-            <Text style={s.label}>Min längd</Text>
-            <Slider
-              style={s.slider}
+            <RangeSlider
+              value={[filters.minLength || 0, filters.maxLength || 150]}
               minimumValue={0}
-              maximumValue={50}
+              maximumValue={150}
               step={1}
-              value={filters.minLength || 0}
-              onValueChange={(value) => onUpdateFilter("minLength", value)}
-              minimumTrackTintColor={theme.colors.onPrimary}
-              maximumTrackTintColor={theme.colors.onPrimary}
-              thumbTintColor={theme.colors.tertiary}
-            />
-
-            <Text style={s.label}>Max längd</Text>
-            <Slider
-              style={s.slider}
-              minimumValue={0}
-              maximumValue={50}
-              step={1}
-              value={filters.maxLenght || 50}
-              onValueChange={(value) => onUpdateFilter("maxLenght", value)}
-              minimumTrackTintColor={theme.colors.onPrimary}
-              maximumTrackTintColor={theme.colors.onPrimary}
-              thumbTintColor={theme.colors.tertiary}
+              onValueChange={(values: number[]) => {
+                onUpdateFilter("minLength", values[0]);
+                onUpdateFilter("maxLength", values[1]);
+              }}
+              minimumTrackTintColor={theme.colors.secondary}
+              maximumTrackTintColor={theme.colors.outlineVariant}
+              thumbTintColor={theme.colors.primary}
+              containerStyle={s.rangeSliderContainer}
             />
           </View>
           <Divider />
@@ -329,6 +318,9 @@ const s = StyleSheet.create({
   slider: {
     width: "100%",
     height: 40,
+  },
+  rangeSliderContainer: {
+    marginTop: 10,
   },
   buttonGroup: {
     flexDirection: "row",
