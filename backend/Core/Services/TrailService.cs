@@ -134,7 +134,6 @@ public class TrailService : ITrailService
                 Math.Sin(dLon / 2) * Math.Sin(dLon / 2);
         var c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
         return R * c;
-
     }
 
     private static double DegreesToRadians(double degrees) => degrees * Math.PI / 180.0;

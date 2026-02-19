@@ -1,16 +1,11 @@
 import React, { useEffect } from "react";
 import { Dimensions, StyleSheet, View } from "react-native";
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withRepeat,
-  withTiming,
-} from "react-native-reanimated";
 import { useTheme } from "react-native-paper";
+import Animated, { useAnimatedStyle, useSharedValue, withRepeat, withTiming } from "react-native-reanimated";
 
 const { width } = Dimensions.get("screen");
 const CAROUSEL_ITEM_WIDTH = Math.round(width * 0.7);
-const CAROUSEL_ITEM_HEIGHT = Math.round(CAROUSEL_ITEM_WIDTH * 0.6);
+const CAROUSEL_ITEM_HEIGHT = Math.round(CAROUSEL_ITEM_WIDTH * 0.78);
 
 function ShimmerBlock({ style }: { style?: any }) {
   const theme = useTheme();
@@ -25,13 +20,7 @@ function ShimmerBlock({ style }: { style?: any }) {
   }));
 
   return (
-    <Animated.View
-      style={[
-        { backgroundColor: theme.colors.surfaceVariant, borderRadius: 8 },
-        style,
-        animatedStyle,
-      ]}
-    />
+    <Animated.View style={[{ backgroundColor: theme.colors.surfaceVariant, borderRadius: 8 }, style, animatedStyle]} />
   );
 }
 
