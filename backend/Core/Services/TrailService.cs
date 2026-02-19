@@ -104,6 +104,7 @@ public class TrailService : ITrailService
                 if (result.Value != null)
                 {
                     trailSymbolUrl = result.Value;
+                    uploadedImageUrls.Add(result.Value);
                 } 
             }
 
@@ -141,7 +142,6 @@ public class TrailService : ITrailService
                 CreatedBy = user.Identifier,
                 IsVerified = false,
                 City = request.City ?? string.Empty,
-                CreatedBy = user.Identifier
             };
 
             if (uploadedImageUrls.Count != 0)
