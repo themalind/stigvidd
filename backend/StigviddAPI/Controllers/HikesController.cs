@@ -37,7 +37,7 @@ public class HikesController : StigViddController
     }
 
     [HttpGet]
-    public async Task<ActionResult<IReadOnlyCollection<HikeResponse>>> GetHikesAsync(
+    public async Task<ActionResult<IReadOnlyCollection<HikeOverviewResponse>>> GetHikesAsync(
         [FromQuery] string? createdBy,
         CancellationToken ctoken)
     {

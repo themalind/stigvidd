@@ -84,7 +84,7 @@ public class HikeService : IHikeService
         return Result.Ok(hike);
     }
 
-    public async Task<Result<IReadOnlyCollection<HikeResponse>>> GetHikesAsync(string? createdBy, CancellationToken ctoken)
+    public async Task<Result<IReadOnlyCollection<HikeOverviewResponse>>> GetHikesAsync(string? createdBy, CancellationToken ctoken)
     {
         using var context = await _context.CreateDbContextAsync(ctoken);
 
@@ -96,17 +96,16 @@ public class HikeService : IHikeService
         }
 
         var hikes = await query
-            .Select(hike => HikeResponse.Create(
+            .Select(hike => HikeOverviewResponse.Create(
                 hike.Identifier,
                 hike.Name,
                 hike.HikeLength,
                 hike.Duration,
-                hike.Coordinates,
                 hike.CreatedBy
             ))
             .ToListAsync(ctoken);
 
-        return Result.Ok<IReadOnlyCollection<HikeResponse>>(hikes);
+        return Result.Ok<IReadOnlyCollection<HikeOverviewResponse>>(hikes);
     }
 
     public async Task<Result> DeleteHikeAsync(string hikeIdentifier, string userIdentifier, CancellationToken ctoken)
