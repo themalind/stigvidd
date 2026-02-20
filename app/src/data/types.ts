@@ -46,6 +46,10 @@ export interface VisitorInformation {
   gettingThere: string;
   publicTransport: string;
   parking: string;
+  illumination: boolean;
+  illuminationText: string;
+  maintainedBy: string;
+  winterMaintenance: boolean;
 }
 
 export interface Review {
