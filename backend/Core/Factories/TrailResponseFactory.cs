@@ -31,7 +31,11 @@ public class TrailResponseFactory
                 trail.VisitorInformation.Identifier,
                 trail.VisitorInformation.GettingThere,
                 trail.VisitorInformation.PublicTransport,
-                trail.VisitorInformation.Parking)
+                trail.VisitorInformation.Parking,
+                trail.VisitorInformation.Illumination,
+                trail.VisitorInformation.IlluminationText,
+                trail.VisitorInformation.MaintainedBy,
+                trail.VisitorInformation.WinterMaintenance)
             : null;
 
         return TrailResponse.Create
@@ -50,8 +54,6 @@ public class TrailResponseFactory
         trail.CreatedBy ?? string.Empty,
         trail.IsVerified,
         trail.City ?? string.Empty,
-        trail.Tags ?? string.Empty,
-        trail.IsVerified,
         images,
         links,
         visitorInformation);
