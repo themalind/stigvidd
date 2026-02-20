@@ -3,7 +3,7 @@
 public class Result
 {
     public bool Success { get; }
-    public Message? Message { get; private set; } 
+    public Message? Message { get; private set; }
     public bool IsFailure => !Success;
 
     protected Result(bool success, Message? message)
@@ -32,7 +32,7 @@ public class Result
     }
 }
 
-public class  Result<T> : Result
+public class Result<T> : Result
 {
     public T? Value { get; set; }
 
