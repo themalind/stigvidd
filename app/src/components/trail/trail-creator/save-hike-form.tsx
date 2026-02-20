@@ -1,7 +1,7 @@
 import { Pressable, StyleSheet, View } from "react-native";
 import { Divider, Surface, Text, TextInput, useTheme } from "react-native-paper";
 import { useForm, Controller } from "react-hook-form";
-import { Hike } from "@/data/types";
+import { ActiveHike } from "@/data/types";
 import FormattedTime from "@/utils/format-time-from-ms";
 import Map from "@/components/map/map";
 import MapView, { LatLng, Polyline } from "react-native-maps";
@@ -9,7 +9,7 @@ import GetRegionFromTrail from "@/utils/get-region-from-trail";
 import { useEffect, useMemo, useRef } from "react";
 
 interface Props {
-  hike: Hike;
+  hike: ActiveHike;
   onDismiss: () => void;
 }
 

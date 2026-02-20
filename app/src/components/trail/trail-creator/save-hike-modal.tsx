@@ -1,13 +1,13 @@
 import { StyleSheet } from "react-native";
 import { Dialog, Portal, useTheme } from "react-native-paper";
 import SaveHikeForm from "./save-hike-form";
-import { Hike } from "@/data/types";
+import { ActiveHike } from "@/data/types";
 
 interface Props {
   visible: boolean;
   onDismiss: () => void;
   onConfirm: () => void;
-  hike: Hike;
+  hike: ActiveHike;
 }
 
 export default function SaveHikeModal({ visible, onDismiss, onConfirm, hike }: Props) {

@@ -207,7 +207,7 @@ export type Segment = {
   endTime?: number;
 };
 
-export type Hike = {
+export type ActiveHike = {
   segments: Segment[];
   totalDistance: number;
   totalTime: number;

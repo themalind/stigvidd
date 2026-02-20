@@ -1,5 +1,5 @@
 import { showErrorAtom } from "@/atoms/snackbar-atoms";
-import { Hike, LocationData, Segment } from "@/data/types";
+import { ActiveHike, LocationData, Segment } from "@/data/types";
 import * as Location from "expo-location";
 import { getDistance } from "geolib";
 import { useSetAtom } from "jotai";
@@ -15,7 +15,7 @@ export function useLocationTracking() {
   const locationSubscriptionRef = useRef<Location.LocationSubscription | null>(null);
   const setError = useSetAtom(showErrorAtom);
 
-  const [hike, setHike] = useState<Hike>({ segments: [], totalDistance: 0, totalTime: 0 });
+  const [hike, setHike] = useState<ActiveHike>({ segments: [], totalDistance: 0, totalTime: 0 });
   const [currentSegment, setCurrentSegment] = useState<Segment | null>(null);
   const [isTracking, setIsTracking] = useState(false);
 
