@@ -15,10 +15,8 @@ public class TrailResponse
     public string? Coordinates { get; set; }
     public string? Tags { get; set; }
     public string? CreatedBy { get; set; }
-    public bool IsVerified { get; set; }
-    public string? City { get; set; }
-    public string? Tags { get; set; }
     public bool IsVerified { get; set; } = false;
+    public string? City { get; set; }
 
     public VisitorInformationResponse? VisitorInformation { get; set; }
     public IReadOnlyCollection<TrailImageResponse>? TrailImagesResponse { get; set; }
@@ -38,10 +36,8 @@ public class TrailResponse
         string coordinates,
         string tags,
         string createdBy,
-        bool IsVerified,
-        string city,
-        string tags,
         bool isVerified,
+        string city,
         IEnumerable<TrailImageResponse>? trailImages,
         IEnumerable<TrailLinkResponse>? trailLinks,
         VisitorInformationResponse? visitorInformationResponse)
@@ -62,10 +58,8 @@ public class TrailResponse
             Coordinates = coordinates,
             Tags = tags,
             CreatedBy = createdBy,
-            IsVerified = IsVerified,
-            City = city,
-            Tags = tags,
             IsVerified = isVerified,
+            City = city,
             TrailImagesResponse = trailImages?.ToList(),
             TrailLinksResponse = trailLinks?.ToList(),
             VisitorInformation = visitorInformationResponse
