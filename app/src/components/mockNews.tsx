@@ -11,7 +11,13 @@ interface News {
 
 const news: News[] = [
   {
-    title: " Snart i appen! 🎉",
+    title: "Nu blir det enklare än någonsin att hitta rätt led i Borås! 🌲🥾",
+    date: "2026-02-18",
+    text: "Nu kan du enkelt se alla leder i Borås samlade i en lista i appen. Sök, filtrera och sortera för att snabbt hitta en tur som passar dig – oavsett nivå eller humör. Ut i naturen på några sekunder. Vilken led testar du först? 🥾",
+    image: require("../assets/images/happy.png"),
+  },
+  {
+    title: "Snart i appen! 🎉",
     date: "2026-01-28",
     text: "Vi kommer under 2026 introducera achievements! Promenera, samla steg och poäng, och lås upp titlar och medaljer längs vägen. Ett lekfullt och motiverande sätt att komma igång med rörelse, oavsett om du väljer en kort promenad runt hörnet eller en längre tur nära dig.",
     image: require("../assets/images/winners-news.png"),
@@ -54,7 +60,7 @@ export default function MockNews() {
             style={[
               s.dot,
               {
-                backgroundColor: index === activeIndex ? theme.colors.primary : theme.colors.outlineVariant,
+                backgroundColor: index === activeIndex ? theme.colors.tertiary : theme.colors.primary,
               },
             ]}
           />
@@ -78,6 +84,7 @@ export default function MockNews() {
             style={{
               borderRadius: 10,
               width: CARD_WIDTH,
+              backgroundColor: theme.colors.surface,
               marginRight: index < news.length - 1 ? CARD_SPACING : 0,
             }}
           >

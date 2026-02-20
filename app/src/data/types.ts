@@ -15,6 +15,9 @@ export interface Trail {
   fullDescription: string;
   coordinates: string;
   city: string;
+  tags?: string;
+  isVerified: boolean;
+  visitorInformation?: VisitorInformation;
   trailImagesResponse?: TrailImage[];
   trailLinksResponse?: TrailLink[];
 }
@@ -23,6 +26,7 @@ export interface TrailOverview {
   identifier: string;
   name?: string;
   trailLength: number;
+  averageRating: number;
   trailImagesResponse?: TrailImage[];
 }
 
@@ -34,6 +38,14 @@ export interface TrailImage {
 export interface TrailLink {
   identifier: string;
   link: string;
+  title: string;
+}
+
+export interface VisitorInformation {
+  identifier: string;
+  gettingThere: string;
+  publicTransport: string;
+  parking: string;
 }
 
 export interface Review {
@@ -107,9 +119,21 @@ export interface TrailShortInfoResponse {
   accessibility: boolean;
   classification: number;
   city: string;
+  startLatitude?: number;
+  startLongitude?: number;
 }
 
 // Frontend types
+export interface FilterOptions {
+  city?: string;
+  minLength?: number;
+  maxLength?: number;
+  accessibility?: boolean;
+  classification?: number;
+  nearMe?: boolean;
+  maxDistance?: number;
+}
+
 export interface CreateStigViddUserCredentials {
   email: string;
   nickname: string;

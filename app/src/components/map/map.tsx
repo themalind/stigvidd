@@ -1,8 +1,7 @@
 import { userThemeAtom } from "@/atoms/user-theme-atom";
 import { nightMapTheme, retroMapTheme } from "@/constants/theme";
-import * as Location from "expo-location";
 import { useAtom } from "jotai";
-import React, { forwardRef, useEffect } from "react";
+import React, { forwardRef } from "react";
 import { StyleProp, useColorScheme, ViewStyle } from "react-native";
 import MapView, { MapViewProps, Region } from "react-native-maps";
 
@@ -28,13 +27,6 @@ export default forwardRef<MapView, Props>(function Map(
   if (theme === "light") {
     mapStyle = "light";
   }
-
-  useEffect(() => {
-    (async () => {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== "granted") return;
-    })();
-  }, []);
 
   return (
     <MapView

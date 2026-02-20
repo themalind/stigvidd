@@ -1,7 +1,7 @@
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { MaterialIcons } from "@expo/vector-icons";
 import { Href, router } from "expo-router";
 import { Pressable, StyleSheet, View } from "react-native";
-import { Surface, Text, useTheme } from "react-native-paper";
+import { Text, useTheme } from "react-native-paper";
 
 interface MenuItemProps {
   text: string;
@@ -16,29 +16,20 @@ const handlePress = (route: Href) => {
 export default function ProfileMenuItem({ text, route, icon }: MenuItemProps) {
   const theme = useTheme();
   return (
-    <View style={s.container}>
-      <Pressable onPress={() => handlePress(route)}>
-        <Surface style={s.surface}>
-          <View style={s.userInfo}>
-            {icon}
-            <Text style={s.choiceText}>{text}</Text>
-          </View>
-          <MaterialCommunityIcons
-            name="arrow-right-thin"
-            size={30}
-            color={theme.colors.onSurface}
-          />
-        </Surface>
-      </Pressable>
-    </View>
+    <Pressable onPress={() => handlePress(route)}>
+      <View style={[s.containerView, { backgroundColor: theme.colors.surface }]}>
+        <View style={s.userInfo}>
+          {icon}
+          <Text style={s.choiceText}>{text}</Text>
+        </View>
+        <MaterialIcons name="chevron-right" size={22} color={theme.colors.onSurface} />
+      </View>
+    </Pressable>
   );
 }
 
 const s = StyleSheet.create({
-  container: {
-    borderRadius: 10,
-  },
-  surface: {
+  containerView: {
     padding: 15,
     flexDirection: "row",
     alignItems: "center",

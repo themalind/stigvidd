@@ -22,6 +22,9 @@ export default function TabsLayout() {
           tabBarStyle: {
             backgroundColor: theme.colors.background,
           },
+          tabBarIconStyle: {
+            marginTop: 8,
+          },
           tabBarShowLabel: false,
           tabBarActiveTintColor: theme.colors.onTertiaryContainer,
           tabBarInactiveTintColor: theme.colors.onBackground,

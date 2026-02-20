@@ -1,8 +1,7 @@
-import { deleteReview } from "@/api/review";
-import { showErrorAtom, showSuccessAtom } from "@/atoms/snackbar-atoms";
+import { showSuccessAtom } from "@/atoms/snackbar-atoms";
 import { stigviddUserAtom } from "@/atoms/user-atoms";
 import { Review } from "@/data/types";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useDeleteReview } from "@/hooks/review/useDeleteReview";
 import { useAtom, useSetAtom } from "jotai";
 import { Fragment } from "react";
 import { Alert, Pressable, StyleSheet, View } from "react-native";
@@ -22,23 +21,7 @@ export default function ReviewSection({ reviews }: ReviewProps) {
   const theme = useTheme();
   const [{ data: user }] = useAtom(stigviddUserAtom);
   const setSuccessMessage = useSetAtom(showSuccessAtom);
-  const setError = useSetAtom(showErrorAtom);
-  const queryClient = useQueryClient();
-
-  // Flytta ut till egen hook?
-  const deleteMutation = useMutation({
-    mutationFn: ({ reviewIdentifier }: { reviewIdentifier: string; trailIdentifier: string }) =>
-      deleteReview(reviewIdentifier),
-    onSuccess: (result, { trailIdentifier }) => {
-      if (result.success) {
-        queryClient.invalidateQueries({ queryKey: ["trail", trailIdentifier] });
-        queryClient.invalidateQueries({ queryKey: ["reviews", trailIdentifier] });
-        setSuccessMessage("Recensionen har tagits bort");
-      } else {
-        setError("Kunde inte ta bort recensionen.");
-      }
-    },
-  });
+  const deleteMutation = useDeleteReview();
 
   const handleDelete = async (reviewIdentifier: string, trailIdentifier: string) => {
     // Byt till nåt snyggare typ alertdialogen

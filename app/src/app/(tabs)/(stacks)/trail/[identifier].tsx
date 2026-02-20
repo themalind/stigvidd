@@ -1,6 +1,5 @@
 import { getTrailByIdentifier } from "@/api/trails";
 import ImageGallery from "@/components/image-gallery";
-import CoordinateParser from "@/utils/coordinate-parser";
 import LoadingIndicator from "@/components/loading-indicator";
 import { Rating } from "@/components/rating";
 import TrailReviewsContainer from "@/components/review/trail-reviews-container";
@@ -9,16 +8,30 @@ import TrailInfo from "@/components/trail/trail-info";
 import TrailMap from "@/components/trail/trail-map";
 import UserBar from "@/components/trail/user-action-bar/user-bar";
 import { Review } from "@/data/types";
+import CoordinateParser from "@/utils/coordinate-parser";
 import { useQuery } from "@tanstack/react-query";
-import { useLocalSearchParams } from "expo-router";
-import { useRef, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
+import { useCallback, useRef, useState } from "react";
+import { BackHandler, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useTheme } from "react-native-paper";
 
 export default function TrailDetailsScreen() {
   const theme = useTheme();
-  const { identifier } = useLocalSearchParams<{ identifier: string }>();
+  const { identifier, returnTo } = useLocalSearchParams<{ identifier: string; returnTo?: string }>();
   const normalizedIdentifier: string = Array.isArray(identifier) ? identifier[0] : identifier;
+
+  useFocusEffect(
+    useCallback(() => {
+      const handler = BackHandler.addEventListener("hardwareBackPress", () => {
+        if (returnTo) {
+          router.navigate(Array.isArray(returnTo) ? returnTo[0] : returnTo);
+          return true;
+        }
+        return false;
+      });
+      return () => handler.remove();
+    }, [returnTo]),
+  );
 
   const scrollViewRef = useRef<ScrollView>(null);
   const surfaceToScrollToRef = useRef<View>(null);
@@ -79,14 +92,13 @@ export default function TrailDetailsScreen() {
       </View>
       {trail && <TrailInfo trail={trail} />}
       {trail && <UserBar trail={trail} />}
-      {trail && <TrailDescription trail={trail} />}
+      {trail?.description && <TrailDescription trail={trail} />}
       {coordinates.length > 0 && <TrailMap trail={coordinates} />}
       {trail && (
         <TrailReviewsContainer
           trail={trail}
           surfaceToScrollToRef={surfaceToScrollToRef}
           onReviewsLoaded={(reviews, total) => {
-            // Use total here
             setReviewCount(total);
             setReviews(reviews);
           }}

@@ -1,8 +1,7 @@
-import { createReview } from "@/api/review";
-import { showErrorAtom, showSuccessAtom } from "@/atoms/snackbar-atoms";
+import { useCreateReview } from "@/hooks/review/useCreateReview";
+import { showErrorAtom } from "@/atoms/snackbar-atoms";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSetAtom } from "jotai";
 import { useState } from "react";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
@@ -37,8 +36,7 @@ export default function AddReviewForm({ trailIdentifier, onSuccess }: ReviewForm
   const [rating, setRating] = useState(1);
   const [reviewImages, setReviewImages] = useState<string[]>([]);
   const setError = useSetAtom(showErrorAtom);
-  const setSuccess = useSetAtom(showSuccessAtom);
-  const queryClient = useQueryClient();
+  const createReviewMutation = useCreateReview(onSuccess);
 
   function handleReviewImages(data: string[]) {
     setReviewImages(data);
@@ -52,49 +50,6 @@ export default function AddReviewForm({ trailIdentifier, onSuccess }: ReviewForm
     resolver: zodResolver(newReviewForm),
     defaultValues: {
       trailIdentifier: trailIdentifier,
-    },
-  });
-
-  // Flytta ut till egen hook?
-  const createReviewMutation = useMutation({
-    mutationFn: async ({
-      trailIdentifier,
-      review,
-      rating,
-      imageUris,
-    }: {
-      trailIdentifier: string;
-      review: string;
-      rating: number;
-      imageUris: string[];
-    }) => {
-      return await createReview({
-        trailIdentifier,
-        review,
-        rating,
-        imageUris,
-      });
-    },
-    onSuccess: (result, variables) => {
-      if (result.success) {
-        queryClient.invalidateQueries({
-          // Uppdatera medelbetyget i trail
-          queryKey: ["trail", variables.trailIdentifier],
-        });
-        queryClient.invalidateQueries({
-          // Uppdatera listan i recensionsfältet
-          queryKey: ["reviews", variables.trailIdentifier],
-        });
-        setSuccess("Recensionen har lagts till");
-        onSuccess();
-      } else {
-        console.error("Error creating review");
-        setError("Kunde inte spara recensionen");
-      }
-    },
-    onError: (error) => {
-      console.error("Error creating review: ", error);
-      setError("Kunde inte spara recensionen");
     },
   });
 

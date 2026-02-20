@@ -122,7 +122,7 @@ export default function ProfilePageScreen() {
 const s = StyleSheet.create({
   container: {
     flexGrow: 1,
-    padding: 20,
+    padding: 10,
     gap: 10,
   },
   topTitle: {
@@ -147,7 +147,8 @@ const s = StyleSheet.create({
   },
   themeToggleContainer: {
     justifyContent: "space-around",
-    paddingLeft: 30,
+    marginLeft: "auto",
+    padding: 20,
   },
   pressableChoicesContainer: {
     flexDirection: "column",

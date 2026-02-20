@@ -1,15 +1,16 @@
 import { getPopularTrails } from "@/api/trails";
+import { locationResolvedAtom, userLocationAtom } from "@/atoms/location-atoms";
 import { userThemeAtom } from "@/atoms/user-theme-atom";
 import ImageCarousel from "@/components/image-carousel";
-import LoadingIndicator from "@/components/loading-indicator";
 import Map from "@/components/map/map";
 import MockNews from "@/components/mockNews";
+import CarouselSkeleton from "@/components/skeleton/carousel-skeleton";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useQuery } from "@tanstack/react-query";
 import { Image } from "expo-image";
 import { useFocusEffect } from "expo-router";
-import { useAtom } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
 import React, { useRef } from "react";
 import { Appearance, Dimensions, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Divider, Surface, useTheme } from "react-native-paper";
@@ -20,6 +21,8 @@ export default function HomeScreen() {
   const scrollViewRef = useRef<ScrollView>(null);
   const theme = useTheme();
   const [userTheme] = useAtom(userThemeAtom);
+  const userLocation = useAtomValue(userLocationAtom);
+  const locationResolved = useAtomValue(locationResolvedAtom);
   const colorScheme = Appearance.getColorScheme();
   const finalTheme = userTheme === "auto" ? (colorScheme ?? "light") : userTheme;
   const hikers =
@@ -28,29 +31,17 @@ export default function HomeScreen() {
       : require("../../assets/images/mrHike-dark.png");
 
   const query = useQuery({
-    queryKey: ["trails", "popular"],
-    queryFn: getPopularTrails,
+    queryKey: ["trails", "popular", userLocation?.latitude, userLocation?.longitude],
+    queryFn: () => getPopularTrails(userLocation?.latitude, userLocation?.longitude),
+    enabled: locationResolved,
   });
 
-  // Scrolla till toppen när skärmen fokuseras (vid tab-tryck)
+  // Scroll to top when screen is focused or bottomtab is pressed.
   useFocusEffect(
     React.useCallback(() => {
       scrollViewRef.current?.scrollTo({ y: 0, animated: false });
     }, []),
   );
-
-  if (query.isPending) {
-    return <LoadingIndicator />;
-  }
-
-  if (query.error) {
-    console.log(query.error);
-    return (
-      <View>
-        <Text>Fel vid hämtning</Text>
-      </View>
-    );
-  }
 
   return (
     <ScrollView ref={scrollViewRef} contentContainerStyle={[s.container, { backgroundColor: theme.colors.background }]}>
@@ -64,7 +55,7 @@ export default function HomeScreen() {
         <Image contentFit="contain" source={hikers} style={s.hikers} />
         <Text style={[s.sectionTitle, { color: theme.colors.onBackground }]}>Populära promenader nära dig</Text>
       </View>
-      <ImageCarousel data={query.data} />
+      {query.data ? <ImageCarousel data={query.data} /> : <CarouselSkeleton />}
       <Divider />
       <View style={{ flexDirection: "row", gap: 10 }}>
         <MaterialCommunityIcons name="map-marker-radius-outline" size={24} color={theme.colors.onBackground} />
@@ -99,11 +90,6 @@ export default function HomeScreen() {
   );
 }
 const s = StyleSheet.create({
-  loading: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
   container: {
     flexGrow: 1,
     padding: 10,

@@ -39,9 +39,12 @@ public class TrailController : StigViddController
 
     [HttpGet]
     [Route("popular")]
-    public async Task<ActionResult<IReadOnlyCollection<TrailOverviewResponse?>>> GetPopularTrailsAsync(CancellationToken ctoken)
+    public async Task<ActionResult<IReadOnlyCollection<TrailOverviewResponse?>>> GetPopularTrailsAsync(
+        [FromQuery] double? latitude,
+        [FromQuery] double? longitude,
+        CancellationToken ctoken)
     {
-        var result = await _trailService.GetPopularTrailOverviewsAsync(ctoken);
+        var result = await _trailService.GetPopularTrailOverviewsAsync(latitude, longitude, ctoken);
 
         if (!result.Success && result.Message != null)
         {

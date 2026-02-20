@@ -23,7 +23,7 @@ export default function NotAuthenticatedDialog({ infoMessage, visible, onDissmis
         textColor={theme.colors.onSurface}
         onConfirm={() => {
           onDissmiss();
-          router.push("/(tabs)/(auth)/login");
+          router.navigate("/(tabs)/(auth)/login");
         }}
       />
     </View>

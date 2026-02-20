@@ -1,12 +1,14 @@
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { MaterialIcons } from "@expo/vector-icons";
 import { zodResolver } from "@hookform/resolvers/zod";
 import React from "react";
-import { Controller, SubmitHandler, useForm } from "react-hook-form";
-import { Image, StyleSheet, View } from "react-native";
-import { HelperText, TextInput, useTheme } from "react-native-paper";
+import { SubmitHandler, useForm } from "react-hook-form";
+import { Image, Pressable, StyleSheet, View } from "react-native";
+import { Text, useTheme } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { z } from "zod";
 
+// https://www.youtube.com/watch?v=yzkTDFErTec
+// https://www.reddit.com/r/reactnative/comments/jbk2fh/animate_icon_and_expand_text_input_similar_to/
 const search = z.object({
   searchString: z.string({ message: "För att söka ange ett sökord" }),
 });
@@ -20,41 +22,22 @@ export default function Header() {
     formState: { errors },
   } = useForm<FormFields>({ resolver: zodResolver(search) });
   const onSubmit: SubmitHandler<FormFields> = async (data) => {};
-  return (
-    <SafeAreaView style={{ backgroundColor: theme.colors.outlineVariant }} edges={["top", "left", "right"]}>
-      <View>
-        <View style={[s.container, { backgroundColor: theme.colors.outlineVariant }]}>
-          <Image style={s.image} source={require("../assets/images/mammaapp.png")} />
-          <View style={s.inputContainer}>
-            <Controller
-              control={control}
-              render={({ field: { onChange, onBlur, value } }) => (
-                <TextInput
-                  style={[s.textInput, { backgroundColor: theme.colors.surface }]}
-                  onChangeText={onChange}
-                  onBlur={onBlur}
-                  value={value}
-                  placeholder="Starta din sökning här.."
-                  mode="outlined"
-                  theme={{ roundness: 10 }}
-                  right={
-                    <TextInput.Icon
-                      icon={() => <MaterialIcons name="search" size={24} color="grey" />}
-                      onPress={handleSubmit(onSubmit)}
-                    />
-                  }
-                  returnKeyType="search" // <-- Visar "Search" på tangentbordet
-                  onSubmitEditing={handleSubmit(onSubmit)} // <-- Kör sökfunktionen vid enter
-                />
-              )}
-              name="searchString"
-            />
-          </View>
-        </View>
 
-        <HelperText type="error" visible={!!errors.searchString} style={{ textAlign: "center" }}>
-          {errors.searchString?.message}
-        </HelperText>
+  return (
+    <SafeAreaView style={{ backgroundColor: theme.colors.outlineVariant }} edges={["top"]}>
+      <View style={[s.container, { backgroundColor: theme.colors.outlineVariant }]}>
+        <View style={s.stigviddContainer}>
+          <Image style={s.image} source={require("../assets/images/mammaapp.png")} />
+          <Text style={[s.text, { color: theme.colors.onSurfaceVariant }]}>Stigvidd</Text>
+        </View>
+        <View style={s.iconContainer}>
+          <Pressable>
+            <MaterialIcons name="search" size={24} color={theme.colors.onSurfaceVariant} />
+          </Pressable>
+          <Pressable>
+            <MaterialIcons name="settings" size={24} color={theme.colors.onSurfaceVariant} />
+          </Pressable>
+        </View>
       </View>
     </SafeAreaView>
   );
@@ -64,22 +47,30 @@ const s = StyleSheet.create({
   container: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: 10,
     paddingVertical: 10,
     gap: 10,
   },
+  stigviddContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    paddingLeft: 10,
+  },
+  text: {
+    fontSize: 20,
+  },
   image: {
-    height: 50,
-    width: 50,
+    height: 35,
+    width: 35,
     resizeMode: "contain",
     alignSelf: "center",
   },
-  inputContainer: {
-    flex: 1,
-    justifyContent: "center",
-  },
-  textInput: {
-    marginTop: 10,
-    height: 40,
+  iconContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 15,
+    paddingRight: 10,
   },
 });

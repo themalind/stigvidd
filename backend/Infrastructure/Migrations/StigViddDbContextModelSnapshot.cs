@@ -346,7 +346,7 @@ namespace Infrastructure.Migrations
                         .IsUnique()
                         .HasFilter("[TrailId] IS NOT NULL");
 
-                    b.ToTable("VisitorInformation");
+                    b.ToTable("VisitorInformations");
                 });
 
             modelBuilder.Entity("UserFavorites", b =>
