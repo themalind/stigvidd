@@ -13,6 +13,7 @@ public class StigViddDbContext(DbContextOptions<StigViddDbContext> options) : Db
     public DbSet<User> Users { get; set; }
     public DbSet<Statistics> Statistics { get; set; }
     public DbSet<VisitorInformation> VisitorInformations { get; set; }
+    public DbSet<Hike> Hikes { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
