@@ -127,6 +127,15 @@ export interface TrailShortInfoResponse {
   startLongitude?: number;
 }
 
+export interface Hike {
+  identifier: string;
+  name: string;
+  hikeLength: number;
+  duration: number;
+  coordinates?: string;
+  createdBy: string;
+}
+
 // Frontend types
 export interface FilterOptions {
   city?: string;
@@ -180,9 +189,17 @@ export interface CreateTrailRequest {
   images: TrailImage[];
 }
 
-// export interface DeleteTrailRequest {
-//
-// }
+export interface CreateHikeRequest {
+  name: string;
+  hikeLength: number;
+  duration: number;
+  coordinates: LatLng[];
+}
+
+export interface DeleteHikeRequest {
+  hikeIdentifier: string;
+  userIdentifier: string;
+}
 
 export interface LoginData {
   email: string;
