@@ -57,7 +57,7 @@ export default function LoginScreen() {
     }
 
     console.log("Inloggad", result.user.email);
-    router.replace("/(tabs)");
+    router.replace("/(tabs)/(profile-stack)/profile-page");
   };
 
   return (

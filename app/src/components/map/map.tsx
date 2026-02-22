@@ -13,7 +13,7 @@ interface Props extends MapViewProps {
 }
 
 export default forwardRef<MapView, Props>(function Map(
-  { style, initialRegion, showsUserLocation = true, children },
+  { style, initialRegion, showsUserLocation = true, children, ...rest },
   ref,
 ) {
   const [theme] = useAtom(userThemeAtom);
@@ -37,6 +37,7 @@ export default forwardRef<MapView, Props>(function Map(
       showsUserLocation={showsUserLocation}
       showsMyLocationButton={false}
       toolbarEnabled={false}
+      {...rest}
     >
       {children}
     </MapView>

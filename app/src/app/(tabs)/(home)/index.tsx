@@ -27,8 +27,8 @@ export default function HomeScreen() {
   const finalTheme = userTheme === "auto" ? (colorScheme ?? "light") : userTheme;
   const hikers =
     finalTheme === "dark"
-      ? require("../../assets/images/mrHike-light.png")
-      : require("../../assets/images/mrHike-dark.png");
+      ? require("../../../assets/images/mrHike-light.png")
+      : require("../../../assets/images/mrHike-dark.png");
 
   const query = useQuery({
     queryKey: ["trails", "popular", userLocation?.latitude, userLocation?.longitude],
