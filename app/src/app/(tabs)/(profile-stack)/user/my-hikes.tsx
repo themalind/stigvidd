@@ -13,18 +13,15 @@ export default function MyHikesScreen() {
   const [authState] = useAtom(authStateAtom);
   const user = useAtomValue(stigviddUserAtom);
 
+  const query = useQuery({
+    queryKey: ["hikes", user.data?.identifier],
+    queryFn: () => getAllHikesByUserId(user.data!.identifier),
+    enabled: !!authState.isAuthenticated && !!user?.data,
+  });
+
   if (!authState.isAuthenticated) {
     return <Redirect href="/(tabs)/(auth)/login" />;
   }
-
-  if (!user.data) {
-    return;
-  }
-
-  const query = useQuery({
-    queryKey: ["hikes", user.data.identifier],
-    queryFn: () => getAllHikesByUserId(user.data.identifier),
-  });
 
   const hikes = query.data;
 
