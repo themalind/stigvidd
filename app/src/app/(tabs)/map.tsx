@@ -1,9 +1,14 @@
 import Map from "@/components/map/map";
 import Marker from "@/components/map/marker";
-import { StyleSheet } from "react-native";
+import { useState } from "react";
+import { StyleSheet, View } from "react-native";
 import { LatLng } from "react-native-maps";
+import { useTheme } from "react-native-paper";
 
 export default function MapScreen() {
+  const theme = useTheme();
+  const [isMapReady, setIsMapReady] = useState(false);
+
   const START_COORDINATE_BORAS = {
     latitude: 57.72096,
     longitude: 12.93816,
@@ -32,22 +37,27 @@ export default function MapScreen() {
   };
 
   return (
-    <Map style={s.container} initialRegion={START_COORDINATE_BORAS} showsUserLocation>
-      <Marker coordinate={frodo} title="Frodo" variant="favourite" />
-      <Marker coordinate={sam} title="Sam" variant="trail" />
-      <Marker coordinate={shelter} title="shelter" variant="shelter" />
-      <Marker coordinate={campsite} title="campsite" variant="campsite" />
-    </Map>
+    <View style={s.container}>
+      <Map
+        style={StyleSheet.absoluteFill}
+        initialRegion={START_COORDINATE_BORAS}
+        showsUserLocation
+        onMapReady={() => setIsMapReady(true)}
+      >
+        <Marker coordinate={frodo} title="Frodo" variant="favourite" />
+        <Marker coordinate={sam} title="Sam" variant="trail" />
+        <Marker coordinate={shelter} title="shelter" variant="shelter" />
+        <Marker coordinate={campsite} title="campsite" variant="campsite" />
+      </Map>
+      {!isMapReady && (
+        <View style={[StyleSheet.absoluteFill, { backgroundColor: theme.colors.background }]} />
+      )}
+    </View>
   );
 }
 
 const s = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  marker: {
-    flex: 1,
-    width: 50,
-    height: 50,
   },
 });

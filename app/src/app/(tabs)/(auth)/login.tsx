@@ -37,7 +37,7 @@ export default function LoginScreen() {
   const background =
     finalTheme === "dark"
       ? require("../../../assets/images/aurora_borealis2.jpg")
-      : require("../../../assets/images/login-background-2.jpg");
+      : require("../../../assets/images/light_mode_login.jpg");
 
   const {
     control,
@@ -57,7 +57,7 @@ export default function LoginScreen() {
     }
 
     console.log("Inloggad", result.user.email);
-    router.replace("/(tabs)");
+    router.replace("/(tabs)/(profile-stack)/profile-page");
   };
 
   return (

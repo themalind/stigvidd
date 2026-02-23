@@ -42,7 +42,7 @@ public class TrailService : ITrailService
             _logger.LogInformation(
                 "TrailService -> GetTrailByIdentifierAsync: Trail with identifier {Identifier} not found.", identifier);
 
-            return Result.Fail<TrailResponse?>(new Message(404, $"Trail with identifier { identifier } not found."));
+            return Result.Fail<TrailResponse?>(new Message(404, $"Trail with identifier {identifier} not found."));
         }
 
         var trailResponse = _trailResponseFactory.Create(trail);
@@ -82,6 +82,10 @@ public class TrailService : ITrailService
         {
             double score = (double)trail.AverageRating;
 
+            // Senior advice: This might be better to do in SQL, since it can be done in the same query
+            // and avoid fetching all trails when user location is provided.
+            // You could create a SQL function or stored procedure to calculate the Haversine distance
+            // and use it in the SELECT clause to compute a proximity score directly in the database.
             if (hasUserLocation && trail.StartLatitude.HasValue && trail.StartLongitude.HasValue)
             {
                 var distanceKm = HaversineDistanceKm(
@@ -104,15 +108,15 @@ public class TrailService : ITrailService
 
         var trailImages = await context.Trails
             .AsNoTracking()
-            .Where(t => trailIds.Contains(t.Id))
-            .Select(t => new
+            .Where(trail => trailIds.Contains(trail.Id))
+            .Select(trail => new
             {
-                t.Id,
-                Image = t.TrailImages!
+                TrailId = trail.Id,
+                FirstTrailImage = trail.TrailImages!
                     .Select(img => TrailImageResponse.Create(img.Identifier, img.ImageUrl))
                     .FirstOrDefault()
             })
-            .ToDictionaryAsync(x => x.Id, x => x.Image, ctoken);
+            .ToDictionaryAsync(x => x.TrailId, x => x.FirstTrailImage, ctoken);
 
         var result = scoredTrails
             .Select(x => TrailOverviewResponse.Create(
@@ -126,7 +130,7 @@ public class TrailService : ITrailService
             ))
             .ToList();
 
-        return Result.Ok<IReadOnlyCollection<TrailOverviewResponse?>>(result!);
+        return Result.Ok<IReadOnlyCollection<TrailOverviewResponse?>>(result);
     }
 
     private static double HaversineDistanceKm(double lat1, double lon1, double lat2, double lon2)
@@ -288,7 +292,7 @@ public class TrailService : ITrailService
                 FROM Trails 
                 WHERE IsVerified = 1
                 """)
-            .AsNoTracking()          
+            .AsNoTracking()
             .ToListAsync(ctoken);
 
         return Result.Ok<IReadOnlyCollection<TrailShortInfoResponse>>(trailsWithShortInfo);

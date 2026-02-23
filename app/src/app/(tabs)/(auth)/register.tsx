@@ -58,7 +58,7 @@ export default function RegisterScreen() {
   const background =
     finalTheme === "dark"
       ? require("../../../assets/images/register-dark-background-2.jpg")
-      : require("../../../assets/images/register-background-2.jpg");
+      : require("../../../assets/images/light_mode_register.jpg");
 
   const {
     control,
@@ -76,7 +76,7 @@ export default function RegisterScreen() {
       setFirebaseError(getRegisterErrorMessage(errorCode));
       return;
     }
-    router.replace("/(tabs)/profile-page");
+    router.replace("/(tabs)/(profile-stack)/profile-page");
     console.log("Registrerad", result.user.email, result.user.displayName);
   };
 

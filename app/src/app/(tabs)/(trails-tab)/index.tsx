@@ -24,8 +24,8 @@ export default function TrailsScreen() {
   const finalTheme = userTheme === "auto" ? (colorScheme ?? "light") : userTheme;
   const hikers =
     finalTheme === "dark"
-      ? require("../../assets/images/mrHike-light.png")
-      : require("../../assets/images/mrHike-dark.png");
+      ? require("../../../assets/images/mrHike-light.png")
+      : require("../../../assets/images/mrHike-dark.png");
 
   const { data: trails, isLoading, isError, refetch, isFetching } = useTrails();
   const onRefresh = () => {
@@ -51,9 +51,9 @@ export default function TrailsScreen() {
   const [filterModalVisible, setFilterModalVisible] = useState(false);
 
   const handlePress = useCallback((identifier: string) => {
-    router.navigate({
-      pathname: "/(tabs)/(stacks)/trail/[identifier]",
-      params: { identifier, returnTo: "/(tabs)/trails" },
+    router.push({
+      pathname: "/(tabs)/(trails-tab)/trail/[identifier]",
+      params: { identifier },
     });
   }, []);
 
