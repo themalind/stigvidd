@@ -82,7 +82,7 @@ export default function TrailCreator() {
     <ScrollView contentContainerStyle={s.content}>
       <View style={s.debug}>
         <Text>
-          debug: {polylineCoords.length} noder, {hike.segments.length} segments
+          debug: {polylineCoords.length} nodes, {hike.segments.length} segments
         </Text>
 
         <Pressable onPress={() => debugAddPoint()}>

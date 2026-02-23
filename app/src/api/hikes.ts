@@ -10,17 +10,19 @@ export async function createHike(request: CreateHikeRequest): Promise<{ success:
   }
 
   try {
-    const response = await fetch(`HTTP://${IP}/api/v1/hikes`, {
+    const response = await fetch(`http://${IP}/api/v1/hikes`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer: ${token}`,
+        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({
         ...request,
         coordinates: JSON.stringify(request.coordinates),
       }),
     });
+
+    console.log(response.body);
 
     if (!response.ok) {
       throw new ApiError(`HTTP error: createHike: ${response.status}`, response.status);

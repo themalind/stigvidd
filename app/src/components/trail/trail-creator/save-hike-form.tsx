@@ -1,12 +1,14 @@
 import { Pressable, StyleSheet, View } from "react-native";
 import { Divider, Surface, Text, TextInput, useTheme } from "react-native-paper";
 import { useForm, Controller } from "react-hook-form";
-import { ActiveHike } from "@/data/types";
+import { ActiveHike, CreateHikeRequest } from "@/data/types";
 import FormattedTime from "@/utils/format-time-from-ms";
 import Map from "@/components/map/map";
 import MapView, { LatLng, Polyline } from "react-native-maps";
 import GetRegionFromTrail from "@/utils/get-region-from-trail";
 import { useEffect, useMemo, useRef } from "react";
+import { createHike } from "@/api/hikes";
+import { router } from "expo-router";
 
 interface Props {
   hike: ActiveHike;
@@ -30,10 +32,25 @@ export default function SaveHikeForm({ hike, onDismiss }: Props) {
     },
   });
 
-  const submit = (data: SaveHikeFormData) => {
-    console.log("Hike Name:", data.hikeName);
-    console.log("Lenth:    ", hike.totalDistance, "m");
-    console.log("Duration: ", time);
+  const submit = async (data: SaveHikeFormData) => {
+    const newHike: CreateHikeRequest = {
+      name: data.hikeName,
+      hikeLength: hike.totalDistance,
+      duration: hike.totalTime,
+      coordinates: [],
+    };
+
+    hike.segments.forEach((segment) => {
+      segment.coordinates.forEach((coords) => {
+        newHike.coordinates.push(coords.data);
+      });
+    });
+
+    const result = await createHike(newHike);
+
+    if (result.success) {
+      router.replace("/(tabs)/(profile-stack)/user/my-hikes");
+    }
   };
 
   const time = FormattedTime(hike.totalTime);
@@ -59,8 +76,8 @@ export default function SaveHikeForm({ hike, onDismiss }: Props) {
     mapRef.current.animateToRegion(GetRegionFromTrail(route), 500);
   }, [route, hike.totalDistance]);
 
-  const openDialogIfValid = handleSubmit(() => {
-    handleSubmit(submit)();
+  const openDialogIfValid = handleSubmit(async (data) => {
+    await submit(data);
     onDismiss();
   });
 
