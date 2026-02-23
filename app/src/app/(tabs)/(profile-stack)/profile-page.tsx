@@ -28,6 +28,7 @@ export default function ProfilePageScreen() {
       scrollViewRef.current?.scrollTo({ y: 0, animated: false });
     }, []),
   );
+
   if (!authState.isAuthenticated) {
     return <Redirect href="/(tabs)/(auth)/login" />;
   }
@@ -47,7 +48,7 @@ export default function ProfilePageScreen() {
       console.log(e);
       setError("Kunde inte logga ut.");
     }
-    router.replace("/(tabs)");
+    router.replace("/(tabs)/(home)");
   }
 
   return (
@@ -57,8 +58,8 @@ export default function ProfilePageScreen() {
         <Image
           source={
             userTheme === "dark"
-              ? require("../../assets/images/wizard-darkmode.png")
-              : require("../../assets/images/wizard-lightmode.png")
+              ? require("../../../assets/images/wizard-darkmode.png")
+              : require("../../../assets/images/wizard-lightmode.png")
           }
           style={[s.image, { borderColor: theme.colors.outline }]}
         />
@@ -73,37 +74,37 @@ export default function ProfilePageScreen() {
       <View style={s.pressableChoicesContainer}>
         <ProfileMenuItem
           text="Favoriter"
-          route="/(tabs)/(stacks)/user/favorites"
+          route="/(tabs)/(profile-stack)/user/favorites"
           icon={<MaterialCommunityIcons name="cards-heart" size={24} color={theme.colors.tertiary} />}
         />
         <ProfileMenuItem
           text="Vill gå"
-          route="/(tabs)/(stacks)/user/wishlist"
+          route="/(tabs)/(profile-stack)/user/wishlist"
           icon={<MaterialIcons name="star" size={24} color={theme.colors.tertiary} />}
         />
         <ProfileMenuItem
           text="Skapa en promenad"
-          route="/(tabs)/profile-page"
+          route="/(tabs)/(profile-stack)/profile-page"
           icon={<MaterialIcons name="hiking" size={24} color={theme.colors.tertiary} />}
         />
         <ProfileMenuItem
           text="Mina egna promenader"
-          route="/(tabs)/profile-page"
+          route="/(tabs)/(profile-stack)/profile-page"
           icon={<MaterialCommunityIcons name="map-legend" size={24} color={theme.colors.tertiary} />}
         />
         <ProfileMenuItem
           text="Utmärkelser"
-          route="/(tabs)/profile-page"
+          route="/(tabs)/(profile-stack)/profile-page"
           icon={<MaterialIcons name="emoji-events" size={24} color={theme.colors.tertiary} />}
         />
         <ProfileMenuItem
           text="Statistik"
-          route="/(tabs)/profile-page"
+          route="/(tabs)/(profile-stack)/profile-page"
           icon={<MaterialIcons name="bar-chart" size={24} color={theme.colors.tertiary} />}
         />
         <ProfileMenuItem
           text="Om Stigvidd"
-          route="/(tabs)/(stacks)/about"
+          route="/(tabs)/(profile-stack)/about"
           icon={<MaterialIcons name="perm-device-info" size={24} color={theme.colors.tertiary} />}
         />
         <View style={s.accountActionsContainer}>

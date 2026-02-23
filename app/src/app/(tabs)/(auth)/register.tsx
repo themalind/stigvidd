@@ -76,7 +76,7 @@ export default function RegisterScreen() {
       setFirebaseError(getRegisterErrorMessage(errorCode));
       return;
     }
-    router.replace("/(tabs)/profile-page");
+    router.replace("/(tabs)/(profile-stack)/profile-page");
     console.log("Registrerad", result.user.email, result.user.displayName);
   };
 

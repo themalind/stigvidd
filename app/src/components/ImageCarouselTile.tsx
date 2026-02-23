@@ -52,9 +52,9 @@ function ImageCarouselTileInner({
     if (onPress) {
       onPress(item);
     } else {
-      router.navigate({
-        pathname: "/(tabs)/(stacks)/trail/[identifier]",
-        params: { identifier: item.identifier, returnTo: "/" },
+      router.push({
+        pathname: "/(tabs)/(home)/trail/[identifier]",
+        params: { identifier: item.identifier },
       });
     }
   };

@@ -32,7 +32,7 @@ export default function TabsLayout() {
         }}
       >
         <Tabs.Screen
-          name="index"
+          name="(home)"
           options={{
             title: "Start",
             tabBarIcon: ({ focused }) =>
@@ -72,7 +72,7 @@ export default function TabsLayout() {
           }}
         />
         <Tabs.Screen
-          name="trails"
+          name="(trails-tab)"
           options={{
             title: "Vandring",
             tabBarIcon: ({ focused }) =>
@@ -92,7 +92,7 @@ export default function TabsLayout() {
           }}
         />
         <Tabs.Screen
-          name="profile-page"
+          name="(profile-stack)"
           options={{
             title: "Profil",
             tabBarIcon: ({ focused }) =>
@@ -109,13 +109,6 @@ export default function TabsLayout() {
                   color={theme.colors.onBackground}
                 />
               ),
-          }}
-        />
-        {/* Dölj alla stack-screens från tabs */}
-        <Tabs.Screen
-          name="(stacks)"
-          options={{
-            href: null,
           }}
         />
         <Tabs.Screen
