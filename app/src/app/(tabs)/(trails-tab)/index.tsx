@@ -1,3 +1,4 @@
+import TrailCreator from "@/components/trail/trail-creator/trail-creator";
 import { userLocationAtom } from "@/atoms/location-atoms";
 import { userThemeAtom } from "@/atoms/user-theme-atom";
 import LoadingIndicator from "@/components/loading-indicator";

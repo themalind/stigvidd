@@ -26,6 +26,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IUserService, UserService>();
         services.AddTransient<IReviewService, ReviewService>();
         services.AddTransient<IWebDavService, WebDavService>();
+        services.AddTransient<IHikeService, HikeService>();
 
         // Factories
         services.AddTransient<TrailResponseFactory>();
@@ -33,6 +34,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<UserWishlistResponseFactory>();
         services.AddTransient<UserResponseFactory>();
         services.AddTransient<ReviewResponseFactory>();
+        services.AddTransient<HikeResponseFactory>();
     }
 }
 

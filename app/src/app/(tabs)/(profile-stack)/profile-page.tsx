@@ -84,12 +84,12 @@ export default function ProfilePageScreen() {
         />
         <ProfileMenuItem
           text="Skapa en promenad"
-          route="/(tabs)/(profile-stack)/profile-page"
+          route="/(tabs)/(profile-stack)/user/create-hike"
           icon={<MaterialIcons name="hiking" size={24} color={theme.colors.tertiary} />}
         />
         <ProfileMenuItem
           text="Mina egna promenader"
-          route="/(tabs)/(profile-stack)/profile-page"
+          route="/(tabs)/(profile-stack)/user/my-hikes"
           icon={<MaterialCommunityIcons name="map-legend" size={24} color={theme.colors.tertiary} />}
         />
         <ProfileMenuItem

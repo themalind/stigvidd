@@ -1,4 +1,5 @@
 import { User as firebaseUser } from "firebase/auth";
+import { LatLng } from "react-native-maps";
 
 // Response types
 export interface Trail {
@@ -45,6 +46,10 @@ export interface VisitorInformation {
   gettingThere: string;
   publicTransport: string;
   parking: string;
+  illumination: boolean;
+  illuminationText: string;
+  maintainedBy: string;
+  winterMaintenance: boolean;
 }
 
 export interface Review {
@@ -99,6 +104,11 @@ export interface User {
   myFavorites: UserFavoritesTrail[];
 }
 
+export interface UserName {
+  identifier: string;
+  nickName: string;
+}
+
 export interface PagedReviewResponse {
   reviews: Review[];
   hasMore: boolean;
@@ -115,6 +125,15 @@ export interface TrailShortInfoResponse {
   city: string;
   startLatitude?: number;
   startLongitude?: number;
+}
+
+export interface Hike {
+  identifier: string;
+  name: string;
+  hikeLength: number;
+  duration: number;
+  coordinates?: string;
+  createdBy: string;
 }
 
 // Frontend types
@@ -152,6 +171,36 @@ export interface DeleteReviewRequest {
   userIdentifier: string;
 }
 
+export interface CreateTrailRequest {
+  name: string;
+  trailLength: number;
+  classification: 0 | 1 | 2 | 3;
+  accessibility: boolean;
+  accessibilityInfo: string;
+  trailSymbol: string;
+  trailSymbolImage: string;
+  description: string;
+  fullDescription: string;
+  coordinates: string;
+  tags: string[];
+  createdBy: UserName;
+  city: string;
+  isVerified: boolean;
+  images: TrailImage[];
+}
+
+export interface CreateHikeRequest {
+  name: string;
+  hikeLength: number;
+  duration: number;
+  coordinates: LatLng[];
+}
+
+export interface DeleteHikeRequest {
+  hikeIdentifier: string;
+  userIdentifier: string;
+}
+
 export interface LoginData {
   email: string;
   password: string;
@@ -162,3 +211,21 @@ export interface AuthResult {
   user: firebaseUser | null;
   error: { code: string; message: string } | null;
 }
+
+export type LocationData = {
+  data: LatLng;
+  timeStamp: number;
+};
+
+export type Segment = {
+  coordinates: LocationData[];
+  distance: number;
+  startTime: number;
+  endTime?: number;
+};
+
+export type ActiveHike = {
+  segments: Segment[];
+  totalDistance: number;
+  totalTime: number;
+};

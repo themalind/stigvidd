@@ -6,7 +6,7 @@ interface AlertDialogProps {
   visible: boolean;
   onDismiss: () => void;
   title: string;
-  infoText: string;
+  infoText: string[];
   backgroundColor?: string;
   textColor?: string;
   confirmText?: string;
@@ -30,8 +30,12 @@ export default function AlertDialog({
       <Dialog style={{ backgroundColor: backgroundColor, borderRadius: 10 }} visible={visible} onDismiss={onDismiss}>
         <Dialog.Title>{title}</Dialog.Title>
         <Dialog.Content>
-          <View>
-            <Text style={{ fontSize: 15, lineHeight: 24, color: textColor }}>{infoText}</Text>
+          <View style={{ gap: 10 }}>
+            {infoText.map((t, index) => (
+              <Text key={index} style={{ fontSize: 15, lineHeight: 24, color: textColor }}>
+                {infoText[index]}
+              </Text>
+            ))}
           </View>
         </Dialog.Content>
         <Dialog.Actions>

@@ -17,7 +17,7 @@ export default function NotAuthenticatedDialog({ infoMessage, visible, onDissmis
         visible={visible}
         onDismiss={() => onDissmiss()}
         title="Du är inte inloggad"
-        infoText={infoMessage}
+        infoText={[infoMessage]}
         confirmText="Logga in"
         backgroundColor={theme.colors.surface}
         textColor={theme.colors.onSurface}
