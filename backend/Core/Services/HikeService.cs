@@ -38,7 +38,7 @@ public class HikeService : IHikeService
             var hike = new Hike
             {
                 Name = request.Name,
-                HikeLength = request.HikeLength,
+                HikeLength = request.HikeLength / 1000,
                 Duration = request.Duration,
                 Coordinates = request.Coordinates,
                 CreatedBy = userIdentifier
@@ -101,6 +101,7 @@ public class HikeService : IHikeService
                 hike.Name,
                 hike.HikeLength,
                 hike.Duration,
+                hike.Coordinates,
                 hike.CreatedBy
             ))
             .ToListAsync(ctoken);

@@ -14,6 +14,7 @@ public class HikeOverviewResponse
         string name,
         decimal hikeLength,
         int duration,
+        string coordinates,
         string createdBy)
     {
         return new HikeOverviewResponse
@@ -22,6 +23,7 @@ public class HikeOverviewResponse
             Name = name,
             HikeLength = hikeLength,
             Duration = duration,
+            Coordinates = coordinates,
             CreatedBy = createdBy
         };
     }
