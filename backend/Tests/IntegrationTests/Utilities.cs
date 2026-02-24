@@ -20,10 +20,12 @@ public static class Utilities
         var trails = GetSeedingTrails();
         var users = GetSeedingUsers(trails);
         var reviews = GetSeedingReviews(trails, users);
+        var hikes = GetSeedingHikes(users);
 
         db.Trails.AddRange(trails);
         db.Users.AddRange(users);
         db.Reviews.AddRange(reviews);
+        db.Hikes.AddRange(hikes);
 
         db.SaveChanges();
     }
@@ -501,5 +503,62 @@ public static class Utilities
                 }
             }
         };
+    }
+
+    public static List<Hike> GetSeedingHikes(List<User> users)
+    {
+        return
+        [
+            new Hike
+            {
+                Id = 1,
+                Identifier = "3f9c1b7e-8a42-4e6d-9c5f-2a7b1d8e4f90",
+                Name = "TestHike1",
+                HikeLength = 10,
+                Duration = 3600000,
+                Coordinates = string.Empty,
+                CreatedBy = users[0].Identifier
+            },
+            new Hike
+            {
+                Id = 2,
+                Identifier = "b7a2d4c1-5e9f-4a63-8c1d-0f2e7b9a6c34",
+                Name = "TestHike2",
+                HikeLength = 20,
+                Duration = 7200000,
+                Coordinates = string.Empty,
+                CreatedBy = users[0].Identifier
+            },
+            new Hike
+            {
+                Id = 3,
+                Identifier = "91e4c2d7-3b8f-4f6a-9d1c-7a2e5b0c8f13",
+                Name = "TestHike3",
+                HikeLength = 30,
+                Duration = 10800000,
+                Coordinates = string.Empty,
+                CreatedBy = users[1].Identifier
+            },
+            new Hike
+            {
+                Id = 4,
+                Identifier = "c4d8a1b9-6f3e-4c72-8a5d-1e9b2f7c0a46",
+                Name = "TestHike4",
+                HikeLength = 40,
+                Duration = 14400000,
+                Coordinates = string.Empty,
+                CreatedBy = users[1].Identifier
+            },
+            new Hike
+            {
+                Id = 5,
+                Identifier = "7a1e9c3d-2b4f-4d68-8c0a-5f2b7e1d9c32",
+                Name = "TestHike5",
+                HikeLength = 50,
+                Duration = 18000000,
+                Coordinates = string.Empty,
+                CreatedBy = users[2].Identifier
+            }
+        ];
     }
 }
