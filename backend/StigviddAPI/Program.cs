@@ -4,6 +4,7 @@ using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using SharpGrip.FluentValidation.AutoValidation.Mvc.Extensions;
+using System.Globalization;
 using System.Text.Json;
 
 namespace StigviddAPI;
@@ -12,6 +13,9 @@ public class Program
 {
     private static void Main(string[] args)
     {
+        CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
+        CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.InvariantCulture;
+
         var builder = WebApplication.CreateBuilder(args);
 
         builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

@@ -8,9 +8,9 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using WebDataContracts.RequestModels.Hike;
 
-namespace UnitTests;
+namespace ServiceTests;
 
-public class HikeServiceTests
+public class HikeServiceTests :TestBase
 {
     [Fact]
     public async Task CreateHikeAsync_ShouldCreateHike_WhenUserExists()
@@ -243,23 +243,5 @@ public class HikeServiceTests
         );
 
         return service;
-    }
-
-    private StigViddDbContext CreateContextAndSqliteDb()
-    {       
-        var connection = new SqliteConnection("DataSource=:memory:");
-        connection.Open(); 
-
-        var options = new DbContextOptionsBuilder<StigViddDbContext>()
-            .UseSqlite(connection)
-            .Options;
-
-        var context = new StigViddDbContext(options);
-
-        context.Database.EnsureCreated();
-
-        Utilities.InitializeDbForTests(context);
-
-        return context;
     }
 }
