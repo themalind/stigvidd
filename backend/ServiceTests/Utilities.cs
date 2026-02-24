@@ -1,18 +1,18 @@
 ﻿using Infrastructure.Data;
 using Infrastructure.Data.Entities;
 
-namespace UnitTests;
+namespace ServiceTests;
 
 // https://github.com/dotnet/AspNetCore.Docs.Samples/blob/main/test/integration-tests/10.x/IntegrationTestsSample/tests/RazorPagesProject.Tests/Helpers/Utilities.cs
 
 /// <summary>
-/// Utility class for managing test database seeding and initialization for unit tests.
-/// Provides methods to populate the database with predefined test data including various user configurations.
+/// Utility class for managing test database seeding and initialization for service tests.
+/// Provides methods to populate the database with predefined test data including trails, users, reviews and hikes.
 /// </summary>
 public static class Utilities
 {   /// <summary>
-    /// Initializes the database with seed data for unit tests.
-    /// Populates the database with predefined trails, users and reviews.
+    /// Initializes the database with seed data for service tests.
+    /// Populates the database with predefined trails, users, reviews and hikes.
     /// </summary>
     /// <param name="db">The database context to initialize.</param>
     public static void InitializeDbForTests(StigViddDbContext db)
@@ -369,11 +369,10 @@ public static class Utilities
     }
 
     /// <summary>
-    /// Creates a collection of predefined review entities for testing.
-    /// Includes reviews with varying Ratings, some with images and different review textM.
+    /// Creates a collection of predefined review entities for service testing.
+    /// Includes reviews with varying ratings, some with images and some without review text.
+    /// Reviews reference trails and users by hardcoded IDs matching the seed data.
     /// </summary>
-    /// <param name="trails">The list of trails to reference when creating reviews.</param>
-    /// <param name="users">The list of users to reference when creating reviews.</param>
     /// <returns>A list of Review entities with varying configurations for comprehensive testing.</returns>
     public static List<Review> GetSeedingReviews(List<Trail> trails, List<User> users)
     {
@@ -420,7 +419,7 @@ public static class Utilities
             CreatedAt = SeedDates.Created,
             LastUpdatedAt = SeedDates.Updated
         },
-        // Review 3: High rating with detailed feedbaMk
+        // Review 3: High rating with detailed feedback
         new Review
         {
             Id = 3,
@@ -432,7 +431,7 @@ public static class Utilities
             CreatedAt = SeedDates.Created,
             LastUpdatedAt = SeedDates.Updated
         },
-        // Review 4: Medium ratiMg
+        // Review 4: Medium rating
         new Review
         {
             Id = 4,
@@ -444,7 +443,7 @@ public static class Utilities
             CreatedAt = SeedDates.Created,
             LastUpdatedAt = SeedDates.Updated
         },
-        // Review 5: Review without text (only RatinM)
+        // Review 5: Review without text (only rating)
         new Review
         {
             Id = 5,
@@ -468,7 +467,7 @@ public static class Utilities
             CreatedAt = SeedDates.Created,
             LastUpdatedAt = SeedDates.Updated
         },
-        // Review 7: Lower rating with constructive feedbaMk
+        // Review 7: Lower rating with constructive feedback
         new Review
         {
             Id = 7,
@@ -505,6 +504,12 @@ public static class Utilities
     };
     }
 
+    /// <summary>
+    /// Creates a collection of predefined hike entities for service testing.
+    /// Includes 5 hikes with varying lengths and durations, distributed across users.
+    /// </summary>
+    /// <param name="users">The list of users to assign as hike creators.</param>
+    /// <returns>A list of Hike entities for comprehensive testing.</returns>
     public static List<Hike> GetSeedingHikes(List<User> users)
     {
         return

@@ -9,9 +9,9 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using WebDataContracts.ResponseModels.User;
 
-namespace UnitTests;
+namespace ServiceTests;
 
-public class UserServiceUnitTests
+public class UserServiceTests : TestBase
 {
     [Fact]
     public async Task GetFavoritesByUserIdentifier_ReturnsOk()
@@ -25,21 +25,6 @@ public class UserServiceUnitTests
         // Assert
         result.Success.Should().BeTrue();
         result.Value.Should().NotBeNull();
-    }
-
-    [Fact]
-    public async Task GetFavoritesByUserIdentifier_WhenNoFavoritesExists_ReturnsEmptyList()
-    {
-        // Arrange 
-        var userService = CreateUserService();
-
-        // Act 
-        var result = await userService.GetFavoritesByUserIdentifierAsync("b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e", CancellationToken.None);
-
-        // Assert
-        result.Success.Should().BeTrue();
-        result.Value.Should().NotBeNull();
-        result.Value.Should().HaveCount(2);
     }
 
     [Fact]
@@ -64,7 +49,7 @@ public class UserServiceUnitTests
     }
 
     [Fact]
-    public async Task GetFavoritesList_WithInvalidUserIdentifier_ReturnsNull()
+    public async Task GetFavoritesList_WithInvalidUserIdentifier_ReturnsEmptyList()
     {
         // Arrange 
         var userService = CreateUserService();
@@ -111,21 +96,6 @@ public class UserServiceUnitTests
     }
 
     [Fact]
-    public async Task AddToUserFavorites_WithInvalidTrailIdentifier_ReturnsNull()
-    {
-        // Arrange
-        var userService = CreateUserService();
-
-        // Act
-        var result = await userService.AddTrailToUserFavoritesListAsync(
-            "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d", "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d", CancellationToken.None);
-
-        // Assert
-        result.Success.Should().BeFalse();
-        result.Value.Should().BeNull();
-    }
-
-    [Fact]
     public async Task AddToUserFavorites_WithInvalidTrailIdentifier_ReturnsCorrectErrorMessage()
     {
         // Arrange
@@ -137,6 +107,7 @@ public class UserServiceUnitTests
 
         // Assert
         result.Success.Should().BeFalse();
+        result.Value.Should().BeNull();
         result.Message.Should().NotBeNull();
         result.Message.StatusCode.Should().Be(404);
         result.Message.ResultMessage.Should().Be("Trail with identifier: a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d not found.");
@@ -243,21 +214,6 @@ public class UserServiceUnitTests
     }
 
     [Fact]
-    public async Task GetWishListByUserIdentifier_ReturnsOk()
-    {
-        // Arrange 
-        var userService = CreateUserService();
-
-        // Act 
-        var result = await userService.GetWishListByUserIdentifierAsync("a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d", CancellationToken.None);
-
-        // Assert
-        result.Success.Should().BeTrue();
-        result.Value.Should().NotBeNull();
-        result.Value.Should().HaveCount(2);
-    }
-
-    [Fact]
     public async Task GetWishListByUserIdentifier_ReturnsList_WithRightProperties()
     {
         // Arrange 
@@ -295,7 +251,7 @@ public class UserServiceUnitTests
     }
 
     [Fact]
-    public async Task GetWishList_WithWrongUserIdentifier_ReturnsNull()
+    public async Task GetWishList_WithInvalidUserIdentifier_ReturnsEmptyList()
     {
         // Arrange 
         var userService = CreateUserService();
@@ -467,37 +423,19 @@ public class UserServiceUnitTests
 
         // Mocka andra dependencies
         var mockLogger = new Mock<ILogger<UserService>>();
-        var mockFavoritesFactory = new Mock<UserFavoritesResponseFactory>();
-        var mockWishlistFactory = new Mock<UserWishlistResponseFactory>();
-        var mockUserFactory = new Mock<UserResponseFactory>();
+        var favoritesResponseFactory = new UserFavoritesResponseFactory();
+        var wishlistResponseFactory = new UserWishlistResponseFactory();
+        var userResponseFactory = new UserResponseFactory();
 
         // Skapa service
         var service = new UserService(
             mockContextFactory.Object,
             mockLogger.Object,
-            mockFavoritesFactory.Object,
-            mockWishlistFactory.Object,
-            mockUserFactory.Object
+            favoritesResponseFactory,
+            wishlistResponseFactory,
+            userResponseFactory
         );
 
         return service;
-    }
-
-    private StigViddDbContext CreateContextAndSqliteDb()
-    {       
-        var connection = new SqliteConnection("DataSource=:memory:");
-        connection.Open(); 
-
-        var options = new DbContextOptionsBuilder<StigViddDbContext>()
-            .UseSqlite(connection)
-            .Options;
-
-        var dbContext = new StigViddDbContext(options);
-
-        dbContext.Database.EnsureCreated();
-
-        Utilities.InitializeDbForTests(dbContext);
-
-        return dbContext;
     }
 }

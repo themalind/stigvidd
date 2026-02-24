@@ -12,9 +12,9 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using System.Text;
 
-namespace UnitTests;
+namespace ServiceTests;
 
-public class ReviewServiceUnitTests
+public class ReviewServiceTests : TestBase
 {
     [Fact]
     public async Task GetReviewsByTrailIdentifier_WhenReviewsExist_ShouldReturnReviews()
@@ -557,24 +557,10 @@ public class ReviewServiceUnitTests
             mockWebDavService.Object,
             reviewResponseFactory,
             mockLogger.Object,
-            mockConfiguration.Object);
+            mockConfiguration.Object
+        );
+
         return reviewService;
-    }
-
-    private StigViddDbContext CreateContextAndSqliteDb()
-    {
-        var connection = new SqliteConnection("DataSource=:memory:");
-        connection.Open();
-
-        var options = new DbContextOptionsBuilder<StigViddDbContext>()
-            .UseSqlite(connection)
-            .Options;
-
-        var dbContext = new StigViddDbContext(options);
-        dbContext.Database.EnsureCreated();
-
-        Utilities.InitializeDbForTests(dbContext);
-        return dbContext;
     }
 
     private FormFileCollection GetFormFileCollection()
