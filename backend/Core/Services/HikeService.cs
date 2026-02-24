@@ -15,7 +15,7 @@ public class HikeService : IHikeService
     private readonly HikeResponseFactory _hikeResponseFactory;
     private readonly ILogger<HikeService> _logger;
 
-    public HikeService(IDbContextFactory<StigViddDbContext> context, IUserService userService, HikeResponseFactory hikeResponseFactory, ILogger<HikeService> logger)
+    public HikeService(IDbContextFactory<StigViddDbContext> context, HikeResponseFactory hikeResponseFactory, ILogger<HikeService> logger)
     {
         _context = context;
         _hikeResponseFactory = hikeResponseFactory;
