@@ -7,8 +7,8 @@ export const columns: ColumnDef<TrailShortInfoResponse>[] = [
     header: "Name",
   },
   {
-    accessorKey: "identifier",
-    header: "Identifier",
+    accessorKey: "city",
+    header: "City",
   },
   {
     accessorKey: "trailLength",
@@ -23,7 +23,7 @@ export const columns: ColumnDef<TrailShortInfoResponse>[] = [
     header: "Classification",
   },
   {
-    accessorKey: "city",
-    header: "City",
+    accessorKey: "identifier",
+    header: "Identifier",
   },
 ];

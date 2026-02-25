@@ -19,7 +19,6 @@ export default function TrailsPage() {
   return (
     <main>
       <div className="container mx-auto py-10">
-        <pre>{JSON.stringify(trails, null, 2)}</pre>
         <DataTable columns={columns} data={trails} />
       </div>
     </main>
