@@ -113,11 +113,16 @@ public class HikeService : IHikeService
     {
         using var context = await _context.CreateDbContextAsync(ctoken);
 
-        var hike = await context.Hikes.FirstOrDefaultAsync(hike => hike.Identifier == hikeIdentifier && hike.CreatedBy == userIdentifier, ctoken);
+        var hike = await context.Hikes.FirstOrDefaultAsync(hike => hike.Identifier == hikeIdentifier, ctoken);
 
         if (hike == null)
         {
             return Result.Fail(new Message(404, $"Could not remove hike with id {hikeIdentifier}."));
+        }
+
+        if (hike.CreatedBy != userIdentifier)
+        {
+            return Result.Fail(new Message(401, $"Hike {hikeIdentifier} does not belong to {userIdentifier}"));
         }
 
         context.Remove(hike);
