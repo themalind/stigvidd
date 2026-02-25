@@ -1,22 +1,27 @@
-import { Link } from "react-router";
+import { useMatches } from "react-router";
 import { DarkModeToggle } from "./dark-mode-toggle";
-import { Button } from "./ui/button";
+import { SidebarTrigger } from "./ui/sidebar";
+
+type RouteHandle = {
+  title?: string;
+};
 
 export default function Header() {
+  const matches = useMatches() as Array<{ handle: RouteHandle }>;
+
+  const currentTitle =
+    [...matches].reverse().find((match) => match.handle?.title)?.handle
+      ?.title ?? "Stigvidd";
+
   return (
-    <header className="flex border-b items-center">
-      <div className="flex p-2 items-center mr-auto">
-        <Button variant="ghost">
-          <Link to={"/dashboard"}>Dashboard</Link>
-        </Button>
-        <Button variant="ghost">
-          <Link to={"/users"}>Users</Link>
-        </Button>
-        <Button variant="ghost">
-          <Link to={"/trails"}>Trails</Link>
-        </Button>
+    <header className="flex justify-between items-center p-2">
+      <div className="flex pl-1 items-center">
+        <SidebarTrigger />
       </div>
-      <div className="p-2">
+      <div>
+        <h1 className="text-2xl">{currentTitle}</h1>
+      </div>
+      <div className="pr-1">
         <DarkModeToggle />
       </div>
     </header>
