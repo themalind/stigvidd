@@ -14,6 +14,7 @@ import { useLocalSearchParams } from "expo-router";
 import { useRef, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useTheme } from "react-native-paper";
+import TrailMiscInfo from "./trail-misc-section/trail-misc-accordion";
 
 export default function TrailDetailsScreen() {
   const theme = useTheme();
@@ -78,6 +79,7 @@ export default function TrailDetailsScreen() {
       {trail && <UserBar trail={trail} />}
       {trail?.description && <TrailDescription trail={trail} />}
       {coordinates.length > 0 && <TrailMap trail={coordinates} />}
+      {trail && <TrailMiscInfo trail={trail} />}
       {trail && (
         <TrailReviewsContainer
           trail={trail}
