@@ -56,16 +56,22 @@ export async function getAllHikes(): Promise<Hike[]> {
 }
 
 export async function getAllHikesByUserId(userIdentifier: string): Promise<Hike[]> {
+  const token = await getUserToken();
+
+  if (!token) {
+    throw new Error("User not authenticated");
+  }
   try {
     const response = await fetch(`http://${IP}/api/v1/hikes?createdBy=${userIdentifier}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
       },
     });
 
     if (!response.ok) {
-      throw new ApiError(`HTTP error: getAllHikes: ${response.status}`, response.status);
+      throw new ApiError(`HTTP error: getAllHikesByUserId: ${response.status}`, response.status);
     }
 
     return await response.json();
