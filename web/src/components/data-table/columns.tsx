@@ -1,29 +1,9 @@
-import type { TrailShortInfoResponse } from "@/types/types";
-import type { ColumnDef } from "@tanstack/react-table";
+import type { TableColumn, TrailShortInfoResponse } from "@/types/types";
 
-export const trailColumns: ColumnDef<TrailShortInfoResponse>[] = [
-  {
-    accessorKey: "name",
-    header: "Name",
-  },
-  {
-    accessorKey: "city",
-    header: "City",
-  },
-  {
-    accessorKey: "trailLength",
-    header: "Length",
-  },
-  {
-    accessorKey: "accessibility",
-    header: "Accessibility",
-  },
-  {
-    accessorKey: "classification",
-    header: "Classification",
-  },
-  {
-    accessorKey: "identifier",
-    header: "Identifier",
-  },
+export const trailColumns: TableColumn<TrailShortInfoResponse>[] = [
+  { label: "Name", key: "name", type: "text" },
+  { label: "City", key: "city", type: "text" },
+  { label: "Length", key: "trailLength", type: "number" },
+  { label: "Classification", key: "classification", type: "number" },
+  { label: "Identifier", key: "identifier", type: "text" },
 ];

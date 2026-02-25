@@ -1,8 +1,8 @@
 import { getAllTrails } from "@/api/trail";
-import DataTable from "@/components/data-table/data-table";
 import { trailColumns } from "@/components/data-table/columns";
 import type { TrailShortInfoResponse } from "@/types/types";
 import { useEffect, useState } from "react";
+import TrailsTable from "@/components/data-table/TrailsTable";
 
 export default function TrailsPage() {
   const [trails, setTrails] = useState<TrailShortInfoResponse[]>([]);
@@ -19,7 +19,7 @@ export default function TrailsPage() {
   return (
     <main>
       <div className="container mx-auto py-10">
-        <DataTable columns={trailColumns} data={trails} />
+        <TrailsTable columns={trailColumns} trails={trails} />
       </div>
     </main>
   );

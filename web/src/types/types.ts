@@ -8,3 +8,10 @@ export type TrailShortInfoResponse = {
   startLatitude?: number;
   startLongitude?: number;
 };
+
+export type TableColumn<T> = {
+  label: string;
+  key: keyof T;
+  type: string;
+  width?: number;
+};
