@@ -166,6 +166,38 @@ public class HikesControllerIntegrationTests : IClassFixture<StigViddWebApplicat
         response.StatusCode.Should().Be(HttpStatusCode.Created);
     }
 
+    [Theory]
+    [InlineData("", 1000, 60000)]
+    [InlineData("  ", 1000, 60000)]
+    [InlineData("ThisNameIsWayTooLongAndIsUnderNoCircumstanceASuitableForAHike", 1000, 60000)]
+    [InlineData("MyHike", 0, 60000)]
+    [InlineData("MyHike", 1000, 0)]
+    public async Task CreateHikeAsync_ShouldReturnBadRequest_WhenRequestPropertiesAreOutsideOfRange(
+        string hikeName,
+        decimal hikeLength,
+        int duration
+    )
+    {
+        // Arrange
+        var client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", AUTHENTICATED_USER);
+        
+        var request = new CreateHikeRequest
+        {
+            Name = hikeName,
+            HikeLength = hikeLength,
+            Duration = duration,
+            Coordinates = "[]"
+        };
+
+        // Act
+        var response = await client.PostAsJsonAsync(BASE_URL, request);
+        
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
     [Fact]
     public async Task CreateHikeAsync_ShouldReturnBadRequest_WhenBodyIsInvalid()
     {

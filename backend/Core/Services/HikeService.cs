@@ -35,6 +35,15 @@ public class HikeService : IHikeService
                 return Result.Fail<HikeResponse>(new Message(404, "User not found"));
             }
 
+            if (
+                string.IsNullOrWhiteSpace(request.Name) ||
+                request.Name.Length > 60 ||
+                request.HikeLength == 0 ||
+                request.Duration == 0)
+            {
+                return Result.Fail<HikeResponse>(new Message(400, "Hike properties are invalid."));
+            }
+
             var hike = new Hike
             {
                 Name = request.Name,
