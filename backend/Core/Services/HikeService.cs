@@ -35,6 +35,15 @@ public class HikeService : IHikeService
                 return Result.Fail<HikeResponse>(new Message(404, "User not found"));
             }
 
+            if (
+                string.IsNullOrWhiteSpace(request.Name) ||
+                request.Name.Length > 60 ||
+                request.HikeLength == 0 ||
+                request.Duration == 0)
+            {
+                return Result.Fail<HikeResponse>(new Message(400, "Hike properties are invalid."));
+            }
+
             var hike = new Hike
             {
                 Name = request.Name,
@@ -113,11 +122,16 @@ public class HikeService : IHikeService
     {
         using var context = await _context.CreateDbContextAsync(ctoken);
 
-        var hike = await context.Hikes.FirstOrDefaultAsync(hike => hike.Identifier == hikeIdentifier && hike.CreatedBy == userIdentifier, ctoken);
+        var hike = await context.Hikes.FirstOrDefaultAsync(hike => hike.Identifier == hikeIdentifier, ctoken);
 
         if (hike == null)
         {
             return Result.Fail(new Message(404, $"Could not remove hike with id {hikeIdentifier}."));
+        }
+
+        if (hike.CreatedBy != userIdentifier)
+        {
+            return Result.Fail(new Message(401, $"Hike {hikeIdentifier} does not belong to {userIdentifier}"));
         }
 
         context.Remove(hike);

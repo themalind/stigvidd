@@ -19,12 +19,20 @@ public class HikesController : StigViddController
         _userService = userService;
     }
 
+    [Authorize]
     [HttpGet("{hikeIdentifier}")]
     public async Task<ActionResult<HikeResponse>> GetHikeByIdentifierAsync(
         string hikeIdentifier,
         CancellationToken ctoken
     )
     {
+        var userResponse = await GetAuthenticatedUserAsync(_userService, ctoken);
+
+        if (userResponse == null)
+        {
+            return Unauthorized("User not found");
+        }
+
         var result = await _hikeService.GetHikeByIdentifierAsync(hikeIdentifier, ctoken);
 
         if (!result.Success && result.Message != null)
@@ -35,17 +43,20 @@ public class HikesController : StigViddController
         return Ok(result.Value);
     }
 
+    [Authorize]
     [HttpGet]
-    public async Task<ActionResult<IReadOnlyCollection<HikeOverviewResponse>>> GetHikesAsync(
+    public async Task<ActionResult<IReadOnlyCollection<HikeResponse>>> GetHikesAsync(
         [FromQuery] string? createdBy,
         CancellationToken ctoken)
     {
-        var result = await _hikeService.GetHikesAsync(createdBy, ctoken);
+        var userResponse = await GetAuthenticatedUserAsync(_userService, ctoken);
 
-        if (!result.Success && result.Message != null)
+        if (userResponse == null)
         {
-            return ToActionResult(result.Message);
+            return Unauthorized("User not found");
         }
+
+        var result = await _hikeService.GetHikesAsync(createdBy, ctoken);
 
         return Ok(result.Value);
     }
