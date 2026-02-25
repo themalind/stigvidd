@@ -12,7 +12,7 @@ export default function CommingSoonPage() {
                    lg:items-start lg:text-left lg:order-last"
           >
             <Link to={"/login"}>
-              <div className="flex items-center mb-3 outline-1 outline-red-500">
+              <div className="flex items-center mb-3">
                 <div className="w-20 aspect-square rounded-full overflow-hidden">
                   <img src="src/assets/icon.png" />
                 </div>
