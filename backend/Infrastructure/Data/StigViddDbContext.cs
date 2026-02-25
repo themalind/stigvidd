@@ -1,5 +1,6 @@
 ﻿using Infrastructure.Data.Entities;
 using Microsoft.EntityFrameworkCore;
+using WebDataContracts.ResponseModels.Trail;
 
 namespace Infrastructure.Data;
 
@@ -46,6 +47,29 @@ public class StigViddDbContext(DbContextOptions<StigViddDbContext> options) : Db
                     j.HasKey("UserId", "TrailId");
                     j.ToTable("UserFavorites");
                 });
+
+        // Decimal precision for entity properties
+        modelBuilder.Entity<Trail>()
+            .Property(t => t.TrailLength).HasPrecision(18, 2);
+
+        modelBuilder.Entity<Review>()
+            .Property(r => r.Rating).HasPrecision(3, 1);
+
+        modelBuilder.Entity<Hike>()
+            .Property(h => h.HikeLength).HasPrecision(18, 2);
+
+        // Keyless entity types used for raw SQL query results
+        modelBuilder.Entity<PopularTrailQueryResult>().HasNoKey()
+            .Property(p => p.TrailLength).HasPrecision(18, 2);
+        modelBuilder.Entity<PopularTrailQueryResult>()
+            .Property(p => p.AverageRating).HasPrecision(18, 6);
+
+        modelBuilder.Entity<TrailShortInfoResponse>().HasNoKey()
+            .Property(t => t.TrailLength).HasPrecision(18, 2);
+        modelBuilder.Entity<TrailShortInfoResponse>()
+            .Property(t => t.StartLatitude).HasPrecision(18, 10);
+        modelBuilder.Entity<TrailShortInfoResponse>()
+            .Property(t => t.StartLongitude).HasPrecision(18, 10);
 
         // Configures a one-to-one relationship where Trail has a VisitorInformation,
         // but VisitorInformation is the dependent side with TrailId as foreign key.
