@@ -21,7 +21,7 @@ export default function TrailMiscInfo({ trail }: Props) {
         {trail.visitorInformation && (
           <List.Accordion
             titleStyle={[s.titleText, { color: theme.colors.onSurface }]}
-            title="Besöksinformation"
+            title="Praktisk information"
             id="1"
             style={{ backgroundColor: theme.colors.surface }}
           >
