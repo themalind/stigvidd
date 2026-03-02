@@ -1,3 +1,4 @@
+import { BORDER_RADIUS } from "@/constants/constants";
 import { UserFavoritesTrail, UserWishlistTrail } from "@/data/types";
 import { Entypo, Feather, FontAwesome } from "@expo/vector-icons";
 import { Image } from "expo-image";
@@ -137,7 +138,7 @@ const s = StyleSheet.create({
   trailImage: {
     height: 100,
     aspectRatio: 0.7,
-    borderRadius: 10,
+    borderRadius: BORDER_RADIUS,
   },
   fadeGradientBottom: {
     position: "absolute",

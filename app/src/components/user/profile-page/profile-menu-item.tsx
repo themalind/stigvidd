@@ -1,3 +1,4 @@
+import { BORDER_RADIUS } from "@/constants/constants";
 import { MaterialIcons } from "@expo/vector-icons";
 import { Href, router } from "expo-router";
 import { Pressable, StyleSheet, View } from "react-native";
@@ -33,7 +34,7 @@ const s = StyleSheet.create({
     padding: 15,
     flexDirection: "row",
     alignItems: "center",
-    borderRadius: 10,
+    borderRadius: BORDER_RADIUS,
     justifyContent: "space-between",
   },
   userInfo: {

@@ -1,3 +1,4 @@
+import { BORDER_RADIUS } from "@/constants/constants";
 import { ReviewImage } from "@/data/types";
 import { BlurView } from "expo-blur";
 import { Image } from "expo-image";
@@ -39,7 +40,7 @@ export default function ImageViewer({ images, visible, onDismiss }: ModalProps) 
         onDismiss={onDismiss}
         contentContainerStyle={[s.modalContainerStyle, { backgroundColor: theme.colors.inverseOnSurface }]}
       >
-        <View style={{ position: "relative", overflow: "hidden", borderRadius: 20 }}>
+        <View style={{ position: "relative", overflow: "hidden", borderRadius: BORDER_RADIUS }}>
           <View>
             <Animated.FlatList
               horizontal
@@ -117,7 +118,7 @@ const s = StyleSheet.create({
     flexDirection: "row",
     maxHeight: height * 0.6,
     maxWidth: width,
-    borderRadius: 10,
+    borderRadius: BORDER_RADIUS,
   },
   flatListContainerStyle: {
     paddingBottom: 0,

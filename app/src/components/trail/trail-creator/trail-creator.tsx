@@ -1,14 +1,15 @@
+import AlertDialog from "@/components/alert-dialog";
 import Map from "@/components/map/map";
+import { BORDER_RADIUS } from "@/constants/constants";
 import { useLocationTracking } from "@/services/use-location-tracking";
+import FormattedTime from "@/utils/format-time-from-ms";
+import { Ionicons } from "@expo/vector-icons";
+import * as Location from "expo-location";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import MapView, { Polyline, Region } from "react-native-maps";
 import { Text, useTheme } from "react-native-paper";
-import * as Location from "expo-location";
-import { Ionicons } from "@expo/vector-icons";
-import AlertDialog from "@/components/alert-dialog";
 import SaveHikeModal from "./save-hike-modal";
-import FormattedTime from "@/utils/format-time-from-ms";
 
 export default function TrailCreator() {
   const mapRef = useRef<MapView>(null);
@@ -190,16 +191,16 @@ const s = StyleSheet.create({
   mapContainer: {
     flex: 1,
     minHeight: 200,
-    borderRadius: 10,
+    borderRadius: BORDER_RADIUS,
     overflow: "hidden",
     marginBottom: 20,
   },
   infoSection: {
     justifyContent: "center",
     alignItems: "center",
-    borderRadius: 10,
+    borderRadius: BORDER_RADIUS,
     height: 80,
-    marginBottom: 20,
+    marginBottom: 5,
   },
   infoText: {
     fontSize: 40,
@@ -215,7 +216,7 @@ const s = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    borderRadius: 10,
+    borderRadius: BORDER_RADIUS,
     gap: 10,
     height: 60,
   },

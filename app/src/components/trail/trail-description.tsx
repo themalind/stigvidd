@@ -1,3 +1,4 @@
+import { SURFACE_BORDER_RADIUS } from "@/constants/constants";
 import { Trail } from "@/data/types";
 import { StyleSheet, Text, View } from "react-native";
 import { Surface, useTheme } from "react-native-paper";
@@ -22,7 +23,7 @@ const s = StyleSheet.create({
   container: {
     gap: 15,
     padding: 20,
-    borderRadius: 10,
+    borderRadius: SURFACE_BORDER_RADIUS,
     justifyContent: "center",
     alignItems: "center",
   },

@@ -1,5 +1,6 @@
 import { showSuccessAtom } from "@/atoms/snackbar-atoms";
 import { stigviddUserAtom } from "@/atoms/user-atoms";
+import { BORDER_RADIUS } from "@/constants/constants";
 import { Review } from "@/data/types";
 import { useDeleteReview } from "@/hooks/review/useDeleteReview";
 import { useAtom, useSetAtom } from "jotai";
@@ -83,9 +84,11 @@ export default function ReviewSection({ reviews }: ReviewProps) {
             <View style={[s.bottomContainer, { backgroundColor: theme.colors.surface }]}>
               <Text>{formatDate(review.createdAt)}</Text>
               <View style={s.actionContainer}>
-                <Pressable onPress={handleReportReview}>
-                  <List.Icon color={theme.colors.outline} icon="alert-circle" />
-                </Pressable>
+                {user?.identifier !== review.userIdentifier && (
+                  <Pressable onPress={handleReportReview}>
+                    <List.Icon color={theme.colors.outline} icon="alert-circle" />
+                  </Pressable>
+                )}
                 {user?.identifier === review.userIdentifier && (
                   <Pressable
                     disabled={deleteMutation.isPending}
@@ -109,7 +112,7 @@ export default function ReviewSection({ reviews }: ReviewProps) {
 
 const s = StyleSheet.create({
   listSection: {
-    borderRadius: 10,
+    borderRadius: BORDER_RADIUS,
   },
   ratingContainer: {
     flexDirection: "row",

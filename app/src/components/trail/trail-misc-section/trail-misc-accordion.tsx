@@ -1,3 +1,4 @@
+import { SURFACE_BORDER_RADIUS } from "@/constants/constants";
 import { Trail } from "@/data/types";
 import React, { useState } from "react";
 import { StyleSheet } from "react-native";
@@ -19,30 +20,30 @@ export default function TrailMiscInfo({ trail }: Props) {
         onAccordionPress={(id) => setExpandedId((prev) => (prev === id ? "" : id))}
       >
         {trail.visitorInformation && (
-          <List.Accordion
-            titleStyle={[s.titleText, { color: theme.colors.onSurface }]}
-            title="Praktisk information"
-            id="1"
-            style={{ backgroundColor: theme.colors.surface }}
-          >
-            <VisitorInformationSection visitorInfo={trail.visitorInformation} />
-          </List.Accordion>
-        )}
-        {trail.fullDescription && (
           <>
-            <Divider />
             <List.Accordion
               titleStyle={[s.titleText, { color: theme.colors.onSurface }]}
-              title="Detaljerad beskrivning"
-              id="2"
+              title="Praktisk information"
+              id="1"
               style={{ backgroundColor: theme.colors.surface }}
             >
-              <FullDescriptionSection fullDescription={trail.fullDescription} />
+              <VisitorInformationSection visitorInfo={trail.visitorInformation} />
             </List.Accordion>
+            <Divider />
           </>
         )}
+        {trail.fullDescription && (
+          <List.Accordion
+            titleStyle={[s.titleText, { color: theme.colors.onSurface }]}
+            title="Detaljerad beskrivning"
+            id="2"
+            style={{ backgroundColor: theme.colors.surface }}
+          >
+            <FullDescriptionSection fullDescription={trail.fullDescription} />
+          </List.Accordion>
+        )}
         <Divider />
-        {trail.trailLinksResponse && (
+        {trail.trailLinksResponse?.length ? (
           <List.Accordion
             titleStyle={[s.titleText, { color: theme.colors.onSurface }]}
             title="Länkar"
@@ -51,7 +52,7 @@ export default function TrailMiscInfo({ trail }: Props) {
           >
             <LinkSection links={trail.trailLinksResponse} />
           </List.Accordion>
-        )}
+        ) : null}
       </List.AccordionGroup>
     </Surface>
   );
@@ -61,7 +62,7 @@ const s = StyleSheet.create({
   container: {
     gap: 10,
     padding: 10,
-    borderRadius: 10,
+    borderRadius: SURFACE_BORDER_RADIUS,
   },
   titleText: {
     fontWeight: 700,

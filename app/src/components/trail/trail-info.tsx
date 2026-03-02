@@ -1,3 +1,4 @@
+import { SURFACE_BORDER_RADIUS } from "@/constants/constants";
 import { Trail } from "@/data/types";
 import { classificationParser } from "@/utils/classification-parser";
 import { getDifficultyIcon } from "@/utils/getDifficultyIcon";
@@ -46,7 +47,7 @@ export default function TrailInfo({ trail }: TrailinfoProps) {
 const s = StyleSheet.create({
   container: {
     padding: 20,
-    borderRadius: 10,
+    borderRadius: SURFACE_BORDER_RADIUS,
     gap: 5,
   },
   sectionTitle: {

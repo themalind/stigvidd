@@ -1,3 +1,4 @@
+import { BORDER_RADIUS } from "@/constants/constants";
 import { FilterOptions } from "@/data/types";
 import { classificationParser } from "@/utils/classification-parser";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -275,7 +276,7 @@ const s = StyleSheet.create({
     fontWeight: "700",
   },
   clearButtonWrapper: {
-    borderRadius: 10,
+    borderRadius: BORDER_RADIUS,
   },
   clearButton: {
     fontSize: 16,
@@ -283,7 +284,7 @@ const s = StyleSheet.create({
   },
   doneButtonWrapper: {
     paddingHorizontal: 10,
-    borderRadius: 10,
+    borderRadius: BORDER_RADIUS,
   },
   doneButton: {
     padding: 5,
@@ -320,7 +321,7 @@ const s = StyleSheet.create({
     flex: 1,
     paddingVertical: 10,
     paddingHorizontal: 15,
-    borderRadius: 8,
+    borderRadius: BORDER_RADIUS,
     alignItems: "center",
     justifyContent: "center",
   },

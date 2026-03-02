@@ -1,3 +1,4 @@
+import { BORDER_RADIUS } from "@/constants/constants";
 import { TrailLink } from "@/data/types";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Linking, Pressable, StyleSheet, View } from "react-native";
@@ -47,7 +48,7 @@ const s = StyleSheet.create({
   },
   iconBox: {
     borderWidth: 1,
-    borderRadius: 5,
+    borderRadius: BORDER_RADIUS,
     padding: 8,
   },
 });

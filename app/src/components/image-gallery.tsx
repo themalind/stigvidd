@@ -1,3 +1,4 @@
+import { BORDER_RADIUS } from "@/constants/constants";
 import { TrailImage } from "@/data/types";
 import { Image } from "expo-image";
 import { useRef, useState } from "react";
@@ -19,7 +20,7 @@ export default function ImageGallery({ images }: GalleryProps) {
 
   const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const scrollPosition = event.nativeEvent.contentOffset.x;
-    const index = Math.round(scrollPosition / (ITEM_WIDTH + GAP));
+    const index = Math.min(Math.round(scrollPosition / (ITEM_WIDTH + GAP)), images.length - 1);
 
     if (index !== currentIndex) {
       setCurrentIndex(index);
@@ -94,12 +95,12 @@ const s = StyleSheet.create({
   focusImage: {
     height: 300,
     width: 350,
-    borderRadius: 10,
+    borderRadius: BORDER_RADIUS,
   },
   scrollImage: {
     height: 90,
     width: 60,
-    borderRadius: 5,
+    borderRadius: BORDER_RADIUS,
   },
   scrollView: {
     gap: 15,
@@ -113,7 +114,7 @@ const s = StyleSheet.create({
   dots: {
     width: 8,
     height: 8,
-    borderRadius: 4,
+    borderRadius: BORDER_RADIUS,
     marginHorizontal: 4,
   },
 });

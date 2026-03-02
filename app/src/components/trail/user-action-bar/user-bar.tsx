@@ -1,3 +1,4 @@
+import { BORDER_RADIUS } from "@/constants/constants";
 import { Trail } from "@/data/types";
 import { Dimensions, StyleSheet, View } from "react-native";
 import { useTheme } from "react-native-paper";
@@ -28,7 +29,7 @@ const s = StyleSheet.create({
   container: {
     width: WIDTH * 0.9,
     height: HEIGHT * 0.08,
-    borderRadius: 10,
+    borderRadius: BORDER_RADIUS,
     justifyContent: "space-between",
     alignItems: "center",
     flexDirection: "row",

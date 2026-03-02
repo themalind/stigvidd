@@ -5,6 +5,7 @@ import ImageCarousel from "@/components/image-carousel";
 import Map from "@/components/map/map";
 import MockNews from "@/components/mockNews";
 import CarouselSkeleton from "@/components/skeleton/carousel-skeleton";
+import { SURFACE_BORDER_RADIUS } from "@/constants/constants";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useQuery } from "@tanstack/react-query";
@@ -106,16 +107,11 @@ const s = StyleSheet.create({
   },
   mapContainer: {
     height: HEIGHT * 0.25,
-    borderRadius: 10,
+    borderRadius: SURFACE_BORDER_RADIUS,
     overflow: "hidden",
   },
   hikers: {
     height: 25,
     width: 25,
-  },
-  winners: {
-    width: 120,
-    height: 120,
-    borderRadius: 8,
   },
 });

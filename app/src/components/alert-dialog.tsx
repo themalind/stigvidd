@@ -1,3 +1,4 @@
+import { DIALOG_BORDER_RADIUS } from "@/constants/constants";
 import React from "react";
 import { Text, View } from "react-native";
 import { Button, Dialog, Portal } from "react-native-paper";
@@ -27,7 +28,11 @@ export default function AlertDialog({
 }: AlertDialogProps) {
   return (
     <Portal>
-      <Dialog style={{ backgroundColor: backgroundColor, borderRadius: 10 }} visible={visible} onDismiss={onDismiss}>
+      <Dialog
+        style={{ backgroundColor: backgroundColor, borderRadius: DIALOG_BORDER_RADIUS }}
+        visible={visible}
+        onDismiss={onDismiss}
+      >
         <Dialog.Title>{title}</Dialog.Title>
         <Dialog.Content>
           <View style={{ gap: 10 }}>

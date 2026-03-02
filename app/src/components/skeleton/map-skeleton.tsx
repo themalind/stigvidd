@@ -1,12 +1,11 @@
 import { BORDER_RADIUS } from "@/constants/constants";
 import React, { useEffect } from "react";
-import { Dimensions, StyleSheet, View } from "react-native";
+import { Dimensions, StyleSheet, Text, View } from "react-native";
 import { useTheme } from "react-native-paper";
 import Animated, { useAnimatedStyle, useSharedValue, withRepeat, withTiming } from "react-native-reanimated";
 
-const { width } = Dimensions.get("screen");
-const CAROUSEL_ITEM_WIDTH = Math.round(width * 0.7);
-const CAROUSEL_ITEM_HEIGHT = Math.round(CAROUSEL_ITEM_WIDTH * 0.78);
+const WIDTH = Dimensions.get("screen").width;
+const HEIGHT = Dimensions.get("screen").height;
 
 function ShimmerBlock({ style }: { style?: any }) {
   const theme = useTheme();
@@ -27,30 +26,40 @@ function ShimmerBlock({ style }: { style?: any }) {
   );
 }
 
-export default function CarouselSkeleton() {
+export default function MapSkeleton({ text }: { text?: string }) {
+  const theme = useTheme();
   return (
-    <View style={s.carouselRow}>
+    <View style={s.container}>
       <ShimmerBlock
         style={{
-          width: CAROUSEL_ITEM_WIDTH,
-          height: CAROUSEL_ITEM_HEIGHT,
           borderRadius: BORDER_RADIUS,
+          width: WIDTH * 0.9,
+          height: HEIGHT * 0.3,
         }}
       />
-      <ShimmerBlock
-        style={{
-          width: CAROUSEL_ITEM_WIDTH * 0.4,
-          height: CAROUSEL_ITEM_HEIGHT,
-          borderRadius: BORDER_RADIUS,
-        }}
-      />
+      {text && (
+        <View style={s.overlay}>
+          <Text style={[s.text, { color: theme.colors.onSurfaceVariant }]}>{text}</Text>
+        </View>
+      )}
     </View>
   );
 }
 
 const s = StyleSheet.create({
-  carouselRow: {
-    flexDirection: "row",
-    gap: 10,
+  container: {
+    overflow: "hidden",
+  },
+  map: {
+    flex: 1,
+  },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  text: {
+    fontSize: 16,
+    fontWeight: "600",
   },
 });

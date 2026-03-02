@@ -1,14 +1,15 @@
-import { Pressable, StyleSheet, View } from "react-native";
-import { Divider, Surface, Text, TextInput, useTheme } from "react-native-paper";
-import { useForm, Controller } from "react-hook-form";
+import { createHike } from "@/api/hikes";
+import Map from "@/components/map/map";
+import { BORDER_RADIUS } from "@/constants/constants";
 import { ActiveHike, CreateHikeRequest } from "@/data/types";
 import FormattedTime from "@/utils/format-time-from-ms";
-import Map from "@/components/map/map";
-import MapView, { LatLng, Polyline } from "react-native-maps";
 import GetRegionFromTrail from "@/utils/get-region-from-trail";
-import { useEffect, useMemo, useRef } from "react";
-import { createHike } from "@/api/hikes";
 import { router } from "expo-router";
+import { useEffect, useMemo, useRef } from "react";
+import { Controller, useForm } from "react-hook-form";
+import { Pressable, StyleSheet, View } from "react-native";
+import MapView, { LatLng, Polyline } from "react-native-maps";
+import { Divider, Surface, Text, TextInput, useTheme } from "react-native-paper";
 
 interface Props {
   hike: ActiveHike;
@@ -144,7 +145,7 @@ export default function SaveHikeForm({ hike, onDismiss }: Props) {
 
 const s = StyleSheet.create({
   inputText: {
-    // borderRadius: 10,
+    // borderRadius: BORDER_RADIUS,
     // marginTop: 10,
   },
   errorText: {
@@ -171,7 +172,7 @@ const s = StyleSheet.create({
   },
   mapContainer: {
     height: 300,
-    borderRadius: 10,
+    borderRadius: BORDER_RADIUS,
     marginVertical: 20,
     overflow: "hidden",
   },

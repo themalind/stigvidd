@@ -2,6 +2,7 @@ import { signInUser } from "@/api/auth";
 import { getLoginErrorMessage } from "@/api/firebase-errors";
 import { userThemeAtom } from "@/atoms/user-theme-atom";
 import PasswordInputField from "@/components/password-input-field";
+import { SURFACE_BORDER_RADIUS } from "@/constants/constants";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Image } from "expo-image";
 import { Link, router } from "expo-router";
@@ -207,7 +208,7 @@ const s = StyleSheet.create({
   surface: {
     gap: 15,
     padding: 30,
-    borderRadius: 10,
+    borderRadius: SURFACE_BORDER_RADIUS,
     alignItems: "center",
     width: WIDTH * 0.8,
   },

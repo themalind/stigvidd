@@ -1,3 +1,4 @@
+import { BORDER_RADIUS } from "@/constants/constants";
 import { VisitorInformation } from "@/data/types";
 import { StyleSheet, View } from "react-native";
 import { Divider, Icon, Text, useTheme } from "react-native-paper";
@@ -91,7 +92,7 @@ const s = StyleSheet.create({
   },
   iconBox: {
     borderWidth: 1,
-    borderRadius: 5,
+    borderRadius: BORDER_RADIUS,
     padding: 8,
   },
 });

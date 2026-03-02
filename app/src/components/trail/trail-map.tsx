@@ -1,9 +1,10 @@
+import { SURFACE_BORDER_RADIUS } from "@/constants/constants";
+import GetRegionFromTrail from "@/utils/get-region-from-trail";
 import { useEffect, useRef } from "react";
 import { Dimensions, StyleSheet } from "react-native";
 import MapView, { LatLng, Polyline } from "react-native-maps";
 import { Surface } from "react-native-paper";
 import Map from "../map/map";
-import GetRegionFromTrail from "@/utils/get-region-from-trail";
 
 interface TrailMapProps {
   trail: LatLng[];
@@ -34,7 +35,7 @@ const s = StyleSheet.create({
   container: {
     width: WIDTH * 0.9,
     height: HEIGHT * 0.3,
-    borderRadius: 10,
+    borderRadius: SURFACE_BORDER_RADIUS,
     overflow: "hidden",
   },
   map: {

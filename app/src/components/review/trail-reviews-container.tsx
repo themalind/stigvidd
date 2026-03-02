@@ -1,5 +1,6 @@
 import { getReviewsByTrailIdentifier } from "@/api/review";
 import { authStateAtom } from "@/atoms/auth-atoms";
+import { SURFACE_BORDER_RADIUS } from "@/constants/constants";
 import { Review, Trail } from "@/data/types";
 import { Ionicons } from "@expo/vector-icons";
 import { useInfiniteQuery } from "@tanstack/react-query";
@@ -122,7 +123,7 @@ export default function TrailReviewsContainer({ trail, surfaceToScrollToRef, onR
 const s = StyleSheet.create({
   surface: {
     justifyContent: "center",
-    borderRadius: 10,
+    borderRadius: SURFACE_BORDER_RADIUS,
     padding: 25,
   },
   title: {
