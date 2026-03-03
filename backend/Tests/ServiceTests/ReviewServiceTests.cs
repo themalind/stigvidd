@@ -5,7 +5,6 @@ using Core.Services;
 using FluentAssertions;
 using Infrastructure.Data;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;

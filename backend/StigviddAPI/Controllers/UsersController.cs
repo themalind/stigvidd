@@ -10,11 +10,11 @@ namespace StigviddAPI.Controllers;
 [Authorize]
 [ApiController]
 [Route("/api/v1/[controller]")]
-public class UserController : StigViddController
+public class UsersController : StigViddController
 {
     private readonly IUserService _userService;
 
-    public UserController(IUserService userService, ILogger<UserController> logger)
+    public UsersController(IUserService userService, ILogger<UsersController> logger)
     {
         _userService = userService;
     }

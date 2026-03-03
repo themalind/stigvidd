@@ -31,7 +31,7 @@ public class AuthenticationIntegrationTests : IClassFixture<StigViddWebApplicati
         };
 
         // Act
-        var response = await client.PostAsJsonAsync("/api/v1/user/create", createUserRequest);
+        var response = await client.PostAsJsonAsync("/api/v1/users/create", createUserRequest);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
@@ -52,7 +52,7 @@ public class AuthenticationIntegrationTests : IClassFixture<StigViddWebApplicati
         };
 
         // Act
-        var response = await client.PostAsJsonAsync("/api/v1/user/create", createUserRequest);
+        var response = await client.PostAsJsonAsync("/api/v1/users/create", createUserRequest);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Created);
@@ -65,7 +65,7 @@ public class AuthenticationIntegrationTests : IClassFixture<StigViddWebApplicati
         var client = _factory.CreateClient();
       
         // Act
-        var response = await client.GetAsync($"/api/v1/user/");
+        var response = await client.GetAsync($"/api/v1/users/");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
@@ -78,7 +78,7 @@ public class AuthenticationIntegrationTests : IClassFixture<StigViddWebApplicati
         var client = _factory.CreateClient();
         
         // Act
-        var response = await client.GetAsync($"/api/v1/user/favorites");
+        var response = await client.GetAsync($"/api/v1/users/favorites");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
@@ -91,7 +91,7 @@ public class AuthenticationIntegrationTests : IClassFixture<StigViddWebApplicati
         var client = _factory.CreateClient();
      
         // Act
-        var response = await client.GetAsync($"/api/v1/user/wishlist");
+        var response = await client.GetAsync($"/api/v1/users/wishlist");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
@@ -109,7 +109,7 @@ public class AuthenticationIntegrationTests : IClassFixture<StigViddWebApplicati
         };
 
         // Act
-        var response = await client.PostAsJsonAsync("/api/v1/user/favorites", favoriteRequest);
+        var response = await client.PostAsJsonAsync("/api/v1/users/favorites", favoriteRequest);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
@@ -127,7 +127,7 @@ public class AuthenticationIntegrationTests : IClassFixture<StigViddWebApplicati
         };
 
         // Act
-        var response = await client.PostAsJsonAsync("/api/v1/user/wishlist", wishlistRequest);
+        var response = await client.PostAsJsonAsync("/api/v1/users/wishlist", wishlistRequest);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
@@ -142,7 +142,7 @@ public class AuthenticationIntegrationTests : IClassFixture<StigViddWebApplicati
         var trailIdentifier = "11a1b2c3-d4e5-4f6a-7b8c-9d0e1f2a3b4c";
       
         // Act
-        var response = await client.DeleteAsync($"/api/v1/user/favorites/{trailIdentifier}");
+        var response = await client.DeleteAsync($"/api/v1/users/favorites/{trailIdentifier}");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
@@ -157,7 +157,7 @@ public class AuthenticationIntegrationTests : IClassFixture<StigViddWebApplicati
         var trailIdentifier = "77a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c";
       
         // Act
-        var response = await client.DeleteAsync($"/api/v1/user/wishlist/{trailIdentifier}");
+        var response = await client.DeleteAsync($"/api/v1/users/wishlist/{trailIdentifier}");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);

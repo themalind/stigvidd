@@ -8,12 +8,12 @@ namespace StigviddAPI.Controllers;
 
 [ApiController]
 [Route("/api/v1/[controller]")]
-public class ReviewController : StigViddController
+public class ReviewsController : StigViddController
 {
     private readonly IReviewService _reviewService;
     private readonly IUserService _userService;
 
-    public ReviewController(IReviewService service, IUserService userService)
+    public ReviewsController(IReviewService service, IUserService userService)
     {
         _reviewService = service;
         _userService = userService;

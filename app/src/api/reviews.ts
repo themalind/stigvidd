@@ -9,7 +9,7 @@ export async function getReviewsByTrailIdentifier(
   limit: number,
 ): Promise<PagedReviewResponse> {
   try {
-    const response = await fetch(`http://${IP}/api/v1/review/trail/${trailIdentifier}?page=${page}&limit=${limit}`, {
+    const response = await fetch(`http://${IP}/api/v1/reviews/trail/${trailIdentifier}?page=${page}&limit=${limit}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -52,7 +52,7 @@ export async function createReview(request: CreateReviewRequest): Promise<{ succ
   formData.append("rating", `${request.rating}`);
 
   try {
-    const response = await fetch("http://" + IP + "/api/v1/review/create", {
+    const response = await fetch("http://" + IP + "/api/v1/reviews/create", {
       method: "POST",
       body: formData,
       headers: {
@@ -79,7 +79,7 @@ export async function deleteReview(reviewIdentifier: string): Promise<{ success:
   }
 
   try {
-    const response = await fetch(`http://${IP}/api/v1/review/${reviewIdentifier}`, {
+    const response = await fetch(`http://${IP}/api/v1/reviews/${reviewIdentifier}`, {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",

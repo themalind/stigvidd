@@ -1,7 +1,7 @@
 import { IP } from "@/../ipconfig";
-import { CreateTrailRequest, Trail, TrailOverview, TrailShortInfoResponse } from "@/data/types";
-import { getUserToken } from "./users";
+import { Coordinates, CreateTrailRequest, Trail, TrailOverview, TrailShortInfoResponse } from "@/data/types";
 import uuid from "react-native-uuid";
+import { getUserToken } from "./users";
 
 export async function getPopularTrails(latitude?: number, longitude?: number): Promise<TrailOverview[]> {
   try {
@@ -13,7 +13,7 @@ export async function getPopularTrails(latitude?: number, longitude?: number): P
     // Se över om vi ska ha någon API-nyckel här för att autentisera appen
     // och för att undvika att någon kan spamma och döda servern?
     const query = params.toString();
-    const url = `http://${IP}/api/v1/Trail/popular${query ? `?${query}` : ""}`;
+    const url = `http://${IP}/api/v1/trails/popular${query ? `?${query}` : ""}`;
     const response = await fetch(url);
 
     if (!response.ok) {
@@ -29,7 +29,7 @@ export async function getPopularTrails(latitude?: number, longitude?: number): P
 
 export async function getAllTrails(): Promise<TrailShortInfoResponse[]> {
   try {
-    const response = await fetch("http://" + IP + `/api/v1/trail`);
+    const response = await fetch("http://" + IP + `/api/v1/trails`);
     if (!response.ok) {
       throw new Error(`HTTP error ${response.status}`);
     }
@@ -43,10 +43,26 @@ export async function getAllTrails(): Promise<TrailShortInfoResponse[]> {
 
 export async function getTrailByIdentifier(identifier: string): Promise<Trail> {
   try {
-    const response = await fetch("http://" + IP + `/api/v1/Trail/${identifier}`);
+    const response = await fetch("http://" + IP + `/api/v1/trails/${identifier}`);
 
     if (!response.ok) {
       throw new Error(`HTTP error ${response.status}`);
+    }
+    const json = await response.json();
+
+    return json;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+}
+
+export async function getCoordinatesByTrailIdentifier(identifier: string): Promise<Coordinates> {
+  try {
+    const response = await fetch("http://" + IP + `/api/v1/trails/${identifier}/coordinates`);
+
+    if (!response.ok) {
+      throw new Error(`getCordsTrailByIdentifier: HTTP error ${response.status}`);
     }
     const json = await response.json();
 
@@ -90,12 +106,11 @@ export async function addTrail(request: CreateTrailRequest): Promise<{ success: 
   formData.append("fullDescription", `${request.fullDescription}`);
   formData.append("coordinates", `${request.coordinates}`);
   formData.append("tags", `${request.tags}`);
-  formData.append("createdBy", `${request.createdBy.identifier}`);
   formData.append("isVerified", `${request.isVerified}`);
   formData.append("city", `${request.city}`);
 
   try {
-    const response = await fetch(`http://${IP}/api/v1/trail/create`, {
+    const response = await fetch(`http://${IP}/api/v1/trails/create`, {
       method: "POST",
       body: formData,
       headers: {
