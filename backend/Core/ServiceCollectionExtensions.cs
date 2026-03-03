@@ -4,7 +4,10 @@ using Core.Services;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using System.Net;
+using WebDav;
 
 namespace Core;
 
@@ -47,6 +50,20 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IReviewService, ReviewService>();
         services.AddTransient<IWebDavService, WebDavService>();
         services.AddTransient<IHikeService, HikeService>();
+
+        services.AddTransient<Func<IWebDavClient>>(sp =>
+        {
+            var config = sp.GetRequiredService<IConfiguration>();
+            var baseUrl = config["WebDav:BaseUrl"] ?? throw new InvalidOperationException("WebDav:BaseUrl configuration is missing");
+            var userName = config["WebDav:Username"] ?? throw new InvalidOperationException("WebDav:Username configuration is missing");
+            var password = config["WebDav:Password"] ?? throw new InvalidOperationException("WebDav:Password configuration is missing");
+
+            return () => new WebDavClient(new WebDavClientParams
+            {
+                BaseAddress = new Uri(baseUrl),
+                Credentials = new NetworkCredential(userName, password)
+            });
+        });
 
         // Factories
         services.AddTransient<TrailResponseFactory>();

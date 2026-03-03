@@ -47,6 +47,9 @@ public static class Utilities
     /// <returns>A list of Trail entities with complete test data including images where applicable.</returns>
     public static List<Trail> GetSeedingTrails()
     {
+        var coordinates = "[{ latitude=57.62141010663575, longitude= 12.805517126805371,}]";
+        var tags = "[\"skog\", \"sjö\", \"klippor\", \"vildmark\"]";
+
         return
         [
             new Trail
@@ -62,7 +65,8 @@ public static class Utilities
                 FullDescription = string.Empty,
                 TrailSymbol = "Röd markering",
                 TrailSymbolImage = "https://inkaben.se/stigvidd/mock/mock-trail-symbol.png",
-                Coordinates = null,
+                Coordinates = coordinates,
+                Tags = tags,
                 City = "Tiveden",
                 CreatedAt = DateTime.UtcNow,
                 LastUpdatedAt = DateTime.UtcNow,
@@ -104,7 +108,9 @@ public static class Utilities
                 FullDescription = string.Empty,
                 TrailSymbol = "Blå markering",
                 TrailSymbolImage = "https://inkaben.se/stigvidd/mock/mock-trail-symbol.png",
-                Coordinates = null,
+                Coordinates = coordinates,
+                Tags = tags,
+                IsVerified = true,
                 City = "Viskafors",
                 CreatedAt = DateTime.UtcNow,
                 LastUpdatedAt = DateTime.UtcNow,
@@ -139,7 +145,9 @@ public static class Utilities
                 FullDescription = string.Empty,
                 TrailSymbol = "Orange markering",
                 TrailSymbolImage = "https://inkaben.se/stigvidd/mock/mock-trail-symbol.png",
-                Coordinates = null,
+                Coordinates = coordinates,
+                Tags = tags,
+                IsVerified = true,
                 City = "Dannike",
                 CreatedAt = DateTime.UtcNow,
                 LastUpdatedAt = DateTime.UtcNow
@@ -157,7 +165,9 @@ public static class Utilities
                 FullDescription = string.Empty,
                 TrailSymbol = "Grön markering",
                 TrailSymbolImage = "https://inkaben.se/stigvidd/mock/mock-trail-symbol.png",
-                Coordinates = null,
+                Coordinates = coordinates,
+                Tags = tags,
+                IsVerified = true,
                 City = "Arås",
                 CreatedAt = DateTime.UtcNow,
                 LastUpdatedAt = DateTime.UtcNow,
@@ -192,7 +202,9 @@ public static class Utilities
                 FullDescription = string.Empty,
                 TrailSymbol = "Röd markering med en 6:a på",
                 TrailSymbolImage = "https://inkaben.se/stigvidd/mock/mock-trail-symbol.png",
-                Coordinates = null,
+                Coordinates = coordinates,
+                Tags = tags,
+                IsVerified = true,
                 City = "Gesebol",
                 CreatedAt = DateTime.UtcNow,
                 LastUpdatedAt = DateTime.UtcNow
@@ -210,7 +222,9 @@ public static class Utilities
                 FullDescription = string.Empty,
                 TrailSymbol = "Blå markering",
                 TrailSymbolImage = "https://inkaben.se/stigvidd/mock/mock-trail-symbol.png",
-                Coordinates = null,
+                Coordinates = coordinates,
+                Tags = tags,
+                IsVerified = true,
                 City = "Hultafors",
                 CreatedAt = DateTime.UtcNow,
                 LastUpdatedAt = DateTime.UtcNow
@@ -228,7 +242,9 @@ public static class Utilities
                 FullDescription = string.Empty,
                 TrailSymbol = "Nässla",
                 TrailSymbolImage = "https://inkaben.se/stigvidd/mock/nassla.png",
-                Coordinates = null,
+                Coordinates = coordinates,
+                Tags = tags,
+                IsVerified= true,
                 City = "Nässehult",
                 CreatedAt = DateTime.UtcNow,
                 LastUpdatedAt = DateTime.UtcNow,

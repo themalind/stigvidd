@@ -13,7 +13,6 @@ public class CreateTrailRequest
     public string? FullDescription { get; set; }
     public required string Coordinates { get; set; }
     public string? Tags { get; set; }
-    public string? CreatedBy { get; set; }
     public bool? IsVerified { get; set; }
     public string? City { get; set; }
 }
