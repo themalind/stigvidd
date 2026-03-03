@@ -13,13 +13,16 @@ export interface Trail {
   trailSymbolImage: string;
   description: string;
   fullDescription: string;
-  coordinates: string;
   city: string;
   tags?: string;
   isVerified: boolean;
   visitorInformation?: VisitorInformation;
   trailImagesResponse?: TrailImage[];
   trailLinksResponse?: TrailLink[];
+}
+
+export interface Coordinates {
+  coordinates: string;
 }
 
 export interface TrailOverview {
@@ -183,7 +186,6 @@ export interface CreateTrailRequest {
   fullDescription: string;
   coordinates: string;
   tags: string[];
-  createdBy: UserName;
   city: string;
   isVerified: boolean;
   images: TrailImage[];

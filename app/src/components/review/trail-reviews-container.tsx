@@ -1,4 +1,4 @@
-import { getReviewsByTrailIdentifier } from "@/api/review";
+import { getReviewsByTrailIdentifier } from "@/api/reviews";
 import { authStateAtom } from "@/atoms/auth-atoms";
 import { SURFACE_BORDER_RADIUS } from "@/constants/constants";
 import { Review, Trail } from "@/data/types";

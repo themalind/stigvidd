@@ -1,4 +1,4 @@
-import { deleteReview } from "@/api/review";
+import { deleteReview } from "@/api/reviews";
 import { showErrorAtom, showSuccessAtom } from "@/atoms/snackbar-atoms";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSetAtom } from "jotai";
