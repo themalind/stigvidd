@@ -70,9 +70,9 @@ export default function SettingsDrawer({ visible, onDismiss }: Props) {
             <MaterialIcons name="close" size={24} color={theme.colors.onSurfaceVariant} />
           </Pressable>
         </View>
-        <View style={{ marginTop: "auto", paddingBottom: 45 }}>
+        <View style={s.drawerItemContainer}>
           <Divider bold style={{ marginHorizontal: 16 }} />
-          <Drawer.Section showDivider={false} style={{ marginTop: 20 }}>
+          <Drawer.Section showDivider={false} style={s.drawerSection}>
             <Drawer.Item
               label="Tema"
               icon="theme-light-dark"
@@ -149,5 +149,12 @@ const s = StyleSheet.create({
     height: 60,
     width: 60,
     alignSelf: "center",
+  },
+  drawerItemContainer: {
+    marginTop: "auto",
+    paddingBottom: 45,
+  },
+  drawerSection: {
+    marginTop: 20,
   },
 });
