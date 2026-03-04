@@ -1,7 +1,7 @@
 import { router } from "expo-router";
 import { View } from "react-native";
 import { useTheme } from "react-native-paper";
-import AlertDialog from "./alert-dialog";
+import AlertDialog from "../alert-dialog";
 
 interface DialogProps {
   infoMessage: string;

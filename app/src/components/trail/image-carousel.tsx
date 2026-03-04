@@ -1,10 +1,7 @@
 import { TrailOverview } from "@/data/types";
 import React, { useCallback } from "react";
 import { useWindowDimensions, View } from "react-native";
-import Animated, {
-  useAnimatedScrollHandler,
-  useSharedValue,
-} from "react-native-reanimated";
+import Animated, { useAnimatedScrollHandler, useSharedValue } from "react-native-reanimated";
 import { CarouselTile } from "./ImageCarouselTile";
 
 interface CarouselProps {
@@ -13,11 +10,7 @@ interface CarouselProps {
   onItemPress?: (item: TrailOverview) => void;
 }
 
-export default function ImageCarousel({
-  data,
-  showText = true,
-  onItemPress,
-}: CarouselProps) {
+export default function ImageCarousel({ data, showText = true, onItemPress }: CarouselProps) {
   const scrollX = useSharedValue(0);
   const { width } = useWindowDimensions();
   const itemWidth = Math.round(width * 0.7);

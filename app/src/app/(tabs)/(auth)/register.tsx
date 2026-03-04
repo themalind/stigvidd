@@ -1,7 +1,7 @@
 import { getRegisterErrorMessage } from "@/api/firebase-errors";
 import { registerUserAtom } from "@/atoms/auth-atoms";
 import { userThemeAtom } from "@/atoms/user-theme-atom";
-import PasswordInputField from "@/components/password-input-field";
+import PasswordInputField from "@/components/auth/password-input-field";
 import { SURFACE_BORDER_RADIUS } from "@/constants/constants";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Image } from "expo-image";

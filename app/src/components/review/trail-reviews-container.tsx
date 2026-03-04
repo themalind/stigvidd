@@ -8,8 +8,8 @@ import { useAtom } from "jotai";
 import React, { RefObject, useEffect, useMemo, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Button, Surface, useTheme } from "react-native-paper";
+import NotAuthenticatedDialog from "../auth/not-authenticated-msg-dialog";
 import LoadingIndicator from "../loading-indicator";
-import NotAuthenticatedDialog from "../not-authenticated-msg-dialog";
 import AddReview from "./add/add-review-modal";
 import ReviewSection from "./review-section ";
 

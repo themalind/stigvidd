@@ -47,7 +47,7 @@ function ImageCarouselTileInner({
   const imageSource =
     item.trailImagesResponse && item.trailImagesResponse.length > 0
       ? item.trailImagesResponse[0].imageUrl
-      : require("../assets/images/noImage.png");
+      : require("../../assets/images/noImage.png");
 
   const handlePress = () => {
     if (onPress) {

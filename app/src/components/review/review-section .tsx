@@ -7,7 +7,7 @@ import { useAtom, useSetAtom } from "jotai";
 import { Fragment } from "react";
 import { Alert, Pressable, StyleSheet, View } from "react-native";
 import { Divider, List, Text, useTheme } from "react-native-paper";
-import { Rating } from "../rating";
+import { Rating } from "./rating";
 import ReviewImageGrid from "./review-image-grid ";
 
 interface ReviewProps {

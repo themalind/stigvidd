@@ -1,7 +1,7 @@
 import { getCoordinatesByTrailIdentifier, getTrailByIdentifier } from "@/api/trails";
-import ImageGallery from "@/components/image-gallery";
-import { Rating } from "@/components/rating";
+import { Rating } from "@/components/review/rating";
 import TrailReviewsContainer from "@/components/review/trail-reviews-container";
+import ImageGallery from "@/components/trail/image-gallery";
 import TrailDescription from "@/components/trail/trail-description";
 import TrailInfo from "@/components/trail/trail-info";
 import TrailMap from "@/components/trail/trail-map";

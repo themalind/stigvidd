@@ -43,13 +43,13 @@ export default function SettingsDrawer({ visible, onDismiss }: Props) {
       setError("Kunde inte logga ut.");
     }
     onDismiss();
-    router.replace("/(tabs)/(auth)/login");
+    router.replace("/(tabs)/(settings)/login");
   }
 
   function handleLogin() {
     setActive("login");
     onDismiss();
-    router.replace("/(tabs)/(auth)/login");
+    router.replace("/(tabs)/(settings)/login");
   }
 
   return (
@@ -64,7 +64,7 @@ export default function SettingsDrawer({ visible, onDismiss }: Props) {
         ]}
       >
         <View style={s.stigviddContainer}>
-          <Image style={s.image} contentFit="contain" source={require("../assets/images/mammaapp.png")} />
+          <Image style={s.image} contentFit="contain" source={require("../../assets/images/mammaapp.png")} />
           <Text style={[s.text, { color: theme.colors.onSurfaceVariant }]}>Stigvidd</Text>
           <Pressable hitSlop={12} onPress={onDismiss} style={s.closeButton}>
             <MaterialIcons name="close" size={24} color={theme.colors.onSurfaceVariant} />

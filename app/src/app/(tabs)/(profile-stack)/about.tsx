@@ -1,2 +1,2 @@
-import AboutScreen from "@/components/about-screen";
+import AboutScreen from "@/components/about/about-screen";
 export default AboutScreen;

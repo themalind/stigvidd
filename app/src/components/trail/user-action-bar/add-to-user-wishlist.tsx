@@ -1,12 +1,8 @@
 import { ApiError } from "@/api/users";
 import { authStateAtom } from "@/atoms/auth-atoms";
 import { showErrorAtom, showWarningAtom } from "@/atoms/snackbar-atoms";
-import {
-  addToWishlistAtom,
-  removeFromWishlistAtom,
-  userWishlistAtom,
-} from "@/atoms/user-atoms";
-import NotAuthenticatedDialog from "@/components/not-authenticated-msg-dialog";
+import { addToWishlistAtom, removeFromWishlistAtom, userWishlistAtom } from "@/atoms/user-atoms";
+import NotAuthenticatedDialog from "@/components/auth/not-authenticated-msg-dialog";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { useState } from "react";
@@ -47,24 +43,14 @@ export default function AddToUserWishlist({ trailIdentifier }: Props) {
     }
   };
 
-  const isInWishlist = data?.some(
-    (trail) => trail.identifier === trailIdentifier,
-  );
+  const isInWishlist = data?.some((trail) => trail.identifier === trailIdentifier);
 
   const isPending = removeUserWishlist.isPending || addToUserWishlist.isPending;
 
   return (
     <View style={s.container}>
-      <TouchableOpacity
-        style={s.touchable}
-        onPress={handlePress}
-        disabled={isPending}
-      >
-        <MaterialIcons
-          name={isInWishlist ? "check" : "add"}
-          size={30}
-          color={theme.colors.onPrimary}
-        />
+      <TouchableOpacity style={s.touchable} onPress={handlePress} disabled={isPending}>
+        <MaterialIcons name={isInWishlist ? "check" : "add"} size={30} color={theme.colors.onPrimary} />
         <Text style={[s.text, { color: theme.colors.onPrimary }]}>Vill gå</Text>
       </TouchableOpacity>
       <NotAuthenticatedDialog
