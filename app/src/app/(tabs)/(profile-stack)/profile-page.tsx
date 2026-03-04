@@ -48,7 +48,7 @@ export default function ProfilePageScreen() {
       console.log(e);
       setError("Kunde inte logga ut.");
     }
-    router.replace("/(tabs)/(home)");
+    router.replace("/(tabs)/(auth)/login");
   }
 
   return (

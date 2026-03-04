@@ -4,7 +4,7 @@ import { userThemeAtom } from "@/atoms/user-theme-atom";
 import ImageCarousel from "@/components/image-carousel";
 import Map from "@/components/map/map";
 import MockNews from "@/components/mockNews";
-import CarouselSkeleton from "@/components/skeleton/carousel-skeleton";
+import CarouselSkeleton from "@/components/skeletons/carousel-skeleton";
 import { SURFACE_BORDER_RADIUS } from "@/constants/constants";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";

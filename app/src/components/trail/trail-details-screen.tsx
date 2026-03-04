@@ -15,7 +15,7 @@ import { Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 
 import { LatLng } from "react-native-maps";
 import { useTheme } from "react-native-paper";
 import LoadingIndicator from "../loading-indicator";
-import MapSkeleton from "../skeleton/map-skeleton";
+import MapSkeleton from "../skeletons/map-skeleton";
 import TrailMiscInfo from "./trail-misc-section/trail-misc-accordion";
 
 export default function TrailDetailsScreen() {
@@ -95,6 +95,7 @@ export default function TrailDetailsScreen() {
         <MapSkeleton text="Laddar karta..." />
       )}
       {trail && <TrailMiscInfo trail={trail} />}
+
       {trail && (
         <TrailReviewsContainer
           trail={trail}
