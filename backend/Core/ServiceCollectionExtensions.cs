@@ -1,6 +1,9 @@
 ﻿using Core.Factories;
 using Core.Interfaces;
 using Core.Services;
+using FirebaseAdmin;
+using FirebaseAdmin.Auth;
+using Google.Apis.Auth.OAuth2;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
@@ -44,7 +47,23 @@ public static class ServiceCollectionExtensions
         // Bra att börja med transient. Märker man att en annan livstid behövs är det lättare att ändra till längre livstid än kortare.
         // Transient: En ny instans skapas varje gång tjänsten begärs. Garbage collected när den inte längre används.
 
+        // Firebase Admin
+        services.AddSingleton(sp =>
+        {
+            var config = sp.GetRequiredService<IConfiguration>();
+            var credentialPath = config["Firebase:ServiceAccountPath"]
+                ?? throw new InvalidOperationException("Firebase:ServiceAccountPath configuration is missing");
+
+            var app = FirebaseApp.DefaultInstance ?? FirebaseApp.Create(new AppOptions
+            {
+                Credential = GoogleCredential.FromFile(credentialPath)
+            });
+
+            return FirebaseAuth.GetAuth(app);
+        });
+
         // Services
+        services.AddTransient<IFirebaseAuthService, FirebaseAuthService>();
         services.AddTransient<ITrailService, TrailService>();
         services.AddTransient<IUserService, UserService>();
         services.AddTransient<IReviewService, ReviewService>();

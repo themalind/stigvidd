@@ -196,4 +196,26 @@ public class UsersController : StigViddController
 
         return NoContent();
     }
+
+    [HttpDelete]
+    [Route("delete")]
+    public async Task<ActionResult> DeleteUserAsync(
+      CancellationToken ctoken)
+    {
+        var userResponse = await GetAuthenticatedUserAsync(_userService, ctoken);
+
+        if (userResponse == null)
+        {
+            return Unauthorized("User not found");
+        }
+
+        var result = await _userService.DeleteUserAsync(userResponse.Identifier, ctoken);
+
+        if (!result.Success && result.Message != null)
+        {
+            return ToActionResult(result.Message);
+        }
+
+        return NoContent();
+    }
 }
