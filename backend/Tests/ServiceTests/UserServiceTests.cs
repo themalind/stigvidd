@@ -1,5 +1,6 @@
 ﻿using Core;
 using Core.Factories;
+using Core.Interfaces;
 using Core.Services;
 using FluentAssertions;
 using Infrastructure.Data;
@@ -413,29 +414,181 @@ public class UserServiceTests : TestBase
         result.Message.ResultMessage.Should().Be("User has no wishlist");
     }
 
+    [Fact]
+    public async Task CreateUserAsync_WhenFirebaseUidDoesNotExist_ShouldCreateUser()
+    {
+        // Arrange
+        var service = CreateUserService();
+
+        // Act
+        var result = await service.CreateUserAsync("glenn@raggigast.se", "Glenn", "brand-new-firebase-uid", CancellationToken.None);
+
+        // Assert
+        result.Success.Should().BeTrue();
+        result.Value.Should().NotBeNull();
+        result.Value!.Email.Should().Be("glenn@raggigast.se");
+        result.Value.NickName.Should().Be("Glenn");
+    }
+
+    [Fact]
+    public async Task CreateUserAsync_WhenFirebaseUidAlreadyExists_ShouldReturnConflict()
+    {
+        // Arrange
+        var service = CreateUserService();
+
+        // Act — all seed users share "firebase-uid-12345"
+        var result = await service.CreateUserAsync("artemis@fluffigast.se", "Artemis", "firebase-uid-12345", CancellationToken.None);
+
+        // Assert
+        result.Success.Should().BeFalse();
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(409);
+    }
+
+    [Fact]
+    public async Task GetUserByFirebaseUidAsync_WhenFound_ShouldReturnUser()
+    {
+        // Arrange
+        var service = CreateUserService();
+
+        // Act
+        var result = await service.GetUserByFirebaseUidAsync("firebase-uid-12345", CancellationToken.None);
+
+        // Assert
+        result.Success.Should().BeTrue();
+        result.Value.Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task GetUserByFirebaseUidAsync_WhenNotFound_ShouldFail()
+    {
+        // Arrange
+        var service = CreateUserService();
+
+        // Act
+        var result = await service.GetUserByFirebaseUidAsync("does-not-exist", CancellationToken.None);
+
+        // Assert
+        result.Success.Should().BeFalse();
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(404);
+    }
+
+    [Fact]
+    public async Task DeleteUserAsync_WhenUserExistsAndFirebaseSucceeds_ShouldDeleteUser()
+    {
+        // Arrange
+        var mockFirebase = new Mock<IFirebaseAuthService>();
+        mockFirebase
+            .Setup(f => f.DeleteUserAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        var options = CreateSeededOptions();
+        var service = CreateUserServiceWithOptions(options, mockFirebase.Object);
+
+        const string userToDelete = "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d";
+
+        // Act
+        var result = await service.DeleteUserAsync(userToDelete, CancellationToken.None);
+
+        // Assert
+        result.Success.Should().BeTrue();
+
+        using var verifyContext = new StigViddDbContext(options);
+        verifyContext.Users.Any(u => u.Identifier == userToDelete).Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task DeleteUserAsync_WhenUserNotFound_ShouldFail()
+    {
+        // Arrange
+        var service = CreateUserService();
+
+        // Act
+        var result = await service.DeleteUserAsync("does-not-exist", CancellationToken.None);
+
+        // Assert
+        result.Success.Should().BeFalse();
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(404);
+    }
+
+    [Fact]
+    public async Task DeleteUserAsync_WhenFirebaseDeletionFails_ShouldRollbackDbDeletion()
+    {
+        // Arrange
+        var mockFirebase = new Mock<IFirebaseAuthService>();
+        mockFirebase
+            .Setup(f => f.DeleteUserAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new Exception("Firebase unavailable"));
+
+        var options = CreateSeededOptions();
+        var service = CreateUserServiceWithOptions(options, mockFirebase.Object);
+
+        const string userToDelete = "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d";
+
+        // Act
+        var result = await service.DeleteUserAsync(userToDelete, CancellationToken.None);
+
+        // Assert
+        result.Success.Should().BeFalse();
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(500);
+
+        // User must still exist — the DB deletion must have been rolled back
+        using var verifyContext = new StigViddDbContext(options);
+        verifyContext.Users.Any(u => u.Identifier == userToDelete).Should().BeTrue();
+    }
+
+    private DbContextOptions<StigViddDbContext> CreateSeededOptions()
+    {
+        var connection = new SqliteConnection("DataSource=:memory:");
+        connection.Open();
+
+        var options = new DbContextOptionsBuilder<StigViddDbContext>()
+            .UseSqlite(connection)
+            .Options;
+
+        var seedContext = new StigViddDbContext(options);
+        seedContext.Database.EnsureCreated();
+        Utilities.InitializeDbForTests(seedContext);
+
+        return options;
+    }
+
+    private UserService CreateUserServiceWithOptions(
+        DbContextOptions<StigViddDbContext> options,
+        IFirebaseAuthService firebaseAuthService)
+    {
+        var mockContextFactory = new Mock<IDbContextFactory<StigViddDbContext>>();
+        mockContextFactory
+            .Setup(f => f.CreateDbContextAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(() => new StigViddDbContext(options));
+
+        return new UserService(
+            mockContextFactory.Object,
+            new Mock<ILogger<UserService>>().Object,
+            firebaseAuthService,
+            new UserFavoritesResponseFactory(),
+            new UserWishlistResponseFactory(),
+            new UserResponseFactory()
+        );
+    }
+
     private UserService CreateUserService()
     {
-        var dbContext = CreateContextAndSqliteDb();
-
         var mockContextFactory = new Mock<IDbContextFactory<StigViddDbContext>>();
-        mockContextFactory.Setup(f => f.CreateDbContextAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(dbContext);
+        mockContextFactory
+            .Setup(f => f.CreateDbContextAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(() => CreateContextAndSqliteDb());
 
-        // Mocka andra dependencies
-        var mockLogger = new Mock<ILogger<UserService>>();
-        var favoritesResponseFactory = new UserFavoritesResponseFactory();
-        var wishlistResponseFactory = new UserWishlistResponseFactory();
-        var userResponseFactory = new UserResponseFactory();
-
-        // Skapa service
-        var service = new UserService(
+        return new UserService(
             mockContextFactory.Object,
-            mockLogger.Object,
-            favoritesResponseFactory,
-            wishlistResponseFactory,
-            userResponseFactory
+            new Mock<ILogger<UserService>>().Object,
+            new Mock<IFirebaseAuthService>().Object,
+            new UserFavoritesResponseFactory(),
+            new UserWishlistResponseFactory(),
+            new UserResponseFactory()
         );
-
-        return service;
     }
 }
