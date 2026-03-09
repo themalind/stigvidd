@@ -1,6 +1,7 @@
 import { CreateStigViddUserCredentials, User, UserFavoritesTrail, UserWishlistTrail } from "@/data/types";
-import { getAuth, getIdToken } from "@firebase/auth";
+import { getIdToken } from "@firebase/auth";
 import { IP } from "../../ipconfig";
+import { auth } from "../../firebase-config";
 
 export class ApiError extends Error {
   status?: number;
@@ -13,7 +14,6 @@ export class ApiError extends Error {
 }
 
 export async function getUserToken(): Promise<string | null> {
-  const auth = getAuth();
   return auth.currentUser ? await getIdToken(auth.currentUser) : null;
 }
 
@@ -212,6 +212,25 @@ export async function removeUserFavorite(trailIdentifier: string): Promise<void>
   } catch (error) {
     console.log(error);
     throw error;
+  }
+}
+
+export async function deleteStigViddUser(): Promise<void> {
+  const token = await getUserToken();
+
+  if (!token) {
+    throw new Error("User not authenticated");
+  }
+
+  const response = await fetch(`http://${IP}/api/v1/users/delete`, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new ApiError(`HTTP error ${response.status}`, response.status);
   }
 }
 

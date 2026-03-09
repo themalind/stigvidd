@@ -214,6 +214,11 @@ export interface AuthResult {
   error: { code: string; message: string } | null;
 }
 
+export interface UpdateUserResult {
+  success: boolean;
+  error: { code: string; message: string } | null;
+}
+
 export type LocationData = {
   data: LatLng;
   timeStamp: number;

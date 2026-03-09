@@ -114,10 +114,6 @@ const s = StyleSheet.create({
   listSection: {
     borderRadius: BORDER_RADIUS,
   },
-  ratingContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
   title: {
     fontWeight: 700,
     paddingBottom: 10,

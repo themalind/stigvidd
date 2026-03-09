@@ -59,7 +59,6 @@ export default function PasswordInputField({
 
 const styles = StyleSheet.create({
   textInput: {
-    flex: 1,
     width: WIDTH * 0.65,
   },
 });
