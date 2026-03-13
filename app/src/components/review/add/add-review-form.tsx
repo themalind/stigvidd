@@ -1,4 +1,5 @@
 import { useCreateReview } from "@/hooks/review/useCreateReview";
+import { BORDER_RADIUS } from "@/constants/constants";
 import { showErrorAtom } from "@/atoms/snackbar-atoms";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -188,6 +189,7 @@ export default function AddReviewForm({ trailIdentifier, onSuccess }: ReviewForm
       <View>
         <Button
           mode="contained"
+          style={s.button}
           onPress={handleSubmit(onSubmit, (errors) => {
             console.log("Validation failed:", errors);
           })}
@@ -211,5 +213,8 @@ const s = StyleSheet.create({
   },
   gap: {
     gap: 20,
+  },
+  button: {
+    borderRadius: BORDER_RADIUS,
   },
 });

@@ -2,7 +2,7 @@ import { signInUser } from "@/api/auth";
 import { getLoginErrorMessage } from "@/api/firebase-errors";
 import { userThemeAtom } from "@/atoms/user-theme-atom";
 import PasswordInputField from "@/components/auth/password-input-field";
-import { SURFACE_BORDER_RADIUS } from "@/constants/constants";
+import { BORDER_RADIUS, SURFACE_BORDER_RADIUS } from "@/constants/constants";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Image } from "expo-image";
 import { Link, router } from "expo-router";
@@ -245,6 +245,7 @@ const s = StyleSheet.create({
   },
   button: {
     width: WIDTH * 0.5,
+    borderRadius: BORDER_RADIUS,
   },
   errorContainer: {
     height: 30,
