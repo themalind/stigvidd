@@ -6,8 +6,8 @@ import { BlurView } from "expo-blur";
 import { router } from "expo-router";
 import { useState } from "react";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
-import { Dimensions, StyleSheet, View } from "react-native";
-import { Button, Modal, Portal, Text, useTheme } from "react-native-paper";
+import { Dimensions, Pressable, StyleSheet, View } from "react-native";
+import { Button, Icon, Modal, Portal, Text, useTheme } from "react-native-paper";
 import { z } from "zod";
 import AlertDialog from "../alert-dialog";
 import PasswordInputField from "./password-input-field";
@@ -68,7 +68,12 @@ export default function DeleteAccountModal({ visible, onDismiss }: Props) {
         onDismiss={isDeleting ? undefined : onDismiss} // Disables close on outsideclick while deleting
       >
         <View style={{ gap: 20, padding: 20 }}>
-          <Text style={s.textTitle}>Avsluta konto </Text>
+          <View style={s.titleDismissView}>
+            <Text style={s.textTitle}>Avsluta konto </Text>
+            <Pressable hitSlop={12} onPress={onDismiss}>
+              <Icon source="close" size={24} />
+            </Pressable>
+          </View>
           <Text>Skriv in ditt lösenord</Text>
           <View style={s.textInputContainer}>
             <Controller
@@ -134,6 +139,10 @@ const s = StyleSheet.create({
     borderRadius: BORDER_RADIUS,
     padding: 10,
     alignSelf: "center",
+  },
+  titleDismissView: {
+    justifyContent: "space-between",
+    flexDirection: "row",
   },
   textInputContainer: {
     alignItems: "center",

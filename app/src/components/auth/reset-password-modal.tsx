@@ -7,8 +7,8 @@ import { BlurView } from "expo-blur";
 import { useSetAtom } from "jotai";
 import { useState } from "react";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
-import { Dimensions, StyleSheet, View } from "react-native";
-import { Button, Modal, Portal, Text, TextInput, useTheme } from "react-native-paper";
+import { Dimensions, Pressable, StyleSheet, View } from "react-native";
+import { Button, Icon, Modal, Portal, Text, TextInput, useTheme } from "react-native-paper";
 import { z } from "zod";
 
 interface Props {
@@ -58,7 +58,12 @@ export default function ResetPasswordModal({ visible, onDismiss }: Props) {
         onDismiss={onDismiss}
       >
         <View style={{ gap: 20, padding: 20 }}>
-          <Text style={s.textTitle}>Återställ ditt lösenord</Text>
+          <View style={s.titleDismissView}>
+            <Text style={s.textTitle}>Återställ ditt lösenord </Text>
+            <Pressable hitSlop={12} onPress={onDismiss}>
+              <Icon source="close" size={24} />
+            </Pressable>
+          </View>
           <View style={s.textInputContainer}>
             <Controller
               control={control}
@@ -115,6 +120,10 @@ const s = StyleSheet.create({
     borderRadius: BORDER_RADIUS,
     padding: 10,
     alignSelf: "center",
+  },
+  titleDismissView: {
+    justifyContent: "space-between",
+    flexDirection: "row",
   },
   textInputContainer: {
     alignItems: "center",
