@@ -63,6 +63,14 @@ public class StigViddWebApplicationFactory<TProgram>
                 .ReturnsAsync(Result.Ok(true));
 
             services.AddSingleton(mockWebDavService.Object);
+
+            // Prevent real Firebase Admin calls during integration tests
+            var mockFirebaseAuthService = new Mock<IFirebaseAuthService>();
+            mockFirebaseAuthService
+                .Setup(x => x.DeleteUserAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .Returns(Task.CompletedTask);
+
+            services.AddSingleton(mockFirebaseAuthService.Object);
         });
 
         builder.UseEnvironment("Development");

@@ -1,6 +1,6 @@
 import { getReviewsByTrailIdentifier } from "@/api/reviews";
 import { authStateAtom } from "@/atoms/auth-atoms";
-import { SURFACE_BORDER_RADIUS } from "@/constants/constants";
+import { BORDER_RADIUS, SURFACE_BORDER_RADIUS } from "@/constants/constants";
 import { Review, Trail } from "@/data/types";
 import { Ionicons } from "@expo/vector-icons";
 import { useInfiniteQuery } from "@tanstack/react-query";
@@ -103,13 +103,22 @@ export default function TrailReviewsContainer({ trail, surfaceToScrollToRef, onR
             <Text style={{ color: theme.colors.onBackground }}>Det finns inga recensioner här ännu.</Text>
           </Surface>
         ) : (
-          <ReviewSection reviews={reviews} />
+          <>
+            <ReviewSection reviews={reviews} />
+            {(hasNextPage || isFetchingNextPage) && (
+              <Button
+                style={{ borderRadius: BORDER_RADIUS }}
+                mode="elevated"
+                onPress={() => fetchNextPage()}
+                disabled={isFetchingNextPage}
+              >
+                <Text style={{ color: theme.colors.onSurface }}>
+                  {isFetchingNextPage ? "Laddar fler..." : "Ladda fler"}
+                </Text>
+              </Button>
+            )}
+          </>
         )}
-        <Button onPress={() => fetchNextPage()} disabled={!hasNextPage || isFetchingNextPage}>
-          <Text style={{ color: theme.colors.onSurface }}>
-            {isFetchingNextPage ? "Laddar fler..." : hasNextPage ? "Ladda fler" : ""}
-          </Text>
-        </Button>
       </Surface>
       <NotAuthenticatedDialog
         visible={isAuthDialogVisible}

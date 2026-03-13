@@ -2,7 +2,6 @@ using Core.Factories;
 using Core.Services;
 using FluentAssertions;
 using Infrastructure.Data;
-using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -164,17 +163,7 @@ public class HikeServiceTests :TestBase
     public async Task DeleteHikeAsync_ShouldDeleteHike_WhenIdentifiersMatch()
     {
         // Arrange
-        // Not using CreateHikeService() or CreateContextAndSqliteDb() to keep connection open in order to verify deletion.
-        var connection = new SqliteConnection("DataSource=:memory:");
-        connection.Open(); 
-
-        var options = new DbContextOptionsBuilder<StigViddDbContext>()
-            .UseSqlite(connection)
-            .Options;
-
-        var context = new StigViddDbContext(options);
-        context.Database.EnsureCreated();
-        Utilities.InitializeDbForTests(context);
+        var options = CreateSeededOptions();
 
         var mockContextFactory = new Mock<IDbContextFactory<StigViddDbContext>>();
         mockContextFactory

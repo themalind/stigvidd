@@ -8,7 +8,7 @@ interface AlertDialogProps {
   onDismiss: () => void;
   title: string;
   infoText: string[];
-  backgroundColor?: string;
+  backgroundColor: string;
   textColor?: string;
   confirmText?: string;
   onConfirm?: () => void;

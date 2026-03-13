@@ -2,18 +2,19 @@ import { signInUser } from "@/api/auth";
 import { getLoginErrorMessage } from "@/api/firebase-errors";
 import { userThemeAtom } from "@/atoms/user-theme-atom";
 import PasswordInputField from "@/components/auth/password-input-field";
-import { SURFACE_BORDER_RADIUS } from "@/constants/constants";
+import { BORDER_RADIUS, SURFACE_BORDER_RADIUS } from "@/constants/constants";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Image } from "expo-image";
 import { Link, router } from "expo-router";
 import { useAtom } from "jotai";
 import { useState } from "react";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
-import { Appearance, Dimensions, ImageBackground, StyleSheet, Text, View } from "react-native";
+import { Appearance, Dimensions, ImageBackground, Pressable, StyleSheet, Text, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { Button, Surface, TextInput, useTheme } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { z } from "zod";
+import ResetPasswordModal from "./reset-password-modal";
 
 const HEIGHT = Dimensions.get("screen").height;
 const WIDTH = Dimensions.get("screen").width;
@@ -31,6 +32,7 @@ type FormFields = z.infer<typeof loginFields>;
 
 export default function LoginScreen() {
   const theme = useTheme();
+  const [visible, setVisible] = useState(false);
   const [firebaseError, setFirebaseError] = useState("");
   const [userTheme] = useAtom(userThemeAtom);
   const colorScheme = Appearance.getColorScheme();
@@ -151,6 +153,19 @@ export default function LoginScreen() {
                 {isSubmitting ? "Loggar in..." : "Logga in"}
               </Button>
               {firebaseError && <Text style={[s.errorText, { color: theme.colors.error }]}>{firebaseError}</Text>}
+              <Pressable style={{ flexDirection: "row" }} hitSlop={12} onPress={() => setVisible(true)}>
+                <Text style={[s.linkText, { color: theme.colors.onSurface }]}>Glömt ditt lösenord? </Text>
+                <Text
+                  style={[
+                    s.linkText,
+                    {
+                      color: theme.colors.tertiary,
+                    },
+                  ]}
+                >
+                  Återställ här.
+                </Text>
+              </Pressable>
               <Link style={[s.linkText, { color: theme.colors.onSurface }]} replace href="./register">
                 <Text>Inte medlem? </Text>
                 <Text
@@ -165,6 +180,7 @@ export default function LoginScreen() {
           </Surface>
         </ImageBackground>
       </KeyboardAwareScrollView>
+      <ResetPasswordModal visible={visible} onDismiss={() => setVisible(false)} />
     </SafeAreaView>
   );
 }
@@ -229,6 +245,7 @@ const s = StyleSheet.create({
   },
   button: {
     width: WIDTH * 0.5,
+    borderRadius: BORDER_RADIUS,
   },
   errorContainer: {
     height: 30,

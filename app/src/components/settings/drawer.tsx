@@ -15,7 +15,9 @@ interface Props {
   visible: boolean;
   onDismiss: () => void;
 }
+
 const width = Dimensions.get("screen").width;
+
 export default function SettingsDrawer({ visible, onDismiss }: Props) {
   const [authState] = useAtom(authStateAtom);
   const { userTheme, toggleTheme } = useThemeToggle();
