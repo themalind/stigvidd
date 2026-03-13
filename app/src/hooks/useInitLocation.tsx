@@ -8,27 +8,27 @@ export function useInitLocation() {
   const setUserLocation = useSetAtom(userLocationAtom);
   const setLocationResolved = useSetAtom(locationResolvedAtom);
 
-  const fetchLocation = async () => {
-    try {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status === "granted") {
-        const loc = await Location.getCurrentPositionAsync({});
-        setUserLocation({
-          latitude: loc.coords.latitude,
-          longitude: loc.coords.longitude,
-        });
-      } else {
-        // Rensa positionen om tillstånd saknas
-        setUserLocation(null);
-      }
-    } catch (e) {
-      console.log("Kunde inte hämta position:", e);
-    } finally {
-      setLocationResolved(true);
-    }
-  };
-
   useEffect(() => {
+    const fetchLocation = async () => {
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status === "granted") {
+          const loc = await Location.getCurrentPositionAsync({});
+          setUserLocation({
+            latitude: loc.coords.latitude,
+            longitude: loc.coords.longitude,
+          });
+        } else {
+          // Rensa positionen om tillstånd saknas
+          setUserLocation(null);
+        }
+      } catch (e) {
+        console.log("Kunde inte hämta position:", e);
+      } finally {
+        setLocationResolved(true);
+      }
+    };
+
     fetchLocation();
 
     // Lyssna på när appen kommer tillbaka i förgrunden
@@ -39,5 +39,5 @@ export function useInitLocation() {
     });
 
     return () => sub.remove();
-  }, []);
+  }, [setUserLocation, setLocationResolved]);
 }
