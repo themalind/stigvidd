@@ -9,6 +9,24 @@ export type TrailShortInfoResponse = {
   startLongitude?: number;
 };
 
+export type TrailResponse = {
+  identifier: string;
+  name: string;
+  trailLenght: number;
+  classification: number;
+  accessibility: boolean;
+  accessibilityInfo: string;
+  trailSymbol: string;
+  trailSymbolImage: string;
+  description: string;
+  fullDescription: string;
+  coordinates?: string;
+  tags: string;
+  createdBy: string;
+  isVerified: boolean;
+  city: string;
+};
+
 export type TableColumn<T> = {
   label: string;
   key: keyof T;
