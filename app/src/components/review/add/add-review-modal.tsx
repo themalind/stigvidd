@@ -1,8 +1,8 @@
 import { BORDER_RADIUS } from "@/constants/constants";
 import { BlurView } from "expo-blur";
-import { Dimensions, StyleSheet, View } from "react-native";
+import { Dimensions, Pressable, StyleSheet, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
-import { Modal, Portal, Text, useTheme } from "react-native-paper";
+import { Icon, Modal, Portal, Text, useTheme } from "react-native-paper";
 import AddReviewForm from "./add-review-form";
 const { height } = Dimensions.get("screen");
 
@@ -30,9 +30,14 @@ export default function AddReview({ visible, onDismiss, trailIdentifier, trailNa
           extraScrollHeight={20}
           contentContainerStyle={s.scrollContent}
         >
-          <View style={s.topTextContainer}>
-            <Text style={s.title}>Skapa en recension</Text>
-            <Text style={s.text}>{`${trailName} ${trailLenght} km`}</Text>
+          <View style={s.titleAndCloseContainer}>
+            <View style={s.topTextContainer}>
+              <Text style={s.title}>Skapa en recension</Text>
+              <Text style={s.text}>{`${trailName} ${trailLenght} km`}</Text>
+            </View>
+            <Pressable hitSlop={12} onPress={onDismiss}>
+              <Icon size={30} source="close" />
+            </Pressable>
           </View>
           <AddReviewForm trailIdentifier={trailIdentifier} onSuccess={onDismiss} />
         </KeyboardAwareScrollView>
@@ -46,9 +51,14 @@ const s = StyleSheet.create({
     borderRadius: BORDER_RADIUS,
     padding: 10,
   },
+  titleAndCloseContainer: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    padding: 10,
+  },
   topTextContainer: {
     gap: 10,
-    padding: 10,
   },
   scrollContent: {
     flexGrow: 1,

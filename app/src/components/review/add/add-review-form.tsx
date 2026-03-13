@@ -1,6 +1,6 @@
-import { useCreateReview } from "@/hooks/review/useCreateReview";
-import { BORDER_RADIUS } from "@/constants/constants";
 import { showErrorAtom } from "@/atoms/snackbar-atoms";
+import { BORDER_RADIUS } from "@/constants/constants";
+import { useCreateReview } from "@/hooks/review/useCreateReview";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useSetAtom } from "jotai";
@@ -209,6 +209,7 @@ const s = StyleSheet.create({
   },
   rowGap: {
     flexDirection: "row",
+    alignItems: "center",
     gap: 10,
   },
   gap: {
