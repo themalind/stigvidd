@@ -4,7 +4,6 @@ using Core.Interfaces;
 using Core.Services;
 using FluentAssertions;
 using Infrastructure.Data;
-using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -540,23 +539,7 @@ public class UserServiceTests : TestBase
         verifyContext.Users.Any(u => u.Identifier == userToDelete).Should().BeTrue();
     }
 
-    private DbContextOptions<StigViddDbContext> CreateSeededOptions()
-    {
-        var connection = new SqliteConnection("DataSource=:memory:");
-        connection.Open();
-
-        var options = new DbContextOptionsBuilder<StigViddDbContext>()
-            .UseSqlite(connection)
-            .Options;
-
-        var seedContext = new StigViddDbContext(options);
-        seedContext.Database.EnsureCreated();
-        Utilities.InitializeDbForTests(seedContext);
-
-        return options;
-    }
-
-    private UserService CreateUserServiceWithOptions(
+private UserService CreateUserServiceWithOptions(
         DbContextOptions<StigViddDbContext> options,
         IFirebaseAuthService firebaseAuthService)
     {
