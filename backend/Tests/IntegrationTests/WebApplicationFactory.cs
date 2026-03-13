@@ -1,4 +1,6 @@
-﻿using Infrastructure.Data;
+﻿using Core;
+using Core.Interfaces;
+using Infrastructure.Data;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -7,6 +9,7 @@ using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
+using Moq;
 using System.Data.Common;
 using System.Net.Http.Headers;
 
@@ -49,6 +52,25 @@ public class StigViddWebApplicationFactory<TProgram>
             services.AddAuthentication("Test")
                 .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(
                     "Test", options => { });
+
+            // Prevent real WebDAV network calls during integration tests
+            var mockWebDavService = new Mock<IWebDavService>();
+            mockWebDavService
+                .Setup(x => x.UploadFileAsync(It.IsAny<Stream>(), It.IsAny<string>()))
+                .ReturnsAsync(Result.Ok<string?>("mock/uploaded-file.jpg"));
+            mockWebDavService
+                .Setup(x => x.DeleteFileAsync(It.IsAny<string>()))
+                .ReturnsAsync(Result.Ok(true));
+
+            services.AddSingleton(mockWebDavService.Object);
+
+            // Prevent real Firebase Admin calls during integration tests
+            var mockFirebaseAuthService = new Mock<IFirebaseAuthService>();
+            mockFirebaseAuthService
+                .Setup(x => x.DeleteUserAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .Returns(Task.CompletedTask);
+
+            services.AddSingleton(mockFirebaseAuthService.Object);
         });
 
         builder.UseEnvironment("Development");

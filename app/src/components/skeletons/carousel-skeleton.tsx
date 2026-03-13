@@ -1,4 +1,5 @@
-import React, { useEffect } from "react";
+import { BORDER_RADIUS } from "@/constants/constants";
+import { useEffect } from "react";
 import { Dimensions, StyleSheet, View } from "react-native";
 import { useTheme } from "react-native-paper";
 import Animated, { useAnimatedStyle, useSharedValue, withRepeat, withTiming } from "react-native-reanimated";
@@ -20,7 +21,9 @@ function ShimmerBlock({ style }: { style?: any }) {
   }));
 
   return (
-    <Animated.View style={[{ backgroundColor: theme.colors.surfaceVariant, borderRadius: 8 }, style, animatedStyle]} />
+    <Animated.View
+      style={[{ backgroundColor: theme.colors.surfaceVariant, borderRadius: BORDER_RADIUS }, style, animatedStyle]}
+    />
   );
 }
 
@@ -31,14 +34,14 @@ export default function CarouselSkeleton() {
         style={{
           width: CAROUSEL_ITEM_WIDTH,
           height: CAROUSEL_ITEM_HEIGHT,
-          borderRadius: 8,
+          borderRadius: BORDER_RADIUS,
         }}
       />
       <ShimmerBlock
         style={{
           width: CAROUSEL_ITEM_WIDTH * 0.4,
           height: CAROUSEL_ITEM_HEIGHT,
-          borderRadius: 8,
+          borderRadius: BORDER_RADIUS,
         }}
       />
     </View>

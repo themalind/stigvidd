@@ -1,4 +1,5 @@
 import { userThemeAtom } from "@/atoms/user-theme-atom";
+import { BORDER_RADIUS } from "@/constants/constants";
 import { TrailShortInfoResponse } from "@/data/types";
 import { classificationParser } from "@/utils/classification-parser";
 import { getDifficultyIcon } from "@/utils/getDifficultyIcon";
@@ -68,7 +69,7 @@ export default memo(TrailItem);
 const s = StyleSheet.create({
   trailCard: {
     flex: 1,
-    borderRadius: 10,
+    borderRadius: BORDER_RADIUS,
     padding: 10,
     gap: 5,
   },

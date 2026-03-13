@@ -1,3 +1,4 @@
+import { BORDER_RADIUS } from "@/constants/constants";
 import { BlurView } from "expo-blur";
 import { Dimensions, StyleSheet, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
@@ -42,7 +43,7 @@ export default function AddReview({ visible, onDismiss, trailIdentifier, trailNa
 const s = StyleSheet.create({
   modalContainerStyle: {
     height: height * 0.8,
-    borderRadius: 10,
+    borderRadius: BORDER_RADIUS,
     padding: 10,
   },
   topTextContainer: {

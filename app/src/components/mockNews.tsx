@@ -1,3 +1,4 @@
+import { BORDER_RADIUS } from "@/constants/constants";
 import { useState } from "react";
 import { Dimensions, NativeScrollEvent, NativeSyntheticEvent, ScrollView, StyleSheet, View } from "react-native";
 import { Button, Card, Text, useTheme } from "react-native-paper";
@@ -82,7 +83,7 @@ export default function MockNews() {
           <Card
             key={newsItem.date}
             style={{
-              borderRadius: 10,
+              borderRadius: BORDER_RADIUS,
               width: CARD_WIDTH,
               backgroundColor: theme.colors.surface,
               marginRight: index < news.length - 1 ? CARD_SPACING : 0,
@@ -123,7 +124,7 @@ const s = StyleSheet.create({
   dot: {
     width: 8,
     height: 8,
-    borderRadius: 4,
+    borderRadius: BORDER_RADIUS,
   },
   title: {
     fontWeight: "bold",
@@ -138,10 +139,12 @@ const s = StyleSheet.create({
   },
   cardCover: {
     height: 200,
+    borderRadius: BORDER_RADIUS,
   },
   button: {
     position: "absolute",
     bottom: 8,
     right: 8,
+    borderRadius: BORDER_RADIUS,
   },
 });

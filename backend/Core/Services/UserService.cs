@@ -14,18 +14,21 @@ public class UserService : IUserService
 {
     private readonly IDbContextFactory<StigViddDbContext> _context;
     private readonly ILogger<UserService> _logger;
+    private readonly IFirebaseAuthService _firebaseAuthService;
     private readonly UserFavoritesResponseFactory _favoritesResponseFactory;
     private readonly UserWishlistResponseFactory _wishlistResponseFactory;
     private readonly UserResponseFactory _userResponseFactory;
 
     public UserService(IDbContextFactory<StigViddDbContext> context,
     ILogger<UserService> logger,
+    IFirebaseAuthService firebaseAuthService,
     UserFavoritesResponseFactory favoritesFactory,
     UserWishlistResponseFactory wishlistFactory,
     UserResponseFactory userResponseFactory)
     {
         _context = context;
         _logger = logger;
+        _firebaseAuthService = firebaseAuthService;
         _favoritesResponseFactory = favoritesFactory;
         _wishlistResponseFactory = wishlistFactory;
         _userResponseFactory = userResponseFactory;
@@ -322,5 +325,46 @@ public class UserService : IUserService
         }
 
         return Result.Ok<UserResponse?>(user);
+    }
+
+    public async Task<Result> DeleteUserAsync(string identifier, CancellationToken ctoken)
+    {
+        using var context = await _context.CreateDbContextAsync(ctoken);
+
+        var user = await context.Users
+            .FirstOrDefaultAsync(user => user.Identifier == identifier, ctoken);
+
+        if (user is null)
+        {
+            _logger.LogWarning("User with identifier {identifier} not found.", identifier);
+            return Result.Fail(new Message(404, $"User with identifier {identifier} not found."));
+        }
+
+        // Wrap in a transaction so the DB deletion is rolled back if Firebase deletion fails.
+        // Both deletions must succeed together — a partial delete would leave the systems out of sync.
+        using var transaction = await context.Database.BeginTransactionAsync(ctoken);
+
+        try
+        {
+            // Stage the DB deletion. SaveChanges writes to the DB but the transaction is not committed yet.
+            context.Users.Remove(user);
+            await context.SaveChangesAsync(ctoken);
+
+            // Delete the Firebase account via Admin SDK.
+            // If this throws, the catch block rolls back the DB deletion.
+            await _firebaseAuthService.DeleteUserAsync(user.FirebaseUid, ctoken);
+
+            // Both deletions succeeded — commit the DB transaction.
+            await transaction.CommitAsync(ctoken);
+            return Result.Ok();
+        }
+        catch (Exception ex)
+        {
+            // Either the DB save or the Firebase deletion failed.
+            // Rolling back ensures the StigVidd user is not left without a Firebase account.
+            await transaction.RollbackAsync(ctoken);
+            _logger.LogError(ex, "Error deleting user with identifier {identifier}", identifier);
+            return Result.Fail(new Message(500, $"Error deleting user with identifier {identifier}"));
+        }
     }
 }

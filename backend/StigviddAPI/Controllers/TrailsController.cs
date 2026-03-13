@@ -8,23 +8,25 @@ namespace StigviddAPI.Controllers;
 
 [ApiController]
 [Route("api/v1/[controller]")]
-public class TrailController : StigViddController
+public class TrailsController : StigViddController
 {
     private readonly ITrailService _trailService;
     private readonly IUserService _userService;
-    private readonly ILogger<TrailController> _logger;
+    private readonly ILogger<TrailsController> _logger;
 
-    public TrailController(ITrailService trailService, IUserService userService, ILogger<TrailController> logger)
+    public TrailsController(ITrailService trailService, IUserService userService, ILogger<TrailsController> logger)
     {
         _trailService = trailService;
         _userService = userService;
         _logger = logger;
     }
 
-    [Route("{identifier}")]
-    public async Task<ActionResult<TrailResponse?>> GetTrailByIdentifierAsync(string identifier, CancellationToken ctoken)
+    [HttpGet("{identifier}")]
+    public async Task<ActionResult<TrailResponse?>> GetTrailByIdentifierAsync(
+        string identifier, 
+        CancellationToken ctoken)
     {
-        var result = await _trailService.GetTrailByIdentifierAsync(identifier, ctoken);
+        var result = await _trailService.GetTrailByIdentifierWithoutCoordinatesAsync(identifier, ctoken);
 
         if (!result.Success && result.Message != null)
         {
@@ -37,8 +39,7 @@ public class TrailController : StigViddController
         return Ok(result.Value);
     }
 
-    [HttpGet]
-    [Route("popular")]
+    [HttpGet("popular")]
     public async Task<ActionResult<IReadOnlyCollection<TrailOverviewResponse?>>> GetPopularTrailsAsync(
         [FromQuery] double? latitude,
         [FromQuery] double? longitude,
@@ -57,8 +58,7 @@ public class TrailController : StigViddController
         return Ok(result.Value);
     }
 
-    [HttpGet]
-    [Route("")]
+    [HttpGet("")]
     public async Task<ActionResult<IReadOnlyCollection<TrailShortInfoResponse>>> GetAllTrailsAsync(CancellationToken ctoken)
     {
         var result = await _trailService.GetAllTrailsWithBasicInfoAsync(ctoken);
@@ -67,6 +67,24 @@ public class TrailController : StigViddController
         {
             _logger.LogInformation(
               "GetAllTrailsAsync: Failed to fetch trails.");
+
+            return ToActionResult(result.Message);
+        }
+
+        return Ok(result.Value);
+    }
+
+    [HttpGet("{identifier}/coordinates")]
+    public async Task<ActionResult<CoordinatesResponse?>> GetCoordinatesByTrailIdentifierAsync(
+        string identifier, 
+        CancellationToken ctoken)
+    {
+        var result = await _trailService.GetCoordinatesByTrailIdentifierAsync(identifier, ctoken);
+
+        if (!result.Success && result.Message != null)
+        {
+            _logger.LogInformation(
+              "GetAllCordsByTrailIdentifierAsync: Failed to fetch cords. {identifier}", identifier);
 
             return ToActionResult(result.Message);
         }
@@ -90,7 +108,7 @@ public class TrailController : StigViddController
             return Unauthorized("User not found");
         }
 
-        var result = await _trailService.AddTrailAsync(request, trailSymbolImage, images, ctoken);
+        var result = await _trailService.AddTrailAsync(request, trailSymbolImage, images, userResponse.Identifier, ctoken);
 
         if (!result.Success && result.Message != null)
         {

@@ -65,5 +65,47 @@ public class TrailResponse
             VisitorInformation = visitorInformationResponse
         };
     }
+
+    public static TrailResponse Create(
+       string identifier,
+       string name,
+       decimal trailLenght,
+       int classification,
+       bool accessibility,
+       string accessibilityInfo,
+       string trailSymbol,
+       string trailSymbolImage,
+       string description,
+       string fullDescription,
+       string tags,
+       string createdBy,
+       bool isVerified,
+       string city,
+       IEnumerable<TrailImageResponse>? trailImages,
+       IEnumerable<TrailLinkResponse>? trailLinks,
+       VisitorInformationResponse? visitorInformationResponse)
+
+    {
+        return new TrailResponse
+        {
+            Identifier = identifier,
+            Name = name,
+            TrailLenght = trailLenght,
+            Classification = classification,
+            Accessibility = accessibility,
+            AccessibilityInfo = accessibilityInfo,
+            TrailSymbol = trailSymbol,
+            TrailSymbolImage = trailSymbolImage,
+            Description = description,
+            FullDescription = fullDescription,
+            Tags = tags,
+            CreatedBy = createdBy,
+            IsVerified = isVerified,
+            City = city,
+            TrailImagesResponse = trailImages?.ToList(),
+            TrailLinksResponse = trailLinks?.ToList(),
+            VisitorInformation = visitorInformationResponse
+        };
+    }
 }
 

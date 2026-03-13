@@ -1,11 +1,12 @@
+import { BORDER_RADIUS } from "@/constants/constants";
 import { UserFavoritesTrail, UserWishlistTrail } from "@/data/types";
-import { Entypo, Feather, FontAwesome } from "@expo/vector-icons";
+import { Entypo } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { Divider, Text, useTheme } from "react-native-paper";
-import { Rating } from "../rating";
+import { Rating } from "../review/rating";
 
 interface UserTrailCollectionProps {
   title: string;
@@ -29,10 +30,6 @@ export default function UserTrailCollection({
         <View style={s.icons}>
           {icon}
           <Text style={s.title}>{title}</Text>
-        </View>
-        <View style={s.icons}>
-          <Feather name="filter" size={20} color={theme.colors.onBackground} />
-          <FontAwesome name="sort-amount-desc" size={20} color={theme.colors.onBackground} />
         </View>
       </View>
       <Divider bold={true} />
@@ -137,7 +134,7 @@ const s = StyleSheet.create({
   trailImage: {
     height: 100,
     aspectRatio: 0.7,
-    borderRadius: 10,
+    borderRadius: BORDER_RADIUS,
   },
   fadeGradientBottom: {
     position: "absolute",

@@ -1,3 +1,4 @@
+import { BORDER_RADIUS } from "@/constants/constants";
 import { ReviewImage } from "@/data/types";
 import { Image } from "expo-image";
 import { useState } from "react";
@@ -37,6 +38,6 @@ const s = StyleSheet.create({
   image: {
     height: 100,
     width: 80,
-    borderRadius: 8,
+    borderRadius: BORDER_RADIUS,
   },
 });

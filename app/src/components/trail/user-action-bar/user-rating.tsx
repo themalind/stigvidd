@@ -1,5 +1,5 @@
 import { authStateAtom } from "@/atoms/auth-atoms";
-import NotAuthenticatedDialog from "@/components/not-authenticated-msg-dialog";
+import NotAuthenticatedDialog from "@/components/auth/not-authenticated-msg-dialog";
 import AddReview from "@/components/review/add/add-review-modal";
 import { Trail } from "@/data/types";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
@@ -36,14 +36,8 @@ export default function UserRating({ trail }: UserRatingProps) {
   return (
     <View style={s.container}>
       <TouchableOpacity onPress={onPress} style={s.touchable}>
-        <FontAwesome
-          name="thumbs-o-up"
-          size={30}
-          color={theme.colors.onPrimary}
-        />
-        <Text style={[s.text, { color: theme.colors.onPrimary }]}>
-          Betygsätt
-        </Text>
+        <FontAwesome name="thumbs-o-up" size={30} color={theme.colors.onPrimary} />
+        <Text style={[s.text, { color: theme.colors.onPrimary }]}>Betygsätt</Text>
       </TouchableOpacity>
       <AddReview
         trailIdentifier={trail.identifier}

@@ -1,37 +1,18 @@
 ﻿using Core.Interfaces;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using System.Net;
 using WebDav;
 
 namespace Core.Services;
 
 public class WebDavService : IWebDavService
 {
-    // Skapa klass för dessa?
-    private readonly string _baseUrl;
-    private readonly string _userName;
-    private readonly string _password;
     private readonly ILogger<WebDavService> _logger;
+    private readonly Func<IWebDavClient> _clientFactory;
 
-    public WebDavService(IConfiguration configuration, ILogger<WebDavService> logger)
+    public WebDavService(ILogger<WebDavService> logger, Func<IWebDavClient> clientFactory)
     {
-
-        _baseUrl = configuration["WebDav:BaseUrl"] ?? throw new InvalidOperationException("WebDav:BaseUrl configuration is missing");
-        _userName = configuration["WebDav:Username"] ?? throw new InvalidOperationException("WebDav:Username configuration is missing");
-        _password = configuration["WebDav:Password"] ?? throw new InvalidOperationException("WebDav:Password configuration is missing");
         _logger = logger;
-    }
-
-    private IWebDavClient CreateClient()
-    {
-        var clientParams = new WebDavClientParams
-        {
-            BaseAddress = new Uri(_baseUrl),
-            Credentials = new NetworkCredential(_userName, _password)
-        };
-
-        return new WebDavClient(clientParams);
+        _clientFactory = clientFactory;
     }
 
     // https://github.com/skazantsev/WebDavClient/tree/main/src/WebDav.Client/Request
@@ -47,14 +28,15 @@ public class WebDavService : IWebDavService
 
         try
         {
-            using var client = CreateClient();
+            using var client = _clientFactory();
+
             var result = await client.PutFile(remotePath, stream);
 
             if (!result.IsSuccessful)
             {
                 _logger.LogError("UploadFileAsync: Could not upload image {remotePath}", remotePath);
 
-                Result.Fail<string?>(new Message(result.StatusCode, $"UploadFileAsync: Could not upload files. {result.StatusCode}"));
+                return Result.Fail<string?>(new Message(result.StatusCode, $"UploadFileAsync: Could not upload files. {result.StatusCode}"));
             }
 
             return Result.Ok<string?>($"{remotePath}");
@@ -71,7 +53,7 @@ public class WebDavService : IWebDavService
     {
         try
         {
-            using var client = CreateClient();
+            using var client = _clientFactory();
 
             var result = await client.Delete(relativePath); // relativePath ex "reviews/guid.jpeg"
 
@@ -79,7 +61,7 @@ public class WebDavService : IWebDavService
             {
                 _logger.LogError("DeleteFileAsync: Could not delete file with path: {relativePath}", relativePath);
 
-                Result.Fail<bool>(new Message(result.StatusCode, $"DeleteFileAsync: Could not delete file"));
+                return Result.Fail<bool>(new Message(result.StatusCode, $"DeleteFileAsync: Could not delete file"));
             }
 
             return Result.Ok(result.IsSuccessful);
@@ -93,7 +75,7 @@ public class WebDavService : IWebDavService
 
     public async Task EnsureDirectoryExistsAsync(string directoryPath)
     {
-        using var client = CreateClient();
+        using var client = _clientFactory();
 
         var result = await client.Mkcol(directoryPath);
 

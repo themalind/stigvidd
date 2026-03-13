@@ -1,3 +1,4 @@
+import { BORDER_RADIUS } from "@/constants/constants";
 import { TrailOverview } from "@/data/types";
 import { Image as ExpoImage } from "expo-image";
 import { router } from "expo-router";
@@ -46,7 +47,7 @@ function ImageCarouselTileInner({
   const imageSource =
     item.trailImagesResponse && item.trailImagesResponse.length > 0
       ? item.trailImagesResponse[0].imageUrl
-      : require("../assets/images/noImage.png");
+      : require("../../assets/images/noImage.png");
 
   const handlePress = () => {
     if (onPress) {
@@ -79,7 +80,7 @@ function ImageCarouselTileInner({
           style={{
             width: imageSize,
             height: imageHeight,
-            borderRadius: 8,
+            borderRadius: BORDER_RADIUS,
           }}
           contentFit="cover"
           cachePolicy="disk"
@@ -113,7 +114,7 @@ const s = StyleSheet.create({
     fontSize: 15,
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 6,
+    borderRadius: BORDER_RADIUS,
   },
   tile: {
     justifyContent: "center",

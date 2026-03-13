@@ -2,7 +2,7 @@ import { ApiError } from "@/api/users";
 import { authStateAtom } from "@/atoms/auth-atoms";
 import { showErrorAtom, showWarningAtom } from "@/atoms/snackbar-atoms";
 import { addToFavoritesAtom, removeFromFavoritesAtom, userFavoritesAtom } from "@/atoms/user-atoms";
-import NotAuthenticatedDialog from "@/components/not-authenticated-msg-dialog";
+import NotAuthenticatedDialog from "@/components/auth/not-authenticated-msg-dialog";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { useState } from "react";

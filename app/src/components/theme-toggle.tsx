@@ -1,24 +1,11 @@
-import { userThemeAtom } from "@/atoms/user-theme-atom";
+import { useThemeToggle } from "@/hooks/useThemeToggle";
 import { MaterialIcons } from "@expo/vector-icons";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useAtom } from "jotai";
 import { Pressable } from "react-native";
 import { useTheme } from "react-native-paper";
 
 export default function ThemeToggle() {
-  const [userTheme, setUserTheme] = useAtom(userThemeAtom);
+  const { userTheme, toggleTheme } = useThemeToggle();
   const theme = useTheme();
-
-  const toggleTheme = async () => {
-    const newTheme = userTheme === "light" ? "dark" : "light";
-    setUserTheme(newTheme);
-
-    try {
-      await AsyncStorage.setItem("my-theme", newTheme);
-    } catch (e) {
-      console.log(e);
-    }
-  };
 
   return (
     <Pressable onPress={toggleTheme}>

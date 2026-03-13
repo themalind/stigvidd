@@ -1,6 +1,7 @@
 import { getAllHikesByUserId } from "@/api/hikes";
 import { authStateAtom } from "@/atoms/auth-atoms";
 import { stigviddUserAtom } from "@/atoms/user-atoms";
+import { BORDER_RADIUS } from "@/constants/constants";
 import FormattedTime from "@/utils/format-time-from-ms";
 import { useQuery } from "@tanstack/react-query";
 import { Redirect } from "expo-router";
@@ -68,7 +69,7 @@ const s = StyleSheet.create({
     gap: 10,
   },
   hike: {
-    borderRadius: 10,
+    borderRadius: BORDER_RADIUS,
     padding: 10,
     gap: 4,
   },

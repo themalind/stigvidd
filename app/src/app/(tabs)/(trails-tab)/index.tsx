@@ -1,9 +1,9 @@
-import TrailCreator from "@/components/trail/trail-creator/trail-creator";
 import { userLocationAtom } from "@/atoms/location-atoms";
 import { userThemeAtom } from "@/atoms/user-theme-atom";
 import LoadingIndicator from "@/components/loading-indicator";
 import { TrailFilterModal } from "@/components/trail/trail-list/trail-filter-modal";
 import TrailItem from "@/components/trail/trail-list/trail-item";
+import { BORDER_RADIUS } from "@/constants/constants";
 import { TrailShortInfoResponse } from "@/data/types";
 import { useTrailFilters } from "@/hooks/trail/useTrailFilters";
 import { useTrails } from "@/hooks/trail/useTrails";
@@ -170,7 +170,7 @@ const s = StyleSheet.create({
   retryButton: {
     paddingHorizontal: 20,
     paddingVertical: 10,
-    borderRadius: 8,
+    borderRadius: BORDER_RADIUS,
   },
   hikers: {
     height: 25,
@@ -197,7 +197,7 @@ const s = StyleSheet.create({
     gap: 5,
     padding: 5,
     paddingRight: 10,
-    borderRadius: 8,
+    borderRadius: BORDER_RADIUS,
   },
   filterButtonText: {
     fontWeight: "600",

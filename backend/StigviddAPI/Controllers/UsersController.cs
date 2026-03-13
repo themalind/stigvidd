@@ -10,11 +10,11 @@ namespace StigviddAPI.Controllers;
 [Authorize]
 [ApiController]
 [Route("/api/v1/[controller]")]
-public class UserController : StigViddController
+public class UsersController : StigViddController
 {
     private readonly IUserService _userService;
 
-    public UserController(IUserService userService, ILogger<UserController> logger)
+    public UsersController(IUserService userService, ILogger<UsersController> logger)
     {
         _userService = userService;
     }
@@ -188,6 +188,28 @@ public class UserController : StigViddController
         }
 
         var result = await _userService.RemoveTrailFromUserWishListAsync(userResponse.Identifier, request.TrailIdentifier, ctoken);
+
+        if (!result.Success && result.Message != null)
+        {
+            return ToActionResult(result.Message);
+        }
+
+        return NoContent();
+    }
+
+    [HttpDelete]
+    [Route("delete")]
+    public async Task<ActionResult> DeleteUserAsync(
+      CancellationToken ctoken)
+    {
+        var userResponse = await GetAuthenticatedUserAsync(_userService, ctoken);
+
+        if (userResponse == null)
+        {
+            return Unauthorized("User not found");
+        }
+
+        var result = await _userService.DeleteUserAsync(userResponse.Identifier, ctoken);
 
         if (!result.Success && result.Message != null)
         {

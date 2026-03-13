@@ -1,11 +1,7 @@
-import {
-  CreateStigViddUserCredentials,
-  User,
-  UserFavoritesTrail,
-  UserWishlistTrail,
-} from "@/data/types";
-import { getAuth, getIdToken } from "@firebase/auth";
+import { CreateStigViddUserCredentials, User, UserFavoritesTrail, UserWishlistTrail } from "@/data/types";
+import { getIdToken } from "@firebase/auth";
 import { IP } from "../../ipconfig";
+import { auth } from "../../firebase-config";
 
 export class ApiError extends Error {
   status?: number;
@@ -18,14 +14,10 @@ export class ApiError extends Error {
 }
 
 export async function getUserToken(): Promise<string | null> {
-  const auth = getAuth();
   return auth.currentUser ? await getIdToken(auth.currentUser) : null;
 }
 
-export async function createStigViddUser({
-  email,
-  nickname,
-}: CreateStigViddUserCredentials): Promise<User> {
+export async function createStigViddUser({ email, nickname }: CreateStigViddUserCredentials): Promise<User> {
   const token = await getUserToken();
 
   if (!token) {
@@ -33,7 +25,7 @@ export async function createStigViddUser({
   }
 
   try {
-    const response = await fetch(`http://${IP}/api/v1/user/create`, {
+    const response = await fetch(`http://${IP}/api/v1/users/create`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -64,7 +56,7 @@ export async function getStigViddUser(): Promise<User> {
   }
 
   try {
-    const response = await fetch(`http://${IP}/api/v1/user`, {
+    const response = await fetch(`http://${IP}/api/v1/users`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -91,7 +83,7 @@ export async function getUserFavorites(): Promise<UserFavoritesTrail[]> {
   }
 
   try {
-    const response = await fetch(`http://${IP}/api/v1/user/favorites`, {
+    const response = await fetch(`http://${IP}/api/v1/users/favorites`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -118,7 +110,7 @@ export async function getUserWishlist(): Promise<UserWishlistTrail[]> {
   }
 
   try {
-    const response = await fetch("http://" + IP + `/api/v1/user/wishlist`, {
+    const response = await fetch("http://" + IP + `/api/v1/users/wishlist`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -137,9 +129,7 @@ export async function getUserWishlist(): Promise<UserWishlistTrail[]> {
   }
 }
 
-export async function addToUserFavorite(
-  trailIdentifier: string,
-): Promise<UserFavoritesTrail> {
+export async function addToUserFavorite(trailIdentifier: string): Promise<UserFavoritesTrail> {
   const token = await getUserToken();
 
   if (!token) {
@@ -147,7 +137,7 @@ export async function addToUserFavorite(
   }
 
   try {
-    const response = await fetch(`http://${IP}/api/v1/user/favorites`, {
+    const response = await fetch(`http://${IP}/api/v1/users/favorites`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -170,9 +160,7 @@ export async function addToUserFavorite(
   }
 }
 
-export async function addToUserWishlist(
-  trailIdentifier: string,
-): Promise<UserFavoritesTrail> {
+export async function addToUserWishlist(trailIdentifier: string): Promise<UserFavoritesTrail> {
   const token = await getUserToken();
 
   if (!token) {
@@ -180,7 +168,7 @@ export async function addToUserWishlist(
   }
 
   try {
-    const response = await fetch(`http://${IP}/api/v1/user/wishlist`, {
+    const response = await fetch(`http://${IP}/api/v1/users/wishlist`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -202,9 +190,7 @@ export async function addToUserWishlist(
   }
 }
 
-export async function removeUserFavorite(
-  trailIdentifier: string,
-): Promise<void> {
+export async function removeUserFavorite(trailIdentifier: string): Promise<void> {
   const token = await getUserToken();
 
   if (!token) {
@@ -212,16 +198,13 @@ export async function removeUserFavorite(
   }
 
   try {
-    const response = await fetch(
-      `http://${IP}/api/v1/user/favorites/${trailIdentifier}`,
-      {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
+    const response = await fetch(`http://${IP}/api/v1/users/favorites/${trailIdentifier}`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
       },
-    );
+    });
 
     if (!response.ok) {
       throw new ApiError(`HTTP error ${response.status}`, response.status);
@@ -232,9 +215,26 @@ export async function removeUserFavorite(
   }
 }
 
-export async function removeUserWishlist(
-  trailIdentifier: string,
-): Promise<void> {
+export async function deleteStigViddUser(): Promise<void> {
+  const token = await getUserToken();
+
+  if (!token) {
+    throw new Error("User not authenticated");
+  }
+
+  const response = await fetch(`http://${IP}/api/v1/users/delete`, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new ApiError(`HTTP error ${response.status}`, response.status);
+  }
+}
+
+export async function removeUserWishlist(trailIdentifier: string): Promise<void> {
   const token = await getUserToken();
 
   if (!token) {
@@ -242,16 +242,13 @@ export async function removeUserWishlist(
   }
 
   try {
-    const response = await fetch(
-      `http://${IP}/api/v1/user/wishlist/${trailIdentifier}`,
-      {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
+    const response = await fetch(`http://${IP}/api/v1/users/wishlist/${trailIdentifier}`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
       },
-    );
+    });
 
     if (!response.ok) {
       throw new ApiError(`HTTP error ${response.status}`, response.status);

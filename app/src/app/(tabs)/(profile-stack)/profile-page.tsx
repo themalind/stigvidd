@@ -3,6 +3,7 @@ import { authStateAtom } from "@/atoms/auth-atoms";
 import { showErrorAtom } from "@/atoms/snackbar-atoms";
 import { stigviddUserAtom } from "@/atoms/user-atoms";
 import { userThemeAtom } from "@/atoms/user-theme-atom";
+import DeleteAccountModal from "@/components/auth/delete-account-modal";
 import LoadingIndicator from "@/components/loading-indicator";
 import ThemeToggle from "@/components/theme-toggle";
 import ProfileMenuItem from "@/components/user/profile-page/profile-menu-item";
@@ -10,7 +11,7 @@ import { MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { Redirect, router, useFocusEffect } from "expo-router";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { Text, useTheme } from "react-native-paper";
 
@@ -21,6 +22,7 @@ export default function ProfilePageScreen() {
   const userTheme = useAtomValue(userThemeAtom);
   const theme = useTheme();
   const [authState] = useAtom(authStateAtom);
+  const [visible, setVisible] = useState(false);
 
   // Scrolla till toppen när skärmen fokuseras (vid tab-tryck)
   useFocusEffect(
@@ -48,7 +50,7 @@ export default function ProfilePageScreen() {
       console.log(e);
       setError("Kunde inte logga ut.");
     }
-    router.replace("/(tabs)/(home)/index");
+    router.replace("/(tabs)/(auth)/login");
   }
 
   return (
@@ -111,11 +113,12 @@ export default function ProfilePageScreen() {
           <Pressable onPress={handleSignOut}>
             <Text style={s.actionText}>Logga ut</Text>
           </Pressable>
-          <Pressable onPress={handleSignOut}>
+          <Pressable onPress={() => setVisible(true)}>
             <Text style={s.actionText}>Avsluta konto</Text>
           </Pressable>
         </View>
       </View>
+      <DeleteAccountModal visible={visible} onDismiss={() => setVisible(false)} />
     </ScrollView>
   );
 }
@@ -149,7 +152,7 @@ const s = StyleSheet.create({
   themeToggleContainer: {
     justifyContent: "space-around",
     marginLeft: "auto",
-    padding: 20,
+    padding: 5,
   },
   pressableChoicesContainer: {
     flexDirection: "column",

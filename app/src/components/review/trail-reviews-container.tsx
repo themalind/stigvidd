@@ -1,5 +1,6 @@
-import { getReviewsByTrailIdentifier } from "@/api/review";
+import { getReviewsByTrailIdentifier } from "@/api/reviews";
 import { authStateAtom } from "@/atoms/auth-atoms";
+import { BORDER_RADIUS, SURFACE_BORDER_RADIUS } from "@/constants/constants";
 import { Review, Trail } from "@/data/types";
 import { Ionicons } from "@expo/vector-icons";
 import { useInfiniteQuery } from "@tanstack/react-query";
@@ -7,8 +8,8 @@ import { useAtom } from "jotai";
 import React, { RefObject, useEffect, useMemo, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Button, Surface, useTheme } from "react-native-paper";
+import NotAuthenticatedDialog from "../auth/not-authenticated-msg-dialog";
 import LoadingIndicator from "../loading-indicator";
-import NotAuthenticatedDialog from "../not-authenticated-msg-dialog";
 import AddReview from "./add/add-review-modal";
 import ReviewSection from "./review-section ";
 
@@ -102,13 +103,22 @@ export default function TrailReviewsContainer({ trail, surfaceToScrollToRef, onR
             <Text style={{ color: theme.colors.onBackground }}>Det finns inga recensioner här ännu.</Text>
           </Surface>
         ) : (
-          <ReviewSection reviews={reviews} />
+          <>
+            <ReviewSection reviews={reviews} />
+            {(hasNextPage || isFetchingNextPage) && (
+              <Button
+                style={{ borderRadius: BORDER_RADIUS }}
+                mode="elevated"
+                onPress={() => fetchNextPage()}
+                disabled={isFetchingNextPage}
+              >
+                <Text style={{ color: theme.colors.onSurface }}>
+                  {isFetchingNextPage ? "Laddar fler..." : "Ladda fler"}
+                </Text>
+              </Button>
+            )}
+          </>
         )}
-        <Button onPress={() => fetchNextPage()} disabled={!hasNextPage || isFetchingNextPage}>
-          <Text style={{ color: theme.colors.onSurface }}>
-            {isFetchingNextPage ? "Laddar fler..." : hasNextPage ? "Ladda fler" : ""}
-          </Text>
-        </Button>
       </Surface>
       <NotAuthenticatedDialog
         visible={isAuthDialogVisible}
@@ -122,7 +132,7 @@ export default function TrailReviewsContainer({ trail, surfaceToScrollToRef, onR
 const s = StyleSheet.create({
   surface: {
     justifyContent: "center",
-    borderRadius: 10,
+    borderRadius: SURFACE_BORDER_RADIUS,
     padding: 25,
   },
   title: {

@@ -1,7 +1,8 @@
+import { DIALOG_BORDER_RADIUS } from "@/constants/constants";
+import { ActiveHike } from "@/data/types";
 import { StyleSheet } from "react-native";
 import { Dialog, Portal, useTheme } from "react-native-paper";
 import SaveHikeForm from "./save-hike-form";
-import { ActiveHike } from "@/data/types";
 
 interface Props {
   visible: boolean;
@@ -31,6 +32,6 @@ export default function SaveHikeModal({ visible, onDismiss, onConfirm, hike }: P
 
 const s = StyleSheet.create({
   container: {
-    borderRadius: 20,
+    borderRadius: DIALOG_BORDER_RADIUS,
   },
 });

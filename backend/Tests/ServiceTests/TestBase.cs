@@ -21,4 +21,21 @@ public abstract class TestBase
         Utilities.InitializeDbForTests(dbContext);
         return dbContext;
     }
+
+    protected DbContextOptions<StigViddDbContext> CreateSeededOptions()
+    {
+        var connection = new SqliteConnection("DataSource=:memory:");
+        connection.Open();
+
+        var options = new DbContextOptionsBuilder<StigViddDbContext>()
+            .UseSqlite(connection)
+            .Options;
+
+        var seedContext = new StigViddDbContext(options);
+        seedContext.Database.EnsureCreated();
+
+        Utilities.InitializeDbForTests(seedContext);
+
+        return options;
+    }
 }

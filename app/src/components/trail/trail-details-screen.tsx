@@ -1,8 +1,7 @@
-import { getTrailByIdentifier } from "@/api/trails";
-import ImageGallery from "@/components/image-gallery";
-import LoadingIndicator from "@/components/loading-indicator";
-import { Rating } from "@/components/rating";
+import { getCoordinatesByTrailIdentifier, getTrailByIdentifier } from "@/api/trails";
+import { Rating } from "@/components/review/rating";
 import TrailReviewsContainer from "@/components/review/trail-reviews-container";
+import ImageGallery from "@/components/trail/image-gallery";
 import TrailDescription from "@/components/trail/trail-description";
 import TrailInfo from "@/components/trail/trail-info";
 import TrailMap from "@/components/trail/trail-map";
@@ -13,7 +12,11 @@ import { useQuery } from "@tanstack/react-query";
 import { useLocalSearchParams } from "expo-router";
 import { useRef, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { LatLng } from "react-native-maps";
 import { useTheme } from "react-native-paper";
+import LoadingIndicator from "../loading-indicator";
+import MapSkeleton from "../skeletons/map-skeleton";
+import TrailMiscInfo from "./trail-misc-section/trail-misc-accordion";
 
 export default function TrailDetailsScreen() {
   const theme = useTheme();
@@ -36,6 +39,12 @@ export default function TrailDetailsScreen() {
     enabled: !!normalizedIdentifier && typeof normalizedIdentifier === "string",
   });
 
+  const { data: coords } = useQuery({
+    queryKey: ["cords", normalizedIdentifier],
+    queryFn: () => getCoordinatesByTrailIdentifier(normalizedIdentifier),
+    enabled: !!normalizedIdentifier,
+  });
+
   if (isLoading) {
     return <LoadingIndicator />;
   }
@@ -45,7 +54,10 @@ export default function TrailDetailsScreen() {
   }
 
   const images = trail?.trailImagesResponse || [];
-  const coordinates = CoordinateParser({ data: trail!.coordinates, identifier: trail!.identifier });
+  let coordinates: LatLng[] = [];
+  if (coords) {
+    coordinates = CoordinateParser({ data: coords.coordinates, identifier: trail!.identifier });
+  }
 
   const onPressScrollToRatings = () => {
     surfaceToScrollToRef.current?.measure((_x, _y, _width, _height, _pageX, pageY) => {
@@ -77,7 +89,13 @@ export default function TrailDetailsScreen() {
       {trail && <TrailInfo trail={trail} />}
       {trail && <UserBar trail={trail} />}
       {trail?.description && <TrailDescription trail={trail} />}
-      {coordinates.length > 0 && <TrailMap trail={coordinates} />}
+      {coords?.coordinates ? (
+        coordinates.length > 0 && <TrailMap trail={coordinates} />
+      ) : (
+        <MapSkeleton text="Laddar karta..." />
+      )}
+      {trail && <TrailMiscInfo trail={trail} />}
+
       {trail && (
         <TrailReviewsContainer
           trail={trail}

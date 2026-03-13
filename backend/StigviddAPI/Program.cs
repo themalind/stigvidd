@@ -38,7 +38,10 @@ public class Program
             options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
         });
 
-        builder.Services.AddFluentValidationAutoValidation();
+        builder.Services.AddFluentValidationAutoValidation(config =>
+        {
+            config.EnableFormBindingSourceAutomaticValidation = true;
+        });
 
         // Automatically register all validators from the assembly
         builder.Services.AddValidatorsFromAssemblyContaining<AddToUserFavoriteValidator>();        

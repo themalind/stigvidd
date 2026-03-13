@@ -13,13 +13,16 @@ export interface Trail {
   trailSymbolImage: string;
   description: string;
   fullDescription: string;
-  coordinates: string;
   city: string;
   tags?: string;
   isVerified: boolean;
   visitorInformation?: VisitorInformation;
   trailImagesResponse?: TrailImage[];
   trailLinksResponse?: TrailLink[];
+}
+
+export interface Coordinates {
+  coordinates: string;
 }
 
 export interface TrailOverview {
@@ -46,7 +49,7 @@ export interface VisitorInformation {
   gettingThere: string;
   publicTransport: string;
   parking: string;
-  illumination: boolean;
+  illumination: boolean; // byt till isIlluminated
   illuminationText: string;
   maintainedBy: string;
   winterMaintenance: boolean;
@@ -183,7 +186,6 @@ export interface CreateTrailRequest {
   fullDescription: string;
   coordinates: string;
   tags: string[];
-  createdBy: UserName;
   city: string;
   isVerified: boolean;
   images: TrailImage[];
@@ -209,6 +211,11 @@ export interface LoginData {
 export interface AuthResult {
   success: boolean;
   user: firebaseUser | null;
+  error: { code: string; message: string } | null;
+}
+
+export interface UpdateUserResult {
+  success: boolean;
   error: { code: string; message: string } | null;
 }
 
