@@ -1,7 +1,7 @@
 import { IP } from "@/../ipconfig";
 import type { TrailResponse, TrailShortInfoResponse } from "@/types/types";
 
-const BASE_URL = `http://${IP}/api/v1/trail`;
+const BASE_URL = `http://${IP}/api/v1/trails`;
 
 export async function getAllTrails(): Promise<TrailShortInfoResponse[]> {
   try {
