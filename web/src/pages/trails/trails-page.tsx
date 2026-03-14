@@ -16,6 +16,8 @@ export default function TrailsPage() {
     fetchTrails();
   }, []);
 
+  trails.sort((a, b) => a.name.localeCompare(b.name));
+
   return (
     <main>
       <div className="container mx-auto py-10">

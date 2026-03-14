@@ -1,4 +1,8 @@
-import type { TableColumn, TrailShortInfoResponse } from "@/types/types";
+import {
+  CLASSIFICATION,
+  type TableColumn,
+  type TrailShortInfoResponse,
+} from "@/types/types";
 import {
   Table,
   TableBody,
@@ -7,7 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from "../ui/table";
-import Editor from "../editor";
+import TrailEditor from "../trail-editor";
 
 interface Props {
   columns: TableColumn<TrailShortInfoResponse>[];
@@ -21,11 +25,23 @@ export default function TrailsTable({ columns, trails }: Props) {
     columns: TableColumn<TrailShortInfoResponse>[],
     row: TrailShortInfoResponse,
   ) {
-    return columns.map((column) => row[column.key]);
+    return columns.map((column) => {
+      const value = row[column.key];
+
+      if (column.key === "trailLength") {
+        return value + " km";
+      }
+
+      if (column.key === "classification") {
+        return CLASSIFICATION[value as number] ?? "Unknown";
+      }
+
+      return value;
+    });
   }
 
   return (
-    <div className="rounded-md border">
+    <div className="rounded-xs border">
       <Table>
         <TableHeader>
           <TableRow>
@@ -37,13 +53,16 @@ export default function TrailsTable({ columns, trails }: Props) {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {trails.map((trail) => (
-            <TableRow key={trail.identifier}>
+          {trails.map((trail, index) => (
+            <TableRow
+              key={trail.identifier}
+              className={index % 2 === 0 ? "bg-sidebar" : "bg-background"}
+            >
               {getRowValues(columns, trail).map((value, index) => (
                 <TableCell key={index}>{value}</TableCell>
               ))}
               <TableCell className="flex justify-end">
-                <Editor data={trail} selected={true} />
+                <TrailEditor data={trail} selected={true} />
               </TableCell>
             </TableRow>
           ))}

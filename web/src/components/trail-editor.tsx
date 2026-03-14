@@ -1,4 +1,4 @@
-import type { TrailShortInfoResponse } from "@/types/types";
+import { CLASSIFICATION, type TrailShortInfoResponse } from "@/types/types";
 import { Button } from "./ui/button";
 import {
   Sheet,
@@ -23,19 +23,12 @@ import {
 } from "./ui/select";
 import { useEffect, useState } from "react";
 
-const classification = [
-  { label: "Svår", value: 3 },
-  { label: "Medel", value: 2 },
-  { label: "Lätt", value: 1 },
-  { label: "Okänd", value: 0 },
-];
-
 interface Props {
   data: TrailShortInfoResponse;
   selected: boolean;
 }
 
-export default function Editor({ data, selected }: Props) {
+export default function TrailEditor({ data, selected }: Props) {
   const [formData, setFormData] = useState(data);
 
   useEffect(() => {
@@ -94,11 +87,15 @@ export default function Editor({ data, selected }: Props) {
               <SelectContent>
                 <SelectGroup>
                   <SelectLabel>Svårighetsgrad</SelectLabel>
-                  {classification.map((c) => (
-                    <SelectItem key={c.value} value={c.value.toString()}>
-                      {c.label}
-                    </SelectItem>
-                  ))}
+                  {Object.entries(CLASSIFICATION)
+                    .reverse()
+                    .map(([key, value]) => {
+                      return (
+                        <SelectItem key={key} value={key}>
+                          {value}
+                        </SelectItem>
+                      );
+                    })}
                 </SelectGroup>
               </SelectContent>
             </Select>

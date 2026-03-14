@@ -33,3 +33,10 @@ export type TableColumn<T> = {
   type: string;
   width?: number;
 };
+
+export const CLASSIFICATION: Record<number, string> = {
+  0: "Unclassified",
+  1: "Easy",
+  2: "Medium",
+  3: "Hard",
+};
