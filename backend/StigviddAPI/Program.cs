@@ -18,6 +18,12 @@ public class Program
 
         var builder = WebApplication.CreateBuilder(args);
 
+        builder.Host.UseDefaultServiceProvider(options =>
+        {
+            options.ValidateOnBuild = true;
+            options.ValidateScopes = true;
+        });
+
         builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
          .AddJwtBearer(options =>
          {

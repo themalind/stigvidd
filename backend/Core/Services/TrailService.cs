@@ -356,19 +356,19 @@ public class TrailService : ITrailService
         {
             var trailsWithShortInfo = await context.Database
                 .SqlQueryRaw<TrailShortInfoResponse>(
-                    """
-                SELECT
-                    Identifier,
-                    Name,
-                    TrailLength,
-                    Accessibility,
-                    Classification,
-                    City,
-                    CAST(JSON_VALUE(Coordinates, '$[0].latitude') AS decimal(18,10)) AS StartLatitude,
-                    CAST(JSON_VALUE(Coordinates, '$[0].longitude') AS decimal(18,10)) AS StartLongitude
-                FROM Trails 
-                WHERE IsVerified = 1
-                """)
+                   """
+                    SELECT
+                        Identifier,
+                        Name,
+                        TrailLength,
+                        Accessibility,
+                        Classification,
+                        City,
+                        CAST(JSON_VALUE(Coordinates, '$[0].latitude') AS decimal(18,10)) AS StartLatitude,
+                        CAST(JSON_VALUE(Coordinates, '$[0].longitude') AS decimal(18,10)) AS StartLongitude
+                    FROM Trails 
+                    WHERE IsVerified = 1
+                    """)
                 .AsNoTracking()
                 .ToListAsync(ctoken);
 

@@ -7,25 +7,6 @@ namespace Core.Factories;
 
 public class UserFavoritesResponseFactory
 {
-    public IEnumerable<UserFavoritesTrailResponse>? Create(ICollection<Trail>? trails)
-    {
-        return trails?.Select(
-                trail => UserFavoritesTrailResponse.Create(
-                trail.Identifier,
-                trail.Name,
-                trail.TrailLength,
-                trail.Description,
-                trail.Reviews?.Select(r => RatingResponse.Create(
-                     r.Identifier,
-                     r.Rating)).ToList(),
-                trail.TrailImages?
-                    .Select(trailImage => TrailImageResponse.Create(
-                        trailImage.Identifier,
-                        trailImage.ImageUrl))
-                    .ToList()
-            .ToList()));
-    }
-
     public UserFavoritesTrailResponse Create(Trail trail)
     {
         return UserFavoritesTrailResponse.Create(
