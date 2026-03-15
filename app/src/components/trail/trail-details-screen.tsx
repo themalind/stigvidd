@@ -1,3 +1,4 @@
+import { getTrailObstaclesByTrailIdentifier } from "@/api/trail-obstacles";
 import { getCoordinatesByTrailIdentifier, getTrailByIdentifier } from "@/api/trails";
 import { Rating } from "@/components/review/rating";
 import TrailReviewsContainer from "@/components/review/trail-reviews-container";
@@ -17,16 +18,18 @@ import { useTheme } from "react-native-paper";
 import LoadingIndicator from "../loading-indicator";
 import MapSkeleton from "../skeletons/map-skeleton";
 import TrailMiscInfo from "./trail-misc-section/trail-misc-accordion";
+import TrailObstacleWarning from "./trail-obstacle-warning";
+import TrailObstacleModal from "./trail-obstacles-modal";
 
 export default function TrailDetailsScreen() {
   const theme = useTheme();
   const { identifier } = useLocalSearchParams<{ identifier: string }>();
   const normalizedIdentifier: string = Array.isArray(identifier) ? identifier[0] : identifier;
-
   const scrollViewRef = useRef<ScrollView>(null);
   const surfaceToScrollToRef = useRef<View>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [reviewCount, setReviewCount] = useState(0);
+  const [showObstacleModal, setShowObstacleModal] = useState(false);
 
   const {
     data: trail,
@@ -38,6 +41,14 @@ export default function TrailDetailsScreen() {
     queryFn: () => getTrailByIdentifier(normalizedIdentifier),
     enabled: !!normalizedIdentifier && typeof normalizedIdentifier === "string",
   });
+
+  const { data: obstacles } = useQuery({
+    queryKey: ["obstacles", normalizedIdentifier],
+    queryFn: () => getTrailObstaclesByTrailIdentifier(normalizedIdentifier),
+    enabled: !!normalizedIdentifier,
+  });
+
+  console.log(obstacles);
 
   const { data: coords } = useQuery({
     queryKey: ["cords", normalizedIdentifier],
@@ -87,6 +98,9 @@ export default function TrailDetailsScreen() {
         </View>
       </View>
       {trail && <TrailInfo trail={trail} />}
+      {obstacles && obstacles.length > 0 && (
+        <TrailObstacleWarning onPress={() => setShowObstacleModal(true)} />
+      )}
       {trail && <UserBar trail={trail} />}
       {trail?.description && <TrailDescription trail={trail} />}
       {coords?.coordinates ? (
@@ -109,6 +123,11 @@ export default function TrailDetailsScreen() {
       <Pressable style={s.backToTop} onPress={onPressScrollToTop}>
         <Text style={[s.text, { color: theme.colors.secondary }]}>Tillbaka till toppen</Text>
       </Pressable>
+      <TrailObstacleModal
+        visible={showObstacleModal}
+        onDismiss={() => setShowObstacleModal(false)}
+        obstacles={obstacles}
+      />
     </ScrollView>
   );
 }

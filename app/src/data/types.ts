@@ -139,6 +139,21 @@ export interface Hike {
   createdBy: string;
 }
 
+export interface TrailObstacle {
+  identifier: string;
+  description: string;
+  issueType: string;
+  incidentLongitude?: number;
+  incidentLatitude?: number;
+  createdAt: string;
+  solvedVotes?: TrailObstacleSolvedVote[];
+}
+
+export interface TrailObstacleSolvedVote {
+  userIdentifier: string;
+  trailObstacleIdentifier: string;
+}
+
 // Frontend types
 export interface FilterOptions {
   city?: string;
