@@ -9,6 +9,7 @@ public enum TrailIssueType
     Shelter = 4,
     FirePit = 5,
     Walkway = 6, 
+    Signage = 7,
 }
 
 // Do not change the values of the enum as they are used in the database and changing them would break existing data.

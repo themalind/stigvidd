@@ -13,4 +13,5 @@ public interface IUserService
     public Task<Result<UserResponse?>> CreateUserAsync(string email, string nickName, string firebaseuid, CancellationToken ctoken);
     public Task<Result<UserResponse?>> GetUserByFirebaseUidAsync(string firebaseUid, CancellationToken ctoken);
     public Task<Result> DeleteUserAsync(string identifier, CancellationToken ctoken);
-   }
+    public Task<Result<int>> GetUserIdByIdentifierAsync(string identifier, CancellationToken ctoken);
+}
