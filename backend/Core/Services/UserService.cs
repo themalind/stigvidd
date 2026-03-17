@@ -34,6 +34,47 @@ public class UserService : IUserService
         _userResponseFactory = userResponseFactory;
     }
 
+    public async Task<Result<UserResponse?>> GetUserByFirebaseUidAsync(string firebaseUid, CancellationToken ctoken)
+    {
+        using var context = await _context.CreateDbContextAsync(ctoken);
+
+        var user = await context.Users
+            .Where(user => user.FirebaseUid == firebaseUid)
+            .Select(user => UserResponse.Create(
+                user.Identifier,
+                user.NickName,
+                user.Email,
+                null,
+                null))
+            .FirstOrDefaultAsync(ctoken);
+
+        if (user is null)
+        {
+            _logger.LogWarning("User with Firebase UID {firebaseUid} not found.", firebaseUid);
+            return Result.Fail<UserResponse?>(new Message(404, $"User with Firebase UID {firebaseUid} not found."));
+        }
+
+        return Result.Ok<UserResponse?>(user);
+    }
+
+    public async Task<Result<int>> GetUserIdByIdentifierAsync(string identifier, CancellationToken ctoken)
+    {
+        using var context = await _context.CreateDbContextAsync(ctoken);
+
+        var userId = await context.Users
+            .Where(u => u.Identifier == identifier)
+            .Select(u => u.Id)
+            .FirstOrDefaultAsync(ctoken);
+
+        if (userId == 0)
+        {
+            _logger.LogWarning("User with identifier {identifier} not found.", identifier);
+            return Result.Fail<int>(new Message(404, $"User with identifier {identifier} not found."));
+        }
+
+        return Result.Ok(userId);
+    }
+
     public async Task<Result<IReadOnlyCollection<UserFavoritesTrailResponse?>>> GetFavoritesByUserIdentifierAsync(string userIdentifier, CancellationToken ctoken)
     {
         using var context = await _context.CreateDbContextAsync(ctoken);
@@ -304,29 +345,6 @@ public class UserService : IUserService
         return Result.Ok<UserResponse?>(userResponse);
     }
 
-    public async Task<Result<UserResponse?>> GetUserByFirebaseUidAsync(string firebaseUid, CancellationToken ctoken)
-    {
-        using var context = await _context.CreateDbContextAsync(ctoken);
-
-        var user = await context.Users
-            .Where(user => user.FirebaseUid == firebaseUid)
-            .Select(user => UserResponse.Create(
-                user.Identifier,
-                user.NickName,
-                user.Email,
-                null,
-                null))
-            .FirstOrDefaultAsync(ctoken);
-
-        if (user is null)
-        {
-            _logger.LogWarning("User with Firebase UID {firebaseUid} not found.", firebaseUid);
-            return Result.Fail<UserResponse?>(new Message(404, $"User with Firebase UID {firebaseUid} not found."));
-        }
-
-        return Result.Ok<UserResponse?>(user);
-    }
-
     public async Task<Result> DeleteUserAsync(string identifier, CancellationToken ctoken)
     {
         using var context = await _context.CreateDbContextAsync(ctoken);
@@ -366,23 +384,5 @@ public class UserService : IUserService
             _logger.LogError(ex, "Error deleting user with identifier {identifier}", identifier);
             return Result.Fail(new Message(500, $"Error deleting user with identifier {identifier}"));
         }
-    }
-
-    public async Task<Result<int>> GetUserIdByIdentifierAsync(string identifier, CancellationToken ctoken)
-    {
-        using var context = await _context.CreateDbContextAsync(ctoken);
-
-        var userId = await context.Users
-            .Where(u => u.Identifier == identifier)
-            .Select(u => u.Id)
-            .FirstOrDefaultAsync(ctoken);
-
-        if (userId == 0)
-        {
-            _logger.LogWarning("User with identifier {identifier} not found.", identifier);
-            return Result.Fail<int>(new Message(404, $"User with identifier {identifier} not found."));
-        }
-
-        return Result.Ok(userId);
     }
 }

@@ -1,9 +1,9 @@
 ﻿using Core.Interfaces;
-using FirebaseAdmin.Auth;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using WebDataContracts.RequestModels.TrailObstacle;
 using WebDataContracts.ResponseModels.TrailObstacle;
-using WebDataContracts.ResponseModels.User;
+
 
 namespace StigviddAPI.Controllers;
 
@@ -43,6 +43,38 @@ public class TrailObstaclesController : StigViddController
 
     [Authorize]
     [HttpPost]
+    [Route("")]
+    public async Task<ActionResult> AddTrailObstacle(
+        [FromForm] TrailObstacleRequest obstacleRequest, 
+        CancellationToken ctoken)
+    {
+        var user = await GetAuthenticatedUserAsync(_userService, ctoken);
+
+        if (user is null)
+        {
+            return Unauthorized("User not found");
+        }
+
+        var result = await _obstaclesService.AddTrailObstacle(
+            user.Identifier,
+            obstacleRequest.TrailObstacleIdentifier,
+            obstacleRequest.Description,
+            obstacleRequest.IssueType,
+            obstacleRequest.Longitude,
+            obstacleRequest.Latitude,
+            ctoken);
+
+        if(!result.Success && result.Message != null)
+        {
+            _logger.LogInformation("AddTrailObstacle: Failed to save trail obstacle for user {user}", user.Identifier);
+            return ToActionResult(result.Message);
+        }
+
+        return Created();
+    }
+
+    [Authorize]
+    [HttpPost]
     [Route("solve/{trailObstacleIdentifier}")]
     public async Task<ActionResult> AddSolvedVote([FromRoute] string trailObstacleIdentifier, CancellationToken ctoken)
     {
@@ -61,6 +93,31 @@ public class TrailObstaclesController : StigViddController
 
             return ToActionResult(result.Message);
         }
+
         return Ok();
+    }
+
+    [Authorize]
+    [HttpDelete]
+    [Route("solve/{trailObstacleIdentifier}")]
+    public async Task<ActionResult> DeleteSolvedVoteByUserIdentifier([FromRoute] string trailObstacleIdentifier, CancellationToken ctoken)
+    {
+        var user = await GetAuthenticatedUserAsync(_userService, ctoken);
+
+        if (user is null)
+        {
+            return Unauthorized("User not found");
+        }
+
+        var result = await _obstaclesService.DeleteSolvedVoteByUserIdentifierAsync(user.Identifier, trailObstacleIdentifier, ctoken);
+
+        if (!result.Success && result.Message != null)
+        {
+            _logger.LogInformation("DeleteSolvedVoteByUserIdentifier: Failed to delete solved vote for user: {userIdentifier}", user.Identifier);
+
+            return ToActionResult(result.Message);
+        }
+
+        return NoContent();
     }
 }

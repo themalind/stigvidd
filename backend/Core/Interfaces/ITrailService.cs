@@ -6,6 +6,7 @@ namespace Core.Interfaces;
 
 public interface ITrailService
 {
+    Task<Result<int>> GetTrailIdByIdentifierAsync(string identifier, CancellationToken ctoken);
     Task<Result<TrailResponse?>> GetTrailByIdentifierWithoutCoordinatesAsync(string identifier, CancellationToken ctoken);
     Task<Result<CoordinatesResponse?>> GetCoordinatesByTrailIdentifierAsync(string identifier, CancellationToken ctoken);
     Task<Result<IReadOnlyCollection<TrailOverviewResponse?>>> GetPopularTrailOverviewsAsync(double? userLatitude, double? userLongitude, CancellationToken ctoken);

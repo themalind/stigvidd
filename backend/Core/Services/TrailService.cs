@@ -28,6 +28,24 @@ public class TrailService : ITrailService
         _trailResponseFactory = factory;
     }
 
+    public async Task<Result<int>> GetTrailIdByIdentifierAsync(string identifier, CancellationToken ctoken)
+    {
+        using var context = await _context.CreateDbContextAsync(ctoken);
+
+        var trailId = await context.Trails
+            .Where(t => t.Identifier == identifier)
+            .Select(t => t.Id)
+            .FirstOrDefaultAsync();
+
+        if (trailId == 0)
+        {
+            _logger.LogWarning("Trail with identifier {identifier} not found.", identifier);
+            return Result.Fail<int>(new Message(404, $"Trail with identifier {identifier} not found."));
+        }
+
+        return Result.Ok(trailId);
+    }
+
     public async Task<Result<TrailResponse?>> GetTrailByIdentifierWithoutCoordinatesAsync(string identifier, CancellationToken ctoken)
     {
         using var context = await _context.CreateDbContextAsync(ctoken);
@@ -138,19 +156,19 @@ public class TrailService : ITrailService
             var trailData = await context.Database
                 .SqlQueryRaw<PopularTrailQueryResult>(
                     """
-                SELECT
-                    t.Id,
-                    t.Identifier,
-                    t.Name,
-                    t.TrailLength,
-                    ISNULL(AVG(r.Rating), 0) AS AverageRating,
-                    CAST(JSON_VALUE(t.Coordinates, '$[0].latitude') AS float) AS StartLatitude,
-                    CAST(JSON_VALUE(t.Coordinates, '$[0].longitude') AS float) AS StartLongitude
-                FROM Trails t
-                LEFT JOIN Reviews r ON r.TrailId = t.Id
-                WHERE t.IsVerified = 1
-                GROUP BY t.Id, t.Identifier, t.Name, t.TrailLength, t.Coordinates
-                """)
+                    SELECT
+                        t.Id,
+                        t.Identifier,
+                        t.Name,
+                        t.TrailLength,
+                        ISNULL(AVG(r.Rating), 0) AS AverageRating,
+                        CAST(JSON_VALUE(t.Coordinates, '$[0].latitude') AS float) AS StartLatitude,
+                        CAST(JSON_VALUE(t.Coordinates, '$[0].longitude') AS float) AS StartLongitude
+                    FROM Trails t
+                    LEFT JOIN Reviews r ON r.TrailId = t.Id
+                    WHERE t.IsVerified = 1
+                    GROUP BY t.Id, t.Identifier, t.Name, t.TrailLength, t.Coordinates
+                    """)
                 .AsNoTracking()
                 .ToListAsync(ctoken);
 
