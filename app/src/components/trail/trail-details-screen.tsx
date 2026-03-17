@@ -122,6 +122,7 @@ export default function TrailDetailsScreen() {
         visible={showObstacleModal}
         onDismiss={() => setShowObstacleModal(false)}
         obstacles={obstacles}
+        trailIdentifier={normalizedIdentifier}
       />
     </ScrollView>
   );

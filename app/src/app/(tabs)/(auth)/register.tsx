@@ -41,6 +41,7 @@ const registerFields = z
       });
     }
   });
+
 type FormFields = z.infer<typeof registerFields>;
 
 const addOpacity = (rgbColor: string, opacity: number): string => {

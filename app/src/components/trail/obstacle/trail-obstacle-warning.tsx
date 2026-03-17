@@ -10,14 +10,14 @@ interface Props {
 export default function TrailObstacleWarning({ onPress }: Props) {
   const theme = useTheme();
   return (
-    <View style={[s.container, { backgroundColor: theme.colors.outlineVariant, borderColor: theme.colors.error }]}>
-      <Pressable onPress={onPress}>
+    <View style={[s.container, { backgroundColor: theme.colors.background, borderColor: theme.colors.error }]}>
+      <Pressable hitSlop={12} onPress={onPress}>
         <View style={s.row}>
           <View style={s.rowGap}>
             <MaterialIcons name="warning-amber" size={18} color={theme.colors.error} />
             <Text style={s.bold}>Hinder rapporterade längs promenaden!</Text>
           </View>
-          <MaterialIcons name="chevron-right" size={24} color={theme.colors.primary} />
+          <MaterialIcons name="chevron-right" size={24} color={theme.colors.onBackground} />
         </View>
       </Pressable>
     </View>

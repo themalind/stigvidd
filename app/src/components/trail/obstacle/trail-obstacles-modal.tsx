@@ -11,11 +11,12 @@ interface Props {
   visible: boolean;
   onDismiss: () => void;
   obstacles: TrailObstacle[] | undefined;
+  trailIdentifier: string;
 }
 
 const { height } = Dimensions.get("screen");
 
-export default function TrailObstacleModal({ visible, onDismiss, obstacles }: Props) {
+export default function TrailObstacleModal({ visible, onDismiss, obstacles, trailIdentifier }: Props) {
   const theme = useTheme();
   return (
     <Portal>
@@ -43,7 +44,7 @@ export default function TrailObstacleModal({ visible, onDismiss, obstacles }: Pr
         </View>
         <ScrollView contentContainerStyle={s.scrollContent} style={s.scrollView} showsVerticalScrollIndicator={false}>
           {obstacles?.map((obstacle) => (
-            <TrailObstacleItem key={obstacle.identifier} obstacle={obstacle} />
+            <TrailObstacleItem key={obstacle.identifier} obstacle={obstacle} trailIdentifier={trailIdentifier} />
           ))}
         </ScrollView>
       </Modal>
@@ -53,10 +54,10 @@ export default function TrailObstacleModal({ visible, onDismiss, obstacles }: Pr
 
 const s = StyleSheet.create({
   modalContainerStyle: {
-    height: height * 0.8,
+    height: height * 0.9,
     borderRadius: BORDER_RADIUS,
     padding: 10,
-    gap: 10,
+    gap: 5,
   },
   header: {
     flexDirection: "row",
