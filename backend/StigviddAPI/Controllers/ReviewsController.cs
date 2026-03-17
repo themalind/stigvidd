@@ -71,7 +71,7 @@ public class ReviewsController : StigViddController
     [HttpDelete]
     [Route("{reviewIdentifier}")]
     public async Task<ActionResult> DeleteReviewAsync(
-        [FromRoute] DeleteReviewRequest request,
+        [FromRoute] string reviewIdentifier,
         CancellationToken ctoken)
     {
         var userResponse = await GetAuthenticatedUserAsync(_userService, ctoken);
@@ -82,7 +82,7 @@ public class ReviewsController : StigViddController
         }
 
         var result = await _reviewService.DeleteReviewAsync(
-            request.ReviewIdentifier,
+            reviewIdentifier,
             userResponse.Identifier,
             ctoken
         );

@@ -12,13 +12,12 @@ export default function TrailObstacleWarning({ onPress }: Props) {
   return (
     <View style={[s.container, { backgroundColor: theme.colors.outlineVariant, borderColor: theme.colors.error }]}>
       <Pressable onPress={onPress}>
-        <Text style={{ fontWeight: 700 }}>Hinder rapporterade på den här promenaden!</Text>
-        <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-          <View style={{ flexDirection: "row", alignItems: "flex-end", gap: 5 }}>
-            <MaterialIcons name="warning-amber" size={24} color={theme.colors.error} />
-            <Text>Tryck här för att läsa mer</Text>
+        <View style={s.row}>
+          <View style={s.rowGap}>
+            <MaterialIcons name="warning-amber" size={18} color={theme.colors.error} />
+            <Text style={s.bold}>Hinder rapporterade längs promenaden!</Text>
           </View>
-          <MaterialIcons name="chevron-right" size={24} color="black" />
+          <MaterialIcons name="chevron-right" size={24} color={theme.colors.primary} />
         </View>
       </Pressable>
     </View>
@@ -29,8 +28,19 @@ const s = StyleSheet.create({
   container: {
     borderWidth: 2,
     borderRadius: BORDER_RADIUS,
-    flex: 1,
     gap: 5,
     padding: 5,
+  },
+  row: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  rowGap: {
+    flexDirection: "row",
+    gap: 5,
+  },
+  bold: {
+    fontWeight: "700",
   },
 });

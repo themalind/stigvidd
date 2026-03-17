@@ -3,6 +3,7 @@ import { stigviddUserAtom } from "@/atoms/user-atoms";
 import { BORDER_RADIUS } from "@/constants/constants";
 import { Review } from "@/data/types";
 import { useDeleteReview } from "@/hooks/review/useDeleteReview";
+import { formatDate } from "@/utils/format-date";
 import { useAtom, useSetAtom } from "jotai";
 import { Fragment } from "react";
 import { Alert, Pressable, StyleSheet, View } from "react-native";
@@ -13,10 +14,6 @@ import ReviewImageGrid from "./review-image-grid ";
 interface ReviewProps {
   reviews: Review[];
 }
-
-const formatDate = (dateString: string): string => {
-  return dateString.split("T")[0];
-};
 
 export default function ReviewSection({ reviews }: ReviewProps) {
   const theme = useTheme();

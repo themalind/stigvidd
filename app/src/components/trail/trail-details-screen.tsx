@@ -17,10 +17,9 @@ import { LatLng } from "react-native-maps";
 import { useTheme } from "react-native-paper";
 import LoadingIndicator from "../loading-indicator";
 import MapSkeleton from "../skeletons/map-skeleton";
+import TrailObstacleWarning from "./obstacle/trail-obstacle-warning";
+import TrailObstacleModal from "./obstacle/trail-obstacles-modal";
 import TrailMiscInfo from "./trail-misc-section/trail-misc-accordion";
-import TrailObstacleWarning from "./trail-obstacle-warning";
-import TrailObstacleModal from "./trail-obstacles-modal";
-
 export default function TrailDetailsScreen() {
   const theme = useTheme();
   const { identifier } = useLocalSearchParams<{ identifier: string }>();
@@ -48,8 +47,6 @@ export default function TrailDetailsScreen() {
     enabled: !!normalizedIdentifier,
   });
 
-  console.log(obstacles);
-
   const { data: coords } = useQuery({
     queryKey: ["cords", normalizedIdentifier],
     queryFn: () => getCoordinatesByTrailIdentifier(normalizedIdentifier),
@@ -61,7 +58,7 @@ export default function TrailDetailsScreen() {
   }
 
   if (isError) {
-    return <Text style={{ padding: 20, color: theme.colors.error }}>{error?.message}</Text>;
+    return <Text style={[s.errorText, { color: theme.colors.error }]}>{error?.message}</Text>;
   }
 
   const images = trail?.trailImagesResponse || [];
@@ -83,7 +80,7 @@ export default function TrailDetailsScreen() {
   return (
     <ScrollView ref={scrollViewRef} contentContainerStyle={[s.container, { backgroundColor: theme.colors.background }]}>
       <Text style={[s.sectionTitle, { color: theme.colors.onBackground }]}>{trail?.name}</Text>
-      <View style={{ alignItems: "center", justifyContent: "center" }}>
+      <View style={s.imageContainer}>
         <ImageGallery images={images} />
       </View>
       <View style={s.ratingSection}>
@@ -98,9 +95,7 @@ export default function TrailDetailsScreen() {
         </View>
       </View>
       {trail && <TrailInfo trail={trail} />}
-      {obstacles && obstacles.length > 0 && (
-        <TrailObstacleWarning onPress={() => setShowObstacleModal(true)} />
-      )}
+      {obstacles && obstacles.length > 0 && <TrailObstacleWarning onPress={() => setShowObstacleModal(true)} />}
       {trail && <UserBar trail={trail} />}
       {trail?.description && <TrailDescription trail={trail} />}
       {coords?.coordinates ? (
@@ -164,6 +159,13 @@ const s = StyleSheet.create({
   },
   paddingLeft: {
     paddingRight: 10,
+  },
+  imageContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  errorText: {
+    padding: 20,
   },
 });
 
