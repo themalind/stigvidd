@@ -2,7 +2,7 @@ import { TrailOverview } from "@/data/types";
 import React, { useCallback } from "react";
 import { useWindowDimensions, View } from "react-native";
 import Animated, { useAnimatedScrollHandler, useSharedValue } from "react-native-reanimated";
-import { CarouselTile } from "./ImageCarouselTile";
+import { CarouselTile } from "./image-carousel-tile";
 
 interface CarouselProps {
   data: TrailOverview[];

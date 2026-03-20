@@ -23,7 +23,6 @@ export default function AddToUserFavorite({ trailIdentifier }: Props) {
   const setError = useSetAtom(showErrorAtom);
 
   const isInFavorites = data?.some((trail) => trail.identifier === trailIdentifier);
-
   const isPending = removeUserFavorite.isPending || addToUserFavorite.isPending;
 
   const handlePress = () => {

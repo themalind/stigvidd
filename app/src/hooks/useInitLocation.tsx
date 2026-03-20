@@ -2,12 +2,12 @@ import { locationResolvedAtom, userLocationAtom } from "@/atoms/location-atoms";
 import * as Location from "expo-location";
 import { useSetAtom } from "jotai";
 import { useEffect } from "react";
-import { AppState } from "react-native";
 
 export function useInitLocation() {
   const setUserLocation = useSetAtom(userLocationAtom);
   const setLocationResolved = useSetAtom(locationResolvedAtom);
-
+  // console.log("userlocation: ", userLocationAtom);
+  // console.log("locationResolved ", locationResolvedAtom);
   useEffect(() => {
     const fetchLocation = async () => {
       try {
@@ -31,13 +31,14 @@ export function useInitLocation() {
 
     fetchLocation();
 
+    // Detta verkar skapa problem. Vi behöver se över location i appen!
     // Lyssna på när appen kommer tillbaka i förgrunden
-    const sub = AppState.addEventListener("change", (state) => {
-      if (state === "active") {
-        fetchLocation();
-      }
-    });
+    // const sub = AppState.addEventListener("change", (state) => {
+    //   if (state === "active") {
+    //     fetchLocation();
+    //   }
+    // });
 
-    return () => sub.remove();
+    // return () => sub.remove();
   }, [setUserLocation, setLocationResolved]);
 }

@@ -33,15 +33,10 @@ export default function AddReviewForm({ trailIdentifier, onSuccess }: ReviewForm
   const [showImageInfoModal, setShowImageInfoModal] = useState(false);
   const [showStarInfoModal, setShowStarInfoModal] = useState(false);
   const [showReviewInfoModal, setShowReviewInfoModal] = useState(false);
-  const [height, setHeight] = useState(40);
   const [rating, setRating] = useState(1);
   const [reviewImages, setReviewImages] = useState<string[]>([]);
   const setError = useSetAtom(showErrorAtom);
   const createReviewMutation = useCreateReview(onSuccess);
-
-  function handleReviewImages(data: string[]) {
-    setReviewImages(data);
-  }
 
   const {
     control,
@@ -142,7 +137,7 @@ export default function AddReviewForm({ trailIdentifier, onSuccess }: ReviewForm
         />
       </View>
       <View style={s.rowGap}>
-        <AddReviewImages reviewImageCallback={handleReviewImages} />
+        <AddReviewImages setReviewImages={setReviewImages} />
       </View>
       <Divider />
       <View style={s.gap}>
@@ -172,13 +167,19 @@ export default function AddReviewForm({ trailIdentifier, onSuccess }: ReviewForm
             <TextInput
               error={!!errors.trailReview}
               onBlur={onBlur}
-              multiline={true}
-              maxLength={500}
+              autoCapitalize="sentences"
+              multiline
+              scrollEnabled={false}
+              textAlignVertical="top"
               onChangeText={onChange}
               value={value}
+              maxLength={500}
               label="Recension"
-              onContentSizeChange={(event) => setHeight(event.nativeEvent.contentSize.height)}
-              style={{ height: Math.max(40, height) }}
+              theme={{
+                colors: {
+                  primary: theme.colors.onSurface,
+                },
+              }}
             />
           )}
           name="trailReview"

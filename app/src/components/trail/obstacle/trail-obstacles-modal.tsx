@@ -32,7 +32,7 @@ export default function TrailObstacleModal({ visible, onDismiss, obstacles, trai
             <Text style={s.title}>Rapporterade hinder</Text>
           </View>
           <Pressable hitSlop={12} onPress={onDismiss}>
-            <MaterialIcons name="close" size={24} color={theme.colors.primary} />
+            <MaterialIcons name="close" size={24} color={theme.colors.onSurface} />
           </Pressable>
         </View>
         <View style={[s.infoBox, { backgroundColor: theme.colors.surfaceVariant }]}>
@@ -57,7 +57,7 @@ const s = StyleSheet.create({
     height: height * 0.9,
     borderRadius: BORDER_RADIUS,
     padding: 10,
-    gap: 5,
+    gap: 15,
   },
   header: {
     flexDirection: "row",

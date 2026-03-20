@@ -21,7 +21,7 @@ export default function UserBar({ trail }: Props) {
       <AddToUserWishlist trailIdentifier={trail.identifier} />
       <UserShare />
       <UserRating trail={trail} />
-      <UserReportIssue />
+      <UserReportIssue trailIdentifier={trail.identifier} />
       <AddToUserFavorite trailIdentifier={trail.identifier} />
     </View>
   );

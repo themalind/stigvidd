@@ -1,4 +1,4 @@
-import { addSolvedVote } from "@/api/trail-obstacles";
+import { addSolvedVote, deleteSolvedVote } from "@/api/trail-obstacles";
 import { authStateAtom } from "@/atoms/auth-atoms";
 import { stigviddUserAtom } from "@/atoms/user-atoms";
 import AlertDialog from "@/components/alert-dialog";
@@ -25,7 +25,9 @@ export default function TrailObstacleItem({ obstacle, trailIdentifier }: Props) 
   const { data: stigviddUser } = useAtomValue(stigviddUserAtom);
   const [showAuthDialog, setAuthDialog] = useState(false);
   const [showVoteDialog, setShowVoteDialog] = useState(false);
+  const [showUndoDialog, setShowUndoDialog] = useState(false);
   const queryClient = useQueryClient();
+  const hasVoted = obstacle.solvedVotes?.some((v) => v.userIdentifier === stigviddUser?.identifier);
 
   const { mutate, isPending } = useMutation({
     mutationFn: () => addSolvedVote(obstacle.identifier),
@@ -34,19 +36,34 @@ export default function TrailObstacleItem({ obstacle, trailIdentifier }: Props) 
     },
   });
 
-  const hasVoted = obstacle.solvedVotes?.some((v) => v.userIdentifier === stigviddUser?.identifier);
+  const { mutate: deleteMutate, isPending: deleteIsPending } = useMutation({
+    mutationFn: () => deleteSolvedVote(obstacle.identifier),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["obstacles", trailIdentifier] });
+    },
+  });
 
   const handlePress = () => {
     if (!authState.isAuthenticated) {
       setAuthDialog(true);
       return;
     }
-    setShowVoteDialog(true);
+
+    if (hasVoted) {
+      setShowUndoDialog(true);
+    } else {
+      setShowVoteDialog(true);
+    }
   };
 
-  function handleConfirm() {
+  function handleAddVote() {
     mutate();
     setShowVoteDialog(false);
+  }
+
+  function handleRemoveVote() {
+    deleteMutate();
+    setShowUndoDialog(false);
   }
 
   return (
@@ -67,7 +84,7 @@ export default function TrailObstacleItem({ obstacle, trailIdentifier }: Props) 
         </View>
         <View style={s.voteRow}>
           <Text style={s.voteCount}>{obstacle.solvedVotes?.length ?? 0}/3</Text>
-          <Pressable hitSlop={12} onPress={handlePress} disabled={isPending || hasVoted}>
+          <Pressable hitSlop={12} onPress={handlePress} disabled={isPending || deleteIsPending}>
             <MaterialIcons
               size={24}
               name={hasVoted ? "check-circle" : "radio-button-unchecked"}
@@ -89,10 +106,26 @@ export default function TrailObstacleItem({ obstacle, trailIdentifier }: Props) 
           "Vill du markera detta hinder som löst?",
           "När du markerar som åtgärdat intygar du att hindret inte längre finns kvar. Vill du fortsätta?",
         ]}
-        onConfirm={handleConfirm}
+        onConfirm={handleAddVote}
         confirmText="Ok"
         cancelText="Avbryt"
         backgroundColor={theme.colors.surface}
+        textColor={theme.colors.onSurface}
+      />
+      <AlertDialog
+        visible={showUndoDialog}
+        onDismiss={() => setShowUndoDialog(false)}
+        title="Ta bort markering"
+        infoText={[
+          "Du har redan markerat detta hinder som löst.",
+          "Vill du ta bort din markering?",
+          "Detta innebär att hindret inte längre räknas som åtgärdat från din sida.",
+        ]}
+        onConfirm={handleRemoveVote}
+        confirmText="Ta bort"
+        cancelText="Avbryt"
+        backgroundColor={theme.colors.surface}
+        textColor={theme.colors.onSurface}
       />
     </View>
   );
