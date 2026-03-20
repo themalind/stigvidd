@@ -2,9 +2,9 @@
 
 public class TrailObstacleRequest
 {
-    public required string TrailObstacleIdentifier { get; set; }
+    public required string TrailIdentifier { get; set; }
     public required string Description { get; set; }
     public required string IssueType { get; set; }
-    public decimal? Longitude { get; set; }
-    public decimal? Latitude { get; set; }
+    public decimal? IncidentLongitude { get; set; }
+    public decimal? IncidentLatitude { get; set; }
 }

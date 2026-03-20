@@ -123,6 +123,37 @@ public class UserService : IUserService
         return Result.Ok<IReadOnlyCollection<UserWishlistTrailResponse?>>(wishlist);
     }
 
+    public async Task<Result<UserResponse?>> CreateUserAsync(string email, string nickName, string firebaseUid, CancellationToken ctoken)
+    {
+        using var context = await _context.CreateDbContextAsync(ctoken);
+
+        var existingUser = await context.Users
+            .FirstOrDefaultAsync(u => u.FirebaseUid == firebaseUid, ctoken);
+
+        if (existingUser is not null)
+        {
+            _logger.LogWarning("User with identifier {firebaseUid} already exists.", firebaseUid);
+
+            return Result.Fail<UserResponse?>(new Message(409, $"User with identifier {firebaseUid} already exists."));
+        }
+
+        var newUser = new User
+        {
+            FirebaseUid = firebaseUid,
+            NickName = nickName,
+            Email = email,
+            MyFavorites = [],
+            MyWishList = []
+        };
+
+        context.Users.Add(newUser);
+
+        await context.SaveChangesAsync(ctoken);
+
+        var userResponse = _userResponseFactory.Create(newUser);
+        return Result.Ok<UserResponse?>(userResponse);
+    }
+
     public async Task<Result<UserFavoritesTrailResponse?>> AddTrailToUserFavoritesListAsync(string userIdentifier, string trailIdentifier, CancellationToken ctoken)
     {
         using var context = await _context.CreateDbContextAsync(ctoken);
@@ -314,37 +345,6 @@ public class UserService : IUserService
         return Result.Ok();
     }
 
-    public async Task<Result<UserResponse?>> CreateUserAsync(string email, string nickName, string firebaseUid, CancellationToken ctoken)
-    {
-        using var context = await _context.CreateDbContextAsync(ctoken);
-
-        var existingUser = await context.Users
-            .FirstOrDefaultAsync(u => u.FirebaseUid == firebaseUid, ctoken);
-
-        if (existingUser is not null)
-        {
-            _logger.LogWarning("User with identifier {firebaseUid} already exists.", firebaseUid);
-
-            return Result.Fail<UserResponse?>(new Message(409, $"User with identifier {firebaseUid} already exists."));
-        }
-
-        var newUser = new User
-        {
-            FirebaseUid = firebaseUid,
-            NickName = nickName,
-            Email = email,
-            MyFavorites = [],
-            MyWishList = []
-        };
-
-        context.Users.Add(newUser);
-
-        await context.SaveChangesAsync(ctoken);
-
-        var userResponse = _userResponseFactory.Create(newUser);
-        return Result.Ok<UserResponse?>(userResponse);
-    }
-
     public async Task<Result> DeleteUserAsync(string identifier, CancellationToken ctoken)
     {
         using var context = await _context.CreateDbContextAsync(ctoken);
@@ -364,6 +364,12 @@ public class UserService : IUserService
 
         try
         {
+            // Remove the user's solved votes first — NoAction FK prevents cascade from doing this automatically.
+            var solvedVotes = await context.TrailObstacleSolvedVotes
+                .Where(sv => sv.UserId == user.Id)
+                .ToListAsync(ctoken);
+            context.TrailObstacleSolvedVotes.RemoveRange(solvedVotes);
+
             // Stage the DB deletion. SaveChanges writes to the DB but the transaction is not committed yet.
             context.Users.Remove(user);
             await context.SaveChangesAsync(ctoken);

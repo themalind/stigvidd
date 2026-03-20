@@ -44,8 +44,8 @@ public class TrailObstaclesController : StigViddController
     [Authorize]
     [HttpPost]
     [Route("")]
-    public async Task<ActionResult> AddTrailObstacle(
-        [FromForm] TrailObstacleRequest obstacleRequest, 
+    public async Task<ActionResult> CreateTrailObstacle(
+       TrailObstacleRequest obstacleRequest,
         CancellationToken ctoken)
     {
         var user = await GetAuthenticatedUserAsync(_userService, ctoken);
@@ -57,14 +57,14 @@ public class TrailObstaclesController : StigViddController
 
         var result = await _obstaclesService.AddTrailObstacle(
             user.Identifier,
-            obstacleRequest.TrailObstacleIdentifier,
+            obstacleRequest.TrailIdentifier,
             obstacleRequest.Description,
             obstacleRequest.IssueType,
-            obstacleRequest.Longitude,
-            obstacleRequest.Latitude,
+            obstacleRequest.IncidentLongitude,
+            obstacleRequest.IncidentLatitude,
             ctoken);
 
-        if(!result.Success && result.Message != null)
+        if (!result.Success && result.Message != null)
         {
             _logger.LogInformation("AddTrailObstacle: Failed to save trail obstacle for user {user}", user.Identifier);
             return ToActionResult(result.Message);
@@ -87,7 +87,7 @@ public class TrailObstaclesController : StigViddController
 
         var result = await _obstaclesService.AddSolvedVoteAsync(user.Identifier, trailObstacleIdentifier, ctoken);
 
-        if(!result.Success && result.Message != null)
+        if (!result.Success && result.Message != null)
         {
             _logger.LogInformation("AddSolvedVote: Failed to add solved vote for user: {userIdentifier}", user.Identifier);
 

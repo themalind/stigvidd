@@ -1,4 +1,3 @@
-
 using Core.Factories;
 using Core.Interfaces;
 using Infrastructure.Data;
@@ -6,7 +5,6 @@ using Infrastructure.Data.Entities;
 using Infrastructure.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using WebDataContracts.RequestModels.TrailObstacle;
 using WebDataContracts.ResponseModels.TrailObstacle;
 
 namespace Core.Services;
@@ -23,7 +21,7 @@ public class TrailObstaclesService : ITrailObstaclesService
         IDbContextFactory<StigViddDbContext> context,
         ILogger<TrailObstaclesService> logger,
         TrailObstaclesResponseFactory responseFactory,
-        IUserService userService, 
+        IUserService userService,
         ITrailService trailService)
     {
         _context = context;
@@ -157,6 +155,46 @@ public class TrailObstaclesService : ITrailObstaclesService
 
     public async Task<Result> DeleteSolvedVoteByUserIdentifierAsync(string userIdentifier, string trailObstacleIdentifier, CancellationToken ctoken)
     {
-        throw new NotImplementedException();
+        try
+        {
+            using var context = await _context.CreateDbContextAsync(ctoken);
+
+            var userIdResult = await _userService.GetUserIdByIdentifierAsync(userIdentifier, ctoken);
+
+            if (!userIdResult.Success)
+            {
+                return Result.Fail(new Message(404, $"{userIdResult.Message}"));
+            }
+
+            var obstacleId = await context.TrailObstacles
+                .Where(to => to.Identifier == trailObstacleIdentifier)
+                .Select(to => to.Id)
+                .FirstOrDefaultAsync(ctoken);
+
+            if (obstacleId == 0)
+            {
+                return Result.Fail(new Message(404, $"No trail obstacle found with identifier: {trailObstacleIdentifier}"));
+            }
+
+            var solvedVote = await context.TrailObstacleSolvedVotes
+                .Where(sv => sv.TrailObstacleId == obstacleId && sv.UserId == userIdResult.Value)
+                .FirstOrDefaultAsync(ctoken);
+
+            if (solvedVote is null)
+            {
+                return Result.Fail(new Message(404, $"No solved vote found for obstacle {trailObstacleIdentifier} and user {userIdentifier}"));
+            }
+
+            context.Remove(solvedVote);
+            await context.SaveChangesAsync(ctoken);
+
+            return Result.Ok();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to delete solved vote from trail obstacle {identifier} for user {}", trailObstacleIdentifier, userIdentifier);
+
+            return Result.Fail(new Message(500, "An error occurred while deleting solved vote for trail obstacle."));
+        }
     }
 }
