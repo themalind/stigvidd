@@ -1,5 +1,6 @@
 ﻿using Infrastructure.Data;
 using Infrastructure.Data.Entities;
+using Infrastructure.Enums;
 
 namespace ServiceTests;
 
@@ -21,11 +22,15 @@ public static class Utilities
         var users = GetSeedingUsers(trails);
         var reviews = GetSeedingReviews(trails, users);
         var hikes = GetSeedingHikes(users);
+        var obstacles = GetSeedingTrailObstacles(trails, users);
+        var solvedVotes = GetSeedingTrailObstacleSolvedVotes(obstacles, users);
 
         db.Trails.AddRange(trails);
         db.Users.AddRange(users);
         db.Reviews.AddRange(reviews);
         db.Hikes.AddRange(hikes);
+        db.TrailObstacles.AddRange(obstacles);
+        db.TrailObstacleSolvedVotes.AddRange(solvedVotes);
 
         db.SaveChanges();
     }
@@ -580,6 +585,108 @@ public static class Utilities
                 Coordinates = string.Empty,
                 CreatedBy = users[2].Identifier
             }
+        ];
+    }
+
+    public static List<TrailObstacle> GetSeedingTrailObstacles(List<Trail> trails, List<User> users)
+    {
+        return
+        [
+            // Obstacle 1: Active fallen tree on Tiveden, created recently
+            new TrailObstacle
+            {
+                Id = 1,
+                Identifier = "ob1a1b2c3-d4e5-4f6a-7b8c-9d0e1f2a3b4c",
+                Description = "Stort träd har fallit över stigen och blockerar passage.",
+                IssueType = TrailIssueType.FallenTree,
+                TrailId = 1, // Tiveden
+                UserId = 1,  // NaturElskaren
+                IncidentLongitude = 14.5M,
+                IncidentLatitude = 58.9M,
+                CreatedAt = DateTime.UtcNow.AddDays(-5),
+                LastUpdatedAt = DateTime.UtcNow.AddDays(-5),
+            },
+            // Obstacle 2: Flooding on Storsjöleden, one solved vote already
+            new TrailObstacle
+            {
+                Id = 2,
+                Identifier = "ob2b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+                Description = "Översvämning vid bron, svårt att passera.",
+                IssueType = TrailIssueType.Flooding,
+                TrailId = 2, // Storsjöleden
+                UserId = 2,  // VandrarVennen
+                CreatedAt = DateTime.UtcNow.AddDays(-10),
+                LastUpdatedAt = DateTime.UtcNow.AddDays(-10),
+            },
+            // Obstacle 3: Mud on Tångaleden, three solved votes (filtered out by the >=3 threshold)
+            new TrailObstacle
+            {
+                Id = 3,
+                Identifier = "ob3c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e",
+                Description = "Lera och blöt mark efter regn, svårt att ta sig fram.",
+                IssueType = TrailIssueType.Mud,
+                TrailId = 3, // Tångaleden
+                UserId = 3,  // SkogsGreven
+                CreatedAt = DateTime.UtcNow.AddDays(-2),
+                LastUpdatedAt = DateTime.UtcNow.AddDays(-2),
+            },
+            // Obstacle 4: Old obstacle outside the 30-day active window (should be filtered out)
+            new TrailObstacle
+            {
+                Id = 4,
+                Identifier = "ob4d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f",
+                Description = "Gammal nedfallen skylt som blockerade stigen.",
+                IssueType = TrailIssueType.Signage,
+                TrailId = 1, // Tiveden
+                UserId = 4,  // Eremiten
+                CreatedAt = DateTime.UtcNow.AddDays(-40),
+                LastUpdatedAt = DateTime.UtcNow.AddDays(-40),
+            },
+        ];
+    }
+
+    public static List<TrailObstacleSolvedVote> GetSeedingTrailObstacleSolvedVotes(List<TrailObstacle> obstacles, List<User> users)
+    {
+        return
+        [
+            // Vote on obstacle 2 by user 1
+            new TrailObstacleSolvedVote
+            {
+                Id = 1,
+                Identifier = "sv1a1b2c3-d4e5-4f6a-7b8c-9d0e1f2a3b4c",
+                TrailObstacleId = 2,
+                UserId = 1, // NaturElskaren
+                CreatedAt = SeedDates.Created,
+                LastUpdatedAt = SeedDates.Updated,
+            },
+            // Two votes on obstacle 3 (by user 1 and user 2)
+            new TrailObstacleSolvedVote
+            {
+                Id = 2,
+                Identifier = "sv2b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+                TrailObstacleId = 3,
+                UserId = 1, // NaturElskaren
+                CreatedAt = SeedDates.Created,
+                LastUpdatedAt = SeedDates.Updated,
+            },
+            new TrailObstacleSolvedVote
+            {
+                Id = 3,
+                Identifier = "sv3c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e",
+                TrailObstacleId = 3,
+                UserId = 2, // VandrarVennen
+                CreatedAt = SeedDates.Created,
+                LastUpdatedAt = SeedDates.Updated,
+            },
+            new TrailObstacleSolvedVote
+            {
+                Id = 4,
+                Identifier = "sv4d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f",
+                TrailObstacleId = 3,
+                UserId = 3, // SkogsGreven — third vote, pushes obstacle 3 to the filter threshold
+                CreatedAt = SeedDates.Created,
+                LastUpdatedAt = SeedDates.Updated,
+            },
         ];
     }
 }

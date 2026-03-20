@@ -539,9 +539,9 @@ public class UserServiceTests : TestBase
         verifyContext.Users.Any(u => u.Identifier == userToDelete).Should().BeTrue();
     }
 
-private UserService CreateUserServiceWithOptions(
-        DbContextOptions<StigViddDbContext> options,
-        IFirebaseAuthService firebaseAuthService)
+    private UserService CreateUserServiceWithOptions(
+            DbContextOptions<StigViddDbContext> options,
+            IFirebaseAuthService firebaseAuthService)
     {
         var mockContextFactory = new Mock<IDbContextFactory<StigViddDbContext>>();
         mockContextFactory
