@@ -1,6 +1,5 @@
 ﻿using Infrastructure.Data.Entities;
 using Microsoft.EntityFrameworkCore;
-using WebDataContracts.ResponseModels.Trail;
 
 namespace Infrastructure.Data;
 

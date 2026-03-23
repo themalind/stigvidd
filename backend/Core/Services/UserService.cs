@@ -39,6 +39,7 @@ public class UserService : IUserService
         using var context = await _context.CreateDbContextAsync(ctoken);
 
         var user = await context.Users
+            .AsNoTracking()
             .Where(user => user.FirebaseUid == firebaseUid)
             .Select(user => UserResponse.Create(
                 user.Identifier,
@@ -62,6 +63,7 @@ public class UserService : IUserService
         using var context = await _context.CreateDbContextAsync(ctoken);
 
         var userId = await context.Users
+            .AsNoTracking()
             .Where(u => u.Identifier == identifier)
             .Select(u => u.Id)
             .FirstOrDefaultAsync(ctoken);
@@ -80,6 +82,7 @@ public class UserService : IUserService
         using var context = await _context.CreateDbContextAsync(ctoken);
 
         var favorites = await context.Users
+            .AsNoTracking()
             .Where(u => u.Identifier == userIdentifier)
             .SelectMany(u => u.MyFavorites!.Select(trail => UserFavoritesTrailResponse.Create(
                     trail.Identifier,
@@ -94,9 +97,12 @@ public class UserService : IUserService
                        trailImage => TrailImageResponse.Create(
                            trailImage.Identifier,
                            trailImage.ImageUrl)).Take(1).ToList()
-                   ))).ToListAsync(ctoken);
+                   )))
+            .ToListAsync(ctoken);
 
-        return Result.Ok<IReadOnlyCollection<UserFavoritesTrailResponse?>>(favorites);
+        var sorted = favorites.OrderBy(trail => trail.Name).ToList();
+
+        return Result.Ok<IReadOnlyCollection<UserFavoritesTrailResponse?>>(sorted);
     }
 
     public async Task<Result<IReadOnlyCollection<UserWishlistTrailResponse?>>> GetWishListByUserIdentifierAsync(string userIdentifier, CancellationToken ctoken)
@@ -104,6 +110,7 @@ public class UserService : IUserService
         using var context = await _context.CreateDbContextAsync(ctoken);
 
         var wishlist = await context.Users
+                .AsNoTracking()
                 .Where(user => user.Identifier == userIdentifier)
                 .SelectMany(user => user.MyWishList!.Select(trail => UserWishlistTrailResponse.Create(
                         trail.Identifier,
@@ -118,9 +125,12 @@ public class UserService : IUserService
                            trailImage => TrailImageResponse.Create(
                                trailImage.Identifier,
                                trailImage.ImageUrl)).Take(1).ToList()
-                       ))).ToListAsync(ctoken);
+                       )))
+                .ToListAsync(ctoken);
 
-        return Result.Ok<IReadOnlyCollection<UserWishlistTrailResponse?>>(wishlist);
+        var sorted = wishlist.OrderBy(trail => trail.Name).ToList();
+
+        return Result.Ok<IReadOnlyCollection<UserWishlistTrailResponse?>>(sorted);
     }
 
     public async Task<Result<UserResponse?>> CreateUserAsync(string email, string nickName, string firebaseUid, CancellationToken ctoken)
