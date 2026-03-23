@@ -14,7 +14,8 @@ using System.Data.Common;
 using System.Net.Http.Headers;
 
 namespace IntegrationTests;
-
+// TODO
+// https://learn.microsoft.com/en-us/aspnet/core/test/integration-tests?view=aspnetcore-9.0&pivots=xunit#mock-authentication
 public class StigViddWebApplicationFactory<TProgram>
     : WebApplicationFactory<TProgram> where TProgram : class
 {
