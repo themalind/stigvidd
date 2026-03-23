@@ -6,8 +6,7 @@ import { useEffect } from "react";
 export function useInitLocation() {
   const setUserLocation = useSetAtom(userLocationAtom);
   const setLocationResolved = useSetAtom(locationResolvedAtom);
-  // console.log("userlocation: ", userLocationAtom);
-  // console.log("locationResolved ", locationResolvedAtom);
+
   useEffect(() => {
     const fetchLocation = async () => {
       try {
@@ -30,15 +29,5 @@ export function useInitLocation() {
     };
 
     fetchLocation();
-
-    // Detta verkar skapa problem. Vi behöver se över location i appen!
-    // Lyssna på när appen kommer tillbaka i förgrunden
-    // const sub = AppState.addEventListener("change", (state) => {
-    //   if (state === "active") {
-    //     fetchLocation();
-    //   }
-    // });
-
-    // return () => sub.remove();
   }, [setUserLocation, setLocationResolved]);
 }
