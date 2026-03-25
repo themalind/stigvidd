@@ -63,15 +63,17 @@ export default function HomeScreen() {
         <Text style={[s.sectionTitle, { color: theme.colors.onBackground }]}>Hitta på kartan</Text>
       </View>
       <Surface style={s.mapContainer}>
-        <Map
-          style={s.map}
-          initialRegion={{
-            latitude: 57.721,
-            longitude: 12.9401,
-            latitudeDelta: 0.0922,
-            longitudeDelta: 0.0421,
-          }}
-        />
+        <View style={s.mapInner}>
+          <Map
+            style={s.map}
+            initialRegion={{
+              latitude: 57.721,
+              longitude: 12.9401,
+              latitudeDelta: 0.0922,
+              longitudeDelta: 0.0421,
+            }}
+          />
+        </View>
       </Surface>
       <Divider />
       <View style={{ gap: 20 }}>
@@ -107,6 +109,10 @@ const s = StyleSheet.create({
   },
   mapContainer: {
     height: HEIGHT * 0.25,
+    borderRadius: SURFACE_BORDER_RADIUS,
+  },
+  mapInner: {
+    flex: 1,
     borderRadius: SURFACE_BORDER_RADIUS,
     overflow: "hidden",
   },
