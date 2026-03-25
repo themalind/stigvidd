@@ -10,14 +10,16 @@ interface Props {
 export default function TrailObstacleWarning({ onPress }: Props) {
   const theme = useTheme();
   return (
-    <View style={[s.container, { backgroundColor: theme.colors.background, borderColor: theme.colors.error }]}>
+    <View style={[s.container, { backgroundColor: theme.colors.errorContainer, borderLeftColor: theme.colors.error }]}>
       <Pressable hitSlop={12} onPress={onPress}>
         <View style={s.row}>
           <View style={s.rowGap}>
-            <MaterialIcons name="warning-amber" size={18} color={theme.colors.error} />
-            <Text style={s.bold}>Hinder rapporterade längs promenaden!</Text>
+            <MaterialIcons name="warning-amber" size={18} color={theme.colors.onErrorContainer} />
+            <Text style={[s.bold, { color: theme.colors.onErrorContainer }]}>
+              Hinder rapporterade längs promenaden!
+            </Text>
           </View>
-          <MaterialIcons name="chevron-right" size={24} color={theme.colors.onBackground} />
+          <MaterialIcons name="chevron-right" size={24} color={theme.colors.onErrorContainer} />
         </View>
       </Pressable>
     </View>
@@ -26,10 +28,9 @@ export default function TrailObstacleWarning({ onPress }: Props) {
 
 const s = StyleSheet.create({
   container: {
-    borderWidth: 2,
+    borderLeftWidth: 4,
     borderRadius: BORDER_RADIUS,
-    gap: 5,
-    padding: 5,
+    padding: 12,
   },
   row: {
     flexDirection: "row",
@@ -38,7 +39,8 @@ const s = StyleSheet.create({
   },
   rowGap: {
     flexDirection: "row",
-    gap: 5,
+    alignItems: "center",
+    gap: 8,
   },
   bold: {
     fontWeight: "700",

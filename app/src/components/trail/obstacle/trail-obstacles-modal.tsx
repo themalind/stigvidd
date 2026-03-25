@@ -36,8 +36,10 @@ export default function TrailObstacleModal({ visible, onDismiss, obstacles, trai
           </Pressable>
         </View>
         <View style={[s.infoBox, { backgroundColor: theme.colors.surfaceVariant }]}>
-          <Text style={s.bold}>Här visas rapporterade hinder längs leden.</Text>
-          <Text>
+          <Text style={[s.infoLabel, { color: theme.colors.onSurfaceVariant }]}>
+            Här visas rapporterade hinder längs leden.
+          </Text>
+          <Text style={[s.infoBody, { color: theme.colors.onSurfaceVariant }]}>
             Hjälp gärna till genom att markera ett hinder som löst om det är åtgärdat. Det gör du genom att trycka på
             bockikonen (✓) på det hinder du vill markera. Varningen tas bort efter 3 bekräftelser eller 30 dagar.
           </Text>
@@ -74,14 +76,22 @@ const s = StyleSheet.create({
   title: {
     fontWeight: "700",
     fontSize: 18,
+    letterSpacing: 0.4,
   },
   infoBox: {
     borderRadius: BORDER_RADIUS,
-    padding: 10,
-    gap: 4,
+    padding: 12,
+    gap: 6,
   },
-  bold: {
-    fontWeight: "700",
+  infoLabel: {
+    fontSize: 11,
+    fontWeight: "600",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  infoBody: {
+    fontSize: 13,
+    lineHeight: 20,
   },
   scrollContent: {
     gap: 15,

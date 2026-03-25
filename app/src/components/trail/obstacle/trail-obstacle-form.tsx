@@ -1,26 +1,23 @@
 import { createTrailObstacle } from "@/api/trail-obstacles";
-import { showErrorAtom, showSuccessAtom } from "@/atoms/snackbar-atoms";
+import { getCoordinatesByTrailIdentifier } from "@/api/trails";
+import { showSuccessAtom } from "@/atoms/snackbar-atoms";
 import { BORDER_RADIUS } from "@/constants/constants";
 import { CreateTrailObstacleRequest } from "@/data/types";
+import CoordinateParser from "@/utils/coordinate-parser";
+import { isNearTrail } from "@/utils/haversine";
 import issueTypeParser from "@/utils/issue-type-parser";
 import { MaterialIcons } from "@expo/vector-icons";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Picker } from "@react-native-picker/picker";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import SelectInput from "@/components/select-input";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { BlurView } from "expo-blur";
 import * as ExpoLinking from "expo-linking";
 import * as Location from "expo-location";
 import { useSetAtom } from "jotai";
 import { useState } from "react";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
+import { Dimensions, Pressable, StyleSheet, Switch, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
-import {
-  Dimensions,
-  Pressable,
-  StyleSheet,
-  Switch,
-  View,
-} from "react-native";
 import { Button, Modal, Portal, Surface, Text, TextInput, useTheme } from "react-native-paper";
 import { z } from "zod";
 
@@ -49,9 +46,9 @@ interface Props {
 
 export default function TrailObstacleForm({ trailIdentifier, visible, onDismiss }: Props) {
   const [isLocating, setIsLocating] = useState(false);
+  const [locationError, setLocationError] = useState<string | null>(null);
 
   const theme = useTheme();
-  const setErrorMesg = useSetAtom(showErrorAtom);
   const setSuccessMsg = useSetAtom(showSuccessAtom);
   const queryClient = useQueryClient();
 
@@ -62,6 +59,13 @@ export default function TrailObstacleForm({ trailIdentifier, visible, onDismiss 
     },
   });
 
+  const { data: trailCords } = useQuery({
+    queryKey: ["cords", trailIdentifier],
+    queryFn: () => getCoordinatesByTrailIdentifier(trailIdentifier),
+    enabled: !!trailIdentifier,
+  });
+
+  const parsed = trailCords ? CoordinateParser({ data: trailCords.coordinates, identifier: trailIdentifier }) : [];
   const {
     control,
     handleSubmit,
@@ -94,32 +98,46 @@ export default function TrailObstacleForm({ trailIdentifier, visible, onDismiss 
   };
 
   const handleLocationToggle = async (enabled: boolean, onChange: (val: boolean) => void) => {
+    // If switch is not set to add location set coordinates to null
     if (!enabled) {
       onChange(false);
       setValue("incidentLatitude", null);
       setValue("incidentLongitude", null);
+      setLocationError(null);
       return;
     }
 
     setIsLocating(true);
+    setLocationError(null);
+
+    // Check that the user accepted location
     try {
       const { granted } = await Location.getForegroundPermissionsAsync();
 
       if (!granted) {
-        setErrorMesg("Platsbehörighet saknas. Aktivera i systeminställningarna.");
+        setLocationError("Platsbehörighet saknas. Aktivera i systeminställningarna.");
         await ExpoLinking.openSettings();
         return;
       }
 
+      // Get user position
       const location = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.Balanced,
       });
-      onChange(true);
+
+      // Check if the user is on the trail or near it.
+      if (parsed.length === 0 || !isNearTrail(location.coords.latitude, location.coords.longitude, parsed)) {
+        setLocationError("Du verkar inte befinna dig på leden. Platsen kan inte bifogas.");
+        return;
+      }
+
+      // Save the coords
+      onChange(true); // Syncs switch state back to React Hook Form, also activates the watch
       setValue("incidentLatitude", location.coords.latitude);
       setValue("incidentLongitude", location.coords.longitude);
     } catch (e) {
       console.log("Kunde inte hämta plats", e);
-      setErrorMesg("Kunde inte hämta plats, försök igen.");
+      setLocationError("Kunde inte hämta plats, försök igen.");
     } finally {
       setIsLocating(false);
     }
@@ -146,8 +164,10 @@ export default function TrailObstacleForm({ trailIdentifier, visible, onDismiss 
             </View>
 
             <Surface style={s.surface}>
-              <Text style={s.bold}>Upptäcker du något som påverkar framkomligheten eller säkerheten på leden?</Text>
-              <Text>
+              <Text style={[s.infoLabel, { color: theme.colors.onSurfaceVariant }]}>
+                Upptäcker du något som påverkar framkomligheten eller säkerheten på leden?
+              </Text>
+              <Text style={[s.infoBody, { color: theme.colors.onSurfaceVariant }]}>
                 Använd formuläret för att berätta om hinder, skador eller andra händelser längs promenaden som kan vara
                 bra för andra att känna till.
               </Text>
@@ -159,34 +179,24 @@ export default function TrailObstacleForm({ trailIdentifier, visible, onDismiss 
               contentContainerStyle={s.scrollContent}
             >
               <View style={s.fieldGroup}>
-                <Text style={s.bold}>Välj en kategori</Text>
+                <Text style={[s.fieldLabel, { color: theme.colors.onSurfaceVariant }]}>Välj en kategori</Text>
                 <Controller
                   control={control}
                   name="issueType"
-                  render={({ field: { onChange, onBlur, value } }) => (
-                    <Picker
-                      dropdownIconColor={theme.colors.onSurface}
-                      style={{ color: theme.colors.onSurface, backgroundColor: theme.colors.surfaceVariant }}
+                  render={({ field: { onChange, value } }) => (
+                    <SelectInput
                       selectedValue={value}
-                      onBlur={onBlur}
                       onValueChange={onChange}
-                      mode="dropdown"
-                    >
-                      {issueTypes.map((type) => (
-                        <Picker.Item
-                          key={type}
-                          label={issueTypeParser(type)}
-                          value={type}
-                          style={{ color: theme.colors.onSurface, backgroundColor: theme.colors.surfaceVariant }}
-                        />
-                      ))}
-                    </Picker>
+                      options={issueTypes.map((type) => ({ label: issueTypeParser(type), value: type }))}
+                    />
                   )}
                 />
                 {errors.issueType && <Text>{errors.issueType.message}</Text>}
               </View>
               <View style={s.fieldGroup}>
-                <Text style={s.bold}>Lägg till en beskrivning max 500 tecken</Text>
+                <Text style={[s.fieldLabel, { color: theme.colors.onSurfaceVariant }]}>
+                  Lägg till en beskrivning max 500 tecken
+                </Text>
                 <Controller
                   control={control}
                   name="description"
@@ -213,7 +223,9 @@ export default function TrailObstacleForm({ trailIdentifier, visible, onDismiss 
                 )}
               </View>
               <View style={s.locationRow}>
-                <Text style={s.locationLabel}>Dela din plats (valfritt)</Text>
+                <Text style={[s.locationLabel, { color: theme.colors.onSurfaceVariant }]}>
+                  Dela din plats (valfritt)
+                </Text>
                 <Controller
                   control={control}
                   name="useLocation"
@@ -230,6 +242,7 @@ export default function TrailObstacleForm({ trailIdentifier, visible, onDismiss 
                 />
               </View>
               {watch("useLocation") && <Text>📍 Plats kommer att bifogas</Text>}
+              {locationError && <Text style={[s.bold, { color: theme.colors.error }]}>{locationError}</Text>}
             </KeyboardAwareScrollView>
 
             <Button onPress={handleSubmit(onSubmit)} mode="contained" style={s.button} disabled={isPending}>
@@ -288,9 +301,26 @@ const s = StyleSheet.create({
   title: {
     fontWeight: "700",
     fontSize: 18,
+    letterSpacing: 0.4,
   },
   bold: {
     fontWeight: "700",
+  },
+  infoLabel: {
+    fontSize: 11,
+    fontWeight: "600",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  infoBody: {
+    fontSize: 13,
+    lineHeight: 20,
+  },
+  fieldLabel: {
+    fontSize: 11,
+    fontWeight: "600",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
   },
   fieldGroup: {
     gap: 5,
@@ -303,8 +333,10 @@ const s = StyleSheet.create({
     padding: 5,
   },
   locationLabel: {
-    fontWeight: "700",
-    fontSize: 17,
+    fontSize: 11,
+    fontWeight: "600",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
   },
   switch: {
     transform: [{ scaleX: 1.1 }, { scaleY: 1.1 }],
