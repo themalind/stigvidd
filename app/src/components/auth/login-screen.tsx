@@ -11,7 +11,7 @@ import { useState } from "react";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
 import { Appearance, Dimensions, ImageBackground, Pressable, StyleSheet, Text, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
-import { Button, Surface, TextInput, useTheme } from "react-native-paper";
+import { Button, TextInput, useTheme } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { z } from "zod";
 import ResetPasswordModal from "./reset-password-modal";
@@ -72,8 +72,7 @@ export default function LoginScreen() {
         contentContainerStyle={s.scrollContent}
       >
         <ImageBackground resizeMode="cover" source={background} style={s.backgroundImage}>
-          <Surface
-            elevation={5}
+          <View
             style={[
               s.surface,
               {
@@ -177,7 +176,7 @@ export default function LoginScreen() {
                 </Text>
               </Link>
             </View>
-          </Surface>
+          </View>
         </ImageBackground>
       </KeyboardAwareScrollView>
       <ResetPasswordModal visible={visible} onDismiss={() => setVisible(false)} />

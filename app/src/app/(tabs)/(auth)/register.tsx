@@ -11,7 +11,7 @@ import React, { useState } from "react";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
 import { Appearance, Dimensions, ImageBackground, StyleSheet, Text, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
-import { Button, Surface, TextInput, useTheme } from "react-native-paper";
+import { Button, TextInput, useTheme } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { z } from "zod";
 
@@ -91,7 +91,7 @@ export default function RegisterScreen() {
         contentContainerStyle={s.scrollContent}
       >
         <ImageBackground resizeMode="cover" source={background} style={s.backgroundImage}>
-          <Surface elevation={5} style={[s.surface, { backgroundColor: addOpacity(theme.colors.surface, 0.9) }]}>
+          <View style={[s.surface, { backgroundColor: addOpacity(theme.colors.surface, 0.9) }]}>
             <View style={s.logoContainer}>
               <Text style={[s.title, { color: theme.colors.onSurface }]}>Stigvidd</Text>
               <Image source={require("../../../assets/images/mammaapp.png")} style={s.logo} contentFit="contain" />
@@ -233,7 +233,7 @@ export default function RegisterScreen() {
                 </Link>
               </View>
             </View>
-          </Surface>
+          </View>
         </ImageBackground>
       </KeyboardAwareScrollView>
     </SafeAreaView>
