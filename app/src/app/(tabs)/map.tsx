@@ -49,9 +49,7 @@ export default function MapScreen() {
         <Marker coordinate={shelter} title="shelter" variant="shelter" />
         <Marker coordinate={campsite} title="campsite" variant="campsite" />
       </Map>
-      {!isMapReady && (
-        <View style={[StyleSheet.absoluteFill, { backgroundColor: theme.colors.background }]} />
-      )}
+      {!isMapReady && <View style={[StyleSheet.absoluteFill, { backgroundColor: theme.colors.background }]} />}
     </View>
   );
 }

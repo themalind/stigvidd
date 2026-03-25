@@ -10,12 +10,9 @@ export const imageStateAtom = atom<{
 });
 
 // Derived atom för att visa bild
-export const showImageAtom = atom(
-  null,
-  (get, set, imageUri: string | number) => {
-    set(imageStateAtom, { show: true, uri: imageUri });
-  },
-);
+export const showImageAtom = atom(null, (get, set, imageUri: string | number) => {
+  set(imageStateAtom, { show: true, uri: imageUri });
+});
 
 // Derived atom för att dölja bild
 export const hideImageAtom = atom(null, (get, set) => {

@@ -35,9 +35,7 @@ export default function WishlistScreen() {
       noTrailsSavedInfo="Du har inga sparade promenader som du vill gå än. Gå till en promenad och tryck på plusset för att lägga till."
       onDelete={handleDelete}
       trails={data ?? []}
-      icon={
-        <MaterialIcons name="star" size={24} color={theme.colors.tertiary} />
-      }
+      icon={<MaterialIcons name="star" size={24} color={theme.colors.tertiary} />}
     />
   );
 }
