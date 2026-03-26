@@ -6,7 +6,8 @@ import FormattedTime from "@/utils/format-time-from-ms";
 import { useQuery } from "@tanstack/react-query";
 import { Redirect } from "expo-router";
 import { useAtom, useAtomValue } from "jotai";
-import { StyleSheet, View } from "react-native";
+import BackButton from "@/components/back-button";
+import { Platform, StyleSheet, View } from "react-native";
 import { Text, useTheme } from "react-native-paper";
 
 export default function MyHikesScreen() {
@@ -29,13 +30,9 @@ export default function MyHikesScreen() {
   if (hikes?.length === 0) {
     return (
       <View
-        style={{
-          flex: 1,
-          justifyContent: "center",
-          alignItems: "center",
-          backgroundColor: theme.colors.background,
-        }}
+        style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: theme.colors.background }}
       >
+        <BackButton />
         <Text style={{ color: theme.colors.onBackground }}>No hikes saved</Text>
       </View>
     );
@@ -43,6 +40,7 @@ export default function MyHikesScreen() {
 
   return (
     <View style={[s.container, { backgroundColor: theme.colors.background }]}>
+      <BackButton />
       <Text>hello</Text>
 
       {hikes?.map((hike, index) => {

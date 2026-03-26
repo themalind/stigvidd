@@ -68,19 +68,19 @@ export default function TrailObstacleItem({ obstacle, trailIdentifier }: Props) 
 
   return (
     <View style={[s.container, { borderColor: theme.colors.outlineVariant }]}>
-      <View style={s.row}>
-        <Text style={s.bold}>Kategori: </Text>
-        <Text>{issueTypeParser(obstacle.issueType)}</Text>
+      <View style={s.field}>
+        <Text style={[s.label, { color: theme.colors.onSurfaceVariant }]}>Kategori</Text>
+        <Text style={[s.value, { color: theme.colors.onSurface }]}>{issueTypeParser(obstacle.issueType)}</Text>
       </View>
-      <Divider bold />
-      <View>
-        <Text style={s.bold}>Beskrivning: </Text>
-        <Text>{obstacle.description}</Text>
+      <Divider />
+      <View style={s.field}>
+        <Text style={[s.label, { color: theme.colors.onSurfaceVariant }]}>Beskrivning</Text>
+        <Text style={[s.description, { color: theme.colors.onSurface }]}>{obstacle.description}</Text>
       </View>
       <View style={s.footer}>
-        <View style={s.row}>
-          <Text style={s.bold}>Datum: </Text>
-          <Text>{formatDate(obstacle.createdAt)}</Text>
+        <View style={s.field}>
+          <Text style={[s.label, { color: theme.colors.onSurfaceVariant }]}>Datum</Text>
+          <Text style={[s.value, { color: theme.colors.onSurface }]}>{formatDate(obstacle.createdAt)}</Text>
         </View>
         <View style={s.voteRow}>
           <Text style={s.voteCount}>{obstacle.solvedVotes?.length ?? 0}/3</Text>
@@ -133,16 +133,27 @@ export default function TrailObstacleItem({ obstacle, trailIdentifier }: Props) 
 
 const s = StyleSheet.create({
   container: {
-    borderWidth: 2,
+    borderWidth: 1,
     borderRadius: BORDER_RADIUS,
-    padding: 10,
-    gap: 5,
+    padding: 12,
+    gap: 10,
   },
-  row: {
-    flexDirection: "row",
+  field: {
+    gap: 2,
   },
-  bold: {
-    fontWeight: "700",
+  label: {
+    fontSize: 11,
+    fontWeight: "600",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  value: {
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  description: {
+    fontSize: 14,
+    lineHeight: 20,
   },
   footer: {
     flexDirection: "row",
