@@ -192,7 +192,7 @@ export const TrailFilterModal: React.FC<TrailFilterModalProps> = ({
             <Text style={s.sectionTitle}>Svårighetsgrad</Text>
             <SelectInput
               selectedValue={filters.classification !== undefined ? String(filters.classification) : ""}
-              onValueChange={(value) => onUpdateFilter("classification", value === "" ? undefined : value)}
+              onValueChange={(value) => onUpdateFilter("classification", value === "" ? undefined : Number(value))}
               options={[
                 { label: "Alla svårighetsgrader", value: "" },
                 ...classifications.map((c) => ({ label: classificationParser(c), value: String(c) })),
