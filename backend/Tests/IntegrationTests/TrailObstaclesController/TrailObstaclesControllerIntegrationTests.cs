@@ -130,6 +130,28 @@ public class TrailObstaclesControllerIntegrationTests : IClassFixture<StigViddWe
     }
 
     [Fact]
+    public async Task AddTrailObstacle_WithDescriptionTooLong_ShouldReturnBadRequest()
+    {
+        // Arrange
+        var client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", AuthenticatedUser);
+
+        var obstacle = new TrailObstacleRequest
+        {
+            TrailIdentifier = "11a1b2c3-d4e5-4f6a-7b8c-9d0e1f2a3b4c",
+            Description = new string('a', 501), // over 500 chars
+            IssueType = "FallenTree"
+        };
+
+        // Act
+        var response = await client.PostAsJsonAsync("/api/v1/trailobstacles", obstacle);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
     public async Task AddTrailObstacle_WithNonExistentTrailIdentifier_ShouldReturnNotFound()
     {
         // Arrange
