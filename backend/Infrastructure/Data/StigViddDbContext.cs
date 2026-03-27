@@ -80,16 +80,18 @@ public class StigViddDbContext(DbContextOptions<StigViddDbContext> options) : Db
             .Property(to => to.IncidentLongitude)
             .HasPrecision(18, 10);
 
+        // Each solved vote belongs to one obstacle; obstacle can have many solved votes
         modelBuilder.Entity<TrailObstacleSolvedVote>()
             .HasOne(solvedVote => solvedVote.TrailObstacle)
             .WithMany(to => to.SolvedVotes)
             .HasForeignKey(solvedVote => solvedVote.TrailObstacleId)
-            .OnDelete(DeleteBehavior.NoAction);
+            .OnDelete(DeleteBehavior.NoAction); // Prevent cascade delete when obstacle is removed
 
+        // Each solved vote is cast by one user; deleting the user cascades to their votes
         modelBuilder.Entity<TrailObstacleSolvedVote>()
             .HasOne(solvedVote => solvedVote.User)
             .WithMany()
             .HasForeignKey(solvedVote => solvedVote.UserId)
-            .OnDelete(DeleteBehavior.NoAction);
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

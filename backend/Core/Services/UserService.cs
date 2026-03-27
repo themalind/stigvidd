@@ -374,13 +374,8 @@ public class UserService : IUserService
 
         try
         {
-            // Remove the user's solved votes first — NoAction FK prevents cascade from doing this automatically.
-            var solvedVotes = await context.TrailObstacleSolvedVotes
-                .Where(sv => sv.UserId == user.Id)
-                .ToListAsync(ctoken);
-            context.TrailObstacleSolvedVotes.RemoveRange(solvedVotes);
-
             // Stage the DB deletion. SaveChanges writes to the DB but the transaction is not committed yet.
+            // Solved votes are deleted automatically via cascade.
             context.Users.Remove(user);
             await context.SaveChangesAsync(ctoken);
 
