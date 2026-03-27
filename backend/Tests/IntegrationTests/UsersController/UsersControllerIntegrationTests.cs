@@ -1,4 +1,4 @@
-﻿using FluentAssertions;
+using FluentAssertions;
 using StigviddAPI;
 using System.Net;
 using System.Net.Http.Headers;
@@ -12,10 +12,19 @@ public class UsersControllerIntegrationTests : IClassFixture<StigViddWebApplicat
 {
     private readonly StigViddWebApplicationFactory<Program> _factory;
 
+    #region Seed identifiers
     // Test user identifiers matching seeded data in Utilities.cs
     private const string UserWithWishlist = "firebase-uid-12345";  // User 1: NaturElskaren
     private const string UserWithFavorites = "firebase-uid-12346"; // User 2: VandrarVennen
     private const string NonExistingUser = "firebase-uid-99999";   // No matching user in DB
+
+    // Trails
+    private const string StorsjoledenIdentifier = "22b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d";    // in VandrarVennen's favorites
+    private const string VildmarksledenArasIdentifier = "44d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f"; // in NaturElskaren's wishlist
+    private const string GesebolIdentifier = "55e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a";         // not in any tested user's lists
+    private const string HultaforsIdentifier = "66f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b";       // not in NaturElskaren's wishlist
+    private const string NonExistentTrailIdentifier = "88b8c9d0-e1f2-4a3b-4c5d-6e7f8a9b0c1d"; // does not exist in DB
+    #endregion
 
     public UsersControllerIntegrationTests(StigViddWebApplicationFactory<Program> factory)
     {
@@ -31,7 +40,7 @@ public class UsersControllerIntegrationTests : IClassFixture<StigViddWebApplicat
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", UserWithFavorites);
 
-       // Act
+        // Act
         var response = await client.GetAsync($"/api/v1/users/favorites");
         var favorites = await response.Content.ReadFromJsonAsync<List<UserFavoritesTrailResponse>>();
 
@@ -88,7 +97,7 @@ public class UsersControllerIntegrationTests : IClassFixture<StigViddWebApplicat
 
         var userRequest = new AddToUserFavoritesRequest
         {
-            TrailIdentifier = "55e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a"
+            TrailIdentifier = GesebolIdentifier
         };
 
         // Act
@@ -128,13 +137,13 @@ public class UsersControllerIntegrationTests : IClassFixture<StigViddWebApplicat
 
         var userRequest = new AddToUserFavoritesRequest
         {
-            TrailIdentifier = "55e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a"
+            TrailIdentifier = GesebolIdentifier
         };
 
         // Act
         var response = await client.PostAsJsonAsync("/api/v1/users/favorites", userRequest);
 
-        // Assert 
+        // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
 
@@ -148,7 +157,7 @@ public class UsersControllerIntegrationTests : IClassFixture<StigViddWebApplicat
 
         var userRequest = new AddToUserFavoritesRequest
         {
-            TrailIdentifier = "88b8c9d0-e1f2-4a3b-4c5d-6e7f8a9b0c1d"
+            TrailIdentifier = NonExistentTrailIdentifier
         };
 
         // Act
@@ -166,10 +175,10 @@ public class UsersControllerIntegrationTests : IClassFixture<StigViddWebApplicat
         client.DefaultRequestHeaders.Authorization =
          new AuthenticationHeaderValue("Bearer", UserWithFavorites);
 
-        // Trail "22b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d" is already in UserWithFavorites' favorites
+        // StorsjoledenIdentifier is already in VandrarVennen's favorites
         var userRequest = new AddToUserFavoritesRequest
         {
-            TrailIdentifier = "22b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d"
+            TrailIdentifier = StorsjoledenIdentifier
         };
 
         // Act
@@ -187,11 +196,8 @@ public class UsersControllerIntegrationTests : IClassFixture<StigViddWebApplicat
         client.DefaultRequestHeaders.Authorization =
          new AuthenticationHeaderValue("Bearer", UserWithFavorites);
 
-        // Trail "22b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d" is in UserWithFavorites' favorites
-        var trailIdentifier = "22b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d";
-
-        // Act
-        var request = new HttpRequestMessage(HttpMethod.Delete, $"/api/v1/users/favorites/{trailIdentifier}");
+        // StorsjoledenIdentifier is in VandrarVennen's favorites
+        var request = new HttpRequestMessage(HttpMethod.Delete, $"/api/v1/users/favorites/{StorsjoledenIdentifier}");
         var response = await client.SendAsync(request);
 
         // Assert
@@ -206,10 +212,8 @@ public class UsersControllerIntegrationTests : IClassFixture<StigViddWebApplicat
         client.DefaultRequestHeaders.Authorization =
          new AuthenticationHeaderValue("Bearer", UserWithFavorites);
 
-        var trailIdentifier = "22b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5y";
-
         // Act
-        var request = new HttpRequestMessage(HttpMethod.Delete, $"/api/v1/users/favorites/{trailIdentifier}");
+        var request = new HttpRequestMessage(HttpMethod.Delete, $"/api/v1/users/favorites/22b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5y");
         var response = await client.SendAsync(request);
 
         // Assert
@@ -224,10 +228,8 @@ public class UsersControllerIntegrationTests : IClassFixture<StigViddWebApplicat
         client.DefaultRequestHeaders.Authorization =
          new AuthenticationHeaderValue("Bearer", NonExistingUser);
 
-        var trailIdentifier = "22b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d";
-
         // Act
-        var request = new HttpRequestMessage(HttpMethod.Delete, $"/api/v1/users/favorites/{trailIdentifier}");
+        var request = new HttpRequestMessage(HttpMethod.Delete, $"/api/v1/users/favorites/{StorsjoledenIdentifier}");
         var response = await client.SendAsync(request);
 
         // Assert
@@ -299,7 +301,7 @@ public class UsersControllerIntegrationTests : IClassFixture<StigViddWebApplicat
 
         var userRequest = new AddToUserWishlistRequest
         {
-            TrailIdentifier = "55e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a"
+            TrailIdentifier = GesebolIdentifier
         };
 
         // Act
@@ -319,7 +321,7 @@ public class UsersControllerIntegrationTests : IClassFixture<StigViddWebApplicat
 
         var userRequest = new AddToUserWishlistRequest
         {
-            TrailIdentifier = "55e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a"
+            TrailIdentifier = GesebolIdentifier
         };
 
         // Act
@@ -339,7 +341,7 @@ public class UsersControllerIntegrationTests : IClassFixture<StigViddWebApplicat
 
         var userRequest = new AddToUserWishlistRequest
         {
-            TrailIdentifier = "88b8c9d0-e1f2-4a3b-4c5d-6e7f8a9b0c1d"
+            TrailIdentifier = NonExistentTrailIdentifier
         };
 
         // Act
@@ -377,10 +379,10 @@ public class UsersControllerIntegrationTests : IClassFixture<StigViddWebApplicat
         client.DefaultRequestHeaders.Authorization =
          new AuthenticationHeaderValue("Bearer", UserWithWishlist);
 
-        // Trail "44d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f" is already in UserWithWishlist's wishlist
+        // VildmarksledenArasIdentifier is already in NaturElskaren's wishlist
         var userRequest = new AddToUserWishlistRequest
         {
-            TrailIdentifier = "44d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f"
+            TrailIdentifier = VildmarksledenArasIdentifier
         };
 
         // Act
@@ -398,11 +400,8 @@ public class UsersControllerIntegrationTests : IClassFixture<StigViddWebApplicat
         client.DefaultRequestHeaders.Authorization =
          new AuthenticationHeaderValue("Bearer", UserWithWishlist);
 
-        // Trail "44d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f" is in UserWithWishlist's wishlist
-        var trailIdentifier = "44d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f";
-
-        // Act
-        var request = new HttpRequestMessage(HttpMethod.Delete, $"/api/v1/users/wishlist/{trailIdentifier}");
+        // VildmarksledenArasIdentifier is in NaturElskaren's wishlist
+        var request = new HttpRequestMessage(HttpMethod.Delete, $"/api/v1/users/wishlist/{VildmarksledenArasIdentifier}");
         var response = await client.SendAsync(request);
 
         // Assert
@@ -417,10 +416,8 @@ public class UsersControllerIntegrationTests : IClassFixture<StigViddWebApplicat
         client.DefaultRequestHeaders.Authorization =
          new AuthenticationHeaderValue("Bearer", UserWithWishlist);
 
-        var trailIdentifier = "66f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b";
-
-        // Act
-        var request = new HttpRequestMessage(HttpMethod.Delete, $"/api/v1/users/wishlist/{trailIdentifier}");
+        // HultaforsIdentifier is NOT in NaturElskaren's wishlist
+        var request = new HttpRequestMessage(HttpMethod.Delete, $"/api/v1/users/wishlist/{HultaforsIdentifier}");
         var response = await client.SendAsync(request);
 
         // Assert
@@ -435,10 +432,8 @@ public class UsersControllerIntegrationTests : IClassFixture<StigViddWebApplicat
         client.DefaultRequestHeaders.Authorization =
          new AuthenticationHeaderValue("Bearer", NonExistingUser);
 
-        var trailIdentifier = "44d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f";
-
         // Act
-        var request = new HttpRequestMessage(HttpMethod.Delete, $"/api/v1/users/wishlist/{trailIdentifier}");
+        var request = new HttpRequestMessage(HttpMethod.Delete, $"/api/v1/users/wishlist/{VildmarksledenArasIdentifier}");
         var response = await client.SendAsync(request);
 
         // Assert
@@ -450,7 +445,6 @@ public class UsersControllerIntegrationTests : IClassFixture<StigViddWebApplicat
     {
         // Arrange
         var client = _factory.CreateClient();
-        // Use a new firebase UID for creating a new user
         client.DefaultRequestHeaders.Authorization =
          new AuthenticationHeaderValue("Bearer", "firebase-uid-new-user-1");
 

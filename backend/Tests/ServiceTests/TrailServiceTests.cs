@@ -1,4 +1,4 @@
-﻿using Core;
+using Core;
 using Core.Factories;
 using Core.Interfaces;
 using Core.Services;
@@ -16,20 +16,29 @@ namespace ServiceTests;
 
 public class TrailServiceTests : TestBase
 {
+    #region Seed identifiers
+
+    // Users
+    private const string NaturElskarenIdentifier = "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d"; // User 1
+
+    // Trails
+    private const string VildmarksledenArasIdentifier = "44d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f"; // Trail 4
+
+    #endregion
+
     [Fact]
     public async Task GetTrailByIdentifierWithoutCoordinatesAsync_WhenTrailExists_ShouldReturnSuccess_AndTrail()
     {
         // Arrange
         var trailService = CreateTrailService();
-        var trailIdentifier = "44d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f"; // Vildmarksleden Årås
 
         // Act
-        var result = await trailService.GetTrailByIdentifierWithoutCoordinatesAsync(trailIdentifier, CancellationToken.None);
+        var result = await trailService.GetTrailByIdentifierWithoutCoordinatesAsync(VildmarksledenArasIdentifier, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeTrue();
         result.Value.Should().NotBeNull();
-        result.Value.Identifier.Should().Be(trailIdentifier);
+        result.Value.Identifier.Should().Be(VildmarksledenArasIdentifier);
     }
 
     [Fact]
@@ -37,10 +46,9 @@ public class TrailServiceTests : TestBase
     {
         // Arrange
         var trailService = CreateTrailService();
-        var trailIdentifier = "not-a-real-trail";
 
         // Act
-        var result = await trailService.GetTrailByIdentifierWithoutCoordinatesAsync(trailIdentifier, CancellationToken.None);
+        var result = await trailService.GetTrailByIdentifierWithoutCoordinatesAsync("not-a-real-trail", CancellationToken.None);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -54,10 +62,9 @@ public class TrailServiceTests : TestBase
     {
         // Arrange
         var trailService = CreateTrailService();
-        var trailIdentifier = "44d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f"; // Vildmarksleden Årås
 
         // Act
-        var result = await trailService.GetCoordinatesByTrailIdentifierAsync(trailIdentifier, CancellationToken.None);
+        var result = await trailService.GetCoordinatesByTrailIdentifierAsync(VildmarksledenArasIdentifier, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -69,10 +76,9 @@ public class TrailServiceTests : TestBase
     {
         // Arrange
         var trailService = CreateTrailService();
-        var trailIdentifier = "not-a-real-trail"; // Vildmarksleden Årås
 
         // Act
-        var result = await trailService.GetCoordinatesByTrailIdentifierAsync(trailIdentifier, CancellationToken.None);
+        var result = await trailService.GetCoordinatesByTrailIdentifierAsync("not-a-real-trail", CancellationToken.None);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -85,8 +91,6 @@ public class TrailServiceTests : TestBase
     {
         // Arrange
         var trailService = CreateTrailService();
-
-        var userIdentifier = "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d"; // NaturElskaren
 
         var request = new CreateTrailRequest
         {
@@ -113,7 +117,7 @@ public class TrailServiceTests : TestBase
         var trailImageUrls = GetFormFileCollection();
 
         // Act
-        var result = await trailService.AddTrailAsync(request, trailSymbolImage, trailImageUrls, userIdentifier, CancellationToken.None);
+        var result = await trailService.AddTrailAsync(request, trailSymbolImage, trailImageUrls, NaturElskarenIdentifier, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -128,8 +132,6 @@ public class TrailServiceTests : TestBase
         // Arrange
         var trailService = CreateTrailService(uploadShouldThrowException: true);
 
-        var userIdentifier = "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d"; // NaturElskaren
-
         var request = new CreateTrailRequest
         {
             Name = "Test Trail",
@@ -155,7 +157,7 @@ public class TrailServiceTests : TestBase
         var trailImageUrls = GetFormFileCollection();
 
         // Act
-        var result = await trailService.AddTrailAsync(request, trailSymbolImage, trailImageUrls, userIdentifier, CancellationToken.None);
+        var result = await trailService.AddTrailAsync(request, trailSymbolImage, trailImageUrls, NaturElskarenIdentifier, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -169,8 +171,6 @@ public class TrailServiceTests : TestBase
         // Arrange
         var trailService = CreateTrailService(uploadShouldReturnFailure: true);
 
-        var userIdentifier = "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d"; // NaturElskaren
-
         var request = new CreateTrailRequest
         {
             Name = "Test Trail",
@@ -194,7 +194,7 @@ public class TrailServiceTests : TestBase
         var trailImageUrls = GetFormFileCollection();
 
         // Act
-        var result = await trailService.AddTrailAsync(request, trailSymbolImage, trailImageUrls, userIdentifier, CancellationToken.None);
+        var result = await trailService.AddTrailAsync(request, trailSymbolImage, trailImageUrls, NaturElskarenIdentifier, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeFalse();

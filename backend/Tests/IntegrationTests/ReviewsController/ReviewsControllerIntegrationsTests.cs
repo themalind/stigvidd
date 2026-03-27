@@ -1,4 +1,4 @@
-﻿using FluentAssertions;
+using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using StigviddAPI;
 using System.Net;
@@ -12,7 +12,19 @@ public class ReviewsControllerIntegrationsTests : IClassFixture<StigViddWebAppli
 {
     private readonly StigViddWebApplicationFactory<Program> _factory;
 
+    #region Seed identifiers
     private const string AuthenticatedUser = "firebase-uid-12346"; // User 2: VandrarVennen
+
+    // Trails
+    private const string TivedenIdentifier = "11a1b2c3-d4e5-4f6a-7b8c-9d0e1f2a3b4c";    // 2 reviews seeded
+    private const string HultaforsIdentifier = "66f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b";  // 0 reviews seeded
+    private const string NassehultIdentifier = "77a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c";  // 2 reviews seeded
+    private const string NonExistentTrailIdentifier = "22b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c58"; // does not exist
+
+    // Reviews
+    private const string Review1Identifier = "r1a1b2c3-d4e5-4f6a-7b8c-9d0e1f2a3b4c"; // by VandrarVennen, on Tiveden
+    private const string Review2Identifier = "r2b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d"; // by NaturElskaren (another user)
+    #endregion
 
     public ReviewsControllerIntegrationsTests(StigViddWebApplicationFactory<Program> factory)
     {
@@ -28,12 +40,11 @@ public class ReviewsControllerIntegrationsTests : IClassFixture<StigViddWebAppli
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", AuthenticatedUser);
 
-        var trailIdentifier = "11a1b2c3-d4e5-4f6a-7b8c-9d0e1f2a3b4c";
         int page = 0;
         int limit = 2;
 
         // Act
-        var response = await client.GetAsync($"/api/v1/reviews/trail/{trailIdentifier}?page={page}&limit={limit}");
+        var response = await client.GetAsync($"/api/v1/reviews/trail/{TivedenIdentifier}?page={page}&limit={limit}");
         var pagedReviews = await response.Content.ReadFromJsonAsync<PagedReviewResponse>();
 
         // Assert
@@ -50,12 +61,11 @@ public class ReviewsControllerIntegrationsTests : IClassFixture<StigViddWebAppli
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", AuthenticatedUser);
 
-        var trailWithoutReviews = "66f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b";
         int page = 0;
         int limit = 10;
 
         // Act
-        var response = await client.GetAsync($"/api/v1/reviews/trail/{trailWithoutReviews}?page={page}&limit={limit}");
+        var response = await client.GetAsync($"/api/v1/reviews/trail/{HultaforsIdentifier}?page={page}&limit={limit}");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -69,12 +79,11 @@ public class ReviewsControllerIntegrationsTests : IClassFixture<StigViddWebAppli
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", AuthenticatedUser);
 
-        var invalidTrailIdentifier = "i-am-an-invalid-trail-identifier";
         int page = 0;
         int limit = 10;
 
         // Act
-        var response = await client.GetAsync($"/api/v1/reviews/trail/{invalidTrailIdentifier}?page={page}&limit={limit}");
+        var response = await client.GetAsync($"/api/v1/reviews/trail/i-am-an-invalid-trail-identifier?page={page}&limit={limit}");
         var pagedReviews = await response.Content.ReadFromJsonAsync<PagedReviewResponse>();
 
         // Assert
@@ -91,11 +100,9 @@ public class ReviewsControllerIntegrationsTests : IClassFixture<StigViddWebAppli
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", AuthenticatedUser);
 
-        var trailIdentifier = "77a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c"; // Nässlehult
-
         var formData = new MultipartFormDataContent
         {
-            { new StringContent(trailIdentifier), "TrailIdentifier" },
+            { new StringContent(NassehultIdentifier), "TrailIdentifier" },
             { new StringContent("An amazing trail with breathtaking views!"), "TrailReview" },
             { new StringContent("4.5"), "Rating" }
         };
@@ -113,11 +120,9 @@ public class ReviewsControllerIntegrationsTests : IClassFixture<StigViddWebAppli
         // Arrange
         var client = _factory.CreateClient();
 
-        var trailIdentifier = "77a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c"; // Nässlehult
-
         var formData = new MultipartFormDataContent
         {
-            { new StringContent(trailIdentifier), "TrailIdentifier" },
+            { new StringContent(NassehultIdentifier), "TrailIdentifier" },
             { new StringContent("An amazing trail with breathtaking views!"), "TrailReview" },
             { new StringContent("4.5"), "Rating" }
         };
@@ -137,10 +142,9 @@ public class ReviewsControllerIntegrationsTests : IClassFixture<StigViddWebAppli
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", AuthenticatedUser);
 
-        var trailIdentifier = "77a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c"; // Nässlehult
         var formData = new MultipartFormDataContent
         {
-            { new StringContent(trailIdentifier), "TrailIdentifier" },
+            { new StringContent(NassehultIdentifier), "TrailIdentifier" },
             { new StringContent("An amazing trail with breathtaking views!"), "TrailReview" },
             { new StringContent("1337"), "Rating" }
         };
@@ -160,10 +164,9 @@ public class ReviewsControllerIntegrationsTests : IClassFixture<StigViddWebAppli
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", AuthenticatedUser);
 
-        var invalidTrailIdentifier = "22b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c58";
         var formData = new MultipartFormDataContent
         {
-            { new StringContent(invalidTrailIdentifier), "TrailIdentifier" },
+            { new StringContent(NonExistentTrailIdentifier), "TrailIdentifier" },
             { new StringContent("An amazing trail with breathtaking views!"), "TrailReview" },
             { new StringContent("4.5"), "Rating" }
         };
@@ -183,10 +186,8 @@ public class ReviewsControllerIntegrationsTests : IClassFixture<StigViddWebAppli
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", AuthenticatedUser);
 
-        var reviewIdentifier = "r1a1b2c3-d4e5-4f6a-7b8c-9d0e1f2a3b4c"; // Review by VandrarVennen
         // Act
-
-        var response = await client.DeleteAsync($"/api/v1/reviews/{reviewIdentifier}");
+        var response = await client.DeleteAsync($"/api/v1/reviews/{Review1Identifier}");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.NoContent);
@@ -197,15 +198,14 @@ public class ReviewsControllerIntegrationsTests : IClassFixture<StigViddWebAppli
     {
         // Arrange
         var client = _factory.CreateClient();
-        var reviewIdentifier = "r1a1b2c3-d4e5-4f6a-7b8c-9d0e1f2a3b4c"; // Review by VandrarVennen
 
         // Act
-        var response = await client.DeleteAsync($"/api/v1/reviews/{reviewIdentifier}");
+        var response = await client.DeleteAsync($"/api/v1/reviews/{Review1Identifier}");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
-    
+
     // Claudetests
 
     [Fact]
@@ -216,12 +216,11 @@ public class ReviewsControllerIntegrationsTests : IClassFixture<StigViddWebAppli
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", AuthenticatedUser);
 
-        var trailIdentifier = "11a1b2c3-d4e5-4f6a-7b8c-9d0e1f2a3b4c"; // Tiveden (has 2 reviews)
         int page = 0;
         int limit = 1;
 
         // Act
-        var response = await client.GetAsync($"/api/v1/reviews/trail/{trailIdentifier}?page={page}&limit={limit}");
+        var response = await client.GetAsync($"/api/v1/reviews/trail/{TivedenIdentifier}?page={page}&limit={limit}");
         var pagedReviews = await response.Content.ReadFromJsonAsync<PagedReviewResponse>();
 
         // Assert
@@ -240,12 +239,11 @@ public class ReviewsControllerIntegrationsTests : IClassFixture<StigViddWebAppli
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", AuthenticatedUser);
 
-        var trailIdentifier = "11a1b2c3-d4e5-4f6a-7b8c-9d0e1f2a3b4c"; // Tiveden (has 2 reviews)
         int page = 0;
         int limit = 10;
 
         // Act
-        var response = await client.GetAsync($"/api/v1/reviews/trail/{trailIdentifier}?page={page}&limit={limit}");
+        var response = await client.GetAsync($"/api/v1/reviews/trail/{TivedenIdentifier}?page={page}&limit={limit}");
         var pagedReviews = await response.Content.ReadFromJsonAsync<PagedReviewResponse>();
 
         // Assert
@@ -264,12 +262,11 @@ public class ReviewsControllerIntegrationsTests : IClassFixture<StigViddWebAppli
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", AuthenticatedUser);
 
-        var trailIdentifier = "77a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c"; // Nässehult (has 2 reviews)
         int page = 1;
         int limit = 1;
 
         // Act
-        var response = await client.GetAsync($"/api/v1/reviews/trail/{trailIdentifier}?page={page}&limit={limit}");
+        var response = await client.GetAsync($"/api/v1/reviews/trail/{NassehultIdentifier}?page={page}&limit={limit}");
         var pagedReviews = await response.Content.ReadFromJsonAsync<PagedReviewResponse>();
 
         // Assert
@@ -287,12 +284,11 @@ public class ReviewsControllerIntegrationsTests : IClassFixture<StigViddWebAppli
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", AuthenticatedUser);
 
-        var trailIdentifier = "77a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c"; // Nässehult (has 2 reviews)
         int page = 10;
         int limit = 10;
 
         // Act
-        var response = await client.GetAsync($"/api/v1/reviews/trail/{trailIdentifier}?page={page}&limit={limit}");
+        var response = await client.GetAsync($"/api/v1/reviews/trail/{NassehultIdentifier}?page={page}&limit={limit}");
         var pagedReviews = await response.Content.ReadFromJsonAsync<PagedReviewResponse>();
 
         // Assert
@@ -311,10 +307,9 @@ public class ReviewsControllerIntegrationsTests : IClassFixture<StigViddWebAppli
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", AuthenticatedUser);
 
-        var trailIdentifier = "77a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c";
         var formData = new MultipartFormDataContent
         {
-            { new StringContent(trailIdentifier), "TrailIdentifier" },
+            { new StringContent(NassehultIdentifier), "TrailIdentifier" },
             { new StringContent("Test review"), "TrailReview" },
             { new StringContent("0.5"), "Rating" }
         };
@@ -334,10 +329,9 @@ public class ReviewsControllerIntegrationsTests : IClassFixture<StigViddWebAppli
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", AuthenticatedUser);
 
-        var trailIdentifier = "77a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c";
         var formData = new MultipartFormDataContent
         {
-            { new StringContent(trailIdentifier), "TrailIdentifier" },
+            { new StringContent(NassehultIdentifier), "TrailIdentifier" },
             { new StringContent("Minimum rating review"), "TrailReview" },
             { new StringContent("1"), "Rating" }
         };
@@ -357,10 +351,9 @@ public class ReviewsControllerIntegrationsTests : IClassFixture<StigViddWebAppli
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", AuthenticatedUser);
 
-        var trailIdentifier = "77a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c";
         var formData = new MultipartFormDataContent
         {
-            { new StringContent(trailIdentifier), "TrailIdentifier" },
+            { new StringContent(NassehultIdentifier), "TrailIdentifier" },
             { new StringContent("Maximum rating review"), "TrailReview" },
             { new StringContent("5"), "Rating" }
         };
@@ -380,10 +373,9 @@ public class ReviewsControllerIntegrationsTests : IClassFixture<StigViddWebAppli
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", AuthenticatedUser);
 
-        var trailIdentifier = "77a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c";
         var formData = new MultipartFormDataContent
         {
-            { new StringContent(trailIdentifier), "TrailIdentifier" },
+            { new StringContent(NassehultIdentifier), "TrailIdentifier" },
             { new StringContent("Test review"), "TrailReview" },
             { new StringContent("5.1"), "Rating" }
         };
@@ -403,10 +395,9 @@ public class ReviewsControllerIntegrationsTests : IClassFixture<StigViddWebAppli
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", AuthenticatedUser);
 
-        var trailIdentifier = "77a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c";
         var formData = new MultipartFormDataContent
         {
-            { new StringContent(trailIdentifier), "TrailIdentifier" },
+            { new StringContent(NassehultIdentifier), "TrailIdentifier" },
             { new StringContent("4"), "Rating" }
         };
 
@@ -425,8 +416,6 @@ public class ReviewsControllerIntegrationsTests : IClassFixture<StigViddWebAppli
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", AuthenticatedUser);
 
-        var trailIdentifier = "77a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c"; // Nässehult
-
         var fakeImageBytes = new byte[] { 0xFF, 0xD8, 0xFF, 0xE0 }; // minimal JPEG header
 
         var imageContent1 = new ByteArrayContent(fakeImageBytes);
@@ -437,7 +426,7 @@ public class ReviewsControllerIntegrationsTests : IClassFixture<StigViddWebAppli
 
         var formData = new MultipartFormDataContent
         {
-            { new StringContent(trailIdentifier), "TrailIdentifier" },
+            { new StringContent(NassehultIdentifier), "TrailIdentifier" },
             { new StringContent("Great trail!"), "TrailReview" },
             { new StringContent("4.5"), "Rating" },
             { imageContent1, "images", "review-image-1.jpg" },
@@ -459,10 +448,8 @@ public class ReviewsControllerIntegrationsTests : IClassFixture<StigViddWebAppli
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", AuthenticatedUser);
 
-        var nonExistentReviewIdentifier = "non-existent-review-identifier";
-
         // Act
-        var response = await client.DeleteAsync($"/api/v1/reviews/{nonExistentReviewIdentifier}");
+        var response = await client.DeleteAsync($"/api/v1/reviews/non-existent-review-identifier");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
@@ -476,11 +463,8 @@ public class ReviewsControllerIntegrationsTests : IClassFixture<StigViddWebAppli
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", AuthenticatedUser); // VandrarVennen
 
-        // Review by NaturElskaren, not VandrarVennen
-        var reviewByOtherUser = "r2b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d";
-
-        // Act
-        var response = await client.DeleteAsync($"/api/v1/reviews/{reviewByOtherUser}");
+        // Act — Review2 belongs to NaturElskaren, not VandrarVennen
+        var response = await client.DeleteAsync($"/api/v1/reviews/{Review2Identifier}");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);

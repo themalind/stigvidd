@@ -13,15 +13,37 @@ namespace ServiceTests;
 
 public class TrailObstaclesServiceTests : TestBase
 {
+    #region Seed identifiers
+
+    // Users
+    private const string NaturElskarenIdentifier = "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d"; // User 1
+    private const string VandrarVennenIdentifier = "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e";  // User 2
+    private const string SkogsGrenIdentifier = "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d67";     // User 3
+
+    // Trails
+    private const string TivedenIdentifier = "11a1b2c3-d4e5-4f6a-7b8c-9d0e1f2a3b4c";        // has Obstacle1 + Obstacle4 (old)
+    private const string TangaledenIdentifier = "33c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e";    // has Obstacle3 (3 solved votes)
+    private const string GesebolIdentifier = "55e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a";       // no obstacles
+
+    // Obstacles
+    private const string Obstacle1Identifier = "ob1a1b2c3-d4e5-4f6a-7b8c-9d0e1f2a3b4c"; // Tiveden, 0 solved votes
+    private const string Obstacle2Identifier = "ob2b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d"; // Storsjöleden, 1 solved vote by NaturElskaren
+    private const string Obstacle3Identifier = "ob3c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e"; // Tångaleden, 3 solved votes (filtered)
+
+    // Coordinates
+    private const decimal ObstacleLatitude = 57.7291353665M;
+    private const decimal ObstacleLongitude = 12.8382551042M;
+
+    #endregion
+
     [Fact]
     public async Task GetTrailObstacles_WhenObstaclesExist_ShouldReturnObstacles()
     {
         // Arrange
         var service = CreateTrailObstacleService();
-        var trailIdentifier = "11a1b2c3-d4e5-4f6a-7b8c-9d0e1f2a3b4c"; // Tiveden — has obstacle 1
 
         // Act
-        var result = await service.GetTrailObstaclesByTrailIdentifierAsync(trailIdentifier, CancellationToken.None);
+        var result = await service.GetTrailObstaclesByTrailIdentifierAsync(TivedenIdentifier, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -34,10 +56,9 @@ public class TrailObstaclesServiceTests : TestBase
     {
         // Arrange
         var service = CreateTrailObstacleService();
-        var trailIdentifier = "55e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a"; // Gesebol — no obstacles
 
         // Act
-        var result = await service.GetTrailObstaclesByTrailIdentifierAsync(trailIdentifier, CancellationToken.None);
+        var result = await service.GetTrailObstaclesByTrailIdentifierAsync(GesebolIdentifier, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -50,14 +71,13 @@ public class TrailObstaclesServiceTests : TestBase
     {
         // Arrange
         var service = CreateTrailObstacleService();
-        var trailIdentifier = "11a1b2c3-d4e5-4f6a-7b8c-9d0e1f2a3b4c"; // Tiveden — obstacle 1 (active) + obstacle 4 (40 days old)
 
         // Act
-        var result = await service.GetTrailObstaclesByTrailIdentifierAsync(trailIdentifier, CancellationToken.None);
+        var result = await service.GetTrailObstaclesByTrailIdentifierAsync(TivedenIdentifier, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeTrue();
-        result.Value.Should().HaveCount(1); // Obstacle 4 filtered out
+        result.Value.Should().HaveCount(1); // Obstacle4 (40 days old) filtered out
     }
 
     [Fact]
@@ -65,14 +85,13 @@ public class TrailObstaclesServiceTests : TestBase
     {
         // Arrange
         var service = CreateTrailObstacleService();
-        var trailIdentifier = "33c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e"; // Tångaleden — obstacle 3 has 3 solved votes in seed
 
         // Act
-        var result = await service.GetTrailObstaclesByTrailIdentifierAsync(trailIdentifier, CancellationToken.None);
+        var result = await service.GetTrailObstaclesByTrailIdentifierAsync(TangaledenIdentifier, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeTrue();
-        result.Value.Should().BeEmpty(); // Obstacle 3 filtered out: 3 or more solved votes
+        result.Value.Should().BeEmpty(); // Obstacle3 filtered out: 3 or more solved votes
     }
 
     [Fact]
@@ -83,8 +102,8 @@ public class TrailObstaclesServiceTests : TestBase
 
         // Act
         var result = await service.AddTrailObstacle(
-            "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d", // NaturElskaren
-            "11a1b2c3-d4e5-4f6a-7b8c-9d0e1f2a3b4c",  // Tiveden
+            NaturElskarenIdentifier,
+            TivedenIdentifier,
             "Stort träd blockerar stigen.",
             "FallenTree",
             null, null,
@@ -103,7 +122,7 @@ public class TrailObstaclesServiceTests : TestBase
         // Act
         var result = await service.AddTrailObstacle(
             "invalid-user",
-            "11a1b2c3-d4e5-4f6a-7b8c-9d0e1f2a3b4c",
+            TivedenIdentifier,
             "Beskrivning av hinder.",
             "FallenTree",
             null, null,
@@ -123,7 +142,7 @@ public class TrailObstaclesServiceTests : TestBase
 
         // Act
         var result = await service.AddTrailObstacle(
-            "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+            NaturElskarenIdentifier,
             "invalid-trail",
             "Beskrivning av hinder.",
             "FallenTree",
@@ -145,8 +164,8 @@ public class TrailObstaclesServiceTests : TestBase
 
         // Act
         var result = await service.AddTrailObstacle(
-            "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
-            "11a1b2c3-d4e5-4f6a-7b8c-9d0e1f2a3b4c",
+            NaturElskarenIdentifier,
+            TivedenIdentifier,
             "Okänt problem på stigen.",
             "SomethingTotallyUnknown",
             null, null,
@@ -169,11 +188,11 @@ public class TrailObstaclesServiceTests : TestBase
 
         // Act
         var result = await service.AddTrailObstacle(
-            "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
-            "11a1b2c3-d4e5-4f6a-7b8c-9d0e1f2a3b4c",
+            NaturElskarenIdentifier,
+            TivedenIdentifier,
             "Stort träd blockerar stigen.",
             "FallenTree",
-            12.8382551042M, 57.7291353665M,
+            ObstacleLongitude, ObstacleLatitude,
             CancellationToken.None);
 
         // Assert
@@ -181,8 +200,8 @@ public class TrailObstaclesServiceTests : TestBase
 
         using var context = new StigViddDbContext(options);
         var saved = context.TrailObstacles.OrderByDescending(o => o.Id).First();
-        saved.IncidentLongitude.Should().Be(12.8382551042M);
-        saved.IncidentLatitude.Should().Be(57.7291353665M);
+        saved.IncidentLongitude.Should().Be(ObstacleLongitude);
+        saved.IncidentLatitude.Should().Be(ObstacleLatitude);
     }
 
     [Fact]
@@ -193,8 +212,8 @@ public class TrailObstaclesServiceTests : TestBase
 
         // Act
         var result = await service.AddSolvedVoteAsync(
-            "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e", // VandrarVennen — has not voted on obstacle 1
-            "ob1a1b2c3-d4e5-4f6a-7b8c-9d0e1f2a3b4c",  // Obstacle 1 — 0 votes
+            VandrarVennenIdentifier, // VandrarVennen has not voted on Obstacle1
+            Obstacle1Identifier,
             CancellationToken.None);
 
         // Assert
@@ -209,8 +228,8 @@ public class TrailObstaclesServiceTests : TestBase
 
         // Act
         var result = await service.AddSolvedVoteAsync(
-            "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d", // NaturElskaren — already voted on obstacle 2
-            "ob2b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+            NaturElskarenIdentifier, // NaturElskaren already voted on Obstacle2
+            Obstacle2Identifier,
             CancellationToken.None);
 
         // Assert
@@ -228,7 +247,7 @@ public class TrailObstaclesServiceTests : TestBase
         // Act
         var result = await service.AddSolvedVoteAsync(
             "invalid-user",
-            "ob1a1b2c3-d4e5-4f6a-7b8c-9d0e1f2a3b4c",
+            Obstacle1Identifier,
             CancellationToken.None);
 
         // Assert
@@ -245,7 +264,7 @@ public class TrailObstaclesServiceTests : TestBase
 
         // Act
         var result = await service.AddSolvedVoteAsync(
-            "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+            NaturElskarenIdentifier,
             "invalid-obstacle",
             CancellationToken.None);
 
@@ -263,8 +282,8 @@ public class TrailObstaclesServiceTests : TestBase
 
         // Act
         var result = await service.DeleteSolvedVoteByUserIdentifierAsync(
-            "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d", // NaturElskaren — has a vote on obstacle 2
-            "ob2b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+            NaturElskarenIdentifier, // NaturElskaren has a vote on Obstacle2
+            Obstacle2Identifier,
             CancellationToken.None);
 
         // Assert
@@ -280,7 +299,7 @@ public class TrailObstaclesServiceTests : TestBase
         // Act
         var result = await service.DeleteSolvedVoteByUserIdentifierAsync(
             "invalid-user",
-            "ob2b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+            Obstacle2Identifier,
             CancellationToken.None);
 
         // Assert
@@ -297,7 +316,7 @@ public class TrailObstaclesServiceTests : TestBase
 
         // Act
         var result = await service.DeleteSolvedVoteByUserIdentifierAsync(
-            "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+            NaturElskarenIdentifier,
             "invalid-obstacle",
             CancellationToken.None);
 
@@ -315,8 +334,8 @@ public class TrailObstaclesServiceTests : TestBase
 
         // Act
         var result = await service.DeleteSolvedVoteByUserIdentifierAsync(
-            "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d67", // SkogsGreven — has no vote on obstacle 2
-            "ob2b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+            SkogsGrenIdentifier, // SkogsGren has no vote on Obstacle2
+            Obstacle2Identifier,
             CancellationToken.None);
 
         // Assert

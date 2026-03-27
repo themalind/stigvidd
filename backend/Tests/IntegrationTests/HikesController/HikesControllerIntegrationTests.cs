@@ -12,9 +12,18 @@ namespace IntegrationTests.HikesController;
 
 public class HikesControllerIntegrationTests : IClassFixture<StigViddWebApplicationFactory<Program>>
 {
+    #region Seed identifiers
     private const string BASE_URL = "/api/v1/hikes/";
-    private const string AUTHENTICATED_USER = "firebase-uid-12345";
+    private const string AUTHENTICATED_USER = "firebase-uid-12345";  // NaturElskaren
     private const string NOT_AUTHENTICATED_USER = "not-a-valid-uid";
+
+    // Users
+    private const string NaturElskarenIdentifier = "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d"; // User 1
+
+    // Hikes
+    private const string TestHike1Identifier = "3f9c1b7e-8a42-4e6d-9c5f-2a7b1d8e4f90"; // by NaturElskaren
+    private const string TestHike3Identifier = "91e4c2d7-3b8f-4f6a-9d1c-7a2e5b0c8f13"; // by VandrarVennen (different creator)
+    #endregion
 
     private readonly StigViddWebApplicationFactory<Program> _factory;
 
@@ -32,11 +41,9 @@ public class HikesControllerIntegrationTests : IClassFixture<StigViddWebApplicat
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", AUTHENTICATED_USER);
 
-        var hikeIdentifier = "3f9c1b7e-8a42-4e6d-9c5f-2a7b1d8e4f90";
-        
         // Act
-        var response = await client.GetAsync($"{BASE_URL}{hikeIdentifier}");
-        
+        var response = await client.GetAsync($"{BASE_URL}{TestHike1Identifier}");
+
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
     }
@@ -49,10 +56,8 @@ public class HikesControllerIntegrationTests : IClassFixture<StigViddWebApplicat
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", AUTHENTICATED_USER);
 
-        var hikeIdentifier = "not-a-uid";
-
         // Act
-        var response = await client.GetAsync($"{BASE_URL}{hikeIdentifier}");
+        var response = await client.GetAsync($"{BASE_URL}not-a-uid");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
@@ -66,10 +71,8 @@ public class HikesControllerIntegrationTests : IClassFixture<StigViddWebApplicat
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", NOT_AUTHENTICATED_USER);
 
-        var hikeIdentifier = "3f9c1b7e-8a42-4e6d-9c5f-2a7b1d8e4f90";
-
         // Act
-        var response = await client.GetAsync($"{BASE_URL}{hikeIdentifier}");
+        var response = await client.GetAsync($"{BASE_URL}{TestHike1Identifier}");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
@@ -97,11 +100,9 @@ public class HikesControllerIntegrationTests : IClassFixture<StigViddWebApplicat
         var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", AUTHENTICATED_USER);
-        
-        var userIdentifier = "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d";
 
         // Act
-        var response = await client.GetAsync($"{BASE_URL}?createdBy={userIdentifier}");
+        var response = await client.GetAsync($"{BASE_URL}?createdBy={NaturElskarenIdentifier}");
         var responseObject = await response.Content.ReadFromJsonAsync<HikeResponse[]>();
 
         // Assert
@@ -116,11 +117,9 @@ public class HikesControllerIntegrationTests : IClassFixture<StigViddWebApplicat
         var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", AUTHENTICATED_USER);
-        
-        var userIdentifier = "not-a-valid-user";
 
         // Act
-        var response = await client.GetAsync($"{BASE_URL}?createdBy={userIdentifier}");
+        var response = await client.GetAsync($"{BASE_URL}?createdBy=not-a-valid-user");
         var responseObject = await response.Content.ReadFromJsonAsync<HikeResponse[]>();
 
         // Assert
@@ -150,7 +149,7 @@ public class HikesControllerIntegrationTests : IClassFixture<StigViddWebApplicat
         var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", AUTHENTICATED_USER);
-        
+
         var request = new CreateHikeRequest
         {
             Name = "TestHike1",
@@ -161,7 +160,7 @@ public class HikesControllerIntegrationTests : IClassFixture<StigViddWebApplicat
 
         // Act
         var response = await client.PostAsJsonAsync(BASE_URL, request);
-        
+
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Created);
     }
@@ -182,7 +181,7 @@ public class HikesControllerIntegrationTests : IClassFixture<StigViddWebApplicat
         var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", AUTHENTICATED_USER);
-        
+
         var request = new CreateHikeRequest
         {
             Name = hikeName,
@@ -193,7 +192,7 @@ public class HikesControllerIntegrationTests : IClassFixture<StigViddWebApplicat
 
         // Act
         var response = await client.PostAsJsonAsync(BASE_URL, request);
-        
+
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
@@ -205,7 +204,7 @@ public class HikesControllerIntegrationTests : IClassFixture<StigViddWebApplicat
         var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", AUTHENTICATED_USER);
-        
+
         var request = new StringContent
         (
             "this-is-not-valid",
@@ -215,7 +214,7 @@ public class HikesControllerIntegrationTests : IClassFixture<StigViddWebApplicat
 
         // Act
         var response = await client.PostAsJsonAsync(BASE_URL, request);
-        
+
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
@@ -227,7 +226,7 @@ public class HikesControllerIntegrationTests : IClassFixture<StigViddWebApplicat
         var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", NOT_AUTHENTICATED_USER);
-        
+
         var request = new CreateHikeRequest
         {
             Name = "TestHike1",
@@ -238,7 +237,7 @@ public class HikesControllerIntegrationTests : IClassFixture<StigViddWebApplicat
 
         // Act
         var response = await client.PostAsJsonAsync(BASE_URL, request);
-        
+
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
@@ -250,12 +249,10 @@ public class HikesControllerIntegrationTests : IClassFixture<StigViddWebApplicat
         var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", AUTHENTICATED_USER);
-        
-        var hikeIdentifier = "3f9c1b7e-8a42-4e6d-9c5f-2a7b1d8e4f90";
 
         // Act
-        var response = await client.DeleteAsync($"{BASE_URL}{hikeIdentifier}");
-        
+        var response = await client.DeleteAsync($"{BASE_URL}{TestHike1Identifier}");
+
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.NoContent);
     }
@@ -267,12 +264,10 @@ public class HikesControllerIntegrationTests : IClassFixture<StigViddWebApplicat
         var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", AUTHENTICATED_USER);
-        
-        var hikeIdentifier = "not-a-valid-hike-identifier";
 
         // Act
-        var response = await client.DeleteAsync($"{BASE_URL}{hikeIdentifier}");
-        
+        var response = await client.DeleteAsync($"{BASE_URL}not-a-valid-hike-identifier");
+
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
@@ -284,12 +279,10 @@ public class HikesControllerIntegrationTests : IClassFixture<StigViddWebApplicat
         var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", AUTHENTICATED_USER);
-        
-        var hikeIdentifier = "91e4c2d7-3b8f-4f6a-9d1c-7a2e5b0c8f13";
 
-        // Act
-        var response = await client.DeleteAsync($"{BASE_URL}{hikeIdentifier}");
-        
+        // Act — TestHike3 is owned by VandrarVennen, not NaturElskaren
+        var response = await client.DeleteAsync($"{BASE_URL}{TestHike3Identifier}");
+
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
@@ -301,12 +294,10 @@ public class HikesControllerIntegrationTests : IClassFixture<StigViddWebApplicat
         var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", NOT_AUTHENTICATED_USER);
-        
-        var hikeIdentifier = "3f9c1b7e-8a42-4e6d-9c5f-2a7b1d8e4f90";
 
         // Act
-        var response = await client.DeleteAsync($"{BASE_URL}{hikeIdentifier}");
-        
+        var response = await client.DeleteAsync($"{BASE_URL}{TestHike1Identifier}");
+
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }

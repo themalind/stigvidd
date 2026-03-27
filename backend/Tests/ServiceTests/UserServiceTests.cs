@@ -1,4 +1,4 @@
-﻿using Core;
+using Core;
 using Core.Factories;
 using Core.Interfaces;
 using Core.Services;
@@ -13,14 +13,38 @@ namespace ServiceTests;
 
 public class UserServiceTests : TestBase
 {
+    #region Seed identifiers
+
+    // Users
+    private const string NaturElskarenIdentifier = "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d"; // User 1: wishlist only
+    private const int NaturElskarenUserId = 1;
+    private const string VandrarVennenIdentifier = "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e"; // User 2: favorites only
+    private const string SkogsGrenIdentifier = "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d67";     // User 3: favorites + null wishlist
+    private const string EremitenIdentifier = "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d22";      // User 4: null favorites
+    private const string KattletenIdentifier = "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5a33";     // User 5: empty favorites
+    private const string Molgan75Identifier = "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5a44";      // User 6: empty wishlist
+    private const string NonExistentUserIdentifier = "77a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c";
+
+    // Trails
+    private const string TivedenIdentifier = "11a1b2c3-d4e5-4f6a-7b8c-9d0e1f2a3b4c";
+    private const string StorsjoledenIdentifier = "22b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d";
+    private const string VildmarksledenArasIdentifier = "44d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f";
+    private const string NassehultIdentifier = "77a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c";
+    private const string HultaforsIdentifier = "66f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b"; // valid trail, not in any tested user's lists
+
+    // Firebase UIDs
+    private const string ExistingFirebaseUid = "firebase-uid-12345";
+
+    #endregion
+
     [Fact]
     public async Task GetFavoritesByUserIdentifier_ReturnsOk()
     {
-        // Arrange 
+        // Arrange
         var userService = CreateUserService();
 
-        // Act 
-        var result = await userService.GetFavoritesByUserIdentifierAsync("a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d", CancellationToken.None);
+        // Act
+        var result = await userService.GetFavoritesByUserIdentifierAsync(NaturElskarenIdentifier, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -30,11 +54,11 @@ public class UserServiceTests : TestBase
     [Fact]
     public async Task GetUserFavorites_ReturnsList_WithRightProperties()
     {
-        // Arrange 
+        // Arrange
         var userService = CreateUserService();
 
-        // Act 
-        var result = await userService.GetFavoritesByUserIdentifierAsync("b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e", CancellationToken.None);
+        // Act
+        var result = await userService.GetFavoritesByUserIdentifierAsync(VandrarVennenIdentifier, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -42,20 +66,20 @@ public class UserServiceTests : TestBase
                 .And.HaveCount(2);
         result.Value.Select(t => t!.Identifier)
                 .Should()
-                .ContainInOrder(["11a1b2c3-d4e5-4f6a-7b8c-9d0e1f2a3b4c", "22b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d"]);
+                .ContainInOrder([StorsjoledenIdentifier, TivedenIdentifier]);
         result.Value.Select(t => t!.Name)
                 .Should()
-                .ContainInOrder(["Tiveden", "Storsjöleden"]);
+                .ContainInOrder(["Storsjöleden", "Tiveden"]);
     }
 
     [Fact]
     public async Task GetFavoritesList_WithInvalidUserIdentifier_ReturnsEmptyList()
     {
-        // Arrange 
+        // Arrange
         var userService = CreateUserService();
 
-        // Act 
-        var result = await userService.GetFavoritesByUserIdentifierAsync("77a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c", CancellationToken.None);
+        // Act
+        var result = await userService.GetFavoritesByUserIdentifierAsync(NonExistentUserIdentifier, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -65,18 +89,18 @@ public class UserServiceTests : TestBase
     [Fact]
     public async Task AddToFavoritesList_WithInvalidUserIdentifier_ReturnsCorrectErrorMessage()
     {
-        // Arrange 
+        // Arrange
         var userService = CreateUserService();
 
-        // Act 
+        // Act
         var result = await userService.AddTrailToUserFavoritesListAsync(
-          "77a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c", "77a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c", CancellationToken.None);
+          NonExistentUserIdentifier, NonExistentUserIdentifier, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeFalse();
         result.Message.Should().NotBeNull();
         result.Message.StatusCode.Should().Be(404);
-        result.Message.ResultMessage.Should().Be("User with identifier 77a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c not found.");
+        result.Message.ResultMessage.Should().Be($"User with identifier {NonExistentUserIdentifier} not found.");
     }
 
     [Fact]
@@ -87,7 +111,7 @@ public class UserServiceTests : TestBase
 
         // Act
         var result = await userService.AddTrailToUserFavoritesListAsync(
-            "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d", "77a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c", CancellationToken.None);
+            NaturElskarenIdentifier, NassehultIdentifier, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -103,14 +127,14 @@ public class UserServiceTests : TestBase
 
         // Act
         var result = await userService.AddTrailToUserFavoritesListAsync(
-            "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d", "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d", CancellationToken.None);
+            NaturElskarenIdentifier, NaturElskarenIdentifier, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeFalse();
         result.Value.Should().BeNull();
         result.Message.Should().NotBeNull();
         result.Message.StatusCode.Should().Be(404);
-        result.Message.ResultMessage.Should().Be("Trail with identifier: a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d not found.");
+        result.Message.ResultMessage.Should().Be($"Trail with identifier: {NaturElskarenIdentifier} not found.");
     }
 
     [Fact]
@@ -121,14 +145,14 @@ public class UserServiceTests : TestBase
 
         // Act
         var result = await userService.AddTrailToUserFavoritesListAsync(
-            "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e", "11a1b2c3-d4e5-4f6a-7b8c-9d0e1f2a3b4c", CancellationToken.None);
+            VandrarVennenIdentifier, TivedenIdentifier, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeFalse();
         result.Value.Should().BeNull();
         result.Message.Should().NotBeNull();
         result.Message.StatusCode.Should().Be(409);
-        result.Message.ResultMessage.Should().Be("Trail 11a1b2c3-d4e5-4f6a-7b8c-9d0e1f2a3b4c already in user favorites");
+        result.Message.ResultMessage.Should().Be($"Trail {TivedenIdentifier} already in user favorites");
     }
 
     [Fact]
@@ -139,7 +163,7 @@ public class UserServiceTests : TestBase
 
         // Act
         var result = await userService.RemoveTrailFromUserFavoritesListAsync(
-            "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e", "11a1b2c3-d4e5-4f6a-7b8c-9d0e1f2a3b4c", CancellationToken.None);
+            VandrarVennenIdentifier, TivedenIdentifier, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -153,13 +177,13 @@ public class UserServiceTests : TestBase
 
         // Act
         var result = await userService.RemoveTrailFromUserFavoritesListAsync(
-            "77a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c", "11a1b2c3-d4e5-4f6a-7b8c-9d0e1f2a3b4c", CancellationToken.None);
+            NonExistentUserIdentifier, TivedenIdentifier, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeFalse();
         result.Message.Should().NotBeNull();
         result.Message.StatusCode.Should().Be(404);
-        result.Message.ResultMessage.Should().Be("No user found with identifier 77a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c");
+        result.Message.ResultMessage.Should().Be($"No user found with identifier {NonExistentUserIdentifier}");
     }
 
     [Fact]
@@ -170,13 +194,13 @@ public class UserServiceTests : TestBase
 
         // Act
         var result = await userService.RemoveTrailFromUserFavoritesListAsync(
-            "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e", "66f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b", CancellationToken.None);
+            VandrarVennenIdentifier, HultaforsIdentifier, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeFalse();
         result.Message.Should().NotBeNull();
         result.Message.StatusCode.Should().Be(409);
-        result.Message.ResultMessage.Should().Be("Trail 66f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b not in user favorites");
+        result.Message.ResultMessage.Should().Be($"Trail {HultaforsIdentifier} not in user favorites");
     }
 
     [Fact]
@@ -187,7 +211,7 @@ public class UserServiceTests : TestBase
 
         // Act
         var result = await userService.RemoveTrailFromUserFavoritesListAsync(
-            "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d22", "77a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c", CancellationToken.None);
+            EremitenIdentifier, NonExistentUserIdentifier, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -204,7 +228,7 @@ public class UserServiceTests : TestBase
 
         // Act
         var result = await userService.RemoveTrailFromUserFavoritesListAsync(
-            "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5a33", "77a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c", CancellationToken.None);
+            KattletenIdentifier, NonExistentUserIdentifier, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -216,11 +240,11 @@ public class UserServiceTests : TestBase
     [Fact]
     public async Task GetWishListByUserIdentifier_ReturnsList_WithRightProperties()
     {
-        // Arrange 
+        // Arrange
         var userService = CreateUserService();
 
-        // Act 
-        var result = await userService.GetWishListByUserIdentifierAsync("a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d", CancellationToken.None);
+        // Act
+        var result = await userService.GetWishListByUserIdentifierAsync(NaturElskarenIdentifier, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -229,20 +253,20 @@ public class UserServiceTests : TestBase
 
         result.Value.Select(t => t!.Identifier)
                 .Should()
-                .ContainInOrder(["44d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f", "77a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c"]);
+                .ContainInOrder([NassehultIdentifier, VildmarksledenArasIdentifier]);
         result.Value.Select(t => t!.Name)
                 .Should()
-                .ContainInOrder(["Vildmarksleden Årås", "Nässehult"]);
+                .ContainInOrder(["Nässehult", "Vildmarksleden Årås"]);
     }
 
     [Fact]
     public async Task GetWishListByUserIdentifier_WhenNoWishlistExists_ReturnsEmptyList()
     {
-        // Arrange 
+        // Arrange
         var userService = CreateUserService();
 
-        // Act 
-        var result = await userService.GetWishListByUserIdentifierAsync("b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e", CancellationToken.None);
+        // Act
+        var result = await userService.GetWishListByUserIdentifierAsync(VandrarVennenIdentifier, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -253,11 +277,11 @@ public class UserServiceTests : TestBase
     [Fact]
     public async Task GetWishList_WithInvalidUserIdentifier_ReturnsEmptyList()
     {
-        // Arrange 
+        // Arrange
         var userService = CreateUserService();
 
-        // Act 
-        var result = await userService.GetWishListByUserIdentifierAsync("77a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c", CancellationToken.None);
+        // Act
+        var result = await userService.GetWishListByUserIdentifierAsync(NonExistentUserIdentifier, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -267,18 +291,18 @@ public class UserServiceTests : TestBase
     [Fact]
     public async Task AddToWishList_WithInvalidUserIdentifier_ReturnsCorrectErrorMessage()
     {
-        // Arrange 
+        // Arrange
         var userService = CreateUserService();
 
-        // Act 
+        // Act
         var result = await userService.AddTrailToUserWishListAsync(
-          "77a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c", "44d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f", CancellationToken.None);
+          NonExistentUserIdentifier, VildmarksledenArasIdentifier, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeFalse();
         result.Message.Should().NotBeNull();
         result.Message.StatusCode.Should().Be(404);
-        result.Message.ResultMessage.Should().Be("User with identifier 77a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c not found.");
+        result.Message.ResultMessage.Should().Be($"User with identifier {NonExistentUserIdentifier} not found.");
     }
 
     [Fact]
@@ -289,7 +313,7 @@ public class UserServiceTests : TestBase
 
         // Act
         var result = await userService.AddTrailToUserWishListAsync(
-            "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e", "44d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f", CancellationToken.None);
+            VandrarVennenIdentifier, VildmarksledenArasIdentifier, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -305,13 +329,13 @@ public class UserServiceTests : TestBase
 
         // Act
         var result = await userService.AddTrailToUserWishListAsync(
-            "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e", "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d", CancellationToken.None);
+            VandrarVennenIdentifier, NaturElskarenIdentifier, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeFalse();
         result.Message.Should().NotBeNull();
         result.Message.StatusCode.Should().Be(404);
-        result.Message.ResultMessage.Should().Be("Trail with identifier: a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d not found");
+        result.Message.ResultMessage.Should().Be($"Trail with identifier: {NaturElskarenIdentifier} not found");
     }
 
     [Fact]
@@ -322,14 +346,14 @@ public class UserServiceTests : TestBase
 
         // Act
         var result = await userService.AddTrailToUserWishListAsync(
-            "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d", "77a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c", CancellationToken.None);
+            NaturElskarenIdentifier, NassehultIdentifier, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeFalse();
         result.Value.Should().BeNull();
         result.Message.Should().NotBeNull();
         result.Message.StatusCode.Should().Be(409);
-        result.Message.ResultMessage.Should().Be("Trail 77a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c already in user wishlist");
+        result.Message.ResultMessage.Should().Be($"Trail {NassehultIdentifier} already in user wishlist");
     }
 
     [Fact]
@@ -340,7 +364,7 @@ public class UserServiceTests : TestBase
 
         // Act
         var result = await userService.RemoveTrailFromUserWishListAsync(
-            "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d", "44d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f", CancellationToken.None);
+            NaturElskarenIdentifier, VildmarksledenArasIdentifier, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -354,13 +378,13 @@ public class UserServiceTests : TestBase
 
         // Act
         var result = await userService.RemoveTrailFromUserWishListAsync(
-            "77a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c", "44d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f", CancellationToken.None);
+            NonExistentUserIdentifier, VildmarksledenArasIdentifier, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeFalse();
         result.Message.Should().NotBeNull();
         result.Message.StatusCode.Should().Be(404);
-        result.Message.ResultMessage.Should().Be("No user found with identifier 77a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c");
+        result.Message.ResultMessage.Should().Be($"No user found with identifier {NonExistentUserIdentifier}");
     }
 
     [Fact]
@@ -371,14 +395,15 @@ public class UserServiceTests : TestBase
 
         // Act
         var result = await userService.RemoveTrailFromUserWishListAsync(
-            "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d", "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d", CancellationToken.None);
+            NaturElskarenIdentifier, NaturElskarenIdentifier, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeFalse();
         result.Message.Should().NotBeNull();
         result.Message.StatusCode.Should().Be(409);
-        result.Message.ResultMessage.Should().Be("Trail a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d not in user wishlist");
+        result.Message.ResultMessage.Should().Be($"Trail {NaturElskarenIdentifier} not in user wishlist");
     }
+
     [Fact]
     public async Task RemoveFromUserWishlist_WhenWishlistIsNull_ShouldReturnCorrectErrorMessage()
     {
@@ -387,7 +412,7 @@ public class UserServiceTests : TestBase
 
         // Act
         var result = await userService.RemoveTrailFromUserWishListAsync(
-            "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d67", "77a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c", CancellationToken.None);
+            SkogsGrenIdentifier, NonExistentUserIdentifier, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -404,7 +429,7 @@ public class UserServiceTests : TestBase
 
         // Act
         var result = await userService.RemoveTrailFromUserWishListAsync(
-            "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5a44", "77a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c", CancellationToken.None);
+            Molgan75Identifier, NonExistentUserIdentifier, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -436,7 +461,7 @@ public class UserServiceTests : TestBase
         var service = CreateUserService();
 
         // Act — all seed users share "firebase-uid-12345"
-        var result = await service.CreateUserAsync("artemis@fluffigast.se", "Artemis", "firebase-uid-12345", CancellationToken.None);
+        var result = await service.CreateUserAsync("artemis@fluffigast.se", "Artemis", ExistingFirebaseUid, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -451,7 +476,7 @@ public class UserServiceTests : TestBase
         var service = CreateUserService();
 
         // Act
-        var result = await service.GetUserByFirebaseUidAsync("firebase-uid-12345", CancellationToken.None);
+        var result = await service.GetUserByFirebaseUidAsync(ExistingFirebaseUid, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -485,16 +510,17 @@ public class UserServiceTests : TestBase
         var options = CreateSeededOptions();
         var service = CreateUserServiceWithOptions(options, mockFirebase.Object);
 
-        const string userToDelete = "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d";
-
         // Act
-        var result = await service.DeleteUserAsync(userToDelete, CancellationToken.None);
+        var result = await service.DeleteUserAsync(NaturElskarenIdentifier, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeTrue();
 
         using var verifyContext = new StigViddDbContext(options);
-        verifyContext.Users.Any(u => u.Identifier == userToDelete).Should().BeFalse();
+        verifyContext.Users.Any(u => u.Identifier == NaturElskarenIdentifier).Should().BeFalse();
+
+        // Solved votes belonging to the deleted user should also be removed via cascade
+        verifyContext.TrailObstacleSolvedVotes.Any(sv => sv.UserId == NaturElskarenUserId).Should().BeFalse();
     }
 
     [Fact]
@@ -524,10 +550,8 @@ public class UserServiceTests : TestBase
         var options = CreateSeededOptions();
         var service = CreateUserServiceWithOptions(options, mockFirebase.Object);
 
-        const string userToDelete = "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d";
-
         // Act
-        var result = await service.DeleteUserAsync(userToDelete, CancellationToken.None);
+        var result = await service.DeleteUserAsync(NaturElskarenIdentifier, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -536,7 +560,7 @@ public class UserServiceTests : TestBase
 
         // User must still exist — the DB deletion must have been rolled back
         using var verifyContext = new StigViddDbContext(options);
-        verifyContext.Users.Any(u => u.Identifier == userToDelete).Should().BeTrue();
+        verifyContext.Users.Any(u => u.Identifier == NaturElskarenIdentifier).Should().BeTrue();
     }
 
     private UserService CreateUserServiceWithOptions(

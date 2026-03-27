@@ -12,7 +12,18 @@ public class TrailObstaclesControllerIntegrationTests : IClassFixture<StigViddWe
 {
     private readonly StigViddWebApplicationFactory<Program> _factory;
 
+    #region Seed identifiers
     private const string AuthenticatedUser = "firebase-uid-12346"; // User 2: VandrarVennen
+
+    // Trails
+    private const string TivedenIdentifier = "11a1b2c3-d4e5-4f6a-7b8c-9d0e1f2a3b4c";          // Trail 1 — has obstacles
+    private const string GesebolIdentifier = "55e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a";           // Trail 5 — no obstacles
+    private const string NonExistentTrailIdentifier = "00000000-0000-0000-0000-000000000000";    // does not exist in DB
+
+    // Obstacles
+    private const string Obstacle1Identifier = "ob1a1b2c3-d4e5-4f6a-7b8c-9d0e1f2a3b4c"; // Obstacle 1 — VandrarVennen has NOT voted
+    private const string Obstacle3Identifier = "ob3c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e"; // Obstacle 3 — VandrarVennen HAS voted
+    #endregion
 
     public TrailObstaclesControllerIntegrationTests(StigViddWebApplicationFactory<Program> factory)
     {
@@ -25,10 +36,9 @@ public class TrailObstaclesControllerIntegrationTests : IClassFixture<StigViddWe
     {
         // Arrange
         var client = _factory.CreateClient();
-        var trailIdentifier = "11a1b2c3-d4e5-4f6a-7b8c-9d0e1f2a3b4c"; // Tiveden — has obstacle 1
 
         // Act
-        var response = await client.GetAsync($"/api/v1/trailobstacles/trail/{trailIdentifier}");
+        var response = await client.GetAsync($"/api/v1/trailobstacles/trail/{TivedenIdentifier}");
         var obstacles = await response.Content.ReadFromJsonAsync<List<TrailObstacleResponse>>();
 
         // Assert
@@ -41,10 +51,9 @@ public class TrailObstaclesControllerIntegrationTests : IClassFixture<StigViddWe
     {
         // Arrange
         var client = _factory.CreateClient();
-        var trailIdentifier = "55e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a"; // Gesebol — no obstacles
 
         // Act
-        var response = await client.GetAsync($"/api/v1/trailobstacles/trail/{trailIdentifier}");
+        var response = await client.GetAsync($"/api/v1/trailobstacles/trail/{GesebolIdentifier}");
         var obstacles = await response.Content.ReadFromJsonAsync<List<TrailObstacleResponse>>();
 
         // Assert
@@ -59,7 +68,7 @@ public class TrailObstaclesControllerIntegrationTests : IClassFixture<StigViddWe
         var client = _factory.CreateClient();
 
         // Act
-        var response = await client.GetAsync("/api/v1/trailobstacles/trail/11a1b2c3-d4e5-4f6a-7b8c-9d0e1f2a3b4c");
+        var response = await client.GetAsync($"/api/v1/trailobstacles/trail/{TivedenIdentifier}");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -75,7 +84,7 @@ public class TrailObstaclesControllerIntegrationTests : IClassFixture<StigViddWe
 
         var obstacle = new TrailObstacleRequest
         {
-            TrailIdentifier = "11a1b2c3-d4e5-4f6a-7b8c-9d0e1f2a3b4c",
+            TrailIdentifier = TivedenIdentifier,
             Description = "Stort träd har fallit över stigen, svårt att passera.",
             IssueType = "FallenTree"
         };
@@ -95,7 +104,7 @@ public class TrailObstaclesControllerIntegrationTests : IClassFixture<StigViddWe
 
         var obstacle = new TrailObstacleRequest
         {
-            TrailIdentifier = "11a1b2c3-d4e5-4f6a-7b8c-9d0e1f2a3b4c",
+            TrailIdentifier = TivedenIdentifier,
             Description = "Stort träd har fallit över stigen, svårt att passera.",
             IssueType = "FallenTree"
         };
@@ -117,7 +126,7 @@ public class TrailObstaclesControllerIntegrationTests : IClassFixture<StigViddWe
 
         var obstacle = new TrailObstacleRequest
         {
-            TrailIdentifier = "11a1b2c3-d4e5-4f6a-7b8c-9d0e1f2a3b4c",
+            TrailIdentifier = TivedenIdentifier,
             Description = "För kort", // under 15 chars
             IssueType = "FallenTree"
         };
@@ -139,7 +148,7 @@ public class TrailObstaclesControllerIntegrationTests : IClassFixture<StigViddWe
 
         var obstacle = new TrailObstacleRequest
         {
-            TrailIdentifier = "11a1b2c3-d4e5-4f6a-7b8c-9d0e1f2a3b4c",
+            TrailIdentifier = TivedenIdentifier,
             Description = new string('a', 501), // over 500 chars
             IssueType = "FallenTree"
         };
@@ -161,7 +170,7 @@ public class TrailObstaclesControllerIntegrationTests : IClassFixture<StigViddWe
 
         var obstacle = new TrailObstacleRequest
         {
-            TrailIdentifier = "00000000-0000-0000-0000-000000000000",
+            TrailIdentifier = NonExistentTrailIdentifier,
             Description = "Stort träd blockerar stigen helt och hållet.",
             IssueType = "FallenTree"
         };
@@ -183,7 +192,7 @@ public class TrailObstaclesControllerIntegrationTests : IClassFixture<StigViddWe
 
         var obstacle = new TrailObstacleRequest
         {
-            TrailIdentifier = "11a1b2c3-d4e5-4f6a-7b8c-9d0e1f2a3b4c",
+            TrailIdentifier = TivedenIdentifier,
             Description = "Stort träd blockerar stigen helt och hållet.",
             IssueType = "FallenTree",
             IncidentLongitude = 12.8382551042m,
@@ -207,7 +216,7 @@ public class TrailObstaclesControllerIntegrationTests : IClassFixture<StigViddWe
 
         var obstacle = new TrailObstacleRequest
         {
-            TrailIdentifier = "11a1b2c3-d4e5-4f6a-7b8c-9d0e1f2a3b4c",
+            TrailIdentifier = TivedenIdentifier,
             Description = "Stort träd blockerar stigen helt och hållet.",
             IssueType = "FallenTree",
             IncidentLongitude = 181.0000000001m, // max is 180
@@ -231,7 +240,7 @@ public class TrailObstaclesControllerIntegrationTests : IClassFixture<StigViddWe
 
         var obstacle = new TrailObstacleRequest
         {
-            TrailIdentifier = "11a1b2c3-d4e5-4f6a-7b8c-9d0e1f2a3b4c",
+            TrailIdentifier = TivedenIdentifier,
             Description = "Stort träd blockerar stigen helt och hållet.",
             IssueType = "FallenTree",
             IncidentLongitude = 12.8382551042m,
@@ -253,10 +262,8 @@ public class TrailObstaclesControllerIntegrationTests : IClassFixture<StigViddWe
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", AuthenticatedUser);
 
-        var obstacleIdentifier = "ob1a1b2c3-d4e5-4f6a-7b8c-9d0e1f2a3b4c"; // Obstacle 1 — VandrarVennen has not voted on it
-
         // Act
-        var response = await client.PostAsync($"/api/v1/trailobstacles/solve/{obstacleIdentifier}", null);
+        var response = await client.PostAsync($"/api/v1/trailobstacles/solve/{Obstacle1Identifier}", null);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -267,10 +274,9 @@ public class TrailObstaclesControllerIntegrationTests : IClassFixture<StigViddWe
     {
         // Arrange
         var client = _factory.CreateClient();
-        var obstacleIdentifier = "ob1a1b2c3-d4e5-4f6a-7b8c-9d0e1f2a3b4c";
 
         // Act
-        var response = await client.PostAsync($"/api/v1/trailobstacles/solve/{obstacleIdentifier}", null);
+        var response = await client.PostAsync($"/api/v1/trailobstacles/solve/{Obstacle1Identifier}", null);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
@@ -284,10 +290,8 @@ public class TrailObstaclesControllerIntegrationTests : IClassFixture<StigViddWe
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", AuthenticatedUser);
 
-        var obstacleIdentifier = "ob3c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e"; // Obstacle 3 — VandrarVennen already has a vote here
-
         // Act
-        var response = await client.PostAsync($"/api/v1/trailobstacles/solve/{obstacleIdentifier}", null);
+        var response = await client.PostAsync($"/api/v1/trailobstacles/solve/{Obstacle3Identifier}", null);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Conflict);
@@ -316,10 +320,8 @@ public class TrailObstaclesControllerIntegrationTests : IClassFixture<StigViddWe
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", AuthenticatedUser);
 
-        var obstacleIdentifier = "ob3c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e"; // Obstacle 3 — VandrarVennen has a vote here
-
         // Act
-        var response = await client.DeleteAsync($"/api/v1/trailobstacles/solve/{obstacleIdentifier}");
+        var response = await client.DeleteAsync($"/api/v1/trailobstacles/solve/{Obstacle3Identifier}");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.NoContent);
@@ -332,7 +334,7 @@ public class TrailObstaclesControllerIntegrationTests : IClassFixture<StigViddWe
         var client = _factory.CreateClient();
 
         // Act
-        var response = await client.DeleteAsync("/api/v1/trailobstacles/solve/ob3c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e");
+        var response = await client.DeleteAsync($"/api/v1/trailobstacles/solve/{Obstacle3Identifier}");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
@@ -346,10 +348,8 @@ public class TrailObstaclesControllerIntegrationTests : IClassFixture<StigViddWe
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", AuthenticatedUser);
 
-        var obstacleIdentifier = "ob1a1b2c3-d4e5-4f6a-7b8c-9d0e1f2a3b4c"; // Obstacle 1 — VandrarVennen has no vote here
-
         // Act
-        var response = await client.DeleteAsync($"/api/v1/trailobstacles/solve/{obstacleIdentifier}");
+        var response = await client.DeleteAsync($"/api/v1/trailobstacles/solve/{Obstacle1Identifier}");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);

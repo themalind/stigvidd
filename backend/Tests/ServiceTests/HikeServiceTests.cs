@@ -9,8 +9,23 @@ using WebDataContracts.RequestModels.Hike;
 
 namespace ServiceTests;
 
-public class HikeServiceTests :TestBase
+public class HikeServiceTests : TestBase
 {
+    #region Seed identifiers
+
+    // Users
+    private const string NaturElskarenIdentifier = "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d"; // User 1: owns Hike1 + Hike2
+    private const string SkogsGrenIdentifier = "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d67";     // User 3: owns Hike5
+    private const string EremitenIdentifier = "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d22";      // User 4: owns no hikes
+
+    // Hikes
+    private const string TestHike1Identifier = "3f9c1b7e-8a42-4e6d-9c5f-2a7b1d8e4f90"; // by NaturElskaren
+    private const string TestHike2Identifier = "b7a2d4c1-5e9f-4a63-8c1d-0f2e7b9a6c34"; // by NaturElskaren
+    private const string TestHike3Identifier = "91e4c2d7-3b8f-4f6a-9d1c-7a2e5b0c8f13"; // by VandrarVennen
+    private const string TestHike5Identifier = "7a1e9c3d-2b4f-4d68-8c0a-5f2b7e1d9c32"; // by SkogsGren
+
+    #endregion
+
     [Fact]
     public async Task CreateHikeAsync_ShouldCreateHike_WhenUserExists()
     {
@@ -25,12 +40,10 @@ public class HikeServiceTests :TestBase
             Coordinates = "[]"
         };
 
-        var userIdentifier = "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d";
-
         // Act
         var result = await service.CreateHikeAsync(
             request,
-            userIdentifier,
+            NaturElskarenIdentifier,
             CancellationToken.None);
 
         // Assert
@@ -54,12 +67,10 @@ public class HikeServiceTests :TestBase
             Coordinates = "[]"
         };
 
-        var userIdentifier = "not a guid";
-
         // Act
         var result = await service.CreateHikeAsync(
             request,
-            userIdentifier,
+            "not a guid",
             CancellationToken.None
         );
 
@@ -71,33 +82,29 @@ public class HikeServiceTests :TestBase
 
     [Fact]
     public async Task GetHikeByIdentifierAsync_ShouldReturnHike_WhenExists()
-    {        
+    {
         // Arrange
         var service = CreateHikeService();
 
-        var identifier = "3f9c1b7e-8a42-4e6d-9c5f-2a7b1d8e4f90";
-
         // Act
-        var result = await service.GetHikeByIdentifierAsync(identifier, CancellationToken.None);
+        var result = await service.GetHikeByIdentifierAsync(TestHike1Identifier, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeTrue();
         result.Value.Should().NotBeNull();
         result.Value.Name.Should().Be("TestHike1");
         result.Value.HikeLength.Should().Be(10);
-        result.Value.CreatedBy.Should().Be("a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d");
+        result.Value.CreatedBy.Should().Be(NaturElskarenIdentifier);
     }
 
     [Fact]
     public async Task GetHikeByIdentifierAsync_ShouldFail_WhenIdentifierDoNotExists()
-    {        
+    {
         // Arrange
         var service = CreateHikeService();
 
-        var identifier = "not a guid";
-
         // Act
-        var result = await service.GetHikeByIdentifierAsync(identifier, CancellationToken.None);
+        var result = await service.GetHikeByIdentifierAsync("not a guid", CancellationToken.None);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -125,11 +132,10 @@ public class HikeServiceTests :TestBase
     {
         // Arrange
         var service = CreateHikeService();
-        var userIdentifier = "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d";
 
         // Act
         var result = await service.GetHikesAsync(
-            userIdentifier,
+            NaturElskarenIdentifier,
             CancellationToken.None
         );
 
@@ -137,7 +143,7 @@ public class HikeServiceTests :TestBase
         result.Success.Should().BeTrue();
         result.Value.Should().NotBeNull();
         result.Value.Should().HaveCount(2);
-        result.Value.First().CreatedBy.Should().Be(userIdentifier);
+        result.Value.First().CreatedBy.Should().Be(NaturElskarenIdentifier);
     }
 
     [Fact]
@@ -145,11 +151,10 @@ public class HikeServiceTests :TestBase
     {
         // Arrange
         var service = CreateHikeService();
-        var userIdentifier = "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d22";
 
         // Act
         var result = await service.GetHikesAsync(
-            userIdentifier,
+            EremitenIdentifier,
             CancellationToken.None
         );
 
@@ -169,20 +174,17 @@ public class HikeServiceTests :TestBase
         mockContextFactory
             .Setup(f => f.CreateDbContextAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(() => new StigViddDbContext(options));
-        
+
         var service = new HikeService(
             mockContextFactory.Object,
             new HikeResponseFactory(),
             new Mock<ILogger<HikeService>>().Object
         );
 
-        var hikeIdentifier = "7a1e9c3d-2b4f-4d68-8c0a-5f2b7e1d9c32";
-        var userIdentifier = "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d67";
-
         // Act
         var result = await service.DeleteHikeAsync(
-            hikeIdentifier,
-            userIdentifier,
+            TestHike5Identifier,
+            SkogsGrenIdentifier,
             CancellationToken.None
         );
 
@@ -191,14 +193,14 @@ public class HikeServiceTests :TestBase
 
         using var verifyContext = new StigViddDbContext(options);
 
-        verifyContext.Hikes.Any(h => h.Identifier == hikeIdentifier)
+        verifyContext.Hikes.Any(h => h.Identifier == TestHike5Identifier)
             .Should().BeFalse();
     }
 
     [Theory]
-    [InlineData("3f9c1b7e-8a42-4e6d-9c5f-2a7b1d8e4f90","b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d22")]
-    [InlineData("b7a2d4c1-5e9f-4a63-8c1d-0f2e7b9a6c34","b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d22")]
-    [InlineData("91e4c2d7-3b8f-4f6a-9d1c-7a2e5b0c8f13","b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d22")]
+    [InlineData(TestHike1Identifier, EremitenIdentifier)]
+    [InlineData(TestHike2Identifier, EremitenIdentifier)]
+    [InlineData(TestHike3Identifier, EremitenIdentifier)]
     public async Task DeleteHikeAsync_ShouldFail_WhenIdentifiersDoesNotMatch(string hikeIdentifier, string userIdentifier)
     {
         // Arrange
@@ -221,10 +223,10 @@ public class HikeServiceTests :TestBase
         mockContextFactory
             .Setup(f => f.CreateDbContextAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(() => CreateContextAndSqliteDb());
-        
+
         var HikeResponseFactory = new HikeResponseFactory();
         var mockLogger = new Mock<ILogger<HikeService>>();
-        
+
         var service = new HikeService(
             mockContextFactory.Object,
             HikeResponseFactory,
