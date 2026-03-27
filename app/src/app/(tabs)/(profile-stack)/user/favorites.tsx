@@ -35,13 +35,7 @@ export default function FavoritesScreen() {
       noTrailsSavedInfo="Inga Favoriter sparade än. Gå till en promenad och tryck på hjärtat för att lägga till."
       onDelete={handleDelete}
       trails={data ?? []}
-      icon={
-        <MaterialCommunityIcons
-          name="cards-heart"
-          size={24}
-          color={theme.colors.tertiary}
-        />
-      }
+      icon={<MaterialCommunityIcons name="cards-heart" size={24} color={theme.colors.tertiary} />}
     />
   );
 }

@@ -6,17 +6,15 @@ export default function ProfileStackLayout() {
   const [authState] = useAtom(authStateAtom);
 
   return (
-    <Stack
-      screenOptions={{
-        headerShown: false,
-      }}
-    >
+    <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="profile-page" />
       <Stack.Screen name="about" />
       <Stack.Screen name="trail/[identifier]" />
       <Stack.Protected guard={authState.isAuthenticated}>
         <Stack.Screen name="user/favorites" />
         <Stack.Screen name="user/wishlist" />
+        <Stack.Screen name="user/my-hikes" />
+        <Stack.Screen name="user/create-hike" />
       </Stack.Protected>
     </Stack>
   );

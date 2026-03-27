@@ -12,11 +12,7 @@ const icon = {
   favourite: require("@/assets/map/marker/smultronstalle-101-159.png"),
 };
 
-export default function Marker({
-  variant = "trail",
-  children,
-  ...props
-}: Props) {
+export default function Marker({ variant = "trail", children, ...props }: Props) {
   return (
     <MarkerRNM image={icon[variant]} {...props}>
       {children}

@@ -23,7 +23,7 @@ export default function RootLayout() {
   // Create a QueryClient with useMemo to avoid recreating on every render.
   const queryClient = useMemo(() => new QueryClient(), []);
 
-  // Fetch location on mount and re-check when app returns to foreground
+  // Fetch location on mount
   useInitLocation();
 
   useEffect(() => {

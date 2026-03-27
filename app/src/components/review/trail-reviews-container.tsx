@@ -11,7 +11,7 @@ import { Button, Surface, useTheme } from "react-native-paper";
 import NotAuthenticatedDialog from "../auth/not-authenticated-msg-dialog";
 import LoadingIndicator from "../loading-indicator";
 import AddReview from "./add/add-review-modal";
-import ReviewSection from "./review-section ";
+import ReviewSection from "./review-section";
 
 interface ReviewWrapperProps {
   trail: Trail;

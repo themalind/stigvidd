@@ -61,7 +61,7 @@ export async function createReview(request: CreateReviewRequest): Promise<{ succ
     });
 
     if (!response.ok) {
-      console.log(response.body);
+      throw new ApiError(`HTTP error ${response.status}`, response.status);
     }
 
     return { success: true };

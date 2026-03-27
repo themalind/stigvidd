@@ -6,13 +6,13 @@ import NotAuthenticatedDialog from "@/components/auth/not-authenticated-msg-dial
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { useState } from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useTheme } from "react-native-paper";
 
 interface Props {
   trailIdentifier: string;
 }
-export default function AddUserFavorite({ trailIdentifier }: Props) {
+export default function AddToUserFavorite({ trailIdentifier }: Props) {
   const theme = useTheme();
   const [authState] = useAtom(authStateAtom);
   const [showAuthDialog, setAuthDialog] = useState(false);
@@ -23,7 +23,6 @@ export default function AddUserFavorite({ trailIdentifier }: Props) {
   const setError = useSetAtom(showErrorAtom);
 
   const isInFavorites = data?.some((trail) => trail.identifier === trailIdentifier);
-
   const isPending = removeUserFavorite.isPending || addToUserFavorite.isPending;
 
   const handlePress = () => {
@@ -49,10 +48,10 @@ export default function AddUserFavorite({ trailIdentifier }: Props) {
 
   return (
     <View style={s.container}>
-      <TouchableOpacity style={s.touchable} onPress={handlePress} disabled={isPending}>
-        <MaterialIcons name={isInFavorites ? "favorite" : "favorite-border"} size={30} color={theme.colors.onPrimary} />
-        <Text style={[s.text, { color: theme.colors.onPrimary }]}>Favorit</Text>
-      </TouchableOpacity>
+      <Pressable style={s.pressable} onPress={handlePress} disabled={isPending}>
+        <MaterialIcons name={isInFavorites ? "favorite" : "favorite-border"} size={30} color={theme.colors.onSurface} />
+        <Text style={[s.text, { color: theme.colors.onSurface }]}>Favorit</Text>
+      </Pressable>
       <NotAuthenticatedDialog
         visible={showAuthDialog}
         onDissmiss={() => setAuthDialog(false)}
@@ -66,7 +65,7 @@ const s = StyleSheet.create({
   container: {
     flexDirection: "column",
   },
-  touchable: {
+  pressable: {
     justifyContent: "center",
     alignItems: "center",
   },

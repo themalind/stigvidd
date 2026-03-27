@@ -20,7 +20,8 @@ export default function ImageGallery({ images }: GalleryProps) {
 
   const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const scrollPosition = event.nativeEvent.contentOffset.x;
-    const index = Math.min(Math.round(scrollPosition / (ITEM_WIDTH + GAP)), images.length - 1);
+    const rawIndex = Math.round(scrollPosition / (ITEM_WIDTH + GAP));
+    const index = Math.max(0, Math.min(rawIndex, images.length - 1));
 
     if (index !== currentIndex) {
       setCurrentIndex(index);
@@ -42,7 +43,7 @@ export default function ImageGallery({ images }: GalleryProps) {
   return (
     <View style={s.container}>
       <View style={s.focusImageConatiner}>
-        <Image source={selectedImage.imageUrl} style={s.focusImage} contentFit="cover" />
+        {selectedImage && <Image source={selectedImage.imageUrl} style={s.focusImage} contentFit="cover" />}
       </View>
       <View style={{ flex: 1 }}>
         <ScrollView

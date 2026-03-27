@@ -3,7 +3,7 @@ import { FilterOptions } from "@/data/types";
 import { classificationParser } from "@/utils/classification-parser";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Slider as RangeSlider } from "@miblanchard/react-native-slider";
-import { Picker } from "@react-native-picker/picker";
+import SelectInput from "@/components/select-input";
 import React from "react";
 import { Modal, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { Divider, Text, useTheme } from "react-native-paper";
@@ -37,7 +37,6 @@ export const TrailFilterModal: React.FC<TrailFilterModalProps> = ({
   hasLocation,
 }) => {
   const theme = useTheme();
-  const pickerStyle = { color: theme.colors.onSurface, backgroundColor: theme.colors.surface };
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
       <SafeAreaView style={[s.modalContainer, { backgroundColor: theme.colors.background }]}>
@@ -59,18 +58,11 @@ export const TrailFilterModal: React.FC<TrailFilterModalProps> = ({
           {/* City Filter */}
           <View style={s.section}>
             <Text style={s.sectionTitle}>Orter</Text>
-            <Picker
-              dropdownIconColor={theme.colors.onSurface}
-              style={pickerStyle}
+            <SelectInput
               selectedValue={filters.city || ""}
               onValueChange={(value) => onUpdateFilter("city", value === "" ? undefined : value)}
-              mode="dropdown"
-            >
-              <Picker.Item style={pickerStyle} label="Alla orter" value="" />
-              {cities.map((city) => (
-                <Picker.Item key={city} label={city} value={city} style={pickerStyle} />
-              ))}
-            </Picker>
+              options={[{ label: "Alla orter", value: "" }, ...cities.map((city) => ({ label: city, value: city }))]}
+            />
           </View>
           <Divider />
 
@@ -198,23 +190,14 @@ export const TrailFilterModal: React.FC<TrailFilterModalProps> = ({
           {/* Classification Filter */}
           <View style={s.section}>
             <Text style={s.sectionTitle}>Svårighetsgrad</Text>
-            <Picker
-              dropdownIconColor={theme.colors.onSurface}
-              style={pickerStyle}
-              selectedValue={filters.classification || ""}
-              onValueChange={(value) => onUpdateFilter("classification", value === "" ? undefined : value)}
-              mode="dropdown"
-            >
-              <Picker.Item style={pickerStyle} label="Alla svårighetsgrader" value="" />
-              {classifications.map((classification, index) => (
-                <Picker.Item
-                  key={index}
-                  label={classificationParser(classification)}
-                  value={classification}
-                  style={pickerStyle}
-                />
-              ))}
-            </Picker>
+            <SelectInput
+              selectedValue={filters.classification !== undefined ? String(filters.classification) : ""}
+              onValueChange={(value) => onUpdateFilter("classification", value === "" ? undefined : Number(value))}
+              options={[
+                { label: "Alla svårighetsgrader", value: "" },
+                ...classifications.map((c) => ({ label: classificationParser(c), value: String(c) })),
+              ]}
+            />
           </View>
           <Divider />
 
@@ -240,19 +223,17 @@ export const TrailFilterModal: React.FC<TrailFilterModalProps> = ({
           {/* Sort Options */}
           <View style={s.section}>
             <Text style={s.sectionTitle}>Sortera efter</Text>
-            <Picker
-              mode="dropdown"
-              dropdownIconColor={theme.colors.onSurface}
-              style={pickerStyle}
+            <SelectInput
               selectedValue={sortBy}
               onValueChange={onUpdateSort}
-            >
-              <Picker.Item style={pickerStyle} label="Namn (A-Ö)" value="name-asc" />
-              <Picker.Item style={pickerStyle} label="Namn (Ö-A)" value="name-desc" />
-              <Picker.Item style={pickerStyle} label="Längd (Kortast först)" value="length-asc" />
-              <Picker.Item style={pickerStyle} label="Längd (Längst först)" value="length-desc" />
-              {hasLocation && <Picker.Item style={pickerStyle} label="Närmast först" value="distance-asc" />}
-            </Picker>
+              options={[
+                { label: "Namn (A-Ö)", value: "name-asc" },
+                { label: "Namn (Ö-A)", value: "name-desc" },
+                { label: "Längd (Kortast först)", value: "length-asc" },
+                { label: "Längd (Längst först)", value: "length-desc" },
+                ...(hasLocation ? [{ label: "Närmast först", value: "distance-asc" }] : []),
+              ]}
+            />
           </View>
           <Divider />
         </ScrollView>

@@ -1,4 +1,4 @@
-﻿using Core;
+using Core;
 using Core.Factories;
 using Core.Interfaces;
 using Core.Services;
@@ -15,17 +15,34 @@ namespace ServiceTests;
 
 public class ReviewServiceTests : TestBase
 {
+    #region Seed identifiers
+
+    // Users
+    private const string NaturElskarenIdentifier = "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d"; // User 1
+    private const string VandrarVennenIdentifier = "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e";  // User 2
+    private const string KattletenIdentifier = "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5a33";       // User 5
+
+    // Trails
+    private const string NassehultIdentifier = "77a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c"; // 2 reviews seeded
+    private const string HultaforsIdentifier = "66f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b"; // 0 reviews seeded
+
+    // Reviews
+    private const string Review1Identifier = "r1a1b2c3-d4e5-4f6a-7b8c-9d0e1f2a3b4c"; // VandrarVennen, on Tiveden, with images
+    private const string Review2Identifier = "r2b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d"; // NaturElskaren, on Storsjöleden, no images
+    private const string Review5Identifier = "r5e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a"; // Kattleten, on Vildmarksleden Årås, no text
+
+    #endregion
+
     [Fact]
     public async Task GetReviewsByTrailIdentifier_WhenReviewsExist_ShouldReturnReviews()
     {
         // Arrange
         var reviewService = CreateReviewService();
-        var trailIdentifier = "77a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c"; // Nässehult trail
         int page = 0;
         int limit = 10;
 
         // Act
-        var result = await reviewService.GetReviewsByTrailIdentifierAsync(trailIdentifier, page, limit, CancellationToken.None);
+        var result = await reviewService.GetReviewsByTrailIdentifierAsync(NassehultIdentifier, page, limit, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -38,12 +55,11 @@ public class ReviewServiceTests : TestBase
     {
         // Arrange
         var reviewService = CreateReviewService();
-        var trailIdentifier = "66f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b";
         int page = 0;
         int limit = 10;
 
         // Act
-        var result = await reviewService.GetReviewsByTrailIdentifierAsync(trailIdentifier, page, limit, CancellationToken.None);
+        var result = await reviewService.GetReviewsByTrailIdentifierAsync(HultaforsIdentifier, page, limit, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -55,14 +71,12 @@ public class ReviewServiceTests : TestBase
     {
         // Arrange
         var reviewService = CreateReviewService();
-        var userIdentifier = "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d"; // NaturElskaren
-        var trailIdentifier = "77a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c"; // Nässehult trail
         var trailReview = "Great trail!";
         var rating = 4.5M;
         var imageUrls = GetFormFileCollection();
 
         // Act
-        var result = await reviewService.AddReviewAsync(userIdentifier, trailIdentifier, trailReview, rating, imageUrls, CancellationToken.None);
+        var result = await reviewService.AddReviewAsync(NaturElskarenIdentifier, NassehultIdentifier, trailReview, rating, imageUrls, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -74,14 +88,12 @@ public class ReviewServiceTests : TestBase
     {
         // Arrange
         var reviewService = CreateReviewService();
-        var userIdentifier = "i-am-an-invalid-user-identifier";
-        var trailIdentifier = "77a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c"; // Nässehult trail
         var trailReview = "Great trail!";
         var rating = 4.5M;
         var imageUrls = GetFormFileCollection();
 
         // Act
-        var result = await reviewService.AddReviewAsync(userIdentifier, trailIdentifier, trailReview, rating, imageUrls, CancellationToken.None);
+        var result = await reviewService.AddReviewAsync("i-am-an-invalid-user-identifier", NassehultIdentifier, trailReview, rating, imageUrls, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -95,14 +107,12 @@ public class ReviewServiceTests : TestBase
     {
         // Arrange
         var reviewService = CreateReviewService();
-        var userIdentifier = "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d"; // NaturElskaren
-        var trailIdentifier = "i-am-an-invalid-trail-identifier";
         var trailReview = "Great trail!";
         var rating = 4.5M;
         var imageUrls = GetFormFileCollection();
 
         // Act
-        var result = await reviewService.AddReviewAsync(userIdentifier, trailIdentifier, trailReview, rating, imageUrls, CancellationToken.None);
+        var result = await reviewService.AddReviewAsync(NaturElskarenIdentifier, "i-am-an-invalid-trail-identifier", trailReview, rating, imageUrls, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -116,14 +126,12 @@ public class ReviewServiceTests : TestBase
     {
         // Arrange
         var reviewService = CreateReviewService();
-        var userIdentifier = "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d"; // NaturElskaren
-        var trailIdentifier = "77a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c"; // Nässehult trail
         var trailReview = "Great trail!";
         var rating = 1337M;
         var imageUrls = GetFormFileCollection();
 
         // Act
-        var result = await reviewService.AddReviewAsync(userIdentifier, trailIdentifier, trailReview, rating, imageUrls, CancellationToken.None);
+        var result = await reviewService.AddReviewAsync(NaturElskarenIdentifier, NassehultIdentifier, trailReview, rating, imageUrls, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -137,10 +145,9 @@ public class ReviewServiceTests : TestBase
     {
         // Arrange
         var reviewService = CreateReviewService();
-        var userIdentifier = "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5a33";
-        var reviewIdentifier = "r5e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a";
+
         // Act
-        var result = await reviewService.DeleteReviewAsync(reviewIdentifier, userIdentifier, CancellationToken.None);
+        var result = await reviewService.DeleteReviewAsync(Review5Identifier, KattletenIdentifier, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -151,10 +158,9 @@ public class ReviewServiceTests : TestBase
     {
         // Arrange
         var reviewService = CreateReviewService();
-        var userIdentifier = "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5a33";
-        var reviewIdentifier = "i-am-an-invalid-identifier";
+
         // Act
-        var result = await reviewService.DeleteReviewAsync(reviewIdentifier, userIdentifier, CancellationToken.None);
+        var result = await reviewService.DeleteReviewAsync("i-am-an-invalid-identifier", KattletenIdentifier, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -167,10 +173,9 @@ public class ReviewServiceTests : TestBase
     {
         // Arrange
         var reviewService = CreateReviewService();
-        var userIdentifier = "i-am-an-invalid-user-identifier";
-        var reviewIdentifier = "r5e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a";
+
         // Act
-        var result = await reviewService.DeleteReviewAsync(reviewIdentifier, userIdentifier, CancellationToken.None);
+        var result = await reviewService.DeleteReviewAsync(Review5Identifier, "i-am-an-invalid-user-identifier", CancellationToken.None);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -178,19 +183,18 @@ public class ReviewServiceTests : TestBase
         result.Message.StatusCode.Should().Be(404);
     }
 
-    // ClaudeTests 
+    // ClaudeTests
 
     [Fact]
     public async Task GetReviewsByTrailIdentifier_WithPagination_ShouldReturnCorrectPage()
     {
         // Arrange
         var reviewService = CreateReviewService();
-        var trailIdentifier = "77a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c"; // Nässehult trail (has 2 reviews)
         int page = 0;
         int limit = 1;
 
         // Act
-        var result = await reviewService.GetReviewsByTrailIdentifierAsync(trailIdentifier, page, limit, CancellationToken.None);
+        var result = await reviewService.GetReviewsByTrailIdentifierAsync(NassehultIdentifier, page, limit, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -205,12 +209,11 @@ public class ReviewServiceTests : TestBase
     {
         // Arrange
         var reviewService = CreateReviewService();
-        var trailIdentifier = "77a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c"; // Nässehult trail (has 2 reviews)
         int page = 0;
         int limit = 10;
 
         // Act
-        var result = await reviewService.GetReviewsByTrailIdentifierAsync(trailIdentifier, page, limit, CancellationToken.None);
+        var result = await reviewService.GetReviewsByTrailIdentifierAsync(NassehultIdentifier, page, limit, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -225,12 +228,11 @@ public class ReviewServiceTests : TestBase
     {
         // Arrange
         var reviewService = CreateReviewService();
-        var trailIdentifier = "77a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c"; // Nässehult trail (has 2 reviews)
         int page = 1;
         int limit = 1;
 
         // Act
-        var result = await reviewService.GetReviewsByTrailIdentifierAsync(trailIdentifier, page, limit, CancellationToken.None);
+        var result = await reviewService.GetReviewsByTrailIdentifierAsync(NassehultIdentifier, page, limit, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -244,12 +246,11 @@ public class ReviewServiceTests : TestBase
     {
         // Arrange
         var reviewService = CreateReviewService();
-        var trailIdentifier = "77a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c"; // Nässehult trail (has 2 reviews)
         int page = 10;
         int limit = 10;
 
         // Act
-        var result = await reviewService.GetReviewsByTrailIdentifierAsync(trailIdentifier, page, limit, CancellationToken.None);
+        var result = await reviewService.GetReviewsByTrailIdentifierAsync(NassehultIdentifier, page, limit, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -264,13 +265,10 @@ public class ReviewServiceTests : TestBase
     {
         // Arrange
         var reviewService = CreateReviewService();
-        var userIdentifier = "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d";
-        var trailIdentifier = "77a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c";
-        var trailReview = "Test review";
         var rating = 0.5M;
 
         // Act
-        var result = await reviewService.AddReviewAsync(userIdentifier, trailIdentifier, trailReview, rating, null, CancellationToken.None);
+        var result = await reviewService.AddReviewAsync(NaturElskarenIdentifier, NassehultIdentifier, "Test review", rating, null, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -283,13 +281,10 @@ public class ReviewServiceTests : TestBase
     {
         // Arrange
         var reviewService = CreateReviewService();
-        var userIdentifier = "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d";
-        var trailIdentifier = "77a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c";
-        var trailReview = "Minimum rating review";
         var rating = 1.0M;
 
         // Act
-        var result = await reviewService.AddReviewAsync(userIdentifier, trailIdentifier, trailReview, rating, null, CancellationToken.None);
+        var result = await reviewService.AddReviewAsync(NaturElskarenIdentifier, NassehultIdentifier, "Minimum rating review", rating, null, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -302,13 +297,10 @@ public class ReviewServiceTests : TestBase
     {
         // Arrange
         var reviewService = CreateReviewService();
-        var userIdentifier = "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d";
-        var trailIdentifier = "77a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c";
-        var trailReview = "Maximum rating review";
         var rating = 5.0M;
 
         // Act
-        var result = await reviewService.AddReviewAsync(userIdentifier, trailIdentifier, trailReview, rating, null, CancellationToken.None);
+        var result = await reviewService.AddReviewAsync(NaturElskarenIdentifier, NassehultIdentifier, "Maximum rating review", rating, null, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -321,13 +313,10 @@ public class ReviewServiceTests : TestBase
     {
         // Arrange
         var reviewService = CreateReviewService();
-        var userIdentifier = "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d";
-        var trailIdentifier = "77a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c";
-        var trailReview = "Test review";
         var rating = 5.1M;
 
         // Act
-        var result = await reviewService.AddReviewAsync(userIdentifier, trailIdentifier, trailReview, rating, null, CancellationToken.None);
+        var result = await reviewService.AddReviewAsync(NaturElskarenIdentifier, NassehultIdentifier, "Test review", rating, null, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -340,13 +329,10 @@ public class ReviewServiceTests : TestBase
     {
         // Arrange
         var reviewService = CreateReviewService();
-        var userIdentifier = "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d";
-        var trailIdentifier = "77a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c";
-        var trailReview = "Review without images";
         var rating = 4.0M;
 
         // Act
-        var result = await reviewService.AddReviewAsync(userIdentifier, trailIdentifier, trailReview, rating, null, CancellationToken.None);
+        var result = await reviewService.AddReviewAsync(NaturElskarenIdentifier, NassehultIdentifier, "Review without images", rating, null, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -358,14 +344,11 @@ public class ReviewServiceTests : TestBase
     {
         // Arrange
         var reviewService = CreateReviewService();
-        var userIdentifier = "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d";
-        var trailIdentifier = "77a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c";
-        var trailReview = "Review with empty images";
         var rating = 4.0M;
         var emptyImages = new FormFileCollection();
 
         // Act
-        var result = await reviewService.AddReviewAsync(userIdentifier, trailIdentifier, trailReview, rating, emptyImages, CancellationToken.None);
+        var result = await reviewService.AddReviewAsync(NaturElskarenIdentifier, NassehultIdentifier, "Review with empty images", rating, emptyImages, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -377,13 +360,11 @@ public class ReviewServiceTests : TestBase
     {
         // Arrange
         var reviewService = CreateReviewService();
-        var userIdentifier = "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d";
-        var trailIdentifier = "77a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c";
         string? trailReview = null;
         var rating = 4.0M;
 
         // Act
-        var result = await reviewService.AddReviewAsync(userIdentifier, trailIdentifier, trailReview, rating, null, CancellationToken.None);
+        var result = await reviewService.AddReviewAsync(NaturElskarenIdentifier, NassehultIdentifier, trailReview, rating, null, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -396,14 +377,11 @@ public class ReviewServiceTests : TestBase
     {
         // Arrange
         var reviewService = CreateReviewService(uploadShouldReturnFailure: true);
-        var userIdentifier = "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d";
-        var trailIdentifier = "77a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c";
-        var trailReview = "Review with failed upload";
         var rating = 4.0M;
         var imageUrls = GetFormFileCollection();
 
         // Act
-        var result = await reviewService.AddReviewAsync(userIdentifier, trailIdentifier, trailReview, rating, imageUrls, CancellationToken.None);
+        var result = await reviewService.AddReviewAsync(NaturElskarenIdentifier, NassehultIdentifier, "Review with failed upload", rating, imageUrls, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -416,14 +394,11 @@ public class ReviewServiceTests : TestBase
     {
         // Arrange
         var reviewService = CreateReviewService(uploadShouldThrowException: true);
-        var userIdentifier = "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d";
-        var trailIdentifier = "77a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c";
-        var trailReview = "Review with exception during upload";
         var rating = 4.0M;
         var imageUrls = GetFormFileCollection();
 
         // Act
-        var result = await reviewService.AddReviewAsync(userIdentifier, trailIdentifier, trailReview, rating, imageUrls, CancellationToken.None);
+        var result = await reviewService.AddReviewAsync(NaturElskarenIdentifier, NassehultIdentifier, "Review with exception during upload", rating, imageUrls, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -436,11 +411,9 @@ public class ReviewServiceTests : TestBase
     {
         // Arrange
         var reviewService = CreateReviewService();
-        var userIdentifier = "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e"; // VandrarVennen
-        var reviewIdentifier = "r1a1b2c3-d4e5-4f6a-7b8c-9d0e1f2a3b4c"; // Review with images
 
         // Act
-        var result = await reviewService.DeleteReviewAsync(reviewIdentifier, userIdentifier, CancellationToken.None);
+        var result = await reviewService.DeleteReviewAsync(Review1Identifier, VandrarVennenIdentifier, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -451,11 +424,9 @@ public class ReviewServiceTests : TestBase
     {
         // Arrange
         var reviewService = CreateReviewService(deleteShouldReturnFailure: true);
-        var userIdentifier = "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e"; // VandrarVennen
-        var reviewIdentifier = "r1a1b2c3-d4e5-4f6a-7b8c-9d0e1f2a3b4c"; // Review with images
 
         // Act
-        var result = await reviewService.DeleteReviewAsync(reviewIdentifier, userIdentifier, CancellationToken.None);
+        var result = await reviewService.DeleteReviewAsync(Review1Identifier, VandrarVennenIdentifier, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -468,11 +439,9 @@ public class ReviewServiceTests : TestBase
     {
         // Arrange
         var reviewService = CreateReviewService(deleteShouldThrowException: true);
-        var userIdentifier = "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e"; // VandrarVennen
-        var reviewIdentifier = "r1a1b2c3-d4e5-4f6a-7b8c-9d0e1f2a3b4c"; // Review with images
 
         // Act
-        var result = await reviewService.DeleteReviewAsync(reviewIdentifier, userIdentifier, CancellationToken.None);
+        var result = await reviewService.DeleteReviewAsync(Review1Identifier, VandrarVennenIdentifier, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -483,11 +452,9 @@ public class ReviewServiceTests : TestBase
     {
         // Arrange
         var reviewService = CreateReviewService();
-        var userIdentifier = "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d"; // NaturElskaren
-        var reviewIdentifier = "r2b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d"; // Review without images
 
         // Act
-        var result = await reviewService.DeleteReviewAsync(reviewIdentifier, userIdentifier, CancellationToken.None);
+        var result = await reviewService.DeleteReviewAsync(Review2Identifier, NaturElskarenIdentifier, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeTrue();

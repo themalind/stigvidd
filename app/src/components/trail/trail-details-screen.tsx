@@ -1,3 +1,4 @@
+import { getTrailObstaclesByTrailIdentifier } from "@/api/trail-obstacles";
 import { getCoordinatesByTrailIdentifier, getTrailByIdentifier } from "@/api/trails";
 import { Rating } from "@/components/review/rating";
 import TrailReviewsContainer from "@/components/review/trail-reviews-container";
@@ -14,19 +15,21 @@ import { useRef, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { LatLng } from "react-native-maps";
 import { useTheme } from "react-native-paper";
+import BackButton from "../back-button";
 import LoadingIndicator from "../loading-indicator";
 import MapSkeleton from "../skeletons/map-skeleton";
+import TrailObstacleWarning from "./obstacle/trail-obstacle-warning";
+import TrailObstacleModal from "./obstacle/trail-obstacles-modal";
 import TrailMiscInfo from "./trail-misc-section/trail-misc-accordion";
-
 export default function TrailDetailsScreen() {
   const theme = useTheme();
   const { identifier } = useLocalSearchParams<{ identifier: string }>();
   const normalizedIdentifier: string = Array.isArray(identifier) ? identifier[0] : identifier;
-
   const scrollViewRef = useRef<ScrollView>(null);
   const surfaceToScrollToRef = useRef<View>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [reviewCount, setReviewCount] = useState(0);
+  const [showObstacleModal, setShowObstacleModal] = useState(false);
 
   const {
     data: trail,
@@ -37,6 +40,12 @@ export default function TrailDetailsScreen() {
     queryKey: ["trail", normalizedIdentifier],
     queryFn: () => getTrailByIdentifier(normalizedIdentifier),
     enabled: !!normalizedIdentifier && typeof normalizedIdentifier === "string",
+  });
+
+  const { data: obstacles } = useQuery({
+    queryKey: ["obstacles", normalizedIdentifier],
+    queryFn: () => getTrailObstaclesByTrailIdentifier(normalizedIdentifier),
+    enabled: !!normalizedIdentifier,
   });
 
   const { data: coords } = useQuery({
@@ -50,11 +59,12 @@ export default function TrailDetailsScreen() {
   }
 
   if (isError) {
-    return <Text style={{ padding: 20, color: theme.colors.error }}>{error?.message}</Text>;
+    return <Text style={[s.errorText, { color: theme.colors.error }]}>{error?.message}</Text>;
   }
 
   const images = trail?.trailImagesResponse || [];
   let coordinates: LatLng[] = [];
+
   if (coords) {
     coordinates = CoordinateParser({ data: coords.coordinates, identifier: trail!.identifier });
   }
@@ -70,50 +80,63 @@ export default function TrailDetailsScreen() {
   };
 
   return (
-    <ScrollView ref={scrollViewRef} contentContainerStyle={[s.container, { backgroundColor: theme.colors.background }]}>
-      <Text style={[s.sectionTitle, { color: theme.colors.onBackground }]}>{trail?.name}</Text>
-      <View style={{ alignItems: "center", justifyContent: "center" }}>
-        <ImageGallery images={images} />
-      </View>
-      <View style={s.ratingSection}>
-        <View style={s.rating}>
-          <Rating trailReviews={reviews} starSize={20} starColor={theme.colors.secondary} />
-          <Text style={[s.ratingNumber, { color: theme.colors.onBackground }]}>{`(${reviewCount})`}</Text>
+    <View style={[s.screen, { backgroundColor: theme.colors.background }]}>
+      <BackButton />
+      <ScrollView ref={scrollViewRef} contentContainerStyle={s.container}>
+        <Text style={[s.sectionTitle, { color: theme.colors.onBackground }]}>{trail?.name}</Text>
+        <View style={s.imageContainer}>
+          <ImageGallery images={images} />
         </View>
-        <View style={s.paddingLeft}>
-          <TouchableOpacity onPress={onPressScrollToRatings}>
-            <Text style={[s.text, { color: theme.colors.secondary }]}>Läs recensioner</Text>
-          </TouchableOpacity>
+        <View style={s.ratingSection}>
+          <View style={s.rating}>
+            <Rating trailReviews={reviews} starSize={20} starColor={theme.colors.secondary} />
+            <Text style={[s.ratingNumber, { color: theme.colors.onBackground }]}>{`(${reviewCount})`}</Text>
+          </View>
+          <View style={s.paddingLeft}>
+            <TouchableOpacity onPress={onPressScrollToRatings}>
+              <Text style={[s.text, { color: theme.colors.secondary }]}>Läs recensioner</Text>
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
-      {trail && <TrailInfo trail={trail} />}
-      {trail && <UserBar trail={trail} />}
-      {trail?.description && <TrailDescription trail={trail} />}
-      {coords?.coordinates ? (
-        coordinates.length > 0 && <TrailMap trail={coordinates} />
-      ) : (
-        <MapSkeleton text="Laddar karta..." />
-      )}
-      {trail && <TrailMiscInfo trail={trail} />}
+        {trail && <TrailInfo trail={trail} />}
+        {obstacles && obstacles.length > 0 && <TrailObstacleWarning onPress={() => setShowObstacleModal(true)} />}
+        {trail && <UserBar trail={trail} />}
+        {trail?.description && <TrailDescription trail={trail} />}
+        {coords?.coordinates ? (
+          coordinates.length > 0 && <TrailMap trail={coordinates} />
+        ) : (
+          <MapSkeleton text="Laddar karta..." />
+        )}
+        {trail && <TrailMiscInfo trail={trail} />}
 
-      {trail && (
-        <TrailReviewsContainer
-          trail={trail}
-          surfaceToScrollToRef={surfaceToScrollToRef}
-          onReviewsLoaded={(reviews, total) => {
-            setReviewCount(total);
-            setReviews(reviews);
-          }}
+        {trail && (
+          <TrailReviewsContainer
+            trail={trail}
+            surfaceToScrollToRef={surfaceToScrollToRef}
+            onReviewsLoaded={(reviews, total) => {
+              setReviewCount(total);
+              setReviews(reviews);
+            }}
+          />
+        )}
+        <Pressable style={s.backToTop} onPress={onPressScrollToTop}>
+          <Text style={[s.text, { color: theme.colors.secondary }]}>Tillbaka till toppen</Text>
+        </Pressable>
+        <TrailObstacleModal
+          visible={showObstacleModal}
+          onDismiss={() => setShowObstacleModal(false)}
+          obstacles={obstacles}
+          trailIdentifier={normalizedIdentifier}
         />
-      )}
-      <Pressable style={s.backToTop} onPress={onPressScrollToTop}>
-        <Text style={[s.text, { color: theme.colors.secondary }]}>Tillbaka till toppen</Text>
-      </Pressable>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 }
 
 const s = StyleSheet.create({
+  screen: {
+    flex: 1,
+  },
   container: {
     padding: 20,
     gap: 15,
@@ -145,6 +168,13 @@ const s = StyleSheet.create({
   },
   paddingLeft: {
     paddingRight: 10,
+  },
+  imageContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  errorText: {
+    padding: 20,
   },
 });
 

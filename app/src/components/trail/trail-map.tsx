@@ -1,7 +1,7 @@
 import { SURFACE_BORDER_RADIUS } from "@/constants/constants";
 import GetRegionFromTrail from "@/utils/get-region-from-trail";
 import { useEffect, useRef } from "react";
-import { Dimensions, StyleSheet } from "react-native";
+import { Dimensions, StyleSheet, View } from "react-native";
 import MapView, { LatLng, Polyline } from "react-native-maps";
 import { Surface } from "react-native-paper";
 import Map from "../map/map";
@@ -24,9 +24,11 @@ export default function TrailMap({ trail }: TrailMapProps) {
 
   return (
     <Surface style={s.container}>
-      <Map style={s.map} ref={mapRef} initialRegion={GetRegionFromTrail(trail)}>
-        <Polyline coordinates={trail} strokeWidth={3} strokeColor="#eb3204" />
-      </Map>
+      <View style={s.inner}>
+        <Map style={s.map} ref={mapRef} initialRegion={GetRegionFromTrail(trail)}>
+          <Polyline coordinates={trail} strokeWidth={3} strokeColor="#eb3204" />
+        </Map>
+      </View>
     </Surface>
   );
 }
@@ -35,6 +37,10 @@ const s = StyleSheet.create({
   container: {
     width: WIDTH * 0.9,
     height: HEIGHT * 0.3,
+    borderRadius: SURFACE_BORDER_RADIUS,
+  },
+  inner: {
+    flex: 1,
     borderRadius: SURFACE_BORDER_RADIUS,
     overflow: "hidden",
   },

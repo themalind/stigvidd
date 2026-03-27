@@ -1,6 +1,12 @@
 import { AuthResult, LoginData, UpdateUserResult } from "@/data/types";
 import { FirebaseError } from "firebase/app";
-import { EmailAuthProvider, reauthenticateWithCredential, sendPasswordResetEmail, signInWithEmailAndPassword, signOut } from "firebase/auth";
+import {
+  EmailAuthProvider,
+  reauthenticateWithCredential,
+  sendPasswordResetEmail,
+  signInWithEmailAndPassword,
+  signOut,
+} from "firebase/auth";
 import { auth } from "../../firebase-config";
 import { deleteStigViddUser } from "./users";
 

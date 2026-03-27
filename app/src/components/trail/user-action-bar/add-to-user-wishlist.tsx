@@ -6,7 +6,7 @@ import NotAuthenticatedDialog from "@/components/auth/not-authenticated-msg-dial
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { useState } from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useTheme } from "react-native-paper";
 
 interface Props {
@@ -49,10 +49,10 @@ export default function AddToUserWishlist({ trailIdentifier }: Props) {
 
   return (
     <View style={s.container}>
-      <TouchableOpacity style={s.touchable} onPress={handlePress} disabled={isPending}>
-        <MaterialIcons name={isInWishlist ? "check" : "add"} size={30} color={theme.colors.onPrimary} />
-        <Text style={[s.text, { color: theme.colors.onPrimary }]}>Vill gå</Text>
-      </TouchableOpacity>
+      <Pressable style={s.pressable} onPress={handlePress} disabled={isPending}>
+        <MaterialIcons name={isInWishlist ? "check" : "add"} size={30} color={theme.colors.onSurface} />
+        <Text style={[s.text, { color: theme.colors.onSurface }]}>Vill gå</Text>
+      </Pressable>
       <NotAuthenticatedDialog
         visible={showAuthDialog}
         onDissmiss={() => setAuthDialog(false)}
@@ -66,7 +66,7 @@ const s = StyleSheet.create({
   container: {
     flexDirection: "column",
   },
-  touchable: {
+  pressable: {
     justifyContent: "center",
     alignItems: "center",
   },

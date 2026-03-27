@@ -21,7 +21,7 @@ public class ReviewsController : StigViddController
 
     [HttpGet]
     [Route("trail/{trailIdentifier}")]
-    public async Task<ActionResult<PagedReviewResponse>> GetReviewsByTrailIdentifierAsync(
+    public async Task<ActionResult<PagedReviewResponse>> GetReviewsByTrailIdentifier(
         [FromRoute] string trailIdentifier,
         [FromQuery] int page, // Vilken omgång
         [FromQuery] int limit, // Hur många per omgång
@@ -40,7 +40,7 @@ public class ReviewsController : StigViddController
     [Authorize]
     [HttpPost]
     [Route("create")]
-    public async Task<ActionResult> AddReviewAsync(
+    public async Task<ActionResult> CreateReview(
         [FromForm] CreateReviewRequest request,
         [FromForm] IFormFileCollection? images,
         CancellationToken ctoken)
@@ -70,8 +70,8 @@ public class ReviewsController : StigViddController
     [Authorize]
     [HttpDelete]
     [Route("{reviewIdentifier}")]
-    public async Task<ActionResult> DeleteReviewAsync(
-        [FromRoute] DeleteReviewRequest request,
+    public async Task<ActionResult> DeleteReview(
+        [FromRoute] string reviewIdentifier,
         CancellationToken ctoken)
     {
         var userResponse = await GetAuthenticatedUserAsync(_userService, ctoken);
@@ -82,7 +82,7 @@ public class ReviewsController : StigViddController
         }
 
         var result = await _reviewService.DeleteReviewAsync(
-            request.ReviewIdentifier,
+            reviewIdentifier,
             userResponse.Identifier,
             ctoken
         );

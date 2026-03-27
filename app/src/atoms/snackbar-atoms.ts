@@ -9,41 +9,32 @@ export const snackbarAtom = atom<SnackbarState>({
 });
 
 // Helper atoms för att visa snackbar
-export const showSuccessAtom = atom(
-  null,
-  (get, set, message: string, icon?: string) => {
-    set(snackbarAtom, {
-      visible: true,
-      message,
-      type: "success",
-      icon: icon || "check-circle",
-    });
-  },
-);
+export const showSuccessAtom = atom(null, (get, set, message: string, icon?: string) => {
+  set(snackbarAtom, {
+    visible: true,
+    message,
+    type: "success",
+    icon: icon || "check-circle",
+  });
+});
 
-export const showRemovedAtom = atom(
-  null,
-  (get, set, message: string, icon?: string) => {
-    set(snackbarAtom, {
-      visible: true,
-      message,
-      type: "success",
-      icon: icon || "check-circle",
-    });
-  },
-);
+export const showRemovedAtom = atom(null, (get, set, message: string, icon?: string) => {
+  set(snackbarAtom, {
+    visible: true,
+    message,
+    type: "success",
+    icon: icon || "check-circle",
+  });
+});
 
-export const showErrorAtom = atom(
-  null,
-  (get, set, message: string, icon?: string) => {
-    set(snackbarAtom, {
-      visible: true,
-      message,
-      type: "error",
-      icon: icon || "error-outline",
-    });
-  },
-);
+export const showErrorAtom = atom(null, (get, set, message: string, icon?: string) => {
+  set(snackbarAtom, {
+    visible: true,
+    message,
+    type: "error",
+    icon: icon || "error-outline",
+  });
+});
 
 export const hideSnackbarAtom = atom(null, (get, set) => {
   set(snackbarAtom, (prev) => ({ ...prev, visible: false }));

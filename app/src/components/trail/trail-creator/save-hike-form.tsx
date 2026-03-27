@@ -121,9 +121,11 @@ export default function SaveHikeForm({ hike, onDismiss }: Props) {
 
       {route.length > 0 ? (
         <Surface style={s.mapContainer}>
-          <Map style={s.map} ref={mapRef} initialRegion={GetRegionFromTrail(route)}>
-            <Polyline coordinates={route} strokeColor="#f00" strokeWidth={3} />
-          </Map>
+          <View style={s.mapInner}>
+            <Map style={s.map} ref={mapRef} initialRegion={GetRegionFromTrail(route)}>
+              <Polyline coordinates={route} strokeColor="#f00" strokeWidth={3} />
+            </Map>
+          </View>
         </Surface>
       ) : null}
 
@@ -174,6 +176,10 @@ const s = StyleSheet.create({
     height: 300,
     borderRadius: BORDER_RADIUS,
     marginVertical: 20,
+  },
+  mapInner: {
+    flex: 1,
+    borderRadius: BORDER_RADIUS,
     overflow: "hidden",
   },
   map: {

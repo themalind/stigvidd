@@ -1,6 +1,5 @@
 ﻿using Infrastructure.Data.Entities;
 using Microsoft.EntityFrameworkCore;
-using WebDataContracts.ResponseModels.Trail;
 
 namespace Infrastructure.Data;
 
@@ -15,6 +14,8 @@ public class StigViddDbContext(DbContextOptions<StigViddDbContext> options) : Db
     public DbSet<Statistics> Statistics { get; set; }
     public DbSet<VisitorInformation> VisitorInformations { get; set; }
     public DbSet<Hike> Hikes { get; set; }
+    public DbSet<TrailObstacle> TrailObstacles { get; set; }
+    public DbSet<TrailObstacleSolvedVote> TrailObstacleSolvedVotes { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -58,19 +59,6 @@ public class StigViddDbContext(DbContextOptions<StigViddDbContext> options) : Db
         modelBuilder.Entity<Hike>()
             .Property(h => h.HikeLength).HasPrecision(18, 2);
 
-        // Keyless entity types used for raw SQL query results
-        modelBuilder.Entity<PopularTrailQueryResult>().HasNoKey()
-            .Property(p => p.TrailLength).HasPrecision(18, 2);
-        modelBuilder.Entity<PopularTrailQueryResult>()
-            .Property(p => p.AverageRating).HasPrecision(18, 6);
-
-        modelBuilder.Entity<TrailShortInfoResponse>().HasNoKey()
-            .Property(t => t.TrailLength).HasPrecision(18, 2);
-        modelBuilder.Entity<TrailShortInfoResponse>()
-            .Property(t => t.StartLatitude).HasPrecision(18, 10);
-        modelBuilder.Entity<TrailShortInfoResponse>()
-            .Property(t => t.StartLongitude).HasPrecision(18, 10);
-
         // Configures a one-to-one relationship where Trail has a VisitorInformation,
         // but VisitorInformation is the dependent side with TrailId as foreign key.
         // The Trail table won't have a VisitorInformationId. Deleting a Trail cascades to VisitorInformation.
@@ -78,6 +66,32 @@ public class StigViddDbContext(DbContextOptions<StigViddDbContext> options) : Db
             .HasOne(t => t.VisitorInformation)
             .WithOne()
             .HasForeignKey<VisitorInformation>("TrailId")
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<TrailObstacleSolvedVote>()
+            .HasIndex(v => new { v.TrailObstacleId, v.UserId })
+            .IsUnique();
+
+        modelBuilder.Entity<TrailObstacle>()
+            .Property(to => to.IncidentLatitude)
+            .HasPrecision(18, 10); ;
+
+        modelBuilder.Entity<TrailObstacle>()
+            .Property(to => to.IncidentLongitude)
+            .HasPrecision(18, 10);
+
+        // Each solved vote belongs to one obstacle; obstacle can have many solved votes
+        modelBuilder.Entity<TrailObstacleSolvedVote>()
+            .HasOne(solvedVote => solvedVote.TrailObstacle)
+            .WithMany(to => to.SolvedVotes)
+            .HasForeignKey(solvedVote => solvedVote.TrailObstacleId)
+            .OnDelete(DeleteBehavior.NoAction); // Prevent cascade delete when obstacle is removed
+
+        // Each solved vote is cast by one user; deleting the user cascades to their votes
+        modelBuilder.Entity<TrailObstacleSolvedVote>()
+            .HasOne(solvedVote => solvedVote.User)
+            .WithMany()
+            .HasForeignKey(solvedVote => solvedVote.UserId)
             .OnDelete(DeleteBehavior.Cascade);
     }
 }
