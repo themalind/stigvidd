@@ -60,7 +60,7 @@ export default function RegisterScreen() {
   const background =
     finalTheme === "dark"
       ? require("../../../assets/images/register-dark-background-2.jpg")
-      : require("../../../assets/images/light_mode_register.jpg");
+      : require("../../../assets/images/lightmode_register.jpg");
 
   const {
     control,

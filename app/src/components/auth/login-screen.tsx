@@ -39,8 +39,8 @@ export default function LoginScreen() {
   const finalTheme = userTheme === "auto" ? (colorScheme ?? "light") : userTheme;
   const background =
     finalTheme === "dark"
-      ? require("../../assets/images/aurora_borealis2.jpg")
-      : require("../../assets/images/light_mode_login.jpg");
+      ? require("../../assets/images/darkmode_login.jpg")
+      : require("../../assets/images/lightmode_login.jpg");
 
   const {
     control,
