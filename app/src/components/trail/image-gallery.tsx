@@ -2,7 +2,7 @@ import { BORDER_RADIUS } from "@/constants/constants";
 import { TrailImage } from "@/data/types";
 import { Image } from "expo-image";
 import { useRef, useState } from "react";
-import { NativeScrollEvent, NativeSyntheticEvent, Pressable, StyleSheet, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import { useTheme } from "react-native-paper";
 
@@ -17,17 +17,6 @@ export default function ImageGallery({ images }: GalleryProps) {
   const theme = useTheme();
   const ITEM_WIDTH = 80;
   const GAP = 15;
-
-  const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const scrollPosition = event.nativeEvent.contentOffset.x;
-    const rawIndex = Math.round(scrollPosition / (ITEM_WIDTH + GAP));
-    const index = Math.max(0, Math.min(rawIndex, images.length - 1));
-
-    if (index !== currentIndex) {
-      setCurrentIndex(index);
-      setSelectedImage(images[index]);
-    }
-  };
 
   const handleImagePress = (image: TrailImage, index: number) => {
     setSelectedImage(image);
@@ -50,7 +39,6 @@ export default function ImageGallery({ images }: GalleryProps) {
           ref={scrollViewRef}
           contentContainerStyle={s.scrollView}
           horizontal
-          onScroll={handleScroll}
           scrollEventThrottle={16}
           showsHorizontalScrollIndicator={false}
           snapToInterval={ITEM_WIDTH + GAP}
