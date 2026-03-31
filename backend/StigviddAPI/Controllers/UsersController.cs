@@ -18,10 +18,10 @@ public class UsersController : StigViddController
     {
         _userService = userService;
     }
-    
+
     [HttpPost]
     [Route("create")]
-    public async Task<ActionResult<UserResponse?>> CreateUserAsync(
+    public async Task<ActionResult<UserResponse?>> CreateUser(
         [FromBody] CreateUserRequest createUserRequest,
               CancellationToken ctoken)
     {
@@ -43,7 +43,7 @@ public class UsersController : StigViddController
 
     [HttpGet]
     [Route("")]
-    public async Task<ActionResult<UserResponse?>> GetStigViddUserAsync(
+    public async Task<ActionResult<UserResponse?>> GetStigViddUser(
        CancellationToken ctoken)
     {
         var firebaseUid = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -63,7 +63,7 @@ public class UsersController : StigViddController
 
     [HttpGet]
     [Route("favorites")]
-    public async Task<ActionResult<IReadOnlyCollection<UserFavoritesTrailResponse>>> GetAuthenticatedUsersFavoritesAsync(
+    public async Task<ActionResult<IReadOnlyCollection<UserFavoritesTrailResponse>>> GetAuthenticatedUsersFavorites(
               CancellationToken ctoken)
     {
         var userResponse = await GetAuthenticatedUserAsync(_userService, ctoken);
@@ -85,7 +85,7 @@ public class UsersController : StigViddController
 
     [HttpGet]
     [Route("wishlist")]
-    public async Task<ActionResult<IReadOnlyCollection<UserWishlistTrailResponse>>> GetAuthenticatedUsersWishListAsync(
+    public async Task<ActionResult<IReadOnlyCollection<UserWishlistTrailResponse>>> GetAuthenticatedUsersWishList(
            CancellationToken ctoken)
     {
         var userResponse = await GetAuthenticatedUserAsync(_userService, ctoken);
@@ -107,7 +107,7 @@ public class UsersController : StigViddController
 
     [HttpPost]
     [Route("favorites")]
-    public async Task<ActionResult<UserFavoritesTrailResponse?>> AddTrailToUserFavoritesListAsync(
+    public async Task<ActionResult<UserFavoritesTrailResponse?>> AddTrailToUserFavoritesList(
        [FromBody] AddToUserFavoritesRequest favoriteRequest,
        CancellationToken ctoken)
     {
@@ -130,7 +130,7 @@ public class UsersController : StigViddController
 
     [HttpPost]
     [Route("wishlist")]
-    public async Task<ActionResult<UserWishlistTrailResponse?>> AddTrailToUserWishListAsync(
+    public async Task<ActionResult<UserWishlistTrailResponse?>> AddTrailToUserWishList(
       [FromBody] AddToUserWishlistRequest addToUserWishlistRequest,
       CancellationToken ctoken)
     {
@@ -153,7 +153,7 @@ public class UsersController : StigViddController
 
     [HttpDelete]
     [Route("favorites/{trailIdentifier}")]
-    public async Task<ActionResult> RemoveTrailFromUserFavoritesListAsync(
+    public async Task<ActionResult> RemoveTrailFromUserFavoritesList(
       [FromRoute] RemoveFromUserFavoriteRequest request,
       CancellationToken ctoken)
     {
@@ -176,7 +176,7 @@ public class UsersController : StigViddController
 
     [HttpDelete]
     [Route("wishlist/{trailIdentifier}")]
-    public async Task<ActionResult> RemoveTrailFromUserWishListAsync(
+    public async Task<ActionResult> RemoveTrailFromUserWishList(
       [FromRoute] RemoveFromUserwishListRequest request,
       CancellationToken ctoken)
     {
@@ -199,7 +199,7 @@ public class UsersController : StigViddController
 
     [HttpDelete]
     [Route("delete")]
-    public async Task<ActionResult> DeleteUserAsync(
+    public async Task<ActionResult> DeleteUser(
       CancellationToken ctoken)
     {
         var userResponse = await GetAuthenticatedUserAsync(_userService, ctoken);

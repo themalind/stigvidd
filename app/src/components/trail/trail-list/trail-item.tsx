@@ -22,8 +22,8 @@ function TrailItem({ item, handlePress }: TrailItemProps) {
   const finalTheme = userTheme === "auto" ? (colorScheme ?? "light") : userTheme;
   const wizardPin =
     finalTheme === "dark"
-      ? require("../../../assets/map/marker/vandringsled-dark-100-159.png")
-      : require("../../../assets/map/marker/vandringsled-100-159.png");
+      ? require("../../../assets/map/marker/vandringsled-dark-90-143.png")
+      : require("../../../assets/map/marker/vandringsled-90-143.png");
 
   return (
     <Pressable

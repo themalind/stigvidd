@@ -33,6 +33,7 @@ export default forwardRef<MapView, Props>(function Map(
       ref={ref}
       style={style}
       customMapStyle={mapStyle === "dark" ? nightMapTheme : retroMapTheme}
+      userInterfaceStyle={mapStyle === "dark" ? "dark" : "light"}
       initialRegion={initialRegion}
       showsUserLocation={showsUserLocation}
       showsMyLocationButton={false}

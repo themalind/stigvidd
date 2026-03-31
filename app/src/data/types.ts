@@ -130,6 +130,13 @@ export interface TrailShortInfoResponse {
   startLongitude?: number;
 }
 
+export interface TrailMarkerResponse {
+  identifier: string;
+  name: string;
+  startLatitude?: number;
+  startLongitude?: number;
+}
+
 export interface Hike {
   identifier: string;
   name: string;

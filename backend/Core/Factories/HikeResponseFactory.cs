@@ -1,6 +1,5 @@
 using Infrastructure.Data.Entities;
 using WebDataContracts.ResponseModels.Hike;
-using WebDataContracts.ResponseModels.Review;
 
 namespace Core.Factories;
 

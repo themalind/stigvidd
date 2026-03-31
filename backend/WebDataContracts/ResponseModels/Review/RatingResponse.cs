@@ -2,7 +2,7 @@
 
 public class RatingResponse
 {
-    public required string Identifier { get; set; }
+    public required string Identifier { get; set; } // ReviewIdentifier
     public decimal Rating { get; set; }
 
     public static RatingResponse Create(

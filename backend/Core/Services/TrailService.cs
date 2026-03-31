@@ -399,4 +399,34 @@ public class TrailService : ITrailService
             return Result.Fail<IReadOnlyCollection<TrailShortInfoResponse>>(new Message(500, "An error occurred while fetching trails."));
         }
     }
+
+    public async Task<Result<IReadOnlyCollection<TrailMarkerResponse>>> GetAllTrailMarkersAsync(CancellationToken ctoken)
+    {
+        using var context = await _context.CreateDbContextAsync(ctoken);
+        try
+        {
+            var trailMarkers = await context.Database
+                .SqlQueryRaw<TrailMarkerResponse>(
+                   """
+                    SELECT
+                        t.Identifier,
+                        t.Name,
+                        CAST(JSON_VALUE(t.Coordinates, '$[0].latitude') AS decimal(18,10)) AS StartLatitude,
+                        CAST(JSON_VALUE(t.Coordinates, '$[0].longitude') AS decimal(18,10)) AS StartLongitude
+                    FROM Trails t
+                    WHERE t.IsVerified = 1
+                    GROUP BY t.Identifier, t.Name, t.Coordinates
+                    """)
+                .AsNoTracking()
+                .ToListAsync(ctoken);
+
+            return Result.Ok<IReadOnlyCollection<TrailMarkerResponse>>(trailMarkers);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error fetching trail markers.");
+
+            return Result.Fail<IReadOnlyCollection<TrailMarkerResponse>>(new Message(500, "An error occurred while fetching trail markers."));
+        }
+    }
 }

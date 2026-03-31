@@ -22,8 +22,8 @@ public class TrailsController : StigViddController
     }
 
     [HttpGet("{identifier}")]
-    public async Task<ActionResult<TrailResponse?>> GetTrailByIdentifierAsync(
-        string identifier, 
+    public async Task<ActionResult<TrailResponse?>> GetTrailByIdentifier(
+        string identifier,
         CancellationToken ctoken)
     {
         var result = await _trailService.GetTrailByIdentifierWithoutCoordinatesAsync(identifier, ctoken);
@@ -40,7 +40,7 @@ public class TrailsController : StigViddController
     }
 
     [HttpGet("popular")]
-    public async Task<ActionResult<IReadOnlyCollection<TrailOverviewResponse?>>> GetPopularTrailsAsync(
+    public async Task<ActionResult<IReadOnlyCollection<TrailOverviewResponse?>>> GetPopularTrails(
         [FromQuery] double? latitude,
         [FromQuery] double? longitude,
         CancellationToken ctoken)
@@ -59,11 +59,11 @@ public class TrailsController : StigViddController
     }
 
     [HttpGet("")]
-    public async Task<ActionResult<IReadOnlyCollection<TrailShortInfoResponse>>> GetAllTrailsAsync(CancellationToken ctoken)
+    public async Task<ActionResult<IReadOnlyCollection<TrailShortInfoResponse>>> GetAllTrails(CancellationToken ctoken)
     {
         var result = await _trailService.GetAllTrailsWithBasicInfoAsync(ctoken);
 
-        if(!result.Success && result.Message != null)
+        if (!result.Success && result.Message != null)
         {
             _logger.LogInformation(
               "GetAllTrailsAsync: Failed to fetch trails.");
@@ -75,8 +75,8 @@ public class TrailsController : StigViddController
     }
 
     [HttpGet("{identifier}/coordinates")]
-    public async Task<ActionResult<CoordinatesResponse?>> GetCoordinatesByTrailIdentifierAsync(
-        string identifier, 
+    public async Task<ActionResult<CoordinatesResponse?>> GetCoordinatesByTrailIdentifier(
+        string identifier,
         CancellationToken ctoken)
     {
         var result = await _trailService.GetCoordinatesByTrailIdentifierAsync(identifier, ctoken);
@@ -92,10 +92,27 @@ public class TrailsController : StigViddController
         return Ok(result.Value);
     }
 
+    [HttpGet("markers")]
+    public async Task<ActionResult<IReadOnlyCollection<TrailMarkerResponse>>> GetTrailMarkers(
+               CancellationToken ctoken)
+    {
+        var result = await _trailService.GetAllTrailMarkersAsync(ctoken);
+
+        if (!result.Success && result.Message != null)
+        {
+            _logger.LogInformation(
+              "GetTrailMarkersAsync: Failed to fetch trail markers.");
+
+            return ToActionResult(result.Message);
+        }
+
+        return Ok(result.Value);
+    }
+
     [Authorize]
     [HttpPost]
     [Route("create")]
-    public async Task<ActionResult> AddTrailAsync(
+    public async Task<ActionResult> AddTrail(
         [FromForm] CreateTrailRequest request,
         [FromForm] IFormFile trailSymbolImage,
         [FromForm] IFormFileCollection images,

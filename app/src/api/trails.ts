@@ -1,11 +1,19 @@
 import { IP } from "@/../ipconfig";
-import { Coordinates, CreateTrailRequest, Trail, TrailOverview, TrailShortInfoResponse } from "@/data/types";
+import {
+  Coordinates,
+  CreateTrailRequest,
+  Trail,
+  TrailMarkerResponse,
+  TrailOverview,
+  TrailShortInfoResponse,
+} from "@/data/types";
 import uuid from "react-native-uuid";
 import { getUserToken } from "./users";
 
 export async function getPopularTrails(latitude?: number, longitude?: number): Promise<TrailOverview[]> {
   try {
     const params = new URLSearchParams();
+    
     if (latitude !== undefined && longitude !== undefined) {
       params.append("latitude", latitude.toString());
       params.append("longitude", longitude.toString());
@@ -63,6 +71,22 @@ export async function getCoordinatesByTrailIdentifier(identifier: string): Promi
 
     if (!response.ok) {
       throw new Error(`getCordsTrailByIdentifier: HTTP error ${response.status}`);
+    }
+    const json = await response.json();
+
+    return json;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+}
+
+export async function getTrailMarkers(): Promise<TrailMarkerResponse[]> {
+  try {
+    const response = await fetch("http://" + IP + `/api/v1/trails/markers`);
+
+    if (!response.ok) {
+      throw new Error(`getTrailMarkers: HTTP error ${response.status}`);
     }
     const json = await response.json();
 

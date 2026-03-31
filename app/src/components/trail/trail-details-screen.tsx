@@ -21,6 +21,7 @@ import MapSkeleton from "../skeletons/map-skeleton";
 import TrailObstacleWarning from "./obstacle/trail-obstacle-warning";
 import TrailObstacleModal from "./obstacle/trail-obstacles-modal";
 import TrailMiscInfo from "./trail-misc-section/trail-misc-accordion";
+
 export default function TrailDetailsScreen() {
   const theme = useTheme();
   const { identifier } = useLocalSearchParams<{ identifier: string }>();
