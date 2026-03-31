@@ -6,8 +6,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useAtom } from "jotai";
 import React, { RefObject, useEffect, useMemo, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
-import { Button, Surface, useTheme } from "react-native-paper";
+import { Pressable, StyleSheet, View } from "react-native";
+import { Button, Surface, Text, useTheme } from "react-native-paper";
 import NotAuthenticatedDialog from "../auth/not-authenticated-msg-dialog";
 import LoadingIndicator from "../loading-indicator";
 import AddReview from "./add/add-review-modal";
@@ -108,13 +108,12 @@ export default function TrailReviewsContainer({ trail, surfaceToScrollToRef, onR
             {(hasNextPage || isFetchingNextPage) && (
               <Button
                 style={{ borderRadius: BORDER_RADIUS }}
-                mode="elevated"
+                mode="outlined"
                 onPress={() => fetchNextPage()}
                 disabled={isFetchingNextPage}
+                labelStyle={{ color: theme.colors.onSurface }}
               >
-                <Text style={{ color: theme.colors.onSurface }}>
-                  {isFetchingNextPage ? "Laddar fler..." : "Ladda fler"}
-                </Text>
+                {isFetchingNextPage ? "Laddar fler..." : "Ladda fler"}
               </Button>
             )}
           </>

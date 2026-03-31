@@ -2,7 +2,7 @@ import { TrailOverview } from "@/data/types";
 import React, { useCallback } from "react";
 import { useWindowDimensions, View } from "react-native";
 import Animated, { useAnimatedScrollHandler, useSharedValue } from "react-native-reanimated";
-import { CarouselTile } from "./image-carousel-tile";
+import { CarouselTile } from "./Image-carousel-tile";
 
 interface CarouselProps {
   data: TrailOverview[];
@@ -63,7 +63,7 @@ export default function ImageCarousel({ data, showText = true, onItemPress }: Ca
         windowSize={5}
         initialNumToRender={3}
         maxToRenderPerBatch={3}
-        removeClippedSubviews={true}
+        removeClippedSubviews={false}
         getItemLayout={getItemLayout}
         contentContainerStyle={{
           paddingLeft: 0,
