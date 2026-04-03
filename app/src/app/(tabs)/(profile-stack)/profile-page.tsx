@@ -9,7 +9,8 @@ import ThemeToggle from "@/components/theme-toggle";
 import ProfileMenuItem from "@/components/user/profile-page/profile-menu-item";
 import { MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
 import { Image } from "expo-image";
-import { Redirect, router, useFocusEffect } from "expo-router";
+import { CommonActions } from "@react-navigation/native";
+import { Redirect, useFocusEffect, useNavigation } from "expo-router";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import React, { useRef, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
@@ -23,6 +24,7 @@ export default function ProfilePageScreen() {
   const theme = useTheme();
   const [authState] = useAtom(authStateAtom);
   const [visible, setVisible] = useState(false);
+  const navigation = useNavigation();
 
   // Scrolla till toppen när skärmen fokuseras (vid tab-tryck)
   useFocusEffect(
@@ -50,7 +52,14 @@ export default function ProfilePageScreen() {
       console.log(e);
       setError("Kunde inte logga ut.");
     }
-    router.replace("/(tabs)/(auth)/login");
+    // Reset the entire tab navigator to only the auth/login screen,
+    // clearing all tab history and nested stack history.
+    navigation.getParent()?.dispatch(
+      CommonActions.reset({
+        index: 0,
+        routes: [{ name: "(auth)", state: { routes: [{ name: "login" }] } }],
+      }),
+    );
   }
 
   return (
