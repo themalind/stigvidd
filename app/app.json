@@ -31,7 +31,8 @@
         "android.permission.FOREGROUND_SERVICE",
         "android.permission.FOREGROUND_SERVICE_LOCATION",
         "android.permission.RECORD_AUDIO"
-      ]
+      ],
+      "package": "com.stigvidd.app"
     },
     "web": {
       "output": "static",
