@@ -26,6 +26,7 @@ public class ReviewService : IReviewService
         _reviewResponseFactory = reviewResponseFactory;
         _logger = logger;
     }
+
     public async Task<Result<PagedReviewResponse>> GetReviewsByTrailIdentifierAsync(string trailIdentifier, int page, int limit, CancellationToken ctoken)
     {
         using var context = await _context.CreateDbContextAsync(ctoken);

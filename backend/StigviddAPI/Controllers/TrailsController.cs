@@ -31,7 +31,7 @@ public class TrailsController : StigViddController
         if (!result.Success && result.Message != null)
         {
             _logger.LogInformation(
-                "GetTrailByIdentifierAsync: Trail with identifier: {identifier} not found.", identifier);
+                "GetTrailByIdentifier: Trail with identifier: {identifier} not found.", identifier);
 
             return ToActionResult(result.Message);
         }
@@ -50,7 +50,7 @@ public class TrailsController : StigViddController
         if (!result.Success && result.Message != null)
         {
             _logger.LogInformation(
-               "GetPopularTrailsAsync: Failed to fetch popular trails.");
+               "GetPopularTrails Failed to fetch popular trails.");
 
             return ToActionResult(result.Message);
         }
@@ -66,7 +66,7 @@ public class TrailsController : StigViddController
         if (!result.Success && result.Message != null)
         {
             _logger.LogInformation(
-              "GetAllTrailsAsync: Failed to fetch trails.");
+              "GetAllTrails: Failed to fetch trails.");
 
             return ToActionResult(result.Message);
         }
@@ -84,7 +84,7 @@ public class TrailsController : StigViddController
         if (!result.Success && result.Message != null)
         {
             _logger.LogInformation(
-              "GetAllCordsByTrailIdentifierAsync: Failed to fetch cords. {identifier}", identifier);
+              "GetAllCordsByTrailIdentifier: Failed to fetch cords. {identifier}", identifier);
 
             return ToActionResult(result.Message);
         }
@@ -101,7 +101,7 @@ public class TrailsController : StigViddController
         if (!result.Success && result.Message != null)
         {
             _logger.LogInformation(
-              "GetTrailMarkersAsync: Failed to fetch trail markers.");
+              "GetTrailMarkers: Failed to fetch trail markers.");
 
             return ToActionResult(result.Message);
         }
