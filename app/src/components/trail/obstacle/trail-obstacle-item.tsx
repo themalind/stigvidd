@@ -17,9 +17,10 @@ import { Divider, Text, useTheme } from "react-native-paper";
 interface Props {
   obstacle: TrailObstacle;
   trailIdentifier: string;
+  onCloseModal?: () => void;
 }
 
-export default function TrailObstacleItem({ obstacle, trailIdentifier }: Props) {
+export default function TrailObstacleItem({ obstacle, trailIdentifier, onCloseModal }: Props) {
   const theme = useTheme();
   const [authState] = useAtom(authStateAtom);
   const { data: stigviddUser } = useAtomValue(stigviddUserAtom);
@@ -96,6 +97,7 @@ export default function TrailObstacleItem({ obstacle, trailIdentifier }: Props) 
       <NotAuthenticatedDialog
         visible={showAuthDialog}
         onDissmiss={() => setAuthDialog(false)}
+        onBeforeNavigate={onCloseModal}
         infoMessage="Du behöver vara inloggad för att markera ett hinder som löst."
       />
       <AlertDialog

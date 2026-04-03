@@ -46,7 +46,7 @@ export default function TrailObstacleModal({ visible, onDismiss, obstacles, trai
         </View>
         <ScrollView contentContainerStyle={s.scrollContent} style={s.scrollView} showsVerticalScrollIndicator={false}>
           {obstacles?.map((obstacle) => (
-            <TrailObstacleItem key={obstacle.identifier} obstacle={obstacle} trailIdentifier={trailIdentifier} />
+            <TrailObstacleItem key={obstacle.identifier} obstacle={obstacle} trailIdentifier={trailIdentifier} onCloseModal={onDismiss} />
           ))}
         </ScrollView>
       </Modal>
