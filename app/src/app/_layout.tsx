@@ -4,10 +4,12 @@ import { GlobalSnackbar } from "@/components/global-snackbar";
 import { useInitLocation } from "@/hooks/useInitLocation";
 import { useUserTheme } from "@/hooks/useUserTheme";
 import "@/services/location-task";
+import * as NavigationBar from "expo-navigation-bar";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useAtom, useSetAtom } from "jotai";
+import { queryClientAtom } from "jotai-tanstack-query";
 import React, { useEffect, useMemo } from "react";
 import { StyleSheet, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -21,8 +23,22 @@ export default function RootLayout() {
   const [user] = useAtom(userAtom);
   const statusBarStyle = theme.dark ? "light" : "dark";
 
+  // Create a unique key based on the current user
+  // When this key changes (user logs in/out), React will unmount and remount
+  // the entire component tree, resetting all local state
+  const appKey = user?.uid || "guest";
+
   // Create a QueryClient with useMemo to avoid recreating on every render.
-  const queryClient = useMemo(() => new QueryClient(), []);
+  // appKey as dependency ensures a fresh QueryClient (empty cache) when user changes.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const queryClient = useMemo(() => new QueryClient(), [appKey]);
+
+  // Sync queryClientAtom (used by jotai-tanstack-query atoms) with the same QueryClient
+  // as QueryClientProvider so there is only one QueryClient in the app.
+  const setQueryClient = useSetAtom(queryClientAtom);
+  useEffect(() => {
+    setQueryClient(queryClient);
+  }, [queryClient, setQueryClient]);
 
   // Fetch location on mount
   useInitLocation();
@@ -33,22 +49,15 @@ export default function RootLayout() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Clear React Query cache when user logs out
-  useEffect(() => {
-    if (!user) {
-      queryClient.clear();
-    }
-  }, [user, queryClient]);
-
   // Load theme
   useEffect(() => {
     loadUserTheme().then(setUserTheme);
   }, [setUserTheme]);
 
-  // Create a unique key based on the current user
-  // When this key changes (user logs in/out), React will unmount and remount
-  // the entire component tree, resetting all local state
-  const appKey = user?.uid || "guest";
+  // Keep Android navigation bar color in sync with the tab bar background
+  useEffect(() => {
+    NavigationBar.setBackgroundColorAsync(theme.colors.background);
+  }, [theme.colors.background]);
 
   return (
     <QueryClientProvider client={queryClient}>
