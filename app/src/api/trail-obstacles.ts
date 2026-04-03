@@ -1,10 +1,10 @@
 import { CreateTrailObstacleRequest, TrailObstacle } from "@/data/types";
-import { IP } from "../../ipconfig";
 import { ApiError, getUserToken } from "./users";
+import { BASE_URL } from "./api-config";
 
 export async function getTrailObstaclesByTrailIdentifier(trailIdentifier: string): Promise<TrailObstacle[]> {
   try {
-    const response = await fetch(`http://${IP}/api/v1/trailobstacles/trail/${trailIdentifier}`, {
+    const response = await fetch(`${BASE_URL}/trailobstacles/trail/${trailIdentifier}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -26,7 +26,7 @@ export async function addSolvedVote(obstacleIdentifier: string): Promise<{ succe
   try {
     const token = await getUserToken();
 
-    const response = await fetch(`http://${IP}/api/v1/trailobstacles/solve/${obstacleIdentifier}`, {
+    const response = await fetch(`${BASE_URL}/trailobstacles/solve/${obstacleIdentifier}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -49,7 +49,7 @@ export async function deleteSolvedVote(obstacleIdentifier: string): Promise<{ su
   try {
     const token = await getUserToken();
 
-    const response = await fetch(`http://${IP}/api/v1/trailobstacles/solve/${obstacleIdentifier}`, {
+    const response = await fetch(`${BASE_URL}/trailobstacles/solve/${obstacleIdentifier}`, {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",
@@ -76,7 +76,7 @@ export async function createTrailObstacle(request: CreateTrailObstacleRequest): 
   }
 
   try {
-    const response = await fetch(`http://${IP}/api/v1/trailobstacles`, {
+    const response = await fetch(`${BASE_URL}/trailobstacles`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

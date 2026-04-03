@@ -25,9 +25,11 @@ export default function TrailMap({ trail }: TrailMapProps) {
   return (
     <Surface style={s.container}>
       <View style={s.inner}>
-        <Map style={s.map} ref={mapRef} initialRegion={GetRegionFromTrail(trail)}>
-          <Polyline coordinates={trail} strokeWidth={3} strokeColor="#eb3204" />
-        </Map>
+        {trail.length > 0 && (
+          <Map style={s.map} ref={mapRef} initialRegion={GetRegionFromTrail(trail)}>
+            <Polyline coordinates={trail} strokeWidth={3} strokeColor="#eb3204" />
+          </Map>
+        )}
       </View>
     </Surface>
   );

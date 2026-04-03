@@ -1,6 +1,6 @@
 import { CreateHikeRequest, Hike } from "@/data/types";
-import { IP } from "../../ipconfig";
 import { ApiError, getUserToken } from "./users";
+import { BASE_URL } from "./api-config";
 
 export async function createHike(request: CreateHikeRequest): Promise<{ success: boolean }> {
   const token = await getUserToken();
@@ -10,7 +10,7 @@ export async function createHike(request: CreateHikeRequest): Promise<{ success:
   }
 
   try {
-    const response = await fetch(`http://${IP}/api/v1/hikes`, {
+    const response = await fetch(`${BASE_URL}/hikes`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -37,7 +37,7 @@ export async function createHike(request: CreateHikeRequest): Promise<{ success:
 
 export async function getAllHikes(): Promise<Hike[]> {
   try {
-    const response = await fetch(`http://${IP}/api/v1/hikes`, {
+    const response = await fetch(`${BASE_URL}/hikes`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -62,7 +62,7 @@ export async function getAllHikesByUserId(userIdentifier: string): Promise<Hike[
     throw new Error("User not authenticated");
   }
   try {
-    const response = await fetch(`http://${IP}/api/v1/hikes?createdBy=${userIdentifier}`, {
+    const response = await fetch(`${BASE_URL}/hikes?createdBy=${userIdentifier}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -83,7 +83,7 @@ export async function getAllHikesByUserId(userIdentifier: string): Promise<Hike[
 
 export async function getHikeByIdentifier(hikeIdentifier: string): Promise<Hike> {
   try {
-    const response = await fetch(`http://${IP}/api/v1/hikes/${hikeIdentifier}`, {
+    const response = await fetch(`${BASE_URL}/hikes/${hikeIdentifier}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -109,7 +109,7 @@ export async function deleteHike(hikeIdentifier: string): Promise<{ success: boo
   }
 
   try {
-    const response = await fetch(`http://${IP}/api/v1/hikes/${hikeIdentifier}`, {
+    const response = await fetch(`${BASE_URL}/hikes/${hikeIdentifier}`, {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",

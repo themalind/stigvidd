@@ -50,7 +50,7 @@ export default function UserTrailCollection({
                   })
                 }
               >
-                <View style={s.favoriteContainer}>
+                <View style={s.trailContainer}>
                   {trail.trailImages ? (
                     <Image style={s.trailImage} source={trail.trailImages[0].imageUrl} contentFit="cover" />
                   ) : null}
@@ -64,7 +64,7 @@ export default function UserTrailCollection({
                       ) : null}
                     </View>
                     <Text>{trail.trailLength} km</Text>
-                    <Text>{trail.description}</Text>
+                    <Text numberOfLines={3}>{trail.description}</Text>
                   </View>
                   <Pressable onPress={() => onDelete(trail.identifier)} style={s.trash}>
                     <Entypo name="cross" size={24} color={theme.colors.onBackground} />
@@ -101,7 +101,8 @@ const s = StyleSheet.create({
     alignSelf: "flex-start",
     paddingTop: 5,
   },
-  favoriteContainer: {
+  trailContainer: {
+    padding: 5,
     flexDirection: "row",
     alignItems: "center",
   },

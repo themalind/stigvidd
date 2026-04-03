@@ -3,6 +3,7 @@ import { loadUserTheme, userThemeAtom } from "@/atoms/user-theme-atom";
 import { GlobalSnackbar } from "@/components/global-snackbar";
 import { useInitLocation } from "@/hooks/useInitLocation";
 import { useUserTheme } from "@/hooks/useUserTheme";
+import "@/services/location-task";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
@@ -17,7 +18,7 @@ export default function RootLayout() {
   const initAuth = useSetAtom(initAuthAtom);
   const setUserTheme = useSetAtom(userThemeAtom);
   const theme = useUserTheme();
-  const user = useAtom(userAtom);
+  const [user] = useAtom(userAtom);
   const statusBarStyle = theme.dark ? "light" : "dark";
 
   // Create a QueryClient with useMemo to avoid recreating on every render.
@@ -47,7 +48,7 @@ export default function RootLayout() {
   // Create a unique key based on the current user
   // When this key changes (user logs in/out), React will unmount and remount
   // the entire component tree, resetting all local state
-  const appKey = user?.[0]?.uid || "guest";
+  const appKey = user?.uid || "guest";
 
   return (
     <QueryClientProvider client={queryClient}>

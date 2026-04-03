@@ -1,6 +1,7 @@
 import { createTrailObstacle } from "@/api/trail-obstacles";
 import { getCoordinatesByTrailIdentifier } from "@/api/trails";
-import { showSuccessAtom } from "@/atoms/snackbar-atoms";
+import { showErrorAtom, showSuccessAtom } from "@/atoms/snackbar-atoms";
+import SelectInput from "@/components/select-input";
 import { BORDER_RADIUS } from "@/constants/constants";
 import { CreateTrailObstacleRequest } from "@/data/types";
 import CoordinateParser from "@/utils/coordinate-parser";
@@ -8,7 +9,6 @@ import { isNearTrail } from "@/utils/haversine";
 import issueTypeParser from "@/utils/issue-type-parser";
 import { MaterialIcons } from "@expo/vector-icons";
 import { zodResolver } from "@hookform/resolvers/zod";
-import SelectInput from "@/components/select-input";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { BlurView } from "expo-blur";
 import * as ExpoLinking from "expo-linking";
@@ -49,6 +49,7 @@ export default function TrailObstacleForm({ trailIdentifier, visible, onDismiss 
   const [locationError, setLocationError] = useState<string | null>(null);
 
   const theme = useTheme();
+  const setErrorMsg = useSetAtom(showErrorAtom);
   const setSuccessMsg = useSetAtom(showSuccessAtom);
   const queryClient = useQueryClient();
 
@@ -56,6 +57,12 @@ export default function TrailObstacleForm({ trailIdentifier, visible, onDismiss 
     mutationFn: (obstacle: CreateTrailObstacleRequest) => createTrailObstacle(obstacle),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["obstacles", trailIdentifier] });
+      reset();
+      onDismiss();
+      setSuccessMsg("Sparat! Tack för att du har rapporterat");
+    },
+    onError: () => {
+      setErrorMsg("Någor gick fel försök igen senare");
     },
   });
 
@@ -91,10 +98,7 @@ export default function TrailObstacleForm({ trailIdentifier, visible, onDismiss 
       incidentLatitude: data.incidentLatitude ?? null,
       incidentLongitude: data.incidentLongitude ?? null,
     };
-    reset();
     mutate(newObstacle);
-    onDismiss();
-    setSuccessMsg("Sparat! Tack för att du har rapporterat");
   };
 
   const handleLocationToggle = async (enabled: boolean, onChange: (val: boolean) => void) => {

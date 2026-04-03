@@ -1,10 +1,14 @@
 import { createHike } from "@/api/hikes";
+import { showErrorAtom } from "@/atoms/snackbar-atoms";
 import Map from "@/components/map/map";
 import { BORDER_RADIUS } from "@/constants/constants";
 import { ActiveHike, CreateHikeRequest } from "@/data/types";
 import FormattedTime from "@/utils/format-time-from-ms";
 import GetRegionFromTrail from "@/utils/get-region-from-trail";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
+import { useAtomValue, useSetAtom } from "jotai";
+import { stigviddUserAtom } from "@/atoms/user-atoms";
 import { useEffect, useMemo, useRef } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { Pressable, StyleSheet, View } from "react-native";
@@ -14,15 +18,33 @@ import { Divider, Surface, Text, TextInput, useTheme } from "react-native-paper"
 interface Props {
   hike: ActiveHike;
   onDismiss: () => void;
+  onSaveSuccess: () => void;
 }
 
 type SaveHikeFormData = {
   hikeName: string;
 };
 
-export default function SaveHikeForm({ hike, onDismiss }: Props) {
+export default function SaveHikeForm({ hike, onDismiss, onSaveSuccess }: Props) {
   const theme = useTheme();
+  const setErrorMsg = useSetAtom(showErrorAtom);
   const mapRef = useRef<MapView>(null);
+  const queryClient = useQueryClient();
+  const user = useAtomValue(stigviddUserAtom);
+
+  const { mutate, isPending } = useMutation({
+    mutationFn: (newHike: CreateHikeRequest) => createHike(newHike),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["hikes", user.data?.identifier] });
+      onSaveSuccess();
+      onDismiss();
+      router.replace("/(tabs)/(profile-stack)/user/my-hikes");
+    },
+    onError: () => {
+      setErrorMsg("Något gick fel försök igen senare.");
+    },
+  });
+
   const {
     control,
     handleSubmit,
@@ -47,11 +69,7 @@ export default function SaveHikeForm({ hike, onDismiss }: Props) {
       });
     });
 
-    const result = await createHike(newHike);
-
-    if (result.success) {
-      router.replace("/(tabs)/(profile-stack)/user/my-hikes");
-    }
+    mutate(newHike);
   };
 
   const time = FormattedTime(hike.totalTime);
@@ -77,10 +95,7 @@ export default function SaveHikeForm({ hike, onDismiss }: Props) {
     mapRef.current.animateToRegion(GetRegionFromTrail(route), 500);
   }, [route, hike.totalDistance]);
 
-  const openDialogIfValid = handleSubmit(async (data) => {
-    await submit(data);
-    onDismiss();
-  });
+  const openDialogIfValid = handleSubmit(submit);
 
   return (
     <View>
@@ -131,12 +146,12 @@ export default function SaveHikeForm({ hike, onDismiss }: Props) {
 
       <View style={s.actions}>
         <View style={s.Left}>
-          <Pressable style={s.action} onPress={onDismiss}>
+          <Pressable style={s.action} disabled={isPending} onPress={onDismiss}>
             <Text>Gå tillbaka</Text>
           </Pressable>
         </View>
         <View style={s.Right}>
-          <Pressable style={s.action} onPress={openDialogIfValid}>
+          <Pressable style={s.action} disabled={isPending} onPress={openDialogIfValid}>
             <Text>Bekräfta</Text>
           </Pressable>
         </View>

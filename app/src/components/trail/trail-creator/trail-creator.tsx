@@ -15,7 +15,9 @@ export default function TrailCreator() {
   const mapRef = useRef<MapView>(null);
   const { startTracking, stopTracking, resetTracking, isTracking, hike, currentSegment, getActiveTime, debugAddPoint } =
     useLocationTracking();
-  const [tick, setTick] = useState(0);
+  const [displayTime, setDisplayTime] = useState(0);
+  const getActiveTimeRef = useRef(getActiveTime);
+  getActiveTimeRef.current = getActiveTime;
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [initialRegion, setInitialRegion] = useState<Region | undefined>(undefined);
@@ -30,16 +32,19 @@ export default function TrailCreator() {
   }, [hike.segments, currentSegment]);
 
   useEffect(() => {
-    if (!isTracking) return;
+    if (!isTracking) {
+      setDisplayTime(getActiveTimeRef.current());
+      return;
+    }
 
     const interval = setInterval(() => {
-      setTick((t) => t + 1);
+      setDisplayTime(getActiveTimeRef.current());
     }, 1000);
 
     return () => clearInterval(interval);
   }, [isTracking]);
 
-  const formattedTime = FormattedTime(getActiveTime());
+  const formattedTime = FormattedTime(displayTime);
 
   const formattedDistance = useMemo(() => {
     const km = hike.totalDistance / 1000;
@@ -149,6 +154,7 @@ export default function TrailCreator() {
         visible={showDeleteDialog}
         onDismiss={() => setShowDeleteDialog(false)}
         onConfirm={() => {
+          setDisplayTime(0);
           resetTracking();
           setShowDeleteDialog(false);
         }}
@@ -164,6 +170,7 @@ export default function TrailCreator() {
         visible={showSaveModal}
         onDismiss={() => setShowSaveModal(false)}
         onConfirm={() => setShowSaveModal(false)}
+        onSaveSuccess={resetTracking}
         hike={hike}
       />
     </ScrollView>
