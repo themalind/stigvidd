@@ -42,7 +42,7 @@ public class HikesControllerIntegrationTests : IClassFixture<StigViddWebApplicat
             new AuthenticationHeaderValue("Bearer", AUTHENTICATED_USER);
 
         // Act
-        var response = await client.GetAsync($"{BASE_URL}{TestHike1Identifier}");
+        var response = await client.GetAsync($"{BASE_URL}{TestHike1Identifier}", TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -57,7 +57,7 @@ public class HikesControllerIntegrationTests : IClassFixture<StigViddWebApplicat
             new AuthenticationHeaderValue("Bearer", AUTHENTICATED_USER);
 
         // Act
-        var response = await client.GetAsync($"{BASE_URL}not-a-uid");
+        var response = await client.GetAsync($"{BASE_URL}not-a-uid", TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
@@ -72,7 +72,7 @@ public class HikesControllerIntegrationTests : IClassFixture<StigViddWebApplicat
             new AuthenticationHeaderValue("Bearer", NOT_AUTHENTICATED_USER);
 
         // Act
-        var response = await client.GetAsync($"{BASE_URL}{TestHike1Identifier}");
+        var response = await client.GetAsync($"{BASE_URL}{TestHike1Identifier}", TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
@@ -87,7 +87,7 @@ public class HikesControllerIntegrationTests : IClassFixture<StigViddWebApplicat
             new AuthenticationHeaderValue("Bearer", AUTHENTICATED_USER);
 
         // Act
-        var response = await client.GetAsync(BASE_URL);
+        var response = await client.GetAsync(BASE_URL, TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -102,8 +102,8 @@ public class HikesControllerIntegrationTests : IClassFixture<StigViddWebApplicat
             new AuthenticationHeaderValue("Bearer", AUTHENTICATED_USER);
 
         // Act
-        var response = await client.GetAsync($"{BASE_URL}?createdBy={NaturElskarenIdentifier}");
-        var responseObject = await response.Content.ReadFromJsonAsync<HikeResponse[]>();
+        var response = await client.GetAsync($"{BASE_URL}?createdBy={NaturElskarenIdentifier}", TestContext.Current.CancellationToken);
+        var responseObject = await response.Content.ReadFromJsonAsync<HikeResponse[]>(TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -119,8 +119,8 @@ public class HikesControllerIntegrationTests : IClassFixture<StigViddWebApplicat
             new AuthenticationHeaderValue("Bearer", AUTHENTICATED_USER);
 
         // Act
-        var response = await client.GetAsync($"{BASE_URL}?createdBy=not-a-valid-user");
-        var responseObject = await response.Content.ReadFromJsonAsync<HikeResponse[]>();
+        var response = await client.GetAsync($"{BASE_URL}?createdBy=not-a-valid-user", TestContext.Current.CancellationToken);
+        var responseObject = await response.Content.ReadFromJsonAsync<HikeResponse[]>(TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -136,7 +136,7 @@ public class HikesControllerIntegrationTests : IClassFixture<StigViddWebApplicat
             new AuthenticationHeaderValue("Bearer", NOT_AUTHENTICATED_USER);
 
         // Act
-        var response = await client.GetAsync(BASE_URL);
+        var response = await client.GetAsync(BASE_URL, TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
@@ -159,7 +159,7 @@ public class HikesControllerIntegrationTests : IClassFixture<StigViddWebApplicat
         };
 
         // Act
-        var response = await client.PostAsJsonAsync(BASE_URL, request);
+        var response = await client.PostAsJsonAsync(BASE_URL, request, TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Created);
@@ -191,7 +191,7 @@ public class HikesControllerIntegrationTests : IClassFixture<StigViddWebApplicat
         };
 
         // Act
-        var response = await client.PostAsJsonAsync(BASE_URL, request);
+        var response = await client.PostAsJsonAsync(BASE_URL, request, TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
@@ -213,7 +213,7 @@ public class HikesControllerIntegrationTests : IClassFixture<StigViddWebApplicat
         );
 
         // Act
-        var response = await client.PostAsJsonAsync(BASE_URL, request);
+        var response = await client.PostAsJsonAsync(BASE_URL, request, TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
@@ -236,7 +236,7 @@ public class HikesControllerIntegrationTests : IClassFixture<StigViddWebApplicat
         };
 
         // Act
-        var response = await client.PostAsJsonAsync(BASE_URL, request);
+        var response = await client.PostAsJsonAsync(BASE_URL, request, TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
@@ -251,7 +251,7 @@ public class HikesControllerIntegrationTests : IClassFixture<StigViddWebApplicat
             new AuthenticationHeaderValue("Bearer", AUTHENTICATED_USER);
 
         // Act
-        var response = await client.DeleteAsync($"{BASE_URL}{TestHike1Identifier}");
+        var response = await client.DeleteAsync($"{BASE_URL}{TestHike1Identifier}", TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.NoContent);
@@ -266,7 +266,7 @@ public class HikesControllerIntegrationTests : IClassFixture<StigViddWebApplicat
             new AuthenticationHeaderValue("Bearer", AUTHENTICATED_USER);
 
         // Act
-        var response = await client.DeleteAsync($"{BASE_URL}not-a-valid-hike-identifier");
+        var response = await client.DeleteAsync($"{BASE_URL}not-a-valid-hike-identifier", TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
@@ -281,7 +281,7 @@ public class HikesControllerIntegrationTests : IClassFixture<StigViddWebApplicat
             new AuthenticationHeaderValue("Bearer", AUTHENTICATED_USER);
 
         // Act — TestHike3 is owned by VandrarVennen, not NaturElskaren
-        var response = await client.DeleteAsync($"{BASE_URL}{TestHike3Identifier}");
+        var response = await client.DeleteAsync($"{BASE_URL}{TestHike3Identifier}", TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
@@ -296,7 +296,7 @@ public class HikesControllerIntegrationTests : IClassFixture<StigViddWebApplicat
             new AuthenticationHeaderValue("Bearer", NOT_AUTHENTICATED_USER);
 
         // Act
-        var response = await client.DeleteAsync($"{BASE_URL}{TestHike1Identifier}");
+        var response = await client.DeleteAsync($"{BASE_URL}{TestHike1Identifier}", TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);

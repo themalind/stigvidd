@@ -38,8 +38,8 @@ public class TrailObstaclesControllerIntegrationTests : IClassFixture<StigViddWe
         var client = _factory.CreateClient();
 
         // Act
-        var response = await client.GetAsync($"/api/v1/trailobstacles/trail/{TivedenIdentifier}");
-        var obstacles = await response.Content.ReadFromJsonAsync<List<TrailObstacleResponse>>();
+        var response = await client.GetAsync($"/api/v1/trailobstacles/trail/{TivedenIdentifier}", TestContext.Current.CancellationToken);
+        var obstacles = await response.Content.ReadFromJsonAsync<List<TrailObstacleResponse>>(TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -53,8 +53,8 @@ public class TrailObstaclesControllerIntegrationTests : IClassFixture<StigViddWe
         var client = _factory.CreateClient();
 
         // Act
-        var response = await client.GetAsync($"/api/v1/trailobstacles/trail/{GesebolIdentifier}");
-        var obstacles = await response.Content.ReadFromJsonAsync<List<TrailObstacleResponse>>();
+        var response = await client.GetAsync($"/api/v1/trailobstacles/trail/{GesebolIdentifier}", TestContext.Current.CancellationToken);
+        var obstacles = await response.Content.ReadFromJsonAsync<List<TrailObstacleResponse>>(TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -68,7 +68,7 @@ public class TrailObstaclesControllerIntegrationTests : IClassFixture<StigViddWe
         var client = _factory.CreateClient();
 
         // Act
-        var response = await client.GetAsync($"/api/v1/trailobstacles/trail/{TivedenIdentifier}");
+        var response = await client.GetAsync($"/api/v1/trailobstacles/trail/{TivedenIdentifier}", TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -90,7 +90,7 @@ public class TrailObstaclesControllerIntegrationTests : IClassFixture<StigViddWe
         };
 
         // Act
-        var response = await client.PostAsJsonAsync("/api/v1/trailobstacles", obstacle);
+        var response = await client.PostAsJsonAsync("/api/v1/trailobstacles", obstacle, TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Created);
@@ -110,7 +110,7 @@ public class TrailObstaclesControllerIntegrationTests : IClassFixture<StigViddWe
         };
 
         // Act
-        var response = await client.PostAsJsonAsync("/api/v1/trailobstacles", obstacle);
+        var response = await client.PostAsJsonAsync("/api/v1/trailobstacles", obstacle, TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
@@ -132,7 +132,7 @@ public class TrailObstaclesControllerIntegrationTests : IClassFixture<StigViddWe
         };
 
         // Act
-        var response = await client.PostAsJsonAsync("/api/v1/trailobstacles", obstacle);
+        var response = await client.PostAsJsonAsync("/api/v1/trailobstacles", obstacle, TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
@@ -154,7 +154,7 @@ public class TrailObstaclesControllerIntegrationTests : IClassFixture<StigViddWe
         };
 
         // Act
-        var response = await client.PostAsJsonAsync("/api/v1/trailobstacles", obstacle);
+        var response = await client.PostAsJsonAsync("/api/v1/trailobstacles", obstacle, TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
@@ -176,7 +176,7 @@ public class TrailObstaclesControllerIntegrationTests : IClassFixture<StigViddWe
         };
 
         // Act
-        var response = await client.PostAsJsonAsync("/api/v1/trailobstacles", obstacle);
+        var response = await client.PostAsJsonAsync("/api/v1/trailobstacles", obstacle, TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
@@ -200,7 +200,7 @@ public class TrailObstaclesControllerIntegrationTests : IClassFixture<StigViddWe
         };
 
         // Act
-        var response = await client.PostAsJsonAsync("/api/v1/trailobstacles", obstacle);
+        var response = await client.PostAsJsonAsync("/api/v1/trailobstacles", obstacle, TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Created);
@@ -224,7 +224,7 @@ public class TrailObstaclesControllerIntegrationTests : IClassFixture<StigViddWe
         };
 
         // Act
-        var response = await client.PostAsJsonAsync("/api/v1/trailobstacles", obstacle);
+        var response = await client.PostAsJsonAsync("/api/v1/trailobstacles", obstacle, TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
@@ -248,7 +248,7 @@ public class TrailObstaclesControllerIntegrationTests : IClassFixture<StigViddWe
         };
 
         // Act
-        var response = await client.PostAsJsonAsync("/api/v1/trailobstacles", obstacle);
+        var response = await client.PostAsJsonAsync("/api/v1/trailobstacles", obstacle, TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
@@ -263,7 +263,7 @@ public class TrailObstaclesControllerIntegrationTests : IClassFixture<StigViddWe
             new AuthenticationHeaderValue("Bearer", AuthenticatedUser);
 
         // Act
-        var response = await client.PostAsync($"/api/v1/trailobstacles/solve/{Obstacle1Identifier}", null);
+        var response = await client.PostAsync($"/api/v1/trailobstacles/solve/{Obstacle1Identifier}", null, TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -276,7 +276,7 @@ public class TrailObstaclesControllerIntegrationTests : IClassFixture<StigViddWe
         var client = _factory.CreateClient();
 
         // Act
-        var response = await client.PostAsync($"/api/v1/trailobstacles/solve/{Obstacle1Identifier}", null);
+        var response = await client.PostAsync($"/api/v1/trailobstacles/solve/{Obstacle1Identifier}", null, TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
@@ -291,7 +291,7 @@ public class TrailObstaclesControllerIntegrationTests : IClassFixture<StigViddWe
             new AuthenticationHeaderValue("Bearer", AuthenticatedUser);
 
         // Act
-        var response = await client.PostAsync($"/api/v1/trailobstacles/solve/{Obstacle3Identifier}", null);
+        var response = await client.PostAsync($"/api/v1/trailobstacles/solve/{Obstacle3Identifier}", null, TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Conflict);
@@ -306,7 +306,7 @@ public class TrailObstaclesControllerIntegrationTests : IClassFixture<StigViddWe
             new AuthenticationHeaderValue("Bearer", AuthenticatedUser);
 
         // Act
-        var response = await client.PostAsync("/api/v1/trailobstacles/solve/non-existent-obstacle", null);
+        var response = await client.PostAsync("/api/v1/trailobstacles/solve/non-existent-obstacle", null, TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
@@ -321,7 +321,7 @@ public class TrailObstaclesControllerIntegrationTests : IClassFixture<StigViddWe
             new AuthenticationHeaderValue("Bearer", AuthenticatedUser);
 
         // Act
-        var response = await client.DeleteAsync($"/api/v1/trailobstacles/solve/{Obstacle3Identifier}");
+        var response = await client.DeleteAsync($"/api/v1/trailobstacles/solve/{Obstacle3Identifier}", TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.NoContent);
@@ -334,7 +334,7 @@ public class TrailObstaclesControllerIntegrationTests : IClassFixture<StigViddWe
         var client = _factory.CreateClient();
 
         // Act
-        var response = await client.DeleteAsync($"/api/v1/trailobstacles/solve/{Obstacle3Identifier}");
+        var response = await client.DeleteAsync($"/api/v1/trailobstacles/solve/{Obstacle3Identifier}", TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
@@ -349,7 +349,7 @@ public class TrailObstaclesControllerIntegrationTests : IClassFixture<StigViddWe
             new AuthenticationHeaderValue("Bearer", AuthenticatedUser);
 
         // Act
-        var response = await client.DeleteAsync($"/api/v1/trailobstacles/solve/{Obstacle1Identifier}");
+        var response = await client.DeleteAsync($"/api/v1/trailobstacles/solve/{Obstacle1Identifier}", TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);

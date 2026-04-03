@@ -41,8 +41,8 @@ public class UsersControllerIntegrationTests : IClassFixture<StigViddWebApplicat
             new AuthenticationHeaderValue("Bearer", UserWithFavorites);
 
         // Act
-        var response = await client.GetAsync($"/api/v1/users/favorites");
-        var favorites = await response.Content.ReadFromJsonAsync<List<UserFavoritesTrailResponse>>();
+        var response = await client.GetAsync($"/api/v1/users/favorites", TestContext.Current.CancellationToken);
+        var favorites = await response.Content.ReadFromJsonAsync<List<UserFavoritesTrailResponse>>(TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -59,8 +59,8 @@ public class UsersControllerIntegrationTests : IClassFixture<StigViddWebApplicat
          new AuthenticationHeaderValue("Bearer", UserWithWishlist);
 
         // Act
-        var response = await client.GetAsync($"/api/v1/users/favorites");
-        var favorites = await response.Content.ReadFromJsonAsync<List<UserFavoritesTrailResponse>>();
+        var response = await client.GetAsync($"/api/v1/users/favorites", TestContext.Current.CancellationToken);
+        var favorites = await response.Content.ReadFromJsonAsync<List<UserFavoritesTrailResponse>>(TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -77,8 +77,8 @@ public class UsersControllerIntegrationTests : IClassFixture<StigViddWebApplicat
          new AuthenticationHeaderValue("Bearer", UserWithFavorites);
 
         // Act
-        var response = await client.GetAsync($"/api/v1/users/favorites");
-        var favorites = await response.Content.ReadFromJsonAsync<List<UserFavoritesTrailResponse>>();
+        var response = await client.GetAsync($"/api/v1/users/favorites", TestContext.Current.CancellationToken);
+        var favorites = await response.Content.ReadFromJsonAsync<List<UserFavoritesTrailResponse>>(TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -101,7 +101,7 @@ public class UsersControllerIntegrationTests : IClassFixture<StigViddWebApplicat
         };
 
         // Act
-        var response = await client.PostAsJsonAsync("/api/v1/users/favorites", userRequest);
+        var response = await client.PostAsJsonAsync("/api/v1/users/favorites", userRequest, TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Created);
@@ -121,7 +121,7 @@ public class UsersControllerIntegrationTests : IClassFixture<StigViddWebApplicat
         };
 
         // Act
-        var response = await client.PostAsJsonAsync("/api/v1/users/favorites", userRequest);
+        var response = await client.PostAsJsonAsync("/api/v1/users/favorites", userRequest, TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
@@ -141,7 +141,7 @@ public class UsersControllerIntegrationTests : IClassFixture<StigViddWebApplicat
         };
 
         // Act
-        var response = await client.PostAsJsonAsync("/api/v1/users/favorites", userRequest);
+        var response = await client.PostAsJsonAsync("/api/v1/users/favorites", userRequest, TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
@@ -161,7 +161,7 @@ public class UsersControllerIntegrationTests : IClassFixture<StigViddWebApplicat
         };
 
         // Act
-        var response = await client.PostAsJsonAsync("/api/v1/users/favorites", userRequest);
+        var response = await client.PostAsJsonAsync("/api/v1/users/favorites", userRequest, TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
@@ -182,7 +182,7 @@ public class UsersControllerIntegrationTests : IClassFixture<StigViddWebApplicat
         };
 
         // Act
-        var response = await client.PostAsJsonAsync("/api/v1/users/favorites", userRequest);
+        var response = await client.PostAsJsonAsync("/api/v1/users/favorites", userRequest, TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Conflict);
@@ -198,7 +198,7 @@ public class UsersControllerIntegrationTests : IClassFixture<StigViddWebApplicat
 
         // StorsjoledenIdentifier is in VandrarVennen's favorites
         var request = new HttpRequestMessage(HttpMethod.Delete, $"/api/v1/users/favorites/{StorsjoledenIdentifier}");
-        var response = await client.SendAsync(request);
+        var response = await client.SendAsync(request, TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.NoContent);
@@ -214,7 +214,7 @@ public class UsersControllerIntegrationTests : IClassFixture<StigViddWebApplicat
 
         // Act
         var request = new HttpRequestMessage(HttpMethod.Delete, $"/api/v1/users/favorites/22b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5y");
-        var response = await client.SendAsync(request);
+        var response = await client.SendAsync(request, TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Conflict);
@@ -230,7 +230,7 @@ public class UsersControllerIntegrationTests : IClassFixture<StigViddWebApplicat
 
         // Act
         var request = new HttpRequestMessage(HttpMethod.Delete, $"/api/v1/users/favorites/{StorsjoledenIdentifier}");
-        var response = await client.SendAsync(request);
+        var response = await client.SendAsync(request, TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
@@ -245,8 +245,8 @@ public class UsersControllerIntegrationTests : IClassFixture<StigViddWebApplicat
          new AuthenticationHeaderValue("Bearer", UserWithWishlist);
 
         // Act
-        var response = await client.GetAsync($"/api/v1/users/wishlist");
-        var wishlist = await response.Content.ReadFromJsonAsync<List<UserWishlistTrailResponse>>();
+        var response = await client.GetAsync($"/api/v1/users/wishlist", TestContext.Current.CancellationToken);
+        var wishlist = await response.Content.ReadFromJsonAsync<List<UserWishlistTrailResponse>>(TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -263,8 +263,8 @@ public class UsersControllerIntegrationTests : IClassFixture<StigViddWebApplicat
          new AuthenticationHeaderValue("Bearer", UserWithFavorites);
 
         // Act
-        var response = await client.GetAsync($"/api/v1/users/wishlist");
-        var wishlist = await response.Content.ReadFromJsonAsync<List<UserWishlistTrailResponse>>();
+        var response = await client.GetAsync($"/api/v1/users/wishlist", TestContext.Current.CancellationToken);
+        var wishlist = await response.Content.ReadFromJsonAsync<List<UserWishlistTrailResponse>>(TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -281,8 +281,8 @@ public class UsersControllerIntegrationTests : IClassFixture<StigViddWebApplicat
          new AuthenticationHeaderValue("Bearer", UserWithWishlist);
 
         // Act
-        var response = await client.GetAsync($"/api/v1/users/wishlist");
-        var wishList = await response.Content.ReadFromJsonAsync<List<UserWishlistTrailResponse>>();
+        var response = await client.GetAsync($"/api/v1/users/wishlist", TestContext.Current.CancellationToken);
+        var wishList = await response.Content.ReadFromJsonAsync<List<UserWishlistTrailResponse>>(TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -305,7 +305,7 @@ public class UsersControllerIntegrationTests : IClassFixture<StigViddWebApplicat
         };
 
         // Act
-        var response = await client.PostAsJsonAsync("/api/v1/users/wishlist", userRequest);
+        var response = await client.PostAsJsonAsync("/api/v1/users/wishlist", userRequest, TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Created);
@@ -325,7 +325,7 @@ public class UsersControllerIntegrationTests : IClassFixture<StigViddWebApplicat
         };
 
         // Act
-        var response = await client.PostAsJsonAsync("/api/v1/users/wishlist", userRequest);
+        var response = await client.PostAsJsonAsync("/api/v1/users/wishlist", userRequest, TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
@@ -345,7 +345,7 @@ public class UsersControllerIntegrationTests : IClassFixture<StigViddWebApplicat
         };
 
         // Act
-        var response = await client.PostAsJsonAsync("/api/v1/users/wishlist", userRequest);
+        var response = await client.PostAsJsonAsync("/api/v1/users/wishlist", userRequest, TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
@@ -365,7 +365,7 @@ public class UsersControllerIntegrationTests : IClassFixture<StigViddWebApplicat
         };
 
         // Act
-        var response = await client.PostAsJsonAsync("/api/v1/users/wishlist", userRequest);
+        var response = await client.PostAsJsonAsync("/api/v1/users/wishlist", userRequest, TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
@@ -386,7 +386,7 @@ public class UsersControllerIntegrationTests : IClassFixture<StigViddWebApplicat
         };
 
         // Act
-        var response = await client.PostAsJsonAsync("/api/v1/users/wishlist", userRequest);
+        var response = await client.PostAsJsonAsync("/api/v1/users/wishlist", userRequest, TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Conflict);
@@ -402,7 +402,7 @@ public class UsersControllerIntegrationTests : IClassFixture<StigViddWebApplicat
 
         // VildmarksledenArasIdentifier is in NaturElskaren's wishlist
         var request = new HttpRequestMessage(HttpMethod.Delete, $"/api/v1/users/wishlist/{VildmarksledenArasIdentifier}");
-        var response = await client.SendAsync(request);
+        var response = await client.SendAsync(request, TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.NoContent);
@@ -418,7 +418,7 @@ public class UsersControllerIntegrationTests : IClassFixture<StigViddWebApplicat
 
         // HultaforsIdentifier is NOT in NaturElskaren's wishlist
         var request = new HttpRequestMessage(HttpMethod.Delete, $"/api/v1/users/wishlist/{HultaforsIdentifier}");
-        var response = await client.SendAsync(request);
+        var response = await client.SendAsync(request, TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Conflict);
@@ -434,7 +434,7 @@ public class UsersControllerIntegrationTests : IClassFixture<StigViddWebApplicat
 
         // Act
         var request = new HttpRequestMessage(HttpMethod.Delete, $"/api/v1/users/wishlist/{VildmarksledenArasIdentifier}");
-        var response = await client.SendAsync(request);
+        var response = await client.SendAsync(request, TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
@@ -455,7 +455,7 @@ public class UsersControllerIntegrationTests : IClassFixture<StigViddWebApplicat
         };
 
         // Act
-        var response = await client.PostAsJsonAsync("/api/v1/users/create", userRequest);
+        var response = await client.PostAsJsonAsync("/api/v1/users/create", userRequest, TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Created);
@@ -476,7 +476,7 @@ public class UsersControllerIntegrationTests : IClassFixture<StigViddWebApplicat
         };
 
         // Act
-        var response = await client.PostAsJsonAsync("/api/v1/users/create", userRequest);
+        var response = await client.PostAsJsonAsync("/api/v1/users/create", userRequest, TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
@@ -497,7 +497,7 @@ public class UsersControllerIntegrationTests : IClassFixture<StigViddWebApplicat
         };
 
         // Act
-        var response = await client.PostAsJsonAsync("/api/v1/users/create", userRequest);
+        var response = await client.PostAsJsonAsync("/api/v1/users/create", userRequest, TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);

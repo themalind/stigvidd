@@ -44,8 +44,8 @@ public class ReviewsControllerIntegrationsTests : IClassFixture<StigViddWebAppli
         int limit = 2;
 
         // Act
-        var response = await client.GetAsync($"/api/v1/reviews/trail/{TivedenIdentifier}?page={page}&limit={limit}");
-        var pagedReviews = await response.Content.ReadFromJsonAsync<PagedReviewResponse>();
+        var response = await client.GetAsync($"/api/v1/reviews/trail/{TivedenIdentifier}?page={page}&limit={limit}", TestContext.Current.CancellationToken);
+        var pagedReviews = await response.Content.ReadFromJsonAsync<PagedReviewResponse>(TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -65,7 +65,7 @@ public class ReviewsControllerIntegrationsTests : IClassFixture<StigViddWebAppli
         int limit = 10;
 
         // Act
-        var response = await client.GetAsync($"/api/v1/reviews/trail/{HultaforsIdentifier}?page={page}&limit={limit}");
+        var response = await client.GetAsync($"/api/v1/reviews/trail/{HultaforsIdentifier}?page={page}&limit={limit}", TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -83,8 +83,8 @@ public class ReviewsControllerIntegrationsTests : IClassFixture<StigViddWebAppli
         int limit = 10;
 
         // Act
-        var response = await client.GetAsync($"/api/v1/reviews/trail/i-am-an-invalid-trail-identifier?page={page}&limit={limit}");
-        var pagedReviews = await response.Content.ReadFromJsonAsync<PagedReviewResponse>();
+        var response = await client.GetAsync($"/api/v1/reviews/trail/i-am-an-invalid-trail-identifier?page={page}&limit={limit}", TestContext.Current.CancellationToken);
+        var pagedReviews = await response.Content.ReadFromJsonAsync<PagedReviewResponse>(TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -108,7 +108,7 @@ public class ReviewsControllerIntegrationsTests : IClassFixture<StigViddWebAppli
         };
 
         // Act
-        var response = await client.PostAsync("/api/v1/reviews/create", formData);
+        var response = await client.PostAsync("/api/v1/reviews/create", formData, TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Created);
@@ -128,7 +128,7 @@ public class ReviewsControllerIntegrationsTests : IClassFixture<StigViddWebAppli
         };
 
         // Act
-        var response = await client.PostAsync("/api/v1/reviews/create", formData);
+        var response = await client.PostAsync("/api/v1/reviews/create", formData, TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
@@ -150,7 +150,7 @@ public class ReviewsControllerIntegrationsTests : IClassFixture<StigViddWebAppli
         };
 
         // Act
-        var response = await client.PostAsync("/api/v1/reviews/create", formData);
+        var response = await client.PostAsync("/api/v1/reviews/create", formData, TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
@@ -172,7 +172,7 @@ public class ReviewsControllerIntegrationsTests : IClassFixture<StigViddWebAppli
         };
 
         // Act
-        var response = await client.PostAsync("/api/v1/reviews/create", formData);
+        var response = await client.PostAsync("/api/v1/reviews/create", formData, TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
@@ -187,7 +187,7 @@ public class ReviewsControllerIntegrationsTests : IClassFixture<StigViddWebAppli
             new AuthenticationHeaderValue("Bearer", AuthenticatedUser);
 
         // Act
-        var response = await client.DeleteAsync($"/api/v1/reviews/{Review1Identifier}");
+        var response = await client.DeleteAsync($"/api/v1/reviews/{Review1Identifier}", TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.NoContent);
@@ -200,7 +200,7 @@ public class ReviewsControllerIntegrationsTests : IClassFixture<StigViddWebAppli
         var client = _factory.CreateClient();
 
         // Act
-        var response = await client.DeleteAsync($"/api/v1/reviews/{Review1Identifier}");
+        var response = await client.DeleteAsync($"/api/v1/reviews/{Review1Identifier}", TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
@@ -220,8 +220,8 @@ public class ReviewsControllerIntegrationsTests : IClassFixture<StigViddWebAppli
         int limit = 1;
 
         // Act
-        var response = await client.GetAsync($"/api/v1/reviews/trail/{TivedenIdentifier}?page={page}&limit={limit}");
-        var pagedReviews = await response.Content.ReadFromJsonAsync<PagedReviewResponse>();
+        var response = await client.GetAsync($"/api/v1/reviews/trail/{TivedenIdentifier}?page={page}&limit={limit}", TestContext.Current.CancellationToken);
+        var pagedReviews = await response.Content.ReadFromJsonAsync<PagedReviewResponse>(TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -243,8 +243,8 @@ public class ReviewsControllerIntegrationsTests : IClassFixture<StigViddWebAppli
         int limit = 10;
 
         // Act
-        var response = await client.GetAsync($"/api/v1/reviews/trail/{TivedenIdentifier}?page={page}&limit={limit}");
-        var pagedReviews = await response.Content.ReadFromJsonAsync<PagedReviewResponse>();
+        var response = await client.GetAsync($"/api/v1/reviews/trail/{TivedenIdentifier}?page={page}&limit={limit}", TestContext.Current.CancellationToken);
+        var pagedReviews = await response.Content.ReadFromJsonAsync<PagedReviewResponse>(TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -266,8 +266,8 @@ public class ReviewsControllerIntegrationsTests : IClassFixture<StigViddWebAppli
         int limit = 1;
 
         // Act
-        var response = await client.GetAsync($"/api/v1/reviews/trail/{NassehultIdentifier}?page={page}&limit={limit}");
-        var pagedReviews = await response.Content.ReadFromJsonAsync<PagedReviewResponse>();
+        var response = await client.GetAsync($"/api/v1/reviews/trail/{NassehultIdentifier}?page={page}&limit={limit}", TestContext.Current.CancellationToken);
+        var pagedReviews = await response.Content.ReadFromJsonAsync<PagedReviewResponse>(TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -288,8 +288,8 @@ public class ReviewsControllerIntegrationsTests : IClassFixture<StigViddWebAppli
         int limit = 10;
 
         // Act
-        var response = await client.GetAsync($"/api/v1/reviews/trail/{NassehultIdentifier}?page={page}&limit={limit}");
-        var pagedReviews = await response.Content.ReadFromJsonAsync<PagedReviewResponse>();
+        var response = await client.GetAsync($"/api/v1/reviews/trail/{NassehultIdentifier}?page={page}&limit={limit}", TestContext.Current.CancellationToken);
+        var pagedReviews = await response.Content.ReadFromJsonAsync<PagedReviewResponse>(TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -315,7 +315,7 @@ public class ReviewsControllerIntegrationsTests : IClassFixture<StigViddWebAppli
         };
 
         // Act
-        var response = await client.PostAsync("/api/v1/reviews/create", formData);
+        var response = await client.PostAsync("/api/v1/reviews/create", formData, TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
@@ -337,7 +337,7 @@ public class ReviewsControllerIntegrationsTests : IClassFixture<StigViddWebAppli
         };
 
         // Act
-        var response = await client.PostAsync("/api/v1/reviews/create", formData);
+        var response = await client.PostAsync("/api/v1/reviews/create", formData, TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Created);
@@ -359,7 +359,7 @@ public class ReviewsControllerIntegrationsTests : IClassFixture<StigViddWebAppli
         };
 
         // Act
-        var response = await client.PostAsync("/api/v1/reviews/create", formData);
+        var response = await client.PostAsync("/api/v1/reviews/create", formData, TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Created);
@@ -381,7 +381,7 @@ public class ReviewsControllerIntegrationsTests : IClassFixture<StigViddWebAppli
         };
 
         // Act
-        var response = await client.PostAsync("/api/v1/reviews/create", formData);
+        var response = await client.PostAsync("/api/v1/reviews/create", formData, TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
@@ -402,7 +402,7 @@ public class ReviewsControllerIntegrationsTests : IClassFixture<StigViddWebAppli
         };
 
         // Act
-        var response = await client.PostAsync("/api/v1/reviews/create", formData);
+        var response = await client.PostAsync("/api/v1/reviews/create", formData, TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Created);
@@ -434,7 +434,7 @@ public class ReviewsControllerIntegrationsTests : IClassFixture<StigViddWebAppli
         };
 
         // Act
-        var response = await client.PostAsync("/api/v1/reviews/create", formData);
+        var response = await client.PostAsync("/api/v1/reviews/create", formData, TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Created);
@@ -449,7 +449,7 @@ public class ReviewsControllerIntegrationsTests : IClassFixture<StigViddWebAppli
             new AuthenticationHeaderValue("Bearer", AuthenticatedUser);
 
         // Act
-        var response = await client.DeleteAsync($"/api/v1/reviews/non-existent-review-identifier");
+        var response = await client.DeleteAsync($"/api/v1/reviews/non-existent-review-identifier", TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
@@ -464,7 +464,7 @@ public class ReviewsControllerIntegrationsTests : IClassFixture<StigViddWebAppli
             new AuthenticationHeaderValue("Bearer", AuthenticatedUser); // VandrarVennen
 
         // Act — Review2 belongs to NaturElskaren, not VandrarVennen
-        var response = await client.DeleteAsync($"/api/v1/reviews/{Review2Identifier}");
+        var response = await client.DeleteAsync($"/api/v1/reviews/{Review2Identifier}", TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);

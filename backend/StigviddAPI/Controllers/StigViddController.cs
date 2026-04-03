@@ -16,6 +16,7 @@ public abstract class StigViddController : Controller
             (int)HttpStatusCode.NotFound => NotFound(message.ResultMessage),
             (int)HttpStatusCode.BadRequest => BadRequest(message.ResultMessage),
             (int)HttpStatusCode.Conflict => Conflict(message.ResultMessage),
+            (int)HttpStatusCode.Unauthorized => Unauthorized(message.ResultMessage),
             _ => StatusCode(StatusCodes.Status500InternalServerError)
         };
 

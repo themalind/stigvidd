@@ -37,7 +37,7 @@ public class AuthenticationIntegrationTests : IClassFixture<StigViddWebApplicati
         };
 
         // Act
-        var response = await client.PostAsJsonAsync("/api/v1/users/create", createUserRequest);
+        var response = await client.PostAsJsonAsync("/api/v1/users/create", createUserRequest, TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
@@ -58,7 +58,7 @@ public class AuthenticationIntegrationTests : IClassFixture<StigViddWebApplicati
         };
 
         // Act
-        var response = await client.PostAsJsonAsync("/api/v1/users/create", createUserRequest);
+        var response = await client.PostAsJsonAsync("/api/v1/users/create", createUserRequest, TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Created);
@@ -71,7 +71,7 @@ public class AuthenticationIntegrationTests : IClassFixture<StigViddWebApplicati
         var client = _factory.CreateClient();
 
         // Act
-        var response = await client.GetAsync($"/api/v1/users/");
+        var response = await client.GetAsync($"/api/v1/users/", TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
@@ -84,7 +84,7 @@ public class AuthenticationIntegrationTests : IClassFixture<StigViddWebApplicati
         var client = _factory.CreateClient();
 
         // Act
-        var response = await client.GetAsync($"/api/v1/users/favorites");
+        var response = await client.GetAsync($"/api/v1/users/favorites", TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
@@ -97,7 +97,7 @@ public class AuthenticationIntegrationTests : IClassFixture<StigViddWebApplicati
         var client = _factory.CreateClient();
 
         // Act
-        var response = await client.GetAsync($"/api/v1/users/wishlist");
+        var response = await client.GetAsync($"/api/v1/users/wishlist", TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
@@ -115,7 +115,7 @@ public class AuthenticationIntegrationTests : IClassFixture<StigViddWebApplicati
         };
 
         // Act
-        var response = await client.PostAsJsonAsync("/api/v1/users/favorites", favoriteRequest);
+        var response = await client.PostAsJsonAsync("/api/v1/users/favorites", favoriteRequest, TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
@@ -133,7 +133,7 @@ public class AuthenticationIntegrationTests : IClassFixture<StigViddWebApplicati
         };
 
         // Act
-        var response = await client.PostAsJsonAsync("/api/v1/users/wishlist", wishlistRequest);
+        var response = await client.PostAsJsonAsync("/api/v1/users/wishlist", wishlistRequest, TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
@@ -146,7 +146,7 @@ public class AuthenticationIntegrationTests : IClassFixture<StigViddWebApplicati
         var client = _factory.CreateClient();
 
         // Act
-        var response = await client.DeleteAsync($"/api/v1/users/favorites/{TivedenIdentifier}");
+        var response = await client.DeleteAsync($"/api/v1/users/favorites/{TivedenIdentifier}", TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
@@ -159,7 +159,7 @@ public class AuthenticationIntegrationTests : IClassFixture<StigViddWebApplicati
         var client = _factory.CreateClient();
 
         // Act
-        var response = await client.DeleteAsync($"/api/v1/users/wishlist/{NassehultIdentifier}");
+        var response = await client.DeleteAsync($"/api/v1/users/wishlist/{NassehultIdentifier}", TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);

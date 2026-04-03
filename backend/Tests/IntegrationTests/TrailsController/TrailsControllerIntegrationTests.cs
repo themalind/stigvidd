@@ -32,7 +32,7 @@ public class TrailsControllerIntegrationTests : IClassFixture<StigViddWebApplica
         var client = _factory.CreateClient();
 
         // Act
-        var response = await client.GetAsync($"/api/v1/trails/non-existent-trail-identifier");
+        var response = await client.GetAsync($"/api/v1/trails/non-existent-trail-identifier", TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
@@ -45,7 +45,7 @@ public class TrailsControllerIntegrationTests : IClassFixture<StigViddWebApplica
         var client = _factory.CreateClient();
 
         // Act
-        var response = await client.GetAsync($"/api/v1/trails/{StorsjoledenIdentifier}/coordinates");
+        var response = await client.GetAsync($"/api/v1/trails/{StorsjoledenIdentifier}/coordinates", TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -58,7 +58,7 @@ public class TrailsControllerIntegrationTests : IClassFixture<StigViddWebApplica
         var client = _factory.CreateClient();
 
         // Act
-        var response = await client.GetAsync($"/api/v1/trails/non-existent-trail-identifier/coordinates");
+        var response = await client.GetAsync($"/api/v1/trails/non-existent-trail-identifier/coordinates", TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
@@ -98,7 +98,7 @@ public class TrailsControllerIntegrationTests : IClassFixture<StigViddWebApplica
         };
 
         // Act
-        var response = await client.PostAsync("/api/v1/trails/create", requestContent);
+        var response = await client.PostAsync("/api/v1/trails/create", requestContent, TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Created);
@@ -138,7 +138,7 @@ public class TrailsControllerIntegrationTests : IClassFixture<StigViddWebApplica
         };
 
         // Act
-        var response = await client.PostAsync("/api/v1/trails/create", requestContent);
+        var response = await client.PostAsync("/api/v1/trails/create", requestContent, TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
@@ -151,11 +151,11 @@ public class TrailsControllerIntegrationTests : IClassFixture<StigViddWebApplica
         var client = _factory.CreateClient();
 
         // Act
-        var response = await client.GetAsync($"/api/v1/trails/{StorsjoledenIdentifier}");
+        var response = await client.GetAsync($"/api/v1/trails/{StorsjoledenIdentifier}", TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        var trail = await response.Content.ReadFromJsonAsync<TrailResponse>();
+        var trail = await response.Content.ReadFromJsonAsync<TrailResponse>(TestContext.Current.CancellationToken);
         trail.Should().NotBeNull();
         trail.Identifier.Should().Be(StorsjoledenIdentifier);
         trail.Name.Should().Be("Storsjöleden");
@@ -195,7 +195,7 @@ public class TrailsControllerIntegrationTests : IClassFixture<StigViddWebApplica
         };
 
         // Act
-        var response = await client.PostAsync("/api/v1/trails/create", requestContent);
+        var response = await client.PostAsync("/api/v1/trails/create", requestContent, TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
@@ -234,7 +234,7 @@ public class TrailsControllerIntegrationTests : IClassFixture<StigViddWebApplica
         };
 
         // Act
-        var response = await client.PostAsync("/api/v1/trails/create", requestContent);
+        var response = await client.PostAsync("/api/v1/trails/create", requestContent, TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
