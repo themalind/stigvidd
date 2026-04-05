@@ -35,6 +35,14 @@ export default function HikeDetails({ visible, hike, onDismiss }: Props) {
   const queryClient = useQueryClient();
   const coordinates = CoordinateParser({ data: hike.coordinates ?? "", identifier: hike.identifier });
 
+  const handleMapReady = () => {
+    if (!mapRef.current || coordinates.length === 0) return;
+    mapRef.current.fitToCoordinates(coordinates, {
+      edgePadding: { top: 20, right: 20, bottom: 20, left: 20 },
+      animated: false,
+    });
+  };
+
   const deleteMutation = useMutation({
     mutationFn: (identifier: string) => deleteHike(identifier),
     onSuccess: () => {
@@ -72,7 +80,7 @@ export default function HikeDetails({ visible, hike, onDismiss }: Props) {
         </Text>
         <View style={s.mapContainer}>
           {hike.coordinates && hike.coordinates.length > 0 && (
-            <Map style={s.map} ref={mapRef} initialRegion={GetRegionFromTrail(coordinates)}>
+            <Map style={s.map} ref={mapRef} initialRegion={GetRegionFromTrail(coordinates)} onMapReady={handleMapReady}>
               <Polyline coordinates={coordinates} strokeWidth={3} strokeColor="#eb3204" />
             </Map>
           )}
@@ -89,6 +97,8 @@ export default function HikeDetails({ visible, hike, onDismiss }: Props) {
           title="Ta bort promenad"
           infoText={["Vill du ta bort promenaden?"]}
           textColor={theme.colors.onSurface}
+          confirmText="Ta bort"
+          cancelText="Avbryt"
           onConfirm={() => deleteMutation.mutate(hike.identifier)}
           backgroundColor={theme.colors.surface}
         />
