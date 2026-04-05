@@ -6,11 +6,11 @@ interface Props extends MapMarkerProps {
 }
 
 const icon = {
-  trailLight: require("@/assets/map/marker/vandringsled-90-143.png"),
-  trailDark: require("@/assets/map/marker/vandringsled-dark-90-143.png"),
-  shelter: require("@/assets/map/marker/vindskydd-100-159.png"),
-  campsite: require("@/assets/map/marker/taltplats-101-159.png"),
-  favourite: require("@/assets/map/marker/smultronstalle-101-159.png"),
+  trailLight: require("@/assets/map/marker/vandringsled.png"),
+  trailDark: require("@/assets/map/marker/vandringsled-dark.png"),
+  shelter: require("@/assets/map/marker/vindskydd.png"),
+  campsite: require("@/assets/map/marker/taltplats.png"),
+  favourite: require("@/assets/map/marker/smultronstalle.png"),
 };
 
 export default function Marker({ variant = "trailLight", children, ...props }: Props) {
