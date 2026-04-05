@@ -1,4 +1,5 @@
 import AlertDialog from "@/components/alert-dialog";
+import LoadingIndicator from "@/components/loading-indicator";
 import Map from "@/components/map/map";
 import { BORDER_RADIUS } from "@/constants/constants";
 import { useLocationTracking } from "@/services/use-location-tracking";
@@ -82,7 +83,7 @@ export default function TrailCreator() {
 
   const hasData = hike.segments.length > 0 || (currentSegment && currentSegment.coordinates.length > 0);
 
-  if (!initialRegion) return <Text>Loading Map...</Text>;
+  if (!initialRegion) return <LoadingIndicator />;
 
   return (
     <ScrollView contentContainerStyle={s.content}>
