@@ -11,6 +11,7 @@ import { Rating } from "../review/rating";
 
 interface UserTrailCollectionProps {
   title: string;
+  description?: string;
   noTrailsSavedInfo: string;
   trails: UserFavoritesTrail[] | UserWishlistTrail[];
   onDelete: (identifier: string) => void;
@@ -19,6 +20,7 @@ interface UserTrailCollectionProps {
 
 export default function UserTrailCollection({
   title,
+  description,
   trails,
   noTrailsSavedInfo,
   onDelete,
@@ -34,6 +36,10 @@ export default function UserTrailCollection({
           <Text style={s.title}>{title}</Text>
         </View>
         <Divider bold={true} />
+        <View style={[s.infoBox, { backgroundColor: theme.colors.outlineVariant }]}>
+          {description && <Text style={s.infoDescription}>{description}</Text>}
+          <Text>Tryck på ett spår för mer info. Tryck på X för att ta bort.</Text>
+        </View>
         <ScrollView
           showsVerticalScrollIndicator={false}
           showsHorizontalScrollIndicator={false}
@@ -147,6 +153,16 @@ const s = StyleSheet.create({
     bottom: 0,
     height: 80,
     zIndex: 1,
+  },
+  infoBox: {
+    borderRadius: BORDER_RADIUS,
+    padding: 12,
+    marginBottom: 10,
+    marginTop: 10,
+    gap: 4,
+  },
+  infoDescription: {
+    fontWeight: "600",
   },
   noTrailMsgContainer: {
     justifyContent: "center",
