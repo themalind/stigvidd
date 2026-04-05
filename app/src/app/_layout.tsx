@@ -4,7 +4,6 @@ import { GlobalSnackbar } from "@/components/global-snackbar";
 import { useInitLocation } from "@/hooks/useInitLocation";
 import { useUserTheme } from "@/hooks/useUserTheme";
 import "@/services/location-task";
-import * as NavigationBar from "expo-navigation-bar";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
@@ -53,11 +52,6 @@ export default function RootLayout() {
   useEffect(() => {
     loadUserTheme().then(setUserTheme);
   }, [setUserTheme]);
-
-  // Keep Android navigation bar color in sync with the tab bar background
-  useEffect(() => {
-    NavigationBar.setBackgroundColorAsync(theme.colors.background);
-  }, [theme.colors.background]);
 
   return (
     <QueryClientProvider client={queryClient}>
