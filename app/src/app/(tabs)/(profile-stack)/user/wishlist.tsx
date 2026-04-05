@@ -32,6 +32,7 @@ export default function WishlistScreen() {
   return (
     <UserTrailCollection
       title="Vill gå"
+      description="Här är promenader du sparat att vill gå."
       noTrailsSavedInfo="Du har inga sparade promenader som du vill gå än. Gå till en promenad och tryck på plusset för att lägga till."
       onDelete={handleDelete}
       trails={data ?? []}

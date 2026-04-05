@@ -32,6 +32,7 @@ export default function FavoritesScreen() {
   return (
     <UserTrailCollection
       title="Mina favoriter"
+      description="Här är dina sparade favoriter."
       noTrailsSavedInfo="Inga Favoriter sparade än. Gå till en promenad och tryck på hjärtat för att lägga till."
       onDelete={handleDelete}
       trails={data ?? []}
