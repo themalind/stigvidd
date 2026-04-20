@@ -8,7 +8,11 @@ export default function AboutScreen() {
     <View style={[s.screen, { backgroundColor: theme.colors.background }]}>
       <BackButton />
       <ScrollView contentContainerStyle={s.container}>
-        <Text style={{ color: theme.colors.onBackground }}>About</Text>
+        <Text style={{ color: theme.colors.onBackground }}>
+          Stigvidd is a hiking and trail discovery application built as a thesis project. It lets users explore hiking
+          trails in the Borås area, record their own hikes with GPS tracking, rate and review trails, and report
+          obstacles along the way.
+        </Text>
       </ScrollView>
     </View>
   );
