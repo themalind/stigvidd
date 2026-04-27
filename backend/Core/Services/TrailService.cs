@@ -98,7 +98,7 @@ public class TrailService : ITrailService
             if (trail == null)
             {
                 _logger.LogInformation(
-                    "TrailService -> GetTrailByIdentifierWithoutCoordinatesAsync: Trail with identifier {Identifier} not found.", identifier);
+                    "TrailService -> GetTrailByIdentifierWithoutCoordinatesAsync: Trail with identifier ${Identifier} not found.", identifier);
 
                 return Result.Fail<TrailResponse?>(new Message(404, $"Trail with identifier {identifier} not found."));
             }

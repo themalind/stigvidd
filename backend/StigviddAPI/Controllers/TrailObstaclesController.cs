@@ -1,4 +1,5 @@
 ﻿using Core.Interfaces;
+using Infrastructure.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WebDataContracts.RequestModels.TrailObstacle;
@@ -39,6 +40,13 @@ public class TrailObstaclesController : StigViddController
         }
 
         return Ok(result.Value);
+    }
+
+    [HttpGet]
+    [Route("issue-types")]
+    public ActionResult<IReadOnlyCollection<string>> GetTrailObstacleIssueTypes()
+    {
+        return Ok(Enum.GetNames<TrailIssueType>());
     }
 
     [Authorize]
@@ -98,6 +106,32 @@ public class TrailObstaclesController : StigViddController
     }
 
     [Authorize]
+    [HttpPut]
+    [Route("{trailObstacleIdentifier}")]
+    public async Task<ActionResult> UpdateTrailObstacle(
+        [FromRoute] string trailObstacleIdentifier,
+        TrailObstacleUpdateRequest updateRequest,
+        CancellationToken ctoken)
+    {
+        var user = await GetAuthenticatedUserAsync(_userService, ctoken);
+
+        if (user is null)
+        {
+            return Unauthorized("User not found");
+        }
+
+        var result = await _obstaclesService.UpdateTrailObstacleAsync(user.Identifier, trailObstacleIdentifier, updateRequest.Description, updateRequest.IssueType, ctoken);
+
+        if (!result.Success && result.Message != null)
+        {
+            _logger.LogInformation("UpdateTrailObstacle: Failed to update trail obstacle for user: {userIdentifier}", user.Identifier);
+            return ToActionResult(result.Message);
+        }
+
+        return NoContent();
+    }
+
+    [Authorize]
     [HttpDelete]
     [Route("solve/{trailObstacleIdentifier}")]
     public async Task<ActionResult> DeleteSolvedVoteByUserIdentifier([FromRoute] string trailObstacleIdentifier, CancellationToken ctoken)
@@ -114,6 +148,30 @@ public class TrailObstaclesController : StigViddController
         if (!result.Success && result.Message != null)
         {
             _logger.LogInformation("DeleteSolvedVoteByUserIdentifier: Failed to delete solved vote for user: {userIdentifier}", user.Identifier);
+
+            return ToActionResult(result.Message);
+        }
+
+        return NoContent();
+    }
+
+    [Authorize]
+    [HttpDelete]
+    [Route("{trailObstacleIdentifier}")]
+    public async Task<ActionResult> DeleteTrailObstacle([FromRoute] string trailObstacleIdentifier, CancellationToken ctoken)
+    {
+        var user = await GetAuthenticatedUserAsync(_userService, ctoken);
+
+        if (user is null)
+        {
+            return Unauthorized("User not found");
+        }
+
+        var result = await _obstaclesService.DeleteTrailObstacleAsync(user.Identifier, trailObstacleIdentifier, ctoken);
+
+        if (!result.Success && result.Message != null)
+        {
+            _logger.LogInformation($"DeleteTrailObstacle: Failed to delete trail obstacle for user: {user.Identifier}");
 
             return ToActionResult(result.Message);
         }

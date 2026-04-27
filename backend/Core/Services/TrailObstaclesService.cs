@@ -46,6 +46,7 @@ public class TrailObstaclesService : ITrailObstaclesService
                     to.Trail!.Identifier == identifier &&
                     to.CreatedAt > activeThreshold &&
                     to.SolvedVotes.Count < 3)
+                .Include(TrailObstacle => TrailObstacle.User)
                 .Include(TrailObstacle => TrailObstacle.SolvedVotes)
                     .ThenInclude(SolvedVote => SolvedVote.User)
                 .ToListAsync(ctoken);
@@ -56,7 +57,7 @@ public class TrailObstaclesService : ITrailObstaclesService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "An error occurred while fetching trail obstacles for trail identifier {Identifier}", identifier);
+            _logger.LogError(ex, "An error occurred while fetching trail obstacles for trail {identifier}", identifier);
 
             return Result.Fail<IReadOnlyCollection<TrailObstacleResponse?>>(new Message(500, "An error occurred while fetching trail obstacles."));
         }
@@ -101,7 +102,7 @@ public class TrailObstaclesService : ITrailObstaclesService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "An error occurred while adding trail obstacle for {user} and {trail}", userIdentifier, trailIdentifier);
+            _logger.LogError(ex, $"An error occurred while adding trail obstacle for {userIdentifier} and {trailIdentifier}");
 
             return Result.Fail(new Message(500, "An error occurred while adding trail obstacle."));
         }
@@ -147,9 +148,51 @@ public class TrailObstaclesService : ITrailObstaclesService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "An error occurred while adding solved vote for trail obstacle");
+            _logger.LogError(ex, "An error occurred while adding solved vote for trail obstacle {trailObstacleIdentifier} and user {userIdentifier}", trailObstacleIdentifier, userIdentifier);
 
             return Result.Fail(new Message(500, "An error occurred while adding solved vote for trail obstacle."));
+        }
+    }
+
+    public async Task<Result> UpdateTrailObstacleAsync(string userIdentifier, string trailObstacleIdentifier, string? description, string? issueType, CancellationToken ctoken)
+    {
+        try
+        {
+            using var context = await _context.CreateDbContextAsync(ctoken);
+
+            var userIdResult = await _userService.GetUserIdByIdentifierAsync(userIdentifier, ctoken);
+
+            if (!userIdResult.Success)
+            {
+                return Result.Fail(new Message(404, $"{userIdResult.Message}"));
+            }
+
+            var obstacle = await context.TrailObstacles
+                .FirstOrDefaultAsync(to => to.Identifier == trailObstacleIdentifier && to.UserId == userIdResult.Value, ctoken);
+
+            if (obstacle is null)
+            {
+                return Result.Fail(new Message(404, $"No trail obstacle found for user {userIdentifier} with identifier: {trailObstacleIdentifier}"));
+            }
+
+            if (!string.IsNullOrEmpty(description))
+            {
+                obstacle.Description = description;
+            }
+            if (!string.IsNullOrEmpty(issueType) && Enum.TryParse<TrailIssueType>(issueType, out var issueTypeResult))
+            {
+                obstacle.IssueType = issueTypeResult;
+            }
+
+            await context.SaveChangesAsync(ctoken);
+
+            return Result.Ok();
+
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "An error occurred while updating trail obstacle {trailObstacleIdentifier} for user {userIdentifier}", trailObstacleIdentifier, userIdentifier);
+            return Result.Fail(new Message(500, "An error occurred while updating trail obstacle."));
         }
     }
 
@@ -167,13 +210,13 @@ public class TrailObstaclesService : ITrailObstaclesService
             }
 
             var obstacleId = await context.TrailObstacles
-                .Where(to => to.Identifier == trailObstacleIdentifier)
+                .Where(to => to.Identifier == trailObstacleIdentifier && to.UserId == userIdResult.Value)
                 .Select(to => to.Id)
                 .FirstOrDefaultAsync(ctoken);
 
             if (obstacleId == 0)
             {
-                return Result.Fail(new Message(404, $"No trail obstacle found with identifier: {trailObstacleIdentifier}"));
+                return Result.Fail(new Message(404, $"No trail obstacle found for user {userIdentifier} with identifier: {trailObstacleIdentifier}"));
             }
 
             var solvedVote = await context.TrailObstacleSolvedVotes
@@ -192,9 +235,42 @@ public class TrailObstaclesService : ITrailObstaclesService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to delete solved vote from trail obstacle {identifier} for user {}", trailObstacleIdentifier, userIdentifier);
+            _logger.LogError(ex, "Failed to delete solved vote from trail obstacle {trailObstacleIdentifier} for user {userIdentifier}", trailObstacleIdentifier, userIdentifier);
 
             return Result.Fail(new Message(500, "An error occurred while deleting solved vote for trail obstacle."));
+        }
+    }
+
+    public async Task<Result> DeleteTrailObstacleAsync(string userIdentifier, string trailObstacleIdentifier, CancellationToken ctoken)
+    {
+        try
+        {
+            using var context = await _context.CreateDbContextAsync(ctoken);
+
+            var userIdResult = await _userService.GetUserIdByIdentifierAsync(userIdentifier, ctoken);
+
+            if (!userIdResult.Success)
+            {
+                return Result.Fail(new Message(404, $"{userIdResult.Message}"));
+            }
+
+            var obstacle = await context.TrailObstacles
+                .FirstOrDefaultAsync(to => to.Identifier == trailObstacleIdentifier && to.UserId == userIdResult.Value, ctoken);
+
+            if (obstacle is null)
+            {
+                return Result.Fail(new Message(404, $"No trail obstacle found for user {userIdentifier} with identifier: {trailObstacleIdentifier}"));
+            }
+
+            context.TrailObstacles.Remove(obstacle);
+            await context.SaveChangesAsync(ctoken);
+
+            return Result.Ok();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to delete trail obstacle {trailObstacleIdentifier} for user {userIdentifier}", trailObstacleIdentifier, userIdentifier);
+            return Result.Fail(new Message(500, "An error occurred while deleting trail obstacle."));
         }
     }
 }
