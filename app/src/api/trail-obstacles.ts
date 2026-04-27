@@ -1,6 +1,6 @@
-import { CreateTrailObstacleRequest, TrailObstacle } from "@/data/types";
-import { ApiError, getUserToken } from "./users";
+import { CreateTrailObstacleRequest, TrailObstacle, UpdateTrailObstacleRequest } from "@/data/types";
 import { BASE_URL } from "./api-config";
+import { ApiError, getUserToken } from "./users";
 
 export async function getTrailObstaclesByTrailIdentifier(trailIdentifier: string): Promise<TrailObstacle[]> {
   try {
@@ -88,9 +88,87 @@ export async function createTrailObstacle(request: CreateTrailObstacleRequest): 
     if (!response.ok) {
       throw new ApiError(`HTTP error: addSolvedVote:  ${response.status}`, response.status);
     }
+
     return { success: true };
   } catch (error) {
     console.log("createTrailObstacle: ", error);
+    throw error;
+  }
+}
+
+export async function updateTrailObstacle(
+  obstacleIdentifier: string,
+  request: UpdateTrailObstacleRequest,
+): Promise<{ success: boolean }> {
+  const token = await getUserToken();
+
+  if (!token) {
+    throw new Error("User not authenticated");
+  }
+
+  try {
+    const response = await fetch(`${BASE_URL}/trailobstacles/${obstacleIdentifier}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(request),
+    });
+
+    if (!response.ok) {
+      throw new ApiError(`HTTP error: updateTrailObstacle: ${response.status}`, response.status);
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.log("updateTrailObstacle: ", error);
+    throw error;
+  }
+}
+
+export async function getObstacleIssueTypes(): Promise<string[]> {
+  try {
+    const response = await fetch(`${BASE_URL}/trailobstacles/issue-types`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      throw new ApiError(`HTTP error: addSolvedVote:  ${response.status}`, response.status);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.log("getObstacleIssueTypes: ", error);
+    throw error;
+  }
+}
+
+export async function deleteTrailObstacle(trailObstacleIdentifier: string): Promise<{ success: boolean }> {
+  try {
+    const token = await getUserToken();
+
+    if (!token) {
+      throw new Error("User not authenticated");
+    }
+    const response = await fetch(`${BASE_URL}/trailobstacles/${trailObstacleIdentifier}`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new ApiError(`HTTP error: addSolvedVote:  ${response.status}`, response.status);
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.log("deleteTrailObstacle: ", error);
     throw error;
   }
 }
