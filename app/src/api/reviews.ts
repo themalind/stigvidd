@@ -1,7 +1,7 @@
 import { CreateReviewRequest, PagedReviewResponse } from "@/data/types";
 import uuid from "react-native-uuid";
-import { ApiError, getUserToken } from "./users";
 import { BASE_URL } from "./api-config";
+import { ApiError, getUserToken } from "./users";
 
 export async function getReviewsByTrailIdentifier(
   trailIdentifier: string,
@@ -36,7 +36,6 @@ export async function createReview(request: CreateReviewRequest): Promise<{ succ
 
   const formData = new FormData();
 
-  // Skapa filobjekten
   request.imageUris?.forEach((uri) => {
     const fileName = `${uuid.v4()}.jpg`;
 
@@ -44,7 +43,7 @@ export async function createReview(request: CreateReviewRequest): Promise<{ succ
       uri: uri,
       type: "image/jpeg",
       name: fileName,
-    } as any); // Hittar vi ett annat sätt att typa så byter vi.
+    } as any);
   });
 
   formData.append("trailIdentifier", request.trailIdentifier);
