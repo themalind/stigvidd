@@ -58,7 +58,7 @@ export async function deleteSolvedVote(obstacleIdentifier: string): Promise<{ su
     });
 
     if (!response.ok) {
-      throw new ApiError(`HTTP error: addSolvedVote:  ${response.status}`, response.status);
+      throw new ApiError(`HTTP error: deleteSolvedVote:  ${response.status}`, response.status);
     }
 
     return { success: true };
@@ -86,7 +86,7 @@ export async function createTrailObstacle(request: CreateTrailObstacleRequest): 
     });
 
     if (!response.ok) {
-      throw new ApiError(`HTTP error: addSolvedVote:  ${response.status}`, response.status);
+      throw new ApiError(`HTTP error: createTrailObstacle:  ${response.status}`, response.status);
     }
 
     return { success: true };
@@ -137,7 +137,7 @@ export async function getObstacleIssueTypes(): Promise<string[]> {
     });
 
     if (!response.ok) {
-      throw new ApiError(`HTTP error: addSolvedVote:  ${response.status}`, response.status);
+      throw new ApiError(`HTTP error: getObstacleIssueTypes:  ${response.status}`, response.status);
     }
 
     return await response.json();
@@ -163,7 +163,7 @@ export async function deleteTrailObstacle(trailObstacleIdentifier: string): Prom
     });
 
     if (!response.ok) {
-      throw new ApiError(`HTTP error: addSolvedVote:  ${response.status}`, response.status);
+      throw new ApiError(`HTTP error: deleteTrailObstacle:  ${response.status}`, response.status);
     }
 
     return { success: true };
