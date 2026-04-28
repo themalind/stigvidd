@@ -147,33 +147,41 @@ public class ReviewService : IReviewService
 
     public async Task<Result> DeleteReviewAsync(string reviewIdentifier, string userIdentifer, CancellationToken ctoken)
     {
-        var reviewResult = await _reviewRepository.GetReviewByIdentifierAsync(reviewIdentifier, userIdentifer, ctoken);
-
-        if (!reviewResult.IsSuccess)
-            return Result.Fail(new Message(404, $"RemoveReviewAsync: Could not find review with identifier: {reviewIdentifier} and user identifier: {userIdentifer}"));
-
-        var review = reviewResult.Value;
-
-        if (review.ReviewImages != null && review.ReviewImages.Any())
+        try
         {
-            foreach (var image in review.ReviewImages)
-            {
-                try
-                {
-                    var result = await _webDavService.DeleteFileAsync(image.ImageUrl);
+            var reviewResult = await _reviewRepository.GetReviewByIdentifierAsync(reviewIdentifier, userIdentifer, ctoken);
 
-                    if (result.IsFailure)
-                        return Result.Fail(new Message(500, "Could not remove file. Try again later."));
-                }
-                catch (Exception ex)
+            if (!reviewResult.IsSuccess)
+                return Result.Fail(new Message(404, $"RemoveReviewAsync: Could not find review with identifier: {reviewIdentifier} and user identifier: {userIdentifer}"));
+
+            var review = reviewResult.Value;
+
+            if (review.ReviewImages != null && review.ReviewImages.Any())
+            {
+                foreach (var image in review.ReviewImages)
                 {
-                    _logger.LogWarning(ex, "RemoveReviewAsync: Failed to remove image {ImageUrl}. UserIdentifier: {userIdentifer}, ReviewIdentifer: {reviewIdentifier}", image.ImageUrl, userIdentifer, reviewIdentifier);
+                    try
+                    {
+                        var result = await _webDavService.DeleteFileAsync(image.ImageUrl);
+
+                        if (result.IsFailure)
+                            return Result.Fail(new Message(500, "Could not remove file. Try again later."));
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "RemoveReviewAsync: Failed to remove image {ImageUrl}. UserIdentifier: {userIdentifer}, ReviewIdentifer: {reviewIdentifier}", image.ImageUrl, userIdentifer, reviewIdentifier);
+                    }
                 }
             }
+
+            await _reviewRepository.DeleteReviewAsync(review, ctoken);
+
+            return Result.Ok();
         }
-
-        await _reviewRepository.DeleteReviewAsync(review, ctoken);
-
-        return Result.Ok();
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error deleting review {reviewIdentifier} for user {userIdentifer}", reviewIdentifier, userIdentifer);
+            return Result.Fail(new Message(500, "An error occurred while deleting the review."));
+        }
     }
 }

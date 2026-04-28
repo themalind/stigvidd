@@ -34,15 +34,23 @@ public class TrailService : ITrailService
 
     public async Task<Result<int>> GetTrailIdByIdentifierAsync(string identifier, CancellationToken ctoken)
     {
-        var result = await _trailResponseRepository.GetTrailIdByIdentifierAsync(identifier, ctoken);
-
-        if (!result.IsSuccess)
+        try
         {
-            _logger.LogWarning("Trail with identifier {identifier} not found.", identifier);
-            return Result.Fail<int>(new Message(404, $"Trail with identifier {identifier} not found."));
-        }
+            var result = await _trailResponseRepository.GetTrailIdByIdentifierAsync(identifier, ctoken);
 
-        return Result.Ok(result.Value);
+            if (!result.IsSuccess)
+            {
+                _logger.LogWarning("Trail with identifier {identifier} not found.", identifier);
+                return Result.Fail<int>(new Message(404, $"Trail with identifier {identifier} not found."));
+            }
+
+            return Result.Ok(result.Value);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error fetching trail ID with identifier {identifier}", identifier);
+            return Result.Fail<int>(new Message(500, "An error occurred while fetching the trail."));
+        }
     }
 
     public async Task<Result<TrailResponse?>> GetTrailByIdentifierWithoutCoordinatesAsync(string identifier, CancellationToken ctoken)

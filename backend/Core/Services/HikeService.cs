@@ -71,36 +71,60 @@ public class HikeService : IHikeService
 
     public async Task<Result<HikeResponse>> GetHikeByIdentifierAsync(string identifier, CancellationToken ctoken)
     {
-        var result = await _hikeResponseRepository.GetHikeByIdentifierAsync(identifier, ctoken);
+        try
+        {
+            var result = await _hikeResponseRepository.GetHikeByIdentifierAsync(identifier, ctoken);
 
-        if (!result.IsSuccess)
-            return Result.Fail<HikeResponse>(new Message(404, "Hike not found"));
+            if (!result.IsSuccess)
+                return Result.Fail<HikeResponse>(new Message(404, "Hike not found"));
 
-        return Result.Ok(_hikeResponseFactory.Create(result.Value));
+            return Result.Ok(_hikeResponseFactory.Create(result.Value));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error fetching hike with identifier {identifier}", identifier);
+            return Result.Fail<HikeResponse>(new Message(500, "An error occurred while fetching the hike."));
+        }
     }
 
     public async Task<Result<IReadOnlyCollection<HikeOverviewResponse>>> GetHikesAsync(string? createdBy, CancellationToken ctoken)
     {
-        var result = await _hikeResponseRepository.GetHikesAsync(createdBy, ctoken);
+        try
+        {
+            var result = await _hikeResponseRepository.GetHikesAsync(createdBy, ctoken);
 
-        if (!result.IsSuccess)
+            if (!result.IsSuccess)
+                return Result.Fail<IReadOnlyCollection<HikeOverviewResponse>>(new Message(500, "An error occurred while fetching hikes."));
+
+            return Result.Ok(result.Value);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error fetching hikes for user {createdBy}", createdBy);
             return Result.Fail<IReadOnlyCollection<HikeOverviewResponse>>(new Message(500, "An error occurred while fetching hikes."));
-
-        return Result.Ok(result.Value);
+        }
     }
 
     public async Task<Result> DeleteHikeAsync(string hikeIdentifier, string userIdentifier, CancellationToken ctoken)
     {
-        var result = await _hikeResponseRepository.GetHikeByIdentifierAsync(hikeIdentifier, ctoken);
+        try
+        {
+            var result = await _hikeResponseRepository.GetHikeByIdentifierAsync(hikeIdentifier, ctoken);
 
-        if (!result.IsSuccess)
-            return Result.Fail(new Message(404, $"Could not remove hike with id {hikeIdentifier}."));
+            if (!result.IsSuccess)
+                return Result.Fail(new Message(404, $"Could not remove hike with id {hikeIdentifier}."));
 
-        if (result.Value.CreatedBy != userIdentifier)
-            return Result.Fail(new Message(401, $"Hike {hikeIdentifier} does not belong to {userIdentifier}"));
+            if (result.Value.CreatedBy != userIdentifier)
+                return Result.Fail(new Message(401, $"Hike {hikeIdentifier} does not belong to {userIdentifier}"));
 
-        await _hikeResponseRepository.DeleteHikeAsync(result.Value, ctoken);
+            await _hikeResponseRepository.DeleteHikeAsync(result.Value, ctoken);
 
-        return Result.Ok();
+            return Result.Ok();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error deleting hike {hikeIdentifier} for user {userIdentifier}", hikeIdentifier, userIdentifier);
+            return Result.Fail(new Message(500, "An error occurred while deleting the hike."));
+        }
     }
 }
