@@ -1,6 +1,12 @@
+using Core;
+using Core.Interfaces.Services;
 using Infrastructure.Data;
 using Infrastructure.Data.Entities;
 using Infrastructure.Enums;
+using Microsoft.AspNetCore.Http;
+using Moq;
+using System.Text;
+using UserResponseModel = WebDataContracts.ResponseModels.User.UserResponse;
 
 namespace UnitTests;
 
@@ -164,16 +170,16 @@ public static class Utilities
                     new TrailImage
                     {
                         Id = 6,
-                        Identifier = "img-asdfasdf-1",
+                        Identifier = "img-aras-1",
                         ImageUrl = "https://inkaben.se/stigvidd/mock/image.jpg",
-                        TrailId = 2
+                        TrailId = 4
                     },
                     new TrailImage
                     {
                         Id = 7,
-                        Identifier = "img-asdfasdf-2",
+                        Identifier = "img-aras-2",
                         ImageUrl = "https://inkaben.se/stigvidd/mock/image.jpg",
-                        TrailId = 2
+                        TrailId = 4
                     }
                 }
             },
@@ -241,16 +247,16 @@ public static class Utilities
                     new TrailImage
                     {
                         Id = 8,
-                        Identifier = "img-asdfasdf-1",
+                        Identifier = "img-nassehult-1",
                         ImageUrl = "https://inkaben.se/stigvidd/mock/image.jpg",
-                        TrailId = 2
+                        TrailId = 7
                     },
                     new TrailImage
                     {
                         Id = 9,
-                        Identifier = "img-asdfasdf-2",
+                        Identifier = "img-nassehult-2",
                         ImageUrl = "https://inkaben.se/stigvidd/mock/image.jpg",
-                        TrailId = 2
+                        TrailId = 7
                     }
                 }
             }
@@ -536,5 +542,161 @@ public static class Utilities
             new TrailObstacleSolvedVote { Id = 3, Identifier = "sv3c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e", TrailObstacleId = 3, UserId = 2, CreatedAt = SeedDates.Created, LastUpdatedAt = SeedDates.Updated },
             new TrailObstacleSolvedVote { Id = 4, Identifier = "sv4d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f", TrailObstacleId = 3, UserId = 3, CreatedAt = SeedDates.Created, LastUpdatedAt = SeedDates.Updated },
         ];
+    }
+
+    public static class Identifiers
+    {
+        public const string User = "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d";
+        public const string UserFirebaseUid = "firebase-uid-12345";
+        public const string Trail1 = "11a1b2c3-d4e5-4f6a-7b8c-9d0e1f2a3b4c";
+        public const string Trail4 = "44d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f";
+        public const string Trail7 = "77a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c";
+        public const string Hike1 = "3f9c1b7e-8a42-4e6d-9c5f-2a7b1d8e4f90";
+        public const string Review5 = "r5e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a";
+        public const string Obstacle1 = "ob1a1b2c3-d4e5-4f6a-7b8c-9d0e1f2a3b4c";
+    }
+
+    public static class Stubs
+    {
+        public static Hike Hike() => new()
+        {
+            Id = 1,
+            Identifier = Identifiers.Hike1,
+            Name = "TestHike1",
+            HikeLength = 10,
+            Duration = 3600000,
+            Coordinates = "[]",
+            CreatedBy = Identifiers.User
+        };
+
+        public static Trail Trail() => new()
+        {
+            Id = 4,
+            Identifier = Identifiers.Trail4,
+            Name = "Vildmarksleden Årås",
+            TrailLength = 8.5M,
+            Classification = 2,
+            Accessibility = true,
+            IsVerified = true,
+            City = "Arås",
+            Coordinates = "[{\"latitude\":57.62,\"longitude\":12.80}]"
+        };
+
+        public static Review Review(bool withImages = false) => new()
+        {
+            Id = 1,
+            Identifier = Identifiers.Review5,
+            TrailReview = "Great trail",
+            Rating = 4.0M,
+            User = new User { Id = 1, Identifier = Identifiers.User, NickName = "Nick", Email = "nick@test.com", FirebaseUid = "uid" },
+            Trail = new Trail { Id = 7, Identifier = Identifiers.Trail7, Name = "Nässehult", TrailLength = 5M },
+            CreatedAt = DateTime.UtcNow,
+            ReviewImages = withImages
+                ? [new ReviewImage { Id = 1, Identifier = "img-1", ImageUrl = "reviews/img.jpg" }]
+                : []
+        };
+
+        public static TrailObstacle Obstacle(List<TrailObstacleSolvedVote>? votes = null) => new()
+        {
+            Id = 1,
+            Identifier = Identifiers.Obstacle1,
+            Description = "Fallen tree",
+            IssueType = TrailIssueType.FallenTree,
+            TrailId = 1,
+            UserId = 1,
+            User = new User { Id = 1, Identifier = Identifiers.User, NickName = "Nick", Email = "nick@test.com", FirebaseUid = "uid" },
+            SolvedVotes = votes ?? []
+        };
+
+        public static TrailObstacleSolvedVote Vote() => new()
+        {
+            Id = 1,
+            Identifier = "vote-1",
+            TrailObstacleId = 1,
+            UserId = 1,
+            User = new User { Id = 1, Identifier = Identifiers.User, NickName = "Nick", Email = "nick@test.com", FirebaseUid = "uid" }
+        };
+
+        public static UserResponseModel UserResponse() =>
+            UserResponseModel.Create(Identifiers.User, "Nick", "nick@test.com", null, null);
+
+        public static IFormFile FakeFile(string name = "test.jpg")
+        {
+            var bytes = Encoding.UTF8.GetBytes("fake image content");
+            return new FormFile(new MemoryStream(bytes), 0, bytes.Length, "file", name)
+            {
+                Headers = new HeaderDictionary(),
+                ContentType = "image/jpeg"
+            };
+        }
+
+        public static FormFileCollection TwoImages()
+        {
+            var col = new FormFileCollection();
+            col.Add(FakeFile("img1.jpg"));
+            col.Add(FakeFile("img2.jpg"));
+            return col;
+        }
+    }
+
+    public static class MockFactory
+    {
+        public static Mock<IUserService> UserServiceFoundByIdentifier()
+        {
+            var mock = new Mock<IUserService>();
+            mock.Setup(u => u.GetUserByIdentifierAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(Result.Ok<UserResponseModel?>(Stubs.UserResponse()));
+            return mock;
+        }
+
+        public static Mock<IUserService> UserServiceNotFoundByIdentifier()
+        {
+            var mock = new Mock<IUserService>();
+            mock.Setup(u => u.GetUserByIdentifierAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(Result.Fail<UserResponseModel?>(new Message(404, "User not found")));
+            return mock;
+        }
+
+        public static Mock<IUserService> UserServiceFoundById(int id = 1)
+        {
+            var mock = new Mock<IUserService>();
+            mock.Setup(u => u.GetUserIdByIdentifierAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(Result.Ok(id));
+            return mock;
+        }
+
+        public static Mock<IUserService> UserServiceNotFoundById()
+        {
+            var mock = new Mock<IUserService>();
+            mock.Setup(u => u.GetUserIdByIdentifierAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(Result.Fail<int>(new Message(404, "User not found")));
+            return mock;
+        }
+
+        public static Mock<ITrailService> TrailServiceFound(int id = 1)
+        {
+            var mock = new Mock<ITrailService>();
+            mock.Setup(t => t.GetTrailIdByIdentifierAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(Result.Ok(id));
+            return mock;
+        }
+
+        public static Mock<ITrailService> TrailServiceNotFound()
+        {
+            var mock = new Mock<ITrailService>();
+            mock.Setup(t => t.GetTrailIdByIdentifierAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(Result.Fail<int>(new Message(404, "Trail not found")));
+            return mock;
+        }
+
+        public static Mock<IWebDavService> WebDavService()
+        {
+            var mock = new Mock<IWebDavService>();
+            mock.Setup(w => w.UploadFileAsync(It.IsAny<Stream>(), It.IsAny<string>()))
+                .ReturnsAsync(Result.Ok<string?>("uploads/test-image.jpg"));
+            mock.Setup(w => w.DeleteFileAsync(It.IsAny<string>()))
+                .ReturnsAsync(Result.Ok(true));
+            return mock;
+        }
     }
 }

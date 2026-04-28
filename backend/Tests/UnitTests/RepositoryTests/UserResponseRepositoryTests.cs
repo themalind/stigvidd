@@ -1,4 +1,4 @@
-﻿using Core;
+using Core;
 using Core.Interfaces.Repositories;
 using Core.Repositories;
 using FluentAssertions;
@@ -18,12 +18,16 @@ public class UserResponseRepositoryTests : UnitTests.TestBase
     private UserResponseRepository BuildRepo(IFirebaseAuthRepository? firebase = null) =>
         new(CreateSeededFactory(), firebase ?? new Mock<IFirebaseAuthRepository>().Object);
 
-
     [Fact]
     public async Task GetUserByFirebaseUid_WhenFound_ReturnsSuccess()
     {
-        var result = await BuildRepo().GetUserByFirebaseUidAsync(ExistingFirebaseUid, CancellationToken.None);
+        // Arrange
+        var repo = BuildRepo();
 
+        // Act
+        var result = await repo.GetUserByFirebaseUidAsync(ExistingFirebaseUid, CancellationToken.None);
+
+        // Assert
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().NotBeNull();
     }
@@ -31,18 +35,27 @@ public class UserResponseRepositoryTests : UnitTests.TestBase
     [Fact]
     public async Task GetUserByFirebaseUid_WhenNotFound_ReturnsNotFound()
     {
-        var result = await BuildRepo().GetUserByFirebaseUidAsync("no-such-uid", CancellationToken.None);
+        // Arrange
+        var repo = BuildRepo();
 
+        // Act
+        var result = await repo.GetUserByFirebaseUidAsync("no-such-uid", CancellationToken.None);
+
+        // Assert
         result.IsSuccess.Should().BeFalse();
         result.Status.Should().Be(RepositoryResultStatus.NotFound);
     }
 
-
     [Fact]
     public async Task GetUserIdByIdentifier_WhenFound_ReturnsId()
     {
-        var result = await BuildRepo().GetUserIdByIdentifierAsync(NaturElskarenIdentifier, CancellationToken.None);
+        // Arrange
+        var repo = BuildRepo();
 
+        // Act
+        var result = await repo.GetUserIdByIdentifierAsync(NaturElskarenIdentifier, CancellationToken.None);
+
+        // Assert
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().BeGreaterThan(0);
     }
@@ -50,18 +63,27 @@ public class UserResponseRepositoryTests : UnitTests.TestBase
     [Fact]
     public async Task GetUserIdByIdentifier_WhenNotFound_ReturnsNotFound()
     {
-        var result = await BuildRepo().GetUserIdByIdentifierAsync("no-such-user", CancellationToken.None);
+        // Arrange
+        var repo = BuildRepo();
 
+        // Act
+        var result = await repo.GetUserIdByIdentifierAsync("no-such-user", CancellationToken.None);
+
+        // Assert
         result.IsSuccess.Should().BeFalse();
         result.Status.Should().Be(RepositoryResultStatus.NotFound);
     }
 
-
     [Fact]
     public async Task GetUserByIdentifier_WhenFound_ReturnsUser()
     {
-        var result = await BuildRepo().GetUserByIdentifierAsync(NaturElskarenIdentifier, CancellationToken.None);
+        // Arrange
+        var repo = BuildRepo();
 
+        // Act
+        var result = await repo.GetUserByIdentifierAsync(NaturElskarenIdentifier, CancellationToken.None);
+
+        // Assert
         result.IsSuccess.Should().BeTrue();
         result.Value!.Identifier.Should().Be(NaturElskarenIdentifier);
     }
@@ -69,19 +91,28 @@ public class UserResponseRepositoryTests : UnitTests.TestBase
     [Fact]
     public async Task GetUserByIdentifier_WhenNotFound_ReturnsNotFound()
     {
-        var result = await BuildRepo().GetUserByIdentifierAsync("no-such-user", CancellationToken.None);
+        // Arrange
+        var repo = BuildRepo();
 
+        // Act
+        var result = await repo.GetUserByIdentifierAsync("no-such-user", CancellationToken.None);
+
+        // Assert
         result.IsSuccess.Should().BeFalse();
         result.Status.Should().Be(RepositoryResultStatus.NotFound);
     }
 
-
     [Fact]
     public async Task GetFavoritesByUserIdentifier_WhenHasFavorites_ReturnsList()
     {
-        // VandrarVennen has 2 favorites (Tiveden + Storsjöleden)
-        var result = await BuildRepo().GetFavoritesByUserIdentifierAsync(VandrarVennenIdentifier, CancellationToken.None);
+        // Arrange
+        var repo = BuildRepo();
 
+        // Act
+        // VandrarVennen has 2 favorites (Tiveden + Storsjöleden)
+        var result = await repo.GetFavoritesByUserIdentifierAsync(VandrarVennenIdentifier, CancellationToken.None);
+
+        // Assert
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().HaveCount(2);
     }
@@ -89,20 +120,29 @@ public class UserResponseRepositoryTests : UnitTests.TestBase
     [Fact]
     public async Task GetFavoritesByUserIdentifier_WhenNoFavorites_ReturnsEmpty()
     {
-        // NaturElskaren has no favorites set
-        var result = await BuildRepo().GetFavoritesByUserIdentifierAsync(NaturElskarenIdentifier, CancellationToken.None);
+        // Arrange
+        var repo = BuildRepo();
 
+        // Act
+        // NaturElskaren has no favorites set
+        var result = await repo.GetFavoritesByUserIdentifierAsync(NaturElskarenIdentifier, CancellationToken.None);
+
+        // Assert
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().BeEmpty();
     }
 
-
     [Fact]
     public async Task GetWishListByUserIdentifier_WhenHasWishlist_ReturnsList()
     {
-        // NaturElskaren has 2 wishlist items (Vildmarksleden + Nässehult)
-        var result = await BuildRepo().GetWishListByUserIdentifierAsync(NaturElskarenIdentifier, CancellationToken.None);
+        // Arrange
+        var repo = BuildRepo();
 
+        // Act
+        // NaturElskaren has 2 wishlist items (Vildmarksleden + Nässehult)
+        var result = await repo.GetWishListByUserIdentifierAsync(NaturElskarenIdentifier, CancellationToken.None);
+
+        // Assert
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().HaveCount(2);
     }
@@ -110,20 +150,24 @@ public class UserResponseRepositoryTests : UnitTests.TestBase
     [Fact]
     public async Task GetWishListByUserIdentifier_WhenNoWishlist_ReturnsEmpty()
     {
-        // VandrarVennen has no wishlist
-        var result = await BuildRepo().GetWishListByUserIdentifierAsync(VandrarVennenIdentifier, CancellationToken.None);
+        // Arrange
+        var repo = BuildRepo();
 
+        // Act
+        // VandrarVennen has no wishlist
+        var result = await repo.GetWishListByUserIdentifierAsync(VandrarVennenIdentifier, CancellationToken.None);
+
+        // Assert
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().BeEmpty();
     }
 
-
     [Fact]
     public async Task CreateUser_ShouldPersistAndReturn()
     {
+        // Arrange
         var factory = CreateSeededFactory();
         var repo = new UserResponseRepository(factory, new Mock<IFirebaseAuthRepository>().Object);
-
         var newUser = new User
         {
             Identifier = Guid.NewGuid().ToString(),
@@ -134,8 +178,10 @@ public class UserResponseRepositoryTests : UnitTests.TestBase
             MyWishList = []
         };
 
+        // Act
         var result = await repo.CreateUserAsync(newUser, CancellationToken.None);
 
+        // Assert
         result.IsSuccess.Should().BeTrue();
         result.Value!.NickName.Should().Be("Glenn");
 
@@ -143,13 +189,17 @@ public class UserResponseRepositoryTests : UnitTests.TestBase
         verify.IsSuccess.Should().BeTrue();
     }
 
-
     [Fact]
     public async Task AddTrailToFavorites_WhenValid_ReturnsSuccess()
     {
-        // NaturElskaren has no favorites yet; add Nässehult
-        var result = await BuildRepo().AddTrailToUserFavoritesListAsync(NaturElskarenIdentifier, NassehultIdentifier, CancellationToken.None);
+        // Arrange
+        var repo = BuildRepo();
 
+        // Act
+        // NaturElskaren has no favorites yet; add Nässehult
+        var result = await repo.AddTrailToUserFavoritesListAsync(NaturElskarenIdentifier, NassehultIdentifier, CancellationToken.None);
+
+        // Assert
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().NotBeNull();
         result.Value!.Identifier.Should().Be(NassehultIdentifier);
@@ -158,8 +208,13 @@ public class UserResponseRepositoryTests : UnitTests.TestBase
     [Fact]
     public async Task AddTrailToFavorites_WhenUserNotFound_ReturnsNotFound()
     {
-        var result = await BuildRepo().AddTrailToUserFavoritesListAsync("no-such-user", TivedenIdentifier, CancellationToken.None);
+        // Arrange
+        var repo = BuildRepo();
 
+        // Act
+        var result = await repo.AddTrailToUserFavoritesListAsync("no-such-user", TivedenIdentifier, CancellationToken.None);
+
+        // Assert
         result.IsSuccess.Should().BeFalse();
         result.Status.Should().Be(RepositoryResultStatus.NotFound);
     }
@@ -167,8 +222,13 @@ public class UserResponseRepositoryTests : UnitTests.TestBase
     [Fact]
     public async Task AddTrailToFavorites_WhenTrailNotFound_ReturnsNotFound()
     {
-        var result = await BuildRepo().AddTrailToUserFavoritesListAsync(NaturElskarenIdentifier, "no-such-trail", CancellationToken.None);
+        // Arrange
+        var repo = BuildRepo();
 
+        // Act
+        var result = await repo.AddTrailToUserFavoritesListAsync(NaturElskarenIdentifier, "no-such-trail", CancellationToken.None);
+
+        // Assert
         result.IsSuccess.Should().BeFalse();
         result.Status.Should().Be(RepositoryResultStatus.NotFound);
     }
@@ -176,20 +236,29 @@ public class UserResponseRepositoryTests : UnitTests.TestBase
     [Fact]
     public async Task AddTrailToFavorites_WhenDuplicate_ReturnsConflict()
     {
-        // VandrarVennen already has Tiveden in favorites
-        var result = await BuildRepo().AddTrailToUserFavoritesListAsync(VandrarVennenIdentifier, TivedenIdentifier, CancellationToken.None);
+        // Arrange
+        var repo = BuildRepo();
 
+        // Act
+        // VandrarVennen already has Tiveden in favorites
+        var result = await repo.AddTrailToUserFavoritesListAsync(VandrarVennenIdentifier, TivedenIdentifier, CancellationToken.None);
+
+        // Assert
         result.IsSuccess.Should().BeFalse();
         result.Status.Should().Be(RepositoryResultStatus.Conflict);
     }
 
-
     [Fact]
     public async Task AddTrailToWishList_WhenValid_ReturnsSuccess()
     {
-        // VandrarVennen has no wishlist; add Tiveden
-        var result = await BuildRepo().AddTrailToUserWishListAsync(VandrarVennenIdentifier, TivedenIdentifier, CancellationToken.None);
+        // Arrange
+        var repo = BuildRepo();
 
+        // Act
+        // VandrarVennen has no wishlist; add Tiveden
+        var result = await repo.AddTrailToUserWishListAsync(VandrarVennenIdentifier, TivedenIdentifier, CancellationToken.None);
+
+        // Assert
         result.IsSuccess.Should().BeTrue();
         result.Value!.Identifier.Should().Be(TivedenIdentifier);
     }
@@ -197,8 +266,13 @@ public class UserResponseRepositoryTests : UnitTests.TestBase
     [Fact]
     public async Task AddTrailToWishList_WhenUserNotFound_ReturnsNotFound()
     {
-        var result = await BuildRepo().AddTrailToUserWishListAsync("no-such-user", TivedenIdentifier, CancellationToken.None);
+        // Arrange
+        var repo = BuildRepo();
 
+        // Act
+        var result = await repo.AddTrailToUserWishListAsync("no-such-user", TivedenIdentifier, CancellationToken.None);
+
+        // Assert
         result.IsSuccess.Should().BeFalse();
         result.Status.Should().Be(RepositoryResultStatus.NotFound);
     }
@@ -206,27 +280,41 @@ public class UserResponseRepositoryTests : UnitTests.TestBase
     [Fact]
     public async Task AddTrailToWishList_WhenDuplicate_ReturnsConflict()
     {
-        // NaturElskaren already has Nässehult in wishlist
-        var result = await BuildRepo().AddTrailToUserWishListAsync(NaturElskarenIdentifier, NassehultIdentifier, CancellationToken.None);
+        // Arrange
+        var repo = BuildRepo();
 
+        // Act
+        // NaturElskaren already has Nässehult in wishlist
+        var result = await repo.AddTrailToUserWishListAsync(NaturElskarenIdentifier, NassehultIdentifier, CancellationToken.None);
+
+        // Assert
         result.IsSuccess.Should().BeFalse();
         result.Status.Should().Be(RepositoryResultStatus.Conflict);
     }
 
-
     [Fact]
     public async Task RemoveFromFavorites_WhenValid_ReturnsSuccess()
     {
-        var result = await BuildRepo().RemoveTrailFromUserFavoritesListAsync(VandrarVennenIdentifier, TivedenIdentifier, CancellationToken.None);
+        // Arrange
+        var repo = BuildRepo();
 
+        // Act
+        var result = await repo.RemoveTrailFromUserFavoritesListAsync(VandrarVennenIdentifier, TivedenIdentifier, CancellationToken.None);
+
+        // Assert
         result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
     public async Task RemoveFromFavorites_WhenUserNotFound_ReturnsNotFound()
     {
-        var result = await BuildRepo().RemoveTrailFromUserFavoritesListAsync("no-such-user", TivedenIdentifier, CancellationToken.None);
+        // Arrange
+        var repo = BuildRepo();
 
+        // Act
+        var result = await repo.RemoveTrailFromUserFavoritesListAsync("no-such-user", TivedenIdentifier, CancellationToken.None);
+
+        // Assert
         result.IsSuccess.Should().BeFalse();
         result.Status.Should().Be(RepositoryResultStatus.NotFound);
     }
@@ -234,27 +322,41 @@ public class UserResponseRepositoryTests : UnitTests.TestBase
     [Fact]
     public async Task RemoveFromFavorites_WhenTrailNotInList_ReturnsNotFound()
     {
-        // NaturElskaren has no favorites
-        var result = await BuildRepo().RemoveTrailFromUserFavoritesListAsync(NaturElskarenIdentifier, TivedenIdentifier, CancellationToken.None);
+        // Arrange
+        var repo = BuildRepo();
 
+        // Act
+        // NaturElskaren has no favorites
+        var result = await repo.RemoveTrailFromUserFavoritesListAsync(NaturElskarenIdentifier, TivedenIdentifier, CancellationToken.None);
+
+        // Assert
         result.IsSuccess.Should().BeFalse();
         result.Status.Should().Be(RepositoryResultStatus.NotFound);
     }
 
-
     [Fact]
     public async Task RemoveFromWishList_WhenValid_ReturnsSuccess()
     {
-        var result = await BuildRepo().RemoveTrailFromUserWishListAsync(NaturElskarenIdentifier, NassehultIdentifier, CancellationToken.None);
+        // Arrange
+        var repo = BuildRepo();
 
+        // Act
+        var result = await repo.RemoveTrailFromUserWishListAsync(NaturElskarenIdentifier, NassehultIdentifier, CancellationToken.None);
+
+        // Assert
         result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
     public async Task RemoveFromWishList_WhenUserNotFound_ReturnsNotFound()
     {
-        var result = await BuildRepo().RemoveTrailFromUserWishListAsync("no-such-user", NassehultIdentifier, CancellationToken.None);
+        // Arrange
+        var repo = BuildRepo();
 
+        // Act
+        var result = await repo.RemoveTrailFromUserWishListAsync("no-such-user", NassehultIdentifier, CancellationToken.None);
+
+        // Assert
         result.IsSuccess.Should().BeFalse();
         result.Status.Should().Be(RepositoryResultStatus.NotFound);
     }
@@ -265,8 +367,13 @@ public class UserResponseRepositoryTests : UnitTests.TestBase
     [Fact]
     public async Task DeleteUser_WhenNotFound_ReturnsNotFound()
     {
-        var result = await BuildRepo().DeleteUserAsync("no-such-user", CancellationToken.None);
+        // Arrange
+        var repo = BuildRepo();
 
+        // Act
+        var result = await repo.DeleteUserAsync("no-such-user", CancellationToken.None);
+
+        // Assert
         result.IsSuccess.Should().BeFalse();
         result.Status.Should().Be(RepositoryResultStatus.NotFound);
     }

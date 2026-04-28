@@ -1,4 +1,4 @@
-﻿using Core;
+using Core;
 using Core.Factories;
 using Core.Repositories;
 using FluentAssertions;
@@ -16,7 +16,6 @@ public class ReviewResponseRepositoryTests : UnitTests.TestBase
     private const string Review5Identifier = "r5e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a"; // Kattleten, no images
     private const string VandrarVennenIdentifier = "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e";
     private const string KattletenIdentifier = "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5a33";
-
     private ReviewResponseRepository BuildRepo()
     {
         var cfg = new Mock<IConfiguration>();
@@ -24,12 +23,16 @@ public class ReviewResponseRepositoryTests : UnitTests.TestBase
         return new ReviewResponseRepository(CreateSeededFactory(), new ReviewResponseFactory(cfg.Object));
     }
 
-
     [Fact]
     public async Task GetReviewsByTrailIdentifier_WhenTrailHasReviews_ReturnsCorrectCount()
     {
-        var result = await BuildRepo().GetReviewsByTrailIdentifierAsync(NassehultIdentifier, 0, 10, CancellationToken.None);
+        // Arrange
+        var repo = BuildRepo();
 
+        // Act
+        var result = await repo.GetReviewsByTrailIdentifierAsync(NassehultIdentifier, 0, 10, CancellationToken.None);
+
+        // Assert
         result.IsSuccess.Should().BeTrue();
         result.Value!.Reviews.Should().HaveCount(2);
         result.Value.Total.Should().Be(2);
@@ -38,8 +41,13 @@ public class ReviewResponseRepositoryTests : UnitTests.TestBase
     [Fact]
     public async Task GetReviewsByTrailIdentifier_WhenTrailHasNoReviews_ReturnsEmpty()
     {
-        var result = await BuildRepo().GetReviewsByTrailIdentifierAsync(HultaforsIdentifier, 0, 10, CancellationToken.None);
+        // Arrange
+        var repo = BuildRepo();
 
+        // Act
+        var result = await repo.GetReviewsByTrailIdentifierAsync(HultaforsIdentifier, 0, 10, CancellationToken.None);
+
+        // Assert
         result.IsSuccess.Should().BeTrue();
         result.Value!.Reviews.Should().BeEmpty();
         result.Value.Total.Should().Be(0);
@@ -48,8 +56,13 @@ public class ReviewResponseRepositoryTests : UnitTests.TestBase
     [Fact]
     public async Task GetReviewsByTrailIdentifier_WithLimitOf1_HasMoreIsTrue()
     {
-        var result = await BuildRepo().GetReviewsByTrailIdentifierAsync(NassehultIdentifier, 0, 1, CancellationToken.None);
+        // Arrange
+        var repo = BuildRepo();
 
+        // Act
+        var result = await repo.GetReviewsByTrailIdentifierAsync(NassehultIdentifier, 0, 1, CancellationToken.None);
+
+        // Assert
         result.IsSuccess.Should().BeTrue();
         result.Value!.Reviews.Should().HaveCount(1);
         result.Value.HasMore.Should().BeTrue();
@@ -59,8 +72,13 @@ public class ReviewResponseRepositoryTests : UnitTests.TestBase
     [Fact]
     public async Task GetReviewsByTrailIdentifier_OnLastPage_HasMoreIsFalse()
     {
-        var result = await BuildRepo().GetReviewsByTrailIdentifierAsync(NassehultIdentifier, 1, 1, CancellationToken.None);
+        // Arrange
+        var repo = BuildRepo();
 
+        // Act
+        var result = await repo.GetReviewsByTrailIdentifierAsync(NassehultIdentifier, 1, 1, CancellationToken.None);
+
+        // Assert
         result.IsSuccess.Should().BeTrue();
         result.Value!.Reviews.Should().HaveCount(1);
         result.Value.HasMore.Should().BeFalse();
@@ -69,20 +87,29 @@ public class ReviewResponseRepositoryTests : UnitTests.TestBase
     [Fact]
     public async Task GetReviewsByTrailIdentifier_BeyondLastPage_ReturnsEmpty()
     {
-        var result = await BuildRepo().GetReviewsByTrailIdentifierAsync(NassehultIdentifier, 10, 10, CancellationToken.None);
+        // Arrange
+        var repo = BuildRepo();
 
+        // Act
+        var result = await repo.GetReviewsByTrailIdentifierAsync(NassehultIdentifier, 10, 10, CancellationToken.None);
+
+        // Assert
         result.IsSuccess.Should().BeTrue();
         result.Value!.Reviews.Should().BeEmpty();
         result.Value.HasMore.Should().BeFalse();
         result.Value.Total.Should().Be(2);
     }
 
-
     [Fact]
     public async Task GetReviewByIdentifier_WhenFound_ReturnsReview()
     {
-        var result = await BuildRepo().GetReviewByIdentifierAsync(Review1Identifier, VandrarVennenIdentifier, CancellationToken.None);
+        // Arrange
+        var repo = BuildRepo();
 
+        // Act
+        var result = await repo.GetReviewByIdentifierAsync(Review1Identifier, VandrarVennenIdentifier, CancellationToken.None);
+
+        // Assert
         result.IsSuccess.Should().BeTrue();
         result.Value!.Identifier.Should().Be(Review1Identifier);
     }
@@ -90,9 +117,14 @@ public class ReviewResponseRepositoryTests : UnitTests.TestBase
     [Fact]
     public async Task GetReviewByIdentifier_WhenWrongUser_ReturnsNotFound()
     {
-        // Review1 belongs to VandrarVennen, not Kattleten
-        var result = await BuildRepo().GetReviewByIdentifierAsync(Review1Identifier, KattletenIdentifier, CancellationToken.None);
+        // Arrange
+        var repo = BuildRepo();
 
+        // Act
+        // Review1 belongs to VandrarVennen, not Kattleten
+        var result = await repo.GetReviewByIdentifierAsync(Review1Identifier, KattletenIdentifier, CancellationToken.None);
+
+        // Assert
         result.IsSuccess.Should().BeFalse();
         result.Status.Should().Be(RepositoryResultStatus.NotFound);
     }
@@ -100,21 +132,25 @@ public class ReviewResponseRepositoryTests : UnitTests.TestBase
     [Fact]
     public async Task GetReviewByIdentifier_WhenNotFound_ReturnsNotFound()
     {
-        var result = await BuildRepo().GetReviewByIdentifierAsync("no-such-review", VandrarVennenIdentifier, CancellationToken.None);
+        // Arrange
+        var repo = BuildRepo();
 
+        // Act
+        var result = await repo.GetReviewByIdentifierAsync("no-such-review", VandrarVennenIdentifier, CancellationToken.None);
+
+        // Assert
         result.IsSuccess.Should().BeFalse();
         result.Status.Should().Be(RepositoryResultStatus.NotFound);
     }
 
-
     [Fact]
     public async Task AddReview_ShouldPersistAndReturn()
     {
+        // Arrange
         var factory = CreateSeededFactory();
         var cfg = new Mock<IConfiguration>();
         cfg.Setup(c => c["PresentableBaseUrl"]).Returns("http://stigvidd.se/testing/");
         var repo = new ReviewResponseRepository(factory, new ReviewResponseFactory(cfg.Object));
-
         var review = new Review
         {
             Identifier = Guid.NewGuid().ToString(),
@@ -124,25 +160,29 @@ public class ReviewResponseRepositoryTests : UnitTests.TestBase
             UserId = 1
         };
 
+        // Act
         var result = await repo.AddReviewAsync(review, CancellationToken.None);
 
+        // Assert
         result.IsSuccess.Should().BeTrue();
         result.Value!.Rating.Should().Be(4.5M);
     }
 
-
     [Fact]
     public async Task DeleteReview_ShouldRemoveFromDatabase()
     {
+        // Arrange
         var factory = CreateSeededFactory();
         var cfg = new Mock<IConfiguration>();
         cfg.Setup(c => c["PresentableBaseUrl"]).Returns("http://stigvidd.se/testing/");
         var repo = new ReviewResponseRepository(factory, new ReviewResponseFactory(cfg.Object));
-
         var found = await repo.GetReviewByIdentifierAsync(Review5Identifier, KattletenIdentifier, CancellationToken.None);
         found.IsSuccess.Should().BeTrue();
 
+        // Act
         var deleteResult = await repo.DeleteReviewAsync(found.Value!, CancellationToken.None);
+
+        // Assert
         deleteResult.IsSuccess.Should().BeTrue();
 
         var verify = await repo.GetReviewByIdentifierAsync(Review5Identifier, KattletenIdentifier, CancellationToken.None);

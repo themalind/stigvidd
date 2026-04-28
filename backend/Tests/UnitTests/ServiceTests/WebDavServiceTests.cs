@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using WebDav;
 
-namespace UnitTests;
+namespace UnitTests.ServiceTests;
 
 public class WebDavServiceTests
 {

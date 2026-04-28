@@ -1,4 +1,4 @@
-﻿using Core;
+using Core;
 using Core.Repositories;
 using FluentAssertions;
 using Infrastructure.Data;
@@ -50,14 +50,16 @@ public class TrailObstacleResponseRepositoryTests : UnitTests.TestBase
         return mock.Object;
     }
 
-
     [Fact]
     public async Task GetObstaclesByTrail_WhenObstaclesExist_ReturnsActiveOnes()
     {
+        // Arrange
         var repo = new TrailObstacleResponseRepository(CreateSeededFactory());
 
+        // Act
         var result = await repo.GetTrailObstaclesByTrailIdentifierAsync(TivedenIdentifier, CancellationToken.None);
 
+        // Assert
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().HaveCount(1); // Obstacle4 (40 days old) is filtered out
     }
@@ -65,10 +67,13 @@ public class TrailObstacleResponseRepositoryTests : UnitTests.TestBase
     [Fact]
     public async Task GetObstaclesByTrail_WhenNoObstacles_ReturnsEmpty()
     {
+        // Arrange
         var repo = new TrailObstacleResponseRepository(CreateSeededFactory());
 
+        // Act
         var result = await repo.GetTrailObstaclesByTrailIdentifierAsync(GesebolIdentifier, CancellationToken.None);
 
+        // Assert
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().BeEmpty();
     }
@@ -76,21 +81,27 @@ public class TrailObstacleResponseRepositoryTests : UnitTests.TestBase
     [Fact]
     public async Task GetObstaclesByTrail_FiltersObstaclesOlderThan30Days()
     {
+        // Arrange
         var repo = new TrailObstacleResponseRepository(CreateSeededFactory());
 
+        // Act
         var result = await repo.GetTrailObstaclesByTrailIdentifierAsync(TivedenIdentifier, CancellationToken.None);
 
+        // Assert
         result.Value.Should().NotContain(o => o.Identifier.Contains("ob4"));
     }
 
     [Fact]
     public async Task GetObstaclesByTrail_FiltersObstaclesWithThreeOrMoreSolvedVotes()
     {
+        // Arrange
         var repo = new TrailObstacleResponseRepository(CreateSeededFactory());
 
+        // Act
         // Obstacle3 on Tångaleden has exactly 3 solved votes
         var result = await repo.GetTrailObstaclesByTrailIdentifierAsync(TangaledenIdentifier, CancellationToken.None);
 
+        // Assert
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().BeEmpty();
     }
@@ -98,10 +109,13 @@ public class TrailObstacleResponseRepositoryTests : UnitTests.TestBase
     [Fact]
     public async Task GetObstaclesByTrail_ObstacleExactly30DaysOld_IsExcluded()
     {
+        // Arrange
         var repo = new TrailObstacleResponseRepository(CreateFactoryWithObstacleAt(DateTime.UtcNow.AddDays(-30)));
 
+        // Act
         var result = await repo.GetTrailObstaclesByTrailIdentifierAsync(TivedenIdentifier, CancellationToken.None);
 
+        // Assert
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().BeEmpty();
     }
@@ -109,22 +123,27 @@ public class TrailObstacleResponseRepositoryTests : UnitTests.TestBase
     [Fact]
     public async Task GetObstaclesByTrail_ObstacleJustUnder30DaysOld_IsIncluded()
     {
+        // Arrange
         var repo = new TrailObstacleResponseRepository(CreateFactoryWithObstacleAt(DateTime.UtcNow.AddDays(-29)));
 
+        // Act
         var result = await repo.GetTrailObstaclesByTrailIdentifierAsync(TivedenIdentifier, CancellationToken.None);
 
+        // Assert
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().HaveCount(1);
     }
 
-
     [Fact]
     public async Task GetObstacleByIdentifier_WhenFound_ReturnsSuccess()
     {
+        // Arrange
         var repo = new TrailObstacleResponseRepository(CreateSeededFactory());
 
+        // Act
         var result = await repo.GetTrailObstacleByIdentifierAsync(Obstacle1Identifier, CancellationToken.None);
 
+        // Assert
         result.IsSuccess.Should().BeTrue();
         result.Value!.Identifier.Should().Be(Obstacle1Identifier);
     }
@@ -132,43 +151,50 @@ public class TrailObstacleResponseRepositoryTests : UnitTests.TestBase
     [Fact]
     public async Task GetObstacleByIdentifier_WhenNotFound_ReturnsNotFound()
     {
+        // Arrange
         var repo = new TrailObstacleResponseRepository(CreateSeededFactory());
 
+        // Act
         var result = await repo.GetTrailObstacleByIdentifierAsync("no-such-obstacle", CancellationToken.None);
 
+        // Assert
         result.IsSuccess.Should().BeFalse();
         result.Status.Should().Be(RepositoryResultStatus.NotFound);
     }
 
-
     [Fact]
     public async Task GetObstacleByIdentifierAndUserId_WhenFound_ReturnsSuccess()
     {
+        // Arrange
         var repo = new TrailObstacleResponseRepository(CreateSeededFactory());
 
+        // Act
         var result = await repo.GetTrailObstacleByIdentifierAndUserIdAsync(Obstacle1Identifier, UserId1, CancellationToken.None);
 
+        // Assert
         result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
     public async Task GetObstacleByIdentifierAndUserId_WhenWrongUser_ReturnsNotFound()
     {
+        // Arrange
         var repo = new TrailObstacleResponseRepository(CreateSeededFactory());
 
+        // Act
         var result = await repo.GetTrailObstacleByIdentifierAndUserIdAsync(Obstacle1Identifier, 99, CancellationToken.None);
 
+        // Assert
         result.IsSuccess.Should().BeFalse();
         result.Status.Should().Be(RepositoryResultStatus.NotFound);
     }
 
-
     [Fact]
     public async Task AddTrailObstacle_ShouldPersistAndReturn()
     {
+        // Arrange
         var factory = CreateSeededFactory();
         var repo = new TrailObstacleResponseRepository(factory);
-
         var obstacle = new TrailObstacle
         {
             Identifier = Guid.NewGuid().ToString(),
@@ -178,8 +204,10 @@ public class TrailObstacleResponseRepositoryTests : UnitTests.TestBase
             UserId = 1
         };
 
+        // Act
         var result = await repo.AddTrailObstacleAsync(obstacle, CancellationToken.None);
 
+        // Assert
         result.IsSuccess.Should().BeTrue();
         result.Value!.Description.Should().Be("New obstacle");
 
@@ -187,59 +215,66 @@ public class TrailObstacleResponseRepositoryTests : UnitTests.TestBase
         verify.IsSuccess.Should().BeTrue();
     }
 
-
     [Fact]
     public async Task UpdateTrailObstacle_ShouldPersistChanges()
     {
+        // Arrange
         var factory = CreateSeededFactory();
         var repo = new TrailObstacleResponseRepository(factory);
-
         var found = await repo.GetTrailObstacleByIdentifierAsync(Obstacle1Identifier, CancellationToken.None);
         found.IsSuccess.Should().BeTrue();
-
         var obstacle = found.Value!;
         obstacle.Description = "Updated description";
         obstacle.IssueType = TrailIssueType.Flooding;
 
+        // Act
         await repo.UpdateTrailObstacleAsync(obstacle, CancellationToken.None);
 
+        // Assert
         var verify = await repo.GetTrailObstacleByIdentifierAsync(Obstacle1Identifier, CancellationToken.None);
         verify.Value!.Description.Should().Be("Updated description");
         verify.Value.IssueType.Should().Be(TrailIssueType.Flooding);
     }
 
-
     [Fact]
     public async Task DeleteTrailObstacle_ShouldRemoveFromDatabase()
     {
+        // Arrange
         var factory = CreateSeededFactory();
         var repo = new TrailObstacleResponseRepository(factory);
-
         var found = await repo.GetTrailObstacleByIdentifierAsync(Obstacle1Identifier, CancellationToken.None);
+
+        // Act
         await repo.DeleteTrailObstacleAsync(found.Value!, CancellationToken.None);
 
+        // Assert
         var verify = await repo.GetTrailObstacleByIdentifierAsync(Obstacle1Identifier, CancellationToken.None);
         verify.IsSuccess.Should().BeFalse();
     }
 
-
     [Fact]
     public async Task GetSolvedVoteByObstacleIdAndUserId_WhenFound_ReturnsSuccess()
     {
+        // Arrange
         var repo = new TrailObstacleResponseRepository(CreateSeededFactory());
 
+        // Act
         var result = await repo.GetSolvedVoteByObstacleIdAndUserIdAsync(ObstacleId2, UserId1, CancellationToken.None);
 
+        // Assert
         result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
     public async Task GetSolvedVoteByObstacleIdAndUserId_WhenNotFound_ReturnsNotFound()
     {
+        // Arrange
         var repo = new TrailObstacleResponseRepository(CreateSeededFactory());
 
+        // Act
         var result = await repo.GetSolvedVoteByObstacleIdAndUserIdAsync(99, 99, CancellationToken.None);
 
+        // Assert
         result.IsSuccess.Should().BeFalse();
         result.Status.Should().Be(RepositoryResultStatus.NotFound);
     }
@@ -247,9 +282,9 @@ public class TrailObstacleResponseRepositoryTests : UnitTests.TestBase
     [Fact]
     public async Task AddSolvedVote_ShouldPersist()
     {
+        // Arrange
         var factory = CreateSeededFactory();
         var repo = new TrailObstacleResponseRepository(factory);
-
         var vote = new TrailObstacleSolvedVote
         {
             Identifier = Guid.NewGuid().ToString(),
@@ -257,7 +292,10 @@ public class TrailObstacleResponseRepositoryTests : UnitTests.TestBase
             UserId = 2
         };
 
+        // Act
         var addResult = await repo.AddSolvedVoteAsync(vote, CancellationToken.None);
+
+        // Assert
         addResult.IsSuccess.Should().BeTrue();
 
         var verify = await repo.GetSolvedVoteByObstacleIdAndUserIdAsync(1, 2, CancellationToken.None);
@@ -267,14 +305,16 @@ public class TrailObstacleResponseRepositoryTests : UnitTests.TestBase
     [Fact]
     public async Task DeleteSolvedVote_ShouldRemove()
     {
+        // Arrange
         var factory = CreateSeededFactory();
         var repo = new TrailObstacleResponseRepository(factory);
-
         var vote = await repo.GetSolvedVoteByObstacleIdAndUserIdAsync(ObstacleId2, UserId1, CancellationToken.None);
         vote.IsSuccess.Should().BeTrue();
 
+        // Act
         await repo.DeleteSolvedVoteAsync(vote.Value!, CancellationToken.None);
 
+        // Assert
         var verify = await repo.GetSolvedVoteByObstacleIdAndUserIdAsync(ObstacleId2, UserId1, CancellationToken.None);
         verify.IsSuccess.Should().BeFalse();
     }

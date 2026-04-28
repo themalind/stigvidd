@@ -119,6 +119,10 @@ public class TrailObstacleResponseRepository : ITrailObstacleResponseRepository
     {
         using var context = await _context.CreateDbContextAsync(ctoken);
 
+        await context.TrailObstacleSolvedVotes
+            .Where(sv => sv.TrailObstacleId == trailObstacle.Id)
+            .ExecuteDeleteAsync(ctoken);
+
         context.TrailObstacles.Remove(trailObstacle);
         await context.SaveChangesAsync(ctoken);
 
