@@ -1,4 +1,4 @@
-﻿using Core.Interfaces;
+﻿using Core.Interfaces.Services;
 using Infrastructure.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

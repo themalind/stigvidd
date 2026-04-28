@@ -1,5 +1,7 @@
 using Core.Factories;
-using Core.Interfaces;
+using Core.Interfaces.Repositories;
+using Core.Interfaces.Services;
+using Core.Repositories;
 using Core.Services;
 using FluentAssertions;
 using Infrastructure.Data;
@@ -344,6 +346,206 @@ public class TrailObstaclesServiceTests : TestBase
         result.Message.StatusCode.Should().Be(404);
     }
 
+    [Fact]
+    public async Task GetTrailObstacles_ShouldIncludeUserIdentifierInResponse()
+    {
+        // Arrange
+        var service = CreateTrailObstacleService();
+
+        // Act
+        var result = await service.GetTrailObstaclesByTrailIdentifierAsync(TivedenIdentifier, CancellationToken.None);
+
+        // Assert
+        result.Success.Should().BeTrue();
+        result.Value.Should().NotBeEmpty();
+        result.Value!.First()!.UserIdentifier.Should().Be(NaturElskarenIdentifier);
+    }
+
+    [Fact]
+    public async Task UpdateTrailObstacle_WithValidData_ShouldReturnSuccess()
+    {
+        // Arrange
+        var service = CreateTrailObstacleService();
+
+        // Act
+        var result = await service.UpdateTrailObstacleAsync(
+            NaturElskarenIdentifier,
+            Obstacle1Identifier,
+            "Uppdaterad beskrivning av hindret.",
+            "Mud",
+            CancellationToken.None);
+
+        // Assert
+        result.Success.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task UpdateTrailObstacle_ShouldPersistUpdatedFields()
+    {
+        // Arrange
+        var options = CreateSeededOptions();
+        var service = CreateTrailObstacleServiceWithOptions(options);
+
+        // Act
+        await service.UpdateTrailObstacleAsync(
+            NaturElskarenIdentifier,
+            Obstacle1Identifier,
+            "Uppdaterad beskrivning av hindret.",
+            "Mud",
+            CancellationToken.None);
+
+        // Assert
+        using var context = new StigViddDbContext(options);
+        var updated = context.TrailObstacles.First(o => o.Identifier == Obstacle1Identifier);
+        updated.Description.Should().Be("Uppdaterad beskrivning av hindret.");
+        updated.IssueType.Should().Be(TrailIssueType.Mud);
+    }
+
+    [Fact]
+    public async Task UpdateTrailObstacle_WithUnknownIssueType_ShouldNotUpdateIssueType()
+    {
+        // Arrange
+        var options = CreateSeededOptions();
+        var service = CreateTrailObstacleServiceWithOptions(options);
+
+        // Act
+        await service.UpdateTrailObstacleAsync(
+            NaturElskarenIdentifier,
+            Obstacle1Identifier,
+            "Uppdaterad beskrivning av hindret.",
+            "SomethingUnknown",
+            CancellationToken.None);
+
+        // Assert
+        using var context = new StigViddDbContext(options);
+        var updated = context.TrailObstacles.First(o => o.Identifier == Obstacle1Identifier);
+        updated.IssueType.Should().Be(TrailIssueType.FallenTree); // original value preserved
+    }
+
+    [Fact]
+    public async Task UpdateTrailObstacle_WithInvalidUserIdentifier_ShouldReturnNotFound()
+    {
+        // Arrange
+        var service = CreateTrailObstacleService();
+
+        // Act
+        var result = await service.UpdateTrailObstacleAsync(
+            "invalid-user",
+            Obstacle1Identifier,
+            "Uppdaterad beskrivning.",
+            "Mud",
+            CancellationToken.None);
+
+        // Assert
+        result.Success.Should().BeFalse();
+        result.Message!.StatusCode.Should().Be(404);
+    }
+
+    [Fact]
+    public async Task UpdateTrailObstacle_WithInvalidObstacleIdentifier_ShouldReturnNotFound()
+    {
+        // Arrange
+        var service = CreateTrailObstacleService();
+
+        // Act
+        var result = await service.UpdateTrailObstacleAsync(
+            NaturElskarenIdentifier,
+            "invalid-obstacle",
+            "Uppdaterad beskrivning.",
+            "Mud",
+            CancellationToken.None);
+
+        // Assert
+        result.Success.Should().BeFalse();
+        result.Message!.StatusCode.Should().Be(404);
+    }
+
+    [Fact]
+    public async Task UpdateTrailObstacle_WhenUserDoesNotOwnObstacle_ShouldReturnNotFound()
+    {
+        // Arrange
+        var service = CreateTrailObstacleService();
+
+        // Act
+        var result = await service.UpdateTrailObstacleAsync(
+            VandrarVennenIdentifier, // VandrarVennen does not own Obstacle1
+            Obstacle1Identifier,
+            "Uppdaterad beskrivning.",
+            "Mud",
+            CancellationToken.None);
+
+        // Assert
+        result.Success.Should().BeFalse();
+        result.Message!.StatusCode.Should().Be(404);
+    }
+
+    [Fact]
+    public async Task DeleteTrailObstacle_WithValidData_ShouldReturnSuccess()
+    {
+        // Arrange
+        var service = CreateTrailObstacleService();
+
+        // Act
+        var result = await service.DeleteTrailObstacleAsync(
+            NaturElskarenIdentifier,
+            Obstacle1Identifier,
+            CancellationToken.None);
+
+        // Assert
+        result.Success.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task DeleteTrailObstacle_WithInvalidUserIdentifier_ShouldReturnNotFound()
+    {
+        // Arrange
+        var service = CreateTrailObstacleService();
+
+        // Act
+        var result = await service.DeleteTrailObstacleAsync(
+            "invalid-user",
+            Obstacle1Identifier,
+            CancellationToken.None);
+
+        // Assert
+        result.Success.Should().BeFalse();
+        result.Message!.StatusCode.Should().Be(404);
+    }
+
+    [Fact]
+    public async Task DeleteTrailObstacle_WithInvalidObstacleIdentifier_ShouldReturnNotFound()
+    {
+        // Arrange
+        var service = CreateTrailObstacleService();
+
+        // Act
+        var result = await service.DeleteTrailObstacleAsync(
+            NaturElskarenIdentifier,
+            "invalid-obstacle",
+            CancellationToken.None);
+
+        // Assert
+        result.Success.Should().BeFalse();
+        result.Message!.StatusCode.Should().Be(404);
+    }
+
+    [Fact]
+    public async Task DeleteTrailObstacle_WhenUserDoesNotOwnObstacle_ShouldReturnNotFound()
+    {
+        // Arrange
+        var service = CreateTrailObstacleService();
+
+        // Act
+        var result = await service.DeleteTrailObstacleAsync(
+            VandrarVennenIdentifier, // VandrarVennen does not own Obstacle1
+            Obstacle1Identifier,
+            CancellationToken.None);
+
+        // Assert
+        result.Success.Should().BeFalse();
+        result.Message!.StatusCode.Should().Be(404);
+    }
+
     private TrailObstaclesService CreateTrailObstacleService()
     {
         var mockContextFactory = new Mock<IDbContextFactory<StigViddDbContext>>();
@@ -369,7 +571,7 @@ public class TrailObstaclesServiceTests : TestBase
         var userService = new UserService(
             contextFactory,
             new Mock<ILogger<UserService>>().Object,
-            new Mock<IFirebaseAuthService>().Object,
+            new Mock<IFirebaseAuthRepository>().Object,
             new UserFavoritesResponseFactory(),
             new UserWishlistResponseFactory(),
             new UserResponseFactory()
@@ -377,12 +579,13 @@ public class TrailObstaclesServiceTests : TestBase
 
         var mockConfiguration = new Mock<IConfiguration>();
         mockConfiguration.Setup(config => config["PresentableBaseUrl"]).Returns("http://stigvidd.se/testing/");
+        ITrailResponseRepository trailRepository = new TrailResponseRepository(contextFactory);
         var trailService = new TrailService(
-            contextFactory,
             new Mock<IWebDavService>().Object,
             new Mock<ILogger<TrailService>>().Object,
             new TrailResponseFactory(mockConfiguration.Object),
-            mockConfiguration.Object
+            mockConfiguration.Object,
+            trailRepository
         );
 
         return new TrailObstaclesService(

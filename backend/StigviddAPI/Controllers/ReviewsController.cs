@@ -1,4 +1,4 @@
-﻿using Core.Interfaces;
+﻿using Core.Interfaces.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WebDataContracts.RequestModels.Review;
@@ -95,5 +95,3 @@ public class ReviewsController : StigViddController
         return NoContent();
     }
 }
-
-

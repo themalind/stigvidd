@@ -1,7 +1,7 @@
 using WebDataContracts.RequestModels.Hike;
 using WebDataContracts.ResponseModels.Hike;
 
-namespace Core.Interfaces;
+namespace Core.Interfaces.Services;
 
 public interface IHikeService
 {

@@ -2,7 +2,7 @@
 using WebDataContracts.RequestModels.Trail;
 using WebDataContracts.ResponseModels.Trail;
 
-namespace Core.Interfaces;
+namespace Core.Interfaces.Services;
 
 public interface ITrailService
 {

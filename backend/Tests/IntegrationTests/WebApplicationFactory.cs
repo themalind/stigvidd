@@ -1,5 +1,6 @@
 ﻿using Core;
-using Core.Interfaces;
+using Core.Interfaces.Repositories;
+using Core.Interfaces.Services;
 using Infrastructure.Data;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
@@ -65,7 +66,7 @@ public class StigViddWebApplicationFactory<TProgram>
             services.AddSingleton(mockWebDavService.Object);
 
             // Prevent real Firebase Admin calls during integration tests
-            var mockFirebaseAuthService = new Mock<IFirebaseAuthService>();
+            var mockFirebaseAuthService = new Mock<IFirebaseAuthRepository>();
             mockFirebaseAuthService
                 .Setup(x => x.DeleteUserAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .Returns(Task.CompletedTask);

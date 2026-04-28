@@ -1,6 +1,5 @@
 using Core;
 using Core.Factories;
-using Core.Interfaces;
 using Core.Services;
 using Infrastructure.Data;
 using Microsoft.AspNetCore.Http;
@@ -11,6 +10,7 @@ using FluentAssertions;
 using Microsoft.Extensions.Configuration;
 using System.Text;
 using WebDataContracts.RequestModels.Trail;
+using Core.Interfaces.Services;
 
 namespace ServiceTests;
 

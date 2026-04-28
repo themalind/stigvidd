@@ -1,6 +1,6 @@
 using Core;
 using Core.Factories;
-using Core.Interfaces;
+using Core.Interfaces.Services;
 using Core.Services;
 using FluentAssertions;
 using Infrastructure.Data;

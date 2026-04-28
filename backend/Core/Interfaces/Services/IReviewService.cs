@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using WebDataContracts.ResponseModels.Review;
 
-namespace Core.Interfaces;
+namespace Core.Interfaces.Services;
 
 public interface IReviewService
 {

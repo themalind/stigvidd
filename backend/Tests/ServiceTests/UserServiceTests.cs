@@ -1,6 +1,7 @@
 using Core;
 using Core.Factories;
-using Core.Interfaces;
+using Core.Interfaces.Repositories;
+using Core.Interfaces.Services;
 using Core.Services;
 using FluentAssertions;
 using Infrastructure.Data;
@@ -502,7 +503,7 @@ public class UserServiceTests : TestBase
     public async Task DeleteUserAsync_WhenUserExistsAndFirebaseSucceeds_ShouldDeleteUser()
     {
         // Arrange
-        var mockFirebase = new Mock<IFirebaseAuthService>();
+        var mockFirebase = new Mock<IFirebaseAuthRepository>();
         mockFirebase
             .Setup(f => f.DeleteUserAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
@@ -542,7 +543,7 @@ public class UserServiceTests : TestBase
     public async Task DeleteUserAsync_WhenFirebaseDeletionFails_ShouldRollbackDbDeletion()
     {
         // Arrange
-        var mockFirebase = new Mock<IFirebaseAuthService>();
+        var mockFirebase = new Mock<IFirebaseAuthRepository>();
         mockFirebase
             .Setup(f => f.DeleteUserAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new Exception("Firebase unavailable"));
@@ -565,7 +566,7 @@ public class UserServiceTests : TestBase
 
     private UserService CreateUserServiceWithOptions(
             DbContextOptions<StigViddDbContext> options,
-            IFirebaseAuthService firebaseAuthService)
+            IFirebaseAuthRepository firebaseAuthService)
     {
         var mockContextFactory = new Mock<IDbContextFactory<StigViddDbContext>>();
         mockContextFactory
@@ -592,7 +593,7 @@ public class UserServiceTests : TestBase
         return new UserService(
             mockContextFactory.Object,
             new Mock<ILogger<UserService>>().Object,
-            new Mock<IFirebaseAuthService>().Object,
+            new Mock<IFirebaseAuthRepository>().Object,
             new UserFavoritesResponseFactory(),
             new UserWishlistResponseFactory(),
             new UserResponseFactory()

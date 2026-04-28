@@ -1,5 +1,5 @@
 ﻿using Core;
-using Core.Interfaces;
+using Core.Interfaces.Services;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
 using System.Security.Claims;

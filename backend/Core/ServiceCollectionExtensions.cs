@@ -1,5 +1,7 @@
 ﻿using Core.Factories;
-using Core.Interfaces;
+using Core.Interfaces.Repositories;
+using Core.Interfaces.Services;
+using Core.Repositories;
 using Core.Services;
 using FirebaseAdmin;
 using FirebaseAdmin.Auth;
@@ -54,16 +56,27 @@ public static class ServiceCollectionExtensions
             var credentialPath = config["Firebase:ServiceAccountPath"]
                 ?? throw new InvalidOperationException("Firebase:ServiceAccountPath configuration is missing");
 
+#pragma warning disable CS0618
+            var credential = GoogleCredential.FromFile(credentialPath);
+#pragma warning restore CS0618
+
             var app = FirebaseApp.DefaultInstance ?? FirebaseApp.Create(new AppOptions
             {
-                Credential = GoogleCredential.FromFile(credentialPath)
+                Credential = credential
             });
 
             return FirebaseAuth.GetAuth(app);
         });
 
+        // Repositories
+        services.AddTransient<IFirebaseAuthRepository, FirebaseAuthRepository>();
+        services.AddTransient<ITrailResponseRepository, TrailResponseRepository>();
+        services.AddTransient<IUserResponseRepository, UserResponseRepository>();
+        services.AddTransient<IReviewResponseRepository, ReviewResponseRepository>();
+        services.AddTransient<IHikeResponseRepository, HikeResponseRepository>();
+        services.AddTransient<ITrailObstacleResponseRepository, TrailObstacleResponseRepository>();
+
         // Services
-        services.AddTransient<IFirebaseAuthService, FirebaseAuthService>();
         services.AddTransient<ITrailService, TrailService>();
         services.AddTransient<IUserService, UserService>();
         services.AddTransient<IReviewService, ReviewService>();

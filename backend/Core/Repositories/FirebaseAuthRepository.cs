@@ -1,13 +1,13 @@
-using Core.Interfaces;
+using Core.Interfaces.Repositories;
 using FirebaseAdmin.Auth;
 
-namespace Core.Services;
+namespace Core.Repositories;
 
-public class FirebaseAuthService : IFirebaseAuthService
+public class FirebaseAuthRepository : IFirebaseAuthRepository
 {
     private readonly FirebaseAuth _firebaseAuth;
 
-    public FirebaseAuthService(FirebaseAuth firebaseAuth)
+    public FirebaseAuthRepository(FirebaseAuth firebaseAuth)
     {
         _firebaseAuth = firebaseAuth;
     }
