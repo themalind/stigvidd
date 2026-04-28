@@ -55,7 +55,8 @@ public class ReviewServiceTests
 
         // Assert
         result.Success.Should().BeTrue();
-        result.Value!.Reviews.Should().HaveCount(2);
+        result.Value.Should().NotBeNull();
+        result.Value.Reviews.Should().HaveCount(2);
     }
 
     [Fact]
@@ -71,7 +72,8 @@ public class ReviewServiceTests
 
         // Assert
         result.Success.Should().BeFalse();
-        result.Message!.StatusCode.Should().Be(500);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(500);
     }
 
     [Fact]
@@ -101,7 +103,8 @@ public class ReviewServiceTests
 
         // Assert
         result.Success.Should().BeFalse();
-        result.Message!.StatusCode.Should().Be(400);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(400);
     }
 
     [Fact]
@@ -115,7 +118,8 @@ public class ReviewServiceTests
 
         // Assert
         result.Success.Should().BeFalse();
-        result.Message!.StatusCode.Should().Be(400);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(400);
     }
 
     [Fact]
@@ -159,7 +163,8 @@ public class ReviewServiceTests
 
         // Assert
         result.Success.Should().BeFalse();
-        result.Message!.StatusCode.Should().Be(404);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(404);
     }
 
     [Fact]
@@ -173,7 +178,8 @@ public class ReviewServiceTests
 
         // Assert
         result.Success.Should().BeFalse();
-        result.Message!.StatusCode.Should().Be(404);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(404);
     }
 
     [Fact]
@@ -189,7 +195,8 @@ public class ReviewServiceTests
 
         // Assert
         result.Success.Should().BeFalse();
-        result.Message!.StatusCode.Should().Be(500);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(500);
     }
 
     [Fact]
@@ -205,7 +212,8 @@ public class ReviewServiceTests
 
         // Assert
         result.Success.Should().BeFalse();
-        result.Message!.StatusCode.Should().Be(500);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(500);
     }
 
     [Fact]
@@ -238,7 +246,8 @@ public class ReviewServiceTests
 
         // Assert
         result.Success.Should().BeTrue();
-        result.Value!.TrailReview.Should().BeNullOrEmpty();
+        result.Value.Should().NotBeNull();
+        result.Value.TrailReview.Should().BeNullOrEmpty();
     }
 
     [Fact]
@@ -288,7 +297,8 @@ public class ReviewServiceTests
 
         // Assert
         result.Success.Should().BeFalse();
-        result.Message!.StatusCode.Should().Be(404);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(404);
     }
 
     [Fact]
@@ -307,7 +317,8 @@ public class ReviewServiceTests
 
         // Assert
         result.Success.Should().BeFalse();
-        result.Message!.StatusCode.Should().Be(500);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(500);
     }
 
     [Fact]

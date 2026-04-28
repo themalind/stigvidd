@@ -3,9 +3,9 @@ using Core.Repositories;
 using FluentAssertions;
 using Infrastructure.Data.Entities;
 
-namespace RepositoryTests;
+namespace UnitTests.RepositoryTests;
 
-public class TrailResponseRepositoryTests : UnitTests.TestBase
+public class TrailResponseRepositoryTests : TestBase
 {
     private const string TivedenIdentifier = "11a1b2c3-d4e5-4f6a-7b8c-9d0e1f2a3b4c";
     private const string StorsjoledenIdentifier = "22b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d";
@@ -65,7 +65,8 @@ public class TrailResponseRepositoryTests : UnitTests.TestBase
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        result.Value!.Identifier.Should().Be(StorsjoledenIdentifier);
+        result.Value.Should().NotBeNull();
+        result.Value.Identifier.Should().Be(StorsjoledenIdentifier);
     }
 
     [Fact]
@@ -142,7 +143,8 @@ public class TrailResponseRepositoryTests : UnitTests.TestBase
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        result.Value!.Name.Should().Be("NewTestTrail");
+        result.Value.Should().NotBeNull();
+        result.Value.Name.Should().Be("NewTestTrail");
 
         var verify = await repo.GetTrailIdByIdentifierAsync(trail.Identifier, CancellationToken.None);
         verify.IsSuccess.Should().BeTrue();

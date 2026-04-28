@@ -3,9 +3,9 @@ using Core.Repositories;
 using FluentAssertions;
 using Infrastructure.Data.Entities;
 
-namespace RepositoryTests;
+namespace UnitTests.RepositoryTests;
 
-public class HikeResponseRepositoryTests : UnitTests.TestBase
+public class HikeResponseRepositoryTests : TestBase
 {
     private const string UserIdentifier = "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d";
     private const string HikeIdentifier = "3f9c1b7e-8a42-4e6d-9c5f-2a7b1d8e4f90";
@@ -21,7 +21,8 @@ public class HikeResponseRepositoryTests : UnitTests.TestBase
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        result.Value!.Identifier.Should().Be(HikeIdentifier);
+        result.Value.Should().NotBeNull();
+        result.Value.Identifier.Should().Be(HikeIdentifier);
         result.Value.Name.Should().Be("TestHike1");
     }
 
@@ -104,7 +105,8 @@ public class HikeResponseRepositoryTests : UnitTests.TestBase
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        result.Value!.Name.Should().Be("NewHike");
+        result.Value.Should().NotBeNull();
+        result.Value.Name.Should().Be("NewHike");
 
         var verify = await repo.GetHikeByIdentifierAsync(hike.Identifier, CancellationToken.None);
         verify.IsSuccess.Should().BeTrue();

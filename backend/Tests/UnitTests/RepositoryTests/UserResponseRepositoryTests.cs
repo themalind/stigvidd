@@ -5,9 +5,9 @@ using FluentAssertions;
 using Infrastructure.Data.Entities;
 using Moq;
 
-namespace RepositoryTests;
+namespace UnitTests.RepositoryTests;
 
-public class UserResponseRepositoryTests : UnitTests.TestBase
+public class UserResponseRepositoryTests : TestBase
 {
     private const string NaturElskarenIdentifier = "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d"; // wishlist only
     private const string VandrarVennenIdentifier = "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e"; // favorites only
@@ -85,7 +85,8 @@ public class UserResponseRepositoryTests : UnitTests.TestBase
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        result.Value!.Identifier.Should().Be(NaturElskarenIdentifier);
+        result.Value.Should().NotBeNull();
+        result.Value.Identifier.Should().Be(NaturElskarenIdentifier);
     }
 
     [Fact]
@@ -183,7 +184,8 @@ public class UserResponseRepositoryTests : UnitTests.TestBase
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        result.Value!.NickName.Should().Be("Glenn");
+        result.Value.Should().NotBeNull();
+        result.Value.NickName.Should().Be("Glenn");
 
         var verify = await repo.GetUserByFirebaseUidAsync("brand-new-firebase-uid", CancellationToken.None);
         verify.IsSuccess.Should().BeTrue();
@@ -202,7 +204,7 @@ public class UserResponseRepositoryTests : UnitTests.TestBase
         // Assert
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().NotBeNull();
-        result.Value!.Identifier.Should().Be(NassehultIdentifier);
+        result.Value.Identifier.Should().Be(NassehultIdentifier);
     }
 
     [Fact]
@@ -260,7 +262,8 @@ public class UserResponseRepositoryTests : UnitTests.TestBase
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        result.Value!.Identifier.Should().Be(TivedenIdentifier);
+        result.Value.Should().NotBeNull();
+        result.Value.Identifier.Should().Be(TivedenIdentifier);
     }
 
     [Fact]

@@ -6,9 +6,9 @@ using Infrastructure.Data.Entities;
 using Microsoft.Extensions.Configuration;
 using Moq;
 
-namespace RepositoryTests;
+namespace UnitTests.RepositoryTests;
 
-public class ReviewResponseRepositoryTests : UnitTests.TestBase
+public class ReviewResponseRepositoryTests : TestBase
 {
     private const string NassehultIdentifier = "77a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c"; // 2 reviews
     private const string HultaforsIdentifier = "66f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b"; // 0 reviews
@@ -34,7 +34,8 @@ public class ReviewResponseRepositoryTests : UnitTests.TestBase
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        result.Value!.Reviews.Should().HaveCount(2);
+        result.Value.Should().NotBeNull();
+        result.Value.Reviews.Should().HaveCount(2);
         result.Value.Total.Should().Be(2);
     }
 
@@ -49,7 +50,8 @@ public class ReviewResponseRepositoryTests : UnitTests.TestBase
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        result.Value!.Reviews.Should().BeEmpty();
+        result.Value.Should().NotBeNull();
+        result.Value.Reviews.Should().BeEmpty();
         result.Value.Total.Should().Be(0);
     }
 
@@ -64,7 +66,8 @@ public class ReviewResponseRepositoryTests : UnitTests.TestBase
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        result.Value!.Reviews.Should().HaveCount(1);
+        result.Value.Should().NotBeNull();
+        result.Value.Reviews.Should().HaveCount(1);
         result.Value.HasMore.Should().BeTrue();
         result.Value.Total.Should().Be(2);
     }
@@ -80,7 +83,8 @@ public class ReviewResponseRepositoryTests : UnitTests.TestBase
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        result.Value!.Reviews.Should().HaveCount(1);
+        result.Value.Should().NotBeNull();
+        result.Value.Reviews.Should().HaveCount(1);
         result.Value.HasMore.Should().BeFalse();
     }
 
@@ -95,7 +99,8 @@ public class ReviewResponseRepositoryTests : UnitTests.TestBase
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        result.Value!.Reviews.Should().BeEmpty();
+        result.Value.Should().NotBeNull();
+        result.Value.Reviews.Should().BeEmpty();
         result.Value.HasMore.Should().BeFalse();
         result.Value.Total.Should().Be(2);
     }
@@ -111,7 +116,8 @@ public class ReviewResponseRepositoryTests : UnitTests.TestBase
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        result.Value!.Identifier.Should().Be(Review1Identifier);
+        result.Value.Should().NotBeNull();
+        result.Value.Identifier.Should().Be(Review1Identifier);
     }
 
     [Fact]
@@ -165,7 +171,8 @@ public class ReviewResponseRepositoryTests : UnitTests.TestBase
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        result.Value!.Rating.Should().Be(4.5M);
+        result.Value.Should().NotBeNull();
+        result.Value.Rating.Should().Be(4.5M);
     }
 
     [Fact]

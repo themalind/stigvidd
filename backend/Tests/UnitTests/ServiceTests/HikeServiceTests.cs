@@ -57,7 +57,8 @@ public class HikeServiceTests
 
         // Assert
         result.Success.Should().BeFalse();
-        result.Message!.StatusCode.Should().Be(404);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(404);
     }
 
     [Fact]
@@ -71,7 +72,8 @@ public class HikeServiceTests
 
         // Assert
         result.Success.Should().BeFalse();
-        result.Message!.StatusCode.Should().Be(400);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(400);
     }
 
     [Fact]
@@ -85,7 +87,8 @@ public class HikeServiceTests
 
         // Assert
         result.Success.Should().BeFalse();
-        result.Message!.StatusCode.Should().Be(400);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(400);
     }
 
     [Fact]
@@ -99,7 +102,8 @@ public class HikeServiceTests
 
         // Assert
         result.Success.Should().BeFalse();
-        result.Message!.StatusCode.Should().Be(400);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(400);
     }
 
     [Fact]
@@ -115,7 +119,8 @@ public class HikeServiceTests
 
         // Assert
         result.Success.Should().BeFalse();
-        result.Message!.StatusCode.Should().Be(500);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(500);
     }
 
     [Fact]
@@ -131,7 +136,8 @@ public class HikeServiceTests
 
         // Assert
         result.Success.Should().BeTrue();
-        result.Value!.Identifier.Should().Be(Utilities.Identifiers.Hike1);
+        result.Value.Should().NotBeNull();
+        result.Value.Identifier.Should().Be(Utilities.Identifiers.Hike1);
         result.Value.Name.Should().Be("TestHike1");
     }
 
@@ -148,7 +154,8 @@ public class HikeServiceTests
 
         // Assert
         result.Success.Should().BeFalse();
-        result.Message!.StatusCode.Should().Be(404);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(404);
     }
 
     [Fact]
@@ -185,7 +192,8 @@ public class HikeServiceTests
 
         // Assert
         result.Success.Should().BeFalse();
-        result.Message!.StatusCode.Should().Be(500);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(500);
     }
 
     [Fact]
@@ -219,7 +227,8 @@ public class HikeServiceTests
 
         // Assert
         result.Success.Should().BeFalse();
-        result.Message!.StatusCode.Should().Be(404);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(404);
     }
 
     [Fact]
@@ -236,6 +245,7 @@ public class HikeServiceTests
 
         // Assert
         result.Success.Should().BeFalse();
-        result.Message!.StatusCode.Should().Be(401);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(401);
     }
 }

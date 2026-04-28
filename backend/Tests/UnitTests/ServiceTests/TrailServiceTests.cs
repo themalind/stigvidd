@@ -76,7 +76,8 @@ public class TrailServiceTests
 
         // Assert
         result.Success.Should().BeFalse();
-        result.Message!.StatusCode.Should().Be(404);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(404);
     }
 
     [Fact]
@@ -92,7 +93,8 @@ public class TrailServiceTests
 
         // Assert
         result.Success.Should().BeTrue();
-        result.Value!.Identifier.Should().Be(Utilities.Identifiers.Trail4);
+        result.Value.Should().NotBeNull();
+        result.Value.Identifier.Should().Be(Utilities.Identifiers.Trail4);
     }
 
     [Fact]
@@ -108,7 +110,8 @@ public class TrailServiceTests
 
         // Assert
         result.Success.Should().BeFalse();
-        result.Message!.StatusCode.Should().Be(404);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(404);
     }
 
     [Fact]
@@ -124,7 +127,8 @@ public class TrailServiceTests
 
         // Assert
         result.Success.Should().BeFalse();
-        result.Message!.StatusCode.Should().Be(500);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(500);
     }
 
     [Fact]
@@ -157,7 +161,8 @@ public class TrailServiceTests
 
         // Assert
         result.Success.Should().BeFalse();
-        result.Message!.StatusCode.Should().Be(404);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(404);
     }
 
     [Fact]
@@ -174,7 +179,7 @@ public class TrailServiceTests
         // Assert
         result.Success.Should().BeTrue();
         result.Value.Should().NotBeNull();
-        result.Value!.Name.Should().Be("Test Trail");
+        result.Value.Name.Should().Be("Test Trail");
     }
 
     [Fact]
@@ -190,7 +195,8 @@ public class TrailServiceTests
 
         // Assert
         result.Success.Should().BeFalse();
-        result.Message!.StatusCode.Should().Be(500);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(500);
     }
 
     [Fact]
@@ -208,7 +214,8 @@ public class TrailServiceTests
 
         // Assert
         result.Success.Should().BeFalse();
-        result.Message!.StatusCode.Should().Be(500);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(500);
     }
 
     [Fact]
@@ -224,7 +231,8 @@ public class TrailServiceTests
 
         // Assert
         result.Success.Should().BeFalse();
-        result.Message!.StatusCode.Should().Be(500);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(500);
     }
 
     [Fact]
@@ -260,7 +268,8 @@ public class TrailServiceTests
 
         // Assert
         result.Success.Should().BeFalse();
-        result.Message!.StatusCode.Should().Be(500);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(500);
     }
 
     [Fact]
@@ -296,7 +305,8 @@ public class TrailServiceTests
 
         // Assert
         result.Success.Should().BeFalse();
-        result.Message!.StatusCode.Should().Be(500);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(500);
     }
 
     [Fact]
@@ -312,7 +322,8 @@ public class TrailServiceTests
 
         // Assert
         result.Success.Should().BeFalse();
-        result.Message!.StatusCode.Should().Be(500);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(500);
     }
 
     [Fact]
@@ -348,7 +359,8 @@ public class TrailServiceTests
 
         // Assert
         result.Success.Should().BeFalse();
-        result.Message!.StatusCode.Should().Be(500);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(500);
     }
 
     [Fact]
@@ -364,6 +376,7 @@ public class TrailServiceTests
 
         // Assert
         result.Success.Should().BeFalse();
-        result.Message!.StatusCode.Should().Be(500);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(500);
     }
 }

@@ -44,7 +44,8 @@ public class UserServiceTests
 
         // Assert
         result.Success.Should().BeFalse();
-        result.Message!.StatusCode.Should().Be(404);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(404);
     }
 
     [Fact]
@@ -76,7 +77,8 @@ public class UserServiceTests
 
         // Assert
         result.Success.Should().BeFalse();
-        result.Message!.StatusCode.Should().Be(404);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(404);
     }
 
     [Fact]
@@ -108,7 +110,8 @@ public class UserServiceTests
 
         // Assert
         result.Success.Should().BeFalse();
-        result.Message!.StatusCode.Should().Be(404);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(404);
     }
 
     [Fact]
@@ -198,7 +201,8 @@ public class UserServiceTests
 
         // Assert
         result.Success.Should().BeTrue();
-        result.Value!.Email.Should().Be("new@test.com");
+        result.Value.Should().NotBeNull();
+        result.Value.Email.Should().Be("new@test.com");
         result.Value.NickName.Should().Be("NewUser");
     }
 
@@ -249,7 +253,8 @@ public class UserServiceTests
 
         // Assert
         result.Success.Should().BeFalse();
-        result.Message!.StatusCode.Should().Be(404);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(404);
     }
 
     [Fact]
@@ -265,7 +270,8 @@ public class UserServiceTests
 
         // Assert
         result.Success.Should().BeFalse();
-        result.Message!.StatusCode.Should().Be(409);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(409);
     }
 
     [Fact]
@@ -298,7 +304,8 @@ public class UserServiceTests
 
         // Assert
         result.Success.Should().BeFalse();
-        result.Message!.StatusCode.Should().Be(404);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(404);
     }
 
     [Fact]
@@ -314,7 +321,8 @@ public class UserServiceTests
 
         // Assert
         result.Success.Should().BeFalse();
-        result.Message!.StatusCode.Should().Be(409);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(409);
     }
 
     [Fact]
@@ -345,7 +353,8 @@ public class UserServiceTests
 
         // Assert
         result.Success.Should().BeFalse();
-        result.Message!.StatusCode.Should().Be(404);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(404);
     }
 
     [Fact]
@@ -376,7 +385,8 @@ public class UserServiceTests
 
         // Assert
         result.Success.Should().BeFalse();
-        result.Message!.StatusCode.Should().Be(404);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(404);
     }
 
     [Fact]
@@ -407,7 +417,8 @@ public class UserServiceTests
 
         // Assert
         result.Success.Should().BeFalse();
-        result.Message!.StatusCode.Should().Be(404);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(404);
     }
 
     [Fact]
@@ -423,6 +434,7 @@ public class UserServiceTests
 
         // Assert
         result.Success.Should().BeFalse();
-        result.Message!.StatusCode.Should().Be(500);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(500);
     }
 }

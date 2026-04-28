@@ -7,9 +7,9 @@ using Infrastructure.Enums;
 using Microsoft.EntityFrameworkCore;
 using Moq;
 
-namespace RepositoryTests;
+namespace UnitTests.RepositoryTests;
 
-public class TrailObstacleResponseRepositoryTests : UnitTests.TestBase
+public class TrailObstacleResponseRepositoryTests : TestBase
 {
     private const string TivedenIdentifier = "11a1b2c3-d4e5-4f6a-7b8c-9d0e1f2a3b4c";   // has Obstacle1 (active) + Obstacle4 (40 days old)
     private const string TangaledenIdentifier = "33c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e"; // has Obstacle3 (3 solved votes)
@@ -145,7 +145,8 @@ public class TrailObstacleResponseRepositoryTests : UnitTests.TestBase
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        result.Value!.Identifier.Should().Be(Obstacle1Identifier);
+        result.Value.Should().NotBeNull();
+        result.Value.Identifier.Should().Be(Obstacle1Identifier);
     }
 
     [Fact]
@@ -209,7 +210,8 @@ public class TrailObstacleResponseRepositoryTests : UnitTests.TestBase
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        result.Value!.Description.Should().Be("New obstacle");
+        result.Value.Should().NotBeNull();
+        result.Value.Description.Should().Be("New obstacle");
 
         var verify = await repo.GetTrailObstacleByIdentifierAsync(obstacle.Identifier, CancellationToken.None);
         verify.IsSuccess.Should().BeTrue();
@@ -232,7 +234,8 @@ public class TrailObstacleResponseRepositoryTests : UnitTests.TestBase
 
         // Assert
         var verify = await repo.GetTrailObstacleByIdentifierAsync(Obstacle1Identifier, CancellationToken.None);
-        verify.Value!.Description.Should().Be("Updated description");
+        verify.Value.Should().NotBeNull();
+        verify.Value.Description.Should().Be("Updated description");
         verify.Value.IssueType.Should().Be(TrailIssueType.Flooding);
     }
 
