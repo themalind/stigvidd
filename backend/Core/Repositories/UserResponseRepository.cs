@@ -68,19 +68,25 @@ public class UserResponseRepository : IUserResponseRepository
     {
         using var context = await _context.CreateDbContextAsync(ctoken);
 
-        var favorites = await context.Users
+        var user = await context.Users
             .AsNoTracking()
-            .Where(u => u.Identifier == userIdentifier)
-            .SelectMany(u => u.MyFavorites!.Select(trail => UserFavoritesTrailResponse.Create(
+            .Include(u => u.MyFavorites!)
+                .ThenInclude(t => t.Reviews)
+            .Include(u => u.MyFavorites!)
+                .ThenInclude(t => t.TrailImages)
+            .FirstOrDefaultAsync(u => u.Identifier == userIdentifier, ctoken);
+
+        IReadOnlyCollection<UserFavoritesTrailResponse> result = (user?.MyFavorites ?? [])
+            .Select(trail => UserFavoritesTrailResponse.Create(
                 trail.Identifier,
                 trail.Name,
                 trail.TrailLength,
                 trail.Description,
-                trail.Reviews!.Select(r => RatingResponse.Create(r.Identifier, r.Rating)).ToList(),
-                trail.TrailImages!.Select(ti => TrailImageResponse.Create(ti.Identifier, ti.ImageUrl)).Take(1).ToList())))
-            .ToListAsync(ctoken);
+                trail.Reviews?.Select(r => RatingResponse.Create(r.Identifier, r.Rating)).ToList(),
+                trail.TrailImages?.Select(ti => TrailImageResponse.Create(ti.Identifier, ti.ImageUrl)).Take(1).ToList()))
+            .OrderBy(t => t.Name)
+            .ToList();
 
-        IReadOnlyCollection<UserFavoritesTrailResponse> result = favorites.OrderBy(t => t.Name).ToList();
         return RepositoryResult<IReadOnlyCollection<UserFavoritesTrailResponse>>.Success(result);
     }
 
@@ -88,19 +94,25 @@ public class UserResponseRepository : IUserResponseRepository
     {
         using var context = await _context.CreateDbContextAsync(ctoken);
 
-        var wishlist = await context.Users
+        var user = await context.Users
             .AsNoTracking()
-            .Where(u => u.Identifier == userIdentifier)
-            .SelectMany(u => u.MyWishList!.Select(trail => UserWishlistTrailResponse.Create(
+            .Include(u => u.MyWishList!)
+                .ThenInclude(t => t.Reviews)
+            .Include(u => u.MyWishList!)
+                .ThenInclude(t => t.TrailImages)
+            .FirstOrDefaultAsync(u => u.Identifier == userIdentifier, ctoken);
+
+        IReadOnlyCollection<UserWishlistTrailResponse> result = (user?.MyWishList ?? [])
+            .Select(trail => UserWishlistTrailResponse.Create(
                 trail.Identifier,
                 trail.Name,
                 trail.TrailLength,
                 trail.Description,
-                trail.Reviews!.Select(r => RatingResponse.Create(r.Identifier, r.Rating)).ToList(),
-                trail.TrailImages!.Select(ti => TrailImageResponse.Create(ti.Identifier, ti.ImageUrl)).Take(1).ToList())))
-            .ToListAsync(ctoken);
+                trail.Reviews?.Select(r => RatingResponse.Create(r.Identifier, r.Rating)).ToList(),
+                trail.TrailImages?.Select(ti => TrailImageResponse.Create(ti.Identifier, ti.ImageUrl)).Take(1).ToList()))
+            .OrderBy(t => t.Name)
+            .ToList();
 
-        IReadOnlyCollection<UserWishlistTrailResponse> result = wishlist.OrderBy(t => t.Name).ToList();
         return RepositoryResult<IReadOnlyCollection<UserWishlistTrailResponse>>.Success(result);
     }
 

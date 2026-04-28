@@ -25,6 +25,9 @@ public class ReviewResponseRepository : IReviewResponseRepository
         context.Reviews.Add(review);
         await context.SaveChangesAsync(ctoken);
 
+        await context.Entry(review).Reference(r => r.User).LoadAsync(ctoken);
+        await context.Entry(review).Reference(r => r.Trail).LoadAsync(ctoken);
+
         return RepositoryResult<Review>.Success(review);
     }
 

@@ -173,7 +173,7 @@ public class TrailObstaclesService : ITrailObstaclesService
             if (!obstacleResult.IsSuccess)
                 return Result.Fail(new Message(404, $"No trail obstacle found for user {userIdentifier} with identifier: {trailObstacleIdentifier}"));
 
-            var solvedVoteResult = await _obstacleResponseRepository.GetSolvedVoteByObstacleIdAndUserIdAsync(userIdResult.Value, obstacleResult.Value.Id, ctoken);
+            var solvedVoteResult = await _obstacleResponseRepository.GetSolvedVoteByObstacleIdAndUserIdAsync(obstacleResult.Value.Id, userIdResult.Value, ctoken);
 
             if (!solvedVoteResult.IsSuccess)
                 return Result.Fail(new Message(404, $"No solved vote found for obstacle {trailObstacleIdentifier} and user {userIdentifier}"));

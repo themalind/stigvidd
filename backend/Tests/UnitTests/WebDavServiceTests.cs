@@ -1,4 +1,4 @@
-using Core.Services;
+﻿using Core.Services;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;

@@ -20,6 +20,7 @@ public class ReviewResponseFactory
                 _presentableBaseUrl, // "https://stigvidd.se/files/"
                 reviewImage.Identifier,
                 reviewImage.ImageUrl)); // reviews/guid.jpeg
+
         return ReviewResponse.Create(
             review.Identifier,
             review.TrailReview ?? string.Empty,

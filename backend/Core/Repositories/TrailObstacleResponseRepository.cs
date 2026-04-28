@@ -42,6 +42,9 @@ public class TrailObstacleResponseRepository : ITrailObstacleResponseRepository
         context.TrailObstacles.Add(obstacle);
         await context.SaveChangesAsync(ctoken);
 
+        await context.Entry(obstacle).Reference(o => o.User).LoadAsync(ctoken);
+        await context.Entry(obstacle).Collection(o => o.SolvedVotes).LoadAsync(ctoken);
+
         return RepositoryResult<TrailObstacle>.Success(obstacle);
     }
 
