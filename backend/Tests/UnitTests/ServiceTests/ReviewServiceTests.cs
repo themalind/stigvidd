@@ -60,7 +60,7 @@ public class ReviewServiceTests
     }
 
     [Fact]
-    public async Task GetReviewsByTrailIdentifier_WhenRepositoryFails_Returns500()
+    public async Task GetReviewsByTrailIdentifier_WhenRepositoryFails_ReturnsInternalServerError()
     {
         // Arrange
         var repo = new Mock<IReviewResponseRepository>();
@@ -93,7 +93,7 @@ public class ReviewServiceTests
     }
 
     [Fact]
-    public async Task AddReview_WithRatingBelowMin_Returns400()
+    public async Task AddReview_WithRatingBelowMin_ReturnsBadRequest()
     {
         // Arrange
         var service = Build();
@@ -108,7 +108,7 @@ public class ReviewServiceTests
     }
 
     [Fact]
-    public async Task AddReview_WithRatingAboveMax_Returns400()
+    public async Task AddReview_WithRatingAboveMax_ReturnsBadRequest()
     {
         // Arrange
         var service = Build();
@@ -153,7 +153,7 @@ public class ReviewServiceTests
     }
 
     [Fact]
-    public async Task AddReview_WhenUserNotFound_Returns404()
+    public async Task AddReview_WhenUserNotFound_ReturnsNotFound()
     {
         // Arrange
         var service = Build(userSvc: Utilities.MockFactory.UserServiceNotFoundById());
@@ -168,7 +168,7 @@ public class ReviewServiceTests
     }
 
     [Fact]
-    public async Task AddReview_WhenTrailNotFound_Returns404()
+    public async Task AddReview_WhenTrailNotFound_ReturnsNotFound()
     {
         // Arrange
         var service = Build(trailSvc: Utilities.MockFactory.TrailServiceNotFound());
@@ -183,7 +183,7 @@ public class ReviewServiceTests
     }
 
     [Fact]
-    public async Task AddReview_WhenUploadFails_Returns500()
+    public async Task AddReview_WhenUploadFails_ReturnsInternalServerError()
     {
         // Arrange
         var webDav = new Mock<IWebDavService>();
@@ -200,7 +200,7 @@ public class ReviewServiceTests
     }
 
     [Fact]
-    public async Task AddReview_WhenUploadThrowsException_Returns500()
+    public async Task AddReview_WhenUploadThrowsException_ReturnsInternalServerError()
     {
         // Arrange
         var webDav = new Mock<IWebDavService>();
@@ -285,7 +285,7 @@ public class ReviewServiceTests
     }
 
     [Fact]
-    public async Task DeleteReview_WhenNotFound_Returns404()
+    public async Task DeleteReview_WhenNotFound_ReturnsNotFound()
     {
         // Arrange
         var repo = new Mock<IReviewResponseRepository>();
@@ -302,7 +302,7 @@ public class ReviewServiceTests
     }
 
     [Fact]
-    public async Task DeleteReview_WhenWebDavDeleteFails_Returns500()
+    public async Task DeleteReview_WhenWebDavDeleteFails_ReturnsInternalServerError()
     {
         // Arrange
         var webDav = new Mock<IWebDavService>();

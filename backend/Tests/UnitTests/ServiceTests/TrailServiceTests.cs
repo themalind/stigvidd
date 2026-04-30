@@ -64,7 +64,7 @@ public class TrailServiceTests
     }
 
     [Fact]
-    public async Task GetTrailIdByIdentifier_WhenNotFound_Returns404()
+    public async Task GetTrailIdByIdentifier_WhenNotFound_ReturnsNotFound()
     {
         // Arrange
         var repo = new Mock<ITrailResponseRepository>();
@@ -98,7 +98,7 @@ public class TrailServiceTests
     }
 
     [Fact]
-    public async Task GetTrailByIdentifier_WhenNotFound_Returns404()
+    public async Task GetTrailByIdentifier_WhenNotFound_ReturnsNotFound()
     {
         // Arrange
         var repo = new Mock<ITrailResponseRepository>();
@@ -115,7 +115,7 @@ public class TrailServiceTests
     }
 
     [Fact]
-    public async Task GetTrailByIdentifier_WhenExceptionThrown_Returns500()
+    public async Task GetTrailByIdentifier_WhenExceptionThrown_ReturnsInternalServerError()
     {
         // Arrange
         var repo = new Mock<ITrailResponseRepository>();
@@ -149,7 +149,7 @@ public class TrailServiceTests
     }
 
     [Fact]
-    public async Task GetCoordinates_WhenNotFound_Returns404()
+    public async Task GetCoordinates_WhenNotFound_ReturnsNotFound()
     {
         // Arrange
         var repo = new Mock<ITrailResponseRepository>();
@@ -183,7 +183,7 @@ public class TrailServiceTests
     }
 
     [Fact]
-    public async Task AddTrail_WhenUploadFails_Returns500()
+    public async Task AddTrail_WhenUploadFails_ReturnsInternalServerError()
     {
         // Arrange
         var webDav = new Mock<IWebDavService>();
@@ -200,7 +200,7 @@ public class TrailServiceTests
     }
 
     [Fact]
-    public async Task AddTrail_WhenUploadThrowsException_Returns500()
+    public async Task AddTrail_WhenUploadThrowsException_ReturnsInternalServerError()
     {
         // Arrange
         var webDav = new Mock<IWebDavService>();
@@ -219,7 +219,7 @@ public class TrailServiceTests
     }
 
     [Fact]
-    public async Task AddTrail_WhenRepositoryFails_Returns500()
+    public async Task AddTrail_WhenRepositoryFails_ReturnsInternalServerError()
     {
         // Arrange
         var repo = new Mock<ITrailResponseRepository>();
@@ -256,7 +256,7 @@ public class TrailServiceTests
     }
 
     [Fact]
-    public async Task GetPopularTrailOverviews_WhenExceptionThrown_Returns500()
+    public async Task GetPopularTrailOverviews_WhenExceptionThrown_ReturnsInternalServerError()
     {
         // Arrange
         var repo = new Mock<ITrailResponseRepository>();
@@ -293,7 +293,7 @@ public class TrailServiceTests
     }
 
     [Fact]
-    public async Task GetAllTrailsWithBasicInfo_WhenRepositoryFails_Returns500()
+    public async Task GetAllTrailsWithBasicInfo_WhenRepositoryFails_ReturnsInternalServerError()
     {
         // Arrange
         var repo = new Mock<ITrailResponseRepository>();
@@ -310,7 +310,7 @@ public class TrailServiceTests
     }
 
     [Fact]
-    public async Task GetAllTrailsWithBasicInfo_WhenExceptionThrown_Returns500()
+    public async Task GetAllTrailsWithBasicInfo_WhenExceptionThrown_ReturnsInternalServerError()
     {
         // Arrange
         var repo = new Mock<ITrailResponseRepository>();
@@ -347,7 +347,7 @@ public class TrailServiceTests
     }
 
     [Fact]
-    public async Task GetAllTrailMarkers_WhenRepositoryFails_Returns500()
+    public async Task GetAllTrailMarkers_WhenRepositoryFails_ReturnsInternalServerError()
     {
         // Arrange
         var repo = new Mock<ITrailResponseRepository>();
@@ -364,7 +364,7 @@ public class TrailServiceTests
     }
 
     [Fact]
-    public async Task GetAllTrailMarkers_WhenExceptionThrown_Returns500()
+    public async Task GetAllTrailMarkers_WhenExceptionThrown_ReturnsInternalServerError()
     {
         // Arrange
         var repo = new Mock<ITrailResponseRepository>();

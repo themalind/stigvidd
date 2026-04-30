@@ -32,7 +32,7 @@ public class UserServiceTests
     }
 
     [Fact]
-    public async Task GetUserByFirebaseUid_WhenNotFound_Returns404()
+    public async Task GetUserByFirebaseUid_WhenNotFound_ReturnsNotFound()
     {
         // Arrange
         var repo = new Mock<IUserResponseRepository>();
@@ -65,7 +65,7 @@ public class UserServiceTests
     }
 
     [Fact]
-    public async Task GetUserIdByIdentifier_WhenNotFound_Returns404()
+    public async Task GetUserIdByIdentifier_WhenNotFound_ReturnsNotFound()
     {
         // Arrange
         var repo = new Mock<IUserResponseRepository>();
@@ -98,7 +98,7 @@ public class UserServiceTests
     }
 
     [Fact]
-    public async Task GetUserByIdentifier_WhenNotFound_Returns404()
+    public async Task GetUserByIdentifier_WhenNotFound_ReturnsNotFound()
     {
         // Arrange
         var repo = new Mock<IUserResponseRepository>();
@@ -207,7 +207,7 @@ public class UserServiceTests
     }
 
     [Fact]
-    public async Task CreateUser_WhenFirebaseUidAlreadyExists_Returns409()
+    public async Task CreateUser_WhenFirebaseUidAlreadyExists_ReturnsConflict()
     {
         // Arrange
         var repo = new Mock<IUserResponseRepository>();
@@ -241,7 +241,7 @@ public class UserServiceTests
     }
 
     [Fact]
-    public async Task AddTrailToFavorites_WhenNotFound_Returns404()
+    public async Task AddTrailToFavorites_WhenNotFound_ReturnsNotFound()
     {
         // Arrange
         var repo = new Mock<IUserResponseRepository>();
@@ -258,7 +258,7 @@ public class UserServiceTests
     }
 
     [Fact]
-    public async Task AddTrailToFavorites_WhenDuplicate_Returns409()
+    public async Task AddTrailToFavorites_WhenDuplicate_ReturnsConflict()
     {
         // Arrange
         var repo = new Mock<IUserResponseRepository>();
@@ -292,7 +292,7 @@ public class UserServiceTests
     }
 
     [Fact]
-    public async Task AddTrailToWishList_WhenNotFound_Returns404()
+    public async Task AddTrailToWishList_WhenNotFound_ReturnsNotFound()
     {
         // Arrange
         var repo = new Mock<IUserResponseRepository>();
@@ -309,7 +309,7 @@ public class UserServiceTests
     }
 
     [Fact]
-    public async Task AddTrailToWishList_WhenDuplicate_Returns409()
+    public async Task AddTrailToWishList_WhenDuplicate_ReturnsConflict()
     {
         // Arrange
         var repo = new Mock<IUserResponseRepository>();
@@ -341,7 +341,7 @@ public class UserServiceTests
     }
 
     [Fact]
-    public async Task RemoveFromFavorites_WhenNotFound_Returns404()
+    public async Task RemoveFromFavorites_WhenNotFound_ReturnsNotFound()
     {
         // Arrange
         var repo = new Mock<IUserResponseRepository>();
@@ -373,7 +373,7 @@ public class UserServiceTests
     }
 
     [Fact]
-    public async Task RemoveFromWishList_WhenNotFound_Returns404()
+    public async Task RemoveFromWishList_WhenNotFound_ReturnsNotFound()
     {
         // Arrange
         var repo = new Mock<IUserResponseRepository>();
@@ -405,7 +405,7 @@ public class UserServiceTests
     }
 
     [Fact]
-    public async Task DeleteUser_WhenNotFound_Returns404()
+    public async Task DeleteUser_WhenNotFound_ReturnsNotFound()
     {
         // Arrange
         var repo = new Mock<IUserResponseRepository>();
@@ -422,7 +422,7 @@ public class UserServiceTests
     }
 
     [Fact]
-    public async Task DeleteUser_WhenExceptionThrown_Returns500()
+    public async Task DeleteUser_WhenExceptionThrown_ReturnsInternalServerError()
     {
         // Arrange
         var repo = new Mock<IUserResponseRepository>();

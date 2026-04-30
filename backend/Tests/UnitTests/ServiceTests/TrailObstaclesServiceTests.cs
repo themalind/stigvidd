@@ -63,7 +63,7 @@ public class TrailObstaclesServiceTests
     }
 
     [Fact]
-    public async Task GetObstacles_WhenRepositoryFails_Returns500()
+    public async Task GetObstacles_WhenRepositoryFails_ReturnsInternalServerError()
     {
         // Arrange
         var repo = new Mock<ITrailObstacleResponseRepository>();
@@ -96,7 +96,7 @@ public class TrailObstaclesServiceTests
     }
 
     [Fact]
-    public async Task AddTrailObstacle_WhenUserNotFound_Returns404()
+    public async Task AddTrailObstacle_WhenUserNotFound_ReturnsNotFound()
     {
         // Arrange
         var service = Build(userSvc: Utilities.MockFactory.UserServiceNotFoundById());
@@ -111,7 +111,7 @@ public class TrailObstaclesServiceTests
     }
 
     [Fact]
-    public async Task AddTrailObstacle_WhenTrailNotFound_Returns404()
+    public async Task AddTrailObstacle_WhenTrailNotFound_ReturnsNotFound()
     {
         // Arrange
         var service = Build(trailSvc: Utilities.MockFactory.TrailServiceNotFound());
@@ -143,7 +143,7 @@ public class TrailObstaclesServiceTests
     }
 
     [Fact]
-    public async Task AddTrailObstacle_WhenRepositoryFails_Returns500()
+    public async Task AddTrailObstacle_WhenRepositoryFails_ReturnsInternalServerError()
     {
         // Arrange
         var repo = new Mock<ITrailObstacleResponseRepository>();
@@ -178,7 +178,7 @@ public class TrailObstaclesServiceTests
     }
 
     [Fact]
-    public async Task AddSolvedVote_WhenUserNotFound_Returns404()
+    public async Task AddSolvedVote_WhenUserNotFound_ReturnsNotFound()
     {
         // Arrange
         var service = Build(userSvc: Utilities.MockFactory.UserServiceNotFoundById());
@@ -193,7 +193,7 @@ public class TrailObstaclesServiceTests
     }
 
     [Fact]
-    public async Task AddSolvedVote_WhenObstacleNotFound_Returns404()
+    public async Task AddSolvedVote_WhenObstacleNotFound_ReturnsNotFound()
     {
         // Arrange
         var repo = new Mock<ITrailObstacleResponseRepository>();
@@ -210,7 +210,7 @@ public class TrailObstaclesServiceTests
     }
 
     [Fact]
-    public async Task AddSolvedVote_WhenUserAlreadyVoted_Returns409()
+    public async Task AddSolvedVote_WhenUserAlreadyVoted_ReturnsConflict()
     {
         // Arrange
         var obstacle = Utilities.Stubs.Obstacle(votes: [new TrailObstacleSolvedVote { UserId = UserId, TrailObstacleId = ObstacleId }]);
@@ -228,7 +228,7 @@ public class TrailObstaclesServiceTests
     }
 
     [Fact]
-    public async Task AddSolvedVote_WhenRepositoryThrows_Returns500()
+    public async Task AddSolvedVote_WhenRepositoryThrows_ReturnsInternalServerError()
     {
         // Arrange
         var repo = new Mock<ITrailObstacleResponseRepository>();
@@ -278,7 +278,7 @@ public class TrailObstaclesServiceTests
     }
 
     [Fact]
-    public async Task DeleteSolvedVote_WhenUserNotFound_Returns404()
+    public async Task DeleteSolvedVote_WhenUserNotFound_ReturnsNotFound()
     {
         // Arrange
         var service = Build(userSvc: Utilities.MockFactory.UserServiceNotFoundById());
@@ -293,7 +293,7 @@ public class TrailObstaclesServiceTests
     }
 
     [Fact]
-    public async Task DeleteSolvedVote_WhenObstacleNotFound_Returns404()
+    public async Task DeleteSolvedVote_WhenObstacleNotFound_ReturnsNotFound()
     {
         // Arrange
         var repo = new Mock<ITrailObstacleResponseRepository>();
@@ -310,7 +310,7 @@ public class TrailObstaclesServiceTests
     }
 
     [Fact]
-    public async Task DeleteSolvedVote_WhenVoteNotFound_Returns404()
+    public async Task DeleteSolvedVote_WhenVoteNotFound_ReturnsNotFound()
     {
         // Arrange
         var repo = new Mock<ITrailObstacleResponseRepository>();
@@ -329,7 +329,7 @@ public class TrailObstaclesServiceTests
     }
 
     [Fact]
-    public async Task DeleteSolvedVote_WhenRepositoryThrows_Returns500()
+    public async Task DeleteSolvedVote_WhenRepositoryThrows_ReturnsInternalServerError()
     {
         // Arrange
         var vote = Utilities.Stubs.Vote();
@@ -368,7 +368,7 @@ public class TrailObstaclesServiceTests
     }
 
     [Fact]
-    public async Task UpdateTrailObstacle_WhenUserNotFound_Returns404()
+    public async Task UpdateTrailObstacle_WhenUserNotFound_ReturnsNotFound()
     {
         // Arrange
         var service = Build(userSvc: Utilities.MockFactory.UserServiceNotFoundById());
@@ -383,7 +383,7 @@ public class TrailObstaclesServiceTests
     }
 
     [Fact]
-    public async Task UpdateTrailObstacle_WhenObstacleNotFound_Returns404()
+    public async Task UpdateTrailObstacle_WhenObstacleNotFound_ReturnsNotFound()
     {
         // Arrange
         var repo = new Mock<ITrailObstacleResponseRepository>();
@@ -420,7 +420,7 @@ public class TrailObstaclesServiceTests
     }
 
     [Fact]
-    public async Task UpdateTrailObstacle_WhenRepositoryThrows_Returns500()
+    public async Task UpdateTrailObstacle_WhenRepositoryThrows_ReturnsInternalServerError()
     {
         // Arrange
         var repo = new Mock<ITrailObstacleResponseRepository>();
@@ -457,7 +457,7 @@ public class TrailObstaclesServiceTests
     }
 
     [Fact]
-    public async Task DeleteTrailObstacle_WhenUserNotFound_Returns404()
+    public async Task DeleteTrailObstacle_WhenUserNotFound_ReturnsNotFound()
     {
         // Arrange
         var service = Build(userSvc: Utilities.MockFactory.UserServiceNotFoundById());
@@ -472,7 +472,7 @@ public class TrailObstaclesServiceTests
     }
 
     [Fact]
-    public async Task DeleteTrailObstacle_WhenObstacleNotFound_Returns404()
+    public async Task DeleteTrailObstacle_WhenObstacleNotFound_ReturnsNotFound()
     {
         // Arrange
         var repo = new Mock<ITrailObstacleResponseRepository>();
@@ -489,7 +489,7 @@ public class TrailObstaclesServiceTests
     }
 
     [Fact]
-    public async Task DeleteTrailObstacle_WhenRepositoryThrows_Returns500()
+    public async Task DeleteTrailObstacle_WhenRepositoryThrows_ReturnsInternalServerError()
     {
         // Arrange
         var obstacle = Utilities.Stubs.Obstacle();

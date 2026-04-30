@@ -47,7 +47,7 @@ public class HikeServiceTests
     }
 
     [Fact]
-    public async Task CreateHike_WhenUserNotFound_Returns404()
+    public async Task CreateHike_WhenUserNotFound_ReturnsNotFound()
     {
         // Arrange
         var service = Build(userSvc: Utilities.MockFactory.UserServiceNotFoundByIdentifier());
@@ -62,7 +62,7 @@ public class HikeServiceTests
     }
 
     [Fact]
-    public async Task CreateHike_WithEmptyName_Returns400()
+    public async Task CreateHike_WithEmptyName_ReturnsBadRequest()
     {
         // Arrange
         var request = new CreateHikeRequest { Name = "", HikeLength = 5000, Duration = 1800000, Coordinates = "[]" };
@@ -77,7 +77,7 @@ public class HikeServiceTests
     }
 
     [Fact]
-    public async Task CreateHike_WithZeroHikeLength_Returns400()
+    public async Task CreateHike_WithZeroHikeLength_ReturnsBadRequest()
     {
         // Arrange
         var request = new CreateHikeRequest { Name = "Hike", HikeLength = 0, Duration = 1800000, Coordinates = "[]" };
@@ -92,7 +92,7 @@ public class HikeServiceTests
     }
 
     [Fact]
-    public async Task CreateHike_WithZeroDuration_Returns400()
+    public async Task CreateHike_WithZeroDuration_ReturnsBadRequest()
     {
         // Arrange
         var request = new CreateHikeRequest { Name = "Hike", HikeLength = 5000, Duration = 0, Coordinates = "[]" };
@@ -107,7 +107,7 @@ public class HikeServiceTests
     }
 
     [Fact]
-    public async Task CreateHike_WhenRepositoryFails_Returns500()
+    public async Task CreateHike_WhenRepositoryFails_ReturnsInternalServerError()
     {
         // Arrange
         var hikeRepo = new Mock<IHikeResponseRepository>();
@@ -142,7 +142,7 @@ public class HikeServiceTests
     }
 
     [Fact]
-    public async Task GetHikeByIdentifier_WhenNotFound_Returns404()
+    public async Task GetHikeByIdentifier_WhenNotFound_ReturnsNotFound()
     {
         // Arrange
         var hikeRepo = new Mock<IHikeResponseRepository>();
@@ -180,7 +180,7 @@ public class HikeServiceTests
     }
 
     [Fact]
-    public async Task GetHikes_WhenRepositoryFails_Returns500()
+    public async Task GetHikes_WhenRepositoryFails_ReturnsInternalServerError()
     {
         // Arrange
         var hikeRepo = new Mock<IHikeResponseRepository>();
@@ -215,7 +215,7 @@ public class HikeServiceTests
     }
 
     [Fact]
-    public async Task DeleteHike_WhenNotFound_Returns404()
+    public async Task DeleteHike_WhenNotFound_ReturnsNotFound()
     {
         // Arrange
         var hikeRepo = new Mock<IHikeResponseRepository>();
@@ -232,7 +232,7 @@ public class HikeServiceTests
     }
 
     [Fact]
-    public async Task DeleteHike_WhenNotOwner_Returns401()
+    public async Task DeleteHike_WhenNotOwner_ReturnsUnauthorized()
     {
         // Arrange
         var hike = Utilities.Stubs.Hike();
