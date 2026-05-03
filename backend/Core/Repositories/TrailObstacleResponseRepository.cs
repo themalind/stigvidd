@@ -75,6 +75,8 @@ public class TrailObstacleResponseRepository : ITrailObstacleResponseRepository
     {
         using var context = await _context.CreateDbContextAsync(ctoken);
 
+        trailObstacle.LastUpdatedAt = DateTime.UtcNow;
+
         context.TrailObstacles.Update(trailObstacle);
         await context.SaveChangesAsync(ctoken);
 
