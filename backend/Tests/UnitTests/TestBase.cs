@@ -6,6 +6,9 @@ namespace UnitTests;
 
 public abstract class TestBase
 {
+    /// <summary>
+    /// Creates an isolated in-memory database pre-populated with test data via <see cref="Utilities.InitializeDbForTests"/>.
+    /// </summary>
     protected static IDbContextFactory<StigViddDbContext> CreateSeededFactory()
     {
         var options = new DbContextOptionsBuilder<StigViddDbContext>()
