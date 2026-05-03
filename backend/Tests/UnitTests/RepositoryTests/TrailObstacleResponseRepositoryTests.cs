@@ -240,6 +240,59 @@ public class TrailObstacleResponseRepositoryTests : TestBase
     }
 
     [Fact]
+    public async Task UpdateTrailObstacle_SetsLastUpdatedAtToUtcNow()
+    {
+        // Arrange
+        var factory = CreateSeededFactory();
+        var repo = new TrailObstacleResponseRepository(factory);
+        var found = await repo.GetTrailObstacleByIdentifierAsync(Obstacle1Identifier, CancellationToken.None);
+        found.IsSuccess.Should().BeTrue();
+
+        var obstacle = found.Value;
+        obstacle.Should().NotBeNull();
+
+        var before = DateTime.UtcNow;
+
+        // Act
+        await repo.UpdateTrailObstacleAsync(obstacle, CancellationToken.None);
+        var after = DateTime.UtcNow;
+
+        // Assert
+        var persisted = await repo.GetTrailObstacleByIdentifierAsync(Obstacle1Identifier, CancellationToken.None);
+        persisted.IsSuccess.Should().BeTrue();
+
+        var persistedValue = persisted.Value;
+        persistedValue.Should().NotBeNull();
+        persistedValue.LastUpdatedAt.Should().BeOnOrAfter(before).And.BeOnOrBefore(after);
+    }
+
+    [Fact]
+    public async Task UpdateTrailObstacle_OverwritesPreviousLastUpdatedAt()
+    {
+        // Arrange
+        var factory = CreateSeededFactory();
+        var repo = new TrailObstacleResponseRepository(factory);
+        var found = await repo.GetTrailObstacleByIdentifierAsync(Obstacle1Identifier, CancellationToken.None);
+        found.IsSuccess.Should().BeTrue();
+
+        var obstacle = found.Value;
+        obstacle.Should().NotBeNull();
+
+        var originalLastUpdatedAt = obstacle.LastUpdatedAt;
+
+        // Act
+        await repo.UpdateTrailObstacleAsync(obstacle, CancellationToken.None);
+
+        // Assert
+        var persisted = await repo.GetTrailObstacleByIdentifierAsync(Obstacle1Identifier, CancellationToken.None);
+        persisted.IsSuccess.Should().BeTrue();
+
+        var persistedValue = persisted.Value;
+        persistedValue.Should().NotBeNull();
+        persistedValue.LastUpdatedAt.Should().NotBe(originalLastUpdatedAt);
+    }
+
+    [Fact]
     public async Task DeleteTrailObstacle_ShouldRemoveFromDatabase()
     {
         // Arrange
