@@ -25,7 +25,9 @@ jobs:
     - name: Build
       run: dotnet build --no-restore
     - name: Test
-      run: dotnet test --no-build --verbosity normal
+      run: |
+        dotnet test Tests/UnitTests/UnitTests.csproj --no-build --verbosity normal
+        dotnet test Tests/IntegrationTests/IntegrationTests.csproj --no-build --verbosity normal
 
   app:
     runs-on: ubuntu-latest
