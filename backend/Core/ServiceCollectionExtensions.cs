@@ -70,11 +70,11 @@ public static class ServiceCollectionExtensions
 
         // Repositories
         services.AddTransient<IFirebaseAuthRepository, FirebaseAuthRepository>();
-        services.AddTransient<ITrailResponseRepository, TrailResponseRepository>();
-        services.AddTransient<IUserResponseRepository, UserResponseRepository>();
-        services.AddTransient<IReviewResponseRepository, ReviewResponseRepository>();
-        services.AddTransient<IHikeResponseRepository, HikeResponseRepository>();
-        services.AddTransient<ITrailObstacleResponseRepository, TrailObstacleResponseRepository>();
+        services.AddTransient<ITrailRepository, TrailRepository>();
+        services.AddTransient<IUserRepository, UserRepository>();
+        services.AddTransient<IReviewRepository, ReviewRepository>();
+        services.AddTransient<IHikeRepository, HikeRepository>();
+        services.AddTransient<ITrailObstacleRepository, TrailObstacleRepository>();
 
         // Services
         services.AddTransient<ITrailService, TrailService>();
@@ -100,8 +100,6 @@ public static class ServiceCollectionExtensions
 
         // Factories
         services.AddTransient<TrailResponseFactory>();
-        services.AddTransient<UserFavoritesResponseFactory>();
-        services.AddTransient<UserWishlistResponseFactory>();
         services.AddTransient<UserResponseFactory>();
         services.AddTransient<ReviewResponseFactory>();
         services.AddTransient<HikeResponseFactory>();

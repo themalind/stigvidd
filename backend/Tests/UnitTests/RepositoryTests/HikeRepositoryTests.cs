@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using Core;
 using Core.Repositories;
 using FluentAssertions;
@@ -5,7 +6,7 @@ using Infrastructure.Data.Entities;
 
 namespace UnitTests.RepositoryTests;
 
-public class HikeResponseRepositoryTests : TestBase
+public class HikeRepositoryTests : TestBase
 {
     private const string UserIdentifier = "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d";
     private const string HikeIdentifier = "3f9c1b7e-8a42-4e6d-9c5f-2a7b1d8e4f90";
@@ -14,7 +15,7 @@ public class HikeResponseRepositoryTests : TestBase
     public async Task GetHikeByIdentifier_WhenFound_ReturnsSuccess()
     {
         // Arrange
-        var repo = new HikeResponseRepository(CreateSeededFactory());
+        var repo = new HikeRepository(CreateSeededFactory());
 
         // Act
         var result = await repo.GetHikeByIdentifierAsync(HikeIdentifier, CancellationToken.None);
@@ -30,7 +31,7 @@ public class HikeResponseRepositoryTests : TestBase
     public async Task GetHikeByIdentifier_WhenNotFound_ReturnsNotFound()
     {
         // Arrange
-        var repo = new HikeResponseRepository(CreateSeededFactory());
+        var repo = new HikeRepository(CreateSeededFactory());
 
         // Act
         var result = await repo.GetHikeByIdentifierAsync("no-such-hike", CancellationToken.None);
@@ -44,10 +45,10 @@ public class HikeResponseRepositoryTests : TestBase
     public async Task GetHikes_WithoutFilter_ReturnsAll()
     {
         // Arrange
-        var repo = new HikeResponseRepository(CreateSeededFactory());
+        var repo = new HikeRepository(CreateSeededFactory());
 
         // Act
-        var result = await repo.GetHikesAsync(null, CancellationToken.None);
+        var result = await repo.GetHikesAsync(null, h => h.CreatedBy, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -58,26 +59,26 @@ public class HikeResponseRepositoryTests : TestBase
     public async Task GetHikes_FilteredByCreator_ReturnsOnlyThatUsersHikes()
     {
         // Arrange
-        var repo = new HikeResponseRepository(CreateSeededFactory());
+        var repo = new HikeRepository(CreateSeededFactory());
 
         // Act
-        var result = await repo.GetHikesAsync(UserIdentifier, CancellationToken.None);
+        var result = await repo.GetHikesAsync(UserIdentifier, h => h.CreatedBy, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().HaveCount(2);
-        result.Value.Should().AllSatisfy(h => h.CreatedBy.Should().Be(UserIdentifier));
+        result.Value.Should().AllSatisfy(createdBy => createdBy.Should().Be(UserIdentifier));
     }
 
     [Fact]
     public async Task GetHikes_WhenUserHasNoHikes_ReturnsEmpty()
     {
         // Arrange
-        var repo = new HikeResponseRepository(CreateSeededFactory());
+        var repo = new HikeRepository(CreateSeededFactory());
 
         // Act
         // User 4 (Eremiten) owns no hikes in seed data
-        var result = await repo.GetHikesAsync("b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d22", CancellationToken.None);
+        var result = await repo.GetHikesAsync("b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d22", h => h.CreatedBy, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -89,7 +90,7 @@ public class HikeResponseRepositoryTests : TestBase
     {
         // Arrange
         var factory = CreateSeededFactory();
-        var repo = new HikeResponseRepository(factory);
+        var repo = new HikeRepository(factory);
         var hike = new Hike
         {
             Identifier = Guid.NewGuid().ToString(),
@@ -117,12 +118,13 @@ public class HikeResponseRepositoryTests : TestBase
     {
         // Arrange
         var factory = CreateSeededFactory();
-        var repo = new HikeResponseRepository(factory);
+        var repo = new HikeRepository(factory);
         var found = await repo.GetHikeByIdentifierAsync(HikeIdentifier, CancellationToken.None);
         found.IsSuccess.Should().BeTrue();
 
         // Act
-        var deleteResult = await repo.DeleteHikeAsync(found.Value!, CancellationToken.None);
+        found.Value.Should().NotBeNull();
+        var deleteResult = await repo.DeleteHikeAsync(found.Value, CancellationToken.None);
 
         // Assert
         deleteResult.IsSuccess.Should().BeTrue();

@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 
-namespace Core
+namespace Core.Common
 {
     public class RepositoryResult
     {

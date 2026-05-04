@@ -2,36 +2,34 @@ using Core.Interfaces.Repositories;
 using Infrastructure.Data;
 using Infrastructure.Data.Entities;
 using Microsoft.EntityFrameworkCore;
-using WebDataContracts.ResponseModels.Review;
-using WebDataContracts.ResponseModels.Trail;
-using WebDataContracts.ResponseModels.User;
+using System.Linq.Expressions;
 
 namespace Core.Repositories;
 
-public class UserResponseRepository : IUserResponseRepository
+public class UserRepository : IUserRepository
 {
     private readonly IDbContextFactory<StigViddDbContext> _context;
     private readonly IFirebaseAuthRepository _firebaseAuthRepository;
 
-    public UserResponseRepository(IDbContextFactory<StigViddDbContext> context, IFirebaseAuthRepository firebaseAuthRepository)
+    public UserRepository(IDbContextFactory<StigViddDbContext> context, IFirebaseAuthRepository firebaseAuthRepository)
     {
         _context = context;
         _firebaseAuthRepository = firebaseAuthRepository;
     }
 
-    public async Task<RepositoryResult<UserResponse>> GetUserByFirebaseUidAsync(string firebaseUid, CancellationToken ctoken)
+    public async Task<RepositoryResult<T>> GetUserByFirebaseUidAsync<T>(string firebaseUid, Expression<Func<User, T>> selector, CancellationToken ctoken)
     {
         using var context = await _context.CreateDbContextAsync(ctoken);
 
-        var user = await context.Users
+        var result = await context.Users
             .AsNoTracking()
             .Where(u => u.FirebaseUid == firebaseUid)
-            .Select(u => UserResponse.Create(u.Identifier, u.NickName, u.Email, null, null))
+            .Select(selector)
             .FirstOrDefaultAsync(ctoken);
 
-        return user is null
-            ? RepositoryResult<UserResponse>.NotFound()
-            : RepositoryResult<UserResponse>.Success(user);
+        return result is null
+            ? RepositoryResult<T>.NotFound()
+            : RepositoryResult<T>.Success(result);
     }
 
     public async Task<RepositoryResult<int>> GetUserIdByIdentifierAsync(string identifier, CancellationToken ctoken)
@@ -49,71 +47,49 @@ public class UserResponseRepository : IUserResponseRepository
             : RepositoryResult<int>.Success(userId.Value);
     }
 
-    public async Task<RepositoryResult<UserResponse>> GetUserByIdentifierAsync(string identifier, CancellationToken ctoken)
+    public async Task<RepositoryResult<T>> GetUserByIdentifierAsync<T>(string identifier, Expression<Func<User, T>> selector, CancellationToken ctoken)
     {
         using var context = await _context.CreateDbContextAsync(ctoken);
 
-        var user = await context.Users
+        var result = await context.Users
             .AsNoTracking()
             .Where(u => u.Identifier == identifier)
-            .Select(u => UserResponse.Create(u.Identifier, u.NickName, u.Email, null, null))
+            .Select(selector)
             .FirstOrDefaultAsync(ctoken);
 
-        return user is null
-            ? RepositoryResult<UserResponse>.NotFound()
-            : RepositoryResult<UserResponse>.Success(user);
+        return result is null
+            ? RepositoryResult<T>.NotFound()
+            : RepositoryResult<T>.Success(result);
     }
 
-    public async Task<RepositoryResult<IReadOnlyCollection<UserFavoritesTrailResponse>>> GetFavoritesByUserIdentifierAsync(string userIdentifier, CancellationToken ctoken)
+    public async Task<RepositoryResult<IReadOnlyCollection<T>>> GetFavoritesByUserIdentifierAsync<T>(string userIdentifier, Expression<Func<Trail, T>> selector, CancellationToken ctoken)
     {
         using var context = await _context.CreateDbContextAsync(ctoken);
 
-        var user = await context.Users
+        var items = await context.Users
             .AsNoTracking()
-            .Include(u => u.MyFavorites!)
-                .ThenInclude(t => t.Reviews)
-            .Include(u => u.MyFavorites!)
-                .ThenInclude(t => t.TrailImages)
-            .FirstOrDefaultAsync(u => u.Identifier == userIdentifier, ctoken);
-
-        IReadOnlyCollection<UserFavoritesTrailResponse> result = (user?.MyFavorites ?? [])
-            .Select(trail => UserFavoritesTrailResponse.Create(
-                trail.Identifier,
-                trail.Name,
-                trail.TrailLength,
-                trail.Description,
-                trail.Reviews?.Select(r => RatingResponse.Create(r.Identifier, r.Rating)).ToList(),
-                trail.TrailImages?.Select(ti => TrailImageResponse.Create(ti.Identifier, ti.ImageUrl)).Take(1).ToList()))
+            .Where(u => u.Identifier == userIdentifier)
+            .SelectMany(u => u.MyFavorites ?? new List<Trail>())
             .OrderBy(t => t.Name)
-            .ToList();
+            .Select(selector)
+            .ToListAsync(ctoken);
 
-        return RepositoryResult<IReadOnlyCollection<UserFavoritesTrailResponse>>.Success(result);
+        return RepositoryResult<IReadOnlyCollection<T>>.Success(items);
     }
 
-    public async Task<RepositoryResult<IReadOnlyCollection<UserWishlistTrailResponse>>> GetWishListByUserIdentifierAsync(string userIdentifier, CancellationToken ctoken)
+    public async Task<RepositoryResult<IReadOnlyCollection<T>>> GetWishListByUserIdentifierAsync<T>(string userIdentifier, Expression<Func<Trail, T>> selector, CancellationToken ctoken)
     {
         using var context = await _context.CreateDbContextAsync(ctoken);
 
-        var user = await context.Users
+        var items = await context.Users
             .AsNoTracking()
-            .Include(u => u.MyWishList!)
-                .ThenInclude(t => t.Reviews)
-            .Include(u => u.MyWishList!)
-                .ThenInclude(t => t.TrailImages)
-            .FirstOrDefaultAsync(u => u.Identifier == userIdentifier, ctoken);
-
-        IReadOnlyCollection<UserWishlistTrailResponse> result = (user?.MyWishList ?? [])
-            .Select(trail => UserWishlistTrailResponse.Create(
-                trail.Identifier,
-                trail.Name,
-                trail.TrailLength,
-                trail.Description,
-                trail.Reviews?.Select(r => RatingResponse.Create(r.Identifier, r.Rating)).ToList(),
-                trail.TrailImages?.Select(ti => TrailImageResponse.Create(ti.Identifier, ti.ImageUrl)).Take(1).ToList()))
+            .Where(u => u.Identifier == userIdentifier)
+            .SelectMany(u => u.MyWishList ?? new List<Trail>())
             .OrderBy(t => t.Name)
-            .ToList();
+            .Select(selector)
+            .ToListAsync(ctoken);
 
-        return RepositoryResult<IReadOnlyCollection<UserWishlistTrailResponse>>.Success(result);
+        return RepositoryResult<IReadOnlyCollection<T>>.Success(items);
     }
 
     public async Task<RepositoryResult<User>> CreateUserAsync(User user, CancellationToken ctoken)
@@ -126,7 +102,7 @@ public class UserResponseRepository : IUserResponseRepository
         return RepositoryResult<User>.Success(user);
     }
 
-    public async Task<RepositoryResult<UserFavoritesTrailResponse>> AddTrailToUserFavoritesListAsync(string userIdentifier, string trailIdentifier, CancellationToken ctoken)
+    public async Task<RepositoryResult<T>> AddTrailToUserFavoritesListAsync<T>(string userIdentifier, string trailIdentifier, Expression<Func<Trail, T>> selector, CancellationToken ctoken)
     {
         using var context = await _context.CreateDbContextAsync(ctoken);
 
@@ -135,20 +111,18 @@ public class UserResponseRepository : IUserResponseRepository
             .FirstOrDefaultAsync(u => u.Identifier == userIdentifier, ctoken);
 
         if (user is null)
-            return RepositoryResult<UserFavoritesTrailResponse>.NotFound();
+            return RepositoryResult<T>.NotFound();
 
         var trail = await context.Trails
-            .Include(t => t.TrailImages)
-            .Include(t => t.Reviews)
             .FirstOrDefaultAsync(t => t.Identifier == trailIdentifier, ctoken);
 
         if (trail is null)
-            return RepositoryResult<UserFavoritesTrailResponse>.NotFound();
+            return RepositoryResult<T>.NotFound();
 
         user.MyFavorites ??= [];
 
         if (user.MyFavorites.Any(f => f.Identifier == trailIdentifier))
-            return RepositoryResult<UserFavoritesTrailResponse>.Conflict();
+            return RepositoryResult<T>.Conflict();
 
         user.MyFavorites.Add(trail);
 
@@ -158,19 +132,21 @@ public class UserResponseRepository : IUserResponseRepository
         }
         catch (DbUpdateException)
         {
-            return RepositoryResult<UserFavoritesTrailResponse>.Conflict();
+            return RepositoryResult<T>.Conflict();
         }
 
-        return RepositoryResult<UserFavoritesTrailResponse>.Success(UserFavoritesTrailResponse.Create(
-            trail.Identifier,
-            trail.Name,
-            trail.TrailLength,
-            trail.Description,
-            trail.Reviews!.Select(r => RatingResponse.Create(r.Identifier, r.Rating)).ToList(),
-            trail.TrailImages!.Select(ti => TrailImageResponse.Create(ti.Identifier, ti.ImageUrl)).Take(1).ToList()));
+        var result = await context.Trails
+            .AsNoTracking()
+            .Where(t => t.Identifier == trailIdentifier)
+            .Select(selector)
+            .FirstOrDefaultAsync(ctoken);
+
+        return result is null
+            ? RepositoryResult<T>.NotFound()
+            : RepositoryResult<T>.Success(result);
     }
 
-    public async Task<RepositoryResult<UserWishlistTrailResponse>> AddTrailToUserWishListAsync(string userIdentifier, string trailIdentifier, CancellationToken ctoken)
+    public async Task<RepositoryResult<T>> AddTrailToUserWishListAsync<T>(string userIdentifier, string trailIdentifier, Expression<Func<Trail, T>> selector, CancellationToken ctoken)
     {
         using var context = await _context.CreateDbContextAsync(ctoken);
 
@@ -179,20 +155,18 @@ public class UserResponseRepository : IUserResponseRepository
             .FirstOrDefaultAsync(u => u.Identifier == userIdentifier, ctoken);
 
         if (user is null)
-            return RepositoryResult<UserWishlistTrailResponse>.NotFound();
+            return RepositoryResult<T>.NotFound();
 
         var trail = await context.Trails
-            .Include(t => t.TrailImages)
-            .Include(t => t.Reviews)
             .FirstOrDefaultAsync(t => t.Identifier == trailIdentifier, ctoken);
 
         if (trail is null)
-            return RepositoryResult<UserWishlistTrailResponse>.NotFound();
+            return RepositoryResult<T>.NotFound();
 
         user.MyWishList ??= [];
 
         if (user.MyWishList.Any(t => t.Identifier == trailIdentifier))
-            return RepositoryResult<UserWishlistTrailResponse>.Conflict();
+            return RepositoryResult<T>.Conflict();
 
         user.MyWishList.Add(trail);
 
@@ -202,16 +176,18 @@ public class UserResponseRepository : IUserResponseRepository
         }
         catch (DbUpdateException)
         {
-            return RepositoryResult<UserWishlistTrailResponse>.Conflict();
+            return RepositoryResult<T>.Conflict();
         }
 
-        return RepositoryResult<UserWishlistTrailResponse>.Success(UserWishlistTrailResponse.Create(
-            trail.Identifier,
-            trail.Name,
-            trail.TrailLength,
-            trail.Description,
-            trail.Reviews!.Select(r => RatingResponse.Create(r.Identifier, r.Rating)).ToList(),
-            trail.TrailImages!.Select(ti => TrailImageResponse.Create(ti.Identifier, ti.ImageUrl)).Take(1).ToList()));
+        var result = await context.Trails
+            .AsNoTracking()
+            .Where(t => t.Identifier == trailIdentifier)
+            .Select(selector)
+            .FirstOrDefaultAsync(ctoken);
+
+        return result is null
+            ? RepositoryResult<T>.NotFound()
+            : RepositoryResult<T>.Success(result);
     }
 
     public async Task<RepositoryResult> RemoveTrailFromUserFavoritesListAsync(string userIdentifier, string trailIdentifier, CancellationToken ctoken)

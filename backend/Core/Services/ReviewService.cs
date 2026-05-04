@@ -10,7 +10,7 @@ namespace Core.Services;
 
 public class ReviewService : IReviewService
 {
-    private readonly IReviewResponseRepository _reviewRepository;
+    private readonly IReviewRepository _reviewRepository;
     private readonly IWebDavService _webDavService;
     private readonly IUserService _userService;
     private readonly ITrailService _trailService;
@@ -18,7 +18,7 @@ public class ReviewService : IReviewService
     private readonly ILogger<ReviewService> _logger;
 
     public ReviewService(
-        IReviewResponseRepository reviewRepository,
+        IReviewRepository reviewRepository,
         IWebDavService webDavService,
         IUserService userService,
         ITrailService trailService,
@@ -41,12 +41,37 @@ public class ReviewService : IReviewService
     {
         try
         {
-            var result = await _reviewRepository.GetReviewsByTrailIdentifierAsync(trailIdentifier, page, limit, ctoken);
+            var baseUrl = _reviewResponseFactory.PresentableBaseUrl;
+
+            var result = await _reviewRepository.GetReviewsByTrailIdentifierAsync(
+                trailIdentifier, page, limit,
+                r => new ReviewResponse
+                {
+                    Identifier = r.Identifier,
+                    TrailReview = r.TrailReview,
+                    Rating = r.Rating,
+                    UserName = r.User != null ? r.User.NickName : string.Empty,
+                    CreatedAt = r.CreatedAt,
+                    TrailIdentifier = r.Trail != null ? r.Trail.Identifier : string.Empty,
+                    UserIdentifier = r.User != null ? r.User.Identifier : string.Empty,
+                    ReviewImages = r.ReviewImages!.Select(img => new ReviewImageResponse
+                    {
+                        Identifier = img.Identifier,
+                        ImageUrl = baseUrl + img.ImageUrl
+                    }).ToList()
+                },
+                ctoken);
 
             if (!result.IsSuccess)
                 return Result.Fail<PagedReviewResponse>(new Message(500, "An error occurred while fetching reviews."));
 
-            return Result.Ok(result.Value);
+            return Result.Ok(new PagedReviewResponse
+            {
+                Reviews = result.Value.Items,
+                Page = result.Value.Page,
+                HasMore = result.Value.HasMore,
+                Total = result.Value.TotalCount
+            });
         }
         catch (Exception ex)
         {

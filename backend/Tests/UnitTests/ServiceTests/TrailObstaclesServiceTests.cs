@@ -1,4 +1,3 @@
-using Core;
 using Core.Factories;
 using Core.Interfaces.Repositories;
 using Core.Interfaces.Services;
@@ -8,7 +7,7 @@ using Infrastructure.Data.Entities;
 using Infrastructure.Enums;
 using Microsoft.Extensions.Logging;
 using Moq;
-
+using System.Linq.Expressions;
 namespace UnitTests.ServiceTests;
 
 public class TrailObstaclesServiceTests
@@ -18,15 +17,15 @@ public class TrailObstaclesServiceTests
     private const int TrailId = 1;
 
     private TrailObstaclesService Build(
-        Mock<ITrailObstacleResponseRepository>? obstacleRepo = null,
-        Mock<IUserService>? userSvc = null,
-        Mock<ITrailService>? trailSvc = null) =>
+        Mock<ITrailObstacleRepository>? obstacleRepo = null,
+        Mock<IUserService>? userService = null,
+        Mock<ITrailService>? trailService = null) =>
         new(
-            (obstacleRepo ?? new Mock<ITrailObstacleResponseRepository>()).Object,
+            (obstacleRepo ?? new Mock<ITrailObstacleRepository>()).Object,
             new Mock<ILogger<TrailObstaclesService>>().Object,
             new TrailObstaclesResponseFactory(),
-            (userSvc ?? Utilities.MockFactory.UserServiceFoundById(UserId)).Object,
-            (trailSvc ?? Utilities.MockFactory.TrailServiceFound(TrailId)).Object);
+            (userService ?? Utilities.MockFactory.UserServiceFoundById(UserId)).Object,
+            (trailService ?? Utilities.MockFactory.TrailServiceFound(TrailId)).Object);
 
 
     [Fact]
@@ -34,8 +33,8 @@ public class TrailObstaclesServiceTests
     {
         // Arrange
         IReadOnlyCollection<TrailObstacle> obstacles = [Utilities.Stubs.Obstacle()];
-        var repo = new Mock<ITrailObstacleResponseRepository>();
-        repo.Setup(r => r.GetTrailObstaclesByTrailIdentifierAsync(Utilities.Identifiers.Trail1, It.IsAny<CancellationToken>()))
+        var repo = new Mock<ITrailObstacleRepository>();
+        repo.Setup(r => r.GetTrailObstaclesByTrailIdentifierAsync(Utilities.Identifiers.Trail1, It.IsAny<Expression<Func<TrailObstacle, TrailObstacle>>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<IReadOnlyCollection<TrailObstacle>>.Success(obstacles));
 
         // Act
@@ -50,8 +49,8 @@ public class TrailObstaclesServiceTests
     public async Task GetObstacles_WhenNoneExist_ReturnsEmptyList()
     {
         // Arrange
-        var repo = new Mock<ITrailObstacleResponseRepository>();
-        repo.Setup(r => r.GetTrailObstaclesByTrailIdentifierAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+        var repo = new Mock<ITrailObstacleRepository>();
+        repo.Setup(r => r.GetTrailObstaclesByTrailIdentifierAsync(It.IsAny<string>(), It.IsAny<Expression<Func<TrailObstacle, TrailObstacle>>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<IReadOnlyCollection<TrailObstacle>>.Success([]));
 
         // Act
@@ -66,8 +65,8 @@ public class TrailObstaclesServiceTests
     public async Task GetObstacles_WhenRepositoryFails_ReturnsInternalServerError()
     {
         // Arrange
-        var repo = new Mock<ITrailObstacleResponseRepository>();
-        repo.Setup(r => r.GetTrailObstaclesByTrailIdentifierAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+        var repo = new Mock<ITrailObstacleRepository>();
+        repo.Setup(r => r.GetTrailObstaclesByTrailIdentifierAsync(It.IsAny<string>(), It.IsAny<Expression<Func<TrailObstacle, TrailObstacle>>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<IReadOnlyCollection<TrailObstacle>>.Error());
 
         // Act
@@ -83,7 +82,7 @@ public class TrailObstaclesServiceTests
     public async Task AddTrailObstacle_WithValidData_ReturnsSuccess()
     {
         // Arrange
-        var repo = new Mock<ITrailObstacleResponseRepository>();
+        var repo = new Mock<ITrailObstacleRepository>();
         repo.Setup(r => r.AddTrailObstacleAsync(It.IsAny<TrailObstacle>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<TrailObstacle>.Success(Utilities.Stubs.Obstacle()));
 
@@ -99,7 +98,7 @@ public class TrailObstaclesServiceTests
     public async Task AddTrailObstacle_WhenUserNotFound_ReturnsNotFound()
     {
         // Arrange
-        var service = Build(userSvc: Utilities.MockFactory.UserServiceNotFoundById());
+        var service = Build(userService: Utilities.MockFactory.UserServiceNotFoundById());
 
         // Act
         var result = await service.AddTrailObstacle("invalid", Utilities.Identifiers.Trail1, "Desc", "FallenTree", null, null, CancellationToken.None);
@@ -114,7 +113,7 @@ public class TrailObstaclesServiceTests
     public async Task AddTrailObstacle_WhenTrailNotFound_ReturnsNotFound()
     {
         // Arrange
-        var service = Build(trailSvc: Utilities.MockFactory.TrailServiceNotFound());
+        var service = Build(trailService: Utilities.MockFactory.TrailServiceNotFound());
 
         // Act
         var result = await service.AddTrailObstacle(Utilities.Identifiers.User, "invalid", "Desc", "FallenTree", null, null, CancellationToken.None);
@@ -130,7 +129,7 @@ public class TrailObstaclesServiceTests
     {
         // Arrange
         TrailObstacle? captured = null;
-        var repo = new Mock<ITrailObstacleResponseRepository>();
+        var repo = new Mock<ITrailObstacleRepository>();
         repo.Setup(r => r.AddTrailObstacleAsync(It.IsAny<TrailObstacle>(), It.IsAny<CancellationToken>()))
             .Callback<TrailObstacle, CancellationToken>((obs, _) => captured = obs)
             .ReturnsAsync(RepositoryResult<TrailObstacle>.Success(Utilities.Stubs.Obstacle()));
@@ -139,14 +138,15 @@ public class TrailObstaclesServiceTests
         await Build(repo).AddTrailObstacle(Utilities.Identifiers.User, Utilities.Identifiers.Trail1, "Desc", "TotallyUnknown", null, null, CancellationToken.None);
 
         // Assert
-        captured!.IssueType.Should().Be(TrailIssueType.Other);
+        captured.Should().NotBeNull();
+        captured.IssueType.Should().Be(TrailIssueType.Other);
     }
 
     [Fact]
     public async Task AddTrailObstacle_WhenRepositoryFails_ReturnsInternalServerError()
     {
         // Arrange
-        var repo = new Mock<ITrailObstacleResponseRepository>();
+        var repo = new Mock<ITrailObstacleRepository>();
         repo.Setup(r => r.AddTrailObstacleAsync(It.IsAny<TrailObstacle>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<TrailObstacle>.Error());
 
@@ -164,7 +164,7 @@ public class TrailObstaclesServiceTests
     {
         // Arrange
         var obstacle = Utilities.Stubs.Obstacle(votes: []);
-        var repo = new Mock<ITrailObstacleResponseRepository>();
+        var repo = new Mock<ITrailObstacleRepository>();
         repo.Setup(r => r.GetTrailObstacleByIdentifierAsync(Utilities.Identifiers.Obstacle1, It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<TrailObstacle>.Success(obstacle));
         repo.Setup(r => r.AddSolvedVoteAsync(It.IsAny<TrailObstacleSolvedVote>(), It.IsAny<CancellationToken>()))
@@ -181,7 +181,7 @@ public class TrailObstaclesServiceTests
     public async Task AddSolvedVote_WhenUserNotFound_ReturnsNotFound()
     {
         // Arrange
-        var service = Build(userSvc: Utilities.MockFactory.UserServiceNotFoundById());
+        var service = Build(userService: Utilities.MockFactory.UserServiceNotFoundById());
 
         // Act
         var result = await service.AddSolvedVoteAsync("invalid", Utilities.Identifiers.Obstacle1, CancellationToken.None);
@@ -196,7 +196,7 @@ public class TrailObstaclesServiceTests
     public async Task AddSolvedVote_WhenObstacleNotFound_ReturnsNotFound()
     {
         // Arrange
-        var repo = new Mock<ITrailObstacleResponseRepository>();
+        var repo = new Mock<ITrailObstacleRepository>();
         repo.Setup(r => r.GetTrailObstacleByIdentifierAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<TrailObstacle>.NotFound());
 
@@ -214,7 +214,7 @@ public class TrailObstaclesServiceTests
     {
         // Arrange
         var obstacle = Utilities.Stubs.Obstacle(votes: [new TrailObstacleSolvedVote { UserId = UserId, TrailObstacleId = ObstacleId }]);
-        var repo = new Mock<ITrailObstacleResponseRepository>();
+        var repo = new Mock<ITrailObstacleRepository>();
         repo.Setup(r => r.GetTrailObstacleByIdentifierAsync(Utilities.Identifiers.Obstacle1, It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<TrailObstacle>.Success(obstacle));
 
@@ -231,7 +231,7 @@ public class TrailObstaclesServiceTests
     public async Task AddSolvedVote_WhenRepositoryThrows_ReturnsInternalServerError()
     {
         // Arrange
-        var repo = new Mock<ITrailObstacleResponseRepository>();
+        var repo = new Mock<ITrailObstacleRepository>();
         repo.Setup(r => r.GetTrailObstacleByIdentifierAsync(Utilities.Identifiers.Obstacle1, It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<TrailObstacle>.Success(Utilities.Stubs.Obstacle(votes: [])));
         repo.Setup(r => r.AddSolvedVoteAsync(It.IsAny<TrailObstacleSolvedVote>(), It.IsAny<CancellationToken>()))
@@ -261,7 +261,7 @@ public class TrailObstaclesServiceTests
         userSvc.Setup(u => u.GetUserIdByIdentifierAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Ok(distinctUserId));
 
-        var repo = new Mock<ITrailObstacleResponseRepository>();
+        var repo = new Mock<ITrailObstacleRepository>();
         repo.Setup(r => r.GetTrailObstacleByIdentifierAsync(Utilities.Identifiers.Obstacle1, It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<TrailObstacle>.Success(obstacle));
         // Pin exact argument order: (obstacleId, userId) — catches swapped IDs
@@ -281,7 +281,7 @@ public class TrailObstaclesServiceTests
     public async Task DeleteSolvedVote_WhenUserNotFound_ReturnsNotFound()
     {
         // Arrange
-        var service = Build(userSvc: Utilities.MockFactory.UserServiceNotFoundById());
+        var service = Build(userService: Utilities.MockFactory.UserServiceNotFoundById());
 
         // Act
         var result = await service.DeleteSolvedVoteByUserIdentifierAsync("invalid", Utilities.Identifiers.Obstacle1, CancellationToken.None);
@@ -296,7 +296,7 @@ public class TrailObstaclesServiceTests
     public async Task DeleteSolvedVote_WhenObstacleNotFound_ReturnsNotFound()
     {
         // Arrange
-        var repo = new Mock<ITrailObstacleResponseRepository>();
+        var repo = new Mock<ITrailObstacleRepository>();
         repo.Setup(r => r.GetTrailObstacleByIdentifierAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<TrailObstacle>.NotFound());
 
@@ -313,7 +313,7 @@ public class TrailObstaclesServiceTests
     public async Task DeleteSolvedVote_WhenVoteNotFound_ReturnsNotFound()
     {
         // Arrange
-        var repo = new Mock<ITrailObstacleResponseRepository>();
+        var repo = new Mock<ITrailObstacleRepository>();
         repo.Setup(r => r.GetTrailObstacleByIdentifierAsync(Utilities.Identifiers.Obstacle1, It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<TrailObstacle>.Success(Utilities.Stubs.Obstacle()));
         repo.Setup(r => r.GetSolvedVoteByObstacleIdAndUserIdAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
@@ -333,7 +333,7 @@ public class TrailObstaclesServiceTests
     {
         // Arrange
         var vote = Utilities.Stubs.Vote();
-        var repo = new Mock<ITrailObstacleResponseRepository>();
+        var repo = new Mock<ITrailObstacleRepository>();
         repo.Setup(r => r.GetTrailObstacleByIdentifierAsync(Utilities.Identifiers.Obstacle1, It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<TrailObstacle>.Success(Utilities.Stubs.Obstacle()));
         repo.Setup(r => r.GetSolvedVoteByObstacleIdAndUserIdAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
@@ -354,7 +354,7 @@ public class TrailObstaclesServiceTests
     public async Task UpdateTrailObstacle_WhenValid_ReturnsSuccess()
     {
         // Arrange
-        var repo = new Mock<ITrailObstacleResponseRepository>();
+        var repo = new Mock<ITrailObstacleRepository>();
         repo.Setup(r => r.GetTrailObstacleByIdentifierAndUserIdAsync(Utilities.Identifiers.Obstacle1, UserId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<TrailObstacle>.Success(Utilities.Stubs.Obstacle()));
         repo.Setup(r => r.UpdateTrailObstacleAsync(It.IsAny<TrailObstacle>(), It.IsAny<CancellationToken>()))
@@ -371,7 +371,7 @@ public class TrailObstaclesServiceTests
     public async Task UpdateTrailObstacle_WhenUserNotFound_ReturnsNotFound()
     {
         // Arrange
-        var service = Build(userSvc: Utilities.MockFactory.UserServiceNotFoundById());
+        var service = Build(userService: Utilities.MockFactory.UserServiceNotFoundById());
 
         // Act
         var result = await service.UpdateTrailObstacleAsync("invalid", Utilities.Identifiers.Obstacle1, "desc", "Mud", CancellationToken.None);
@@ -386,7 +386,7 @@ public class TrailObstaclesServiceTests
     public async Task UpdateTrailObstacle_WhenObstacleNotFound_ReturnsNotFound()
     {
         // Arrange
-        var repo = new Mock<ITrailObstacleResponseRepository>();
+        var repo = new Mock<ITrailObstacleRepository>();
         repo.Setup(r => r.GetTrailObstacleByIdentifierAndUserIdAsync(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<TrailObstacle>.NotFound());
 
@@ -405,7 +405,7 @@ public class TrailObstaclesServiceTests
         // Arrange
         var obstacle = Utilities.Stubs.Obstacle(); // IssueType = FallenTree
         TrailObstacle? captured = null;
-        var repo = new Mock<ITrailObstacleResponseRepository>();
+        var repo = new Mock<ITrailObstacleRepository>();
         repo.Setup(r => r.GetTrailObstacleByIdentifierAndUserIdAsync(Utilities.Identifiers.Obstacle1, UserId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<TrailObstacle>.Success(obstacle));
         repo.Setup(r => r.UpdateTrailObstacleAsync(It.IsAny<TrailObstacle>(), It.IsAny<CancellationToken>()))
@@ -416,14 +416,15 @@ public class TrailObstaclesServiceTests
         await Build(repo).UpdateTrailObstacleAsync(Utilities.Identifiers.User, Utilities.Identifiers.Obstacle1, "New desc", "TotallyUnknown", CancellationToken.None);
 
         // Assert
-        captured!.IssueType.Should().Be(TrailIssueType.FallenTree);
+        captured.Should().NotBeNull();
+        captured.IssueType.Should().Be(TrailIssueType.FallenTree);
     }
 
     [Fact]
     public async Task UpdateTrailObstacle_WhenRepositoryThrows_ReturnsInternalServerError()
     {
         // Arrange
-        var repo = new Mock<ITrailObstacleResponseRepository>();
+        var repo = new Mock<ITrailObstacleRepository>();
         repo.Setup(r => r.GetTrailObstacleByIdentifierAndUserIdAsync(Utilities.Identifiers.Obstacle1, UserId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<TrailObstacle>.Success(Utilities.Stubs.Obstacle()));
         repo.Setup(r => r.UpdateTrailObstacleAsync(It.IsAny<TrailObstacle>(), It.IsAny<CancellationToken>()))
@@ -443,7 +444,7 @@ public class TrailObstaclesServiceTests
     {
         // Arrange
         var obstacle = Utilities.Stubs.Obstacle();
-        var repo = new Mock<ITrailObstacleResponseRepository>();
+        var repo = new Mock<ITrailObstacleRepository>();
         repo.Setup(r => r.GetTrailObstacleByIdentifierAndUserIdAsync(Utilities.Identifiers.Obstacle1, UserId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<TrailObstacle>.Success(obstacle));
         repo.Setup(r => r.DeleteTrailObstacleAsync(obstacle, It.IsAny<CancellationToken>()))
@@ -460,7 +461,7 @@ public class TrailObstaclesServiceTests
     public async Task DeleteTrailObstacle_WhenUserNotFound_ReturnsNotFound()
     {
         // Arrange
-        var service = Build(userSvc: Utilities.MockFactory.UserServiceNotFoundById());
+        var service = Build(userService: Utilities.MockFactory.UserServiceNotFoundById());
 
         // Act
         var result = await service.DeleteTrailObstacleAsync("invalid", Utilities.Identifiers.Obstacle1, CancellationToken.None);
@@ -475,7 +476,7 @@ public class TrailObstaclesServiceTests
     public async Task DeleteTrailObstacle_WhenObstacleNotFound_ReturnsNotFound()
     {
         // Arrange
-        var repo = new Mock<ITrailObstacleResponseRepository>();
+        var repo = new Mock<ITrailObstacleRepository>();
         repo.Setup(r => r.GetTrailObstacleByIdentifierAndUserIdAsync(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<TrailObstacle>.NotFound());
 
@@ -493,7 +494,7 @@ public class TrailObstaclesServiceTests
     {
         // Arrange
         var obstacle = Utilities.Stubs.Obstacle();
-        var repo = new Mock<ITrailObstacleResponseRepository>();
+        var repo = new Mock<ITrailObstacleRepository>();
         repo.Setup(r => r.GetTrailObstacleByIdentifierAndUserIdAsync(Utilities.Identifiers.Obstacle1, UserId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<TrailObstacle>.Success(obstacle));
         repo.Setup(r => r.DeleteTrailObstacleAsync(obstacle, It.IsAny<CancellationToken>()))

@@ -1,21 +1,18 @@
-using Core.Factories;
+using System.Linq.Expressions;
 using Core.Interfaces.Repositories;
 using Infrastructure.Data;
 using Infrastructure.Data.Entities;
 using Microsoft.EntityFrameworkCore;
-using WebDataContracts.ResponseModels.Review;
 
 namespace Core.Repositories;
 
-public class ReviewResponseRepository : IReviewResponseRepository
+public class ReviewRepository : IReviewRepository
 {
     private readonly IDbContextFactory<StigViddDbContext> _context;
-    private readonly ReviewResponseFactory _reviewResponseFactory;
 
-    public ReviewResponseRepository(IDbContextFactory<StigViddDbContext> context, ReviewResponseFactory reviewResponseFactory)
+    public ReviewRepository(IDbContextFactory<StigViddDbContext> context)
     {
         _context = context;
-        _reviewResponseFactory = reviewResponseFactory;
     }
 
     public async Task<RepositoryResult<Review>> AddReviewAsync(Review review, CancellationToken ctoken)
@@ -47,14 +44,14 @@ public class ReviewResponseRepository : IReviewResponseRepository
 
         var review = await context.Reviews
             .Include(r => r.ReviewImages)
-            .FirstOrDefaultAsync(r => r.Identifier == reviewIdentifier && r.User!.Identifier == userIdentifer, ctoken);
+            .FirstOrDefaultAsync(r => r.Identifier == reviewIdentifier && r.User != null && r.User.Identifier == userIdentifer, ctoken);
 
         return review is null
             ? RepositoryResult<Review>.NotFound()
             : RepositoryResult<Review>.Success(review);
     }
 
-    public async Task<RepositoryResult<PagedReviewResponse>> GetReviewsByTrailIdentifierAsync(string trailIdentifier, int page, int limit, CancellationToken ctoken)
+    public async Task<RepositoryResult<PagedResult<T>>> GetReviewsByTrailIdentifierAsync<T>(string trailIdentifier, int page, int limit, Expression<Func<Review, T>> selector, CancellationToken ctoken)
     {
         using var context = await _context.CreateDbContextAsync(ctoken);
 
@@ -62,26 +59,25 @@ public class ReviewResponseRepository : IReviewResponseRepository
 
         var totalCount = await context.Reviews
             .AsNoTracking()
-            .Where(r => r.Trail!.Identifier == trailIdentifier)
+            .Where(r => r.Trail != null && r.Trail.Identifier == trailIdentifier)
             .CountAsync(ctoken);
 
-        var reviews = await context.Reviews
+        var items = await context.Reviews
             .AsNoTracking()
-            .Where(r => r.Trail!.Identifier == trailIdentifier)
-            .Include(r => r.User)
-            .Include(r => r.Trail)
-            .Include(r => r.ReviewImages)
+            .Where(r => r.Trail != null && r.Trail.Identifier == trailIdentifier)
             .OrderByDescending(r => r.CreatedAt)
             .Skip(offset)
             .Take(limit + 1)
+            .Select(selector)
             .ToListAsync(ctoken);
 
-        var hasMore = reviews.Count > limit;
+        var hasMore = items.Count > limit;
 
-        var reviewResponses = (hasMore ? reviews.Take(limit) : reviews)
-            .Select(_reviewResponseFactory.Create)
-            .ToList();
-
-        return RepositoryResult<PagedReviewResponse>.Success(_reviewResponseFactory.Create(reviewResponses, page, hasMore, totalCount));
+        return RepositoryResult<PagedResult<T>>.Success(
+            new PagedResult<T>(
+                hasMore ? items.Take(limit).ToList() : items,
+                page,
+                hasMore,
+                totalCount));
     }
 }

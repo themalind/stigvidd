@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using Core;
 using Core.Interfaces.Repositories;
 using Core.Repositories;
@@ -7,7 +8,7 @@ using Moq;
 
 namespace UnitTests.RepositoryTests;
 
-public class UserResponseRepositoryTests : TestBase
+public class UserRepositoryTests : TestBase
 {
     private const string NaturElskarenIdentifier = "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d"; // wishlist only
     private const string VandrarVennenIdentifier = "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e"; // favorites only
@@ -15,7 +16,7 @@ public class UserResponseRepositoryTests : TestBase
     private const string TivedenIdentifier = "11a1b2c3-d4e5-4f6a-7b8c-9d0e1f2a3b4c";
     private const string NassehultIdentifier = "77a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c";
 
-    private UserResponseRepository BuildRepo(IFirebaseAuthRepository? firebase = null) =>
+    private UserRepository BuildRepo(IFirebaseAuthRepository? firebase = null) =>
         new(CreateSeededFactory(), firebase ?? new Mock<IFirebaseAuthRepository>().Object);
 
     [Fact]
@@ -25,7 +26,7 @@ public class UserResponseRepositoryTests : TestBase
         var repo = BuildRepo();
 
         // Act
-        var result = await repo.GetUserByFirebaseUidAsync(ExistingFirebaseUid, CancellationToken.None);
+        var result = await repo.GetUserByFirebaseUidAsync(ExistingFirebaseUid, u => u.Identifier, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -39,7 +40,7 @@ public class UserResponseRepositoryTests : TestBase
         var repo = BuildRepo();
 
         // Act
-        var result = await repo.GetUserByFirebaseUidAsync("no-such-uid", CancellationToken.None);
+        var result = await repo.GetUserByFirebaseUidAsync("no-such-uid", u => u.Identifier, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -81,12 +82,12 @@ public class UserResponseRepositoryTests : TestBase
         var repo = BuildRepo();
 
         // Act
-        var result = await repo.GetUserByIdentifierAsync(NaturElskarenIdentifier, CancellationToken.None);
+        var result = await repo.GetUserByIdentifierAsync(NaturElskarenIdentifier, u => u.Identifier, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().NotBeNull();
-        result.Value.Identifier.Should().Be(NaturElskarenIdentifier);
+        result.Value.Should().Be(NaturElskarenIdentifier);
     }
 
     [Fact]
@@ -96,7 +97,7 @@ public class UserResponseRepositoryTests : TestBase
         var repo = BuildRepo();
 
         // Act
-        var result = await repo.GetUserByIdentifierAsync("no-such-user", CancellationToken.None);
+        var result = await repo.GetUserByIdentifierAsync("no-such-user", u => u.Identifier, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -111,7 +112,7 @@ public class UserResponseRepositoryTests : TestBase
 
         // Act
         // VandrarVennen has 2 favorites (Tiveden + Storsjöleden)
-        var result = await repo.GetFavoritesByUserIdentifierAsync(VandrarVennenIdentifier, CancellationToken.None);
+        var result = await repo.GetFavoritesByUserIdentifierAsync(VandrarVennenIdentifier, t => t.Identifier, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -126,7 +127,7 @@ public class UserResponseRepositoryTests : TestBase
 
         // Act
         // NaturElskaren has no favorites set
-        var result = await repo.GetFavoritesByUserIdentifierAsync(NaturElskarenIdentifier, CancellationToken.None);
+        var result = await repo.GetFavoritesByUserIdentifierAsync(NaturElskarenIdentifier, t => t.Identifier, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -141,7 +142,7 @@ public class UserResponseRepositoryTests : TestBase
 
         // Act
         // NaturElskaren has 2 wishlist items (Vildmarksleden + Nässehult)
-        var result = await repo.GetWishListByUserIdentifierAsync(NaturElskarenIdentifier, CancellationToken.None);
+        var result = await repo.GetWishListByUserIdentifierAsync(NaturElskarenIdentifier, t => t.Identifier, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -156,7 +157,7 @@ public class UserResponseRepositoryTests : TestBase
 
         // Act
         // VandrarVennen has no wishlist
-        var result = await repo.GetWishListByUserIdentifierAsync(VandrarVennenIdentifier, CancellationToken.None);
+        var result = await repo.GetWishListByUserIdentifierAsync(VandrarVennenIdentifier, t => t.Identifier, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -168,7 +169,7 @@ public class UserResponseRepositoryTests : TestBase
     {
         // Arrange
         var factory = CreateSeededFactory();
-        var repo = new UserResponseRepository(factory, new Mock<IFirebaseAuthRepository>().Object);
+        var repo = new UserRepository(factory, new Mock<IFirebaseAuthRepository>().Object);
         var newUser = new User
         {
             Identifier = Guid.NewGuid().ToString(),
@@ -187,7 +188,7 @@ public class UserResponseRepositoryTests : TestBase
         result.Value.Should().NotBeNull();
         result.Value.NickName.Should().Be("Glenn");
 
-        var verify = await repo.GetUserByFirebaseUidAsync("brand-new-firebase-uid", CancellationToken.None);
+        var verify = await repo.GetUserByFirebaseUidAsync("brand-new-firebase-uid", u => u.Identifier, CancellationToken.None);
         verify.IsSuccess.Should().BeTrue();
     }
 
@@ -199,12 +200,12 @@ public class UserResponseRepositoryTests : TestBase
 
         // Act
         // NaturElskaren has no favorites yet; add Nässehult
-        var result = await repo.AddTrailToUserFavoritesListAsync(NaturElskarenIdentifier, NassehultIdentifier, CancellationToken.None);
+        var result = await repo.AddTrailToUserFavoritesListAsync(NaturElskarenIdentifier, NassehultIdentifier, t => t.Identifier, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().NotBeNull();
-        result.Value.Identifier.Should().Be(NassehultIdentifier);
+        result.Value.Should().Be(NassehultIdentifier);
     }
 
     [Fact]
@@ -214,7 +215,7 @@ public class UserResponseRepositoryTests : TestBase
         var repo = BuildRepo();
 
         // Act
-        var result = await repo.AddTrailToUserFavoritesListAsync("no-such-user", TivedenIdentifier, CancellationToken.None);
+        var result = await repo.AddTrailToUserFavoritesListAsync("no-such-user", TivedenIdentifier, t => t.Identifier, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -228,7 +229,7 @@ public class UserResponseRepositoryTests : TestBase
         var repo = BuildRepo();
 
         // Act
-        var result = await repo.AddTrailToUserFavoritesListAsync(NaturElskarenIdentifier, "no-such-trail", CancellationToken.None);
+        var result = await repo.AddTrailToUserFavoritesListAsync(NaturElskarenIdentifier, "no-such-trail", t => t.Identifier, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -243,7 +244,7 @@ public class UserResponseRepositoryTests : TestBase
 
         // Act
         // VandrarVennen already has Tiveden in favorites
-        var result = await repo.AddTrailToUserFavoritesListAsync(VandrarVennenIdentifier, TivedenIdentifier, CancellationToken.None);
+        var result = await repo.AddTrailToUserFavoritesListAsync(VandrarVennenIdentifier, TivedenIdentifier, t => t.Identifier, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -258,12 +259,12 @@ public class UserResponseRepositoryTests : TestBase
 
         // Act
         // VandrarVennen has no wishlist; add Tiveden
-        var result = await repo.AddTrailToUserWishListAsync(VandrarVennenIdentifier, TivedenIdentifier, CancellationToken.None);
+        var result = await repo.AddTrailToUserWishListAsync(VandrarVennenIdentifier, TivedenIdentifier, t => t.Identifier, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().NotBeNull();
-        result.Value.Identifier.Should().Be(TivedenIdentifier);
+        result.Value.Should().Be(TivedenIdentifier);
     }
 
     [Fact]
@@ -273,7 +274,7 @@ public class UserResponseRepositoryTests : TestBase
         var repo = BuildRepo();
 
         // Act
-        var result = await repo.AddTrailToUserWishListAsync("no-such-user", TivedenIdentifier, CancellationToken.None);
+        var result = await repo.AddTrailToUserWishListAsync("no-such-user", TivedenIdentifier, t => t.Identifier, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -288,7 +289,7 @@ public class UserResponseRepositoryTests : TestBase
 
         // Act
         // NaturElskaren already has Nässehult in wishlist
-        var result = await repo.AddTrailToUserWishListAsync(NaturElskarenIdentifier, NassehultIdentifier, CancellationToken.None);
+        var result = await repo.AddTrailToUserWishListAsync(NaturElskarenIdentifier, NassehultIdentifier, t => t.Identifier, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeFalse();

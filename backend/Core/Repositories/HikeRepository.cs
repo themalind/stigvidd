@@ -1,16 +1,16 @@
+using System.Linq.Expressions;
 using Core.Interfaces.Repositories;
 using Infrastructure.Data;
 using Infrastructure.Data.Entities;
 using Microsoft.EntityFrameworkCore;
-using WebDataContracts.ResponseModels.Hike;
 
 namespace Core.Repositories;
 
-public class HikeResponseRepository : IHikeResponseRepository
+public class HikeRepository : IHikeRepository
 {
     private readonly IDbContextFactory<StigViddDbContext> _context;
 
-    public HikeResponseRepository(IDbContextFactory<StigViddDbContext> context)
+    public HikeRepository(IDbContextFactory<StigViddDbContext> context)
     {
         _context = context;
     }
@@ -37,7 +37,7 @@ public class HikeResponseRepository : IHikeResponseRepository
             : RepositoryResult<Hike>.Success(hike);
     }
 
-    public async Task<RepositoryResult<IReadOnlyCollection<HikeOverviewResponse>>> GetHikesAsync(string? createdBy, CancellationToken ctoken)
+    public async Task<RepositoryResult<IReadOnlyCollection<T>>> GetHikesAsync<T>(string? createdBy, Expression<Func<Hike, T>> selector, CancellationToken ctoken)
     {
         using var context = await _context.CreateDbContextAsync(ctoken);
 
@@ -47,16 +47,10 @@ public class HikeResponseRepository : IHikeResponseRepository
             query = query.Where(h => h.CreatedBy == createdBy);
 
         var hikes = await query
-            .Select(h => HikeOverviewResponse.Create(
-                h.Identifier,
-                h.Name,
-                h.HikeLength,
-                h.Duration,
-                h.Coordinates,
-                h.CreatedBy))
+            .Select(selector)
             .ToListAsync(ctoken);
 
-        return RepositoryResult<IReadOnlyCollection<HikeOverviewResponse>>.Success(hikes);
+        return RepositoryResult<IReadOnlyCollection<T>>.Success(hikes);
     }
 
     public async Task<RepositoryResult> DeleteHikeAsync(Hike hike, CancellationToken ctoken)

@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using Core.Interfaces.Repositories;
 using Infrastructure.Data;
 using Infrastructure.Data.Entities;
@@ -6,11 +7,11 @@ using WebDataContracts.ResponseModels.Trail;
 
 namespace Core.Repositories;
 
-public class TrailResponseRepository : ITrailResponseRepository
+public class TrailRepository : ITrailRepository
 {
     private readonly IDbContextFactory<StigViddDbContext> _context;
 
-    public TrailResponseRepository(IDbContextFactory<StigViddDbContext> context)
+    public TrailRepository(IDbContextFactory<StigViddDbContext> context)
     {
         _context = context;
     }
@@ -93,7 +94,7 @@ public class TrailResponseRepository : ITrailResponseRepository
             if (hasUserLocation && trail.StartLatitude.HasValue && trail.StartLongitude.HasValue)
             {
                 var distanceKm = HaversineDistanceKm(
-                    userLatitude!.Value, userLongitude!.Value,
+                    userLatitude.GetValueOrDefault(), userLongitude.GetValueOrDefault(),
                     trail.StartLatitude.Value, trail.StartLongitude.Value);
 
                 // Proximity boost: closer trails get a higher bonus (max ~5 points at 0 km, decaying with distance)
@@ -149,44 +150,19 @@ public class TrailResponseRepository : ITrailResponseRepository
 
     private static double DegreesToRadians(double degrees) => degrees * Math.PI / 180.0;
 
-    public async Task<RepositoryResult<TrailResponse>> GetTrailByIdentifierWithoutCoordinatesAsync(string identifier, CancellationToken ctoken)
+    public async Task<RepositoryResult<T>> GetTrailByIdentifierAsync<T>(string identifier, Expression<Func<Trail, T>> selector, CancellationToken ctoken)
     {
         using var context = await _context.CreateDbContextAsync(ctoken);
 
-        var trail = await context.Trails
+        var result = await context.Trails
             .AsNoTracking()
-            .Where(t => t.IsVerified == true && t.Identifier == identifier)
-            .Select(t => TrailResponse.Create(
-                t.Identifier,
-                t.Name,
-                t.TrailLength,
-                t.Classification,
-                t.Accessibility,
-                t.AccessibilityInfo,
-                t.TrailSymbol,
-                t.TrailSymbolImage,
-                t.Description,
-                t.FullDescription,
-                t.Tags,
-                t.CreatedBy!,
-                t.IsVerified,
-                t.City,
-                t.TrailImages!.Select(img => TrailImageResponse.Create(img.Identifier, img.ImageUrl)).ToList(),
-                t.TrailLinks!.Select(link => TrailLinkResponse.Create(link.Identifier, link.Link, link.Title)).ToList(),
-                t.VisitorInformation != null ? VisitorInformationResponse.Create(
-                    t.VisitorInformation.Identifier,
-                    t.VisitorInformation.GettingThere,
-                    t.VisitorInformation.PublicTransport,
-                    t.VisitorInformation.Parking,
-                    t.VisitorInformation.Illumination,
-                    t.VisitorInformation.IlluminationText,
-                    t.VisitorInformation.MaintainedBy,
-                    t.VisitorInformation.WinterMaintenance) : null))
+            .Where(t => t.Identifier == identifier && t.IsVerified == true)
+            .Select(selector)
             .FirstOrDefaultAsync(ctoken);
 
-        return trail is null
-            ? RepositoryResult<TrailResponse>.NotFound()
-            : RepositoryResult<TrailResponse>.Success(trail);
+        return result is null
+            ? RepositoryResult<T>.NotFound()
+            : RepositoryResult<T>.Success(result);
     }
 
     public async Task<RepositoryResult<int>> GetTrailIdByIdentifierAsync(string identifier, CancellationToken ctoken)

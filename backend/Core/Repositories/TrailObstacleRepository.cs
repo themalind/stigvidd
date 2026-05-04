@@ -2,37 +2,38 @@ using Core.Interfaces.Repositories;
 using Infrastructure.Data;
 using Infrastructure.Data.Entities;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 
 namespace Core.Repositories;
 
-public class TrailObstacleResponseRepository : ITrailObstacleResponseRepository
+public class TrailObstacleRepository : ITrailObstacleRepository
 {
     private readonly IDbContextFactory<StigViddDbContext> _context;
 
-    public TrailObstacleResponseRepository(IDbContextFactory<StigViddDbContext> context)
+    public TrailObstacleRepository(IDbContextFactory<StigViddDbContext> context)
     {
         _context = context;
     }
 
-    public async Task<RepositoryResult<IReadOnlyCollection<TrailObstacle>>> GetTrailObstaclesByTrailIdentifierAsync(string identifier, CancellationToken ctoken)
+    public async Task<RepositoryResult<IReadOnlyCollection<T>>> GetTrailObstaclesByTrailIdentifierAsync<T>(string identifier, Expression<Func<TrailObstacle, T>> selector, CancellationToken ctoken)
     {
-        var now = DateTime.UtcNow;
-        var activeThreshold = now.AddDays(-30);
+        var activeThreshold = DateTime.UtcNow.AddDays(-30);
 
         using var context = await _context.CreateDbContextAsync(ctoken);
 
         var obstacles = await context.TrailObstacles
             .AsNoTracking()
-            .Where(to =>
-                to.Trail!.Identifier == identifier &&
-                to.CreatedAt > activeThreshold &&
-                to.SolvedVotes.Count < 3)
             .Include(to => to.User)
             .Include(to => to.SolvedVotes)
                 .ThenInclude(sv => sv.User)
+            .Where(to =>
+                to.Trail != null && to.Trail.Identifier == identifier &&
+                to.CreatedAt > activeThreshold &&
+                to.SolvedVotes.Count < 3)
+            .Select(selector)
             .ToListAsync(ctoken);
 
-        return RepositoryResult<IReadOnlyCollection<TrailObstacle>>.Success(obstacles);
+        return RepositoryResult<IReadOnlyCollection<T>>.Success(obstacles);
     }
 
     public async Task<RepositoryResult<TrailObstacle>> AddTrailObstacleAsync(TrailObstacle obstacle, CancellationToken ctoken)

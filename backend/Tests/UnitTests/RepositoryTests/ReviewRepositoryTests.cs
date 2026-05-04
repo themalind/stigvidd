@@ -1,14 +1,13 @@
+using System.Linq.Expressions;
 using Core;
-using Core.Factories;
 using Core.Repositories;
 using FluentAssertions;
 using Infrastructure.Data.Entities;
-using Microsoft.Extensions.Configuration;
-using Moq;
+using WebDataContracts.ResponseModels.Review;
 
 namespace UnitTests.RepositoryTests;
 
-public class ReviewResponseRepositoryTests : TestBase
+public class ReviewRepositoryTests : TestBase
 {
     private const string NassehultIdentifier = "77a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c"; // 2 reviews
     private const string HultaforsIdentifier = "66f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b"; // 0 reviews
@@ -16,12 +15,19 @@ public class ReviewResponseRepositoryTests : TestBase
     private const string Review5Identifier = "r5e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a"; // Kattleten, no images
     private const string VandrarVennenIdentifier = "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e";
     private const string KattletenIdentifier = "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5a33";
-    private ReviewResponseRepository BuildRepo()
-    {
-        var cfg = new Mock<IConfiguration>();
-        cfg.Setup(c => c["PresentableBaseUrl"]).Returns("http://stigvidd.se/testing/");
-        return new ReviewResponseRepository(CreateSeededFactory(), new ReviewResponseFactory(cfg.Object));
-    }
+
+    private static Expression<Func<Review, ReviewResponse>> ReviewSelector =>
+        r => new ReviewResponse
+        {
+            Identifier = r.Identifier,
+            TrailReview = r.TrailReview,
+            Rating = r.Rating,
+            UserName = r.User != null ? r.User.NickName : string.Empty,
+            UserIdentifier = r.User != null ? r.User.Identifier : string.Empty,
+            TrailIdentifier = r.Trail != null ? r.Trail.Identifier : string.Empty
+        };
+
+    private ReviewRepository BuildRepo() => new(CreateSeededFactory());
 
     [Fact]
     public async Task GetReviewsByTrailIdentifier_WhenTrailHasReviews_ReturnsCorrectCount()
@@ -30,13 +36,13 @@ public class ReviewResponseRepositoryTests : TestBase
         var repo = BuildRepo();
 
         // Act
-        var result = await repo.GetReviewsByTrailIdentifierAsync(NassehultIdentifier, 0, 10, CancellationToken.None);
+        var result = await repo.GetReviewsByTrailIdentifierAsync(NassehultIdentifier, 0, 10, ReviewSelector, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().NotBeNull();
-        result.Value.Reviews.Should().HaveCount(2);
-        result.Value.Total.Should().Be(2);
+        result.Value.Items.Should().HaveCount(2);
+        result.Value.TotalCount.Should().Be(2);
     }
 
     [Fact]
@@ -46,13 +52,13 @@ public class ReviewResponseRepositoryTests : TestBase
         var repo = BuildRepo();
 
         // Act
-        var result = await repo.GetReviewsByTrailIdentifierAsync(HultaforsIdentifier, 0, 10, CancellationToken.None);
+        var result = await repo.GetReviewsByTrailIdentifierAsync(HultaforsIdentifier, 0, 10, ReviewSelector, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().NotBeNull();
-        result.Value.Reviews.Should().BeEmpty();
-        result.Value.Total.Should().Be(0);
+        result.Value.Items.Should().BeEmpty();
+        result.Value.TotalCount.Should().Be(0);
     }
 
     [Fact]
@@ -62,14 +68,14 @@ public class ReviewResponseRepositoryTests : TestBase
         var repo = BuildRepo();
 
         // Act
-        var result = await repo.GetReviewsByTrailIdentifierAsync(NassehultIdentifier, 0, 1, CancellationToken.None);
+        var result = await repo.GetReviewsByTrailIdentifierAsync(NassehultIdentifier, 0, 1, ReviewSelector, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().NotBeNull();
-        result.Value.Reviews.Should().HaveCount(1);
+        result.Value.Items.Should().HaveCount(1);
         result.Value.HasMore.Should().BeTrue();
-        result.Value.Total.Should().Be(2);
+        result.Value.TotalCount.Should().Be(2);
     }
 
     [Fact]
@@ -79,12 +85,12 @@ public class ReviewResponseRepositoryTests : TestBase
         var repo = BuildRepo();
 
         // Act
-        var result = await repo.GetReviewsByTrailIdentifierAsync(NassehultIdentifier, 1, 1, CancellationToken.None);
+        var result = await repo.GetReviewsByTrailIdentifierAsync(NassehultIdentifier, 1, 1, ReviewSelector, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().NotBeNull();
-        result.Value.Reviews.Should().HaveCount(1);
+        result.Value.Items.Should().HaveCount(1);
         result.Value.HasMore.Should().BeFalse();
     }
 
@@ -95,14 +101,14 @@ public class ReviewResponseRepositoryTests : TestBase
         var repo = BuildRepo();
 
         // Act
-        var result = await repo.GetReviewsByTrailIdentifierAsync(NassehultIdentifier, 10, 10, CancellationToken.None);
+        var result = await repo.GetReviewsByTrailIdentifierAsync(NassehultIdentifier, 10, 10, ReviewSelector, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().NotBeNull();
-        result.Value.Reviews.Should().BeEmpty();
+        result.Value.Items.Should().BeEmpty();
         result.Value.HasMore.Should().BeFalse();
-        result.Value.Total.Should().Be(2);
+        result.Value.TotalCount.Should().Be(2);
     }
 
     [Fact]
@@ -153,10 +159,7 @@ public class ReviewResponseRepositoryTests : TestBase
     public async Task AddReview_ShouldPersistAndReturn()
     {
         // Arrange
-        var factory = CreateSeededFactory();
-        var cfg = new Mock<IConfiguration>();
-        cfg.Setup(c => c["PresentableBaseUrl"]).Returns("http://stigvidd.se/testing/");
-        var repo = new ReviewResponseRepository(factory, new ReviewResponseFactory(cfg.Object));
+        var repo = new ReviewRepository(CreateSeededFactory());
         var review = new Review
         {
             Identifier = Guid.NewGuid().ToString(),
@@ -179,15 +182,13 @@ public class ReviewResponseRepositoryTests : TestBase
     public async Task DeleteReview_ShouldRemoveFromDatabase()
     {
         // Arrange
-        var factory = CreateSeededFactory();
-        var cfg = new Mock<IConfiguration>();
-        cfg.Setup(c => c["PresentableBaseUrl"]).Returns("http://stigvidd.se/testing/");
-        var repo = new ReviewResponseRepository(factory, new ReviewResponseFactory(cfg.Object));
+        var repo = new ReviewRepository(CreateSeededFactory());
         var found = await repo.GetReviewByIdentifierAsync(Review5Identifier, KattletenIdentifier, CancellationToken.None);
         found.IsSuccess.Should().BeTrue();
 
         // Act
-        var deleteResult = await repo.DeleteReviewAsync(found.Value!, CancellationToken.None);
+        found.Value.Should().NotBeNull();
+        var deleteResult = await repo.DeleteReviewAsync(found.Value, CancellationToken.None);
 
         // Assert
         deleteResult.IsSuccess.Should().BeTrue();

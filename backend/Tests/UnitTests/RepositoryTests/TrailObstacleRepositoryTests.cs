@@ -1,4 +1,3 @@
-using Core;
 using Core.Repositories;
 using FluentAssertions;
 using Infrastructure.Data;
@@ -9,16 +8,15 @@ using Moq;
 
 namespace UnitTests.RepositoryTests;
 
-public class TrailObstacleResponseRepositoryTests : TestBase
+public class TrailObstacleRepositoryTests : TestBase
 {
     private const string TivedenIdentifier = "11a1b2c3-d4e5-4f6a-7b8c-9d0e1f2a3b4c";   // has Obstacle1 (active) + Obstacle4 (40 days old)
     private const string TangaledenIdentifier = "33c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e"; // has Obstacle3 (3 solved votes)
     private const string GesebolIdentifier = "55e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a";   // no obstacles
 
     private const string Obstacle1Identifier = "ob1a1b2c3-d4e5-4f6a-7b8c-9d0e1f2a3b4c"; // Tiveden, 0 votes, userId=1
-    private const string Obstacle2Identifier = "ob2b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d"; // Storsjöleden, 1 vote by user 1
+    private const string Obstacle4Identifier = "ob4d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f"; // Tiveden, 40 days old (filtered)
 
-    private const string StorsjoledenIdentifier = "22b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d"; // has Obstacle2 (1 solved vote)
     private const int UserId1 = 1;
     private const int ObstacleId2 = 2;
 
@@ -54,10 +52,10 @@ public class TrailObstacleResponseRepositoryTests : TestBase
     public async Task GetObstaclesByTrail_WhenObstaclesExist_ReturnsActiveOnes()
     {
         // Arrange
-        var repo = new TrailObstacleResponseRepository(CreateSeededFactory());
+        var repo = new TrailObstacleRepository(CreateSeededFactory());
 
         // Act
-        var result = await repo.GetTrailObstaclesByTrailIdentifierAsync(TivedenIdentifier, CancellationToken.None);
+        var result = await repo.GetTrailObstaclesByTrailIdentifierAsync(TivedenIdentifier, to => to.Identifier, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -68,10 +66,10 @@ public class TrailObstacleResponseRepositoryTests : TestBase
     public async Task GetObstaclesByTrail_WhenNoObstacles_ReturnsEmpty()
     {
         // Arrange
-        var repo = new TrailObstacleResponseRepository(CreateSeededFactory());
+        var repo = new TrailObstacleRepository(CreateSeededFactory());
 
         // Act
-        var result = await repo.GetTrailObstaclesByTrailIdentifierAsync(GesebolIdentifier, CancellationToken.None);
+        var result = await repo.GetTrailObstaclesByTrailIdentifierAsync(GesebolIdentifier, to => to.Identifier, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -82,24 +80,24 @@ public class TrailObstacleResponseRepositoryTests : TestBase
     public async Task GetObstaclesByTrail_FiltersObstaclesOlderThan30Days()
     {
         // Arrange
-        var repo = new TrailObstacleResponseRepository(CreateSeededFactory());
+        var repo = new TrailObstacleRepository(CreateSeededFactory());
 
         // Act
-        var result = await repo.GetTrailObstaclesByTrailIdentifierAsync(TivedenIdentifier, CancellationToken.None);
+        var result = await repo.GetTrailObstaclesByTrailIdentifierAsync(TivedenIdentifier, to => to.Identifier, CancellationToken.None);
 
         // Assert
-        result.Value.Should().NotContain(o => o.Identifier.Contains("ob4"));
+        result.Value.Should().NotContain(Obstacle4Identifier);
     }
 
     [Fact]
     public async Task GetObstaclesByTrail_FiltersObstaclesWithThreeOrMoreSolvedVotes()
     {
         // Arrange
-        var repo = new TrailObstacleResponseRepository(CreateSeededFactory());
+        var repo = new TrailObstacleRepository(CreateSeededFactory());
 
         // Act
         // Obstacle3 on Tångaleden has exactly 3 solved votes
-        var result = await repo.GetTrailObstaclesByTrailIdentifierAsync(TangaledenIdentifier, CancellationToken.None);
+        var result = await repo.GetTrailObstaclesByTrailIdentifierAsync(TangaledenIdentifier, to => to.Identifier, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -110,10 +108,10 @@ public class TrailObstacleResponseRepositoryTests : TestBase
     public async Task GetObstaclesByTrail_ObstacleExactly30DaysOld_IsExcluded()
     {
         // Arrange
-        var repo = new TrailObstacleResponseRepository(CreateFactoryWithObstacleAt(DateTime.UtcNow.AddDays(-30)));
+        var repo = new TrailObstacleRepository(CreateFactoryWithObstacleAt(DateTime.UtcNow.AddDays(-30)));
 
         // Act
-        var result = await repo.GetTrailObstaclesByTrailIdentifierAsync(TivedenIdentifier, CancellationToken.None);
+        var result = await repo.GetTrailObstaclesByTrailIdentifierAsync(TivedenIdentifier, to => to.Identifier, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -124,10 +122,10 @@ public class TrailObstacleResponseRepositoryTests : TestBase
     public async Task GetObstaclesByTrail_ObstacleJustUnder30DaysOld_IsIncluded()
     {
         // Arrange
-        var repo = new TrailObstacleResponseRepository(CreateFactoryWithObstacleAt(DateTime.UtcNow.AddDays(-29)));
+        var repo = new TrailObstacleRepository(CreateFactoryWithObstacleAt(DateTime.UtcNow.AddDays(-29)));
 
         // Act
-        var result = await repo.GetTrailObstaclesByTrailIdentifierAsync(TivedenIdentifier, CancellationToken.None);
+        var result = await repo.GetTrailObstaclesByTrailIdentifierAsync(TivedenIdentifier, to => to.Identifier, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -138,7 +136,7 @@ public class TrailObstacleResponseRepositoryTests : TestBase
     public async Task GetObstacleByIdentifier_WhenFound_ReturnsSuccess()
     {
         // Arrange
-        var repo = new TrailObstacleResponseRepository(CreateSeededFactory());
+        var repo = new TrailObstacleRepository(CreateSeededFactory());
 
         // Act
         var result = await repo.GetTrailObstacleByIdentifierAsync(Obstacle1Identifier, CancellationToken.None);
@@ -153,7 +151,7 @@ public class TrailObstacleResponseRepositoryTests : TestBase
     public async Task GetObstacleByIdentifier_WhenNotFound_ReturnsNotFound()
     {
         // Arrange
-        var repo = new TrailObstacleResponseRepository(CreateSeededFactory());
+        var repo = new TrailObstacleRepository(CreateSeededFactory());
 
         // Act
         var result = await repo.GetTrailObstacleByIdentifierAsync("no-such-obstacle", CancellationToken.None);
@@ -167,7 +165,7 @@ public class TrailObstacleResponseRepositoryTests : TestBase
     public async Task GetObstacleByIdentifierAndUserId_WhenFound_ReturnsSuccess()
     {
         // Arrange
-        var repo = new TrailObstacleResponseRepository(CreateSeededFactory());
+        var repo = new TrailObstacleRepository(CreateSeededFactory());
 
         // Act
         var result = await repo.GetTrailObstacleByIdentifierAndUserIdAsync(Obstacle1Identifier, UserId1, CancellationToken.None);
@@ -180,7 +178,7 @@ public class TrailObstacleResponseRepositoryTests : TestBase
     public async Task GetObstacleByIdentifierAndUserId_WhenWrongUser_ReturnsNotFound()
     {
         // Arrange
-        var repo = new TrailObstacleResponseRepository(CreateSeededFactory());
+        var repo = new TrailObstacleRepository(CreateSeededFactory());
 
         // Act
         var result = await repo.GetTrailObstacleByIdentifierAndUserIdAsync(Obstacle1Identifier, 99, CancellationToken.None);
@@ -195,7 +193,7 @@ public class TrailObstacleResponseRepositoryTests : TestBase
     {
         // Arrange
         var factory = CreateSeededFactory();
-        var repo = new TrailObstacleResponseRepository(factory);
+        var repo = new TrailObstacleRepository(factory);
         var obstacle = new TrailObstacle
         {
             Identifier = Guid.NewGuid().ToString(),
@@ -222,10 +220,11 @@ public class TrailObstacleResponseRepositoryTests : TestBase
     {
         // Arrange
         var factory = CreateSeededFactory();
-        var repo = new TrailObstacleResponseRepository(factory);
+        var repo = new TrailObstacleRepository(factory);
         var found = await repo.GetTrailObstacleByIdentifierAsync(Obstacle1Identifier, CancellationToken.None);
         found.IsSuccess.Should().BeTrue();
-        var obstacle = found.Value!;
+        found.Value.Should().NotBeNull();
+        var obstacle = found.Value;
         obstacle.Description = "Updated description";
         obstacle.IssueType = TrailIssueType.Flooding;
 
@@ -244,7 +243,7 @@ public class TrailObstacleResponseRepositoryTests : TestBase
     {
         // Arrange
         var factory = CreateSeededFactory();
-        var repo = new TrailObstacleResponseRepository(factory);
+        var repo = new TrailObstacleRepository(factory);
         var found = await repo.GetTrailObstacleByIdentifierAsync(Obstacle1Identifier, CancellationToken.None);
         found.IsSuccess.Should().BeTrue();
 
@@ -271,7 +270,7 @@ public class TrailObstacleResponseRepositoryTests : TestBase
     {
         // Arrange
         var factory = CreateSeededFactory();
-        var repo = new TrailObstacleResponseRepository(factory);
+        var repo = new TrailObstacleRepository(factory);
         var found = await repo.GetTrailObstacleByIdentifierAsync(Obstacle1Identifier, CancellationToken.None);
         found.IsSuccess.Should().BeTrue();
 
@@ -297,11 +296,12 @@ public class TrailObstacleResponseRepositoryTests : TestBase
     {
         // Arrange
         var factory = CreateSeededFactory();
-        var repo = new TrailObstacleResponseRepository(factory);
+        var repo = new TrailObstacleRepository(factory);
         var found = await repo.GetTrailObstacleByIdentifierAsync(Obstacle1Identifier, CancellationToken.None);
 
         // Act
-        await repo.DeleteTrailObstacleAsync(found.Value!, CancellationToken.None);
+        found.Value.Should().NotBeNull();
+        await repo.DeleteTrailObstacleAsync(found.Value, CancellationToken.None);
 
         // Assert
         var verify = await repo.GetTrailObstacleByIdentifierAsync(Obstacle1Identifier, CancellationToken.None);
@@ -312,7 +312,7 @@ public class TrailObstacleResponseRepositoryTests : TestBase
     public async Task GetSolvedVoteByObstacleIdAndUserId_WhenFound_ReturnsSuccess()
     {
         // Arrange
-        var repo = new TrailObstacleResponseRepository(CreateSeededFactory());
+        var repo = new TrailObstacleRepository(CreateSeededFactory());
 
         // Act
         var result = await repo.GetSolvedVoteByObstacleIdAndUserIdAsync(ObstacleId2, UserId1, CancellationToken.None);
@@ -325,7 +325,7 @@ public class TrailObstacleResponseRepositoryTests : TestBase
     public async Task GetSolvedVoteByObstacleIdAndUserId_WhenNotFound_ReturnsNotFound()
     {
         // Arrange
-        var repo = new TrailObstacleResponseRepository(CreateSeededFactory());
+        var repo = new TrailObstacleRepository(CreateSeededFactory());
 
         // Act
         var result = await repo.GetSolvedVoteByObstacleIdAndUserIdAsync(99, 99, CancellationToken.None);
@@ -340,7 +340,7 @@ public class TrailObstacleResponseRepositoryTests : TestBase
     {
         // Arrange
         var factory = CreateSeededFactory();
-        var repo = new TrailObstacleResponseRepository(factory);
+        var repo = new TrailObstacleRepository(factory);
         var vote = new TrailObstacleSolvedVote
         {
             Identifier = Guid.NewGuid().ToString(),
@@ -363,12 +363,13 @@ public class TrailObstacleResponseRepositoryTests : TestBase
     {
         // Arrange
         var factory = CreateSeededFactory();
-        var repo = new TrailObstacleResponseRepository(factory);
+        var repo = new TrailObstacleRepository(factory);
         var vote = await repo.GetSolvedVoteByObstacleIdAndUserIdAsync(ObstacleId2, UserId1, CancellationToken.None);
         vote.IsSuccess.Should().BeTrue();
 
         // Act
-        await repo.DeleteSolvedVoteAsync(vote.Value!, CancellationToken.None);
+        vote.Value.Should().NotBeNull();
+        await repo.DeleteSolvedVoteAsync(vote.Value, CancellationToken.None);
 
         // Assert
         var verify = await repo.GetSolvedVoteByObstacleIdAndUserIdAsync(ObstacleId2, UserId1, CancellationToken.None);

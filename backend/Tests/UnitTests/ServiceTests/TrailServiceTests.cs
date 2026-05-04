@@ -1,9 +1,11 @@
+using System.Linq.Expressions;
 using Core;
 using Core.Factories;
 using Core.Interfaces.Repositories;
 using Core.Interfaces.Services;
 using Core.Services;
 using FluentAssertions;
+using Infrastructure.Data.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -15,14 +17,14 @@ namespace UnitTests.ServiceTests;
 public class TrailServiceTests
 {
     private TrailService Build(
-        Mock<ITrailResponseRepository>? trailRepo = null,
+        Mock<ITrailRepository>? trailRepo = null,
         Mock<IWebDavService>? webDav = null)
     {
         var cfg = new Mock<IConfiguration>();
         cfg.Setup(c => c["PresentableBaseUrl"]).Returns("http://stigvidd.se/testing/");
 
         return new TrailService(
-            (trailRepo ?? new Mock<ITrailResponseRepository>()).Object,
+            (trailRepo ?? new Mock<ITrailRepository>()).Object,
             (webDav ?? Utilities.MockFactory.WebDavService()).Object,
             new Mock<ILogger<TrailService>>().Object,
             new TrailResponseFactory(cfg.Object),
@@ -51,7 +53,7 @@ public class TrailServiceTests
     public async Task GetTrailIdByIdentifier_WhenFound_ReturnsId()
     {
         // Arrange
-        var repo = new Mock<ITrailResponseRepository>();
+        var repo = new Mock<ITrailRepository>();
         repo.Setup(r => r.GetTrailIdByIdentifierAsync(Utilities.Identifiers.Trail4, It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<int>.Success(4));
 
@@ -67,7 +69,7 @@ public class TrailServiceTests
     public async Task GetTrailIdByIdentifier_WhenNotFound_ReturnsNotFound()
     {
         // Arrange
-        var repo = new Mock<ITrailResponseRepository>();
+        var repo = new Mock<ITrailRepository>();
         repo.Setup(r => r.GetTrailIdByIdentifierAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<int>.NotFound());
 
@@ -84,8 +86,8 @@ public class TrailServiceTests
     public async Task GetTrailByIdentifier_WhenFound_ReturnsTrail()
     {
         // Arrange
-        var repo = new Mock<ITrailResponseRepository>();
-        repo.Setup(r => r.GetTrailByIdentifierWithoutCoordinatesAsync(Utilities.Identifiers.Trail4, It.IsAny<CancellationToken>()))
+        var repo = new Mock<ITrailRepository>();
+        repo.Setup(r => r.GetTrailByIdentifierAsync(Utilities.Identifiers.Trail4, It.IsAny<Expression<Func<Trail, TrailResponse>>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<TrailResponse>.Success(StubTrailResponse()));
 
         // Act
@@ -101,8 +103,8 @@ public class TrailServiceTests
     public async Task GetTrailByIdentifier_WhenNotFound_ReturnsNotFound()
     {
         // Arrange
-        var repo = new Mock<ITrailResponseRepository>();
-        repo.Setup(r => r.GetTrailByIdentifierWithoutCoordinatesAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+        var repo = new Mock<ITrailRepository>();
+        repo.Setup(r => r.GetTrailByIdentifierAsync(It.IsAny<string>(), It.IsAny<Expression<Func<Trail, TrailResponse>>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<TrailResponse>.NotFound());
 
         // Act
@@ -118,8 +120,8 @@ public class TrailServiceTests
     public async Task GetTrailByIdentifier_WhenExceptionThrown_ReturnsInternalServerError()
     {
         // Arrange
-        var repo = new Mock<ITrailResponseRepository>();
-        repo.Setup(r => r.GetTrailByIdentifierWithoutCoordinatesAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+        var repo = new Mock<ITrailRepository>();
+        repo.Setup(r => r.GetTrailByIdentifierAsync(It.IsAny<string>(), It.IsAny<Expression<Func<Trail, TrailResponse>>>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new Exception("DB error"));
 
         // Act
@@ -136,7 +138,7 @@ public class TrailServiceTests
     {
         // Arrange
         var json = "[{\"latitude\":57.62,\"longitude\":12.80}]";
-        var repo = new Mock<ITrailResponseRepository>();
+        var repo = new Mock<ITrailRepository>();
         repo.Setup(r => r.GetCoordinatesByTrailIdentifierAsync(Utilities.Identifiers.Trail4, It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<string>.Success(json));
 
@@ -152,7 +154,7 @@ public class TrailServiceTests
     public async Task GetCoordinates_WhenNotFound_ReturnsNotFound()
     {
         // Arrange
-        var repo = new Mock<ITrailResponseRepository>();
+        var repo = new Mock<ITrailRepository>();
         repo.Setup(r => r.GetCoordinatesByTrailIdentifierAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<string>.NotFound());
 
@@ -169,7 +171,7 @@ public class TrailServiceTests
     public async Task AddTrail_WithValidRequest_ReturnsSuccess()
     {
         // Arrange
-        var repo = new Mock<ITrailResponseRepository>();
+        var repo = new Mock<ITrailRepository>();
         repo.Setup(r => r.AddTrailAsync(It.IsAny<Infrastructure.Data.Entities.Trail>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Infrastructure.Data.Entities.Trail t, CancellationToken _) => RepositoryResult<Infrastructure.Data.Entities.Trail>.Success(t));
 
@@ -222,7 +224,7 @@ public class TrailServiceTests
     public async Task AddTrail_WhenRepositoryFails_ReturnsInternalServerError()
     {
         // Arrange
-        var repo = new Mock<ITrailResponseRepository>();
+        var repo = new Mock<ITrailRepository>();
         repo.Setup(r => r.AddTrailAsync(It.IsAny<Infrastructure.Data.Entities.Trail>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<Infrastructure.Data.Entities.Trail>.Error());
 
@@ -243,7 +245,7 @@ public class TrailServiceTests
         [
             TrailOverviewResponse.Create(Utilities.Identifiers.Trail4, "Trail A", 5M, 4.2M, null)
         ];
-        var repo = new Mock<ITrailResponseRepository>();
+        var repo = new Mock<ITrailRepository>();
         repo.Setup(r => r.GetPopularTrailOverviewsAsync(It.IsAny<double?>(), It.IsAny<double?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<IReadOnlyCollection<TrailOverviewResponse>>.Success(overviews));
 
@@ -259,7 +261,7 @@ public class TrailServiceTests
     public async Task GetPopularTrailOverviews_WhenExceptionThrown_ReturnsInternalServerError()
     {
         // Arrange
-        var repo = new Mock<ITrailResponseRepository>();
+        var repo = new Mock<ITrailRepository>();
         repo.Setup(r => r.GetPopularTrailOverviewsAsync(It.IsAny<double?>(), It.IsAny<double?>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new Exception("DB error"));
 
@@ -280,7 +282,7 @@ public class TrailServiceTests
         [
             TrailShortInfoResponse.Create(Utilities.Identifiers.Trail4, "Trail A", 5M, true, 2, "Gothenburg")
         ];
-        var repo = new Mock<ITrailResponseRepository>();
+        var repo = new Mock<ITrailRepository>();
         repo.Setup(r => r.GetAllTrailsWithBasicInfoAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<IReadOnlyCollection<TrailShortInfoResponse>>.Success(trails));
 
@@ -296,7 +298,7 @@ public class TrailServiceTests
     public async Task GetAllTrailsWithBasicInfo_WhenRepositoryFails_ReturnsInternalServerError()
     {
         // Arrange
-        var repo = new Mock<ITrailResponseRepository>();
+        var repo = new Mock<ITrailRepository>();
         repo.Setup(r => r.GetAllTrailsWithBasicInfoAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<IReadOnlyCollection<TrailShortInfoResponse>>.Error());
 
@@ -313,7 +315,7 @@ public class TrailServiceTests
     public async Task GetAllTrailsWithBasicInfo_WhenExceptionThrown_ReturnsInternalServerError()
     {
         // Arrange
-        var repo = new Mock<ITrailResponseRepository>();
+        var repo = new Mock<ITrailRepository>();
         repo.Setup(r => r.GetAllTrailsWithBasicInfoAsync(It.IsAny<CancellationToken>()))
             .ThrowsAsync(new Exception("DB error"));
 
@@ -334,7 +336,7 @@ public class TrailServiceTests
         [
             new TrailMarkerResponse { Identifier = Utilities.Identifiers.Trail4, Name = "Trail A", StartLatitude = 57.6M, StartLongitude = 12.8M }
         ];
-        var repo = new Mock<ITrailResponseRepository>();
+        var repo = new Mock<ITrailRepository>();
         repo.Setup(r => r.GetAllTrailMarkersAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<IReadOnlyCollection<TrailMarkerResponse>>.Success(markers));
 
@@ -350,7 +352,7 @@ public class TrailServiceTests
     public async Task GetAllTrailMarkers_WhenRepositoryFails_ReturnsInternalServerError()
     {
         // Arrange
-        var repo = new Mock<ITrailResponseRepository>();
+        var repo = new Mock<ITrailRepository>();
         repo.Setup(r => r.GetAllTrailMarkersAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<IReadOnlyCollection<TrailMarkerResponse>>.Error());
 
@@ -367,7 +369,7 @@ public class TrailServiceTests
     public async Task GetAllTrailMarkers_WhenExceptionThrown_ReturnsInternalServerError()
     {
         // Arrange
-        var repo = new Mock<ITrailResponseRepository>();
+        var repo = new Mock<ITrailRepository>();
         repo.Setup(r => r.GetAllTrailMarkersAsync(It.IsAny<CancellationToken>()))
             .ThrowsAsync(new Exception("DB error"));
 

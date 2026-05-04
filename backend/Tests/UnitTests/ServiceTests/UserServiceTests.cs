@@ -1,8 +1,10 @@
+using System.Linq.Expressions;
 using Core;
 using Core.Factories;
 using Core.Interfaces.Repositories;
 using Core.Services;
 using FluentAssertions;
+using Infrastructure.Data.Entities;
 using Microsoft.Extensions.Logging;
 using Moq;
 using WebDataContracts.ResponseModels.User;
@@ -11,7 +13,7 @@ namespace UnitTests.ServiceTests;
 
 public class UserServiceTests
 {
-    private UserService Build(IUserResponseRepository repo) =>
+    private UserService Build(IUserRepository repo) =>
         new(repo, new Mock<ILogger<UserService>>().Object, new UserResponseFactory());
 
 
@@ -19,8 +21,8 @@ public class UserServiceTests
     public async Task GetUserByFirebaseUid_WhenFound_ReturnsSuccess()
     {
         // Arrange
-        var repo = new Mock<IUserResponseRepository>();
-        repo.Setup(r => r.GetUserByFirebaseUidAsync(Utilities.Identifiers.UserFirebaseUid, It.IsAny<CancellationToken>()))
+        var repo = new Mock<IUserRepository>();
+        repo.Setup(r => r.GetUserByFirebaseUidAsync(Utilities.Identifiers.UserFirebaseUid, It.IsAny<Expression<Func<User, UserResponse>>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<UserResponse>.Success(Utilities.Stubs.UserResponse()));
 
         // Act
@@ -35,8 +37,8 @@ public class UserServiceTests
     public async Task GetUserByFirebaseUid_WhenNotFound_ReturnsNotFound()
     {
         // Arrange
-        var repo = new Mock<IUserResponseRepository>();
-        repo.Setup(r => r.GetUserByFirebaseUidAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+        var repo = new Mock<IUserRepository>();
+        repo.Setup(r => r.GetUserByFirebaseUidAsync(It.IsAny<string>(), It.IsAny<Expression<Func<User, UserResponse>>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<UserResponse>.NotFound());
 
         // Act
@@ -52,7 +54,7 @@ public class UserServiceTests
     public async Task GetUserIdByIdentifier_WhenFound_ReturnsId()
     {
         // Arrange
-        var repo = new Mock<IUserResponseRepository>();
+        var repo = new Mock<IUserRepository>();
         repo.Setup(r => r.GetUserIdByIdentifierAsync(Utilities.Identifiers.User, It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<int>.Success(42));
 
@@ -68,7 +70,7 @@ public class UserServiceTests
     public async Task GetUserIdByIdentifier_WhenNotFound_ReturnsNotFound()
     {
         // Arrange
-        var repo = new Mock<IUserResponseRepository>();
+        var repo = new Mock<IUserRepository>();
         repo.Setup(r => r.GetUserIdByIdentifierAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<int>.NotFound());
 
@@ -85,8 +87,8 @@ public class UserServiceTests
     public async Task GetUserByIdentifier_WhenFound_ReturnsSuccess()
     {
         // Arrange
-        var repo = new Mock<IUserResponseRepository>();
-        repo.Setup(r => r.GetUserByIdentifierAsync(Utilities.Identifiers.User, It.IsAny<CancellationToken>()))
+        var repo = new Mock<IUserRepository>();
+        repo.Setup(r => r.GetUserByIdentifierAsync(Utilities.Identifiers.User, It.IsAny<Expression<Func<User, UserResponse>>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<UserResponse>.Success(Utilities.Stubs.UserResponse()));
 
         // Act
@@ -101,8 +103,8 @@ public class UserServiceTests
     public async Task GetUserByIdentifier_WhenNotFound_ReturnsNotFound()
     {
         // Arrange
-        var repo = new Mock<IUserResponseRepository>();
-        repo.Setup(r => r.GetUserByIdentifierAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+        var repo = new Mock<IUserRepository>();
+        repo.Setup(r => r.GetUserByIdentifierAsync(It.IsAny<string>(), It.IsAny<Expression<Func<User, UserResponse>>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<UserResponse>.NotFound());
 
         // Act
@@ -122,8 +124,8 @@ public class UserServiceTests
         [
             UserFavoritesTrailResponse.Create("t1", "Trail", 5M, "Desc", null, null)
         ];
-        var repo = new Mock<IUserResponseRepository>();
-        repo.Setup(r => r.GetFavoritesByUserIdentifierAsync(Utilities.Identifiers.User, It.IsAny<CancellationToken>()))
+        var repo = new Mock<IUserRepository>();
+        repo.Setup(r => r.GetFavoritesByUserIdentifierAsync(Utilities.Identifiers.User, It.IsAny<Expression<Func<Trail, UserFavoritesTrailResponse>>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<IReadOnlyCollection<UserFavoritesTrailResponse>>.Success(list));
 
         // Act
@@ -138,8 +140,8 @@ public class UserServiceTests
     public async Task GetFavoritesByUserIdentifier_WhenNoFavorites_ReturnsEmptyList()
     {
         // Arrange
-        var repo = new Mock<IUserResponseRepository>();
-        repo.Setup(r => r.GetFavoritesByUserIdentifierAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+        var repo = new Mock<IUserRepository>();
+        repo.Setup(r => r.GetFavoritesByUserIdentifierAsync(It.IsAny<string>(), It.IsAny<Expression<Func<Trail, UserFavoritesTrailResponse>>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<IReadOnlyCollection<UserFavoritesTrailResponse>>.Success([]));
 
         // Act
@@ -158,8 +160,8 @@ public class UserServiceTests
         [
             UserWishlistTrailResponse.Create("t2", "Trail 2", 8M, "Desc", null, null)
         ];
-        var repo = new Mock<IUserResponseRepository>();
-        repo.Setup(r => r.GetWishListByUserIdentifierAsync(Utilities.Identifiers.User, It.IsAny<CancellationToken>()))
+        var repo = new Mock<IUserRepository>();
+        repo.Setup(r => r.GetWishListByUserIdentifierAsync(Utilities.Identifiers.User, It.IsAny<Expression<Func<Trail, UserWishlistTrailResponse>>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<IReadOnlyCollection<UserWishlistTrailResponse>>.Success(list));
 
         // Act
@@ -174,8 +176,8 @@ public class UserServiceTests
     public async Task GetWishListByUserIdentifier_WhenNoWishlist_ReturnsEmptyList()
     {
         // Arrange
-        var repo = new Mock<IUserResponseRepository>();
-        repo.Setup(r => r.GetWishListByUserIdentifierAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+        var repo = new Mock<IUserRepository>();
+        repo.Setup(r => r.GetWishListByUserIdentifierAsync(It.IsAny<string>(), It.IsAny<Expression<Func<Trail, UserWishlistTrailResponse>>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<IReadOnlyCollection<UserWishlistTrailResponse>>.Success([]));
 
         // Act
@@ -190,11 +192,11 @@ public class UserServiceTests
     public async Task CreateUser_WhenFirebaseUidIsNew_ReturnsSuccess()
     {
         // Arrange
-        var repo = new Mock<IUserResponseRepository>();
-        repo.Setup(r => r.GetUserByFirebaseUidAsync("new-uid", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(RepositoryResult<UserResponse>.NotFound());
-        repo.Setup(r => r.CreateUserAsync(It.IsAny<Infrastructure.Data.Entities.User>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((Infrastructure.Data.Entities.User u, CancellationToken _) => RepositoryResult<Infrastructure.Data.Entities.User>.Success(u));
+        var repo = new Mock<IUserRepository>();
+        repo.Setup(r => r.GetUserByFirebaseUidAsync("new-uid", It.IsAny<Expression<Func<User, string>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<string>.NotFound());
+        repo.Setup(r => r.CreateUserAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((User u, CancellationToken _) => RepositoryResult<User>.Success(u));
 
         // Act
         var result = await Build(repo.Object).CreateUserAsync("new@test.com", "NewUser", "new-uid", CancellationToken.None);
@@ -210,9 +212,9 @@ public class UserServiceTests
     public async Task CreateUser_WhenFirebaseUidAlreadyExists_ReturnsConflict()
     {
         // Arrange
-        var repo = new Mock<IUserResponseRepository>();
-        repo.Setup(r => r.GetUserByFirebaseUidAsync(Utilities.Identifiers.UserFirebaseUid, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(RepositoryResult<UserResponse>.Success(Utilities.Stubs.UserResponse()));
+        var repo = new Mock<IUserRepository>();
+        repo.Setup(r => r.GetUserByFirebaseUidAsync(Utilities.Identifiers.UserFirebaseUid, It.IsAny<Expression<Func<User, string>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<string>.Success(Utilities.Identifiers.User));
 
         // Act
         var result = await Build(repo.Object).CreateUserAsync("other@test.com", "Other", Utilities.Identifiers.UserFirebaseUid, CancellationToken.None);
@@ -228,8 +230,8 @@ public class UserServiceTests
     {
         // Arrange
         var response = UserFavoritesTrailResponse.Create(Utilities.Identifiers.Trail1, "Trail", 5M, "Desc", null, null);
-        var repo = new Mock<IUserResponseRepository>();
-        repo.Setup(r => r.AddTrailToUserFavoritesListAsync(Utilities.Identifiers.User, Utilities.Identifiers.Trail1, It.IsAny<CancellationToken>()))
+        var repo = new Mock<IUserRepository>();
+        repo.Setup(r => r.AddTrailToUserFavoritesListAsync(Utilities.Identifiers.User, Utilities.Identifiers.Trail1, It.IsAny<Expression<Func<Trail, UserFavoritesTrailResponse>>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<UserFavoritesTrailResponse>.Success(response));
 
         // Act
@@ -244,8 +246,8 @@ public class UserServiceTests
     public async Task AddTrailToFavorites_WhenNotFound_ReturnsNotFound()
     {
         // Arrange
-        var repo = new Mock<IUserResponseRepository>();
-        repo.Setup(r => r.AddTrailToUserFavoritesListAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+        var repo = new Mock<IUserRepository>();
+        repo.Setup(r => r.AddTrailToUserFavoritesListAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<Trail, UserFavoritesTrailResponse>>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<UserFavoritesTrailResponse>.NotFound());
 
         // Act
@@ -261,8 +263,8 @@ public class UserServiceTests
     public async Task AddTrailToFavorites_WhenDuplicate_ReturnsConflict()
     {
         // Arrange
-        var repo = new Mock<IUserResponseRepository>();
-        repo.Setup(r => r.AddTrailToUserFavoritesListAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+        var repo = new Mock<IUserRepository>();
+        repo.Setup(r => r.AddTrailToUserFavoritesListAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<Trail, UserFavoritesTrailResponse>>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<UserFavoritesTrailResponse>.Conflict());
 
         // Act
@@ -279,8 +281,8 @@ public class UserServiceTests
     {
         // Arrange
         var response = UserWishlistTrailResponse.Create(Utilities.Identifiers.Trail1, "Trail", 5M, "Desc", null, null);
-        var repo = new Mock<IUserResponseRepository>();
-        repo.Setup(r => r.AddTrailToUserWishListAsync(Utilities.Identifiers.User, Utilities.Identifiers.Trail1, It.IsAny<CancellationToken>()))
+        var repo = new Mock<IUserRepository>();
+        repo.Setup(r => r.AddTrailToUserWishListAsync(Utilities.Identifiers.User, Utilities.Identifiers.Trail1, It.IsAny<Expression<Func<Trail, UserWishlistTrailResponse>>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<UserWishlistTrailResponse>.Success(response));
 
         // Act
@@ -295,8 +297,8 @@ public class UserServiceTests
     public async Task AddTrailToWishList_WhenNotFound_ReturnsNotFound()
     {
         // Arrange
-        var repo = new Mock<IUserResponseRepository>();
-        repo.Setup(r => r.AddTrailToUserWishListAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+        var repo = new Mock<IUserRepository>();
+        repo.Setup(r => r.AddTrailToUserWishListAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<Trail, UserWishlistTrailResponse>>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<UserWishlistTrailResponse>.NotFound());
 
         // Act
@@ -312,8 +314,8 @@ public class UserServiceTests
     public async Task AddTrailToWishList_WhenDuplicate_ReturnsConflict()
     {
         // Arrange
-        var repo = new Mock<IUserResponseRepository>();
-        repo.Setup(r => r.AddTrailToUserWishListAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+        var repo = new Mock<IUserRepository>();
+        repo.Setup(r => r.AddTrailToUserWishListAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Expression<Func<Trail, UserWishlistTrailResponse>>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<UserWishlistTrailResponse>.Conflict());
 
         // Act
@@ -329,7 +331,7 @@ public class UserServiceTests
     public async Task RemoveFromFavorites_WhenSuccess_ReturnsSuccess()
     {
         // Arrange
-        var repo = new Mock<IUserResponseRepository>();
+        var repo = new Mock<IUserRepository>();
         repo.Setup(r => r.RemoveTrailFromUserFavoritesListAsync(Utilities.Identifiers.User, Utilities.Identifiers.Trail1, It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult.Success());
 
@@ -344,7 +346,7 @@ public class UserServiceTests
     public async Task RemoveFromFavorites_WhenNotFound_ReturnsNotFound()
     {
         // Arrange
-        var repo = new Mock<IUserResponseRepository>();
+        var repo = new Mock<IUserRepository>();
         repo.Setup(r => r.RemoveTrailFromUserFavoritesListAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult.NotFound());
 
@@ -361,7 +363,7 @@ public class UserServiceTests
     public async Task RemoveFromWishList_WhenSuccess_ReturnsSuccess()
     {
         // Arrange
-        var repo = new Mock<IUserResponseRepository>();
+        var repo = new Mock<IUserRepository>();
         repo.Setup(r => r.RemoveTrailFromUserWishListAsync(Utilities.Identifiers.User, Utilities.Identifiers.Trail1, It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult.Success());
 
@@ -376,7 +378,7 @@ public class UserServiceTests
     public async Task RemoveFromWishList_WhenNotFound_ReturnsNotFound()
     {
         // Arrange
-        var repo = new Mock<IUserResponseRepository>();
+        var repo = new Mock<IUserRepository>();
         repo.Setup(r => r.RemoveTrailFromUserWishListAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult.NotFound());
 
@@ -393,7 +395,7 @@ public class UserServiceTests
     public async Task DeleteUser_WhenFound_ReturnsSuccess()
     {
         // Arrange
-        var repo = new Mock<IUserResponseRepository>();
+        var repo = new Mock<IUserRepository>();
         repo.Setup(r => r.DeleteUserAsync(Utilities.Identifiers.User, It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult.Success());
 
@@ -408,7 +410,7 @@ public class UserServiceTests
     public async Task DeleteUser_WhenNotFound_ReturnsNotFound()
     {
         // Arrange
-        var repo = new Mock<IUserResponseRepository>();
+        var repo = new Mock<IUserRepository>();
         repo.Setup(r => r.DeleteUserAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult.NotFound());
 
@@ -425,7 +427,7 @@ public class UserServiceTests
     public async Task DeleteUser_WhenExceptionThrown_ReturnsInternalServerError()
     {
         // Arrange
-        var repo = new Mock<IUserResponseRepository>();
+        var repo = new Mock<IUserRepository>();
         repo.Setup(r => r.DeleteUserAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new Exception("DB error"));
 

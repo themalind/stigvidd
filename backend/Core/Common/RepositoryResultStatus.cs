@@ -1,4 +1,4 @@
-﻿namespace Core
+﻿namespace Core.Common
 {
     public enum RepositoryResultStatus
     {

@@ -9,7 +9,7 @@ public class VisitorInformationResponse
     public bool Illumination { get; set; }
     public string IlluminationText { get; set; } = string.Empty;
     public string MaintainedBy { get; set; } = string.Empty;
-    public bool WinterMaintenacnce { get; set; }
+    public bool WinterMaintenance { get; set; }
 
     public static VisitorInformationResponse Create(
         string identifier,
@@ -30,7 +30,7 @@ public class VisitorInformationResponse
             Illumination = illumination,
             IlluminationText = illuminationText,
             MaintainedBy = maintainedBy,
-            WinterMaintenacnce = winterMaintenance
+            WinterMaintenance = winterMaintenance
         };
     }
 }

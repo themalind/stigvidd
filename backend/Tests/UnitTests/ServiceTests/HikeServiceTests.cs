@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using Core;
 using Core.Factories;
 using Core.Interfaces.Repositories;
@@ -14,10 +15,10 @@ namespace UnitTests.ServiceTests;
 public class HikeServiceTests
 {
     private HikeService Build(
-        Mock<IHikeResponseRepository>? hikeRepo = null,
+        Mock<IHikeRepository>? hikeRepo = null,
         Mock<Core.Interfaces.Services.IUserService>? userSvc = null) =>
         new(
-            (hikeRepo ?? new Mock<IHikeResponseRepository>()).Object,
+            (hikeRepo ?? new Mock<IHikeRepository>()).Object,
             new HikeResponseFactory(),
             new Mock<ILogger<HikeService>>().Object,
             (userSvc ?? new Mock<Core.Interfaces.Services.IUserService>()).Object);
@@ -34,7 +35,7 @@ public class HikeServiceTests
     public async Task CreateHike_WhenUserExists_ReturnsSuccess()
     {
         // Arrange
-        var hikeRepo = new Mock<IHikeResponseRepository>();
+        var hikeRepo = new Mock<IHikeRepository>();
         hikeRepo.Setup(r => r.CreateHikeAsync(It.IsAny<Hike>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<Hike>.Success(Utilities.Stubs.Hike()));
 
@@ -110,7 +111,7 @@ public class HikeServiceTests
     public async Task CreateHike_WhenRepositoryFails_ReturnsInternalServerError()
     {
         // Arrange
-        var hikeRepo = new Mock<IHikeResponseRepository>();
+        var hikeRepo = new Mock<IHikeRepository>();
         hikeRepo.Setup(r => r.CreateHikeAsync(It.IsAny<Hike>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<Hike>.Error());
 
@@ -127,7 +128,7 @@ public class HikeServiceTests
     public async Task GetHikeByIdentifier_WhenFound_ReturnsSuccess()
     {
         // Arrange
-        var hikeRepo = new Mock<IHikeResponseRepository>();
+        var hikeRepo = new Mock<IHikeRepository>();
         hikeRepo.Setup(r => r.GetHikeByIdentifierAsync(Utilities.Identifiers.Hike1, It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<Hike>.Success(Utilities.Stubs.Hike()));
 
@@ -145,7 +146,7 @@ public class HikeServiceTests
     public async Task GetHikeByIdentifier_WhenNotFound_ReturnsNotFound()
     {
         // Arrange
-        var hikeRepo = new Mock<IHikeResponseRepository>();
+        var hikeRepo = new Mock<IHikeRepository>();
         hikeRepo.Setup(r => r.GetHikeByIdentifierAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<Hike>.NotFound());
 
@@ -167,8 +168,8 @@ public class HikeServiceTests
             HikeOverviewResponse.Create("id1", "H1", 10, 3600000, "[]", Utilities.Identifiers.User),
             HikeOverviewResponse.Create("id2", "H2", 20, 7200000, "[]", Utilities.Identifiers.User),
         ];
-        var hikeRepo = new Mock<IHikeResponseRepository>();
-        hikeRepo.Setup(r => r.GetHikesAsync(It.IsAny<string?>(), It.IsAny<CancellationToken>()))
+        var hikeRepo = new Mock<IHikeRepository>();
+        hikeRepo.Setup(r => r.GetHikesAsync(It.IsAny<string?>(), It.IsAny<Expression<Func<Hike, HikeOverviewResponse>>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<IReadOnlyCollection<HikeOverviewResponse>>.Success(list));
 
         // Act
@@ -183,8 +184,8 @@ public class HikeServiceTests
     public async Task GetHikes_WhenRepositoryFails_ReturnsInternalServerError()
     {
         // Arrange
-        var hikeRepo = new Mock<IHikeResponseRepository>();
-        hikeRepo.Setup(r => r.GetHikesAsync(It.IsAny<string?>(), It.IsAny<CancellationToken>()))
+        var hikeRepo = new Mock<IHikeRepository>();
+        hikeRepo.Setup(r => r.GetHikesAsync(It.IsAny<string?>(), It.IsAny<Expression<Func<Hike, HikeOverviewResponse>>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<IReadOnlyCollection<HikeOverviewResponse>>.Error());
 
         // Act
@@ -201,7 +202,7 @@ public class HikeServiceTests
     {
         // Arrange
         var hike = Utilities.Stubs.Hike();
-        var hikeRepo = new Mock<IHikeResponseRepository>();
+        var hikeRepo = new Mock<IHikeRepository>();
         hikeRepo.Setup(r => r.GetHikeByIdentifierAsync(Utilities.Identifiers.Hike1, It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<Hike>.Success(hike));
         hikeRepo.Setup(r => r.DeleteHikeAsync(hike, It.IsAny<CancellationToken>()))
@@ -218,7 +219,7 @@ public class HikeServiceTests
     public async Task DeleteHike_WhenNotFound_ReturnsNotFound()
     {
         // Arrange
-        var hikeRepo = new Mock<IHikeResponseRepository>();
+        var hikeRepo = new Mock<IHikeRepository>();
         hikeRepo.Setup(r => r.GetHikeByIdentifierAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<Hike>.NotFound());
 
@@ -236,7 +237,7 @@ public class HikeServiceTests
     {
         // Arrange
         var hike = Utilities.Stubs.Hike();
-        var hikeRepo = new Mock<IHikeResponseRepository>();
+        var hikeRepo = new Mock<IHikeRepository>();
         hikeRepo.Setup(r => r.GetHikeByIdentifierAsync(Utilities.Identifiers.Hike1, It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<Hike>.Success(hike));
 

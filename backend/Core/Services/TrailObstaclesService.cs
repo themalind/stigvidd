@@ -10,20 +10,20 @@ namespace Core.Services;
 
 public class TrailObstaclesService : ITrailObstaclesService
 {
-    private readonly ITrailObstacleResponseRepository _obstacleResponseRepository;
+    private readonly ITrailObstacleRepository _obstacleRepository;
     private readonly ILogger<TrailObstaclesService> _logger;
     private readonly TrailObstaclesResponseFactory _responseFactory;
     private readonly IUserService _userService;
     private readonly ITrailService _trailService;
 
     public TrailObstaclesService(
-        ITrailObstacleResponseRepository obstacleResponseRepository,
+        ITrailObstacleRepository obstacleResponseRepository,
         ILogger<TrailObstaclesService> logger,
         TrailObstaclesResponseFactory responseFactory,
         IUserService userService,
         ITrailService trailService)
     {
-        _obstacleResponseRepository = obstacleResponseRepository;
+        _obstacleRepository = obstacleResponseRepository;
         _logger = logger;
         _responseFactory = responseFactory;
         _userService = userService;
@@ -34,7 +34,9 @@ public class TrailObstaclesService : ITrailObstaclesService
     {
         try
         {
-            var result = await _obstacleResponseRepository.GetTrailObstaclesByTrailIdentifierAsync(identifier, ctoken);
+            var result = await _obstacleRepository.GetTrailObstaclesByTrailIdentifierAsync(
+                identifier,
+                to => to, ctoken);
 
             if (!result.IsSuccess)
                 return Result.Fail<IReadOnlyCollection<TrailObstacleResponse>>(new Message(500, "An error occurred while fetching trail obstacles."));
@@ -75,7 +77,7 @@ public class TrailObstaclesService : ITrailObstaclesService
                 IncidentLatitude = latitude,
             };
 
-            var result = await _obstacleResponseRepository.AddTrailObstacleAsync(obstacle, ctoken);
+            var result = await _obstacleRepository.AddTrailObstacleAsync(obstacle, ctoken);
 
             if (!result.IsSuccess)
                 return Result.Fail<TrailObstacleResponse?>(new Message(500, "An error occurred while adding trail obstacle."));
@@ -99,7 +101,7 @@ public class TrailObstaclesService : ITrailObstaclesService
             if (!userIdResult.Success)
                 return Result.Fail(new Message(404, $"{userIdResult.Message}"));
 
-            var obstacleResult = await _obstacleResponseRepository.GetTrailObstacleByIdentifierAsync(trailObstacleIdentifier, ctoken);
+            var obstacleResult = await _obstacleRepository.GetTrailObstacleByIdentifierAsync(trailObstacleIdentifier, ctoken);
 
             if (!obstacleResult.IsSuccess)
                 return Result.Fail(new Message(404, $"No trail obstacle found with identifier: {trailObstacleIdentifier}"));
@@ -113,7 +115,7 @@ public class TrailObstaclesService : ITrailObstaclesService
                 TrailObstacleId = obstacleResult.Value.Id
             };
 
-            await _obstacleResponseRepository.AddSolvedVoteAsync(solvedVote, ctoken);
+            await _obstacleRepository.AddSolvedVoteAsync(solvedVote, ctoken);
 
             return Result.Ok();
         }
@@ -134,7 +136,7 @@ public class TrailObstaclesService : ITrailObstaclesService
             if (!userIdResult.Success)
                 return Result.Fail(new Message(404, $"{userIdResult.Message}"));
 
-            var obstacleResult = await _obstacleResponseRepository.GetTrailObstacleByIdentifierAndUserIdAsync(trailObstacleIdentifier, userIdResult.Value, ctoken);
+            var obstacleResult = await _obstacleRepository.GetTrailObstacleByIdentifierAndUserIdAsync(trailObstacleIdentifier, userIdResult.Value, ctoken);
 
             if (!obstacleResult.IsSuccess)
                 return Result.Fail(new Message(404, $"No trail obstacle found for user {userIdentifier} with identifier: {trailObstacleIdentifier}"));
@@ -147,7 +149,7 @@ public class TrailObstaclesService : ITrailObstaclesService
             if (!string.IsNullOrEmpty(issueType) && Enum.TryParse<TrailIssueType>(issueType, out var issueTypeResult))
                 obstacle.IssueType = issueTypeResult;
 
-            await _obstacleResponseRepository.UpdateTrailObstacleAsync(obstacle, ctoken);
+            await _obstacleRepository.UpdateTrailObstacleAsync(obstacle, ctoken);
 
             return Result.Ok();
         }
@@ -168,17 +170,17 @@ public class TrailObstaclesService : ITrailObstaclesService
             if (!userIdResult.Success)
                 return Result.Fail(new Message(404, $"{userIdResult.Message}"));
 
-            var obstacleResult = await _obstacleResponseRepository.GetTrailObstacleByIdentifierAsync(trailObstacleIdentifier, ctoken);
+            var obstacleResult = await _obstacleRepository.GetTrailObstacleByIdentifierAsync(trailObstacleIdentifier, ctoken);
 
             if (!obstacleResult.IsSuccess)
                 return Result.Fail(new Message(404, $"No trail obstacle found for user {userIdentifier} with identifier: {trailObstacleIdentifier}"));
 
-            var solvedVoteResult = await _obstacleResponseRepository.GetSolvedVoteByObstacleIdAndUserIdAsync(obstacleResult.Value.Id, userIdResult.Value, ctoken);
+            var solvedVoteResult = await _obstacleRepository.GetSolvedVoteByObstacleIdAndUserIdAsync(obstacleResult.Value.Id, userIdResult.Value, ctoken);
 
             if (!solvedVoteResult.IsSuccess)
                 return Result.Fail(new Message(404, $"No solved vote found for obstacle {trailObstacleIdentifier} and user {userIdentifier}"));
 
-            await _obstacleResponseRepository.DeleteSolvedVoteAsync(solvedVoteResult.Value, ctoken);
+            await _obstacleRepository.DeleteSolvedVoteAsync(solvedVoteResult.Value, ctoken);
 
             return Result.Ok();
         }
@@ -199,12 +201,12 @@ public class TrailObstaclesService : ITrailObstaclesService
             if (!userIdResult.Success)
                 return Result.Fail(new Message(404, $"{userIdResult.Message}"));
 
-            var obstacleResult = await _obstacleResponseRepository.GetTrailObstacleByIdentifierAndUserIdAsync(trailObstacleIdentifier, userIdResult.Value, ctoken);
+            var obstacleResult = await _obstacleRepository.GetTrailObstacleByIdentifierAndUserIdAsync(trailObstacleIdentifier, userIdResult.Value, ctoken);
 
             if (!obstacleResult.IsSuccess)
                 return Result.Fail(new Message(404, $"No trail obstacle found for user {userIdentifier} with identifier: {trailObstacleIdentifier}"));
 
-            await _obstacleResponseRepository.DeleteTrailObstacleAsync(obstacleResult.Value, ctoken);
+            await _obstacleRepository.DeleteTrailObstacleAsync(obstacleResult.Value, ctoken);
 
             return Result.Ok();
         }

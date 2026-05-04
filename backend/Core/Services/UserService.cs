@@ -3,21 +3,23 @@ using Core.Interfaces.Repositories;
 using Core.Interfaces.Services;
 using Infrastructure.Data.Entities;
 using Microsoft.Extensions.Logging;
+using WebDataContracts.ResponseModels.Review;
+using WebDataContracts.ResponseModels.Trail;
 using WebDataContracts.ResponseModels.User;
 
 namespace Core.Services;
 
 public class UserService : IUserService
 {
-    private readonly IUserResponseRepository _userResponseRepository;
+    private readonly IUserRepository _userRepository;
     private readonly ILogger<UserService> _logger;
     private readonly UserResponseFactory _userResponseFactory;
 
-    public UserService(IUserResponseRepository userResponseRepository,
+    public UserService(IUserRepository userResponseRepository,
     ILogger<UserService> logger,
     UserResponseFactory userResponseFactory)
     {
-        _userResponseRepository = userResponseRepository;
+        _userRepository = userResponseRepository;
         _logger = logger;
         _userResponseFactory = userResponseFactory;
     }
@@ -26,7 +28,10 @@ public class UserService : IUserService
     {
         try
         {
-            var result = await _userResponseRepository.GetUserByFirebaseUidAsync(firebaseUid, ctoken);
+            var result = await _userRepository.GetUserByFirebaseUidAsync(
+                firebaseUid,
+                u => new UserResponse { Identifier = u.Identifier, NickName = u.NickName, Email = u.Email },
+                ctoken);
 
             if (!result.IsSuccess)
             {
@@ -47,7 +52,7 @@ public class UserService : IUserService
     {
         try
         {
-            var result = await _userResponseRepository.GetUserIdByIdentifierAsync(identifier, ctoken);
+            var result = await _userRepository.GetUserIdByIdentifierAsync(identifier, ctoken);
 
             if (!result.IsSuccess)
             {
@@ -68,7 +73,10 @@ public class UserService : IUserService
     {
         try
         {
-            var result = await _userResponseRepository.GetUserByIdentifierAsync(identifier, ctoken);
+            var result = await _userRepository.GetUserByIdentifierAsync(
+                identifier,
+                u => new UserResponse { Identifier = u.Identifier, NickName = u.NickName, Email = u.Email },
+                ctoken);
 
             if (!result.IsSuccess)
             {
@@ -89,9 +97,20 @@ public class UserService : IUserService
     {
         try
         {
-            var result = await _userResponseRepository.GetFavoritesByUserIdentifierAsync(userIdentifier, ctoken);
+            var result = await _userRepository.GetFavoritesByUserIdentifierAsync(
+                userIdentifier,
+                t => new UserFavoritesTrailResponse
+                {
+                    Identifier = t.Identifier,
+                    Name = t.Name ?? string.Empty,
+                    TrailLength = t.TrailLength,
+                    Description = t.Description ?? string.Empty,
+                    RatingResponse = t.Reviews!.Select(r => new RatingResponse { Identifier = r.Identifier, Rating = r.Rating }).ToList(),
+                    TrailImages = t.TrailImages!.Select(ti => new TrailImageResponse { Identifier = ti.Identifier, ImageUrl = ti.ImageUrl }).Take(1).ToList()
+                },
+                ctoken);
 
-            return Result.Ok<IReadOnlyCollection<UserFavoritesTrailResponse?>>(result.Value!);
+            return Result.Ok<IReadOnlyCollection<UserFavoritesTrailResponse?>>(result.Value ?? []);
         }
         catch (Exception ex)
         {
@@ -104,9 +123,20 @@ public class UserService : IUserService
     {
         try
         {
-            var result = await _userResponseRepository.GetWishListByUserIdentifierAsync(userIdentifier, ctoken);
+            var result = await _userRepository.GetWishListByUserIdentifierAsync(
+                userIdentifier,
+                t => new UserWishlistTrailResponse
+                {
+                    Identifier = t.Identifier,
+                    Name = t.Name ?? string.Empty,
+                    TrailLength = t.TrailLength,
+                    Description = t.Description ?? string.Empty,
+                    RatingResponse = t.Reviews!.Select(r => new RatingResponse { Identifier = r.Identifier, Rating = r.Rating }).ToList(),
+                    TrailImages = t.TrailImages!.Select(ti => new TrailImageResponse { Identifier = ti.Identifier, ImageUrl = ti.ImageUrl }).Take(1).ToList()
+                },
+                ctoken);
 
-            return Result.Ok<IReadOnlyCollection<UserWishlistTrailResponse?>>(result.Value!);
+            return Result.Ok<IReadOnlyCollection<UserWishlistTrailResponse?>>(result.Value ?? []);
         }
         catch (Exception ex)
         {
@@ -119,7 +149,7 @@ public class UserService : IUserService
     {
         try
         {
-            var existing = await _userResponseRepository.GetUserByFirebaseUidAsync(firebaseUid, ctoken);
+            var existing = await _userRepository.GetUserByFirebaseUidAsync(firebaseUid, u => u.Identifier, ctoken);
 
             if (existing.IsSuccess)
             {
@@ -136,7 +166,7 @@ public class UserService : IUserService
                 MyWishList = []
             };
 
-            await _userResponseRepository.CreateUserAsync(newUser, ctoken);
+            await _userRepository.CreateUserAsync(newUser, ctoken);
 
             var userResponse = _userResponseFactory.Create(newUser);
             return Result.Ok<UserResponse?>(userResponse);
@@ -152,7 +182,19 @@ public class UserService : IUserService
     {
         try
         {
-            var result = await _userResponseRepository.AddTrailToUserFavoritesListAsync(userIdentifier, trailIdentifier, ctoken);
+            var result = await _userRepository.AddTrailToUserFavoritesListAsync(
+                userIdentifier,
+                trailIdentifier,
+                t => new UserFavoritesTrailResponse
+                {
+                    Identifier = t.Identifier,
+                    Name = t.Name ?? string.Empty,
+                    TrailLength = t.TrailLength,
+                    Description = t.Description ?? string.Empty,
+                    RatingResponse = t.Reviews!.Select(r => new RatingResponse { Identifier = r.Identifier, Rating = r.Rating }).ToList(),
+                    TrailImages = t.TrailImages!.Select(ti => new TrailImageResponse { Identifier = ti.Identifier, ImageUrl = ti.ImageUrl }).Take(1).ToList()
+                },
+                ctoken);
 
             if (result.Status == RepositoryResultStatus.NotFound)
             {
@@ -179,7 +221,19 @@ public class UserService : IUserService
     {
         try
         {
-            var result = await _userResponseRepository.AddTrailToUserWishListAsync(userIdentifier, trailIdentifier, ctoken);
+            var result = await _userRepository.AddTrailToUserWishListAsync(
+                userIdentifier,
+                trailIdentifier,
+                t => new UserWishlistTrailResponse
+                {
+                    Identifier = t.Identifier,
+                    Name = t.Name ?? string.Empty,
+                    TrailLength = t.TrailLength,
+                    Description = t.Description ?? string.Empty,
+                    RatingResponse = t.Reviews!.Select(r => new RatingResponse { Identifier = r.Identifier, Rating = r.Rating }).ToList(),
+                    TrailImages = t.TrailImages!.Select(ti => new TrailImageResponse { Identifier = ti.Identifier, ImageUrl = ti.ImageUrl }).Take(1).ToList()
+                },
+                ctoken);
 
             if (result.Status == RepositoryResultStatus.NotFound)
             {
@@ -206,7 +260,7 @@ public class UserService : IUserService
     {
         try
         {
-            var result = await _userResponseRepository.RemoveTrailFromUserFavoritesListAsync(userIdentifier, trailIdentifier, ctoken);
+            var result = await _userRepository.RemoveTrailFromUserFavoritesListAsync(userIdentifier, trailIdentifier, ctoken);
 
             if (!result.IsSuccess)
             {
@@ -227,7 +281,7 @@ public class UserService : IUserService
     {
         try
         {
-            var result = await _userResponseRepository.RemoveTrailFromUserWishListAsync(userIdentifier, trailIdentifier, ctoken);
+            var result = await _userRepository.RemoveTrailFromUserWishListAsync(userIdentifier, trailIdentifier, ctoken);
 
             if (!result.IsSuccess)
             {
@@ -248,7 +302,7 @@ public class UserService : IUserService
     {
         try
         {
-            var result = await _userResponseRepository.DeleteUserAsync(identifier, ctoken);
+            var result = await _userRepository.DeleteUserAsync(identifier, ctoken);
 
             if (result.Status == RepositoryResultStatus.NotFound)
             {

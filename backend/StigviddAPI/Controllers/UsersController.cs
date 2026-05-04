@@ -38,7 +38,10 @@ public class UsersController : StigViddController
             return ToActionResult(result.Message);
         }
 
-        return Created($"{result.Value!.Identifier}", result.Value);
+        if (result.Value is null)
+            return StatusCode(500);
+
+        return Created($"{result.Value.Identifier}", result.Value);
     }
 
     [HttpGet]

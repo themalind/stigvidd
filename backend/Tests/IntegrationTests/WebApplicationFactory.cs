@@ -27,12 +27,15 @@ public class StigViddWebApplicationFactory<TProgram>
             var dbContextDescriptor = services.SingleOrDefault(
                 d => d.ServiceType ==
                     typeof(IDbContextOptionsConfiguration<StigViddDbContext>));
-            services.Remove(dbContextDescriptor!);
+            if (dbContextDescriptor != null)
+                services.Remove(dbContextDescriptor);
 
             var dbConnectionDescriptor = services.SingleOrDefault(
                 d => d.ServiceType ==
                     typeof(DbConnection));
-            services.Remove(dbConnectionDescriptor!);
+
+            if (dbConnectionDescriptor != null)
+                services.Remove(dbConnectionDescriptor);
 
             _connection = new SqliteConnection("DataSource=:memory:");
             _connection.Open();

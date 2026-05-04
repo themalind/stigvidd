@@ -382,7 +382,7 @@ public class TrailObstaclesControllerIntegrationTests : IClassFixture<StigViddWe
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         obstacles.Should().NotBeEmpty();
-        obstacles!.First().UserIdentifier.Should().NotBeNullOrEmpty();
+        obstacles.First().UserIdentifier.Should().NotBeNullOrEmpty();
     }
 
     [Fact]

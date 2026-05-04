@@ -13,14 +13,14 @@ public class HikeService : IHikeService
     private readonly HikeResponseFactory _hikeResponseFactory;
     private readonly ILogger<HikeService> _logger;
     private readonly IUserService _userService;
-    private readonly IHikeResponseRepository _hikeResponseRepository;
+    private readonly IHikeRepository _hikeRepository;
 
-    public HikeService(IHikeResponseRepository hikeResponseRepository,
+    public HikeService(IHikeRepository hikeResponseRepository,
         HikeResponseFactory hikeResponseFactory,
         ILogger<HikeService> logger,
         IUserService userService)
     {
-        _hikeResponseRepository = hikeResponseRepository;
+        _hikeRepository = hikeResponseRepository;
         _hikeResponseFactory = hikeResponseFactory;
         _logger = logger;
         _userService = userService;
@@ -52,7 +52,7 @@ public class HikeService : IHikeService
                 CreatedBy = userIdentifier
             };
 
-            var result = await _hikeResponseRepository.CreateHikeAsync(hike, ctoken);
+            var result = await _hikeRepository.CreateHikeAsync(hike, ctoken);
 
             if (!result.IsSuccess)
                 return Result.Fail<HikeResponse>(new Message(500, "An error occurred while adding the hike."));
@@ -73,7 +73,7 @@ public class HikeService : IHikeService
     {
         try
         {
-            var result = await _hikeResponseRepository.GetHikeByIdentifierAsync(identifier, ctoken);
+            var result = await _hikeRepository.GetHikeByIdentifierAsync(identifier, ctoken);
 
             if (!result.IsSuccess)
                 return Result.Fail<HikeResponse>(new Message(404, "Hike not found"));
@@ -91,7 +91,18 @@ public class HikeService : IHikeService
     {
         try
         {
-            var result = await _hikeResponseRepository.GetHikesAsync(createdBy, ctoken);
+            var result = await _hikeRepository.GetHikesAsync(
+                createdBy,
+                h => new HikeOverviewResponse
+                {
+                    Identifier = h.Identifier,
+                    Name = h.Name,
+                    HikeLength = h.HikeLength,
+                    Duration = h.Duration,
+                    Coordinates = h.Coordinates,
+                    CreatedBy = h.CreatedBy
+                },
+                ctoken);
 
             if (!result.IsSuccess)
                 return Result.Fail<IReadOnlyCollection<HikeOverviewResponse>>(new Message(500, "An error occurred while fetching hikes."));
@@ -109,7 +120,7 @@ public class HikeService : IHikeService
     {
         try
         {
-            var result = await _hikeResponseRepository.GetHikeByIdentifierAsync(hikeIdentifier, ctoken);
+            var result = await _hikeRepository.GetHikeByIdentifierAsync(hikeIdentifier, ctoken);
 
             if (!result.IsSuccess)
                 return Result.Fail(new Message(404, $"Could not remove hike with id {hikeIdentifier}."));
@@ -117,7 +128,7 @@ public class HikeService : IHikeService
             if (result.Value.CreatedBy != userIdentifier)
                 return Result.Fail(new Message(401, $"Hike {hikeIdentifier} does not belong to {userIdentifier}"));
 
-            await _hikeResponseRepository.DeleteHikeAsync(result.Value, ctoken);
+            await _hikeRepository.DeleteHikeAsync(result.Value, ctoken);
 
             return Result.Ok();
         }

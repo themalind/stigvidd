@@ -1,4 +1,3 @@
-using Core;
 using Core.Factories;
 using Core.Interfaces.Repositories;
 using Core.Interfaces.Services;
@@ -8,6 +7,7 @@ using Infrastructure.Data.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
+using System.Linq.Expressions;
 using WebDataContracts.ResponseModels.Review;
 
 namespace UnitTests.ServiceTests;
@@ -15,40 +15,36 @@ namespace UnitTests.ServiceTests;
 public class ReviewServiceTests
 {
     private ReviewService Build(
-        Mock<IReviewResponseRepository>? reviewRepo = null,
+        Mock<IReviewRepository>? reviewRepo = null,
         Mock<IWebDavService>? webDav = null,
-        Mock<IUserService>? userSvc = null,
-        Mock<ITrailService>? trailSvc = null)
+        Mock<IUserService>? userService = null,
+        Mock<ITrailService>? trailService = null)
     {
         var cfg = new Mock<IConfiguration>();
         cfg.Setup(c => c["PresentableBaseUrl"]).Returns("http://stigvidd.se/testing/");
 
         return new ReviewService(
-            (reviewRepo ?? new Mock<IReviewResponseRepository>()).Object,
+            (reviewRepo ?? new Mock<IReviewRepository>()).Object,
             (webDav ?? Utilities.MockFactory.WebDavService()).Object,
-            (userSvc ?? Utilities.MockFactory.UserServiceFoundById()).Object,
-            (trailSvc ?? Utilities.MockFactory.TrailServiceFound()).Object,
+            (userService ?? Utilities.MockFactory.UserServiceFoundById()).Object,
+            (trailService ?? Utilities.MockFactory.TrailServiceFound()).Object,
             new ReviewResponseFactory(cfg.Object),
             new Mock<ILogger<ReviewService>>().Object);
     }
 
-    private static PagedReviewResponse StubPage(int count = 2) => new()
-    {
-        Reviews = Enumerable.Range(0, count)
-            .Select(i => ReviewResponse.Create($"r{i}", "text", 4M, "Nick", DateTime.UtcNow, Utilities.Identifiers.Trail7, Utilities.Identifiers.User, null))
-            .ToList(),
-        Page = 0,
-        HasMore = false,
-        Total = count
-    };
+    private static PagedResult<ReviewResponse> StubPage(int count = 2) =>
+        new(Enumerable.Range(0, count)
+                .Select(i => ReviewResponse.Create($"r{i}", "text", 4M, "Nick", DateTime.UtcNow, Utilities.Identifiers.Trail7, Utilities.Identifiers.User, null))
+                .ToList(),
+            0, false, count);
 
     [Fact]
     public async Task GetReviewsByTrailIdentifier_WhenSuccess_ReturnsReviews()
     {
         // Arrange
-        var repo = new Mock<IReviewResponseRepository>();
-        repo.Setup(r => r.GetReviewsByTrailIdentifierAsync(Utilities.Identifiers.Trail7, 0, 10, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(RepositoryResult<PagedReviewResponse>.Success(StubPage(2)));
+        var repo = new Mock<IReviewRepository>();
+        repo.Setup(r => r.GetReviewsByTrailIdentifierAsync(Utilities.Identifiers.Trail7, 0, 10, It.IsAny<Expression<Func<Review, ReviewResponse>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<PagedResult<ReviewResponse>>.Success(StubPage(2)));
 
         // Act
         var result = await Build(repo).GetReviewsByTrailIdentifierAsync(Utilities.Identifiers.Trail7, 0, 10, CancellationToken.None);
@@ -63,9 +59,9 @@ public class ReviewServiceTests
     public async Task GetReviewsByTrailIdentifier_WhenRepositoryFails_ReturnsInternalServerError()
     {
         // Arrange
-        var repo = new Mock<IReviewResponseRepository>();
-        repo.Setup(r => r.GetReviewsByTrailIdentifierAsync(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(RepositoryResult<PagedReviewResponse>.Error());
+        var repo = new Mock<IReviewRepository>();
+        repo.Setup(r => r.GetReviewsByTrailIdentifierAsync(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>(), It.IsAny<Expression<Func<Review, ReviewResponse>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<PagedResult<ReviewResponse>>.Error());
 
         // Act
         var result = await Build(repo).GetReviewsByTrailIdentifierAsync(Utilities.Identifiers.Trail7, 0, 10, CancellationToken.None);
@@ -80,7 +76,7 @@ public class ReviewServiceTests
     public async Task AddReview_WithValidRating_ReturnsSuccess()
     {
         // Arrange
-        var repo = new Mock<IReviewResponseRepository>();
+        var repo = new Mock<IReviewRepository>();
         repo.Setup(r => r.AddReviewAsync(It.IsAny<Review>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<Review>.Success(Utilities.Stubs.Review()));
 
@@ -126,7 +122,7 @@ public class ReviewServiceTests
     public async Task AddReview_WithRatingAtMinBoundary_ReturnsSuccess()
     {
         // Arrange
-        var repo = new Mock<IReviewResponseRepository>();
+        var repo = new Mock<IReviewRepository>();
         repo.Setup(r => r.AddReviewAsync(It.IsAny<Review>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<Review>.Success(Utilities.Stubs.Review()));
 
@@ -141,7 +137,7 @@ public class ReviewServiceTests
     public async Task AddReview_WithRatingAtMaxBoundary_ReturnsSuccess()
     {
         // Arrange
-        var repo = new Mock<IReviewResponseRepository>();
+        var repo = new Mock<IReviewRepository>();
         repo.Setup(r => r.AddReviewAsync(It.IsAny<Review>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<Review>.Success(Utilities.Stubs.Review()));
 
@@ -156,7 +152,7 @@ public class ReviewServiceTests
     public async Task AddReview_WhenUserNotFound_ReturnsNotFound()
     {
         // Arrange
-        var service = Build(userSvc: Utilities.MockFactory.UserServiceNotFoundById());
+        var service = Build(userService: Utilities.MockFactory.UserServiceNotFoundById());
 
         // Act
         var result = await service.AddReviewAsync("invalid", Utilities.Identifiers.Trail7, "text", 4.0M, null, CancellationToken.None);
@@ -171,7 +167,7 @@ public class ReviewServiceTests
     public async Task AddReview_WhenTrailNotFound_ReturnsNotFound()
     {
         // Arrange
-        var service = Build(trailSvc: Utilities.MockFactory.TrailServiceNotFound());
+        var service = Build(trailService: Utilities.MockFactory.TrailServiceNotFound());
 
         // Act
         var result = await service.AddReviewAsync(Utilities.Identifiers.User, "invalid", "text", 4.0M, null, CancellationToken.None);
@@ -220,7 +216,7 @@ public class ReviewServiceTests
     public async Task AddReview_WithNullImages_ReturnsSuccess()
     {
         // Arrange
-        var repo = new Mock<IReviewResponseRepository>();
+        var repo = new Mock<IReviewRepository>();
         repo.Setup(r => r.AddReviewAsync(It.IsAny<Review>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<Review>.Success(Utilities.Stubs.Review()));
 
@@ -237,7 +233,7 @@ public class ReviewServiceTests
         // Arrange
         var review = Utilities.Stubs.Review();
         review.TrailReview = null;
-        var repo = new Mock<IReviewResponseRepository>();
+        var repo = new Mock<IReviewRepository>();
         repo.Setup(r => r.AddReviewAsync(It.IsAny<Review>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<Review>.Success(review));
 
@@ -254,7 +250,7 @@ public class ReviewServiceTests
     public async Task DeleteReview_WithoutImages_ReturnsSuccess()
     {
         // Arrange
-        var repo = new Mock<IReviewResponseRepository>();
+        var repo = new Mock<IReviewRepository>();
         repo.Setup(r => r.GetReviewByIdentifierAsync(Utilities.Identifiers.Review5, Utilities.Identifiers.User, It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<Review>.Success(Utilities.Stubs.Review(withImages: false)));
         repo.Setup(r => r.DeleteReviewAsync(It.IsAny<Review>(), It.IsAny<CancellationToken>()))
@@ -271,7 +267,7 @@ public class ReviewServiceTests
     public async Task DeleteReview_WithImages_ReturnsSuccess()
     {
         // Arrange
-        var repo = new Mock<IReviewResponseRepository>();
+        var repo = new Mock<IReviewRepository>();
         repo.Setup(r => r.GetReviewByIdentifierAsync(Utilities.Identifiers.Review5, Utilities.Identifiers.User, It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<Review>.Success(Utilities.Stubs.Review(withImages: true)));
         repo.Setup(r => r.DeleteReviewAsync(It.IsAny<Review>(), It.IsAny<CancellationToken>()))
@@ -288,7 +284,7 @@ public class ReviewServiceTests
     public async Task DeleteReview_WhenNotFound_ReturnsNotFound()
     {
         // Arrange
-        var repo = new Mock<IReviewResponseRepository>();
+        var repo = new Mock<IReviewRepository>();
         repo.Setup(r => r.GetReviewByIdentifierAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<Review>.NotFound());
 
@@ -308,7 +304,7 @@ public class ReviewServiceTests
         var webDav = new Mock<IWebDavService>();
         webDav.Setup(w => w.DeleteFileAsync(It.IsAny<string>()))
             .ReturnsAsync(Result.Fail<bool>(new Message(500, "Delete failed")));
-        var repo = new Mock<IReviewResponseRepository>();
+        var repo = new Mock<IReviewRepository>();
         repo.Setup(r => r.GetReviewByIdentifierAsync(Utilities.Identifiers.Review5, Utilities.Identifiers.User, It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<Review>.Success(Utilities.Stubs.Review(withImages: true)));
 
@@ -329,7 +325,7 @@ public class ReviewServiceTests
         var webDav = new Mock<IWebDavService>();
         webDav.Setup(w => w.DeleteFileAsync(It.IsAny<string>()))
             .ThrowsAsync(new Exception("network error"));
-        var repo = new Mock<IReviewResponseRepository>();
+        var repo = new Mock<IReviewRepository>();
         repo.Setup(r => r.GetReviewByIdentifierAsync(Utilities.Identifiers.Review5, Utilities.Identifiers.User, It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<Review>.Success(Utilities.Stubs.Review(withImages: true)));
         repo.Setup(r => r.DeleteReviewAsync(It.IsAny<Review>(), It.IsAny<CancellationToken>()))

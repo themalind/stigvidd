@@ -16,16 +16,16 @@ public class TrailService : ITrailService
     private readonly IWebDavService _webDavService;
     private readonly ILogger<TrailService> _logger;
     private readonly TrailResponseFactory _trailResponseFactory;
-    private readonly ITrailResponseRepository _trailResponseRepository;
+    private readonly ITrailRepository _trailRepository;
 
     public TrailService(
-        ITrailResponseRepository trailResponseRepository,
+        ITrailRepository trailResponseRepository,
         IWebDavService webDavService,
         ILogger<TrailService> logger,
         TrailResponseFactory factory,
         IConfiguration configuration)
     {
-        _trailResponseRepository = trailResponseRepository;
+        _trailRepository = trailResponseRepository;
         _presentableBaseUrl = configuration["PresentableBaseUrl"] ?? throw new InvalidOperationException("PresentableBaseUrl configuration is missing");
         _webDavService = webDavService;
         _logger = logger;
@@ -36,7 +36,7 @@ public class TrailService : ITrailService
     {
         try
         {
-            var result = await _trailResponseRepository.GetTrailIdByIdentifierAsync(identifier, ctoken);
+            var result = await _trailRepository.GetTrailIdByIdentifierAsync(identifier, ctoken);
 
             if (!result.IsSuccess)
             {
@@ -57,7 +57,48 @@ public class TrailService : ITrailService
     {
         try
         {
-            var result = await _trailResponseRepository.GetTrailByIdentifierWithoutCoordinatesAsync(identifier, ctoken);
+            var result = await _trailRepository.GetTrailByIdentifierAsync(
+                identifier,
+                t => new TrailResponse
+                {
+                    Identifier = t.Identifier,
+                    Name = t.Name,
+                    TrailLenght = t.TrailLength,
+                    Classification = t.Classification,
+                    Accessibility = t.Accessibility,
+                    AccessibilityInfo = t.AccessibilityInfo,
+                    TrailSymbol = t.TrailSymbol,
+                    TrailSymbolImage = t.TrailSymbolImage,
+                    Description = t.Description,
+                    FullDescription = t.FullDescription,
+                    Tags = t.Tags,
+                    CreatedBy = t.CreatedBy,
+                    IsVerified = t.IsVerified,
+                    City = t.City,
+                    TrailImagesResponse = t.TrailImages!.Select(img => new TrailImageResponse
+                    {
+                        Identifier = img.Identifier,
+                        ImageUrl = img.ImageUrl
+                    }).ToList(),
+                    TrailLinksResponse = t.TrailLinks!.Select(link => new TrailLinkResponse
+                    {
+                        Identifier = link.Identifier,
+                        Link = link.Link,
+                        Title = link.Title
+                    }).ToList(),
+                    VisitorInformation = t.VisitorInformation != null ? new VisitorInformationResponse
+                    {
+                        Identifier = t.VisitorInformation.Identifier,
+                        GettingThere = t.VisitorInformation.GettingThere,
+                        PublicTransport = t.VisitorInformation.PublicTransport,
+                        Parking = t.VisitorInformation.Parking,
+                        Illumination = t.VisitorInformation.Illumination,
+                        IlluminationText = t.VisitorInformation.IlluminationText,
+                        MaintainedBy = t.VisitorInformation.MaintainedBy,
+                        WinterMaintenance = t.VisitorInformation.WinterMaintenance
+                    } : null
+                },
+                ctoken);
 
             if (!result.IsSuccess)
             {
@@ -78,7 +119,7 @@ public class TrailService : ITrailService
     {
         try
         {
-            var result = await _trailResponseRepository.GetCoordinatesByTrailIdentifierAsync(identifier, ctoken);
+            var result = await _trailRepository.GetCoordinatesByTrailIdentifierAsync(identifier, ctoken);
 
             if (!result.IsSuccess)
             {
@@ -100,9 +141,9 @@ public class TrailService : ITrailService
     {
         try
         {
-            var result = await _trailResponseRepository.GetPopularTrailOverviewsAsync(userLatitude, userLongitude, ctoken);
+            var result = await _trailRepository.GetPopularTrailOverviewsAsync(userLatitude, userLongitude, ctoken);
 
-            return Result.Ok<IReadOnlyCollection<TrailOverviewResponse?>>(result.Value!);
+            return Result.Ok<IReadOnlyCollection<TrailOverviewResponse?>>(result.Value ?? []);
         }
         catch (Exception ex)
         {
@@ -176,7 +217,7 @@ public class TrailService : ITrailService
                     .ToList();
             }
 
-            var addResult = await _trailResponseRepository.AddTrailAsync(trail, ctoken);
+            var addResult = await _trailRepository.AddTrailAsync(trail, ctoken);
 
             if (!addResult.IsSuccess)
                 return Result.Fail<TrailResponse?>(new Message(500, "An error occurred while adding the trail."));
@@ -215,7 +256,7 @@ public class TrailService : ITrailService
     {
         try
         {
-            var result = await _trailResponseRepository.GetAllTrailsWithBasicInfoAsync(ctoken);
+            var result = await _trailRepository.GetAllTrailsWithBasicInfoAsync(ctoken);
 
             if (!result.IsSuccess)
                 return Result.Fail<IReadOnlyCollection<TrailShortInfoResponse>>(new Message(500, "An error occurred while fetching trails."));
@@ -233,7 +274,7 @@ public class TrailService : ITrailService
     {
         try
         {
-            var result = await _trailResponseRepository.GetAllTrailMarkersAsync(ctoken);
+            var result = await _trailRepository.GetAllTrailMarkersAsync(ctoken);
 
             if (!result.IsSuccess)
                 return Result.Fail<IReadOnlyCollection<TrailMarkerResponse>>(new Message(500, "An error occurred while fetching trail markers."));

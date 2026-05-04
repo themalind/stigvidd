@@ -81,7 +81,10 @@ public class HikesController : StigViddController
             return ToActionResult(result.Message);
         }
 
-        return Created($"/api/v1/hikes/{result.Value!.Identifier}", result.Value);
+        if (result.Value is null)
+            return StatusCode(500);
+
+        return Created($"/api/v1/hikes/{result.Value.Identifier}", result.Value);
     }
 
     [Authorize]
