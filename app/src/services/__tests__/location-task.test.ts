@@ -1,11 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getDistance } from "geolib";
-import {
-  HIKE_STORAGE_KEY,
-  StoredHikeState,
-  defaultHikeState,
-  readHikeState,
-} from "../location-task";
+import { HIKE_STORAGE_KEY, StoredHikeState, defaultHikeState, readHikeState } from "../location-task";
 
 // Capture the background task callback when the module registers it
 let locationTaskCallback: (body: { data: unknown; error: unknown }) => Promise<void>;
@@ -224,10 +219,7 @@ describe("location background task", () => {
 
   it("processes a batch of locations and applies filters to each independently", async () => {
     // Distances returned per call: valid (50m), too close (1m), valid (30m)
-    mockGetDistance
-      .mockReturnValueOnce(50)
-      .mockReturnValueOnce(1)
-      .mockReturnValueOnce(30);
+    mockGetDistance.mockReturnValueOnce(50).mockReturnValueOnce(1).mockReturnValueOnce(30);
 
     const stateWithPoint: StoredHikeState = {
       ...activeState,

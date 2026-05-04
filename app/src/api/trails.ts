@@ -13,7 +13,7 @@ import { BASE_URL } from "./api-config";
 export async function getPopularTrails(latitude?: number, longitude?: number): Promise<TrailOverview[]> {
   try {
     const params = new URLSearchParams();
-    
+
     if (latitude !== undefined && longitude !== undefined) {
       params.append("latitude", latitude.toString());
       params.append("longitude", longitude.toString());
