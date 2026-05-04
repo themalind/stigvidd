@@ -45,63 +45,64 @@ type LocationTaskData = {
   locations: Location.LocationObject[];
 };
 
-// Must be defined at module level before the app renders.
-// This task runs in the background even when the screen is locked.
-TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }: TaskManager.TaskManagerTaskBody<LocationTaskData>) => {
-  if (error) {
-    console.error("[LocationTask] Error:", error.message);
-    return;
-  }
-
-  const { locations } = data;
-  if (!locations?.length) return;
-
-  try {
-    const state = await readHikeState();
-    if (!state.isTracking || !state.currentSegment) return;
-
-    let currentSegment = state.currentSegment;
-    let totalDistance = state.hike.totalDistance;
-
-    for (const location of locations) {
-      if (!location.coords.accuracy || location.coords.accuracy > MAX_ACCURACY) {
-        continue;
-      }
-
-      const newPoint: LocationData = {
-        data: {
-          latitude: location.coords.latitude,
-          longitude: location.coords.longitude,
-        },
-        timeStamp: location.timestamp,
-      };
-
-      const lastPoint = currentSegment.coordinates.at(-1);
-      let distanceToAdd = 0;
-
-      if (lastPoint) {
-        const distance = getDistance(lastPoint.data, newPoint.data);
-        if (distance < MIN_DISTANCE || distance > MAX_DISTANCE) {
-          continue;
-        }
-        distanceToAdd = distance;
-      }
-
-      currentSegment = {
-        ...currentSegment,
-        coordinates: [...currentSegment.coordinates, newPoint],
-        distance: currentSegment.distance + distanceToAdd,
-      };
-
-      totalDistance += distanceToAdd;
+TaskManager.defineTask(
+  LOCATION_TASK_NAME,
+  async ({ data, error }: TaskManager.TaskManagerTaskBody<LocationTaskData>) => {
+    if (error) {
+      console.error("[LocationTask] Error:", error.message);
+      return;
     }
 
-    await writeHikeState({
-      ...state,
-      currentSegment,
-      hike: { ...state.hike, totalDistance },
-    });
-  } catch (e) {
-    console.error("[LocationTask] Processing error:", e);
-  }
-});
+    const { locations } = data;
+    if (!locations?.length) return;
+
+    try {
+      const state = await readHikeState();
+      if (!state.isTracking || !state.currentSegment) return;
+
+      let currentSegment = state.currentSegment;
+      let totalDistance = state.hike.totalDistance;
+
+      for (const location of locations) {
+        if (!location.coords.accuracy || location.coords.accuracy > MAX_ACCURACY) {
+          continue;
+        }
+
+        const newPoint: LocationData = {
+          data: {
+            latitude: location.coords.latitude,
+            longitude: location.coords.longitude,
+          },
+          timeStamp: location.timestamp,
+        };
+
+        const lastPoint = currentSegment.coordinates.at(-1);
+        let distanceToAdd = 0;
+
+        if (lastPoint) {
+          const distance = getDistance(lastPoint.data, newPoint.data);
+          if (distance < MIN_DISTANCE || distance > MAX_DISTANCE) {
+            continue;
+          }
+          distanceToAdd = distance;
+        }
+
+        currentSegment = {
+          ...currentSegment,
+          coordinates: [...currentSegment.coordinates, newPoint],
+          distance: currentSegment.distance + distanceToAdd,
+        };
+
+        totalDistance += distanceToAdd;
+      }
+
+      await writeHikeState({
+        ...state,
+        currentSegment,
+        hike: { ...state.hike, totalDistance },
+      });
+    } catch (e) {
+      console.error("[LocationTask] Processing error:", e);
+    }
+  },
+);
