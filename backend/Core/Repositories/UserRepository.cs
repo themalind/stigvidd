@@ -69,7 +69,7 @@ public class UserRepository : IUserRepository
         var items = await context.Users
             .AsNoTracking()
             .Where(u => u.Identifier == userIdentifier)
-            .SelectMany(u => u.MyFavorites ?? new List<Trail>())
+            .SelectMany(u => u.MyFavorites!)
             .OrderBy(t => t.Name)
             .Select(selector)
             .ToListAsync(ctoken);
@@ -84,7 +84,7 @@ public class UserRepository : IUserRepository
         var items = await context.Users
             .AsNoTracking()
             .Where(u => u.Identifier == userIdentifier)
-            .SelectMany(u => u.MyWishList ?? new List<Trail>())
+            .SelectMany(u => u.MyWishList!)
             .OrderBy(t => t.Name)
             .Select(selector)
             .ToListAsync(ctoken);
