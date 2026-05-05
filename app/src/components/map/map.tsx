@@ -14,7 +14,7 @@ interface Props extends MapViewProps {
 
 export default forwardRef<MapView, Props>(function Map(
   { style, initialRegion, showsUserLocation = true, children, ...rest },
-  ref,
+  mapRef,
 ) {
   const [theme] = useAtom(userThemeAtom);
   const deviceScheme = useColorScheme();
@@ -30,7 +30,7 @@ export default forwardRef<MapView, Props>(function Map(
 
   return (
     <MapView
-      ref={ref}
+      ref={mapRef}
       style={style}
       customMapStyle={mapStyle === "dark" ? nightMapTheme : retroMapTheme}
       userInterfaceStyle={mapStyle === "dark" ? "dark" : "light"}

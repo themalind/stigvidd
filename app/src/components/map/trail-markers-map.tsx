@@ -3,9 +3,9 @@ import { userThemeAtom } from "@/atoms/user-theme-atom";
 import { START_COORDINATE_BORAS } from "@/constants/constants";
 import { useQuery } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
-import React from "react";
+import React, { forwardRef } from "react";
 import { StyleProp, useColorScheme, ViewStyle } from "react-native";
-import { Region } from "react-native-maps";
+import MapView, { Region } from "react-native-maps";
 import Map from "./map";
 import Marker from "./marker";
 
@@ -16,7 +16,10 @@ interface Props {
   onMapReady?: () => void;
 }
 
-export default function TrailMarkersMap({ style, initialRegion, showsUserLocation, onMapReady }: Props) {
+export default forwardRef<MapView, Props>(function TrailerMarkersMap(
+  { style, initialRegion, showsUserLocation, onMapReady }: Props,
+  mapRef,
+) {
   const userTheme = useAtomValue(userThemeAtom);
   const deviceScheme = useColorScheme();
   const isDark = (userTheme === "auto" ? deviceScheme : userTheme) === "dark";
@@ -28,6 +31,7 @@ export default function TrailMarkersMap({ style, initialRegion, showsUserLocatio
 
   return (
     <Map
+      ref={mapRef}
       style={style}
       initialRegion={initialRegion ?? START_COORDINATE_BORAS}
       showsUserLocation={showsUserLocation}
@@ -48,4 +52,4 @@ export default function TrailMarkersMap({ style, initialRegion, showsUserLocatio
         ))}
     </Map>
   );
-}
+});
