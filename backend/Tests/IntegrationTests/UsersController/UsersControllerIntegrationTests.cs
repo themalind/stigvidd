@@ -205,7 +205,7 @@ public class UsersControllerIntegrationTests : IClassFixture<StigViddWebApplicat
     }
 
     [Fact]
-    public async Task RemoveFromUserFavorites_WithInvaldTrailIdentifier_ReturnsConflict()
+    public async Task RemoveFromUserFavorites_WithInvaldTrailIdentifier_ReturnsNotFound()
     {
         // Arrange
         var client = _factory.CreateClient();
@@ -217,7 +217,7 @@ public class UsersControllerIntegrationTests : IClassFixture<StigViddWebApplicat
         var response = await client.SendAsync(request, TestContext.Current.CancellationToken);
 
         // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.Conflict);
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
 
     [Fact]
@@ -409,7 +409,7 @@ public class UsersControllerIntegrationTests : IClassFixture<StigViddWebApplicat
     }
 
     [Fact]
-    public async Task RemoveFromUserWishlist_WithInvaldTrailIdentifier_ReturnsConflict()
+    public async Task RemoveFromUserWishlist_WithInvaldTrailIdentifier_ReturnsNotFound()
     {
         // Arrange
         var client = _factory.CreateClient();
@@ -421,7 +421,7 @@ public class UsersControllerIntegrationTests : IClassFixture<StigViddWebApplicat
         var response = await client.SendAsync(request, TestContext.Current.CancellationToken);
 
         // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.Conflict);
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
 
     [Fact]

@@ -1,4 +1,4 @@
-import { addSolvedVote, deleteSolvedVote } from "@/api/trail-obstacles";
+import { addSolvedVote, deleteSolvedVote, deleteTrailObstacle } from "@/api/trail-obstacles";
 import { authStateAtom } from "@/atoms/auth-atoms";
 import { stigviddUserAtom } from "@/atoms/user-atoms";
 import AlertDialog from "@/components/alert-dialog";
@@ -13,6 +13,7 @@ import { useAtom, useAtomValue } from "jotai";
 import { useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { Divider, Text, useTheme } from "react-native-paper";
+import TrailObstacleUpdateForm from "./trail-obstacle-update-form";
 
 interface Props {
   obstacle: TrailObstacle;
@@ -27,8 +28,11 @@ export default function TrailObstacleItem({ obstacle, trailIdentifier, onCloseMo
   const [showAuthDialog, setAuthDialog] = useState(false);
   const [showVoteDialog, setShowVoteDialog] = useState(false);
   const [showUndoDialog, setShowUndoDialog] = useState(false);
+  const [showUpdateForm, setShowUpdateForm] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const queryClient = useQueryClient();
   const hasVoted = obstacle.solvedVotes?.some((v) => v.userIdentifier === stigviddUser?.identifier);
+  const isOwner = stigviddUser?.identifier === obstacle.userIdentifier;
 
   const { mutate, isPending } = useMutation({
     mutationFn: () => addSolvedVote(obstacle.identifier),
@@ -37,8 +41,15 @@ export default function TrailObstacleItem({ obstacle, trailIdentifier, onCloseMo
     },
   });
 
-  const { mutate: deleteMutate, isPending: deleteIsPending } = useMutation({
+  const { mutate: deleteSolvedVoteMutate, isPending: deleteSolvedVoteIsPending } = useMutation({
     mutationFn: () => deleteSolvedVote(obstacle.identifier),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["obstacles", trailIdentifier] });
+    },
+  });
+
+  const { mutate: deleteObstacleMutate, isPending: deleteObstacleIsPending } = useMutation({
+    mutationFn: (trailObstacleIdentifier: string) => deleteTrailObstacle(trailObstacleIdentifier),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["obstacles", trailIdentifier] });
     },
@@ -57,21 +68,46 @@ export default function TrailObstacleItem({ obstacle, trailIdentifier, onCloseMo
     }
   };
 
+  function handleEdit() {
+    if (!authState.isAuthenticated) {
+      setAuthDialog(true);
+      return;
+    }
+    setShowUpdateForm(true);
+  }
+
+  function handleDelete() {
+    deleteObstacleMutate(obstacle.identifier);
+    setShowDeleteDialog(false);
+  }
+
   function handleAddVote() {
     mutate();
     setShowVoteDialog(false);
   }
 
   function handleRemoveVote() {
-    deleteMutate();
+    deleteSolvedVoteMutate();
     setShowUndoDialog(false);
   }
 
   return (
     <View style={[s.container, { borderColor: theme.colors.outlineVariant }]}>
-      <View style={s.field}>
-        <Text style={[s.label, { color: theme.colors.onSurfaceVariant }]}>Kategori</Text>
-        <Text style={[s.value, { color: theme.colors.onSurface }]}>{issueTypeParser(obstacle.issueType)}</Text>
+      <View style={s.categoryRow}>
+        <View style={s.field}>
+          <Text style={[s.label, { color: theme.colors.onSurfaceVariant }]}>Kategori</Text>
+          <Text style={[s.value, { color: theme.colors.onSurface }]}>{issueTypeParser(obstacle.issueType)}</Text>
+        </View>
+        {isOwner && (
+          <View style={s.ownerActions}>
+            <Pressable hitSlop={12} onPress={handleEdit} disabled={deleteObstacleIsPending}>
+              <MaterialIcons size={20} name="edit" color={theme.colors.onSurfaceVariant} />
+            </Pressable>
+            <Pressable hitSlop={12} onPress={() => setShowDeleteDialog(true)} disabled={deleteObstacleIsPending}>
+              <MaterialIcons size={20} name="delete-outline" color={theme.colors.onSurface} />
+            </Pressable>
+          </View>
+        )}
       </View>
       <Divider />
       <View style={s.field}>
@@ -85,7 +121,7 @@ export default function TrailObstacleItem({ obstacle, trailIdentifier, onCloseMo
         </View>
         <View style={s.voteRow}>
           <Text style={s.voteCount}>{obstacle.solvedVotes?.length ?? 0}/3</Text>
-          <Pressable hitSlop={12} onPress={handlePress} disabled={isPending || deleteIsPending}>
+          <Pressable hitSlop={12} onPress={handlePress} disabled={isPending || deleteSolvedVoteIsPending}>
             <MaterialIcons
               size={24}
               name={hasVoted ? "check-circle" : "radio-button-unchecked"}
@@ -94,6 +130,25 @@ export default function TrailObstacleItem({ obstacle, trailIdentifier, onCloseMo
           </Pressable>
         </View>
       </View>
+      <TrailObstacleUpdateForm
+        visible={showUpdateForm}
+        onDismiss={() => setShowUpdateForm(false)}
+        obstacleIdentifier={obstacle.identifier}
+        trailIdentifier={trailIdentifier}
+        initialDescription={obstacle.description}
+        initialIssueType={obstacle.issueType}
+      />
+      <AlertDialog
+        visible={showDeleteDialog}
+        onDismiss={() => setShowDeleteDialog(false)}
+        title="Ta bort hinder"
+        infoText={["Är du säker på att du vill ta bort den här rapporten?", "Åtgärden kan inte ångras."]}
+        onConfirm={handleDelete}
+        confirmText="Ta bort"
+        cancelText="Avbryt"
+        backgroundColor={theme.colors.surface}
+        textColor={theme.colors.onSurface}
+      />
       <NotAuthenticatedDialog
         visible={showAuthDialog}
         onDissmiss={() => setAuthDialog(false)}
@@ -142,6 +197,15 @@ const s = StyleSheet.create({
   },
   field: {
     gap: 2,
+  },
+  categoryRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+  },
+  ownerActions: {
+    flexDirection: "row",
+    gap: 16,
   },
   label: {
     fontSize: 11,

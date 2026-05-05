@@ -146,6 +146,11 @@ export interface Hike {
   createdBy: string;
 }
 
+export interface UpdateTrailObstacleRequest {
+  description?: string;
+  issueType?: string;
+}
+
 export interface CreateTrailObstacleRequest {
   description: string;
   issueType: string;
@@ -156,6 +161,7 @@ export interface CreateTrailObstacleRequest {
 
 export interface TrailObstacle {
   identifier: string;
+  userIdentifier: string;
   description: string;
   issueType: string;
   incidentLongitude?: number;

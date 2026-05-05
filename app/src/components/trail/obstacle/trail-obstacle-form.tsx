@@ -1,4 +1,4 @@
-import { createTrailObstacle } from "@/api/trail-obstacles";
+import { createTrailObstacle, getObstacleIssueTypes } from "@/api/trail-obstacles";
 import { getCoordinatesByTrailIdentifier } from "@/api/trails";
 import { showErrorAtom, showSuccessAtom } from "@/atoms/snackbar-atoms";
 import SelectInput from "@/components/select-input";
@@ -36,8 +36,6 @@ type FormFields = z.infer<typeof obstacleFields>;
 
 const { height, width } = Dimensions.get("screen");
 
-const issueTypes: string[] = ["Other", "FallenTree", "Mud", "Flooding", "Shelter", "FirePit", "Walkway", "Signage"];
-
 interface Props {
   trailIdentifier: string;
   visible: boolean;
@@ -53,6 +51,17 @@ export default function TrailObstacleForm({ trailIdentifier, visible, onDismiss 
   const setSuccessMsg = useSetAtom(showSuccessAtom);
   const queryClient = useQueryClient();
 
+  const { data: issueTypes } = useQuery({
+    queryKey: ["issueTypes", "obstacle"],
+    queryFn: () => getObstacleIssueTypes(),
+  });
+
+  const { data: trailCords } = useQuery({
+    queryKey: ["cords", trailIdentifier],
+    queryFn: () => getCoordinatesByTrailIdentifier(trailIdentifier),
+    enabled: !!trailIdentifier,
+  });
+
   const { mutate, isPending } = useMutation({
     mutationFn: (obstacle: CreateTrailObstacleRequest) => createTrailObstacle(obstacle),
     onSuccess: () => {
@@ -64,12 +73,6 @@ export default function TrailObstacleForm({ trailIdentifier, visible, onDismiss 
     onError: () => {
       setErrorMsg("Någor gick fel försök igen senare");
     },
-  });
-
-  const { data: trailCords } = useQuery({
-    queryKey: ["cords", trailIdentifier],
-    queryFn: () => getCoordinatesByTrailIdentifier(trailIdentifier),
-    enabled: !!trailIdentifier,
   });
 
   const parsed = trailCords ? CoordinateParser({ data: trailCords.coordinates, identifier: trailIdentifier }) : [];
@@ -98,6 +101,7 @@ export default function TrailObstacleForm({ trailIdentifier, visible, onDismiss 
       incidentLatitude: data.incidentLatitude ?? null,
       incidentLongitude: data.incidentLongitude ?? null,
     };
+
     mutate(newObstacle);
   };
 
@@ -184,17 +188,19 @@ export default function TrailObstacleForm({ trailIdentifier, visible, onDismiss 
             >
               <View style={s.fieldGroup}>
                 <Text style={[s.fieldLabel, { color: theme.colors.onSurfaceVariant }]}>Välj en kategori</Text>
-                <Controller
-                  control={control}
-                  name="issueType"
-                  render={({ field: { onChange, value } }) => (
-                    <SelectInput
-                      selectedValue={value}
-                      onValueChange={onChange}
-                      options={issueTypes.map((type) => ({ label: issueTypeParser(type), value: type }))}
-                    />
-                  )}
-                />
+                {issueTypes?.length && (
+                  <Controller
+                    control={control}
+                    name="issueType"
+                    render={({ field: { onChange, value } }) => (
+                      <SelectInput
+                        selectedValue={value}
+                        onValueChange={onChange}
+                        options={issueTypes.map((type) => ({ label: issueTypeParser(type), value: type }))}
+                      />
+                    )}
+                  />
+                )}
                 {errors.issueType && <Text>{errors.issueType.message}</Text>}
               </View>
               <View style={s.fieldGroup}>

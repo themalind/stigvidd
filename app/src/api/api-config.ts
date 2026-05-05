@@ -1,3 +1,1 @@
-export const BASE_URL = `https://stigvidd.se/api/v1`;
-
-//`http://${IP}/api/v1`;
+export const BASE_URL = `http://${process.env.EXPO_PUBLIC_API_HOST}/api/v1`;

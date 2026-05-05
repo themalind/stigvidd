@@ -179,14 +179,14 @@ public static class Utilities
                         Id = 6,
                         Identifier = "img-asdfasdf-1",
                         ImageUrl = "https://inkaben.se/stigvidd/mock/image.jpg",
-                        TrailId = 2
+                        TrailId = 4
                     },
                     new TrailImage
                     {
                         Id = 7,
                         Identifier = "img-asdfasdf-2",
                         ImageUrl = "https://inkaben.se/stigvidd/mock/image.jpg",
-                        TrailId = 2
+                        TrailId = 4
                     }
                 }
             },
@@ -252,14 +252,14 @@ public static class Utilities
                         Id = 8,
                         Identifier = "img-asdfasdf-1",
                         ImageUrl = "https://inkaben.se/stigvidd/mock/image.jpg",
-                        TrailId = 2
+                        TrailId = 7
                     },
                     new TrailImage
                     {
                         Id = 9,
                         Identifier = "img-asdfasdf-2",
                         ImageUrl = "https://inkaben.se/stigvidd/mock/image.jpg",
-                        TrailId = 2
+                        TrailId = 7
                     }
                 }
             }

@@ -249,7 +249,7 @@ public class ReviewsControllerIntegrationsTests : IClassFixture<StigViddWebAppli
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         pagedReviews.Should().NotBeNull();
-        pagedReviews!.Reviews.Should().HaveCount(2);
+        pagedReviews.Reviews.Should().HaveCount(2);
         pagedReviews.HasMore.Should().BeFalse();
         pagedReviews.Total.Should().Be(2);
     }
@@ -272,7 +272,7 @@ public class ReviewsControllerIntegrationsTests : IClassFixture<StigViddWebAppli
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         pagedReviews.Should().NotBeNull();
-        pagedReviews!.Reviews.Should().HaveCount(1);
+        pagedReviews.Reviews.Should().HaveCount(1);
         pagedReviews.HasMore.Should().BeFalse();
     }
 

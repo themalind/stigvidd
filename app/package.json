@@ -9,7 +9,8 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "lint": "expo lint",
-    "test": "jest"
+    "test": "jest",
+    "format:check": "prettier --check ."
   },
   "jest": {
     "preset": "jest-expo",

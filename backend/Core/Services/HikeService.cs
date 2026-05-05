@@ -1,8 +1,7 @@
 using Core.Factories;
-using Core.Interfaces;
-using Infrastructure.Data;
+using Core.Interfaces.Repositories;
+using Core.Interfaces.Services;
 using Infrastructure.Data.Entities;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using WebDataContracts.RequestModels.Hike;
 using WebDataContracts.ResponseModels.Hike;
@@ -11,32 +10,32 @@ namespace Core.Services;
 
 public class HikeService : IHikeService
 {
-    private readonly IDbContextFactory<StigViddDbContext> _context;
     private readonly HikeResponseFactory _hikeResponseFactory;
     private readonly ILogger<HikeService> _logger;
+    private readonly IUserService _userService;
+    private readonly IHikeRepository _hikeRepository;
 
-    public HikeService(IDbContextFactory<StigViddDbContext> context, HikeResponseFactory hikeResponseFactory, ILogger<HikeService> logger)
+    public HikeService(IHikeRepository hikeResponseRepository,
+        HikeResponseFactory hikeResponseFactory,
+        ILogger<HikeService> logger,
+        IUserService userService)
     {
-        _context = context;
+        _hikeRepository = hikeResponseRepository;
         _hikeResponseFactory = hikeResponseFactory;
         _logger = logger;
+        _userService = userService;
     }
 
     public async Task<Result<HikeResponse>> CreateHikeAsync(CreateHikeRequest request, string userIdentifier, CancellationToken ctoken)
     {
-        using var context = await _context.CreateDbContextAsync(ctoken);
-
         try
         {
-            var user = await context.Users.FirstOrDefaultAsync(user => user.Identifier == userIdentifier, ctoken);
+            var userResult = await _userService.GetUserByIdentifierAsync(userIdentifier, ctoken);
 
-            if (user == null)
-            {
+            if (!userResult.Success)
                 return Result.Fail<HikeResponse>(new Message(404, "User not found"));
-            }
 
-            if (
-                string.IsNullOrWhiteSpace(request.Name) ||
+            if (string.IsNullOrWhiteSpace(request.Name) ||
                 request.Name.Length > 60 ||
                 request.HikeLength == 0 ||
                 request.Duration == 0)
@@ -53,13 +52,14 @@ public class HikeService : IHikeService
                 CreatedBy = userIdentifier
             };
 
-            context.Hikes.Add(hike);
-            await context.SaveChangesAsync(ctoken);
+            var result = await _hikeRepository.CreateHikeAsync(hike, ctoken);
 
-            _logger.LogInformation("Hike {hikeId} added successfully by user {userId}.", hike.Id, user.Id);
+            if (!result.IsSuccess)
+                return Result.Fail<HikeResponse>(new Message(500, "An error occurred while adding the hike."));
 
-            return Result.Ok(_hikeResponseFactory.Create(hike));
+            _logger.LogInformation("Hike {hikeId} added successfully by user {userId}.", result.Value.Id, userIdentifier);
 
+            return Result.Ok(_hikeResponseFactory.Create(result.Value));
         }
         catch (Exception ex)
         {
@@ -71,72 +71,71 @@ public class HikeService : IHikeService
 
     public async Task<Result<HikeResponse>> GetHikeByIdentifierAsync(string identifier, CancellationToken ctoken)
     {
-        using var context = await _context.CreateDbContextAsync(ctoken);
-
-        var hike = await context.Hikes
-            .Where(hike => hike.Identifier == identifier)
-            .Select(hike => HikeResponse.Create(
-                hike.Identifier,
-                hike.Name,
-                hike.HikeLength,
-                hike.Duration,
-                hike.Coordinates,
-                hike.CreatedBy
-            ))
-            .FirstOrDefaultAsync(ctoken);
-
-        if (hike == null)
+        try
         {
-            return Result.Fail<HikeResponse>(new Message(404, "Hike not found"));
-        }
+            var result = await _hikeRepository.GetHikeByIdentifierAsync(identifier, ctoken);
 
-        return Result.Ok(hike);
+            if (!result.IsSuccess)
+                return Result.Fail<HikeResponse>(new Message(404, "Hike not found"));
+
+            return Result.Ok(_hikeResponseFactory.Create(result.Value));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error fetching hike with identifier {identifier}", identifier);
+            return Result.Fail<HikeResponse>(new Message(500, "An error occurred while fetching the hike."));
+        }
     }
 
     public async Task<Result<IReadOnlyCollection<HikeOverviewResponse>>> GetHikesAsync(string? createdBy, CancellationToken ctoken)
     {
-        using var context = await _context.CreateDbContextAsync(ctoken);
-
-        var query = context.Hikes.AsQueryable();
-
-        if (!string.IsNullOrWhiteSpace(createdBy))
+        try
         {
-            query = query.Where(hike => hike.CreatedBy == createdBy);
+            var result = await _hikeRepository.GetHikesAsync(
+                createdBy,
+                h => new HikeOverviewResponse
+                {
+                    Identifier = h.Identifier,
+                    Name = h.Name,
+                    HikeLength = h.HikeLength,
+                    Duration = h.Duration,
+                    Coordinates = h.Coordinates,
+                    CreatedBy = h.CreatedBy
+                },
+                ctoken);
+
+            if (!result.IsSuccess)
+                return Result.Fail<IReadOnlyCollection<HikeOverviewResponse>>(new Message(500, "An error occurred while fetching hikes."));
+
+            return Result.Ok(result.Value);
         }
-
-        var hikes = await query
-            .Select(hike => HikeOverviewResponse.Create(
-                hike.Identifier,
-                hike.Name,
-                hike.HikeLength,
-                hike.Duration,
-                hike.Coordinates,
-                hike.CreatedBy
-            ))
-            .ToListAsync(ctoken);
-
-        return Result.Ok<IReadOnlyCollection<HikeOverviewResponse>>(hikes);
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error fetching hikes for user {createdBy}", createdBy);
+            return Result.Fail<IReadOnlyCollection<HikeOverviewResponse>>(new Message(500, "An error occurred while fetching hikes."));
+        }
     }
 
     public async Task<Result> DeleteHikeAsync(string hikeIdentifier, string userIdentifier, CancellationToken ctoken)
     {
-        using var context = await _context.CreateDbContextAsync(ctoken);
-
-        var hike = await context.Hikes.FirstOrDefaultAsync(hike => hike.Identifier == hikeIdentifier, ctoken);
-
-        if (hike == null)
+        try
         {
-            return Result.Fail(new Message(404, $"Could not remove hike with id {hikeIdentifier}."));
-        }
+            var result = await _hikeRepository.GetHikeByIdentifierAsync(hikeIdentifier, ctoken);
 
-        if (hike.CreatedBy != userIdentifier)
+            if (!result.IsSuccess)
+                return Result.Fail(new Message(404, $"Could not remove hike with id {hikeIdentifier}."));
+
+            if (result.Value.CreatedBy != userIdentifier)
+                return Result.Fail(new Message(401, $"Hike {hikeIdentifier} does not belong to {userIdentifier}"));
+
+            await _hikeRepository.DeleteHikeAsync(result.Value, ctoken);
+
+            return Result.Ok();
+        }
+        catch (Exception ex)
         {
-            return Result.Fail(new Message(401, $"Hike {hikeIdentifier} does not belong to {userIdentifier}"));
+            _logger.LogError(ex, "Error deleting hike {hikeIdentifier} for user {userIdentifier}", hikeIdentifier, userIdentifier);
+            return Result.Fail(new Message(500, "An error occurred while deleting the hike."));
         }
-
-        context.Remove(hike);
-        await context.SaveChangesAsync(ctoken);
-
-        return Result.Ok();
     }
 }

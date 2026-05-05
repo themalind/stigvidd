@@ -13,6 +13,6 @@ public class CreateReviewRequestValidator : AbstractValidator<CreateReviewReques
         RuleFor(createReviewRequest => createReviewRequest.TrailReview)
             .MaximumLength(500);
         RuleFor(createReviewRequest => createReviewRequest.Rating)
-            .Must(rating => rating >= 1M || rating <= 5M);
+            .Must(rating => rating >= 1M && rating <= 5M);
     }
 }

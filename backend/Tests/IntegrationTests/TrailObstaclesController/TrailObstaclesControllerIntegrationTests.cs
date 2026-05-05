@@ -21,7 +21,8 @@ public class TrailObstaclesControllerIntegrationTests : IClassFixture<StigViddWe
     private const string NonExistentTrailIdentifier = "00000000-0000-0000-0000-000000000000";    // does not exist in DB
 
     // Obstacles
-    private const string Obstacle1Identifier = "ob1a1b2c3-d4e5-4f6a-7b8c-9d0e1f2a3b4c"; // Obstacle 1 — VandrarVennen has NOT voted
+    private const string Obstacle1Identifier = "ob1a1b2c3-d4e5-4f6a-7b8c-9d0e1f2a3b4c"; // Obstacle 1 — owned by NaturElskaren, VandrarVennen has NOT voted
+    private const string Obstacle2Identifier = "ob2b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d"; // Obstacle 2 — owned by VandrarVennen
     private const string Obstacle3Identifier = "ob3c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e"; // Obstacle 3 — VandrarVennen HAS voted
     #endregion
 
@@ -338,6 +339,171 @@ public class TrailObstaclesControllerIntegrationTests : IClassFixture<StigViddWe
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task GetIssueTypes_ShouldReturnOk()
+    {
+        // Arrange
+        var client = _factory.CreateClient();
+
+        // Act
+        var response = await client.GetAsync("/api/v1/trailobstacles/issue-types", TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+    }
+
+    [Fact]
+    public async Task GetIssueTypes_ShouldReturnAllEnumValues()
+    {
+        // Arrange
+        var client = _factory.CreateClient();
+
+        // Act
+        var response = await client.GetAsync("/api/v1/trailobstacles/issue-types", TestContext.Current.CancellationToken);
+        var issueTypes = await response.Content.ReadFromJsonAsync<List<string>>(TestContext.Current.CancellationToken);
+
+        // Assert
+        issueTypes.Should().NotBeNullOrEmpty();
+        issueTypes.Should().Contain(["Other", "FallenTree", "Mud", "Flooding", "Shelter", "FirePit", "Walkway", "Signage"]);
+    }
+
+    [Fact]
+    public async Task GetTrailObstacles_ShouldIncludeUserIdentifierInResponse()
+    {
+        // Arrange
+        var client = _factory.CreateClient();
+
+        // Act
+        var response = await client.GetAsync($"/api/v1/trailobstacles/trail/{TivedenIdentifier}", TestContext.Current.CancellationToken);
+        var obstacles = await response.Content.ReadFromJsonAsync<List<TrailObstacleResponse>>(TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        obstacles.Should().NotBeEmpty();
+        obstacles.First().UserIdentifier.Should().NotBeNullOrEmpty();
+    }
+
+    [Fact]
+    public async Task UpdateTrailObstacle_WithAuthenticatedOwner_ShouldReturnNoContent()
+    {
+        // Arrange
+        var client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", AuthenticatedUser);
+
+        var updateRequest = new TrailObstacleUpdateRequest
+        {
+            Description = "Uppdaterad beskrivning av hindret vid bron.",
+            IssueType = "Mud"
+        };
+
+        // Act
+        var response = await client.PutAsJsonAsync($"/api/v1/trailobstacles/{Obstacle2Identifier}", updateRequest, TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+    }
+
+    [Fact]
+    public async Task UpdateTrailObstacle_WithoutAuthentication_ShouldReturnUnauthorized()
+    {
+        // Arrange
+        var client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = null;
+
+        var updateRequest = new TrailObstacleUpdateRequest
+        {
+            Description = "Uppdaterad beskrivning av hindret.",
+            IssueType = "Mud"
+        };
+
+        // Act
+        var response = await client.PutAsJsonAsync($"/api/v1/trailobstacles/{Obstacle2Identifier}", updateRequest, TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task UpdateTrailObstacle_WhenUserDoesNotOwnObstacle_ShouldReturnNotFound()
+    {
+        // Arrange
+        var client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", AuthenticatedUser);
+
+        var updateRequest = new TrailObstacleUpdateRequest
+        {
+            Description = "Uppdaterad beskrivning av hindret.",
+            IssueType = "Mud"
+        };
+
+        // Act
+        var response = await client.PutAsJsonAsync($"/api/v1/trailobstacles/{Obstacle1Identifier}", updateRequest, TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task DeleteTrailObstacle_WithAuthenticatedOwner_ShouldReturnNoContent()
+    {
+        // Arrange
+        var client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", AuthenticatedUser);
+
+        // Act
+        var response = await client.DeleteAsync($"/api/v1/trailobstacles/{Obstacle2Identifier}", TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+    }
+
+    [Fact]
+    public async Task DeleteTrailObstacle_WithoutAuthentication_ShouldReturnUnauthorized()
+    {
+        // Arrange
+        var client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = null;
+
+        // Act
+        var response = await client.DeleteAsync($"/api/v1/trailobstacles/{Obstacle2Identifier}", TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task DeleteTrailObstacle_WhenUserDoesNotOwnObstacle_ShouldReturnNotFound()
+    {
+        // Arrange
+        var client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", AuthenticatedUser);
+
+        // Act
+        var response = await client.DeleteAsync($"/api/v1/trailobstacles/{Obstacle1Identifier}", TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task DeleteTrailObstacle_WithNonExistentObstacleIdentifier_ShouldReturnNotFound()
+    {
+        // Arrange
+        var client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", AuthenticatedUser);
+
+        // Act
+        var response = await client.DeleteAsync("/api/v1/trailobstacles/non-existent-obstacle", TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
 
     [Fact]
