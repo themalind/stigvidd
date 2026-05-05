@@ -25,6 +25,10 @@ jobs:
     - name: Build
       run: dotnet build --no-restore
     - name: Test
+      env:
+        # Host startup requires this; WebApplicationFactory replaces the DbContext
+        # with SQLite in-memory, so the value is only there to pass the null-check.
+        ConnectionStrings__StigVidd: "DataSource=:memory:"
       run: |
         dotnet test Tests/UnitTests/UnitTests.csproj --no-build --verbosity normal
         dotnet test Tests/IntegrationTests/IntegrationTests.csproj --no-build --verbosity normal
