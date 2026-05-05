@@ -32,6 +32,11 @@ jobs:
       run: |
         dotnet test Tests/UnitTests/UnitTests.csproj --no-build --verbosity normal
         dotnet test Tests/IntegrationTests/IntegrationTests.csproj --no-build --verbosity normal
+    - name: Print integration test log on failure
+      if: failure()
+      run: |
+        echo "=== Integration test log ==="
+        find Tests/IntegrationTests/bin -name 'IntegrationTests_*.log' -exec cat {} \;
 
   app:
     runs-on: ubuntu-latest
