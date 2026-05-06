@@ -1,11 +1,4 @@
-import {
-  Coordinates,
-  CreateTrailRequest,
-  Trail,
-  TrailMarkerResponse,
-  TrailOverview,
-  TrailShortInfoResponse,
-} from "@/data/types";
+import { Coordinates, CreateTrailRequest, Trail, TrailOverview, TrailShortInfoResponse } from "@/data/types";
 import uuid from "react-native-uuid";
 import { getUserToken } from "./users";
 import { BASE_URL } from "./api-config";
@@ -71,22 +64,6 @@ export async function getCoordinatesByTrailIdentifier(identifier: string): Promi
 
     if (!response.ok) {
       throw new Error(`getCordsTrailByIdentifier: HTTP error ${response.status}`);
-    }
-    const json = await response.json();
-
-    return json;
-  } catch (error) {
-    console.log(error);
-    throw error;
-  }
-}
-
-export async function getTrailMarkers(): Promise<TrailMarkerResponse[]> {
-  try {
-    const response = await fetch(`${BASE_URL}/trails/markers`);
-
-    if (!response.ok) {
-      throw new Error(`getTrailMarkers: HTTP error ${response.status}`);
     }
     const json = await response.json();
 
