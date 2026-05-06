@@ -68,7 +68,7 @@ export default function FilterButton({ filter, onChange }: Props) {
           s.filter,
           {
             backgroundColor:
-              filter.trails || filter.shelters || filter.firePits || filter.accessability
+              filter.trails || filter.shelters || filter.firePits || filter.accessibility
                 ? theme.colors.primary
                 : theme.colors.secondary,
             borderColor: theme.colors.onPrimary,
@@ -131,12 +131,12 @@ export default function FilterButton({ filter, onChange }: Props) {
           s.button,
           getStyle(225, 80),
           {
-            backgroundColor: filter.accessability ? theme.colors.primary : theme.colors.secondary,
+            backgroundColor: filter.accessibility ? theme.colors.primary : theme.colors.secondary,
             borderColor: theme.colors.onPrimary,
           },
         ]}
       >
-        <Pressable onPress={() => onChange({ ...filter, accessability: !filter.accessability })}>
+        <Pressable onPress={() => onChange({ ...filter, accessibility: !filter.accessibility })}>
           <MaterialCommunityIcons name="wheelchair-accessibility" size={24} color={theme.colors.onPrimary} />
         </Pressable>
       </Animated.View>
