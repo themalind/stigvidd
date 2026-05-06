@@ -8,16 +8,18 @@ import { StyleProp, useColorScheme, ViewStyle } from "react-native";
 import MapView, { Region } from "react-native-maps";
 import Map from "./map";
 import Marker from "./marker";
+import { MapMarkerFilter } from "@/data/types";
 
 interface Props {
   style?: StyleProp<ViewStyle>;
   initialRegion?: Region;
   showsUserLocation?: boolean;
+  filter: MapMarkerFilter;
   onMapReady?: () => void;
 }
 
 export default forwardRef<MapView, Props>(function TrailerMarkersMap(
-  { style, initialRegion, showsUserLocation, onMapReady }: Props,
+  { style, initialRegion, showsUserLocation, filter, onMapReady }: Props,
   mapRef,
 ) {
   const userTheme = useAtomValue(userThemeAtom);
@@ -37,19 +39,20 @@ export default forwardRef<MapView, Props>(function TrailerMarkersMap(
       showsUserLocation={showsUserLocation}
       {...(onMapReady !== undefined && { onMapReady })}
     >
-      {trails
-        ?.filter((t) => t.startLatitude != null && t.startLongitude != null)
-        .map((trail) => (
-          <Marker
-            key={trail.identifier}
-            coordinate={{
-              latitude: Number(trail.startLatitude),
-              longitude: Number(trail.startLongitude),
-            }}
-            title={trail.name}
-            variant={isDark ? "trailDark" : "trailLight"}
-          />
-        ))}
+      {filter.trails &&
+        trails
+          ?.filter((t) => t.startLatitude != null && t.startLongitude != null)
+          .map((trail) => (
+            <Marker
+              key={trail.identifier}
+              coordinate={{
+                latitude: Number(trail.startLatitude),
+                longitude: Number(trail.startLongitude),
+              }}
+              title={trail.name}
+              variant={isDark ? "trailDark" : "trailLight"}
+            />
+          ))}
     </Map>
   );
 });

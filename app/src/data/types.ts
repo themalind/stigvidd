@@ -272,3 +272,10 @@ export type ActiveHike = {
   totalDistance: number;
   totalTime: number;
 };
+
+export type MapMarkerFilter = {
+  trails: boolean;
+  shelters: boolean;
+  firePits: boolean;
+  accessability: boolean;
+};

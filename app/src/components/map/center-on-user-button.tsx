@@ -55,8 +55,8 @@ export default function CenterOnUserButton({ mapRef }: Props) {
 const s = StyleSheet.create({
   center: {
     position: "absolute",
-    right: 20,
-    bottom: 20,
+    right: 15,
+    bottom: 18,
     padding: 12,
     borderWidth: 2,
     borderRadius: 999,
