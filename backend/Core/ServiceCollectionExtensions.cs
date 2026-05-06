@@ -75,6 +75,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IReviewRepository, ReviewRepository>();
         services.AddTransient<IHikeRepository, HikeRepository>();
         services.AddTransient<ITrailObstacleRepository, TrailObstacleRepository>();
+        services.AddTransient<IFacilityRepository, FacilityRepository>();
 
         // Services
         services.AddTransient<ITrailService, TrailService>();
@@ -83,6 +84,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IWebDavService, WebDavService>();
         services.AddTransient<IHikeService, HikeService>();
         services.AddTransient<ITrailObstaclesService, TrailObstaclesService>();
+        services.AddTransient<IFacilityService, FacilityService>();
 
         services.AddTransient<Func<IWebDavClient>>(sp =>
         {
@@ -104,6 +106,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<ReviewResponseFactory>();
         services.AddTransient<HikeResponseFactory>();
         services.AddTransient<TrailObstaclesResponseFactory>();
+        services.AddTransient<FacilityResponseFactory>();
     }
 }
 
