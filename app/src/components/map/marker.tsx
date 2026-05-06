@@ -2,7 +2,7 @@ import { MapMarkerProps, Marker as MarkerRNM } from "react-native-maps";
 
 interface Props extends MapMarkerProps {
   children?: React.ReactNode;
-  variant?: "trailLight" | "trailDark" | "shelter" | "campsite" | "favourite";
+  variant?: "trailLight" | "trailDark" | "shelter" | "campsite" | "favourite" | "firePit" | "combined";
 }
 
 const icon = {
@@ -11,6 +11,8 @@ const icon = {
   shelter: require("@/assets/map/marker/vindskydd.png"),
   campsite: require("@/assets/map/marker/taltplats.png"),
   favourite: require("@/assets/map/marker/smultronstalle.png"),
+  firePit: require("@/assets/map/marker/grillplats3x.png"),
+  combined: require("@/assets/map/marker/grillskydd.png"),
 };
 
 export default function Marker({ variant = "trailLight", children, ...props }: Props) {

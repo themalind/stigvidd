@@ -22,7 +22,7 @@ export async function getFacilityMarkers(): Promise<Facility[]> {
     const response = await fetch(`${BASE_URL}/facilities`);
 
     if (!response.ok) {
-      throw new Error(`facilities: HTTP error ${response.status}`);
+      throw new Error(`getFacilityMarkers: HTTP error ${response.status}`);
     }
     const json = await response.json();
 

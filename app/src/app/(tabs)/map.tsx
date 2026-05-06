@@ -16,7 +16,7 @@ export default function MapScreen() {
     trails: true,
     shelters: true,
     firePits: true,
-    accessability: true,
+    accessibility: false,
   });
 
   return (
