@@ -4,6 +4,7 @@ using Infrastructure.Data;
 using Infrastructure.Data.Entities;
 using Infrastructure.Enums;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 
 namespace UnitTests.RepositoryTests;
@@ -52,7 +53,7 @@ public class TrailObstacleRepositoryTests : TestBase
     public async Task GetObstaclesByTrail_WhenObstaclesExist_ReturnsActiveOnes()
     {
         // Arrange
-        var repo = new TrailObstacleRepository(CreateSeededFactory());
+        var repo = new TrailObstacleRepository(CreateSeededFactory(), NullLogger<TrailObstacleRepository>.Instance);
 
         // Act
         var result = await repo.GetTrailObstaclesByTrailIdentifierAsync(TivedenIdentifier, to => to.Identifier, CancellationToken.None);
@@ -66,7 +67,7 @@ public class TrailObstacleRepositoryTests : TestBase
     public async Task GetObstaclesByTrail_WhenNoObstacles_ReturnsEmpty()
     {
         // Arrange
-        var repo = new TrailObstacleRepository(CreateSeededFactory());
+        var repo = new TrailObstacleRepository(CreateSeededFactory(), NullLogger<TrailObstacleRepository>.Instance);
 
         // Act
         var result = await repo.GetTrailObstaclesByTrailIdentifierAsync(GesebolIdentifier, to => to.Identifier, CancellationToken.None);
@@ -80,7 +81,7 @@ public class TrailObstacleRepositoryTests : TestBase
     public async Task GetObstaclesByTrail_FiltersObstaclesOlderThan30Days()
     {
         // Arrange
-        var repo = new TrailObstacleRepository(CreateSeededFactory());
+        var repo = new TrailObstacleRepository(CreateSeededFactory(), NullLogger<TrailObstacleRepository>.Instance);
 
         // Act
         var result = await repo.GetTrailObstaclesByTrailIdentifierAsync(TivedenIdentifier, to => to.Identifier, CancellationToken.None);
@@ -93,7 +94,7 @@ public class TrailObstacleRepositoryTests : TestBase
     public async Task GetObstaclesByTrail_FiltersObstaclesWithThreeOrMoreSolvedVotes()
     {
         // Arrange
-        var repo = new TrailObstacleRepository(CreateSeededFactory());
+        var repo = new TrailObstacleRepository(CreateSeededFactory(), NullLogger<TrailObstacleRepository>.Instance);
 
         // Act
         // Obstacle3 on Tångaleden has exactly 3 solved votes
@@ -108,7 +109,7 @@ public class TrailObstacleRepositoryTests : TestBase
     public async Task GetObstaclesByTrail_ObstacleExactly30DaysOld_IsExcluded()
     {
         // Arrange
-        var repo = new TrailObstacleRepository(CreateFactoryWithObstacleAt(DateTime.UtcNow.AddDays(-30)));
+        var repo = new TrailObstacleRepository(CreateFactoryWithObstacleAt(DateTime.UtcNow.AddDays(-30)), NullLogger<TrailObstacleRepository>.Instance);
 
         // Act
         var result = await repo.GetTrailObstaclesByTrailIdentifierAsync(TivedenIdentifier, to => to.Identifier, CancellationToken.None);
@@ -122,7 +123,7 @@ public class TrailObstacleRepositoryTests : TestBase
     public async Task GetObstaclesByTrail_ObstacleJustUnder30DaysOld_IsIncluded()
     {
         // Arrange
-        var repo = new TrailObstacleRepository(CreateFactoryWithObstacleAt(DateTime.UtcNow.AddDays(-29)));
+        var repo = new TrailObstacleRepository(CreateFactoryWithObstacleAt(DateTime.UtcNow.AddDays(-29)), NullLogger<TrailObstacleRepository>.Instance);
 
         // Act
         var result = await repo.GetTrailObstaclesByTrailIdentifierAsync(TivedenIdentifier, to => to.Identifier, CancellationToken.None);
@@ -136,7 +137,7 @@ public class TrailObstacleRepositoryTests : TestBase
     public async Task GetObstacleByIdentifier_WhenFound_ReturnsSuccess()
     {
         // Arrange
-        var repo = new TrailObstacleRepository(CreateSeededFactory());
+        var repo = new TrailObstacleRepository(CreateSeededFactory(), NullLogger<TrailObstacleRepository>.Instance);
 
         // Act
         var result = await repo.GetTrailObstacleByIdentifierAsync(Obstacle1Identifier, CancellationToken.None);
@@ -151,7 +152,7 @@ public class TrailObstacleRepositoryTests : TestBase
     public async Task GetObstacleByIdentifier_WhenNotFound_ReturnsNotFound()
     {
         // Arrange
-        var repo = new TrailObstacleRepository(CreateSeededFactory());
+        var repo = new TrailObstacleRepository(CreateSeededFactory(), NullLogger<TrailObstacleRepository>.Instance);
 
         // Act
         var result = await repo.GetTrailObstacleByIdentifierAsync("no-such-obstacle", CancellationToken.None);
@@ -165,7 +166,7 @@ public class TrailObstacleRepositoryTests : TestBase
     public async Task GetObstacleByIdentifierAndUserId_WhenFound_ReturnsSuccess()
     {
         // Arrange
-        var repo = new TrailObstacleRepository(CreateSeededFactory());
+        var repo = new TrailObstacleRepository(CreateSeededFactory(), NullLogger<TrailObstacleRepository>.Instance);
 
         // Act
         var result = await repo.GetTrailObstacleByIdentifierAndUserIdAsync(Obstacle1Identifier, UserId1, CancellationToken.None);
@@ -178,7 +179,7 @@ public class TrailObstacleRepositoryTests : TestBase
     public async Task GetObstacleByIdentifierAndUserId_WhenWrongUser_ReturnsNotFound()
     {
         // Arrange
-        var repo = new TrailObstacleRepository(CreateSeededFactory());
+        var repo = new TrailObstacleRepository(CreateSeededFactory(), NullLogger<TrailObstacleRepository>.Instance);
 
         // Act
         var result = await repo.GetTrailObstacleByIdentifierAndUserIdAsync(Obstacle1Identifier, 99, CancellationToken.None);
@@ -193,7 +194,7 @@ public class TrailObstacleRepositoryTests : TestBase
     {
         // Arrange
         var factory = CreateSeededFactory();
-        var repo = new TrailObstacleRepository(factory);
+        var repo = new TrailObstacleRepository(factory, NullLogger<TrailObstacleRepository>.Instance);
         var obstacle = new TrailObstacle
         {
             Identifier = Guid.NewGuid().ToString(),
@@ -220,7 +221,7 @@ public class TrailObstacleRepositoryTests : TestBase
     {
         // Arrange
         var factory = CreateSeededFactory();
-        var repo = new TrailObstacleRepository(factory);
+        var repo = new TrailObstacleRepository(factory, NullLogger<TrailObstacleRepository>.Instance);
         var found = await repo.GetTrailObstacleByIdentifierAsync(Obstacle1Identifier, CancellationToken.None);
         found.IsSuccess.Should().BeTrue();
         found.Value.Should().NotBeNull();
@@ -243,7 +244,7 @@ public class TrailObstacleRepositoryTests : TestBase
     {
         // Arrange
         var factory = CreateSeededFactory();
-        var repo = new TrailObstacleRepository(factory);
+        var repo = new TrailObstacleRepository(factory, NullLogger<TrailObstacleRepository>.Instance);
         var found = await repo.GetTrailObstacleByIdentifierAsync(Obstacle1Identifier, CancellationToken.None);
         found.IsSuccess.Should().BeTrue();
 
@@ -270,7 +271,7 @@ public class TrailObstacleRepositoryTests : TestBase
     {
         // Arrange
         var factory = CreateSeededFactory();
-        var repo = new TrailObstacleRepository(factory);
+        var repo = new TrailObstacleRepository(factory, NullLogger<TrailObstacleRepository>.Instance);
         var found = await repo.GetTrailObstacleByIdentifierAsync(Obstacle1Identifier, CancellationToken.None);
         found.IsSuccess.Should().BeTrue();
 
@@ -296,7 +297,7 @@ public class TrailObstacleRepositoryTests : TestBase
     {
         // Arrange
         var factory = CreateSeededFactory();
-        var repo = new TrailObstacleRepository(factory);
+        var repo = new TrailObstacleRepository(factory, NullLogger<TrailObstacleRepository>.Instance);
         var found = await repo.GetTrailObstacleByIdentifierAsync(Obstacle1Identifier, CancellationToken.None);
 
         // Act
@@ -312,7 +313,7 @@ public class TrailObstacleRepositoryTests : TestBase
     public async Task GetSolvedVoteByObstacleIdAndUserId_WhenFound_ReturnsSuccess()
     {
         // Arrange
-        var repo = new TrailObstacleRepository(CreateSeededFactory());
+        var repo = new TrailObstacleRepository(CreateSeededFactory(), NullLogger<TrailObstacleRepository>.Instance);
 
         // Act
         var result = await repo.GetSolvedVoteByObstacleIdAndUserIdAsync(ObstacleId2, UserId1, CancellationToken.None);
@@ -325,7 +326,7 @@ public class TrailObstacleRepositoryTests : TestBase
     public async Task GetSolvedVoteByObstacleIdAndUserId_WhenNotFound_ReturnsNotFound()
     {
         // Arrange
-        var repo = new TrailObstacleRepository(CreateSeededFactory());
+        var repo = new TrailObstacleRepository(CreateSeededFactory(), NullLogger<TrailObstacleRepository>.Instance);
 
         // Act
         var result = await repo.GetSolvedVoteByObstacleIdAndUserIdAsync(99, 99, CancellationToken.None);
@@ -340,7 +341,7 @@ public class TrailObstacleRepositoryTests : TestBase
     {
         // Arrange
         var factory = CreateSeededFactory();
-        var repo = new TrailObstacleRepository(factory);
+        var repo = new TrailObstacleRepository(factory, NullLogger<TrailObstacleRepository>.Instance);
         var vote = new TrailObstacleSolvedVote
         {
             Identifier = Guid.NewGuid().ToString(),
@@ -363,7 +364,7 @@ public class TrailObstacleRepositoryTests : TestBase
     {
         // Arrange
         var factory = CreateSeededFactory();
-        var repo = new TrailObstacleRepository(factory);
+        var repo = new TrailObstacleRepository(factory, NullLogger<TrailObstacleRepository>.Instance);
         var vote = await repo.GetSolvedVoteByObstacleIdAndUserIdAsync(ObstacleId2, UserId1, CancellationToken.None);
         vote.IsSuccess.Should().BeTrue();
 

@@ -122,7 +122,7 @@ public class TrailServiceTests
         // Arrange
         var repo = new Mock<ITrailRepository>();
         repo.Setup(r => r.GetTrailByIdentifierAsync(It.IsAny<string>(), It.IsAny<Expression<Func<Trail, TrailResponse>>>(), It.IsAny<CancellationToken>()))
-            .ThrowsAsync(new Exception("DB error"));
+            .ReturnsAsync(RepositoryResult<TrailResponse>.Error());
 
         // Act
         var result = await Build(repo).GetTrailByIdentifierWithoutCoordinatesAsync(Utilities.Identifiers.Trail4, CancellationToken.None);
@@ -263,7 +263,7 @@ public class TrailServiceTests
         // Arrange
         var repo = new Mock<ITrailRepository>();
         repo.Setup(r => r.GetPopularTrailOverviewsAsync(It.IsAny<double?>(), It.IsAny<double?>(), It.IsAny<CancellationToken>()))
-            .ThrowsAsync(new Exception("DB error"));
+            .ReturnsAsync(RepositoryResult<IReadOnlyCollection<TrailOverviewResponse>>.Error());
 
         // Act
         var result = await Build(repo).GetPopularTrailOverviewsAsync(57.0, 12.0, CancellationToken.None);
@@ -317,7 +317,7 @@ public class TrailServiceTests
         // Arrange
         var repo = new Mock<ITrailRepository>();
         repo.Setup(r => r.GetAllTrailsWithBasicInfoAsync(It.IsAny<CancellationToken>()))
-            .ThrowsAsync(new Exception("DB error"));
+            .ReturnsAsync(RepositoryResult<IReadOnlyCollection<TrailShortInfoResponse>>.Error());
 
         // Act
         var result = await Build(repo).GetAllTrailsWithBasicInfoAsync(CancellationToken.None);
@@ -371,7 +371,7 @@ public class TrailServiceTests
         // Arrange
         var repo = new Mock<ITrailRepository>();
         repo.Setup(r => r.GetAllTrailMarkersAsync(It.IsAny<CancellationToken>()))
-            .ThrowsAsync(new Exception("DB error"));
+            .ReturnsAsync(RepositoryResult<IReadOnlyCollection<TrailMarkerResponse>>.Error());
 
         // Act
         var result = await Build(repo).GetAllTrailMarkersAsync(CancellationToken.None);

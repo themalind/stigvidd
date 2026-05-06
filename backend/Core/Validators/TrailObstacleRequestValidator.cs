@@ -9,7 +9,8 @@ public class TrailObstacleRequestValidator : AbstractValidator<TrailObstacleRequ
     {
         RuleFor(trailObstacleRequest => trailObstacleRequest.Description)
             .NotEmpty()
-            .WithMessage("Description can not be empty")            .MinimumLength(15)
+            .WithMessage("Description can not be empty")
+            .MinimumLength(15)
             .MaximumLength(500);
         RuleFor(trailObstacleRequest => trailObstacleRequest.IssueType)
             .NotEmpty()

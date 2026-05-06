@@ -3,6 +3,7 @@ using Core;
 using Core.Repositories;
 using FluentAssertions;
 using Infrastructure.Data.Entities;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace UnitTests.RepositoryTests;
 
@@ -15,7 +16,7 @@ public class TrailRepositoryTests : TestBase
     public async Task GetTrailIdByIdentifier_WhenFound_ReturnsId()
     {
         // Arrange
-        var repo = new TrailRepository(CreateSeededFactory());
+        var repo = new TrailRepository(CreateSeededFactory(), NullLogger<TrailRepository>.Instance);
 
         // Act
         var result = await repo.GetTrailIdByIdentifierAsync(TivedenIdentifier, CancellationToken.None);
@@ -29,7 +30,7 @@ public class TrailRepositoryTests : TestBase
     public async Task GetTrailIdByIdentifier_WhenNotFound_ReturnsNotFound()
     {
         // Arrange
-        var repo = new TrailRepository(CreateSeededFactory());
+        var repo = new TrailRepository(CreateSeededFactory(), NullLogger<TrailRepository>.Instance);
 
         // Act
         var result = await repo.GetTrailIdByIdentifierAsync("no-such-trail", CancellationToken.None);
@@ -43,7 +44,7 @@ public class TrailRepositoryTests : TestBase
     public async Task GetTrailByIdentifier_WhenFound_ReturnsTrail()
     {
         // Arrange
-        var repo = new TrailRepository(CreateSeededFactory());
+        var repo = new TrailRepository(CreateSeededFactory(), NullLogger<TrailRepository>.Instance);
 
         // Act
         var result = await repo.GetTrailByIdentifierAsync(TivedenIdentifier, t => t.Identifier, CancellationToken.None);
@@ -58,7 +59,7 @@ public class TrailRepositoryTests : TestBase
     public async Task GetTrailByIdentifier_WhenVerified_ReturnsTrail()
     {
         // Arrange
-        var repo = new TrailRepository(CreateSeededFactory());
+        var repo = new TrailRepository(CreateSeededFactory(), NullLogger<TrailRepository>.Instance);
 
         // Act
         // Storsjöleden has IsVerified = true
@@ -74,7 +75,7 @@ public class TrailRepositoryTests : TestBase
     public async Task GetTrailByIdentifier_WhenNotFound_ReturnsNotFound()
     {
         // Arrange
-        var repo = new TrailRepository(CreateSeededFactory());
+        var repo = new TrailRepository(CreateSeededFactory(), NullLogger<TrailRepository>.Instance);
 
         // Act
         var result = await repo.GetTrailByIdentifierAsync("no-such-trail", t => t.Identifier, CancellationToken.None);
@@ -88,7 +89,7 @@ public class TrailRepositoryTests : TestBase
     public async Task GetCoordinates_WhenFound_ReturnsCoordinates()
     {
         // Arrange
-        var repo = new TrailRepository(CreateSeededFactory());
+        var repo = new TrailRepository(CreateSeededFactory(), NullLogger<TrailRepository>.Instance);
 
         // Act
         var result = await repo.GetCoordinatesByTrailIdentifierAsync(StorsjoledenIdentifier, CancellationToken.None);
@@ -102,7 +103,7 @@ public class TrailRepositoryTests : TestBase
     public async Task GetCoordinates_WhenNotFound_ReturnsNotFound()
     {
         // Arrange
-        var repo = new TrailRepository(CreateSeededFactory());
+        var repo = new TrailRepository(CreateSeededFactory(), NullLogger<TrailRepository>.Instance);
 
         // Act
         var result = await repo.GetCoordinatesByTrailIdentifierAsync("no-such-trail", CancellationToken.None);
@@ -117,7 +118,7 @@ public class TrailRepositoryTests : TestBase
     {
         // Arrange
         var factory = CreateSeededFactory();
-        var repo = new TrailRepository(factory);
+        var repo = new TrailRepository(factory, NullLogger<TrailRepository>.Instance);
         var trail = new Trail
         {
             Identifier = Guid.NewGuid().ToString(),

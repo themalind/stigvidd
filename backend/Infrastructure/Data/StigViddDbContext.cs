@@ -16,6 +16,7 @@ public class StigViddDbContext(DbContextOptions<StigViddDbContext> options) : Db
     public DbSet<Hike> Hikes { get; set; }
     public DbSet<TrailObstacle> TrailObstacles { get; set; }
     public DbSet<TrailObstacleSolvedVote> TrailObstacleSolvedVotes { get; set; }
+    public DbSet<Facility> Facilities { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -79,6 +80,14 @@ public class StigViddDbContext(DbContextOptions<StigViddDbContext> options) : Db
         modelBuilder.Entity<TrailObstacle>()
             .Property(to => to.IncidentLongitude)
             .HasPrecision(18, 10);
+
+        modelBuilder.Entity<Facility>()
+           .Property(f => f.Longitude)
+           .HasPrecision(18, 5);
+
+        modelBuilder.Entity<Facility>()
+           .Property(f => f.Latitude)
+           .HasPrecision(18, 5);
 
         // Each solved vote belongs to one obstacle; obstacle can have many solved votes
         modelBuilder.Entity<TrailObstacleSolvedVote>()

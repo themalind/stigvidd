@@ -39,46 +39,35 @@ public class ReviewService : IReviewService
         int limit,
         CancellationToken ctoken)
     {
-        try
-        {
-            var baseUrl = _reviewResponseFactory.PresentableBaseUrl;
+        var baseUrl = _reviewResponseFactory.PresentableBaseUrl;
 
-            var result = await _reviewRepository.GetReviewsByTrailIdentifierAsync(
-                trailIdentifier, page, limit,
-                r => new ReviewResponse
+        var result = await _reviewRepository.GetReviewsByTrailIdentifierAsync(
+            trailIdentifier, page, limit,
+            r => ReviewResponse.Create(
+                r.Identifier,
+                r.TrailReview,
+                r.Rating,
+                r.User != null ? r.User.NickName : string.Empty,
+                r.CreatedAt,
+                r.Trail != null ? r.Trail.Identifier : string.Empty,
+                r.User != null ? r.User.Identifier : string.Empty,
+                r.ReviewImages!.Select(img => new ReviewImageResponse
                 {
-                    Identifier = r.Identifier,
-                    TrailReview = r.TrailReview,
-                    Rating = r.Rating,
-                    UserName = r.User != null ? r.User.NickName : string.Empty,
-                    CreatedAt = r.CreatedAt,
-                    TrailIdentifier = r.Trail != null ? r.Trail.Identifier : string.Empty,
-                    UserIdentifier = r.User != null ? r.User.Identifier : string.Empty,
-                    ReviewImages = r.ReviewImages!.Select(img => new ReviewImageResponse
-                    {
-                        Identifier = img.Identifier,
-                        ImageUrl = baseUrl + img.ImageUrl
-                    }).ToList()
-                },
-                ctoken);
+                    Identifier = img.Identifier,
+                    ImageUrl = baseUrl + img.ImageUrl
+                }).ToList()),
+            ctoken);
 
-            if (!result.IsSuccess)
-                return Result.Fail<PagedReviewResponse>(new Message(500, "An error occurred while fetching reviews."));
-
-            return Result.Ok(new PagedReviewResponse
-            {
-                Reviews = result.Value.Items,
-                Page = result.Value.Page,
-                HasMore = result.Value.HasMore,
-                Total = result.Value.TotalCount
-            });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error fetching reviews for TrailIdentifier: {TrailIdentifier}", trailIdentifier);
-
+        if (!result.IsSuccess)
             return Result.Fail<PagedReviewResponse>(new Message(500, "An error occurred while fetching reviews."));
-        }
+
+        return Result.Ok(new PagedReviewResponse
+        {
+            Reviews = result.Value.Items,
+            Page = result.Value.Page,
+            HasMore = result.Value.HasMore,
+            Total = result.Value.TotalCount
+        });
     }
 
     public async Task<Result<ReviewResponse?>> AddReviewAsync(
@@ -140,8 +129,6 @@ public class ReviewService : IReviewService
             if (!addResult.IsSuccess)
                 return Result.Fail<ReviewResponse?>(new Message(500, "An error occurred while adding the review."));
 
-            _logger.LogInformation("Review added successfully for User: {UserId}, Trail: {TrailId}", userResult.Value, trailResult.Value);
-
             return Result.Ok<ReviewResponse?>(_reviewResponseFactory.Create(addResult.Value));
         }
         catch (Exception ex)
@@ -172,41 +159,36 @@ public class ReviewService : IReviewService
 
     public async Task<Result> DeleteReviewAsync(string reviewIdentifier, string userIdentifer, CancellationToken ctoken)
     {
-        try
+        var reviewResult = await _reviewRepository.GetReviewByIdentifierAsync(reviewIdentifier, userIdentifer, ctoken);
+
+        if (reviewResult.Status == RepositoryResultStatus.Error)
+            return Result.Fail(new Message(500, "An error occurred while deleting the review."));
+
+        if (!reviewResult.IsSuccess)
+            return Result.Fail(new Message(404, $"RemoveReviewAsync: Could not find review with identifier: {reviewIdentifier} and user identifier: {userIdentifer}"));
+
+        var review = reviewResult.Value;
+
+        if (review.ReviewImages != null && review.ReviewImages.Any())
         {
-            var reviewResult = await _reviewRepository.GetReviewByIdentifierAsync(reviewIdentifier, userIdentifer, ctoken);
-
-            if (!reviewResult.IsSuccess)
-                return Result.Fail(new Message(404, $"RemoveReviewAsync: Could not find review with identifier: {reviewIdentifier} and user identifier: {userIdentifer}"));
-
-            var review = reviewResult.Value;
-
-            if (review.ReviewImages != null && review.ReviewImages.Any())
+            foreach (var image in review.ReviewImages)
             {
-                foreach (var image in review.ReviewImages)
+                try
                 {
-                    try
-                    {
-                        var result = await _webDavService.DeleteFileAsync(image.ImageUrl);
+                    var result = await _webDavService.DeleteFileAsync(image.ImageUrl);
 
-                        if (result.IsFailure)
-                            return Result.Fail(new Message(500, "Could not remove file. Try again later."));
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogWarning(ex, "RemoveReviewAsync: Failed to remove image {ImageUrl}. UserIdentifier: {userIdentifer}, ReviewIdentifer: {reviewIdentifier}", image.ImageUrl, userIdentifer, reviewIdentifier);
-                    }
+                    if (result.IsFailure)
+                        return Result.Fail(new Message(500, "Could not remove file. Try again later."));
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "RemoveReviewAsync: Failed to remove image {ImageUrl}. UserIdentifier: {userIdentifer}, ReviewIdentifer: {reviewIdentifier}", image.ImageUrl, userIdentifer, reviewIdentifier);
                 }
             }
-
-            await _reviewRepository.DeleteReviewAsync(review, ctoken);
-
-            return Result.Ok();
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error deleting review {reviewIdentifier} for user {userIdentifer}", reviewIdentifier, userIdentifer);
-            return Result.Fail(new Message(500, "An error occurred while deleting the review."));
-        }
+
+        await _reviewRepository.DeleteReviewAsync(review, ctoken);
+
+        return Result.Ok();
     }
 }

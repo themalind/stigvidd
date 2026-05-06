@@ -24,6 +24,7 @@ public static class Utilities
         var hikes = GetSeedingHikes(users);
         var obstacles = GetSeedingTrailObstacles(trails, users);
         var solvedVotes = GetSeedingTrailObstacleSolvedVotes(obstacles, users);
+        var facilities = GetSeedingFacilities();
 
         db.Trails.AddRange(trails);
         db.Users.AddRange(users);
@@ -31,8 +32,40 @@ public static class Utilities
         db.Hikes.AddRange(hikes);
         db.TrailObstacles.AddRange(obstacles);
         db.TrailObstacleSolvedVotes.AddRange(solvedVotes);
+        db.Facilities.AddRange(facilities);
 
         db.SaveChanges();
+    }
+
+    public static List<Facility> GetSeedingFacilities()
+    {
+        return
+        [
+            new Facility
+            {
+                Id = 1,
+                Identifier = "fac1a1b2-c3d4-4e5f-6a7b-8c9d0e1f2a3b",
+                Name = "Grillplats Tiveden",
+                FacilityType = FacilityType.FirePit,
+                IsAccessible = true,
+                Latitude = 58.9M,
+                Longitude = 14.5M,
+                CreatedAt = SeedDates.Created,
+                LastUpdatedAt = SeedDates.Updated
+            },
+            new Facility
+            {
+                Id = 2,
+                Identifier = "fac2b2c3-d4e5-4f6a-7b8c-9d0e1f2a3b4c",
+                Name = "Vindskydd Gesebol",
+                FacilityType = FacilityType.Shelter,
+                IsAccessible = false,
+                Latitude = 57.6M,
+                Longitude = 12.8M,
+                CreatedAt = SeedDates.Created,
+                LastUpdatedAt = SeedDates.Updated
+            }
+        ];
     }
 
     /// <summary>

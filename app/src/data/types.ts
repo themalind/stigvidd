@@ -239,6 +239,23 @@ export interface DeleteHikeRequest {
   userIdentifier: string;
 }
 
+export interface CreateFacilityRequest {
+  name: string;
+  facilityType: number;
+  isAccessible: boolean;
+  latitude: number;
+  longitude: number;
+}
+
+export interface Facility {
+  identifier: string;
+  name: string;
+  facilityType: 0 | 1 | 2 | 3;
+  isAccessible: boolean;
+  latitude: number;
+  longitude: number;
+}
+
 export interface LoginData {
   email: string;
   password: string;

@@ -4,6 +4,7 @@ using Core.Interfaces.Repositories;
 using Core.Repositories;
 using FluentAssertions;
 using Infrastructure.Data.Entities;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 
 namespace UnitTests.RepositoryTests;
@@ -17,7 +18,7 @@ public class UserRepositoryTests : TestBase
     private const string NassehultIdentifier = "77a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c";
 
     private UserRepository BuildRepo(IFirebaseAuthRepository? firebase = null) =>
-        new(CreateSeededFactory(), firebase ?? new Mock<IFirebaseAuthRepository>().Object);
+        new(CreateSeededFactory(), firebase ?? new Mock<IFirebaseAuthRepository>().Object, NullLogger<UserRepository>.Instance);
 
     [Fact]
     public async Task GetUserByFirebaseUid_WhenFound_ReturnsSuccess()
@@ -169,7 +170,7 @@ public class UserRepositoryTests : TestBase
     {
         // Arrange
         var factory = CreateSeededFactory();
-        var repo = new UserRepository(factory, new Mock<IFirebaseAuthRepository>().Object);
+        var repo = new UserRepository(factory, new Mock<IFirebaseAuthRepository>().Object, NullLogger<UserRepository>.Instance);
         var newUser = new User
         {
             Identifier = Guid.NewGuid().ToString(),

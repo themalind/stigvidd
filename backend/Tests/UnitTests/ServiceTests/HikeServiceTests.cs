@@ -5,7 +5,6 @@ using Core.Interfaces.Repositories;
 using Core.Services;
 using FluentAssertions;
 using Infrastructure.Data.Entities;
-using Microsoft.Extensions.Logging;
 using Moq;
 using WebDataContracts.RequestModels.Hike;
 using WebDataContracts.ResponseModels.Hike;
@@ -20,7 +19,6 @@ public class HikeServiceTests
         new(
             (hikeRepo ?? new Mock<IHikeRepository>()).Object,
             new HikeResponseFactory(),
-            new Mock<ILogger<HikeService>>().Object,
             (userSvc ?? new Mock<Core.Interfaces.Services.IUserService>()).Object);
 
     private static CreateHikeRequest ValidRequest() => new()
