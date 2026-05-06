@@ -133,6 +133,7 @@ export interface TrailShortInfoResponse {
 export interface TrailMarkerResponse {
   identifier: string;
   name: string;
+  isAccessible: boolean;
   startLatitude?: number;
   startLongitude?: number;
 }
@@ -294,5 +295,5 @@ export type MapMarkerFilter = {
   trails: boolean;
   shelters: boolean;
   firePits: boolean;
-  accessability: boolean;
+  accessibility: boolean;
 };

@@ -234,11 +234,12 @@ public class TrailRepository : ITrailRepository
                         SELECT
                             t.Identifier,
                             t.Name,
+                            t.Accessibility AS IsAccessible,
                             CAST(JSON_VALUE(t.Coordinates, '$[0].latitude') AS decimal(18,10)) AS StartLatitude,
                             CAST(JSON_VALUE(t.Coordinates, '$[0].longitude') AS decimal(18,10)) AS StartLongitude
                         FROM Trails t
                         WHERE t.IsVerified = 1
-                        GROUP BY t.Identifier, t.Name, t.Coordinates
+                        GROUP BY t.Identifier, t.Name, t.Accessibility, t.Coordinates
                         """)
                 .AsNoTracking()
                 .ToListAsync(ctoken);
