@@ -16,6 +16,7 @@ import { Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 
 import { LatLng } from "react-native-maps";
 import { useTheme } from "react-native-paper";
 import BackButton from "../back-button";
+import ErrorView from "../error-view";
 import LoadingIndicator from "../loading-indicator";
 import MapSkeleton from "../skeletons/map-skeleton";
 import TrailObstacleWarning from "./obstacle/trail-obstacle-warning";
@@ -37,6 +38,7 @@ export default function TrailDetailsScreen() {
     isLoading,
     isError,
     error,
+    refetch,
   } = useQuery({
     queryKey: ["trail", normalizedIdentifier],
     queryFn: () => getTrailByIdentifier(normalizedIdentifier),
@@ -60,7 +62,7 @@ export default function TrailDetailsScreen() {
   }
 
   if (isError) {
-    return <Text style={[s.errorText, { color: theme.colors.error }]}>{error?.message}</Text>;
+    return <ErrorView error={error} onRetry={refetch} />;
   }
 
   const images = trail?.trailImagesResponse || [];
@@ -173,9 +175,6 @@ const s = StyleSheet.create({
   imageContainer: {
     alignItems: "center",
     justifyContent: "center",
-  },
-  errorText: {
-    padding: 20,
   },
 });
 

@@ -29,7 +29,7 @@ internal class Program
         var cancellationToken = new CancellationTokenSource().Token;
         Console.WriteLine("Importerar data...");
         //await transMogrifier.TransmogrifyAsync("C:\\projekt\\suvnet24\\examensarbete\\spar_leder.json", ct: cancellationToken);
-        await facilityImporter.ImportAsync("C:\\projekt\\suvnet24\\examensarbete\\grillplats_vindskydd_wgs84.csv", cancellationToken);
+        //await facilityImporter.ImportAsync("C:\\projekt\\suvnet24\\examensarbete\\grillplats_vindskydd_wgs84.csv", cancellationToken);
         Console.WriteLine("Färdigt!");
         Console.ReadLine();
     }

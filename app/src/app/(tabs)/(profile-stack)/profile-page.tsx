@@ -4,6 +4,7 @@ import { showErrorAtom } from "@/atoms/snackbar-atoms";
 import { stigviddUserAtom } from "@/atoms/user-atoms";
 import { userThemeAtom } from "@/atoms/user-theme-atom";
 import DeleteAccountModal from "@/components/auth/delete-account-modal";
+import ErrorView from "@/components/error-view";
 import LoadingIndicator from "@/components/loading-indicator";
 import ThemeToggle from "@/components/theme-toggle";
 import ProfileMenuItem from "@/components/user/profile-page/profile-menu-item";
@@ -41,8 +42,8 @@ export default function ProfilePageScreen() {
     return <LoadingIndicator />;
   }
 
-  if (isError && error) {
-    return <Text style={{ color: theme.colors.error }}>{error.message}</Text>;
+  if (isError) {
+    return <ErrorView error={error} />;
   }
 
   async function handleSignOut() {

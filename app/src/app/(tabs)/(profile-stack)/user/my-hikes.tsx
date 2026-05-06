@@ -2,6 +2,7 @@ import { getAllHikesByUserId } from "@/api/hikes";
 import { authStateAtom } from "@/atoms/auth-atoms";
 import { stigviddUserAtom } from "@/atoms/user-atoms";
 import BackButton from "@/components/back-button";
+import ErrorView from "@/components/error-view";
 import LoadingIndicator from "@/components/loading-indicator";
 import HikeDetails from "@/components/trail/trail-creator/hike-details";
 import { BORDER_RADIUS } from "@/constants/constants";
@@ -40,15 +41,8 @@ export default function MyHikesScreen() {
     return <LoadingIndicator />;
   }
 
-  if (isError && error) {
-    return (
-      <View
-        style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: theme.colors.background }}
-      >
-        <BackButton />
-        <Text style={{ color: theme.colors.error }}>{error.message}</Text>
-      </View>
-    );
+  if (isError) {
+    return <ErrorView error={error} />;
   }
 
   if (hikes?.length === 0) {

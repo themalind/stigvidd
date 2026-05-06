@@ -1,6 +1,7 @@
 import { authStateAtom } from "@/atoms/auth-atoms";
 import { stigviddUserAtom } from "@/atoms/user-atoms";
 import BackButton from "@/components/back-button";
+import ErrorView from "@/components/error-view";
 import LoadingIndicator from "@/components/loading-indicator";
 import TrailCreator from "@/components/trail/trail-creator/trail-creator";
 import * as Location from "expo-location";
@@ -43,8 +44,8 @@ export default function CreateHikeScreen() {
     );
   }
 
-  if (isError && error) {
-    return <Text style={{ color: theme.colors.error }}>{error.message}</Text>;
+  if (isError) {
+    return <ErrorView error={error} />;
   }
 
   return (
