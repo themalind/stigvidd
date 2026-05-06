@@ -9,6 +9,7 @@ import React, { RefObject, useEffect, useMemo, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { Button, Surface, Text, useTheme } from "react-native-paper";
 import NotAuthenticatedDialog from "../auth/not-authenticated-msg-dialog";
+import ErrorView from "../error-view";
 import LoadingIndicator from "../loading-indicator";
 import AddReview from "./add/add-review-modal";
 import ReviewSection from "./review-section";
@@ -57,7 +58,7 @@ export default function TrailReviewsContainer({ trail, surfaceToScrollToRef, onR
   }
 
   if (isError) {
-    return <Text style={{ padding: 20, color: theme.colors.error }}>{error?.message}</Text>;
+    return <ErrorView error={error} />;
   }
 
   const handleAddReviewPress = () => {
