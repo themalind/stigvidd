@@ -5,7 +5,6 @@ using Core.Services;
 using FluentAssertions;
 using Infrastructure.Data.Entities;
 using Infrastructure.Enums;
-using Microsoft.Extensions.Logging;
 using Moq;
 using System.Linq.Expressions;
 namespace UnitTests.ServiceTests;
@@ -22,7 +21,6 @@ public class TrailObstaclesServiceTests
         Mock<ITrailService>? trailService = null) =>
         new(
             (obstacleRepo ?? new Mock<ITrailObstacleRepository>()).Object,
-            new Mock<ILogger<TrailObstaclesService>>().Object,
             new TrailObstaclesResponseFactory(),
             (userService ?? Utilities.MockFactory.UserServiceFoundById(UserId)).Object,
             (trailService ?? Utilities.MockFactory.TrailServiceFound(TrailId)).Object);
@@ -235,7 +233,7 @@ public class TrailObstaclesServiceTests
         repo.Setup(r => r.GetTrailObstacleByIdentifierAsync(Utilities.Identifiers.Obstacle1, It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<TrailObstacle>.Success(Utilities.Stubs.Obstacle(votes: [])));
         repo.Setup(r => r.AddSolvedVoteAsync(It.IsAny<TrailObstacleSolvedVote>(), It.IsAny<CancellationToken>()))
-            .ThrowsAsync(new Exception("DB error"));
+            .ReturnsAsync(RepositoryResult.Error());
 
         // Act
         var result = await Build(repo).AddSolvedVoteAsync(Utilities.Identifiers.User, Utilities.Identifiers.Obstacle1, CancellationToken.None);
@@ -339,7 +337,7 @@ public class TrailObstaclesServiceTests
         repo.Setup(r => r.GetSolvedVoteByObstacleIdAndUserIdAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<TrailObstacleSolvedVote>.Success(vote));
         repo.Setup(r => r.DeleteSolvedVoteAsync(vote, It.IsAny<CancellationToken>()))
-            .ThrowsAsync(new Exception("DB error"));
+            .ReturnsAsync(RepositoryResult.Error());
 
         // Act
         var result = await Build(repo).DeleteSolvedVoteByUserIdentifierAsync(Utilities.Identifiers.User, Utilities.Identifiers.Obstacle1, CancellationToken.None);
@@ -428,7 +426,7 @@ public class TrailObstaclesServiceTests
         repo.Setup(r => r.GetTrailObstacleByIdentifierAndUserIdAsync(Utilities.Identifiers.Obstacle1, UserId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<TrailObstacle>.Success(Utilities.Stubs.Obstacle()));
         repo.Setup(r => r.UpdateTrailObstacleAsync(It.IsAny<TrailObstacle>(), It.IsAny<CancellationToken>()))
-            .ThrowsAsync(new Exception("DB error"));
+            .ReturnsAsync(RepositoryResult<TrailObstacle>.Error());
 
         // Act
         var result = await Build(repo).UpdateTrailObstacleAsync(Utilities.Identifiers.User, Utilities.Identifiers.Obstacle1, "New desc", "Mud", CancellationToken.None);
@@ -498,7 +496,7 @@ public class TrailObstaclesServiceTests
         repo.Setup(r => r.GetTrailObstacleByIdentifierAndUserIdAsync(Utilities.Identifiers.Obstacle1, UserId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<TrailObstacle>.Success(obstacle));
         repo.Setup(r => r.DeleteTrailObstacleAsync(obstacle, It.IsAny<CancellationToken>()))
-            .ThrowsAsync(new Exception("DB error"));
+            .ReturnsAsync(RepositoryResult.Error());
 
         // Act
         var result = await Build(repo).DeleteTrailObstacleAsync(Utilities.Identifiers.User, Utilities.Identifiers.Obstacle1, CancellationToken.None);

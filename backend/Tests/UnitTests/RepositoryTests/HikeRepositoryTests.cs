@@ -3,6 +3,7 @@ using Core;
 using Core.Repositories;
 using FluentAssertions;
 using Infrastructure.Data.Entities;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace UnitTests.RepositoryTests;
 
@@ -15,7 +16,7 @@ public class HikeRepositoryTests : TestBase
     public async Task GetHikeByIdentifier_WhenFound_ReturnsSuccess()
     {
         // Arrange
-        var repo = new HikeRepository(CreateSeededFactory());
+        var repo = new HikeRepository(CreateSeededFactory(), NullLogger<HikeRepository>.Instance);
 
         // Act
         var result = await repo.GetHikeByIdentifierAsync(HikeIdentifier, CancellationToken.None);
@@ -31,7 +32,7 @@ public class HikeRepositoryTests : TestBase
     public async Task GetHikeByIdentifier_WhenNotFound_ReturnsNotFound()
     {
         // Arrange
-        var repo = new HikeRepository(CreateSeededFactory());
+        var repo = new HikeRepository(CreateSeededFactory(), NullLogger<HikeRepository>.Instance);
 
         // Act
         var result = await repo.GetHikeByIdentifierAsync("no-such-hike", CancellationToken.None);
@@ -45,7 +46,7 @@ public class HikeRepositoryTests : TestBase
     public async Task GetHikes_WithoutFilter_ReturnsAll()
     {
         // Arrange
-        var repo = new HikeRepository(CreateSeededFactory());
+        var repo = new HikeRepository(CreateSeededFactory(), NullLogger<HikeRepository>.Instance);
 
         // Act
         var result = await repo.GetHikesAsync(null, h => h.CreatedBy, CancellationToken.None);
@@ -59,7 +60,7 @@ public class HikeRepositoryTests : TestBase
     public async Task GetHikes_FilteredByCreator_ReturnsOnlyThatUsersHikes()
     {
         // Arrange
-        var repo = new HikeRepository(CreateSeededFactory());
+        var repo = new HikeRepository(CreateSeededFactory(), NullLogger<HikeRepository>.Instance);
 
         // Act
         var result = await repo.GetHikesAsync(UserIdentifier, h => h.CreatedBy, CancellationToken.None);
@@ -74,7 +75,7 @@ public class HikeRepositoryTests : TestBase
     public async Task GetHikes_WhenUserHasNoHikes_ReturnsEmpty()
     {
         // Arrange
-        var repo = new HikeRepository(CreateSeededFactory());
+        var repo = new HikeRepository(CreateSeededFactory(), NullLogger<HikeRepository>.Instance);
 
         // Act
         // User 4 (Eremiten) owns no hikes in seed data
@@ -90,7 +91,7 @@ public class HikeRepositoryTests : TestBase
     {
         // Arrange
         var factory = CreateSeededFactory();
-        var repo = new HikeRepository(factory);
+        var repo = new HikeRepository(factory, NullLogger<HikeRepository>.Instance);
         var hike = new Hike
         {
             Identifier = Guid.NewGuid().ToString(),
@@ -118,7 +119,7 @@ public class HikeRepositoryTests : TestBase
     {
         // Arrange
         var factory = CreateSeededFactory();
-        var repo = new HikeRepository(factory);
+        var repo = new HikeRepository(factory, NullLogger<HikeRepository>.Instance);
         var found = await repo.GetHikeByIdentifierAsync(HikeIdentifier, CancellationToken.None);
         found.IsSuccess.Should().BeTrue();
 

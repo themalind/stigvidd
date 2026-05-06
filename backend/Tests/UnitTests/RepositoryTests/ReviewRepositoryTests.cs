@@ -3,6 +3,7 @@ using Core;
 using Core.Repositories;
 using FluentAssertions;
 using Infrastructure.Data.Entities;
+using Microsoft.Extensions.Logging.Abstractions;
 using WebDataContracts.ResponseModels.Review;
 
 namespace UnitTests.RepositoryTests;
@@ -27,7 +28,7 @@ public class ReviewRepositoryTests : TestBase
             TrailIdentifier = r.Trail != null ? r.Trail.Identifier : string.Empty
         };
 
-    private ReviewRepository BuildRepo() => new(CreateSeededFactory());
+    private ReviewRepository BuildRepo() => new(CreateSeededFactory(), NullLogger<ReviewRepository>.Instance);
 
     [Fact]
     public async Task GetReviewsByTrailIdentifier_WhenTrailHasReviews_ReturnsCorrectCount()
@@ -159,7 +160,7 @@ public class ReviewRepositoryTests : TestBase
     public async Task AddReview_ShouldPersistAndReturn()
     {
         // Arrange
-        var repo = new ReviewRepository(CreateSeededFactory());
+        var repo = new ReviewRepository(CreateSeededFactory(), NullLogger<ReviewRepository>.Instance);
         var review = new Review
         {
             Identifier = Guid.NewGuid().ToString(),
@@ -182,7 +183,7 @@ public class ReviewRepositoryTests : TestBase
     public async Task DeleteReview_ShouldRemoveFromDatabase()
     {
         // Arrange
-        var repo = new ReviewRepository(CreateSeededFactory());
+        var repo = new ReviewRepository(CreateSeededFactory(), NullLogger<ReviewRepository>.Instance);
         var found = await repo.GetReviewByIdentifierAsync(Review5Identifier, KattletenIdentifier, CancellationToken.None);
         found.IsSuccess.Should().BeTrue();
 

@@ -5,7 +5,6 @@ using Core.Interfaces.Repositories;
 using Core.Services;
 using FluentAssertions;
 using Infrastructure.Data.Entities;
-using Microsoft.Extensions.Logging;
 using Moq;
 using WebDataContracts.ResponseModels.User;
 
@@ -14,7 +13,7 @@ namespace UnitTests.ServiceTests;
 public class UserServiceTests
 {
     private UserService Build(IUserRepository repo) =>
-        new(repo, new Mock<ILogger<UserService>>().Object, new UserResponseFactory());
+        new(repo, new UserResponseFactory());
 
 
     [Fact]
@@ -429,7 +428,7 @@ public class UserServiceTests
         // Arrange
         var repo = new Mock<IUserRepository>();
         repo.Setup(r => r.DeleteUserAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-            .ThrowsAsync(new Exception("DB error"));
+            .ReturnsAsync(RepositoryResult.Error());
 
         // Act
         var result = await Build(repo.Object).DeleteUserAsync(Utilities.Identifiers.User, CancellationToken.None);
