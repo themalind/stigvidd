@@ -2,14 +2,16 @@ import { signOutUser } from "@/api/auth";
 import { authStateAtom } from "@/atoms/auth-atoms";
 import { showErrorAtom } from "@/atoms/snackbar-atoms";
 import { useThemeToggle } from "@/hooks/useThemeToggle";
+import { CommonActions } from "@react-navigation/native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import { Image } from "expo-image";
-import { router } from "expo-router";
+import { router, useNavigation } from "expo-router";
 import { useAtom, useSetAtom } from "jotai";
 import * as React from "react";
 import { Dimensions, Modal, Pressable, StyleSheet, View } from "react-native";
 import { Divider, Drawer, Text, useTheme } from "react-native-paper";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 interface Props {
   visible: boolean;
@@ -24,6 +26,8 @@ export default function SettingsDrawer({ visible, onDismiss }: Props) {
   const theme = useTheme();
   const setError = useSetAtom(showErrorAtom);
   const [active, setActive] = React.useState("");
+  const insets = useSafeAreaInsets();
+  const navigation = useNavigation();
 
   async function handleThemeToggle() {
     setActive("theme");
@@ -45,7 +49,22 @@ export default function SettingsDrawer({ visible, onDismiss }: Props) {
       setError("Kunde inte logga ut.");
     }
     onDismiss();
-    router.replace("/(tabs)/(settings)/login");
+    // Reset the entire navigation tree back to auth/login,
+    // clearing all tab history and nested stack history.
+    navigation.dispatch(
+      CommonActions.reset({
+        index: 0,
+        routes: [
+          {
+            name: "(tabs)",
+            state: {
+              index: 0,
+              routes: [{ name: "(auth)", state: { routes: [{ name: "login" }] } }],
+            },
+          },
+        ],
+      }),
+    );
   }
 
   function handleLogin() {
@@ -62,7 +81,12 @@ export default function SettingsDrawer({ visible, onDismiss }: Props) {
       <View
         style={[
           s.panel,
-          { backgroundColor: theme.colors.surface, borderLeftColor: theme.colors.outlineVariant, borderLeftWidth: 1 },
+          {
+            backgroundColor: theme.colors.surface,
+            borderLeftColor: theme.colors.outlineVariant,
+            borderLeftWidth: 1,
+            paddingTop: insets.top + 10,
+          },
         ]}
       >
         <View style={s.stigviddContainer}>
@@ -130,7 +154,7 @@ const s = StyleSheet.create({
     right: 0,
     bottom: 0,
     width: width * 0.7,
-    paddingTop: 20,
+    paddingTop: 0,
     elevation: 8,
   },
   stigviddContainer: {

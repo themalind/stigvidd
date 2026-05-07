@@ -11,7 +11,7 @@ public class Trail : BaseEntity
     public string TrailSymbolImage { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
     public string FullDescription { get; set; } = string.Empty;
-    public string? Coordinates { get; set; } 
+    public string? Coordinates { get; set; }
     public string Tags { get; set; } = string.Empty;
     public string? CreatedBy { get; set; } = string.Empty;
     public bool IsVerified { get; set; } = false;
@@ -21,4 +21,5 @@ public class Trail : BaseEntity
     public ICollection<TrailImage>? TrailImages { get; set; }
     public ICollection<Review>? Reviews { get; set; }
     public ICollection<TrailLink>? TrailLinks { get; set; }
+    public ICollection<TrailObstacle>? TrailObstacles { get; set; }
 }

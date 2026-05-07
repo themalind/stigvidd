@@ -12,6 +12,12 @@ interface News {
 
 const news: News[] = [
   {
+    title: "Våren är här och det är dags att röra på sig! 🥾",
+    date: "2026-04-05",
+    text: "I appen finns flera färdiga leder att välja bland. Perfekta för jogging eller längre turer. Men det bästa är att du nu kan skapa och spara personliga rutter. Upptäck nya vägar, testa olika sträckor och gör varje promenad till ditt eget äventyr 🌷☀️",
+    image: require("../assets/images/spring.jpg"),
+  },
+  {
     title: "Nu blir det enklare än någonsin att hitta rätt led i Borås! 🌲🥾",
     date: "2026-02-18",
     text: "Nu kan du enkelt se alla leder i Borås samlade i en lista i appen. Sök, filtrera och sortera för att snabbt hitta en tur som passar dig – oavsett nivå eller humör. Ut i naturen på några sekunder. Vilken led testar du först? 🥾",
@@ -26,7 +32,7 @@ const news: News[] = [
   {
     title: "Picke vann igen!🎉 Stigvidds mest promenerade promenad 2025!",
     date: "2026-01-14",
-    text: "Lorem ipsum dolor sit, amet consectetur adipisicing elit. Nihil, omnis amet. Tenetur minus voluptatem pariatur, voluptates eius modi soluta inventore suscipit? Ratione exercitationem tempore enim nostrum quia quo consequuntur provident.",
+    text: "Pickesjön runt utsågs nyligen till årets mest promenerade promenad i appen! Den lättgångna, cirka 3,5 km långa rundan runt Pickesjön har blivit en favorit för många, med varierande natur och fina stigar nära Borås centrum.",
     image: require("../assets/images/picke.jpg"),
   },
   {

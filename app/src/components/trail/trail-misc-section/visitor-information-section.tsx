@@ -20,6 +20,7 @@ export default function VisitorInformationSection({ visitorInfo }: Props) {
         <Text style={s.propertyText}>{visitorInfo.gettingThere}</Text>
       </View>
       <Divider style={{ backgroundColor: theme.colors.onSurface }} />
+
       <View style={s.propertyContainer}>
         <View
           style={[s.iconBox, { backgroundColor: theme.colors.tertiaryContainer, borderColor: theme.colors.tertiary }]}
@@ -29,6 +30,7 @@ export default function VisitorInformationSection({ visitorInfo }: Props) {
         <Text style={s.propertyText}>{visitorInfo.publicTransport}</Text>
       </View>
       <Divider style={{ backgroundColor: theme.colors.onSurface }} />
+
       <View style={s.propertyContainer}>
         <View
           style={[s.iconBox, { backgroundColor: theme.colors.tertiaryContainer, borderColor: theme.colors.tertiary }]}
@@ -76,15 +78,14 @@ export default function VisitorInformationSection({ visitorInfo }: Props) {
 
 const s = StyleSheet.create({
   container: {
-    flex: 1,
     padding: 10,
-    gap: 5,
   },
   propertyContainer: {
     flexDirection: "row",
-    alignItems: "flex-start",
+    alignItems: "center",
     gap: 15,
-    padding: 5,
+    paddingTop: 10,
+    paddingBottom: 10,
   },
   propertyText: {
     flex: 1,

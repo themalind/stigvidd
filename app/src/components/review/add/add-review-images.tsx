@@ -10,20 +10,20 @@ import { useTheme } from "react-native-paper";
 const { width } = Dimensions.get("screen");
 
 interface ReviewImageProp {
-  reviewImageCallback?: (data: string[]) => void; // För att retunera bilderna till formuläret
+  setReviewImages?: (data: string[]) => void; // För att retunera bilderna till formuläret
 }
 
-export default function AddReviewImages({ reviewImageCallback }: ReviewImageProp) {
+export default function AddReviewImages({ setReviewImages }: ReviewImageProp) {
   const theme = useTheme();
   const setError = useSetAtom(showErrorAtom);
   const [images, setImages] = useState<ImagePicker.ImagePickerAsset[]>([]);
 
   function OnImagesChange(images: ImagePicker.ImagePickerAsset[]) {
-    if (!reviewImageCallback) {
+    if (!setReviewImages) {
       return;
     }
     const urls = images.map((asset) => asset.uri); // Använd 'imgs' parametern
-    reviewImageCallback(urls);
+    setReviewImages(urls);
   }
 
   const onDeleteImage = (uri: string) => {
@@ -84,7 +84,7 @@ export default function AddReviewImages({ reviewImageCallback }: ReviewImageProp
             >
               <MaterialCommunityIcons name="close" size={25} color={theme.colors.onBackground} />
             </Pressable>
-            <Image source={{ uri: image.uri }} style={s.image} />
+            <Image source={{ uri: image.uri }} contentFit="cover" style={s.image} />
           </View>
         ))}
 
@@ -117,6 +117,5 @@ const s = StyleSheet.create({
   image: {
     width: width * 0.25,
     aspectRatio: 3 / 4,
-    resizeMode: "cover",
   },
 });

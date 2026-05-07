@@ -5,11 +5,7 @@ export default function LoadingIndicator() {
   const theme = useTheme();
   return (
     <View style={[s.loading, { backgroundColor: theme.colors.background }]}>
-      <ActivityIndicator
-        size="large"
-        animating={true}
-        color={theme.colors.primary}
-      />
+      <ActivityIndicator size="large" animating={true} color={theme.colors.primary} />
     </View>
   );
 }

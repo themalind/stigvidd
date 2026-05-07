@@ -1,6 +1,6 @@
 import { CreateReviewRequest, PagedReviewResponse } from "@/data/types";
 import uuid from "react-native-uuid";
-import { IP } from "../../ipconfig";
+import { BASE_URL } from "./api-config";
 import { ApiError, getUserToken } from "./users";
 
 export async function getReviewsByTrailIdentifier(
@@ -9,7 +9,7 @@ export async function getReviewsByTrailIdentifier(
   limit: number,
 ): Promise<PagedReviewResponse> {
   try {
-    const response = await fetch(`http://${IP}/api/v1/reviews/trail/${trailIdentifier}?page=${page}&limit=${limit}`, {
+    const response = await fetch(`${BASE_URL}/reviews/trail/${trailIdentifier}?page=${page}&limit=${limit}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -36,7 +36,6 @@ export async function createReview(request: CreateReviewRequest): Promise<{ succ
 
   const formData = new FormData();
 
-  // Skapa filobjekten
   request.imageUris?.forEach((uri) => {
     const fileName = `${uuid.v4()}.jpg`;
 
@@ -44,7 +43,7 @@ export async function createReview(request: CreateReviewRequest): Promise<{ succ
       uri: uri,
       type: "image/jpeg",
       name: fileName,
-    } as any); // Hittar vi ett annat sätt att typa så byter vi.
+    } as any);
   });
 
   formData.append("trailIdentifier", request.trailIdentifier);
@@ -52,7 +51,7 @@ export async function createReview(request: CreateReviewRequest): Promise<{ succ
   formData.append("rating", `${request.rating}`);
 
   try {
-    const response = await fetch("http://" + IP + "/api/v1/reviews/create", {
+    const response = await fetch(`${BASE_URL}/reviews/create`, {
       method: "POST",
       body: formData,
       headers: {
@@ -61,7 +60,7 @@ export async function createReview(request: CreateReviewRequest): Promise<{ succ
     });
 
     if (!response.ok) {
-      console.log(response.body);
+      throw new ApiError(`HTTP error ${response.status}`, response.status);
     }
 
     return { success: true };
@@ -79,7 +78,7 @@ export async function deleteReview(reviewIdentifier: string): Promise<{ success:
   }
 
   try {
-    const response = await fetch(`http://${IP}/api/v1/reviews/${reviewIdentifier}`, {
+    const response = await fetch(`${BASE_URL}/reviews/${reviewIdentifier}`, {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",

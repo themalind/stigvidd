@@ -11,7 +11,7 @@ import { useState } from "react";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
 import { Appearance, Dimensions, ImageBackground, Pressable, StyleSheet, Text, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
-import { Button, Surface, TextInput, useTheme } from "react-native-paper";
+import { Button, TextInput, useTheme } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { z } from "zod";
 import ResetPasswordModal from "./reset-password-modal";
@@ -39,8 +39,8 @@ export default function LoginScreen() {
   const finalTheme = userTheme === "auto" ? (colorScheme ?? "light") : userTheme;
   const background =
     finalTheme === "dark"
-      ? require("../../assets/images/aurora_borealis2.jpg")
-      : require("../../assets/images/light_mode_login.jpg");
+      ? require("../../assets/images/darkmode_login.jpg")
+      : require("../../assets/images/lightmode_login.jpg");
 
   const {
     control,
@@ -60,7 +60,7 @@ export default function LoginScreen() {
     }
 
     console.log("Inloggad", result.user.email);
-    router.navigate("/(tabs)/(profile-stack)/profile-page");
+    router.replace("/(tabs)/(profile-stack)/profile-page");
   };
 
   return (
@@ -72,8 +72,7 @@ export default function LoginScreen() {
         contentContainerStyle={s.scrollContent}
       >
         <ImageBackground resizeMode="cover" source={background} style={s.backgroundImage}>
-          <Surface
-            elevation={5}
+          <View
             style={[
               s.surface,
               {
@@ -177,7 +176,7 @@ export default function LoginScreen() {
                 </Text>
               </Link>
             </View>
-          </Surface>
+          </View>
         </ImageBackground>
       </KeyboardAwareScrollView>
       <ResetPasswordModal visible={visible} onDismiss={() => setVisible(false)} />

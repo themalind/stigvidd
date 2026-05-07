@@ -7,9 +7,10 @@ interface DialogProps {
   infoMessage: string;
   visible: boolean;
   onDissmiss: () => void;
+  onBeforeNavigate?: () => void;
 }
 
-export default function NotAuthenticatedDialog({ infoMessage, visible, onDissmiss }: DialogProps) {
+export default function NotAuthenticatedDialog({ infoMessage, visible, onDissmiss, onBeforeNavigate }: DialogProps) {
   const theme = useTheme();
   return (
     <View>
@@ -23,6 +24,7 @@ export default function NotAuthenticatedDialog({ infoMessage, visible, onDissmis
         textColor={theme.colors.onSurface}
         onConfirm={() => {
           onDissmiss();
+          onBeforeNavigate?.();
           router.navigate("/(tabs)/(auth)/login");
         }}
       />

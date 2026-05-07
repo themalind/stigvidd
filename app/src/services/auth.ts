@@ -1,11 +1,7 @@
 import { createStigViddUser } from "@/api/users";
 import { AuthResult, RegisterData } from "@/data/types";
 import { FirebaseError } from "firebase/app";
-import {
-  User,
-  createUserWithEmailAndPassword,
-  deleteUser,
-} from "firebase/auth";
+import { User, createUserWithEmailAndPassword, deleteUser } from "firebase/auth";
 import { auth } from "../../firebase-config";
 
 // Detta är tänkt att fungera som en transaction. Om något av stegen går fel ska ingen användare skapas.
@@ -14,11 +10,7 @@ export async function registerUser(data: RegisterData): Promise<AuthResult> {
 
   try {
     // Skapa Firebaseanvändare
-    const response = await createUserWithEmailAndPassword(
-      auth,
-      data.email,
-      data.password,
-    );
+    const response = await createUserWithEmailAndPassword(auth, data.email, data.password);
 
     if (!response) {
       throw new Error("Could not create a firebase user!");
@@ -42,9 +34,7 @@ export async function registerUser(data: RegisterData): Promise<AuthResult> {
     if (firebaseUser) {
       try {
         await deleteUser(firebaseUser);
-        console.warn(
-          "registerUser: Could not create user! Deleted by rollback.",
-        );
+        console.warn("registerUser: Could not create user! Deleted by rollback.");
       } catch (deleteError) {
         console.error("Failed to rollback:", deleteError);
       }

@@ -17,10 +17,51 @@ namespace Infrastructure.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.0")
+                .HasAnnotation("ProductVersion", "10.0.7")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+
+            modelBuilder.Entity("Infrastructure.Data.Entities.Facility", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("FacilityType")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Identifier")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsAccessible")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("LastUpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("Latitude")
+                        .HasPrecision(18, 5)
+                        .HasColumnType("decimal(18,5)");
+
+                    b.Property<decimal>("Longitude")
+                        .HasPrecision(18, 5)
+                        .HasColumnType("decimal(18,5)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Facilities");
+                });
 
             modelBuilder.Entity("Infrastructure.Data.Entities.Hike", b =>
                 {
@@ -45,6 +86,7 @@ namespace Infrastructure.Migrations
                         .HasColumnType("int");
 
                     b.Property<decimal>("HikeLength")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("Identifier")
@@ -82,7 +124,8 @@ namespace Infrastructure.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<decimal>("Rating")
-                        .HasColumnType("decimal(18,2)");
+                        .HasPrecision(3, 1)
+                        .HasColumnType("decimal(3,1)");
 
                     b.Property<int>("TrailId")
                         .HasColumnType("int");
@@ -230,6 +273,7 @@ namespace Infrastructure.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("TrailLength")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("TrailSymbol")
@@ -311,6 +355,88 @@ namespace Infrastructure.Migrations
                     b.HasIndex("TrailId");
 
                     b.ToTable("TrailLinks");
+                });
+
+            modelBuilder.Entity("Infrastructure.Data.Entities.TrailObstacle", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Identifier")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal?>("IncidentLatitude")
+                        .HasPrecision(18, 10)
+                        .HasColumnType("decimal(18,10)");
+
+                    b.Property<decimal?>("IncidentLongitude")
+                        .HasPrecision(18, 10)
+                        .HasColumnType("decimal(18,10)");
+
+                    b.Property<int>("IssueType")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("LastUpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("TrailId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TrailId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("TrailObstacles");
+                });
+
+            modelBuilder.Entity("Infrastructure.Data.Entities.TrailObstacleSolvedVote", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Identifier")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("LastUpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("TrailObstacleId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("TrailObstacleId", "UserId")
+                        .IsUnique();
+
+                    b.ToTable("TrailObstacleSolvedVotes");
                 });
 
             modelBuilder.Entity("Infrastructure.Data.Entities.User", b =>
@@ -497,6 +623,44 @@ namespace Infrastructure.Migrations
                     b.Navigation("Trail");
                 });
 
+            modelBuilder.Entity("Infrastructure.Data.Entities.TrailObstacle", b =>
+                {
+                    b.HasOne("Infrastructure.Data.Entities.Trail", "Trail")
+                        .WithMany("TrailObstacles")
+                        .HasForeignKey("TrailId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Infrastructure.Data.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Trail");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Infrastructure.Data.Entities.TrailObstacleSolvedVote", b =>
+                {
+                    b.HasOne("Infrastructure.Data.Entities.TrailObstacle", "TrailObstacle")
+                        .WithMany("SolvedVotes")
+                        .HasForeignKey("TrailObstacleId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("Infrastructure.Data.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("TrailObstacle");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Infrastructure.Data.Entities.VisitorInformation", b =>
                 {
                     b.HasOne("Infrastructure.Data.Entities.Trail", null)
@@ -548,7 +712,14 @@ namespace Infrastructure.Migrations
 
                     b.Navigation("TrailLinks");
 
+                    b.Navigation("TrailObstacles");
+
                     b.Navigation("VisitorInformation");
+                });
+
+            modelBuilder.Entity("Infrastructure.Data.Entities.TrailObstacle", b =>
+                {
+                    b.Navigation("SolvedVotes");
                 });
 
             modelBuilder.Entity("Infrastructure.Data.Entities.User", b =>

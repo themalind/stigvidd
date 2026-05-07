@@ -1,5 +1,6 @@
 import { authStateAtom } from "@/atoms/auth-atoms";
 import { removeFromWishlistAtom, userWishlistAtom } from "@/atoms/user-atoms";
+import ErrorView from "@/components/error-view";
 import LoadingIndicator from "@/components/loading-indicator";
 import UserTrailCollection from "@/components/user/user-trail-collection";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -21,8 +22,8 @@ export default function WishlistScreen() {
     return <LoadingIndicator />;
   }
 
-  if (isError && error) {
-    return <Text style={{ color: theme.colors.error }}>{error.message}</Text>;
+  if (isError) {
+    return <ErrorView error={error} />;
   }
 
   const handleDelete = (trailIdentifier: string) => {
@@ -32,12 +33,11 @@ export default function WishlistScreen() {
   return (
     <UserTrailCollection
       title="Vill gå"
+      description="Här är promenader du sparat att du vill gå."
       noTrailsSavedInfo="Du har inga sparade promenader som du vill gå än. Gå till en promenad och tryck på plusset för att lägga till."
       onDelete={handleDelete}
       trails={data ?? []}
-      icon={
-        <MaterialIcons name="star" size={24} color={theme.colors.tertiary} />
-      }
+      icon={<MaterialIcons name="star" size={24} color={theme.colors.tertiary} />}
     />
   );
 }

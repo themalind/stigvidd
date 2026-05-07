@@ -49,12 +49,7 @@ export const authStateAtom = atom((get) => ({
 export const initAuthAtom = atom(null, (get, set) => {
   const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
     const isRegistering = get(isRegisteringAtom);
-    console.log(
-      "onAuthStateChanged triggered",
-      currentUser?.displayName,
-      "isRegistering:",
-      isRegistering,
-    );
+    console.log("onAuthStateChanged triggered", currentUser?.displayName, "isRegistering:", isRegistering);
 
     if (!isRegistering) {
       set(userAtom, currentUser);
@@ -64,21 +59,18 @@ export const initAuthAtom = atom(null, (get, set) => {
   return unsubscribe;
 });
 
-export const registerUserAtom = atom(
-  null,
-  async (_, set, data: RegisterData) => {
-    set(isRegisteringAtom, true);
+export const registerUserAtom = atom(null, async (_, set, data: RegisterData) => {
+  set(isRegisteringAtom, true);
 
-    const result = await registerUser(data);
+  const result = await registerUser(data);
 
-    set(isRegisteringAtom, false);
+  set(isRegisteringAtom, false);
 
-    if (result.success && result.user) {
-      set(userAtom, result.user);
-      set(authLoadingAtom, false);
-      router.replace("/(tabs)/(profile-stack)/profile-page");
-    }
+  if (result.success && result.user) {
+    set(userAtom, result.user);
+    set(authLoadingAtom, false);
+    router.replace("/(tabs)/(profile-stack)/profile-page");
+  }
 
-    return result;
-  },
-);
+  return result;
+});

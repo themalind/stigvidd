@@ -33,16 +33,19 @@ export default function TrailMiscInfo({ trail }: Props) {
           </>
         )}
         {trail.fullDescription && (
-          <List.Accordion
-            titleStyle={[s.titleText, { color: theme.colors.onSurface }]}
-            title="Detaljerad beskrivning"
-            id="2"
-            style={{ backgroundColor: theme.colors.surface }}
-          >
-            <FullDescriptionSection fullDescription={trail.fullDescription} />
-          </List.Accordion>
+          <>
+            <List.Accordion
+              titleStyle={[s.titleText, { color: theme.colors.onSurface }]}
+              title="Detaljerad beskrivning"
+              id="2"
+              style={{ backgroundColor: theme.colors.surface }}
+            >
+              <FullDescriptionSection fullDescription={trail.fullDescription} />
+            </List.Accordion>
+            <Divider />
+          </>
         )}
-        <Divider />
+
         {trail.trailLinksResponse?.length ? (
           <List.Accordion
             titleStyle={[s.titleText, { color: theme.colors.onSurface }]}

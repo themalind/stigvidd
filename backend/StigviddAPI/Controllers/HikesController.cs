@@ -1,4 +1,4 @@
-using Core.Interfaces;
+using Core.Interfaces.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WebDataContracts.RequestModels.Hike;
@@ -21,7 +21,7 @@ public class HikesController : StigViddController
 
     [Authorize]
     [HttpGet("{hikeIdentifier}")]
-    public async Task<ActionResult<HikeResponse>> GetHikeByIdentifierAsync(
+    public async Task<ActionResult<HikeResponse>> GetHikeByIdentifier(
         string hikeIdentifier,
         CancellationToken ctoken
     )
@@ -45,7 +45,7 @@ public class HikesController : StigViddController
 
     [Authorize]
     [HttpGet]
-    public async Task<ActionResult<IReadOnlyCollection<HikeResponse>>> GetHikesAsync(
+    public async Task<ActionResult<IReadOnlyCollection<HikeResponse>>> GetHikes(
         [FromQuery] string? createdBy,
         CancellationToken ctoken)
     {
@@ -63,7 +63,7 @@ public class HikesController : StigViddController
 
     [Authorize]
     [HttpPost]
-    public async Task<ActionResult<HikeResponse>> CreateHikeAsync(
+    public async Task<ActionResult<HikeResponse>> CreateHike(
         [FromBody] CreateHikeRequest request,
         CancellationToken ctoken)
     {
@@ -81,12 +81,15 @@ public class HikesController : StigViddController
             return ToActionResult(result.Message);
         }
 
-        return Created($"/api/v1/hikes/{result.Value!.Identifier}", result.Value);
+        if (result.Value is null)
+            return StatusCode(500);
+
+        return Created($"/api/v1/hikes/{result.Value.Identifier}", result.Value);
     }
 
     [Authorize]
     [HttpDelete("{hikeIdentifier}")]
-    public async Task<ActionResult> DeleteHikeAsync(
+    public async Task<ActionResult> DeleteHike(
         string hikeIdentifier,
         CancellationToken ctoken)
     {

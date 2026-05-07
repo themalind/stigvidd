@@ -2,11 +2,11 @@ import { authStateAtom } from "@/atoms/auth-atoms";
 import NotAuthenticatedDialog from "@/components/auth/not-authenticated-msg-dialog";
 import AddReview from "@/components/review/add/add-review-modal";
 import { Trail } from "@/data/types";
-import FontAwesome from "@expo/vector-icons/FontAwesome";
+import { MaterialIcons } from "@expo/vector-icons";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAtom } from "jotai";
 import { useState } from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useTheme } from "react-native-paper";
 
 interface UserRatingProps {
@@ -35,10 +35,10 @@ export default function UserRating({ trail }: UserRatingProps) {
 
   return (
     <View style={s.container}>
-      <TouchableOpacity onPress={onPress} style={s.touchable}>
-        <FontAwesome name="thumbs-o-up" size={30} color={theme.colors.onPrimary} />
-        <Text style={[s.text, { color: theme.colors.onPrimary }]}>Betygsätt</Text>
-      </TouchableOpacity>
+      <Pressable onPress={onPress} style={s.pressable}>
+        <MaterialIcons name="thumb-up-off-alt" size={30} color={theme.colors.onSurface} />
+        <Text style={[s.text, { color: theme.colors.onSurface }]}>Betygsätt</Text>
+      </Pressable>
       <AddReview
         trailIdentifier={trail.identifier}
         trailName={trail.name}
@@ -59,7 +59,7 @@ const s = StyleSheet.create({
   container: {
     flexDirection: "column",
   },
-  touchable: {
+  pressable: {
     justifyContent: "center",
     alignItems: "center",
   },

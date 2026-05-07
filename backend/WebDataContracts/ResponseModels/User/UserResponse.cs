@@ -13,8 +13,8 @@ public class UserResponse
         string identifier,
         string nickName,
         string email,
-        ICollection<UserWishlistTrailResponse>? myWishList,
-        ICollection<UserFavoritesTrailResponse>? myFavorites)
+        ICollection<UserWishlistTrailResponse>? myWishList = null,
+        ICollection<UserFavoritesTrailResponse>? myFavorites = null)
     {
         return new UserResponse
         {

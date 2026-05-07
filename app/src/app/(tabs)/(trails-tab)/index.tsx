@@ -1,5 +1,6 @@
 import { userLocationAtom } from "@/atoms/location-atoms";
 import { userThemeAtom } from "@/atoms/user-theme-atom";
+import ErrorView from "@/components/error-view";
 import LoadingIndicator from "@/components/loading-indicator";
 import { TrailFilterModal } from "@/components/trail/trail-list/trail-filter-modal";
 import TrailItem from "@/components/trail/trail-list/trail-item";
@@ -67,14 +68,7 @@ export default function TrailsScreen() {
   }
 
   if (isError) {
-    return (
-      <View>
-        <Text>Kunde inte ladda leder</Text>
-        <Pressable onPress={() => refetch()} style={s.retryButton}>
-          <Text>Försök igen</Text>
-        </Pressable>
-      </View>
-    );
+    return <ErrorView error={undefined} onRetry={refetch} />;
   }
 
   return (
@@ -166,11 +160,6 @@ export default function TrailsScreen() {
 const s = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  retryButton: {
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: BORDER_RADIUS,
   },
   hikers: {
     height: 25,

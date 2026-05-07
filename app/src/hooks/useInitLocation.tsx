@@ -2,7 +2,6 @@ import { locationResolvedAtom, userLocationAtom } from "@/atoms/location-atoms";
 import * as Location from "expo-location";
 import { useSetAtom } from "jotai";
 import { useEffect } from "react";
-import { AppState } from "react-native";
 
 export function useInitLocation() {
   const setUserLocation = useSetAtom(userLocationAtom);
@@ -30,14 +29,5 @@ export function useInitLocation() {
     };
 
     fetchLocation();
-
-    // Lyssna på när appen kommer tillbaka i förgrunden
-    const sub = AppState.addEventListener("change", (state) => {
-      if (state === "active") {
-        fetchLocation();
-      }
-    });
-
-    return () => sub.remove();
   }, [setUserLocation, setLocationResolved]);
 }

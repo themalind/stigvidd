@@ -24,9 +24,12 @@ internal class Program
 
         var context = new StigViddDbContext(options);
 
-        var transMogrifier = new TransmogrifyBorasData(context); 
+        var transMogrifier = new TransmogrifyBorasData(context);
+        var facilityImporter = new FacilityImporter(context);
         var cancellationToken = new CancellationTokenSource().Token;
-        await transMogrifier.TransmogrifyAsync("C:\\projekt\\suvnet24\\examensarbete\\spar_leder.json", ct: cancellationToken);
+        Console.WriteLine("Importerar data...");
+        //await transMogrifier.TransmogrifyAsync("C:\\projekt\\suvnet24\\examensarbete\\spar_leder.json", ct: cancellationToken);
+        //await facilityImporter.ImportAsync("C:\\projekt\\suvnet24\\examensarbete\\grillplats_vindskydd_wgs84.csv", cancellationToken);
         Console.WriteLine("Färdigt!");
         Console.ReadLine();
     }

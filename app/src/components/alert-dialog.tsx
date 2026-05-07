@@ -44,14 +44,14 @@ export default function AlertDialog({
           </View>
         </Dialog.Content>
         <Dialog.Actions>
+          <Button onPress={onDismiss}>
+            <Text style={{ fontSize: 18, color: textColor }}>{cancelText}</Text>
+          </Button>
           {confirmText && onConfirm && (
             <Button onPress={onConfirm}>
               <Text style={{ fontSize: 18, color: textColor }}>{confirmText}</Text>
             </Button>
           )}
-          <Button onPress={onDismiss}>
-            <Text style={{ fontSize: 18, color: textColor }}>{cancelText}</Text>
-          </Button>
         </Dialog.Actions>
       </Dialog>
     </Portal>

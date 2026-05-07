@@ -130,6 +130,14 @@ export interface TrailShortInfoResponse {
   startLongitude?: number;
 }
 
+export interface TrailMarkerResponse {
+  identifier: string;
+  name: string;
+  isAccessible: boolean;
+  startLatitude?: number;
+  startLongitude?: number;
+}
+
 export interface Hike {
   identifier: string;
   name: string;
@@ -137,6 +145,35 @@ export interface Hike {
   duration: number;
   coordinates?: string;
   createdBy: string;
+}
+
+export interface UpdateTrailObstacleRequest {
+  description?: string;
+  issueType?: string;
+}
+
+export interface CreateTrailObstacleRequest {
+  description: string;
+  issueType: string;
+  trailIdentifier: string;
+  incidentLongitude: number | null;
+  incidentLatitude: number | null;
+}
+
+export interface TrailObstacle {
+  identifier: string;
+  userIdentifier: string;
+  description: string;
+  issueType: string;
+  incidentLongitude?: number;
+  incidentLatitude?: number;
+  createdAt: string;
+  solvedVotes?: TrailObstacleSolvedVote[];
+}
+
+export interface TrailObstacleSolvedVote {
+  userIdentifier: string;
+  trailObstacleIdentifier: string;
 }
 
 // Frontend types
@@ -203,6 +240,23 @@ export interface DeleteHikeRequest {
   userIdentifier: string;
 }
 
+export interface CreateFacilityRequest {
+  name: string;
+  facilityType: number;
+  isAccessible: boolean;
+  latitude: number;
+  longitude: number;
+}
+
+export interface Facility {
+  identifier: string;
+  name: string;
+  facilityType: 0 | 1 | 2 | 3;
+  isAccessible: boolean;
+  latitude: number;
+  longitude: number;
+}
+
 export interface LoginData {
   email: string;
   password: string;
@@ -235,4 +289,11 @@ export type ActiveHike = {
   segments: Segment[];
   totalDistance: number;
   totalTime: number;
+};
+
+export type MapMarkerFilter = {
+  trails: boolean;
+  shelters: boolean;
+  firePits: boolean;
+  accessibility: boolean;
 };

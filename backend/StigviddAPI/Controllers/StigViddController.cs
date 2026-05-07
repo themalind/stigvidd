@@ -1,5 +1,5 @@
 ﻿using Core;
-using Core.Interfaces;
+using Core.Interfaces.Services;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
 using System.Security.Claims;
@@ -9,7 +9,6 @@ namespace StigviddAPI.Controllers;
 
 public abstract class StigViddController : Controller
 {
-    // För att alla controllers ska ha tillgång till denna metod.
     protected ActionResult ToActionResult(Message message)
     {
         return message.StatusCode switch
@@ -17,7 +16,8 @@ public abstract class StigViddController : Controller
             (int)HttpStatusCode.NotFound => NotFound(message.ResultMessage),
             (int)HttpStatusCode.BadRequest => BadRequest(message.ResultMessage),
             (int)HttpStatusCode.Conflict => Conflict(message.ResultMessage),
-             _ => StatusCode(message.StatusCode, message.ResultMessage)
+            (int)HttpStatusCode.Unauthorized => Unauthorized(message.ResultMessage),
+            _ => StatusCode(StatusCodes.Status500InternalServerError)
         };
 
     }
@@ -35,6 +35,6 @@ public abstract class StigViddController : Controller
 
         var userResult = await userService.GetUserByFirebaseUidAsync(firebaseUid, ctoken);
 
-        return  userResult?.Value;
+        return userResult?.Value;
     }
 }

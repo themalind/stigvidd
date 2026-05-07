@@ -22,8 +22,8 @@ function TrailItem({ item, handlePress }: TrailItemProps) {
   const finalTheme = userTheme === "auto" ? (colorScheme ?? "light") : userTheme;
   const wizardPin =
     finalTheme === "dark"
-      ? require("../../../assets/map/marker/vandringsled-dark-100-159.png")
-      : require("../../../assets/map/marker/vandringsled-100-159.png");
+      ? require("../../../assets/map/marker/vandringsled-dark-90-143.png")
+      : require("../../../assets/map/marker/vandringsled-90-143.png");
 
   return (
     <Pressable
@@ -36,6 +36,11 @@ function TrailItem({ item, handlePress }: TrailItemProps) {
           <Text style={s.trailName} numberOfLines={1}>
             {item.name}
           </Text>
+          {item.accessibility ? (
+            <View style={[s.accessibilityBadge, { backgroundColor: theme.colors.tertiaryContainer }]}>
+              <MaterialCommunityIcons name="wheelchair-accessibility" size={14} color={theme.colors.tertiary} />
+            </View>
+          ) : null}
         </View>
         <MaterialIcons name="chevron-right" size={22} color={theme.colors.onSurfaceVariant} />
       </View>
@@ -54,11 +59,6 @@ function TrailItem({ item, handlePress }: TrailItemProps) {
             </>
           )}
         </View>
-        {item.accessibility ? (
-          <View style={[s.accessibilityBadge, { backgroundColor: theme.colors.tertiaryContainer }]}>
-            <MaterialCommunityIcons name="wheelchair-accessibility" size={16} color={theme.colors.tertiary} />
-          </View>
-        ) : null}
       </View>
     </Pressable>
   );
@@ -105,11 +105,12 @@ const s = StyleSheet.create({
     textAlign: "right",
   },
   classificationContainer: {
-    width: 100,
+    width: 65,
     flexDirection: "row",
     gap: 5,
     alignItems: "center",
-    justifyContent: "center",
+    justifyContent: "flex-end",
+    paddingRight: 2,
   },
   accessibilityBadge: {
     padding: 4,

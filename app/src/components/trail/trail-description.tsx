@@ -24,8 +24,6 @@ const s = StyleSheet.create({
     gap: 15,
     padding: 20,
     borderRadius: SURFACE_BORDER_RADIUS,
-    justifyContent: "center",
-    alignItems: "center",
   },
   descriptionContainer: {
     gap: 5,

@@ -8,10 +8,11 @@ interface Props {
   visible: boolean;
   onDismiss: () => void;
   onConfirm: () => void;
+  onSaveSuccess: () => void;
   hike: ActiveHike;
 }
 
-export default function SaveHikeModal({ visible, onDismiss, onConfirm, hike }: Props) {
+export default function SaveHikeModal({ visible, onDismiss, onConfirm, onSaveSuccess, hike }: Props) {
   const theme = useTheme();
 
   return (
@@ -23,7 +24,7 @@ export default function SaveHikeModal({ visible, onDismiss, onConfirm, hike }: P
       >
         <Dialog.Title>Spara Promenad</Dialog.Title>
         <Dialog.Content>
-          <SaveHikeForm hike={hike} onDismiss={onDismiss} />
+          <SaveHikeForm hike={hike} onDismiss={onDismiss} onSaveSuccess={onSaveSuccess} />
         </Dialog.Content>
       </Dialog>
     </Portal>

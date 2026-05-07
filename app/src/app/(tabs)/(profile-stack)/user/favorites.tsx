@@ -1,5 +1,6 @@
 import { authStateAtom } from "@/atoms/auth-atoms";
 import { removeFromFavoritesAtom, userFavoritesAtom } from "@/atoms/user-atoms";
+import ErrorView from "@/components/error-view";
 import LoadingIndicator from "@/components/loading-indicator";
 import UserTrailCollection from "@/components/user/user-trail-collection";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -21,8 +22,8 @@ export default function FavoritesScreen() {
     return <LoadingIndicator />;
   }
 
-  if (isError && error) {
-    return <Text style={{ color: theme.colors.error }}>{error.message}</Text>;
+  if (isError) {
+    return <ErrorView error={error} />;
   }
 
   const handleDelete = (trailIdentifier: string) => {
@@ -32,16 +33,11 @@ export default function FavoritesScreen() {
   return (
     <UserTrailCollection
       title="Mina favoriter"
+      description="Här är dina sparade favoriter."
       noTrailsSavedInfo="Inga Favoriter sparade än. Gå till en promenad och tryck på hjärtat för att lägga till."
       onDelete={handleDelete}
       trails={data ?? []}
-      icon={
-        <MaterialCommunityIcons
-          name="cards-heart"
-          size={24}
-          color={theme.colors.tertiary}
-        />
-      }
+      icon={<MaterialCommunityIcons name="cards-heart" size={24} color={theme.colors.tertiary} />}
     />
   );
 }
