@@ -11,7 +11,7 @@ const icon = {
   shelter: require("@/assets/map/marker/vindskydd.png"),
   campsite: require("@/assets/map/marker/taltplats.png"),
   favourite: require("@/assets/map/marker/smultronstalle.png"),
-  firePit: require("@/assets/map/marker/grillplats3x.png"),
+  firePit: require("@/assets/map/marker/grillplats.png"),
   combined: require("@/assets/map/marker/grillskydd.png"),
 };
 
