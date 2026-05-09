@@ -170,8 +170,8 @@ public class TrailServiceTests
     {
         // Arrange
         var repo = new Mock<ITrailRepository>();
-        repo.Setup(r => r.AddTrailAsync(It.IsAny<Infrastructure.Data.Entities.Trail>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((Infrastructure.Data.Entities.Trail t, CancellationToken _) => RepositoryResult<Infrastructure.Data.Entities.Trail>.Success(t));
+        repo.Setup(r => r.AddTrailAsync(It.IsAny<Trail>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Trail t, CancellationToken _) => RepositoryResult<Trail>.Success(t));
 
         // Act
         var result = await Build(repo).AddTrailAsync(ValidRequest(), Utilities.Stubs.FakeFile(), Utilities.Stubs.TwoImages(), "user-id", CancellationToken.None);
@@ -223,8 +223,8 @@ public class TrailServiceTests
     {
         // Arrange
         var repo = new Mock<ITrailRepository>();
-        repo.Setup(r => r.AddTrailAsync(It.IsAny<Infrastructure.Data.Entities.Trail>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(RepositoryResult<Infrastructure.Data.Entities.Trail>.Error());
+        repo.Setup(r => r.AddTrailAsync(It.IsAny<Trail>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<Trail>.Error());
 
         // Act
         var result = await Build(repo).AddTrailAsync(ValidRequest(), null, null, "user-id", CancellationToken.None);
@@ -239,11 +239,11 @@ public class TrailServiceTests
     public async Task AddTrail_WithSymbolAndImages_SymbolUrlNotStoredAsTrailImage()
     {
         // Arrange
-        Infrastructure.Data.Entities.Trail? capturedTrail = null;
+        Trail? capturedTrail = null;
         var repo = new Mock<ITrailRepository>();
-        repo.Setup(r => r.AddTrailAsync(It.IsAny<Infrastructure.Data.Entities.Trail>(), It.IsAny<CancellationToken>()))
-            .Callback<Infrastructure.Data.Entities.Trail, CancellationToken>((t, _) => capturedTrail = t)
-            .ReturnsAsync((Infrastructure.Data.Entities.Trail t, CancellationToken _) => RepositoryResult<Infrastructure.Data.Entities.Trail>.Success(t));
+        repo.Setup(r => r.AddTrailAsync(It.IsAny<Trail>(), It.IsAny<CancellationToken>()))
+            .Callback<Trail, CancellationToken>((t, _) => capturedTrail = t)
+            .ReturnsAsync((Trail t, CancellationToken _) => RepositoryResult<Trail>.Success(t));
 
         var webDav = new Mock<IWebDavService>();
         webDav.SetupSequence(w => w.UploadFileAsync(It.IsAny<Stream>(), It.IsAny<string>()))
@@ -268,8 +268,8 @@ public class TrailServiceTests
     {
         // Arrange
         var repo = new Mock<ITrailRepository>();
-        repo.Setup(r => r.AddTrailAsync(It.IsAny<Infrastructure.Data.Entities.Trail>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((Infrastructure.Data.Entities.Trail t, CancellationToken _) => RepositoryResult<Infrastructure.Data.Entities.Trail>.Success(t));
+        repo.Setup(r => r.AddTrailAsync(It.IsAny<Trail>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Trail t, CancellationToken _) => RepositoryResult<Trail>.Success(t));
 
         var webDav = new Mock<IWebDavService>();
         webDav.Setup(w => w.UploadFileAsync(It.IsAny<Stream>(), It.IsAny<string>()))

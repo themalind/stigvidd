@@ -547,6 +547,8 @@ public static class Utilities
     public static class Identifiers
     {
         public const string User = "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d";
+        public const string UserWithNoFavorites = "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5a33";
+        public const string UserWithNoWishlist = "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5a44";
         public const string UserFirebaseUid = "firebase-uid-12345";
         public const string Trail1 = "11a1b2c3-d4e5-4f6a-7b8c-9d0e1f2a3b4c";
         public const string Trail4 = "44d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f";

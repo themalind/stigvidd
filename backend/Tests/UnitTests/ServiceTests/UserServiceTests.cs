@@ -20,8 +20,6 @@ public class UserServiceTests
         return new UserService(repo, new UserResponseFactory(cfg.Object));
     }
 
-
-
     [Fact]
     public async Task GetUserByFirebaseUid_WhenFound_ReturnsSuccess()
     {
@@ -146,11 +144,15 @@ public class UserServiceTests
     {
         // Arrange
         var repo = new Mock<IUserRepository>();
-        repo.Setup(r => r.GetFavoritesByUserIdentifierAsync(It.IsAny<string>(), It.IsAny<Expression<Func<Trail, UserFavoritesTrailResponse>>>(), It.IsAny<CancellationToken>()))
+        repo.Setup(r => r.GetFavoritesByUserIdentifierAsync(
+            Utilities.Identifiers.UserWithNoFavorites, 
+            It.IsAny<Expression<Func<Trail, 
+            UserFavoritesTrailResponse>>>(), 
+            It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<IReadOnlyCollection<UserFavoritesTrailResponse>>.Success([]));
 
         // Act
-        var result = await Build(repo.Object).GetFavoritesByUserIdentifierAsync("unknown", CancellationToken.None);
+        var result = await Build(repo.Object).GetFavoritesByUserIdentifierAsync(Utilities.Identifiers.UserWithNoFavorites, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -182,11 +184,11 @@ public class UserServiceTests
     {
         // Arrange
         var repo = new Mock<IUserRepository>();
-        repo.Setup(r => r.GetWishListByUserIdentifierAsync(It.IsAny<string>(), It.IsAny<Expression<Func<Trail, UserWishlistTrailResponse>>>(), It.IsAny<CancellationToken>()))
+        repo.Setup(r => r.GetWishListByUserIdentifierAsync(Utilities.Identifiers.UserWithNoWishlist, It.IsAny<Expression<Func<Trail, UserWishlistTrailResponse>>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<IReadOnlyCollection<UserWishlistTrailResponse>>.Success([]));
 
         // Act
-        var result = await Build(repo.Object).GetWishListByUserIdentifierAsync("unknown", CancellationToken.None);
+        var result = await Build(repo.Object).GetWishListByUserIdentifierAsync(Utilities.Identifiers.UserWithNoWishlist, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeTrue();
