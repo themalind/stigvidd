@@ -1,5 +1,3 @@
-using System.Linq.Expressions;
-using Core;
 using Core.Factories;
 using Core.Interfaces.Repositories;
 using Core.Interfaces.Services;
@@ -9,6 +7,7 @@ using Infrastructure.Data.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
+using System.Linq.Expressions;
 using WebDataContracts.RequestModels.Trail;
 using WebDataContracts.ResponseModels.Trail;
 
@@ -27,8 +26,7 @@ public class TrailServiceTests
             (trailRepo ?? new Mock<ITrailRepository>()).Object,
             (webDav ?? Utilities.MockFactory.WebDavService()).Object,
             new Mock<ILogger<TrailService>>().Object,
-            new TrailResponseFactory(cfg.Object),
-            cfg.Object);
+            new TrailResponseFactory(cfg.Object));
     }
 
     private static TrailResponse StubTrailResponse() =>
@@ -238,6 +236,58 @@ public class TrailServiceTests
     }
 
     [Fact]
+    public async Task AddTrail_WithSymbolAndImages_SymbolUrlNotStoredAsTrailImage()
+    {
+        // Arrange
+        Infrastructure.Data.Entities.Trail? capturedTrail = null;
+        var repo = new Mock<ITrailRepository>();
+        repo.Setup(r => r.AddTrailAsync(It.IsAny<Infrastructure.Data.Entities.Trail>(), It.IsAny<CancellationToken>()))
+            .Callback<Infrastructure.Data.Entities.Trail, CancellationToken>((t, _) => capturedTrail = t)
+            .ReturnsAsync((Infrastructure.Data.Entities.Trail t, CancellationToken _) => RepositoryResult<Infrastructure.Data.Entities.Trail>.Success(t));
+
+        var webDav = new Mock<IWebDavService>();
+        webDav.SetupSequence(w => w.UploadFileAsync(It.IsAny<Stream>(), It.IsAny<string>()))
+            .ReturnsAsync(Result.Ok<string?>("symbols/symbol.jpg"))
+            .ReturnsAsync(Result.Ok<string?>("trails/img1.jpg"))
+            .ReturnsAsync(Result.Ok<string?>("trails/img2.jpg"));
+
+        // Act
+        var result = await Build(repo, webDav).AddTrailAsync(ValidRequest(), Utilities.Stubs.FakeFile(), Utilities.Stubs.TwoImages(), "user-id", CancellationToken.None);
+
+        // Assert
+        result.Success.Should().BeTrue();
+        capturedTrail.Should().NotBeNull();
+        capturedTrail.TrailSymbolImage.Should().Be("symbols/symbol.jpg");
+        capturedTrail.TrailImages.Should().NotBeNull();
+        capturedTrail.TrailImages.Should().HaveCount(2);
+        capturedTrail.TrailImages.Select(i => i.ImageUrl).Should().NotContain("symbols/symbol.jpg");
+    }
+
+    [Fact]
+    public async Task AddTrail_WithImages_ResponseImageUrlsHaveBaseUrlPrepended()
+    {
+        // Arrange
+        var repo = new Mock<ITrailRepository>();
+        repo.Setup(r => r.AddTrailAsync(It.IsAny<Infrastructure.Data.Entities.Trail>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Infrastructure.Data.Entities.Trail t, CancellationToken _) => RepositoryResult<Infrastructure.Data.Entities.Trail>.Success(t));
+
+        var webDav = new Mock<IWebDavService>();
+        webDav.Setup(w => w.UploadFileAsync(It.IsAny<Stream>(), It.IsAny<string>()))
+            .ReturnsAsync(Result.Ok<string?>("trails/img.jpg"));
+
+        // Act
+        var result = await Build(repo, webDav).AddTrailAsync(ValidRequest(), null, Utilities.Stubs.TwoImages(), "user-id", CancellationToken.None);
+
+        // Assert
+        result.Success.Should().BeTrue();
+        result.Value.Should().NotBeNull();
+        result.Value.TrailImagesResponse.Should().NotBeNull();
+        result.Value.TrailImagesResponse.Should().NotBeEmpty();
+        result.Value.TrailImagesResponse.Should().AllSatisfy(img =>
+            img.ImageUrl.Should().StartWith("http://stigvidd.se/testing/"));
+    }
+
+    [Fact]
     public async Task GetPopularTrailOverviews_WhenSuccess_ReturnsTrails()
     {
         // Arrange
@@ -246,7 +296,7 @@ public class TrailServiceTests
             TrailOverviewResponse.Create(Utilities.Identifiers.Trail4, "Trail A", 5M, 4.2M, null)
         ];
         var repo = new Mock<ITrailRepository>();
-        repo.Setup(r => r.GetPopularTrailOverviewsAsync(It.IsAny<double?>(), It.IsAny<double?>(), It.IsAny<CancellationToken>()))
+        repo.Setup(r => r.GetPopularTrailOverviewsAsync(It.IsAny<string>(), It.IsAny<double?>(), It.IsAny<double?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<IReadOnlyCollection<TrailOverviewResponse>>.Success(overviews));
 
         // Act
@@ -262,7 +312,7 @@ public class TrailServiceTests
     {
         // Arrange
         var repo = new Mock<ITrailRepository>();
-        repo.Setup(r => r.GetPopularTrailOverviewsAsync(It.IsAny<double?>(), It.IsAny<double?>(), It.IsAny<CancellationToken>()))
+        repo.Setup(r => r.GetPopularTrailOverviewsAsync(It.IsAny<string>(), It.IsAny<double?>(), It.IsAny<double?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<IReadOnlyCollection<TrailOverviewResponse>>.Error());
 
         // Act
