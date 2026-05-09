@@ -80,7 +80,7 @@ public class FacilityServiceTests
 
         // Assert
         captured.Should().NotBeNull();
-        captured!.FacilityType.Should().Be(expected);
+        captured.FacilityType.Should().Be(expected);
     }
 
 
@@ -274,7 +274,7 @@ public class FacilityServiceTests
 
         // Assert
         captured.Should().NotBeNull();
-        captured!.Name.Should().Be("New Name");
+        captured.Name.Should().Be("New Name");
         captured.FacilityType.Should().Be(original.FacilityType);
         captured.IsAccessible.Should().Be(original.IsAccessible);
         captured.Latitude.Should().Be(original.Latitude);

@@ -1,9 +1,9 @@
-using System.Linq.Expressions;
 using Core.Interfaces.Repositories;
 using Infrastructure.Data;
 using Infrastructure.Data.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using System.Linq.Expressions;
 using WebDataContracts.ResponseModels.Trail;
 
 namespace Core.Repositories;
@@ -75,7 +75,7 @@ public class TrailRepository : ITrailRepository
         }
     }
 
-    public async Task<RepositoryResult<IReadOnlyCollection<TrailOverviewResponse>>> GetPopularTrailOverviewsAsync(double? userLatitude, double? userLongitude, CancellationToken ctoken)
+    public async Task<RepositoryResult<IReadOnlyCollection<TrailOverviewResponse>>> GetPopularTrailOverviewsAsync(string presentableBaseUrl, double? userLatitude, double? userLongitude, CancellationToken ctoken)
     {
         try
         {
@@ -138,7 +138,7 @@ public class TrailRepository : ITrailRepository
                 {
                     TrailId = t.Id,
                     FirstTrailImage = t.TrailImages!
-                        .Select(img => TrailImageResponse.Create(img.Identifier, img.ImageUrl))
+                        .Select(img => TrailImageResponse.Create(presentableBaseUrl, img.Identifier, img.ImageUrl))
                         .FirstOrDefault()
                 })
                 .ToDictionaryAsync(x => x.TrailId, x => x.FirstTrailImage, ctoken);

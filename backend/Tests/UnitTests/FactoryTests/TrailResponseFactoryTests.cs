@@ -77,4 +77,43 @@ public class TrailResponseFactoryTests
         // Assert
         result.VisitorInformation.Should().BeNull();
     }
+
+    [Fact]
+    public void Create_WhenTrailHasImages_ImageUrlsHaveBaseUrlPrepended()
+    {
+        // Arrange
+        var factory = BuildFactory();
+        var trail = BaseTrail();
+        trail.TrailImages =
+        [
+            new TrailImage { Identifier = "img-1", ImageUrl = "trails/img1.jpg", TrailId = 1 },
+            new TrailImage { Identifier = "img-2", ImageUrl = "trails/img2.jpg", TrailId = 1 }
+        ];
+
+        // Act
+        var result = factory.Create(trail);
+
+        // Assert
+        result.TrailImagesResponse.Should().HaveCount(2);
+        result.TrailImagesResponse.Should().NotBeNull();
+        result.TrailImagesResponse.Should().AllSatisfy(img =>
+            img.ImageUrl.Should().StartWith("http://stigvidd.se/testing/"));
+        result.TrailImagesResponse.Select(i => i.ImageUrl).Should().BeEquivalentTo(
+            ["http://stigvidd.se/testing/trails/img1.jpg", "http://stigvidd.se/testing/trails/img2.jpg"]);
+    }
+
+    [Fact]
+    public void Create_WhenTrailHasNoImages_ReturnsEmptyImages()
+    {
+        // Arrange
+        var factory = BuildFactory();
+        var trail = BaseTrail();
+        trail.TrailImages = [];
+
+        // Act
+        var result = factory.Create(trail);
+
+        // Assert
+        result.TrailImagesResponse.Should().BeEmpty();
+    }
 }
