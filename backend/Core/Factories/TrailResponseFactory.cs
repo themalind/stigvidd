@@ -6,22 +6,23 @@ namespace Core.Factories;
 
 public class TrailResponseFactory
 {
-    private string _presentableBaseUrl;
+    public string PresentableBaseUrl { get; }
 
     public TrailResponseFactory(IConfiguration configuration)
     {
-        _presentableBaseUrl = configuration["PresentableBaseUrl"] ?? throw new InvalidOperationException("PresentableBaseUrl configuration is missing");
+        PresentableBaseUrl = configuration["PresentableBaseUrl"] ?? throw new InvalidOperationException("PresentableBaseUrl configuration is missing");
     }
 
     public TrailResponse Create(Trail trail)
     {
         var images = trail.TrailImages?.Select(trailImage =>
             TrailImageResponse.Create(
+                PresentableBaseUrl,
                 trailImage.Identifier,
                 trailImage.ImageUrl)) ?? null;
 
         var links = trail.TrailLinks?.Select(trailLink =>
-            TrailLinkResponse.Create( // Här kommer vi behöva skicka presentableUrl
+            TrailLinkResponse.Create(
                 trailLink.Identifier,
                 trailLink.Link,
                 trailLink.Title)) ?? null;

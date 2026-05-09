@@ -3,7 +3,6 @@ using Core.Interfaces.Repositories;
 using Core.Interfaces.Services;
 using Infrastructure.Data.Entities;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using WebDataContracts.RequestModels.Trail;
 using WebDataContracts.ResponseModels.Trail;
@@ -12,7 +11,6 @@ namespace Core.Services;
 
 public class TrailService : ITrailService
 {
-    private readonly string _presentableBaseUrl;
     private readonly IWebDavService _webDavService;
     private readonly ILogger<TrailService> _logger;
     private readonly TrailResponseFactory _trailResponseFactory;
@@ -22,11 +20,9 @@ public class TrailService : ITrailService
         ITrailRepository trailResponseRepository,
         IWebDavService webDavService,
         ILogger<TrailService> logger,
-        TrailResponseFactory factory,
-        IConfiguration configuration)
+        TrailResponseFactory factory)
     {
         _trailRepository = trailResponseRepository;
-        _presentableBaseUrl = configuration["PresentableBaseUrl"] ?? throw new InvalidOperationException("PresentableBaseUrl configuration is missing");
         _webDavService = webDavService;
         _logger = logger;
         _trailResponseFactory = factory;
@@ -63,11 +59,10 @@ public class TrailService : ITrailService
                 t.Tags,
                 t.CreatedBy!,
                 t.IsVerified, t.City,
-                t.TrailImages!.Select(img => new TrailImageResponse
-                {
-                    Identifier = img.Identifier,
-                    ImageUrl = img.ImageUrl
-                }).ToList(),
+                t.TrailImages!.Select(img => TrailImageResponse.Create(
+                    _trailResponseFactory.PresentableBaseUrl,
+                    img.Identifier,
+                    img.ImageUrl)).ToList(),
                 t.TrailLinks!.Select(link => new TrailLinkResponse
                 {
                     Identifier = link.Identifier,
@@ -112,7 +107,7 @@ public class TrailService : ITrailService
     public async Task<Result<IReadOnlyCollection<TrailOverviewResponse?>>> GetPopularTrailOverviewsAsync(
         double? userLatitude, double? userLongitude, CancellationToken ctoken)
     {
-        var result = await _trailRepository.GetPopularTrailOverviewsAsync(userLatitude, userLongitude, ctoken);
+        var result = await _trailRepository.GetPopularTrailOverviewsAsync(_trailResponseFactory.PresentableBaseUrl, userLatitude, userLongitude, ctoken);
 
         if (result.Status == RepositoryResultStatus.Error)
             return Result.Fail<IReadOnlyCollection<TrailOverviewResponse?>>(new Message(500, "An error occurred while fetching popular trails."));
@@ -128,7 +123,8 @@ public class TrailService : ITrailService
         CancellationToken ctoken)
     {
         var trailSymbolUrl = string.Empty;
-        var uploadedImageUrls = new List<string>();
+        var uploadedUrls = new List<string>();
+        var trailImagePaths = new List<string>();
 
         try
         {
@@ -142,7 +138,7 @@ public class TrailService : ITrailService
                 if (result.Value != null)
                 {
                     trailSymbolUrl = result.Value;
-                    uploadedImageUrls.Add(result.Value);
+                    uploadedUrls.Add(result.Value);
                 }
             }
 
@@ -156,7 +152,10 @@ public class TrailService : ITrailService
                         return Result.Fail<TrailResponse?>(new Message(500, "Something went wrong, could not create Trail. Try again Later."));
 
                     if (result.Value != null)
-                        uploadedImageUrls.Add(result.Value);
+                    {
+                        uploadedUrls.Add(result.Value);
+                        trailImagePaths.Add(result.Value);
+                    }
                 }
             }
 
@@ -178,10 +177,10 @@ public class TrailService : ITrailService
                 City = request.City ?? string.Empty,
             };
 
-            if (uploadedImageUrls.Count != 0)
+            if (trailImagePaths.Count != 0)
             {
-                trail.TrailImages = uploadedImageUrls
-                    .Select(url => new TrailImage { ImageUrl = url })
+                trail.TrailImages = trailImagePaths
+                    .Select(url => new TrailImage { ImageUrl = url, Trail = trail })
                     .ToList();
             }
 
@@ -196,8 +195,8 @@ public class TrailService : ITrailService
         {
             _logger.LogError(ex, "Error adding trail for user: {userIdentifier}", userIdentifier);
 
-            if (uploadedImageUrls.Count != 0)
-                await CleanupUploadedImagesAsync(uploadedImageUrls);
+            if (uploadedUrls.Count != 0)
+                await CleanupUploadedImagesAsync(uploadedUrls);
 
             return Result.Fail<TrailResponse?>(new Message(500, "An error occurred while adding the trail."));
         }

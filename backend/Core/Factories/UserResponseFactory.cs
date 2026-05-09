@@ -1,4 +1,5 @@
 ﻿using Infrastructure.Data.Entities;
+using Microsoft.Extensions.Configuration;
 using WebDataContracts.ResponseModels.Review;
 using WebDataContracts.ResponseModels.Trail;
 using WebDataContracts.ResponseModels.User;
@@ -7,12 +8,19 @@ namespace Core.Factories;
 
 public class UserResponseFactory
 {
+    public string PresentableBaseUrl { get; }
+
+    public UserResponseFactory(IConfiguration configuration)
+    {
+        PresentableBaseUrl = configuration["PresentableBaseUrl"] ?? throw new InvalidOperationException("PresentableBaseUrl configuration is missing");
+    }
+
     public UserResponse Create(User user)
     {
         return UserResponse.Create(
             user.Identifier,
             user.NickName,
-            user.Email,           
+            user.Email,
 
             user.MyWishList?.Select(wish =>
                 UserWishlistTrailResponse.Create(
@@ -26,6 +34,7 @@ public class UserResponseFactory
                             r.Rating)).ToList(),
                     wish.TrailImages?.Select(ti =>
                         TrailImageResponse.Create(
+                            PresentableBaseUrl,
                             ti.Identifier,
                             ti.ImageUrl)
                     ).ToList()
@@ -44,6 +53,7 @@ public class UserResponseFactory
                             review.Rating)).ToList(),
                     favorite.TrailImages?.Select(trailImage =>
                         TrailImageResponse.Create(
+                            PresentableBaseUrl,
                             trailImage.Identifier,
                             trailImage.ImageUrl)
                     ).ToList()
