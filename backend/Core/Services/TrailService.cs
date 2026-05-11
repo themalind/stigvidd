@@ -218,6 +218,34 @@ public class TrailService : ITrailService
         }
     }
 
+    public async Task<Result<TrailResponse?>> UpdateTrailAsync(UpdateTrailRequest request, string trailIdentifier, string userIdentifier, CancellationToken ctoken)
+    {
+        var trail = new Trail
+        {
+            Identifier = trailIdentifier,
+            Name = request.Name,
+            TrailLength = request.TrailLength,
+            Classification = request.Classification ?? 0,
+            Accessibility = request.Accessibility ?? false,
+            AccessibilityInfo = request.AccessibilityInfo ?? string.Empty,
+            TrailSymbol = request.TrailSymbol ?? string.Empty,
+            Description = request.Description ?? string.Empty,
+            FullDescription = request.FullDescription ?? string.Empty,
+            Tags = request.Tags ?? string.Empty,
+            City = request.City ?? string.Empty,
+        };
+
+        var result = await _trailRepository.UpdateTrailAsync(trail, ctoken);
+
+        if (result.Status == RepositoryResultStatus.Error)
+            return Result.Fail<TrailResponse?>(new Message(500, "An error occurred while updating the trail."));
+
+        if (!result.IsSuccess)
+            return Result.Fail<TrailResponse?>(new Message(404, $"Trail with identifier {trailIdentifier} not found."));
+
+        return Result.Ok<TrailResponse?>(_trailResponseFactory.Create(result.Value));
+    }
+
     public async Task<Result<IReadOnlyCollection<TrailShortInfoResponse>>> GetAllTrailsWithBasicInfoAsync(CancellationToken ctoken)
     {
         var result = await _trailRepository.GetAllTrailsWithBasicInfoAsync(ctoken);

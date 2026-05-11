@@ -110,6 +110,31 @@ public class TrailsController : StigViddController
     }
 
     [Authorize]
+    [HttpPut("{identifier}")]
+    public async Task<ActionResult<TrailResponse?>> UpdateTrail(
+        string identifier,
+        [FromBody] UpdateTrailRequest request,
+        CancellationToken ctoken)
+    {
+        var userResponse = await GetAuthenticatedUserAsync(_userService, ctoken);
+
+        if (userResponse == null)
+            return Unauthorized("User not found");
+
+        var result = await _trailService.UpdateTrailAsync(request, identifier, userResponse.Identifier, ctoken);
+
+        if (!result.Success && result.Message != null)
+        {
+            _logger.LogInformation(
+                "UpdateTrail: Failed to update trail with identifier: {identifier}.", identifier);
+
+            return ToActionResult(result.Message);
+        }
+
+        return Ok(result.Value);
+    }
+
+    [Authorize]
     [HttpPost]
     [Route("create")]
     public async Task<ActionResult> AddTrail(

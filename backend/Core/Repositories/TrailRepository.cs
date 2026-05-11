@@ -270,4 +270,40 @@ public class TrailRepository : ITrailRepository
             return RepositoryResult<Trail>.Error();
         }
     }
+
+    public async Task<RepositoryResult<Trail>> UpdateTrailAsync(Trail trail, CancellationToken ctoken)
+    {
+        try
+        {
+            using var context = await _context.CreateDbContextAsync(ctoken);
+
+            var existing = await context.Trails
+                .Where(t => t.Identifier == trail.Identifier)
+                .FirstOrDefaultAsync(ctoken);
+
+            if (existing is null)
+                return RepositoryResult<Trail>.NotFound();
+
+            existing.Name = trail.Name;
+            existing.TrailLength = trail.TrailLength;
+            existing.Classification = trail.Classification;
+            existing.Accessibility = trail.Accessibility;
+            existing.AccessibilityInfo = trail.AccessibilityInfo;
+            existing.TrailSymbol = trail.TrailSymbol;
+            existing.Description = trail.Description;
+            existing.FullDescription = trail.FullDescription;
+            existing.Tags = trail.Tags;
+            existing.City = trail.City;
+            existing.LastUpdatedAt = DateTime.UtcNow;
+
+            await context.SaveChangesAsync(ctoken);
+
+            return RepositoryResult<Trail>.Success(existing);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "TrailRepository: UpdateTrailAsync -> Something went wrong when updating trail with identifier {Identifier}.", trail.Identifier);
+            return RepositoryResult<Trail>.Error();
+        }
+    }
 }
