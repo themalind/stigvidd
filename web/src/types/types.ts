@@ -34,6 +34,19 @@ export type TableColumn<T> = {
   width?: number;
 };
 
+export type UpdateTrailRequest = {
+  name: string;
+  trailLength: number;
+  classification?: number;
+  accessibility?: boolean;
+  accessibilityInfo?: string;
+  trailSymbol?: string;
+  description?: string;
+  fullDescription?: string;
+  tags?: string;
+  city?: string;
+};
+
 export const CLASSIFICATION: Record<number, string> = {
   0: "Unclassified",
   1: "Easy",
