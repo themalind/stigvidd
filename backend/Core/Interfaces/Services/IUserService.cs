@@ -14,5 +14,5 @@ public interface IUserService
     Task<Result<UserWishlistTrailResponse?>> AddTrailToUserWishListAsync(string userIdentifier, string trailIdentifier, CancellationToken ctoken);
     Task<Result> RemoveTrailFromUserFavoritesListAsync(string userIdentifier, string trailIdentifier, CancellationToken ctoken);
     Task<Result> RemoveTrailFromUserWishListAsync(string userIdentifier, string trailIdentifier, CancellationToken ctoken);
-    public Task<Result> DeleteUserAsync(string identifier, CancellationToken ctoken);
+    Task<Result> DeleteUserAsync(string identifier, CancellationToken ctoken);
 }

@@ -88,6 +88,11 @@ public class HikeService : IHikeService
 
     public async Task<Result> DeleteHikeAsync(string hikeIdentifier, string userIdentifier, CancellationToken ctoken)
     {
+        var userResult = await _userService.GetUserByIdentifierAsync(userIdentifier, ctoken);
+
+        if (!userResult.Success || userResult.Value is null)
+            return Result.Fail<HikeResponse>(new Message(404, "User not found"));
+
         var result = await _hikeRepository.GetHikeByIdentifierAsync(hikeIdentifier, ctoken);
 
         if (result.Status == RepositoryResultStatus.Error)
@@ -96,10 +101,45 @@ public class HikeService : IHikeService
         if (!result.IsSuccess)
             return Result.Fail(new Message(404, $"Could not remove hike with id {hikeIdentifier}."));
 
-        if (result.Value.CreatedBy != userIdentifier)
-            return Result.Fail(new Message(401, $"Hike {hikeIdentifier} does not belong to {userIdentifier}"));
+        if (result.Value.CreatedBy != userResult.Value.Identifier)
+            return Result.Fail(new Message(401, $"Hike {hikeIdentifier} does not belong to {userResult.Value.Identifier}"));
 
         await _hikeRepository.DeleteHikeAsync(result.Value, ctoken);
+
+        return Result.Ok();
+    }
+
+    public async Task<Result> DeleteHikeSharesByUserIdAsync(int userId, CancellationToken ctoken)
+    {
+        var result = await _hikeRepository.DeleteHikeSharesByUserIdAsync(userId, ctoken);
+
+        if (!result.IsSuccess)
+            return Result.Fail(new Message(500, "An error occurred while deleting the hike shares."));
+
+        return Result.Ok();
+    }
+
+    public async Task<Result> DeleteHikesByUserIdentifierAsync(string userIdentifier, CancellationToken ctoken)
+    {
+        var userResult = await _userService.GetUserByIdentifierAsync(userIdentifier, ctoken);
+
+        if (!userResult.Success || userResult.Value is null)
+            return Result.Fail<HikeResponse>(new Message(404, "User not found"));
+
+        var result = await _hikeRepository.DeleteHikesByUserIdentifierAsync(userResult.Value.Identifier, ctoken);
+
+        if (!result.IsSuccess)
+            return Result.Fail(new Message(500, "An error occurred while deleting the hikes."));
+
+        return Result.Ok();
+    }
+
+    public async Task<Result> HandleUserHikesOnUserDeleteAsync(int userId, CancellationToken ctoken)
+    {
+        var result = await _hikeRepository.HandleUserHikesOnUserDeleteAsync(userId, ctoken);
+
+        if (!result.IsSuccess)
+            return Result.Fail(new Message(500, "An error occurred while handling user hikes on user delete."));
 
         return Result.Ok();
     }

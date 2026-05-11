@@ -2,7 +2,7 @@
 
 namespace Infrastructure.Data.Entities;
 
-public class TrailObstacle : BaseEntity
+public class TrailObstacle : SoftDeletableEntity
 {
     public required string Description { get; set; }
     public required TrailIssueType IssueType { get; set; }

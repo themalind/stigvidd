@@ -11,13 +11,18 @@ namespace Core.Services;
 public class UserService : IUserService
 {
     private readonly IUserRepository _userRepository;
+    private readonly ITrailObstacleRepository _trailObstacleRepository;
     private readonly UserResponseFactory _userResponseFactory;
+    private readonly IHikeService _hikeService;
 
     public UserService(IUserRepository userResponseRepository,
-    UserResponseFactory userResponseFactory)
+    ITrailObstacleRepository trailObstacleRepository,
+    UserResponseFactory userResponseFactory, IHikeService hikeService)
     {
         _userRepository = userResponseRepository;
+        _trailObstacleRepository = trailObstacleRepository;
         _userResponseFactory = userResponseFactory;
+        _hikeService = hikeService;
     }
 
     public async Task<Result<UserResponse?>> GetUserByFirebaseUidAsync(string firebaseUid, CancellationToken ctoken)
@@ -211,13 +216,38 @@ public class UserService : IUserService
 
     public async Task<Result> DeleteUserAsync(string identifier, CancellationToken ctoken)
     {
+        var userResult = await _userRepository.GetUserIdByIdentifierAsync(identifier, ctoken);
+
+        if (!userResult.IsSuccess)
+        {
+            if (userResult.Status == RepositoryResultStatus.NotFound)
+                return Result.Fail(new Message(404, $"User with identifier {identifier} not found."));
+
+            if (userResult.Status == RepositoryResultStatus.Error)
+                return Result.Fail(new Message(500, $"Error deleting user with identifier {identifier}"));
+        }
+
+        var hikeResult = await _hikeService.HandleUserHikesOnUserDeleteAsync(userResult.Value, ctoken);
+
+        if (!hikeResult.Success)
+            return Result.Fail(new Message(500, $"Error deleting user with identifier {identifier}"));
+
+        var sharedHikesResult = await _hikeService.DeleteHikeSharesByUserIdAsync(userResult.Value, ctoken);
+
+        if (!sharedHikesResult.Success)
+            return Result.Fail(new Message(500, $"Error deleting user with identifier {identifier}"));
+
+        // Reviews cascade at the DB level (OnDelete Cascade), so they are removed automatically when the user is deleted.
+        // TrailObstacles use NoAction to avoid multiple cascade paths, so they must be removed explicitly before the user is deleted.
+        var obstacleResult = await _trailObstacleRepository.DeleteAllObstaclesByUserIdAsync(userResult.Value, ctoken);
+
+        if (obstacleResult.Status == RepositoryResultStatus.Error)
+            return Result.Fail(new Message(500, $"Error deleting user with identifier {identifier}"));
+
         var result = await _userRepository.DeleteUserAsync(identifier, ctoken);
 
         if (result.Status == RepositoryResultStatus.Error)
             return Result.Fail(new Message(500, $"Error deleting user with identifier {identifier}"));
-
-        if (result.Status == RepositoryResultStatus.NotFound)
-            return Result.Fail(new Message(404, $"User with identifier {identifier} not found."));
 
         return Result.Ok();
     }

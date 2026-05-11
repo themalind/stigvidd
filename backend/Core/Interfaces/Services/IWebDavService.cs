@@ -2,7 +2,7 @@
 
 public interface IWebDavService
 {
-    public Task<Result<string?>> UploadFileAsync(Stream stream, string? subDirectory);
-    public Task<Result<bool>> DeleteFileAsync(string fileUrl);
-    public Task EnsureDirectoryExistsAsync(string directoryPath);
+    Task<Result<string?>> UploadFileAsync(Stream stream, string? subDirectory);
+    Task<Result<bool>> DeleteFileAsync(string fileUrl);
+    Task EnsureDirectoryExistsAsync(string directoryPath);
 }

@@ -16,8 +16,8 @@ public class UserServiceTests
     {
         var cfg = new Mock<IConfiguration>();
         cfg.Setup(c => c["PresentableBaseUrl"]).Returns("http://stigvidd.se/testing/");
-
-        return new UserService(repo, new UserResponseFactory(cfg.Object));
+        var trailobstacleRepo = new Mock<ITrailObstacleRepository>();
+        return new UserService(repo, trailobstacleRepo.Object, new UserResponseFactory(cfg.Object));
     }
 
     [Fact]
@@ -145,9 +145,9 @@ public class UserServiceTests
         // Arrange
         var repo = new Mock<IUserRepository>();
         repo.Setup(r => r.GetFavoritesByUserIdentifierAsync(
-            Utilities.Identifiers.UserWithNoFavorites, 
-            It.IsAny<Expression<Func<Trail, 
-            UserFavoritesTrailResponse>>>(), 
+            Utilities.Identifiers.UserWithNoFavorites,
+            It.IsAny<Expression<Func<Trail,
+            UserFavoritesTrailResponse>>>(),
             It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<IReadOnlyCollection<UserFavoritesTrailResponse>>.Success([]));
 
