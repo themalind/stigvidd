@@ -13,16 +13,16 @@ public class UserService : IUserService
     private readonly IUserRepository _userRepository;
     private readonly ITrailObstacleRepository _trailObstacleRepository;
     private readonly UserResponseFactory _userResponseFactory;
-    private readonly IHikeService _hikeService;
+    private readonly IHikeRepository _hikeRepository;
 
     public UserService(IUserRepository userResponseRepository,
     ITrailObstacleRepository trailObstacleRepository,
-    UserResponseFactory userResponseFactory, IHikeService hikeService)
+    UserResponseFactory userResponseFactory, IHikeRepository hikeRepository)
     {
         _userRepository = userResponseRepository;
         _trailObstacleRepository = trailObstacleRepository;
         _userResponseFactory = userResponseFactory;
-        _hikeService = hikeService;
+        _hikeRepository = hikeRepository;
     }
 
     public async Task<Result<UserResponse?>> GetUserByFirebaseUidAsync(string firebaseUid, CancellationToken ctoken)
@@ -110,6 +110,15 @@ public class UserService : IUserService
 
     public async Task<Result<UserResponse?>> CreateUserAsync(string email, string nickName, string firebaseUid, CancellationToken ctoken)
     {
+        var nicknameCheck = await _userRepository.CheckUserNicknameAvaliability(nickName, ctoken);
+        if (!nicknameCheck.IsSuccess)
+        {
+            if (nicknameCheck.Status == RepositoryResultStatus.Conflict)
+                return Result.Fail<UserResponse?>(new Message(409, $"Nickname {nickName} is already taken."));
+
+            return Result.Fail<UserResponse?>(new Message(500, "An error occurred while creating the user."));
+        }
+
         var existing = await _userRepository.GetUserByFirebaseUidAsync(firebaseUid, u => u.Identifier, ctoken);
 
         if (existing.Status == RepositoryResultStatus.Error)
@@ -227,14 +236,14 @@ public class UserService : IUserService
                 return Result.Fail(new Message(500, $"Error deleting user with identifier {identifier}"));
         }
 
-        var hikeResult = await _hikeService.HandleUserHikesOnUserDeleteAsync(userResult.Value, ctoken);
+        var hikeResult = await _hikeRepository.HandleUserHikesOnUserDeleteAsync(userResult.Value, ctoken);
 
-        if (!hikeResult.Success)
+        if (!hikeResult.IsSuccess)
             return Result.Fail(new Message(500, $"Error deleting user with identifier {identifier}"));
 
-        var sharedHikesResult = await _hikeService.DeleteHikeSharesByUserIdAsync(userResult.Value, ctoken);
+        var sharedHikesResult = await _hikeRepository.DeleteHikeSharesByUserIdAsync(userResult.Value, ctoken);
 
-        if (!sharedHikesResult.Success)
+        if (!sharedHikesResult.IsSuccess)
             return Result.Fail(new Message(500, $"Error deleting user with identifier {identifier}"));
 
         // Reviews cascade at the DB level (OnDelete Cascade), so they are removed automatically when the user is deleted.
