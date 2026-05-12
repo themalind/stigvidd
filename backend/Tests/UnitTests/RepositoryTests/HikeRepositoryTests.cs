@@ -1,5 +1,3 @@
-using System.Linq.Expressions;
-using Core;
 using Core.Repositories;
 using FluentAssertions;
 using Infrastructure.Data.Entities;
@@ -10,7 +8,10 @@ namespace UnitTests.RepositoryTests;
 public class HikeRepositoryTests : TestBase
 {
     private const string UserIdentifier = "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d";
+    private const int UserIdNoHikes = 4;
+    private const int UserIdWithHikes = 1;
     private const string HikeIdentifier = "3f9c1b7e-8a42-4e6d-9c5f-2a7b1d8e4f90";
+
 
     [Fact]
     public async Task GetHikeByIdentifier_WhenFound_ReturnsSuccess()
@@ -63,7 +64,7 @@ public class HikeRepositoryTests : TestBase
         var repo = new HikeRepository(CreateSeededFactory(), NullLogger<HikeRepository>.Instance);
 
         // Act
-        var result = await repo.GetHikesAsync(UserIdentifier, h => h.CreatedBy, CancellationToken.None);
+        var result = await repo.GetHikesAsync(UserIdWithHikes, h => h.CreatedBy, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -79,7 +80,7 @@ public class HikeRepositoryTests : TestBase
 
         // Act
         // User 4 (Eremiten) owns no hikes in seed data
-        var result = await repo.GetHikesAsync("b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d22", h => h.CreatedBy, CancellationToken.None);
+        var result = await repo.GetHikesAsync(UserIdNoHikes, h => h.CreatedBy, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -125,7 +126,7 @@ public class HikeRepositoryTests : TestBase
 
         // Act
         found.Value.Should().NotBeNull();
-        var deleteResult = await repo.DeleteHikeAsync(found.Value, CancellationToken.None);
+        var deleteResult = await repo.SoftDeleteHikeAsync(found.Value, CancellationToken.None);
 
         // Assert
         deleteResult.IsSuccess.Should().BeTrue();

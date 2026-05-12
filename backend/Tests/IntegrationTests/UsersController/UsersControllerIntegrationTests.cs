@@ -4,6 +4,7 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using WebDataContracts.RequestModels.User;
+using WebDataContracts.ResponseModels.TrailObstacle;
 using WebDataContracts.ResponseModels.User;
 
 namespace IntegrationTests.UsersController;
@@ -24,6 +25,15 @@ public class UsersControllerIntegrationTests : IClassFixture<StigViddWebApplicat
     private const string GesebolIdentifier = "55e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a";         // not in any tested user's lists
     private const string HultaforsIdentifier = "66f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b";       // not in NaturElskaren's wishlist
     private const string NonExistentTrailIdentifier = "88b8c9d0-e1f2-4a3b-4c5d-6e7f8a9b0c1d"; // does not exist in DB
+
+    // Hikes (for delete user tests)
+    private const string SharedHikeIdentifier = "91e4c2d7-3b8f-4f6a-9d1c-7a2e5b0c8f13";   // Hike 3: owned by VandrarVennen, shared with NaturElskaren
+    private const string UnsharedHikeIdentifier = "c4d8a1b9-6f3e-4c72-8a5d-1e9b2f7c0a46"; // Hike 4: owned by VandrarVennen, not shared
+
+    // Trail obstacles (for delete user tests)
+    private const string TangaledensTrailIdentifier = "33c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e"; // Tångaleden — obstacle 3 lives here
+    private const string Obstacle3Identifier = "ob3c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e";       // Obstacle 3: VandrarVennen voted on this
+    private const string VandrarVennenIdentifier = "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e";    // VandrarVennen's user Identifier (not Firebase UID)
     #endregion
 
     public UsersControllerIntegrationTests(StigViddWebApplicationFactory<Program> factory)
@@ -501,5 +511,123 @@ public class UsersControllerIntegrationTests : IClassFixture<StigViddWebApplicat
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    // VandrarVennen (firebase-uid-12346) is used as the deletion candidate because they own
+    // the full set of user-generated data at seed time:
+    //   - Review 1 (with review images) — removed by DB cascade on user delete
+    //   - Trail obstacle 2 (Flooding) — removed explicitly before user delete
+    //   - Solved vote 3 on obstacle 3 — removed by DB cascade on user delete
+    //   - Hike 3 (shared with NaturElskaren) — preserved; only UserId is nulled by EF SetNull
+    //   - Hike 4 (not shared) — soft-deleted during deletion flow
+    //   - HikeShare recipient record for Hike 5 — removed by DeleteHikeSharesByUserIdAsync
+
+    [Fact]
+    public async Task DeleteUser_ShouldReturnNoContent_WhenUserHasReviewsHikesObstaclesAndSharedHikes()
+    {
+        // Arrange — VandrarVennen has the full set: review, hikes, obstacle, solved vote,
+        // one hike shared out, and is a recipient of one shared hike.
+        var client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", UserWithFavorites);
+
+        // Act
+        var request = new HttpRequestMessage(HttpMethod.Delete, "/api/v1/users/delete");
+        var response = await client.SendAsync(request, TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+    }
+
+    [Fact]
+    public async Task DeleteUser_ShouldReturnUnauthorized_WhenUserDoesNotExist()
+    {
+        // Arrange
+        var client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", NonExistingUser);
+
+        // Act
+        var request = new HttpRequestMessage(HttpMethod.Delete, "/api/v1/users/delete");
+        var response = await client.SendAsync(request, TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task DeleteUser_AfterDeletion_SharedHikeIsStillAccessible()
+    {
+        // Arrange — VandrarVennen shared Hike 3 with NaturElskaren before deleting.
+        // Hike 3 should remain in the database (not soft-deleted) so other users can still read it.
+        var client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", UserWithFavorites);
+
+        var deleteRequest = new HttpRequestMessage(HttpMethod.Delete, "/api/v1/users/delete");
+        await client.SendAsync(deleteRequest, TestContext.Current.CancellationToken);
+
+        // Act — NaturElskaren fetches the hike that VandrarVennen shared
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", UserWithWishlist);
+
+        var getResponse = await client.GetAsync(
+            $"/api/v1/hikes/{SharedHikeIdentifier}",
+            TestContext.Current.CancellationToken);
+
+        // Assert
+        getResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+    }
+
+    [Fact]
+    public async Task DeleteUser_AfterDeletion_UnsharedHikeIsNotAccessible()
+    {
+        // Arrange — Hike 4 belongs only to VandrarVennen with no shares.
+        // It should be soft-deleted during the deletion flow and no longer accessible.
+        var client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", UserWithFavorites);
+
+        var deleteRequest = new HttpRequestMessage(HttpMethod.Delete, "/api/v1/users/delete");
+        await client.SendAsync(deleteRequest, TestContext.Current.CancellationToken);
+
+        // Act — NaturElskaren tries to fetch the now-deleted hike
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", UserWithWishlist);
+
+        var getResponse = await client.GetAsync(
+            $"/api/v1/hikes/{UnsharedHikeIdentifier}",
+            TestContext.Current.CancellationToken);
+
+        // Assert — soft-delete global query filter makes it invisible
+        getResponse.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task DeleteUser_AfterDeletion_SolvedVoteOnOthersObstacleIsCascadeRemoved()
+    {
+        // Arrange — Obstacle 3 (on Tångaleden, owned by SkogsGreven) has 3 seeded votes:
+        // NaturElskaren, VandrarVennen, and SkogsGreven. VandrarVennen's vote is the one
+        // that should cascade away when the user row is deleted.
+        var client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", UserWithFavorites);
+
+        var deleteRequest = new HttpRequestMessage(HttpMethod.Delete, "/api/v1/users/delete");
+        await client.SendAsync(deleteRequest, TestContext.Current.CancellationToken);
+
+        // Act — fetch obstacles for Tångaleden (no auth required)
+        var getResponse = await client.GetAsync(
+            $"/api/v1/trailobstacles/trail/{TangaledensTrailIdentifier}",
+            TestContext.Current.CancellationToken);
+
+        var obstacles = await getResponse.Content
+            .ReadFromJsonAsync<List<TrailObstacleResponse>>(TestContext.Current.CancellationToken);
+
+        var obstacle3 = obstacles!.Single(o => o.Identifier == Obstacle3Identifier);
+
+        // Assert — VandrarVennen's vote is gone; NaturElskaren's and SkogsGreven's remain
+        obstacle3.SolvedVotes.Should().HaveCount(2);
+        obstacle3.SolvedVotes.Should().NotContain(v => v.UserIdentifier == VandrarVennenIdentifier);
     }
 }

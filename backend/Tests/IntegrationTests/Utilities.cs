@@ -26,6 +26,8 @@ public static class Utilities
         var solvedVotes = GetSeedingTrailObstacleSolvedVotes(obstacles, users);
         var facilities = GetSeedingFacilities();
 
+        var hikeShares = GetSeedingHikeShares(hikes, users);
+
         db.Trails.AddRange(trails);
         db.Users.AddRange(users);
         db.Reviews.AddRange(reviews);
@@ -33,6 +35,7 @@ public static class Utilities
         db.TrailObstacles.AddRange(obstacles);
         db.TrailObstacleSolvedVotes.AddRange(solvedVotes);
         db.Facilities.AddRange(facilities);
+        db.HikeShares.AddRange(hikeShares);
 
         db.SaveChanges();
     }
@@ -563,7 +566,8 @@ public static class Utilities
                 HikeLength = 10,
                 Duration = 3600000,
                 Coordinates = string.Empty,
-                CreatedBy = users[0].Identifier
+                CreatedBy = users[0].Identifier,
+                UserId = users[0].Id
             },
             new Hike
             {
@@ -573,7 +577,8 @@ public static class Utilities
                 HikeLength = 20,
                 Duration = 7200000,
                 Coordinates = string.Empty,
-                CreatedBy = users[0].Identifier
+                CreatedBy = users[0].Identifier,
+                UserId = users[0].Id
             },
             new Hike
             {
@@ -583,7 +588,8 @@ public static class Utilities
                 HikeLength = 30,
                 Duration = 10800000,
                 Coordinates = string.Empty,
-                CreatedBy = users[1].Identifier
+                CreatedBy = users[1].Identifier,
+                UserId = users[1].Id
             },
             new Hike
             {
@@ -593,7 +599,8 @@ public static class Utilities
                 HikeLength = 40,
                 Duration = 14400000,
                 Coordinates = string.Empty,
-                CreatedBy = users[1].Identifier
+                CreatedBy = users[1].Identifier,
+                UserId = users[1].Id
             },
             new Hike
             {
@@ -603,7 +610,8 @@ public static class Utilities
                 HikeLength = 50,
                 Duration = 18000000,
                 Coordinates = string.Empty,
-                CreatedBy = users[2].Identifier
+                CreatedBy = users[2].Identifier,
+                UserId = users[2].Id
             }
         ];
     }
@@ -706,6 +714,39 @@ public static class Utilities
                 UserId = 3, // SkogsGreven — third vote, pushes obstacle 3 to the filter threshold
                 CreatedAt = SeedDates.Created,
                 LastUpdatedAt = SeedDates.Updated,
+            },
+        ];
+    }
+
+    /// <summary>
+    /// Creates HikeShare seed data covering two scenarios:
+    /// VandrarVennen has shared one of their own hikes (so it is preserved on deletion),
+    /// and VandrarVennen is a recipient of a hike shared by another user (so their recipient
+    /// record is cleaned up on deletion).
+    /// </summary>
+    public static List<HikeShare> GetSeedingHikeShares(List<Hike> hikes, List<User> users)
+    {
+        return
+        [
+            // VandrarVennen (User 2) shares Hike 3 with NaturElskaren (User 1).
+            // When VandrarVennen deletes, Hike 3 is preserved (not soft-deleted) because
+            // a HikeShare record exists for it; the DB cascade nulls its UserId.
+            new HikeShare
+            {
+                HikeId = 3,
+                SharedById = 2,   // VandrarVennen
+                SharedWithId = 1, // NaturElskaren
+                CreatedAt = SeedDates.Created,
+            },
+            // SkogsGreven (User 3) shares Hike 5 with VandrarVennen (User 2).
+            // When VandrarVennen deletes, this recipient record is removed by
+            // DeleteHikeSharesByUserIdAsync (SharedWithId == VandrarVennen's Id).
+            new HikeShare
+            {
+                HikeId = 5,
+                SharedById = 3,   // SkogsGreven
+                SharedWithId = 2, // VandrarVennen
+                CreatedAt = SeedDates.Created,
             },
         ];
     }
