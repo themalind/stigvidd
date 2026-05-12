@@ -65,6 +65,7 @@ export default function RegisterScreen() {
   const {
     control,
     handleSubmit,
+    setError,
     formState: { errors, isSubmitting },
   } = useForm<FormFields>({ resolver: zodResolver(registerFields) });
 
@@ -75,6 +76,10 @@ export default function RegisterScreen() {
 
     if (!result.success || !result.user) {
       const errorCode = result.error?.code || "unknown";
+      if (errorCode === "api/nickname-taken") {
+        setError("nickName", { message: "Smeknamnet upptaget!" });
+        return;
+      }
       setFirebaseError(getRegisterErrorMessage(errorCode));
       return;
     }

@@ -1,6 +1,6 @@
 import { FirebaseError } from "firebase/app";
 import { createUserWithEmailAndPassword, deleteUser } from "firebase/auth";
-import { createStigViddUser } from "../../api/users";
+import { ApiError, createStigViddUser } from "../../api/users";
 import { registerUser } from "../auth";
 import { RegisterData } from "../../data/types";
 
@@ -25,9 +25,20 @@ jest.mock("../../../firebase-config", () => ({
   auth: {},
 }));
 
-jest.mock("@/api/users", () => ({
-  createStigViddUser: jest.fn(),
-}));
+jest.mock("@/api/users", () => {
+  class ApiError extends Error {
+    status?: number;
+    constructor(message: string, status?: number) {
+      super(message);
+      this.name = "ApiError";
+      this.status = status;
+    }
+  }
+  return {
+    createStigViddUser: jest.fn(),
+    ApiError,
+  };
+});
 
 const mockCreateUserWithEmailAndPassword = createUserWithEmailAndPassword as jest.Mock;
 const mockDeleteUser = deleteUser as jest.Mock;
@@ -102,6 +113,31 @@ describe("registerUser", () => {
       message: "Email already in use",
     });
     expect(mockDeleteUser).not.toHaveBeenCalled();
+  });
+
+  it("returns api/nickname-taken error when backend returns 409", async () => {
+    mockCreateUserWithEmailAndPassword.mockResolvedValue({ user: mockFirebaseUser });
+    mockCreateStigViddUser.mockRejectedValue(new ApiError("nickname-taken", 409));
+    mockDeleteUser.mockResolvedValue(undefined);
+
+    const result = await registerUser(registerData);
+
+    expect(result.success).toBe(false);
+    expect(result.user).toBeNull();
+    expect(result.error).toEqual({ code: "api/nickname-taken", message: "Smeknamnet är redan taget" });
+    expect(mockDeleteUser).toHaveBeenCalledWith(mockFirebaseUser);
+  });
+
+  it("returns unknown error when backend returns a non-409 error", async () => {
+    mockCreateUserWithEmailAndPassword.mockResolvedValue({ user: mockFirebaseUser });
+    mockCreateStigViddUser.mockRejectedValue(new ApiError("HTTP error 500", 500));
+    mockDeleteUser.mockResolvedValue(undefined);
+
+    const result = await registerUser(registerData);
+
+    expect(result.success).toBe(false);
+    expect(result.error).toEqual({ code: "unknown", message: "Ett oväntat fel inträffade" });
+    expect(mockDeleteUser).toHaveBeenCalledWith(mockFirebaseUser);
   });
 
   it("returns failure gracefully when rollback deleteUser also throws", async () => {
