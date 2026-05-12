@@ -8,6 +8,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import NavMain from "./nav-main";
+import { NavUser } from "./nav-user";
 import { NavLink } from "react-router";
 
 export function AppSidebar() {
@@ -29,7 +30,10 @@ export function AppSidebar() {
       <SidebarContent>
         <NavMain />
       </SidebarContent>
-      <SidebarFooter />
+
+      <SidebarFooter>
+        <NavUser />
+      </SidebarFooter>
     </Sidebar>
   );
 }

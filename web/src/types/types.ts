@@ -9,6 +9,12 @@ export type TrailShortInfoResponse = {
   startLongitude?: number;
 };
 
+export type StigviddUser = {
+  identifier: string;
+  nickName: string;
+  email: string;
+};
+
 export type VisitorInformation = {
   identifier: string;
   gettingThere: string;
