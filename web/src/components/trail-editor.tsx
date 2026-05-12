@@ -26,6 +26,7 @@ import {
   SheetTrigger,
 } from "./ui/sheet";
 import { Textarea } from "./ui/textarea";
+import { TagInput } from "./tag-input";
 import { Edit } from "lucide-react";
 import { useState } from "react";
 import { getTrailByIdentifier, updateTrail } from "@/api/trail";
@@ -229,11 +230,9 @@ export default function TrailEditor({ data, selected }: Props) {
               </div>
               <div className="flex flex-col gap-2">
                 <p>Tags</p>
-                <Input
+                <TagInput
                   value={formData.tags ?? ""}
-                  onChange={(e) =>
-                    setFormData({ ...formData, tags: e.target.value })
-                  }
+                  onChange={(tags) => setFormData({ ...formData, tags })}
                 />
               </div>
             </div>
