@@ -120,7 +120,7 @@ export default function TrailEditor({ data, selected }: Props) {
           </Button>
         ) : null}
       </SheetTrigger>
-      <SheetContent>
+      <SheetContent className="sm:max-w-lg">
         <SheetHeader>
           <SheetTitle>Edit Trail</SheetTitle>
           <SheetDescription>

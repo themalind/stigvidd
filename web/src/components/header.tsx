@@ -14,7 +14,7 @@ export default function Header() {
       ?.title ?? "Stigvidd";
 
   return (
-    <header className="flex justify-between items-center p-2">
+    <header className="sticky top-0 z-10 flex justify-between items-center p-2 bg-background border-t-8 border-t-sidebar border-b">
       <div className="flex pl-1 items-center">
         <SidebarTrigger />
       </div>
