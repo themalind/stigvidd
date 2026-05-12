@@ -222,6 +222,23 @@ public class UserServiceTests
     }
 
     [Fact]
+    public async Task CreateUser_WhenNicknameAlreadyTaken_ReturnsConflict()
+    {
+        // Arrange
+        var repo = new Mock<IUserRepository>();
+        repo.Setup(r => r.CheckUserNicknameAvaliability(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult.Conflict());
+
+        // Act
+        var result = await Build(repo).CreateUserAsync("new@test.com", "TakenNickname", "new-uid", CancellationToken.None);
+
+        // Assert
+        result.Success.Should().BeFalse();
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(409);
+    }
+
+    [Fact]
     public async Task CreateUser_WhenFirebaseUidAlreadyExists_ReturnsConflict()
     {
         // Arrange

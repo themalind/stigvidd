@@ -237,6 +237,113 @@ public class HikeServiceTests
     }
 
     [Fact]
+    public async Task UpdateHike_WhenOwner_ReturnsSuccess()
+    {
+        // Arrange
+        var hike = Utilities.Stubs.Hike();
+        var userRepo = new Mock<IUserRepository>();
+        userRepo.Setup(r => r.GetUserByIdentifierAsync(It.IsAny<string>(), It.IsAny<Expression<Func<User, int>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<int>.Success(1));
+        var hikeRepo = new Mock<IHikeRepository>();
+        hikeRepo.Setup(r => r.GetHikeByIdentifierAsync(Utilities.Identifiers.Hike1, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<Hike>.Success(hike));
+        hikeRepo.Setup(r => r.UpdateHikeAsync(It.IsAny<Hike>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<Hike>.Success(hike));
+
+        // Act
+        var result = await Build(hikeRepo, userRepo).UpdateHikeAsync(
+            Utilities.Identifiers.Hike1, Utilities.Identifiers.User,
+            "NewName", "NewDesc", null, null, CancellationToken.None);
+
+        // Assert
+        result.Success.Should().BeTrue();
+        result.Value!.Name.Should().Be("NewName");
+        result.Value.Description.Should().Be("NewDesc");
+    }
+
+    [Fact]
+    public async Task UpdateHike_WhenUserNotFound_ReturnsNotFound()
+    {
+        // Arrange
+        var userRepo = new Mock<IUserRepository>();
+        userRepo.Setup(r => r.GetUserByIdentifierAsync(It.IsAny<string>(), It.IsAny<Expression<Func<User, int>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<int>.NotFound());
+
+        // Act
+        var result = await Build(userRepo: userRepo).UpdateHikeAsync(
+            Utilities.Identifiers.Hike1, "unknown-user",
+            "NewName", null, null, null, CancellationToken.None);
+
+        // Assert
+        result.Success.Should().BeFalse();
+        result.Message!.StatusCode.Should().Be(404);
+    }
+
+    [Fact]
+    public async Task UpdateHike_WhenHikeNotFound_ReturnsNotFound()
+    {
+        // Arrange
+        var userRepo = new Mock<IUserRepository>();
+        userRepo.Setup(r => r.GetUserByIdentifierAsync(It.IsAny<string>(), It.IsAny<Expression<Func<User, int>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<int>.Success(1));
+        var hikeRepo = new Mock<IHikeRepository>();
+        hikeRepo.Setup(r => r.GetHikeByIdentifierAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<Hike>.NotFound());
+
+        // Act
+        var result = await Build(hikeRepo, userRepo).UpdateHikeAsync(
+            "no-such-hike", Utilities.Identifiers.User,
+            "NewName", null, null, null, CancellationToken.None);
+
+        // Assert
+        result.Success.Should().BeFalse();
+        result.Message!.StatusCode.Should().Be(404);
+    }
+
+    [Fact]
+    public async Task UpdateHike_WhenHikeRepositoryErrors_ReturnsInternalServerError()
+    {
+        // Arrange
+        var userRepo = new Mock<IUserRepository>();
+        userRepo.Setup(r => r.GetUserByIdentifierAsync(It.IsAny<string>(), It.IsAny<Expression<Func<User, int>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<int>.Success(1));
+        var hikeRepo = new Mock<IHikeRepository>();
+        hikeRepo.Setup(r => r.GetHikeByIdentifierAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<Hike>.Error());
+
+        // Act
+        var result = await Build(hikeRepo, userRepo).UpdateHikeAsync(
+            Utilities.Identifiers.Hike1, Utilities.Identifiers.User,
+            "NewName", null, null, null, CancellationToken.None);
+
+        // Assert
+        result.Success.Should().BeFalse();
+        result.Message!.StatusCode.Should().Be(500);
+    }
+
+    [Fact]
+    public async Task UpdateHike_WhenNotOwner_ReturnsUnauthorized()
+    {
+        // Arrange
+        var hike = Utilities.Stubs.Hike(); // UserId = 1
+        var userRepo = new Mock<IUserRepository>();
+        userRepo.Setup(r => r.GetUserByIdentifierAsync(It.IsAny<string>(), It.IsAny<Expression<Func<User, int>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<int>.Success(99)); // different user
+        var hikeRepo = new Mock<IHikeRepository>();
+        hikeRepo.Setup(r => r.GetHikeByIdentifierAsync(Utilities.Identifiers.Hike1, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<Hike>.Success(hike));
+
+        // Act
+        var result = await Build(hikeRepo, userRepo).UpdateHikeAsync(
+            Utilities.Identifiers.Hike1, "other-user",
+            "NewName", null, null, null, CancellationToken.None);
+
+        // Assert
+        result.Success.Should().BeFalse();
+        result.Message!.StatusCode.Should().Be(401);
+    }
+
+    [Fact]
     public async Task DeleteHike_WhenOwner_ReturnsSuccess()
     {
         // Arrange

@@ -1,7 +1,10 @@
 using Core.Repositories;
 using FluentAssertions;
+using Infrastructure.Data;
 using Infrastructure.Data.Entities;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
+using Moq;
 
 namespace UnitTests.RepositoryTests;
 
@@ -113,6 +116,69 @@ public class HikeRepositoryTests : TestBase
 
         var verify = await repo.GetHikeByIdentifierAsync(hike.Identifier, CancellationToken.None);
         verify.IsSuccess.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task GetHikeIdByIdentifier_WhenFound_ReturnsId()
+    {
+        // Arrange
+        var repo = new HikeRepository(CreateSeededFactory(), NullLogger<HikeRepository>.Instance);
+
+        // Act
+        var result = await repo.GetHikeIdByIdentifierAsync(HikeIdentifier, CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().BeGreaterThan(0);
+    }
+
+    [Fact]
+    public async Task GetHikeIdByIdentifier_WhenNotFound_ReturnsNotFound()
+    {
+        // Arrange
+        var repo = new HikeRepository(CreateSeededFactory(), NullLogger<HikeRepository>.Instance);
+
+        // Act
+        var result = await repo.GetHikeIdByIdentifierAsync("no-such-hike", CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.Should().BeFalse();
+        result.Status.Should().Be(RepositoryResultStatus.NotFound);
+    }
+
+    [Fact]
+    public async Task SoftDeleteHike_WhenHasShares_SetsUserIdNull()
+    {
+        // Arrange — build an in-memory DB that includes a HikeShare for Hike 1
+        var options = new DbContextOptionsBuilder<StigViddDbContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString())
+            .Options;
+
+        using (var seed = new StigViddDbContext(options))
+        {
+            seed.Database.EnsureCreated();
+            Utilities.InitializeDbForTests(seed);
+            seed.HikeShares.Add(new HikeShare { HikeId = 1, SharedWithId = 2, SharedById = 1 });
+            seed.SaveChanges();
+        }
+
+        var factory = new Mock<IDbContextFactory<StigViddDbContext>>();
+        factory.Setup(f => f.CreateDbContextAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(() => new StigViddDbContext(options));
+
+        var repo = new HikeRepository(factory.Object, NullLogger<HikeRepository>.Instance);
+        var found = await repo.GetHikeByIdentifierAsync(HikeIdentifier, CancellationToken.None);
+        found.IsSuccess.Should().BeTrue();
+
+        // Act
+        var deleteResult = await repo.SoftDeleteHikeAsync(found.Value!, CancellationToken.None);
+
+        // Assert — hike still exists (not soft-deleted) but owner is cleared
+        deleteResult.IsSuccess.Should().BeTrue();
+        var verify = await repo.GetHikeByIdentifierAsync(HikeIdentifier, CancellationToken.None);
+        verify.IsSuccess.Should().BeTrue();
+        verify.Value!.UserId.Should().BeNull();
+        verify.Value.IsDeleted.Should().BeFalse();
     }
 
     [Fact]

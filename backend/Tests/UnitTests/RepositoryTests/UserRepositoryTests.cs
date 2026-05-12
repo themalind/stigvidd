@@ -366,6 +366,61 @@ public class UserRepositoryTests : TestBase
         result.Status.Should().Be(RepositoryResultStatus.NotFound);
     }
 
+    [Fact]
+    public async Task GetUserIdByName_WhenFound_ReturnsId()
+    {
+        // Arrange
+        var repo = BuildRepo();
+
+        // Act
+        var result = await repo.GetUserIdByNameAsync("NaturElskaren", CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().BeGreaterThan(0);
+    }
+
+    [Fact]
+    public async Task GetUserIdByName_WhenNotFound_ReturnsNotFound()
+    {
+        // Arrange
+        var repo = BuildRepo();
+
+        // Act
+        var result = await repo.GetUserIdByNameAsync("NoSuchNickname", CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.Should().BeFalse();
+        result.Status.Should().Be(RepositoryResultStatus.NotFound);
+    }
+
+    [Fact]
+    public async Task CheckUserNicknameAvailability_WhenAvailable_ReturnsSuccess()
+    {
+        // Arrange
+        var repo = BuildRepo();
+
+        // Act
+        var result = await repo.CheckUserNicknameAvaliability("BrandNewNickname", CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task CheckUserNicknameAvailability_WhenTaken_ReturnsConflict()
+    {
+        // Arrange
+        var repo = BuildRepo();
+
+        // Act
+        var result = await repo.CheckUserNicknameAvaliability("NaturElskaren", CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.Should().BeFalse();
+        result.Status.Should().Be(RepositoryResultStatus.Conflict);
+    }
+
     // Note: DeleteUserAsync uses BeginTransactionAsync which is not supported by EF InMemory.
     // The happy-path delete is covered by integration tests instead.
 

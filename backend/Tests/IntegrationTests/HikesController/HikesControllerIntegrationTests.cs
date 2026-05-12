@@ -243,6 +243,74 @@ public class HikesControllerIntegrationTests : IClassFixture<StigViddWebApplicat
     }
 
     [Fact]
+    public async Task UpdateHikeAsync_ShouldReturnOk_WhenHikeIsUpdated()
+    {
+        // Arrange
+        var client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", AUTHENTICATED_USER);
+
+        var request = new UpdateHikeRequest { Name = "UpdatedName" };
+
+        // Act
+        var response = await client.PutAsJsonAsync($"{BASE_URL}{TestHike1Identifier}", request, TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+    }
+
+    [Fact]
+    public async Task UpdateHikeAsync_ShouldReturnNotFound_WhenHikeNotFound()
+    {
+        // Arrange
+        var client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", AUTHENTICATED_USER);
+
+        var request = new UpdateHikeRequest { Name = "UpdatedName" };
+
+        // Act
+        var response = await client.PutAsJsonAsync($"{BASE_URL}not-a-valid-identifier", request, TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task UpdateHikeAsync_ShouldReturnUnauthorized_WhenUserIsNotCreator()
+    {
+        // Arrange
+        var client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", AUTHENTICATED_USER);
+
+        var request = new UpdateHikeRequest { Name = "UpdatedName" };
+
+        // Act — TestHike3 is owned by VandrarVennen, not NaturElskaren
+        var response = await client.PutAsJsonAsync($"{BASE_URL}{TestHike3Identifier}", request, TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task UpdateHikeAsync_ShouldReturnUnauthorized_WhenUserNotFound()
+    {
+        // Arrange
+        var client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", NOT_AUTHENTICATED_USER);
+
+        var request = new UpdateHikeRequest { Name = "UpdatedName" };
+
+        // Act
+        var response = await client.PutAsJsonAsync($"{BASE_URL}{TestHike1Identifier}", request, TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
     public async Task DeleteHikeAsync_ShouldReturnNoContent_WhenHikeIsDeleted()
     {
         // Arrange
