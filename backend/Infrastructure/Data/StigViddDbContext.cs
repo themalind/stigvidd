@@ -120,6 +120,13 @@ public class StigViddDbContext(DbContextOptions<StigViddDbContext> options) : Db
             .HasForeignKey(hs => hs.SharedWithId)
             .OnDelete(DeleteBehavior.NoAction);
 
+        // HikeShare → SharedBy user (NoAction; sharer may delete account but share row stays)
+        modelBuilder.Entity<HikeShare>()
+            .HasOne(hs => hs.SharedBy)
+            .WithMany()
+            .HasForeignKey(hs => hs.SharedById)
+            .OnDelete(DeleteBehavior.NoAction);
+
         // HikeImage → Hike (cascade delete)
         modelBuilder.Entity<HikeImage>()
             .HasOne(hi => hi.Hike)
