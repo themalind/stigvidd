@@ -12,4 +12,5 @@ public class UpdateTrailRequest
     public string? FullDescription { get; set; }
     public string? Tags { get; set; }
     public string? City { get; set; }
+    public UpdateVisitorInformationRequest? VisitorInformation { get; set; }
 }

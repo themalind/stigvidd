@@ -278,6 +278,7 @@ public class TrailRepository : ITrailRepository
             using var context = await _context.CreateDbContextAsync(ctoken);
 
             var existing = await context.Trails
+                .Include(t => t.VisitorInformation)
                 .Where(t => t.Identifier == trail.Identifier)
                 .FirstOrDefaultAsync(ctoken);
 
@@ -295,6 +296,25 @@ public class TrailRepository : ITrailRepository
             existing.Tags = trail.Tags;
             existing.City = trail.City;
             existing.LastUpdatedAt = DateTime.UtcNow;
+
+            if (trail.VisitorInformation != null)
+            {
+                if (existing.VisitorInformation != null)
+                {
+                    existing.VisitorInformation.GettingThere = trail.VisitorInformation.GettingThere;
+                    existing.VisitorInformation.PublicTransport = trail.VisitorInformation.PublicTransport;
+                    existing.VisitorInformation.Parking = trail.VisitorInformation.Parking;
+                    existing.VisitorInformation.Illumination = trail.VisitorInformation.Illumination;
+                    existing.VisitorInformation.IlluminationText = trail.VisitorInformation.IlluminationText;
+                    existing.VisitorInformation.MaintainedBy = trail.VisitorInformation.MaintainedBy;
+                    existing.VisitorInformation.WinterMaintenance = trail.VisitorInformation.WinterMaintenance;
+                    existing.VisitorInformation.LastUpdatedAt = DateTime.UtcNow;
+                }
+                else
+                {
+                    existing.VisitorInformation = trail.VisitorInformation;
+                }
+            }
 
             await context.SaveChangesAsync(ctoken);
 

@@ -9,6 +9,17 @@ export type TrailShortInfoResponse = {
   startLongitude?: number;
 };
 
+export type VisitorInformation = {
+  identifier: string;
+  gettingThere: string;
+  publicTransport: string;
+  parking: string;
+  illumination: boolean;
+  illuminationText: string;
+  maintainedBy: string;
+  winterMaintenance: boolean;
+};
+
 export type TrailResponse = {
   identifier: string;
   name: string;
@@ -25,6 +36,7 @@ export type TrailResponse = {
   createdBy: string;
   isVerified: boolean;
   city: string;
+  visitorInformation?: VisitorInformation;
 };
 
 export type TableColumn<T> = {
@@ -32,6 +44,16 @@ export type TableColumn<T> = {
   key: keyof T;
   type: string;
   width?: number;
+};
+
+export type UpdateVisitorInformationRequest = {
+  gettingThere?: string;
+  publicTransport?: string;
+  parking?: string;
+  illumination?: boolean;
+  illuminationText?: string;
+  maintainedBy?: string;
+  winterMaintenance?: boolean;
 };
 
 export type UpdateTrailRequest = {
@@ -45,6 +67,7 @@ export type UpdateTrailRequest = {
   fullDescription?: string;
   tags?: string;
   city?: string;
+  visitorInformation?: UpdateVisitorInformationRequest;
 };
 
 export const CLASSIFICATION: Record<number, string> = {

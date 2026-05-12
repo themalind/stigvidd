@@ -31,6 +31,7 @@ import { Edit } from "lucide-react";
 import { useState } from "react";
 import { getTrailByIdentifier, updateTrail } from "@/api/trail";
 import { toast } from "sonner";
+import { Separator } from "./ui/separator";
 
 interface Props {
   data: TrailShortInfoResponse;
@@ -48,6 +49,15 @@ const emptyForm = (): UpdateTrailRequest => ({
   fullDescription: "",
   tags: "",
   city: "",
+  visitorInformation: {
+    gettingThere: "",
+    publicTransport: "",
+    parking: "",
+    illumination: false,
+    illuminationText: "",
+    maintainedBy: "",
+    winterMaintenance: false,
+  },
 });
 
 export default function TrailEditor({ data, selected }: Props) {
@@ -71,6 +81,16 @@ export default function TrailEditor({ data, selected }: Props) {
         fullDescription: trail.fullDescription,
         tags: trail.tags,
         city: trail.city,
+        visitorInformation: {
+          gettingThere: trail.visitorInformation?.gettingThere ?? "",
+          publicTransport: trail.visitorInformation?.publicTransport ?? "",
+          parking: trail.visitorInformation?.parking ?? "",
+          illumination: trail.visitorInformation?.illumination ?? false,
+          illuminationText: trail.visitorInformation?.illuminationText ?? "",
+          maintainedBy: trail.visitorInformation?.maintainedBy ?? "",
+          winterMaintenance:
+            trail.visitorInformation?.winterMaintenance ?? false,
+        },
       });
     } catch {
       toast.error("Failed to load trail data.");
@@ -181,7 +201,10 @@ export default function TrailEditor({ data, selected }: Props) {
                   id="accessibility"
                   checked={formData.accessibility ?? false}
                   onCheckedChange={(checked) =>
-                    setFormData({ ...formData, accessibility: checked === true })
+                    setFormData({
+                      ...formData,
+                      accessibility: checked === true,
+                    })
                   }
                 />
                 <p>Accessible</p>
@@ -235,15 +258,126 @@ export default function TrailEditor({ data, selected }: Props) {
                   onChange={(tags) => setFormData({ ...formData, tags })}
                 />
               </div>
+
+              <Separator className="mt-3" />
+
+              <p className="font-semibold">Visitor Information</p>
+
+              <div className="flex flex-col gap-2">
+                <p>Getting There</p>
+                <Textarea
+                  value={formData.visitorInformation?.gettingThere ?? ""}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      visitorInformation: {
+                        ...formData.visitorInformation,
+                        gettingThere: e.target.value,
+                      },
+                    })
+                  }
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <p>Public Transport</p>
+                <Textarea
+                  value={formData.visitorInformation?.publicTransport ?? ""}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      visitorInformation: {
+                        ...formData.visitorInformation,
+                        publicTransport: e.target.value,
+                      },
+                    })
+                  }
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <p>Parking</p>
+                <Textarea
+                  value={formData.visitorInformation?.parking ?? ""}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      visitorInformation: {
+                        ...formData.visitorInformation,
+                        parking: e.target.value,
+                      },
+                    })
+                  }
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="illumination"
+                  checked={formData.visitorInformation?.illumination ?? false}
+                  onCheckedChange={(checked) =>
+                    setFormData({
+                      ...formData,
+                      visitorInformation: {
+                        ...formData.visitorInformation,
+                        illumination: checked === true,
+                      },
+                    })
+                  }
+                />
+                <p>Illuminated</p>
+              </div>
+              <div className="flex flex-col gap-2">
+                <p>Illumination Info</p>
+                <Input
+                  value={formData.visitorInformation?.illuminationText ?? ""}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      visitorInformation: {
+                        ...formData.visitorInformation,
+                        illuminationText: e.target.value,
+                      },
+                    })
+                  }
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <p>Maintained By</p>
+                <Input
+                  value={formData.visitorInformation?.maintainedBy ?? ""}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      visitorInformation: {
+                        ...formData.visitorInformation,
+                        maintainedBy: e.target.value,
+                      },
+                    })
+                  }
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="winterMaintenance"
+                  checked={
+                    formData.visitorInformation?.winterMaintenance ?? false
+                  }
+                  onCheckedChange={(checked) =>
+                    setFormData({
+                      ...formData,
+                      visitorInformation: {
+                        ...formData.visitorInformation,
+                        winterMaintenance: checked === true,
+                      },
+                    })
+                  }
+                />
+                <p>Winter Maintenance</p>
+              </div>
             </div>
           </div>
         )}
 
         <SheetFooter>
-          <Button
-            onClick={handleSubmit}
-            disabled={submitting || loading}
-          >
+          <Button onClick={handleSubmit} disabled={submitting || loading}>
             {submitting ? "Saving..." : "Save changes"}
           </Button>
           <SheetClose asChild>

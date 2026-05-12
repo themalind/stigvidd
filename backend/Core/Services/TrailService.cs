@@ -234,6 +234,20 @@ public class TrailService : ITrailService
             City = request.City ?? string.Empty,
         };
 
+        if (request.VisitorInformation != null)
+        {
+            trail.VisitorInformation = new VisitorInformation
+            {
+                GettingThere = request.VisitorInformation.GettingThere ?? string.Empty,
+                PublicTransport = request.VisitorInformation.PublicTransport ?? string.Empty,
+                Parking = request.VisitorInformation.Parking ?? string.Empty,
+                Illumination = request.VisitorInformation.Illumination ?? false,
+                IlluminationText = request.VisitorInformation.IlluminationText ?? string.Empty,
+                MaintainedBy = request.VisitorInformation.MaintainedBy ?? string.Empty,
+                WinterMaintenance = request.VisitorInformation.WinterMaintenance ?? false,
+            };
+        }
+
         var result = await _trailRepository.UpdateTrailAsync(trail, ctoken);
 
         if (result.Status == RepositoryResultStatus.Error)
