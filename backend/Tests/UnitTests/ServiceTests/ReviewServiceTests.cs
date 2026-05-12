@@ -213,6 +213,26 @@ public class ReviewServiceTests
     }
 
     [Fact]
+    public async Task AddReview_WithImages_ResponseImageUrlsHaveBaseUrlPrepended()
+    {
+        // Arrange
+        var repo = new Mock<IReviewRepository>();
+        repo.Setup(r => r.AddReviewAsync(It.IsAny<Review>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<Review>.Success(Utilities.Stubs.Review(withImages: true)));
+
+        // Act
+        var result = await Build(repo).AddReviewAsync(Utilities.Identifiers.User, Utilities.Identifiers.Trail7, "text", 4.0M, Utilities.Stubs.TwoImages(), CancellationToken.None);
+
+        // Assert
+        result.Success.Should().BeTrue();
+        result.Value.Should().NotBeNull();
+        result.Value.ReviewImages.Should().NotBeNull();
+        result.Value.ReviewImages.Should().NotBeEmpty();
+        result.Value.ReviewImages.Should().AllSatisfy(img =>
+            img.ImageUrl.Should().StartWith("http://stigvidd.se/testing/"));
+    }
+
+    [Fact]
     public async Task AddReview_WithNullImages_ReturnsSuccess()
     {
         // Arrange

@@ -1,19 +1,25 @@
-using System.Linq.Expressions;
-using Core;
 using Core.Factories;
 using Core.Interfaces.Repositories;
 using Core.Services;
 using FluentAssertions;
 using Infrastructure.Data.Entities;
+using Microsoft.Extensions.Configuration;
 using Moq;
+using System.Linq.Expressions;
 using WebDataContracts.ResponseModels.User;
 
 namespace UnitTests.ServiceTests;
 
 public class UserServiceTests
 {
-    private UserService Build(IUserRepository repo) =>
-        new(repo, new UserResponseFactory());
+    private UserService Build(IUserRepository repo)
+    {
+        var cfg = new Mock<IConfiguration>();
+        cfg.Setup(c => c["PresentableBaseUrl"]).Returns("http://stigvidd.se/testing/");
+
+        return new UserService(repo, new UserResponseFactory(cfg.Object));
+    }
+
 
 
     [Fact]
