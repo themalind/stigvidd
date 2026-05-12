@@ -8,6 +8,8 @@ public interface IUserRepository
     Task<RepositoryResult<T>> GetUserByFirebaseUidAsync<T>(string firebaseUid, Expression<Func<User, T>> selector, CancellationToken ctoken);
     Task<RepositoryResult<int>> GetUserIdByIdentifierAsync(string identifier, CancellationToken ctoken);
     Task<RepositoryResult<T>> GetUserByIdentifierAsync<T>(string identifier, Expression<Func<User, T>> selector, CancellationToken ctoken);
+    Task<RepositoryResult<int>> GetUserIdByNameAsync(string name, CancellationToken ctoken);
+    Task<RepositoryResult> CheckUserNicknameAvaliability(string nickname, CancellationToken ctoken);
     Task<RepositoryResult<IReadOnlyCollection<T>>> GetFavoritesByUserIdentifierAsync<T>(string userIdentifier, Expression<Func<Trail, T>> selector, CancellationToken ctoken);
     Task<RepositoryResult<IReadOnlyCollection<T>>> GetWishListByUserIdentifierAsync<T>(string userIdentifier, Expression<Func<Trail, T>> selector, CancellationToken ctoken);
     Task<RepositoryResult<User>> CreateUserAsync(User user, CancellationToken ctoken);
