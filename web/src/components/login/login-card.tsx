@@ -8,15 +8,51 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { signInUser } from "@/api/auth";
+import { useState } from "react";
+import { useNavigate } from "react-router";
 
 export function LoginCard() {
+  const navigate = useNavigate();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
+
+    const result = await signInUser(email, password);
+
+    if (!result.success) {
+      const code = result.error?.code ?? "";
+      if (
+        code === "auth/wrong-password" ||
+        code === "auth/user-not-found" ||
+        code === "auth/invalid-credential"
+      ) {
+        setError("Invalid email or password.");
+      } else if (code === "auth/too-many-requests") {
+        setError("Too many attempts. Please try again later.");
+      } else {
+        setError("Something went wrong. Please try again.");
+      }
+      setLoading(false);
+      return;
+    }
+
+    navigate("/dashboard");
+  }
+
   return (
     <Card className="w-full max-w-sm bg-background gap-0 p-0 overflow-hidden rounded-xs">
       <CardHeader className="py-6">
         <CardTitle>Logga in</CardTitle>
       </CardHeader>
       <CardContent>
-        <form>
+        <form id="login-form" onSubmit={handleSubmit}>
           <div className="flex flex-col gap-6">
             <div className="grid gap-2">
               <Label htmlFor="email">Epost</Label>
@@ -24,32 +60,35 @@ export function LoginCard() {
                 id="email"
                 type="email"
                 placeholder="min-epost@exempel.se"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 required
               />
             </div>
             <div className="grid gap-2">
-              <div className="flex items-center">
-                <Label htmlFor="password">Lösenord</Label>
-              </div>
-              <Input id="password" type="password" required />
+              <Label htmlFor="password">Lösenord</Label>
+              <Input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
             </div>
+            {error && (
+              <p className="text-sm text-destructive">{error}</p>
+            )}
           </div>
         </form>
-        <div>
-          <a
-            href="#"
-            className="ml-auto inline-block text-sm underline-offset-4 hover:underline not-hover:text-gray-400 dark:not-hover:text-gray-500"
-          >
-            Jag har glömt mitt lösenord...
-          </a>
-        </div>
       </CardContent>
       <CardFooter className="flex-col gap-2 py-6">
-        <Button type="submit" className="w-full">
-          Logga in
-        </Button>
-        <Button variant="outline" className="w-full">
-          Skapa konto
+        <Button
+          type="submit"
+          form="login-form"
+          className="w-full"
+          disabled={loading}
+        >
+          {loading ? "Loggar in..." : "Logga in"}
         </Button>
       </CardFooter>
     </Card>

@@ -1,3 +1,4 @@
+import { ProtectedRoute } from "@/components/auth/protected-route";
 import CommingSoonPage from "@/pages/comming-soon/comming-soon-page";
 import DashboardPage from "@/pages/dashboard/dashboard-page";
 import Layout from "@/pages/Layout";
@@ -18,22 +19,27 @@ export const router = createBrowserRouter([
     element: <LoginPage />,
   },
   {
-    element: <Layout />,
+    element: <ProtectedRoute />,
     children: [
       {
-        path: "/dashboard",
-        handle: { title: "Dashboard" },
-        element: <DashboardPage />,
-      },
-      {
-        path: "/users",
-        handle: { title: "Users" },
-        element: <UsersPage />,
-      },
-      {
-        path: "/trails",
-        handle: { title: "Trails" },
-        element: <TrailsPage />,
+        element: <Layout />,
+        children: [
+          {
+            path: "/dashboard",
+            handle: { title: "Dashboard" },
+            element: <DashboardPage />,
+          },
+          {
+            path: "/users",
+            handle: { title: "Users" },
+            element: <UsersPage />,
+          },
+          {
+            path: "/trails",
+            handle: { title: "Trails" },
+            element: <TrailsPage />,
+          },
+        ],
       },
     ],
   },

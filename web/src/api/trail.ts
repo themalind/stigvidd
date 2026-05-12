@@ -1,9 +1,11 @@
 import { IP } from "@/../ipconfig";
+import { auth } from "../../firebase-config";
 import type {
   TrailResponse,
   TrailShortInfoResponse,
   UpdateTrailRequest,
 } from "@/types/types";
+import { getIdToken } from "firebase/auth";
 
 const BASE_URL = `http://${IP}/api/v1/trails`;
 
@@ -43,7 +45,9 @@ export async function updateTrail(
   identifier: string,
   request: UpdateTrailRequest,
 ): Promise<TrailResponse> {
-  const token = localStorage.getItem("access_token");
+  const token = auth.currentUser
+    ? await getIdToken(auth.currentUser)
+    : null;
   try {
     const response = await fetch(`${BASE_URL}/${identifier}`, {
       method: "PUT",
