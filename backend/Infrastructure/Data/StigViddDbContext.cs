@@ -18,6 +18,7 @@ public class StigViddDbContext(DbContextOptions<StigViddDbContext> options) : Db
     public DbSet<Facility> Facilities { get; set; }
     public DbSet<HikeShare> HikeShares { get; set; }
     public DbSet<HikeImage> HikeImages { get; set; }
+    public DbSet<FriendRequest> FriendRequests { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -133,6 +134,21 @@ public class StigViddDbContext(DbContextOptions<StigViddDbContext> options) : Db
             .WithMany(h => h.Images)
             .HasForeignKey(hi => hi.HikeId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<FriendRequest>()
+            .HasKey(fr => new { fr.RequesterId, fr.ReceiverId });
+
+        modelBuilder.Entity<FriendRequest>()
+            .HasOne(fr => fr.Requester)
+            .WithMany()
+            .HasForeignKey(fr => fr.RequesterId)
+            .OnDelete(DeleteBehavior.NoAction);
+
+        modelBuilder.Entity<FriendRequest>()
+            .HasOne(fr => fr.Receiver)
+            .WithMany()
+            .HasForeignKey(fr => fr.ReceiverId)
+            .OnDelete(DeleteBehavior.NoAction);
 
         // Decimal precision for entity properties
         modelBuilder.Entity<Trail>()
