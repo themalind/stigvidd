@@ -10,6 +10,8 @@ namespace Infrastructure.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.Sql("DELETE FROM [HikeShares]");
+
             migrationBuilder.AddColumn<int>(
                 name: "SharedById",
                 table: "HikeShares",
