@@ -4,7 +4,7 @@ public class HikeShareRecipientResponse
 {
     public required string HikeIdentifier { get; set; }
     public required string HikeName { get; set; }
-    public decimal Hikelength { get; set; }
+    public decimal HikeLength { get; set; }
     public int Duration { get; set; }
     public required string Coordinates { get; set; }
     public string? CreatedByName { get; set; }
