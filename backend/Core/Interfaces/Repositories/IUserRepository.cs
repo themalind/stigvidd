@@ -12,6 +12,7 @@ public interface IUserRepository
     Task<RepositoryResult> CheckUserNicknameAvaliability(string nickname, CancellationToken ctoken);
     Task<RepositoryResult<IReadOnlyCollection<T>>> GetFavoritesByUserIdentifierAsync<T>(string userIdentifier, Expression<Func<Trail, T>> selector, CancellationToken ctoken);
     Task<RepositoryResult<IReadOnlyCollection<T>>> GetWishListByUserIdentifierAsync<T>(string userIdentifier, Expression<Func<Trail, T>> selector, CancellationToken ctoken);
+    Task<RepositoryResult<bool>> CheckForUsername(string username, CancellationToken ctoken);
     Task<RepositoryResult<User>> CreateUserAsync(User user, CancellationToken ctoken);
     Task<RepositoryResult<T>> AddTrailToUserFavoritesListAsync<T>(string userIdentifier, string trailIdentifier, Expression<Func<Trail, T>> selector, CancellationToken ctoken);
     Task<RepositoryResult<T>> AddTrailToUserWishListAsync<T>(string userIdentifier, string trailIdentifier, Expression<Func<Trail, T>> selector, CancellationToken ctoken);

@@ -9,6 +9,9 @@ public interface IUserService
     Task<Result<UserResponse?>> GetUserByIdentifierAsync(string identifier, CancellationToken ctoken);
     Task<Result<IReadOnlyCollection<UserFavoritesTrailResponse?>>> GetFavoritesByUserIdentifierAsync(string userIdentifier, CancellationToken ctoken);
     Task<Result<IReadOnlyCollection<UserWishlistTrailResponse?>>> GetWishListByUserIdentifierAsync(string userIdentifier, CancellationToken ctoken);
+    Task<Result<UserNameResponse>> SearchUsersByNickNameAsync(string query, int excludeUserId, CancellationToken ctoken);
+    Task<Result<UserNameResponse>> SearchForUserByUsernameAsync(string username, CancellationToken ctoken);
+    Task<Result<UserNameResponse>> CheckForUsername(string username, CancellationToken ctoken);
     Task<Result<UserResponse?>> CreateUserAsync(string email, string nickName, string firebaseuid, CancellationToken ctoken);
     Task<Result<UserFavoritesTrailResponse?>> AddTrailToUserFavoritesListAsync(string userIdentifier, string trailIdentifier, CancellationToken ctoken);
     Task<Result<UserWishlistTrailResponse?>> AddTrailToUserWishListAsync(string userIdentifier, string trailIdentifier, CancellationToken ctoken);
