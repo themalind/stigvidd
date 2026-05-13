@@ -2,6 +2,7 @@ using Core.Factories;
 using Core.Interfaces.Repositories;
 using Core.Interfaces.Services;
 using Infrastructure.Data.Entities;
+using WebDataContracts.ResponseModels.Friend;
 using WebDataContracts.ResponseModels.Review;
 using WebDataContracts.ResponseModels.Trail;
 using WebDataContracts.ResponseModels.User;
@@ -126,14 +127,20 @@ public class UserService : IUserService
         return Result.Ok(UserNameResponse.Create(query, exists));
     }
 
-    public async Task<Result<UserNameResponse>> SearchForUserByUsernameAsync(string username, CancellationToken ctoken)
+    public async Task<Result<FriendResponse?>> SearchForUserByUsernameAsync(string username, CancellationToken ctoken)
     {
-        var result = await _userRepository.CheckForUsername(username, ctoken);
+        var result = await _userRepository.GetUserByNickNameAsync(
+            username,
+            u => FriendResponse.Create(u.Identifier, u.NickName),
+            ctoken);
 
-        if (result.Status == RepositoryResultStatus.Error)
-            return Result.Fail<UserNameResponse>(new Message(500, "An error occurred while searching for the user."));
+        if (result.Status == RepositoryResultStatus.NotFound)
+            return Result.Ok<FriendResponse?>(null);
 
-        return Result.Ok(UserNameResponse.Create(username, result.Value));
+        if (!result.IsSuccess)
+            return Result.Fail<FriendResponse?>(new Message(500, "An error occurred while searching for the user."));
+
+        return Result.Ok<FriendResponse?>(result.Value);
     }
 
     public async Task<Result<UserNameResponse>> CheckForUsername(string username, CancellationToken ctoken)

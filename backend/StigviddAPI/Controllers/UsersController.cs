@@ -177,7 +177,7 @@ public class UsersController : StigViddController
 
     [HttpGet]
     [Route("search")]
-    public async Task<ActionResult<UserNameResponse>> SearchForUserByUsername([FromQuery] CheckUsernameRequest request, CancellationToken ctoken)
+    public async Task<ActionResult> SearchForUserByUsername([FromQuery] CheckUsernameRequest request, CancellationToken ctoken)
     {
         var userResponse = await GetAuthenticatedUserAsync(_userService, ctoken);
         if (userResponse == null)
@@ -189,6 +189,8 @@ public class UsersController : StigViddController
         {
             return ToActionResult(result.Message);
         }
+        if (result.Value is null)
+            return NotFound();
         return Ok(result.Value);
     }
 

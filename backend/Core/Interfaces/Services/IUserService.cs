@@ -1,4 +1,5 @@
-﻿using WebDataContracts.ResponseModels.User;
+﻿using WebDataContracts.ResponseModels.Friend;
+using WebDataContracts.ResponseModels.User;
 
 namespace Core.Interfaces.Services;
 
@@ -10,7 +11,7 @@ public interface IUserService
     Task<Result<IReadOnlyCollection<UserFavoritesTrailResponse?>>> GetFavoritesByUserIdentifierAsync(string userIdentifier, CancellationToken ctoken);
     Task<Result<IReadOnlyCollection<UserWishlistTrailResponse?>>> GetWishListByUserIdentifierAsync(string userIdentifier, CancellationToken ctoken);
     Task<Result<UserNameResponse>> SearchUsersByNickNameAsync(string query, int excludeUserId, CancellationToken ctoken);
-    Task<Result<UserNameResponse>> SearchForUserByUsernameAsync(string username, CancellationToken ctoken);
+    Task<Result<FriendResponse?>> SearchForUserByUsernameAsync(string username, CancellationToken ctoken);
     Task<Result<UserNameResponse>> CheckForUsername(string username, CancellationToken ctoken);
     Task<Result<UserResponse?>> CreateUserAsync(string email, string nickName, string firebaseuid, CancellationToken ctoken);
     Task<Result<UserFavoritesTrailResponse?>> AddTrailToUserFavoritesListAsync(string userIdentifier, string trailIdentifier, CancellationToken ctoken);

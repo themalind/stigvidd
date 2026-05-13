@@ -89,6 +89,29 @@ public class UserRepository : IUserRepository
         }
     }
 
+    public async Task<RepositoryResult<T>> GetUserByNickNameAsync<T>(string nickName, Expression<Func<User, T>> selector, CancellationToken ctoken)
+    {
+        try
+        {
+            using var context = await _context.CreateDbContextAsync(ctoken);
+
+            var result = await context.Users
+                .AsNoTracking()
+                .Where(u => u.NickName == nickName)
+                .Select(selector)
+                .FirstOrDefaultAsync(ctoken);
+
+            return result is null
+                ? RepositoryResult<T>.NotFound()
+                : RepositoryResult<T>.Success(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "UserRepository: GetUserByNickNameAsync -> Something went wrong when fetching user with nickname {NickName}.", nickName);
+            return RepositoryResult<T>.Error();
+        }
+    }
+
     public async Task<RepositoryResult<int>> GetUserIdByNameAsync(string name, CancellationToken ctoken)
     {
         try
