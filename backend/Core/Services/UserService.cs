@@ -14,15 +14,19 @@ public class UserService : IUserService
     private readonly ITrailObstacleRepository _trailObstacleRepository;
     private readonly UserResponseFactory _userResponseFactory;
     private readonly IHikeRepository _hikeRepository;
+    private readonly IFriendRepository _friendRepository;
 
     public UserService(IUserRepository userResponseRepository,
     ITrailObstacleRepository trailObstacleRepository,
-    UserResponseFactory userResponseFactory, IHikeRepository hikeRepository)
+    UserResponseFactory userResponseFactory,
+    IHikeRepository hikeRepository,
+    IFriendRepository friendRepository)
     {
         _userRepository = userResponseRepository;
         _trailObstacleRepository = trailObstacleRepository;
         _userResponseFactory = userResponseFactory;
         _hikeRepository = hikeRepository;
+        _friendRepository = friendRepository;
     }
 
     public async Task<Result<UserResponse?>> GetUserByFirebaseUidAsync(string firebaseUid, CancellationToken ctoken)
@@ -106,6 +110,40 @@ public class UserService : IUserService
             return Result.Fail<IReadOnlyCollection<UserWishlistTrailResponse?>>(new Message(500, "An error occurred while fetching wishlist."));
 
         return Result.Ok<IReadOnlyCollection<UserWishlistTrailResponse?>>(result.Value ?? []);
+    }
+
+    public async Task<Result<UserNameResponse>> SearchUsersByNickNameAsync(string query, int excludeUserId, CancellationToken ctoken)
+    {
+        var result = await _userRepository.GetUserIdByNameAsync(query, ctoken);
+
+        if (result.Status == RepositoryResultStatus.Error)
+            return Result.Fail<UserNameResponse>(new Message(500, "An error occurred while searching for the user."));
+
+        if (!result.IsSuccess)
+            return Result.Ok(UserNameResponse.Create(query, false));
+
+        var exists = result.Value != excludeUserId;
+        return Result.Ok(UserNameResponse.Create(query, exists));
+    }
+
+    public async Task<Result<UserNameResponse>> SearchForUserByUsernameAsync(string username, CancellationToken ctoken)
+    {
+        var result = await _userRepository.CheckForUsername(username, ctoken);
+
+        if (result.Status == RepositoryResultStatus.Error)
+            return Result.Fail<UserNameResponse>(new Message(500, "An error occurred while searching for the user."));
+
+        return Result.Ok(UserNameResponse.Create(username, result.Value));
+    }
+
+    public async Task<Result<UserNameResponse>> CheckForUsername(string username, CancellationToken ctoken)
+    {
+        var result = await _userRepository.CheckForUsername(username, ctoken);
+
+        if (result.Status == RepositoryResultStatus.Error)
+            return Result.Fail<UserNameResponse>(new Message(500, "An error occurred while checking username."));
+
+        return Result.Ok(UserNameResponse.Create(username, result.Value));
     }
 
     public async Task<Result<UserResponse?>> CreateUserAsync(string email, string nickName, string firebaseUid, CancellationToken ctoken)
@@ -251,6 +289,12 @@ public class UserService : IUserService
         var obstacleResult = await _trailObstacleRepository.DeleteAllObstaclesByUserIdAsync(userResult.Value, ctoken);
 
         if (obstacleResult.Status == RepositoryResultStatus.Error)
+            return Result.Fail(new Message(500, $"Error deleting user with identifier {identifier}"));
+
+        // FriendRequests use NoAction to avoid multiple cascade paths, so they must be removed explicitly before the user is deleted.
+        var friendRequestsResult = await _friendRepository.DeleteAllFriendRequestsByUserIdAsync(userResult.Value, ctoken);
+
+        if (friendRequestsResult.Status == RepositoryResultStatus.Error)
             return Result.Fail(new Message(500, $"Error deleting user with identifier {identifier}"));
 
         var result = await _userRepository.DeleteUserAsync(identifier, ctoken);

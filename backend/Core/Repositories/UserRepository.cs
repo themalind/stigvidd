@@ -178,6 +178,25 @@ public class UserRepository : IUserRepository
         }
     }
 
+    public async Task<RepositoryResult<bool>> CheckForUsername(string username, CancellationToken ctoken)
+    {
+        try
+        {
+            using var context = await _context.CreateDbContextAsync(ctoken);
+            var exists = await context.Users
+                .AsNoTracking()
+                .AnyAsync(u => u.NickName == username, ctoken);
+
+            return RepositoryResult<bool>.Success(exists);
+
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "UserRepository: CheckForUsername -> Something went wrong when checking for username {username}.", username);
+            return RepositoryResult<bool>.Error();
+        }
+    }
+
     public async Task<RepositoryResult<User>> CreateUserAsync(User user, CancellationToken ctoken)
     {
         try

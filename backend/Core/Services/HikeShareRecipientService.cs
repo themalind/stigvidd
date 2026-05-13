@@ -25,11 +25,11 @@ public class HikeShareRecipientService : IHikeShareRecipientService
             HikeIdentifier = hs.Hike!.Identifier,
             HikeName = hs.Hike.Name,
             Duration = hs.Hike.Duration,
-            Hikelength = hs.Hike.HikeLength,
+            HikeLength = hs.Hike.HikeLength,
             Coordinates = hs.Hike.Coordinates,
-            SharedByName = hs.SharedBy != null ? hs.SharedBy.NickName : "Deleted user",
-            SharedByIdentifier = hs.SharedBy != null ? hs.SharedBy.Identifier : "Deleted user",
-            CreatedByName = hs.Hike.UserId != null ? hs.Hike.User!.NickName : "Deleted user",
+            SharedByName = hs.SharedBy!.NickName,
+            SharedByIdentifier = hs.SharedBy.Identifier,
+            CreatedByName = hs.Hike.User!.NickName,
             SharedAt = hs.CreatedAt
         }, ctoken);
 
