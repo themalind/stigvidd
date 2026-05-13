@@ -257,6 +257,33 @@ export interface Facility {
   longitude: number;
 }
 
+export interface SharedHike {
+  hikeIdentifier: string;
+  hikeName: string;
+  hikeLength: number;
+  duration: number;
+  coordinates: string;
+  sharedByName: string;
+  sharedByIdentifier: string;
+  sharedAt: string;
+}
+
+export interface ReshareSharedHikeRequest {
+  hikeIdentifier: string;
+  reShareToName: string;
+}
+
+export interface Friend {
+  identifier: string;
+  nickName: string;
+}
+
+export interface FriendRequest {
+  requesterIdentifier: string;
+  requesterNickName: string;
+  createdAt: string;
+}
+
 export interface LoginData {
   email: string;
   password: string;
