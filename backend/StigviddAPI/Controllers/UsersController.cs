@@ -108,6 +108,27 @@ public class UsersController : StigViddController
         return Ok(result.Value);
     }
 
+    [HttpGet]
+    [Route("check-username")]
+    public async Task<ActionResult<UserNameResponse>> CheckUsername([FromQuery] CheckUsernameRequest request, CancellationToken ctoken)
+    {
+        var userResponse = await GetAuthenticatedUserAsync(_userService, ctoken);
+
+        if (userResponse == null)
+        {
+            return Unauthorized();
+        }
+
+        var result = await _userService.CheckForUsername(request.Username, ctoken);
+
+        if (!result.Success && result.Message != null)
+        {
+            return ToActionResult(result.Message);
+        }
+
+        return Ok(result.Value);
+    }
+
     [HttpPost]
     [Route("favorites")]
     public async Task<ActionResult<UserFavoritesTrailResponse?>> AddTrailToUserFavoritesList(
@@ -152,6 +173,23 @@ public class UsersController : StigViddController
         }
 
         return Created($"{addToUserWishlistRequest.TrailIdentifier}", result.Value);
+    }
+
+    [HttpGet]
+    [Route("search")]
+    public async Task<ActionResult<UserNameResponse>> SearchForUserByUsername([FromQuery] CheckUsernameRequest request, CancellationToken ctoken)
+    {
+        var userResponse = await GetAuthenticatedUserAsync(_userService, ctoken);
+        if (userResponse == null)
+        {
+            return Unauthorized("User not found");
+        }
+        var result = await _userService.SearchForUserByUsernameAsync(request.Username, ctoken);
+        if (!result.Success && result.Message != null)
+        {
+            return ToActionResult(result.Message);
+        }
+        return Ok(result.Value);
     }
 
     [HttpDelete]

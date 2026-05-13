@@ -71,7 +71,7 @@ public class HikesController : StigViddController
 
         if (userResponse == null)
         {
-            return Unauthorized("User not found");
+            return Unauthorized();
         }
 
         var result = await _hikeService.CreateHikeAsync(request, userResponse.Identifier, ctoken);
@@ -88,7 +88,38 @@ public class HikesController : StigViddController
     }
 
     [Authorize]
-    [HttpDelete("{hikeIdentifier}")]
+    [HttpPut]
+    [Route("{hikeIdentifier}")]
+    public async Task<ActionResult<HikeResponse>> UpdateHike(
+        [FromRoute] string hikeIdentifier,
+        [FromBody] UpdateHikeRequest request,
+        CancellationToken ctoken)
+    {
+        var userResponse = await GetAuthenticatedUserAsync(_userService, ctoken);
+        if (userResponse == null)
+        {
+            return Unauthorized();
+        }
+
+        var result = await _hikeService.UpdateHikeAsync(
+            hikeIdentifier,
+            userResponse.Identifier,
+            request.Name,
+            request.Description,
+            request.GettingThere,
+            request.ParkingInfo, ctoken);
+
+        if (!result.Success && result.Message != null)
+        {
+            return ToActionResult(result.Message);
+        }
+
+        return Ok(result);
+    }
+
+    [Authorize]
+    [HttpDelete]
+    [Route("{hikeIdentifier}")]
     public async Task<ActionResult> DeleteHike(
         string hikeIdentifier,
         CancellationToken ctoken)
@@ -100,7 +131,7 @@ public class HikesController : StigViddController
             return Unauthorized("User not found");
         }
 
-        var result = await _hikeService.DeleteHikeAsync(hikeIdentifier, userResponse.Identifier, ctoken);
+        var result = await _hikeService.SoftDeleteHikeAsync(hikeIdentifier, userResponse.Identifier, ctoken);
 
         if (!result.Success && result.Message != null)
         {
