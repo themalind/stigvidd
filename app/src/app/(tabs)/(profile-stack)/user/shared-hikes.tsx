@@ -46,15 +46,6 @@ export default function SharedHikesScreen() {
     return <ErrorView error={error} />;
   }
 
-  if (hikes?.length === 0) {
-    return (
-      <View style={[s.noHikesContainer, { backgroundColor: theme.colors.background }]}>
-        <BackButton />
-        <Text style={{ color: theme.colors.onBackground }}>No hikes shared with you yet</Text>
-      </View>
-    );
-  }
-
   return (
     <View style={[s.container, { backgroundColor: theme.colors.background }]}>
       <BackButton />
@@ -76,35 +67,42 @@ export default function SharedHikesScreen() {
           }}
         />
       )}
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={s.scrollContent}>
-        {hikes?.map((hike, index) => (
-          <Pressable
-            style={[s.hikePressable, { backgroundColor: theme.colors.surface }]}
-            key={index}
-            onPress={() => {
-              setSelectedSharedHike(hike);
-              setVisible(true);
-            }}
-          >
-            <View style={s.hikeInfo}>
-              <View style={[s.iconCircle, { backgroundColor: theme.colors.primaryContainer }]}>
-                <Fontisto name="map" size={24} color={theme.colors.secondary} />
-              </View>
-              <View style={s.flex}>
-                <Text style={s.name} numberOfLines={1}>
-                  {hike.hikeName}
-                </Text>
-                <View style={s.info}>
-                  <Text>{hike.hikeLength} km</Text>
-                  <Text>{FormattedTime(hike.duration)}</Text>
-                  <Text>Delad av: {hike.sharedByName}</Text>
+      {hikes?.length === 0 ? (
+        <View style={[s.noHikesContainer, { backgroundColor: theme.colors.background }]}>
+          <BackButton />
+          <Text style={{ color: theme.colors.onBackground }}>Inga delade promenader här än</Text>
+        </View>
+      ) : (
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={s.scrollContent}>
+          {hikes?.map((hike, index) => (
+            <Pressable
+              style={[s.hikePressable, { backgroundColor: theme.colors.surface }]}
+              key={index}
+              onPress={() => {
+                setSelectedSharedHike(hike);
+                setVisible(true);
+              }}
+            >
+              <View style={s.hikeInfo}>
+                <View style={[s.iconCircle, { backgroundColor: theme.colors.primaryContainer }]}>
+                  <Fontisto name="map" size={24} color={theme.colors.secondary} />
                 </View>
+                <View style={s.flex}>
+                  <Text style={s.name} numberOfLines={1}>
+                    {hike.hikeName}
+                  </Text>
+                  <View style={s.info}>
+                    <Text>{hike.hikeLength} km</Text>
+                    <Text>{FormattedTime(hike.duration)}</Text>
+                    <Text>Delad av: {hike.sharedByName}</Text>
+                  </View>
+                </View>
+                <Icon source="chevron-right" size={20} />
               </View>
-              <Icon source="chevron-right" size={20} />
-            </View>
-          </Pressable>
-        ))}
-      </ScrollView>
+            </Pressable>
+          ))}
+        </ScrollView>
+      )}
     </View>
   );
 }
