@@ -1,14 +1,14 @@
-import { getAllHikesByUserId } from "@/api/hikes";
+import { getSharedHikes } from "@/api/shared-hikes";
 import { authStateAtom } from "@/atoms/auth-atoms";
 import { stigviddUserAtom } from "@/atoms/user-atoms";
 import BackButton from "@/components/back-button";
 import ErrorView from "@/components/error-view";
 import LoadingIndicator from "@/components/loading-indicator";
-import HikeDetails from "@/components/trail/trail-creator/hike-details";
+import SharedHikeDetails from "@/components/shared-hike/shared-hike-details";
 import { BORDER_RADIUS } from "@/constants/constants";
-import { Hike } from "@/data/types";
+import { SharedHike } from "@/data/types";
 import FormattedTime from "@/utils/format-time-from-ms";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { Fontisto } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
 import { Redirect } from "expo-router";
 import { useAtom, useAtomValue } from "jotai";
@@ -16,12 +16,12 @@ import { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { Divider, Icon, Text, useTheme } from "react-native-paper";
 
-export default function MyHikesScreen() {
+export default function SharedHikesScreen() {
   const theme = useTheme();
   const [authState] = useAtom(authStateAtom);
   const user = useAtomValue(stigviddUserAtom);
   const [visible, setVisible] = useState(false);
-  const [hike, setSelectedhike] = useState<Hike | null>(null);
+  const [sharedHike, setSelectedSharedHike] = useState<SharedHike | null>(null);
 
   const {
     data: hikes,
@@ -29,8 +29,8 @@ export default function MyHikesScreen() {
     isError,
     error,
   } = useQuery({
-    queryKey: ["hikes", user.data?.identifier],
-    queryFn: () => getAllHikesByUserId(user.data!.identifier),
+    queryKey: ["shared-hikes", user.data?.identifier],
+    queryFn: () => getSharedHikes(),
     enabled: !!authState.isAuthenticated && !!user?.data,
   });
 
@@ -52,7 +52,7 @@ export default function MyHikesScreen() {
         style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: theme.colors.background }}
       >
         <BackButton />
-        <Text style={{ color: theme.colors.onBackground }}>No hikes saved</Text>
+        <Text style={{ color: theme.colors.onBackground }}>No hikes shared with you yet</Text>
       </View>
     );
   }
@@ -60,21 +60,21 @@ export default function MyHikesScreen() {
   return (
     <View style={[s.container, { backgroundColor: theme.colors.background }]}>
       <BackButton />
-      <View style={{ flexDirection: "row", gap: 10, paddingTop: 10, paddingBottom: 10 }}>
+      <View style={{ flexDirection: "row", gap: 10, paddingTop: 10, paddingBottom: 10, alignItems: "center" }}>
         <Icon source="hiking" size={24} color={theme.colors.tertiary} />
-        <Text style={{ fontSize: 17, fontWeight: 700 }}>Mina sparade promenader</Text>
+        <Text style={{ fontSize: 17, fontWeight: 700 }}>Delade promenader</Text>
       </View>
       <View style={[s.infoBox, { backgroundColor: theme.colors.outlineVariant }]}>
         <Text>Tryck på en promenad för att se mer information eller ta bort den.</Text>
       </View>
       <Divider bold={true} />
-      {hike && (
-        <HikeDetails
+      {sharedHike && (
+        <SharedHikeDetails
           visible={visible}
-          hike={hike}
+          sharedHike={sharedHike}
           onDismiss={() => {
             setVisible(false);
-            setSelectedhike(null);
+            setSelectedSharedHike(null);
           }}
         />
       )}
@@ -88,21 +88,22 @@ export default function MyHikesScreen() {
             }}
             key={index}
             onPress={() => {
-              setSelectedhike(hike);
+              setSelectedSharedHike(hike);
               setVisible(true);
             }}
           >
             <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-              <View style={[s.iconCircle, { backgroundColor: theme.colors.secondaryContainer }]}>
-                <MaterialCommunityIcons name="map-legend" size={24} color={theme.colors.secondary} />
+              <View style={[s.iconCircle, { backgroundColor: theme.colors.primaryContainer }]}>
+                <Fontisto name="map" size={24} color={theme.colors.secondary} />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={s.name} numberOfLines={1}>
-                  {hike.name}
+                  {hike.hikeName}
                 </Text>
                 <View style={s.info}>
                   <Text>{hike.hikeLength} km</Text>
                   <Text>{FormattedTime(hike.duration)}</Text>
+                  <Text>Delad av: {hike.sharedByName}</Text>
                 </View>
               </View>
               <Icon source="chevron-right" size={20} />
@@ -132,6 +133,7 @@ const s = StyleSheet.create({
   },
   info: {
     flexDirection: "row",
+    justifyContent: "space-between",
     gap: 12,
     marginTop: 2,
   },
