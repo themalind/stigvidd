@@ -5,12 +5,13 @@ import { useInitLocation } from "@/hooks/useInitLocation";
 import { useUserTheme } from "@/hooks/useUserTheme";
 import "@/services/location-task";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import * as NavigationBar from "expo-navigation-bar";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useAtom, useSetAtom } from "jotai";
 import { queryClientAtom } from "jotai-tanstack-query";
 import React, { useEffect, useMemo } from "react";
-import { StyleSheet, View } from "react-native";
+import { Platform, StyleSheet, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { PaperProvider } from "react-native-paper";
 import "react-native-reanimated";
@@ -52,6 +53,11 @@ export default function RootLayout() {
   useEffect(() => {
     loadUserTheme().then(setUserTheme);
   }, [setUserTheme]);
+
+  useEffect(() => {
+    if (Platform.OS !== "android") return;
+    NavigationBar.setButtonStyleAsync(theme.dark ? "light" : "dark");
+  }, [theme.dark]);
 
   return (
     <QueryClientProvider client={queryClient}>
