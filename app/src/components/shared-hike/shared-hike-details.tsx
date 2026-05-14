@@ -8,6 +8,7 @@ import CoordinateParser from "@/utils/coordinate-parser";
 import { formatDate } from "@/utils/format-date";
 import FormattedTime from "@/utils/format-time-from-ms";
 import GetRegionFromTrail from "@/utils/get-region-from-trail";
+import { Fontisto } from "@expo/vector-icons";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { BlurView } from "expo-blur";
 import { useAtomValue, useSetAtom } from "jotai";
@@ -80,16 +81,29 @@ export default function SharedHikeDetails({ visible, sharedHike, onDismiss }: Pr
         <Pressable style={{ alignSelf: "flex-end" }} hitSlop={12} onPress={onDismiss}>
           <Icon size={24} source="close" color={theme.colors.onSurface} />
         </Pressable>
+        <View
+          style={{
+            backgroundColor: theme.colors.outlineVariant,
+            gap: 10,
+            justifyContent: "space-between",
+            padding: 10,
+            borderRadius: BORDER_RADIUS,
+          }}
+        >
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
+            <Fontisto name="map" size={20} color={theme.colors.primary} />
+            <Text style={{ fontSize: 18, fontWeight: 700, color: theme.colors.secondary }}>{sharedHike.hikeName}</Text>
+          </View>
+          <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+            <Text>
+              <Icon color={theme.colors.tertiary} size={20} source="hiking" /> {sharedHike.hikeLength} km
+            </Text>
+            <Text>
+              <Icon color={theme.colors.tertiary} size={20} source="clock" /> {FormattedTime(sharedHike.duration)}
+            </Text>
+          </View>
+        </View>
 
-        <Text style={{ fontSize: 18, fontWeight: 700 }}>{sharedHike.hikeName}</Text>
-        <Text>
-          <Icon size={20} source="hiking" /> {sharedHike.hikeLength} km
-        </Text>
-        <Text>
-          <Icon size={20} source="clock" /> {FormattedTime(sharedHike.duration)}
-        </Text>
-        <Text>Delad av: {sharedHike.sharedByName}</Text>
-        <Text>Delad: {formatDate(sharedHike.sharedAt)}</Text>
         <View style={s.mapContainer}>
           {sharedHike.coordinates && sharedHike.coordinates.length > 0 && (
             <Map style={s.map} ref={mapRef} initialRegion={GetRegionFromTrail(coordinates)} onMapReady={handleMapReady}>
@@ -97,12 +111,35 @@ export default function SharedHikeDetails({ visible, sharedHike, onDismiss }: Pr
             </Map>
           )}
         </View>
-        <Button style={{ borderRadius: BORDER_RADIUS, marginTop: "auto" }} mode="outlined" onPress={handeleDelete}>
-          <View style={{ gap: 5, flexDirection: "row" }}>
-            <Icon size={20} source="delete" />
-            <Text>Ta bort</Text>
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-between",
+          }}
+        >
+          <View style={{ flexDirection: "row" }}>
+            <Text style={{ color: theme.colors.secondary, fontWeight: 700 }}>Delad av: </Text>
+            <Text>{sharedHike.sharedByName}</Text>
           </View>
-        </Button>
+          <View style={{ flexDirection: "row" }}>
+            <Text style={{ color: theme.colors.secondary, fontWeight: 700 }}>Datum: </Text>
+            <Text>{formatDate(sharedHike.sharedAt)}</Text>
+          </View>
+        </View>
+        <View style={{ flexDirection: "row", gap: 20, marginTop: "auto" }}>
+          <Button style={{ flex: 1, borderRadius: BORDER_RADIUS }} mode="contained" onPress={handeleDelete}>
+            <View style={{ gap: 5, flexDirection: "row" }}>
+              <Icon color={theme.colors.onPrimary} size={20} source="share" />
+              <Text style={{ color: theme.colors.onPrimary }}>Dela</Text>
+            </View>
+          </Button>
+          <Button style={{ flex: 1, borderRadius: BORDER_RADIUS }} mode="outlined" onPress={handeleDelete}>
+            <View style={{ gap: 5, flexDirection: "row" }}>
+              <Icon size={20} source="delete" />
+              <Text>Ta bort</Text>
+            </View>
+          </Button>
+        </View>
         <AlertDialog
           visible={showOnDeleteDialog}
           onDismiss={() => setOnDeleteDialog(false)}
@@ -125,9 +162,11 @@ const s = StyleSheet.create({
     height: HEIGHT * 0.8,
     borderRadius: BORDER_RADIUS,
     padding: 15,
-    gap: 15,
+    gap: 10,
   },
   mapContainer: {
+    borderWidth: 0.3,
+    borderColor: "black",
     height: HEIGHT * 0.4,
     borderRadius: SURFACE_BORDER_RADIUS,
     overflow: "hidden",
