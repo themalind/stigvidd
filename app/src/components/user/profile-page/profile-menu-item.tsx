@@ -25,8 +25,12 @@ export default function ProfileMenuItem({ text, route, icon, badge }: MenuItemPr
           <Text style={s.choiceText}>{text}</Text>
         </View>
         <View style={s.right}>
-          {badge !== undefined && badge > 0 && <Badge style={{ backgroundColor: theme.colors.primary }}>{badge}</Badge>}
-          <MaterialIcons name="chevron-right" size={22} color={theme.colors.onSurface} />
+          {badge !== undefined && badge > 0 && (
+            <Badge size={24} style={{ backgroundColor: theme.colors.primary }}>
+              {badge}
+            </Badge>
+          )}
+          <MaterialIcons name="chevron-right" size={24} color={theme.colors.onSurface} />
         </View>
       </View>
     </Pressable>
