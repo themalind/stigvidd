@@ -90,48 +90,48 @@ export default function ProfilePageScreen() {
         <ProfileMenuItem
           text="Mina vänner"
           route="/(tabs)/(profile-stack)/user/friends"
-          icon={<MaterialCommunityIcons name="account-group" size={24} color={theme.colors.tertiary} />}
+          icon={<MaterialCommunityIcons name="account-group" size={30} color={theme.colors.tertiary} />}
           badge={incomingCount}
         />
         <ProfileMenuItem
           text="Favoriter"
           route="/(tabs)/(profile-stack)/user/favorites"
-          icon={<MaterialCommunityIcons name="cards-heart" size={24} color={theme.colors.tertiary} />}
+          icon={<MaterialCommunityIcons name="cards-heart" size={30} color={theme.colors.tertiary} />}
         />
         <ProfileMenuItem
           text="Vill gå"
           route="/(tabs)/(profile-stack)/user/wishlist"
-          icon={<MaterialIcons name="star" size={24} color={theme.colors.tertiary} />}
+          icon={<MaterialIcons name="star" size={30} color={theme.colors.tertiary} />}
         />
         <ProfileMenuItem
           text="Skapa en promenad"
           route="/(tabs)/(profile-stack)/user/create-hike"
-          icon={<MaterialIcons name="hiking" size={24} color={theme.colors.tertiary} />}
+          icon={<MaterialIcons name="hiking" size={30} color={theme.colors.tertiary} />}
         />
         <ProfileMenuItem
           text="Mina egna promenader"
           route="/(tabs)/(profile-stack)/user/my-hikes"
-          icon={<MaterialCommunityIcons name="map-legend" size={24} color={theme.colors.tertiary} />}
+          icon={<MaterialCommunityIcons name="map-legend" size={30} color={theme.colors.tertiary} />}
         />
         <ProfileMenuItem
           text="Promenader delade med mig"
           route="/(tabs)/(profile-stack)/user/shared-hikes"
-          icon={<Fontisto name="map" size={20} color={theme.colors.tertiary} />}
+          icon={<Fontisto name="map" size={26} color={theme.colors.tertiary} />}
         />
         <ProfileMenuItem
           text="Utmärkelser"
           route="/(tabs)/(profile-stack)/profile-page"
-          icon={<MaterialIcons name="emoji-events" size={24} color={theme.colors.tertiary} />}
+          icon={<MaterialIcons name="emoji-events" size={30} color={theme.colors.tertiary} />}
         />
         <ProfileMenuItem
           text="Statistik"
           route="/(tabs)/(profile-stack)/profile-page"
-          icon={<MaterialIcons name="bar-chart" size={24} color={theme.colors.tertiary} />}
+          icon={<MaterialIcons name="bar-chart" size={30} color={theme.colors.tertiary} />}
         />
         <ProfileMenuItem
           text="Om Stigvidd"
           route="/(tabs)/(profile-stack)/about"
-          icon={<MaterialIcons name="perm-device-info" size={24} color={theme.colors.tertiary} />}
+          icon={<MaterialIcons name="perm-device-info" size={30} color={theme.colors.tertiary} />}
         />
         <View style={s.accountActionsContainer}>
           <Pressable onPress={handleSignOut}>
