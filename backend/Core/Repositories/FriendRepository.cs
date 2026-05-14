@@ -186,9 +186,12 @@ public class FriendRepository : IFriendRepository
         {
             using var context = await _context.CreateDbContextAsync(ctoken);
 
-            await context.FriendRequests
+            var requests = await context.FriendRequests
                 .Where(fr => fr.RequesterId == userId || fr.ReceiverId == userId)
-                .ExecuteDeleteAsync(ctoken);
+                .ToListAsync(ctoken);
+
+            context.FriendRequests.RemoveRange(requests);
+            await context.SaveChangesAsync(ctoken);
 
             return RepositoryResult.Success();
         }
@@ -206,9 +209,12 @@ public class FriendRepository : IFriendRepository
             using var context = await _context.CreateDbContextAsync(ctoken);
 
             var existingRequest = await context.FriendRequests
-                .FirstOrDefaultAsync(fr => fr.RequesterId == requesterId && fr.ReceiverId == receiverId && fr.Status == FriendRequestStatus.Pending, ctoken);
+                .AnyAsync(fr =>
+                    ((fr.RequesterId == requesterId && fr.ReceiverId == receiverId) ||
+                     (fr.RequesterId == receiverId && fr.ReceiverId == requesterId)) &&
+                    (fr.Status == FriendRequestStatus.Pending || fr.Status == FriendRequestStatus.Accepted), ctoken);
 
-            if (existingRequest != null)
+            if (existingRequest)
             {
                 return RepositoryResult.Conflict();
             }

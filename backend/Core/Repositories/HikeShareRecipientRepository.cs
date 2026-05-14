@@ -81,9 +81,12 @@ public class HikeShareRecipientRepository : IHikeShareRecipientRepository
         {
             using var context = await _dbContext.CreateDbContextAsync(ctoken);
 
-            await context.HikeShares
+            var shares = await context.HikeShares
                 .Where(hs => hs.SharedWithId == userId && hs.HikeId == hikeId)
-                .ExecuteDeleteAsync(ctoken);
+                .ToListAsync(ctoken);
+
+            context.HikeShares.RemoveRange(shares);
+            await context.SaveChangesAsync(ctoken);
 
             return RepositoryResult.Success();
         }
