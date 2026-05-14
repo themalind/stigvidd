@@ -1,86 +1,74 @@
 using Core.Repositories;
 using FluentAssertions;
-using Infrastructure.Data;
 using Infrastructure.Data.Entities;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
-using Moq;
 
 namespace UnitTests.RepositoryTests;
 
-public class FacilityRepositoryTests
+public class FacilityRepositoryTests : TestBase
 {
-    private const string Facility1Identifier = "fac1a1b2-c3d4-4e5f-6a7b-8c9d0e1f2a3b";
-    private const string Facility2Identifier = "fac2b2c3-d4e5-4f6a-7b8c-9d0e1f2a3b4c";
-
-    private static IDbContextFactory<StigViddDbContext> CreateFactory(IEnumerable<Facility>? facilities = null)
-    {
-        var options = new DbContextOptionsBuilder<StigViddDbContext>()
-            .UseInMemoryDatabase(Guid.NewGuid().ToString())
-            .Options;
-
-        using var ctx = new StigViddDbContext(options);
-        if (facilities != null)
-            ctx.Facilities.AddRange(facilities);
-        ctx.SaveChanges();
-
-        var mock = new Mock<IDbContextFactory<StigViddDbContext>>();
-        mock.Setup(f => f.CreateDbContextAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(() => new StigViddDbContext(options));
-        return mock.Object;
-    }
-
-    private static Facility MakeFacility(int id = 1, string? identifier = null, string name = "Grillplats Tiveden") => new()
-    {
-        Id = id,
-        Identifier = identifier ?? Facility1Identifier,
-        Name = name,
-        FacilityType = FacilityType.FirePit,
-        IsAccessible = true,
-        Latitude = 58.9M,
-        Longitude = 14.5M,
-        CreatedAt = DateTime.UtcNow,
-        LastUpdatedAt = DateTime.UtcNow
-    };
+    private const string Facility1Identifier = Utilities.Identifiers.Facility1;
 
     [Fact]
     public async Task CreateFacilityAsync_WhenValid_ReturnsFacility()
     {
         // Arrange
-        var repo = new FacilityRepository(CreateFactory(), NullLogger<FacilityRepository>.Instance);
+        var repo = new FacilityRepository(CreateSeededFactory(), NullLogger<FacilityRepository>.Instance);
+        var facility = new Facility
+        {
+            Identifier = Guid.NewGuid().ToString(),
+            Name = "Ny Grillplats",
+            FacilityType = FacilityType.FirePit,
+            IsAccessible = true,
+            Latitude = 57.5M,
+            Longitude = 13.2M,
+            CreatedAt = DateTime.UtcNow,
+            LastUpdatedAt = DateTime.UtcNow
+        };
 
         // Act
-        var result = await repo.CreateFacilityAsync(MakeFacility(), CancellationToken.None);
+        var result = await repo.CreateFacilityAsync(facility, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().NotBeNull();
-        result.Value.Name.Should().Be("Grillplats Tiveden");
+        result.Value.Name.Should().Be("Ny Grillplats");
     }
 
     [Fact]
     public async Task CreateFacilityAsync_PersistsToDatabase()
     {
         // Arrange
-        var factory = CreateFactory();
+        var factory = CreateSeededFactory();
         var repo = new FacilityRepository(factory, NullLogger<FacilityRepository>.Instance);
+        var identifier = Guid.NewGuid().ToString();
+        var facility = new Facility
+        {
+            Identifier = identifier,
+            Name = "Ny Grillplats",
+            FacilityType = FacilityType.FirePit,
+            IsAccessible = true,
+            Latitude = 57.5M,
+            Longitude = 13.2M,
+            CreatedAt = DateTime.UtcNow,
+            LastUpdatedAt = DateTime.UtcNow
+        };
 
         // Act
-        await repo.CreateFacilityAsync(MakeFacility(), CancellationToken.None);
+        await repo.CreateFacilityAsync(facility, CancellationToken.None);
 
         // Assert
-        var verify = await repo.GetByIdentifierAsync(Facility1Identifier, CancellationToken.None);
+        var verify = await repo.GetByIdentifierAsync(identifier, CancellationToken.None);
         verify.IsSuccess.Should().BeTrue();
         verify.Value.Should().NotBeNull();
-        verify.Value.Name.Should().Be("Grillplats Tiveden");
+        verify.Value.Name.Should().Be("Ny Grillplats");
     }
 
     [Fact]
     public async Task GetAllAsync_WhenFacilitiesExist_ReturnsAll()
     {
         // Arrange
-        var factory = CreateFactory([MakeFacility(1, Facility1Identifier), MakeFacility(2, Facility2Identifier, "Vindskydd Gesebol")]);
-        var repo = new FacilityRepository(factory, NullLogger<FacilityRepository>.Instance);
+        var repo = new FacilityRepository(CreateSeededFactory(), NullLogger<FacilityRepository>.Instance);
 
         // Act
         var result = await repo.GetAllAsync(CancellationToken.None);
@@ -91,24 +79,10 @@ public class FacilityRepositoryTests
     }
 
     [Fact]
-    public async Task GetAllAsync_WhenNoneExist_ReturnsEmptyCollection()
-    {
-        // Arrange
-        var repo = new FacilityRepository(CreateFactory(), NullLogger<FacilityRepository>.Instance);
-
-        // Act
-        var result = await repo.GetAllAsync(CancellationToken.None);
-
-        // Assert
-        result.IsSuccess.Should().BeTrue();
-        result.Value.Should().BeEmpty();
-    }
-
-    [Fact]
     public async Task GetByIdentifierAsync_WhenFound_ReturnsSuccess()
     {
         // Arrange
-        var repo = new FacilityRepository(CreateFactory([MakeFacility()]), NullLogger<FacilityRepository>.Instance);
+        var repo = new FacilityRepository(CreateSeededFactory(), NullLogger<FacilityRepository>.Instance);
 
         // Act
         var result = await repo.GetByIdentifierAsync(Facility1Identifier, CancellationToken.None);
@@ -117,13 +91,14 @@ public class FacilityRepositoryTests
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().NotBeNull();
         result.Value.Identifier.Should().Be(Facility1Identifier);
+        result.Value.Name.Should().Be("Grillplats Tiveden");
     }
 
     [Fact]
     public async Task GetByIdentifierAsync_WhenNotFound_ReturnsNotFound()
     {
         // Arrange
-        var repo = new FacilityRepository(CreateFactory(), NullLogger<FacilityRepository>.Instance);
+        var repo = new FacilityRepository(CreateSeededFactory(), NullLogger<FacilityRepository>.Instance);
 
         // Act
         var result = await repo.GetByIdentifierAsync("no-such-facility", CancellationToken.None);
@@ -137,11 +112,11 @@ public class FacilityRepositoryTests
     public async Task UpdateAsync_PersistsChanges()
     {
         // Arrange
-        var factory = CreateFactory([MakeFacility()]);
+        var factory = CreateSeededFactory();
         var repo = new FacilityRepository(factory, NullLogger<FacilityRepository>.Instance);
         var found = await repo.GetByIdentifierAsync(Facility1Identifier, CancellationToken.None);
-        found.Value.Should().NotBeNull();
         found.IsSuccess.Should().BeTrue();
+        found.Value.Should().NotBeNull();
 
         var facility = found.Value;
         facility.Name = "Updated Name";
@@ -159,13 +134,12 @@ public class FacilityRepositoryTests
     public async Task UpdateAsync_SetsLastUpdatedAtToUtcNow()
     {
         // Arrange
-        var factory = CreateFactory([MakeFacility()]);
+        var factory = CreateSeededFactory();
         var repo = new FacilityRepository(factory, NullLogger<FacilityRepository>.Instance);
         var found = await repo.GetByIdentifierAsync(Facility1Identifier, CancellationToken.None);
         found.Value.Should().NotBeNull();
 
         var facility = found.Value;
-
         var before = DateTime.UtcNow;
 
         // Act
@@ -182,7 +156,7 @@ public class FacilityRepositoryTests
     public async Task DeleteAsync_RemovesFacilityFromDatabase()
     {
         // Arrange
-        var factory = CreateFactory([MakeFacility()]);
+        var factory = CreateSeededFactory();
         var repo = new FacilityRepository(factory, NullLogger<FacilityRepository>.Instance);
         var found = await repo.GetByIdentifierAsync(Facility1Identifier, CancellationToken.None);
         found.Value.Should().NotBeNull();

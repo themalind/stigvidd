@@ -14,6 +14,7 @@ public class HikeRepositoryTests : TestBase
     private const int UserIdNoHikes = 4;
     private const int UserIdWithHikes = 1;
     private const string HikeIdentifier = "3f9c1b7e-8a42-4e6d-9c5f-2a7b1d8e4f90";
+    private const string HikeIdentifierNoShares = "a2f3b1c4-9e7d-4a21-bc5f-3d8e6f1a2b90";
 
 
     [Fact]
@@ -57,7 +58,7 @@ public class HikeRepositoryTests : TestBase
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        result.Value.Should().HaveCount(5);
+        result.Value.Should().HaveCount(6);
     }
 
     [Fact]
@@ -149,31 +150,15 @@ public class HikeRepositoryTests : TestBase
     [Fact]
     public async Task SoftDeleteHike_WhenHasShares_SetsUserIdNull()
     {
-        // Arrange — build an in-memory DB that includes a HikeShare for Hike 1
-        var options = new DbContextOptionsBuilder<StigViddDbContext>()
-            .UseInMemoryDatabase(Guid.NewGuid().ToString())
-            .Options;
-
-        using (var seed = new StigViddDbContext(options))
-        {
-            seed.Database.EnsureCreated();
-            Utilities.InitializeDbForTests(seed);
-            seed.HikeShares.Add(new HikeShare { HikeId = 1, SharedWithId = 2, SharedById = 1 });
-            seed.SaveChanges();
-        }
-
-        var factory = new Mock<IDbContextFactory<StigViddDbContext>>();
-        factory.Setup(f => f.CreateDbContextAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(() => new StigViddDbContext(options));
-
-        var repo = new HikeRepository(factory.Object, NullLogger<HikeRepository>.Instance);
+        // Arrange — seed already contains HikeShare { HikeId=1, SharedWithId=2 } for Hike 1
+        var repo = new HikeRepository(CreateSeededFactory(), NullLogger<HikeRepository>.Instance);
         var found = await repo.GetHikeByIdentifierAsync(HikeIdentifier, CancellationToken.None);
         found.IsSuccess.Should().BeTrue();
 
         // Act
         var deleteResult = await repo.SoftDeleteHikeAsync(found.Value!, CancellationToken.None);
 
-        // Assert — hike still exists (not soft-deleted) but owner is cleared
+        // Assert — hike still visible (not soft-deleted) but owner is cleared
         deleteResult.IsSuccess.Should().BeTrue();
         var verify = await repo.GetHikeByIdentifierAsync(HikeIdentifier, CancellationToken.None);
         verify.IsSuccess.Should().BeTrue();
@@ -184,20 +169,19 @@ public class HikeRepositoryTests : TestBase
     [Fact]
     public async Task DeleteHike_ShouldRemoveFromDatabase()
     {
-        // Arrange
-        var factory = CreateSeededFactory();
-        var repo = new HikeRepository(factory, NullLogger<HikeRepository>.Instance);
-        var found = await repo.GetHikeByIdentifierAsync(HikeIdentifier, CancellationToken.None);
+        // Arrange — Hike 6 has no HikeShares so SoftDelete sets IsDeleted=true,
+        // which the global query filter then hides from GetHikeByIdentifierAsync.
+        var repo = new HikeRepository(CreateSeededFactory(), NullLogger<HikeRepository>.Instance);
+        var found = await repo.GetHikeByIdentifierAsync(HikeIdentifierNoShares, CancellationToken.None);
         found.IsSuccess.Should().BeTrue();
 
         // Act
         found.Value.Should().NotBeNull();
         var deleteResult = await repo.SoftDeleteHikeAsync(found.Value, CancellationToken.None);
 
-        // Assert
+        // Assert — global IsDeleted query filter hides the hike
         deleteResult.IsSuccess.Should().BeTrue();
-
-        var verify = await repo.GetHikeByIdentifierAsync(HikeIdentifier, CancellationToken.None);
+        var verify = await repo.GetHikeByIdentifierAsync(HikeIdentifierNoShares, CancellationToken.None);
         verify.IsSuccess.Should().BeFalse();
     }
 }
