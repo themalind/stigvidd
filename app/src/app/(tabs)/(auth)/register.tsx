@@ -44,8 +44,10 @@ const registerFields = z
 
 type FormFields = z.infer<typeof registerFields>;
 
-const addOpacity = (rgbColor: string, opacity: number): string => {
-  return rgbColor.replace("rgb", "rgba").replace(")", `, ${opacity})`);
+const addOpacity = (color: string, opacity: number): string => {
+  if (color.startsWith("rgb(")) return color.replace("rgb(", "rgba(").replace(")", `, ${opacity})`);
+  if (color.startsWith("hsl(")) return color.replace("hsl(", "hsla(").replace(")", `, ${opacity})`);
+  return color;
 };
 
 export default function RegisterScreen() {
