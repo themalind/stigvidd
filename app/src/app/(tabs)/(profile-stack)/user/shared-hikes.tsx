@@ -48,9 +48,7 @@ export default function SharedHikesScreen() {
 
   if (hikes?.length === 0) {
     return (
-      <View
-        style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: theme.colors.background }}
-      >
+      <View style={[s.noHikesContainer, { backgroundColor: theme.colors.background }]}>
         <BackButton />
         <Text style={{ color: theme.colors.onBackground }}>No hikes shared with you yet</Text>
       </View>
@@ -60,9 +58,9 @@ export default function SharedHikesScreen() {
   return (
     <View style={[s.container, { backgroundColor: theme.colors.background }]}>
       <BackButton />
-      <View style={{ flexDirection: "row", gap: 10, paddingTop: 10, paddingBottom: 10, alignItems: "center" }}>
+      <View style={s.headerSection}>
         <Icon source="hiking" size={24} color={theme.colors.tertiary} />
-        <Text style={{ fontSize: 17, fontWeight: 700 }}>Delade promenader</Text>
+        <Text style={s.headerText}>Delade promenader</Text>
       </View>
       <View style={[s.infoBox, { backgroundColor: theme.colors.outlineVariant }]}>
         <Text>Tryck på en promenad för att se mer information eller ta bort den.</Text>
@@ -81,22 +79,18 @@ export default function SharedHikesScreen() {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={s.scrollContent}>
         {hikes?.map((hike, index) => (
           <Pressable
-            style={{
-              backgroundColor: theme.colors.surface,
-              padding: 10,
-              borderRadius: BORDER_RADIUS,
-            }}
+            style={[s.hikePressable, { backgroundColor: theme.colors.surface }]}
             key={index}
             onPress={() => {
               setSelectedSharedHike(hike);
               setVisible(true);
             }}
           >
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+            <View style={s.hikeInfo}>
               <View style={[s.iconCircle, { backgroundColor: theme.colors.primaryContainer }]}>
                 <Fontisto name="map" size={24} color={theme.colors.secondary} />
               </View>
-              <View style={{ flex: 1 }}>
+              <View style={s.flex}>
                 <Text style={s.name} numberOfLines={1}>
                   {hike.hikeName}
                 </Text>
@@ -120,6 +114,34 @@ const s = StyleSheet.create({
     flex: 1,
     padding: 10,
     gap: 10,
+  },
+  noHikesContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  headerSection: {
+    flexDirection: "row",
+    gap: 10,
+    paddingTop: 10,
+    paddingBottom: 10,
+    alignItems: "center",
+  },
+  headerText: {
+    fontSize: 17,
+    fontWeight: 700,
+  },
+  hikePressable: {
+    padding: 10,
+    borderRadius: BORDER_RADIUS,
+  },
+  hikeInfo: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  flex: {
+    flex: 1,
   },
   iconCircle: {
     width: 42,
