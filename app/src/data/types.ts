@@ -263,6 +263,7 @@ export interface SharedHike {
   hikeLength: number;
   duration: number;
   coordinates: string;
+  createdByName: string;
   sharedByName: string;
   sharedByIdentifier: string;
   sharedAt: string;
@@ -271,6 +272,11 @@ export interface SharedHike {
 export interface ReshareSharedHikeRequest {
   hikeIdentifier: string;
   reShareToName: string;
+}
+
+export interface ShareHikeRequest {
+  hikeIdentifier: string;
+  sharedWithName: string;
 }
 
 export interface Friend {
