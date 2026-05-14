@@ -31,6 +31,7 @@ public class FriendService : IFriendService
         {
             if (requesterIdResult.Status == RepositoryResultStatus.NotFound)
                 return Result.Fail(new Message(404, "Requester user not found."));
+
             return Result.Fail(new Message(500, "An error occurred while retrieving the requester user."));
         }
 
@@ -53,6 +54,7 @@ public class FriendService : IFriendService
         {
             if (userIdResult.Status == RepositoryResultStatus.NotFound)
                 return Result.Fail<IEnumerable<FriendResponse>>(new Message(404, "User not found."));
+
             return Result.Fail<IEnumerable<FriendResponse>>(new Message(500, "An error occurred while retrieving the user."));
         }
 
@@ -74,6 +76,7 @@ public class FriendService : IFriendService
         {
             if (userIdResult.Status == RepositoryResultStatus.NotFound)
                 return Result.Fail<IEnumerable<FriendRequestResponse>>(new Message(404, "User not found."));
+
             return Result.Fail<IEnumerable<FriendRequestResponse>>(new Message(500, "An error occurred while retrieving the user."));
         }
 
@@ -83,9 +86,7 @@ public class FriendService : IFriendService
             ctoken);
 
         if (!result.IsSuccess)
-        {
             return Result.Fail<IEnumerable<FriendRequestResponse>>(new Message(500, "An error occurred while fetching incoming friend requests."));
-        }
 
         return Result.Ok(result.Value);
     }
@@ -97,6 +98,7 @@ public class FriendService : IFriendService
         {
             if (userIdResult.Status == RepositoryResultStatus.NotFound)
                 return Result.Fail<IEnumerable<OutgoingFriendRequestResponse>>(new Message(404, "User not found."));
+
             return Result.Fail<IEnumerable<OutgoingFriendRequestResponse>>(new Message(500, "An error occurred while retrieving the user."));
         }
 
@@ -106,9 +108,7 @@ public class FriendService : IFriendService
             ctoken);
 
         if (!result.IsSuccess)
-        {
             return Result.Fail<IEnumerable<OutgoingFriendRequestResponse>>(new Message(500, "An error occurred while fetching outgoing friend requests."));
-        }
 
         return Result.Ok(result.Value);
     }
@@ -120,6 +120,7 @@ public class FriendService : IFriendService
         {
             if (currentUserIdResult.Status == RepositoryResultStatus.NotFound)
                 return Result.Fail(new Message(404, "Current user not found."));
+
             return Result.Fail(new Message(500, "An error occurred while retrieving the current user."));
         }
 
@@ -128,6 +129,7 @@ public class FriendService : IFriendService
         {
             if (otherIdResult.Status == RepositoryResultStatus.NotFound)
                 return Result.Fail(new Message(404, "User not found."));
+
             return Result.Fail(new Message(500, "An error occurred while retrieving the user."));
         }
 
@@ -137,6 +139,7 @@ public class FriendService : IFriendService
         {
             if (result.Status == RepositoryResultStatus.NotFound)
                 return Result.Fail(new Message(404, "Connection not found."));
+
             return Result.Fail(new Message(500, "An error occurred while removing the connection."));
         }
 
@@ -176,6 +179,7 @@ public class FriendService : IFriendService
         {
             if (result.Status == RepositoryResultStatus.Conflict)
                 return Result.Fail(new Message(409, "A friend request or friendship already exists."));
+
             return Result.Fail(new Message(500, "An error occurred while sending the friend request."));
         }
 

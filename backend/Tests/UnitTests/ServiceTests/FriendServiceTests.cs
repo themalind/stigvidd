@@ -726,7 +726,7 @@ public class FriendServiceTests
         var service = Build(userRepositoryMock: userRepoMock);
 
         // Act
-        var result = await service.AcceptFriendRequestAsync("current-user-identifier", "requester-identifier", CancellationToken.None);
+        var result = await service.AcceptFriendRequestAsync("Sauron", "Saruman", CancellationToken.None);
 
         // Assert
         result.Success.Should().BeFalse();

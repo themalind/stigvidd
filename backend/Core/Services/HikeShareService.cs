@@ -34,8 +34,8 @@ public class HikeShareService : IHikeShareService
         {
             if (userIdResult.Status == RepositoryResultStatus.NotFound)
                 return Result.Fail(new Message(404, "User not found with the given identifier."));
-            else
-                return Result.Fail(new Message(500, "Something went wrong when fetching user ID."));
+
+            return Result.Fail(new Message(500, "Something went wrong when fetching user ID."));
         }
 
         var sharedWithUserIdResult = await _userRepository.GetUserIdByNameAsync(sharedWithName, ctoken);
@@ -43,8 +43,8 @@ public class HikeShareService : IHikeShareService
         {
             if (sharedWithUserIdResult.Status == RepositoryResultStatus.NotFound)
                 return Result.Fail(new Message(404, "User not found with the given name."));
-            else
-                return Result.Fail(new Message(500, "Something went wrong when fetching user ID."));
+
+            return Result.Fail(new Message(500, "Something went wrong when fetching user ID."));
         }
 
         if (userIdResult.Value == sharedWithUserIdResult.Value)
@@ -55,8 +55,8 @@ public class HikeShareService : IHikeShareService
         {
             if (hikeResult.Status == RepositoryResultStatus.NotFound)
                 return Result.Fail(new Message(404, "Hike not found with the given identifier."));
-            else
-                return Result.Fail(new Message(500, "Something went wrong when fetching hike."));
+
+            return Result.Fail(new Message(500, "Something went wrong when fetching hike."));
         }
 
         if (hikeResult.Value.CreatedBy != identifier)
