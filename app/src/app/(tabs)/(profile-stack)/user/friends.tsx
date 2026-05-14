@@ -7,18 +7,8 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
 import { useAtom } from "jotai";
 import React, { useState } from "react";
-import { ScrollView, StyleSheet, View } from "react-native";
-import {
-  ActivityIndicator,
-  Avatar,
-  Button,
-  IconButton,
-  Searchbar,
-  Surface,
-  Text,
-  TouchableRipple,
-  useTheme,
-} from "react-native-paper";
+import { Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { ActivityIndicator, Avatar, Button, IconButton, Searchbar, Surface, Text, useTheme } from "react-native-paper";
 
 export default function FriendsScreen() {
   const [query, setQuery] = useState("");
@@ -60,7 +50,6 @@ export default function FriendsScreen() {
         inputStyle={{ fontSize: 15 }}
       />
 
-      {/* Sökresultat */}
       {showSearchResults && (
         <View style={styles.section}>
           <SectionHeader icon="account-search" label="Sökresultat" color={theme.colors.primary} />
@@ -74,7 +63,7 @@ export default function FriendsScreen() {
             ) : (
               searchResults?.map((user, i) => (
                 <View key={user.identifier}>
-                  <TouchableRipple borderless={false} onPress={() => {}}>
+                  <Pressable hitSlop={12} onPress={() => {}}>
                     <View style={styles.row}>
                       <Avatar.Text
                         size={40}
@@ -98,7 +87,7 @@ export default function FriendsScreen() {
                         />
                       )}
                     </View>
-                  </TouchableRipple>
+                  </Pressable>
                   {i < (searchResults?.length ?? 0) - 1 && (
                     <View style={[styles.divider, { backgroundColor: theme.colors.outlineVariant }]} />
                   )}
