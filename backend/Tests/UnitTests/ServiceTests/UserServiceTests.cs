@@ -12,16 +12,21 @@ namespace UnitTests.ServiceTests;
 
 public class UserServiceTests
 {
-    private UserService Build(Mock<IUserRepository>? repo = null, Mock<IHikeRepository>? hikeRepo = null, Mock<ITrailObstacleRepository>? trailobstacleRepo = null)
+    private UserService Build(
+        Mock<IUserRepository>? repo = null,
+        Mock<IHikeRepository>? hikeRepo = null,
+        Mock<ITrailObstacleRepository>? trailobstacleRepo = null,
+        Mock<IFriendRepository>? friendRepo = null)
     {
         var cfg = new Mock<IConfiguration>();
         cfg.Setup(c => c["PresentableBaseUrl"]).Returns("http://stigvidd.se/testing/");
         repo ??= new Mock<IUserRepository>();
+        friendRepo ??= new Mock<IFriendRepository>();
         var userResponseFactory = new UserResponseFactory(cfg.Object);
         trailobstacleRepo ??= new Mock<ITrailObstacleRepository>();
         hikeRepo ??= new Mock<IHikeRepository>();
 
-        return new UserService(repo.Object, trailobstacleRepo.Object, userResponseFactory, hikeRepo.Object);
+        return new UserService(repo.Object, trailobstacleRepo.Object, userResponseFactory, hikeRepo.Object, friendRepo.Object);
     }
 
     [Fact]
@@ -440,9 +445,12 @@ public class UserServiceTests
         var trailObstacleRepo = new Mock<ITrailObstacleRepository>();
         trailObstacleRepo.Setup(r => r.DeleteAllObstaclesByUserIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult.Success());
+        var friendRepo = new Mock<IFriendRepository>();
+        friendRepo.Setup(r => r.DeleteAllFriendRequestsByUserIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult.Success());
 
         // Act
-        var result = await Build(repo, hikeRepo, trailObstacleRepo).DeleteUserAsync(Utilities.Identifiers.User, CancellationToken.None);
+        var result = await Build(repo, hikeRepo, trailObstacleRepo, friendRepo).DeleteUserAsync(Utilities.Identifiers.User, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeTrue();
