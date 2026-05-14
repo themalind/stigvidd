@@ -2,6 +2,7 @@ import { removeSharedHike, reshareHike } from "@/api/shared-hikes";
 import { showErrorAtom, showSuccessAtom } from "@/atoms/snackbar-atoms";
 import { stigviddUserAtom } from "@/atoms/user-atoms";
 import AlertDialog from "@/components/alert-dialog";
+import SharedHikeModal from "@/components/shared-hike/shared-hike-modal";
 import { BORDER_RADIUS, SURFACE_BORDER_RADIUS } from "@/constants/constants";
 import { ReshareSharedHikeRequest, SharedHike } from "@/data/types";
 import CoordinateParser from "@/utils/coordinate-parser";
@@ -30,6 +31,7 @@ export default function SharedHikeDetails({ visible, sharedHike, onDismiss }: Pr
   const setErrorMsg = useSetAtom(showErrorAtom);
   const setSuccessMsg = useSetAtom(showSuccessAtom);
   const [showOnDeleteDialog, setOnDeleteDialog] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
 
   const mapRef = useRef<MapView>(null);
   const theme = useTheme();
@@ -60,9 +62,13 @@ export default function SharedHikeDetails({ visible, sharedHike, onDismiss }: Pr
   const reShareMutation = useMutation({
     mutationFn: (request: ReshareSharedHikeRequest) => reshareHike(request),
     onSuccess: () => {
+      setShowShareModal(false);
+      onDismiss();
       setSuccessMsg("Promenaden har delats!");
     },
     onError: () => {
+      setShowShareModal(false);
+      onDismiss();
       setErrorMsg("Något gick fel försök igen senare.");
     },
   });
@@ -78,23 +84,15 @@ export default function SharedHikeDetails({ visible, sharedHike, onDismiss }: Pr
         onDismiss={onDismiss}
         contentContainerStyle={[s.contentContainerStyle, { backgroundColor: theme.colors.surface }]}
       >
-        <Pressable style={{ alignSelf: "flex-end" }} hitSlop={12} onPress={onDismiss}>
+        <Pressable style={s.closeIcon} hitSlop={12} onPress={onDismiss}>
           <Icon size={24} source="close" color={theme.colors.onSurface} />
         </Pressable>
-        <View
-          style={{
-            backgroundColor: theme.colors.outlineVariant,
-            gap: 10,
-            justifyContent: "space-between",
-            padding: 10,
-            borderRadius: BORDER_RADIUS,
-          }}
-        >
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
+        <View style={[s.hikeDetailsContainer, { backgroundColor: theme.colors.outlineVariant }]}>
+          <View style={s.hikeNameContainer}>
             <Fontisto name="map" size={20} color={theme.colors.primary} />
-            <Text style={{ fontSize: 18, fontWeight: 700, color: theme.colors.secondary }}>{sharedHike.hikeName}</Text>
+            <Text style={[s.hikeName, { color: theme.colors.secondary }]}>{sharedHike.hikeName}</Text>
           </View>
-          <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+          <View style={s.hikeInfo}>
             <Text>
               <Icon color={theme.colors.tertiary} size={20} source="hiking" /> {sharedHike.hikeLength} km
             </Text>
@@ -111,30 +109,25 @@ export default function SharedHikeDetails({ visible, sharedHike, onDismiss }: Pr
             </Map>
           )}
         </View>
-        <View
-          style={{
-            flexDirection: "row",
-            justifyContent: "space-between",
-          }}
-        >
-          <View style={{ flexDirection: "row" }}>
-            <Text style={{ color: theme.colors.secondary, fontWeight: 700 }}>Delad av: </Text>
+        <View style={s.sharedDetails}>
+          <View style={s.row}>
+            <Text style={[s.bold, { color: theme.colors.secondary }]}>Delad av: </Text>
             <Text>{sharedHike.sharedByName}</Text>
           </View>
-          <View style={{ flexDirection: "row" }}>
-            <Text style={{ color: theme.colors.secondary, fontWeight: 700 }}>Datum: </Text>
+          <View style={s.row}>
+            <Text style={[s.bold, { color: theme.colors.secondary }]}>Datum: </Text>
             <Text>{formatDate(sharedHike.sharedAt)}</Text>
           </View>
         </View>
-        <View style={{ flexDirection: "row", gap: 20, marginTop: "auto" }}>
-          <Button style={{ flex: 1, borderRadius: BORDER_RADIUS }} mode="contained" onPress={handeleDelete}>
-            <View style={{ gap: 5, flexDirection: "row" }}>
+        <View style={s.buttonGroup}>
+          <Button style={s.button} mode="contained" onPress={() => setShowShareModal(true)}>
+            <View style={s.buttonContent}>
               <Icon color={theme.colors.onPrimary} size={20} source="share" />
               <Text style={{ color: theme.colors.onPrimary }}>Dela</Text>
             </View>
           </Button>
-          <Button style={{ flex: 1, borderRadius: BORDER_RADIUS }} mode="outlined" onPress={handeleDelete}>
-            <View style={{ gap: 5, flexDirection: "row" }}>
+          <Button style={s.button} mode="outlined" onPress={handeleDelete}>
+            <View style={s.buttonContent}>
               <Icon size={20} source="delete" />
               <Text>Ta bort</Text>
             </View>
@@ -151,6 +144,20 @@ export default function SharedHikeDetails({ visible, sharedHike, onDismiss }: Pr
           onConfirm={() => deleteMutation.mutate(sharedHike.hikeIdentifier)}
           backgroundColor={theme.colors.surface}
         />
+        <SharedHikeModal
+          visible={showShareModal}
+          onDismiss={() => setShowShareModal(false)}
+          onShare={(friendNickName) => {
+            if (friendNickName === sharedHike.createdByName) {
+              setShowShareModal(false);
+              onDismiss();
+              setErrorMsg("Du kan inte dela en promenad med dess skapare.");
+              return;
+            }
+            reShareMutation.mutate({ hikeIdentifier: sharedHike.hikeIdentifier, reShareToName: friendNickName });
+          }}
+          isPending={reShareMutation.isPending}
+        />
       </Modal>
     </Portal>
   );
@@ -164,6 +171,38 @@ const s = StyleSheet.create({
     padding: 15,
     gap: 10,
   },
+  closeIcon: {
+    alignSelf: "flex-end",
+  },
+  hikeDetailsContainer: {
+    gap: 10,
+    justifyContent: "space-between",
+    padding: 10,
+    borderRadius: BORDER_RADIUS,
+  },
+  hikeNameContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+  },
+  hikeName: {
+    fontSize: 18,
+    fontWeight: 700,
+  },
+  hikeInfo: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  sharedDetails: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  row: {
+    flexDirection: "row",
+  },
+  bold: {
+    fontWeight: 700,
+  },
   mapContainer: {
     borderWidth: 0.3,
     borderColor: "black",
@@ -173,5 +212,18 @@ const s = StyleSheet.create({
   },
   map: {
     flex: 1,
+  },
+  buttonGroup: {
+    flexDirection: "row",
+    gap: 20,
+    marginTop: "auto",
+  },
+  button: {
+    flex: 1,
+    borderRadius: BORDER_RADIUS,
+  },
+  buttonContent: {
+    gap: 5,
+    flexDirection: "row",
   },
 });
