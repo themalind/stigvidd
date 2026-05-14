@@ -19,8 +19,10 @@ import ResetPasswordModal from "./reset-password-modal";
 const HEIGHT = Dimensions.get("screen").height;
 const WIDTH = Dimensions.get("screen").width;
 
-const addOpacity = (rgbColor: string, opacity: number): string => {
-  return rgbColor.replace("rgb", "rgba").replace(")", `, ${opacity})`);
+const addOpacity = (color: string, opacity: number): string => {
+  if (color.startsWith("rgb(")) return color.replace("rgb(", "rgba(").replace(")", `, ${opacity})`);
+  if (color.startsWith("hsl(")) return color.replace("hsl(", "hsla(").replace(")", `, ${opacity})`);
+  return color;
 };
 
 const loginFields = z.object({
