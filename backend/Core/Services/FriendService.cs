@@ -173,7 +173,11 @@ public class FriendService : IFriendService
 
         var result = await _friendRepository.SendRequestAsync(currentUserIdResult.Value, receiverIdResult.Value, ctoken);
         if (!result.IsSuccess)
+        {
+            if (result.Status == RepositoryResultStatus.Conflict)
+                return Result.Fail(new Message(409, "A friend request or friendship already exists."));
             return Result.Fail(new Message(500, "An error occurred while sending the friend request."));
+        }
 
         return Result.Ok();
     }
