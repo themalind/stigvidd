@@ -25,7 +25,6 @@ public static class Utilities
         var obstacles = GetSeedingTrailObstacles(trails, users);
         var solvedVotes = GetSeedingTrailObstacleSolvedVotes(obstacles, users);
         var facilities = GetSeedingFacilities();
-
         var hikeShares = GetSeedingHikeShares(hikes, users);
 
         db.Trails.AddRange(trails);
