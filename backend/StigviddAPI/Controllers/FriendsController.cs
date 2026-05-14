@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WebDataContracts.RequestModels.Friend;
+using WebDataContracts.ResponseModels.Friend;
 
 namespace StigviddAPI.Controllers;
 
@@ -63,7 +64,7 @@ public class FriendsController : StigViddController
 
     [HttpGet]
     [Route("requests/outgoing")]
-    public async Task<ActionResult> GetOutgoingFriendRequests(CancellationToken ctoken)
+    public async Task<ActionResult<IReadOnlyCollection<OutgoingFriendRequestResponse>>> GetOutgoingFriendRequests(CancellationToken ctoken)
     {
         var userResponse = await GetAuthenticatedUserAsync(_userService, ctoken);
 

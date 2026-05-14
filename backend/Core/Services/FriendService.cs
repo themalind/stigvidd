@@ -90,24 +90,24 @@ public class FriendService : IFriendService
         return Result.Ok(result.Value);
     }
 
-    public async Task<Result<IEnumerable<FriendRequestResponse>>> GetOutgoingRequestsAsync(string currentUserIdentifier, CancellationToken ctoken)
+    public async Task<Result<IEnumerable<OutgoingFriendRequestResponse>>> GetOutgoingRequestsAsync(string currentUserIdentifier, CancellationToken ctoken)
     {
         var userIdResult = await _userRepository.GetUserIdByIdentifierAsync(currentUserIdentifier, ctoken);
         if (!userIdResult.IsSuccess)
         {
             if (userIdResult.Status == RepositoryResultStatus.NotFound)
-                return Result.Fail<IEnumerable<FriendRequestResponse>>(new Message(404, "User not found."));
-            return Result.Fail<IEnumerable<FriendRequestResponse>>(new Message(500, "An error occurred while retrieving the user."));
+                return Result.Fail<IEnumerable<OutgoingFriendRequestResponse>>(new Message(404, "User not found."));
+            return Result.Fail<IEnumerable<OutgoingFriendRequestResponse>>(new Message(500, "An error occurred while retrieving the user."));
         }
 
         var result = await _friendRepository.GetOutgoingRequestsAsync(
             userIdResult.Value,
-            u => FriendRequestResponse.Create(u.Receiver!.Identifier, u.Receiver.NickName, u.CreatedAt),
+            u => OutgoingFriendRequestResponse.Create(u.Receiver!.Identifier, u.Receiver.NickName, u.CreatedAt),
             ctoken);
 
         if (!result.IsSuccess)
         {
-            return Result.Fail<IEnumerable<FriendRequestResponse>>(new Message(500, "An error occurred while fetching outgoing friend requests."));
+            return Result.Fail<IEnumerable<OutgoingFriendRequestResponse>>(new Message(500, "An error occurred while fetching outgoing friend requests."));
         }
 
         return Result.Ok(result.Value);

@@ -84,9 +84,9 @@ public class UserService : IUserService
                  t.Name ?? string.Empty,
                  t.TrailLength,
                  t.Description ?? string.Empty,
-                 t.Reviews!.Select(r => new RatingResponse { Identifier = r.Identifier, Rating = r.Rating }).ToList(),
-                 t.TrailImages!.Select(ti => new TrailImageResponse { Identifier = ti.Identifier, ImageUrl = ti.ImageUrl }).Take(1)
-            .ToList()), ctoken);
+                 t.Reviews!.Select(r => RatingResponse.Create(r.Identifier, r.Rating)).ToList(),
+                 t.TrailImages!.Select(ti => TrailImageResponse.Create(_userResponseFactory.PresentableBaseUrl, ti.Identifier, ti.ImageUrl)).Take(1).ToList()
+            ), ctoken);
 
         if (result.Status == RepositoryResultStatus.Error)
             return Result.Fail<IReadOnlyCollection<UserFavoritesTrailResponse?>>(new Message(500, "An error occurred while fetching favorites."));
@@ -103,9 +103,9 @@ public class UserService : IUserService
                  t.Name ?? string.Empty,
                  t.TrailLength,
                  t.Description ?? string.Empty,
-                 t.Reviews!.Select(r => new RatingResponse { Identifier = r.Identifier, Rating = r.Rating }).ToList(),
-                 t.TrailImages!.Select(ti => new TrailImageResponse { Identifier = ti.Identifier, ImageUrl = ti.ImageUrl }).Take(1)
-            .ToList()), ctoken);
+                 t.Reviews!.Select(r => RatingResponse.Create(r.Identifier, r.Rating)).ToList(),
+                 t.TrailImages!.Select(ti => TrailImageResponse.Create(_userResponseFactory.PresentableBaseUrl, ti.Identifier, ti.ImageUrl)).Take(1).ToList()
+            ), ctoken);
 
         if (result.Status == RepositoryResultStatus.Error)
             return Result.Fail<IReadOnlyCollection<UserWishlistTrailResponse?>>(new Message(500, "An error occurred while fetching wishlist."));
@@ -200,9 +200,9 @@ public class UserService : IUserService
                 t.Name ?? string.Empty,
                 t.TrailLength,
                 t.Description ?? string.Empty,
-                t.Reviews!.Select(r => new RatingResponse { Identifier = r.Identifier, Rating = r.Rating }).ToList(),
-                t.TrailImages!.Select(ti => new TrailImageResponse { Identifier = ti.Identifier, ImageUrl = ti.ImageUrl }).Take(1)
-            .ToList()), ctoken);
+                t.Reviews!.Select(r => RatingResponse.Create(r.Identifier, r.Rating)).ToList(),
+                t.TrailImages!.Select(ti => TrailImageResponse.Create(_userResponseFactory.PresentableBaseUrl, ti.Identifier, ti.ImageUrl)).Take(1).ToList()
+            ), ctoken);
 
         if (result.Status == RepositoryResultStatus.Error)
             return Result.Fail<UserFavoritesTrailResponse?>(new Message(500, "An error occurred while adding trail to favorites."));
@@ -226,8 +226,8 @@ public class UserService : IUserService
                  t.Name ?? string.Empty,
                  t.TrailLength,
                  t.Description ?? string.Empty,
-                 t.Reviews!.Select(r => new RatingResponse { Identifier = r.Identifier, Rating = r.Rating }).ToList(),
-                 t.TrailImages!.Select(ti => new TrailImageResponse { Identifier = ti.Identifier, ImageUrl = ti.ImageUrl }).Take(1).ToList()
+                 t.Reviews!.Select(r => RatingResponse.Create(r.Identifier, r.Rating)).ToList(),
+                 t.TrailImages!.Select(ti => TrailImageResponse.Create(_userResponseFactory.PresentableBaseUrl, ti.Identifier, ti.ImageUrl)).Take(1).ToList()
             ), ctoken);
 
         if (result.Status == RepositoryResultStatus.Error)

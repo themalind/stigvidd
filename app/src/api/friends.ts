@@ -1,4 +1,4 @@
-import { Friend, FriendRequest } from "@/data/types";
+import { Friend, FriendRequest, OutgoingFriendRequest } from "@/data/types";
 import { BASE_URL } from "./api-config";
 import { ApiError, getUserToken } from "./users";
 
@@ -138,7 +138,7 @@ export async function getIncomingRequests(): Promise<FriendRequest[]> {
   }
 }
 
-export async function getOutgoingRequests(): Promise<FriendRequest[]> {
+export async function getOutgoingRequests(): Promise<OutgoingFriendRequest[]> {
   try {
     const token = await getUserToken();
 

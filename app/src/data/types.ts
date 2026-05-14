@@ -284,6 +284,12 @@ export interface FriendRequest {
   createdAt: string;
 }
 
+export interface OutgoingFriendRequest {
+  receiverIdentifier: string;
+  receiverNickName: string;
+  createdAt: string;
+}
+
 export interface LoginData {
   email: string;
   password: string;
