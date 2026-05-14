@@ -1,5 +1,6 @@
 import { signOutUser } from "@/api/auth";
 import { authStateAtom } from "@/atoms/auth-atoms";
+import { incomingRequestsAtom } from "@/atoms/friends-atoms";
 import { showErrorAtom } from "@/atoms/snackbar-atoms";
 import { stigviddUserAtom } from "@/atoms/user-atoms";
 import { userThemeAtom } from "@/atoms/user-theme-atom";
@@ -8,9 +9,9 @@ import ErrorView from "@/components/error-view";
 import LoadingIndicator from "@/components/loading-indicator";
 import ThemeToggle from "@/components/theme-toggle";
 import ProfileMenuItem from "@/components/user/profile-page/profile-menu-item";
-import { MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
-import { Image } from "expo-image";
+import { Fontisto, MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
 import { CommonActions } from "@react-navigation/native";
+import { Image } from "expo-image";
 import { Redirect, useFocusEffect, useNavigation } from "expo-router";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import React, { useRef, useState } from "react";
@@ -26,6 +27,8 @@ export default function ProfilePageScreen() {
   const [authState] = useAtom(authStateAtom);
   const [visible, setVisible] = useState(false);
   const navigation = useNavigation();
+  const { data: incoming } = useAtomValue(incomingRequestsAtom);
+  const incomingCount = incoming?.length ?? 0;
 
   // Scrolla till toppen när skärmen fokuseras (vid tab-tryck)
   useFocusEffect(
@@ -85,6 +88,12 @@ export default function ProfilePageScreen() {
       </View>
       <View style={s.pressableChoicesContainer}>
         <ProfileMenuItem
+          text="Mina vänner"
+          route="/(tabs)/(profile-stack)/user/friends"
+          icon={<MaterialCommunityIcons name="account-group" size={24} color={theme.colors.tertiary} />}
+          badge={incomingCount}
+        />
+        <ProfileMenuItem
           text="Favoriter"
           route="/(tabs)/(profile-stack)/user/favorites"
           icon={<MaterialCommunityIcons name="cards-heart" size={24} color={theme.colors.tertiary} />}
@@ -103,6 +112,11 @@ export default function ProfilePageScreen() {
           text="Mina egna promenader"
           route="/(tabs)/(profile-stack)/user/my-hikes"
           icon={<MaterialCommunityIcons name="map-legend" size={24} color={theme.colors.tertiary} />}
+        />
+        <ProfileMenuItem
+          text="Promenader delade med mig"
+          route="/(tabs)/(profile-stack)/user/shared-hikes"
+          icon={<Fontisto name="map" size={20} color={theme.colors.tertiary} />}
         />
         <ProfileMenuItem
           text="Utmärkelser"
