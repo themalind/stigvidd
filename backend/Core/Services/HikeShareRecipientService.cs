@@ -52,17 +52,17 @@ public class HikeShareRecipientService : IHikeShareRecipientService
                 return Result.Fail(new Message(500, "Something went wrong when fetching user ID."));
         }
 
-        var hikeIdResult = await _hikeRepository.GetHikeIdByIdentifierAsync(hikeIdentifier, ctoken);
-        if (!hikeIdResult.IsSuccess)
+        var hikeResult = await _hikeRepository.GetHikeByIdentifierAsync(hikeIdentifier, ctoken);
+        if (!hikeResult.IsSuccess)
         {
-            if (hikeIdResult.Status == RepositoryResultStatus.NotFound)
+            if (hikeResult.Status == RepositoryResultStatus.NotFound)
                 return Result.Fail(new Message(404, "Hike not found with the given identifier."));
             else
                 return Result.Fail(new Message(500, "Something went wrong when fetching hike."));
         }
 
         // Must have it shared with them to be able to reshare it
-        var hasRighToShare = await _hikeShareRecipientRepository.HasHikeSharedWithUserAsync(hikeIdResult.Value, userIdResult.Value, ctoken);
+        var hasRighToShare = await _hikeShareRecipientRepository.HasHikeSharedWithUserAsync(userIdResult.Value, hikeResult.Value.Id, ctoken);
         if (!hasRighToShare.IsSuccess)
             return Result.Fail(new Message(500, "Something went wrong when checking share permissions."));
 
@@ -82,9 +82,22 @@ public class HikeShareRecipientService : IHikeShareRecipientService
         if (userIdResult.Value == sharedWithUserIdResult.Value)
             return Result.Fail(new Message(400, "You cannot share a hike with yourself."));
 
+        // ReshareToUser can not be owner of the hike 
+        var isOwner = hikeResult.Value.UserId == sharedWithUserIdResult.Value;
+        if (isOwner)
+            return Result.Fail(new Message(400, "You cannot reshare a hike to the owner."));
+
+        // Already shared with user
+        var alreadyShared = await _hikeShareRecipientRepository.HasHikeSharedWithUserAsync(sharedWithUserIdResult.Value, hikeResult.Value.Id, ctoken);
+        if (!alreadyShared.IsSuccess)
+            return Result.Fail(new Message(500, "Something went wrong when checking if hike is already shared."));
+
+        if (alreadyShared.Value)
+            return Result.Fail(new Message(409, "This hike has already been shared with this user."));
+
         var hikeShare = new HikeShare
         {
-            HikeId = hikeIdResult.Value,
+            HikeId = hikeResult.Value.Id,
             SharedById = userIdResult.Value,
             SharedWithId = sharedWithUserIdResult.Value,
             CreatedAt = DateTime.UtcNow
