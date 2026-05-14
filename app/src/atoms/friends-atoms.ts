@@ -14,7 +14,6 @@ export const incomingRequestsAtom = atomWithQuery((get) => {
   };
 });
 
-
 export const friendsAtom = atomWithQuery((get) => {
   const firebaseUser = get(userAtom);
   return {
