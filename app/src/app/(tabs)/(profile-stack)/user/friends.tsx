@@ -10,11 +10,17 @@ import React, { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { ActivityIndicator, Avatar, Button, IconButton, Searchbar, Surface, Text, useTheme } from "react-native-paper";
 
+const PREVIEW_COUNT = 5;
+
 export default function FriendsScreen() {
   const [query, setQuery] = useState("");
   const { acceptMutation, rejectMutation, sendRequestMutation, removeFriendMutation } = useFriendMutations();
   const theme = useTheme();
   const [friendToRemoveId, setFriendToRemoveId] = useState<string | null>(null);
+  const [friendsExpanded, setFriendsExpanded] = useState(false);
+  const [incomingExpanded, setIncomingExpanded] = useState(false);
+  const [outgoingExpanded, setOutgoingExpanded] = useState(false);
+  const [searchExpanded, setSearchExpanded] = useState(false);
 
   const [{ data: incomingRequests, isPending: incomingPending, isError: incomingError, refetch: refetchIncoming }] =
     useAtom(incomingRequestsAtom);
@@ -61,38 +67,45 @@ export default function FriendsScreen() {
             ) : searchResults?.length === 0 ? (
               <EmptyState text="Inga användare hittades" />
             ) : (
-              searchResults?.map((user, i) => (
-                <View key={user.identifier}>
-                  <Pressable hitSlop={12} onPress={() => {}}>
-                    <View style={styles.row}>
-                      <Avatar.Text
-                        size={40}
-                        label={getInitials(user.nickName)}
-                        style={{ backgroundColor: theme.colors.primaryContainer }}
-                        labelStyle={{ color: theme.colors.onPrimaryContainer, fontSize: 14 }}
-                      />
-                      <Text style={styles.rowName} variant="bodyLarge">
-                        {user.nickName}
-                      </Text>
-                      {friends?.some((f) => f.identifier === user.identifier) ? (
-                        <MaterialCommunityIcons name="account-check" size={22} color={theme.colors.primary} />
-                      ) : outgoingRequests?.some((r) => r.receiverIdentifier === user.identifier) ? (
-                        <MaterialCommunityIcons name="clock-outline" size={22} color={theme.colors.outline} />
-                      ) : (
-                        <IconButton
-                          icon="account-plus"
-                          size={20}
-                          onPress={() => sendRequestMutation.mutate(user.nickName)}
-                          style={styles.actionButton}
+              <>
+                {(searchExpanded ? searchResults : searchResults?.slice(0, PREVIEW_COUNT))?.map((user, i, arr) => (
+                  <View key={user.identifier}>
+                    <Pressable hitSlop={12} onPress={() => {}}>
+                      <View style={styles.row}>
+                        <Avatar.Text
+                          size={40}
+                          label={getInitials(user.nickName)}
+                          style={{ backgroundColor: theme.colors.primaryContainer }}
+                          labelStyle={{ color: theme.colors.onPrimaryContainer, fontSize: 14 }}
                         />
-                      )}
-                    </View>
-                  </Pressable>
-                  {i < (searchResults?.length ?? 0) - 1 && (
-                    <View style={[styles.divider, { backgroundColor: theme.colors.outlineVariant }]} />
-                  )}
-                </View>
-              ))
+                        <Text style={styles.rowName} variant="bodyLarge">
+                          {user.nickName}
+                        </Text>
+                        {friends?.some((f) => f.identifier === user.identifier) ? (
+                          <MaterialCommunityIcons name="account-check" size={22} color={theme.colors.primary} />
+                        ) : outgoingRequests?.some((r) => r.receiverIdentifier === user.identifier) ? (
+                          <MaterialCommunityIcons name="clock-outline" size={22} color={theme.colors.outline} />
+                        ) : (
+                          <IconButton
+                            icon="account-plus"
+                            size={20}
+                            onPress={() => sendRequestMutation.mutate(user.nickName)}
+                            style={styles.actionButton}
+                          />
+                        )}
+                      </View>
+                    </Pressable>
+                    {i < arr.length - 1 && (
+                      <View style={[styles.divider, { backgroundColor: theme.colors.outlineVariant }]} />
+                    )}
+                  </View>
+                ))}
+                {(searchResults?.length ?? 0) > PREVIEW_COUNT && (
+                  <Button mode="text" onPress={() => setSearchExpanded((v) => !v)} style={styles.retryButton}>
+                    {searchExpanded ? "Visa färre" : `Visa alla (${searchResults?.length})`}
+                  </Button>
+                )}
+              </>
             )}
           </Surface>
         </View>
@@ -106,7 +119,7 @@ export default function FriendsScreen() {
             color={theme.colors.tertiary}
           />
           <Surface style={[styles.card, { backgroundColor: theme.colors.surface }]} elevation={1}>
-            {incomingRequests?.map((req, i) => (
+            {(incomingExpanded ? incomingRequests : incomingRequests?.slice(0, PREVIEW_COUNT))?.map((req, i, arr) => (
               <View key={req.requesterIdentifier}>
                 <View style={styles.row}>
                   <Avatar.Text
@@ -137,11 +150,16 @@ export default function FriendsScreen() {
                     />
                   </View>
                 </View>
-                {i < (incomingRequests?.length ?? 0) - 1 && (
+                {i < arr.length - 1 && (
                   <View style={[styles.divider, { backgroundColor: theme.colors.outlineVariant }]} />
                 )}
               </View>
             ))}
+            {(incomingRequests?.length ?? 0) > PREVIEW_COUNT && (
+              <Button mode="text" onPress={() => setIncomingExpanded((v) => !v)} style={styles.retryButton}>
+                {incomingExpanded ? "Visa färre" : `Visa alla (${incomingRequests?.length})`}
+              </Button>
+            )}
           </Surface>
         </View>
       )}
@@ -165,7 +183,7 @@ export default function FriendsScreen() {
             color={theme.colors.secondary}
           />
           <Surface style={[styles.card, { backgroundColor: theme.colors.surface }]} elevation={1}>
-            {outgoingRequests?.map((req, i) => (
+            {(outgoingExpanded ? outgoingRequests : outgoingRequests?.slice(0, PREVIEW_COUNT))?.map((req, i, arr) => (
               <View key={req.receiverIdentifier}>
                 <View style={styles.row}>
                   <Avatar.Text
@@ -186,11 +204,16 @@ export default function FriendsScreen() {
                     style={styles.actionButton}
                   />
                 </View>
-                {i < (outgoingRequests?.length ?? 0) - 1 && (
+                {i < arr.length - 1 && (
                   <View style={[styles.divider, { backgroundColor: theme.colors.outlineVariant }]} />
                 )}
               </View>
             ))}
+            {(outgoingRequests?.length ?? 0) > PREVIEW_COUNT && (
+              <Button mode="text" onPress={() => setOutgoingExpanded((v) => !v)} style={styles.retryButton}>
+                {outgoingExpanded ? "Visa färre" : `Visa alla (${outgoingRequests?.length})`}
+              </Button>
+            )}
           </Surface>
         </View>
       )}
@@ -225,32 +248,39 @@ export default function FriendsScreen() {
           ) : friends?.length === 0 ? (
             <EmptyState text="Du har inga vänner än — sök ovan för att lägga till någon!" />
           ) : (
-            friends?.map((friend, i) => (
-              <View key={friend.identifier}>
-                <View style={styles.row}>
-                  <Avatar.Text
-                    size={40}
-                    label={getInitials(friend.nickName)}
-                    style={{ backgroundColor: theme.colors.primaryContainer }}
-                    labelStyle={{ color: theme.colors.onPrimaryContainer, fontSize: 14 }}
-                  />
-                  <Text style={styles.rowName} variant="bodyLarge">
-                    {friend.nickName}
-                  </Text>
-                  <IconButton
-                    icon="account-remove"
-                    size={20}
-                    iconColor={theme.colors.outline}
-                    onPress={() => setFriendToRemoveId(friend.identifier)}
-                    disabled={removeFriendMutation.isPending}
-                    style={styles.actionButton}
-                  />
+            <>
+              {(friendsExpanded ? friends : friends?.slice(0, PREVIEW_COUNT))?.map((friend, i, arr) => (
+                <View key={friend.identifier}>
+                  <View style={styles.row}>
+                    <Avatar.Text
+                      size={40}
+                      label={getInitials(friend.nickName)}
+                      style={{ backgroundColor: theme.colors.primaryContainer }}
+                      labelStyle={{ color: theme.colors.onPrimaryContainer, fontSize: 14 }}
+                    />
+                    <Text style={styles.rowName} variant="bodyLarge">
+                      {friend.nickName}
+                    </Text>
+                    <IconButton
+                      icon="account-remove"
+                      size={20}
+                      iconColor={theme.colors.outline}
+                      onPress={() => setFriendToRemoveId(friend.identifier)}
+                      disabled={removeFriendMutation.isPending}
+                      style={styles.actionButton}
+                    />
+                  </View>
+                  {i < arr.length - 1 && (
+                    <View style={[styles.divider, { backgroundColor: theme.colors.outlineVariant }]} />
+                  )}
                 </View>
-                {i < (friends?.length ?? 0) - 1 && (
-                  <View style={[styles.divider, { backgroundColor: theme.colors.outlineVariant }]} />
-                )}
-              </View>
-            ))
+              ))}
+              {(friends?.length ?? 0) > PREVIEW_COUNT && (
+                <Button mode="text" onPress={() => setFriendsExpanded((v) => !v)} style={styles.retryButton}>
+                  {friendsExpanded ? "Visa färre" : `Visa alla (${friends?.length})`}
+                </Button>
+              )}
+            </>
           )}
         </Surface>
         <AlertDialog
