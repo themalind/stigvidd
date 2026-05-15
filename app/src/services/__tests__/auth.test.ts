@@ -1,8 +1,8 @@
 import { FirebaseError } from "firebase/app";
 import { createUserWithEmailAndPassword, deleteUser } from "firebase/auth";
 import { ApiError, createStigViddUser } from "../../api/users";
-import { registerUser } from "../auth";
 import { RegisterData } from "../../data/types";
+import { registerUser } from "../auth";
 
 jest.mock("firebase/app", () => {
   class FirebaseError extends Error {
@@ -124,7 +124,7 @@ describe("registerUser", () => {
 
     expect(result.success).toBe(false);
     expect(result.user).toBeNull();
-    expect(result.error).toEqual({ code: "api/nickname-taken", message: "Smeknamnet är redan taget" });
+    expect(result.error).toEqual({ code: "api/nickname-taken", message: "Smeknamnet upptaget" });
     expect(mockDeleteUser).toHaveBeenCalledWith(mockFirebaseUser);
   });
 
