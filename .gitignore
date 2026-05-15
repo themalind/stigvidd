@@ -62,3 +62,4 @@ bin/
 node_modules/
 *.user
 spar_leder.json
+*.csproj.lscache
