@@ -189,7 +189,7 @@ namespace Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("SharedById")
+                    b.Property<int?>("SharedById")
                         .HasColumnType("int");
 
                     b.HasKey("HikeId", "SharedWithId");
@@ -690,8 +690,7 @@ namespace Infrastructure.Migrations
                     b.HasOne("Infrastructure.Data.Entities.User", "SharedBy")
                         .WithMany()
                         .HasForeignKey("SharedById")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.HasOne("Infrastructure.Data.Entities.User", "SharedWith")
                         .WithMany()
