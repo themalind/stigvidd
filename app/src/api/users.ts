@@ -37,6 +37,10 @@ export async function createStigViddUser({ email, nickname }: CreateStigViddUser
       }),
     });
 
+    if (response.status === 409) {
+      throw new ApiError("nickname-taken", 409);
+    }
+
     if (!response.ok) {
       throw new ApiError(`HTTP error ${response.status}`, response.status);
     }

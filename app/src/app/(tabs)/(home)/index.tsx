@@ -1,6 +1,5 @@
 import { getPopularTrails } from "@/api/trails";
 import { locationResolvedAtom, userLocationAtom } from "@/atoms/location-atoms";
-import { userThemeAtom } from "@/atoms/user-theme-atom";
 import Map from "@/components/map/map";
 import MockNews from "@/components/mockNews";
 import CarouselSkeleton from "@/components/skeletons/carousel-skeleton";
@@ -11,9 +10,9 @@ import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useQuery } from "@tanstack/react-query";
 import { Image } from "expo-image";
 import { useFocusEffect } from "expo-router";
-import { useAtom, useAtomValue } from "jotai";
+import { useAtomValue } from "jotai";
 import React, { useRef } from "react";
-import { Appearance, Dimensions, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Dimensions, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Divider, Surface, useTheme } from "react-native-paper";
 
 const HEIGHT = Dimensions.get("screen").height;
@@ -21,15 +20,11 @@ const HEIGHT = Dimensions.get("screen").height;
 export default function HomeScreen() {
   const scrollViewRef = useRef<ScrollView>(null);
   const theme = useTheme();
-  const [userTheme] = useAtom(userThemeAtom);
   const userLocation = useAtomValue(userLocationAtom);
   const locationResolved = useAtomValue(locationResolvedAtom);
-  const colorScheme = Appearance.getColorScheme();
-  const finalTheme = userTheme === "auto" ? (colorScheme ?? "light") : userTheme;
-  const hikers =
-    finalTheme === "dark"
-      ? require("../../../assets/images/mrHike-light.png")
-      : require("../../../assets/images/mrHike-dark.png");
+  const hikers = theme.dark
+    ? require("../../../assets/images/mrHike-light.png")
+    : require("../../../assets/images/mrHike-dark.png");
 
   const query = useQuery({
     queryKey: ["trails", "popular", userLocation?.latitude, userLocation?.longitude],

@@ -1,6 +1,5 @@
 import { RegisterData } from "@/data/types";
 import { registerUser } from "@/services/auth";
-import { router } from "expo-router";
 import { onAuthStateChanged, User } from "firebase/auth";
 import { atom } from "jotai";
 import { auth } from "../../firebase-config";
@@ -69,7 +68,6 @@ export const registerUserAtom = atom(null, async (_, set, data: RegisterData) =>
   if (result.success && result.user) {
     set(userAtom, result.user);
     set(authLoadingAtom, false);
-    router.replace("/(tabs)/(profile-stack)/profile-page");
   }
 
   return result;

@@ -89,6 +89,72 @@ public class UserRepository : IUserRepository
         }
     }
 
+    public async Task<RepositoryResult<T>> GetUserByNickNameAsync<T>(string nickName, Expression<Func<User, T>> selector, CancellationToken ctoken)
+    {
+        try
+        {
+            using var context = await _context.CreateDbContextAsync(ctoken);
+
+            var result = await context.Users
+                .AsNoTracking()
+                .Where(u => u.NickName == nickName)
+                .Select(selector)
+                .FirstOrDefaultAsync(ctoken);
+
+            return result is null
+                ? RepositoryResult<T>.NotFound()
+                : RepositoryResult<T>.Success(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "UserRepository: GetUserByNickNameAsync -> Something went wrong when fetching user with nickname {NickName}.", nickName);
+            return RepositoryResult<T>.Error();
+        }
+    }
+
+    public async Task<RepositoryResult<int>> GetUserIdByNameAsync(string name, CancellationToken ctoken)
+    {
+        try
+        {
+            using var context = await _context.CreateDbContextAsync(ctoken);
+
+            var userId = await context.Users
+                .AsNoTracking()
+                .Where(u => u.NickName == name)
+                .Select(u => (int?)u.Id)
+                .FirstOrDefaultAsync(ctoken);
+
+            return userId is null
+                ? RepositoryResult<int>.NotFound()
+                : RepositoryResult<int>.Success(userId.Value);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "UserRepository: GetUserIdByNameAsync -> Something went wrong when fetching user with name {name}.", name);
+            return RepositoryResult<int>.Error();
+        }
+    }
+
+    public async Task<RepositoryResult> CheckUserNicknameAvaliability(string nickname, CancellationToken ctoken)
+    {
+        try
+        {
+            using var context = await _context.CreateDbContextAsync(ctoken);
+
+            var exists = await context.Users
+                .AsNoTracking()
+                .AnyAsync(u => u.NickName == nickname, ctoken);
+
+            return exists ? RepositoryResult.Conflict() : RepositoryResult.Success();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "UserRepository: GetUserByNicknameAsync -> Something went wrong when fetching user with nickname {nickname}.", nickname);
+            return RepositoryResult.Error();
+        }
+    }
+
+
     public async Task<RepositoryResult<IReadOnlyCollection<T>>> GetFavoritesByUserIdentifierAsync<T>(string userIdentifier, Expression<Func<Trail, T>> selector, CancellationToken ctoken)
     {
         try
@@ -132,6 +198,25 @@ public class UserRepository : IUserRepository
         {
             _logger.LogError(ex, "UserRepository: GetWishListByUserIdentifierAsync -> Something went wrong when fetching wishlist for user {userIdentifier}.", userIdentifier);
             return RepositoryResult<IReadOnlyCollection<T>>.Error();
+        }
+    }
+
+    public async Task<RepositoryResult<bool>> CheckForUsername(string username, CancellationToken ctoken)
+    {
+        try
+        {
+            using var context = await _context.CreateDbContextAsync(ctoken);
+            var exists = await context.Users
+                .AsNoTracking()
+                .AnyAsync(u => u.NickName == username, ctoken);
+
+            return RepositoryResult<bool>.Success(exists);
+
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "UserRepository: CheckForUsername -> Something went wrong when checking for username {username}.", username);
+            return RepositoryResult<bool>.Error();
         }
     }
 

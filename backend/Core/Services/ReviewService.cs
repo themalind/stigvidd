@@ -51,11 +51,7 @@ public class ReviewService : IReviewService
                 r.CreatedAt,
                 r.Trail != null ? r.Trail.Identifier : string.Empty,
                 r.User != null ? r.User.Identifier : string.Empty,
-                r.ReviewImages!.Select(img => new ReviewImageResponse
-                {
-                    Identifier = img.Identifier,
-                    ImageUrl = baseUrl + img.ImageUrl
-                }).ToList()),
+                r.ReviewImages!.Select(img => ReviewImageResponse.Create(baseUrl, img.Identifier, img.ImageUrl)).ToList()),
             ctoken);
 
         if (!result.IsSuccess)

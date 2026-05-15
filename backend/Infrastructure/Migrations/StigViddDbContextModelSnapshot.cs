@@ -63,6 +63,27 @@ namespace Infrastructure.Migrations
                     b.ToTable("Facilities");
                 });
 
+            modelBuilder.Entity("Infrastructure.Data.Entities.FriendRequest", b =>
+                {
+                    b.Property<int>("RequesterId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ReceiverId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.HasKey("RequesterId", "ReceiverId");
+
+                    b.HasIndex("ReceiverId");
+
+                    b.ToTable("FriendRequests");
+                });
+
             modelBuilder.Entity("Infrastructure.Data.Entities.Hike", b =>
                 {
                     b.Property<int>("Id")
@@ -82,8 +103,17 @@ namespace Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int>("Duration")
                         .HasColumnType("int");
+
+                    b.Property<string>("GettingThere")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("HikeLength")
                         .HasPrecision(18, 2)
@@ -93,6 +123,9 @@ namespace Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
                     b.Property<DateTime>("LastUpdatedAt")
                         .HasColumnType("datetime2");
 
@@ -100,9 +133,72 @@ namespace Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("ParkingInfo")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("UserId")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
+                    b.HasIndex("UserId");
+
                     b.ToTable("Hikes");
+                });
+
+            modelBuilder.Entity("Infrastructure.Data.Entities.HikeImage", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("HikeId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Identifier")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ImageUrl")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("LastUpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("HikeId");
+
+                    b.ToTable("HikeImages");
+                });
+
+            modelBuilder.Entity("Infrastructure.Data.Entities.HikeShare", b =>
+                {
+                    b.Property<int>("HikeId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SharedWithId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("SharedById")
+                        .HasColumnType("int");
+
+                    b.HasKey("HikeId", "SharedWithId");
+
+                    b.HasIndex("SharedById");
+
+                    b.HasIndex("SharedWithId");
+
+                    b.ToTable("HikeShares");
                 });
 
             modelBuilder.Entity("Infrastructure.Data.Entities.Review", b =>
@@ -116,9 +212,15 @@ namespace Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("Identifier")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
 
                     b.Property<DateTime>("LastUpdatedAt")
                         .HasColumnType("datetime2");
@@ -175,44 +277,6 @@ namespace Infrastructure.Migrations
                     b.HasIndex("ReviewId");
 
                     b.ToTable("ReviewImages");
-                });
-
-            modelBuilder.Entity("Infrastructure.Data.Entities.Statistics", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Identifier")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("LastUpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<double>("TotalKilometers")
-                        .HasColumnType("float");
-
-                    b.Property<int>("TotalSteps")
-                        .HasColumnType("int");
-
-                    b.Property<int>("TotalWalkedTrails")
-                        .HasColumnType("int");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId")
-                        .IsUnique();
-
-                    b.ToTable("Statistics");
                 });
 
             modelBuilder.Entity("Infrastructure.Data.Entities.Trail", b =>
@@ -368,6 +432,9 @@ namespace Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -383,6 +450,9 @@ namespace Infrastructure.Migrations
                     b.Property<decimal?>("IncidentLongitude")
                         .HasPrecision(18, 10)
                         .HasColumnType("decimal(18,10)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
 
                     b.Property<int>("IssueType")
                         .HasColumnType("int");
@@ -450,6 +520,9 @@ namespace Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -462,14 +535,20 @@ namespace Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
                     b.Property<DateTime>("LastUpdatedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("NickName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("NickName")
+                        .IsUnique();
 
                     b.ToTable("Users");
                 });
@@ -560,6 +639,72 @@ namespace Infrastructure.Migrations
                     b.ToTable("UserWishList", (string)null);
                 });
 
+            modelBuilder.Entity("Infrastructure.Data.Entities.FriendRequest", b =>
+                {
+                    b.HasOne("Infrastructure.Data.Entities.User", "Receiver")
+                        .WithMany()
+                        .HasForeignKey("ReceiverId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("Infrastructure.Data.Entities.User", "Requester")
+                        .WithMany()
+                        .HasForeignKey("RequesterId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Receiver");
+
+                    b.Navigation("Requester");
+                });
+
+            modelBuilder.Entity("Infrastructure.Data.Entities.Hike", b =>
+                {
+                    b.HasOne("Infrastructure.Data.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Infrastructure.Data.Entities.HikeImage", b =>
+                {
+                    b.HasOne("Infrastructure.Data.Entities.Hike", "Hike")
+                        .WithMany("Images")
+                        .HasForeignKey("HikeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Hike");
+                });
+
+            modelBuilder.Entity("Infrastructure.Data.Entities.HikeShare", b =>
+                {
+                    b.HasOne("Infrastructure.Data.Entities.Hike", "Hike")
+                        .WithMany()
+                        .HasForeignKey("HikeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Infrastructure.Data.Entities.User", "SharedBy")
+                        .WithMany()
+                        .HasForeignKey("SharedById")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Infrastructure.Data.Entities.User", "SharedWith")
+                        .WithMany()
+                        .HasForeignKey("SharedWithId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Hike");
+
+                    b.Navigation("SharedBy");
+
+                    b.Navigation("SharedWith");
+                });
+
             modelBuilder.Entity("Infrastructure.Data.Entities.Review", b =>
                 {
                     b.HasOne("Infrastructure.Data.Entities.Trail", "Trail")
@@ -588,17 +733,6 @@ namespace Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Review");
-                });
-
-            modelBuilder.Entity("Infrastructure.Data.Entities.Statistics", b =>
-                {
-                    b.HasOne("Infrastructure.Data.Entities.User", "User")
-                        .WithOne("MyStatistics")
-                        .HasForeignKey("Infrastructure.Data.Entities.Statistics", "UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Infrastructure.Data.Entities.TrailImage", b =>
@@ -699,6 +833,11 @@ namespace Infrastructure.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Infrastructure.Data.Entities.Hike", b =>
+                {
+                    b.Navigation("Images");
+                });
+
             modelBuilder.Entity("Infrastructure.Data.Entities.Review", b =>
                 {
                     b.Navigation("ReviewImages");
@@ -720,11 +859,6 @@ namespace Infrastructure.Migrations
             modelBuilder.Entity("Infrastructure.Data.Entities.TrailObstacle", b =>
                 {
                     b.Navigation("SolvedVotes");
-                });
-
-            modelBuilder.Entity("Infrastructure.Data.Entities.User", b =>
-                {
-                    b.Navigation("MyStatistics");
                 });
 #pragma warning restore 612, 618
         }

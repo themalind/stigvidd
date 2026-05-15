@@ -8,6 +8,7 @@ import HikeDetails from "@/components/trail/trail-creator/hike-details";
 import { BORDER_RADIUS } from "@/constants/constants";
 import { Hike } from "@/data/types";
 import FormattedTime from "@/utils/format-time-from-ms";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
 import { Redirect } from "expo-router";
 import { useAtom, useAtomValue } from "jotai";
@@ -45,23 +46,12 @@ export default function MyHikesScreen() {
     return <ErrorView error={error} />;
   }
 
-  if (hikes?.length === 0) {
-    return (
-      <View
-        style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: theme.colors.background }}
-      >
-        <BackButton />
-        <Text style={{ color: theme.colors.onBackground }}>No hikes saved</Text>
-      </View>
-    );
-  }
-
   return (
     <View style={[s.container, { backgroundColor: theme.colors.background }]}>
       <BackButton />
-      <View style={{ flexDirection: "row", gap: 10, paddingTop: 10, paddingBottom: 10 }}>
+      <View style={s.headerText}>
         <Icon source="hiking" size={24} color={theme.colors.tertiary} />
-        <Text style={{ fontSize: 17, fontWeight: 700 }}>Mina sparade promenader</Text>
+        <Text style={s.titleTextBold}>Mina sparade promenader</Text>
       </View>
       <View style={[s.infoBox, { backgroundColor: theme.colors.outlineVariant }]}>
         <Text>Tryck på en promenad för att se mer information eller ta bort den.</Text>
@@ -77,38 +67,40 @@ export default function MyHikesScreen() {
           }}
         />
       )}
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={s.scrollContent}>
-        {hikes?.map((hike, index) => (
-          <Pressable
-            style={{
-              backgroundColor: theme.colors.surface,
-              padding: 10,
-              borderRadius: BORDER_RADIUS,
-            }}
-            key={index}
-            onPress={() => {
-              setSelectedhike(hike);
-              setVisible(true);
-            }}
-          >
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-              <View style={[s.iconCircle, { backgroundColor: theme.colors.secondaryContainer }]}>
-                <Icon source="map-marker-distance" size={28} color={theme.colors.onSecondaryContainer} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={s.name} numberOfLines={1}>
-                  {hike.name}
-                </Text>
-                <View style={s.info}>
-                  <Text>{hike.hikeLength} km</Text>
-                  <Text>{FormattedTime(hike.duration)}</Text>
+      {hikes?.length === 0 ? (
+        <View style={[s.noHikesContainer, { backgroundColor: theme.colors.surface }]}>
+          <Text style={{ color: theme.colors.onBackground }}>No hikes saved</Text>
+        </View>
+      ) : (
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={s.scrollContent}>
+          {hikes?.map((hike, index) => (
+            <Pressable
+              style={[s.hikePressable, { backgroundColor: theme.colors.surface }]}
+              key={index}
+              onPress={() => {
+                setSelectedhike(hike);
+                setVisible(true);
+              }}
+            >
+              <View style={s.hikeItem}>
+                <View style={[s.iconCircle, { backgroundColor: theme.colors.secondaryContainer }]}>
+                  <MaterialCommunityIcons name="map-legend" size={24} color={theme.colors.secondary} />
                 </View>
+                <View style={s.flex}>
+                  <Text style={s.name} numberOfLines={1}>
+                    {hike.name}
+                  </Text>
+                  <View style={s.info}>
+                    <Text>{hike.hikeLength} km</Text>
+                    <Text>{FormattedTime(hike.duration)}</Text>
+                  </View>
+                </View>
+                <Icon source="chevron-right" size={20} />
               </View>
-              <Icon source="chevron-right" size={20} />
-            </View>
-          </Pressable>
-        ))}
-      </ScrollView>
+            </Pressable>
+          ))}
+        </ScrollView>
+      )}
     </View>
   );
 }
@@ -119,12 +111,39 @@ const s = StyleSheet.create({
     padding: 10,
     gap: 10,
   },
+  noHikesContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  headerText: {
+    flexDirection: "row",
+    gap: 10,
+    paddingTop: 10,
+    paddingBottom: 10,
+  },
+  titleTextBold: {
+    fontSize: 17,
+    fontWeight: 700,
+  },
   iconCircle: {
-    width: 52,
-    height: 52,
+    width: 42,
+    height: 42,
     borderRadius: BORDER_RADIUS,
     justifyContent: "center",
     alignItems: "center",
+  },
+  hikePressable: {
+    padding: 10,
+    borderRadius: BORDER_RADIUS,
+  },
+  hikeItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  flex: {
+    flex: 1,
   },
   name: {
     fontWeight: "bold",

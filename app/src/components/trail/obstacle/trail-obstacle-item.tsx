@@ -119,15 +119,18 @@ export default function TrailObstacleItem({ obstacle, trailIdentifier, onCloseMo
           <Text style={[s.label, { color: theme.colors.onSurfaceVariant }]}>Datum</Text>
           <Text style={[s.value, { color: theme.colors.onSurface }]}>{formatDate(obstacle.createdAt)}</Text>
         </View>
+
         <View style={s.voteRow}>
           <Text style={s.voteCount}>{obstacle.solvedVotes?.length ?? 0}/3</Text>
-          <Pressable hitSlop={12} onPress={handlePress} disabled={isPending || deleteSolvedVoteIsPending}>
-            <MaterialIcons
-              size={24}
-              name={hasVoted ? "check-circle" : "radio-button-unchecked"}
-              color={isPending ? theme.colors.outline : theme.colors.tertiary}
-            />
-          </Pressable>
+          {!isOwner && (
+            <Pressable hitSlop={12} onPress={handlePress} disabled={isPending || deleteSolvedVoteIsPending}>
+              <MaterialIcons
+                size={24}
+                name={hasVoted ? "check-circle" : "radio-button-unchecked"}
+                color={isPending ? theme.colors.outline : theme.colors.tertiary}
+              />
+            </Pressable>
+          )}
         </View>
       </View>
       <TrailObstacleUpdateForm

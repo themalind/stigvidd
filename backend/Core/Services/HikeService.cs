@@ -10,24 +10,29 @@ namespace Core.Services;
 public class HikeService : IHikeService
 {
     private readonly HikeResponseFactory _hikeResponseFactory;
-    private readonly IUserService _userService;
+    private readonly IUserRepository _userRepository;
     private readonly IHikeRepository _hikeRepository;
 
-    public HikeService(IHikeRepository hikeResponseRepository,
+    public HikeService(IHikeRepository hikeRepository,
         HikeResponseFactory hikeResponseFactory,
-        IUserService userService)
+        IUserRepository userRepository)
     {
-        _hikeRepository = hikeResponseRepository;
+        _hikeRepository = hikeRepository;
         _hikeResponseFactory = hikeResponseFactory;
-        _userService = userService;
+        _userRepository = userRepository;
     }
 
     public async Task<Result<HikeResponse>> CreateHikeAsync(CreateHikeRequest request, string userIdentifier, CancellationToken ctoken)
     {
-        var userResult = await _userService.GetUserByIdentifierAsync(userIdentifier, ctoken);
+        var userIdResult = await _userRepository.GetUserIdByIdentifierAsync(userIdentifier, ctoken);
 
-        if (!userResult.Success)
+        if (!userIdResult.IsSuccess)
+        {
+            if (userIdResult.Status == RepositoryResultStatus.Error)
+                return Result.Fail<HikeResponse>(new Message(500, "An error occurred while fetching the user."));
+
             return Result.Fail<HikeResponse>(new Message(404, "User not found"));
+        }
 
         if (string.IsNullOrWhiteSpace(request.Name) ||
             request.Name.Length > 60 ||
@@ -43,7 +48,11 @@ public class HikeService : IHikeService
             HikeLength = request.HikeLength / 1000,
             Duration = request.Duration,
             Coordinates = request.Coordinates,
-            CreatedBy = userIdentifier
+            CreatedBy = userIdentifier,
+            UserId = userIdResult.Value,
+            ParkingInfo = request?.ParkingInfo,
+            GettingThere = request?.GettingThere,
+            Description = request?.Description
         };
 
         var result = await _hikeRepository.CreateHikeAsync(hike, ctoken);
@@ -69,8 +78,26 @@ public class HikeService : IHikeService
 
     public async Task<Result<IReadOnlyCollection<HikeOverviewResponse>>> GetHikesAsync(string? createdBy, CancellationToken ctoken)
     {
+        int? userId = null;
+
+        if (createdBy is not null)
+        {
+            var userIdResult = await _userRepository.GetUserIdByIdentifierAsync(createdBy, ctoken);
+
+            if (!userIdResult.IsSuccess)
+            {
+                if (userIdResult.Status == RepositoryResultStatus.NotFound)
+                {
+                    return Result.Ok<IReadOnlyCollection<HikeOverviewResponse>>([]);
+                }
+                return Result.Fail<IReadOnlyCollection<HikeOverviewResponse>>(new Message(500, "An error occurred while fetching the user."));
+            }
+
+            userId = userIdResult.Value;
+        }
+
         var result = await _hikeRepository.GetHikesAsync(
-            createdBy,
+            userId,
             h => HikeOverviewResponse.Create(
                 h.Identifier,
                 h.Name,
@@ -86,8 +113,66 @@ public class HikeService : IHikeService
         return Result.Ok(result.Value);
     }
 
-    public async Task<Result> DeleteHikeAsync(string hikeIdentifier, string userIdentifier, CancellationToken ctoken)
+    public async Task<Result<Hike>> UpdateHikeAsync(
+        string hikeIdentifier,
+        string userIdentifier,
+        string? name,
+        string? description,
+        string? gettingThere,
+        string? parkingInfo, CancellationToken ctoken)
     {
+        var userIdResult = await _userRepository.GetUserByIdentifierAsync(userIdentifier, u => u.Id, ctoken);
+
+        if (!userIdResult.IsSuccess)
+            return Result.Fail<Hike>(new Message(404, "User not found"));
+
+        var hikeResult = await _hikeRepository.GetHikeByIdentifierAsync(hikeIdentifier, ctoken);
+
+        if (!hikeResult.IsSuccess)
+        {
+            if (hikeResult.Status == RepositoryResultStatus.Error)
+                return Result.Fail<Hike>(new Message(500, "An error occurred while fetching the hike."));
+
+            if (hikeResult.Status == RepositoryResultStatus.NotFound || hikeResult.Value is null)
+                return Result.Fail<Hike>(new Message(404, "Hike not found"));
+        }
+
+        if (hikeResult.Value.UserId != userIdResult.Value)
+            return Result.Fail<Hike>(new Message(401, "Hike does not belong to the user"));
+
+
+        if (!string.IsNullOrEmpty(name))
+        {
+            hikeResult.Value.Name = name;
+        }
+
+        if (!string.IsNullOrEmpty(description))
+        {
+            hikeResult.Value.Description = description;
+        }
+
+        if (!string.IsNullOrEmpty(gettingThere))
+        {
+            hikeResult.Value.GettingThere = gettingThere;
+        }
+
+        if (!string.IsNullOrEmpty(parkingInfo))
+        {
+            hikeResult.Value.ParkingInfo = parkingInfo;
+        }
+
+        await _hikeRepository.UpdateHikeAsync(hikeResult.Value, ctoken);
+
+        return Result.Ok(hikeResult.Value);
+    }
+
+    public async Task<Result> SoftDeleteHikeAsync(string hikeIdentifier, string userIdentifier, CancellationToken ctoken)
+    {
+        var userResult = await _userRepository.GetUserByIdentifierAsync(userIdentifier, u => u, ctoken);
+
+        if (!userResult.IsSuccess || userResult.Value is null)
+            return Result.Fail<HikeResponse>(new Message(404, "User not found"));
+
         var result = await _hikeRepository.GetHikeByIdentifierAsync(hikeIdentifier, ctoken);
 
         if (result.Status == RepositoryResultStatus.Error)
@@ -96,10 +181,45 @@ public class HikeService : IHikeService
         if (!result.IsSuccess)
             return Result.Fail(new Message(404, $"Could not remove hike with id {hikeIdentifier}."));
 
-        if (result.Value.CreatedBy != userIdentifier)
-            return Result.Fail(new Message(401, $"Hike {hikeIdentifier} does not belong to {userIdentifier}"));
+        if (result.Value.UserId != userResult.Value.Id)
+            return Result.Fail(new Message(401, $"Hike {hikeIdentifier} does not belong to {userResult.Value.Id}"));
 
-        await _hikeRepository.DeleteHikeAsync(result.Value, ctoken);
+        await _hikeRepository.SoftDeleteHikeAsync(result.Value, ctoken);
+
+        return Result.Ok();
+    }
+
+    public async Task<Result> DeleteHikeSharesByUserIdAsync(int userId, CancellationToken ctoken)
+    {
+        var result = await _hikeRepository.DeleteHikeSharesByUserIdAsync(userId, ctoken);
+
+        if (!result.IsSuccess)
+            return Result.Fail(new Message(500, "An error occurred while deleting the hike shares."));
+
+        return Result.Ok();
+    }
+
+    public async Task<Result> DeleteHikesByUserIdentifierAsync(string userIdentifier, CancellationToken ctoken)
+    {
+        var userResult = await _userRepository.GetUserByIdentifierAsync(userIdentifier, u => u, ctoken);
+
+        if (!userResult.IsSuccess || userResult.Value is null)
+            return Result.Fail<HikeResponse>(new Message(404, "User not found"));
+
+        var result = await _hikeRepository.DeleteHikesByUserIdentifierAsync(userResult.Value.Identifier, ctoken);
+
+        if (!result.IsSuccess)
+            return Result.Fail(new Message(500, "An error occurred while deleting the hikes."));
+
+        return Result.Ok();
+    }
+
+    public async Task<Result> HandleUserHikesOnUserDeleteAsync(int userId, CancellationToken ctoken)
+    {
+        var result = await _hikeRepository.HandleUserHikesOnUserDeleteAsync(userId, ctoken);
+
+        if (!result.IsSuccess)
+            return Result.Fail(new Message(500, "An error occurred while handling user hikes on user delete."));
 
         return Result.Ok();
     }

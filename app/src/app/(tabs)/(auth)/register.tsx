@@ -2,10 +2,11 @@ import { getRegisterErrorMessage } from "@/api/firebase-errors";
 import { registerUserAtom } from "@/atoms/auth-atoms";
 import { userThemeAtom } from "@/atoms/user-theme-atom";
 import PasswordInputField from "@/components/auth/password-input-field";
+import BackButton from "@/components/back-button";
 import { BORDER_RADIUS, SURFACE_BORDER_RADIUS } from "@/constants/constants";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Image } from "expo-image";
-import { Link, router } from "expo-router";
+import { Link } from "expo-router";
 import { useAtom } from "jotai";
 import React, { useState } from "react";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
@@ -44,8 +45,10 @@ const registerFields = z
 
 type FormFields = z.infer<typeof registerFields>;
 
-const addOpacity = (rgbColor: string, opacity: number): string => {
-  return rgbColor.replace("rgb", "rgba").replace(")", `, ${opacity})`);
+const addOpacity = (color: string, opacity: number): string => {
+  if (color.startsWith("rgb(")) return color.replace("rgb(", "rgba(").replace(")", `, ${opacity})`);
+  if (color.startsWith("hsl(")) return color.replace("hsl(", "hsla(").replace(")", `, ${opacity})`);
+  return color;
 };
 
 export default function RegisterScreen() {
@@ -65,6 +68,7 @@ export default function RegisterScreen() {
   const {
     control,
     handleSubmit,
+    setError,
     formState: { errors, isSubmitting },
   } = useForm<FormFields>({ resolver: zodResolver(registerFields) });
 
@@ -75,10 +79,13 @@ export default function RegisterScreen() {
 
     if (!result.success || !result.user) {
       const errorCode = result.error?.code || "unknown";
+      if (errorCode === "api/nickname-taken") {
+        setError("nickName", { message: "Smeknamnet upptaget!" });
+        return;
+      }
       setFirebaseError(getRegisterErrorMessage(errorCode));
       return;
     }
-    router.replace("/(tabs)/(profile-stack)/profile-page");
     console.log("Registrerad", result.user.email, result.user.displayName);
   };
 
@@ -91,6 +98,9 @@ export default function RegisterScreen() {
         contentContainerStyle={s.scrollContent}
       >
         <ImageBackground resizeMode="cover" source={background} style={s.backgroundImage}>
+          <View style={s.backButtonContainer}>
+            <BackButton />
+          </View>
           <View style={[s.surface, { backgroundColor: addOpacity(theme.colors.surface, 0.9) }]}>
             <View style={s.logoContainer}>
               <Text style={[s.title, { color: theme.colors.onSurface }]}>Stigvidd</Text>
@@ -248,6 +258,11 @@ const s = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
+  },
+  backButtonContainer: {
+    position: "absolute",
+    top: 0,
+    left: 0,
   },
   logoContainer: {
     flexDirection: "row",

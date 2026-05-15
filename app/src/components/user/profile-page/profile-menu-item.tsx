@@ -2,19 +2,20 @@ import { BORDER_RADIUS } from "@/constants/constants";
 import { MaterialIcons } from "@expo/vector-icons";
 import { Href, router } from "expo-router";
 import { Pressable, StyleSheet, View } from "react-native";
-import { Text, useTheme } from "react-native-paper";
+import { Badge, Text, useTheme } from "react-native-paper";
 
 interface MenuItemProps {
   text: string;
   route: Href;
   icon?: React.ReactNode;
+  badge?: number;
 }
 
 const handlePress = (route: Href) => {
   router.push(route);
 };
 
-export default function ProfileMenuItem({ text, route, icon }: MenuItemProps) {
+export default function ProfileMenuItem({ text, route, icon, badge }: MenuItemProps) {
   const theme = useTheme();
   return (
     <Pressable onPress={() => handlePress(route)}>
@@ -23,7 +24,14 @@ export default function ProfileMenuItem({ text, route, icon }: MenuItemProps) {
           {icon}
           <Text style={s.choiceText}>{text}</Text>
         </View>
-        <MaterialIcons name="chevron-right" size={22} color={theme.colors.onSurface} />
+        <View style={s.right}>
+          {badge !== undefined && badge > 0 && (
+            <Badge size={24} style={{ backgroundColor: theme.colors.primary }}>
+              {badge}
+            </Badge>
+          )}
+          <MaterialIcons name="chevron-right" size={24} color={theme.colors.onSurface} />
+        </View>
       </View>
     </Pressable>
   );
@@ -42,8 +50,13 @@ const s = StyleSheet.create({
     alignItems: "center",
     gap: 20,
   },
+  right: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
   choiceText: {
-    fontWeight: 700,
+    fontWeight: "700",
     fontSize: 16,
   },
 });

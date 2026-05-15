@@ -247,29 +247,23 @@ public class TrailObstaclesServiceTests
     [Fact]
     public async Task DeleteSolvedVote_WhenValid_ReturnsSuccess()
     {
-        // Use distinct IDs so a swap of (obstacleId, userId) would cause the mock not to match
         // Arrange
-        const int distinctObstacleId = 42;
-        const int distinctUserId = 99;
-        var obstacle = Utilities.Stubs.Obstacle();
-        obstacle.Id = distinctObstacleId;
         var vote = Utilities.Stubs.Vote();
 
-        var userSvc = new Mock<IUserService>();
-        userSvc.Setup(u => u.GetUserIdByIdentifierAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result.Ok(distinctUserId));
+        var userService = new Mock<IUserService>();
+        userService.Setup(u => u.GetUserIdByIdentifierAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Ok(UserId));
 
         var repo = new Mock<ITrailObstacleRepository>();
         repo.Setup(r => r.GetTrailObstacleByIdentifierAsync(Utilities.Identifiers.Obstacle1, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(RepositoryResult<TrailObstacle>.Success(obstacle));
-        // Pin exact argument order: (obstacleId, userId) — catches swapped IDs
-        repo.Setup(r => r.GetSolvedVoteByObstacleIdAndUserIdAsync(distinctObstacleId, distinctUserId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<TrailObstacle>.Success(Utilities.Stubs.Obstacle()));
+        repo.Setup(r => r.GetSolvedVoteByObstacleIdAndUserIdAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<TrailObstacleSolvedVote>.Success(vote));
         repo.Setup(r => r.DeleteSolvedVoteAsync(vote, It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult.Success());
 
         // Act
-        var result = await Build(repo, userSvc).DeleteSolvedVoteByUserIdentifierAsync(Utilities.Identifiers.User, Utilities.Identifiers.Obstacle1, CancellationToken.None);
+        var result = await Build(repo, userService).DeleteSolvedVoteByUserIdentifierAsync(Utilities.Identifiers.User, Utilities.Identifiers.Obstacle1, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeTrue();

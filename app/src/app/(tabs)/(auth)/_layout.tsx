@@ -9,7 +9,7 @@ export default function AuthLayout() {
   const theme = useTheme();
 
   if (authState.isAuthenticated) {
-    return <Redirect href="/" />;
+    return <Redirect href="/(tabs)/(profile-stack)/profile-page" />;
   }
 
   return (
