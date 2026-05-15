@@ -93,7 +93,7 @@ export default function FriendsScreen() {
                               <IconButton
                                 hitSlop={20}
                                 icon="account-plus"
-                                size={20}
+                                size={25}
                                 onPress={() => sendRequestMutation.mutate(user.nickName)}
                                 style={styles.actionButton}
                               />
@@ -142,7 +142,7 @@ export default function FriendsScreen() {
                         <View style={styles.rowActions}>
                           <IconButton
                             icon="check"
-                            size={20}
+                            size={25}
                             iconColor={theme.colors.primary}
                             onPress={() => acceptMutation.mutate(req.requesterIdentifier)}
                             disabled={acceptMutation.isPending || rejectMutation.isPending}
@@ -150,7 +150,7 @@ export default function FriendsScreen() {
                           />
                           <IconButton
                             icon="close"
-                            size={20}
+                            size={25}
                             iconColor={theme.colors.error}
                             onPress={() => rejectMutation.mutate(req.requesterIdentifier)}
                             disabled={acceptMutation.isPending || rejectMutation.isPending}
@@ -211,7 +211,7 @@ export default function FriendsScreen() {
                         </Text>
                         <IconButton
                           icon="close"
-                          size={20}
+                          size={25}
                           iconColor={theme.colors.outline}
                           onPress={() => removeFriendMutation.mutate(req.receiverIdentifier)}
                           disabled={removeFriendMutation.isPending}
@@ -282,7 +282,7 @@ export default function FriendsScreen() {
                         </Text>
                         <IconButton
                           icon="account-remove"
-                          size={20}
+                          size={25}
                           iconColor={theme.colors.outline}
                           onPress={() => setFriendToRemoveId(friend.identifier)}
                           disabled={removeFriendMutation.isPending}
