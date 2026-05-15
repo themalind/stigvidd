@@ -23,9 +23,7 @@ export default function TabsLayout() {
             backgroundColor: theme.colors.background,
             borderTopColor: theme.colors.outline,
           },
-          tabBarBackground: () => (
-            <View style={{ flex: 1, backgroundColor: theme.colors.background }} />
-          ),
+          tabBarBackground: () => <View style={{ flex: 1, backgroundColor: theme.colors.background }} />,
           tabBarIconStyle: {
             marginTop: 8,
           },

@@ -32,23 +32,19 @@ export default function SharedHikeModal({ visible, onDismiss, onShare, isPending
   });
 
   const friends = friendsRaw?.filter(
-    (f) => f.nickName !== currentUser.data?.nickName && f.nickName !== excludeNickName
+    (f) => f.nickName !== currentUser.data?.nickName && f.nickName !== excludeNickName,
   );
 
   const listHeight = friends
     ? Math.min(
         friends.length * ITEM_HEIGHT + (friends.length - 1) * DIVIDER_HEIGHT,
-        MAX_HEIGHT - HEADER_HEIGHT - DIVIDER_HEIGHT
+        MAX_HEIGHT - HEADER_HEIGHT - DIVIDER_HEIGHT,
       )
     : ITEM_HEIGHT;
 
   return (
     <Portal>
-      <Modal
-        visible={visible}
-        onDismiss={onDismiss}
-        contentContainerStyle={s.container}
-      >
+      <Modal visible={visible} onDismiss={onDismiss} contentContainerStyle={s.container}>
         <View style={[s.inner, { backgroundColor: theme.colors.surface }]}>
           <View style={s.header}>
             <Text variant="titleMedium" style={{ color: theme.colors.onSurface }}>
@@ -68,10 +64,7 @@ export default function SharedHikeModal({ visible, onDismiss, onShare, isPending
               {friends.map((item: Friend, index: number) => (
                 <View key={item.identifier}>
                   <Pressable
-                    style={({ pressed }) => [
-                      s.friendItem,
-                      pressed && { backgroundColor: theme.colors.surfaceVariant },
-                    ]}
+                    style={({ pressed }) => [s.friendItem, pressed && { backgroundColor: theme.colors.surfaceVariant }]}
                     onPress={() => onShare(item.nickName)}
                     disabled={isPending}
                   >
