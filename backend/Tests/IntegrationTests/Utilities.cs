@@ -348,7 +348,7 @@ public static class Utilities
             {
                 Id = 3,
                 Identifier = "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d67",
-                FirebaseUid = "firebase-uid-12345",
+                FirebaseUid = "firebase-uid-12347",
                 Email = "glenn@example.local",
                 NickName = "SkogsGreven",
                 CreatedAt = SeedDates.Created,

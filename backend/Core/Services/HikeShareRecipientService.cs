@@ -10,12 +10,18 @@ public class HikeShareRecipientService : IHikeShareRecipientService
     private readonly IHikeShareRecipientRepository _hikeShareRecipientRepository;
     private readonly IUserRepository _userRepository;
     private readonly IHikeRepository _hikeRepository;
+    private readonly IFriendRepository _friendRepository;
 
-    public HikeShareRecipientService(IHikeShareRecipientRepository hikeShareRecipientRepository, IUserRepository userRepository, IHikeRepository hikeRepository)
+    public HikeShareRecipientService(
+        IHikeShareRecipientRepository hikeShareRecipientRepository,
+        IUserRepository userRepository,
+        IHikeRepository hikeRepository,
+        IFriendRepository friendRepository)
     {
         _hikeShareRecipientRepository = hikeShareRecipientRepository;
         _userRepository = userRepository;
         _hikeRepository = hikeRepository;
+        _friendRepository = friendRepository;
     }
 
     public async Task<Result<IReadOnlyCollection<HikeShareRecipientResponse>>> GetAllHikesSharedWithUserAsync(string identifier, CancellationToken ctoken)
@@ -75,6 +81,14 @@ public class HikeShareRecipientService : IHikeShareRecipientService
 
             return Result.Fail(new Message(500, "Something went wrong when fetching user ID."));
         }
+
+        // Must be friends to share a hike
+        var areFriendsResult = await _friendRepository.FriendshipExistsAsync(userIdResult.Value, sharedWithUserIdResult.Value, ctoken);
+        if (!areFriendsResult.IsSuccess)
+            return Result.Fail(new Message(500, "Something went wrong when checking friendship status."));
+
+        if (!areFriendsResult.Value)
+            return Result.Fail(new Message(403, "You can only share a hike with a friend."));
 
         // Cannot share with yourself
         if (userIdResult.Value == sharedWithUserIdResult.Value)

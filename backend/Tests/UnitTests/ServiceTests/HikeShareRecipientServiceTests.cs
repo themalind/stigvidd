@@ -13,12 +13,14 @@ public class HikeShareRecipientServiceTests
     public static HikeShareRecipientService Build(
         Mock<IHikeShareRecipientRepository>? hikeShareRecipientRepositoryMock = null,
         Mock<IUserRepository>? userRepositoryMock = null,
-        Mock<IHikeRepository>? hikeRepositoryMock = null)
+        Mock<IHikeRepository>? hikeRepositoryMock = null,
+        Mock<IFriendRepository>? friendRepositoryMock = null)
     {
         return new HikeShareRecipientService(
             hikeShareRecipientRepositoryMock?.Object ?? new Mock<IHikeShareRecipientRepository>().Object,
             userRepositoryMock?.Object ?? new Mock<IUserRepository>().Object,
-            hikeRepositoryMock?.Object ?? new Mock<IHikeRepository>().Object
+            hikeRepositoryMock?.Object ?? new Mock<IHikeRepository>().Object,
+            friendRepositoryMock?.Object ?? new Mock<IFriendRepository>().Object
         );
     }
 
@@ -285,6 +287,40 @@ public class HikeShareRecipientServiceTests
     }
 
     [Fact]
+    public async Task ReshareSharedHikeAsync_WhenNotFriends_ReturnsForbidden()
+    {
+        // Arrange
+        var userRepoMock = new Mock<IUserRepository>();
+        userRepoMock.Setup(r => r.GetUserIdByIdentifierAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<int>.Success(1));
+        userRepoMock.Setup(r => r.GetUserIdByNameAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<int>.Success(2));
+
+        var hikeRepoMock = new Mock<IHikeRepository>();
+        hikeRepoMock.Setup(r => r.GetHikeByIdentifierAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<Hike>.Success(HikeOwnedByOther()));
+
+        var repoMock = new Mock<IHikeShareRecipientRepository>();
+        repoMock.Setup(r => r.HasHikeSharedWithUserAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<bool>.Success(true));
+
+        var friendRepoMock = new Mock<IFriendRepository>();
+        friendRepoMock.Setup(r => r.FriendshipExistsAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<bool>.Success(false));
+
+        var service = Build(hikeShareRecipientRepositoryMock: repoMock, userRepositoryMock: userRepoMock, hikeRepositoryMock: hikeRepoMock, friendRepositoryMock: friendRepoMock);
+
+        // Act
+        var result = await service.ReshareSharedHikeAsync("hike-identifier", "user-identifier", "reshareToName", CancellationToken.None);
+
+        // Assert
+        result.Success.Should().BeFalse();
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(403);
+        result.Message.ResultMessage.Should().Be("You can only share a hike with a friend.");
+    }
+
+    [Fact]
     public async Task ReshareSharedHikeAsync_WhenReshareToSelf_ReturnsBadRequest()
     {
         // Arrange
@@ -302,7 +338,11 @@ public class HikeShareRecipientServiceTests
         repoMock.Setup(r => r.HasHikeSharedWithUserAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<bool>.Success(true));
 
-        var service = Build(hikeShareRecipientRepositoryMock: repoMock, userRepositoryMock: userRepoMock, hikeRepositoryMock: hikeRepoMock);
+        var friendRepoMock = new Mock<IFriendRepository>();
+        friendRepoMock.Setup(r => r.FriendshipExistsAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<bool>.Success(true));
+
+        var service = Build(hikeShareRecipientRepositoryMock: repoMock, userRepositoryMock: userRepoMock, hikeRepositoryMock: hikeRepoMock, friendRepositoryMock: friendRepoMock);
 
         // Act
         var result = await service.ReshareSharedHikeAsync("hike-identifier", "user-identifier", "reshareToName", CancellationToken.None);
@@ -332,7 +372,11 @@ public class HikeShareRecipientServiceTests
         repoMock.Setup(r => r.HasHikeSharedWithUserAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<bool>.Success(true));
 
-        var service = Build(hikeShareRecipientRepositoryMock: repoMock, userRepositoryMock: userRepoMock, hikeRepositoryMock: hikeRepoMock);
+        var friendRepoMock = new Mock<IFriendRepository>();
+        friendRepoMock.Setup(r => r.FriendshipExistsAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<bool>.Success(true));
+
+        var service = Build(hikeShareRecipientRepositoryMock: repoMock, userRepositoryMock: userRepoMock, hikeRepositoryMock: hikeRepoMock, friendRepositoryMock: friendRepoMock);
 
         // Act
         var result = await service.ReshareSharedHikeAsync("hike-identifier", "user-identifier", "reshareToName", CancellationToken.None);
@@ -363,7 +407,11 @@ public class HikeShareRecipientServiceTests
             .ReturnsAsync(RepositoryResult<bool>.Success(true))
             .ReturnsAsync(RepositoryResult<bool>.Error());
 
-        var service = Build(hikeShareRecipientRepositoryMock: repoMock, userRepositoryMock: userRepoMock, hikeRepositoryMock: hikeRepoMock);
+        var friendRepoMock = new Mock<IFriendRepository>();
+        friendRepoMock.Setup(r => r.FriendshipExistsAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<bool>.Success(true));
+
+        var service = Build(hikeShareRecipientRepositoryMock: repoMock, userRepositoryMock: userRepoMock, hikeRepositoryMock: hikeRepoMock, friendRepositoryMock: friendRepoMock);
 
         // Act
         var result = await service.ReshareSharedHikeAsync("hike-identifier", "user-identifier", "reshareToName", CancellationToken.None);
@@ -393,7 +441,11 @@ public class HikeShareRecipientServiceTests
             .ReturnsAsync(RepositoryResult<bool>.Success(true))
             .ReturnsAsync(RepositoryResult<bool>.Success(true));
 
-        var service = Build(hikeShareRecipientRepositoryMock: repoMock, userRepositoryMock: userRepoMock, hikeRepositoryMock: hikeRepoMock);
+        var friendRepoMock = new Mock<IFriendRepository>();
+        friendRepoMock.Setup(r => r.FriendshipExistsAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<bool>.Success(true));
+
+        var service = Build(hikeShareRecipientRepositoryMock: repoMock, userRepositoryMock: userRepoMock, hikeRepositoryMock: hikeRepoMock, friendRepositoryMock: friendRepoMock);
 
         // Act
         var result = await service.ReshareSharedHikeAsync("hike-identifier", "user-identifier", "reshareToName", CancellationToken.None);
@@ -426,7 +478,11 @@ public class HikeShareRecipientServiceTests
         repoMock.Setup(r => r.ReshareSharedHikeAsync(It.IsAny<HikeShare>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult.Error());
 
-        var service = Build(hikeShareRecipientRepositoryMock: repoMock, userRepositoryMock: userRepoMock, hikeRepositoryMock: hikeRepoMock);
+        var friendRepoMock = new Mock<IFriendRepository>();
+        friendRepoMock.Setup(r => r.FriendshipExistsAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<bool>.Success(true));
+
+        var service = Build(hikeShareRecipientRepositoryMock: repoMock, userRepositoryMock: userRepoMock, hikeRepositoryMock: hikeRepoMock, friendRepositoryMock: friendRepoMock);
 
         // Act
         var result = await service.ReshareSharedHikeAsync("hike-identifier", "user-identifier", "reshareToName", CancellationToken.None);
@@ -458,7 +514,11 @@ public class HikeShareRecipientServiceTests
         repoMock.Setup(r => r.ReshareSharedHikeAsync(It.IsAny<HikeShare>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult.Success());
 
-        var service = Build(hikeShareRecipientRepositoryMock: repoMock, userRepositoryMock: userRepoMock, hikeRepositoryMock: hikeRepoMock);
+        var friendRepoMock = new Mock<IFriendRepository>();
+        friendRepoMock.Setup(r => r.FriendshipExistsAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<bool>.Success(true));
+
+        var service = Build(hikeShareRecipientRepositoryMock: repoMock, userRepositoryMock: userRepoMock, hikeRepositoryMock: hikeRepoMock, friendRepositoryMock: friendRepoMock);
 
         // Act
         var result = await service.ReshareSharedHikeAsync("hike-identifier", "user-identifier", "reshareToName", CancellationToken.None);

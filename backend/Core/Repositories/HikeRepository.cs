@@ -164,7 +164,7 @@ public class HikeRepository : IHikeRepository
             using var context = await _context.CreateDbContextAsync(ctoken);
 
             await context.HikeShares
-                   .Where(hs => hs.SharedWithId == userId || hs.SharedById == userId)
+                   .Where(hs => hs.SharedWithId == userId)
                    .ExecuteDeleteAsync(ctoken);
 
             return RepositoryResult.Success();

@@ -4,7 +4,7 @@ public class HikeShare
 {
     public int HikeId { get; set; }
     public required int SharedWithId { get; set; }
-    public required int SharedById { get; set; }
+    public int? SharedById { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     public Hike? Hike { get; set; }

@@ -184,13 +184,17 @@ public class UsersController : StigViddController
         {
             return Unauthorized("User not found");
         }
+
         var result = await _userService.SearchForUserByUsernameAsync(request.Username, ctoken);
+
         if (!result.Success && result.Message != null)
         {
             return ToActionResult(result.Message);
         }
+
         if (result.Value is null)
             return NotFound();
+
         return Ok(result.Value);
     }
 
