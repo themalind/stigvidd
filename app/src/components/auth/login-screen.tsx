@@ -2,6 +2,7 @@ import { signInUser } from "@/api/auth";
 import { getLoginErrorMessage } from "@/api/firebase-errors";
 import { userThemeAtom } from "@/atoms/user-theme-atom";
 import PasswordInputField from "@/components/auth/password-input-field";
+import BackButton from "@/components/back-button";
 import { BORDER_RADIUS, SURFACE_BORDER_RADIUS } from "@/constants/constants";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Image } from "expo-image";
@@ -32,7 +33,7 @@ const loginFields = z.object({
 
 type FormFields = z.infer<typeof loginFields>;
 
-export default function LoginScreen() {
+export default function LoginScreen({ showBackButton = false }: { showBackButton?: boolean }) {
   const theme = useTheme();
   const [visible, setVisible] = useState(false);
   const [firebaseError, setFirebaseError] = useState("");
@@ -73,6 +74,11 @@ export default function LoginScreen() {
         contentContainerStyle={s.scrollContent}
       >
         <ImageBackground resizeMode="cover" source={background} style={s.backgroundImage}>
+          {showBackButton && (
+            <View style={s.backButtonContainer}>
+              <BackButton />
+            </View>
+          )}
           <View
             style={[
               s.surface,
@@ -196,6 +202,11 @@ const s = StyleSheet.create({
     alignItems: "center",
     flex: 1,
     paddingTop: HEIGHT * 0.15,
+  },
+  backButtonContainer: {
+    position: "absolute",
+    top: 0,
+    left: 0,
   },
   logoContainer: {
     flexDirection: "row",

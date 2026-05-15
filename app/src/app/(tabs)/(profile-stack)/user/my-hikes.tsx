@@ -46,15 +46,6 @@ export default function MyHikesScreen() {
     return <ErrorView error={error} />;
   }
 
-  if (hikes?.length === 0) {
-    return (
-      <View style={[s.noHikesContainer, { backgroundColor: theme.colors.surface }]}>
-        <BackButton />
-        <Text style={{ color: theme.colors.onBackground }}>No hikes saved</Text>
-      </View>
-    );
-  }
-
   return (
     <View style={[s.container, { backgroundColor: theme.colors.background }]}>
       <BackButton />
@@ -76,34 +67,40 @@ export default function MyHikesScreen() {
           }}
         />
       )}
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={s.scrollContent}>
-        {hikes?.map((hike, index) => (
-          <Pressable
-            style={[s.hikePressable, { backgroundColor: theme.colors.surface }]}
-            key={index}
-            onPress={() => {
-              setSelectedhike(hike);
-              setVisible(true);
-            }}
-          >
-            <View style={s.hikeItem}>
-              <View style={[s.iconCircle, { backgroundColor: theme.colors.secondaryContainer }]}>
-                <MaterialCommunityIcons name="map-legend" size={24} color={theme.colors.secondary} />
-              </View>
-              <View style={s.flex}>
-                <Text style={s.name} numberOfLines={1}>
-                  {hike.name}
-                </Text>
-                <View style={s.info}>
-                  <Text>{hike.hikeLength} km</Text>
-                  <Text>{FormattedTime(hike.duration)}</Text>
+      {hikes?.length === 0 ? (
+        <View style={[s.noHikesContainer, { backgroundColor: theme.colors.surface }]}>
+          <Text style={{ color: theme.colors.onBackground }}>No hikes saved</Text>
+        </View>
+      ) : (
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={s.scrollContent}>
+          {hikes?.map((hike, index) => (
+            <Pressable
+              style={[s.hikePressable, { backgroundColor: theme.colors.surface }]}
+              key={index}
+              onPress={() => {
+                setSelectedhike(hike);
+                setVisible(true);
+              }}
+            >
+              <View style={s.hikeItem}>
+                <View style={[s.iconCircle, { backgroundColor: theme.colors.secondaryContainer }]}>
+                  <MaterialCommunityIcons name="map-legend" size={24} color={theme.colors.secondary} />
                 </View>
+                <View style={s.flex}>
+                  <Text style={s.name} numberOfLines={1}>
+                    {hike.name}
+                  </Text>
+                  <View style={s.info}>
+                    <Text>{hike.hikeLength} km</Text>
+                    <Text>{FormattedTime(hike.duration)}</Text>
+                  </View>
+                </View>
+                <Icon source="chevron-right" size={20} />
               </View>
-              <Icon source="chevron-right" size={20} />
-            </View>
-          </Pressable>
-        ))}
-      </ScrollView>
+            </Pressable>
+          ))}
+        </ScrollView>
+      )}
     </View>
   );
 }

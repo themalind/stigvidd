@@ -1,2 +1,5 @@
 import LoginScreen from "@/components/auth/login-screen";
-export default LoginScreen;
+
+export default function SettingsLoginScreen() {
+  return <LoginScreen showBackButton />;
+}
