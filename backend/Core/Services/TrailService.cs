@@ -259,6 +259,74 @@ public class TrailService : ITrailService
         return Result.Ok<TrailResponse?>(_trailResponseFactory.Create(result.Value));
     }
 
+    public async Task<Result<IReadOnlyCollection<TrailImageResponse>>> AddTrailImagesAsync(
+        string trailIdentifier,
+        IFormFileCollection images,
+        CancellationToken ctoken)
+    {
+        var uploadedUrls = new List<string>();
+
+        try
+        {
+            var trailIdResult = await _trailRepository.GetTrailIdByIdentifierAsync(trailIdentifier, ctoken);
+
+            if (trailIdResult.Status == RepositoryResultStatus.Error)
+                return Result.Fail<IReadOnlyCollection<TrailImageResponse>>(new Message(500, "An error occurred while fetching the trail."));
+
+            if (!trailIdResult.IsSuccess)
+                return Result.Fail<IReadOnlyCollection<TrailImageResponse>>(new Message(404, $"Trail with identifier {trailIdentifier} not found."));
+
+            var trailImages = new List<TrailImage>();
+
+            foreach (var image in images)
+            {
+                var uploadResult = await _webDavService.UploadFileAsync(image.OpenReadStream(), "trails");
+
+                if (uploadResult.IsFailure)
+                    return Result.Fail<IReadOnlyCollection<TrailImageResponse>>(new Message(500, "Something went wrong uploading images. Try again later."));
+
+                if (uploadResult.Value != null)
+                {
+                    uploadedUrls.Add(uploadResult.Value);
+                    trailImages.Add(new TrailImage { ImageUrl = uploadResult.Value });
+                }
+            }
+
+            var addResult = await _trailRepository.AddTrailImagesAsync(trailIdResult.Value, trailImages, ctoken);
+
+            if (!addResult.IsSuccess)
+                return Result.Fail<IReadOnlyCollection<TrailImageResponse>>(new Message(500, "An error occurred while saving images."));
+
+            IReadOnlyCollection<TrailImageResponse> response = addResult.Value
+                .Select(img => TrailImageResponse.Create(_trailResponseFactory.PresentableBaseUrl, img.Identifier, img.ImageUrl))
+                .ToList();
+
+            return Result.Ok(response);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "TrailService: AddTrailImagesAsync -> Error adding images to trail {TrailIdentifier}", trailIdentifier);
+
+            if (uploadedUrls.Count != 0)
+                await CleanupUploadedImagesAsync(uploadedUrls);
+
+            return Result.Fail<IReadOnlyCollection<TrailImageResponse>>(new Message(500, "An error occurred while adding images."));
+        }
+    }
+
+    public async Task<Result> DeleteTrailImageAsync(string imageIdentifier, CancellationToken ctoken)
+    {
+        var result = await _trailRepository.DeleteTrailImageAsync(imageIdentifier, ctoken);
+
+        if (result.Status == RepositoryResultStatus.Error)
+            return Result.Fail(new Message(500, "An error occurred while deleting the image."));
+
+        if (!result.IsSuccess)
+            return Result.Fail(new Message(404, $"Image with identifier {imageIdentifier} not found."));
+
+        return Result.Ok();
+    }
+
     public async Task<Result<IReadOnlyCollection<TrailShortInfoResponse>>> GetAllTrailsWithBasicInfoAsync(CancellationToken ctoken)
     {
         var result = await _trailRepository.GetAllTrailsWithBasicInfoAsync(ctoken);

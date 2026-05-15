@@ -26,6 +26,11 @@ export type VisitorInformation = {
   winterMaintenance: boolean;
 };
 
+export type TrailImageResponse = {
+  identifier: string;
+  imageUrl: string;
+};
+
 export type TrailResponse = {
   identifier: string;
   name: string;
@@ -43,6 +48,7 @@ export type TrailResponse = {
   isVerified: boolean;
   city: string;
   visitorInformation?: VisitorInformation;
+  trailImagesResponse?: TrailImageResponse[];
 };
 
 export type TableColumn<T> = {

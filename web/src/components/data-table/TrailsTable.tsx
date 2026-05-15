@@ -12,6 +12,7 @@ import {
   TableRow,
 } from "../ui/table";
 import TrailEditor from "../trail-editor";
+import TrailImagesDialog from "../trail-images-dialog";
 
 interface Props {
   columns: TableColumn<TrailShortInfoResponse>[];
@@ -61,7 +62,8 @@ export default function TrailsTable({ columns, trails }: Props) {
               {getRowValues(columns, trail).map((value, index) => (
                 <TableCell key={index}>{value}</TableCell>
               ))}
-              <TableCell className="flex justify-end">
+              <TableCell className="flex justify-end gap-1">
+                <TrailImagesDialog data={trail} selected={true} />
                 <TrailEditor data={trail} selected={true} />
               </TableCell>
             </TableRow>

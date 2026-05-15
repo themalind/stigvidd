@@ -271,6 +271,57 @@ public class TrailRepository : ITrailRepository
         }
     }
 
+    public async Task<RepositoryResult<IReadOnlyCollection<TrailImage>>> AddTrailImagesAsync(int trailId, IReadOnlyCollection<TrailImage> images, CancellationToken ctoken)
+    {
+        try
+        {
+            using var context = await _context.CreateDbContextAsync(ctoken);
+
+            var trailExists = await context.Trails.AnyAsync(t => t.Id == trailId, ctoken);
+
+            if (!trailExists)
+                return RepositoryResult<IReadOnlyCollection<TrailImage>>.NotFound();
+
+            foreach (var image in images)
+                image.TrailId = trailId;
+
+            context.TrailImages.AddRange(images);
+            await context.SaveChangesAsync(ctoken);
+
+            return RepositoryResult<IReadOnlyCollection<TrailImage>>.Success(images);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "TrailRepository: AddTrailImagesAsync -> Something went wrong when adding images to trail with ID {TrailId}.", trailId);
+            return RepositoryResult<IReadOnlyCollection<TrailImage>>.Error();
+        }
+    }
+
+    public async Task<RepositoryResult> DeleteTrailImageAsync(string imageIdentifier, CancellationToken ctoken)
+    {
+        try
+        {
+            using var context = await _context.CreateDbContextAsync(ctoken);
+
+            var image = await context.TrailImages
+                .Where(img => img.Identifier == imageIdentifier)
+                .FirstOrDefaultAsync(ctoken);
+
+            if (image is null)
+                return RepositoryResult.NotFound();
+
+            context.TrailImages.Remove(image);
+            await context.SaveChangesAsync(ctoken);
+
+            return RepositoryResult.Success();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "TrailRepository: DeleteTrailImageAsync -> Something went wrong when deleting image with identifier {ImageIdentifier}.", imageIdentifier);
+            return RepositoryResult.Error();
+        }
+    }
+
     public async Task<RepositoryResult<Trail>> UpdateTrailAsync(Trail trail, CancellationToken ctoken)
     {
         try

@@ -135,6 +135,55 @@ public class TrailsController : StigViddController
     }
 
     [Authorize]
+    [HttpDelete("images/{imageIdentifier}")]
+    public async Task<ActionResult> DeleteTrailImage(
+        string imageIdentifier,
+        CancellationToken ctoken)
+    {
+        var userResponse = await GetAuthenticatedUserAsync(_userService, ctoken);
+
+        if (userResponse == null)
+            return Unauthorized("User not found");
+
+        var result = await _trailService.DeleteTrailImageAsync(imageIdentifier, ctoken);
+
+        if (!result.Success && result.Message != null)
+        {
+            _logger.LogInformation(
+                "DeleteTrailImage: Failed to delete image with identifier: {imageIdentifier}.", imageIdentifier);
+
+            return ToActionResult(result.Message);
+        }
+
+        return NoContent();
+    }
+
+    [Authorize]
+    [HttpPost("{identifier}/images")]
+    public async Task<ActionResult<IReadOnlyCollection<TrailImageResponse>>> AddTrailImages(
+        string identifier,
+        [FromForm] IFormFileCollection images,
+        CancellationToken ctoken)
+    {
+        var userResponse = await GetAuthenticatedUserAsync(_userService, ctoken);
+
+        if (userResponse == null)
+            return Unauthorized("User not found");
+
+        var result = await _trailService.AddTrailImagesAsync(identifier, images, ctoken);
+
+        if (!result.Success && result.Message != null)
+        {
+            _logger.LogInformation(
+                "AddTrailImages: Failed to add images to trail with identifier: {identifier}.", identifier);
+
+            return ToActionResult(result.Message);
+        }
+
+        return Ok(result.Value);
+    }
+
+    [Authorize]
     [HttpPost]
     [Route("create")]
     public async Task<ActionResult> AddTrail(
