@@ -207,4 +207,41 @@ public class TrailObstacleRepository : ITrailObstacleRepository
             return RepositoryResult.Error();
         }
     }
+
+    public async Task<RepositoryResult> DeleteAllObstaclesByUserIdAsync(int userId, CancellationToken ctoken)
+    {
+        try
+        {
+            using var context = await _context.CreateDbContextAsync(ctoken);
+
+            // IgnoreQueryFilters ensures soft-deleted obstacles are included — all of the user's data should be removed.
+            var obstacleIds = await context.TrailObstacles
+                .IgnoreQueryFilters()
+                .Where(to => to.UserId == userId)
+                .Select(to => to.Id)
+                .ToListAsync(ctoken);
+
+            if (obstacleIds.Count == 0)
+                return RepositoryResult.Success();
+
+            // SolvedVotes use NoAction on the obstacle FK, so votes must be deleted before the obstacles.
+            // ExecuteDeleteAsync issues a single SQL DELETE without loading entities into memory,
+            // which is preferred here since we are bulk-deleting and do not need the entities themselves.
+            await context.TrailObstacleSolvedVotes
+                .Where(sv => obstacleIds.Contains(sv.TrailObstacleId))
+                .ExecuteDeleteAsync(ctoken);
+
+            await context.TrailObstacles
+                .IgnoreQueryFilters()
+                .Where(to => obstacleIds.Contains(to.Id))
+                .ExecuteDeleteAsync(ctoken);
+
+            return RepositoryResult.Success();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "TrailObstacleRepository: DeleteAllObstaclesByUserIdAsync -> Something went wrong when deleting obstacles for user {userId}.", userId);
+            return RepositoryResult.Error();
+        }
+    }
 }

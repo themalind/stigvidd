@@ -12,15 +12,22 @@ namespace UnitTests.ServiceTests;
 
 public class UserServiceTests
 {
-    private UserService Build(IUserRepository repo)
+    private UserService Build(
+        Mock<IUserRepository>? repo = null,
+        Mock<IHikeRepository>? hikeRepo = null,
+        Mock<ITrailObstacleRepository>? trailobstacleRepo = null,
+        Mock<IFriendRepository>? friendRepo = null)
     {
         var cfg = new Mock<IConfiguration>();
         cfg.Setup(c => c["PresentableBaseUrl"]).Returns("http://stigvidd.se/testing/");
+        repo ??= new Mock<IUserRepository>();
+        friendRepo ??= new Mock<IFriendRepository>();
+        var userResponseFactory = new UserResponseFactory(cfg.Object);
+        trailobstacleRepo ??= new Mock<ITrailObstacleRepository>();
+        hikeRepo ??= new Mock<IHikeRepository>();
 
-        return new UserService(repo, new UserResponseFactory(cfg.Object));
+        return new UserService(repo.Object, trailobstacleRepo.Object, userResponseFactory, hikeRepo.Object, friendRepo.Object);
     }
-
-
 
     [Fact]
     public async Task GetUserByFirebaseUid_WhenFound_ReturnsSuccess()
@@ -31,7 +38,7 @@ public class UserServiceTests
             .ReturnsAsync(RepositoryResult<UserResponse>.Success(Utilities.Stubs.UserResponse()));
 
         // Act
-        var result = await Build(repo.Object).GetUserByFirebaseUidAsync(Utilities.Identifiers.UserFirebaseUid, CancellationToken.None);
+        var result = await Build(repo).GetUserByFirebaseUidAsync(Utilities.Identifiers.UserFirebaseUid, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -47,7 +54,7 @@ public class UserServiceTests
             .ReturnsAsync(RepositoryResult<UserResponse>.NotFound());
 
         // Act
-        var result = await Build(repo.Object).GetUserByFirebaseUidAsync("no-uid", CancellationToken.None);
+        var result = await Build(repo).GetUserByFirebaseUidAsync("no-uid", CancellationToken.None);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -64,7 +71,7 @@ public class UserServiceTests
             .ReturnsAsync(RepositoryResult<int>.Success(42));
 
         // Act
-        var result = await Build(repo.Object).GetUserIdByIdentifierAsync(Utilities.Identifiers.User, CancellationToken.None);
+        var result = await Build(repo).GetUserIdByIdentifierAsync(Utilities.Identifiers.User, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -80,7 +87,7 @@ public class UserServiceTests
             .ReturnsAsync(RepositoryResult<int>.NotFound());
 
         // Act
-        var result = await Build(repo.Object).GetUserIdByIdentifierAsync("missing", CancellationToken.None);
+        var result = await Build(repo).GetUserIdByIdentifierAsync("missing", CancellationToken.None);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -97,7 +104,7 @@ public class UserServiceTests
             .ReturnsAsync(RepositoryResult<UserResponse>.Success(Utilities.Stubs.UserResponse()));
 
         // Act
-        var result = await Build(repo.Object).GetUserByIdentifierAsync(Utilities.Identifiers.User, CancellationToken.None);
+        var result = await Build(repo).GetUserByIdentifierAsync(Utilities.Identifiers.User, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -113,7 +120,7 @@ public class UserServiceTests
             .ReturnsAsync(RepositoryResult<UserResponse>.NotFound());
 
         // Act
-        var result = await Build(repo.Object).GetUserByIdentifierAsync("no-user", CancellationToken.None);
+        var result = await Build(repo).GetUserByIdentifierAsync("no-user", CancellationToken.None);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -134,7 +141,7 @@ public class UserServiceTests
             .ReturnsAsync(RepositoryResult<IReadOnlyCollection<UserFavoritesTrailResponse>>.Success(list));
 
         // Act
-        var result = await Build(repo.Object).GetFavoritesByUserIdentifierAsync(Utilities.Identifiers.User, CancellationToken.None);
+        var result = await Build(repo).GetFavoritesByUserIdentifierAsync(Utilities.Identifiers.User, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -146,11 +153,15 @@ public class UserServiceTests
     {
         // Arrange
         var repo = new Mock<IUserRepository>();
-        repo.Setup(r => r.GetFavoritesByUserIdentifierAsync(It.IsAny<string>(), It.IsAny<Expression<Func<Trail, UserFavoritesTrailResponse>>>(), It.IsAny<CancellationToken>()))
+        repo.Setup(r => r.GetFavoritesByUserIdentifierAsync(
+            Utilities.Identifiers.UserWithNoFavorites,
+            It.IsAny<Expression<Func<Trail,
+            UserFavoritesTrailResponse>>>(),
+            It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<IReadOnlyCollection<UserFavoritesTrailResponse>>.Success([]));
 
         // Act
-        var result = await Build(repo.Object).GetFavoritesByUserIdentifierAsync("unknown", CancellationToken.None);
+        var result = await Build(repo).GetFavoritesByUserIdentifierAsync(Utilities.Identifiers.UserWithNoFavorites, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -170,7 +181,7 @@ public class UserServiceTests
             .ReturnsAsync(RepositoryResult<IReadOnlyCollection<UserWishlistTrailResponse>>.Success(list));
 
         // Act
-        var result = await Build(repo.Object).GetWishListByUserIdentifierAsync(Utilities.Identifiers.User, CancellationToken.None);
+        var result = await Build(repo).GetWishListByUserIdentifierAsync(Utilities.Identifiers.User, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -182,11 +193,11 @@ public class UserServiceTests
     {
         // Arrange
         var repo = new Mock<IUserRepository>();
-        repo.Setup(r => r.GetWishListByUserIdentifierAsync(It.IsAny<string>(), It.IsAny<Expression<Func<Trail, UserWishlistTrailResponse>>>(), It.IsAny<CancellationToken>()))
+        repo.Setup(r => r.GetWishListByUserIdentifierAsync(Utilities.Identifiers.UserWithNoWishlist, It.IsAny<Expression<Func<Trail, UserWishlistTrailResponse>>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<IReadOnlyCollection<UserWishlistTrailResponse>>.Success([]));
 
         // Act
-        var result = await Build(repo.Object).GetWishListByUserIdentifierAsync("unknown", CancellationToken.None);
+        var result = await Build(repo).GetWishListByUserIdentifierAsync(Utilities.Identifiers.UserWithNoWishlist, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -198,13 +209,15 @@ public class UserServiceTests
     {
         // Arrange
         var repo = new Mock<IUserRepository>();
+        repo.Setup(r => r.CheckUserNicknameAvaliability(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult.Success());
         repo.Setup(r => r.GetUserByFirebaseUidAsync("new-uid", It.IsAny<Expression<Func<User, string>>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<string>.NotFound());
         repo.Setup(r => r.CreateUserAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((User u, CancellationToken _) => RepositoryResult<User>.Success(u));
 
         // Act
-        var result = await Build(repo.Object).CreateUserAsync("new@test.com", "NewUser", "new-uid", CancellationToken.None);
+        var result = await Build(repo).CreateUserAsync("new@test.com", "NewUser", "new-uid", CancellationToken.None);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -214,15 +227,34 @@ public class UserServiceTests
     }
 
     [Fact]
+    public async Task CreateUser_WhenNicknameAlreadyTaken_ReturnsConflict()
+    {
+        // Arrange
+        var repo = new Mock<IUserRepository>();
+        repo.Setup(r => r.CheckUserNicknameAvaliability(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult.Conflict());
+
+        // Act
+        var result = await Build(repo).CreateUserAsync("new@test.com", "TakenNickname", "new-uid", CancellationToken.None);
+
+        // Assert
+        result.Success.Should().BeFalse();
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(409);
+    }
+
+    [Fact]
     public async Task CreateUser_WhenFirebaseUidAlreadyExists_ReturnsConflict()
     {
         // Arrange
         var repo = new Mock<IUserRepository>();
+        repo.Setup(r => r.CheckUserNicknameAvaliability(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult.Success());
         repo.Setup(r => r.GetUserByFirebaseUidAsync(Utilities.Identifiers.UserFirebaseUid, It.IsAny<Expression<Func<User, string>>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<string>.Success(Utilities.Identifiers.User));
 
         // Act
-        var result = await Build(repo.Object).CreateUserAsync("other@test.com", "Other", Utilities.Identifiers.UserFirebaseUid, CancellationToken.None);
+        var result = await Build(repo).CreateUserAsync("other@test.com", "Other", Utilities.Identifiers.UserFirebaseUid, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -240,7 +272,7 @@ public class UserServiceTests
             .ReturnsAsync(RepositoryResult<UserFavoritesTrailResponse>.Success(response));
 
         // Act
-        var result = await Build(repo.Object).AddTrailToUserFavoritesListAsync(Utilities.Identifiers.User, Utilities.Identifiers.Trail1, CancellationToken.None);
+        var result = await Build(repo).AddTrailToUserFavoritesListAsync(Utilities.Identifiers.User, Utilities.Identifiers.Trail1, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -256,7 +288,7 @@ public class UserServiceTests
             .ReturnsAsync(RepositoryResult<UserFavoritesTrailResponse>.NotFound());
 
         // Act
-        var result = await Build(repo.Object).AddTrailToUserFavoritesListAsync("invalid", "invalid", CancellationToken.None);
+        var result = await Build(repo).AddTrailToUserFavoritesListAsync("invalid", "invalid", CancellationToken.None);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -273,7 +305,7 @@ public class UserServiceTests
             .ReturnsAsync(RepositoryResult<UserFavoritesTrailResponse>.Conflict());
 
         // Act
-        var result = await Build(repo.Object).AddTrailToUserFavoritesListAsync(Utilities.Identifiers.User, Utilities.Identifiers.Trail1, CancellationToken.None);
+        var result = await Build(repo).AddTrailToUserFavoritesListAsync(Utilities.Identifiers.User, Utilities.Identifiers.Trail1, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -291,7 +323,7 @@ public class UserServiceTests
             .ReturnsAsync(RepositoryResult<UserWishlistTrailResponse>.Success(response));
 
         // Act
-        var result = await Build(repo.Object).AddTrailToUserWishListAsync(Utilities.Identifiers.User, Utilities.Identifiers.Trail1, CancellationToken.None);
+        var result = await Build(repo).AddTrailToUserWishListAsync(Utilities.Identifiers.User, Utilities.Identifiers.Trail1, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -307,7 +339,7 @@ public class UserServiceTests
             .ReturnsAsync(RepositoryResult<UserWishlistTrailResponse>.NotFound());
 
         // Act
-        var result = await Build(repo.Object).AddTrailToUserWishListAsync("invalid", "invalid", CancellationToken.None);
+        var result = await Build(repo).AddTrailToUserWishListAsync("invalid", "invalid", CancellationToken.None);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -324,7 +356,7 @@ public class UserServiceTests
             .ReturnsAsync(RepositoryResult<UserWishlistTrailResponse>.Conflict());
 
         // Act
-        var result = await Build(repo.Object).AddTrailToUserWishListAsync(Utilities.Identifiers.User, Utilities.Identifiers.Trail1, CancellationToken.None);
+        var result = await Build(repo).AddTrailToUserWishListAsync(Utilities.Identifiers.User, Utilities.Identifiers.Trail1, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -341,7 +373,7 @@ public class UserServiceTests
             .ReturnsAsync(RepositoryResult.Success());
 
         // Act
-        var result = await Build(repo.Object).RemoveTrailFromUserFavoritesListAsync(Utilities.Identifiers.User, Utilities.Identifiers.Trail1, CancellationToken.None);
+        var result = await Build(repo).RemoveTrailFromUserFavoritesListAsync(Utilities.Identifiers.User, Utilities.Identifiers.Trail1, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -356,7 +388,7 @@ public class UserServiceTests
             .ReturnsAsync(RepositoryResult.NotFound());
 
         // Act
-        var result = await Build(repo.Object).RemoveTrailFromUserFavoritesListAsync("bad", "bad", CancellationToken.None);
+        var result = await Build(repo).RemoveTrailFromUserFavoritesListAsync("bad", "bad", CancellationToken.None);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -373,7 +405,7 @@ public class UserServiceTests
             .ReturnsAsync(RepositoryResult.Success());
 
         // Act
-        var result = await Build(repo.Object).RemoveTrailFromUserWishListAsync(Utilities.Identifiers.User, Utilities.Identifiers.Trail1, CancellationToken.None);
+        var result = await Build(repo).RemoveTrailFromUserWishListAsync(Utilities.Identifiers.User, Utilities.Identifiers.Trail1, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -388,7 +420,7 @@ public class UserServiceTests
             .ReturnsAsync(RepositoryResult.NotFound());
 
         // Act
-        var result = await Build(repo.Object).RemoveTrailFromUserWishListAsync("bad", "bad", CancellationToken.None);
+        var result = await Build(repo).RemoveTrailFromUserWishListAsync("bad", "bad", CancellationToken.None);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -401,11 +433,24 @@ public class UserServiceTests
     {
         // Arrange
         var repo = new Mock<IUserRepository>();
+        repo.Setup(r => r.GetUserIdByIdentifierAsync(Utilities.Identifiers.User, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<int>.Success(1));
         repo.Setup(r => r.DeleteUserAsync(Utilities.Identifiers.User, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult.Success());
+        var hikeRepo = new Mock<IHikeRepository>();
+        hikeRepo.Setup(r => r.HandleUserHikesOnUserDeleteAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult.Success());
+        hikeRepo.Setup(hr => hr.DeleteHikeSharesByUserIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult.Success());
+        var trailObstacleRepo = new Mock<ITrailObstacleRepository>();
+        trailObstacleRepo.Setup(r => r.DeleteAllObstaclesByUserIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult.Success());
+        var friendRepo = new Mock<IFriendRepository>();
+        friendRepo.Setup(r => r.DeleteAllFriendRequestsByUserIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult.Success());
 
         // Act
-        var result = await Build(repo.Object).DeleteUserAsync(Utilities.Identifiers.User, CancellationToken.None);
+        var result = await Build(repo, hikeRepo, trailObstacleRepo, friendRepo).DeleteUserAsync(Utilities.Identifiers.User, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -416,11 +461,13 @@ public class UserServiceTests
     {
         // Arrange
         var repo = new Mock<IUserRepository>();
-        repo.Setup(r => r.DeleteUserAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(RepositoryResult.NotFound());
+        repo.Setup(r => r.GetUserIdByIdentifierAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<int>.NotFound());
+        var hikeRepo = new Mock<IHikeRepository>();
+        var trailObstacleRepo = new Mock<ITrailObstacleRepository>();
 
         // Act
-        var result = await Build(repo.Object).DeleteUserAsync("nobody", CancellationToken.None);
+        var result = await Build(repo, hikeRepo, trailObstacleRepo).DeleteUserAsync("nobody", CancellationToken.None);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -433,11 +480,140 @@ public class UserServiceTests
     {
         // Arrange
         var repo = new Mock<IUserRepository>();
-        repo.Setup(r => r.DeleteUserAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+        repo.Setup(r => r.GetUserIdByIdentifierAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<int>.Error());
+        var hikeRepo = new Mock<IHikeRepository>();
+        var trailObstacleRepo = new Mock<ITrailObstacleRepository>();
+
+        // Act
+        var result = await Build(repo, hikeRepo, trailObstacleRepo).DeleteUserAsync(Utilities.Identifiers.User, CancellationToken.None);
+
+        // Assert
+        result.Success.Should().BeFalse();
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(500);
+    }
+
+    [Fact]
+    public async Task DeleteUser_WhenHandleUserHikesFails_ReturnsInternalServerError()
+    {
+        // Arrange
+        var repo = new Mock<IUserRepository>();
+        repo.Setup(r => r.GetUserIdByIdentifierAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<int>.Success(1));
+        var hikeRepo = new Mock<IHikeRepository>();
+        hikeRepo.Setup(r => r.HandleUserHikesOnUserDeleteAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult.Error());
+        var trailObstacleRepo = new Mock<ITrailObstacleRepository>();
+
+        // Act
+        var result = await Build(repo, hikeRepo, trailObstacleRepo).DeleteUserAsync(Utilities.Identifiers.User, CancellationToken.None);
+
+        // Assert
+        result.Success.Should().BeFalse();
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(500);
+    }
+
+    [Fact]
+    public async Task DeleteUser_WhenDeleteHikeSharesFails_ReturnsInternalServerError()
+    {
+        // Arrange
+        var repo = new Mock<IUserRepository>();
+        repo.Setup(r => r.GetUserIdByIdentifierAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<int>.Success(1));
+        var hikeRepo = new Mock<IHikeRepository>();
+        hikeRepo.Setup(r => r.HandleUserHikesOnUserDeleteAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult.Success());
+        hikeRepo.Setup(r => r.DeleteHikeSharesByUserIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult.Error());
+        var trailObstacleRepo = new Mock<ITrailObstacleRepository>();
+
+        // Act
+        var result = await Build(repo, hikeRepo, trailObstacleRepo).DeleteUserAsync(Utilities.Identifiers.User, CancellationToken.None);
+
+        // Assert
+        result.Success.Should().BeFalse();
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(500);
+    }
+
+    [Fact]
+    public async Task DeleteUser_WhenDeleteObstaclesFails_ReturnsInternalServerError()
+    {
+        // Arrange
+        var repo = new Mock<IUserRepository>();
+        repo.Setup(r => r.GetUserIdByIdentifierAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<int>.Success(1));
+        var hikeRepo = new Mock<IHikeRepository>();
+        hikeRepo.Setup(r => r.HandleUserHikesOnUserDeleteAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult.Success());
+        hikeRepo.Setup(r => r.DeleteHikeSharesByUserIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult.Success());
+        var trailObstacleRepo = new Mock<ITrailObstacleRepository>();
+        trailObstacleRepo.Setup(r => r.DeleteAllObstaclesByUserIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult.Error());
 
         // Act
-        var result = await Build(repo.Object).DeleteUserAsync(Utilities.Identifiers.User, CancellationToken.None);
+        var result = await Build(repo, hikeRepo, trailObstacleRepo).DeleteUserAsync(Utilities.Identifiers.User, CancellationToken.None);
+
+        // Assert
+        result.Success.Should().BeFalse();
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(500);
+    }
+
+    [Fact]
+    public async Task DeleteUser_WhenDeleteFriendRequestsFails_ReturnsInternalServerError()
+    {
+        // Arrange
+        var repo = new Mock<IUserRepository>();
+        repo.Setup(r => r.GetUserIdByIdentifierAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<int>.Success(1));
+        var hikeRepo = new Mock<IHikeRepository>();
+        hikeRepo.Setup(r => r.HandleUserHikesOnUserDeleteAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult.Success());
+        hikeRepo.Setup(r => r.DeleteHikeSharesByUserIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult.Success());
+        var trailObstacleRepo = new Mock<ITrailObstacleRepository>();
+        trailObstacleRepo.Setup(r => r.DeleteAllObstaclesByUserIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult.Success());
+        var friendRepo = new Mock<IFriendRepository>();
+        friendRepo.Setup(r => r.DeleteAllFriendRequestsByUserIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult.Error());
+
+        // Act
+        var result = await Build(repo, hikeRepo, trailObstacleRepo, friendRepo).DeleteUserAsync(Utilities.Identifiers.User, CancellationToken.None);
+
+        // Assert
+        result.Success.Should().BeFalse();
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(500);
+    }
+
+    [Fact]
+    public async Task DeleteUser_WhenFinalDeleteFails_ReturnsInternalServerError()
+    {
+        // Arrange
+        var repo = new Mock<IUserRepository>();
+        repo.Setup(r => r.GetUserIdByIdentifierAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<int>.Success(1));
+        repo.Setup(r => r.DeleteUserAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult.Error());
+        var hikeRepo = new Mock<IHikeRepository>();
+        hikeRepo.Setup(r => r.HandleUserHikesOnUserDeleteAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult.Success());
+        hikeRepo.Setup(r => r.DeleteHikeSharesByUserIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult.Success());
+        var trailObstacleRepo = new Mock<ITrailObstacleRepository>();
+        trailObstacleRepo.Setup(r => r.DeleteAllObstaclesByUserIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult.Success());
+        var friendRepo = new Mock<IFriendRepository>();
+        friendRepo.Setup(r => r.DeleteAllFriendRequestsByUserIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult.Success());
+
+        // Act
+        var result = await Build(repo, hikeRepo, trailObstacleRepo, friendRepo).DeleteUserAsync(Utilities.Identifiers.User, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeFalse();

@@ -1,10 +1,11 @@
-using Core;
+using Core.Interfaces.Repositories;
 using Core.Interfaces.Services;
 using Infrastructure.Data;
 using Infrastructure.Data.Entities;
 using Infrastructure.Enums;
 using Microsoft.AspNetCore.Http;
 using Moq;
+using System.Linq.Expressions;
 using System.Text;
 using UserResponseModel = WebDataContracts.ResponseModels.User.UserResponse;
 
@@ -22,6 +23,9 @@ public static class Utilities
         var hikes = GetSeedingHikes(users);
         var obstacles = GetSeedingTrailObstacles(trails, users);
         var solvedVotes = GetSeedingTrailObstacleSolvedVotes(obstacles, users);
+        var facilities = GetSeedingFacilities();
+        var hikeShares = GetSeedingHikeShares();
+        var friendRequests = GetSeedingFriendRequests();
 
         db.Trails.AddRange(trails);
         db.Users.AddRange(users);
@@ -29,7 +33,9 @@ public static class Utilities
         db.Hikes.AddRange(hikes);
         db.TrailObstacles.AddRange(obstacles);
         db.TrailObstacleSolvedVotes.AddRange(solvedVotes);
-
+        db.Facilities.AddRange(facilities);
+        db.HikeShares.AddRange(hikeShares);
+        db.FriendRequests.AddRange(friendRequests);
         db.SaveChanges();
     }
 
@@ -364,6 +370,30 @@ public static class Utilities
         };
     }
 
+    public static List<HikeShare> GetSeedingHikeShares()
+    {
+        return new List<HikeShare>
+        {
+            new HikeShare { HikeId = 1, SharedWithId = 2, SharedById = 1, CreatedAt = SeedDates.Created },
+            new HikeShare { HikeId = 2, SharedWithId = 3, SharedById = 1, CreatedAt = SeedDates.Created },
+            new HikeShare { HikeId = 3, SharedWithId = 1, SharedById = 2, CreatedAt = SeedDates.Created },
+            new HikeShare { HikeId = 4, SharedWithId = 4, SharedById = 2, CreatedAt = SeedDates.Created },
+            new HikeShare { HikeId = 5, SharedWithId = 5, SharedById = 3, CreatedAt = SeedDates.Created }
+        };
+    }
+
+    public static List<FriendRequest> GetSeedingFriendRequests()
+    {
+        return new List<FriendRequest>
+        {
+            new FriendRequest { RequesterId = 1, ReceiverId = 2, Status = FriendRequestStatus.Accepted, CreatedAt = SeedDates.Created },
+            new FriendRequest { RequesterId = 1, ReceiverId = 3, Status = FriendRequestStatus.Pending, CreatedAt = SeedDates.Created },
+            new FriendRequest { RequesterId = 2, ReceiverId = 3, Status = FriendRequestStatus.Pending, CreatedAt = SeedDates.Created },
+            new FriendRequest { RequesterId = 3, ReceiverId = 4, Status = FriendRequestStatus.Accepted, CreatedAt = SeedDates.Created },
+            new FriendRequest { RequesterId = 4, ReceiverId = 5, Status = FriendRequestStatus.Pending, CreatedAt = SeedDates.Created }
+        };
+    }
+
     public static List<Review> GetSeedingReviews(List<Trail> trails, List<User> users)
     {
         return new List<Review>
@@ -472,11 +502,12 @@ public static class Utilities
     {
         return
         [
-            new Hike { Id = 1, Identifier = "3f9c1b7e-8a42-4e6d-9c5f-2a7b1d8e4f90", Name = "TestHike1", HikeLength = 10, Duration = 3600000, Coordinates = string.Empty, CreatedBy = users[0].Identifier },
-            new Hike { Id = 2, Identifier = "b7a2d4c1-5e9f-4a63-8c1d-0f2e7b9a6c34", Name = "TestHike2", HikeLength = 20, Duration = 7200000, Coordinates = string.Empty, CreatedBy = users[0].Identifier },
-            new Hike { Id = 3, Identifier = "91e4c2d7-3b8f-4f6a-9d1c-7a2e5b0c8f13", Name = "TestHike3", HikeLength = 30, Duration = 10800000, Coordinates = string.Empty, CreatedBy = users[1].Identifier },
-            new Hike { Id = 4, Identifier = "c4d8a1b9-6f3e-4c72-8a5d-1e9b2f7c0a46", Name = "TestHike4", HikeLength = 40, Duration = 14400000, Coordinates = string.Empty, CreatedBy = users[1].Identifier },
-            new Hike { Id = 5, Identifier = "7a1e9c3d-2b4f-4d68-8c0a-5f2b7e1d9c32", Name = "TestHike5", HikeLength = 50, Duration = 18000000, Coordinates = string.Empty, CreatedBy = users[2].Identifier }
+            new Hike { Id = 1, Identifier = "3f9c1b7e-8a42-4e6d-9c5f-2a7b1d8e4f90", Name = "TestHike1", HikeLength = 10, Duration = 3600000, Coordinates = string.Empty, CreatedBy = users[0].Identifier, UserId= users[0].Id },
+            new Hike { Id = 2, Identifier = "b7a2d4c1-5e9f-4a63-8c1d-0f2e7b9a6c34", Name = "TestHike2", HikeLength = 20, Duration = 7200000, Coordinates = string.Empty, CreatedBy = users[0].Identifier, UserId= users[0].Id },
+            new Hike { Id = 3, Identifier = "91e4c2d7-3b8f-4f6a-9d1c-7a2e5b0c8f13", Name = "TestHike3", HikeLength = 30, Duration = 10800000, Coordinates = string.Empty, CreatedBy = users[1].Identifier, UserId= users[1].Id },
+            new Hike { Id = 4, Identifier = "c4d8a1b9-6f3e-4c72-8a5d-1e9b2f7c0a46", Name = "TestHike4", HikeLength = 40, Duration = 14400000, Coordinates = string.Empty, CreatedBy = users[1].Identifier, UserId= users[1].Id },
+            new Hike { Id = 5, Identifier = "7a1e9c3d-2b4f-4d68-8c0a-5f2b7e1d9c32", Name = "TestHike5", HikeLength = 50, Duration = 18000000, Coordinates = string.Empty, CreatedBy = users[2].Identifier, UserId= users[2].Id },
+            new Hike { Id = 6, Identifier = "a2f3b1c4-9e7d-4a21-bc5f-3d8e6f1a2b90", Name = "TestHike6", HikeLength = 15, Duration = 5400000, Coordinates = string.Empty, CreatedBy = users[4].Identifier, UserId= users[4].Id }
         ];
     }
 
@@ -544,9 +575,42 @@ public static class Utilities
         ];
     }
 
+    public static List<Facility> GetSeedingFacilities()
+    {
+        return
+        [
+            new Facility
+            {
+                Id = 1,
+                Identifier = "fac1a1b2-c3d4-4e5f-6a7b-8c9d0e1f2a3b",
+                Name = "Grillplats Tiveden",
+                FacilityType = FacilityType.FirePit,
+                IsAccessible = true,
+                Latitude = 58.9M,
+                Longitude = 14.5M,
+                CreatedAt = SeedDates.Created,
+                LastUpdatedAt = SeedDates.Updated
+            },
+            new Facility
+            {
+                Id = 2,
+                Identifier = "fac2b2c3-d4e5-4f6a-7b8c-9d0e1f2a3b4c",
+                Name = "Vindskydd Gesebol",
+                FacilityType = FacilityType.Shelter,
+                IsAccessible = false,
+                Latitude = 58.1M,
+                Longitude = 13.9M,
+                CreatedAt = SeedDates.Created,
+                LastUpdatedAt = SeedDates.Updated
+            },
+        ];
+    }
+
     public static class Identifiers
     {
         public const string User = "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d";
+        public const string UserWithNoFavorites = "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5a33";
+        public const string UserWithNoWishlist = "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5a44";
         public const string UserFirebaseUid = "firebase-uid-12345";
         public const string Trail1 = "11a1b2c3-d4e5-4f6a-7b8c-9d0e1f2a3b4c";
         public const string Trail4 = "44d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f";
@@ -554,6 +618,8 @@ public static class Utilities
         public const string Hike1 = "3f9c1b7e-8a42-4e6d-9c5f-2a7b1d8e4f90";
         public const string Review5 = "r5e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a";
         public const string Obstacle1 = "ob1a1b2c3-d4e5-4f6a-7b8c-9d0e1f2a3b4c";
+        public const string Facility1 = "fac1a1b2-c3d4-4e5f-6a7b-8c9d0e1f2a3b";
+        public const string Facility2 = "fac2b2c3-d4e5-4f6a-7b8c-9d0e1f2a3b4c";
     }
 
     public static class Stubs
@@ -566,7 +632,8 @@ public static class Utilities
             HikeLength = 10,
             Duration = 3600000,
             Coordinates = "[]",
-            CreatedBy = Identifiers.User
+            CreatedBy = Identifiers.User,
+            UserId = 1
         };
 
         public static Trail Trail() => new()
@@ -649,14 +716,6 @@ public static class Utilities
             return mock;
         }
 
-        public static Mock<IUserService> UserServiceNotFoundByIdentifier()
-        {
-            var mock = new Mock<IUserService>();
-            mock.Setup(u => u.GetUserByIdentifierAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(Result.Fail<UserResponseModel?>(new Message(404, "User not found")));
-            return mock;
-        }
-
         public static Mock<IUserService> UserServiceFoundById(int id = 1)
         {
             var mock = new Mock<IUserService>();
@@ -696,6 +755,31 @@ public static class Utilities
                 .ReturnsAsync(Result.Ok<string?>("uploads/test-image.jpg"));
             mock.Setup(w => w.DeleteFileAsync(It.IsAny<string>()))
                 .ReturnsAsync(Result.Ok(true));
+            return mock;
+        }
+
+        public static Mock<IUserRepository> UserRepositoryFoundByIdentifier()
+        {
+            var user = new User { Id = 1, Identifier = Identifiers.User, NickName = "Nick", Email = "nick@test.com", FirebaseUid = "uid" };
+            var mock = new Mock<IUserRepository>();
+            mock.Setup(r => r.GetUserByIdentifierAsync(It.IsAny<string>(), It.IsAny<Expression<Func<User, User>>>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(RepositoryResult<User>.Success(user));
+            return mock;
+        }
+
+        public static Mock<IUserRepository> UserRepositoryNotFoundByIdentifier()
+        {
+            var mock = new Mock<IUserRepository>();
+            mock.Setup(r => r.GetUserByIdentifierAsync(It.IsAny<string>(), It.IsAny<Expression<Func<User, User>>>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(RepositoryResult<User>.NotFound());
+            return mock;
+        }
+
+        public static Mock<IUserRepository> UserRepositoryFoundById(int id = 1)
+        {
+            var mock = new Mock<IUserRepository>();
+            mock.Setup(r => r.GetUserIdByIdentifierAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(RepositoryResult<int>.Success(id));
             return mock;
         }
     }

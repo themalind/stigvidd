@@ -1,6 +1,6 @@
 ﻿namespace Infrastructure.Data.Entities;
 
-public class Review : BaseEntity
+public class Review : SoftDeletableEntity
 {
     public string? TrailReview { get; set; }
     public decimal Rating { get; set; }

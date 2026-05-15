@@ -120,7 +120,12 @@ public class TrailObstaclesController : StigViddController
             return Unauthorized("User not found");
         }
 
-        var result = await _obstaclesService.UpdateTrailObstacleAsync(user.Identifier, trailObstacleIdentifier, updateRequest.Description, updateRequest.IssueType, ctoken);
+        var result = await _obstaclesService.UpdateTrailObstacleAsync(
+            user.Identifier,
+            trailObstacleIdentifier,
+            updateRequest.Description,
+            updateRequest.IssueType,
+            ctoken);
 
         if (!result.Success && result.Message != null)
         {

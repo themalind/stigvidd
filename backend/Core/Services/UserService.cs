@@ -2,6 +2,7 @@ using Core.Factories;
 using Core.Interfaces.Repositories;
 using Core.Interfaces.Services;
 using Infrastructure.Data.Entities;
+using WebDataContracts.ResponseModels.Friend;
 using WebDataContracts.ResponseModels.Review;
 using WebDataContracts.ResponseModels.Trail;
 using WebDataContracts.ResponseModels.User;
@@ -11,13 +12,22 @@ namespace Core.Services;
 public class UserService : IUserService
 {
     private readonly IUserRepository _userRepository;
+    private readonly ITrailObstacleRepository _trailObstacleRepository;
     private readonly UserResponseFactory _userResponseFactory;
+    private readonly IHikeRepository _hikeRepository;
+    private readonly IFriendRepository _friendRepository;
 
     public UserService(IUserRepository userResponseRepository,
-    UserResponseFactory userResponseFactory)
+    ITrailObstacleRepository trailObstacleRepository,
+    UserResponseFactory userResponseFactory,
+    IHikeRepository hikeRepository,
+    IFriendRepository friendRepository)
     {
         _userRepository = userResponseRepository;
+        _trailObstacleRepository = trailObstacleRepository;
         _userResponseFactory = userResponseFactory;
+        _hikeRepository = hikeRepository;
+        _friendRepository = friendRepository;
     }
 
     public async Task<Result<UserResponse?>> GetUserByFirebaseUidAsync(string firebaseUid, CancellationToken ctoken)
@@ -74,9 +84,9 @@ public class UserService : IUserService
                  t.Name ?? string.Empty,
                  t.TrailLength,
                  t.Description ?? string.Empty,
-                 t.Reviews!.Select(r => new RatingResponse { Identifier = r.Identifier, Rating = r.Rating }).ToList(),
-                 t.TrailImages!.Select(ti => new TrailImageResponse { Identifier = ti.Identifier, ImageUrl = ti.ImageUrl }).Take(1)
-            .ToList()), ctoken);
+                 t.Reviews!.Select(r => RatingResponse.Create(r.Identifier, r.Rating)).ToList(),
+                 t.TrailImages!.Select(ti => TrailImageResponse.Create(_userResponseFactory.PresentableBaseUrl, ti.Identifier, ti.ImageUrl)).Take(1).ToList()
+            ), ctoken);
 
         if (result.Status == RepositoryResultStatus.Error)
             return Result.Fail<IReadOnlyCollection<UserFavoritesTrailResponse?>>(new Message(500, "An error occurred while fetching favorites."));
@@ -93,9 +103,9 @@ public class UserService : IUserService
                  t.Name ?? string.Empty,
                  t.TrailLength,
                  t.Description ?? string.Empty,
-                 t.Reviews!.Select(r => new RatingResponse { Identifier = r.Identifier, Rating = r.Rating }).ToList(),
-                 t.TrailImages!.Select(ti => new TrailImageResponse { Identifier = ti.Identifier, ImageUrl = ti.ImageUrl }).Take(1)
-            .ToList()), ctoken);
+                 t.Reviews!.Select(r => RatingResponse.Create(r.Identifier, r.Rating)).ToList(),
+                 t.TrailImages!.Select(ti => TrailImageResponse.Create(_userResponseFactory.PresentableBaseUrl, ti.Identifier, ti.ImageUrl)).Take(1).ToList()
+            ), ctoken);
 
         if (result.Status == RepositoryResultStatus.Error)
             return Result.Fail<IReadOnlyCollection<UserWishlistTrailResponse?>>(new Message(500, "An error occurred while fetching wishlist."));
@@ -103,8 +113,57 @@ public class UserService : IUserService
         return Result.Ok<IReadOnlyCollection<UserWishlistTrailResponse?>>(result.Value ?? []);
     }
 
+    public async Task<Result<UserNameResponse>> SearchUsersByNickNameAsync(string query, int excludeUserId, CancellationToken ctoken)
+    {
+        var result = await _userRepository.GetUserIdByNameAsync(query, ctoken);
+
+        if (result.Status == RepositoryResultStatus.Error)
+            return Result.Fail<UserNameResponse>(new Message(500, "An error occurred while searching for the user."));
+
+        if (!result.IsSuccess)
+            return Result.Ok(UserNameResponse.Create(query, false));
+
+        var exists = result.Value != excludeUserId;
+        return Result.Ok(UserNameResponse.Create(query, exists));
+    }
+
+    public async Task<Result<FriendResponse?>> SearchForUserByUsernameAsync(string username, CancellationToken ctoken)
+    {
+        var result = await _userRepository.GetUserByNickNameAsync(
+            username,
+            u => FriendResponse.Create(u.Identifier, u.NickName),
+            ctoken);
+
+        if (result.Status == RepositoryResultStatus.NotFound)
+            return Result.Ok<FriendResponse?>(null);
+
+        if (!result.IsSuccess)
+            return Result.Fail<FriendResponse?>(new Message(500, "An error occurred while searching for the user."));
+
+        return Result.Ok<FriendResponse?>(result.Value);
+    }
+
+    public async Task<Result<UserNameResponse>> CheckForUsername(string username, CancellationToken ctoken)
+    {
+        var result = await _userRepository.CheckForUsername(username, ctoken);
+
+        if (result.Status == RepositoryResultStatus.Error)
+            return Result.Fail<UserNameResponse>(new Message(500, "An error occurred while checking username."));
+
+        return Result.Ok(UserNameResponse.Create(username, result.Value));
+    }
+
     public async Task<Result<UserResponse?>> CreateUserAsync(string email, string nickName, string firebaseUid, CancellationToken ctoken)
     {
+        var nicknameCheck = await _userRepository.CheckUserNicknameAvaliability(nickName, ctoken);
+        if (!nicknameCheck.IsSuccess)
+        {
+            if (nicknameCheck.Status == RepositoryResultStatus.Conflict)
+                return Result.Fail<UserResponse?>(new Message(409, $"Nickname {nickName} is already taken."));
+
+            return Result.Fail<UserResponse?>(new Message(500, "An error occurred while creating the user."));
+        }
+
         var existing = await _userRepository.GetUserByFirebaseUidAsync(firebaseUid, u => u.Identifier, ctoken);
 
         if (existing.Status == RepositoryResultStatus.Error)
@@ -141,9 +200,9 @@ public class UserService : IUserService
                 t.Name ?? string.Empty,
                 t.TrailLength,
                 t.Description ?? string.Empty,
-                t.Reviews!.Select(r => new RatingResponse { Identifier = r.Identifier, Rating = r.Rating }).ToList(),
-                t.TrailImages!.Select(ti => new TrailImageResponse { Identifier = ti.Identifier, ImageUrl = ti.ImageUrl }).Take(1)
-            .ToList()), ctoken);
+                t.Reviews!.Select(r => RatingResponse.Create(r.Identifier, r.Rating)).ToList(),
+                t.TrailImages!.Select(ti => TrailImageResponse.Create(_userResponseFactory.PresentableBaseUrl, ti.Identifier, ti.ImageUrl)).Take(1).ToList()
+            ), ctoken);
 
         if (result.Status == RepositoryResultStatus.Error)
             return Result.Fail<UserFavoritesTrailResponse?>(new Message(500, "An error occurred while adding trail to favorites."));
@@ -167,8 +226,8 @@ public class UserService : IUserService
                  t.Name ?? string.Empty,
                  t.TrailLength,
                  t.Description ?? string.Empty,
-                 t.Reviews!.Select(r => new RatingResponse { Identifier = r.Identifier, Rating = r.Rating }).ToList(),
-                 t.TrailImages!.Select(ti => new TrailImageResponse { Identifier = ti.Identifier, ImageUrl = ti.ImageUrl }).Take(1).ToList()
+                 t.Reviews!.Select(r => RatingResponse.Create(r.Identifier, r.Rating)).ToList(),
+                 t.TrailImages!.Select(ti => TrailImageResponse.Create(_userResponseFactory.PresentableBaseUrl, ti.Identifier, ti.ImageUrl)).Take(1).ToList()
             ), ctoken);
 
         if (result.Status == RepositoryResultStatus.Error)
@@ -211,13 +270,44 @@ public class UserService : IUserService
 
     public async Task<Result> DeleteUserAsync(string identifier, CancellationToken ctoken)
     {
+        var userResult = await _userRepository.GetUserIdByIdentifierAsync(identifier, ctoken);
+
+        if (!userResult.IsSuccess)
+        {
+            if (userResult.Status == RepositoryResultStatus.NotFound)
+                return Result.Fail(new Message(404, $"User with identifier {identifier} not found."));
+
+            if (userResult.Status == RepositoryResultStatus.Error)
+                return Result.Fail(new Message(500, $"Error deleting user with identifier {identifier}"));
+        }
+
+        var hikeResult = await _hikeRepository.HandleUserHikesOnUserDeleteAsync(userResult.Value, ctoken);
+
+        if (!hikeResult.IsSuccess)
+            return Result.Fail(new Message(500, $"Error deleting user with identifier {identifier}"));
+
+        var sharedHikesResult = await _hikeRepository.DeleteHikeSharesByUserIdAsync(userResult.Value, ctoken);
+
+        if (!sharedHikesResult.IsSuccess)
+            return Result.Fail(new Message(500, $"Error deleting user with identifier {identifier}"));
+
+        // Reviews cascade at the DB level (OnDelete Cascade), so they are removed automatically when the user is deleted.
+        // TrailObstacles use NoAction to avoid multiple cascade paths, so they must be removed explicitly before the user is deleted.
+        var obstacleResult = await _trailObstacleRepository.DeleteAllObstaclesByUserIdAsync(userResult.Value, ctoken);
+
+        if (obstacleResult.Status == RepositoryResultStatus.Error)
+            return Result.Fail(new Message(500, $"Error deleting user with identifier {identifier}"));
+
+        // FriendRequests use NoAction to avoid multiple cascade paths, so they must be removed explicitly before the user is deleted.
+        var friendRequestsResult = await _friendRepository.DeleteAllFriendRequestsByUserIdAsync(userResult.Value, ctoken);
+
+        if (friendRequestsResult.Status == RepositoryResultStatus.Error)
+            return Result.Fail(new Message(500, $"Error deleting user with identifier {identifier}"));
+
         var result = await _userRepository.DeleteUserAsync(identifier, ctoken);
 
         if (result.Status == RepositoryResultStatus.Error)
             return Result.Fail(new Message(500, $"Error deleting user with identifier {identifier}"));
-
-        if (result.Status == RepositoryResultStatus.NotFound)
-            return Result.Fail(new Message(404, $"User with identifier {identifier} not found."));
 
         return Result.Ok();
     }

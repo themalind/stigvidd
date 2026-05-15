@@ -1,11 +1,16 @@
+import { incomingRequestsAtom } from "@/atoms/friends-atoms";
 import Header from "@/components/header";
 import { FontAwesome, Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { Tabs, usePathname } from "expo-router";
+import { useAtomValue } from "jotai";
+import { View } from "react-native";
 import { useTheme } from "react-native-paper";
 
 export default function TabsLayout() {
   const theme = useTheme();
   const pathname = usePathname();
+  const { data: incoming } = useAtomValue(incomingRequestsAtom);
+  const incomingCount = incoming?.length ?? 0;
 
   const shouldShowHeader = !pathname.includes("/login") && !pathname.includes("/register");
 
@@ -18,6 +23,7 @@ export default function TabsLayout() {
             backgroundColor: theme.colors.background,
             borderTopColor: theme.colors.outline,
           },
+          tabBarBackground: () => <View style={{ flex: 1, backgroundColor: theme.colors.background }} />,
           tabBarIconStyle: {
             marginTop: 8,
           },
@@ -73,6 +79,8 @@ export default function TabsLayout() {
               ) : (
                 <MaterialCommunityIcons name="account-box-outline" size={30} color={theme.colors.onBackground} />
               ),
+            tabBarBadge: incomingCount > 0 ? incomingCount : undefined,
+            tabBarBadgeStyle: { color: theme.colors.onPrimary, backgroundColor: theme.colors.primary },
           }}
         />
         <Tabs.Screen

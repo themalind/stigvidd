@@ -1,4 +1,4 @@
-import { createStigViddUser } from "@/api/users";
+import { ApiError, createStigViddUser } from "@/api/users";
 import { AuthResult, RegisterData } from "@/data/types";
 import { FirebaseError } from "firebase/app";
 import { User, createUserWithEmailAndPassword, deleteUser } from "firebase/auth";
@@ -9,7 +9,9 @@ export async function registerUser(data: RegisterData): Promise<AuthResult> {
   let firebaseUser: User | null = null;
 
   try {
-    // Skapa Firebaseanvändare
+    // Add a namecheck to see if wanted username is free before creating a firebaseuser.
+    // If not it the api will send back an error triggering the rollback flow.
+    // Create FirebaseUser
     const response = await createUserWithEmailAndPassword(auth, data.email, data.password);
 
     if (!response) {
@@ -18,7 +20,7 @@ export async function registerUser(data: RegisterData): Promise<AuthResult> {
 
     firebaseUser = response.user;
 
-    // Skapa StigViddanvändare
+    // Create StigviddUser
     const result = await createStigViddUser({
       email: data.email,
       nickname: data.nickName,
@@ -30,7 +32,7 @@ export async function registerUser(data: RegisterData): Promise<AuthResult> {
 
     return { success: true, user: response.user, error: null };
   } catch (error) {
-    // Om vi skapade en Firebase-användare men något gick fel när stigviddanvändaren skulle skapas, ta bort firebase användaren.
+    // If a firebase user was created but something went wrong while creating stigvidduser, remove firebaseuser.
     if (firebaseUser) {
       try {
         await deleteUser(firebaseUser);
@@ -47,6 +49,17 @@ export async function registerUser(data: RegisterData): Promise<AuthResult> {
         error: {
           code: error.code,
           message: error.message,
+        },
+      };
+    }
+
+    if (error instanceof ApiError && error.message === "nickname-taken") {
+      return {
+        success: false,
+        user: null,
+        error: {
+          code: "api/nickname-taken",
+          message: "Smeknamnet upptaget",
         },
       };
     }

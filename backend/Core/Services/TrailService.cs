@@ -63,23 +63,16 @@ public class TrailService : ITrailService
                     _trailResponseFactory.PresentableBaseUrl,
                     img.Identifier,
                     img.ImageUrl)).ToList(),
-                t.TrailLinks!.Select(link => new TrailLinkResponse
-                {
-                    Identifier = link.Identifier,
-                    Link = link.Link,
-                    Title = link.Title
-                }).ToList(),
-                t.VisitorInformation != null ? new VisitorInformationResponse
-                {
-                    Identifier = t.VisitorInformation.Identifier,
-                    GettingThere = t.VisitorInformation.GettingThere,
-                    PublicTransport = t.VisitorInformation.PublicTransport,
-                    Parking = t.VisitorInformation.Parking,
-                    Illumination = t.VisitorInformation.Illumination,
-                    IlluminationText = t.VisitorInformation.IlluminationText,
-                    MaintainedBy = t.VisitorInformation.MaintainedBy,
-                    WinterMaintenance = t.VisitorInformation.WinterMaintenance
-                } : null),
+                t.TrailLinks!.Select(link => TrailLinkResponse.Create(link.Identifier, link.Link, link.Title)).ToList(),
+                t.VisitorInformation != null ? VisitorInformationResponse.Create(
+                    t.VisitorInformation.Identifier,
+                    t.VisitorInformation.GettingThere,
+                    t.VisitorInformation.PublicTransport,
+                    t.VisitorInformation.Parking,
+                    t.VisitorInformation.Illumination,
+                    t.VisitorInformation.IlluminationText,
+                    t.VisitorInformation.MaintainedBy,
+                    t.VisitorInformation.WinterMaintenance) : null),
             ctoken);
 
         if (result.Status == RepositoryResultStatus.Error)

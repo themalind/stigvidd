@@ -12,6 +12,7 @@ public class UserResponseFactoryTests
     {
         var cfg = new Mock<IConfiguration>();
         cfg.Setup(c => c["PresentableBaseUrl"]).Returns("http://stigvidd.se/testing/");
+
         return new UserResponseFactory(cfg.Object);
     }
 

@@ -1,4 +1,4 @@
-import { CreateHikeRequest, Hike } from "@/data/types";
+import { CreateHikeRequest, Hike, ShareHikeRequest } from "@/data/types";
 import { ApiError, getUserToken } from "./users";
 import { BASE_URL } from "./api-config";
 
@@ -97,6 +97,34 @@ export async function getHikeByIdentifier(hikeIdentifier: string): Promise<Hike>
     return await response.json();
   } catch (error) {
     console.log(error);
+    throw error;
+  }
+}
+
+export async function shareHike(request: ShareHikeRequest): Promise<{ success: boolean }> {
+  const token = await getUserToken();
+
+  if (!token) {
+    throw new Error("User not authenticated");
+  }
+
+  try {
+    const response = await fetch(`${BASE_URL}/hikeshares/share`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(request),
+    });
+
+    if (!response.ok) {
+      throw new ApiError(`HTTP error: shareHike: ${response.status}`, response.status);
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.log("shareHike -> Error while sharing hike:", error);
     throw error;
   }
 }
