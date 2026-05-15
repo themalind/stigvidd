@@ -1,4 +1,5 @@
 import { removeSharedHike, reshareHike } from "@/api/shared-hikes";
+import { ApiError } from "@/api/users";
 import { showErrorAtom, showSuccessAtom } from "@/atoms/snackbar-atoms";
 import { stigviddUserAtom } from "@/atoms/user-atoms";
 import AlertDialog from "@/components/alert-dialog";
@@ -66,10 +67,14 @@ export default function SharedHikeDetails({ visible, sharedHike, onDismiss }: Pr
       onDismiss();
       setSuccessMsg("Promenaden har delats!");
     },
-    onError: () => {
+    onError: (error) => {
       setShowShareModal(false);
       onDismiss();
-      setErrorMsg("Något gick fel försök igen senare.");
+      if (error instanceof ApiError && error.status === 409) {
+        setErrorMsg("Mottagaren har redan promenaden.");
+      } else {
+        setErrorMsg("Något gick fel försök igen senare.");
+      }
     },
   });
   const handeleDelete = () => {
@@ -157,6 +162,7 @@ export default function SharedHikeDetails({ visible, sharedHike, onDismiss }: Pr
             reShareMutation.mutate({ hikeIdentifier: sharedHike.hikeIdentifier, reShareToName: friendNickName });
           }}
           isPending={reShareMutation.isPending}
+          excludeNickName={sharedHike.sharedByName}
         />
       </Modal>
     </Portal>
