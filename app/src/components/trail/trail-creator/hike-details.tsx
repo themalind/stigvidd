@@ -1,4 +1,5 @@
 import { deleteHike, shareHike } from "@/api/hikes";
+import { ApiError } from "@/api/users";
 import { showErrorAtom, showSuccessAtom } from "@/atoms/snackbar-atoms";
 import { stigviddUserAtom } from "@/atoms/user-atoms";
 import AlertDialog from "@/components/alert-dialog";
@@ -65,10 +66,14 @@ export default function HikeDetails({ visible, hike, onDismiss }: Props) {
       onDismiss();
       setSuccessMsg("Promenaden har delats!");
     },
-    onError: () => {
+    onError: (error) => {
       setShowShareModal(false);
       onDismiss();
-      setErrorMsg("Något gick fel försök igen senare.");
+      if (error instanceof ApiError && error.status === 409) {
+        setErrorMsg("Mottagaren har redan promenaden.");
+      } else {
+        setErrorMsg("Något gick fel försök igen senare.");
+      }
     },
   });
 
