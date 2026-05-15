@@ -9,6 +9,8 @@ export async function registerUser(data: RegisterData): Promise<AuthResult> {
   let firebaseUser: User | null = null;
 
   try {
+    // Add a namecheck to see if wanted username is free before creating a firebaseuser.
+    // If not it the api will send back an error triggering the rollback flow.
     // Create FirebaseUser
     const response = await createUserWithEmailAndPassword(auth, data.email, data.password);
 
