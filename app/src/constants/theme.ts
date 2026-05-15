@@ -58,47 +58,64 @@ export const AppDefaultTheme = merge(CombinedDefaultTheme, {
 
 export const AppDarkTheme = merge(CombinedDarkTheme, {
   colors: {
-    primary: "hsl(25, 92%, 58%)",
-    onPrimary: "rgb(60, 22, 0)",
-    primaryContainer: "rgb(132, 60, 14)",
-    onPrimaryContainer: "rgb(255, 220, 192)",
-    secondary: "rgb(220, 188, 168)",
-    onSecondary: "rgb(58, 36, 24)",
-    secondaryContainer: "rgb(82, 58, 44)",
-    onSecondaryContainer: "rgb(252, 220, 200)",
-    tertiary: "rgb(248, 208, 110)",
-    onTertiary: "rgb(56, 40, 0)",
-    tertiaryContainer: "rgb(82, 58, 0)",
-    onTertiaryContainer: "rgb(252, 226, 156)",
-    warning: "#ffaa3c",
-    error: "hsl(0, 76%, 65%)",
-    onError: "rgb(105, 0, 5)",
-    errorContainer: "hsl(0, 28%, 18%)",
-    onErrorContainer: "rgb(255, 180, 171)",
-    background: "rgb(0, 0, 0)",
-    onBackground: "rgb(238, 230, 224)",
-    surface: "hsl(20, 5%, 11%)",
-    onSurface: "rgb(238, 230, 224)",
-    surfaceVariant: "hsl(22, 8%, 17%)",
-    onSurfaceVariant: "rgb(216, 200, 188)",
-    outline: "hsl(25, 55%, 52%)",
-    outlineVariant: "rgb(60, 50, 44)",
+    // Primär (orange accent — knappar, toggles, ikoner, fokuserade fält)
+    primary: "hsl(25, 95%, 55%)",
+    onPrimary: "hsl(0, 0%, 8%)",
+    primaryContainer: "hsl(25, 60%, 22%)",
+    onPrimaryContainer: "hsl(25, 90%, 88%)",
+
+    // Sekundär (neutral grå — sekundära knappar, chips)
+    secondary: "hsl(0, 0%, 80%)",
+    onSecondary: "hsl(0, 0%, 10%)",
+    secondaryContainer: "hsl(0, 0%, 20%)",
+    onSecondaryContainer: "hsl(0, 0%, 92%)",
+
+    // Tertiär (svagare orange-variant för subtilare accenter)
+    tertiary: "hsl(25, 70%, 70%)",
+    onTertiary: "hsl(25, 80%, 12%)",
+    tertiaryContainer: "hsl(25, 40%, 18%)",
+    onTertiaryContainer: "hsl(25, 85%, 90%)",
+
+    // Varning & fel
+    warning: "hsl(35, 95%, 60%)",
+    error: "hsl(0, 75%, 62%)",
+    onError: "hsl(0, 0%, 100%)",
+    errorContainer: "hsl(0, 35%, 20%)",
+    onErrorContainer: "hsl(0, 90%, 90%)",
+
+    // Bakgrund & ytor (svart → mörkgrå-trappa)
+    background: "hsl(0, 0%, 4%)",
+    onBackground: "hsl(0, 0%, 96%)",
+    surface: "hsl(0, 0%, 10%)", // modaler/kort, som "Lägg till lägerplats"
+    onSurface: "hsl(0, 0%, 96%)",
+    surfaceVariant: "hsl(0, 0%, 16%)", // input-bakgrund, listrader
+    onSurfaceVariant: "hsl(0, 0%, 75%)",
+
+    // Konturer (orange som i bilden — input-fältens kanter)
+    outline: "hsl(25, 90%, 55%)",
+    outlineVariant: "hsl(0, 0%, 25%)",
+
     shadow: "rgb(0, 0, 0)",
     scrim: "rgb(0, 0, 0)",
-    inverseSurface: "rgb(238, 230, 224)",
-    inverseOnSurface: "rgb(50, 38, 30)",
-    inversePrimary: "hsl(25, 90%, 38%)",
+
+    // Inverterade ytor (t.ex. snackbar)
+    inverseSurface: "hsl(0, 0%, 94%)",
+    inverseOnSurface: "hsl(0, 0%, 12%)",
+    inversePrimary: "hsl(25, 90%, 40%)",
+
+    // Elevation-trappa — mörkgrå med svag varm dragning
     elevation: {
       level0: "transparent",
-      level1: "rgb(18, 14, 10)",
-      level2: "rgb(28, 22, 16)",
-      level3: "rgb(38, 28, 20)",
-      level4: "rgb(42, 30, 22)",
-      level5: "rgb(48, 34, 24)",
+      level1: "hsl(0, 0%, 9%)",
+      level2: "hsl(0, 0%, 12%)",
+      level3: "hsl(0, 0%, 14%)",
+      level4: "hsl(0, 0%, 16%)",
+      level5: "hsl(0, 0%, 18%)",
     },
-    surfaceDisabled: "rgba(238, 230, 224, 0.12)",
-    onSurfaceDisabled: "rgba(238, 230, 224, 0.38)",
-    backdrop: "rgba(0, 0, 0, 0.6)",
+
+    surfaceDisabled: "hsla(0, 0%, 96%, 0.12)",
+    onSurfaceDisabled: "hsla(0, 0%, 96%, 0.38)",
+    backdrop: "hsla(0, 0%, 0%, 0.6)",
   },
 });
 
