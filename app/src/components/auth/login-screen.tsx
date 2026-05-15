@@ -5,7 +5,7 @@ import PasswordInputField from "@/components/auth/password-input-field";
 import { BORDER_RADIUS, SURFACE_BORDER_RADIUS } from "@/constants/constants";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Image } from "expo-image";
-import { Link, router } from "expo-router";
+import { Link } from "expo-router";
 import { useAtom } from "jotai";
 import { useState } from "react";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
@@ -62,7 +62,6 @@ export default function LoginScreen() {
     }
 
     console.log("Inloggad", result.user.email);
-    router.replace("/(tabs)/(profile-stack)/profile-page");
   };
 
   return (

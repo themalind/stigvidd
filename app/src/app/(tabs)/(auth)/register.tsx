@@ -5,7 +5,7 @@ import PasswordInputField from "@/components/auth/password-input-field";
 import { BORDER_RADIUS, SURFACE_BORDER_RADIUS } from "@/constants/constants";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Image } from "expo-image";
-import { Link, router } from "expo-router";
+import { Link } from "expo-router";
 import { useAtom } from "jotai";
 import React, { useState } from "react";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
@@ -85,7 +85,6 @@ export default function RegisterScreen() {
       setFirebaseError(getRegisterErrorMessage(errorCode));
       return;
     }
-    router.replace("/(tabs)/(profile-stack)/profile-page");
     console.log("Registrerad", result.user.email, result.user.displayName);
   };
 
