@@ -141,6 +141,7 @@ export default function FriendsScreen() {
                         </Text>
                         <View style={styles.rowActions}>
                           <IconButton
+                            hitSlop={16}
                             icon="check"
                             size={25}
                             iconColor={theme.colors.primary}
@@ -149,6 +150,7 @@ export default function FriendsScreen() {
                             style={styles.actionButton}
                           />
                           <IconButton
+                            hitSlop={16}
                             icon="close"
                             size={25}
                             iconColor={theme.colors.error}
@@ -210,6 +212,7 @@ export default function FriendsScreen() {
                           {req.receiverNickName}
                         </Text>
                         <IconButton
+                          hitSlop={16}
                           icon="close"
                           size={25}
                           iconColor={theme.colors.outline}
@@ -281,6 +284,7 @@ export default function FriendsScreen() {
                           {friend.nickName}
                         </Text>
                         <IconButton
+                          hitSlop={16}
                           icon="account-remove"
                           size={25}
                           iconColor={theme.colors.outline}
