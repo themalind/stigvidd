@@ -270,4 +270,111 @@ public class TrailRepository : ITrailRepository
             return RepositoryResult<Trail>.Error();
         }
     }
+
+    public async Task<RepositoryResult<IReadOnlyCollection<TrailImage>>> AddTrailImagesAsync(int trailId, IReadOnlyCollection<TrailImage> images, CancellationToken ctoken)
+    {
+        try
+        {
+            using var context = await _context.CreateDbContextAsync(ctoken);
+
+            var trailExists = await context.Trails.AnyAsync(t => t.Id == trailId, ctoken);
+
+            if (!trailExists)
+                return RepositoryResult<IReadOnlyCollection<TrailImage>>.NotFound();
+
+            foreach (var image in images)
+                image.TrailId = trailId;
+
+            context.TrailImages.AddRange(images);
+            await context.SaveChangesAsync(ctoken);
+
+            return RepositoryResult<IReadOnlyCollection<TrailImage>>.Success(images);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "TrailRepository: AddTrailImagesAsync -> Something went wrong when adding images to trail with ID {TrailId}.", trailId);
+            return RepositoryResult<IReadOnlyCollection<TrailImage>>.Error();
+        }
+    }
+
+    public async Task<RepositoryResult> DeleteTrailImageAsync(string imageIdentifier, CancellationToken ctoken)
+    {
+        try
+        {
+            using var context = await _context.CreateDbContextAsync(ctoken);
+
+            var image = await context.TrailImages
+                .Where(img => img.Identifier == imageIdentifier)
+                .FirstOrDefaultAsync(ctoken);
+
+            if (image is null)
+                return RepositoryResult.NotFound();
+
+            context.TrailImages.Remove(image);
+            await context.SaveChangesAsync(ctoken);
+
+            return RepositoryResult.Success();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "TrailRepository: DeleteTrailImageAsync -> Something went wrong when deleting image with identifier {ImageIdentifier}.", imageIdentifier);
+            return RepositoryResult.Error();
+        }
+    }
+
+    public async Task<RepositoryResult<Trail>> UpdateTrailAsync(Trail trail, CancellationToken ctoken)
+    {
+        try
+        {
+            using var context = await _context.CreateDbContextAsync(ctoken);
+
+            var existing = await context.Trails
+                .Include(t => t.VisitorInformation)
+                .Where(t => t.Identifier == trail.Identifier)
+                .FirstOrDefaultAsync(ctoken);
+
+            if (existing is null)
+                return RepositoryResult<Trail>.NotFound();
+
+            existing.Name = trail.Name;
+            existing.TrailLength = trail.TrailLength;
+            existing.Classification = trail.Classification;
+            existing.Accessibility = trail.Accessibility;
+            existing.AccessibilityInfo = trail.AccessibilityInfo;
+            existing.TrailSymbol = trail.TrailSymbol;
+            existing.Description = trail.Description;
+            existing.FullDescription = trail.FullDescription;
+            existing.Tags = trail.Tags;
+            existing.City = trail.City;
+            existing.LastUpdatedAt = DateTime.UtcNow;
+
+            if (trail.VisitorInformation != null)
+            {
+                if (existing.VisitorInformation != null)
+                {
+                    existing.VisitorInformation.GettingThere = trail.VisitorInformation.GettingThere;
+                    existing.VisitorInformation.PublicTransport = trail.VisitorInformation.PublicTransport;
+                    existing.VisitorInformation.Parking = trail.VisitorInformation.Parking;
+                    existing.VisitorInformation.Illumination = trail.VisitorInformation.Illumination;
+                    existing.VisitorInformation.IlluminationText = trail.VisitorInformation.IlluminationText;
+                    existing.VisitorInformation.MaintainedBy = trail.VisitorInformation.MaintainedBy;
+                    existing.VisitorInformation.WinterMaintenance = trail.VisitorInformation.WinterMaintenance;
+                    existing.VisitorInformation.LastUpdatedAt = DateTime.UtcNow;
+                }
+                else
+                {
+                    existing.VisitorInformation = trail.VisitorInformation;
+                }
+            }
+
+            await context.SaveChangesAsync(ctoken);
+
+            return RepositoryResult<Trail>.Success(existing);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "TrailRepository: UpdateTrailAsync -> Something went wrong when updating trail with identifier {Identifier}.", trail.Identifier);
+            return RepositoryResult<Trail>.Error();
+        }
+    }
 }
