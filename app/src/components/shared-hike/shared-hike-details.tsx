@@ -3,7 +3,7 @@ import { ApiError } from "@/api/users";
 import { showErrorAtom, showSuccessAtom } from "@/atoms/snackbar-atoms";
 import { stigviddUserAtom } from "@/atoms/user-atoms";
 import AlertDialog from "@/components/alert-dialog";
-import SharedHikeModal from "@/components/shared-hike/shared-hike-modal";
+import ReshareHikeModal from "@/components/shared-hike/reshare-hike-modal";
 import { BORDER_RADIUS, SURFACE_BORDER_RADIUS } from "@/constants/constants";
 import { ReshareSharedHikeRequest, SharedHike } from "@/data/types";
 import CoordinateParser from "@/utils/coordinate-parser";
@@ -15,9 +15,9 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { BlurView } from "expo-blur";
 import { useAtomValue, useSetAtom } from "jotai";
 import { useRef, useState } from "react";
-import { Dimensions, Pressable, StyleSheet, View } from "react-native";
+import { Dimensions, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import MapView, { Polyline } from "react-native-maps";
-import { Button, Icon, Modal, Portal, Text, useTheme } from "react-native-paper";
+import { Button, Divider, Icon, Modal, Portal, Text, useTheme } from "react-native-paper";
 import Map from "./../map/map";
 
 interface Props {
@@ -114,16 +114,50 @@ export default function SharedHikeDetails({ visible, sharedHike, onDismiss }: Pr
             </Map>
           )}
         </View>
-        <View style={s.sharedDetails}>
-          <View style={s.row}>
-            <Text style={[s.bold, { color: theme.colors.secondary }]}>Delad av: </Text>
-            <Text>{sharedHike.sharedByName}</Text>
+        <ScrollView style={s.scrollArea} contentContainerStyle={s.scrollContent} bounces={false}>
+          <View style={s.sharedDetails}>
+            <View style={s.row}>
+              <Text style={[s.bold, { color: theme.colors.secondary }]}>Delad av: </Text>
+              <Text>{sharedHike.sharedByName}</Text>
+            </View>
+            <View style={s.row}>
+              <Text style={[s.bold, { color: theme.colors.secondary }]}>Datum: </Text>
+              <Text>{formatDate(sharedHike.sharedAt)}</Text>
+            </View>
           </View>
-          <View style={s.row}>
-            <Text style={[s.bold, { color: theme.colors.secondary }]}>Datum: </Text>
-            <Text>{formatDate(sharedHike.sharedAt)}</Text>
-          </View>
-        </View>
+          {(sharedHike.gettingThere || sharedHike.parkingInfo || sharedHike.description) && (
+            <>
+              <Divider style={s.divider} />
+              {sharedHike.gettingThere && (
+                <View style={s.infoRow}>
+                  <Icon source="map-marker" size={18} color={theme.colors.primary} />
+                  <View style={s.infoText}>
+                    <Text style={[s.infoLabel, { color: theme.colors.secondary }]}>Hitta hit</Text>
+                    <Text>{sharedHike.gettingThere}</Text>
+                  </View>
+                </View>
+              )}
+              {sharedHike.parkingInfo && (
+                <View style={s.infoRow}>
+                  <Icon source="car" size={18} color={theme.colors.primary} />
+                  <View style={s.infoText}>
+                    <Text style={[s.infoLabel, { color: theme.colors.secondary }]}>Parkering</Text>
+                    <Text>{sharedHike.parkingInfo}</Text>
+                  </View>
+                </View>
+              )}
+              {sharedHike.description && (
+                <View style={s.infoRow}>
+                  <Icon source="text" size={18} color={theme.colors.primary} />
+                  <View style={s.infoText}>
+                    <Text style={[s.infoLabel, { color: theme.colors.secondary }]}>Beskrivning</Text>
+                    <Text>{sharedHike.description}</Text>
+                  </View>
+                </View>
+              )}
+            </>
+          )}
+        </ScrollView>
         <View style={s.buttonGroup}>
           <Button style={s.button} mode="contained" onPress={() => setShowShareModal(true)}>
             <View style={s.buttonContent}>
@@ -138,6 +172,7 @@ export default function SharedHikeDetails({ visible, sharedHike, onDismiss }: Pr
             </View>
           </Button>
         </View>
+
         <AlertDialog
           visible={showOnDeleteDialog}
           onDismiss={() => setOnDeleteDialog(false)}
@@ -149,7 +184,7 @@ export default function SharedHikeDetails({ visible, sharedHike, onDismiss }: Pr
           onConfirm={() => deleteMutation.mutate(sharedHike.hikeIdentifier)}
           backgroundColor={theme.colors.surface}
         />
-        <SharedHikeModal
+        <ReshareHikeModal
           visible={showShareModal}
           onDismiss={() => setShowShareModal(false)}
           onShare={(friendNickName) => {
@@ -172,7 +207,7 @@ export default function SharedHikeDetails({ visible, sharedHike, onDismiss }: Pr
 const s = StyleSheet.create({
   contentContainerStyle: {
     justifyContent: "flex-start",
-    height: HEIGHT * 0.8,
+    height: HEIGHT * 0.9,
     borderRadius: BORDER_RADIUS,
     padding: 15,
     gap: 10,
@@ -219,10 +254,35 @@ const s = StyleSheet.create({
   map: {
     flex: 1,
   },
+  scrollArea: {
+    flex: 1,
+  },
+  scrollContent: {
+    gap: 10,
+    paddingVertical: 4,
+  },
+  infoRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 10,
+  },
+  infoText: {
+    flex: 1,
+    gap: 2,
+  },
+  infoLabel: {
+    fontSize: 11,
+    fontWeight: "600",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  divider: {
+    marginVertical: 4,
+  },
   buttonGroup: {
     flexDirection: "row",
     gap: 20,
-    marginTop: "auto",
+    paddingTop: 10,
   },
   button: {
     flex: 1,

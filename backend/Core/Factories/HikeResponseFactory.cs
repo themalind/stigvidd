@@ -13,7 +13,10 @@ public class HikeResponseFactory
             hike.HikeLength,
             hike.Duration,
             hike.Coordinates,
-            hike.CreatedBy
+            hike.CreatedBy,
+            hike.GettingThere,
+            hike.ParkingInfo,
+            hike.Description
         );
     }
 }

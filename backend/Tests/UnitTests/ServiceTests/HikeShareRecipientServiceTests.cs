@@ -87,6 +87,43 @@ public class HikeShareRecipientServiceTests
     }
 
     [Fact]
+    public async Task GetAllHikesSharedWithUserAsync_WhenSuccessful_ReturnsExtraFields()
+    {
+        // Arrange
+        var hikes = new List<HikeShareRecipientResponse>
+        {
+            new()
+            {
+                HikeIdentifier = "id-1",
+                HikeName = "Hike1",
+                Coordinates = "[]",
+                GettingThere = "Take bus 42",
+                ParkingInfo = "Park near the church",
+                Description = "Lovely forest hike"
+            }
+        };
+
+        var repoMock = new Mock<IHikeShareRecipientRepository>();
+        repoMock.Setup(r => r.GetAllHikesSharedWithUserAsync(
+                It.IsAny<string>(),
+                It.IsAny<Expression<Func<HikeShare, HikeShareRecipientResponse>>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<IReadOnlyCollection<HikeShareRecipientResponse>>.Success(hikes));
+
+        var service = Build(hikeShareRecipientRepositoryMock: repoMock);
+
+        // Act
+        var result = await service.GetAllHikesSharedWithUserAsync("user-identifier", CancellationToken.None);
+
+        // Assert
+        result.Success.Should().BeTrue();
+        var hike = result.Value.First();
+        hike.GettingThere.Should().Be("Take bus 42");
+        hike.ParkingInfo.Should().Be("Park near the church");
+        hike.Description.Should().Be("Lovely forest hike");
+    }
+
+    [Fact]
     public async Task ReshareSharedHikeAsync_WhenCurrentUserNotFound_ReturnsNotFound()
     {
         // Arrange

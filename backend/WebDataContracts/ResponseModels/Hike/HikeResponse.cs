@@ -8,6 +8,9 @@ public class HikeResponse
     public int Duration { get; set; }
     public string? Coordinates { get; set; }
     public string? CreatedBy { get; set; }
+    public string? GettingThere { get; set; }
+    public string? ParkingInfo { get; set; }
+    public string? Description { get; set; }
 
     public static HikeResponse Create(
         string identifier,
@@ -15,7 +18,10 @@ public class HikeResponse
         decimal hikeLength,
         int duration,
         string coordinates,
-        string createdBy)
+        string createdBy,
+        string? gettingThere,
+        string? parkingInfo,
+        string? description)
     {
         return new HikeResponse
         {
@@ -24,7 +30,10 @@ public class HikeResponse
             HikeLength = hikeLength,
             Duration = duration,
             Coordinates = coordinates,
-            CreatedBy = createdBy
+            CreatedBy = createdBy,
+            GettingThere = gettingThere,
+            ParkingInfo = parkingInfo,
+            Description = description
         };
     }
 }

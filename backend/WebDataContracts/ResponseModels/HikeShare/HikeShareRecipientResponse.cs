@@ -11,4 +11,7 @@ public class HikeShareRecipientResponse
     public string? SharedByName { get; set; }
     public string? SharedByIdentifier { get; set; }
     public DateTime SharedAt { get; set; }
+    public string? GettingThere { get; set; }
+    public string? ParkingInfo { get; set; }
+    public string? Description { get; set; }
 }

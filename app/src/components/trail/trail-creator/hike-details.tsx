@@ -1,11 +1,11 @@
-import { deleteHike, shareHike } from "@/api/hikes";
+import { deleteHike, shareHike, updateHike } from "@/api/hikes";
 import { ApiError } from "@/api/users";
 import { showErrorAtom, showSuccessAtom } from "@/atoms/snackbar-atoms";
 import { stigviddUserAtom } from "@/atoms/user-atoms";
 import AlertDialog from "@/components/alert-dialog";
-import SharedHikeModal from "@/components/shared-hike/shared-hike-modal";
+import ShareHikeModal, { ShareHikeFormFields } from "@/components/shared-hike/share-hike-modal";
 import { BORDER_RADIUS, SURFACE_BORDER_RADIUS } from "@/constants/constants";
-import { Hike, ShareHikeRequest } from "@/data/types";
+import { Hike, ShareHikeRequest, UpdateHikeRequest } from "@/data/types";
 import CoordinateParser from "@/utils/coordinate-parser";
 import FormattedTime from "@/utils/format-time-from-ms";
 import GetRegionFromTrail from "@/utils/get-region-from-trail";
@@ -46,6 +46,16 @@ export default function HikeDetails({ visible, hike, onDismiss }: Props) {
       animated: false,
     });
   };
+
+  const updateHikeMutation = useMutation({
+    mutationFn: (request: UpdateHikeRequest) => updateHike(request),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["hikes", user.data?.identifier] });
+    },
+    onError: () => {
+      setErrorMsg("Kunde inte uppdatera promenaden");
+    },
+  });
 
   const deleteMutation = useMutation({
     mutationFn: (identifier: string) => deleteHike(identifier),
@@ -89,7 +99,7 @@ export default function HikeDetails({ visible, hike, onDismiss }: Props) {
         onDismiss={onDismiss}
         contentContainerStyle={[s.contentContainerStyle, { backgroundColor: theme.colors.surface }]}
       >
-        <Pressable style={{ alignSelf: "flex-end" }} hitSlop={12} onPress={onDismiss}>
+        <Pressable style={s.closeButton} hitSlop={12} onPress={onDismiss}>
           <Icon size={24} source="close" color={theme.colors.onSurface} />
         </Pressable>
         <View style={[s.hikeDetailsContainer, { backgroundColor: theme.colors.outlineVariant }]}>
@@ -116,17 +126,11 @@ export default function HikeDetails({ visible, hike, onDismiss }: Props) {
           )}
         </View>
         <View style={s.buttonGroup}>
-          <Button style={s.button} mode="contained" onPress={() => setShowShareModal(true)}>
-            <View style={s.buttonContent}>
-              <Icon color={theme.colors.onPrimary} size={20} source="share" />
-              <Text style={{ color: theme.colors.onPrimary }}>Dela</Text>
-            </View>
+          <Button style={s.button} mode="contained" icon="share" onPress={() => setShowShareModal(true)}>
+            Dela
           </Button>
-          <Button style={s.button} mode="outlined" onPress={handeleDelete}>
-            <View style={s.buttonContent}>
-              <Icon size={20} source="delete" />
-              <Text>Ta bort</Text>
-            </View>
+          <Button style={s.button} mode="outlined" icon="delete" onPress={handeleDelete}>
+            Ta bort
           </Button>
         </View>
         <AlertDialog
@@ -140,13 +144,24 @@ export default function HikeDetails({ visible, hike, onDismiss }: Props) {
           onConfirm={() => deleteMutation.mutate(hike.identifier)}
           backgroundColor={theme.colors.surface}
         />
-        <SharedHikeModal
+        <ShareHikeModal
           visible={showShareModal}
           onDismiss={() => setShowShareModal(false)}
-          onShare={(friendNickName) =>
-            shareMutation.mutate({ hikeIdentifier: hike.identifier, sharedWithName: friendNickName })
-          }
-          isPending={shareMutation.isPending}
+          defaultValues={{
+            gettingThere: hike.gettingThere,
+            parkingInfo: hike.parkingInfo,
+            description: hike.description,
+          }}
+          onShare={async (friendNickName: string, formData: ShareHikeFormFields) => {
+            await updateHikeMutation.mutateAsync({
+              hikeIdentifier: hike.identifier,
+              parkingInfo: formData.parkingInfo ?? "",
+              gettingThere: formData.gettingThere ?? "",
+              description: formData.description ?? "",
+            });
+            shareMutation.mutate({ hikeIdentifier: hike.identifier, sharedWithName: friendNickName });
+          }}
+          isPending={shareMutation.isPending || updateHikeMutation.isPending}
         />
       </Modal>
     </Portal>
@@ -154,6 +169,9 @@ export default function HikeDetails({ visible, hike, onDismiss }: Props) {
 }
 
 const s = StyleSheet.create({
+  closeButton: {
+    alignSelf: "flex-end",
+  },
   contentContainerStyle: {
     justifyContent: "flex-start",
     height: HEIGHT * 0.8,
@@ -197,9 +215,5 @@ const s = StyleSheet.create({
   button: {
     borderRadius: BORDER_RADIUS,
     flex: 1,
-  },
-  buttonContent: {
-    gap: 5,
-    flexDirection: "row",
   },
 });

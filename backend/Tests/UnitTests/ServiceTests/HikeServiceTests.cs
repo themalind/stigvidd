@@ -182,6 +182,40 @@ public class HikeServiceTests
     }
 
     [Fact]
+    public async Task GetHikeByIdentifier_WhenFound_MapsExtraFields()
+    {
+        // Arrange
+        var hike = new Hike
+        {
+            Id = 1,
+            Identifier = Utilities.Identifiers.Hike1,
+            Name = "TestHike1",
+            HikeLength = 10,
+            Duration = 3600000,
+            Coordinates = "[]",
+            CreatedBy = Utilities.Identifiers.User,
+            UserId = 1,
+            GettingThere = "Take bus 42",
+            ParkingInfo = "Parking at the church",
+            Description = "Scenic route through the forest"
+        };
+
+        var hikeRepo = new Mock<IHikeRepository>();
+        hikeRepo.Setup(r => r.GetHikeByIdentifierAsync(Utilities.Identifiers.Hike1, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<Hike>.Success(hike));
+
+        // Act
+        var result = await Build(hikeRepo).GetHikeByIdentifierAsync(Utilities.Identifiers.Hike1, CancellationToken.None);
+
+        // Assert
+        result.Success.Should().BeTrue();
+        result.Value.Should().NotBeNull();
+        result.Value.GettingThere.Should().Be("Take bus 42");
+        result.Value.ParkingInfo.Should().Be("Parking at the church");
+        result.Value.Description.Should().Be("Scenic route through the forest");
+    }
+
+    [Fact]
     public async Task GetHikeByIdentifier_WhenNotFound_ReturnsNotFound()
     {
         // Arrange
@@ -204,8 +238,8 @@ public class HikeServiceTests
         // Arrange
         IReadOnlyCollection<HikeOverviewResponse> list =
         [
-            HikeOverviewResponse.Create("id1", "H1", 10, 3600000, "[]", Utilities.Identifiers.User),
-            HikeOverviewResponse.Create("id2", "H2", 20, 7200000, "[]", Utilities.Identifiers.User),
+            HikeOverviewResponse.Create("id1", "H1", 10, 3600000, "[]", Utilities.Identifiers.User, null, null, null),
+            HikeOverviewResponse.Create("id2", "H2", 20, 7200000, "[]", Utilities.Identifiers.User, null, null, null),
         ];
         var hikeRepo = new Mock<IHikeRepository>();
         hikeRepo.Setup(r => r.GetHikesAsync(It.IsAny<int?>(), It.IsAny<Expression<Func<Hike, HikeOverviewResponse>>>(), It.IsAny<CancellationToken>()))
@@ -340,7 +374,8 @@ public class HikeServiceTests
 
         // Assert
         result.Success.Should().BeFalse();
-        result.Message!.StatusCode.Should().Be(401);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(401);
     }
 
     [Fact]

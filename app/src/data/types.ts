@@ -145,6 +145,9 @@ export interface Hike {
   duration: number;
   coordinates?: string;
   createdBy: string;
+  gettingThere?: string;
+  parkingInfo?: string;
+  description?: string;
 }
 
 export interface UpdateTrailObstacleRequest {
@@ -267,6 +270,9 @@ export interface SharedHike {
   sharedByName: string;
   sharedByIdentifier: string;
   sharedAt: string;
+  gettingThere?: string;
+  parkingInfo?: string;
+  description?: string;
 }
 
 export interface ReshareSharedHikeRequest {
@@ -277,6 +283,13 @@ export interface ReshareSharedHikeRequest {
 export interface ShareHikeRequest {
   hikeIdentifier: string;
   sharedWithName: string;
+}
+
+export interface UpdateHikeRequest {
+  hikeIdentifier: string;
+  parkingInfo: string;
+  gettingThere: string;
+  description: string;
 }
 
 export interface Friend {

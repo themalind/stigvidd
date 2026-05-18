@@ -34,7 +34,7 @@ const obstacleFields = z.object({
 
 type FormFields = z.infer<typeof obstacleFields>;
 
-const { height, width } = Dimensions.get("screen");
+const { height } = Dimensions.get("screen");
 
 interface Props {
   trailIdentifier: string;
@@ -293,7 +293,7 @@ const s = StyleSheet.create({
     justifyContent: "flex-start",
   },
   textInput: {
-    width: width * 0.92,
+    width: "100%",
     minHeight: 80,
   },
   header: {
