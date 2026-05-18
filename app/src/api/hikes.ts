@@ -1,6 +1,6 @@
-import { CreateHikeRequest, Hike, ShareHikeRequest } from "@/data/types";
-import { ApiError, getUserToken } from "./users";
+import { CreateHikeRequest, Hike, ShareHikeRequest, UpdateHikeRequest } from "@/data/types";
 import { BASE_URL } from "./api-config";
+import { ApiError, getUserToken } from "./users";
 
 export async function createHike(request: CreateHikeRequest): Promise<{ success: boolean }> {
   const token = await getUserToken();
@@ -31,6 +31,34 @@ export async function createHike(request: CreateHikeRequest): Promise<{ success:
     return { success: true };
   } catch (error) {
     console.log("Fel vid skapandet av promenad:", error);
+    throw error;
+  }
+}
+
+export async function updateHike(request: UpdateHikeRequest): Promise<Hike> {
+  const token = await getUserToken();
+
+  if (!token) {
+    throw new Error("User not authenticated");
+  }
+
+  try {
+    const response = await fetch(`${BASE_URL}/hikes/${request.hikeIdentifier}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(request),
+    });
+
+    if (!response.ok) {
+      throw new ApiError(`HTTP error: updateHike: ${response.status}`, response.status);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.log(error);
     throw error;
   }
 }
