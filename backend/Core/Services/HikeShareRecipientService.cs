@@ -36,7 +36,10 @@ public class HikeShareRecipientService : IHikeShareRecipientService
             SharedByName = hs.SharedBy!.NickName,
             SharedByIdentifier = hs.SharedBy.Identifier,
             CreatedByName = hs.Hike.User!.NickName,
-            SharedAt = hs.CreatedAt
+            SharedAt = hs.CreatedAt,
+            GettingThere = hs.Hike.GettingThere,
+            ParkingInfo = hs.Hike.ParkingInfo,
+            Description = hs.Hike.Description
         }, ctoken);
 
         if (!result.IsSuccess)

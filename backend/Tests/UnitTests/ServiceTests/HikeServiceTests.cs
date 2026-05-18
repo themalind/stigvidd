@@ -204,8 +204,8 @@ public class HikeServiceTests
         // Arrange
         IReadOnlyCollection<HikeOverviewResponse> list =
         [
-            HikeOverviewResponse.Create("id1", "H1", 10, 3600000, "[]", Utilities.Identifiers.User),
-            HikeOverviewResponse.Create("id2", "H2", 20, 7200000, "[]", Utilities.Identifiers.User),
+            HikeOverviewResponse.Create("id1", "H1", 10, 3600000, "[]", Utilities.Identifiers.User, null, null, null),
+            HikeOverviewResponse.Create("id2", "H2", 20, 7200000, "[]", Utilities.Identifiers.User, null, null, null),
         ];
         var hikeRepo = new Mock<IHikeRepository>();
         hikeRepo.Setup(r => r.GetHikesAsync(It.IsAny<int?>(), It.IsAny<Expression<Func<Hike, HikeOverviewResponse>>>(), It.IsAny<CancellationToken>()))
@@ -340,7 +340,8 @@ public class HikeServiceTests
 
         // Assert
         result.Success.Should().BeFalse();
-        result.Message!.StatusCode.Should().Be(401);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(401);
     }
 
     [Fact]
