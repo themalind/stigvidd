@@ -77,7 +77,14 @@ interface Props {
   defaultValues?: ShareHikeFormFields;
 }
 
-export default function ShareHikeModal({ visible, onDismiss, onShare, isPending, excludeNickName, defaultValues }: Props) {
+export default function ShareHikeModal({
+  visible,
+  onDismiss,
+  onShare,
+  isPending,
+  excludeNickName,
+  defaultValues,
+}: Props) {
   const theme = useTheme();
   const [step, setStep] = useState<"form" | "friends">("form");
   const [formData, setFormData] = useState<ShareHikeFormFields>({});
@@ -133,16 +140,36 @@ export default function ShareHikeModal({ visible, onDismiss, onShare, isPending,
               >
                 <Text style={s.infoLabel}>Hitta till promenadens start</Text>
                 <Text style={s.infoBody}>Beskriv hur man hittar med en enkel beskriving</Text>
-                <FormField name="gettingThere" label="Hitta hit (valfritt)" control={control} error={errors.gettingThere} />
+                <FormField
+                  name="gettingThere"
+                  label="Hitta hit (valfritt)"
+                  control={control}
+                  error={errors.gettingThere}
+                />
                 <Text style={s.infoLabel}>Finns det parkering i närheten?</Text>
                 <Text style={s.infoBody}>Exempel: Det finns parkering vid badplatsen, Parkera längs med grusvägen</Text>
-                <FormField name="parkingInfo" label="Parkering (valfritt)" control={control} error={errors.parkingInfo} />
+                <FormField
+                  name="parkingInfo"
+                  label="Parkering (valfritt)"
+                  control={control}
+                  error={errors.parkingInfo}
+                />
                 <Text style={s.infoLabel}>Beskrivning</Text>
                 <Text style={s.infoBody}>Här kan du ge en kort beskrivning av hur till exempel miljön ser ut.</Text>
-                <FormField name="description" label="Beskrivning (valfritt)" control={control} error={errors.description} />
+                <FormField
+                  name="description"
+                  label="Beskrivning (valfritt)"
+                  control={control}
+                  error={errors.description}
+                />
               </KeyboardAwareScrollView>
               <View style={s.buttonContainer}>
-                <Button mode="contained" icon="arrow-right" contentStyle={s.buttonContent} onPress={handleSubmit(onSubmit)}>
+                <Button
+                  mode="contained"
+                  icon="arrow-right"
+                  contentStyle={s.buttonContent}
+                  onPress={handleSubmit(onSubmit)}
+                >
                   Nästa
                 </Button>
               </View>
@@ -162,7 +189,10 @@ export default function ShareHikeModal({ visible, onDismiss, onShare, isPending,
                 {friends.map((item: Friend, index: number) => (
                   <View key={item.identifier}>
                     <Pressable
-                      style={({ pressed }) => [s.friendItem, pressed && { backgroundColor: theme.colors.surfaceVariant }]}
+                      style={({ pressed }) => [
+                        s.friendItem,
+                        pressed && { backgroundColor: theme.colors.surfaceVariant },
+                      ]}
                       onPress={() => onShare(item.nickName, formData)}
                       disabled={isPending}
                     >
