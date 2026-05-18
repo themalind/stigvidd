@@ -182,6 +182,40 @@ public class HikeServiceTests
     }
 
     [Fact]
+    public async Task GetHikeByIdentifier_WhenFound_MapsExtraFields()
+    {
+        // Arrange
+        var hike = new Hike
+        {
+            Id = 1,
+            Identifier = Utilities.Identifiers.Hike1,
+            Name = "TestHike1",
+            HikeLength = 10,
+            Duration = 3600000,
+            Coordinates = "[]",
+            CreatedBy = Utilities.Identifiers.User,
+            UserId = 1,
+            GettingThere = "Take bus 42",
+            ParkingInfo = "Parking at the church",
+            Description = "Scenic route through the forest"
+        };
+
+        var hikeRepo = new Mock<IHikeRepository>();
+        hikeRepo.Setup(r => r.GetHikeByIdentifierAsync(Utilities.Identifiers.Hike1, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<Hike>.Success(hike));
+
+        // Act
+        var result = await Build(hikeRepo).GetHikeByIdentifierAsync(Utilities.Identifiers.Hike1, CancellationToken.None);
+
+        // Assert
+        result.Success.Should().BeTrue();
+        result.Value.Should().NotBeNull();
+        result.Value.GettingThere.Should().Be("Take bus 42");
+        result.Value.ParkingInfo.Should().Be("Parking at the church");
+        result.Value.Description.Should().Be("Scenic route through the forest");
+    }
+
+    [Fact]
     public async Task GetHikeByIdentifier_WhenNotFound_ReturnsNotFound()
     {
         // Arrange
