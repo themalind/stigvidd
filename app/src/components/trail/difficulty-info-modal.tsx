@@ -1,4 +1,5 @@
 import { BORDER_RADIUS } from "@/constants/constants";
+import { DIFFICULTIES } from "@/data/trail-content";
 import { classificationParser } from "@/utils/classification-parser";
 import { getDifficultyIcon } from "@/utils/getDifficultyIcon";
 import { BlurView } from "expo-blur";
@@ -11,38 +12,6 @@ interface Props {
   visible: boolean;
   onDismiss: () => void;
 }
-
-interface DifficultyInfo {
-  value: number;
-  label: string;
-  description: string;
-}
-
-const DIFFICULTIES: DifficultyInfo[] = [
-  {
-    value: 1,
-    label: "Lätt",
-    description:
-      "På leder som har svårighetsnivå lätt är det möjligt att ta sig fram med barnvagn. Underlaget på leden är till största delen hårdgjord yta.",
-  },
-  {
-    value: 2,
-    label: "Medel",
-    description:
-      "De leder som har svårighetsnivå medel går ofta på mindre vägar och naturstigar. Under normala väderförhållanden krävs inga kängor eller stövlar här, och för en person med normal kondition är nivåskillnaden inga problem.",
-  },
-  {
-    value: 3,
-    label: "Svår",
-    description:
-      "En led med svårighetsnivå svår går ofta på naturstig. Här finns sträckor som innehåller stora nivåskillnader eller branta passager, och därför behövs god kondition och ordentliga vandringskängor eller stövlar.",
-  },
-  {
-    value: 0,
-    label: "Inte klassificerad",
-    description: "Ingen officiell klassificering finns.",
-  },
-];
 
 const { height } = Dimensions.get("screen");
 
@@ -63,7 +32,7 @@ export default function DifficultyInfoModal({ difficulty, visible, onDismiss }: 
           <View style={s.content}>
             <View style={s.header}>
               <Text style={s.title}>Svårighetsgrader</Text>
-              <Pressable onPress={onDismiss}>
+              <Pressable hitSlop={16} onPress={onDismiss}>
                 <Icon source="close" size={20} color={theme.colors.onSurface} />
               </Pressable>
             </View>

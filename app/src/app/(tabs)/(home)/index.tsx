@@ -1,21 +1,17 @@
 import { getPopularTrails } from "@/api/trails";
 import { locationResolvedAtom, userLocationAtom } from "@/atoms/location-atoms";
-import Map from "@/components/map/map";
 import MockNews from "@/components/mockNews";
 import CarouselSkeleton from "@/components/skeletons/carousel-skeleton";
 import ImageCarousel from "@/components/trail/image-carousel";
 import { SURFACE_BORDER_RADIUS } from "@/constants/constants";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useQuery } from "@tanstack/react-query";
 import { Image } from "expo-image";
-import { useFocusEffect } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import { useAtomValue } from "jotai";
 import React, { useRef } from "react";
-import { Dimensions, ScrollView, StyleSheet, Text, View } from "react-native";
-import { Divider, Surface, useTheme } from "react-native-paper";
-
-const HEIGHT = Dimensions.get("screen").height;
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Divider, useTheme } from "react-native-paper";
 
 export default function HomeScreen() {
   const scrollViewRef = useRef<ScrollView>(null);
@@ -53,23 +49,50 @@ export default function HomeScreen() {
       </View>
       {query.data ? <ImageCarousel data={query.data} /> : <CarouselSkeleton />}
       <Divider />
-      <View style={{ flexDirection: "row", gap: 10 }}>
-        <MaterialCommunityIcons name="map-marker-radius-outline" size={24} color={theme.colors.onBackground} />
-        <Text style={[s.sectionTitle, { color: theme.colors.onBackground }]}>Hitta på kartan</Text>
-      </View>
-      <Surface style={s.mapContainer}>
-        <View style={s.mapInner}>
-          <Map
-            style={s.map}
-            initialRegion={{
-              latitude: 57.721,
-              longitude: 12.9401,
-              latitudeDelta: 0.0922,
-              longitudeDelta: 0.0421,
-            }}
-          />
+      <Pressable style={s.guideCard} onPress={() => router.push("/(tabs)/(settings)/guide")}>
+        <Image
+          source={require("../../../assets/images/guide_cover.jpg")}
+          style={StyleSheet.absoluteFill}
+          contentFit="cover"
+        />
+        <View style={s.guideOverlay}>
+          <Text style={s.guideTitle}>Naturguide</Text>
+          <Text style={s.guideSubtitle}>Allemansrätt · Naturreservat · Svårighetsgrader</Text>
         </View>
-      </Surface>
+      </Pressable>
+      <Divider />
+      <Pressable style={s.areasCard} onPress={() => router.push("/(tabs)/(home)")}>
+        <View style={s.collage}>
+          <View style={s.collageRow}>
+            <Image
+              source={require("../../../assets/images/area_cover1.jpg")}
+              style={s.collageImage}
+              contentFit="cover"
+            />
+            <Image
+              source={require("../../../assets/images/area_cover2.jpg")}
+              style={s.collageImage}
+              contentFit="cover"
+            />
+          </View>
+          <View style={s.collageRow}>
+            <Image
+              source={require("../../../assets/images/area_cover3.jpg")}
+              style={s.collageImage}
+              contentFit="cover"
+            />
+            <Image
+              source={require("../../../assets/images/area_cover4.jpg")}
+              style={s.collageImage}
+              contentFit="cover"
+            />
+          </View>
+        </View>
+        <View style={s.guideOverlay}>
+          <Text style={s.guideTitle}>Utforska Borås</Text>
+          <Text style={s.guideSubtitle}>Rya åsar · Kype · Kransmossen · Torpanäset</Text>
+        </View>
+      </Pressable>
       <Divider />
       <View style={{ gap: 20 }}>
         <View
@@ -99,20 +122,50 @@ const s = StyleSheet.create({
     fontWeight: 700,
     fontSize: 15,
   },
-  map: {
-    flex: 1,
-  },
-  mapContainer: {
-    height: HEIGHT * 0.25,
-    borderRadius: SURFACE_BORDER_RADIUS,
-  },
-  mapInner: {
-    flex: 1,
-    borderRadius: SURFACE_BORDER_RADIUS,
-    overflow: "hidden",
-  },
   hikers: {
     height: 25,
     width: 25,
+  },
+  areasCard: {
+    height: 220,
+    borderRadius: SURFACE_BORDER_RADIUS,
+    overflow: "hidden",
+  },
+  collage: {
+    flex: 1,
+    gap: 2,
+  },
+  collageRow: {
+    flex: 1,
+    flexDirection: "row",
+    gap: 2,
+  },
+  collageImage: {
+    flex: 1,
+  },
+  weatherCard: {
+    height: 160,
+    borderRadius: SURFACE_BORDER_RADIUS,
+  },
+  guideCard: {
+    height: 140,
+    borderRadius: SURFACE_BORDER_RADIUS,
+    overflow: "hidden",
+  },
+  guideOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0,0,0,0.45)",
+    justifyContent: "flex-end",
+    padding: 14,
+  },
+  guideTitle: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "700",
+  },
+  guideSubtitle: {
+    color: "rgba(255,255,255,0.8)",
+    fontSize: 12,
+    marginTop: 2,
   },
 });

@@ -6,7 +6,7 @@ import UserTrailCollection from "@/components/user/user-trail-collection";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Redirect } from "expo-router";
 import { useAtom } from "jotai";
-import { Text, useTheme } from "react-native-paper";
+import { useTheme } from "react-native-paper";
 
 export default function FavoritesScreen() {
   const theme = useTheme();
