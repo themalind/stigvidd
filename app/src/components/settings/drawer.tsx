@@ -2,8 +2,8 @@ import { signOutUser } from "@/api/auth";
 import { authStateAtom } from "@/atoms/auth-atoms";
 import { showErrorAtom } from "@/atoms/snackbar-atoms";
 import { useThemeToggle } from "@/hooks/useThemeToggle";
-import { CommonActions } from "@react-navigation/native";
 import { MaterialIcons } from "@expo/vector-icons";
+import { CommonActions } from "@react-navigation/native";
 import { BlurView } from "expo-blur";
 import { Image } from "expo-image";
 import { router, useNavigation } from "expo-router";
@@ -73,6 +73,12 @@ export default function SettingsDrawer({ visible, onDismiss }: Props) {
     router.replace("/(tabs)/(settings)/login");
   }
 
+  function handleGuide() {
+    setActive("guide");
+    onDismiss();
+    router.replace("/(tabs)/(settings)/guide");
+  }
+
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onDismiss}>
       <Pressable style={s.backdrop} onPress={onDismiss}>
@@ -112,6 +118,13 @@ export default function SettingsDrawer({ visible, onDismiss }: Props) {
                 />
               )}
               onPress={handleThemeToggle}
+            />
+            <Drawer.Item
+              label="Naturguide"
+              icon="pine-tree"
+              active={active === "guide"}
+              theme={{ roundness: 1 }}
+              onPress={handleGuide}
             />
             <Drawer.Item
               label="Om Stigvidd"
