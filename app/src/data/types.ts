@@ -287,9 +287,9 @@ export interface ShareHikeRequest {
 
 export interface UpdateHikeRequest {
   hikeIdentifier: string;
-  parkingInfo: string;
-  gettingThere: string;
-  description: string;
+  parkingInfo: string | null;
+  gettingThere: string | null;
+  description: string | null;
 }
 
 export interface Friend {
