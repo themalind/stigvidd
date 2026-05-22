@@ -22,6 +22,8 @@ public class StigViddDbContext(DbContextOptions<StigViddDbContext> options) : Db
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.HasDefaultSchema("dbo");
+
         // https://learn.microsoft.com/en-us/ef/core/modeling/relationships/many-to-many
 
         modelBuilder.Entity<User>()

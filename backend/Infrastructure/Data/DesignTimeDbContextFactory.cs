@@ -15,7 +15,7 @@ namespace Infrastructure.Data
                 .Build();
 
             var optionsBuilder = new DbContextOptionsBuilder<StigViddDbContext>();
-            optionsBuilder.UseSqlServer(config.GetConnectionString("StigVidd"));
+            optionsBuilder.UseNpgsql(config.GetConnectionString("StigVidd"));
 
             return new StigViddDbContext(optionsBuilder.Options);
         }
