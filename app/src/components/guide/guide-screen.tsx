@@ -19,24 +19,24 @@ const LINKS: Link[] = [
     url: "https://www.naturvardsverket.se/allemansratten",
   },
   {
-    label: "Rya åsar — Länsstyrelsen Västra Götaland",
-    url: "https://www.lansstyrelsen.se/vastra-gotaland/besoksmal/naturreservat/rya-asar.html",
+    label: "Naturreservat — Naturvårdsverket",
+    url: "https://www.naturvardsverket.se/amnesomraden/skyddad-natur/olika-former-av-naturskydd/naturreservat/",
+  },
+  {
+    label: "Vett och etikett — Borås Stad",
+    url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/vettochallemansratt.4.1601545718c38a990ab44564.html",
+  },
+  {
+    label: "Tillgängligt friluftsliv — Borås Stad ",
+    url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/tillgangligtfriluftslivochtillganglignatur.4.6ef5a1031900c68011c55207.html",
   },
   {
     label: "Friluftsliv & natur — Borås Stad",
     url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur.4.1601545718c38a990ab4455a.html",
   },
   {
-    label: "Vandringsleder — Naturkartan Borås",
-    url: "https://www.naturkartan.se/sv/municipalities/boras/hiking",
-  },
-  {
     label: "Vandringsleder — Borås.com",
     url: "https://www.boras.com/lista/vandringsleder/",
-  },
-  {
-    label: "Naturreservat — Naturkartan Borås",
-    url: "https://www.naturkartan.se/sv/municipalities/boras/nature-reserve",
   },
   {
     label: "SMHI — väderprognos",
@@ -237,7 +237,7 @@ const s = StyleSheet.create({
     flex: 1,
   },
   container: {
-    padding: 20,
+    padding: 12,
     gap: 12,
     paddingBottom: 48,
   },
