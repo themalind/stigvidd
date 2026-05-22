@@ -148,16 +148,16 @@ export default function HikeDetails({ visible, hike, onDismiss }: Props) {
           visible={showShareModal}
           onDismiss={() => setShowShareModal(false)}
           defaultValues={{
-            gettingThere: hike.gettingThere,
-            parkingInfo: hike.parkingInfo,
-            description: hike.description,
+            gettingThere: hike.gettingThere ?? undefined,
+            parkingInfo: hike.parkingInfo ?? undefined,
+            description: hike.description ?? undefined,
           }}
           onShare={async (friendNickName: string, formData: ShareHikeFormFields) => {
             await updateHikeMutation.mutateAsync({
               hikeIdentifier: hike.identifier,
-              parkingInfo: formData.parkingInfo ?? "",
-              gettingThere: formData.gettingThere ?? "",
-              description: formData.description ?? "",
+              parkingInfo: formData.parkingInfo || null,
+              gettingThere: formData.gettingThere || null,
+              description: formData.description || null,
             });
             shareMutation.mutate({ hikeIdentifier: hike.identifier, sharedWithName: friendNickName });
           }}
