@@ -1,8 +1,9 @@
 import { getPopularTrails } from "@/api/trails";
 import { locationResolvedAtom, userLocationAtom } from "@/atoms/location-atoms";
+import HeroBanner from "@/components/home/hero-banner";
 import MockNews from "@/components/mockNews";
-import CarouselSkeleton from "@/components/skeletons/carousel-skeleton";
-import ImageCarousel from "@/components/trail/image-carousel";
+import PagerCarouselSkeleton from "@/components/skeletons/pager-carousel-skeleton";
+import PagerCarousel from "@/components/trail/pager-carousel";
 import { SURFACE_BORDER_RADIUS } from "@/constants/constants";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useQuery } from "@tanstack/react-query";
@@ -11,17 +12,13 @@ import { router, useFocusEffect } from "expo-router";
 import { useAtomValue } from "jotai";
 import React, { useRef } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { Divider, useTheme } from "react-native-paper";
+import { useTheme } from "react-native-paper";
 
 export default function HomeScreen() {
   const scrollViewRef = useRef<ScrollView>(null);
   const theme = useTheme();
   const userLocation = useAtomValue(userLocationAtom);
   const locationResolved = useAtomValue(locationResolvedAtom);
-  const hikers = theme.dark
-    ? require("../../../assets/images/mrHike-light.png")
-    : require("../../../assets/images/mrHike-dark.png");
-
   const query = useQuery({
     queryKey: ["trails", "popular", userLocation?.latitude, userLocation?.longitude],
     queryFn: () => getPopularTrails(userLocation?.latitude, userLocation?.longitude),
@@ -37,73 +34,68 @@ export default function HomeScreen() {
 
   return (
     <ScrollView ref={scrollViewRef} contentContainerStyle={[s.container, { backgroundColor: theme.colors.background }]}>
-      <View
-        style={{
-          flexDirection: "row",
-          gap: 10,
-          alignItems: "center",
-        }}
-      >
-        <Image contentFit="contain" source={hikers} style={s.hikers} />
-        <Text style={[s.sectionTitle, { color: theme.colors.onBackground }]}>Populära promenader nära dig</Text>
+      <HeroBanner lat={userLocation?.latitude} lon={userLocation?.longitude} />
+      <View style={[s.section, { backgroundColor: theme.colors.background }]}>
+        <View style={s.sectionHeader}>
+          <Text style={[s.sectionTitle, { color: theme.colors.onBackground }]}>Populära promenader nära dig</Text>
+        </View>
+        {query.data ? <PagerCarousel data={query.data} /> : <PagerCarouselSkeleton />}
       </View>
-      {query.data ? <ImageCarousel data={query.data} /> : <CarouselSkeleton />}
-      <Divider />
-      <Pressable style={s.guideCard} onPress={() => router.push("/(tabs)/(settings)/guide")}>
-        <Image
-          source={require("../../../assets/images/guide_cover.jpg")}
-          style={StyleSheet.absoluteFill}
-          contentFit="cover"
-        />
-        <View style={s.guideOverlay}>
-          <Text style={s.guideTitle}>Naturguide</Text>
-          <Text style={s.guideSubtitle}>Allemansrätt · Naturreservat · Svårighetsgrader</Text>
-        </View>
-      </Pressable>
-      <Divider />
-      <Pressable style={s.areasCard} onPress={() => router.push("/(tabs)/(home)")}>
-        <View style={s.collage}>
-          <View style={s.collageRow}>
-            <Image
-              source={require("../../../assets/images/area_cover1.jpg")}
-              style={s.collageImage}
-              contentFit="cover"
-            />
-            <Image
-              source={require("../../../assets/images/area_cover2.jpg")}
-              style={s.collageImage}
-              contentFit="cover"
-            />
+
+      <View style={s.cardRow}>
+        <Pressable style={[s.guideCard, s.halfCard]} onPress={() => router.push("/(tabs)/(settings)/guide")}>
+          <Image
+            source={require("../../../assets/images/guide_cover.jpg")}
+            style={s.cardImage}
+            contentFit="cover"
+          />
+          <View style={[s.cardText, { backgroundColor: theme.colors.surface }]}>
+            <Text style={[s.cardTitle, { color: theme.colors.onSurface }]}>Naturguide</Text>
+            <Text style={[s.cardSubtitle, { color: theme.colors.onSurfaceVariant }]}>Allemansrätt · Svårighetsgrader</Text>
           </View>
-          <View style={s.collageRow}>
-            <Image
-              source={require("../../../assets/images/area_cover3.jpg")}
-              style={s.collageImage}
-              contentFit="cover"
-            />
-            <Image
-              source={require("../../../assets/images/area_cover4.jpg")}
-              style={s.collageImage}
-              contentFit="cover"
-            />
-          </View>
-        </View>
-        <View style={s.guideOverlay}>
-          <Text style={s.guideTitle}>Utforska Borås</Text>
-          <Text style={s.guideSubtitle}>Rya åsar · Kype · Kransmossen · Torpanäset</Text>
-        </View>
-      </Pressable>
-      <Divider />
-      <View style={{ gap: 20 }}>
-        <View
-          style={{
-            flexDirection: "row",
-            gap: 10,
-            paddingHorizontal: 5,
-          }}
+        </Pressable>
+
+        <Pressable
+          style={[s.areasCard, s.halfCard]}
+          onPress={() => router.push("/(tabs)/(home)/area/area-list-screen")}
         >
-          <Ionicons name="newspaper-outline" size={24} color={theme.colors.onBackground} />
-          <Text style={[s.sectionTitle, { color: theme.colors.onBackground }]}>Nyheter</Text>
+          <View style={s.collage}>
+            <View style={s.collageRow}>
+              <Image
+                source={require("../../../assets/images/area_cover1.jpg")}
+                style={s.collageImage}
+                contentFit="cover"
+              />
+              <Image
+                source={require("../../../assets/images/area_cover2.jpg")}
+                style={s.collageImage}
+                contentFit="cover"
+              />
+            </View>
+            <View style={s.collageRow}>
+              <Image
+                source={require("../../../assets/images/area_cover3.jpg")}
+                style={s.collageImage}
+                contentFit="cover"
+              />
+              <Image
+                source={require("../../../assets/images/area_cover4.jpg")}
+                style={s.collageImage}
+                contentFit="cover"
+              />
+            </View>
+          </View>
+          <View style={[s.cardText, { backgroundColor: theme.colors.surface }]}>
+            <Text style={[s.cardTitle, { color: theme.colors.onSurface }]}>Utforska Borås</Text>
+            <Text style={[s.cardSubtitle, { color: theme.colors.onSurfaceVariant }]}>Rya åsar · Kype · m.fl.</Text>
+          </View>
+        </Pressable>
+      </View>
+
+      <View style={[s.section, s.newsSection, { backgroundColor: theme.colors.surface }]}>
+        <View style={s.sectionHeader}>
+          <Ionicons name="newspaper-outline" size={20} color={theme.colors.onSurface} />
+          <Text style={[s.sectionTitle, { color: theme.colors.onSurface }]}>Nyheter</Text>
         </View>
         <MockNews />
       </View>
@@ -113,26 +105,48 @@ export default function HomeScreen() {
 const s = StyleSheet.create({
   container: {
     flexGrow: 1,
-    padding: 10,
-    paddingTop: 20,
     paddingBottom: 30,
-    gap: 20,
+    gap: 12,
+  },
+  section: {
+    padding: 12,
+    gap: 12,
+  },
+  sectionHeader: {
+    flexDirection: "row",
+    gap: 8,
+    alignItems: "center",
   },
   sectionTitle: {
-    fontWeight: 700,
+    fontWeight: "700",
     fontSize: 15,
   },
-  hikers: {
-    height: 25,
-    width: 25,
+  cardRow: {
+    flexDirection: "row",
+    gap: 8,
+    paddingHorizontal: 12,
   },
-  areasCard: {
-    height: 220,
+  halfCard: {
+    flex: 1,
     borderRadius: SURFACE_BORDER_RADIUS,
     overflow: "hidden",
   },
+  cardImage: {
+    width: "100%",
+    height: 110,
+  },
+  cardText: {
+    padding: 8,
+    gap: 2,
+  },
+  newsSection: {
+    marginHorizontal: 12,
+    borderRadius: SURFACE_BORDER_RADIUS,
+  },
+  guideCard: {},
+  areasCard: {},
   collage: {
-    flex: 1,
+    height: 110,
     gap: 2,
   },
   collageRow: {
@@ -143,29 +157,11 @@ const s = StyleSheet.create({
   collageImage: {
     flex: 1,
   },
-  weatherCard: {
-    height: 160,
-    borderRadius: SURFACE_BORDER_RADIUS,
-  },
-  guideCard: {
-    height: 140,
-    borderRadius: SURFACE_BORDER_RADIUS,
-    overflow: "hidden",
-  },
-  guideOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0,0,0,0.45)",
-    justifyContent: "flex-end",
-    padding: 14,
-  },
-  guideTitle: {
-    color: "#fff",
-    fontSize: 18,
+  cardTitle: {
+    fontSize: 15,
     fontWeight: "700",
   },
-  guideSubtitle: {
-    color: "rgba(255,255,255,0.8)",
-    fontSize: 12,
-    marginTop: 2,
+  cardSubtitle: {
+    fontSize: 11,
   },
 });
