@@ -13,7 +13,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Redirect } from "expo-router";
 import { useAtom, useAtomValue } from "jotai";
 import { useState } from "react";
-import { Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { Platform, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { Divider, Icon, Text, useTheme } from "react-native-paper";
 
 export default function SharedHikesScreen() {
@@ -47,70 +47,84 @@ export default function SharedHikesScreen() {
   }
 
   return (
-    <View style={[s.container, { backgroundColor: theme.colors.background }]}>
-      <BackButton />
-      <View style={s.headerSection}>
+    <View style={[s.screen, { backgroundColor: theme.colors.background }]}>
+      <View style={s.header}>
+        <BackButton />
         <Icon source="hiking" size={24} color={theme.colors.tertiary} />
         <Text style={s.headerText}>Delade promenader</Text>
       </View>
-      <View style={[s.infoBox, { backgroundColor: theme.colors.outlineVariant }]}>
-        <Text>Tryck på en promenad för att se mer information eller ta bort den.</Text>
-      </View>
-      <Divider bold={true} />
-      {sharedHike && (
-        <SharedHikeDetails
-          visible={visible}
-          sharedHike={sharedHike}
-          onDismiss={() => {
-            setVisible(false);
-            setSelectedSharedHike(null);
-          }}
-        />
-      )}
-      {hikes?.length === 0 ? (
-        <View style={[s.noHikesContainer, { backgroundColor: theme.colors.background }]}>
-          <BackButton />
-          <Text style={{ color: theme.colors.onBackground }}>Inga delade promenader här än</Text>
+      <View style={s.content}>
+        <View style={[s.infoBox, { backgroundColor: theme.colors.outlineVariant }]}>
+          <Text>Tryck på en promenad för att se mer information eller ta bort den.</Text>
         </View>
-      ) : (
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={s.scrollContent}>
-          {hikes?.map((hike, index) => (
-            <Pressable
-              style={[s.hikePressable, { backgroundColor: theme.colors.surface }]}
-              key={index}
-              onPress={() => {
-                setSelectedSharedHike(hike);
-                setVisible(true);
-              }}
-            >
-              <View style={s.hikeInfo}>
-                <View style={[s.iconCircle, { backgroundColor: theme.colors.primaryContainer }]}>
-                  <Fontisto name="map" size={24} color={theme.colors.secondary} />
-                </View>
-                <View style={s.flex}>
-                  <Text style={s.name} numberOfLines={1}>
-                    {hike.hikeName}
-                  </Text>
-                  <View style={s.info}>
-                    <Text>{hike.hikeLength} km</Text>
-                    <Text>{FormattedTime(hike.duration)}</Text>
-                    <Text>Delad av: {hike.sharedByName}</Text>
+        <Divider bold={true} />
+        {sharedHike && (
+          <SharedHikeDetails
+            visible={visible}
+            sharedHike={sharedHike}
+            onDismiss={() => {
+              setVisible(false);
+              setSelectedSharedHike(null);
+            }}
+          />
+        )}
+        {hikes?.length === 0 ? (
+          <View style={[s.noHikesContainer, { backgroundColor: theme.colors.background }]}>
+            <Text style={{ color: theme.colors.onBackground }}>Inga delade promenader här än</Text>
+          </View>
+        ) : (
+          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={s.scrollContent}>
+            {hikes?.map((hike, index) => (
+              <Pressable
+                style={[s.hikePressable, { backgroundColor: theme.colors.surface }]}
+                key={index}
+                onPress={() => {
+                  setSelectedSharedHike(hike);
+                  setVisible(true);
+                }}
+              >
+                <View style={s.hikeInfo}>
+                  <View style={[s.iconCircle, { backgroundColor: theme.colors.primaryContainer }]}>
+                    <Fontisto name="map" size={24} color={theme.colors.secondary} />
                   </View>
+                  <View style={s.flex}>
+                    <Text style={s.name} numberOfLines={1}>
+                      {hike.hikeName}
+                    </Text>
+                    <View style={s.info}>
+                      <Text>{hike.hikeLength} km</Text>
+                      <Text>{FormattedTime(hike.duration)}</Text>
+                      <Text>Delad av: {hike.sharedByName}</Text>
+                    </View>
+                  </View>
+                  <Icon source="chevron-right" size={20} />
                 </View>
-                <Icon source="chevron-right" size={20} />
-              </View>
-            </Pressable>
-          ))}
-        </ScrollView>
-      )}
+              </Pressable>
+            ))}
+          </ScrollView>
+        )}
+      </View>
     </View>
   );
 }
 
 const s = StyleSheet.create({
-  container: {
+  screen: {
     flex: 1,
-    padding: 10,
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    paddingLeft: Platform.select({ ios: 4, default: 10 }),
+    paddingRight: 10,
+    paddingTop: 10,
+    paddingBottom: 10,
+  },
+  content: {
+    flex: 1,
+    paddingHorizontal: 10,
+    paddingBottom: 10,
     gap: 10,
   },
   noHikesContainer: {
@@ -118,16 +132,9 @@ const s = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  headerSection: {
-    flexDirection: "row",
-    gap: 10,
-    paddingTop: 10,
-    paddingBottom: 10,
-    alignItems: "center",
-  },
   headerText: {
     fontSize: 17,
-    fontWeight: 700,
+    fontWeight: "700",
   },
   hikePressable: {
     padding: 10,

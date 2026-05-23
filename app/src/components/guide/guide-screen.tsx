@@ -5,7 +5,7 @@ import { classificationParser } from "@/utils/classification-parser";
 import { getDifficultyIcon } from "@/utils/getDifficultyIcon";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useState } from "react";
-import { LayoutAnimation, Linking, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { LayoutAnimation, Linking, Platform, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { Divider, Text, useTheme } from "react-native-paper";
 
 interface Link {
@@ -109,11 +109,13 @@ export default function GuideScreen() {
 
   return (
     <View style={[s.screen, { backgroundColor: theme.colors.background }]}>
-      <BackButton />
-      <ScrollView contentContainerStyle={s.container} showsVerticalScrollIndicator={false}>
+      <View style={s.header}>
+        <BackButton />
         <Text variant="headlineMedium" style={[s.pageTitle, { color: theme.colors.primary }]}>
           Naturguide
         </Text>
+      </View>
+      <ScrollView contentContainerStyle={s.container} showsVerticalScrollIndicator={false}>
 
         <AccordionSection
           icon={<MaterialCommunityIcons name="walk" size={18} color={theme.colors.primary} />}
@@ -236,6 +238,15 @@ const s = StyleSheet.create({
   screen: {
     flex: 1,
   },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    paddingLeft: Platform.select({ ios: 4, default: 12 }),
+    paddingRight: 12,
+    paddingTop: 12,
+    paddingBottom: 4,
+  },
   container: {
     padding: 12,
     gap: 12,
@@ -243,7 +254,6 @@ const s = StyleSheet.create({
   },
   pageTitle: {
     fontWeight: "bold",
-    marginBottom: 8,
   },
   accordion: {
     borderRadius: BORDER_RADIUS,

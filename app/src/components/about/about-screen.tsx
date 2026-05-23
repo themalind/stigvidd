@@ -1,5 +1,5 @@
 import BackButton from "@/components/back-button";
-import { ScrollView, StyleSheet, View } from "react-native";
+import { Platform, ScrollView, StyleSheet, View } from "react-native";
 import { Text, useTheme } from "react-native-paper";
 
 const features = [
@@ -28,16 +28,16 @@ export default function AboutScreen() {
 
   return (
     <View style={[s.screen, { backgroundColor: theme.colors.background }]}>
-      <BackButton />
-      <ScrollView contentContainerStyle={s.container} showsVerticalScrollIndicator={false}>
+      <View style={s.header}>
+        <BackButton />
         <Text variant="headlineMedium" style={[s.appName, { color: theme.colors.primary }]}>
           Stigvidd
         </Text>
-
+      </View>
+      <ScrollView contentContainerStyle={s.container} showsVerticalScrollIndicator={false}>
         <Text variant="bodyMedium" style={[s.description, { color: theme.colors.onBackground }]}>
-          Stigvidd är en fullstack-app för vandring och ledupptäckt, byggd som ett examensarbete. Utforska
-          vandringsleder i Boråsområdet, spela in egna vandringar med GPS, betygsätt leder och rapportera hinder längs
-          vägen.
+          Stigvidd är en fullstack-app för vandring, byggd som ett examensarbete. Utforska vandringsleder i
+          Boråsområdet, spela in egna vandringar med GPS, betygsätt leder och rapportera hinder längs vägen.
         </Text>
 
         <View style={[s.section, { backgroundColor: theme.colors.secondaryContainer }]}>
@@ -92,14 +92,22 @@ const s = StyleSheet.create({
   screen: {
     flex: 1,
   },
-  container: {
-    padding: 20,
-    gap: 16,
-    paddingBottom: 40,
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    paddingLeft: Platform.select({ ios: 4, default: 12 }),
+    paddingRight: 12,
+    paddingTop: 12,
   },
   appName: {
     fontWeight: "bold",
     marginBottom: 4,
+  },
+  container: {
+    padding: 12,
+    gap: 16,
+    paddingBottom: 40,
   },
   description: {
     lineHeight: 22,

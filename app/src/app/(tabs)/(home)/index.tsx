@@ -47,7 +47,7 @@ export default function HomeScreen() {
           <Image source={require("../../../assets/images/guide_cover.jpg")} style={s.cardImage} contentFit="cover" />
           <View style={[s.cardText, { backgroundColor: theme.colors.surface }]}>
             <Text style={[s.cardTitle, { color: theme.colors.onSurface }]}>Naturguide</Text>
-            <Text style={[s.cardSubtitle, { color: theme.colors.onSurfaceVariant }]}>
+            <Text style={[s.cardSubtitle, { color: theme.colors.onSurfaceVariant }]} numberOfLines={1}>
               Allemansrätt · Svårighetsgrader
             </Text>
           </View>
@@ -121,6 +121,7 @@ const s = StyleSheet.create({
   },
   cardRow: {
     flexDirection: "row",
+    alignItems: "stretch",
     gap: 8,
     paddingHorizontal: 12,
   },

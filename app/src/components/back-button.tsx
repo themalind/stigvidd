@@ -17,8 +17,6 @@ export default function BackButton() {
 
 const s = StyleSheet.create({
   button: {
-    alignSelf: "flex-start",
     paddingLeft: 4,
-    paddingTop: 8,
   },
 });

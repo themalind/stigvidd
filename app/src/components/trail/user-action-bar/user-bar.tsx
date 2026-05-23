@@ -8,7 +8,6 @@ import UserRating from "./user-rating";
 import UserReportIssue from "./user-report-issue";
 import UserShare from "./user-share";
 
-const WIDTH = Dimensions.get("screen").width;
 const HEIGHT = Dimensions.get("screen").height;
 interface Props {
   trail: Trail;
@@ -29,7 +28,6 @@ export default function UserBar({ trail }: Props) {
 
 const s = StyleSheet.create({
   container: {
-    width: WIDTH * 0.9,
     height: HEIGHT * 0.08,
     borderRadius: BORDER_RADIUS,
     justifyContent: "space-between",

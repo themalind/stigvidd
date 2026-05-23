@@ -79,7 +79,6 @@ const s = StyleSheet.create({
   },
   focusImageConatiner: {
     marginBottom: 20,
-    width: "100%",
   },
   focusImage: {
     height: 300,

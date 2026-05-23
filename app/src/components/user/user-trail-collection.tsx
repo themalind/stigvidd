@@ -4,7 +4,7 @@ import { Entypo } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import { Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { Platform, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { Divider, Text, useTheme } from "react-native-paper";
 import BackButton from "../back-button";
 import { Rating } from "../review/rating";
@@ -29,12 +29,12 @@ export default function UserTrailCollection({
   const theme = useTheme();
   return (
     <View style={[s.wrapper, { backgroundColor: theme.colors.background }]}>
-      <BackButton />
+      <View style={s.header}>
+        <BackButton />
+        {icon}
+        <Text style={s.title}>{title}</Text>
+      </View>
       <View style={s.container}>
-        <View style={s.header}>
-          {icon}
-          <Text style={s.title}>{title}</Text>
-        </View>
         <Divider bold={true} />
         <View style={[s.infoBox, { backgroundColor: theme.colors.outlineVariant }]}>
           {description && <Text style={s.infoDescription}>{description}</Text>}
@@ -113,10 +113,13 @@ const s = StyleSheet.create({
     alignItems: "center",
   },
   header: {
-    justifyContent: "flex-start",
-    gap: 10,
     flexDirection: "row",
-    paddingBottom: 15,
+    alignItems: "center",
+    gap: 10,
+    paddingLeft: Platform.select({ ios: 4, default: 10 }),
+    paddingRight: 10,
+    paddingTop: 10,
+    paddingBottom: 10,
   },
   icons: {
     flexDirection: "row",
@@ -124,7 +127,6 @@ const s = StyleSheet.create({
   },
   title: {
     fontSize: 20,
-    alignSelf: "flex-start",
   },
   titleRatingContainer: {
     flexDirection: "row",

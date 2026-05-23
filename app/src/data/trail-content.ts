@@ -47,6 +47,6 @@ export const ACCESSIBILITY_INFO: AccessibilityInfo[] = [
     title: "Ej tillgänglighetsanpassad",
     iconName: "hiking",
     description:
-      "En plats eller led som inte är tillgänglighetsanpassad utgår från naturens egna förutsättningar. Underlaget kan vara ojämnt med stenar, rötter, lera eller sand, och sträckan kan innehålla backar, trappor, smala passager eller spänger.\n\nAnpassade sittplatser, ramper, toaletter eller särskild parkering kan saknas helt eller delvis. Förhållandena varierar mellan olika platser, och i appen hittar du information om varje enskilt besöksmål samt svårighetsgrad för leder.",
+      "En plats eller led som inte är tillgänglighetsanpassad utgår från naturens egna förutsättningar. Underlaget kan vara ojämnt med stenar, rötter, lera eller sand, och sträckan kan innehålla backar, trappor, smala passager eller spänger.\n\nI appen hittar du information om varje enskilt besöksmål samt svårighetsgrad för leder.",
   },
 ];

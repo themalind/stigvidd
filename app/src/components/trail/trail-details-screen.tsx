@@ -12,7 +12,7 @@ import CoordinateParser from "@/utils/coordinate-parser";
 import { useQuery } from "@tanstack/react-query";
 import { useLocalSearchParams } from "expo-router";
 import { useRef, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Platform, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { LatLng } from "react-native-maps";
 import { useTheme } from "react-native-paper";
 import BackButton from "../back-button";
@@ -84,9 +84,11 @@ export default function TrailDetailsScreen() {
 
   return (
     <View style={[s.screen, { backgroundColor: theme.colors.background }]}>
-      <BackButton />
-      <ScrollView ref={scrollViewRef} contentContainerStyle={s.container}>
+      <View style={s.header}>
+        <BackButton />
         <Text style={[s.sectionTitle, { color: theme.colors.onBackground }]}>{trail?.name}</Text>
+      </View>
+      <ScrollView ref={scrollViewRef} contentContainerStyle={s.container}>
         <View style={s.imageContainer}>
           <ImageGallery images={images} />
         </View>
@@ -140,8 +142,15 @@ const s = StyleSheet.create({
   screen: {
     flex: 1,
   },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingLeft: Platform.select({ ios: 4, default: 12 }),
+    paddingRight: 12,
+    paddingTop: 10,
+  },
   container: {
-    padding: 20,
+    padding: 12,
     gap: 15,
   },
   rating: {

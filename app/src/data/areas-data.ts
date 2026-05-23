@@ -41,7 +41,7 @@ export const borasAreas: BorasArea[] = [
     location: "Dalsjöfors, ca 10 km öster om Borås",
     description:
       "Dalsjöfors har ett omväxlande landskap med både skogspartier och öppen jordbruksmark. Intill samhället ligger Dalsjön med badplats och flera vandringsleder i omgivningarna.",
-    image: require("../assets/images/area_cover1.jpg"),
+    image: { uri: "https://stigvidd.se/files/trails/area-dalsjofors.jpg" },
     url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/oster/dalsjofors.4.73feea1318de86063206c0bc.html",
     trails: [],
     facilities: {
@@ -116,7 +116,7 @@ export const borasAreas: BorasArea[] = [
     location: "Väster om Borås centrum, Hestra–Almenäs",
     description:
       "562 hektar kommunalt naturreservat bildat 2001 med klippbranter, ekskogar och stigar för alla nivåer. Kulturlandskapet bär spår av en väg som Carl von Linné vandrade 1746.",
-    image: require("../assets/images/area_cover2.jpg"),
+    image: { uri: "https://stigvidd.se/files/trails/area-rya.jpg" },
     url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/ryaasar.4.1601545718c38a990ab44a4c.html",
     trails: [],
     facilities: {
@@ -179,7 +179,7 @@ export const borasAreas: BorasArea[] = [
     location: "Norra Borås, vid Kypesjön",
     description:
       "Kype är ett friluftsområde i norra Borås med vandringsleder, motionsslingor, bad och fiske. Kypegårdens friluftsgård erbjuder dusch, vedeldad bastu och café.",
-    image: require("../assets/images/area_cover3.jpg"),
+    image: { uri: "https://stigvidd.se/files/trails/area-kype.jpg" },
     url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/kype.4.73feea1318de86063206bb14.html",
     trails: [],
     facilities: {
@@ -265,7 +265,7 @@ export const borasAreas: BorasArea[] = [
     location: "Östra Borås, mot Gånghester",
     description:
       "Kransmossen är ett stort idrotts- och friluftsområde med utegym, multisportarena, basketplan, hinderbana, boulebana och lekplats. Vintertid finns pulkabacke och belysta skidspår. Friluftsgård med dusch och bastu.",
-    image: require("../assets/images/area_cover4.jpg"),
+    image: { uri: "https://stigvidd.se/files/trails/area-kransmossen.jpg" },
     url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/kransmossen.4.73feea1318de86063206bc07.html",
     trails: [],
     facilities: {
@@ -357,7 +357,7 @@ export const borasAreas: BorasArea[] = [
     location: "Öresjöns södra strand, nära Borås centrum",
     description:
       "Almenäs ligger vid Öresjöns södra strand och är hem till Borås största och mest populära kommunala badplats med sandstrand, brygga och badramp. Området sträcker sig även till Sjöbo vid Viskans strand med grönområden, leder och grillplatser. Elstängsel finns vid badplatsen för att hålla vildsvin borta.",
-    image: require("../assets/images/area_cover2.jpg"),
+    image: { uri: "https://stigvidd.se/files/trails/area-almenas.jpg" },
     url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/almenas.4.1601545718c38a990ab486b1.html",
     trails: [],
     facilities: {
@@ -439,7 +439,7 @@ export const borasAreas: BorasArea[] = [
     location: "Ca 15 km sydost om Borås",
     description:
       "Aplared är en by i ett småkuperat landskap med skog och jordbruksmarker. Intill byn finns Skansasjön med badplats och Lindåsabäcken naturreservat som skyddar flodpärlmusslan.",
-    image: require("../assets/images/area_cover1.jpg"),
+    image: { uri: "https://stigvidd.se/files/trails/area-mock.jpg" },
     url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/oster/aplared.4.6b00451018e55e78a7c1d447.html",
     trails: [],
     facilities: {
@@ -491,7 +491,7 @@ export const borasAreas: BorasArea[] = [
     location: "Nordligaste Borås kommun, norr om Fristad",
     description:
       "Borgstena ligger i kommunens nordligaste del med ett varierat landskap dominerat av ek- och bokskogar med historiska rötter från medeltid till modern tid.",
-    image: require("../assets/images/area_cover2.jpg"),
+    image: { uri: "https://stigvidd.se/files/trails/area-mock.jpg" },
     url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/norr/borgstena.4.73feea1318de86063208414c.html",
     trails: [],
     facilities: {
@@ -521,7 +521,7 @@ export const borasAreas: BorasArea[] = [
     location: "Borås centrum",
     description:
       "Centrala Borås är en levande stadskärna där kultur och natur möts. Tre huvudparker — Ramnaparken, Stadsparken och Annelundsparken — erbjuder vattennära promenader och rekreation mitt i staden.",
-    image: require("../assets/images/area_cover3.jpg"),
+    image: { uri: "https://stigvidd.se/files/trails/area-annelund.jpg" },
     url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/borascentrala.4.73feea1318de86063206bf0f.html",
     trails: [],
     facilities: {
@@ -558,7 +558,7 @@ export const borasAreas: BorasArea[] = [
     location: "Ca 6 km väster om Fristad, norra Borås kommun",
     description:
       "Bredared har flera vandringsleder i varierande natur. Från Klockaregården utgår fem markerade leder genom barrskogslandskap med vyer över Hjortsbergsdalen och sjön Veksjön.",
-    image: require("../assets/images/area_cover4.jpg"),
+    image: { uri: "https://stigvidd.se/files/trails/area-bredared.jpg" },
     url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/norr/bredared.4.5493346718e560a04fa6cfa9.html",
     trails: [],
     facilities: {
@@ -575,7 +575,7 @@ export const borasAreas: BorasArea[] = [
     location: "Centrala Borås, vid sjön Kolbränningen",
     description:
       "Vid sjön Kolbränningen finns ett naturskönt område med kommunal badplats med sandstrand, gräsmatta och brygga. Vackra skogsstigar och promenadstråk löper genom omgivande bostadsområden.",
-    image: require("../assets/images/area_cover1.jpg"),
+    image: { uri: "https://stigvidd.se/files/trails/area-mock.jpg" },
     url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/byttorpkolbranningen.4.5493346718e560a04fa5d2ec.html",
     trails: [],
     facilities: {
@@ -612,7 +612,7 @@ export const borasAreas: BorasArea[] = [
     location: "Ca 20 km öster om Borås",
     description:
       "Dannike ligger i ett småkuperat landskap med skog och jordbruksmarker. Rammsjön erbjuder en populär badplats med sandstrand och hopptorn, och i närheten finns Rölle naturreservat med lövskog och ängar.",
-    image: require("../assets/images/area_cover2.jpg"),
+    image: { uri: "https://stigvidd.se/files/trails/area-mock.jpg" },
     url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/oster/dannike.4.73feea1318de860632084213.html",
     trails: [],
     facilities: {
@@ -669,7 +669,7 @@ export const borasAreas: BorasArea[] = [
     location: "Öresjöns norra strand, norra Borås kommun",
     description:
       "Fristad ligger vid Öresjöns norra strand med varierad geografi från bördig jordbruksmark till skogbeklädda höjder. Tre badplatser, sex grillplatser och två naturreservat gör Fristad till ett av kommunens rikaste friluftsområden.",
-    image: require("../assets/images/area_cover3.jpg"),
+    image: { uri: "https://stigvidd.se/files/trails/area-fristad.jpg" },
     url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/norr/fristad.4.73feea1318de86063206a396.html",
     trails: [],
     facilities: {
@@ -780,7 +780,7 @@ export const borasAreas: BorasArea[] = [
     location: "Öster om Öresjö, norr om Borås",
     description:
       "Runt Frufällan finns en blandning av skog och öppna landskap vid Öresjöns östra strand. Badplats med brygga och sandstrand, fyra grillplatser och fiske i Öresjö.",
-    image: require("../assets/images/area_cover4.jpg"),
+    image: { uri: "https://stigvidd.se/files/trails/area-frufallan.jpg" },
     url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/norr/frufallan.4.5493346718e560a04fa6d15b.html",
     trails: [],
     facilities: {
@@ -836,7 +836,7 @@ export const borasAreas: BorasArea[] = [
     location: "Söder om Borås centrum",
     description:
       "Gässlösa är ett naturskönt friluftsområde söder om Borås med skogssjöar och ädellövskog. Förutom vandringsleder och elljusspår finns en populär badplats vid Stora Transåssjön och fiske med regnbåge.",
-    image: require("../assets/images/area_cover1.jpg"),
+    image: { uri: "https://stigvidd.se/files/trails/area-mock.jpg" },
     url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/gasslosa.4.73feea1318de86063206bca4.html",
     trails: [],
     facilities: {
@@ -874,7 +874,7 @@ export const borasAreas: BorasArea[] = [
     location: "Ca 20 km nordväst om Borås",
     description:
       "Hedared omges av skogar och jordbruksmark med flera små sjöar. Sex vandringsleder startar vid Hedareds stavkyrka — en av de äldsta bevarade träkyrkorna i Skandinavien. Badplats med sandstrand vid Östra Valsjön.",
-    image: require("../assets/images/area_cover2.jpg"),
+    image: { uri: "https://stigvidd.se/files/trails/area-mock.jpg" },
     url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/vaster/hedared.4.5493346718e560a04fa6cd38.html",
     trails: [],
     facilities: {
@@ -905,7 +905,7 @@ export const borasAreas: BorasArea[] = [
     location: "Södra Borås, Hestra/Ekås",
     description:
       "Hestra erbjuder flera motionsslingor och vandringsleder i varierande längd genom skogslandskapet. Hestrastugan på Ekås är bas för sju leder, och Rya åsar naturreservat gränsar till området.",
-    image: require("../assets/images/area_cover3.jpg"),
+    image: { uri: "https://stigvidd.se/files/trails/area-mock.jpg" },
     url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/hestra.4.5493346718e560a04fa5d641.html",
     trails: [],
     facilities: {
@@ -942,7 +942,7 @@ export const borasAreas: BorasArea[] = [
     location: "Östra Borås, vid Yttre Åsunden och Torpasjön",
     description:
       "Idylliska platser vid Yttre Åsunden och Torpasjön med rik historisk miljö. Hofsnäs herrgård och Torpa stenhus — ett välbevarat renässansslott från 1500-talet — ger området en unik karaktär. Elva grillplatser och en badplats gör det till ett omtyckt utflyktsmål.",
-    image: require("../assets/images/area_cover4.jpg"),
+    image: { uri: "https://stigvidd.se/files/trails/area-hofsnas.jpg" },
     url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/oster/hofsnasochtorpa.4.73feea1318de86063206bd97.html",
     trails: [],
     facilities: {
@@ -1019,7 +1019,7 @@ export const borasAreas: BorasArea[] = [
     location: "Ca 7 km väster om Borås",
     description:
       "Sjömarken ligger vid Viaredssjön med omväxlande landskap av skog och öppna fält. Badplats med sandstrand och lång brygga, fyra grillplatser och fiske.",
-    image: require("../assets/images/area_cover1.jpg"),
+    image: { uri: "https://stigvidd.se/files/trails/area-mock.jpg" },
     url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/vaster/sjomarken.4.73feea1318de8606320843ef.html",
     trails: [],
     facilities: {
@@ -1075,7 +1075,7 @@ export const borasAreas: BorasArea[] = [
     location: "Tosseryd, norra Borås",
     description:
       "Knektås är sommarhalvåret en arena för mountainbike och vintertid kan man åka skidor här. Sex MTB-leder och en 1 100 meter lång rullskidspår sköts av Borås GIF.",
-    image: require("../assets/images/area_cover2.jpg"),
+    image: { uri: "https://stigvidd.se/files/trails/area-knektas.jpg" },
     url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/norr/knektastosseryd.4.5493346718e560a04fa6d1b7.html",
     trails: [],
     facilities: {
@@ -1099,7 +1099,7 @@ export const borasAreas: BorasArea[] = [
     location: "Ca 8 km söder om Borås",
     description:
       "Rydboholm ligger i Viskan-dalen vid Storsjön med ett vackert landskap av skog och jordbruksmark. Sju vandringsleder, badplats vid Furusjön och fiske i Storsjön.",
-    image: require("../assets/images/area_cover3.jpg"),
+    image: { uri: "https://stigvidd.se/files/trails/area-rydboholm.jpg" },
     url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/soder/rydboholm.4.73feea1318de860632085c53.html",
     trails: [],
     facilities: {
@@ -1137,7 +1137,7 @@ export const borasAreas: BorasArea[] = [
     location: "Ca 15 km nordöst om Borås",
     description:
       "Rångedala har ett varierat landskap med skog och jordbruksmark. Sju vandringsleder startar från Rångedala Hembygdsgård i Algutstorp, och Marsjöns badplats erbjuder sandstrand och brygga.",
-    image: require("../assets/images/area_cover4.jpg"),
+    image: { uri: "https://stigvidd.se/files/trails/area-rangedala.jpg" },
     url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/oster/rangedala.4.73feea1318de8606320845cd.html",
     trails: [],
     facilities: {
@@ -1180,7 +1180,7 @@ export const borasAreas: BorasArea[] = [
     location: "Ca 10 km väster om Borås",
     description:
       "Sandareds landskap präglas av skog och öppna ytor nära Viaredssjön. Två badplatser med sandstrand, fem grillplatser och nio markerade leder inklusive Sjuhäradsleden.",
-    image: require("../assets/images/area_cover1.jpg"),
+    image: { uri: "https://stigvidd.se/files/trails/area-mock.jpg" },
     url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/vaster/sandared.4.73feea1318de86063206c004.html",
     trails: [],
     facilities: {
@@ -1248,7 +1248,7 @@ export const borasAreas: BorasArea[] = [
     location: "Ca 10 km nordväst om Borås",
     description:
       "Sandhult har ett naturskönt landskap med skog och öppna jordbruksmarker nära Trummesjön och Madsjön. Fyra markerade vandringsleder och en badplats med liten sandstrand.",
-    image: require("../assets/images/area_cover2.jpg"),
+    image: { uri: "https://stigvidd.se/files/trails/area-mock.jpg" },
     url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/vaster/sandhult.4.73feea1318de860632085d1c.html",
     trails: [],
     facilities: {
@@ -1279,7 +1279,7 @@ export const borasAreas: BorasArea[] = [
     location: "Ca 20 km sydväst om Borås",
     description:
       "Seglora har ett varierat landskap med skog och jordbruksmark vid Viskan. Tranhults naturreservat skyddar en bokskogsklädd bergssida längs Viskans strand.",
-    image: require("../assets/images/area_cover3.jpg"),
+    image: { uri: "https://stigvidd.se/files/trails/area-seglora.jpg" },
     url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/soder/seglora.4.73feea1318de8606320842db.html",
     trails: [],
     facilities: {
@@ -1330,7 +1330,7 @@ export const borasAreas: BorasArea[] = [
     location: "Vid Öresjö, norra Borås",
     description:
       "Sparsör ligger vid Öresjö med relativt kuperad terräng. Två naturreservat — Kröklings hage och Mölarp — finns i området, liksom kommunal badplats och vindskydd vid Trollevi.",
-    image: require("../assets/images/area_cover4.jpg"),
+    image: { uri: "https://stigvidd.se/files/trails/area-mock.jpg" },
     url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/norr/sparsor.4.73feea1318de860632084504.html",
     trails: [],
     facilities: {
@@ -1401,7 +1401,7 @@ export const borasAreas: BorasArea[] = [
     location: "Ca 15 km söder om Borås",
     description:
       "Svaneholm omges av ett vackert naturlandskap med skog och jordbruksmark vid Storsjön och Viskan. Storsjön naturreservat på 460 hektar ger en känsla av vildmark nära staden.",
-    image: require("../assets/images/area_cover1.jpg"),
+    image: { uri: "https://stigvidd.se/files/trails/area-mock.jpg" },
     url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/soder/svaneholm.4.5493346718e560a04fa6d342.html",
     trails: [],
     facilities: {
@@ -1433,7 +1433,7 @@ export const borasAreas: BorasArea[] = [
     location: "Ca 12 km sydväst om Borås",
     description:
       "Viskafors har ett varierat landskap vid Viskan och Storsjön. 12 grillplatser, 4 vindskydd, badplats med sandstrand och Storsjön naturreservat gör det till kommunens sydligaste friluftspärla.",
-    image: require("../assets/images/area_cover2.jpg"),
+    image: { uri: "https://stigvidd.se/files/trails/area-mock.jpg" },
     url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/soder/viskafors.4.73feea1318de860632083f9d.html",
     trails: [],
     facilities: {
@@ -1533,7 +1533,7 @@ export const borasAreas: BorasArea[] = [
     location: "Södra Borås, vid Borås skidstadion",
     description:
       "Ymergården är ett aktivitetsområde med utegym, boulebana, beachvolleyboll och en 27-håls disc golf-bana. Fyra vandringsleder och en rullskidsbana nära Borås skidstadion.",
-    image: require("../assets/images/area_cover3.jpg"),
+    image: { uri: "https://stigvidd.se/files/trails/area-mock.jpg" },
     url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/ymergarden.4.5493346718e560a04fa5d5cd.html",
     trails: [],
     facilities: {

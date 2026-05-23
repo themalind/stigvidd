@@ -56,7 +56,6 @@ export default function TrailMap({ trail }: TrailMapProps) {
 
 const s = StyleSheet.create({
   container: {
-    width: WIDTH * 0.9,
     height: HEIGHT * 0.3,
     borderRadius: SURFACE_BORDER_RADIUS,
   },
