@@ -147,6 +147,8 @@ const s = StyleSheet.create({
   header: {
     flexDirection: "row",
     alignItems: "center",
+    paddingTop: 5,
+    paddingBottom: 5,
     paddingLeft: Platform.select({ ios: 0, default: 12 }),
   },
   container: {
