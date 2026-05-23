@@ -23,6 +23,7 @@ export default function TrailsScreen() {
   const userLocation = useAtomValue(userLocationAtom);
   const colorScheme = Appearance.getColorScheme();
   const finalTheme = userTheme === "auto" ? (colorScheme ?? "light") : userTheme;
+
   const hikers =
     finalTheme === "dark"
       ? require("../../../assets/images/mrHike-light.png")
@@ -57,6 +58,10 @@ export default function TrailsScreen() {
       params: { identifier },
     });
   }, []);
+
+  const onPressScrollToTop = () => {
+    listRef.current?.scrollToOffset({ offset: 0, animated: true });
+  };
 
   const renderTrailItem = useCallback(
     ({ item }: { item: TrailShortInfoResponse }) => <TrailItem item={item} handlePress={handlePress} />,
@@ -135,6 +140,11 @@ export default function TrailsScreen() {
             <Text style={s.emptyText}>Inga leder hittades</Text>
             <Text style={s.emptySubtext}>Prova att ändra dina filter</Text>
           </View>
+        }
+        ListFooterComponent={
+          <Pressable style={s.backToTop} onPress={onPressScrollToTop}>
+            <Text style={[s.text, { color: theme.colors.secondary }]}>Tillbaka till toppen</Text>
+          </Pressable>
         }
       />
 
@@ -226,5 +236,14 @@ const s = StyleSheet.create({
   listContent: {
     padding: 10,
     gap: 10,
+  },
+  backToTop: {
+    alignSelf: "center",
+    justifyContent: "center",
+    flexDirection: "row",
+  },
+  text: {
+    textDecorationLine: "underline",
+    fontSize: 15,
   },
 });
