@@ -13,6 +13,7 @@ export default function SettingsLayout() {
     >
       <Stack.Screen name="about" />
       <Stack.Screen name="login" />
+      <Stack.Screen name="guide" />
     </Stack>
   );
 }

@@ -19,7 +19,7 @@ internal class Program
         var connectionString = configuration.GetConnectionString("DefaultConnection");
 
         var options = new DbContextOptionsBuilder<StigViddDbContext>()
-            .UseSqlServer(connectionString)
+            .UseNpgsql(connectionString)
             .Options;
 
         var context = new StigViddDbContext(options);

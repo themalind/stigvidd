@@ -61,7 +61,7 @@ public class Program
         });
 
         // Automatically register all validators from the assembly
-        builder.Services.AddValidatorsFromAssemblyContaining<AddToUserFavoriteValidator>();        
+        builder.Services.AddValidatorsFromAssemblyContaining<AddToUserFavoriteValidator>();
 
         builder.Services.AddOpenApi();
 

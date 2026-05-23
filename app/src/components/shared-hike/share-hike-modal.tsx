@@ -41,7 +41,7 @@ function FormField({ name, label, control, error }: FormFieldProps) {
             error={!!error}
             style={[s.textInput, { backgroundColor: theme.colors.surfaceVariant }]}
             onBlur={onBlur}
-            onChangeText={onChange}
+            onChangeText={(text) => onChange(text || undefined)}
             value={value}
             label={label}
             autoCapitalize="sentences"

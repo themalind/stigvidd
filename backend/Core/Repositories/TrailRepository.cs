@@ -29,16 +29,16 @@ public class TrailRepository : ITrailRepository
                 .SqlQueryRaw<TrailShortInfoResponse>(
                    """
                         SELECT
-                            Identifier,
-                            Name,
-                            TrailLength,
-                            Accessibility,
-                            Classification,
-                            City,
-                            CAST(JSON_VALUE(Coordinates, '$[0].latitude') AS decimal(18,10)) AS StartLatitude,
-                            CAST(JSON_VALUE(Coordinates, '$[0].longitude') AS decimal(18,10)) AS StartLongitude
-                        FROM Trails
-                        WHERE IsVerified = 1
+                            "Identifier",
+                            "Name",
+                            "TrailLength",
+                            "Accessibility",
+                            "Classification",
+                            "City",
+                            CAST("Coordinates"::json->0->>'latitude' AS numeric(18,10)) AS "StartLatitude",
+                            CAST("Coordinates"::json->0->>'longitude' AS numeric(18,10)) AS "StartLongitude"
+                        FROM dbo."Trails"
+                        WHERE "IsVerified" = true
                         """)
                 .AsNoTracking()
                 .ToListAsync(ctoken);
@@ -89,17 +89,17 @@ public class TrailRepository : ITrailRepository
                 .SqlQueryRaw<PopularTrailQueryResult>(
                     """
                         SELECT
-                            t.Id,
-                            t.Identifier,
-                            t.Name,
-                            t.TrailLength,
-                            ISNULL(AVG(r.Rating), 0) AS AverageRating,
-                            CAST(JSON_VALUE(t.Coordinates, '$[0].latitude') AS float) AS StartLatitude,
-                            CAST(JSON_VALUE(t.Coordinates, '$[0].longitude') AS float) AS StartLongitude
-                        FROM Trails t
-                        LEFT JOIN Reviews r ON r.TrailId = t.Id
-                        WHERE t.IsVerified = 1
-                        GROUP BY t.Id, t.Identifier, t.Name, t.TrailLength, t.Coordinates
+                            t."Id",
+                            t."Identifier",
+                            t."Name",
+                            t."TrailLength",
+                            COALESCE(AVG(r."Rating"), 0) AS "AverageRating",
+                            CAST(t."Coordinates"::json->0->>'latitude' AS float) AS "StartLatitude",
+                            CAST(t."Coordinates"::json->0->>'longitude' AS float) AS "StartLongitude"
+                        FROM dbo."Trails" t
+                        LEFT JOIN dbo."Reviews" r ON r."TrailId" = t."Id"
+                        WHERE t."IsVerified" = true
+                        GROUP BY t."Id", t."Identifier", t."Name", t."TrailLength", t."Coordinates"
                         """)
                 .AsNoTracking()
                 .ToListAsync(ctoken);
@@ -232,14 +232,14 @@ public class TrailRepository : ITrailRepository
                 .SqlQueryRaw<TrailMarkerResponse>(
                    """
                         SELECT
-                            t.Identifier,
-                            t.Name,
-                            t.Accessibility AS IsAccessible,
-                            CAST(JSON_VALUE(t.Coordinates, '$[0].latitude') AS decimal(18,10)) AS StartLatitude,
-                            CAST(JSON_VALUE(t.Coordinates, '$[0].longitude') AS decimal(18,10)) AS StartLongitude
-                        FROM Trails t
-                        WHERE t.IsVerified = 1
-                        GROUP BY t.Identifier, t.Name, t.Accessibility, t.Coordinates
+                            t."Identifier",
+                            t."Name",
+                            t."Accessibility" AS "IsAccessible",
+                            CAST(t."Coordinates"::json->0->>'latitude' AS numeric(18,10)) AS "StartLatitude",
+                            CAST(t."Coordinates"::json->0->>'longitude' AS numeric(18,10)) AS "StartLongitude"
+                        FROM dbo."Trails" t
+                        WHERE t."IsVerified" = true
+                        GROUP BY t."Identifier", t."Name", t."Accessibility", t."Coordinates"
                         """)
                 .AsNoTracking()
                 .ToListAsync(ctoken);

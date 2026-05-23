@@ -6,9 +6,13 @@ export const incomingRequestsAtom = atomWithQuery((get) => {
   const firebaseUser = get(userAtom);
   return {
     queryKey: ["friends", "incoming", firebaseUser?.uid],
-    queryFn: () => getIncomingRequests(),
+    queryFn: () => {
+      if (!firebaseUser?.uid) return Promise.resolve([]);
+      return getIncomingRequests();
+    },
     enabled: !!firebaseUser?.uid,
     refetchInterval: 5_000,
+    retry: 1,
     refetchIntervalInBackground: false,
     staleTime: 0,
   };

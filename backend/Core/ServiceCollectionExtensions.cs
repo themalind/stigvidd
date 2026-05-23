@@ -8,7 +8,6 @@ using FirebaseAdmin.Auth;
 using Google.Apis.Auth.OAuth2;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System.Net;
@@ -27,23 +26,7 @@ public static class ServiceCollectionExtensions
 
         services.AddDbContextFactory<StigViddDbContext>(o =>
         {
-            o.UseSqlServer(connectionString);
-            o.ConfigureWarnings(w =>
-            {
-                // Reviewed: queries loading multiple collections (TrailImages + TrailLinks/Reviews) are
-                // always scoped to a single entity, so the cartesian product is negligible.
-                w.Ignore(RelationalEventId.MultipleCollectionIncludeWarning);
-
-                // Reviewed: Take(1) on TrailImages inside projections intentionally fetches any one image,
-                // order does not matter here.
-                w.Ignore(CoreEventId.RowLimitingOperationWithoutOrderByWarning);
-
-                // Reviewed: EF Core registers SqlQueryRaw<T> result types (PopularTrailQueryResult,
-                // TrailShortInfoResponse) as ad-hoc entities at query compile time, bypassing OnModelCreating.
-                // All real entity decimal properties have explicit precision configured. This warning
-                // only fires for the raw SQL result types where truncation is not a concern.
-                w.Ignore(SqlServerEventId.DecimalTypeDefaultWarning);
-            });
+            o.UseNpgsql(connectionString);
         });
 
         // Bra att börja med transient. Märker man att en annan livstid behövs är det lättare att ändra till längre livstid än kortare.
