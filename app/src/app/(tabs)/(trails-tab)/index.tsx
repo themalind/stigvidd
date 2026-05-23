@@ -73,6 +73,44 @@ export default function TrailsScreen() {
 
   return (
     <View style={[s.container, { backgroundColor: theme.colors.background }]}>
+      <View style={[s.stickyHeader, { backgroundColor: theme.colors.background }]}>
+        <View style={s.headerRow}>
+          <View style={s.titleRow}>
+            <Image contentFit="contain" source={hikers} style={s.hikers} />
+            <Text style={[s.titleText, { color: theme.colors.onBackground }]}>Vandringsleder</Text>
+          </View>
+          <Pressable onPress={() => setFilterModalVisible(true)}>
+            <View style={[s.filterButtonInner, { backgroundColor: theme.colors.primary }]}>
+              <MaterialIcons name="filter-list" size={24} color={theme.colors.onPrimary} />
+              <Text style={[s.filterButtonText, { color: theme.colors.onPrimary }]}>Filtrera</Text>
+            </View>
+          </Pressable>
+        </View>
+        <TextInput
+          mode="outlined"
+          placeholder="Sök efter led eller ort..."
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          left={<TextInput.Icon icon="magnify" />}
+          right={searchQuery ? <TextInput.Icon icon="close" onPress={() => setSearchQuery("")} /> : undefined}
+          style={[s.searchInput, { backgroundColor: theme.colors.surface }]}
+          theme={{
+            colors: {
+              primary: theme.colors.outlineVariant,
+            },
+          }}
+        />
+        <View style={s.filterContainer}>
+          <Text style={s.resultText}>
+            Visar {filteredCount} av {totalCount} leder
+          </Text>
+          {Object.values(filters).some((v) => v !== undefined) || searchQuery ? (
+            <Pressable onPress={clearFilters}>
+              <Text style={[s.clearFilters, { color: theme.colors.tertiary }]}>Rensa filter</Text>
+            </Pressable>
+          ) : null}
+        </View>
+      </View>
       <FlatList
         ref={listRef}
         data={filteredTrails}
@@ -84,46 +122,6 @@ export default function TrailsScreen() {
         windowSize={5}
         updateCellsBatchingPeriod={50}
         removeClippedSubviews
-        ListHeaderComponent={
-          <>
-            <View style={s.headerRow}>
-              <View style={s.titleRow}>
-                <Image contentFit="contain" source={hikers} style={s.hikers} />
-                <Text style={[s.titleText, { color: theme.colors.onBackground }]}>Vandringsleder</Text>
-              </View>
-              <Pressable onPress={() => setFilterModalVisible(true)}>
-                <View style={[s.filterButtonInner, { backgroundColor: theme.colors.primary }]}>
-                  <MaterialIcons name="filter-list" size={24} color={theme.colors.onPrimary} />
-                  <Text style={[s.filterButtonText, { color: theme.colors.onPrimary }]}>Filtrera</Text>
-                </View>
-              </Pressable>
-            </View>
-            <TextInput
-              mode="outlined"
-              placeholder="Sök efter led eller ort..."
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              left={<TextInput.Icon icon="magnify" />}
-              right={searchQuery ? <TextInput.Icon icon="close" onPress={() => setSearchQuery("")} /> : undefined}
-              style={[s.searchInput, { backgroundColor: theme.colors.surface }]}
-              theme={{
-                colors: {
-                  primary: theme.colors.outlineVariant,
-                },
-              }}
-            />
-            <View style={s.filterContainer}>
-              <Text style={s.resultText}>
-                Visar {filteredCount} av {totalCount} leder
-              </Text>
-              {Object.values(filters).some((v) => v !== undefined) || searchQuery ? (
-                <Pressable onPress={clearFilters}>
-                  <Text style={[s.clearFilters, { color: theme.colors.tertiary }]}>Rensa filter</Text>
-                </Pressable>
-              ) : null}
-            </View>
-          </>
-        }
         refreshControl={
           <RefreshControl
             refreshing={isFetching}
@@ -160,6 +158,10 @@ export default function TrailsScreen() {
 const s = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  stickyHeader: {
+    padding: 10,
+    paddingBottom: 0,
   },
   hikers: {
     height: 25,
