@@ -50,9 +50,11 @@ export default function CreateHikeScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
-      <BackButton />
       <ScrollView ref={scrollViewRef} contentContainerStyle={s.container}>
-        <TrailCreator />
+        <BackButton />
+        <View style={s.content}>
+          <TrailCreator />
+        </View>
       </ScrollView>
     </View>
   );
@@ -61,8 +63,13 @@ export default function CreateHikeScreen() {
 const s = StyleSheet.create({
   container: {
     flexGrow: 1,
-    gap: 10,
+    paddingTop: 8,
+    paddingBottom: 20,
+    gap: 8,
+  },
+  content: {
     paddingHorizontal: 10,
-    paddingVertical: 20,
+    flexGrow: 1,
+    gap: 10,
   },
 });

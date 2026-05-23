@@ -28,61 +28,63 @@ export default function AboutScreen() {
 
   return (
     <View style={[s.screen, { backgroundColor: theme.colors.background }]}>
-      <View style={s.header}>
-        <BackButton />
-        <Text variant="headlineMedium" style={[s.appName, { color: theme.colors.primary }]}>
-          Stigvidd
-        </Text>
-      </View>
       <ScrollView contentContainerStyle={s.container} showsVerticalScrollIndicator={false}>
-        <Text variant="bodyMedium" style={[s.description, { color: theme.colors.onBackground }]}>
-          Stigvidd är en fullstack-app för vandring, byggd som ett examensarbete. Utforska vandringsleder i
-          Boråsområdet, spela in egna vandringar med GPS, betygsätt leder och rapportera hinder längs vägen.
-        </Text>
-
-        <View style={[s.section, { backgroundColor: theme.colors.secondaryContainer }]}>
-          <Text variant="titleSmall" style={[s.sectionTitle, { color: theme.colors.onSecondaryContainer }]}>
-            Funktioner
-          </Text>
-          {features.map((f, i) => (
-            <View key={i} style={s.featureRow}>
-              <Text style={{ color: theme.colors.onSecondaryContainer }}>{"•"}</Text>
-              <Text variant="bodyMedium" style={[s.featureText, { color: theme.colors.onSecondaryContainer }]}>
-                {f}
-              </Text>
-            </View>
-          ))}
-        </View>
-
-        <View style={[s.section, { backgroundColor: theme.colors.secondaryContainer }]}>
-          <Text variant="titleSmall" style={[s.sectionTitle, { color: theme.colors.onSecondaryContainer }]}>
-            Teknik
-          </Text>
-          {techStack.map(({ label, value }) => (
-            <View key={label} style={s.techRow}>
-              <Text variant="bodySmall" style={[s.techLabel, { color: theme.colors.onSecondaryContainer }]}>
-                {label}
-              </Text>
-              <Text variant="bodySmall" style={[s.techValue, { color: theme.colors.onSecondaryContainer }]}>
-                {value}
-              </Text>
-            </View>
-          ))}
-        </View>
-
-        <View style={[s.section, { backgroundColor: theme.colors.secondaryContainer }]}>
-          <Text variant="titleSmall" style={[s.sectionTitle, { color: theme.colors.onSecondaryContainer }]}>
-            Datakälla
-          </Text>
-          <Text variant="bodyMedium" style={[s.featureText, { color: theme.colors.onSecondaryContainer }]}>
-            Leddata för Boråsområdet hämtas från Borås Stads öppna dataportal i GeoJSON-format och importeras via eget
-            ETL-verktyg.
+        <View style={s.header}>
+          <BackButton />
+          <Text variant="headlineMedium" style={[s.appName, { color: theme.colors.primary }]}>
+            Stigvidd
           </Text>
         </View>
+        <View style={s.content}>
+          <Text variant="bodyMedium" style={[s.description, { color: theme.colors.onBackground }]}>
+            Stigvidd är en fullstack-app för vandring, byggd som ett examensarbete. Utforska vandringsleder i
+            Boråsområdet, spela in egna vandringar med GPS, betygsätt leder och rapportera hinder längs vägen.
+          </Text>
 
-        <Text variant="bodySmall" style={[s.footer, { color: theme.colors.outline }]}>
-          Examensarbete · SUVNET24
-        </Text>
+          <View style={[s.section, { backgroundColor: theme.colors.secondaryContainer }]}>
+            <Text variant="titleSmall" style={[s.sectionTitle, { color: theme.colors.onSecondaryContainer }]}>
+              Funktioner
+            </Text>
+            {features.map((f, i) => (
+              <View key={i} style={s.featureRow}>
+                <Text style={{ color: theme.colors.onSecondaryContainer }}>{"•"}</Text>
+                <Text variant="bodyMedium" style={[s.featureText, { color: theme.colors.onSecondaryContainer }]}>
+                  {f}
+                </Text>
+              </View>
+            ))}
+          </View>
+
+          <View style={[s.section, { backgroundColor: theme.colors.secondaryContainer }]}>
+            <Text variant="titleSmall" style={[s.sectionTitle, { color: theme.colors.onSecondaryContainer }]}>
+              Teknik
+            </Text>
+            {techStack.map(({ label, value }) => (
+              <View key={label} style={s.techRow}>
+                <Text variant="bodySmall" style={[s.techLabel, { color: theme.colors.onSecondaryContainer }]}>
+                  {label}
+                </Text>
+                <Text variant="bodySmall" style={[s.techValue, { color: theme.colors.onSecondaryContainer }]}>
+                  {value}
+                </Text>
+              </View>
+            ))}
+          </View>
+
+          <View style={[s.section, { backgroundColor: theme.colors.secondaryContainer }]}>
+            <Text variant="titleSmall" style={[s.sectionTitle, { color: theme.colors.onSecondaryContainer }]}>
+              Datakälla
+            </Text>
+            <Text variant="bodyMedium" style={[s.featureText, { color: theme.colors.onSecondaryContainer }]}>
+              Leddata för Boråsområdet hämtas från Borås Stads öppna dataportal i GeoJSON-format och importeras via eget
+              ETL-verktyg.
+            </Text>
+          </View>
+
+          <Text variant="bodySmall" style={[s.footer, { color: theme.colors.outline }]}>
+            Examensarbete · SUVNET24
+          </Text>
+        </View>
       </ScrollView>
     </View>
   );
@@ -96,18 +98,20 @@ const s = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
-    paddingLeft: Platform.select({ ios: 4, default: 12 }),
-    paddingRight: 12,
-    paddingTop: 12,
+    paddingLeft: Platform.select({ ios: 0, default: 12 }),
   },
   appName: {
     fontWeight: "bold",
     marginBottom: 4,
   },
   container: {
-    padding: 12,
-    gap: 16,
+    paddingTop: 8,
     paddingBottom: 40,
+    gap: 8,
+  },
+  content: {
+    paddingHorizontal: 12,
+    gap: 16,
   },
   description: {
     lineHeight: 22,

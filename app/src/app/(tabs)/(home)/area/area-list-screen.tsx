@@ -8,17 +8,17 @@ export default function AreaListScreen() {
   const theme = useTheme();
 
   return (
-    <>
+    <ScrollView contentContainerStyle={[s.scrollContent, { backgroundColor: theme.colors.background }]}>
       <View style={[s.header, { backgroundColor: theme.colors.background }]}>
         <BackButton />
         <Text style={s.title}>Områden</Text>
       </View>
-      <ScrollView contentContainerStyle={[s.scrollContent, { backgroundColor: theme.colors.background }]}>
+      <View style={s.content}>
         {borasAreas.map((area, index) => {
           return <AreaCard key={index} area={area} />;
         })}
-      </ScrollView>
-    </>
+      </View>
+    </ScrollView>
   );
 }
 
@@ -26,17 +26,19 @@ const s = StyleSheet.create({
   header: {
     flexDirection: "row",
     alignItems: "center",
-    paddingLeft: Platform.select({ ios: 4, default: 10 }),
-    paddingRight: 10,
-    paddingTop: 10,
-    paddingBottom: 10,
+    paddingLeft: Platform.select({ ios: 0, default: 10 }),
   },
   title: {
     fontWeight: "700",
     fontSize: 20,
   },
   scrollContent: {
-    padding: 10,
+    paddingTop: 8,
+    paddingBottom: 20,
+    gap: 8,
+  },
+  content: {
+    paddingHorizontal: 10,
     gap: 15,
   },
 });

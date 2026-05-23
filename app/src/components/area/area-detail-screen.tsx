@@ -21,7 +21,17 @@ function FacilitySection({ title, icon, items }: FacilitySectionProps) {
         <Text style={[s.sectionTitle, { color: theme.colors.onBackground }]}>{title}</Text>
       </View>
       {items.map((item, index) => (
-        <View key={index} style={[s.facilityCard, { backgroundColor: theme.colors.elevation.level1 }]}>
+        <View
+          key={index}
+          style={[
+            s.facilityCard,
+            {
+              backgroundColor: theme.colors.elevation.level1,
+              borderColor: theme.colors.outlineVariant,
+              borderWidth: 1,
+            },
+          ]}
+        >
           <Text style={[s.facilityName, { color: theme.colors.onSurface }]}>{item.name}</Text>
           {item.location ? (
             <View style={s.locationRow}>
@@ -55,8 +65,10 @@ export default function AreaDetailScreen() {
 
   return (
     <View style={[s.screen, { backgroundColor: theme.colors.background }]}>
-      <BackButton />
       <ScrollView contentContainerStyle={s.container}>
+        <View style={s.backButtonRow}>
+          <BackButton />
+        </View>
         <Image source={area.image} style={s.heroImage} resizeMode="cover" />
         <View style={s.header}>
           <Text style={[s.title, { color: theme.colors.onBackground }]}>{area.name}</Text>
@@ -90,12 +102,16 @@ const s = StyleSheet.create({
     gap: 16,
     paddingBottom: 32,
   },
+  backButtonRow: {
+    paddingLeft: 4,
+    paddingTop: 4,
+  },
   heroImage: {
     width: "100%",
     height: 220,
   },
   header: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 12,
     gap: 6,
   },
   title: {
@@ -111,17 +127,17 @@ const s = StyleSheet.create({
     fontSize: 14,
   },
   description: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 12,
     fontSize: 15,
     lineHeight: 22,
   },
   facilitiesHeading: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 12,
     fontSize: 17,
     fontWeight: "700",
   },
   section: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 12,
     gap: 8,
   },
   sectionHeader: {

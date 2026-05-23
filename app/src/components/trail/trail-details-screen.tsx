@@ -84,55 +84,57 @@ export default function TrailDetailsScreen() {
 
   return (
     <View style={[s.screen, { backgroundColor: theme.colors.background }]}>
-      <View style={s.header}>
-        <BackButton />
-        <Text style={[s.sectionTitle, { color: theme.colors.onBackground }]}>{trail?.name}</Text>
-      </View>
       <ScrollView ref={scrollViewRef} contentContainerStyle={s.container}>
-        <View style={s.imageContainer}>
-          <ImageGallery images={images} />
+        <View style={s.header}>
+          <BackButton />
+          <Text style={[s.sectionTitle, { color: theme.colors.onBackground }]}>{trail?.name}</Text>
         </View>
-        <View style={s.ratingSection}>
-          <View style={s.rating}>
-            <Rating trailReviews={reviews} starSize={20} starColor={theme.colors.secondary} />
-            <Text style={[s.ratingNumber, { color: theme.colors.onBackground }]}>{`(${reviewCount})`}</Text>
+        <View style={s.content}>
+          <View style={s.imageContainer}>
+            <ImageGallery images={images} />
           </View>
-          <View style={s.paddingLeft}>
-            <TouchableOpacity onPress={onPressScrollToRatings}>
-              <Text style={[s.text, { color: theme.colors.secondary }]}>Läs recensioner</Text>
-            </TouchableOpacity>
+          <View style={s.ratingSection}>
+            <View style={s.rating}>
+              <Rating trailReviews={reviews} starSize={20} starColor={theme.colors.secondary} />
+              <Text style={[s.ratingNumber, { color: theme.colors.onBackground }]}>{`(${reviewCount})`}</Text>
+            </View>
+            <View style={s.paddingLeft}>
+              <TouchableOpacity onPress={onPressScrollToRatings}>
+                <Text style={[s.text, { color: theme.colors.secondary }]}>Läs recensioner</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
-        {trail && <TrailInfo trail={trail} />}
-        {obstacles && obstacles.length > 0 && <TrailObstacleWarning onPress={() => setShowObstacleModal(true)} />}
-        {trail && <UserBar trail={trail} />}
-        {trail?.description && <TrailDescription trail={trail} />}
-        {coords?.coordinates ? (
-          coordinates.length > 0 && <TrailMap trail={coordinates} />
-        ) : (
-          <MapSkeleton text="Laddar karta..." />
-        )}
-        {trail && <TrailMiscInfo trail={trail} />}
+          {trail && <TrailInfo trail={trail} />}
+          {obstacles && obstacles.length > 0 && <TrailObstacleWarning onPress={() => setShowObstacleModal(true)} />}
+          {trail && <UserBar trail={trail} />}
+          {trail?.description && <TrailDescription trail={trail} />}
+          {coords?.coordinates ? (
+            coordinates.length > 0 && <TrailMap trail={coordinates} />
+          ) : (
+            <MapSkeleton text="Laddar karta..." />
+          )}
+          {trail && <TrailMiscInfo trail={trail} />}
 
-        {trail && (
-          <TrailReviewsContainer
-            trail={trail}
-            surfaceToScrollToRef={surfaceToScrollToRef}
-            onReviewsLoaded={(reviews, total) => {
-              setReviewCount(total);
-              setReviews(reviews);
-            }}
+          {trail && (
+            <TrailReviewsContainer
+              trail={trail}
+              surfaceToScrollToRef={surfaceToScrollToRef}
+              onReviewsLoaded={(reviews, total) => {
+                setReviewCount(total);
+                setReviews(reviews);
+              }}
+            />
+          )}
+          <Pressable style={s.backToTop} onPress={onPressScrollToTop}>
+            <Text style={[s.text, { color: theme.colors.secondary }]}>Tillbaka till toppen</Text>
+          </Pressable>
+          <TrailObstacleModal
+            visible={showObstacleModal}
+            onDismiss={() => setShowObstacleModal(false)}
+            obstacles={obstacles}
+            trailIdentifier={normalizedIdentifier}
           />
-        )}
-        <Pressable style={s.backToTop} onPress={onPressScrollToTop}>
-          <Text style={[s.text, { color: theme.colors.secondary }]}>Tillbaka till toppen</Text>
-        </Pressable>
-        <TrailObstacleModal
-          visible={showObstacleModal}
-          onDismiss={() => setShowObstacleModal(false)}
-          obstacles={obstacles}
-          trailIdentifier={normalizedIdentifier}
-        />
+        </View>
       </ScrollView>
     </View>
   );
@@ -145,12 +147,15 @@ const s = StyleSheet.create({
   header: {
     flexDirection: "row",
     alignItems: "center",
-    paddingLeft: Platform.select({ ios: 4, default: 12 }),
-    paddingRight: 12,
-    paddingTop: 10,
+    paddingLeft: Platform.select({ ios: 0, default: 12 }),
   },
   container: {
-    padding: 12,
+    paddingTop: 4,
+    paddingBottom: 20,
+    gap: 4,
+  },
+  content: {
+    paddingHorizontal: 12,
     gap: 15,
   },
   rating: {

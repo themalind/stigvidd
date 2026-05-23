@@ -49,285 +49,289 @@ export default function FriendsScreen() {
 
   return (
     <View style={[s.screen, { backgroundColor: theme.colors.background }]}>
-      <View style={s.header}>
-        <BackButton />
-        <MaterialCommunityIcons name="account-group" size={24} color={theme.colors.primary} />
-        <Text style={s.headerTitle}>Vänner</Text>
-      </View>
       <ScrollView style={{ backgroundColor: theme.colors.background }} contentContainerStyle={s.scrollContent}>
-        <Searchbar
-          placeholder="Sök användare"
-          value={query}
-          onChangeText={setQuery}
-          style={[s.searchbar, { backgroundColor: theme.colors.surface }]}
-          inputStyle={s.searchbarInput}
-        />
+        <View style={s.header}>
+          <BackButton />
+          <MaterialCommunityIcons name="account-group" size={24} color={theme.colors.primary} />
+          <Text style={s.headerTitle}>Vänner</Text>
+        </View>
+        <View style={s.content}>
+          <Searchbar
+            placeholder="Sök användare"
+            value={query}
+            onChangeText={setQuery}
+            style={[s.searchbar, { backgroundColor: theme.colors.surface }]}
+            inputStyle={s.searchbarInput}
+          />
 
-        {showSearchResults && (
-          <View style={s.section}>
-            <SectionHeader icon="account-search" label="Sökresultat" color={theme.colors.primary} />
-            <Surface style={[s.card, { backgroundColor: theme.colors.surface }]} elevation={1}>
-              <View style={s.cardInner}>
-                {searchPending ? (
-                  <ActivityIndicator style={s.loader} />
-                ) : searchError ? (
-                  <EmptyState text="Något gick fel vid sökning" />
-                ) : searchResults?.length === 0 ? (
-                  <EmptyState text="Inga användare hittades" />
-                ) : (
-                  <>
-                    {(searchExpanded ? searchResults : searchResults?.slice(0, PREVIEW_COUNT))?.map((user, i, arr) => (
-                      <View key={user.identifier}>
-                        <Pressable hitSlop={12} onPress={() => {}}>
-                          <View style={s.row}>
-                            <Avatar.Text
-                              size={40}
-                              label={getInitials(user.nickName)}
-                              style={{ backgroundColor: theme.colors.primaryContainer }}
-                              labelStyle={{ color: theme.colors.onPrimaryContainer, fontSize: 14 }}
-                            />
-                            <Text style={s.rowName} variant="bodyLarge">
-                              {user.nickName}
-                            </Text>
-                            {friends?.some((f) => f.identifier === user.identifier) ? (
-                              <MaterialCommunityIcons name="account-check" size={22} color={theme.colors.primary} />
-                            ) : outgoingRequests?.some((r) => r.receiverIdentifier === user.identifier) ? (
-                              <MaterialCommunityIcons name="clock-outline" size={22} color={theme.colors.outline} />
-                            ) : (
-                              <IconButton
-                                hitSlop={20}
-                                icon="account-plus"
-                                size={25}
-                                onPress={() => sendRequestMutation.mutate(user.nickName)}
-                                style={s.actionButton}
-                              />
+          {showSearchResults && (
+            <View style={s.section}>
+              <SectionHeader icon="account-search" label="Sökresultat" color={theme.colors.primary} />
+              <Surface style={[s.card, { backgroundColor: theme.colors.surface }]} elevation={1}>
+                <View style={s.cardInner}>
+                  {searchPending ? (
+                    <ActivityIndicator style={s.loader} />
+                  ) : searchError ? (
+                    <EmptyState text="Något gick fel vid sökning" />
+                  ) : searchResults?.length === 0 ? (
+                    <EmptyState text="Inga användare hittades" />
+                  ) : (
+                    <>
+                      {(searchExpanded ? searchResults : searchResults?.slice(0, PREVIEW_COUNT))?.map(
+                        (user, i, arr) => (
+                          <View key={user.identifier}>
+                            <Pressable hitSlop={12} onPress={() => {}}>
+                              <View style={s.row}>
+                                <Avatar.Text
+                                  size={40}
+                                  label={getInitials(user.nickName)}
+                                  style={{ backgroundColor: theme.colors.primaryContainer }}
+                                  labelStyle={{ color: theme.colors.onPrimaryContainer, fontSize: 14 }}
+                                />
+                                <Text style={s.rowName} variant="bodyLarge">
+                                  {user.nickName}
+                                </Text>
+                                {friends?.some((f) => f.identifier === user.identifier) ? (
+                                  <MaterialCommunityIcons name="account-check" size={22} color={theme.colors.primary} />
+                                ) : outgoingRequests?.some((r) => r.receiverIdentifier === user.identifier) ? (
+                                  <MaterialCommunityIcons name="clock-outline" size={22} color={theme.colors.outline} />
+                                ) : (
+                                  <IconButton
+                                    hitSlop={20}
+                                    icon="account-plus"
+                                    size={25}
+                                    onPress={() => sendRequestMutation.mutate(user.nickName)}
+                                    style={s.actionButton}
+                                  />
+                                )}
+                              </View>
+                            </Pressable>
+                            {i < arr.length - 1 && (
+                              <View style={[s.divider, { backgroundColor: theme.colors.outlineVariant }]} />
                             )}
                           </View>
-                        </Pressable>
+                        ),
+                      )}
+                      {(searchResults?.length ?? 0) > PREVIEW_COUNT && (
+                        <Button mode="text" onPress={() => setSearchExpanded((v) => !v)} style={s.retryButton}>
+                          {searchExpanded ? "Visa färre" : `Visa alla (${searchResults?.length})`}
+                        </Button>
+                      )}
+                    </>
+                  )}
+                </View>
+              </Surface>
+            </View>
+          )}
+
+          {!incomingPending && !incomingError && (incomingRequests?.length ?? 0) > 0 && (
+            <View style={s.section}>
+              <SectionHeader
+                icon="account-arrow-down"
+                label={`Inkommande (${incomingRequests?.length})`}
+                color={theme.colors.tertiary}
+              />
+              <Surface style={[s.card, { backgroundColor: theme.colors.surface }]} elevation={1}>
+                <View style={s.cardInner}>
+                  {(incomingExpanded ? incomingRequests : incomingRequests?.slice(0, PREVIEW_COUNT))?.map(
+                    (req, i, arr) => (
+                      <View key={req.requesterIdentifier}>
+                        <View style={s.row}>
+                          <Avatar.Text
+                            size={40}
+                            label={getInitials(req.requesterNickName)}
+                            style={{ backgroundColor: theme.colors.tertiaryContainer }}
+                            labelStyle={{ color: theme.colors.onTertiaryContainer, fontSize: 14 }}
+                          />
+                          <Text style={s.rowName} variant="bodyLarge">
+                            {req.requesterNickName}
+                          </Text>
+                          <View style={s.rowActions}>
+                            <IconButton
+                              hitSlop={16}
+                              icon="check"
+                              size={25}
+                              iconColor={theme.colors.primary}
+                              onPress={() => acceptMutation.mutate(req.requesterIdentifier)}
+                              disabled={acceptMutation.isPending || rejectMutation.isPending}
+                              style={s.actionButton}
+                            />
+                            <IconButton
+                              hitSlop={16}
+                              icon="close"
+                              size={25}
+                              iconColor={theme.colors.error}
+                              onPress={() => rejectMutation.mutate(req.requesterIdentifier)}
+                              disabled={acceptMutation.isPending || rejectMutation.isPending}
+                              style={s.actionButton}
+                            />
+                          </View>
+                        </View>
+                        {i < arr.length - 1 && (
+                          <View style={[s.divider, { backgroundColor: theme.colors.outlineVariant }]} />
+                        )}
+                      </View>
+                    ),
+                  )}
+                  {(incomingRequests?.length ?? 0) > PREVIEW_COUNT && (
+                    <Button mode="text" onPress={() => setIncomingExpanded((v) => !v)} style={s.retryButton}>
+                      {incomingExpanded ? "Visa färre" : `Visa alla (${incomingRequests?.length})`}
+                    </Button>
+                  )}
+                </View>
+              </Surface>
+            </View>
+          )}
+          {incomingError && (
+            <View style={s.section}>
+              <SectionHeader icon="account-arrow-down" label="Inkommande" color={theme.colors.tertiary} />
+              <Surface style={[s.card, { backgroundColor: theme.colors.surface }]} elevation={1}>
+                <View style={s.cardInner}>
+                  <EmptyState text="Kunde inte hämta förfrågningar" />
+                  <Button mode="text" onPress={() => refetchIncoming()} style={s.retryButton}>
+                    Försök igen
+                  </Button>
+                </View>
+              </Surface>
+            </View>
+          )}
+
+          {!outgoingPending && !outgoingError && (outgoingRequests?.length ?? 0) > 0 && (
+            <View style={s.section}>
+              <SectionHeader
+                icon="account-arrow-right"
+                label={`Skickade (${outgoingRequests?.length})`}
+                color={theme.colors.secondary}
+              />
+              <Surface style={[s.card, { backgroundColor: theme.colors.surface }]} elevation={1}>
+                <View style={s.cardInner}>
+                  {(outgoingExpanded ? outgoingRequests : outgoingRequests?.slice(0, PREVIEW_COUNT))?.map(
+                    (req, i, arr) => (
+                      <View key={req.receiverIdentifier}>
+                        <View style={s.row}>
+                          <Avatar.Text
+                            size={40}
+                            label={getInitials(req.receiverNickName)}
+                            style={{ backgroundColor: theme.colors.secondaryContainer }}
+                            labelStyle={{ color: theme.colors.onSecondaryContainer, fontSize: 14 }}
+                          />
+                          <Text style={s.rowName} variant="bodyLarge">
+                            {req.receiverNickName}
+                          </Text>
+                          <IconButton
+                            hitSlop={16}
+                            icon="close"
+                            size={25}
+                            iconColor={theme.colors.outline}
+                            onPress={() => removeFriendMutation.mutate(req.receiverIdentifier)}
+                            disabled={removeFriendMutation.isPending}
+                            style={s.actionButton}
+                          />
+                        </View>
+                        {i < arr.length - 1 && (
+                          <View style={[s.divider, { backgroundColor: theme.colors.outlineVariant }]} />
+                        )}
+                      </View>
+                    ),
+                  )}
+                  {(outgoingRequests?.length ?? 0) > PREVIEW_COUNT && (
+                    <Button mode="text" onPress={() => setOutgoingExpanded((v) => !v)} style={s.retryButton}>
+                      {outgoingExpanded ? "Visa färre" : `Visa alla (${outgoingRequests?.length})`}
+                    </Button>
+                  )}
+                </View>
+              </Surface>
+            </View>
+          )}
+          {outgoingError && (
+            <View style={s.section}>
+              <SectionHeader icon="account-arrow-right" label="Skickade" color={theme.colors.secondary} />
+              <Surface style={[s.card, { backgroundColor: theme.colors.surface }]} elevation={1}>
+                <View style={s.cardInner}>
+                  <EmptyState text="Kunde inte hämta förfrågningar" />
+                  <Button mode="text" onPress={() => refetchOutgoing()} style={s.retryButton}>
+                    Försök igen
+                  </Button>
+                </View>
+              </Surface>
+            </View>
+          )}
+
+          <View style={s.section}>
+            <SectionHeader
+              icon="account-group"
+              label={`Vänner${friends ? ` (${friends.length})` : ""}`}
+              color={theme.colors.primary}
+            />
+            <Surface style={[s.card, { backgroundColor: theme.colors.surface }]} elevation={1}>
+              <View style={s.cardInner}>
+                {friendsPending ? (
+                  <ActivityIndicator style={s.loader} />
+                ) : friendsError ? (
+                  <>
+                    <EmptyState text="Kunde inte hämta vänner" />
+                    <Button mode="text" onPress={() => refetchFriends()} style={s.retryButton}>
+                      Försök igen
+                    </Button>
+                  </>
+                ) : friends?.length === 0 ? (
+                  <EmptyState text="Du har inga vänner än — sök ovan för att lägga till någon!" />
+                ) : (
+                  <>
+                    {(friendsExpanded ? friends : friends?.slice(0, PREVIEW_COUNT))?.map((friend, i, arr) => (
+                      <View key={friend.identifier}>
+                        <View style={s.row}>
+                          <Avatar.Text
+                            size={40}
+                            label={getInitials(friend.nickName)}
+                            style={{ backgroundColor: theme.colors.primaryContainer }}
+                            labelStyle={{ color: theme.colors.onPrimaryContainer, fontSize: 14 }}
+                          />
+                          <Text style={s.rowName} variant="bodyLarge">
+                            {friend.nickName}
+                          </Text>
+                          <IconButton
+                            hitSlop={16}
+                            icon="account-remove"
+                            size={25}
+                            iconColor={theme.colors.outline}
+                            onPress={() => setFriendToRemoveId(friend.identifier)}
+                            disabled={removeFriendMutation.isPending}
+                            style={s.actionButton}
+                          />
+                        </View>
                         {i < arr.length - 1 && (
                           <View style={[s.divider, { backgroundColor: theme.colors.outlineVariant }]} />
                         )}
                       </View>
                     ))}
-                    {(searchResults?.length ?? 0) > PREVIEW_COUNT && (
-                      <Button mode="text" onPress={() => setSearchExpanded((v) => !v)} style={s.retryButton}>
-                        {searchExpanded ? "Visa färre" : `Visa alla (${searchResults?.length})`}
+                    {(friends?.length ?? 0) > PREVIEW_COUNT && (
+                      <Button mode="text" onPress={() => setFriendsExpanded((v) => !v)} style={s.retryButton}>
+                        {friendsExpanded ? "Visa färre" : `Visa alla (${friends?.length})`}
                       </Button>
                     )}
                   </>
                 )}
               </View>
             </Surface>
-          </View>
-        )}
-
-        {!incomingPending && !incomingError && (incomingRequests?.length ?? 0) > 0 && (
-          <View style={s.section}>
-            <SectionHeader
-              icon="account-arrow-down"
-              label={`Inkommande (${incomingRequests?.length})`}
-              color={theme.colors.tertiary}
+            <AlertDialog
+              visible={friendToRemoveId !== null}
+              onDismiss={() => setFriendToRemoveId(null)}
+              onConfirm={() => {
+                if (friendToRemoveId) removeFriendMutation.mutate(friendToRemoveId);
+                setFriendToRemoveId(null);
+              }}
+              title="Ta bort vän"
+              infoText={[
+                `Du håller på att ta avsluta din vänskap med ${friends?.find((f) => f.identifier === friendToRemoveId)?.nickName ?? ""}`,
+                "Vill du fortsätta?",
+              ]}
+              cancelText="Avbryt"
+              confirmText="Ta bort"
+              backgroundColor={theme.colors.surface}
+              textColor={theme.colors.onSurface}
             />
-            <Surface style={[s.card, { backgroundColor: theme.colors.surface }]} elevation={1}>
-              <View style={s.cardInner}>
-                {(incomingExpanded ? incomingRequests : incomingRequests?.slice(0, PREVIEW_COUNT))?.map(
-                  (req, i, arr) => (
-                    <View key={req.requesterIdentifier}>
-                      <View style={s.row}>
-                        <Avatar.Text
-                          size={40}
-                          label={getInitials(req.requesterNickName)}
-                          style={{ backgroundColor: theme.colors.tertiaryContainer }}
-                          labelStyle={{ color: theme.colors.onTertiaryContainer, fontSize: 14 }}
-                        />
-                        <Text style={s.rowName} variant="bodyLarge">
-                          {req.requesterNickName}
-                        </Text>
-                        <View style={s.rowActions}>
-                          <IconButton
-                            hitSlop={16}
-                            icon="check"
-                            size={25}
-                            iconColor={theme.colors.primary}
-                            onPress={() => acceptMutation.mutate(req.requesterIdentifier)}
-                            disabled={acceptMutation.isPending || rejectMutation.isPending}
-                            style={s.actionButton}
-                          />
-                          <IconButton
-                            hitSlop={16}
-                            icon="close"
-                            size={25}
-                            iconColor={theme.colors.error}
-                            onPress={() => rejectMutation.mutate(req.requesterIdentifier)}
-                            disabled={acceptMutation.isPending || rejectMutation.isPending}
-                            style={s.actionButton}
-                          />
-                        </View>
-                      </View>
-                      {i < arr.length - 1 && (
-                        <View style={[s.divider, { backgroundColor: theme.colors.outlineVariant }]} />
-                      )}
-                    </View>
-                  ),
-                )}
-                {(incomingRequests?.length ?? 0) > PREVIEW_COUNT && (
-                  <Button mode="text" onPress={() => setIncomingExpanded((v) => !v)} style={s.retryButton}>
-                    {incomingExpanded ? "Visa färre" : `Visa alla (${incomingRequests?.length})`}
-                  </Button>
-                )}
-              </View>
-            </Surface>
           </View>
-        )}
-        {incomingError && (
-          <View style={s.section}>
-            <SectionHeader icon="account-arrow-down" label="Inkommande" color={theme.colors.tertiary} />
-            <Surface style={[s.card, { backgroundColor: theme.colors.surface }]} elevation={1}>
-              <View style={s.cardInner}>
-                <EmptyState text="Kunde inte hämta förfrågningar" />
-                <Button mode="text" onPress={() => refetchIncoming()} style={s.retryButton}>
-                  Försök igen
-                </Button>
-              </View>
-            </Surface>
-          </View>
-        )}
-
-        {!outgoingPending && !outgoingError && (outgoingRequests?.length ?? 0) > 0 && (
-          <View style={s.section}>
-            <SectionHeader
-              icon="account-arrow-right"
-              label={`Skickade (${outgoingRequests?.length})`}
-              color={theme.colors.secondary}
-            />
-            <Surface style={[s.card, { backgroundColor: theme.colors.surface }]} elevation={1}>
-              <View style={s.cardInner}>
-                {(outgoingExpanded ? outgoingRequests : outgoingRequests?.slice(0, PREVIEW_COUNT))?.map(
-                  (req, i, arr) => (
-                    <View key={req.receiverIdentifier}>
-                      <View style={s.row}>
-                        <Avatar.Text
-                          size={40}
-                          label={getInitials(req.receiverNickName)}
-                          style={{ backgroundColor: theme.colors.secondaryContainer }}
-                          labelStyle={{ color: theme.colors.onSecondaryContainer, fontSize: 14 }}
-                        />
-                        <Text style={s.rowName} variant="bodyLarge">
-                          {req.receiverNickName}
-                        </Text>
-                        <IconButton
-                          hitSlop={16}
-                          icon="close"
-                          size={25}
-                          iconColor={theme.colors.outline}
-                          onPress={() => removeFriendMutation.mutate(req.receiverIdentifier)}
-                          disabled={removeFriendMutation.isPending}
-                          style={s.actionButton}
-                        />
-                      </View>
-                      {i < arr.length - 1 && (
-                        <View style={[s.divider, { backgroundColor: theme.colors.outlineVariant }]} />
-                      )}
-                    </View>
-                  ),
-                )}
-                {(outgoingRequests?.length ?? 0) > PREVIEW_COUNT && (
-                  <Button mode="text" onPress={() => setOutgoingExpanded((v) => !v)} style={s.retryButton}>
-                    {outgoingExpanded ? "Visa färre" : `Visa alla (${outgoingRequests?.length})`}
-                  </Button>
-                )}
-              </View>
-            </Surface>
-          </View>
-        )}
-        {outgoingError && (
-          <View style={s.section}>
-            <SectionHeader icon="account-arrow-right" label="Skickade" color={theme.colors.secondary} />
-            <Surface style={[s.card, { backgroundColor: theme.colors.surface }]} elevation={1}>
-              <View style={s.cardInner}>
-                <EmptyState text="Kunde inte hämta förfrågningar" />
-                <Button mode="text" onPress={() => refetchOutgoing()} style={s.retryButton}>
-                  Försök igen
-                </Button>
-              </View>
-            </Surface>
-          </View>
-        )}
-
-        <View style={s.section}>
-          <SectionHeader
-            icon="account-group"
-            label={`Vänner${friends ? ` (${friends.length})` : ""}`}
-            color={theme.colors.primary}
-          />
-          <Surface style={[s.card, { backgroundColor: theme.colors.surface }]} elevation={1}>
-            <View style={s.cardInner}>
-              {friendsPending ? (
-                <ActivityIndicator style={s.loader} />
-              ) : friendsError ? (
-                <>
-                  <EmptyState text="Kunde inte hämta vänner" />
-                  <Button mode="text" onPress={() => refetchFriends()} style={s.retryButton}>
-                    Försök igen
-                  </Button>
-                </>
-              ) : friends?.length === 0 ? (
-                <EmptyState text="Du har inga vänner än — sök ovan för att lägga till någon!" />
-              ) : (
-                <>
-                  {(friendsExpanded ? friends : friends?.slice(0, PREVIEW_COUNT))?.map((friend, i, arr) => (
-                    <View key={friend.identifier}>
-                      <View style={s.row}>
-                        <Avatar.Text
-                          size={40}
-                          label={getInitials(friend.nickName)}
-                          style={{ backgroundColor: theme.colors.primaryContainer }}
-                          labelStyle={{ color: theme.colors.onPrimaryContainer, fontSize: 14 }}
-                        />
-                        <Text style={s.rowName} variant="bodyLarge">
-                          {friend.nickName}
-                        </Text>
-                        <IconButton
-                          hitSlop={16}
-                          icon="account-remove"
-                          size={25}
-                          iconColor={theme.colors.outline}
-                          onPress={() => setFriendToRemoveId(friend.identifier)}
-                          disabled={removeFriendMutation.isPending}
-                          style={s.actionButton}
-                        />
-                      </View>
-                      {i < arr.length - 1 && (
-                        <View style={[s.divider, { backgroundColor: theme.colors.outlineVariant }]} />
-                      )}
-                    </View>
-                  ))}
-                  {(friends?.length ?? 0) > PREVIEW_COUNT && (
-                    <Button mode="text" onPress={() => setFriendsExpanded((v) => !v)} style={s.retryButton}>
-                      {friendsExpanded ? "Visa färre" : `Visa alla (${friends?.length})`}
-                    </Button>
-                  )}
-                </>
-              )}
-            </View>
-          </Surface>
-          <AlertDialog
-            visible={friendToRemoveId !== null}
-            onDismiss={() => setFriendToRemoveId(null)}
-            onConfirm={() => {
-              if (friendToRemoveId) removeFriendMutation.mutate(friendToRemoveId);
-              setFriendToRemoveId(null);
-            }}
-            title="Ta bort vän"
-            infoText={[
-              `Du håller på att ta avsluta din vänskap med ${friends?.find((f) => f.identifier === friendToRemoveId)?.nickName ?? ""}`,
-              "Vill du fortsätta?",
-            ]}
-            cancelText="Avbryt"
-            confirmText="Ta bort"
-            backgroundColor={theme.colors.surface}
-            textColor={theme.colors.onSurface}
-          />
         </View>
       </ScrollView>
     </View>
@@ -361,10 +365,7 @@ const s = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
-    paddingLeft: Platform.select({ ios: 4, default: 12 }),
-    paddingRight: 16,
-    paddingTop: 10,
-    paddingBottom: 10,
+    paddingLeft: Platform.select({ ios: 0, default: 12 }),
   },
   headerTitle: {
     fontSize: 17,
@@ -374,8 +375,12 @@ const s = StyleSheet.create({
     fontSize: 15,
   },
   scrollContent: {
-    padding: 12,
+    paddingTop: 8,
     paddingBottom: 32,
+    gap: 8,
+  },
+  content: {
+    paddingHorizontal: 12,
     gap: 20,
   },
   searchbar: {

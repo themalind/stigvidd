@@ -29,22 +29,22 @@ export default function UserTrailCollection({
   const theme = useTheme();
   return (
     <View style={[s.wrapper, { backgroundColor: theme.colors.background }]}>
-      <View style={s.header}>
-        <BackButton />
-        {icon}
-        <Text style={s.title}>{title}</Text>
-      </View>
-      <View style={s.container}>
-        <Divider bold={true} />
-        <View style={[s.infoBox, { backgroundColor: theme.colors.outlineVariant }]}>
-          {description && <Text style={s.infoDescription}>{description}</Text>}
-          <Text>Tryck på ett spår för mer info. Tryck på X för att ta bort.</Text>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={[s.container, !trails?.length && s.scrollContentCenter]}
+      >
+        <View style={s.header}>
+          <BackButton />
+          {icon}
+          <Text style={s.title}>{title}</Text>
         </View>
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={trails?.length ? undefined : s.scrollContentCenter}
-        >
+        <View style={s.content}>
+          <Divider bold={true} />
+          <View style={[s.infoBox, { backgroundColor: theme.colors.outlineVariant }]}>
+            {description && <Text style={s.infoDescription}>{description}</Text>}
+            <Text>Tryck på ett spår för mer info. Tryck på X för att ta bort.</Text>
+          </View>
           {trails?.length ? (
             trails?.map((trail) => (
               <Pressable
@@ -84,13 +84,13 @@ export default function UserTrailCollection({
               <Text style={s.noTrailMsg}>{noTrailsSavedInfo}</Text>
             </View>
           )}
-        </ScrollView>
-        <LinearGradient
-          colors={["transparent", theme.colors.background]}
-          style={s.fadeGradientBottom}
-          pointerEvents="none"
-        />
-      </View>
+        </View>
+      </ScrollView>
+      <LinearGradient
+        colors={["transparent", theme.colors.background]}
+        style={s.fadeGradientBottom}
+        pointerEvents="none"
+      />
     </View>
   );
 }
@@ -100,8 +100,13 @@ const s = StyleSheet.create({
     flex: 1,
   },
   container: {
-    flex: 1,
-    padding: 10,
+    paddingTop: 8,
+    paddingBottom: 32,
+    gap: 16,
+  },
+  content: {
+    paddingHorizontal: 10,
+    gap: 10,
   },
   trash: {
     alignSelf: "flex-start",
@@ -116,10 +121,7 @@ const s = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
-    paddingLeft: Platform.select({ ios: 4, default: 10 }),
-    paddingRight: 10,
-    paddingTop: 10,
-    paddingBottom: 10,
+    paddingLeft: Platform.select({ ios: 0, default: 10 }),
   },
   icons: {
     flexDirection: "row",

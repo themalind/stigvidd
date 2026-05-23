@@ -109,125 +109,128 @@ export default function GuideScreen() {
 
   return (
     <View style={[s.screen, { backgroundColor: theme.colors.background }]}>
-      <View style={s.header}>
-        <BackButton />
-        <Text variant="headlineMedium" style={[s.pageTitle, { color: theme.colors.primary }]}>
-          Naturguide
-        </Text>
-      </View>
       <ScrollView contentContainerStyle={s.container} showsVerticalScrollIndicator={false}>
-        <AccordionSection
-          icon={<MaterialCommunityIcons name="walk" size={18} color={theme.colors.primary} />}
-          title="Allemansrätten"
-          summary="Rätten att röra sig fritt i naturen"
-          defaultOpen
-        >
-          <Text style={[s.bodyText, { color: cardText }]}>
-            Allemansrätten är en unik svensk lag som ger alla rätt att vistas i naturen, oavsett vem som äger marken.
-            Med den rätten följer också ett ansvar: att inte störa och inte förstöra.
+        <View style={s.header}>
+          <BackButton />
+          <Text variant="headlineMedium" style={[s.pageTitle, { color: theme.colors.primary }]}>
+            Naturguide
           </Text>
-          <Text style={[s.bodyText, { color: cardText }]}>
-            <Text style={[s.bold, { color: cardText }]}>Du får </Text>
-            vandra, cykla och rida nästan överallt i naturen, och du får övernatta ett par nätter utomhus. Du får plocka
-            bär, svamp och blommor som inte är fridlysta.
-          </Text>
-          <Text style={[s.bodyText, { color: cardText }]}>
-            <Text style={[s.bold, { color: cardText }]}>Du får inte </Text>
-            gå in i privata trädgårdar, köra motorfordon på barmark, skada träd eller buskar, eller övernatta på samma
-            plats mer än ett par nätter. Vid torka kan länsstyrelsen eller kommunen utfärda eldningsförbud. Håll alltid
-            koll på om sådant råder i området.
-          </Text>
-          <Text style={[s.bodyText, { color: cardText }]}>
-            <Text style={[s.bold, { color: cardText }]}>Hund </Text>
-            ska hållas kopplad 1 mars–20 augusti så att vilda djur inte störs under sin reproduktionstid.
-          </Text>
-        </AccordionSection>
+        </View>
+        <View style={s.content}>
+          <AccordionSection
+            icon={<MaterialCommunityIcons name="walk" size={18} color={theme.colors.primary} />}
+            title="Allemansrätten"
+            summary="Rätten att röra sig fritt i naturen"
+            defaultOpen
+          >
+            <Text style={[s.bodyText, { color: cardText }]}>
+              Allemansrätten är en unik svensk lag som ger alla rätt att vistas i naturen, oavsett vem som äger marken.
+              Med den rätten följer också ett ansvar: att inte störa och inte förstöra.
+            </Text>
+            <Text style={[s.bodyText, { color: cardText }]}>
+              <Text style={[s.bold, { color: cardText }]}>Du får </Text>
+              vandra, cykla och rida nästan överallt i naturen, och du får övernatta ett par nätter utomhus. Du får
+              plocka bär, svamp och blommor som inte är fridlysta.
+            </Text>
+            <Text style={[s.bodyText, { color: cardText }]}>
+              <Text style={[s.bold, { color: cardText }]}>Du får inte </Text>
+              gå in i privata trädgårdar, köra motorfordon på barmark, skada träd eller buskar, eller övernatta på samma
+              plats mer än ett par nätter. Vid torka kan länsstyrelsen eller kommunen utfärda eldningsförbud. Håll
+              alltid koll på om sådant råder i området.
+            </Text>
+            <Text style={[s.bodyText, { color: cardText }]}>
+              <Text style={[s.bold, { color: cardText }]}>Hund </Text>
+              ska hållas kopplad 1 mars–20 augusti så att vilda djur inte störs under sin reproduktionstid.
+            </Text>
+          </AccordionSection>
 
-        <AccordionSection
-          icon={<MaterialCommunityIcons name="shield-check-outline" size={18} color={theme.colors.primary} />}
-          title="Naturreservat"
-          summary="Skyddade områden med egna föreskrifter"
-        >
-          <Text style={[s.bodyText, { color: cardText }]}>
-            Ett naturreservat är ett område som skyddas av lag för att bevara värdefull natur eller ge människor
-            möjlighet till friluftsliv. Beslut fattas av länsstyrelsen eller kommunen.
-          </Text>
-          <Text style={[s.bodyText, { color: cardText }]}>
-            Varje reservat har <Text style={[s.bold, { color: cardText }]}>egna föreskrifter</Text> som kan vara
-            strängare än allemansrätten. Läs alltid skyltarna vid ingången. De gäller framför allt för eldning,
-            tältning, hundar och motorfordon.
-          </Text>
-          <Text style={[s.bodyText, { color: cardText }]}>
-            Det är alltid förbjudet att <Text style={[s.bold, { color: cardText }]}>skada träd, buskar eller mark</Text>
-            , och att ta med sig jord, sten eller andra naturmaterial från reservatet.
-          </Text>
-        </AccordionSection>
+          <AccordionSection
+            icon={<MaterialCommunityIcons name="shield-check-outline" size={18} color={theme.colors.primary} />}
+            title="Naturreservat"
+            summary="Skyddade områden med egna föreskrifter"
+          >
+            <Text style={[s.bodyText, { color: cardText }]}>
+              Ett naturreservat är ett område som skyddas av lag för att bevara värdefull natur eller ge människor
+              möjlighet till friluftsliv. Beslut fattas av länsstyrelsen eller kommunen.
+            </Text>
+            <Text style={[s.bodyText, { color: cardText }]}>
+              Varje reservat har <Text style={[s.bold, { color: cardText }]}>egna föreskrifter</Text> som kan vara
+              strängare än allemansrätten. Läs alltid skyltarna vid ingången. De gäller framför allt för eldning,
+              tältning, hundar och motorfordon.
+            </Text>
+            <Text style={[s.bodyText, { color: cardText }]}>
+              Det är alltid förbjudet att{" "}
+              <Text style={[s.bold, { color: cardText }]}>skada träd, buskar eller mark</Text>, och att ta med sig jord,
+              sten eller andra naturmaterial från reservatet.
+            </Text>
+          </AccordionSection>
 
-        <AccordionSection
-          icon={<MaterialCommunityIcons name="wheelchair-accessibility" size={18} color={theme.colors.primary} />}
-          title="Tillgänglighet"
-          summary="Vad tillgänglighetsanpassad innebär i appen"
-        >
-          <Text style={[s.bodyText, { color: cardText }]}>
-            I appen är leder märkta som <Text style={[s.bold, { color: cardText }]}>tillgänglighetsanpassade</Text> om
-            de är framkomliga med rullstol, rollator eller barnvagn. Det innebär jämnt och fast underlag med begränsad
-            lutning och tillräcklig bredd.
-          </Text>
-          <Text style={[s.bodyText, { color: cardText }]}>
-            På vissa platser finns även anpassade rastplatser, ramper, parkeringar för rörelsehindrade eller tillgänglig
-            toalett. Vad som erbjuds på varje enskild led framgår av ledens informationssida.
-          </Text>
-          <Text style={[s.bodyText, { color: cardText }]}>
-            Leder som <Text style={[s.bold, { color: cardText }]}>inte är tillgänglighetsanpassade</Text> utgår från
-            naturens egna förutsättningar. Underlaget kan vara ojämnt med stenar, rötter och lera, och sträckan kan
-            innehålla branta partier eller smala passager.
-          </Text>
-        </AccordionSection>
+          <AccordionSection
+            icon={<MaterialCommunityIcons name="wheelchair-accessibility" size={18} color={theme.colors.primary} />}
+            title="Tillgänglighet"
+            summary="Vad tillgänglighetsanpassad innebär i appen"
+          >
+            <Text style={[s.bodyText, { color: cardText }]}>
+              I appen är leder märkta som <Text style={[s.bold, { color: cardText }]}>tillgänglighetsanpassade</Text> om
+              de är framkomliga med rullstol, rollator eller barnvagn. Det innebär jämnt och fast underlag med begränsad
+              lutning och tillräcklig bredd.
+            </Text>
+            <Text style={[s.bodyText, { color: cardText }]}>
+              På vissa platser finns även anpassade rastplatser, ramper, parkeringar för rörelsehindrade eller
+              tillgänglig toalett. Vad som erbjuds på varje enskild led framgår av ledens informationssida.
+            </Text>
+            <Text style={[s.bodyText, { color: cardText }]}>
+              Leder som <Text style={[s.bold, { color: cardText }]}>inte är tillgänglighetsanpassade</Text> utgår från
+              naturens egna förutsättningar. Underlaget kan vara ojämnt med stenar, rötter och lera, och sträckan kan
+              innehålla branta partier eller smala passager.
+            </Text>
+          </AccordionSection>
 
-        <AccordionSection
-          icon={<Ionicons name="trail-sign-outline" size={18} color={theme.colors.primary} />}
-          title="Svårighetsgrader"
-          summary="Lätt, medel, svår och oklassificerad"
-        >
-          <View style={s.cardStack}>
-            {DIFFICULTIES.map((item) => (
-              <View key={item.value} style={[s.difficultyCard, { borderColor: theme.colors.outlineVariant }]}>
-                <View style={s.difficultyCardHeader}>
-                  {getDifficultyIcon(classificationParser(item.value))}
-                  <Text style={[s.cardLabel, { color: cardText }]}>{item.label}</Text>
+          <AccordionSection
+            icon={<Ionicons name="trail-sign-outline" size={18} color={theme.colors.primary} />}
+            title="Svårighetsgrader"
+            summary="Lätt, medel, svår och oklassificerad"
+          >
+            <View style={s.cardStack}>
+              {DIFFICULTIES.map((item) => (
+                <View key={item.value} style={[s.difficultyCard, { borderColor: theme.colors.outlineVariant }]}>
+                  <View style={s.difficultyCardHeader}>
+                    {getDifficultyIcon(classificationParser(item.value))}
+                    <Text style={[s.cardLabel, { color: cardText }]}>{item.label}</Text>
+                  </View>
+                  <Text style={[s.bodyText, { color: cardText }]}>{item.description}</Text>
                 </View>
-                <Text style={[s.bodyText, { color: cardText }]}>{item.description}</Text>
+              ))}
+            </View>
+          </AccordionSection>
+
+          <AccordionSection
+            icon={<Ionicons name="book-outline" size={18} color={theme.colors.primary} />}
+            title="Läs mer"
+            summary="Externa källor och vidare läsning"
+          >
+            {LINKS.map(({ label, url }, index) => (
+              <View key={url}>
+                {index > 0 && <Divider style={{ backgroundColor: theme.colors.outlineVariant }} />}
+                <Pressable style={s.linkRow} onPress={() => Linking.openURL(url)}>
+                  <View
+                    style={[
+                      s.linkIconBox,
+                      { backgroundColor: theme.colors.tertiaryContainer, borderColor: theme.colors.tertiary },
+                    ]}
+                  >
+                    <MaterialCommunityIcons name="link-variant" size={20} color={theme.colors.onTertiaryContainer} />
+                  </View>
+                  <Text style={[s.linkText, { color: theme.colors.onSurface }]}>{label}</Text>
+                </Pressable>
               </View>
             ))}
-          </View>
-        </AccordionSection>
+          </AccordionSection>
 
-        <AccordionSection
-          icon={<Ionicons name="book-outline" size={18} color={theme.colors.primary} />}
-          title="Läs mer"
-          summary="Externa källor och vidare läsning"
-        >
-          {LINKS.map(({ label, url }, index) => (
-            <View key={url}>
-              {index > 0 && <Divider style={{ backgroundColor: theme.colors.outlineVariant }} />}
-              <Pressable style={s.linkRow} onPress={() => Linking.openURL(url)}>
-                <View
-                  style={[
-                    s.linkIconBox,
-                    { backgroundColor: theme.colors.tertiaryContainer, borderColor: theme.colors.tertiary },
-                  ]}
-                >
-                  <MaterialCommunityIcons name="link-variant" size={20} color={theme.colors.onTertiaryContainer} />
-                </View>
-                <Text style={[s.linkText, { color: theme.colors.onSurface }]}>{label}</Text>
-              </Pressable>
-            </View>
-          ))}
-        </AccordionSection>
-
-        <Text variant="bodySmall" style={[s.footer, { color: theme.colors.outline }]}>
-          Källa: Naturvårdsverket · Borås Stad · Länsstyrelsen Västra Götaland
-        </Text>
+          <Text variant="bodySmall" style={[s.footer, { color: theme.colors.outline }]}>
+            Källa: Naturvårdsverket · Borås Stad · Länsstyrelsen Västra Götaland
+          </Text>
+        </View>
       </ScrollView>
     </View>
   );
@@ -241,15 +244,16 @@ const s = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
-    paddingLeft: Platform.select({ ios: 4, default: 12 }),
-    paddingRight: 12,
-    paddingTop: 12,
-    paddingBottom: 4,
+    paddingLeft: Platform.select({ ios: 0, default: 12 }),
   },
   container: {
-    padding: 12,
-    gap: 12,
+    paddingTop: 8,
     paddingBottom: 48,
+    gap: 8,
+  },
+  content: {
+    paddingHorizontal: 12,
+    gap: 12,
   },
   pageTitle: {
     fontWeight: "bold",

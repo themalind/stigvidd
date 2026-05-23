@@ -48,33 +48,23 @@ export default function MyHikesScreen() {
 
   return (
     <View style={[s.screen, { backgroundColor: theme.colors.background }]}>
-      <View style={s.header}>
-        <BackButton />
-        <Icon source="hiking" size={24} color={theme.colors.tertiary} />
-        <Text style={s.titleTextBold}>Mina sparade promenader</Text>
-      </View>
-      <View style={s.content}>
-        <View style={[s.infoBox, { backgroundColor: theme.colors.outlineVariant }]}>
-          <Text>Tryck på en promenad för att se mer information eller ta bort den.</Text>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={s.scrollContent}>
+        <View style={s.header}>
+          <BackButton />
+          <Icon source="hiking" size={24} color={theme.colors.tertiary} />
+          <Text style={s.titleTextBold}>Mina sparade promenader</Text>
         </View>
-        <Divider bold={true} />
-        {hike && (
-          <HikeDetails
-            visible={visible}
-            hike={hike}
-            onDismiss={() => {
-              setVisible(false);
-              setSelectedhike(null);
-            }}
-          />
-        )}
-        {hikes?.length === 0 ? (
-          <View style={[s.noHikesContainer, { backgroundColor: theme.colors.surface }]}>
-            <Text style={{ color: theme.colors.onBackground }}>No hikes saved</Text>
+        <View style={s.content}>
+          <View style={[s.infoBox, { backgroundColor: theme.colors.outlineVariant }]}>
+            <Text>Tryck på en promenad för att se mer information eller ta bort den.</Text>
           </View>
-        ) : (
-          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={s.scrollContent}>
-            {hikes?.map((hike, index) => (
+          <Divider bold={true} />
+          {hikes?.length === 0 ? (
+            <Text style={{ color: theme.colors.onBackground, textAlign: "center", paddingVertical: 20 }}>
+              No hikes saved
+            </Text>
+          ) : (
+            hikes?.map((hike, index) => (
               <Pressable
                 style={[s.hikePressable, { backgroundColor: theme.colors.surface }]}
                 key={index}
@@ -99,10 +89,20 @@ export default function MyHikesScreen() {
                   <Icon source="chevron-right" size={20} />
                 </View>
               </Pressable>
-            ))}
-          </ScrollView>
-        )}
-      </View>
+            ))
+          )}
+        </View>
+      </ScrollView>
+      {hike && (
+        <HikeDetails
+          visible={visible}
+          hike={hike}
+          onDismiss={() => {
+            setVisible(false);
+            setSelectedhike(null);
+          }}
+        />
+      )}
     </View>
   );
 }
@@ -115,21 +115,7 @@ const s = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
-    paddingLeft: Platform.select({ ios: 4, default: 10 }),
-    paddingRight: 10,
-    paddingTop: 10,
-    paddingBottom: 10,
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: 10,
-    paddingBottom: 10,
-    gap: 10,
-  },
-  noHikesContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+    paddingLeft: Platform.select({ ios: 0, default: 10 }),
   },
   titleTextBold: {
     fontSize: 17,
@@ -174,7 +160,12 @@ const s = StyleSheet.create({
     letterSpacing: 0.5,
   },
   scrollContent: {
+    paddingTop: 8,
+    paddingBottom: 20,
+    gap: 16,
+  },
+  content: {
+    paddingHorizontal: 10,
     gap: 10,
-    borderRadius: BORDER_RADIUS,
   },
 });
