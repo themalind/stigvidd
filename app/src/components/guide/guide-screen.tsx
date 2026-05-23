@@ -116,7 +116,6 @@ export default function GuideScreen() {
         </Text>
       </View>
       <ScrollView contentContainerStyle={s.container} showsVerticalScrollIndicator={false}>
-
         <AccordionSection
           icon={<MaterialCommunityIcons name="walk" size={18} color={theme.colors.primary} />}
           title="Allemansrätten"
