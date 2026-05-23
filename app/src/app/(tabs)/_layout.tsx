@@ -20,10 +20,10 @@ export default function TabsLayout() {
       <Tabs
         screenOptions={{
           tabBarStyle: {
-            backgroundColor: theme.colors.background,
+            backgroundColor: theme.dark ? "#000000" : "#ffffff",
             borderTopColor: theme.colors.outline,
           },
-          tabBarBackground: () => <View style={{ flex: 1, backgroundColor: theme.colors.background }} />,
+          tabBarBackground: () => <View style={{ flex: 1, backgroundColor: theme.dark ? "#000000" : "#ffffff" }} />,
           tabBarIconStyle: {
             marginTop: 8,
           },
