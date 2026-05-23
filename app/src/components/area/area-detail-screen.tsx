@@ -51,8 +51,7 @@ export default function AreaDetailScreen() {
   const shelter = area.facilities[FacilityType.Shelter];
   const swimming = area.facilities[FacilityType.SwimmingArea];
 
-  const hasFacilities =
-    firePits.length > 0 || fishing.length > 0 || shelter.length > 0 || swimming.length > 0;
+  const hasFacilities = firePits.length > 0 || fishing.length > 0 || shelter.length > 0 || swimming.length > 0;
 
   return (
     <View style={[s.screen, { backgroundColor: theme.colors.background }]}>

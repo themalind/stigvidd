@@ -4,7 +4,15 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { Image as ExpoImage } from "expo-image";
 import { router } from "expo-router";
 import React, { useRef, useState } from "react";
-import { FlatList, LayoutChangeEvent, NativeScrollEvent, NativeSyntheticEvent, Pressable, StyleSheet, View } from "react-native";
+import {
+  FlatList,
+  LayoutChangeEvent,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
+  Pressable,
+  StyleSheet,
+  View,
+} from "react-native";
 import { Text, useTheme } from "react-native-paper";
 
 interface PagerCarouselProps {
@@ -106,7 +114,10 @@ export default function PagerCarousel({ data, onItemPress }: PagerCarouselProps)
         {data.map((_, i) => (
           <View
             key={i}
-            style={[s.dot, { backgroundColor: i === currentIndex ? theme.colors.primary : theme.colors.outlineVariant }]}
+            style={[
+              s.dot,
+              { backgroundColor: i === currentIndex ? theme.colors.primary : theme.colors.outlineVariant },
+            ]}
           />
         ))}
       </View>

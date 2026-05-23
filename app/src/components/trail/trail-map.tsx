@@ -48,9 +48,7 @@ export default function TrailMap({ trail }: TrailMapProps) {
             </View>
           </Pressable>
         )}
-        {active && (
-          <Pressable style={s.dismissArea} onPress={() => setActive(false)} />
-        )}
+        {active && <Pressable style={s.dismissArea} onPress={() => setActive(false)} />}
       </View>
     </Surface>
   );

@@ -44,14 +44,12 @@ export default function HomeScreen() {
 
       <View style={s.cardRow}>
         <Pressable style={[s.guideCard, s.halfCard]} onPress={() => router.push("/(tabs)/(settings)/guide")}>
-          <Image
-            source={require("../../../assets/images/guide_cover.jpg")}
-            style={s.cardImage}
-            contentFit="cover"
-          />
+          <Image source={require("../../../assets/images/guide_cover.jpg")} style={s.cardImage} contentFit="cover" />
           <View style={[s.cardText, { backgroundColor: theme.colors.surface }]}>
             <Text style={[s.cardTitle, { color: theme.colors.onSurface }]}>Naturguide</Text>
-            <Text style={[s.cardSubtitle, { color: theme.colors.onSurfaceVariant }]}>Allemansrätt · Svårighetsgrader</Text>
+            <Text style={[s.cardSubtitle, { color: theme.colors.onSurfaceVariant }]}>
+              Allemansrätt · Svårighetsgrader
+            </Text>
           </View>
         </Pressable>
 
