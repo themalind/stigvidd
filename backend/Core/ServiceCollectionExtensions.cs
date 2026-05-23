@@ -26,7 +26,10 @@ public static class ServiceCollectionExtensions
 
         services.AddDbContextFactory<StigViddDbContext>(o =>
         {
-            o.UseNpgsql(connectionString);
+            o.UseNpgsql(connectionString, pgsqlOptions =>
+            {
+                pgsqlOptions.UseNetTopologySuite();
+            });
         });
 
         // Bra att börja med transient. Märker man att en annan livstid behövs är det lättare att ändra till längre livstid än kortare.

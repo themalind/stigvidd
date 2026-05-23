@@ -3,6 +3,7 @@ using Infrastructure.Data;
 using Infrastructure.Data.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using NetTopologySuite.Geometries;
 using System.Linq.Expressions;
 using WebDataContracts.ResponseModels.Trail;
 
@@ -25,22 +26,19 @@ public class TrailRepository : ITrailRepository
         {
             using var context = await _context.CreateDbContextAsync(ctoken);
 
-            var trails = await context.Database
-                .SqlQueryRaw<TrailShortInfoResponse>(
-                   """
-                        SELECT
-                            "Identifier",
-                            "Name",
-                            "TrailLength",
-                            "Accessibility",
-                            "Classification",
-                            "City",
-                            CAST("Coordinates"::json->0->>'latitude' AS numeric(18,10)) AS "StartLatitude",
-                            CAST("Coordinates"::json->0->>'longitude' AS numeric(18,10)) AS "StartLongitude"
-                        FROM dbo."Trails"
-                        WHERE "IsVerified" = true
-                        """)
-                .AsNoTracking()
+            var trails = await context.Trails.AsNoTracking()
+                .Where(t => t.IsVerified)
+                .Select(t => new TrailShortInfoResponse
+                {
+                    Identifier = t.Identifier,
+                    Name = t.Name,
+                    TrailLength = t.TrailLength,
+                    Accessibility = t.Accessibility,
+                    Classification = t.Classification,
+                    City = t.City,
+                    StartLongitude = (decimal?)t.GeoPath!.StartPoint.Coordinate.X,
+                    StartLatitude = (decimal?)t.GeoPath.StartPoint.Coordinate.Y,
+                })
                 .ToListAsync(ctoken);
 
             return RepositoryResult<IReadOnlyCollection<TrailShortInfoResponse>>.Success(trails);
@@ -82,76 +80,37 @@ public class TrailRepository : ITrailRepository
             using var context = await _context.CreateDbContextAsync(ctoken);
 
             var hasUserLocation = userLatitude.HasValue && userLongitude.HasValue;
+            var userLocation = userLatitude.HasValue && userLongitude.HasValue ? Geometry.DefaultFactory.WithSRID(4326).CreatePoint(new Coordinate(userLongitude.Value, userLatitude.Value)) : null;
 
-            // Raw SQL extracts only the first coordinate via JSON_VALUE and computes
-            // average rating in SQL, avoiding fetching the entire Coordinates blob.
-            var trailData = await context.Database
-                .SqlQueryRaw<PopularTrailQueryResult>(
-                    """
-                        SELECT
-                            t."Id",
-                            t."Identifier",
-                            t."Name",
-                            t."TrailLength",
-                            COALESCE(AVG(r."Rating"), 0) AS "AverageRating",
-                            CAST(t."Coordinates"::json->0->>'latitude' AS float) AS "StartLatitude",
-                            CAST(t."Coordinates"::json->0->>'longitude' AS float) AS "StartLongitude"
-                        FROM dbo."Trails" t
-                        LEFT JOIN dbo."Reviews" r ON r."TrailId" = t."Id"
-                        WHERE t."IsVerified" = true
-                        GROUP BY t."Id", t."Identifier", t."Name", t."TrailLength", t."Coordinates"
-                        """)
-                .AsNoTracking()
-                .ToListAsync(ctoken);
-
-            var scoredTrails = trailData.Select(trail =>
-            {
-                double score = (double)trail.AverageRating;
-
-                // Senior advice: This might be better to do in SQL, since it can be done in the same query
-                // and avoid fetching all trails when user location is provided.
-                // You could create a SQL function or stored procedure to calculate the Haversine distance
-                // and use it in the SELECT clause to compute a proximity score directly in the database.
-                if (hasUserLocation && trail.StartLatitude.HasValue && trail.StartLongitude.HasValue)
+            var trailQuery =
+                from t in context.Trails
+                where t.IsVerified
+                let trailInfo = new
                 {
-                    var distanceKm = HaversineDistanceKm(
-                        userLatitude.GetValueOrDefault(), userLongitude.GetValueOrDefault(),
-                        trail.StartLatitude.Value, trail.StartLongitude.Value);
-
-                    // Proximity boost: closer trails get a higher bonus (max ~5 points at 0 km, decaying with distance)
-                    double proximityBonus = 5.0 / (1.0 + distanceKm / 10.0);
-                    score += proximityBonus;
+                    Id = t.Id,
+                    Identifier = t.Identifier,
+                    Name = t.Name,
+                    TrailLength = t.TrailLength,
+                    AverageRating =  t.Reviews!.Any() ? t.Reviews!.Average(r => r.Rating) : 0m,
+                    Image = t.TrailImages!.Select(i => new {
+                    			Identifier = i.Identifier,
+                    			ImageUrl = i.ImageUrl
+                    		}).FirstOrDefault(),                        
+                    StartPoint = t.GeoPath!.StartPoint
                 }
+                let score = (double)trailInfo.AverageRating + (userLocation != null ? (5.0 / (1.0 + trailInfo.StartPoint.Distance(userLocation) / 10.0)) : 0.0)
+                orderby score descending
+                select trailInfo;
 
-                return new { trail, score };
-            })
-            .OrderByDescending(x => x.score)
-            .Take(10)
-            .ToList();
+            var scoredTrails = await trailQuery.Take(10).ToListAsync(ctoken);
 
-            var trailIds = scoredTrails.Select(x => x.trail.Id).ToList();
-
-            var trailImages = await context.Trails
-                .AsNoTracking()
-                .Where(t => trailIds.Contains(t.Id))
-                .Select(t => new
-                {
-                    TrailId = t.Id,
-                    FirstTrailImage = t.TrailImages!
-                        .Select(img => TrailImageResponse.Create(presentableBaseUrl, img.Identifier, img.ImageUrl))
-                        .FirstOrDefault()
-                })
-                .ToDictionaryAsync(x => x.TrailId, x => x.FirstTrailImage, ctoken);
-
-            IReadOnlyCollection<TrailOverviewResponse> result = scoredTrails
+            var result = scoredTrails
                 .Select(x => TrailOverviewResponse.Create(
-                    x.trail.Identifier,
-                    x.trail.Name,
-                    x.trail.TrailLength,
-                    x.trail.AverageRating,
-                    trailImages.TryGetValue(x.trail.Id, out var img) && img != null
-                        ? new[] { img }
-                        : Array.Empty<TrailImageResponse>()))
+                    x.Identifier,
+                    x.Name,
+                    x.TrailLength,
+                    x.AverageRating,
+                    x.Image != null ? [TrailImageResponse.Create(presentableBaseUrl, x.Image.Identifier, x.Image.ImageUrl)] : Array.Empty<TrailImageResponse>()))
                 .ToList();
 
             return RepositoryResult<IReadOnlyCollection<TrailOverviewResponse>>.Success(result);
@@ -228,21 +187,15 @@ public class TrailRepository : ITrailRepository
         {
             using var context = await _context.CreateDbContextAsync(ctoken);
 
-            var markers = await context.Database
-                .SqlQueryRaw<TrailMarkerResponse>(
-                   """
-                        SELECT
-                            t."Identifier",
-                            t."Name",
-                            t."Accessibility" AS "IsAccessible",
-                            CAST(t."Coordinates"::json->0->>'latitude' AS numeric(18,10)) AS "StartLatitude",
-                            CAST(t."Coordinates"::json->0->>'longitude' AS numeric(18,10)) AS "StartLongitude"
-                        FROM dbo."Trails" t
-                        WHERE t."IsVerified" = true
-                        GROUP BY t."Identifier", t."Name", t."Accessibility", t."Coordinates"
-                        """)
-                .AsNoTracking()
-                .ToListAsync(ctoken);
+            var markers = await context.Trails.AsNoTracking().Select(t => new TrailMarkerResponse
+            {
+                Identifier = t.Identifier,
+                Name = t.Name,
+                IsAccessible = t.Accessibility,
+                StartLongitude = (decimal?)t.GeoPath!.StartPoint.Coordinate.X,
+                StartLatitude = (decimal?)t.GeoPath.StartPoint.Coordinate.Y,
+            })
+            .ToListAsync(ctoken);
 
             return RepositoryResult<IReadOnlyCollection<TrailMarkerResponse>>.Success(markers);
         }

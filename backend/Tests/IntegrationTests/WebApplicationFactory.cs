@@ -37,6 +37,10 @@ public class StigViddWebApplicationFactory<TProgram>
             if (dbConnectionDescriptor != null)
                 services.Remove(dbConnectionDescriptor);
 
+#if UNIX
+            SQLitePCL.raw.SetProvider(new SQLitePCL.SQLite3Provider_sqlite3());
+#endif
+
             _connection = new SqliteConnection("DataSource=:memory:");
             _connection.Open();
 
@@ -45,7 +49,10 @@ public class StigViddWebApplicationFactory<TProgram>
             services.AddDbContextFactory<StigViddDbContext>((container, options) =>
             {
                 var connection = container.GetRequiredService<DbConnection>();
-                options.UseSqlite(connection);
+                options.UseSqlite(connection, e =>
+                {
+                    e.UseNetTopologySuite();
+                });
             });
         });
 
