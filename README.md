@@ -21,7 +21,7 @@ The project consists of three parts: a cross-platform mobile app, a web-based ad
   </tr>
   <tr>
     <td><img src="screenshots/log-in-screen.jpg" width="180"/></td>
-<td><img src="screenshots/start-screen.jpg" width="180"/></td>
+    <td><img src="screenshots/start-screen.jpg" width="180"/></td>
     <td><img src="screenshots/user-profile-screen.jpg" width="180"/></td>
     <td><img src="screenshots/my-favorites-screen.jpg" width="180"/></td>
   </tr>
@@ -29,14 +29,14 @@ The project consists of three parts: a cross-platform mobile app, a web-based ad
     <td align="center"><b>Trail detail</b></td>
     <td align="center"><b>Trail info & obstacles</b></td>
     <td align="center"><b>Practical info</b></td>
-        <td align="center"><b>Trail list</b></td>
+    <td align="center"><b>Trail list</b></td>
     <td></td>
   </tr>
   <tr>
     <td><img src="screenshots/trail-detail-screen.jpg" width="180"/></td>
     <td><img src="screenshots/trail-information.jpg" width="180"/></td>
     <td><img src="screenshots/trail-practical-info.jpg" width="180"/></td>
-        <td><img src="screenshots/trail-filter-screen.jpg" width="180"/></td>
+    <td><img src="screenshots/trail-filter-screen.jpg" width="180"/></td>
     <td></td>
   </tr>
 </table>
