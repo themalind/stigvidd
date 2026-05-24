@@ -1,0 +1,80 @@
+import { FacilityItem } from "@/data/areas-data";
+import { MaterialIcons } from "@expo/vector-icons";
+import { StyleSheet, View } from "react-native";
+import { Text, useTheme } from "react-native-paper";
+
+interface FacilitySectionProps {
+  title: string;
+  icon: keyof typeof MaterialIcons.glyphMap;
+  items: FacilityItem[];
+}
+
+export default function FacilitySection({ title, icon, items }: FacilitySectionProps) {
+  const theme = useTheme();
+  if (items.length === 0) return null;
+  return (
+    <View style={s.section}>
+      <View style={s.sectionHeader}>
+        <MaterialIcons name={icon} size={20} color={theme.colors.primary} />
+        <Text style={[s.sectionTitle, { color: theme.colors.onBackground }]}>{title}</Text>
+      </View>
+      {items.map((item, index) => (
+        <View
+          key={index}
+          style={[
+            s.facilityCard,
+            {
+              backgroundColor: theme.colors.elevation.level1,
+              borderColor: theme.colors.outlineVariant,
+              borderWidth: 1,
+            },
+          ]}
+        >
+          <Text style={[s.facilityName, { color: theme.colors.onSurface }]}>{item.name}</Text>
+          {item.location ? (
+            <View style={s.locationRow}>
+              <MaterialIcons name="place" size={14} color={theme.colors.onSurfaceVariant} />
+              <Text style={[s.facilityMeta, { color: theme.colors.onSurfaceVariant }]}>{item.location}</Text>
+            </View>
+          ) : null}
+          {item.description ? (
+            <Text style={[s.facilityMeta, { color: theme.colors.onSurfaceVariant }]}>{item.description}</Text>
+          ) : null}
+        </View>
+      ))}
+    </View>
+  );
+}
+
+const s = StyleSheet.create({
+  facilityCard: {
+    borderRadius: 10,
+    padding: 12,
+    gap: 4,
+  },
+  facilityName: {
+    fontWeight: "600",
+    fontSize: 14,
+  },
+  facilityMeta: {
+    fontSize: 13,
+  },
+  section: {
+    paddingHorizontal: 12,
+    gap: 8,
+  },
+  sectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  sectionTitle: {
+    fontSize: 15,
+    fontWeight: "700",
+  },
+  locationRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+});

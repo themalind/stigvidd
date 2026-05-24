@@ -874,7 +874,7 @@ export const borasAreas: BorasArea[] = [
     location: "Ca 20 km nordväst om Borås",
     description:
       "Hedared omges av skogar och jordbruksmark med flera små sjöar. Sex vandringsleder startar vid Hedareds stavkyrka — en av de äldsta bevarade träkyrkorna i Skandinavien. Badplats med sandstrand vid Östra Valsjön.",
-    image: { uri: "https://stigvidd.se/files/trails/area-mock.jpg" },
+    image: { uri: "https://stigvidd.se/files/trails/area-hedared.jpg" },
     url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/vaster/hedared.4.5493346718e560a04fa6cd38.html",
     trails: [],
     facilities: {
