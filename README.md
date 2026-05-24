@@ -15,26 +15,28 @@ The project consists of three parts: a cross-platform mobile app, a web-based ad
 <table>
   <tr>
     <td align="center"><b>Login</b></td>
-    <td align="center"><b>Trail list</b></td>
+    <td align="center"><b>Start screen</b></td>
     <td align="center"><b>Profile</b></td>
     <td align="center"><b>Favorites</b></td>
   </tr>
   <tr>
-    <td><img src="screenshots/Screenshot_stigvidd_2.jpg" width="180"/></td>
-    <td><img src="screenshots/Screenshot_stigvidd_4.jpg" width="180"/></td>
-    <td><img src="screenshots/Screenshot_stigvidd_3.jpg" width="180"/></td>
-    <td><img src="screenshots/Screenshot_stigvidd_1.jpg" width="180"/></td>
+    <td><img src="screenshots/log-in-screen.jpg" width="180"/></td>
+<td><img src="screenshots/start-screen.jpg" width="180"/></td>
+    <td><img src="screenshots/user-profile-screen.jpg" width="180"/></td>
+    <td><img src="screenshots/my-favorites-screen.jpg" width="180"/></td>
   </tr>
   <tr>
     <td align="center"><b>Trail detail</b></td>
     <td align="center"><b>Trail info & obstacles</b></td>
-    <td align="center"><b>Map & practical info</b></td>
+    <td align="center"><b>Practical info</b></td>
+        <td align="center"><b>Trail list</b></td>
     <td></td>
   </tr>
   <tr>
-    <td><img src="screenshots/Screenshot_stigvidd_5.jpg" width="180"/></td>
-    <td><img src="screenshots/Screenshot_stigvidd_6.jpg" width="180"/></td>
-    <td><img src="screenshots/Screenshot_stigvidd_7.jpg" width="180"/></td>
+    <td><img src="screenshots/trail-detail-screen.jpg" width="180"/></td>
+    <td><img src="screenshots/trail-information.jpg" width="180"/></td>
+    <td><img src="screenshots/trail-practical-info.jpg" width="180"/></td>
+        <td><img src="screenshots/trail-filter-screen.jpg" width="180"/></td>
     <td></td>
   </tr>
 </table>
@@ -60,6 +62,7 @@ stigvidd/
 ## Tech Stack
 
 ### Mobile App
+
 - React Native with Expo (SDK 54)
 - TypeScript
 - Expo Router (file-based routing)
@@ -69,13 +72,14 @@ stigvidd/
 - React Native Paper (Material Design 3)
 
 ### Admin Dashboard
+
 - React 19 with Vite
 - TypeScript
 - React Router v7
 - Tailwind CSS v4
-- Radix UI
 
 ### Backend
+
 - ASP.NET Core 10 (Web API)
 - C# / .NET 10
 - Entity Framework Core 10 with SQL Server
@@ -94,7 +98,7 @@ stigvidd/
 - Trail reviews with star ratings and photos
 - Favorites and wishlist with optimistic UI updates
 - Report trail obstacles/hazards with a voting system
-- User profiles with hike history and statistics
+- User profiles with hike history
 - Admin dashboard for trail management
 
 ---
@@ -132,16 +136,19 @@ To run the import, place `spar_leder.json` in the expected path and run the `Map
 ### Backend
 
 1. Navigate to the API project:
+
    ```bash
    cd backend/StigviddAPI
    ```
 
 2. Set up user secrets with your connection string:
+
    ```bash
    dotnet user-secrets set "ConnectionStrings:StigVidd" "your_connection_string"
    ```
 
 3. Apply database migrations:
+
    ```bash
    dotnet ef database update --project ../Infrastructure
    ```
@@ -158,16 +165,19 @@ The API will be available at `https://localhost:7xxx`. Swagger UI is available a
 ### Mobile App
 
 1. Navigate to the app directory:
+
    ```bash
    cd app
    ```
 
 2. Install dependencies:
+
    ```bash
    npm install
    ```
 
 3. Create a `.env` file with your Firebase and API config:
+
    ```
    EXPO_PUBLIC_API_URL=https://localhost:7xxx
    EXPO_PUBLIC_FIREBASE_API_KEY=...
@@ -187,11 +197,13 @@ The API will be available at `https://localhost:7xxx`. Swagger UI is available a
 ### Admin Dashboard
 
 1. Navigate to the web directory:
+
    ```bash
    cd web
    ```
 
 2. Install dependencies:
+
    ```bash
    npm install
    ```
