@@ -36,6 +36,7 @@ jobs:
         dotnet test Tests/IntegrationTests/IntegrationTests.csproj --no-build --verbosity normal --logger "trx;LogFileName=test-results.trx"
     - name: Test Report
       uses: phoenix-actions/test-reporting@v8
+      if: success() || failure()
   app:
     runs-on: ubuntu-latest
     defaults:
