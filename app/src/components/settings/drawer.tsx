@@ -1,7 +1,6 @@
 import { signOutUser } from "@/api/auth";
 import { authStateAtom } from "@/atoms/auth-atoms";
 import { showErrorAtom } from "@/atoms/snackbar-atoms";
-import LanguageSelector from "@/components/language-selector";
 import { useThemeToggle } from "@/hooks/useThemeToggle";
 import { AppLanguage, changeLanguage } from "@/i18n";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -114,13 +113,8 @@ export default function SettingsDrawer({ visible, onDismiss }: Props) {
         </View>
         <View style={s.drawerItemContainer}>
           <Divider bold style={{ marginHorizontal: 16 }} />
-          <View style={s.languageContainer}>
-            <LanguageSelector />
-          </View>
-          <Divider style={{ marginHorizontal: 16 }} />
           <Drawer.Section showDivider={false} style={s.drawerSection}>
             <Drawer.Item
-              label={t("settings.theme")}
               label={t("settings.theme")}
               icon="theme-light-dark"
               active={active === "theme"}
@@ -155,7 +149,6 @@ export default function SettingsDrawer({ visible, onDismiss }: Props) {
             />
             <Drawer.Item
               label={t("settings.about")}
-              label={t("settings.about")}
               icon="cellphone-information"
               active={active === "about"}
               theme={{ roundness: 1 }}
@@ -164,7 +157,6 @@ export default function SettingsDrawer({ visible, onDismiss }: Props) {
             {authState.isAuthenticated ? (
               <Drawer.Item
                 label={t("auth.logout")}
-                label={t("auth.logout")}
                 icon="logout"
                 active={active === "logout"}
                 theme={{ roundness: 1 }}
@@ -172,7 +164,6 @@ export default function SettingsDrawer({ visible, onDismiss }: Props) {
               />
             ) : (
               <Drawer.Item
-                label={t("auth.login")}
                 label={t("auth.login")}
                 icon="login"
                 active={active === "login"}
@@ -222,10 +213,6 @@ const s = StyleSheet.create({
   drawerItemContainer: {
     marginTop: "auto",
     paddingBottom: 45,
-  },
-  languageContainer: {
-    paddingHorizontal: 16,
-    paddingVertical: 16,
   },
   drawerSection: {
     marginTop: 8,
