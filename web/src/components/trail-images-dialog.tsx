@@ -86,7 +86,7 @@ export default function TrailImagesDialog({ data, selected }: Props) {
           <Dialog.Overlay className="data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/50" />
           <Dialog.Content className="bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-1/2 left-1/2 z-50 w-full max-w-2xl -translate-x-1/2 -translate-y-1/2 rounded-xs border p-6 shadow-lg">
             <Dialog.Title className="text-foreground mb-1 font-semibold">
-              Images — {data.name}
+              {data.name}
             </Dialog.Title>
             <Dialog.Description className="text-muted-foreground mb-4 text-sm">
               Manage images for this trail.
