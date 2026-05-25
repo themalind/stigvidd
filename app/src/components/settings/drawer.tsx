@@ -2,6 +2,7 @@ import { signOutUser } from "@/api/auth";
 import { authStateAtom } from "@/atoms/auth-atoms";
 import { showErrorAtom } from "@/atoms/snackbar-atoms";
 import { useThemeToggle } from "@/hooks/useThemeToggle";
+import { changeLanguage, AppLanguage } from "@/i18n";
 import { MaterialIcons } from "@expo/vector-icons";
 import { CommonActions } from "@react-navigation/native";
 import { BlurView } from "expo-blur";
@@ -12,6 +13,7 @@ import * as React from "react";
 import { Dimensions, Modal, Pressable, StyleSheet, View } from "react-native";
 import { Divider, Drawer, Text, useTheme } from "react-native-paper";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useTranslation } from "react-i18next";
 
 interface Props {
   visible: boolean;
@@ -24,6 +26,7 @@ export default function SettingsDrawer({ visible, onDismiss }: Props) {
   const [authState] = useAtom(authStateAtom);
   const { userTheme, toggleTheme } = useThemeToggle();
   const theme = useTheme();
+  const { t, i18n } = useTranslation();
   const setError = useSetAtom(showErrorAtom);
   const [active, setActive] = React.useState("");
   const insets = useSafeAreaInsets();
@@ -32,6 +35,12 @@ export default function SettingsDrawer({ visible, onDismiss }: Props) {
   async function handleThemeToggle() {
     setActive("theme");
     await toggleTheme();
+  }
+
+  async function handleLanguageToggle() {
+    setActive("language");
+    const next: AppLanguage = i18n.language === "sv" ? "en" : "sv";
+    await changeLanguage(next);
   }
 
   function handleAbout() {
@@ -46,7 +55,7 @@ export default function SettingsDrawer({ visible, onDismiss }: Props) {
       await signOutUser();
     } catch (e) {
       console.log(e);
-      setError("Kunde inte logga ut.");
+      setError(t("auth.couldNotLogout"));
     }
     onDismiss();
     // Reset the entire navigation tree back to auth/login,
@@ -106,7 +115,7 @@ export default function SettingsDrawer({ visible, onDismiss }: Props) {
           <Divider bold style={{ marginHorizontal: 16 }} />
           <Drawer.Section showDivider={false} style={s.drawerSection}>
             <Drawer.Item
-              label="Tema"
+              label={t("settings.theme")}
               icon="theme-light-dark"
               active={active === "theme"}
               theme={{ roundness: 1 }}
@@ -120,14 +129,26 @@ export default function SettingsDrawer({ visible, onDismiss }: Props) {
               onPress={handleThemeToggle}
             />
             <Drawer.Item
-              label="Naturguide"
+              label={t("settings.language")}
+              icon="translate"
+              active={active === "language"}
+              theme={{ roundness: 1 }}
+              right={() => (
+                <Text style={{ color: active === "language" ? theme.colors.onSecondaryContainer : theme.colors.onSurfaceVariant, fontWeight: "600" }}>
+                  {i18n.language === "sv" ? "EN" : "SV"}
+                </Text>
+              )}
+              onPress={handleLanguageToggle}
+            />
+            <Drawer.Item
+              label={t("settings.guide")}
               icon="pine-tree"
               active={active === "guide"}
               theme={{ roundness: 1 }}
               onPress={handleGuide}
             />
             <Drawer.Item
-              label="Om Stigvidd"
+              label={t("settings.about")}
               icon="cellphone-information"
               active={active === "about"}
               theme={{ roundness: 1 }}
@@ -135,7 +156,7 @@ export default function SettingsDrawer({ visible, onDismiss }: Props) {
             />
             {authState.isAuthenticated ? (
               <Drawer.Item
-                label="Logga ut"
+                label={t("auth.logout")}
                 icon="logout"
                 active={active === "logout"}
                 theme={{ roundness: 1 }}
@@ -143,7 +164,7 @@ export default function SettingsDrawer({ visible, onDismiss }: Props) {
               />
             ) : (
               <Drawer.Item
-                label="Logga in"
+                label={t("auth.login")}
                 icon="login"
                 active={active === "login"}
                 theme={{ roundness: 1 }}

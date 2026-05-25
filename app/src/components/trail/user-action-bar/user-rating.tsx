@@ -8,6 +8,7 @@ import { useAtom } from "jotai";
 import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useTheme } from "react-native-paper";
+import { useTranslation } from "react-i18next";
 
 interface UserRatingProps {
   trail: Trail;
@@ -15,6 +16,7 @@ interface UserRatingProps {
 
 export default function UserRating({ trail }: UserRatingProps) {
   const theme = useTheme();
+  const { t } = useTranslation();
   const [authState] = useAtom(authStateAtom);
   const [showAuthDialog, setAuthDialog] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -37,7 +39,7 @@ export default function UserRating({ trail }: UserRatingProps) {
     <View style={s.container}>
       <Pressable onPress={onPress} style={s.pressable}>
         <MaterialIcons name="thumb-up-off-alt" size={30} color={theme.colors.onSurface} />
-        <Text style={[s.text, { color: theme.colors.onSurface }]}>Betygsätt</Text>
+        <Text style={[s.text, { color: theme.colors.onSurface }]}>{t("review.rate")}</Text>
       </Pressable>
       <AddReview
         trailIdentifier={trail.identifier}
@@ -49,7 +51,7 @@ export default function UserRating({ trail }: UserRatingProps) {
       <NotAuthenticatedDialog
         visible={showAuthDialog}
         onDissmiss={() => setAuthDialog(false)}
-        infoMessage="Du behöver vara inloggad för att lägga till en recension."
+        infoMessage={t("review.notAuthRating")}
       />
     </View>
   );

@@ -6,6 +6,7 @@ import { BlurView } from "expo-blur";
 import { router } from "expo-router";
 import { useState } from "react";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 import { Dimensions, Pressable, StyleSheet, View } from "react-native";
 import { Button, Icon, Modal, Portal, Text, useTheme } from "react-native-paper";
 import { z } from "zod";
@@ -18,7 +19,7 @@ interface Props {
 }
 
 const deleteUserFields = z.object({
-  password: z.string({ required_error: "Ange ett lösenord" }).min(8, "Lösenordet måste vara minst 8 tecken"),
+  password: z.string({ required_error: "auth.validation.passwordRequired" }).min(8, "auth.validation.passwordTooShort"),
 });
 
 type FormFields = z.infer<typeof deleteUserFields>;
@@ -26,6 +27,7 @@ type FormFields = z.infer<typeof deleteUserFields>;
 const { width } = Dimensions.get("screen");
 
 export default function DeleteAccountModal({ visible, onDismiss }: Props) {
+  const { t } = useTranslation();
   const theme = useTheme();
   const [firebaseError, setFirebaseError] = useState("");
   const [confirmVisible, setConfirmVisible] = useState(false);
@@ -65,16 +67,16 @@ export default function DeleteAccountModal({ visible, onDismiss }: Props) {
       <Modal
         contentContainerStyle={[s.modalContainerStyle, { backgroundColor: theme.colors.surface }]}
         visible={visible}
-        onDismiss={isDeleting ? undefined : onDismiss} // Disables close on outsideclick while deleting
+        onDismiss={isDeleting ? undefined : onDismiss}
       >
         <View style={{ gap: 20, padding: 20 }}>
           <View style={s.titleDismissView}>
-            <Text style={s.textTitle}>Avsluta konto </Text>
+            <Text style={s.textTitle}>{t("auth.deleteAccount")} </Text>
             <Pressable hitSlop={12} onPress={onDismiss}>
               <Icon source="close" size={24} />
             </Pressable>
           </View>
-          <Text>Skriv in ditt lösenord</Text>
+          <Text>{t("auth.enterYourPassword")}</Text>
           <View style={s.textInputContainer}>
             <Controller
               control={control}
@@ -83,7 +85,7 @@ export default function DeleteAccountModal({ visible, onDismiss }: Props) {
                   passwordCallback={onChange}
                   error={!!errors.password}
                   onBlur={onBlur}
-                  label="Ange lösenord"
+                  label={t("auth.enterPassword")}
                   onSubmitEditing={handleSubmit(onSubmit)}
                 />
               )}
@@ -98,7 +100,7 @@ export default function DeleteAccountModal({ visible, onDismiss }: Props) {
                     fontWeight: 600,
                   }}
                 >
-                  {errors.password.message}
+                  {errors.password.message ? t(errors.password.message) : ""}
                 </Text>
               </View>
             )}
@@ -110,7 +112,7 @@ export default function DeleteAccountModal({ visible, onDismiss }: Props) {
             loading={isDeleting}
             onPress={handleSubmit(onSubmit)}
           >
-            {isDeleting ? "Avslutar..." : "Skicka"}
+            {isDeleting ? t("auth.deletingAccount") : t("common.send")}
           </Button>
           {firebaseError && <Text style={[s.errorText, { color: theme.colors.error }]}>{firebaseError}</Text>}
         </View>
@@ -120,11 +122,11 @@ export default function DeleteAccountModal({ visible, onDismiss }: Props) {
         textColor={theme.colors.error}
         backgroundColor={theme.colors.surface}
         onDismiss={() => setConfirmVisible(false)}
-        title="Avsluta konto"
-        infoText={["Är du säker på att du vill avsluta ditt konto?", "ALL din data kommer raderas för alltid!"]}
-        confirmText="Avsluta konto"
+        title={t("auth.deleteAccount")}
+        infoText={[t("auth.confirmDeleteAccount"), t("auth.deleteAccountWarning")]}
+        confirmText={t("auth.deleteAccount")}
         onConfirm={handleConfirm}
-        cancelText="Avbryt"
+        cancelText={t("common.cancel")}
       />
     </Portal>
   );

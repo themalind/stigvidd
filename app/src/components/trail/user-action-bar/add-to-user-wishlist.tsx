@@ -6,6 +6,7 @@ import NotAuthenticatedDialog from "@/components/auth/not-authenticated-msg-dial
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useTheme } from "react-native-paper";
 
@@ -14,6 +15,7 @@ interface Props {
 }
 
 export default function AddToUserWishlist({ trailIdentifier }: Props) {
+  const { t } = useTranslation();
   const theme = useTheme();
   const [authState] = useAtom(authStateAtom);
   const [showAuthDialog, setAuthDialog] = useState(false);
@@ -34,7 +36,7 @@ export default function AddToUserWishlist({ trailIdentifier }: Props) {
       addToUserWishlist.mutate(trailIdentifier, {
         onError: (error) => {
           if (error instanceof ApiError && error.status === 409) {
-            setWarning("Leden finns redan i listan!");
+            setWarning(t("userActions.alreadyInList"));
           } else {
             setError(`${error}`);
           }
@@ -51,12 +53,12 @@ export default function AddToUserWishlist({ trailIdentifier }: Props) {
     <View style={s.container}>
       <Pressable style={s.pressable} onPress={handlePress} disabled={isPending}>
         <MaterialIcons name={isInWishlist ? "check" : "add"} size={30} color={theme.colors.onSurface} />
-        <Text style={[s.text, { color: theme.colors.onSurface }]}>Vill gå</Text>
+        <Text style={[s.text, { color: theme.colors.onSurface }]}>{t("userActions.wishlist")}</Text>
       </Pressable>
       <NotAuthenticatedDialog
         visible={showAuthDialog}
         onDissmiss={() => setAuthDialog(false)}
-        infoMessage="Du behöver vara inloggad för att spara promenader."
+        infoMessage={t("userActions.notAuthWishlist")}
       />
     </View>
   );

@@ -6,6 +6,7 @@ import { useSetAtom } from "jotai";
 import { useState } from "react";
 import { Alert, Dimensions, Pressable, StyleSheet, TouchableOpacity, View } from "react-native";
 import { useTheme } from "react-native-paper";
+import { useTranslation } from "react-i18next";
 
 const { width } = Dimensions.get("screen");
 
@@ -15,6 +16,7 @@ interface ReviewImageProp {
 
 export default function AddReviewImages({ setReviewImages }: ReviewImageProp) {
   const theme = useTheme();
+  const { t } = useTranslation();
   const setError = useSetAtom(showErrorAtom);
   const [images, setImages] = useState<ImagePicker.ImagePickerAsset[]>([]);
 
@@ -35,7 +37,7 @@ export default function AddReviewImages({ setReviewImages }: ReviewImageProp) {
   const pickImage = async () => {
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permissionResult.granted) {
-      Alert.alert("Permission required", "Permission to access the media library is required.");
+      Alert.alert(t("imagePermission.title"), t("imagePermission.message"));
       return;
     }
 
@@ -47,7 +49,7 @@ export default function AddReviewImages({ setReviewImages }: ReviewImageProp) {
 
     if (!result.canceled) {
       if (!result.assets[0].mimeType?.includes("image/jpeg")) {
-        setError("Endast JPG-bilder är tillåtna");
+        setError(t("imagePermission.jpgOnly"));
         return;
       }
 

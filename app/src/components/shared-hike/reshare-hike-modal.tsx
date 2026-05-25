@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
 import { ActivityIndicator, Dimensions, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { Divider, Icon, Modal, Portal, Text, useTheme } from "react-native-paper";
+import { useTranslation } from "react-i18next";
 
 const HEIGHT = Dimensions.get("screen").height;
 
@@ -19,6 +20,7 @@ interface Props {
 
 export default function ReshareHikeModal({ visible, onDismiss, onShare, isPending, excludeNickName }: Props) {
   const theme = useTheme();
+  const { t } = useTranslation();
   const currentUser = useAtomValue(stigviddUserAtom);
 
   const { data: friendsRaw, isLoading } = useQuery({
@@ -38,7 +40,7 @@ export default function ReshareHikeModal({ visible, onDismiss, onShare, isPendin
           <View style={s.header}>
             <Icon source="share" size={18} color={theme.colors.primary} />
             <Text variant="titleMedium" style={{ color: theme.colors.onSurface }}>
-              Dela med en vän
+              {t("hike.shareWithFriend")}
             </Text>
             <Pressable hitSlop={12} onPress={onDismiss}>
               <Icon size={24} source="close" color={theme.colors.onSurface} />
@@ -68,7 +70,7 @@ export default function ReshareHikeModal({ visible, onDismiss, onShare, isPendin
             </ScrollView>
           ) : (
             <View style={s.centered}>
-              <Text style={{ color: theme.colors.onSurfaceVariant }}>Du har inga vänner att dela med.</Text>
+              <Text style={{ color: theme.colors.onSurfaceVariant }}>{t("hike.noFriendsToShare")}</Text>
             </View>
           )}
         </View>

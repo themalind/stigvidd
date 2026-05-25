@@ -1,5 +1,6 @@
 import { ApiError, createStigViddUser } from "@/api/users";
 import { AuthResult, RegisterData } from "@/data/types";
+import i18n from "@/i18n";
 import { FirebaseError } from "firebase/app";
 import { User, createUserWithEmailAndPassword, deleteUser } from "firebase/auth";
 import { auth } from "../../firebase-config";
@@ -59,7 +60,7 @@ export async function registerUser(data: RegisterData): Promise<AuthResult> {
         user: null,
         error: {
           code: "api/nickname-taken",
-          message: "Smeknamnet upptaget",
+          message: i18n.t("auth.nicknameTakenMsg"),
         },
       };
     }
@@ -69,7 +70,7 @@ export async function registerUser(data: RegisterData): Promise<AuthResult> {
       user: null,
       error: {
         code: "unknown",
-        message: "Ett oväntat fel inträffade",
+        message: i18n.t("auth.unknownError"),
       },
     };
   }
