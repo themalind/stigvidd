@@ -94,11 +94,6 @@ export interface RatingResponse {
   rating: number;
 }
 
-export interface Coordinate {
-  Latitude: number;
-  Longitude: number;
-}
-
 export interface User {
   identifier: string;
   nickName: string;
@@ -136,6 +131,15 @@ export interface TrailMarkerResponse {
   isAccessible: boolean;
   startLatitude?: number;
   startLongitude?: number;
+}
+
+export interface TrailPathResponse {
+  identifier: string;
+  name: string;
+  isAccessible: boolean;
+  trailLength: number;
+  classification: number;
+  path: LatLng[];
 }
 
 export interface Hike {

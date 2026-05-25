@@ -4,6 +4,7 @@ using Core.Interfaces.Services;
 using Infrastructure.Data.Entities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
+using NetTopologySuite.Simplify;
 using WebDataContracts.RequestModels.Trail;
 using WebDataContracts.ResponseModels.Trail;
 
@@ -95,6 +96,41 @@ public class TrailService : ITrailService
             return Result.Fail<CoordinatesResponse?>(new Message(404, $"Coordinates with Trail identifier: {identifier} not found."));
 
         return Result.Ok<CoordinatesResponse?>(CoordinatesResponse.Create(result.Value));
+    }
+
+    public async Task<Result<IReadOnlyCollection<TrailPathResponse>>> GetTrailPathsInBoundsAsync(double minLat, double minLon, double maxLat, double maxLon, CancellationToken ctoken)
+    {
+        var bboxHeight = maxLat - minLat;
+        var tolerance = bboxHeight > 0.5 ? 0.001 : bboxHeight > 0.1 ? 0.0003 : 0.0;
+
+        var result = await _trailRepository.GetTrailsInBoundsAsync(
+            minLat, minLon, maxLat, maxLon,
+            t => new { t.Identifier, t.Name, t.Accessibility, t.GeoPath, t.TrailLength, t.Classification },
+            ctoken);
+
+        if (result.Status == RepositoryResultStatus.Error)
+            return Result.Fail<IReadOnlyCollection<TrailPathResponse>>(new Message(500, "An error occurred while fetching trail paths."));
+
+        if (result.Value is null)
+            return Result.Fail<IReadOnlyCollection<TrailPathResponse>>(new Message(500, "An error occurred while fetching trail paths."));
+
+        var paths = result.Value.Select(t =>
+        {
+            var geometry = tolerance > 0 && t.GeoPath != null
+                ? DouglasPeuckerSimplifier.Simplify(t.GeoPath, tolerance)
+                : t.GeoPath;
+
+            return TrailPathResponse.Create(
+                t.Identifier,
+                t.Name,
+                t.Accessibility,
+                t.TrailLength,
+                t.Classification,
+                geometry?.Coordinates.Select(c => new LatLngPoint(c.Y, c.X)).ToList() ?? []
+            );
+        }).ToList();
+
+        return Result.Ok<IReadOnlyCollection<TrailPathResponse>>(paths);
     }
 
     public async Task<Result<IReadOnlyCollection<TrailOverviewResponse?>>> GetPopularTrailOverviewsAsync(

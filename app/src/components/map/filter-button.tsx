@@ -1,5 +1,5 @@
 import { MapMarkerFilter } from "@/data/types";
-import { useRef, useState } from "react";
+import { useRef, useState, useMemo } from "react";
 import { Pressable, StyleSheet, Animated } from "react-native";
 import { useTheme } from "react-native-paper";
 import { MaterialCommunityIcons, Ionicons, FontAwesome6 } from "@expo/vector-icons";
@@ -15,50 +15,37 @@ export default function FilterButton({ filter, onChange }: Props) {
   const animation = useRef(new Animated.Value(0)).current;
 
   const scale = useRef(new Animated.Value(1)).current;
-  const translateY = useRef(new Animated.Value(0)).current;
 
   const toggleMenu = () => {
     const next = !isOpen;
 
-    Animated.spring(scale, {
-      toValue: next ? 1.6 : 1,
-      useNativeDriver: true,
-    }).start();
-
-    Animated.spring(translateY, {
-      toValue: next ? 0 : 0,
-      useNativeDriver: true,
-    }).start();
-
-    Animated.spring(animation, {
-      toValue: next ? 1 : 0,
-      useNativeDriver: true,
-    }).start();
+    Animated.parallel([
+      Animated.spring(scale, { toValue: next ? 1.6 : 1, useNativeDriver: true }),
+      Animated.spring(animation, { toValue: next ? 1 : 0, useNativeDriver: true }),
+    ]).start();
 
     setIsOpen(next);
   };
 
-  const getStyle = (angle: number, distance: number) => {
-    const rad = (angle * Math.PI) / 180;
-
-    return {
-      transform: [
-        {
-          translateX: animation.interpolate({
-            inputRange: [0, 1],
-            outputRange: [0, Math.cos(rad) * distance],
-          }),
-        },
-        {
-          translateY: animation.interpolate({
-            inputRange: [0, 1],
-            outputRange: [0, -Math.sin(rad) * distance],
-          }),
-        },
-      ],
-      opacity: animation,
+  const buttonStyles = useMemo(() => {
+    const makeStyle = (angle: number, distance: number) => {
+      const rad = (angle * Math.PI) / 180;
+      return {
+        transform: [
+          { translateX: animation.interpolate({ inputRange: [0, 1], outputRange: [0, Math.cos(rad) * distance] }) },
+          { translateY: animation.interpolate({ inputRange: [0, 1], outputRange: [0, -Math.sin(rad) * distance] }) },
+        ],
+        opacity: animation,
+      };
     };
-  };
+    return {
+      trails: makeStyle(90, 80),
+      shelters: makeStyle(135, 80),
+      firePits: makeStyle(180, 80),
+      accessibility: makeStyle(225, 80),
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <>
@@ -72,7 +59,7 @@ export default function FilterButton({ filter, onChange }: Props) {
                 ? theme.colors.primary
                 : theme.colors.secondary,
             borderColor: theme.colors.onPrimary,
-            transform: [{ scale }, { translateY }],
+            transform: [{ scale }],
           },
         ]}
       >
@@ -82,9 +69,10 @@ export default function FilterButton({ filter, onChange }: Props) {
       </Animated.View>
 
       <Animated.View
+        pointerEvents={isOpen ? "auto" : "none"}
         style={[
           s.button,
-          getStyle(90, 80),
+          buttonStyles.trails,
           {
             backgroundColor: filter.trails ? theme.colors.primary : theme.colors.secondary,
             borderColor: theme.colors.onPrimary,
@@ -97,9 +85,10 @@ export default function FilterButton({ filter, onChange }: Props) {
       </Animated.View>
 
       <Animated.View
+        pointerEvents={isOpen ? "auto" : "none"}
         style={[
           s.button,
-          getStyle(135, 80),
+          buttonStyles.shelters,
           {
             backgroundColor: filter.shelters ? theme.colors.primary : theme.colors.secondary,
             borderColor: theme.colors.onPrimary,
@@ -112,9 +101,10 @@ export default function FilterButton({ filter, onChange }: Props) {
       </Animated.View>
 
       <Animated.View
+        pointerEvents={isOpen ? "auto" : "none"}
         style={[
           s.button,
-          getStyle(180, 80),
+          buttonStyles.firePits,
           {
             backgroundColor: filter.firePits ? theme.colors.primary : theme.colors.secondary,
             borderColor: theme.colors.onPrimary,
@@ -127,9 +117,10 @@ export default function FilterButton({ filter, onChange }: Props) {
       </Animated.View>
 
       <Animated.View
+        pointerEvents={isOpen ? "auto" : "none"}
         style={[
           s.button,
-          getStyle(225, 80),
+          buttonStyles.accessibility,
           {
             backgroundColor: filter.accessibility ? theme.colors.primary : theme.colors.secondary,
             borderColor: theme.colors.onPrimary,
