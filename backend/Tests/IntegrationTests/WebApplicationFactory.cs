@@ -37,7 +37,7 @@ public class StigViddWebApplicationFactory<TProgram>
             if (dbConnectionDescriptor != null)
                 services.Remove(dbConnectionDescriptor);
 
-#if UNIX
+#if !WINDOWS
             SQLitePCL.raw.SetProvider(new SQLitePCL.SQLite3Provider_sqlite3());
 #endif
 
