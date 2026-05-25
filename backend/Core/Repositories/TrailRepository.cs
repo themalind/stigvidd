@@ -122,8 +122,6 @@ public class TrailRepository : ITrailRepository
         }
     }
 
-    private static double DegreesToRadians(double degrees) => degrees * Math.PI / 180.0;
-
     public async Task<RepositoryResult<T>> GetTrailByIdentifierAsync<T>(string identifier, Expression<Func<Trail, T>> selector, CancellationToken ctoken)
     {
         try
