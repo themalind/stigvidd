@@ -32,11 +32,22 @@ jobs:
         # with SQLite in-memory, so the value is only there to pass the null-check.
         ConnectionStrings__StigVidd: "DataSource=:memory:"
       run: |
-        dotnet test Tests/UnitTests/UnitTests.csproj --no-build --verbosity normal --logger "trx;LogFileName=test-results.trx"
-        dotnet test Tests/IntegrationTests/IntegrationTests.csproj --no-build --verbosity normal --logger "trx;LogFileName=test-results.trx"
-    - name: Test Report
+        dotnet test Tests/UnitTests/UnitTests.csproj --no-build --verbosity normal --logger "trx;LogFileName=unti-test-results.trx"
+        dotnet test Tests/IntegrationTests/IntegrationTests.csproj --no-build --verbosity normal --logger "trx;LogFileName=integration-test-results.trx"
+    - name: Unit Test Report
       uses: phoenix-actions/test-reporting@v8
       if: success() || failure()
+      with:
+          name: Unit Tests
+          path: unit-test-results.trx
+          reporter: dotnet-trx
+    - name: Integration Test Report
+      uses: phoenix-actions/test-reporting@v8
+      if: success() || failure()
+      with:
+          name: Integration Tests
+          path: integration-test-results.trx
+          reporter: dotnet-trx
   app:
     runs-on: ubuntu-latest
     defaults:
