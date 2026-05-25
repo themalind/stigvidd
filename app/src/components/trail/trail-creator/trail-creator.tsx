@@ -10,6 +10,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import MapView, { Polyline, Region } from "react-native-maps";
 import { Text, useTheme } from "react-native-paper";
+import { useTranslation } from "react-i18next";
 import SaveHikeModal from "./save-hike-modal";
 
 export default function TrailCreator() {
@@ -28,6 +29,7 @@ export default function TrailCreator() {
   // Set once on mount from the device's current GPS position
   const [initialRegion, setInitialRegion] = useState<Region | undefined>(undefined);
   const theme = useTheme();
+  const { t } = useTranslation();
 
   // Flattens all completed segments + the active segment into a single coordinate array for the polyline
   const polylineCoords = useMemo(() => {
@@ -134,7 +136,7 @@ export default function TrailCreator() {
             onPress={() => startTracking()}
           >
             <Ionicons name="walk-outline" size={30} color={theme.colors.onSurface} />
-            <Text style={{ color: theme.colors.onSurface }}>Starta vandring</Text>
+            <Text style={{ color: theme.colors.onSurface }}>{t("createHike.start")}</Text>
           </Pressable>
         ) : isTracking ? (
           // Currently recording — only allow pausing
@@ -149,21 +151,21 @@ export default function TrailCreator() {
               onPress={() => setShowDeleteDialog(true)}
             >
               <Ionicons name="close" size={30} color={theme.colors.onSurface} />
-              <Text>Nollställ</Text>
+              <Text>{t("createHike.reset")}</Text>
             </Pressable>
             <Pressable
               style={[s.actionButton, { backgroundColor: theme.colors.inversePrimary }]}
               onPress={() => setShowSaveModal(true)}
             >
               <Ionicons name="checkmark-sharp" size={30} color={theme.colors.onSurface} />
-              <Text>Spara</Text>
+              <Text>{t("common.save")}</Text>
             </Pressable>
             <Pressable
               style={[s.actionButton, { backgroundColor: theme.colors.surface }]}
               onPress={() => startTracking()}
             >
               <Ionicons name="play" size={30} color={theme.colors.onSurface} />
-              <Text>Återuppta</Text>
+              <Text>{t("createHike.resume")}</Text>
             </Pressable>
           </>
         )}
@@ -178,12 +180,12 @@ export default function TrailCreator() {
           resetTracking();
           setShowDeleteDialog(false);
         }}
-        title={"Avbryt pågående promenad"}
-        infoText={["Vill du verkligen avbryta den pågående promenad?", "Detta går inte att ångra."]}
+        title={t("createHike.cancelTitle")}
+        infoText={[t("createHike.cancelConfirm"), t("createHike.cancelWarning")]}
         backgroundColor={theme.colors.background}
         textColor={theme.colors.onBackground}
-        cancelText={"Nej"}
-        confirmText={"Ja"}
+        cancelText={t("createHike.no")}
+        confirmText={t("createHike.yes")}
       />
 
       {/* Modal where the user names and confirms saving the hike */}

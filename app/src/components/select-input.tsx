@@ -1,5 +1,6 @@
 import { Picker } from "@react-native-picker/picker";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Modal, Platform, Pressable, StyleSheet, View } from "react-native";
 import { Text, useTheme } from "react-native-paper";
 
@@ -16,10 +17,11 @@ interface SelectInputProps {
 }
 
 export default function SelectInput({ selectedValue, onValueChange, options, placeholder }: SelectInputProps) {
+  const { t } = useTranslation();
   const theme = useTheme();
   const [open, setOpen] = useState(false);
 
-  const selectedLabel = options.find((o) => o.value === selectedValue)?.label ?? placeholder ?? "Välj...";
+  const selectedLabel = options.find((o) => o.value === selectedValue)?.label ?? placeholder ?? t("common.select");
 
   if (Platform.OS === "android") {
     return (
@@ -57,7 +59,7 @@ export default function SelectInput({ selectedValue, onValueChange, options, pla
         <View style={[s.sheet, { backgroundColor: theme.colors.surface }]}>
           <View style={[s.header, { borderBottomColor: theme.colors.outline }]}>
             <Pressable onPress={() => setOpen(false)}>
-              <Text style={{ color: theme.colors.primary, fontSize: 16 }}>Klar</Text>
+              <Text style={{ color: theme.colors.primary, fontSize: 16 }}>{t("common.done")}</Text>
             </Pressable>
           </View>
           <Picker selectedValue={selectedValue} onValueChange={(val) => onValueChange(val)}>

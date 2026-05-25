@@ -10,6 +10,7 @@ import { Control, Controller, FieldError, SubmitHandler, useForm } from "react-h
 import { ActivityIndicator, Dimensions, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { Button, Divider, Icon, Modal, Portal, Text, TextInput, useTheme } from "react-native-paper";
+import { useTranslation } from "react-i18next";
 import { z } from "zod";
 
 const HEIGHT = Dimensions.get("screen").height;
@@ -86,6 +87,7 @@ export default function ShareHikeModal({
   defaultValues,
 }: Props) {
   const theme = useTheme();
+  const { t } = useTranslation();
   const [step, setStep] = useState<"form" | "friends">("form");
   const [formData, setFormData] = useState<ShareHikeFormFields>({});
   const currentUser = useAtomValue(stigviddUserAtom);
@@ -123,7 +125,7 @@ export default function ShareHikeModal({
           <View style={s.header}>
             <Icon source="share" size={18} color={theme.colors.primary} />
             <Text variant="titleMedium" style={{ color: theme.colors.onSurface }}>
-              Dela med en vän
+              {t("hike.shareWithFriend")}
             </Text>
             <Pressable hitSlop={12} onPress={handleDismiss}>
               <Icon size={24} source="close" color={theme.colors.onSurface} />
@@ -138,27 +140,27 @@ export default function ShareHikeModal({
                 keyboardShouldPersistTaps="handled"
                 enableOnAndroid
               >
-                <Text style={s.infoLabel}>Hitta till promenadens start</Text>
-                <Text style={s.infoBody}>Beskriv hur man hittar med en enkel beskriving</Text>
+                <Text style={s.infoLabel}>{t("hike.gettingThereHeading")}</Text>
+                <Text style={s.infoBody}>{t("hike.gettingThereHelp")}</Text>
                 <FormField
                   name="gettingThere"
-                  label="Hitta hit (valfritt)"
+                  label={t("hike.gettingThereOptional")}
                   control={control}
                   error={errors.gettingThere}
                 />
-                <Text style={s.infoLabel}>Finns det parkering i närheten?</Text>
-                <Text style={s.infoBody}>Exempel: Det finns parkering vid badplatsen, Parkera längs med grusvägen</Text>
+                <Text style={s.infoLabel}>{t("hike.parkingHeading")}</Text>
+                <Text style={s.infoBody}>{t("hike.parkingHelp")}</Text>
                 <FormField
                   name="parkingInfo"
-                  label="Parkering (valfritt)"
+                  label={t("hike.parkingOptional")}
                   control={control}
                   error={errors.parkingInfo}
                 />
-                <Text style={s.infoLabel}>Beskrivning</Text>
-                <Text style={s.infoBody}>Här kan du ge en kort beskrivning av hur till exempel miljön ser ut.</Text>
+                <Text style={s.infoLabel}>{t("hike.descriptionHeading")}</Text>
+                <Text style={s.infoBody}>{t("hike.descriptionHelp")}</Text>
                 <FormField
                   name="description"
-                  label="Beskrivning (valfritt)"
+                  label={t("hike.descriptionOptional")}
                   control={control}
                   error={errors.description}
                 />
@@ -170,7 +172,7 @@ export default function ShareHikeModal({
                   contentStyle={s.buttonContent}
                   onPress={handleSubmit(onSubmit)}
                 >
-                  Nästa
+                  {t("common.next")}
                 </Button>
               </View>
             </>
@@ -182,7 +184,7 @@ export default function ShareHikeModal({
             <>
               <Pressable hitSlop={12} style={s.backButton} onPress={() => setStep("form")}>
                 <Icon size={18} source="arrow-left" color={theme.colors.onSurface} />
-                <Text style={{ color: theme.colors.onSurface }}>Tillbaka</Text>
+                <Text style={{ color: theme.colors.onSurface }}>{t("hike.back")}</Text>
               </Pressable>
               <Divider />
               <ScrollView bounces={false} style={s.flex}>
@@ -207,7 +209,7 @@ export default function ShareHikeModal({
             </>
           ) : (
             <View style={s.centered}>
-              <Text style={{ color: theme.colors.onSurfaceVariant }}>Du har inga vänner att dela med.</Text>
+              <Text style={{ color: theme.colors.onSurfaceVariant }}>{t("hike.noFriendsToShare")}</Text>
             </View>
           )}
         </View>

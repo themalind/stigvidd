@@ -15,9 +15,11 @@ import { useAtom, useAtomValue } from "jotai";
 import { useState } from "react";
 import { Platform, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { Divider, Icon, Text, useTheme } from "react-native-paper";
+import { useTranslation } from "react-i18next";
 
 export default function SharedHikesScreen() {
   const theme = useTheme();
+  const { t } = useTranslation();
   const [authState] = useAtom(authStateAtom);
   const user = useAtomValue(stigviddUserAtom);
   const [visible, setVisible] = useState(false);
@@ -52,16 +54,16 @@ export default function SharedHikesScreen() {
         <View style={s.header}>
           <BackButton />
           <Icon source="hiking" size={24} color={theme.colors.tertiary} />
-          <Text style={s.headerText}>Delade promenader</Text>
+          <Text style={s.headerText}>{t("hike.sharedHikesTitle")}</Text>
         </View>
         <View style={s.content}>
           <View style={[s.infoBox, { backgroundColor: theme.colors.outlineVariant }]}>
-            <Text>Tryck på en promenad för att se mer information eller ta bort den.</Text>
+            <Text>{t("hike.pressForInfo")}</Text>
           </View>
           <Divider bold={true} />
           {hikes?.length === 0 ? (
             <Text style={{ color: theme.colors.onBackground, textAlign: "center", paddingVertical: 20 }}>
-              Inga delade promenader här än
+              {t("hike.noShared")}
             </Text>
           ) : (
             hikes?.map((hike, index) => (
@@ -84,7 +86,7 @@ export default function SharedHikesScreen() {
                     <View style={s.info}>
                       <Text>{hike.hikeLength} km</Text>
                       <Text>{FormattedTime(hike.duration)}</Text>
-                      <Text>Delad av: {hike.sharedByName}</Text>
+                      <Text>{t("hike.sharedByLabel", { name: hike.sharedByName })}</Text>
                     </View>
                   </View>
                   <Icon source="chevron-right" size={20} />

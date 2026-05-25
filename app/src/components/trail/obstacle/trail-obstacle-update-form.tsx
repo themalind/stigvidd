@@ -12,12 +12,13 @@ import { useSetAtom } from "jotai";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
 import { Dimensions, Pressable, StyleSheet, View } from "react-native";
 import { Button, Modal, Portal, Text, TextInput, useTheme } from "react-native-paper";
+import { useTranslation } from "react-i18next";
 import { z } from "zod";
 
 const updateObstacleFields = z.object({
   description: z
-    .string({ required_error: "Ge en kort beskrivning" })
-    .min(15, "Beskrivning för kort minst 15 tecken")
+    .string({ required_error: "obstacle.descriptionRequired" })
+    .min(15, "obstacle.descriptionTooShort")
     .max(500),
   issueType: z.string().nonempty(),
 });
@@ -44,6 +45,7 @@ export default function TrailObstacleUpdateForm({
   onDismiss,
 }: Props) {
   const theme = useTheme();
+  const { t } = useTranslation();
   const setErrorMsg = useSetAtom(showErrorAtom);
   const setSuccessMsg = useSetAtom(showSuccessAtom);
   const queryClient = useQueryClient();
@@ -58,10 +60,10 @@ export default function TrailObstacleUpdateForm({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["obstacles", trailIdentifier] });
       onDismiss();
-      setSuccessMsg("Uppdaterat!");
+      setSuccessMsg(t("obstacle.updated"));
     },
     onError: () => {
-      setErrorMsg("Något gick fel, försök igen senare");
+      setErrorMsg(t("obstacle.updateError"));
     },
   });
 
@@ -93,7 +95,7 @@ export default function TrailObstacleUpdateForm({
           <View style={s.header}>
             <View style={s.headerLeft}>
               <MaterialIcons name="edit-note" size={28} color={theme.colors.onSurface} />
-              <Text style={s.title}>Redigera hinder</Text>
+              <Text style={s.title}>{t("obstacle.editTitle")}</Text>
             </View>
             <Pressable hitSlop={12} onPress={onDismiss}>
               <MaterialIcons name="close" size={24} color={theme.colors.onSurface} />
@@ -101,7 +103,7 @@ export default function TrailObstacleUpdateForm({
           </View>
 
           <View style={s.fieldGroup}>
-            <Text style={[s.fieldLabel, { color: theme.colors.onSurfaceVariant }]}>Välj en kategori</Text>
+            <Text style={[s.fieldLabel, { color: theme.colors.onSurfaceVariant }]}>{t("obstacle.selectCategory")}</Text>
             {issueTypes?.length && (
               <Controller
                 control={control}
@@ -119,7 +121,7 @@ export default function TrailObstacleUpdateForm({
           </View>
 
           <View style={s.fieldGroup}>
-            <Text style={[s.fieldLabel, { color: theme.colors.onSurfaceVariant }]}>Beskrivning max 500 tecken</Text>
+            <Text style={[s.fieldLabel, { color: theme.colors.onSurfaceVariant }]}>{t("obstacle.descriptionMax")}</Text>
             <Controller
               control={control}
               name="description"
@@ -132,7 +134,7 @@ export default function TrailObstacleUpdateForm({
                   onChangeText={onChange}
                   value={value}
                   maxLength={500}
-                  label="Beskrivning"
+                  label={t("obstacle.description")}
                   autoCapitalize="sentences"
                   multiline
                   scrollEnabled={false}
@@ -142,12 +144,14 @@ export default function TrailObstacleUpdateForm({
               )}
             />
             {errors.description && (
-              <Text style={[s.bold, { color: theme.colors.error }]}>{errors.description.message}</Text>
+              <Text style={[s.bold, { color: theme.colors.error }]}>
+                {errors.description.message ? t(errors.description.message) : ""}
+              </Text>
             )}
           </View>
 
           <Button onPress={handleSubmit(onSubmit)} mode="contained" style={s.button} disabled={isPending}>
-            {isPending ? "Sparar..." : "Spara"}
+            {isPending ? t("common.saving") : t("common.save")}
           </Button>
         </View>
       </Modal>

@@ -2,8 +2,10 @@ import { acceptFriendRequest, rejectFriendRequest, removeFriend, sendFriendReque
 import { showErrorAtom, showSuccessAtom } from "@/atoms/snackbar-atoms";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSetAtom } from "jotai";
+import { useTranslation } from "react-i18next";
 
 export function useFriendMutations() {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const setSuccessMsg = useSetAtom(showSuccessAtom);
   const setErrorMsg = useSetAtom(showErrorAtom);
@@ -13,10 +15,10 @@ export function useFriendMutations() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["friends", "incoming"] });
       queryClient.invalidateQueries({ queryKey: ["friends"] });
-      setSuccessMsg("Förfrågan accepterad!");
+      setSuccessMsg(t("friends.requestAccepted"));
     },
     onError: () => {
-      setErrorMsg("Kunde inte godkänna, försök igen senare!");
+      setErrorMsg(t("friends.acceptError"));
     },
   });
 
@@ -24,10 +26,10 @@ export function useFriendMutations() {
     mutationFn: (requesterIdentifier: string) => rejectFriendRequest(requesterIdentifier),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["friends", "incoming"] });
-      setSuccessMsg("Förfrågan nekad");
+      setSuccessMsg(t("friends.requestRejected"));
     },
     onError: () => {
-      setErrorMsg("Något gick fel, försök igen senare!");
+      setErrorMsg(t("friends.rejectError"));
     },
   });
 
@@ -35,10 +37,10 @@ export function useFriendMutations() {
     mutationFn: (receiverNickName: string) => sendFriendRequest(receiverNickName),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["friends", "outgoing"] });
-      setSuccessMsg("Förfrågan skickad!");
+      setSuccessMsg(t("friends.requestSent"));
     },
     onError: () => {
-      setErrorMsg("Kunde inte skicka förfrågan, försök igen!");
+      setErrorMsg(t("friends.sendError"));
     },
   });
 
@@ -46,10 +48,10 @@ export function useFriendMutations() {
     mutationFn: (friendIdentifier: string) => removeFriend(friendIdentifier),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["friends"] });
-      setSuccessMsg("Vän borttagen");
+      setSuccessMsg(t("friends.friendRemoved"));
     },
     onError: () => {
-      setErrorMsg("Kunde inte ta bort vän, försök igen senare!");
+      setErrorMsg(t("friends.removeError"));
     },
   });
 

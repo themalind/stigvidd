@@ -3,6 +3,8 @@ import { loadUserTheme, userThemeAtom } from "@/atoms/user-theme-atom";
 import { GlobalSnackbar } from "@/components/global-snackbar";
 import { useInitLocation } from "@/hooks/useInitLocation";
 import { useUserTheme } from "@/hooks/useUserTheme";
+import "@/i18n";
+import { loadStoredLanguage } from "@/i18n";
 import "@/services/location-task";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import * as NavigationBar from "expo-navigation-bar";
@@ -53,6 +55,10 @@ export default function RootLayout() {
   useEffect(() => {
     loadUserTheme().then(setUserTheme);
   }, [setUserTheme]);
+
+  useEffect(() => {
+    loadStoredLanguage();
+  }, []);
 
   useEffect(() => {
     if (Platform.OS !== "android") return;

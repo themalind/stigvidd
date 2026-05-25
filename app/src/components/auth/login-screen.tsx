@@ -10,6 +10,7 @@ import { Link } from "expo-router";
 import { useAtom } from "jotai";
 import { useState } from "react";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 import { Appearance, Dimensions, ImageBackground, Pressable, StyleSheet, Text, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { Button, TextInput, useTheme } from "react-native-paper";
@@ -27,13 +28,14 @@ const addOpacity = (color: string, opacity: number): string => {
 };
 
 const loginFields = z.object({
-  email: z.string({ required_error: "Du måste ange en e-post" }).email("Ange en giltig e-post"),
-  password: z.string({ required_error: "Ange ett lösenord" }).min(8, "Lösenordet måste vara minst 8 tecken"),
+  email: z.string({ required_error: "auth.validation.emailRequired" }).email("auth.validation.emailInvalid"),
+  password: z.string({ required_error: "auth.validation.passwordRequired" }).min(8, "auth.validation.passwordTooShort"),
 });
 
 type FormFields = z.infer<typeof loginFields>;
 
 export default function LoginScreen({ showBackButton = false }: { showBackButton?: boolean }) {
+  const { t } = useTranslation();
   const theme = useTheme();
   const [visible, setVisible] = useState(false);
   const [firebaseError, setFirebaseError] = useState("");
@@ -92,7 +94,7 @@ export default function LoginScreen({ showBackButton = false }: { showBackButton
               <Image source={require("../../assets/images/mammaapp.png")} style={s.logo} contentFit="contain" />
             </View>
             <View style={s.textInputContainer}>
-              <Text style={[s.text, { color: theme.colors.onSurface }]}>Logga in</Text>
+              <Text style={[s.text, { color: theme.colors.onSurface }]}>{t("auth.login")}</Text>
               <Controller
                 control={control}
                 render={({ field: { onChange, onBlur, value } }) => (
@@ -102,7 +104,7 @@ export default function LoginScreen({ showBackButton = false }: { showBackButton
                     onBlur={onBlur}
                     onChangeText={onChange}
                     value={value}
-                    label="Epost"
+                    label={t("auth.email")}
                     autoCapitalize="none"
                     keyboardType="email-address"
                     theme={{
@@ -123,7 +125,7 @@ export default function LoginScreen({ showBackButton = false }: { showBackButton
                       fontWeight: 600,
                     }}
                   >
-                    {errors.email.message}
+                    {errors.email.message ? t(errors.email.message) : ""}
                   </Text>
                 )}
               </View>
@@ -134,7 +136,7 @@ export default function LoginScreen({ showBackButton = false }: { showBackButton
                     passwordCallback={onChange}
                     error={!!errors.password}
                     onBlur={onBlur}
-                    label="Lösenord"
+                    label={t("auth.password")}
                     onSubmitEditing={handleSubmit(onSubmit)}
                   />
                 )}
@@ -149,18 +151,18 @@ export default function LoginScreen({ showBackButton = false }: { showBackButton
                       fontWeight: 600,
                     }}
                   >
-                    {errors.password.message}
+                    {errors.password.message ? t(errors.password.message) : ""}
                   </Text>
                 )}
               </View>
             </View>
             <View style={s.actionContainer}>
               <Button mode="contained" style={s.button} onPress={handleSubmit(onSubmit)} disabled={isSubmitting}>
-                {isSubmitting ? "Loggar in..." : "Logga in"}
+                {isSubmitting ? t("auth.loggingIn") : t("auth.login")}
               </Button>
               {firebaseError && <Text style={[s.errorText, { color: theme.colors.error }]}>{firebaseError}</Text>}
               <Pressable style={{ flexDirection: "row" }} hitSlop={12} onPress={() => setVisible(true)}>
-                <Text style={[s.linkText, { color: theme.colors.onSurface }]}>Glömt ditt lösenord? </Text>
+                <Text style={[s.linkText, { color: theme.colors.onSurface }]}>{t("auth.forgotPassword")} </Text>
                 <Text
                   style={[
                     s.linkText,
@@ -169,17 +171,17 @@ export default function LoginScreen({ showBackButton = false }: { showBackButton
                     },
                   ]}
                 >
-                  Återställ här.
+                  {t("auth.resetHere")}
                 </Text>
               </Pressable>
               <Link style={[s.linkText, { color: theme.colors.onSurface }]} replace href="./register">
-                <Text>Inte medlem? </Text>
+                <Text>{t("auth.notMember")} </Text>
                 <Text
                   style={{
                     color: theme.colors.tertiary,
                   }}
                 >
-                  Skapa konto här.
+                  {t("auth.createAccountHere")}
                 </Text>
               </Link>
             </View>

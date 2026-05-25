@@ -3,6 +3,7 @@ import { BlurView } from "expo-blur";
 import { Dimensions, Pressable, StyleSheet, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { Icon, Modal, Portal, Text, useTheme } from "react-native-paper";
+import { useTranslation } from "react-i18next";
 import AddReviewForm from "./add-review-form";
 
 const { height } = Dimensions.get("screen");
@@ -17,6 +18,7 @@ interface AddReviewProps {
 
 export default function AddReview({ visible, onDismiss, trailIdentifier, trailName, trailLenght }: AddReviewProps) {
   const theme = useTheme();
+  const { t } = useTranslation();
   return (
     <Portal>
       {visible && <BlurView intensity={100} tint="dark" style={StyleSheet.absoluteFill} />}
@@ -33,7 +35,7 @@ export default function AddReview({ visible, onDismiss, trailIdentifier, trailNa
         >
           <View style={s.titleAndCloseContainer}>
             <View style={s.topTextContainer}>
-              <Text style={s.title}>Skapa en recension</Text>
+              <Text style={s.title}>{t("review.createTitle")}</Text>
               <Text style={s.text}>{`${trailName} ${trailLenght} km`}</Text>
             </View>
             <Pressable hitSlop={12} onPress={onDismiss}>

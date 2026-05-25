@@ -8,6 +8,7 @@ import { useAtom } from "jotai";
 import React, { RefObject, useEffect, useMemo, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { Button, Surface, Text, useTheme } from "react-native-paper";
+import { useTranslation } from "react-i18next";
 import NotAuthenticatedDialog from "../auth/not-authenticated-msg-dialog";
 import ErrorView from "../error-view";
 import LoadingIndicator from "../loading-indicator";
@@ -25,6 +26,7 @@ export default function TrailReviewsContainer({ trail, surfaceToScrollToRef, onR
   const [isReviewModalVisible, setIsReviewModalVisible] = useState(false);
   const [isAuthDialogVisible, setIsAuthDialogVisible] = useState(false);
   const theme = useTheme();
+  const { t } = useTranslation();
 
   const {
     data: reviewResponse,
@@ -78,7 +80,7 @@ export default function TrailReviewsContainer({ trail, surfaceToScrollToRef, onR
       <Surface elevation={4} mode="elevated" style={[s.surface, { backgroundColor: theme.colors.surface, gap: 10 }]}>
         <View style={{ flexDirection: "row" }}>
           <View style={s.ratingSection}>
-            <Text style={[s.title, { color: theme.colors.onSurface }]}>Recensioner</Text>
+            <Text style={[s.title, { color: theme.colors.onSurface }]}>{t("review.title")}</Text>
             <Text style={[s.ratingNumber, { color: theme.colors.tertiary }]}>{`(${totalReviewsCount})`}</Text>
           </View>
           <View style={s.iconSection}>
@@ -101,7 +103,7 @@ export default function TrailReviewsContainer({ trail, surfaceToScrollToRef, onR
             mode="elevated"
             style={[s.surface, { backgroundColor: theme.colors.surface }]}
           >
-            <Text style={{ color: theme.colors.onBackground }}>Det finns inga recensioner här ännu.</Text>
+            <Text style={{ color: theme.colors.onBackground }}>{t("review.noReviews")}</Text>
           </Surface>
         ) : (
           <>
@@ -114,7 +116,7 @@ export default function TrailReviewsContainer({ trail, surfaceToScrollToRef, onR
                 disabled={isFetchingNextPage}
                 labelStyle={{ color: theme.colors.onSurface }}
               >
-                {isFetchingNextPage ? "Laddar fler..." : "Ladda fler"}
+                {isFetchingNextPage ? t("review.loadingMore") : t("review.loadMore")}
               </Button>
             )}
           </>
@@ -123,7 +125,7 @@ export default function TrailReviewsContainer({ trail, surfaceToScrollToRef, onR
       <NotAuthenticatedDialog
         visible={isAuthDialogVisible}
         onDissmiss={() => setIsAuthDialogVisible(false)}
-        infoMessage="Du behöver vara inloggad för att skriva en recension."
+        infoMessage={t("review.notAuthReview")}
       />
     </View>
   );

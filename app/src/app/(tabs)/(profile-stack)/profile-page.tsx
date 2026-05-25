@@ -15,10 +15,12 @@ import { Image } from "expo-image";
 import { Redirect, useFocusEffect, useNavigation } from "expo-router";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import React, { useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { Text, useTheme } from "react-native-paper";
 
 export default function ProfilePageScreen() {
+  const { t } = useTranslation();
   const [{ data: user, isLoading, isError, error }] = useAtom(stigviddUserAtom);
   const setError = useSetAtom(showErrorAtom);
   const scrollViewRef = useRef<ScrollView>(null);
@@ -30,7 +32,6 @@ export default function ProfilePageScreen() {
   const { data: incoming } = useAtomValue(incomingRequestsAtom);
   const incomingCount = incoming?.length ?? 0;
 
-  // Scrolla till toppen när skärmen fokuseras (vid tab-tryck)
   useFocusEffect(
     React.useCallback(() => {
       scrollViewRef.current?.scrollTo({ y: 0, animated: false });
@@ -54,10 +55,8 @@ export default function ProfilePageScreen() {
       await signOutUser();
     } catch (e) {
       console.log(e);
-      setError("Kunde inte logga ut.");
+      setError(t("auth.couldNotLogout"));
     }
-    // Reset the entire tab navigator to only the auth/login screen,
-    // clearing all tab history and nested stack history.
     navigation.getParent()?.dispatch(
       CommonActions.reset({
         index: 0,
@@ -68,7 +67,7 @@ export default function ProfilePageScreen() {
 
   return (
     <ScrollView ref={scrollViewRef} contentContainerStyle={[s.container, { backgroundColor: theme.colors.background }]}>
-      <Text style={s.topTitle}>Mitt Stigvidd</Text>
+      <Text style={s.topTitle}>{t("profile.title")}</Text>
       <View style={s.userInfoContainer}>
         <Image
           source={
@@ -88,57 +87,57 @@ export default function ProfilePageScreen() {
       </View>
       <View style={s.pressableChoicesContainer}>
         <ProfileMenuItem
-          text="Mina vänner"
+          text={t("profile.friends")}
           route="/(tabs)/(profile-stack)/user/friends"
           icon={<MaterialCommunityIcons name="account-group" size={30} color={theme.colors.tertiary} />}
           badge={incomingCount}
         />
         <ProfileMenuItem
-          text="Favoriter"
+          text={t("profile.favorites")}
           route="/(tabs)/(profile-stack)/user/favorites"
           icon={<MaterialCommunityIcons name="cards-heart" size={30} color={theme.colors.tertiary} />}
         />
         <ProfileMenuItem
-          text="Vill gå"
+          text={t("profile.wishlist")}
           route="/(tabs)/(profile-stack)/user/wishlist"
           icon={<MaterialIcons name="star" size={30} color={theme.colors.tertiary} />}
         />
         <ProfileMenuItem
-          text="Skapa en promenad"
+          text={t("profile.createHike")}
           route="/(tabs)/(profile-stack)/user/create-hike"
           icon={<MaterialIcons name="hiking" size={30} color={theme.colors.tertiary} />}
         />
         <ProfileMenuItem
-          text="Mina egna promenader"
+          text={t("profile.myHikes")}
           route="/(tabs)/(profile-stack)/user/my-hikes"
           icon={<MaterialCommunityIcons name="map-legend" size={30} color={theme.colors.tertiary} />}
         />
         <ProfileMenuItem
-          text="Promenader delade med mig"
+          text={t("profile.sharedHikes")}
           route="/(tabs)/(profile-stack)/user/shared-hikes"
           icon={<Fontisto name="map" size={26} color={theme.colors.tertiary} />}
         />
         <ProfileMenuItem
-          text="Utmärkelser"
+          text={t("profile.achievements")}
           route="/(tabs)/(profile-stack)/profile-page"
           icon={<MaterialIcons name="emoji-events" size={30} color={theme.colors.tertiary} />}
         />
         <ProfileMenuItem
-          text="Statistik"
+          text={t("profile.statistics")}
           route="/(tabs)/(profile-stack)/profile-page"
           icon={<MaterialIcons name="bar-chart" size={30} color={theme.colors.tertiary} />}
         />
         <ProfileMenuItem
-          text="Om Stigvidd"
+          text={t("profile.about")}
           route="/(tabs)/(profile-stack)/about"
           icon={<MaterialIcons name="perm-device-info" size={30} color={theme.colors.tertiary} />}
         />
         <View style={s.accountActionsContainer}>
           <Pressable onPress={handleSignOut}>
-            <Text style={s.actionText}>Logga ut</Text>
+            <Text style={s.actionText}>{t("auth.logout")}</Text>
           </Pressable>
           <Pressable onPress={() => setVisible(true)}>
-            <Text style={s.actionText}>Avsluta konto</Text>
+            <Text style={s.actionText}>{t("profile.deleteAccount")}</Text>
           </Pressable>
         </View>
       </View>

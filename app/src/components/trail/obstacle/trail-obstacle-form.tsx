@@ -16,6 +16,7 @@ import * as Location from "expo-location";
 import { useSetAtom } from "jotai";
 import { useState } from "react";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 import { Dimensions, Pressable, StyleSheet, Switch, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { Button, Modal, Portal, Surface, Text, TextInput, useTheme } from "react-native-paper";
@@ -23,8 +24,8 @@ import { z } from "zod";
 
 const obstacleFields = z.object({
   description: z
-    .string({ required_error: "Ge en kort beskrivning" })
-    .min(15, "Beskrivning för kort minst 15 tecken")
+    .string({ required_error: "obstacle.descriptionRequired" })
+    .min(15, "obstacle.descriptionTooShort")
     .max(500),
   issueType: z.string().nonempty(),
   useLocation: z.boolean().optional(),
@@ -43,6 +44,7 @@ interface Props {
 }
 
 export default function TrailObstacleForm({ trailIdentifier, visible, onDismiss }: Props) {
+  const { t } = useTranslation();
   const [isLocating, setIsLocating] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
 
@@ -68,10 +70,10 @@ export default function TrailObstacleForm({ trailIdentifier, visible, onDismiss 
       queryClient.invalidateQueries({ queryKey: ["obstacles", trailIdentifier] });
       reset();
       onDismiss();
-      setSuccessMsg("Sparat! Tack för att du har rapporterat");
+      setSuccessMsg(t("obstacle.reportSuccess"));
     },
     onError: () => {
-      setErrorMsg("Någor gick fel försök igen senare");
+      setErrorMsg(t("obstacle.reportError"));
     },
   });
 
@@ -106,7 +108,6 @@ export default function TrailObstacleForm({ trailIdentifier, visible, onDismiss 
   };
 
   const handleLocationToggle = async (enabled: boolean, onChange: (val: boolean) => void) => {
-    // If switch is not set to add location set coordinates to null
     if (!enabled) {
       onChange(false);
       setValue("incidentLatitude", null);
@@ -118,34 +119,30 @@ export default function TrailObstacleForm({ trailIdentifier, visible, onDismiss 
     setIsLocating(true);
     setLocationError(null);
 
-    // Check that the user accepted location
     try {
       const { granted } = await Location.getForegroundPermissionsAsync();
 
       if (!granted) {
-        setLocationError("Platsbehörighet saknas. Aktivera i systeminställningarna.");
+        setLocationError(t("obstacle.locationPermissionMissing"));
         await ExpoLinking.openSettings();
         return;
       }
 
-      // Get user position
       const location = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.Balanced,
       });
 
-      // Check if the user is on the trail or near it.
       if (parsed.length === 0 || !isNearTrail(location.coords.latitude, location.coords.longitude, parsed)) {
-        setLocationError("Du verkar inte befinna dig på leden. Platsen kan inte bifogas.");
+        setLocationError(t("obstacle.notOnTrail"));
         return;
       }
 
-      // Save the coords
-      onChange(true); // Syncs switch state back to React Hook Form, also activates the watch
+      onChange(true);
       setValue("incidentLatitude", location.coords.latitude);
       setValue("incidentLongitude", location.coords.longitude);
     } catch (e) {
       console.log("Kunde inte hämta plats", e);
-      setLocationError("Kunde inte hämta plats, försök igen.");
+      setLocationError(t("obstacle.locationError"));
     } finally {
       setIsLocating(false);
     }
@@ -164,7 +161,7 @@ export default function TrailObstacleForm({ trailIdentifier, visible, onDismiss 
             <View style={s.header}>
               <View style={s.headerLeft}>
                 <MaterialIcons name="warning-amber" size={18} color={theme.colors.error} />
-                <Text style={s.title}>Rapportera hinder</Text>
+                <Text style={s.title}>{t("obstacle.reportTitle")}</Text>
               </View>
               <Pressable hitSlop={12} onPress={onDismiss}>
                 <MaterialIcons name="close" size={24} color={theme.colors.onSurface} />
@@ -172,13 +169,8 @@ export default function TrailObstacleForm({ trailIdentifier, visible, onDismiss 
             </View>
 
             <Surface style={s.surface}>
-              <Text style={[s.infoLabel, { color: theme.colors.onSurfaceVariant }]}>
-                Upptäcker du något som påverkar framkomligheten eller säkerheten på leden?
-              </Text>
-              <Text style={[s.infoBody, { color: theme.colors.onSurfaceVariant }]}>
-                Använd formuläret för att berätta om hinder, skador eller andra händelser längs promenaden som kan vara
-                bra för andra att känna till.
-              </Text>
+              <Text style={[s.infoLabel, { color: theme.colors.onSurfaceVariant }]}>{t("obstacle.formInfo1")}</Text>
+              <Text style={[s.infoBody, { color: theme.colors.onSurfaceVariant }]}>{t("obstacle.formInfo2")}</Text>
             </Surface>
 
             <KeyboardAwareScrollView
@@ -187,7 +179,9 @@ export default function TrailObstacleForm({ trailIdentifier, visible, onDismiss 
               contentContainerStyle={s.scrollContent}
             >
               <View style={s.fieldGroup}>
-                <Text style={[s.fieldLabel, { color: theme.colors.onSurfaceVariant }]}>Välj en kategori</Text>
+                <Text style={[s.fieldLabel, { color: theme.colors.onSurfaceVariant }]}>
+                  {t("obstacle.selectCategory")}
+                </Text>
                 {issueTypes?.length && (
                   <Controller
                     control={control}
@@ -205,7 +199,7 @@ export default function TrailObstacleForm({ trailIdentifier, visible, onDismiss 
               </View>
               <View style={s.fieldGroup}>
                 <Text style={[s.fieldLabel, { color: theme.colors.onSurfaceVariant }]}>
-                  Lägg till en beskrivning max 500 tecken
+                  {t("obstacle.descriptionLabel")}
                 </Text>
                 <Controller
                   control={control}
@@ -219,7 +213,7 @@ export default function TrailObstacleForm({ trailIdentifier, visible, onDismiss 
                       onChangeText={onChange}
                       value={value}
                       maxLength={500}
-                      label="Beskrivning"
+                      label={t("obstacle.description")}
                       autoCapitalize="sentences"
                       multiline
                       scrollEnabled={false}
@@ -229,12 +223,12 @@ export default function TrailObstacleForm({ trailIdentifier, visible, onDismiss 
                   )}
                 />
                 {errors.description && (
-                  <Text style={[s.bold, { color: theme.colors.error }]}>{errors.description.message}</Text>
+                  <Text style={[s.bold, { color: theme.colors.error }]}>{t(errors.description.message as string)}</Text>
                 )}
               </View>
               <View style={s.locationRow}>
                 <Text style={[s.locationLabel, { color: theme.colors.onSurfaceVariant }]}>
-                  Dela din plats (valfritt)
+                  {t("obstacle.shareLocation")}
                 </Text>
                 <Controller
                   control={control}
@@ -251,12 +245,12 @@ export default function TrailObstacleForm({ trailIdentifier, visible, onDismiss 
                   )}
                 />
               </View>
-              {watch("useLocation") && <Text>📍 Plats kommer att bifogas</Text>}
+              {watch("useLocation") && <Text>{t("obstacle.locationAttached")}</Text>}
               {locationError && <Text style={[s.bold, { color: theme.colors.error }]}>{locationError}</Text>}
             </KeyboardAwareScrollView>
 
             <Button onPress={handleSubmit(onSubmit)} mode="contained" style={s.button} disabled={isPending}>
-              {isPending ? "Skickar..." : "Skicka"}
+              {isPending ? t("common.sending") : t("common.send")}
             </Button>
           </View>
         </View>

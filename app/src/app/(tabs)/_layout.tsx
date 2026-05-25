@@ -5,9 +5,11 @@ import { Tabs, usePathname } from "expo-router";
 import { useAtomValue } from "jotai";
 import { View } from "react-native";
 import { useTheme } from "react-native-paper";
+import { useTranslation } from "react-i18next";
 
 export default function TabsLayout() {
   const theme = useTheme();
+  const { t } = useTranslation();
   const pathname = usePathname();
   const { data: incoming } = useAtomValue(incomingRequestsAtom);
   const incomingCount = incoming?.length ?? 0;
@@ -36,7 +38,7 @@ export default function TabsLayout() {
         <Tabs.Screen
           name="(home)"
           options={{
-            title: "Start",
+            title: t("tabs.home"),
             tabBarIcon: ({ focused }) =>
               focused ? (
                 <Ionicons name="home" size={30} color={theme.colors.onTertiaryContainer} />
@@ -48,7 +50,7 @@ export default function TabsLayout() {
         <Tabs.Screen
           name="map"
           options={{
-            title: "Karta",
+            title: t("tabs.map"),
             tabBarIcon: ({ focused }) =>
               focused ? (
                 <FontAwesome name="map" size={28} color={theme.colors.onTertiaryContainer} />
@@ -60,7 +62,7 @@ export default function TabsLayout() {
         <Tabs.Screen
           name="(trails-tab)"
           options={{
-            title: "Vandring",
+            title: t("tabs.trails"),
             tabBarIcon: ({ focused }) =>
               focused ? (
                 <Ionicons name="trail-sign-sharp" size={30} color={theme.colors.onTertiaryContainer} />
@@ -72,7 +74,7 @@ export default function TabsLayout() {
         <Tabs.Screen
           name="(profile-stack)"
           options={{
-            title: "Profil",
+            title: t("tabs.profile"),
             tabBarIcon: ({ focused }) =>
               focused ? (
                 <MaterialCommunityIcons name="account-box" size={30} color={theme.colors.onTertiaryContainer} />

@@ -7,46 +7,7 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useState } from "react";
 import { LayoutAnimation, Linking, Platform, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { Divider, Text, useTheme } from "react-native-paper";
-
-interface Link {
-  label: string;
-  url: string;
-}
-
-const LINKS: Link[] = [
-  {
-    label: "Allemansrätten — Naturvårdsverket",
-    url: "https://www.naturvardsverket.se/allemansratten",
-  },
-  {
-    label: "Naturreservat — Naturvårdsverket",
-    url: "https://www.naturvardsverket.se/amnesomraden/skyddad-natur/olika-former-av-naturskydd/naturreservat/",
-  },
-  {
-    label: "Vett och etikett — Borås Stad",
-    url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/vettochallemansratt.4.1601545718c38a990ab44564.html",
-  },
-  {
-    label: "Tillgängligt friluftsliv — Borås Stad ",
-    url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/tillgangligtfriluftslivochtillganglignatur.4.6ef5a1031900c68011c55207.html",
-  },
-  {
-    label: "Friluftsliv & natur — Borås Stad",
-    url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur.4.1601545718c38a990ab4455a.html",
-  },
-  {
-    label: "Vandringsleder — Borås.com",
-    url: "https://www.boras.com/lista/vandringsleder/",
-  },
-  {
-    label: "SMHI — väderprognos",
-    url: "https://www.smhi.se/",
-  },
-  {
-    label: "Friluftsfrämjandet",
-    url: "https://www.friluftsframjandet.se/",
-  },
-];
+import { useTranslation } from "react-i18next";
 
 interface AccordionProps {
   icon: React.ReactNode;
@@ -105,7 +66,10 @@ function AccordionSection({ icon, title, summary, children, defaultOpen = false 
 
 export default function GuideScreen() {
   const theme = useTheme();
+  const { t } = useTranslation();
   const cardText = theme.colors.onSurface;
+
+  const links = t("guide.links", { returnObjects: true }) as { label: string; url: string }[];
 
   return (
     <View style={[s.screen, { backgroundColor: theme.colors.background }]}>
@@ -113,92 +77,80 @@ export default function GuideScreen() {
         <View style={s.header}>
           <BackButton />
           <Text variant="headlineMedium" style={[s.pageTitle, { color: theme.colors.primary }]}>
-            Naturguide
+            {t("guide.title")}
           </Text>
         </View>
         <View style={s.content}>
           <AccordionSection
             icon={<MaterialCommunityIcons name="walk" size={18} color={theme.colors.primary} />}
-            title="Allemansrätten"
-            summary="Rätten att röra sig fritt i naturen"
+            title={t("guide.allemansrattenTitle")}
+            summary={t("guide.allemansrattenSummary")}
             defaultOpen
           >
+            <Text style={[s.bodyText, { color: cardText }]}>{t("guide.allemansrattenBody1")}</Text>
             <Text style={[s.bodyText, { color: cardText }]}>
-              Allemansrätten är en unik svensk lag som ger alla rätt att vistas i naturen, oavsett vem som äger marken.
-              Med den rätten följer också ett ansvar: att inte störa och inte förstöra.
+              <Text style={[s.bold, { color: cardText }]}>{t("guide.allemansrattenMayBold")} </Text>
+              {t("guide.allemansrattenMay")}
             </Text>
             <Text style={[s.bodyText, { color: cardText }]}>
-              <Text style={[s.bold, { color: cardText }]}>Du får </Text>
-              vandra, cykla och rida nästan överallt i naturen, och du får övernatta ett par nätter utomhus. Du får
-              plocka bär, svamp och blommor som inte är fridlysta.
+              <Text style={[s.bold, { color: cardText }]}>{t("guide.allemansrattenMayNotBold")} </Text>
+              {t("guide.allemansrattenMayNot")}
             </Text>
             <Text style={[s.bodyText, { color: cardText }]}>
-              <Text style={[s.bold, { color: cardText }]}>Du får inte </Text>
-              gå in i privata trädgårdar, köra motorfordon på barmark, skada träd eller buskar, eller övernatta på samma
-              plats mer än ett par nätter. Vid torka kan länsstyrelsen eller kommunen utfärda eldningsförbud. Håll
-              alltid koll på om sådant råder i området.
-            </Text>
-            <Text style={[s.bodyText, { color: cardText }]}>
-              <Text style={[s.bold, { color: cardText }]}>Hund </Text>
-              ska hållas kopplad 1 mars–20 augusti så att vilda djur inte störs under sin reproduktionstid.
+              <Text style={[s.bold, { color: cardText }]}>{t("guide.allemansrattenDogBold")} </Text>
+              {t("guide.allemansrattenDog")}
             </Text>
           </AccordionSection>
 
           <AccordionSection
             icon={<MaterialCommunityIcons name="shield-check-outline" size={18} color={theme.colors.primary} />}
-            title="Naturreservat"
-            summary="Skyddade områden med egna föreskrifter"
+            title={t("guide.naturreservatTitle")}
+            summary={t("guide.naturreservatSummary")}
           >
+            <Text style={[s.bodyText, { color: cardText }]}>{t("guide.naturreservatBody1")}</Text>
             <Text style={[s.bodyText, { color: cardText }]}>
-              Ett naturreservat är ett område som skyddas av lag för att bevara värdefull natur eller ge människor
-              möjlighet till friluftsliv. Beslut fattas av länsstyrelsen eller kommunen.
+              {t("guide.naturreservatRulesPrefix")}
+              <Text style={[s.bold, { color: cardText }]}>{t("guide.naturreservatRulesBold")}</Text>
+              {t("guide.naturreservatRulesSuffix")}
             </Text>
             <Text style={[s.bodyText, { color: cardText }]}>
-              Varje reservat har <Text style={[s.bold, { color: cardText }]}>egna föreskrifter</Text> som kan vara
-              strängare än allemansrätten. Läs alltid skyltarna vid ingången. De gäller framför allt för eldning,
-              tältning, hundar och motorfordon.
-            </Text>
-            <Text style={[s.bodyText, { color: cardText }]}>
-              Det är alltid förbjudet att{" "}
-              <Text style={[s.bold, { color: cardText }]}>skada träd, buskar eller mark</Text>, och att ta med sig jord,
-              sten eller andra naturmaterial från reservatet.
+              {t("guide.naturreservatForbidPrefix")}
+              <Text style={[s.bold, { color: cardText }]}>{t("guide.naturreservatForbidBold")}</Text>
+              {t("guide.naturreservatForbidSuffix")}
             </Text>
           </AccordionSection>
 
           <AccordionSection
             icon={<MaterialCommunityIcons name="wheelchair-accessibility" size={18} color={theme.colors.primary} />}
-            title="Tillgänglighet"
-            summary="Vad tillgänglighetsanpassad innebär i appen"
+            title={t("guide.accessibilityGuideTitle")}
+            summary={t("guide.accessibilityGuideSummary")}
           >
             <Text style={[s.bodyText, { color: cardText }]}>
-              I appen är leder märkta som <Text style={[s.bold, { color: cardText }]}>tillgänglighetsanpassade</Text> om
-              de är framkomliga med rullstol, rollator eller barnvagn. Det innebär jämnt och fast underlag med begränsad
-              lutning och tillräcklig bredd.
+              {t("guide.accessibilityGuideBody1Prefix")}
+              <Text style={[s.bold, { color: cardText }]}>{t("guide.accessibilityGuideBody1Bold")}</Text>
+              {t("guide.accessibilityGuideBody1Suffix")}
             </Text>
+            <Text style={[s.bodyText, { color: cardText }]}>{t("guide.accessibilityGuideBody2")}</Text>
             <Text style={[s.bodyText, { color: cardText }]}>
-              På vissa platser finns även anpassade rastplatser, ramper, parkeringar för rörelsehindrade eller
-              tillgänglig toalett. Vad som erbjuds på varje enskild led framgår av ledens informationssida.
-            </Text>
-            <Text style={[s.bodyText, { color: cardText }]}>
-              Leder som <Text style={[s.bold, { color: cardText }]}>inte är tillgänglighetsanpassade</Text> utgår från
-              naturens egna förutsättningar. Underlaget kan vara ojämnt med stenar, rötter och lera, och sträckan kan
-              innehålla branta partier eller smala passager.
+              {t("guide.accessibilityGuideBody3Prefix")}
+              <Text style={[s.bold, { color: cardText }]}>{t("guide.accessibilityGuideBody3Bold")}</Text>
+              {t("guide.accessibilityGuideBody3Suffix")}
             </Text>
           </AccordionSection>
 
           <AccordionSection
             icon={<Ionicons name="trail-sign-outline" size={18} color={theme.colors.primary} />}
-            title="Svårighetsgrader"
-            summary="Lätt, medel, svår och oklassificerad"
+            title={t("guide.difficultiesGuideTitle")}
+            summary={t("guide.difficultiesGuideSummary")}
           >
             <View style={s.cardStack}>
               {DIFFICULTIES.map((item) => (
                 <View key={item.value} style={[s.difficultyCard, { borderColor: theme.colors.outlineVariant }]}>
                   <View style={s.difficultyCardHeader}>
                     {getDifficultyIcon(classificationParser(item.value))}
-                    <Text style={[s.cardLabel, { color: cardText }]}>{item.label}</Text>
+                    <Text style={[s.cardLabel, { color: cardText }]}>{t(item.label)}</Text>
                   </View>
-                  <Text style={[s.bodyText, { color: cardText }]}>{item.description}</Text>
+                  <Text style={[s.bodyText, { color: cardText }]}>{t(item.description)}</Text>
                 </View>
               ))}
             </View>
@@ -206,10 +158,10 @@ export default function GuideScreen() {
 
           <AccordionSection
             icon={<Ionicons name="book-outline" size={18} color={theme.colors.primary} />}
-            title="Läs mer"
-            summary="Externa källor och vidare läsning"
+            title={t("guide.readMoreTitle")}
+            summary={t("guide.readMoreSummary")}
           >
-            {LINKS.map(({ label, url }, index) => (
+            {links.map(({ label, url }, index) => (
               <View key={url}>
                 {index > 0 && <Divider style={{ backgroundColor: theme.colors.outlineVariant }} />}
                 <Pressable style={s.linkRow} onPress={() => Linking.openURL(url)}>
@@ -228,7 +180,7 @@ export default function GuideScreen() {
           </AccordionSection>
 
           <Text variant="bodySmall" style={[s.footer, { color: theme.colors.outline }]}>
-            Källa: Naturvårdsverket · Borås Stad · Länsstyrelsen Västra Götaland
+            {t("guide.footer")}
           </Text>
         </View>
       </ScrollView>

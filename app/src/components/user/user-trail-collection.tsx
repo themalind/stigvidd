@@ -6,6 +6,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { Platform, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { Divider, Text, useTheme } from "react-native-paper";
+import { useTranslation } from "react-i18next";
 import BackButton from "../back-button";
 import { Rating } from "../review/rating";
 
@@ -27,6 +28,7 @@ export default function UserTrailCollection({
   icon,
 }: UserTrailCollectionProps) {
   const theme = useTheme();
+  const { t } = useTranslation();
   return (
     <View style={[s.wrapper, { backgroundColor: theme.colors.background }]}>
       <ScrollView
@@ -43,7 +45,7 @@ export default function UserTrailCollection({
           <Divider bold={true} />
           <View style={[s.infoBox, { backgroundColor: theme.colors.outlineVariant }]}>
             {description && <Text style={s.infoDescription}>{description}</Text>}
-            <Text>Tryck på ett spår för mer info. Tryck på X för att ta bort.</Text>
+            <Text>{t("collection.tapInfo")}</Text>
           </View>
           {trails?.length ? (
             trails?.map((trail) => (

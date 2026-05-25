@@ -4,6 +4,7 @@ import * as Location from "expo-location";
 import { getDistance } from "geolib";
 import { useSetAtom } from "jotai";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { AppState } from "react-native";
 import {
   LOCATION_TASK_NAME,
@@ -26,6 +27,7 @@ const MIN_SEGMENT_DISTANCE = 10;
 const POLL_INTERVAL = 2000;
 
 export function useLocationTracking() {
+  const { t } = useTranslation();
   const setError = useSetAtom(showErrorAtom);
   // Holds the setInterval handle for the polling loop
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -86,7 +88,7 @@ export function useLocationTracking() {
     // Foreground permission is always required
     const { status: fgPermission } = await Location.requestForegroundPermissionsAsync();
     if (fgPermission !== "granted") {
-      setError("Permission to access location was denied.");
+      setError(t("createHike.fgPermissionDenied"));
       return;
     }
 
@@ -94,7 +96,7 @@ export function useLocationTracking() {
     if (!__DEV__) {
       const { status: bgPermission } = await Location.requestBackgroundPermissionsAsync();
       if (bgPermission !== "granted") {
-        setError("Permission to access background location was denied.");
+        setError(t("createHike.bgPermissionDenied"));
         return;
       }
     }
@@ -128,7 +130,7 @@ export function useLocationTracking() {
         // Shows a persistent notification so Android keeps the app alive in the background
         foregroundService: {
           notificationTitle: "Stigvidd",
-          notificationBody: "Spelar in vandring...",
+          notificationBody: t("createHike.notificationBody"),
         },
       });
     }

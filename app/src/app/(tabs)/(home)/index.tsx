@@ -13,10 +13,12 @@ import { useAtomValue } from "jotai";
 import React, { useRef } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useTheme } from "react-native-paper";
+import { useTranslation } from "react-i18next";
 
 export default function HomeScreen() {
   const scrollViewRef = useRef<ScrollView>(null);
   const theme = useTheme();
+  const { t } = useTranslation();
   const userLocation = useAtomValue(userLocationAtom);
   const locationResolved = useAtomValue(locationResolvedAtom);
   const query = useQuery({
@@ -37,7 +39,7 @@ export default function HomeScreen() {
       <HeroBanner lat={userLocation?.latitude} lon={userLocation?.longitude} />
       <View style={[s.section, { backgroundColor: theme.colors.background }]}>
         <View style={s.sectionHeader}>
-          <Text style={[s.sectionTitle, { color: theme.colors.onBackground }]}>Populära promenader nära dig</Text>
+          <Text style={[s.sectionTitle, { color: theme.colors.onBackground }]}>{t("home.popularNearYou")}</Text>
         </View>
         {query.data ? <PagerCarousel data={query.data} /> : <PagerCarouselSkeleton />}
       </View>
@@ -46,9 +48,9 @@ export default function HomeScreen() {
         <Pressable style={[s.guideCard, s.halfCard]} onPress={() => router.push("/(tabs)/(settings)/guide")}>
           <Image source={require("../../../assets/images/guide_cover.jpg")} style={s.cardImage} contentFit="cover" />
           <View style={[s.cardText, { backgroundColor: theme.colors.surface }]}>
-            <Text style={[s.cardTitle, { color: theme.colors.onSurface }]}>Naturguide</Text>
+            <Text style={[s.cardTitle, { color: theme.colors.onSurface }]}>{t("home.guide")}</Text>
             <Text style={[s.cardSubtitle, { color: theme.colors.onSurfaceVariant }]} numberOfLines={1}>
-              Allemansrätt · Svårighetsgrader
+              {t("home.guideSubtitle")}
             </Text>
           </View>
         </Pressable>
@@ -84,8 +86,8 @@ export default function HomeScreen() {
             </View>
           </View>
           <View style={[s.cardText, { backgroundColor: theme.colors.surface }]}>
-            <Text style={[s.cardTitle, { color: theme.colors.onSurface }]}>Utforska Borås</Text>
-            <Text style={[s.cardSubtitle, { color: theme.colors.onSurfaceVariant }]}>Rya åsar · Kype · m.fl.</Text>
+            <Text style={[s.cardTitle, { color: theme.colors.onSurface }]}>{t("home.explore")}</Text>
+            <Text style={[s.cardSubtitle, { color: theme.colors.onSurfaceVariant }]}>{t("home.exploreSubtitle")}</Text>
           </View>
         </Pressable>
       </View>
@@ -93,7 +95,7 @@ export default function HomeScreen() {
       <View style={[s.section, s.newsSection, { backgroundColor: theme.colors.surface }]}>
         <View style={s.sectionHeader}>
           <Ionicons name="newspaper-outline" size={20} color={theme.colors.onSurface} />
-          <Text style={[s.sectionTitle, { color: theme.colors.onSurface }]}>Nyheter</Text>
+          <Text style={[s.sectionTitle, { color: theme.colors.onSurface }]}>{t("home.news")}</Text>
         </View>
         <MockNews />
       </View>

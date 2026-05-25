@@ -11,6 +11,7 @@ import { useAtomValue, useSetAtom } from "jotai";
 import { stigviddUserAtom } from "@/atoms/user-atoms";
 import { useEffect, useMemo, useRef } from "react";
 import { Controller, useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 import { Pressable, StyleSheet, View } from "react-native";
 import MapView, { LatLng, Polyline } from "react-native-maps";
 import { Divider, Surface, Text, TextInput, useTheme } from "react-native-paper";
@@ -26,6 +27,7 @@ type SaveHikeFormData = {
 };
 
 export default function SaveHikeForm({ hike, onDismiss, onSaveSuccess }: Props) {
+  const { t } = useTranslation();
   const theme = useTheme();
   const setErrorMsg = useSetAtom(showErrorAtom);
   const mapRef = useRef<MapView>(null);
@@ -41,7 +43,7 @@ export default function SaveHikeForm({ hike, onDismiss, onSaveSuccess }: Props) 
       router.replace("/(tabs)/(profile-stack)/user/my-hikes");
     },
     onError: () => {
-      setErrorMsg("Något gick fel försök igen senare.");
+      setErrorMsg(t("hike.errorSaving"));
     },
   });
 
@@ -108,7 +110,7 @@ export default function SaveHikeForm({ hike, onDismiss, onSaveSuccess }: Props) 
             onChangeText={onChange}
             onBlur={onBlur}
             value={value}
-            label="Promenadnamn"
+            label={t("hike.name")}
             mode="outlined"
           />
         )}
@@ -118,7 +120,7 @@ export default function SaveHikeForm({ hike, onDismiss, onSaveSuccess }: Props) 
           maxLength: 60,
         }}
       />
-      {errors.hikeName && <Text style={s.errorText}>Ange ett promenadnamn</Text>}
+      {errors.hikeName && <Text style={s.errorText}>{t("hike.nameRequired")}</Text>}
 
       <View style={s.summary}>
         <View style={s.Left}>
@@ -147,12 +149,12 @@ export default function SaveHikeForm({ hike, onDismiss, onSaveSuccess }: Props) 
       <View style={s.actions}>
         <View style={s.Left}>
           <Pressable style={s.action} disabled={isPending} onPress={onDismiss}>
-            <Text>Gå tillbaka</Text>
+            <Text>{t("hike.goBack")}</Text>
           </Pressable>
         </View>
         <View style={s.Right}>
           <Pressable style={s.action} disabled={isPending} onPress={openDialogIfValid}>
-            <Text>Bekräfta</Text>
+            <Text>{t("hike.confirm")}</Text>
           </Pressable>
         </View>
       </View>
@@ -161,10 +163,7 @@ export default function SaveHikeForm({ hike, onDismiss, onSaveSuccess }: Props) 
 }
 
 const s = StyleSheet.create({
-  inputText: {
-    // borderRadius: BORDER_RADIUS,
-    // marginTop: 10,
-  },
+  inputText: {},
   errorText: {
     color: "#e00",
     alignSelf: "flex-start",

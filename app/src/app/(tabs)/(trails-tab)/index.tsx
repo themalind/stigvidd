@@ -15,9 +15,11 @@ import { useAtom, useAtomValue } from "jotai";
 import React, { useCallback, useRef, useState } from "react";
 import { Appearance, FlatList, Pressable, RefreshControl, StyleSheet, View } from "react-native";
 import { Text, TextInput, useTheme } from "react-native-paper";
+import { useTranslation } from "react-i18next";
 
 export default function TrailsScreen() {
   const theme = useTheme();
+  const { t } = useTranslation();
   const listRef = useRef<FlatList>(null);
   const [userTheme] = useAtom(userThemeAtom);
   const userLocation = useAtomValue(userLocationAtom);
@@ -82,18 +84,18 @@ export default function TrailsScreen() {
         <View style={s.headerRow}>
           <View style={s.titleRow}>
             <Image contentFit="contain" source={hikers} style={s.hikers} />
-            <Text style={[s.titleText, { color: theme.colors.onBackground }]}>Vandringsleder</Text>
+            <Text style={[s.titleText, { color: theme.colors.onBackground }]}>{t("trailList.title")}</Text>
           </View>
           <Pressable onPress={() => setFilterModalVisible(true)}>
             <View style={[s.filterButtonInner, { backgroundColor: theme.colors.primary }]}>
               <MaterialIcons name="filter-list" size={24} color={theme.colors.onPrimary} />
-              <Text style={[s.filterButtonText, { color: theme.colors.onPrimary }]}>Filtrera</Text>
+              <Text style={[s.filterButtonText, { color: theme.colors.onPrimary }]}>{t("trailList.filter")}</Text>
             </View>
           </Pressable>
         </View>
         <TextInput
           mode="outlined"
-          placeholder="Sök efter led eller ort..."
+          placeholder={t("trailList.search")}
           value={searchQuery}
           onChangeText={setSearchQuery}
           left={<TextInput.Icon icon="magnify" />}
@@ -106,12 +108,10 @@ export default function TrailsScreen() {
           }}
         />
         <View style={s.filterContainer}>
-          <Text style={s.resultText}>
-            Visar {filteredCount} av {totalCount} leder
-          </Text>
+          <Text style={s.resultText}>{t("trailList.showing", { count: filteredCount, total: totalCount })}</Text>
           {Object.values(filters).some((v) => v !== undefined) || searchQuery ? (
             <Pressable onPress={clearFilters}>
-              <Text style={[s.clearFilters, { color: theme.colors.tertiary }]}>Rensa filter</Text>
+              <Text style={[s.clearFilters, { color: theme.colors.tertiary }]}>{t("trailList.clearFilters")}</Text>
             </Pressable>
           ) : null}
         </View>
@@ -132,18 +132,18 @@ export default function TrailsScreen() {
             refreshing={isFetching}
             onRefresh={onRefresh}
             tintColor="#007AFF"
-            title="Uppdaterar leder..."
+            title={t("trailList.refreshing")}
           />
         }
         ListEmptyComponent={
           <View style={s.emptyContainer}>
-            <Text style={s.emptyText}>Inga leder hittades</Text>
-            <Text style={s.emptySubtext}>Prova att ändra dina filter</Text>
+            <Text style={s.emptyText}>{t("trailList.noResults")}</Text>
+            <Text style={s.emptySubtext}>{t("trailList.noResultsHint")}</Text>
           </View>
         }
         ListFooterComponent={
           <Pressable style={s.backToTop} onPress={onPressScrollToTop}>
-            <Text style={[s.text, { color: theme.colors.secondary }]}>Tillbaka till toppen</Text>
+            <Text style={[s.text, { color: theme.colors.secondary }]}>{t("trail.backToTop")}</Text>
           </Pressable>
         }
       />

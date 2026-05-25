@@ -5,6 +5,7 @@ import { BlurView } from "expo-blur";
 import { Dimensions, Pressable, StyleSheet, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { Icon, Modal, Portal, Text, useTheme } from "react-native-paper";
+import { useTranslation } from "react-i18next";
 
 interface Props {
   visible: boolean;
@@ -15,6 +16,7 @@ const { height } = Dimensions.get("screen");
 
 export default function AccesibilityInfoModal({ visible, onDismiss }: Props) {
   const theme = useTheme();
+  const { t } = useTranslation();
 
   return (
     <Portal>
@@ -36,7 +38,7 @@ export default function AccesibilityInfoModal({ visible, onDismiss }: Props) {
                 <View style={[s.headerIconCircle, { borderColor: theme.colors.primary }]}>
                   <Icon size={20} source="human-handsup" color={theme.colors.tertiary} />
                 </View>
-                <Text style={s.title}>Tillgänglighet</Text>
+                <Text style={s.title}>{t("trail.accessibilityTitle")}</Text>
               </View>
               <Pressable hitSlop={16} onPress={onDismiss}>
                 <Icon source="close" size={20} color={theme.colors.onSurface} />
@@ -44,7 +46,9 @@ export default function AccesibilityInfoModal({ visible, onDismiss }: Props) {
             </View>
 
             {ACCESSIBILITY_INFO.map((info) => {
-              const paragraphs = info.description.split("\n").filter((p) => p.trim().length > 0);
+              const paragraphs = t(info.description)
+                .split("\n")
+                .filter((p) => p.trim().length > 0);
 
               return (
                 <View
@@ -59,7 +63,7 @@ export default function AccesibilityInfoModal({ visible, onDismiss }: Props) {
                 >
                   <View style={s.infoHeader}>
                     <MaterialCommunityIcons name={info.iconName} size={24} color={theme.colors.primary} />
-                    <Text style={s.infoLabel}>{info.title}</Text>
+                    <Text style={s.infoLabel}>{t(info.title)}</Text>
                   </View>
                   {paragraphs.map((paragraph, i) => (
                     <Text key={i} style={[s.infoBody, i > 0 && s.infoBodySpacing]}>

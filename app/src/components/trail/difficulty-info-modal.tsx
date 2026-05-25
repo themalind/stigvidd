@@ -6,6 +6,7 @@ import { BlurView } from "expo-blur";
 import { Dimensions, Pressable, StyleSheet, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { Icon, Modal, Portal, Text, useTheme } from "react-native-paper";
+import { useTranslation } from "react-i18next";
 
 interface Props {
   difficulty: number;
@@ -17,6 +18,7 @@ const { height } = Dimensions.get("screen");
 
 export default function DifficultyInfoModal({ difficulty, visible, onDismiss }: Props) {
   const theme = useTheme();
+  const { t } = useTranslation();
   const modalStyle = [s.modalContainerStyle, { backgroundColor: theme.colors.surface }];
 
   return (
@@ -31,7 +33,7 @@ export default function DifficultyInfoModal({ difficulty, visible, onDismiss }: 
         >
           <View style={s.content}>
             <View style={s.header}>
-              <Text style={s.title}>Svårighetsgrader</Text>
+              <Text style={s.title}>{t("trail.difficultiesTitle")}</Text>
               <Pressable hitSlop={16} onPress={onDismiss}>
                 <Icon source="close" size={20} color={theme.colors.onSurface} />
               </Pressable>
@@ -52,9 +54,9 @@ export default function DifficultyInfoModal({ difficulty, visible, onDismiss }: 
                 >
                   <View style={s.classificationIcon}>
                     {getDifficultyIcon(classificationParser(item.value))}
-                    <Text style={s.infoLabel}>{item.label}</Text>
+                    <Text style={s.infoLabel}>{t(item.label)}</Text>
                   </View>
-                  <Text style={s.infoBody}>{item.description}</Text>
+                  <Text style={s.infoBody}>{t(item.description)}</Text>
                 </View>
               );
             })}

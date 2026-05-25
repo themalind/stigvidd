@@ -2,8 +2,10 @@ import { createReview } from "@/api/reviews";
 import { showErrorAtom, showSuccessAtom } from "@/atoms/snackbar-atoms";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSetAtom } from "jotai";
+import { useTranslation } from "react-i18next";
 
 export function useCreateReview(onSuccess: () => void) {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const setSuccess = useSetAtom(showSuccessAtom);
   const setError = useSetAtom(showErrorAtom);
@@ -35,16 +37,16 @@ export function useCreateReview(onSuccess: () => void) {
         queryClient.invalidateQueries({
           queryKey: ["reviews", variables.trailIdentifier],
         });
-        setSuccess("Recensionen har lagts till");
+        setSuccess(t("review.added"));
         onSuccess();
       } else {
         console.error("Error creating review");
-        setError("Kunde inte spara recensionen");
+        setError(t("review.saveError"));
       }
     },
     onError: (error) => {
       console.error("Error creating review: ", error);
-      setError("Kunde inte spara recensionen");
+      setError(t("review.saveError"));
     },
   });
 }

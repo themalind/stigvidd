@@ -1,0 +1,987 @@
+{
+  "common": {
+    "save": "Save",
+    "saving": "Saving...",
+    "cancel": "Cancel",
+    "close": "Close",
+    "done": "Done",
+    "confirm": "Confirm",
+    "back": "Go back",
+    "clear": "Clear",
+    "send": "Send",
+    "sending": "Sending...",
+    "all": "All",
+    "retry": "Try again",
+    "ok": "Ok",
+    "delete": "Delete",
+    "share": "Share",
+    "next": "Next",
+    "select": "Select..."
+  },
+  "auth": {
+    "login": "Log in",
+    "loggingIn": "Logging in...",
+    "register": "Create account",
+    "registering": "Creating account...",
+    "logout": "Log out",
+    "deleteAccount": "Delete account",
+    "deletingAccount": "Deleting...",
+    "forgotPassword": "Forgot your password?",
+    "resetHere": "Reset here.",
+    "resetPassword": "Reset your password",
+    "notMember": "Not a member?",
+    "createAccountHere": "Create an account here.",
+    "alreadyMember": "Already a member?",
+    "loginHere": "Log in here.",
+    "nickname": "Nickname",
+    "email": "Email",
+    "password": "Password",
+    "repeatPassword": "Repeat Password",
+    "enterPassword": "Enter password",
+    "enterEmail": "Enter email",
+    "checkEmail": "Check your email! Also look in your spam folder.",
+    "checkSpam": "Didn't receive an email? Check your spam folder!",
+    "enterYourPassword": "Enter your password",
+    "confirmDeleteAccount": "Are you sure you want to delete your account?",
+    "deleteAccountWarning": "ALL your data will be permanently deleted!",
+    "nicknameTakenMsg": "Nickname already taken",
+    "unknownError": "An unexpected error occurred",
+    "couldNotLogout": "Could not log out.",
+    "notLoggedIn": "You are not logged in",
+    "goToLogin": "Log in",
+    "validation": {
+      "nicknameRequired": "Enter a username",
+      "nicknameTooLong": "Name too long. Max 20 characters",
+      "nicknameInvalidChars": "Only a–z, 0–9, _ and - are allowed",
+      "nicknameTaken": "Nickname already taken!",
+      "emailRequired": "You must enter an email",
+      "emailInvalid": "Enter a valid email",
+      "passwordRequired": "Enter a password",
+      "passwordTooShort": "Password must be at least 8 characters",
+      "passwordMismatch": "Passwords do not match",
+      "confirmPasswordRequired": "Repeat password"
+    }
+  },
+  "profile": {
+    "title": "My Stigvidd",
+    "friends": "My friends",
+    "favorites": "Favorites",
+    "wishlist": "Wishlist",
+    "createHike": "Create a walk",
+    "myHikes": "My own walks",
+    "sharedHikes": "Walks shared with me",
+    "achievements": "Achievements",
+    "statistics": "Statistics",
+    "about": "About Stigvidd",
+    "deleteAccount": "Delete account"
+  },
+  "filter": {
+    "title": "Filter & Sort",
+    "clear": "Clear",
+    "done": "Done",
+    "city": "Cities",
+    "allCities": "All cities",
+    "accessibility": "Accessibility",
+    "adapted": "Adapted",
+    "nearMe": "Near me",
+    "all": "All",
+    "maxDistance": "Max distance: {{distance}} km",
+    "difficulty": "Difficulty",
+    "allDifficulties": "All difficulties",
+    "trailLength": "Trail length: {{min}} - {{max}} km",
+    "sortBy": "Sort by",
+    "sortNameAsc": "Name (A-Z)",
+    "sortNameDesc": "Name (Z-A)",
+    "sortLengthAsc": "Length (Shortest first)",
+    "sortLengthDesc": "Length (Longest first)",
+    "sortNearest": "Nearest first"
+  },
+  "review": {
+    "added": "Review added",
+    "saveError": "Could not save the review",
+    "deleted": "Review deleted",
+    "deleteError": "Could not delete the review",
+    "rating": "Choose a rating *",
+    "ratingTitle": "Give a rating ⭐️⭐️",
+    "ratingQuestion": "How satisfied are you with the walk?",
+    "ratingInstruction": "Give up to 5 stars!",
+    "addImage": "Add image (optional)",
+    "addImageTitle": "Add images",
+    "addImageInfo1": "Show us your walking adventures!",
+    "addImageInfo2": "Feel free to add photos from the walk, but avoid images that may be offensive or inappropriate.",
+    "addImageInfo3": "Max 3 images per walk.",
+    "writeReview": "Write a review or comment",
+    "writeReviewTitle": "Write something",
+    "writeReviewInfo1": "Tell us about the walk!",
+    "writeReviewInfo2": "Write a comment or review about your experiences. Remember to keep the text friendly and respectful.",
+    "reviewLabel": "Review",
+    "createTitle": "Write a review",
+    "deleteTitle": "Delete review",
+    "deleteConfirm": "Are you sure you want to delete your review?",
+    "notAuthReview": "You need to be logged in to write a review.",
+    "notAuthRating": "You need to be logged in to add a review.",
+    "noReviews": "There are no reviews yet.",
+    "loadMore": "Load more",
+    "loadingMore": "Loading more...",
+    "title": "Reviews",
+    "rate": "Rate"
+  },
+  "trail": {
+    "classification": {
+      "notClassified": "Not classified",
+      "easy": "Easy",
+      "medium": "Medium",
+      "hard": "Hard"
+    },
+    "info": "Information",
+    "marking": "Marking",
+    "length": "Length",
+    "difficulty": "Difficulty",
+    "accessibility": "Accessibility",
+    "adapted": "Adapted",
+    "notAdapted": "Not adapted",
+    "variation": "Variation",
+    "description": "Description",
+    "readReviews": "Read reviews",
+    "backToTop": "Back to top",
+    "loadingMap": "Loading map...",
+    "practicalInfo": "Practical information",
+    "detailedDescription": "Detailed description",
+    "links": "Links",
+    "difficultiesTitle": "Difficulty levels",
+    "accessibilityTitle": "Accessibility",
+    "difficulties": {
+      "easy": {
+        "label": "Easy",
+        "description": "Trails with an easy difficulty level can be navigated with a pram. The surface is mostly hard-paved."
+      },
+      "medium": {
+        "label": "Medium",
+        "description": "Medium difficulty trails often follow minor roads and natural paths. In normal weather conditions no hiking boots are required, and the elevation change is manageable for an average person."
+      },
+      "hard": {
+        "label": "Hard",
+        "description": "A hard difficulty trail often follows natural paths. It includes sections with significant elevation changes or steep passages, requiring good fitness and proper hiking boots."
+      },
+      "unclassified": {
+        "label": "Not classified",
+        "description": "No official classification available."
+      }
+    },
+    "accessibilityInfo": {
+      "adapted": {
+        "title": "Accessibility adapted",
+        "description": "Adapted places are accessible to everyone, so that more people can enjoy outdoor activities regardless of physical ability. The surface is even and firm, the gradient is limited and the width is sufficient for a wheelchair, walker or pram.\n\nAvailable facilities vary – there may be benches, adapted rest areas and barbecue spots, a ramp or beach chair at water, an accessible toilet or parking for people with disabilities. The app shows which places are accessibility adapted and what is available at each one."
+      },
+      "notAdapted": {
+        "title": "Not accessibility adapted",
+        "description": "A place or trail that is not accessibility adapted follows natural terrain. The surface may be uneven with stones, roots, mud or sand, and the route may include slopes, steps, narrow passages or boardwalks.\n\nThe app provides information about each destination and the difficulty level for trails."
+      }
+    }
+  },
+  "obstacle": {
+    "warningTitle": "Obstacles reported along the trail!",
+    "modalTitle": "Reported obstacles",
+    "modalInfo": "Obstacles reported along the trail are shown here.",
+    "modalBody": "Please help by marking an obstacle as resolved if it has been fixed. You do this by pressing the checkmark icon (✓) on the obstacle you want to mark. The warning is removed after 3 confirmations or 30 days.",
+    "report": "Report",
+    "reportTitle": "Report obstacle",
+    "notAuthMessage": "You need to be logged in to report an incident.",
+    "formInfo1": "Have you noticed something that affects accessibility or safety on the trail?",
+    "formInfo2": "Use the form to describe obstacles, damage, or other incidents along the trail that others should know about.",
+    "selectCategory": "Select a category",
+    "description": "Description",
+    "descriptionLabel": "Add a description, max 500 characters",
+    "shareLocation": "Share your location (optional)",
+    "locationAttached": "📍 Location will be attached",
+    "locationPermissionMissing": "Location permission missing. Enable in system settings.",
+    "notOnTrail": "You do not appear to be on the trail. Location cannot be attached.",
+    "locationError": "Could not get location, please try again.",
+    "reportSuccess": "Saved! Thank you for reporting",
+    "reportError": "Something went wrong, please try again later",
+    "descriptionRequired": "Provide a short description",
+    "descriptionTooShort": "Description too short, minimum 15 characters",
+    "editTitle": "Edit obstacle",
+    "descriptionMax": "Description max 500 characters",
+    "category": "Category",
+    "date": "Date",
+    "deleteTitle": "Delete obstacle",
+    "deleteConfirm": "Are you sure you want to delete this report?",
+    "deleteWarning": "This action cannot be undone.",
+    "fixedTitle": "Obstacle resolved",
+    "fixedConfirm": "Do you want to mark this obstacle as resolved?",
+    "fixedInfo": "By marking as resolved you confirm the obstacle is no longer present. Do you want to continue?",
+    "undoTitle": "Remove marking",
+    "undoInfo1": "You have already marked this obstacle as resolved.",
+    "undoInfo2": "Do you want to remove your marking?",
+    "undoInfo3": "This means the obstacle will no longer count as resolved from your side.",
+    "notAuthVote": "You need to be logged in to mark an obstacle as resolved.",
+    "updated": "Updated!",
+    "updateError": "Something went wrong, please try again later",
+    "types": {
+      "FallenTree": "Fallen tree",
+      "Mud": "Muddy",
+      "Flooding": "Flooding",
+      "Shelter": "Wind shelter",
+      "FirePit": "Fire pit",
+      "Walkway": "Walkway",
+      "Signage": "Signage",
+      "Other": "Other"
+    }
+  },
+  "hike": {
+    "name": "Walk name",
+    "nameRequired": "Enter a walk name",
+    "goBack": "Go back",
+    "confirm": "Confirm",
+    "errorSaving": "Something went wrong, please try again later.",
+    "saveTitle": "Save Walk",
+    "share": "Share",
+    "delete": "Delete",
+    "deleteTitle": "Delete walk",
+    "deleteConfirm": "Do you want to delete the walk?",
+    "deleted": "Your walk has been deleted!",
+    "shared": "The walk has been shared!",
+    "alreadyHas": "The recipient already has this walk.",
+    "updateError": "Could not update the walk",
+    "genericError": "Something went wrong, please try again later.",
+    "cannotShareWithCreator": "You cannot share a walk with its creator.",
+    "shareWithFriend": "Share with a friend",
+    "noFriendsToShare": "You have no friends to share with.",
+    "back": "Back",
+    "next": "Next",
+    "sharedBy": "Shared by:",
+    "date": "Date:",
+    "gettingThere": "Getting there",
+    "parking": "Parking",
+    "description": "Description",
+    "gettingThereHeading": "How to find the start of the walk",
+    "gettingThereHelp": "Describe how to get there with simple directions",
+    "gettingThereOptional": "Getting there (optional)",
+    "parkingHeading": "Is there parking nearby?",
+    "parkingHelp": "Example: There is parking at the beach, Park along the gravel road",
+    "parkingOptional": "Parking (optional)",
+    "descriptionHeading": "Description",
+    "descriptionHelp": "You can give a short description of the environment, for example.",
+    "descriptionOptional": "Description (optional)",
+    "myHikesTitle": "My saved walks",
+    "pressForInfo": "Tap a walk to see more information or delete it.",
+    "noHikes": "No saved walks",
+    "sharedHikesTitle": "Shared walks",
+    "noShared": "No shared walks yet",
+    "sharedByLabel": "Shared by: {{name}}",
+    "sharedHikeDeleted": "The walk has been deleted!",
+    "sharedHikeAlreadyHas": "The recipient already has this walk."
+  },
+  "userActions": {
+    "favorite": "Favorite",
+    "wishlist": "Wishlist",
+    "share": "Share",
+    "alreadyInList": "Trail already in the list!",
+    "errorOccurred": "An error occurred",
+    "notAuthFavorite": "You need to be logged in to add to favorites.",
+    "notAuthWishlist": "You need to be logged in to save walks.",
+    "notAuthReport": "You need to be logged in to report an incident."
+  },
+  "error": {
+    "400": { "title": "Invalid request", "message": "Something went wrong with your request." },
+    "401": { "title": "Not logged in", "message": "You must log in to continue." },
+    "403": { "title": "Access denied", "message": "You do not have permission to view this." },
+    "404": { "title": "Not found", "message": "What you are looking for no longer exists." },
+    "500": { "title": "Server error", "message": "Something went wrong on the server. Please try again later." },
+    "default": { "title": "Something went wrong", "message": "Check your internet connection and try again." },
+    "retry": "Try again"
+  },
+  "firebaseErrors": {
+    "register": {
+      "emailInUse": "Email address is already in use",
+      "invalidEmail": "Invalid email address",
+      "weakPassword": "Password is too weak (at least 6 characters)",
+      "networkFailed": "Network error. Check your connection",
+      "default": "An error occurred. Please try again"
+    },
+    "passwordReset": {
+      "invalidEmail": "Invalid email address",
+      "userNotFound": "No user with this email address exists",
+      "missingEmail": "Enter an email address",
+      "tooManyRequests": "Too many attempts. Please try again later",
+      "networkFailed": "Network error. Check your connection",
+      "default": "An error occurred. Please try again"
+    },
+    "deleteAccount": {
+      "invalidCredential": "Incorrect password",
+      "userMismatch": "Credentials do not match the logged in account",
+      "userNotFound": "Account not found",
+      "userDisabled": "This account has been disabled",
+      "tooManyRequests": "Too many attempts. Please try again later",
+      "networkFailed": "Network error. Check your connection",
+      "deleteFailed": "Could not delete account. Please try again later",
+      "default": "Something went wrong. Please try again"
+    },
+    "reauthenticate": {
+      "invalidCredential": "Incorrect password",
+      "userMismatch": "Credentials do not match the logged in account",
+      "userNotFound": "Account not found",
+      "userDisabled": "This account has been disabled",
+      "tooManyRequests": "Too many attempts. Please try again later",
+      "networkFailed": "Network error. Check your connection",
+      "invalidEmail": "Invalid email address",
+      "default": "Could not verify your credentials. Please try again"
+    },
+    "login": {
+      "userNotFound": "No user with this email address exists",
+      "wrongPassword": "Incorrect password",
+      "invalidEmail": "Invalid email address",
+      "userDisabled": "This account has been disabled",
+      "tooManyRequests": "Too many failed login attempts. Please try again later",
+      "networkFailed": "Network error. Check your connection",
+      "invalidCredential": "Incorrect email or password",
+      "operationNotAllowed": "Login with email and password is not enabled",
+      "popupClosed": "Login was cancelled",
+      "default": "An error occurred while logging in. Please try again"
+    },
+    "deleteUser": {
+      "requiresRecentLogin": "You need to log in again before you can delete your account",
+      "userNotFound": "Account not found",
+      "networkFailed": "Network error. Check your connection",
+      "tooManyRequests": "Too many attempts. Please try again later",
+      "default": "Could not delete account. Please try again"
+    }
+  },
+  "friends": {
+    "title": "Friends",
+    "search": "Search users",
+    "searchResults": "Search results",
+    "searchError": "Something went wrong with the search",
+    "noResults": "No users found",
+    "incomingTitle": "Incoming",
+    "incomingCount": "Incoming ({{count}})",
+    "incomingError": "Could not fetch requests",
+    "outgoingTitle": "Sent",
+    "outgoingCount": "Sent ({{count}})",
+    "outgoingError": "Could not fetch requests",
+    "friendsTitle": "Friends",
+    "friendsCount": "Friends ({{count}})",
+    "friendsError": "Could not fetch friends",
+    "noFriends": "You have no friends yet — search above to add someone!",
+    "showLess": "Show less",
+    "showAll": "Show all ({{count}})",
+    "removeTitle": "Remove friend",
+    "removeInfo": "You are about to end your friendship with {{name}}",
+    "removeContinue": "Do you want to continue?",
+    "remove": "Remove",
+    "retry": "Try again",
+    "requestAccepted": "Request accepted!",
+    "acceptError": "Could not accept, please try again later!",
+    "requestRejected": "Request declined",
+    "rejectError": "Something went wrong, please try again later!",
+    "requestSent": "Request sent!",
+    "sendError": "Could not send request, please try again!",
+    "friendRemoved": "Friend removed",
+    "removeError": "Could not remove friend, please try again later!"
+  },
+  "collection": {
+    "tapInfo": "Tap a trail for more info. Tap X to remove.",
+    "favorites": {
+      "title": "My favorites",
+      "description": "Here are your saved favorites.",
+      "empty": "No favorites saved yet. Go to a trail and tap the heart to add one."
+    },
+    "wishlist": {
+      "title": "Wishlist",
+      "description": "Here are walks you have saved to do.",
+      "empty": "You have no saved walks on your wishlist yet. Go to a trail and tap the plus to add one."
+    }
+  },
+  "area": {
+    "facilities": "Facilities",
+    "firePits": "Fire pits",
+    "shelters": "Wind shelters",
+    "fishing": "Fishing",
+    "swimming": "Swimming spots"
+  },
+  "areas": {
+    "dalsjofors": {
+      "location": "Dalsjöfors, approx. 10 km east of Borås",
+      "description": "Dalsjöfors has a varied landscape with both forested areas and open farmland. Adjacent to the village lies Dalsjön with a swimming spot and several hiking trails in the surroundings.",
+      "firepit": {
+        "0": "Accessibility-adapted barbecue area along Banvallen.",
+        "1": "Barbecue area with wind shelter.",
+        "2": "Barbecue area adjacent to the hiking trails at Övrarp."
+      },
+      "fishing": {
+        "0": "Fishing spot at Ankedammen.",
+        "1": "Fishing in the stream Häggån.",
+        "2": "Fishing in Stora and Lilla Dalsjön.",
+        "3": "Fishing in Lake Ås-Tolken."
+      },
+      "swimming": {
+        "0": "Swimming spot with sandy beach, pier and climbing equipment for children."
+      },
+      "naturereserv": {
+        "0": "Beech forest nature reserve of 8 hectares, established in 1982. Protected for its high natural values."
+      }
+    },
+    "ryaAsar": {
+      "location": "West of Borås city centre, Hestra–Almenäs",
+      "description": "562-hectare municipal nature reserve established in 2001 with rocky cliffs, oak forests and trails for all levels. The cultural landscape bears traces of a road that Carl von Linné walked in 1746.",
+      "firepit": {
+        "0": "Barbecue area at Fjällsjön adjacent to Björbostugan's starting point.",
+        "1": "Barbecue area on the High Plateau at Ålgårdens starting point."
+      },
+      "shelter": {
+        "0": "Wind shelter at Fjällsjön.",
+        "1": "Wind shelter on the High Plateau."
+      },
+      "fishing": {
+        "0": "Partly within the reserve boundary.",
+        "1": "Fishing in Öresjö. Drinking water source since 1932 — two-stroke engines prohibited."
+      },
+      "naturereserv": {
+        "0": "562-hectare municipal nature reserve established in 2001 with old pine forest, rocky cliffs and oak forests."
+      }
+    },
+    "kype": {
+      "location": "Northern Borås, by Lake Kypesjön",
+      "description": "Kype is an outdoor recreation area in northern Borås with hiking trails, fitness tracks, swimming and fishing. Kypegården outdoor centre offers showers, a wood-fired sauna and a café.",
+      "firepit": {
+        "0": "Barbecue area with wind shelter in Kypeskogen.",
+        "1": "Barbecue area at Inte-nudda-marken-parken at Kypegården.",
+        "2": "Barbecue area with wind shelter at the beach.",
+        "3": "Accessibility-adapted barbecue cabin at Kypesjön.",
+        "4": "Barbecue area at the sledding hill.",
+        "5": "Barbecue area at Horsatorpet in Kypeskogen.",
+        "6": "Barbecue area at Klämmabäcken in Kypeskogen.",
+        "7": "Barbecue area on Rävsrydsberget at Tosseryd."
+      },
+      "shelter": {
+        "0": "Wind shelter in Kypeskogen.",
+        "1": "Wind shelter at the beach."
+      },
+      "swimming": {
+        "0": "Municipal swimming spot with sandy beach and large pier."
+      }
+    },
+    "kransmossen": {
+      "location": "Eastern Borås, towards Gånghester",
+      "description": "Kransmossen is a large sports and recreation area with an outdoor gym, multi-sport arena, basketball court, obstacle course, pétanque court and playground. In winter there is a sledding hill and lit ski trails. An outdoor centre with showers and sauna.",
+      "firepit": {
+        "0": "Barbecue area at Fältspatsgruvan.",
+        "1": "Barbecue cabin in the Kransmossen area.",
+        "2": "Barbecue area at Lilla Häljasjö in Gånghester.",
+        "3": "Barbecue area with wind shelter at Sjölid/Mulleängen.",
+        "4": "Barbecue area with wind shelter at the sledding hill Himlabacken.",
+        "5": "Accessibility-adapted barbecue area at Kärleksängen.",
+        "6": "Barbecue area at MTB-höjden.",
+        "7": "Barbecue area at Slättholmen.",
+        "8": "Barbecue area at Äppelängen."
+      },
+      "shelter": {
+        "0": "Wind shelter at Sjölid/Mulleängen.",
+        "1": "Wind shelter at the sledding hill."
+      },
+      "fishing": {
+        "0": "Fishing in Lillån and Kransån at the Kransmossen area."
+      }
+    },
+    "almenas": {
+      "location": "Southern shore of Öresjön, near Borås city centre",
+      "description": "Almenäs is situated on the southern shore of Öresjön and is home to Borås' largest and most popular municipal swimming spot with a sandy beach, pier and swimming ramp. The area also extends to Sjöbo by the banks of Viskan with green spaces, trails and barbecue areas. An electric fence at the beach keeps wild boar away.",
+      "firepit": {
+        "0": "Barbecue area next to the beach volleyball court by the shore.",
+        "1": "Accessibility-adapted barbecue area with a hard-surfaced gravel path from the car park.",
+        "2": "Barbecue area near the bridge between Almenäs and Sjöbo.",
+        "3": "Barbecue area on the Almenäs promontory east of the beach among old pine trees.",
+        "4": "Barbecue area on the west bank of Viskan at Sjöbo.",
+        "5": "Barbecue area at Viskan next to the sports facility."
+      },
+      "fishing": {
+        "0": "Fishing for pike, perch and zander. Öresjö has been a drinking water source for Borås since 1932 — two-stroke engines are prohibited."
+      },
+      "swimming": {
+        "0": "The municipality's largest and most popular swimming spot with a sandy beach, pier and swimming ramp.",
+        "1": "Municipal swimming spot with large grassy areas and a small sandy beach."
+      },
+      "naturereserv": {
+        "0": "Municipal nature reserve established in 2001, 562 hectares. Old pine forest with marked hiking trails."
+      }
+    },
+    "aplared": {
+      "location": "Approx. 15 km south-east of Borås",
+      "description": "Aplared is a village in a gently rolling landscape with forests and farmland. Near the village lies Skansasjön with a swimming spot, and the Lindåsabäcken nature reserve protects the freshwater pearl mussel.",
+      "firepit": {
+        "0": "Barbecue area in Aplaredsskolan's forest, reached via trails from the sports ground."
+      },
+      "shelter": {
+        "0": "Wind shelter adjacent to the barbecue area, reached via trails from the sports ground."
+      },
+      "fishing": {
+        "0": "Fishing management area east of Borås near Aplared."
+      },
+      "swimming": {
+        "0": "Swimming spot with a pier and grassy area at Skansasjön."
+      },
+      "naturereserv": {
+        "0": "9-hectare protected area established in 2008 to preserve the freshwater pearl mussel."
+      }
+    },
+    "borgstena": {
+      "location": "Northernmost part of Borås municipality, north of Fristad",
+      "description": "Borgstena is located in the northernmost part of the municipality with a varied landscape dominated by oak and beech forests with historical roots from the Middle Ages to modern times.",
+      "fishing": {
+        "0": "Fishing management area north of Fristad near Borgstena.",
+        "1": "Fishing management area just outside Borgstena."
+      }
+    },
+    "borasCentrala": {
+      "location": "Borås city centre",
+      "description": "Central Borås is a vibrant urban core where culture and nature meet. Three main parks — Ramnaparken, Stadsparken and Annelundsparken — offer waterside walks and recreation in the heart of the city.",
+      "firepit": {
+        "0": "Barbecue area along the floodlit track, accessible with a pram from the western side.",
+        "1": "Barbecue area with rain shelter and firewood, next to a large playground."
+      },
+      "shelter": {
+        "0": "Rain shelter adjacent to the barbecue area at the large playground."
+      }
+    },
+    "bredared": {
+      "location": "Approx. 6 km west of Fristad, northern Borås municipality",
+      "description": "Bredared has several hiking trails through varied nature. From Klockaregården, five marked trails lead through a coniferous forest landscape with views over Hjortsbergsdalen and Lake Veksjön."
+    },
+    "byttorpKolbranningen": {
+      "location": "Central Borås, by Lake Kolbränningen",
+      "description": "By Lake Kolbränningen there is a scenic area with a municipal swimming spot with a sandy beach, lawn and pier. Beautiful forest paths and walking routes run through the surrounding residential areas.",
+      "firepit": {
+        "0": "Barbecue area next to the swimming spot along Hestraskogsleden.",
+        "1": "Barbecue area with benches by the lake."
+      },
+      "swimming": {
+        "0": "Municipal swimming spot with sandy beach, lawn, pier and swimming pontoon."
+      }
+    },
+    "dannike": {
+      "location": "Approx. 20 km east of Borås",
+      "description": "Dannike lies in a gently rolling landscape with forests and farmland. Rammsjön offers a popular swimming spot with a sandy beach and diving tower, and nearby is the Rölle nature reserve with deciduous forest and meadows.",
+      "firepit": {
+        "0": "Barbecue area at the swimming spot, not accessibility adapted."
+      },
+      "fishing": {
+        "0": "Fishing in Yttre Åsunden and Torpasjön.",
+        "1": "Fishing in Rammsjön east of Dannike.",
+        "2": "Fishing in Torpasjön near Torpa stenhus."
+      },
+      "swimming": {
+        "0": "Swimming spot with sandy beach, two piers, a diving tower and grassy areas."
+      },
+      "naturereserv": {
+        "0": "State nature reserve established in 1982, 8 hectares of deciduous forest and meadows with valuable flora."
+      }
+    },
+    "fristad": {
+      "location": "Northern shore of Öresjön, northern Borås municipality",
+      "description": "Fristad lies on the northern shore of Öresjön with varied geography ranging from fertile farmland to forested heights. Three swimming spots, six barbecue areas and two nature reserves make Fristad one of the municipality's richest outdoor recreation areas.",
+      "firepit": {
+        "0": "Barbecue area at the pier at Asklanda swimming spot.",
+        "1": "Barbecue area on the western side of Asklanda swimming spot.",
+        "2": "Barbecue area on the eastern side of Asklanda swimming spot.",
+        "3": "Barbecue area at the pier at Skalle swimming spot.",
+        "4": "Barbecue area on the promontory at Skalle swimming spot.",
+        "5": "Barbecue area at Solviken swimming spot."
+      },
+      "fishing": {
+        "0": "Fishing in Säven north of Fristad.",
+        "1": "Fishing in Varnum and Marsjöarna east of Sparsör.",
+        "2": "Fishing in Lake Ärtingen west of Fristad.",
+        "3": "Fishing in Öresjö. Drinking water source since 1932 — two-stroke engines prohibited."
+      },
+      "swimming": {
+        "0": "Sandy beach with volleyball net, climbing net and barbecue areas.",
+        "1": "Long and beautiful sandy beach with pier and bird tower.",
+        "2": "Sandy beach with pier and swimming pontoon at Lake Ärtingen."
+      },
+      "naturereserv": {
+        "0": "66 hectares, established in 1990. Well-known birdwatching area at the mouth of Viskan in Öresjö.",
+        "1": "238 hectares, established in 2010. Boardwalks and a bird tower make the bog accessible."
+      }
+    },
+    "frufallan": {
+      "location": "East of Öresjö, north of Borås",
+      "description": "Around Frufällan there is a mix of forest and open landscapes on the eastern shore of Öresjö. A swimming spot with a pier and sandy beach, four barbecue areas and fishing in Öresjö.",
+      "firepit": {
+        "0": "Barbecue area at the swimming spot.",
+        "1": "Barbecue area at Kröklings hage.",
+        "2": "Barbecue area on Mölarps ö.",
+        "3": "Barbecue area on Vikåsaudden with benches and gravel paths."
+      },
+      "fishing": {
+        "0": "Fishing in Öresjö. Drinking water source since 1932 — two-stroke engines prohibited."
+      },
+      "swimming": {
+        "0": "Swimming spot with pier, sandy beach and grassy area."
+      }
+    },
+    "gasslosa": {
+      "location": "South of Borås city centre",
+      "description": "Gässlösa is a scenic outdoor recreation area south of Borås with forest lakes and broadleaf woodland. In addition to hiking trails and a floodlit track, there is a popular swimming spot at Stora Transåssjön and fishing with rainbow trout.",
+      "firepit": {
+        "0": "Barbecue area along the floodlit track with views over Borås."
+      },
+      "fishing": {
+        "0": "Fishing with stocked rainbow trout. Six hire boats available."
+      },
+      "swimming": {
+        "0": "Swimming spot with sandy beach, grassy area and changing rooms."
+      }
+    },
+    "hedared": {
+      "location": "Approx. 20 km north-west of Borås",
+      "description": "Hedared is surrounded by forests and farmland with several small lakes. Six hiking trails start at Hedareds stave church — one of the oldest preserved wooden churches in Scandinavia. A swimming spot with a sandy beach at Östra Valsjön.",
+      "firepit": {
+        "0": "Barbecue area at the swimming spot at Östra Valsjön."
+      },
+      "swimming": {
+        "0": "Swimming spot with grassy areas, sandy beach and pier."
+      }
+    },
+    "hestra": {
+      "location": "Southern Borås, Hestra/Ekås",
+      "description": "Hestra offers several fitness tracks and hiking trails of varying length through the forest landscape. Hestrastugan at Ekås is the base for seven trails, and the Rya åsar nature reserve borders the area.",
+      "firepit": {
+        "0": "Barbecue area behind the cabin, not accessibility adapted.",
+        "1": "Barbecue area at Lomsjön."
+      },
+      "naturereserv": {
+        "0": "562-hectare municipal nature reserve established in 2001 with old pine forest and marked trails."
+      }
+    },
+    "hofsnasTorpa": {
+      "location": "Eastern Borås, by Yttre Åsunden and Torpasjön",
+      "description": "Idyllic locations by Yttre Åsunden and Torpasjön with a rich historical environment. Hofsnäs manor house and Torpa stenhus — a well-preserved Renaissance castle from the 16th century — give the area a unique character. Eleven barbecue areas and a swimming spot make it a popular day-trip destination.",
+      "firepit": {
+        "0": "Barbecue area at the campsite at Hofsnäs.",
+        "1": "Barbecue area at Ekenäs.",
+        "2": "Barbecue area at Flaxet.",
+        "3": "Barbecue area at Näset.",
+        "4": "Barbecue area at the old steamboat pier."
+      },
+      "shelter": {
+        "0": "Wind shelter at Torpasjön."
+      },
+      "fishing": {
+        "0": "Fishing in the waters of Torpasjön around the Torpanäset nature reserve at Torpa stenhus."
+      },
+      "swimming": {
+        "0": "Swimming spot with beach, pier, grassy areas, two barbecue areas and a wind shelter."
+      },
+      "naturereserv": {
+        "0": "State nature reserve, 159 hectares, established in 2002. Trails through grazing land, forest and shoreline environments with rich birdlife."
+      }
+    },
+    "sjomarken": {
+      "location": "Approx. 7 km west of Borås",
+      "description": "Sjömarken is situated by Viaredssjön with a varied landscape of forest and open fields. A swimming spot with a sandy beach and long pier, four barbecue areas and fishing.",
+      "firepit": {
+        "0": "Barbecue area at the pier.",
+        "1": "Barbecue area at the beach.",
+        "2": "Barbecue area on the promontory.",
+        "3": "Barbecue area at the sports centre."
+      },
+      "fishing": {
+        "0": "Fishing in Viaredssjön near Sandared and Hultafors."
+      },
+      "swimming": {
+        "0": "Sandy beach, large lawn and long pier. Two playgrounds and a climbing net."
+      }
+    },
+    "knektasTosseryd": {
+      "location": "Tosseryd, northern Borås",
+      "description": "Knektås is a mountain biking arena in summer and a skiing venue in winter. Six MTB trails and a 1,100-metre rollerskiing track are managed by Borås GIF.",
+      "firepit": {
+        "0": "Barbecue area on the hill behind the clubhouse, parking approx. 50 m away."
+      }
+    },
+    "rydboholm": {
+      "location": "Approx. 8 km south of Borås",
+      "description": "Rydboholm lies in the Viskan valley by Storsjön with a beautiful landscape of forest and farmland. Seven hiking trails, a swimming spot at Furusjön and fishing in Storsjön.",
+      "firepit": {
+        "0": "Barbecue area by the water."
+      },
+      "fishing": {
+        "0": "Fishing in Storsjön and Viskan. Free boat launch available."
+      },
+      "swimming": {
+        "0": "Charming forest lake with a small sandy beach and calm swimming water."
+      }
+    },
+    "rangedala": {
+      "location": "Approx. 15 km north-east of Borås",
+      "description": "Rångedala has a varied landscape with forests and farmland. Seven hiking trails start from Rångedala Hembygdsgård in Algutstorp, and Marsjön's swimming spot offers a sandy beach and pier.",
+      "firepit": {
+        "0": "Barbecue area at the stream ravine near the heritage centre.",
+        "1": "Barbecue area in the meadow at the heritage centre.",
+        "2": "Barbecue area at the swimming spot."
+      },
+      "swimming": {
+        "0": "Small sandy beach with pier and large lawn."
+      }
+    },
+    "sandared": {
+      "location": "Approx. 10 km west of Borås",
+      "description": "Sandared's landscape is characterised by forest and open areas near Viaredssjön. Two swimming spots with sandy beaches, five barbecue areas and nine marked trails including Sjuhäradsleden.",
+      "firepit": {
+        "0": "Barbecue area on Björviksudden.",
+        "1": "Barbecue area at the SOK cabin in Nordtorp.",
+        "2": "Barbecue area on the western side of the swimming spot.",
+        "3": "Barbecue area on the eastern side of the swimming spot.",
+        "4": "Barbecue area by the stream at Ängen and Åkilen."
+      },
+      "fishing": {
+        "0": "Fishing in Viaredssjön."
+      },
+      "swimming": {
+        "0": "Large sandy beach at Viaredssjön.",
+        "1": "Generous sandy beach with pier and diving tower."
+      }
+    },
+    "sandhult": {
+      "location": "Approx. 10 km north-west of Borås",
+      "description": "Sandhult has a scenic landscape with forest and open farmland near Trummesjön and Madsjön. Four marked hiking trails and a swimming spot with a small sandy beach.",
+      "firepit": {
+        "0": "Barbecue area at the swimming spot with benches and tables."
+      },
+      "swimming": {
+        "0": "Small sandy beach with pier."
+      }
+    },
+    "seglora": {
+      "location": "Approx. 20 km south-west of Borås",
+      "description": "Seglora has a varied landscape with forests and farmland along Viskan. Tranhults nature reserve protects a beech-forest covered hillside along the banks of Viskan.",
+      "firepit": {
+        "0": "Barbecue area at the swimming spot."
+      },
+      "fishing": {
+        "0": "Lake Hungern is the primary fishing water in the area."
+      },
+      "swimming": {
+        "0": "Sandy beach with barbecue area.",
+        "1": "Swimming spot at Stora Hålsjön."
+      },
+      "naturereserv": {
+        "0": "State nature reserve, 3 hectares, established in 1984. Beech-forest covered hillside along Viskan."
+      }
+    },
+    "sparsor": {
+      "location": "By Öresjö, northern Borås",
+      "description": "Sparsör lies by Öresjö with relatively hilly terrain. Two nature reserves — Kröklings hage and Mölarp — are found in the area, as well as a municipal swimming spot and a wind shelter at Trollevi.",
+      "firepit": {
+        "0": "Barbecue area at the municipal swimming spot with a long pier.",
+        "1": "Barbecue area at Trollevi sports facility."
+      },
+      "shelter": {
+        "0": "Wind shelter north of the football pitches."
+      },
+      "fishing": {
+        "0": "Fishing in the main channel of Viskan at Gingri Ön.",
+        "1": "Fishing in Öresjö. Drinking water source since 1932 — two-stroke engines prohibited."
+      },
+      "swimming": {
+        "0": "Municipal swimming spot with a long pier."
+      },
+      "naturereserv": {
+        "0": "State nature reserve, 14 hectares, established in 1962. Meadowland and broadleaf woodland.",
+        "1": "State nature reserve, 66 hectares, established in 1990. Where Viskan meets Öresjö — well-known birdwatching area."
+      }
+    },
+    "svaneholm": {
+      "location": "Approx. 15 km south of Borås",
+      "description": "Svaneholm is surrounded by beautiful natural scenery with forest and farmland by Storsjön and Viskan. The 460-hectare Storsjön nature reserve gives a feeling of wilderness close to the city.",
+      "fishing": {
+        "0": "Partly in Marks municipality. Fishing south of Borås."
+      },
+      "naturereserv": {
+        "0": "460-hectare municipal nature reserve established in 2014 with a wilderness feel and a popular recreation area."
+      }
+    },
+    "viskafors": {
+      "location": "Approx. 12 km south-west of Borås",
+      "description": "Viskafors has a varied landscape along Viskan and Storsjön. 12 barbecue areas, 4 wind shelters, a swimming spot with a sandy beach and Storsjön nature reserve make it the municipality's southernmost outdoor gem.",
+      "firepit": {
+        "0": "Barbecue area at Storsjögården.",
+        "1": "Barbecue area at the cliffs along Storsjön.",
+        "2": "Barbecue area with wind shelter at Hultaberg."
+      },
+      "shelter": {
+        "0": "Wind shelter at Storsjögården.",
+        "1": "Wind shelter at Hultaberg.",
+        "2": "Wind shelter at Kopparhammaren.",
+        "3": "Wind shelter at Lomsjö."
+      },
+      "fishing": {
+        "0": "3 km long river with a gentle flow.",
+        "1": "Fishing in Frisjön south-east of Viskafors.",
+        "2": "Fishing in Viskan at Seglora.",
+        "3": "Fishing in Storsjön and Viskan. Free boat launch available."
+      },
+      "swimming": {
+        "0": "Sandy beach, grassy areas, pier and barbecue areas."
+      },
+      "naturereserv": {
+        "0": "460-hectare municipal nature reserve established in 2014. Gives a feeling of wilderness near Borås."
+      }
+    },
+    "ymergarden": {
+      "location": "Southern Borås, by Borås ski stadium",
+      "description": "Ymergården is an activities area with an outdoor gym, pétanque court, beach volleyball and a 27-hole disc golf course. Four hiking trails and a rollerskiing track near Borås ski stadium."
+    }
+  },
+  "home": {
+    "popularNearYou": "Popular walks near you",
+    "guide": "Nature guide",
+    "guideSubtitle": "Right of access · Difficulty levels",
+    "explore": "Explore Borås",
+    "exploreSubtitle": "Rya åsar · Kype · and more",
+    "news": "News",
+    "readyForWalk": "Ready for a walk?",
+    "greetingMorning": "Good morning",
+    "greetingDay": "Hello",
+    "greetingEvening": "Good evening",
+    "greetingNight": "Good night"
+  },
+  "settings": {
+    "theme": "Theme",
+    "guide": "Nature guide",
+    "about": "About Stigvidd"
+  },
+  "about": {
+    "description": "Stigvidd is a full-stack hiking app built as a thesis project. Explore trails in the Borås area, record your own walks with GPS, rate trails and report obstacles along the way.",
+    "featuresTitle": "Features",
+    "techTitle": "Technology",
+    "dataSourceTitle": "Data source",
+    "dataSourceText": "Trail data for the Borås area is fetched from the City of Borås open data portal in GeoJSON format and imported via a custom ETL tool.",
+    "footer": "Thesis project · SUVNET24",
+    "features": [
+      "Explore and filter hiking trails (difficulty, accessibility, length, city)",
+      "Interactive map with trail markers and GPS coordinates",
+      "Background GPS tracking during walks with distance measurement",
+      "Trail reviews with star ratings and photos",
+      "Favorites and wishlist with optimistic UI updates",
+      "Report obstacles/hazards with a voting system",
+      "User profiles with hiking history and statistics",
+      "Share recorded walks with friends"
+    ],
+    "techStack": [
+      { "label": "App", "value": "React Native · Expo SDK 54 · TypeScript" },
+      { "label": "Routing", "value": "Expo Router (file-based)" },
+      { "label": "Map & GPS", "value": "React Native Maps · Expo Location" },
+      { "label": "State", "value": "TanStack Query · Jotai" },
+      { "label": "UI", "value": "React Native Paper (Material Design 3)" },
+      { "label": "Backend", "value": "ASP.NET Core 10 · C# · EF Core · SQL Server" },
+      { "label": "Auth", "value": "Firebase Authentication (JWT)" }
+    ]
+  },
+  "guide": {
+    "title": "Nature guide",
+    "footer": "Source: Swedish EPA · City of Borås · County Administrative Board of Västra Götaland",
+    "allemansrattenTitle": "Right of Public Access",
+    "allemansrattenSummary": "The right to move freely in nature",
+    "allemansrattenBody1": "The right of public access is a unique Swedish law that gives everyone the right to be in nature, regardless of who owns the land. With that right comes a responsibility: not to disturb and not to destroy.",
+    "allemansrattenMayBold": "You may",
+    "allemansrattenMay": "hike, cycle and ride almost anywhere in nature, and you may camp outdoors for a couple of nights. You may pick berries, mushrooms and flowers that are not protected.",
+    "allemansrattenMayNotBold": "You may not",
+    "allemansrattenMayNot": "enter private gardens, drive motor vehicles on bare ground, damage trees or bushes, or camp in the same place for more than a couple of nights. During dry spells, the county or municipality may issue a fire ban. Always check if such a ban is in effect in the area.",
+    "allemansrattenDogBold": "Dogs",
+    "allemansrattenDog": "must be kept on a leash from 1 March to 20 August so that wild animals are not disturbed during their breeding season.",
+    "naturreservatTitle": "Nature reserves",
+    "naturreservatSummary": "Protected areas with their own regulations",
+    "naturreservatBody1": "A nature reserve is an area protected by law to preserve valuable nature or give people opportunities for outdoor recreation. Decisions are made by the county administrative board or municipality.",
+    "naturreservatRulesPrefix": "Every reserve has ",
+    "naturreservatRulesBold": "its own regulations",
+    "naturreservatRulesSuffix": " which may be stricter than the right of public access. Always read the signs at the entrance. They apply mainly to fires, camping, dogs and motor vehicles.",
+    "naturreservatForbidPrefix": "It is always forbidden to ",
+    "naturreservatForbidBold": "damage trees, bushes or ground",
+    "naturreservatForbidSuffix": ", and to take soil, stones or other natural materials from the reserve.",
+    "accessibilityGuideTitle": "Accessibility",
+    "accessibilityGuideSummary": "What accessibility adapted means in the app",
+    "accessibilityGuideBody1Prefix": "In the app, trails are marked as ",
+    "accessibilityGuideBody1Bold": "accessibility adapted",
+    "accessibilityGuideBody1Suffix": " if they are passable with a wheelchair, walker or pram. This means an even and firm surface with limited gradient and sufficient width.",
+    "accessibilityGuideBody2": "Some locations also have adapted rest areas, ramps, parking for people with disabilities or accessible toilets. What is available at each trail is shown on the trail's information page.",
+    "accessibilityGuideBody3Prefix": "Trails that ",
+    "accessibilityGuideBody3Bold": "are not accessibility adapted",
+    "accessibilityGuideBody3Suffix": " follow natural terrain. The surface may be uneven with stones, roots and mud, and the route may include steep sections or narrow passages.",
+    "difficultiesGuideTitle": "Difficulty levels",
+    "difficultiesGuideSummary": "Easy, medium, hard and unclassified",
+    "readMoreTitle": "Read more",
+    "readMoreSummary": "External sources and further reading",
+    "links": [
+      { "label": "Right of Public Access — Swedish EPA", "url": "https://www.naturvardsverket.se/allemansratten" },
+      {
+        "label": "Nature Reserves — Swedish EPA",
+        "url": "https://www.naturvardsverket.se/amnesomraden/skyddad-natur/olika-former-av-naturskydd/naturreservat/"
+      },
+      {
+        "label": "Etiquette & right of access — City of Borås",
+        "url": "https://www.boras.se/upplevaochgora/friluftslivochnatur/vettochallemansratt.4.1601545718c38a990ab44564.html"
+      },
+      {
+        "label": "Accessible outdoor recreation — City of Borås",
+        "url": "https://www.boras.se/upplevaochgora/friluftslivochnatur/tillgangligtfriluftslivochtillganglignatur.4.6ef5a1031900c68011c55207.html"
+      },
+      {
+        "label": "Outdoor recreation & nature — City of Borås",
+        "url": "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur.4.1601545718c38a990ab4455a.html"
+      },
+      { "label": "Hiking trails — Borås.com", "url": "https://www.boras.com/lista/vandringsleder/" },
+      { "label": "SMHI — weather forecast", "url": "https://www.smhi.se/" },
+      { "label": "Friluftsfrämjandet", "url": "https://www.friluftsframjandet.se/" }
+    ]
+  },
+  "createHike": {
+    "locationRequired": "You need to share your location to create your own walk.",
+    "cancelTitle": "Cancel ongoing walk",
+    "cancelConfirm": "Are you sure you want to cancel the ongoing walk?",
+    "cancelWarning": "This cannot be undone.",
+    "no": "No",
+    "yes": "Yes",
+    "start": "Start walk",
+    "reset": "Reset",
+    "resume": "Resume",
+    "fgPermissionDenied": "Permission to access location was denied.",
+    "bgPermissionDenied": "Permission to access background location was denied.",
+    "notificationBody": "Recording walk..."
+  },
+  "tabs": {
+    "home": "Home",
+    "map": "Map",
+    "trails": "Trails",
+    "profile": "Profile"
+  },
+  "notFound": {
+    "title": "Page not found",
+    "goHome": "Go to home"
+  },
+  "imagePermission": {
+    "title": "Permission required",
+    "message": "Permission to access the media library is required.",
+    "jpgOnly": "Only JPG images are allowed"
+  },
+  "news": {
+    "items": [
+      { "title": "Spring is here and it's time to get moving! 🥾", "date": "5 Apr 2026" },
+      { "title": "It's now easier than ever to find the right trail in Borås! 🌲🥾", "date": "18 Feb 2026" },
+      { "title": "Coming soon to the app: achievements! 🎉", "date": "28 Jan 2026" },
+      { "title": "Picke wins again! Stigvidd's most walked trail of 2025!", "date": "14 Jan 2026" },
+      { "title": "Snow chaos! ❄️ Walks you can do despite the snow", "date": "10 Jan 2026" }
+    ]
+  },
+  "trailList": {
+    "title": "Hiking trails",
+    "filter": "Filter",
+    "search": "Search for trail or location...",
+    "showing": "Showing {{count}} of {{total}} trails",
+    "clearFilters": "Clear filters",
+    "refreshing": "Updating trails...",
+    "noResults": "No trails found",
+    "noResultsHint": "Try adjusting your filters"
+  }
+}

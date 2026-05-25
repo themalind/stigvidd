@@ -1,0 +1,987 @@
+{
+  "common": {
+    "save": "Spara",
+    "saving": "Sparar...",
+    "cancel": "Avbryt",
+    "close": "Stäng",
+    "done": "Klar",
+    "confirm": "Bekräfta",
+    "back": "Gå tillbaka",
+    "clear": "Rensa",
+    "send": "Skicka",
+    "sending": "Skickar...",
+    "all": "Alla",
+    "retry": "Försök igen",
+    "ok": "Ok",
+    "delete": "Ta bort",
+    "share": "Dela",
+    "next": "Nästa",
+    "select": "Välj..."
+  },
+  "auth": {
+    "login": "Logga in",
+    "loggingIn": "Loggar in...",
+    "register": "Skapa konto",
+    "registering": "Skapar konto...",
+    "logout": "Logga ut",
+    "deleteAccount": "Avsluta konto",
+    "deletingAccount": "Avslutar...",
+    "forgotPassword": "Glömt ditt lösenord?",
+    "resetHere": "Återställ här.",
+    "resetPassword": "Återställ ditt lösenord",
+    "notMember": "Inte medlem?",
+    "createAccountHere": "Skapa konto här.",
+    "alreadyMember": "Redan medlem?",
+    "loginHere": "Logga in här.",
+    "nickname": "Smeknamn",
+    "email": "Epost",
+    "password": "Lösenord",
+    "repeatPassword": "Upprepa Lösenord",
+    "enterPassword": "Ange lösenord",
+    "enterEmail": "Ange e-post",
+    "checkEmail": "Kolla din e-post! Kika även i skräpposten.",
+    "checkSpam": "Får du inget mail? Kika i din skräppost!",
+    "enterYourPassword": "Skriv in ditt lösenord",
+    "confirmDeleteAccount": "Är du säker på att du vill avsluta ditt konto?",
+    "deleteAccountWarning": "ALL din data kommer raderas för alltid!",
+    "nicknameTakenMsg": "Smeknamnet upptaget",
+    "unknownError": "Ett oväntat fel inträffade",
+    "couldNotLogout": "Kunde inte logga ut.",
+    "notLoggedIn": "Du är inte inloggad",
+    "goToLogin": "Logga in",
+    "validation": {
+      "nicknameRequired": "Ange ett användarnamn",
+      "nicknameTooLong": "Namn för långt. Max 20 tecken",
+      "nicknameInvalidChars": "Endast a–z, 0–9, _ och - är tillåtna",
+      "nicknameTaken": "Smeknamnet upptaget!",
+      "emailRequired": "Du måste ange en e-post",
+      "emailInvalid": "Ange en giltig e-post",
+      "passwordRequired": "Ange ett lösenord",
+      "passwordTooShort": "Lösenordet måste vara minst 8 tecken",
+      "passwordMismatch": "Lösenorden matchar inte",
+      "confirmPasswordRequired": "Upprepa lösenord"
+    }
+  },
+  "profile": {
+    "title": "Mitt Stigvidd",
+    "friends": "Mina vänner",
+    "favorites": "Favoriter",
+    "wishlist": "Vill gå",
+    "createHike": "Skapa en promenad",
+    "myHikes": "Mina egna promenader",
+    "sharedHikes": "Promenader delade med mig",
+    "achievements": "Utmärkelser",
+    "statistics": "Statistik",
+    "about": "Om Stigvidd",
+    "deleteAccount": "Avsluta konto"
+  },
+  "filter": {
+    "title": "Filter & Sortering",
+    "clear": "Rensa",
+    "done": "Klar",
+    "city": "Orter",
+    "allCities": "Alla orter",
+    "accessibility": "Tillgänglighet",
+    "adapted": "Anpassad",
+    "nearMe": "Nära mig",
+    "all": "Alla",
+    "maxDistance": "Max avstånd: {{distance}} km",
+    "difficulty": "Svårighetsgrad",
+    "allDifficulties": "Alla svårighetsgrader",
+    "trailLength": "Ledlängd: {{min}} - {{max}} km",
+    "sortBy": "Sortera efter",
+    "sortNameAsc": "Namn (A-Ö)",
+    "sortNameDesc": "Namn (Ö-A)",
+    "sortLengthAsc": "Längd (Kortast först)",
+    "sortLengthDesc": "Längd (Längst först)",
+    "sortNearest": "Närmast först"
+  },
+  "review": {
+    "added": "Recensionen har lagts till",
+    "saveError": "Kunde inte spara recensionen",
+    "deleted": "Recensionen har tagits bort",
+    "deleteError": "Kunde inte ta bort recensionen",
+    "rating": "Väl ett betyg *",
+    "ratingTitle": "Sätt ett betyg ⭐️⭐️",
+    "ratingQuestion": "Hur nöjd är du med promenaden?",
+    "ratingInstruction": "Ge upp till 5 stjärnor!",
+    "addImage": "Lägg till bild (valfritt)",
+    "addImageTitle": "Lägg till bilder",
+    "addImageInfo1": "Visa oss dina promenadäventyr!",
+    "addImageInfo2": "Lägg gärna till bilder från promenaden, men undvik bilder som kan vara stötande eller olämpliga.",
+    "addImageInfo3": "Max 3 bilder per promenad.",
+    "writeReview": "Skriv en recension eller kommentar",
+    "writeReviewTitle": "Skriv något",
+    "writeReviewInfo1": "Berätta för oss om promenaden!",
+    "writeReviewInfo2": "Skriv en kommentar eller recension om dina upplevelser. Tänk på att hålla texten trevlig och respektfull.",
+    "reviewLabel": "Recension",
+    "createTitle": "Skapa en recension",
+    "deleteTitle": "Ta bort recension",
+    "deleteConfirm": "Är du säker på att du vill ta bort din recension?",
+    "notAuthReview": "Du behöver vara inloggad för att skriva en recension.",
+    "notAuthRating": "Du behöver vara inloggad för att lägga till en recension.",
+    "noReviews": "Det finns inga recensioner här ännu.",
+    "loadMore": "Ladda fler",
+    "loadingMore": "Laddar fler...",
+    "title": "Recensioner",
+    "rate": "Betygsätt"
+  },
+  "trail": {
+    "classification": {
+      "notClassified": "Inte klassificerad",
+      "easy": "Lätt",
+      "medium": "Medel",
+      "hard": "Svår"
+    },
+    "info": "Information",
+    "marking": "Markering",
+    "length": "Längd",
+    "difficulty": "Svårighetsgrad",
+    "accessibility": "Tillgänglighet",
+    "adapted": "Anpassad",
+    "notAdapted": "Ej anpassad",
+    "variation": "Variation",
+    "description": "Beskrivning",
+    "readReviews": "Läs recensioner",
+    "backToTop": "Tillbaka till toppen",
+    "loadingMap": "Laddar karta...",
+    "practicalInfo": "Praktisk information",
+    "detailedDescription": "Detaljerad beskrivning",
+    "links": "Länkar",
+    "difficultiesTitle": "Svårighetsgrader",
+    "accessibilityTitle": "Tillgänglighet",
+    "difficulties": {
+      "easy": {
+        "label": "Lätt",
+        "description": "På leder som har svårighetsnivå lätt är det möjligt att ta sig fram med barnvagn. Underlaget på leden är till största delen hårdgjord yta."
+      },
+      "medium": {
+        "label": "Medel",
+        "description": "De leder som har svårighetsnivå medel går ofta på mindre vägar och naturstigar. Under normala väderförhållanden krävs inga kängor eller stövlar här, och för en person med normal kondition är nivåskillnaden inga problem."
+      },
+      "hard": {
+        "label": "Svår",
+        "description": "En led med svårighetsnivå svår går ofta på naturstig. Här finns sträckor som innehåller stora nivåskillnader eller branta passager, och därför behövs god kondition och ordentliga vandringskängor eller stövlar."
+      },
+      "unclassified": {
+        "label": "Inte klassificerad",
+        "description": "Ingen officiell klassificering finns."
+      }
+    },
+    "accessibilityInfo": {
+      "adapted": {
+        "title": "Tillgänglighetsanpassad",
+        "description": "Platser som är anpassade är tillgängliga för alla, så att fler kan få ta del av friluftslivet – oavsett fysiska förutsättningar. Underlaget är jämnt och fast, lutningen är begränsad och bredden tilltagen, så att det går att ta sig fram med exempelvis rullstol, rollator eller barnvagn.\n\nVad som finns på plats varierar – det kan handla om vilobänkar, anpassade rast- och grillplatser, ramp eller badstol vid vatten, tillgänglig toalett eller parkering för rörelsehindrade. I appen ser du vilka platser som är tillgänglighetsanpassade och vad som erbjuds på varje ställe, så att du enkelt kan hitta ett besöksmål som passar dina förutsättningar."
+      },
+      "notAdapted": {
+        "title": "Ej tillgänglighetsanpassad",
+        "description": "En plats eller led som inte är tillgänglighetsanpassad utgår från naturens egna förutsättningar. Underlaget kan vara ojämnt med stenar, rötter, lera eller sand, och sträckan kan innehålla backar, trappor, smala passager eller spänger.\n\nI appen hittar du information om varje enskilt besöksmål samt svårighetsgrad för leder."
+      }
+    }
+  },
+  "obstacle": {
+    "warningTitle": "Hinder rapporterade längs promenaden!",
+    "modalTitle": "Rapporterade hinder",
+    "modalInfo": "Här visas rapporterade hinder längs leden.",
+    "modalBody": "Hjälp gärna till genom att markera ett hinder som löst om det är åtgärdat. Det gör du genom att trycka på bockikonen (✓) på det hinder du vill markera. Varningen tas bort efter 3 bekräftelser eller 30 dagar.",
+    "report": "Rapportera",
+    "reportTitle": "Rapportera hinder",
+    "notAuthMessage": "Du behöver vara inloggad för att rapportera en händelse.",
+    "formInfo1": "Upptäcker du något som påverkar framkomligheten eller säkerheten på leden?",
+    "formInfo2": "Använd formuläret för att berätta om hinder, skador eller andra händelser längs promenaden som kan vara bra för andra att känna till.",
+    "selectCategory": "Välj en kategori",
+    "description": "Beskrivning",
+    "descriptionLabel": "Lägg till en beskrivning max 500 tecken",
+    "shareLocation": "Dela din plats (valfritt)",
+    "locationAttached": "📍 Plats kommer att bifogas",
+    "locationPermissionMissing": "Platsbehörighet saknas. Aktivera i systeminställningarna.",
+    "notOnTrail": "Du verkar inte befinna dig på leden. Platsen kan inte bifogas.",
+    "locationError": "Kunde inte hämta plats, försök igen.",
+    "reportSuccess": "Sparat! Tack för att du har rapporterat",
+    "reportError": "Någor gick fel försök igen senare",
+    "descriptionRequired": "Ge en kort beskrivning",
+    "descriptionTooShort": "Beskrivning för kort minst 15 tecken",
+    "editTitle": "Redigera hinder",
+    "descriptionMax": "Beskrivning max 500 tecken",
+    "category": "Kategori",
+    "date": "Datum",
+    "deleteTitle": "Ta bort hinder",
+    "deleteConfirm": "Är du säker på att du vill ta bort den här rapporten?",
+    "deleteWarning": "Åtgärden kan inte ångras.",
+    "fixedTitle": "Hinder åtgärdat",
+    "fixedConfirm": "Vill du markera detta hinder som löst?",
+    "fixedInfo": "När du markerar som åtgärdat intygar du att hindret inte längre finns kvar. Vill du fortsätta?",
+    "undoTitle": "Ta bort markering",
+    "undoInfo1": "Du har redan markerat detta hinder som löst.",
+    "undoInfo2": "Vill du ta bort din markering?",
+    "undoInfo3": "Detta innebär att hindret inte längre räknas som åtgärdat från din sida.",
+    "notAuthVote": "Du behöver vara inloggad för att markera ett hinder som löst.",
+    "updated": "Uppdaterat!",
+    "updateError": "Något gick fel, försök igen senare",
+    "types": {
+      "FallenTree": "Nedfallet träd",
+      "Mud": "Lerigt",
+      "Flooding": "Översvämning",
+      "Shelter": "Vindskydd",
+      "FirePit": "Grillplats",
+      "Walkway": "Spång",
+      "Signage": "Skyltning",
+      "Other": "Annat"
+    }
+  },
+  "hike": {
+    "name": "Promenadnamn",
+    "nameRequired": "Ange ett promenadnamn",
+    "goBack": "Gå tillbaka",
+    "confirm": "Bekräfta",
+    "errorSaving": "Något gick fel försök igen senare.",
+    "saveTitle": "Spara Promenad",
+    "share": "Dela",
+    "delete": "Ta bort",
+    "deleteTitle": "Ta bort promenad",
+    "deleteConfirm": "Vill du ta bort promenaden?",
+    "deleted": "Din promenad har tagits bort!",
+    "shared": "Promenaden har delats!",
+    "alreadyHas": "Mottagaren har redan promenaden.",
+    "updateError": "Kunde inte uppdatera promenaden",
+    "genericError": "Något gick fel försök igen senare.",
+    "cannotShareWithCreator": "Du kan inte dela en promenad med dess skapare.",
+    "shareWithFriend": "Dela med en vän",
+    "noFriendsToShare": "Du har inga vänner att dela med.",
+    "back": "Tillbaka",
+    "next": "Nästa",
+    "sharedBy": "Delad av:",
+    "date": "Datum:",
+    "gettingThere": "Hitta hit",
+    "parking": "Parkering",
+    "description": "Beskrivning",
+    "gettingThereHeading": "Hitta till promenadens start",
+    "gettingThereHelp": "Beskriv hur man hittar med en enkel beskriving",
+    "gettingThereOptional": "Hitta hit (valfritt)",
+    "parkingHeading": "Finns det parkering i närheten?",
+    "parkingHelp": "Exempel: Det finns parkering vid badplatsen, Parkera längs med grusvägen",
+    "parkingOptional": "Parkering (valfritt)",
+    "descriptionHeading": "Beskrivning",
+    "descriptionHelp": "Här kan du ge en kort beskrivning av hur till exempel miljön ser ut.",
+    "descriptionOptional": "Beskrivning (valfritt)",
+    "myHikesTitle": "Mina sparade promenader",
+    "pressForInfo": "Tryck på en promenad för att se mer information eller ta bort den.",
+    "noHikes": "Inga sparade promenader",
+    "sharedHikesTitle": "Delade promenader",
+    "noShared": "Inga delade promenader här än",
+    "sharedByLabel": "Delad av: {{name}}",
+    "sharedHikeDeleted": "Promenaden har tagits bort!",
+    "sharedHikeAlreadyHas": "Mottagaren har redan promenaden."
+  },
+  "userActions": {
+    "favorite": "Favorit",
+    "wishlist": "Vill gå",
+    "share": "Dela",
+    "alreadyInList": "Leden finns redan i listan!",
+    "errorOccurred": "Ett fel uppstod",
+    "notAuthFavorite": "Du behöver vara inloggad för att lägga till i favoriter.",
+    "notAuthWishlist": "Du behöver vara inloggad för att spara promenader.",
+    "notAuthReport": "Du behöver vara inloggad för att rapportera en händelse."
+  },
+  "error": {
+    "400": { "title": "Ogiltigt anrop", "message": "Något gick fel med din förfrågan." },
+    "401": { "title": "Inte inloggad", "message": "Du måste logga in för att fortsätta." },
+    "403": { "title": "Åtkomst nekad", "message": "Du har inte behörighet att visa detta." },
+    "404": { "title": "Hittades inte", "message": "Det du letar efter finns inte längre." },
+    "500": { "title": "Serverfel", "message": "Något gick fel på servern. Försök igen senare." },
+    "default": { "title": "Något gick fel", "message": "Kontrollera din internetanslutning och försök igen." },
+    "retry": "Försök igen"
+  },
+  "firebaseErrors": {
+    "register": {
+      "emailInUse": "E-postadressen används redan",
+      "invalidEmail": "Ogiltig e-postadress",
+      "weakPassword": "Lösenordet är för svagt (minst 6 tecken)",
+      "networkFailed": "Nätverksfel. Kontrollera din anslutning",
+      "default": "Ett fel uppstod. Försök igen"
+    },
+    "passwordReset": {
+      "invalidEmail": "Ogiltig e-postadress",
+      "userNotFound": "Ingen användare med denna e-postadress finns",
+      "missingEmail": "Ange en e-postadress",
+      "tooManyRequests": "För många försök. Försök igen senare",
+      "networkFailed": "Nätverksfel. Kontrollera din anslutning",
+      "default": "Ett fel uppstod. Försök igen"
+    },
+    "deleteAccount": {
+      "invalidCredential": "Felaktigt lösenord",
+      "userMismatch": "Uppgifterna matchar inte det inloggade kontot",
+      "userNotFound": "Kontot hittades inte",
+      "userDisabled": "Detta konto har inaktiverats",
+      "tooManyRequests": "För många försök. Försök igen senare",
+      "networkFailed": "Nätverksfel. Kontrollera din anslutning",
+      "deleteFailed": "Kunde inte ta bort kontot. Försök igen senare",
+      "default": "Något gick fel. Försök igen"
+    },
+    "reauthenticate": {
+      "invalidCredential": "Felaktigt lösenord",
+      "userMismatch": "Uppgifterna matchar inte det inloggade kontot",
+      "userNotFound": "Kontot hittades inte",
+      "userDisabled": "Detta konto har inaktiverats",
+      "tooManyRequests": "För många försök. Försök igen senare",
+      "networkFailed": "Nätverksfel. Kontrollera din anslutning",
+      "invalidEmail": "Ogiltig e-postadress",
+      "default": "Kunde inte verifiera dina uppgifter. Försök igen"
+    },
+    "login": {
+      "userNotFound": "Ingen användare med denna e-postadress finns",
+      "wrongPassword": "Felaktigt lösenord",
+      "invalidEmail": "Ogiltig e-postadress",
+      "userDisabled": "Detta konto har inaktiverats",
+      "tooManyRequests": "För många misslyckade inloggningsförsök. Försök igen senare",
+      "networkFailed": "Nätverksfel. Kontrollera din anslutning",
+      "invalidCredential": "Felaktig e-postadress eller lösenord",
+      "operationNotAllowed": "Inloggning med e-post och lösenord är inte aktiverat",
+      "popupClosed": "Inloggningen avbröts",
+      "default": "Ett fel uppstod vid inloggning. Försök igen"
+    },
+    "deleteUser": {
+      "requiresRecentLogin": "Du behöver logga in på nytt innan du kan ta bort kontot",
+      "userNotFound": "Kontot hittades inte",
+      "networkFailed": "Nätverksfel. Kontrollera din anslutning",
+      "tooManyRequests": "För många försök. Försök igen senare",
+      "default": "Kunde inte ta bort kontot. Försök igen"
+    }
+  },
+  "friends": {
+    "title": "Vänner",
+    "search": "Sök användare",
+    "searchResults": "Sökresultat",
+    "searchError": "Något gick fel vid sökning",
+    "noResults": "Inga användare hittades",
+    "incomingTitle": "Inkommande",
+    "incomingCount": "Inkommande ({{count}})",
+    "incomingError": "Kunde inte hämta förfrågningar",
+    "outgoingTitle": "Skickade",
+    "outgoingCount": "Skickade ({{count}})",
+    "outgoingError": "Kunde inte hämta förfrågningar",
+    "friendsTitle": "Vänner",
+    "friendsCount": "Vänner ({{count}})",
+    "friendsError": "Kunde inte hämta vänner",
+    "noFriends": "Du har inga vänner än — sök ovan för att lägga till någon!",
+    "showLess": "Visa färre",
+    "showAll": "Visa alla ({{count}})",
+    "removeTitle": "Ta bort vän",
+    "removeInfo": "Du håller på att avsluta din vänskap med {{name}}",
+    "removeContinue": "Vill du fortsätta?",
+    "remove": "Ta bort",
+    "retry": "Försök igen",
+    "requestAccepted": "Förfrågan accepterad!",
+    "acceptError": "Kunde inte godkänna, försök igen senare!",
+    "requestRejected": "Förfrågan nekad",
+    "rejectError": "Något gick fel, försök igen senare!",
+    "requestSent": "Förfrågan skickad!",
+    "sendError": "Kunde inte skicka förfrågan, försök igen!",
+    "friendRemoved": "Vän borttagen",
+    "removeError": "Kunde inte ta bort vän, försök igen senare!"
+  },
+  "collection": {
+    "tapInfo": "Tryck på ett spår för mer info. Tryck på X för att ta bort.",
+    "favorites": {
+      "title": "Mina favoriter",
+      "description": "Här är dina sparade favoriter.",
+      "empty": "Inga Favoriter sparade än. Gå till en promenad och tryck på hjärtat för att lägga till."
+    },
+    "wishlist": {
+      "title": "Vill gå",
+      "description": "Här är promenader du sparat att du vill gå.",
+      "empty": "Du har inga sparade promenader som du vill gå än. Gå till en promenad och tryck på plusset för att lägga till."
+    }
+  },
+  "area": {
+    "facilities": "Faciliteter",
+    "firePits": "Grillplatser",
+    "shelters": "Vindskydd",
+    "fishing": "Fiske",
+    "swimming": "Badplatser"
+  },
+  "areas": {
+    "dalsjofors": {
+      "location": "Dalsjöfors, ca 10 km öster om Borås",
+      "description": "Dalsjöfors har ett omväxlande landskap med både skogspartier och öppen jordbruksmark. Intill samhället ligger Dalsjön med badplats och flera vandringsleder i omgivningarna.",
+      "firepit": {
+        "0": "Tillgänglighetsanpassad grillplats längs Banvallen.",
+        "1": "Grillplats med vindskydd.",
+        "2": "Grillplats i anslutning till vandringslederna vid Övrarp."
+      },
+      "fishing": {
+        "0": "Fiskeplats vid Ankedammen.",
+        "1": "Fiske i ån Häggån.",
+        "2": "Fiske i Stora och Lilla Dalsjön.",
+        "3": "Fiske i sjön Ås-Tolken."
+      },
+      "swimming": {
+        "0": "Badplats med sandstrand, brygga och klätterutrustning för barn."
+      },
+      "naturereserv": {
+        "0": "Bokskogsnaturreservat på 8 hektar, bildat 1982. Skyddas för sina höga naturvärden."
+      }
+    },
+    "ryaAsar": {
+      "location": "Väster om Borås centrum, Hestra–Almenäs",
+      "description": "562 hektar kommunalt naturreservat bildat 2001 med klippbranter, ekskogar och stigar för alla nivåer. Kulturlandskapet bär spår av en väg som Carl von Linné vandrade 1746.",
+      "firepit": {
+        "0": "Grillplats vid Fjällsjön i anslutning till Björbostugans startpunkt.",
+        "1": "Grillplats på Högplatån vid Ålgårdens startpunkt."
+      },
+      "shelter": {
+        "0": "Vindskydd vid Fjällsjön.",
+        "1": "Vindskydd på Högplatån."
+      },
+      "fishing": {
+        "0": "Delvis inom reservatsgränsen.",
+        "1": "Fiske i Öresjö. Dricksvattentäkt sedan 1932 — tvåtaktsmotorer förbjudna."
+      },
+      "naturereserv": {
+        "0": "562 hektar kommunalt naturreservat bildat 2001 med gammal tallskog, klippbranter och ekskogar."
+      }
+    },
+    "kype": {
+      "location": "Norra Borås, vid Kypesjön",
+      "description": "Kype är ett friluftsområde i norra Borås med vandringsleder, motionsslingor, bad och fiske. Kypegårdens friluftsgård erbjuder dusch, vedeldad bastu och café.",
+      "firepit": {
+        "0": "Grillplats med vindskydd i Kypeskogen.",
+        "1": "Grillplats vid Inte-nudda-marken-parken på Kypegården.",
+        "2": "Grillplats med vindskydd vid badplatsen.",
+        "3": "Tillgänglighetsanpassad grillstuga vid Kypesjön.",
+        "4": "Grillplats vid pulkabacken.",
+        "5": "Grillplats vid Horsatorpet i Kypeskogen.",
+        "6": "Grillplats vid Klämmabäcken i Kypeskogen.",
+        "7": "Grillplats på Rävsrydsberget vid Tosseryd."
+      },
+      "shelter": {
+        "0": "Vindskydd i Kypeskogen.",
+        "1": "Vindskydd vid badplatsen."
+      },
+      "swimming": {
+        "0": "Kommunal badplats med sandstrand och stor brygga."
+      }
+    },
+    "kransmossen": {
+      "location": "Östra Borås, mot Gånghester",
+      "description": "Kransmossen är ett stort idrotts- och friluftsområde med utegym, multisportarena, basketplan, hinderbana, boulebana och lekplats. Vintertid finns pulkabacke och belysta skidspår. Friluftsgård med dusch och bastu.",
+      "firepit": {
+        "0": "Grillplats vid Fältspatsgruvan.",
+        "1": "Grillstuga i Kransmosseområdet.",
+        "2": "Grillplats vid Lilla Häljasjö i Gånghester.",
+        "3": "Grillplats med vindskydd vid Sjölid/Mulleängen.",
+        "4": "Grillplats med vindskydd vid pulkabacken Himlabacken.",
+        "5": "Tillgänglighetsanpassad grillplats vid Kärleksängen.",
+        "6": "Grillplats vid MTB-höjden.",
+        "7": "Grillplats vid Slättholmen.",
+        "8": "Grillplats vid Äppelängen."
+      },
+      "shelter": {
+        "0": "Vindskydd vid Sjölid/Mulleängen.",
+        "1": "Vindskydd vid pulkabacken."
+      },
+      "fishing": {
+        "0": "Fiske i Lillån och Kransån vid Kransmosseområdet."
+      }
+    },
+    "almenas": {
+      "location": "Öresjöns södra strand, nära Borås centrum",
+      "description": "Almenäs ligger vid Öresjöns södra strand och är hem till Borås största och mest populära kommunala badplats med sandstrand, brygga och badramp. Området sträcker sig även till Sjöbo vid Viskans strand med grönområden, leder och grillplatser. Elstängsel finns vid badplatsen för att hålla vildsvin borta.",
+      "firepit": {
+        "0": "Grillplats intill beachvolleybollplanen vid stranden.",
+        "1": "Tillgänglighetsanpassad grillplats med hårdgjord grusväg från parkeringen.",
+        "2": "Grillplats nära bron mellan Almenäs och Sjöbo.",
+        "3": "Grillplats på Almenäsudden öster om stranden bland gamla tallar.",
+        "4": "Grillplats på Viskans västra sida vid Sjöbo.",
+        "5": "Grillplats vid Viskan intill idrottsanläggningen."
+      },
+      "fishing": {
+        "0": "Fiske efter gädda, abborre och gös. Öresjö är dricksvattentäkt för Borås sedan 1932 — tvåtaktsmotorer är förbjudna."
+      },
+      "swimming": {
+        "0": "Kommunens största och mest populära badplats med sandstrand, brygga och badramp.",
+        "1": "Kommunal badplats med stora gräsytor och liten sandstrand."
+      },
+      "naturereserv": {
+        "0": "Kommunalt naturreservat bildat 2001, 562 hektar. Gammal tallskog med markerade vandringsleder."
+      }
+    },
+    "aplared": {
+      "location": "Ca 15 km sydost om Borås",
+      "description": "Aplared är en by i ett småkuperat landskap med skog och jordbruksmarker. Intill byn finns Skansasjön med badplats och Lindåsabäcken naturreservat som skyddar flodpärlmusslan.",
+      "firepit": {
+        "0": "Grillplats i Aplaredsskolans skog, nås via lederna från idrottsplatsen."
+      },
+      "shelter": {
+        "0": "Vindskydd i anslutning till grillplatsen, nås via lederna från idrottsplatsen."
+      },
+      "fishing": {
+        "0": "Fiskevårdsområde öster om Borås nära Aplared."
+      },
+      "swimming": {
+        "0": "Badplats med brygga och gräsyta vid Skansasjön."
+      },
+      "naturereserv": {
+        "0": "9 hektar skyddat område bildat 2008 för att bevara flodpärlmusslan."
+      }
+    },
+    "borgstena": {
+      "location": "Nordligaste Borås kommun, norr om Fristad",
+      "description": "Borgstena ligger i kommunens nordligaste del med ett varierat landskap dominerat av ek- och bokskogar med historiska rötter från medeltid till modern tid.",
+      "fishing": {
+        "0": "Fiskevårdsområde norr om Fristad nära Borgstena.",
+        "1": "Fiskevårdsområde strax utanför Borgstena."
+      }
+    },
+    "borasCentrala": {
+      "location": "Borås centrum",
+      "description": "Centrala Borås är en levande stadskärna där kultur och natur möts. Tre huvudparker — Ramnaparken, Stadsparken och Annelundsparken — erbjuder vattennära promenader och rekreation mitt i staden.",
+      "firepit": {
+        "0": "Grillplats längs elljusspåret, tillgänglig med barnvagn från västra sidan.",
+        "1": "Grillplats med regnskydd och ved, intill en stor lekplats."
+      },
+      "shelter": {
+        "0": "Regnskydd i anslutning till grillplatsen vid stora lekplatsen."
+      }
+    },
+    "bredared": {
+      "location": "Ca 6 km väster om Fristad, norra Borås kommun",
+      "description": "Bredared har flera vandringsleder i varierande natur. Från Klockaregården utgår fem markerade leder genom barrskogslandskap med vyer över Hjortsbergsdalen och sjön Veksjön."
+    },
+    "byttorpKolbranningen": {
+      "location": "Centrala Borås, vid sjön Kolbränningen",
+      "description": "Vid sjön Kolbränningen finns ett naturskönt område med kommunal badplats med sandstrand, gräsmatta och brygga. Vackra skogsstigar och promenadstråk löper genom omgivande bostadsområden.",
+      "firepit": {
+        "0": "Grillplats intill badplatsen längs Hestraskogsleden.",
+        "1": "Grillplats med bänkar vid sjön."
+      },
+      "swimming": {
+        "0": "Kommunal badplats med sandstrand, gräsmatta, brygga och badflotte."
+      }
+    },
+    "dannike": {
+      "location": "Ca 20 km öster om Borås",
+      "description": "Dannike ligger i ett småkuperat landskap med skog och jordbruksmarker. Rammsjön erbjuder en populär badplats med sandstrand och hopptorn, och i närheten finns Rölle naturreservat med lövskog och ängar.",
+      "firepit": {
+        "0": "Grillplats vid badplatsen, ej tillgänglighetsanpassad."
+      },
+      "fishing": {
+        "0": "Fiske i Yttre Åsunden och Torpasjön.",
+        "1": "Fiske i Rammsjön öster om Dannike.",
+        "2": "Fiske i Torpasjön nära Torpa stenhus."
+      },
+      "swimming": {
+        "0": "Badplats med sandstrand, två bryggor, hopptorn och gräsytor."
+      },
+      "naturereserv": {
+        "0": "Statligt naturreservat bildat 1982, 8 hektar lövskog och ängar med värdefull flora."
+      }
+    },
+    "fristad": {
+      "location": "Öresjöns norra strand, norra Borås kommun",
+      "description": "Fristad ligger vid Öresjöns norra strand med varierad geografi från bördig jordbruksmark till skogbeklädda höjder. Tre badplatser, sex grillplatser och två naturreservat gör Fristad till ett av kommunens rikaste friluftsområden.",
+      "firepit": {
+        "0": "Grillplats vid bryggan på Asklanda badplats.",
+        "1": "Grillplats på västra sidan av Asklanda badplats.",
+        "2": "Grillplats på östra sidan av Asklanda badplats.",
+        "3": "Grillplats vid bryggan på Skalle badplats.",
+        "4": "Grillplats på udden vid Skalle badplats.",
+        "5": "Grillplats vid Solviken badplats."
+      },
+      "fishing": {
+        "0": "Fiske i Säven norr om Fristad.",
+        "1": "Fiske i Varnum och Marsjöarna öster om Sparsör.",
+        "2": "Fiske i sjön Ärtingen väster om Fristad.",
+        "3": "Fiske i Öresjö. Dricksvattentäkt sedan 1932 — tvåtaktsmotorer förbjudna."
+      },
+      "swimming": {
+        "0": "Sandstrand med volleybollnät, klätternät och grillplatser.",
+        "1": "Lång och vacker sandstrand med brygga och fågeltorn.",
+        "2": "Sandstrand med brygga och badflotte vid sjön Ärtingen."
+      },
+      "naturereserv": {
+        "0": "66 hektar, bildat 1990. Känt fågelskådningsområde vid Viskans mynning i Öresjö.",
+        "1": "238 hektar, bildat 2010. Spänger och fågeltorn gör myren tillgänglig."
+      }
+    },
+    "frufallan": {
+      "location": "Öster om Öresjö, norr om Borås",
+      "description": "Runt Frufällan finns en blandning av skog och öppna landskap vid Öresjöns östra strand. Badplats med brygga och sandstrand, fyra grillplatser och fiske i Öresjö.",
+      "firepit": {
+        "0": "Grillplats vid badplatsen.",
+        "1": "Grillplats vid Kröklings hage.",
+        "2": "Grillplats på Mölarps ö.",
+        "3": "Grillplats på Vikåsaudden med bänkar och grusvägar."
+      },
+      "fishing": {
+        "0": "Fiske i Öresjö. Dricksvattentäkt sedan 1932 — tvåtaktsmotorer förbjudna."
+      },
+      "swimming": {
+        "0": "Badplats med brygga, sandstrand och gräsyta."
+      }
+    },
+    "gasslosa": {
+      "location": "Söder om Borås centrum",
+      "description": "Gässlösa är ett naturskönt friluftsområde söder om Borås med skogssjöar och ädellövskog. Förutom vandringsleder och elljusspår finns en populär badplats vid Stora Transåssjön och fiske med regnbåge.",
+      "firepit": {
+        "0": "Grillplats längs elljusspåret med utsikt över Borås."
+      },
+      "fishing": {
+        "0": "Fiske med utsättning av regnbåge. Sex uthyrningsbåtar finns tillgängliga."
+      },
+      "swimming": {
+        "0": "Badplats med sandstrand, gräsyta och omklädningsrum."
+      }
+    },
+    "hedared": {
+      "location": "Ca 20 km nordväst om Borås",
+      "description": "Hedared omges av skogar och jordbruksmark med flera små sjöar. Sex vandringsleder startar vid Hedareds stavkyrka — en av de äldsta bevarade träkyrkorna i Skandinavien. Badplats med sandstrand vid Östra Valsjön.",
+      "firepit": {
+        "0": "Grillplats vid badplatsen på Östra Valsjön."
+      },
+      "swimming": {
+        "0": "Badplats med gräsytor, sandstrand och brygga."
+      }
+    },
+    "hestra": {
+      "location": "Södra Borås, Hestra/Ekås",
+      "description": "Hestra erbjuder flera motionsslingor och vandringsleder i varierande längd genom skogslandskapet. Hestrastugan på Ekås är bas för sju leder, och Rya åsar naturreservat gränsar till området.",
+      "firepit": {
+        "0": "Grillplats bakom stugan, ej tillgänglighetsanpassad.",
+        "1": "Grillplats vid Lomsjön."
+      },
+      "naturereserv": {
+        "0": "562 hektar kommunalt naturreservat bildat 2001 med gammal tallskog och markerade leder."
+      }
+    },
+    "hofsnasTorpa": {
+      "location": "Östra Borås, vid Yttre Åsunden och Torpasjön",
+      "description": "Idylliska platser vid Yttre Åsunden och Torpasjön med rik historisk miljö. Hofsnäs herrgård och Torpa stenhus — ett välbevarat renässansslott från 1500-talet — ger området en unik karaktär. Elva grillplatser och en badplats gör det till ett omtyckt utflyktsmål.",
+      "firepit": {
+        "0": "Grillplats vid campingplatsen vid Hofsnäs.",
+        "1": "Grillplats vid Ekenäs.",
+        "2": "Grillplats vid Flaxet.",
+        "3": "Grillplats vid Näset.",
+        "4": "Grillplats vid den gamla ångbåtsbryggan."
+      },
+      "shelter": {
+        "0": "Vindskydd vid Torpasjön."
+      },
+      "fishing": {
+        "0": "Fiske i Torpasjöns vatten runt Torpanäsets naturreservat vid Torpa stenhus."
+      },
+      "swimming": {
+        "0": "Badplats med strand, brygga, gräsytor, två grillplatser och vindskydd."
+      },
+      "naturereserv": {
+        "0": "Statligt naturreservat, 159 hektar, bildat 2002. Leder genom betesmark, skog och strandmiljöer med rikt fågelliv."
+      }
+    },
+    "sjomarken": {
+      "location": "Ca 7 km väster om Borås",
+      "description": "Sjömarken ligger vid Viaredssjön med omväxlande landskap av skog och öppna fält. Badplats med sandstrand och lång brygga, fyra grillplatser och fiske.",
+      "firepit": {
+        "0": "Grillplats vid bryggan.",
+        "1": "Grillplats vid stranden.",
+        "2": "Grillplats på udden.",
+        "3": "Grillplats vid idrottsgården."
+      },
+      "fishing": {
+        "0": "Fiske i Viaredssjön nära Sandared och Hultafors."
+      },
+      "swimming": {
+        "0": "Sandstrand, stor gräsmatta och lång brygga. Två lekplatser och klätternät."
+      }
+    },
+    "knektasTosseryd": {
+      "location": "Tosseryd, norra Borås",
+      "description": "Knektås är sommarhalvåret en arena för mountainbike och vintertid kan man åka skidor här. Sex MTB-leder och en 1 100 meter lång rullskidspår sköts av Borås GIF.",
+      "firepit": {
+        "0": "Grillplats på kullen bakom klubbstugan, parkering ca 50 m bort."
+      }
+    },
+    "rydboholm": {
+      "location": "Ca 8 km söder om Borås",
+      "description": "Rydboholm ligger i Viskan-dalen vid Storsjön med ett vackert landskap av skog och jordbruksmark. Sju vandringsleder, badplats vid Furusjön och fiske i Storsjön.",
+      "firepit": {
+        "0": "Grillplats vid vattnet."
+      },
+      "fishing": {
+        "0": "Fiske i Storsjön och Viskan. Gratis bålramp tillgänglig."
+      },
+      "swimming": {
+        "0": "Mysig skogssjö med liten sandstrand och lugnt badvatten."
+      }
+    },
+    "rangedala": {
+      "location": "Ca 15 km nordöst om Borås",
+      "description": "Rångedala har ett varierat landskap med skog och jordbruksmark. Sju vandringsleder startar från Rångedala Hembygdsgård i Algutstorp, och Marsjöns badplats erbjuder sandstrand och brygga.",
+      "firepit": {
+        "0": "Grillplats vid bäckravinen nära hembygdsgården.",
+        "1": "Grillplats på ängen vid hembygdsgården.",
+        "2": "Grillplats vid badplatsen."
+      },
+      "swimming": {
+        "0": "Liten sandstrand med brygga och stor gräsmatta."
+      }
+    },
+    "sandared": {
+      "location": "Ca 10 km väster om Borås",
+      "description": "Sandareds landskap präglas av skog och öppna ytor nära Viaredssjön. Två badplatser med sandstrand, fem grillplatser och nio markerade leder inklusive Sjuhäradsleden.",
+      "firepit": {
+        "0": "Grillplats på Björviksudden.",
+        "1": "Grillplats vid SOK-stugan i Nordtorp.",
+        "2": "Grillplats på västra sidan av badplatsen.",
+        "3": "Grillplats på östra sidan av badplatsen.",
+        "4": "Grillplats vid ån på Ängen och Åkilen."
+      },
+      "fishing": {
+        "0": "Fiske i Viaredssjön."
+      },
+      "swimming": {
+        "0": "Stor sandstrand vid Viaredssjön.",
+        "1": "Generös sandstrand med brygga och hopptorn."
+      }
+    },
+    "sandhult": {
+      "location": "Ca 10 km nordväst om Borås",
+      "description": "Sandhult har ett naturskönt landskap med skog och öppna jordbruksmarker nära Trummesjön och Madsjön. Fyra markerade vandringsleder och en badplats med liten sandstrand.",
+      "firepit": {
+        "0": "Grillplats vid badplatsen med bänkar och bord."
+      },
+      "swimming": {
+        "0": "Liten sandstrand med brygga."
+      }
+    },
+    "seglora": {
+      "location": "Ca 20 km sydväst om Borås",
+      "description": "Seglora har ett varierat landskap med skog och jordbruksmark vid Viskan. Tranhults naturreservat skyddar en bokskogsklädd bergssida längs Viskans strand.",
+      "firepit": {
+        "0": "Grillplats vid badplatsen."
+      },
+      "fishing": {
+        "0": "Sjön Hungern är det primära fiskevatnet i området."
+      },
+      "swimming": {
+        "0": "Sandstrand med grillplats.",
+        "1": "Badplats vid Stora Hålsjön."
+      },
+      "naturereserv": {
+        "0": "Statligt naturreservat, 3 hektar, bildat 1984. Bokskogsklädd bergssida längs Viskan."
+      }
+    },
+    "sparsor": {
+      "location": "Vid Öresjö, norra Borås",
+      "description": "Sparsör ligger vid Öresjö med relativt kuperad terräng. Två naturreservat — Kröklings hage och Mölarp — finns i området, liksom kommunal badplats och vindskydd vid Trollevi.",
+      "firepit": {
+        "0": "Grillplats vid kommunal badplats med lång brygga.",
+        "1": "Grillplats vid Trollevi idrottsanläggning."
+      },
+      "shelter": {
+        "0": "Vindskydd norr om fotbollsplanerna."
+      },
+      "fishing": {
+        "0": "Fiske i Viskans huvudfåra vid Gingri Ön.",
+        "1": "Fiske i Öresjö. Dricksvattentäkt sedan 1932 — tvåtaktsmotorer förbjudna."
+      },
+      "swimming": {
+        "0": "Kommunal badplats med lång brygga."
+      },
+      "naturereserv": {
+        "0": "Statligt naturreservat, 14 hektar, bildat 1962. Ängsmark och ädellövskog.",
+        "1": "Statligt naturreservat, 66 hektar, bildat 1990. Där Viskan möter Öresjö — känt fågelskådningsområde."
+      }
+    },
+    "svaneholm": {
+      "location": "Ca 15 km söder om Borås",
+      "description": "Svaneholm omges av ett vackert naturlandskap med skog och jordbruksmark vid Storsjön och Viskan. Storsjön naturreservat på 460 hektar ger en känsla av vildmark nära staden.",
+      "fishing": {
+        "0": "Delvis i Marks kommun. Fiske söder om Borås."
+      },
+      "naturereserv": {
+        "0": "460 hektar kommunalt naturreservat bildat 2014 med vildmarkskänsla och populärt rekreationsområde."
+      }
+    },
+    "viskafors": {
+      "location": "Ca 12 km sydväst om Borås",
+      "description": "Viskafors har ett varierat landskap vid Viskan och Storsjön. 12 grillplatser, 4 vindskydd, badplats med sandstrand och Storsjön naturreservat gör det till kommunens sydligaste friluftspärla.",
+      "firepit": {
+        "0": "Grillplats vid Storsjögården.",
+        "1": "Grillplats vid klipporna längs Storsjön.",
+        "2": "Grillplats med vindskydd vid Hultaberg."
+      },
+      "shelter": {
+        "0": "Vindskydd vid Storsjögården.",
+        "1": "Vindskydd vid Hultaberg.",
+        "2": "Vindskydd vid Kopparhammaren.",
+        "3": "Vindskydd vid Lomsjö."
+      },
+      "fishing": {
+        "0": "3 km lång å med lugnt flöde.",
+        "1": "Fiske i Frisjön sydöst om Viskafors.",
+        "2": "Fiske i Viskan vid Seglora.",
+        "3": "Fiske i Storsjön och Viskan. Gratis bålramp tillgänglig."
+      },
+      "swimming": {
+        "0": "Sandstrand, gräsytor, brygga och grillplatser."
+      },
+      "naturereserv": {
+        "0": "460 hektar kommunalt naturreservat bildat 2014. Ger en känsla av vildmark nära Borås."
+      }
+    },
+    "ymergarden": {
+      "location": "Södra Borås, vid Borås skidstadion",
+      "description": "Ymergården är ett aktivitetsområde med utegym, boulebana, beachvolleyboll och en 27-håls disc golf-bana. Fyra vandringsleder och en rullskidsbana nära Borås skidstadion."
+    }
+  },
+  "home": {
+    "popularNearYou": "Populära promenader nära dig",
+    "guide": "Naturguide",
+    "guideSubtitle": "Allemansrätt · Svårighetsgrader",
+    "explore": "Utforska Borås",
+    "exploreSubtitle": "Rya åsar · Kype · m.fl.",
+    "news": "Nyheter",
+    "readyForWalk": "Dags för en promenad?",
+    "greetingMorning": "God morgon",
+    "greetingDay": "Hej",
+    "greetingEvening": "God kväll",
+    "greetingNight": "God natt"
+  },
+  "settings": {
+    "theme": "Tema",
+    "guide": "Naturguide",
+    "about": "Om Stigvidd"
+  },
+  "about": {
+    "description": "Stigvidd är en fullstack-app för vandring, byggd som ett examensarbete. Utforska vandringsleder i Boråsområdet, spela in egna vandringar med GPS, betygsätt leder och rapportera hinder längs vägen.",
+    "featuresTitle": "Funktioner",
+    "techTitle": "Teknik",
+    "dataSourceTitle": "Datakälla",
+    "dataSourceText": "Leddata för Boråsområdet hämtas från Borås Stads öppna dataportal i GeoJSON-format och importeras via eget ETL-verktyg.",
+    "footer": "Examensarbete · SUVNET24",
+    "features": [
+      "Utforska och filtrera vandringsleder (svårighetsgrad, tillgänglighet, längd, stad)",
+      "Interaktiv karta med ledermarkeringar och GPS-koordinater",
+      "GPS-spårning i bakgrunden under vandring med avståndsmätning",
+      "Lederrecensioner med stjärnbetyg och foton",
+      "Favoriter och önskelista med optimistisk UI-uppdatering",
+      "Rapportera hinder/faror med ett röstningssystem",
+      "Användarprofiler med vandringhistorik och statistik",
+      "Dela inspelade vandringar med vänner"
+    ],
+    "techStack": [
+      { "label": "App", "value": "React Native · Expo SDK 54 · TypeScript" },
+      { "label": "Routing", "value": "Expo Router (filbaserad)" },
+      { "label": "Karta & GPS", "value": "React Native Maps · Expo Location" },
+      { "label": "State", "value": "TanStack Query · Jotai" },
+      { "label": "UI", "value": "React Native Paper (Material Design 3)" },
+      { "label": "Backend", "value": "ASP.NET Core 10 · C# · EF Core · SQL Server" },
+      { "label": "Auth", "value": "Firebase Authentication (JWT)" }
+    ]
+  },
+  "guide": {
+    "title": "Naturguide",
+    "footer": "Källa: Naturvårdsverket · Borås Stad · Länsstyrelsen Västra Götaland",
+    "allemansrattenTitle": "Allemansrätten",
+    "allemansrattenSummary": "Rätten att röra sig fritt i naturen",
+    "allemansrattenBody1": "Allemansrätten är en unik svensk lag som ger alla rätt att vistas i naturen, oavsett vem som äger marken. Med den rätten följer också ett ansvar: att inte störa och inte förstöra.",
+    "allemansrattenMayBold": "Du får",
+    "allemansrattenMay": "vandra, cykla och rida nästan överallt i naturen, och du får övernatta ett par nätter utomhus. Du får plocka bär, svamp och blommor som inte är fridlysta.",
+    "allemansrattenMayNotBold": "Du får inte",
+    "allemansrattenMayNot": "gå in i privata trädgårdar, köra motorfordon på barmark, skada träd eller buskar, eller övernatta på samma plats mer än ett par nätter. Vid torka kan länsstyrelsen eller kommunen utfärda eldningsförbud. Håll alltid koll på om sådant råder i området.",
+    "allemansrattenDogBold": "Hund",
+    "allemansrattenDog": "ska hållas kopplad 1 mars–20 augusti så att vilda djur inte störs under sin reproduktionstid.",
+    "naturreservatTitle": "Naturreservat",
+    "naturreservatSummary": "Skyddade områden med egna föreskrifter",
+    "naturreservatBody1": "Ett naturreservat är ett område som skyddas av lag för att bevara värdefull natur eller ge människor möjlighet till friluftsliv. Beslut fattas av länsstyrelsen eller kommunen.",
+    "naturreservatRulesPrefix": "Varje reservat har ",
+    "naturreservatRulesBold": "egna föreskrifter",
+    "naturreservatRulesSuffix": " som kan vara strängare än allemansrätten. Läs alltid skyltarna vid ingången. De gäller framför allt för eldning, tältning, hundar och motorfordon.",
+    "naturreservatForbidPrefix": "Det är alltid förbjudet att ",
+    "naturreservatForbidBold": "skada träd, buskar eller mark",
+    "naturreservatForbidSuffix": ", och att ta med sig jord, sten eller andra naturmaterial från reservatet.",
+    "accessibilityGuideTitle": "Tillgänglighet",
+    "accessibilityGuideSummary": "Vad tillgänglighetsanpassad innebär i appen",
+    "accessibilityGuideBody1Prefix": "I appen är leder märkta som ",
+    "accessibilityGuideBody1Bold": "tillgänglighetsanpassade",
+    "accessibilityGuideBody1Suffix": " om de är framkomliga med rullstol, rollator eller barnvagn. Det innebär jämnt och fast underlag med begränsad lutning och tillräcklig bredd.",
+    "accessibilityGuideBody2": "På vissa platser finns även anpassade rastplatser, ramper, parkeringar för rörelsehindrade eller tillgänglig toalett. Vad som erbjuds på varje enskild led framgår av ledens informationssida.",
+    "accessibilityGuideBody3Prefix": "Leder som ",
+    "accessibilityGuideBody3Bold": "inte är tillgänglighetsanpassade",
+    "accessibilityGuideBody3Suffix": " utgår från naturens egna förutsättningar. Underlaget kan vara ojämnt med stenar, rötter och lera, och sträckan kan innehålla branta partier eller smala passager.",
+    "difficultiesGuideTitle": "Svårighetsgrader",
+    "difficultiesGuideSummary": "Lätt, medel, svår och oklassificerad",
+    "readMoreTitle": "Läs mer",
+    "readMoreSummary": "Externa källor och vidare läsning",
+    "links": [
+      { "label": "Allemansrätten — Naturvårdsverket", "url": "https://www.naturvardsverket.se/allemansratten" },
+      {
+        "label": "Naturreservat — Naturvårdsverket",
+        "url": "https://www.naturvardsverket.se/amnesomraden/skyddad-natur/olika-former-av-naturskydd/naturreservat/"
+      },
+      {
+        "label": "Vett och etikett — Borås Stad",
+        "url": "https://www.boras.se/upplevaochgora/friluftslivochnatur/vettochallemansratt.4.1601545718c38a990ab44564.html"
+      },
+      {
+        "label": "Tillgängligt friluftsliv — Borås Stad",
+        "url": "https://www.boras.se/upplevaochgora/friluftslivochnatur/tillgangligtfriluftslivochtillganglignatur.4.6ef5a1031900c68011c55207.html"
+      },
+      {
+        "label": "Friluftsliv & natur — Borås Stad",
+        "url": "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur.4.1601545718c38a990ab4455a.html"
+      },
+      { "label": "Vandringsleder — Borås.com", "url": "https://www.boras.com/lista/vandringsleder/" },
+      { "label": "SMHI — väderprognos", "url": "https://www.smhi.se/" },
+      { "label": "Friluftsfrämjandet", "url": "https://www.friluftsframjandet.se/" }
+    ]
+  },
+  "createHike": {
+    "locationRequired": "Du behöver dela din plats för att kunna skapa en egen promenad.",
+    "cancelTitle": "Avbryt pågående promenad",
+    "cancelConfirm": "Vill du verkligen avbryta den pågående promenad?",
+    "cancelWarning": "Detta går inte att ångra.",
+    "no": "Nej",
+    "yes": "Ja",
+    "start": "Starta vandring",
+    "reset": "Nollställ",
+    "resume": "Återuppta",
+    "fgPermissionDenied": "Åtkomst till plats nekades.",
+    "bgPermissionDenied": "Åtkomst till bakgrundsplats nekades.",
+    "notificationBody": "Spelar in vandring..."
+  },
+  "tabs": {
+    "home": "Start",
+    "map": "Karta",
+    "trails": "Vandring",
+    "profile": "Profil"
+  },
+  "notFound": {
+    "title": "Sidan hittades inte",
+    "goHome": "Gå till startsidan"
+  },
+  "imagePermission": {
+    "title": "Tillgång krävs",
+    "message": "Tillgång till mediabiblioteket krävs.",
+    "jpgOnly": "Endast JPG-bilder är tillåtna"
+  },
+  "news": {
+    "items": [
+      { "title": "Våren är här och det är dags att röra på sig! 🥾", "date": "5 apr 2026" },
+      { "title": "Nu blir det enklare än någonsin att hitta rätt led i Borås! 🌲🥾", "date": "18 feb 2026" },
+      { "title": "Snart i appen: achievements! 🎉", "date": "28 jan 2026" },
+      { "title": "Picke vann igen! Stigvidds mest promenerade promenad 2025!", "date": "14 jan 2026" },
+      { "title": "Snökaos! ❄️ Promenader du kan gå trots snön", "date": "10 jan 2026" }
+    ]
+  },
+  "trailList": {
+    "title": "Vandringsleder",
+    "filter": "Filtrera",
+    "search": "Sök efter led eller ort...",
+    "showing": "Visar {{count}} av {{total}} leder",
+    "clearFilters": "Rensa filter",
+    "refreshing": "Uppdaterar leder...",
+    "noResults": "Inga leder hittades",
+    "noResultsHint": "Prova att ändra dina filter"
+  }
+}
