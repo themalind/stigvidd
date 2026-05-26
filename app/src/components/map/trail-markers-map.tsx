@@ -1,12 +1,13 @@
+import { getTrailPaths, getFacilityMarkers, getTrailMarkers, TrailPathBounds } from "@/api/map-markers";
 import { START_COORDINATE_BORAS } from "@/constants/constants";
-import { MapMarkerFilter, TrailPathResponse } from "@/data/types";
+import { MapMarkerFilter, TrailPathLite } from "@/data/types";
+import { getCachedPaths, getZoomLevel, setCachedPaths, snapBounds } from "@/services/trail-path-cache";
 import { FontAwesome6, Ionicons } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
-import React, { forwardRef, useCallback, useMemo, useState } from "react";
-import { StyleProp, StyleSheet, View, ViewStyle } from "react-native";
+import React, { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ActivityIndicator, StyleProp, StyleSheet, View, ViewStyle } from "react-native";
 import MapView, { Marker, Polyline, Region } from "react-native-maps";
 import { useTheme } from "react-native-paper";
-import { getFacilityMarkers, getTrailMarkers, getTrailPaths, TrailPathBounds } from "@/api/map-markers";
 import Map from "./map";
 
 interface Props {
@@ -14,8 +15,8 @@ interface Props {
   initialRegion?: Region;
   showsUserLocation?: boolean;
   filter: MapMarkerFilter;
-  selectedTrail: TrailPathResponse | null;
-  onTrailSelect: (trail: TrailPathResponse | null) => void;
+  selectedIdentifier: string | null;
+  onTrailSelect: (identifier: string | null) => void;
   onMapReady?: () => void;
 }
 
@@ -38,19 +39,26 @@ function MapPin({ color, children }: { color: string; children: React.ReactNode 
 }
 
 export default forwardRef<MapView, Props>(function TrailMarkersMap(
-  { style, initialRegion, showsUserLocation, filter, selectedTrail, onTrailSelect, onMapReady }: Props,
+  { style, initialRegion, showsUserLocation, filter, selectedIdentifier, onTrailSelect, onMapReady }: Props,
   mapRef,
 ) {
   const theme = useTheme();
-  const [bounds, setBounds] = useState<TrailPathBounds>(
-    regionToBounds(initialRegion ?? START_COORDINATE_BORAS),
-  );
+  // Incremented on every new fetch; used to discard responses from superseded requests
+  // when the user pans faster than the network can respond.
+  const fetchCounter = useRef(0);
+  const initialRegionRef = initialRegion ?? START_COORDINATE_BORAS;
 
-  const { data: trailPaths } = useQuery({
-    queryKey: ["trails", "paths", bounds],
-    queryFn: () => getTrailPaths(bounds),
-    enabled: filter.trails,
+  // Bundling bounds + latitudeDelta into one object avoids a separate state update
+  // for each field and ensures the fetch effect always sees a consistent snapshot.
+  const [viewState, setViewState] = useState({
+    bounds: regionToBounds(initialRegionRef),
+    latitudeDelta: initialRegionRef.latitudeDelta,
   });
+
+  // Keeps the previously fetched paths visible while a new fetch is in flight,
+  // so the map never goes blank during panning.
+  const [displayedPaths, setDisplayedPaths] = useState<TrailPathLite[]>([]);
+  const [isNetworkFetching, setIsNetworkFetching] = useState(false);
 
   const { data: trailMarkers } = useQuery({
     queryKey: ["trails", "markers"],
@@ -68,54 +76,124 @@ export default forwardRef<MapView, Props>(function TrailMarkersMap(
   const shelters = useMemo(() => facilities?.filter((f) => f.facilityType === 2), [facilities]);
   const combined = useMemo(() => facilities?.filter((f) => f.facilityType === 3), [facilities]);
 
-  const handleRegionChange = useCallback((region: Region) => setBounds(regionToBounds(region)), []);
+  useEffect(() => {
+    if (!filter.trails) {
+      setDisplayedPaths([]);
+      setIsNetworkFetching(false);
+      return;
+    }
 
-  const startCoord = selectedTrail?.path[0];
+    const level = getZoomLevel(viewState.latitudeDelta);
+
+    if (level === 0) {
+      setDisplayedPaths([]);
+      setIsNetworkFetching(false);
+      return;
+    }
+
+    let active = true;
+    // Snapshot the counter value so we can detect if a newer request has started
+    // by the time this async function resolves.
+    const thisRequest = ++fetchCounter.current;
+
+    async function fetchPaths() {
+      const cached = await getCachedPaths(viewState.bounds, level);
+
+      if (!active) return;
+
+      if (cached) {
+        // Cache hit — render immediately, no loading indicator needed.
+        setDisplayedPaths(cached);
+        setIsNetworkFetching(false);
+        return;
+      }
+
+      setIsNetworkFetching(true);
+
+      try {
+        // Snap to LOD grid before sending to the API so the server receives
+        // a slightly larger but grid-aligned bounding box, matching the cache key.
+        const snapped = snapBounds(viewState.bounds, level);
+        const data = await getTrailPaths(snapped);
+        // Discard if a newer pan has already started a more recent request.
+        if (!active || fetchCounter.current !== thisRequest) return;
+        await setCachedPaths(viewState.bounds, level, data);
+        setDisplayedPaths(data);
+      } catch {
+        // Keep old paths visible on error
+      } finally {
+        if (active && fetchCounter.current === thisRequest) {
+          setIsNetworkFetching(false);
+        }
+      }
+    }
+
+    fetchPaths();
+
+    return () => {
+      active = false;
+    };
+  }, [viewState, filter.trails]);
+
+  const handleRegionChange = useCallback((region: Region) => {
+    setViewState({
+      bounds: regionToBounds(region),
+      latitudeDelta: region.latitudeDelta,
+    });
+  }, []);
+
+  const selectedPath = displayedPaths.find((p) => p.identifier === selectedIdentifier);
+  const startCoord = selectedPath?.path[0];
 
   return (
+    <View style={style}>
     <Map
       ref={mapRef}
-      style={style}
-      initialRegion={initialRegion ?? START_COORDINATE_BORAS}
+      style={StyleSheet.absoluteFill}
+      initialRegion={initialRegionRef}
       showsUserLocation={showsUserLocation}
       onRegionChangeComplete={handleRegionChange}
       onPress={() => onTrailSelect(null)}
       {...(onMapReady !== undefined && { onMapReady })}
     >
       {filter.trails &&
-        trailPaths
-          ?.filter((t) => !filter.accessibility || t.isAccessible)
+        displayedPaths
+          // Accessibility data lives on trailMarkers (global fetch), not on the
+          // lean path data, so we cross-reference by identifier here.
+          .filter((t) => !filter.accessibility || trailMarkers?.find((m) => m.identifier === t.identifier)?.isAccessible)
           .map((t) => (
             <Polyline
               key={t.identifier}
               coordinates={t.path}
-              strokeColor={selectedTrail?.identifier === t.identifier ? "#1a5266" : "#2a8099"}
-              strokeWidth={selectedTrail?.identifier === t.identifier ? 5 : 3}
-              zIndex={selectedTrail?.identifier === t.identifier ? 2 : 1}
+              strokeColor={selectedIdentifier === t.identifier ? "#1a5266" : "#2a8099"}
+              strokeWidth={selectedIdentifier === t.identifier ? 5 : 3}
+              zIndex={selectedIdentifier === t.identifier ? 2 : 1}
               tappable
-              onPress={() => onTrailSelect(t)}
+              onPress={() => onTrailSelect(t.identifier)}
             />
           ))}
 
       {filter.trails &&
         trailMarkers
-          ?.filter((t) => t.startLatitude != null && t.startLongitude != null && (!filter.accessibility || t.isAccessible) && t.identifier !== selectedTrail?.identifier)
-          .map((t) => {
-            const trailPath = trailPaths?.find((p) => p.identifier === t.identifier);
-            return (
-              <Marker
-                key={t.identifier}
-                coordinate={{ latitude: Number(t.startLatitude), longitude: Number(t.startLongitude) }}
-                anchor={{ x: 0.5, y: 1 }}
-                calloutEnabled={false}
-                onPress={() => trailPath && onTrailSelect(trailPath)}
-              >
-                <MapPin color={theme.colors.secondary}>
-                  <Ionicons name="trail-sign-outline" size={14} color={theme.colors.onSecondary} />
-                </MapPin>
-              </Marker>
-            );
-          })}
+          ?.filter(
+            (t) =>
+              t.startLatitude != null &&
+              t.startLongitude != null &&
+              (!filter.accessibility || t.isAccessible) &&
+              t.identifier !== selectedIdentifier,
+          )
+          .map((t) => (
+            <Marker
+              key={t.identifier}
+              coordinate={{ latitude: Number(t.startLatitude), longitude: Number(t.startLongitude) }}
+              anchor={{ x: 0.5, y: 1 }}
+              onPress={() => onTrailSelect(t.identifier)}
+            >
+              <MapPin color={theme.colors.secondary}>
+                <Ionicons name="trail-sign-outline" size={14} color={theme.colors.onSecondary} />
+              </MapPin>
+            </Marker>
+          ))}
 
       {filter.firePits &&
         firePits
@@ -172,7 +250,14 @@ export default forwardRef<MapView, Props>(function TrailMarkersMap(
           </MapPin>
         </Marker>
       )}
+
     </Map>
+      {isNetworkFetching && (
+        <View style={s.fetchingIndicator} pointerEvents="none">
+          <ActivityIndicator size="small" color={theme.colors.primary} />
+        </View>
+      )}
+    </View>
   );
 });
 
@@ -199,5 +284,18 @@ const s = StyleSheet.create({
     borderTopWidth: 7,
     borderLeftColor: "transparent",
     borderRightColor: "transparent",
+  },
+  fetchingIndicator: {
+    position: "absolute",
+    top: 12,
+    right: 12,
+    backgroundColor: "rgba(255,255,255,0.85)",
+    borderRadius: 16,
+    padding: 6,
+    elevation: 4,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.15,
+    shadowRadius: 2,
   },
 });
