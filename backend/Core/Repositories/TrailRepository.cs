@@ -122,8 +122,6 @@ public class TrailRepository : ITrailRepository
         }
     }
 
-    private static double DegreesToRadians(double degrees) => degrees * Math.PI / 180.0;
-
     public async Task<RepositoryResult<T>> GetTrailByIdentifierAsync<T>(string identifier, Expression<Func<Trail, T>> selector, CancellationToken ctoken)
     {
         try
@@ -202,9 +200,13 @@ public class TrailRepository : ITrailRepository
         {
             using var context = await _context.CreateDbContextAsync(ctoken);
 
+            // Build a bounding-box geometry in WGS84 (SRID 4326).
+            // Envelope takes (minX, maxX, minY, maxY) = (minLon, maxLon, minLat, maxLat).
             var factory = new GeometryFactory(new PrecisionModel(), 4326);
             var bbox = factory.ToGeometry(new Envelope(minLon, maxLon, minLat, maxLat));
 
+            // Intersects performs a spatial index lookup (GiST index on GeoPath in PostGIS),
+            // returning only trails whose geometry overlaps the viewport bounding box.
             var trails = await context.Trails
                 .AsNoTracking()
                 .Where(t => t.IsVerified && t.GeoPath != null && t.GeoPath.Intersects(bbox))
