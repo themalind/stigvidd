@@ -1,7 +1,7 @@
-import { Coordinates, CreateTrailRequest, Trail, TrailOverview, TrailShortInfoResponse } from "@/data/types";
+import { Coordinates, CreateTrailRequest, Trail, TrailCard, TrailOverview, TrailShortInfoResponse } from "@/data/types";
 import uuid from "react-native-uuid";
-import { getUserToken } from "./users";
 import { BASE_URL } from "./api-config";
+import { getUserToken } from "./users";
 
 export async function getPopularTrails(latitude?: number, longitude?: number): Promise<TrailOverview[]> {
   try {
@@ -52,6 +52,21 @@ export async function getTrailByIdentifier(identifier: string): Promise<Trail> {
     const json = await response.json();
 
     return json;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+}
+
+export async function getTrailCard(identifier: string): Promise<TrailCard> {
+  try {
+    const response = await fetch(`${BASE_URL}/trails/${identifier}/card`);
+
+    if (!response.ok) {
+      throw new Error(`getTrailCard: HTTP error ${response.status}`);
+    }
+    
+    return response.json();
   } catch (error) {
     console.log(error);
     throw error;
