@@ -133,13 +133,19 @@ export interface TrailMarkerResponse {
   startLongitude?: number;
 }
 
-export interface TrailPathResponse {
+export interface TrailPathLite {
+  identifier: string;
+  path: LatLng[];
+}
+
+export interface TrailCard {
   identifier: string;
   name: string;
-  isAccessible: boolean;
   trailLength: number;
   classification: number;
-  path: LatLng[];
+  isAccessible: boolean;
+  averageRating: number;
+  image?: TrailImage;
 }
 
 export interface Hike {
