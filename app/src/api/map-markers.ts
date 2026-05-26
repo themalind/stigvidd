@@ -1,4 +1,4 @@
-import { Facility, TrailMarkerResponse, TrailPathResponse } from "@/data/types";
+import { Facility, TrailMarkerResponse, TrailPathLite } from "@/data/types";
 import { BASE_URL } from "./api-config";
 
 export interface TrailPathBounds {
@@ -24,7 +24,7 @@ export async function getTrailMarkers(): Promise<TrailMarkerResponse[]> {
   }
 }
 
-export async function getTrailPaths(bounds: TrailPathBounds): Promise<TrailPathResponse[]> {
+export async function getTrailPaths(bounds: TrailPathBounds): Promise<TrailPathLite[]> {
   try {
     const { minLat, minLon, maxLat, maxLon } = bounds;
 
