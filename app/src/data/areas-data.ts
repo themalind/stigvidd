@@ -575,7 +575,7 @@ export const borasAreas: BorasArea[] = [
     location: "Centrala Borås, vid sjön Kolbränningen",
     description:
       "Vid sjön Kolbränningen finns ett naturskönt område med kommunal badplats med sandstrand, gräsmatta och brygga. Vackra skogsstigar och promenadstråk löper genom omgivande bostadsområden.",
-    image: { uri: "https://stigvidd.se/files/trails/area-mock.jpg" },
+    image: { uri: "https://stigvidd.se/files/trails/area-kolbranningen.jpg" },
     url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/byttorpkolbranningen.4.5493346718e560a04fa5d2ec.html",
     trails: [],
     facilities: {
