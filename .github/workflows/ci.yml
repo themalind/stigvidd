@@ -35,20 +35,6 @@ jobs:
         ConnectionStrings__StigVidd: "DataSource=:memory:"
       run: |
         dotnet test --no-build
-    - name: Unit Test Report
-      uses: phoenix-actions/test-reporting@v8
-      if: success() || failure()
-      with:
-          name: Unit Tests
-          path: unit-test-results.trx
-          reporter: dotnet-trx
-    - name: Integration Test Report
-      uses: phoenix-actions/test-reporting@v8
-      if: success() || failure()
-      with:
-          name: Integration Tests
-          path: integration-test-results.trx
-          reporter: dotnet-trx
   app:
     runs-on: ubuntu-latest
     defaults:
