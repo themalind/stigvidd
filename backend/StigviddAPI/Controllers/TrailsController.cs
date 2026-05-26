@@ -111,6 +111,22 @@ public class TrailsController : StigViddController
         return Ok(result.Value);
     }
 
+    [HttpGet("{identifier}/card")]
+    public async Task<ActionResult<TrailCardResponse?>> GetTrailCard(
+        string identifier,
+        CancellationToken ctoken)
+    {
+        var result = await _trailService.GetTrailCardByIdentifierAsync(identifier, ctoken);
+
+        if (!result.Success && result.Message != null)
+        {
+            _logger.LogInformation("GetTrailCard: Trail card with identifier: {identifier} not found.", identifier);
+            return ToActionResult(result.Message);
+        }
+
+        return Ok(result.Value);
+    }
+
     [HttpGet("markers")]
     public async Task<ActionResult<IReadOnlyCollection<TrailMarkerResponse>>> GetTrailMarkers(
                CancellationToken ctoken)

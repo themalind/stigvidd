@@ -100,12 +100,17 @@ public class TrailService : ITrailService
 
     public async Task<Result<IReadOnlyCollection<TrailPathResponse>>> GetTrailPathsInBoundsAsync(double minLat, double minLon, double maxLat, double maxLon, CancellationToken ctoken)
     {
+        // Scale simplification tolerance to the viewport size (LOD).
+        // Large bbox → high tolerance → fewer coordinate points → less data over the wire.
+        // At close zoom (small bbox) tolerance is 0, meaning full coordinate precision.
         var bboxHeight = maxLat - minLat;
         var tolerance = bboxHeight > 0.5 ? 0.001 : bboxHeight > 0.1 ? 0.0003 : 0.0;
 
+        // Only fetch identifier + geometry — metadata (name, length, classification) is
+        // loaded on demand when the user taps a trail via the /card endpoint.
         var result = await _trailRepository.GetTrailsInBoundsAsync(
             minLat, minLon, maxLat, maxLon,
-            t => new { t.Identifier, t.Name, t.Accessibility, t.GeoPath, t.TrailLength, t.Classification },
+            t => new { t.Identifier, t.GeoPath },
             ctoken);
 
         if (result.Status == RepositoryResultStatus.Error)
@@ -116,21 +121,61 @@ public class TrailService : ITrailService
 
         var paths = result.Value.Select(t =>
         {
+            // Douglas-Peucker reduces the number of coordinate points while preserving
+            // the visual shape of the polyline. Skipped at close zoom (tolerance = 0).
             var geometry = tolerance > 0 && t.GeoPath != null
                 ? DouglasPeuckerSimplifier.Simplify(t.GeoPath, tolerance)
                 : t.GeoPath;
 
+            // GeoPath uses (X = longitude, Y = latitude) — swap to LatLngPoint order.
             return TrailPathResponse.Create(
                 t.Identifier,
-                t.Name,
-                t.Accessibility,
-                t.TrailLength,
-                t.Classification,
                 geometry?.Coordinates.Select(c => new LatLngPoint(c.Y, c.X)).ToList() ?? []
             );
         }).ToList();
 
         return Result.Ok<IReadOnlyCollection<TrailPathResponse>>(paths);
+    }
+
+    public async Task<Result<TrailCardResponse?>> GetTrailCardByIdentifierAsync(string identifier, CancellationToken ctoken)
+    {
+        // Project to an anonymous type so EF Core can translate the entire query to SQL,
+        // including the subquery aggregates, without loading full navigation collections.
+        var result = await _trailRepository.GetTrailByIdentifierAsync(
+            identifier,
+            t => new
+            {
+                t.Identifier,
+                t.Name,
+                t.TrailLength,
+                t.Classification,
+                t.Accessibility,
+                // Inline average avoids a separate round-trip to the reviews table.
+                AverageRating = t.Reviews!.Any() ? t.Reviews!.Average(r => r.Rating) : 0m,
+                // Only the first image is needed for the map popup card.
+                Image = t.TrailImages!.Select(i => new { i.Identifier, i.ImageUrl }).FirstOrDefault()
+            },
+            ctoken);
+
+        if (result.Status == RepositoryResultStatus.Error)
+            return Result.Fail<TrailCardResponse?>(new Message(500, "An error occurred while fetching trail card."));
+
+        if (!result.IsSuccess)
+            return Result.Fail<TrailCardResponse?>(new Message(404, $"Trail with identifier {identifier} not found."));
+
+        var v = result.Value;
+        var image = v.Image != null
+            ? TrailImageResponse.Create(_trailResponseFactory.PresentableBaseUrl, v.Image.Identifier, v.Image.ImageUrl)
+            : null;
+
+        return Result.Ok<TrailCardResponse?>(TrailCardResponse.Create(
+            v.Identifier,
+            v.Name,
+            v.TrailLength,
+            v.Classification,
+            v.Accessibility,
+            v.AverageRating,
+            image));
     }
 
     public async Task<Result<IReadOnlyCollection<TrailOverviewResponse?>>> GetPopularTrailOverviewsAsync(
