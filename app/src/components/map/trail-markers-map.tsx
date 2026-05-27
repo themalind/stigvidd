@@ -1,12 +1,12 @@
 import { getFacilityMarkers, getTrailMarkers, getTrailPaths, TrailPathBounds } from "@/api/map-markers";
 import { START_COORDINATE_BORAS } from "@/constants/constants";
-import { MapMarkerFilter, TrailPathLite } from "@/data/types";
+import { Facility, MapMarkerFilter, TrailMarkerResponse, TrailPathLite } from "@/data/types";
 import { getCachedPaths, getZoomLevel, setCachedPaths, snapBounds } from "@/services/trail-path-cache";
 import { FontAwesome6, Ionicons } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
-import React, { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { forwardRef, memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ActivityIndicator, StyleProp, StyleSheet, View, ViewStyle } from "react-native";
-import MapView, { Marker, Polyline, Region } from "react-native-maps";
+import MapView, { LatLng, Marker, Polyline, Region } from "react-native-maps";
 import { useTheme } from "react-native-paper";
 import Map from "./map";
 
@@ -29,34 +29,151 @@ function regionToBounds(region: Region): TrailPathBounds {
   };
 }
 
-function MapPin({ color, children }: { color: string; children: React.ReactNode }) {
+// Memoized so the JSX subtree is not recreated on every parent render.
+// onLayout is used by markers to know when the view has been measured so
+// they can disable tracksViewChanges after the first layout pass.
+const MapPin = memo(function MapPin({
+  color,
+  children,
+  onLayout,
+}: {
+  color: string;
+  children: React.ReactNode;
+  onLayout?: () => void;
+}) {
   return (
-    <View style={s.pinWrapper}>
+    <View style={s.pinWrapper} onLayout={onLayout}>
       <View style={[s.pinBody, { backgroundColor: color }]}>{children}</View>
       <View style={[s.pinTip, { borderTopColor: color }]} />
     </View>
   );
-}
+});
+
+// Each trail gets its own memoized polyline. When selectedIdentifier changes
+// only the 1–2 affected instances re-render; all others bail out via React.memo
+// because their props are unchanged.
+// Note: iOS hit-area handling is intentionally omitted until iOS is addressed.
+const TrailPolyline = memo(function TrailPolyline({
+  identifier,
+  path,
+  selected,
+  onPress,
+}: {
+  identifier: string;
+  path: LatLng[];
+  selected: boolean;
+  onPress: (id: string) => void;
+}) {
+  const handlePress = useCallback(() => onPress(identifier), [onPress, identifier]);
+  return (
+    <Polyline
+      coordinates={path}
+      strokeColor={selected ? "#1a5266" : "#2a8099"}
+      strokeWidth={selected ? 5 : 3}
+      zIndex={selected ? 2 : 1}
+      tappable
+      onPress={handlePress}
+    />
+  );
+});
+
+// tracksViewChanges starts true so the native layer can measure the custom view,
+// then flips to false after the first layout — stopping the per-frame re-render
+// polling that causes lag on older devices.
+const TrailStartMarker = memo(function TrailStartMarker({
+  trail,
+  color,
+  iconColor,
+  onPress,
+}: {
+  trail: TrailMarkerResponse;
+  color: string;
+  iconColor: string;
+  onPress: (id: string) => void;
+}) {
+  const [tracksViewChanges, setTracksViewChanges] = useState(true);
+  const handlePress = useCallback(() => onPress(trail.identifier), [onPress, trail.identifier]);
+  const handleLayout = useCallback(() => setTracksViewChanges(false), []);
+  return (
+    <Marker
+      coordinate={{ latitude: Number(trail.startLatitude), longitude: Number(trail.startLongitude) }}
+      anchor={{ x: 0.5, y: 1 }}
+      tracksViewChanges={tracksViewChanges}
+      onPress={handlePress}
+    >
+      <MapPin color={color} onLayout={handleLayout}>
+        <Ionicons name="trail-sign-outline" size={14} color={iconColor} />
+      </MapPin>
+    </Marker>
+  );
+});
+
+const FacilityMarker = memo(function FacilityMarker({
+  facility,
+  color,
+  iconColor,
+  icon,
+  iconSize,
+}: {
+  facility: Facility;
+  color: string;
+  iconColor: string;
+  icon: "bonfire-outline" | "tent";
+  iconSize: number;
+}) {
+  const [tracksViewChanges, setTracksViewChanges] = useState(true);
+  const handleLayout = useCallback(() => setTracksViewChanges(false), []);
+  return (
+    <Marker
+      coordinate={{ latitude: Number(facility.latitude), longitude: Number(facility.longitude) }}
+      title={facility.name}
+      anchor={{ x: 0.5, y: 1 }}
+      tracksViewChanges={tracksViewChanges}
+    >
+      <MapPin color={color} onLayout={handleLayout}>
+        {icon === "tent" ? (
+          <FontAwesome6 name="tent" size={iconSize} color={iconColor} />
+        ) : (
+          <Ionicons name="bonfire-outline" size={iconSize} color={iconColor} />
+        )}
+      </MapPin>
+    </Marker>
+  );
+});
+
+const SelectedTrailMarker = memo(function SelectedTrailMarker({
+  coordinate,
+  color,
+  iconColor,
+}: {
+  coordinate: LatLng;
+  color: string;
+  iconColor: string;
+}) {
+  const [tracksViewChanges, setTracksViewChanges] = useState(true);
+  const handleLayout = useCallback(() => setTracksViewChanges(false), []);
+  return (
+    <Marker coordinate={coordinate} anchor={{ x: 0.5, y: 1 }} tracksViewChanges={tracksViewChanges}>
+      <MapPin color={color} onLayout={handleLayout}>
+        <Ionicons name="trail-sign-outline" size={14} color={iconColor} />
+      </MapPin>
+    </Marker>
+  );
+});
 
 export default forwardRef<MapView, Props>(function TrailMarkersMap(
   { style, initialRegion, showsUserLocation, filter, selectedIdentifier, onTrailSelect, onMapReady }: Props,
   mapRef,
 ) {
   const theme = useTheme();
-  // Incremented on every new fetch; used to discard responses from superseded requests
-  // when the user pans faster than the network can respond.
   const fetchCounter = useRef(0);
   const initialRegionRef = initialRegion ?? START_COORDINATE_BORAS;
 
-  // Bundling bounds + latitudeDelta into one object avoids a separate state update
-  // for each field and ensures the fetch effect always sees a consistent snapshot.
   const [viewState, setViewState] = useState({
     bounds: regionToBounds(initialRegionRef),
     latitudeDelta: initialRegionRef.latitudeDelta,
   });
 
-  // Keeps the previously fetched paths visible while a new fetch is in flight,
-  // so the map never goes blank during panning.
   const [displayedPaths, setDisplayedPaths] = useState<TrailPathLite[]>([]);
   const [isNetworkFetching, setIsNetworkFetching] = useState(false);
 
@@ -72,9 +189,84 @@ export default forwardRef<MapView, Props>(function TrailMarkersMap(
     enabled: filter.firePits || filter.shelters,
   });
 
-  const firePits = useMemo(() => facilities?.filter((f) => f.facilityType === 1), [facilities]);
-  const shelters = useMemo(() => facilities?.filter((f) => f.facilityType === 2), [facilities]);
-  const combined = useMemo(() => facilities?.filter((f) => f.facilityType === 3), [facilities]);
+  // O(1) accessibility lookup — replaces the O(n) .find() that was nested inside
+  // every .filter() call, making the old code O(n²) per render.
+  const accessibleIds = useMemo(
+    () => new Set(trailMarkers?.filter((m) => m.isAccessible).map((m) => m.identifier) ?? []),
+    [trailMarkers],
+  );
+
+  const firePits = useMemo(() => facilities?.filter((f) => f.facilityType === 1) ?? [], [facilities]);
+  const shelters = useMemo(() => facilities?.filter((f) => f.facilityType === 2) ?? [], [facilities]);
+  const combined = useMemo(() => facilities?.filter((f) => f.facilityType === 3) ?? [], [facilities]);
+
+  const { minLat, maxLat, minLon, maxLon } = viewState.bounds;
+
+  // Viewport-cull markers: only mount what's inside the current map bounds.
+  // Polylines are already viewport-culled at the API level via the bounds query.
+  const visibleTrailMarkers = useMemo(
+    () =>
+      trailMarkers?.filter(
+        (t) =>
+          t.startLatitude != null &&
+          t.startLongitude != null &&
+          t.startLatitude >= minLat &&
+          t.startLatitude <= maxLat &&
+          t.startLongitude >= minLon &&
+          t.startLongitude <= maxLon &&
+          (!filter.accessibility || accessibleIds.has(t.identifier)) &&
+          t.identifier !== selectedIdentifier,
+      ) ?? [],
+    [trailMarkers, minLat, maxLat, minLon, maxLon, filter.accessibility, accessibleIds, selectedIdentifier],
+  );
+
+  const visibleFirePits = useMemo(
+    () =>
+      firePits.filter(
+        (f) =>
+          f.latitude >= minLat &&
+          f.latitude <= maxLat &&
+          f.longitude >= minLon &&
+          f.longitude <= maxLon &&
+          (!filter.accessibility || f.isAccessible),
+      ),
+    [firePits, minLat, maxLat, minLon, maxLon, filter.accessibility],
+  );
+
+  const visibleShelters = useMemo(
+    () =>
+      shelters.filter(
+        (f) =>
+          f.latitude >= minLat &&
+          f.latitude <= maxLat &&
+          f.longitude >= minLon &&
+          f.longitude <= maxLon &&
+          (!filter.accessibility || f.isAccessible),
+      ),
+    [shelters, minLat, maxLat, minLon, maxLon, filter.accessibility],
+  );
+
+  const visibleCombined = useMemo(
+    () =>
+      combined.filter(
+        (f) =>
+          f.latitude >= minLat &&
+          f.latitude <= maxLat &&
+          f.longitude >= minLon &&
+          f.longitude <= maxLon &&
+          (!filter.accessibility || f.isAccessible),
+      ),
+    [combined, minLat, maxLat, minLon, maxLon, filter.accessibility],
+  );
+
+  // Pre-filter paths once so accessibility isn't re-evaluated per render.
+  const visiblePaths = useMemo(
+    () =>
+      filter.trails
+        ? displayedPaths.filter((t) => !filter.accessibility || accessibleIds.has(t.identifier))
+        : [],
+    [displayedPaths, filter.trails, filter.accessibility, accessibleIds],
+  );
 
   useEffect(() => {
     return () => {
@@ -98,8 +290,6 @@ export default forwardRef<MapView, Props>(function TrailMarkersMap(
     }
 
     let active = true;
-    // Snapshot the counter value so we can detect if a newer request has started
-    // by the time this async function resolves.
     const thisRequest = ++fetchCounter.current;
 
     async function fetchPaths() {
@@ -108,7 +298,6 @@ export default forwardRef<MapView, Props>(function TrailMarkersMap(
       if (!active) return;
 
       if (cached) {
-        // Cache hit — render immediately, no loading indicator needed.
         setDisplayedPaths(cached);
         setIsNetworkFetching(false);
         return;
@@ -117,11 +306,8 @@ export default forwardRef<MapView, Props>(function TrailMarkersMap(
       setIsNetworkFetching(true);
 
       try {
-        // Snap to LOD grid before sending to the API so the server receives
-        // a slightly larger but grid-aligned bounding box, matching the cache key.
         const snapped = snapBounds(viewState.bounds, level);
         const data = await getTrailPaths(snapped);
-        // Discard if a newer pan has already started a more recent request.
         if (!active || fetchCounter.current !== thisRequest) return;
         await setCachedPaths(viewState.bounds, level, data);
         setDisplayedPaths(data);
@@ -157,7 +343,10 @@ export default forwardRef<MapView, Props>(function TrailMarkersMap(
     }, 300);
   }, []);
 
-  const selectedPath = displayedPaths.find((p) => p.identifier === selectedIdentifier);
+  const selectedPath = useMemo(
+    () => displayedPaths.find((p) => p.identifier === selectedIdentifier),
+    [displayedPaths, selectedIdentifier],
+  );
   const startCoord = selectedPath?.path[0];
 
   return (
@@ -171,119 +360,72 @@ export default forwardRef<MapView, Props>(function TrailMarkersMap(
         onPress={() => onTrailSelect(null)}
         {...(onMapReady !== undefined && { onMapReady })}
       >
-        {filter.trails &&
-          displayedPaths
-            // Accessibility data lives on trailMarkers (global fetch), not on the
-            // lean path data, so we cross-reference by identifier here.
-            .filter(
-              (t) => !filter.accessibility || trailMarkers?.find((m) => m.identifier === t.identifier)?.isAccessible,
-            )
-            .map((t) => (
-              <Polyline
-                key={t.identifier}
-                coordinates={t.path}
-                strokeColor={selectedIdentifier === t.identifier ? "#1a5266" : "#2a8099"}
-                strokeWidth={selectedIdentifier === t.identifier ? 5 : 3}
-                zIndex={selectedIdentifier === t.identifier ? 2 : 1}
-              />
-            ))}
-
-        {/* Transparent wide hit-area polylines for reliable iOS tap detection */}
-        {filter.trails &&
-          displayedPaths
-            .filter(
-              (t) => !filter.accessibility || trailMarkers?.find((m) => m.identifier === t.identifier)?.isAccessible,
-            )
-            .map((t) => (
-              <Polyline
-                key={`${t.identifier}-hit`}
-                coordinates={t.path}
-                strokeColor="transparent"
-                strokeWidth={20}
-                zIndex={selectedIdentifier === t.identifier ? 4 : 3}
-                tappable
-                onPress={() => onTrailSelect(t.identifier)}
-              />
-            ))}
+        {visiblePaths.map((t) => (
+          <TrailPolyline
+            key={t.identifier}
+            identifier={t.identifier}
+            path={t.path}
+            selected={selectedIdentifier === t.identifier}
+            onPress={onTrailSelect}
+          />
+        ))}
 
         {filter.trails &&
-          trailMarkers
-            ?.filter(
-              (t) =>
-                t.startLatitude != null &&
-                t.startLongitude != null &&
-                (!filter.accessibility || t.isAccessible) &&
-                t.identifier !== selectedIdentifier,
-            )
-            .map((t) => (
-              <Marker
-                key={t.identifier}
-                coordinate={{ latitude: Number(t.startLatitude), longitude: Number(t.startLongitude) }}
-                anchor={{ x: 0.5, y: 1 }}
-                onPress={() => onTrailSelect(t.identifier)}
-              >
-                <MapPin color={theme.colors.tertiary}>
-                  <Ionicons name="trail-sign-outline" size={14} color={theme.colors.onTertiary} />
-                </MapPin>
-              </Marker>
-            ))}
+          visibleTrailMarkers.map((t) => (
+            <TrailStartMarker
+              key={t.identifier}
+              trail={t}
+              color={theme.colors.tertiary}
+              iconColor={theme.colors.onTertiary}
+              onPress={onTrailSelect}
+            />
+          ))}
 
         {filter.firePits &&
-          firePits
-            ?.filter((f) => f.latitude != null && f.longitude != null && (!filter.accessibility || f.isAccessible))
-            .map((f) => (
-              <Marker
-                key={f.identifier}
-                coordinate={{ latitude: Number(f.latitude), longitude: Number(f.longitude) }}
-                title={f.name}
-                anchor={{ x: 0.5, y: 1 }}
-              >
-                <MapPin color={theme.colors.secondary}>
-                  <Ionicons name="bonfire-outline" size={14} color={theme.colors.onSecondary} />
-                </MapPin>
-              </Marker>
-            ))}
+          visibleFirePits.map((f) => (
+            <FacilityMarker
+              key={f.identifier}
+              facility={f}
+              color={theme.colors.secondary}
+              iconColor={theme.colors.onSecondary}
+              icon="bonfire-outline"
+              iconSize={14}
+            />
+          ))}
 
         {filter.shelters &&
-          shelters
-            ?.filter((f) => f.latitude != null && f.longitude != null && (!filter.accessibility || f.isAccessible))
-            .map((f) => (
-              <Marker
-                key={f.identifier}
-                coordinate={{ latitude: Number(f.latitude), longitude: Number(f.longitude) }}
-                title={f.name}
-                anchor={{ x: 0.5, y: 1 }}
-              >
-                <MapPin color={theme.colors.primary}>
-                  <FontAwesome6 name="tent" size={12} color={theme.colors.onPrimary} />
-                </MapPin>
-              </Marker>
-            ))}
+          visibleShelters.map((f) => (
+            <FacilityMarker
+              key={f.identifier}
+              facility={f}
+              color={theme.colors.primary}
+              iconColor={theme.colors.onPrimary}
+              icon="tent"
+              iconSize={12}
+            />
+          ))}
 
         {(filter.firePits || filter.shelters) &&
-          combined
-            ?.filter((f) => f.latitude != null && f.longitude != null && (!filter.accessibility || f.isAccessible))
-            .map((f) => (
-              <Marker
-                key={f.identifier}
-                coordinate={{ latitude: Number(f.latitude), longitude: Number(f.longitude) }}
-                title={f.name}
-                anchor={{ x: 0.5, y: 1 }}
-              >
-                <MapPin color={theme.colors.secondary}>
-                  <Ionicons name="bonfire-outline" size={14} color={theme.colors.onSecondary} />
-                </MapPin>
-              </Marker>
-            ))}
+          visibleCombined.map((f) => (
+            <FacilityMarker
+              key={f.identifier}
+              facility={f}
+              color={theme.colors.secondary}
+              iconColor={theme.colors.onSecondary}
+              icon="bonfire-outline"
+              iconSize={14}
+            />
+          ))}
 
         {startCoord && (
-          <Marker coordinate={startCoord} anchor={{ x: 0.5, y: 1 }}>
-            <MapPin color={theme.colors.tertiary}>
-              <Ionicons name="trail-sign-outline" size={14} color={theme.colors.onTertiary} />
-            </MapPin>
-          </Marker>
+          <SelectedTrailMarker
+            coordinate={startCoord}
+            color={theme.colors.tertiary}
+            iconColor={theme.colors.onTertiary}
+          />
         )}
       </Map>
+
       {isNetworkFetching && (
         <View style={s.fetchingIndicator} pointerEvents="none">
           <ActivityIndicator size="small" color={theme.colors.primary} />
