@@ -1,4 +1,4 @@
-using Core.Validators;
+using Core.Validators.HikeShare;
 using FluentAssertions;
 using WebDataContracts.RequestModels.HikeShare;
 

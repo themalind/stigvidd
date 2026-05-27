@@ -1,7 +1,7 @@
 ﻿using FluentValidation;
 using WebDataContracts.RequestModels.Hike;
 
-namespace Core.Validators;
+namespace Core.Validators.Hike;
 
 public class UpdateHikeRequestValidator : AbstractValidator<UpdateHikeRequest>
 {

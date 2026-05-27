@@ -1,7 +1,7 @@
 using FluentValidation;
 using WebDataContracts.RequestModels.Trail;
 
-namespace Core.Validators;
+namespace Core.Validators.Trail;
 
 public class CreateTrailRequestValidator : AbstractValidator<CreateTrailRequest>
 {

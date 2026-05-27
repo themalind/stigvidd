@@ -157,9 +157,9 @@ public class TrailsControllerIntegrationTests : IClassFixture<StigViddWebApplica
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         var trail = await response.Content.ReadFromJsonAsync<TrailResponse>(TestContext.Current.CancellationToken);
         trail.Should().NotBeNull();
-        trail.Identifier.Should().Be(StorsjoledenIdentifier);
-        trail.Name.Should().Be("Storsjöleden");
-        trail.City.Should().Be("Viskafors");
+        trail!.Identifier.Should().Be(StorsjoledenIdentifier);
+        trail!.Name.Should().Be("Storsjöleden");
+        trail!.City.Should().Be("Viskafors");
     }
 
     [Fact]
@@ -199,6 +199,110 @@ public class TrailsControllerIntegrationTests : IClassFixture<StigViddWebApplica
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task GetTrailCard_ShouldReturnCard_WhenTrailExists()
+    {
+        // Arrange
+        var client = _factory.CreateClient();
+
+        // Act — Storsjöleden (Trail 2): verified, has one review (3.5) and two images
+        var response = await client.GetAsync($"/api/v1/trails/{StorsjoledenIdentifier}/card", TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var card = await response.Content.ReadFromJsonAsync<TrailCardResponse>(TestContext.Current.CancellationToken);
+        card.Should().NotBeNull();
+        card!.Identifier.Should().Be(StorsjoledenIdentifier);
+        card!.Name.Should().Be("Storsjöleden");
+        card!.AverageRating.Should().Be(3.5M);
+        card!.Image.Should().NotBeNull();
+        card!.Image!.Identifier.Should().Be("img-storlsjon-1");
+    }
+
+    [Fact]
+    public async Task GetTrailCard_ShouldReturnNotFound_WhenTrailDoesNotExist()
+    {
+        // Arrange
+        var client = _factory.CreateClient();
+
+        // Act
+        var response = await client.GetAsync("/api/v1/trails/non-existent-trail-identifier/card", TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task GetTrailPaths_ShouldReturnOk_WithValidBounds()
+    {
+        // Arrange
+        var client = _factory.CreateClient();
+
+        // Act — broad bounds covering the test area; seed trails may have no GeoPath set,
+        // which is acceptable: the endpoint should return 200 with an empty or populated array
+        var response = await client.GetAsync(
+            "/api/v1/trails/paths?minLat=55.0&minLon=10.0&maxLat=60.0&maxLon=15.0",
+            TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var paths = await response.Content.ReadFromJsonAsync<IReadOnlyCollection<TrailPathResponse>>(TestContext.Current.CancellationToken);
+        paths.Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task GetTrailCard_ShouldReturnImageUrlWithBaseUrl()
+    {
+        // Arrange
+        var client = _factory.CreateClient();
+
+        // Act — Storsjöleden (Trail 2) has images in the seed data
+        var response = await client.GetAsync($"/api/v1/trails/{StorsjoledenIdentifier}/card", TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var card = await response.Content.ReadFromJsonAsync<TrailCardResponse>(TestContext.Current.CancellationToken);
+        card.Should().NotBeNull();
+        card!.Image.Should().NotBeNull();
+        card!.Image!.ImageUrl.Should().NotBeNullOrEmpty();
+    }
+
+    [Fact]
+    public async Task AddTrail_WithNoTrailImages_ShouldCreateTrail()
+    {
+        // Arrange — symbol image is required by the controller, but trail images are optional
+        var client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", AuthenticatedUser);
+
+        var fakeImageBytes = new byte[] { 0xFF, 0xD8, 0xFF, 0xE0 };
+        var symbolImageContent = new ByteArrayContent(fakeImageBytes);
+        symbolImageContent.Headers.ContentType = new MediaTypeHeaderValue("image/jpeg");
+
+        var requestContent = new MultipartFormDataContent
+        {
+            { new StringContent("Trail Without Trail Images"), "Name" },
+            { new StringContent("3"), "TrailLength" },
+            { new StringContent("1"), "Classification" },
+            { new StringContent("false"), "Accessibility" },
+            { new StringContent("No info"), "AccessibilityInfo" },
+            { new StringContent("test-symbol"), "TrailSymbol" },
+            { new StringContent("A trail with no trail images"), "Description" },
+            { new StringContent("Full description"), "FullDescription" },
+            { new StringContent("[\"skog\"]"), "Tags" },
+            { symbolImageContent, "trailSymbolImage", "symbol.jpg" },
+            { new StringContent("[{latitude=57.62141010663575, longitude= 12.805517126805371,}]"), "Coordinates" },
+            { new StringContent("false"), "IsVerified" },
+            { new StringContent("Test City"), "City" }
+            // no "images" parts — trail image collection is optional
+        };
+
+        // Act
+        var response = await client.PostAsync("/api/v1/trails/create", requestContent, TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.Created);
     }
 
     [Fact]

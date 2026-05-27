@@ -1,6 +1,5 @@
+import { useUserLocation } from "@/hooks/useUserLocation";
 import { Ionicons } from "@expo/vector-icons";
-import * as Location from "expo-location";
-import { useEffect, useState } from "react";
 import { Pressable, StyleSheet } from "react-native";
 import MapView from "react-native-maps";
 import { useTheme } from "react-native-paper";
@@ -11,28 +10,14 @@ interface Props {
 
 export default function CenterOnUserButton({ mapRef }: Props) {
   const theme = useTheme();
-  const [location, setLocation] = useState<Location.LocationObject | null>(null);
-
-  useEffect(() => {
-    (async () => {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-
-      if (status !== "granted") {
-        return;
-      }
-
-      const location = await Location.getCurrentPositionAsync({});
-      setLocation(location);
-    })();
-  }, []);
+  const { data: location } = useUserLocation();
 
   const centerOnUser = () => {
-    if (!location) return;
-
+    if (!location || location.isFallback) return;
     mapRef.current?.animateToRegion(
       {
-        latitude: location.coords.latitude,
-        longitude: location.coords.longitude,
+        latitude: location.latitude,
+        longitude: location.longitude,
         latitudeDelta: 0.05,
         longitudeDelta: 0.05,
       },
@@ -40,7 +25,7 @@ export default function CenterOnUserButton({ mapRef }: Props) {
     );
   };
 
-  if (!location) return;
+  if (!location || location.isFallback) return null;
 
   return (
     <Pressable

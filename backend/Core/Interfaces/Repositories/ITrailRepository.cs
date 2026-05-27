@@ -11,6 +11,7 @@ public interface ITrailRepository
     Task<RepositoryResult<string>> GetCoordinatesByTrailIdentifierAsync(string identifier, CancellationToken ctoken);
     Task<RepositoryResult<IReadOnlyCollection<TrailShortInfoResponse>>> GetAllTrailsWithBasicInfoAsync(CancellationToken ctoken);
     Task<RepositoryResult<IReadOnlyCollection<TrailMarkerResponse>>> GetAllTrailMarkersAsync(CancellationToken ctoken);
+    Task<RepositoryResult<IReadOnlyCollection<T>>> GetTrailsInBoundsAsync<T>(double minLat, double minLon, double maxLat, double maxLon, Expression<Func<Trail, T>> selector, CancellationToken ctoken);
     Task<RepositoryResult<IReadOnlyCollection<TrailOverviewResponse>>> GetPopularTrailOverviewsAsync(string presentableBaseUrl, double? userLatitude, double? userLongitude, CancellationToken ctoken);
     Task<RepositoryResult<Trail>> AddTrailAsync(Trail trail, CancellationToken ctoken);
     Task<RepositoryResult<Trail>> UpdateTrailAsync(Trail trail, CancellationToken ctoken);

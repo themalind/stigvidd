@@ -1,4 +1,4 @@
-using Core.Validators;
+using Core.Validators.Friends;
 using FluentAssertions;
 using WebDataContracts.RequestModels.Friend;
 

@@ -1,5 +1,5 @@
 import { START_COORDINATE_BORAS } from "@/constants/constants";
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 
 // https://opendata.smhi.se/metfcst/snow1gv1/get_point_forecast
 
@@ -40,6 +40,7 @@ export function useWeather(lat?: number, lon?: number) {
     enabled: lat != null && lon != null,
     staleTime: 1000 * 60 * 30,
     retry: false,
+    placeholderData: keepPreviousData,
   });
 }
 

@@ -1,4 +1,4 @@
-namespace Core.Enums;
+namespace Infrastructure.Enums;
 
 public enum Classification
 {

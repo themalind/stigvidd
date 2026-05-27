@@ -1,4 +1,6 @@
-import { initAuthAtom, userAtom } from "@/atoms/auth-atoms";
+import { authLoadingAtom, initAuthAtom, userAtom } from "@/atoms/auth-atoms";
+import { pruneTrailCardCache } from "@/hooks/useTrailCard";
+import { pruneTrailPathCache } from "@/services/trail-path-cache";
 import { loadUserTheme, userThemeAtom } from "@/atoms/user-theme-atom";
 import { GlobalSnackbar } from "@/components/global-snackbar";
 import { useInitLocation } from "@/hooks/useInitLocation";
@@ -8,9 +10,9 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import * as NavigationBar from "expo-navigation-bar";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { useAtom, useSetAtom } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { queryClientAtom } from "jotai-tanstack-query";
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Platform, StyleSheet, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { PaperProvider } from "react-native-paper";
@@ -21,20 +23,24 @@ export default function RootLayout() {
   const setUserTheme = useSetAtom(userThemeAtom);
   const theme = useUserTheme();
   const [user] = useAtom(userAtom);
+  const authLoading = useAtomValue(authLoadingAtom);
   const statusBarStyle = theme.dark ? "light" : "dark";
 
-  // Create a unique key based on the current user
-  // When this key changes (user logs in/out), React will unmount and remount
-  // the entire component tree, resetting all local state
-  const appKey = user?.uid || "guest";
+  // stableKey is null until auth has resolved for the first time.
+  // This ensures the component tree mounts once with the correct key,
+  // so there is no remount-blink at startup. Subsequent changes (login/logout)
+  // still trigger a remount, resetting all local state as before.
+  const [stableKey, setStableKey] = useState<string | null>(null);
+  useEffect(() => {
+    if (!authLoading) {
+      setStableKey(user?.uid ?? "guest");
+    }
+  }, [user, authLoading]);
 
-  // Create a QueryClient with useMemo to avoid recreating on every render.
-  // appKey as dependency ensures a fresh QueryClient (empty cache) when user changes.
+  // Fresh QueryClient per stableKey — resets cache on login/logout.
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const queryClient = useMemo(() => new QueryClient(), [appKey]);
+  const queryClient = useMemo(() => new QueryClient(), [stableKey]);
 
-  // Sync queryClientAtom (used by jotai-tanstack-query atoms) with the same QueryClient
-  // as QueryClientProvider so there is only one QueryClient in the app.
   const setQueryClient = useSetAtom(queryClientAtom);
   useEffect(() => {
     setQueryClient(queryClient);
@@ -55,15 +61,25 @@ export default function RootLayout() {
   }, [setUserTheme]);
 
   useEffect(() => {
+    pruneTrailPathCache();
+    pruneTrailCardCache();
+  }, []);
+
+  useEffect(() => {
     if (Platform.OS !== "android") return;
     NavigationBar.setButtonStyleAsync(theme.dark ? "light" : "dark");
   }, [theme.dark]);
+
+  // Render nothing until auth has resolved — prevents the remount-blink that
+  // happened when the key changed from "guest" to user.uid at startup.
+  // Firebase reads auth state from local cache so this is only ~100–200 ms.
+  if (stableKey === null) return null;
 
   return (
     <QueryClientProvider client={queryClient}>
       <PaperProvider theme={theme}>
         <StatusBar style={statusBarStyle} />
-        <GestureHandlerRootView key={appKey}>
+        <GestureHandlerRootView key={stableKey}>
           <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
             <Stack>
               <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
