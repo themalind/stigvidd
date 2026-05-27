@@ -6,6 +6,7 @@ import { MapMarkerFilter } from "@/data/types";
 import { useTrailCard } from "@/hooks/useTrailCard";
 import { classificationParser } from "@/utils/classification-parser";
 import { getDifficultyIcon } from "@/utils/getDifficultyIcon";
+import { guardedNavigate } from "@/utils/navigation";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useFocusEffect, useRouter } from "expo-router";
 import { startTransition, useCallback, useRef, useState } from "react";
@@ -93,11 +94,13 @@ export default function MapScreen() {
               <TouchableOpacity
                 style={[s.readMoreButton, { backgroundColor: theme.colors.primaryContainer }]}
                 onPress={() =>
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  router.push({
-                    pathname: "/(tabs)/(map)/trail/[identifier]" as any,
-                    params: { identifier: selectedIdentifier },
-                  })
+                  guardedNavigate(() =>
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    router.navigate({
+                      pathname: "/(tabs)/(map)/trail/[identifier]" as any,
+                      params: { identifier: selectedIdentifier },
+                    }),
+                  )
                 }
               >
                 <Text style={[s.readMoreText, { color: theme.colors.onPrimaryContainer }]}>Läs mer</Text>

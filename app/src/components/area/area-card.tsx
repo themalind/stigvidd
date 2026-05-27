@@ -1,4 +1,5 @@
 import { BorasArea } from "@/data/areas-data";
+import { guardedNavigate } from "@/utils/navigation";
 import { router } from "expo-router";
 import { Pressable } from "react-native";
 import { Button, Card, Icon, Text, useTheme } from "react-native-paper";
@@ -13,10 +14,12 @@ export default function AreaCard({ area }: Props) {
     <Pressable
       key={area.identifier}
       onPress={() =>
-        router.push({
-          pathname: "/(tabs)/(home)/area/[identifier]",
-          params: { identifier: area.identifier },
-        })
+        guardedNavigate(() =>
+          router.navigate({
+            pathname: "/(tabs)/(home)/area/[identifier]",
+            params: { identifier: area.identifier },
+          }),
+        )
       }
       style={{ gap: 5 }}
     >

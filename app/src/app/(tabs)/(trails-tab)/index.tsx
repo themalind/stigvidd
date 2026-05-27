@@ -8,6 +8,7 @@ import { BORDER_RADIUS } from "@/constants/constants";
 import { TrailShortInfoResponse } from "@/data/types";
 import { useTrailFilters } from "@/hooks/trail/useTrailFilters";
 import { useTrails } from "@/hooks/trail/useTrails";
+import { guardedNavigate } from "@/utils/navigation";
 import { MaterialIcons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { router } from "expo-router";
@@ -53,10 +54,12 @@ export default function TrailsScreen() {
   const [filterModalVisible, setFilterModalVisible] = useState(false);
 
   const handlePress = useCallback((identifier: string) => {
-    router.push({
-      pathname: "/(tabs)/(trails-tab)/trail/[identifier]",
-      params: { identifier },
-    });
+    guardedNavigate(() =>
+      router.navigate({
+        pathname: "/(tabs)/(trails-tab)/trail/[identifier]",
+        params: { identifier },
+      }),
+    );
   }, []);
 
   const onPressScrollToTop = () => {

@@ -1,5 +1,6 @@
 import { BORDER_RADIUS } from "@/constants/constants";
 import { TrailOverview } from "@/data/types";
+import { guardedNavigate } from "@/utils/navigation";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Image as ExpoImage } from "expo-image";
 import { router } from "expo-router";
@@ -45,10 +46,12 @@ export default function PagerCarousel({ data, onItemPress, containerPadding = 24
     if (onItemPress) {
       onItemPress(item);
     } else {
-      router.push({
-        pathname: "/(tabs)/(home)/trail/[identifier]",
-        params: { identifier: item.identifier },
-      });
+      guardedNavigate(() =>
+        router.navigate({
+          pathname: "/(tabs)/(home)/trail/[identifier]",
+          params: { identifier: item.identifier },
+        }),
+      );
     }
   };
 
