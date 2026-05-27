@@ -66,7 +66,7 @@ describe("useTrailCard", () => {
     expect(mockGetTrailCard).toHaveBeenCalledWith("trail-1");
     expect(mockSetItem).toHaveBeenCalledWith(
       "@stigvidd_trail_card_trail-1",
-      expect.stringContaining('"identifier":"trail-1"')
+      expect.stringContaining('"identifier":"trail-1"'),
     );
   });
 
@@ -113,10 +113,9 @@ describe("useTrailCard", () => {
     mockGetItem.mockResolvedValue(null);
     mockGetTrailCard.mockResolvedValueOnce(card1).mockResolvedValueOnce(card2);
 
-    const { result, rerender } = renderHook(
-      ({ id }: { id: string | null }) => useTrailCard(id),
-      { initialProps: { id: "trail-1" as string | null } }
-    );
+    const { result, rerender } = renderHook(({ id }: { id: string | null }) => useTrailCard(id), {
+      initialProps: { id: "trail-1" as string | null },
+    });
 
     await waitFor(() => expect(result.current.card).toEqual(card1));
 
@@ -130,10 +129,9 @@ describe("useTrailCard", () => {
     const card = makeCard("trail-1");
     mockGetItem.mockResolvedValue(JSON.stringify({ data: card, cachedAt: Date.now() }));
 
-    const { result, rerender } = renderHook(
-      ({ id }: { id: string | null }) => useTrailCard(id),
-      { initialProps: { id: "trail-1" as string | null } }
-    );
+    const { result, rerender } = renderHook(({ id }: { id: string | null }) => useTrailCard(id), {
+      initialProps: { id: "trail-1" as string | null },
+    });
 
     await waitFor(() => expect(result.current.card).toEqual(card));
 

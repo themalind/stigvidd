@@ -44,7 +44,7 @@ export default function FilterButton({ filter, onChange }: Props) {
       firePits: makeStyle(180, 80),
       accessibility: makeStyle(225, 80),
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (

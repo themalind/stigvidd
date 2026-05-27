@@ -65,7 +65,7 @@ export async function getTrailCard(identifier: string): Promise<TrailCard> {
     if (!response.ok) {
       throw new Error(`getTrailCard: HTTP error ${response.status}`);
     }
-    
+
     return response.json();
   } catch (error) {
     console.log(error);

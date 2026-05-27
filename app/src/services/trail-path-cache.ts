@@ -24,8 +24,8 @@ const memCache = new Map<string, CacheEntry>();
 
 // Grid cell sizes (in degrees) per LOD level.
 const GRID_SIZES: Record<1 | 2 | 3, number> = {
-  1: 0.1,   // ~11 km — city-scale view
-  2: 0.02,  // ~2.2 km — neighbourhood view
+  1: 0.1, // ~11 km — city-scale view
+  2: 0.02, // ~2.2 km — neighbourhood view
   3: 0.005, // ~550 m — trail-detail view
 };
 
@@ -148,7 +148,10 @@ export async function pruneTrailPathCache(): Promise<void> {
       if (!key.startsWith(CACHE_PREFIX)) continue;
       try {
         const raw = await AsyncStorage.getItem(key);
-        if (!raw) { toDelete.push(key); continue; }
+        if (!raw) {
+          toDelete.push(key);
+          continue;
+        }
         const entry = JSON.parse(raw) as CacheEntry;
         if (now - entry.cachedAt >= TTL_MS) toDelete.push(key);
       } catch {

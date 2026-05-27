@@ -116,7 +116,8 @@ describe("tileBounds", () => {
   });
 
   it("round-trips with getTilesForBounds: a point strictly inside tileBounds returns only that tile", () => {
-    const x = 128, y = 576;
+    const x = 128,
+      y = 576;
     const b = tileBounds(x, y, 1);
     const inner = {
       minLat: b.minLat + 0.01,
@@ -133,7 +134,10 @@ describe("tileBounds", () => {
 describe("getCachedTiles", () => {
   it("returns all tiles as misses when AsyncStorage returns null", async () => {
     mockGetItem.mockResolvedValue(null);
-    const tiles: TileCoord[] = [{ x: 1001, y: 1001 }, { x: 1002, y: 1002 }];
+    const tiles: TileCoord[] = [
+      { x: 1001, y: 1001 },
+      { x: 1002, y: 1002 },
+    ];
     const { hits, misses } = await getCachedTiles(tiles, 1);
     expect(hits.size).toBe(0);
     expect(misses).toHaveLength(2);
@@ -175,7 +179,10 @@ describe("getCachedTiles", () => {
     mockGetItem
       .mockResolvedValueOnce(JSON.stringify({ data: paths, cachedAt: Date.now() }))
       .mockResolvedValueOnce(null);
-    const tiles: TileCoord[] = [{ x: 1007, y: 1007 }, { x: 1008, y: 1008 }];
+    const tiles: TileCoord[] = [
+      { x: 1007, y: 1007 },
+      { x: 1008, y: 1008 },
+    ];
     const { hits, misses } = await getCachedTiles(tiles, 1);
     expect(hits.size).toBe(1);
     expect(misses).toHaveLength(1);
@@ -203,7 +210,7 @@ describe("setTileCached", () => {
     await setTileCached(2001, 2001, 1, paths);
     expect(mockSetItem).toHaveBeenCalledWith(
       "@stigvidd_map_paths_v3_L1_T2001_2001",
-      expect.stringContaining('"identifier":"trail-e"')
+      expect.stringContaining('"identifier":"trail-e"'),
     );
   });
 

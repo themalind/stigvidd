@@ -189,8 +189,14 @@ export default forwardRef<MapView, Props>(function TrailMarkersMap(
     [trailMarkers],
   );
 
-  const firePits = useMemo(() => facilities?.filter((f) => f.facilityType === 1 || f.facilityType === 3) ?? [], [facilities]);
-  const shelters = useMemo(() => facilities?.filter((f) => f.facilityType === 2 || f.facilityType === 3) ?? [], [facilities]);
+  const firePits = useMemo(
+    () => facilities?.filter((f) => f.facilityType === 1 || f.facilityType === 3) ?? [],
+    [facilities],
+  );
+  const shelters = useMemo(
+    () => facilities?.filter((f) => f.facilityType === 2 || f.facilityType === 3) ?? [],
+    [facilities],
+  );
 
   const visibleTrailMarkers = useMemo(
     () =>
@@ -366,7 +372,6 @@ export default forwardRef<MapView, Props>(function TrailMarkersMap(
               iconSize={12}
             />
           ))}
-
       </Map>
 
       {isNetworkFetching && (

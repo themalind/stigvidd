@@ -12,15 +12,7 @@ import CoordinateParser from "@/utils/coordinate-parser";
 import { useQuery } from "@tanstack/react-query";
 import { useLocalSearchParams } from "expo-router";
 import { startTransition, useCallback, useEffect, useRef, useState } from "react";
-import {
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { Platform, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { LatLng } from "react-native-maps";
 import { useTheme } from "react-native-paper";
 import BackButton from "../back-button";

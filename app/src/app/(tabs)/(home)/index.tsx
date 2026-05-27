@@ -45,7 +45,10 @@ export default function HomeScreen() {
       </View>
 
       <View style={s.cardRow}>
-        <Pressable style={[s.guideCard, s.halfCard]} onPress={() => guardedNavigate(() => router.navigate("/(tabs)/(settings)/guide"))}>
+        <Pressable
+          style={[s.guideCard, s.halfCard]}
+          onPress={() => guardedNavigate(() => router.navigate("/(tabs)/(settings)/guide"))}
+        >
           <Image source={require("../../../assets/images/guide_cover.jpg")} style={s.cardImage} contentFit="cover" />
           <View style={[s.cardText, { backgroundColor: theme.colors.surface }]}>
             <Text style={[s.cardTitle, { color: theme.colors.onSurface }]}>Naturguide</Text>

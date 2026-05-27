@@ -23,7 +23,10 @@ export async function pruneTrailCardCache(): Promise<void> {
     for (const key of cardKeys) {
       try {
         const raw = await AsyncStorage.getItem(key);
-        if (!raw) { toDelete.push(key); continue; }
+        if (!raw) {
+          toDelete.push(key);
+          continue;
+        }
         const entry = JSON.parse(raw) as CacheEntry;
         if (now - entry.cachedAt >= TTL_MS) toDelete.push(key);
       } catch {
