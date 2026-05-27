@@ -38,6 +38,11 @@ export default function TrailDetailsScreen() {
     startTransition(() => setTransitionComplete(true));
   }, []);
 
+  const handleReviewsLoaded = useCallback((loadedReviews: Review[], total: number) => {
+    setReviewCount(total);
+    setReviews(loadedReviews);
+  }, []);
+
   const {
     data: trail,
     isLoading,
@@ -76,11 +81,6 @@ export default function TrailDetailsScreen() {
   if (coords) {
     coordinates = CoordinateParser({ data: coords.coordinates, identifier: trail!.identifier });
   }
-
-  const handleReviewsLoaded = useCallback((loadedReviews: Review[], total: number) => {
-    setReviewCount(total);
-    setReviews(loadedReviews);
-  }, []);
 
   const onPressScrollToRatings = () => {
     surfaceToScrollToRef.current?.measure((_x, _y, _width, _height, _pageX, pageY) => {
