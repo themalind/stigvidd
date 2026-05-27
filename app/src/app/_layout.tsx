@@ -1,4 +1,6 @@
 import { initAuthAtom, userAtom } from "@/atoms/auth-atoms";
+import { pruneTrailCardCache } from "@/hooks/useTrailCard";
+import { pruneTrailPathCache } from "@/services/trail-path-cache";
 import { loadUserTheme, userThemeAtom } from "@/atoms/user-theme-atom";
 import { GlobalSnackbar } from "@/components/global-snackbar";
 import { useInitLocation } from "@/hooks/useInitLocation";
@@ -53,6 +55,11 @@ export default function RootLayout() {
   useEffect(() => {
     loadUserTheme().then(setUserTheme);
   }, [setUserTheme]);
+
+  useEffect(() => {
+    pruneTrailPathCache();
+    pruneTrailCardCache();
+  }, []);
 
   useEffect(() => {
     if (Platform.OS !== "android") return;

@@ -164,12 +164,14 @@ export default forwardRef<MapView, Props>(function TrailMarkersMap(
     queryKey: ["trails", "markers"],
     queryFn: getTrailMarkers,
     enabled: filter.trails,
+    staleTime: 5 * 60 * 1000,
   });
 
   const { data: facilities } = useQuery({
     queryKey: ["facilities", "markers"],
     queryFn: getFacilityMarkers,
     enabled: filter.firePits || filter.shelters,
+    staleTime: 5 * 60 * 1000,
   });
 
   // O(1) accessibility lookup — replaces the O(n) .find() that was nested inside

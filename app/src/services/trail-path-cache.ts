@@ -2,7 +2,16 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { TrailPathBounds } from "@/api/map-markers";
 import { TrailPathLite } from "@/data/types";
 
-const CACHE_PREFIX = "@stigvidd_map_paths";
+const CACHE_VERSION = "v2";
+const CACHE_PREFIX = `@stigvidd_map_paths_${CACHE_VERSION}`;
+// Keys written before versioning was added — safe to wipe on prune.
+const LEGACY_CACHE_PREFIX = "@stigvidd_map_paths_L";
+const TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
+
+interface CacheEntry {
+  data: TrailPathLite[];
+  cachedAt: number;
+}
 
 // Grid cell sizes (in degrees) per LOD level. A larger cell means fewer unique
 // cache keys, so more panning is covered by a single cached response.
@@ -44,8 +53,6 @@ export function snapBounds(bounds: TrailPathBounds, level: number): TrailPathBou
   };
 }
 
-// Cache key encodes the full snapped bounding box and level to avoid collisions
-// between cells at the same level or the same area at different levels.
 function cacheKey(snapped: TrailPathBounds, level: number): string {
   return `${CACHE_PREFIX}_L${level}_${snapped.minLat}_${snapped.minLon}_${snapped.maxLat}_${snapped.maxLon}`;
 }
@@ -56,7 +63,9 @@ export async function getCachedPaths(bounds: TrailPathBounds, level: number): Pr
     const snapped = snapBounds(bounds, level as 1 | 2 | 3);
     const raw = await AsyncStorage.getItem(cacheKey(snapped, level));
     if (!raw) return null;
-    return JSON.parse(raw) as TrailPathLite[];
+    const entry = JSON.parse(raw) as CacheEntry;
+    if (Date.now() - entry.cachedAt >= TTL_MS) return null;
+    return entry.data;
   } catch {
     return null;
   }
@@ -66,8 +75,39 @@ export async function setCachedPaths(bounds: TrailPathBounds, level: number, dat
   if (!(level in GRID_SIZES)) return;
   try {
     const snapped = snapBounds(bounds, level as 1 | 2 | 3);
-    await AsyncStorage.setItem(cacheKey(snapped, level), JSON.stringify(data));
+    const entry: CacheEntry = { data, cachedAt: Date.now() };
+    await AsyncStorage.setItem(cacheKey(snapped, level), JSON.stringify(entry));
   } catch {
     // Ignore storage errors
+  }
+}
+
+// Removes legacy (unversioned) keys and any versioned keys past their TTL.
+// Call once at app startup — runs entirely in the background.
+export async function pruneTrailPathCache(): Promise<void> {
+  try {
+    const allKeys = await AsyncStorage.getAllKeys();
+    const now = Date.now();
+    const toDelete: string[] = [];
+
+    for (const key of allKeys) {
+      if (key.startsWith(LEGACY_CACHE_PREFIX)) {
+        toDelete.push(key);
+        continue;
+      }
+      if (!key.startsWith(CACHE_PREFIX)) continue;
+      try {
+        const raw = await AsyncStorage.getItem(key);
+        if (!raw) { toDelete.push(key); continue; }
+        const entry = JSON.parse(raw) as CacheEntry;
+        if (Date.now() - entry.cachedAt >= TTL_MS) toDelete.push(key);
+      } catch {
+        toDelete.push(key);
+      }
+    }
+
+    if (toDelete.length > 0) await AsyncStorage.multiRemove(toDelete);
+  } catch {
+    // Non-fatal — cache prune is best-effort
   }
 }

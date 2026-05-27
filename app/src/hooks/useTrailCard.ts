@@ -11,6 +11,32 @@ interface CacheEntry {
   cachedAt: number;
 }
 
+// Removes expired trail card entries from AsyncStorage.
+// Call once at app startup — runs entirely in the background.
+export async function pruneTrailCardCache(): Promise<void> {
+  try {
+    const allKeys = await AsyncStorage.getAllKeys();
+    const cardKeys = allKeys.filter((k) => k.startsWith(CACHE_PREFIX));
+    const now = Date.now();
+    const toDelete: string[] = [];
+
+    for (const key of cardKeys) {
+      try {
+        const raw = await AsyncStorage.getItem(key);
+        if (!raw) { toDelete.push(key); continue; }
+        const entry = JSON.parse(raw) as CacheEntry;
+        if (now - entry.cachedAt >= TTL_MS) toDelete.push(key);
+      } catch {
+        toDelete.push(key);
+      }
+    }
+
+    if (toDelete.length > 0) await AsyncStorage.multiRemove(toDelete);
+  } catch {
+    // Non-fatal — cache prune is best-effort
+  }
+}
+
 export function useTrailCard(identifier: string | null): { card: TrailCard | null; isLoading: boolean } {
   const [card, setCard] = useState<TrailCard | null>(null);
   const [isLoading, setIsLoading] = useState(false);

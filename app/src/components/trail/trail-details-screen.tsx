@@ -11,7 +11,7 @@ import { Review } from "@/data/types";
 import CoordinateParser from "@/utils/coordinate-parser";
 import { useQuery } from "@tanstack/react-query";
 import { useLocalSearchParams } from "expo-router";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { startTransition, useCallback, useEffect, useRef, useState } from "react";
 import {
   Platform,
   Pressable,
@@ -43,8 +43,7 @@ export default function TrailDetailsScreen() {
   const [transitionComplete, setTransitionComplete] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => setTransitionComplete(true), 0);
-    return () => clearTimeout(timer);
+    startTransition(() => setTransitionComplete(true));
   }, []);
 
   const {
