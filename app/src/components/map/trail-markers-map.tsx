@@ -141,31 +141,14 @@ const FacilityMarker = memo(function FacilityMarker({
   );
 });
 
-const SelectedTrailMarker = memo(function SelectedTrailMarker({
-  coordinate,
-  color,
-  iconColor,
-}: {
-  coordinate: LatLng;
-  color: string;
-  iconColor: string;
-}) {
-  const [tracksViewChanges, setTracksViewChanges] = useState(true);
-  const handleLayout = useCallback(() => setTracksViewChanges(false), []);
-  return (
-    <Marker coordinate={coordinate} anchor={{ x: 0.5, y: 1 }} tracksViewChanges={tracksViewChanges}>
-      <MapPin color={color} onLayout={handleLayout}>
-        <Ionicons name="trail-sign-outline" size={14} color={iconColor} />
-      </MapPin>
-    </Marker>
-  );
-});
-
 export default forwardRef<MapView, Props>(function TrailMarkersMap(
   { style, initialRegion, showsUserLocation, filter, selectedIdentifier, onTrailSelect, onMapReady }: Props,
   mapRef,
 ) {
   const theme = useTheme();
+  const shelterColor = theme.dark ? "hsl(195, 40%, 52%)" : theme.colors.primary;
+  const shelterIconColor = theme.dark ? "hsl(0, 0%, 96%)" : theme.colors.onPrimary;
+
   const fetchCounter = useRef(0);
   const initialRegionRef = initialRegion ?? START_COORDINATE_BORAS;
 
@@ -214,10 +197,9 @@ export default forwardRef<MapView, Props>(function TrailMarkersMap(
           t.startLatitude <= maxLat &&
           t.startLongitude >= minLon &&
           t.startLongitude <= maxLon &&
-          (!filter.accessibility || accessibleIds.has(t.identifier)) &&
-          t.identifier !== selectedIdentifier,
+          (!filter.accessibility || accessibleIds.has(t.identifier)),
       ) ?? [],
-    [trailMarkers, minLat, maxLat, minLon, maxLon, filter.accessibility, accessibleIds, selectedIdentifier],
+    [trailMarkers, minLat, maxLat, minLon, maxLon, filter.accessibility, accessibleIds],
   );
 
   const visibleFirePits = useMemo(
@@ -261,10 +243,7 @@ export default forwardRef<MapView, Props>(function TrailMarkersMap(
 
   // Pre-filter paths once so accessibility isn't re-evaluated per render.
   const visiblePaths = useMemo(
-    () =>
-      filter.trails
-        ? displayedPaths.filter((t) => !filter.accessibility || accessibleIds.has(t.identifier))
-        : [],
+    () => (filter.trails ? displayedPaths.filter((t) => !filter.accessibility || accessibleIds.has(t.identifier)) : []),
     [displayedPaths, filter.trails, filter.accessibility, accessibleIds],
   );
 
@@ -343,12 +322,6 @@ export default forwardRef<MapView, Props>(function TrailMarkersMap(
     }, 300);
   }, []);
 
-  const selectedPath = useMemo(
-    () => displayedPaths.find((p) => p.identifier === selectedIdentifier),
-    [displayedPaths, selectedIdentifier],
-  );
-  const startCoord = selectedPath?.path[0];
-
   return (
     <View style={style}>
       <Map
@@ -373,7 +346,7 @@ export default forwardRef<MapView, Props>(function TrailMarkersMap(
         {filter.trails &&
           visibleTrailMarkers.map((t) => (
             <TrailStartMarker
-              key={t.identifier}
+              key={`${t.identifier}-${theme.dark}`}
               trail={t}
               color={theme.colors.tertiary}
               iconColor={theme.colors.onTertiary}
@@ -384,7 +357,7 @@ export default forwardRef<MapView, Props>(function TrailMarkersMap(
         {filter.firePits &&
           visibleFirePits.map((f) => (
             <FacilityMarker
-              key={f.identifier}
+              key={`${f.identifier}-${theme.dark}`}
               facility={f}
               color={theme.colors.secondary}
               iconColor={theme.colors.onSecondary}
@@ -396,10 +369,10 @@ export default forwardRef<MapView, Props>(function TrailMarkersMap(
         {filter.shelters &&
           visibleShelters.map((f) => (
             <FacilityMarker
-              key={f.identifier}
+              key={`${f.identifier}-${theme.dark}`}
               facility={f}
-              color={theme.colors.primary}
-              iconColor={theme.colors.onPrimary}
+              color={shelterColor}
+              iconColor={shelterIconColor}
               icon="tent"
               iconSize={12}
             />
@@ -408,7 +381,7 @@ export default forwardRef<MapView, Props>(function TrailMarkersMap(
         {(filter.firePits || filter.shelters) &&
           visibleCombined.map((f) => (
             <FacilityMarker
-              key={f.identifier}
+              key={`${f.identifier}-${theme.dark}`}
               facility={f}
               color={theme.colors.secondary}
               iconColor={theme.colors.onSecondary}
@@ -416,14 +389,6 @@ export default forwardRef<MapView, Props>(function TrailMarkersMap(
               iconSize={14}
             />
           ))}
-
-        {startCoord && (
-          <SelectedTrailMarker
-            coordinate={startCoord}
-            color={theme.colors.tertiary}
-            iconColor={theme.colors.onTertiary}
-          />
-        )}
       </Map>
 
       {isNetworkFetching && (

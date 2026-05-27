@@ -8,7 +8,7 @@ import { classificationParser } from "@/utils/classification-parser";
 import { getDifficultyIcon } from "@/utils/getDifficultyIcon";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useFocusEffect, useRouter } from "expo-router";
-import { useCallback, useRef, useState } from "react";
+import { startTransition, useCallback, useRef, useState } from "react";
 import { ActivityIndicator, Image, StyleSheet, TouchableOpacity, View } from "react-native";
 import MapView from "react-native-maps";
 import { Text, useTheme } from "react-native-paper";
@@ -23,7 +23,7 @@ export default function MapScreen() {
   useFocusEffect(
     useCallback(() => {
       setIsFocused(true);
-      return () => setIsFocused(false);
+      return () => startTransition(() => setIsFocused(false));
     }, []),
   );
 
