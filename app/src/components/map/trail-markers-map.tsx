@@ -189,9 +189,8 @@ export default forwardRef<MapView, Props>(function TrailMarkersMap(
     [trailMarkers],
   );
 
-  const firePits = useMemo(() => facilities?.filter((f) => f.facilityType === 1) ?? [], [facilities]);
-  const shelters = useMemo(() => facilities?.filter((f) => f.facilityType === 2) ?? [], [facilities]);
-  const combined = useMemo(() => facilities?.filter((f) => f.facilityType === 3) ?? [], [facilities]);
+  const firePits = useMemo(() => facilities?.filter((f) => f.facilityType === 1 || f.facilityType === 3) ?? [], [facilities]);
+  const shelters = useMemo(() => facilities?.filter((f) => f.facilityType === 2 || f.facilityType === 3) ?? [], [facilities]);
 
   const visibleTrailMarkers = useMemo(
     () =>
@@ -212,11 +211,6 @@ export default forwardRef<MapView, Props>(function TrailMarkersMap(
   const visibleShelters = useMemo(
     () => shelters.filter((f) => !filter.accessibility || f.isAccessible),
     [shelters, filter.accessibility],
-  );
-
-  const visibleCombined = useMemo(
-    () => combined.filter((f) => !filter.accessibility || f.isAccessible),
-    [combined, filter.accessibility],
   );
 
   // Pre-filter paths once so accessibility isn't re-evaluated per render.
@@ -373,17 +367,6 @@ export default forwardRef<MapView, Props>(function TrailMarkersMap(
             />
           ))}
 
-        {(filter.firePits || filter.shelters) &&
-          visibleCombined.map((f) => (
-            <FacilityMarker
-              key={`${f.identifier}-${theme.dark}`}
-              facility={f}
-              color={theme.colors.secondary}
-              iconColor={theme.colors.onSecondary}
-              icon="bonfire-outline"
-              iconSize={14}
-            />
-          ))}
       </Map>
 
       {isNetworkFetching && (

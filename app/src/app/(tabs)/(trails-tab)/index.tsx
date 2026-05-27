@@ -52,6 +52,7 @@ export default function TrailsScreen() {
   } = useTrailFilters(trails, userLocation);
 
   const [filterModalVisible, setFilterModalVisible] = useState(false);
+  const [showScrollToTop, setShowScrollToTop] = useState(false);
 
   const handlePress = useCallback((identifier: string) => {
     guardedNavigate(() =>
@@ -125,6 +126,8 @@ export default function TrailsScreen() {
         renderItem={renderTrailItem}
         keyExtractor={(item) => item.identifier}
         contentContainerStyle={s.listContent}
+        onScroll={(e) => setShowScrollToTop(e.nativeEvent.contentOffset.y > 300)}
+        scrollEventThrottle={16}
         initialNumToRender={10}
         maxToRenderPerBatch={10}
         windowSize={5}
@@ -145,9 +148,11 @@ export default function TrailsScreen() {
           </View>
         }
         ListFooterComponent={
-          <Pressable style={s.backToTop} onPress={onPressScrollToTop}>
-            <Text style={[s.text, { color: theme.colors.secondary }]}>Tillbaka till toppen</Text>
-          </Pressable>
+          showScrollToTop ? (
+            <Pressable style={s.backToTop} onPress={onPressScrollToTop}>
+              <Text style={[s.text, { color: theme.colors.secondary }]}>Tillbaka till toppen</Text>
+            </Pressable>
+          ) : null
         }
       />
 
