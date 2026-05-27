@@ -1,4 +1,4 @@
-using Core.Validators;
+using Core.Validators.Facility;
 using FluentAssertions;
 using WebDataContracts.RequestModels.Facility;
 

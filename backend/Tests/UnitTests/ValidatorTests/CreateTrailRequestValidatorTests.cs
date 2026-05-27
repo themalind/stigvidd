@@ -1,4 +1,4 @@
-using Core.Validators;
+using Core.Validators.Trail;
 using FluentAssertions;
 using WebDataContracts.RequestModels.Trail;
 

@@ -1,7 +1,7 @@
 ﻿using FluentValidation;
 using WebDataContracts.RequestModels.Review;
 
-namespace Core.Validators;
+namespace Core.Validators.Review;
 
 public class CreateReviewRequestValidator : AbstractValidator<CreateReviewRequest>
 {

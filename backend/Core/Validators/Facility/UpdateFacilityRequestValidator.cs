@@ -1,7 +1,7 @@
 using FluentValidation;
 using WebDataContracts.RequestModels.Facility;
 
-namespace Core.Validators;
+namespace Core.Validators.Facility;
 
 public class UpdateFacilityRequestValidator : AbstractValidator<UpdateFacilityRequest>
 {

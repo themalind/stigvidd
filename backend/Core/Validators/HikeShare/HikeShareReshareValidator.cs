@@ -1,18 +1,19 @@
 ﻿using FluentValidation;
 using WebDataContracts.RequestModels.HikeShare;
 
-namespace Core.Validators;
+namespace Core.Validators.HikeShare;
 
-public class HikeShareRequestValidator : AbstractValidator<HikeShareRequest>
+public class HikeShareReshareValidator : AbstractValidator<ReshareSharedHikeRequest>
 {
-    public HikeShareRequestValidator()
+    public HikeShareReshareValidator()
     {
+
         RuleFor(hsr => hsr.HikeIdentifier)
             .NotEmpty()
                 .WithMessage("HikeIdentifier is required.")
             .Length(36)
                 .WithMessage("HikeIdentifier must be at least 36 characters long.");
-        RuleFor(hsr => hsr.SharedWithName)
+        RuleFor(hsr => hsr.ReShareToName)
             .NotEmpty()
                 .WithMessage("Shared with Name is required.")
             .MaximumLength(20)

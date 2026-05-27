@@ -1,7 +1,7 @@
 ﻿using FluentValidation;
 using WebDataContracts.RequestModels.TrailObstacle;
 
-namespace Core.Validators
+namespace Core.Validators.TrailObstacle
 {
     public class TrailObstacleUpdateRequestValidator : AbstractValidator<TrailObstacleUpdateRequest>
     {

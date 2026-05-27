@@ -1,7 +1,7 @@
 ﻿using FluentValidation;
 using WebDataContracts.RequestModels.Friend;
 
-namespace Core.Validators;
+namespace Core.Validators.Friends;
 
 public class SendFriendRequestRequestValidator : AbstractValidator<SendFriendRequestRequest>
 {
