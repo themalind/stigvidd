@@ -150,6 +150,7 @@ export default forwardRef<MapView, Props>(function TrailMarkersMap(
   const shelterIconColor = theme.dark ? "hsl(0, 0%, 96%)" : theme.colors.onPrimary;
 
   const fetchCounter = useRef(0);
+  const lastLevelRef = useRef<number>(0);
   const initialRegionRef = initialRegion ?? START_COORDINATE_BORAS;
 
   const [viewState, setViewState] = useState({
@@ -185,62 +186,30 @@ export default forwardRef<MapView, Props>(function TrailMarkersMap(
   const shelters = useMemo(() => facilities?.filter((f) => f.facilityType === 2) ?? [], [facilities]);
   const combined = useMemo(() => facilities?.filter((f) => f.facilityType === 3) ?? [], [facilities]);
 
-  const { minLat, maxLat, minLon, maxLon } = viewState.bounds;
-
-  // Viewport-cull markers: only mount what's inside the current map bounds.
-  // Polylines are already viewport-culled at the API level via the bounds query.
   const visibleTrailMarkers = useMemo(
     () =>
       trailMarkers?.filter(
         (t) =>
           t.startLatitude != null &&
           t.startLongitude != null &&
-          t.startLatitude >= minLat &&
-          t.startLatitude <= maxLat &&
-          t.startLongitude >= minLon &&
-          t.startLongitude <= maxLon &&
           (!filter.accessibility || accessibleIds.has(t.identifier)),
       ) ?? [],
-    [trailMarkers, minLat, maxLat, minLon, maxLon, filter.accessibility, accessibleIds],
+    [trailMarkers, filter.accessibility, accessibleIds],
   );
 
   const visibleFirePits = useMemo(
-    () =>
-      firePits.filter(
-        (f) =>
-          f.latitude >= minLat &&
-          f.latitude <= maxLat &&
-          f.longitude >= minLon &&
-          f.longitude <= maxLon &&
-          (!filter.accessibility || f.isAccessible),
-      ),
-    [firePits, minLat, maxLat, minLon, maxLon, filter.accessibility],
+    () => firePits.filter((f) => !filter.accessibility || f.isAccessible),
+    [firePits, filter.accessibility],
   );
 
   const visibleShelters = useMemo(
-    () =>
-      shelters.filter(
-        (f) =>
-          f.latitude >= minLat &&
-          f.latitude <= maxLat &&
-          f.longitude >= minLon &&
-          f.longitude <= maxLon &&
-          (!filter.accessibility || f.isAccessible),
-      ),
-    [shelters, minLat, maxLat, minLon, maxLon, filter.accessibility],
+    () => shelters.filter((f) => !filter.accessibility || f.isAccessible),
+    [shelters, filter.accessibility],
   );
 
   const visibleCombined = useMemo(
-    () =>
-      combined.filter(
-        (f) =>
-          f.latitude >= minLat &&
-          f.latitude <= maxLat &&
-          f.longitude >= minLon &&
-          f.longitude <= maxLon &&
-          (!filter.accessibility || f.isAccessible),
-      ),
-    [combined, minLat, maxLat, minLon, maxLon, filter.accessibility],
+    () => combined.filter((f) => !filter.accessibility || f.isAccessible),
+    [combined, filter.accessibility],
   );
 
   // Pre-filter paths once so accessibility isn't re-evaluated per render.
@@ -267,8 +236,13 @@ export default forwardRef<MapView, Props>(function TrailMarkersMap(
     if (level === 0) {
       setDisplayedPaths([]);
       setIsNetworkFetching(false);
+      lastLevelRef.current = 0;
       return;
     }
+
+    const levelChanged = lastLevelRef.current !== level;
+    lastLevelRef.current = level;
+    if (levelChanged) setDisplayedPaths([]);
 
     let active = true;
     const thisRequest = ++fetchCounter.current;
@@ -277,35 +251,39 @@ export default forwardRef<MapView, Props>(function TrailMarkersMap(
       const tiles = getTilesForBounds(viewState.bounds, level as 1 | 2 | 3);
       const { hits, misses } = await getCachedTiles(tiles, level as 1 | 2 | 3);
 
-      if (!active || fetchCounter.current !== thisRequest) return;
+      const isCurrent = () => active && fetchCounter.current === thisRequest;
 
       if (misses.length === 0) {
-        setDisplayedPaths(mergePathTiles([...hits.values()]));
-        setIsNetworkFetching(false);
+        if (isCurrent()) {
+          setDisplayedPaths(prev => mergePathTiles([prev, ...[...hits.values()]]));
+          setIsNetworkFetching(false);
+        }
         return;
       }
 
-      // Render already-cached tiles immediately while the missing ones load.
-      if (hits.size > 0) setDisplayedPaths(mergePathTiles([...hits.values()]));
-      setIsNetworkFetching(true);
+      // Show cached tiles immediately; always fetch misses to populate the
+      // cache even if this request is no longer the active one.
+      if (isCurrent()) {
+        if (hits.size > 0) setDisplayedPaths(prev => mergePathTiles([prev, ...[...hits.values()]]));
+        setIsNetworkFetching(true);
+      }
 
       const results = await Promise.allSettled(
         misses.map(async ({ x, y }) => {
           const data = await getTrailPaths(tileBounds(x, y, level as 1 | 2 | 3));
-          // Cache regardless of whether this request is still the latest —
-          // the data is valid and will benefit future renders.
           await setTileCached(x, y, level, data);
           return data;
         }),
       );
 
-      if (!active || fetchCounter.current !== thisRequest) return;
+      if (!isCurrent()) return;
 
       const fetched = results
         .filter((r): r is PromiseFulfilledResult<TrailPathLite[]> => r.status === "fulfilled")
         .map((r) => r.value);
 
-      setDisplayedPaths(mergePathTiles([...hits.values(), ...fetched]));
+      // hits are already in prev from the partial-render above; only add fetched.
+      setDisplayedPaths(prev => mergePathTiles([prev, ...fetched]));
       setIsNetworkFetching(false);
     }
 
@@ -329,7 +307,7 @@ export default forwardRef<MapView, Props>(function TrailMarkersMap(
           latitudeDelta: pendingRegion.current.latitudeDelta,
         });
       }
-    }, 300);
+    }, 150);
   }, []);
 
   return (
