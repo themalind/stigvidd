@@ -28,6 +28,25 @@ public class TrailService : ITrailService
         _logger = logger;
         _trailResponseFactory = factory;
     }
+    public async Task<Result<IReadOnlyCollection<TrailShortInfoResponse>>> GetAllTrailsWithBasicInfoAsync(CancellationToken ctoken)
+    {
+        var result = await _trailRepository.GetAllTrailsWithBasicInfoAsync(ctoken);
+
+        if (!result.IsSuccess)
+            return Result.Fail<IReadOnlyCollection<TrailShortInfoResponse>>(new Message(500, "An error occurred while fetching trails."));
+
+        return Result.Ok(result.Value);
+    }
+
+    public async Task<Result<IReadOnlyCollection<TrailMarkerResponse>>> GetAllTrailMarkersAsync(CancellationToken ctoken)
+    {
+        var result = await _trailRepository.GetAllTrailMarkersAsync(ctoken);
+
+        if (!result.IsSuccess)
+            return Result.Fail<IReadOnlyCollection<TrailMarkerResponse>>(new Message(500, "An error occurred while fetching trail markers."));
+
+        return Result.Ok(result.Value);
+    }
 
     public async Task<Result<int>> GetTrailIdByIdentifierAsync(string identifier, CancellationToken ctoken)
     {
@@ -139,22 +158,17 @@ public class TrailService : ITrailService
 
     public async Task<Result<TrailCardResponse?>> GetTrailCardByIdentifierAsync(string identifier, CancellationToken ctoken)
     {
-        // Project to an anonymous type so EF Core can translate the entire query to SQL,
-        // including the subquery aggregates, without loading full navigation collections.
         var result = await _trailRepository.GetTrailByIdentifierAsync(
             identifier,
-            t => new
-            {
+            t => new TrailCardProjection(
                 t.Identifier,
                 t.Name,
                 t.TrailLength,
                 t.Classification,
                 t.Accessibility,
-                // Inline average avoids a separate round-trip to the reviews table.
-                AverageRating = t.Reviews!.Any() ? t.Reviews!.Average(r => r.Rating) : 0m,
-                // Only the first image is needed for the map popup card.
-                Image = t.TrailImages!.Select(i => new { i.Identifier, i.ImageUrl }).FirstOrDefault()
-            },
+                t.Reviews!.Any() ? t.Reviews!.Average(r => r.Rating) : 0m,
+                t.TrailImages!.Select(i => new TrailCardImageProjection(i.Identifier, i.ImageUrl)).FirstOrDefault()
+            ),
             ctoken);
 
         if (result.Status == RepositoryResultStatus.Error)
@@ -400,24 +414,11 @@ public class TrailService : ITrailService
 
         return Result.Ok();
     }
-
-    public async Task<Result<IReadOnlyCollection<TrailShortInfoResponse>>> GetAllTrailsWithBasicInfoAsync(CancellationToken ctoken)
-    {
-        var result = await _trailRepository.GetAllTrailsWithBasicInfoAsync(ctoken);
-
-        if (!result.IsSuccess)
-            return Result.Fail<IReadOnlyCollection<TrailShortInfoResponse>>(new Message(500, "An error occurred while fetching trails."));
-
-        return Result.Ok(result.Value);
-    }
-
-    public async Task<Result<IReadOnlyCollection<TrailMarkerResponse>>> GetAllTrailMarkersAsync(CancellationToken ctoken)
-    {
-        var result = await _trailRepository.GetAllTrailMarkersAsync(ctoken);
-
-        if (!result.IsSuccess)
-            return Result.Fail<IReadOnlyCollection<TrailMarkerResponse>>(new Message(500, "An error occurred while fetching trail markers."));
-
-        return Result.Ok(result.Value);
-    }
 }
+
+internal record TrailCardProjection(
+    string Identifier, string Name, decimal TrailLength,
+    int Classification, bool Accessibility, decimal AverageRating,
+    TrailCardImageProjection? Image);
+
+internal record TrailCardImageProjection(string Identifier, string ImageUrl);

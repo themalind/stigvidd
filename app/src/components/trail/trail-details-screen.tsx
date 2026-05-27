@@ -11,8 +11,16 @@ import { Review } from "@/data/types";
 import CoordinateParser from "@/utils/coordinate-parser";
 import { useQuery } from "@tanstack/react-query";
 import { useLocalSearchParams } from "expo-router";
-import { useRef, useState } from "react";
-import { Platform, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { LatLng } from "react-native-maps";
 import { useTheme } from "react-native-paper";
 import BackButton from "../back-button";
@@ -32,6 +40,12 @@ export default function TrailDetailsScreen() {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [reviewCount, setReviewCount] = useState(0);
   const [showObstacleModal, setShowObstacleModal] = useState(false);
+  const [transitionComplete, setTransitionComplete] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setTransitionComplete(true), 0);
+    return () => clearTimeout(timer);
+  }, []);
 
   const {
     data: trail,
@@ -72,6 +86,11 @@ export default function TrailDetailsScreen() {
     coordinates = CoordinateParser({ data: coords.coordinates, identifier: trail!.identifier });
   }
 
+  const handleReviewsLoaded = useCallback((loadedReviews: Review[], total: number) => {
+    setReviewCount(total);
+    setReviews(loadedReviews);
+  }, []);
+
   const onPressScrollToRatings = () => {
     surfaceToScrollToRef.current?.measure((_x, _y, _width, _height, _pageX, pageY) => {
       scrollViewRef.current?.scrollTo({ y: pageY, animated: true });
@@ -108,8 +127,8 @@ export default function TrailDetailsScreen() {
           {obstacles && obstacles.length > 0 && <TrailObstacleWarning onPress={() => setShowObstacleModal(true)} />}
           {trail && <UserBar trail={trail} />}
           {trail?.description && <TrailDescription trail={trail} />}
-          {coords?.coordinates ? (
-            coordinates.length > 0 && <TrailMap trail={coordinates} />
+          {coords?.coordinates && coordinates.length > 0 && transitionComplete ? (
+            <TrailMap trail={coordinates} />
           ) : (
             <MapSkeleton text="Laddar karta..." />
           )}
@@ -119,10 +138,7 @@ export default function TrailDetailsScreen() {
             <TrailReviewsContainer
               trail={trail}
               surfaceToScrollToRef={surfaceToScrollToRef}
-              onReviewsLoaded={(reviews, total) => {
-                setReviewCount(total);
-                setReviews(reviews);
-              }}
+              onReviewsLoaded={handleReviewsLoaded}
             />
           )}
           <Pressable style={s.backToTop} onPress={onPressScrollToTop}>

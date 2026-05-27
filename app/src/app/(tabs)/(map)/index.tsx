@@ -7,7 +7,7 @@ import { useTrailCard } from "@/hooks/useTrailCard";
 import { classificationParser } from "@/utils/classification-parser";
 import { getDifficultyIcon } from "@/utils/getDifficultyIcon";
 import { MaterialIcons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useRef, useState } from "react";
 import { ActivityIndicator, Image, StyleSheet, TouchableOpacity, View } from "react-native";
 import MapView from "react-native-maps";
@@ -17,7 +17,16 @@ export default function MapScreen() {
   const theme = useTheme();
   const router = useRouter();
   const [isMapReady, setIsMapReady] = useState(false);
+  const [isFocused, setIsFocused] = useState(true);
   const mapRef = useRef<MapView>(null);
+
+  useFocusEffect(
+    useCallback(() => {
+      setIsFocused(true);
+      return () => setIsFocused(false);
+    }, []),
+  );
+
   const [filters, setFilters] = useState<MapMarkerFilter>({
     trails: true,
     shelters: false,
@@ -31,17 +40,21 @@ export default function MapScreen() {
 
   return (
     <View style={s.container}>
-      <TrailMarkersMap
-        ref={mapRef}
-        filter={filters}
-        style={StyleSheet.absoluteFill}
-        initialRegion={START_COORDINATE_BORAS}
-        showsUserLocation
-        selectedIdentifier={selectedIdentifier}
-        onTrailSelect={setSelectedIdentifier}
-        onMapReady={handleMapReady}
-      />
-      {!isMapReady && <View style={[StyleSheet.absoluteFill, { backgroundColor: theme.colors.background }]} />}
+      {isFocused && (
+        <TrailMarkersMap
+          ref={mapRef}
+          filter={filters}
+          style={StyleSheet.absoluteFill}
+          initialRegion={START_COORDINATE_BORAS}
+          showsUserLocation
+          selectedIdentifier={selectedIdentifier}
+          onTrailSelect={setSelectedIdentifier}
+          onMapReady={handleMapReady}
+        />
+      )}
+      {(!isMapReady || !isFocused) && (
+        <View style={[StyleSheet.absoluteFill, { backgroundColor: theme.colors.background }]} />
+      )}
 
       <CenterOnUserButton mapRef={mapRef} />
       <FilterButton filter={filters} onChange={setFilters} />
@@ -53,18 +66,14 @@ export default function MapScreen() {
           ) : card ? (
             <>
               <View style={s.infoPanelHeader}>
-                {card.image && (
-                  <Image source={{ uri: card.image.imageUrl }} style={s.trailImage} resizeMode="cover" />
-                )}
+                {card.image && <Image source={{ uri: card.image.imageUrl }} style={s.trailImage} resizeMode="cover" />}
                 <View style={s.infoPanelMeta}>
                   <Text style={s.trailName} numberOfLines={1}>
                     {card.name}
                   </Text>
                   <View style={s.infoRow}>
                     {card.trailLength != null && (
-                      <Text style={[s.infoText, { color: theme.colors.onSurfaceVariant }]}>
-                        {card.trailLength} km
-                      </Text>
+                      <Text style={[s.infoText, { color: theme.colors.onSurfaceVariant }]}>{card.trailLength} km</Text>
                     )}
                     <View style={s.difficultyRow}>
                       {getDifficultyIcon(classificationParser(card.classification ?? 0))}
@@ -73,9 +82,7 @@ export default function MapScreen() {
                       </Text>
                     </View>
                     <Text style={[s.infoText, { color: theme.colors.onSurfaceVariant }]}>
-                      {Number(card.averageRating) > 0
-                        ? `★ ${Number(card.averageRating).toFixed(1)}`
-                        : "Inga betyg"}
+                      {Number(card.averageRating) > 0 ? `★ ${Number(card.averageRating).toFixed(1)}` : "Inga betyg"}
                     </Text>
                   </View>
                 </View>
@@ -87,7 +94,7 @@ export default function MapScreen() {
                 style={[s.readMoreButton, { backgroundColor: theme.colors.primaryContainer }]}
                 onPress={() =>
                   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                router.push({
+                  router.push({
                     pathname: "/(tabs)/(map)/trail/[identifier]" as any,
                     params: { identifier: selectedIdentifier },
                   })

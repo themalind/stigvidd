@@ -1,4 +1,4 @@
-import { getTrailPaths, getFacilityMarkers, getTrailMarkers, TrailPathBounds } from "@/api/map-markers";
+import { getFacilityMarkers, getTrailMarkers, getTrailPaths, TrailPathBounds } from "@/api/map-markers";
 import { START_COORDINATE_BORAS } from "@/constants/constants";
 import { MapMarkerFilter, TrailPathLite } from "@/data/types";
 import { getCachedPaths, getZoomLevel, setCachedPaths, snapBounds } from "@/services/trail-path-cache";
@@ -77,6 +77,12 @@ export default forwardRef<MapView, Props>(function TrailMarkersMap(
   const combined = useMemo(() => facilities?.filter((f) => f.facilityType === 3), [facilities]);
 
   useEffect(() => {
+    return () => {
+      if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    };
+  }, []);
+
+  useEffect(() => {
     if (!filter.trails) {
       setDisplayedPaths([]);
       setIsNetworkFetching(false);
@@ -135,11 +141,20 @@ export default forwardRef<MapView, Props>(function TrailMarkersMap(
     };
   }, [viewState, filter.trails]);
 
+  const pendingRegion = useRef<Region | null>(null);
+  const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const handleRegionChange = useCallback((region: Region) => {
-    setViewState({
-      bounds: regionToBounds(region),
-      latitudeDelta: region.latitudeDelta,
-    });
+    pendingRegion.current = region;
+    if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    debounceTimer.current = setTimeout(() => {
+      if (pendingRegion.current) {
+        setViewState({
+          bounds: regionToBounds(pendingRegion.current),
+          latitudeDelta: pendingRegion.current.latitudeDelta,
+        });
+      }
+    }, 300);
   }, []);
 
   const selectedPath = displayedPaths.find((p) => p.identifier === selectedIdentifier);
@@ -147,111 +162,128 @@ export default forwardRef<MapView, Props>(function TrailMarkersMap(
 
   return (
     <View style={style}>
-    <Map
-      ref={mapRef}
-      style={StyleSheet.absoluteFill}
-      initialRegion={initialRegionRef}
-      showsUserLocation={showsUserLocation}
-      onRegionChangeComplete={handleRegionChange}
-      onPress={() => onTrailSelect(null)}
-      {...(onMapReady !== undefined && { onMapReady })}
-    >
-      {filter.trails &&
-        displayedPaths
-          // Accessibility data lives on trailMarkers (global fetch), not on the
-          // lean path data, so we cross-reference by identifier here.
-          .filter((t) => !filter.accessibility || trailMarkers?.find((m) => m.identifier === t.identifier)?.isAccessible)
-          .map((t) => (
-            <Polyline
-              key={t.identifier}
-              coordinates={t.path}
-              strokeColor={selectedIdentifier === t.identifier ? "#1a5266" : "#2a8099"}
-              strokeWidth={selectedIdentifier === t.identifier ? 5 : 3}
-              zIndex={selectedIdentifier === t.identifier ? 2 : 1}
-              tappable
-              onPress={() => onTrailSelect(t.identifier)}
-            />
-          ))}
+      <Map
+        ref={mapRef}
+        style={StyleSheet.absoluteFill}
+        initialRegion={initialRegionRef}
+        showsUserLocation={showsUserLocation}
+        onRegionChangeComplete={handleRegionChange}
+        onPress={() => onTrailSelect(null)}
+        {...(onMapReady !== undefined && { onMapReady })}
+      >
+        {filter.trails &&
+          displayedPaths
+            // Accessibility data lives on trailMarkers (global fetch), not on the
+            // lean path data, so we cross-reference by identifier here.
+            .filter(
+              (t) => !filter.accessibility || trailMarkers?.find((m) => m.identifier === t.identifier)?.isAccessible,
+            )
+            .map((t) => (
+              <Polyline
+                key={t.identifier}
+                coordinates={t.path}
+                strokeColor={selectedIdentifier === t.identifier ? "#1a5266" : "#2a8099"}
+                strokeWidth={selectedIdentifier === t.identifier ? 5 : 3}
+                zIndex={selectedIdentifier === t.identifier ? 2 : 1}
+              />
+            ))}
 
-      {filter.trails &&
-        trailMarkers
-          ?.filter(
-            (t) =>
-              t.startLatitude != null &&
-              t.startLongitude != null &&
-              (!filter.accessibility || t.isAccessible) &&
-              t.identifier !== selectedIdentifier,
-          )
-          .map((t) => (
-            <Marker
-              key={t.identifier}
-              coordinate={{ latitude: Number(t.startLatitude), longitude: Number(t.startLongitude) }}
-              anchor={{ x: 0.5, y: 1 }}
-              onPress={() => onTrailSelect(t.identifier)}
-            >
-              <MapPin color={theme.colors.secondary}>
-                <Ionicons name="trail-sign-outline" size={14} color={theme.colors.onSecondary} />
-              </MapPin>
-            </Marker>
-          ))}
+        {/* Transparent wide hit-area polylines for reliable iOS tap detection */}
+        {filter.trails &&
+          displayedPaths
+            .filter(
+              (t) => !filter.accessibility || trailMarkers?.find((m) => m.identifier === t.identifier)?.isAccessible,
+            )
+            .map((t) => (
+              <Polyline
+                key={`${t.identifier}-hit`}
+                coordinates={t.path}
+                strokeColor="transparent"
+                strokeWidth={20}
+                zIndex={selectedIdentifier === t.identifier ? 4 : 3}
+                tappable
+                onPress={() => onTrailSelect(t.identifier)}
+              />
+            ))}
 
-      {filter.firePits &&
-        firePits
-          ?.filter((f) => f.latitude != null && f.longitude != null && (!filter.accessibility || f.isAccessible))
-          .map((f) => (
-            <Marker
-              key={f.identifier}
-              coordinate={{ latitude: Number(f.latitude), longitude: Number(f.longitude) }}
-              title={f.name}
-              anchor={{ x: 0.5, y: 1 }}
-            >
-              <MapPin color={theme.colors.tertiary}>
-                <Ionicons name="bonfire-outline" size={14} color={theme.colors.onTertiary} />
-              </MapPin>
-            </Marker>
-          ))}
+        {filter.trails &&
+          trailMarkers
+            ?.filter(
+              (t) =>
+                t.startLatitude != null &&
+                t.startLongitude != null &&
+                (!filter.accessibility || t.isAccessible) &&
+                t.identifier !== selectedIdentifier,
+            )
+            .map((t) => (
+              <Marker
+                key={t.identifier}
+                coordinate={{ latitude: Number(t.startLatitude), longitude: Number(t.startLongitude) }}
+                anchor={{ x: 0.5, y: 1 }}
+                onPress={() => onTrailSelect(t.identifier)}
+              >
+                <MapPin color={theme.colors.tertiary}>
+                  <Ionicons name="trail-sign-outline" size={14} color={theme.colors.onTertiary} />
+                </MapPin>
+              </Marker>
+            ))}
 
-      {filter.shelters &&
-        shelters
-          ?.filter((f) => f.latitude != null && f.longitude != null && (!filter.accessibility || f.isAccessible))
-          .map((f) => (
-            <Marker
-              key={f.identifier}
-              coordinate={{ latitude: Number(f.latitude), longitude: Number(f.longitude) }}
-              title={f.name}
-              anchor={{ x: 0.5, y: 1 }}
-            >
-              <MapPin color={theme.colors.primary}>
-                <FontAwesome6 name="tent" size={12} color={theme.colors.onPrimary} />
-              </MapPin>
-            </Marker>
-          ))}
+        {filter.firePits &&
+          firePits
+            ?.filter((f) => f.latitude != null && f.longitude != null && (!filter.accessibility || f.isAccessible))
+            .map((f) => (
+              <Marker
+                key={f.identifier}
+                coordinate={{ latitude: Number(f.latitude), longitude: Number(f.longitude) }}
+                title={f.name}
+                anchor={{ x: 0.5, y: 1 }}
+              >
+                <MapPin color={theme.colors.secondary}>
+                  <Ionicons name="bonfire-outline" size={14} color={theme.colors.onSecondary} />
+                </MapPin>
+              </Marker>
+            ))}
 
-      {(filter.firePits || filter.shelters) &&
-        combined
-          ?.filter((f) => f.latitude != null && f.longitude != null && (!filter.accessibility || f.isAccessible))
-          .map((f) => (
-            <Marker
-              key={f.identifier}
-              coordinate={{ latitude: Number(f.latitude), longitude: Number(f.longitude) }}
-              title={f.name}
-              anchor={{ x: 0.5, y: 1 }}
-            >
-              <MapPin color={theme.colors.secondary}>
-                <Ionicons name="bonfire-outline" size={14} color={theme.colors.onSecondary} />
-              </MapPin>
-            </Marker>
-          ))}
+        {filter.shelters &&
+          shelters
+            ?.filter((f) => f.latitude != null && f.longitude != null && (!filter.accessibility || f.isAccessible))
+            .map((f) => (
+              <Marker
+                key={f.identifier}
+                coordinate={{ latitude: Number(f.latitude), longitude: Number(f.longitude) }}
+                title={f.name}
+                anchor={{ x: 0.5, y: 1 }}
+              >
+                <MapPin color={theme.colors.primary}>
+                  <FontAwesome6 name="tent" size={12} color={theme.colors.onPrimary} />
+                </MapPin>
+              </Marker>
+            ))}
 
-      {startCoord && (
-        <Marker coordinate={startCoord} anchor={{ x: 0.5, y: 1 }}>
-          <MapPin color={theme.colors.primary}>
-            <Ionicons name="trail-sign-outline" size={14} color={theme.colors.onPrimary} />
-          </MapPin>
-        </Marker>
-      )}
+        {(filter.firePits || filter.shelters) &&
+          combined
+            ?.filter((f) => f.latitude != null && f.longitude != null && (!filter.accessibility || f.isAccessible))
+            .map((f) => (
+              <Marker
+                key={f.identifier}
+                coordinate={{ latitude: Number(f.latitude), longitude: Number(f.longitude) }}
+                title={f.name}
+                anchor={{ x: 0.5, y: 1 }}
+              >
+                <MapPin color={theme.colors.secondary}>
+                  <Ionicons name="bonfire-outline" size={14} color={theme.colors.onSecondary} />
+                </MapPin>
+              </Marker>
+            ))}
 
-    </Map>
+        {startCoord && (
+          <Marker coordinate={startCoord} anchor={{ x: 0.5, y: 1 }}>
+            <MapPin color={theme.colors.tertiary}>
+              <Ionicons name="trail-sign-outline" size={14} color={theme.colors.onTertiary} />
+            </MapPin>
+          </Marker>
+        )}
+      </Map>
       {isNetworkFetching && (
         <View style={s.fetchingIndicator} pointerEvents="none">
           <ActivityIndicator size="small" color={theme.colors.primary} />

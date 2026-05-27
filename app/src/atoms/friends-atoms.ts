@@ -11,7 +11,7 @@ export const incomingRequestsAtom = atomWithQuery((get) => {
       return getIncomingRequests();
     },
     enabled: !!firebaseUser?.uid,
-    refetchInterval: 5_000,
+    refetchInterval: 60_000,
     retry: 1,
     refetchIntervalInBackground: false,
     staleTime: 0,
