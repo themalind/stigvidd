@@ -1,7 +1,7 @@
 import { getFacilityMarkers, getTrailMarkers, getTrailPaths, TrailPathBounds } from "@/api/map-markers";
 import { START_COORDINATE_BORAS } from "@/constants/constants";
 import { Facility, MapMarkerFilter, TrailMarkerResponse, TrailPathLite } from "@/data/types";
-import { getCachedPaths, getZoomLevel, setCachedPaths, snapBounds } from "@/services/trail-path-cache";
+import { getCachedTiles, getZoomLevel, getTilesForBounds, mergePathTiles, setTileCached, tileBounds } from "@/services/trail-path-cache";
 import { FontAwesome6, Ionicons } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
 import React, { forwardRef, memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -274,31 +274,39 @@ export default forwardRef<MapView, Props>(function TrailMarkersMap(
     const thisRequest = ++fetchCounter.current;
 
     async function fetchPaths() {
-      const cached = await getCachedPaths(viewState.bounds, level);
+      const tiles = getTilesForBounds(viewState.bounds, level as 1 | 2 | 3);
+      const { hits, misses } = await getCachedTiles(tiles, level as 1 | 2 | 3);
 
-      if (!active) return;
+      if (!active || fetchCounter.current !== thisRequest) return;
 
-      if (cached) {
-        setDisplayedPaths(cached);
+      if (misses.length === 0) {
+        setDisplayedPaths(mergePathTiles([...hits.values()]));
         setIsNetworkFetching(false);
         return;
       }
 
+      // Render already-cached tiles immediately while the missing ones load.
+      if (hits.size > 0) setDisplayedPaths(mergePathTiles([...hits.values()]));
       setIsNetworkFetching(true);
 
-      try {
-        const snapped = snapBounds(viewState.bounds, level);
-        const data = await getTrailPaths(snapped);
-        if (!active || fetchCounter.current !== thisRequest) return;
-        await setCachedPaths(viewState.bounds, level, data);
-        setDisplayedPaths(data);
-      } catch {
-        // Keep old paths visible on error
-      } finally {
-        if (active && fetchCounter.current === thisRequest) {
-          setIsNetworkFetching(false);
-        }
-      }
+      const results = await Promise.allSettled(
+        misses.map(async ({ x, y }) => {
+          const data = await getTrailPaths(tileBounds(x, y, level as 1 | 2 | 3));
+          // Cache regardless of whether this request is still the latest —
+          // the data is valid and will benefit future renders.
+          await setTileCached(x, y, level, data);
+          return data;
+        }),
+      );
+
+      if (!active || fetchCounter.current !== thisRequest) return;
+
+      const fetched = results
+        .filter((r): r is PromiseFulfilledResult<TrailPathLite[]> => r.status === "fulfilled")
+        .map((r) => r.value);
+
+      setDisplayedPaths(mergePathTiles([...hits.values(), ...fetched]));
+      setIsNetworkFetching(false);
     }
 
     fetchPaths();
