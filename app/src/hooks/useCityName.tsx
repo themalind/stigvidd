@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import * as Location from "expo-location";
 
 export interface UserLocation {
@@ -19,5 +19,6 @@ export function useCityName({ latitude, longitude }: UserLocation) {
     },
     enabled: latitude != null && longitude != null,
     staleTime: 1000 * 60 * 10,
+    placeholderData: keepPreviousData,
   });
 }

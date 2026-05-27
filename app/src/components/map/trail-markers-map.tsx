@@ -1,7 +1,14 @@
 import { getFacilityMarkers, getTrailMarkers, getTrailPaths, TrailPathBounds } from "@/api/map-markers";
 import { START_COORDINATE_BORAS } from "@/constants/constants";
 import { Facility, MapMarkerFilter, TrailMarkerResponse, TrailPathLite } from "@/data/types";
-import { getCachedTiles, getZoomLevel, getTilesForBounds, mergePathTiles, setTileCached, tileBounds } from "@/services/trail-path-cache";
+import {
+  getCachedTiles,
+  getZoomLevel,
+  getTilesForBounds,
+  mergePathTiles,
+  setTileCached,
+  tileBounds,
+} from "@/services/trail-path-cache";
 import { FontAwesome6, Ionicons } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
 import React, { forwardRef, memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -255,7 +262,7 @@ export default forwardRef<MapView, Props>(function TrailMarkersMap(
 
       if (misses.length === 0) {
         if (isCurrent()) {
-          setDisplayedPaths(prev => mergePathTiles([prev, ...[...hits.values()]]));
+          setDisplayedPaths((prev) => mergePathTiles([prev, ...[...hits.values()]]));
           setIsNetworkFetching(false);
         }
         return;
@@ -264,7 +271,7 @@ export default forwardRef<MapView, Props>(function TrailMarkersMap(
       // Show cached tiles immediately; always fetch misses to populate the
       // cache even if this request is no longer the active one.
       if (isCurrent()) {
-        if (hits.size > 0) setDisplayedPaths(prev => mergePathTiles([prev, ...[...hits.values()]]));
+        if (hits.size > 0) setDisplayedPaths((prev) => mergePathTiles([prev, ...[...hits.values()]]));
         setIsNetworkFetching(true);
       }
 
@@ -283,7 +290,7 @@ export default forwardRef<MapView, Props>(function TrailMarkersMap(
         .map((r) => r.value);
 
       // hits are already in prev from the partial-render above; only add fetched.
-      setDisplayedPaths(prev => mergePathTiles([prev, ...fetched]));
+      setDisplayedPaths((prev) => mergePathTiles([prev, ...fetched]));
       setIsNetworkFetching(false);
     }
 

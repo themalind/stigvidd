@@ -6,7 +6,7 @@ import PagerCarouselSkeleton from "@/components/skeletons/pager-carousel-skeleto
 import PagerCarousel from "@/components/trail/pager-carousel";
 import { SURFACE_BORDER_RADIUS } from "@/constants/constants";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { Image } from "expo-image";
 import { router, useFocusEffect } from "expo-router";
 import { useAtomValue } from "jotai";
@@ -23,6 +23,7 @@ export default function HomeScreen() {
     queryKey: ["trails", "popular", userLocation?.latitude, userLocation?.longitude],
     queryFn: () => getPopularTrails(userLocation?.latitude, userLocation?.longitude),
     enabled: locationResolved,
+    placeholderData: keepPreviousData,
   });
 
   // Scroll to top when screen is focused or bottomtab is pressed.

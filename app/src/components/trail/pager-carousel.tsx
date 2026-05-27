@@ -6,32 +6,29 @@ import { router } from "expo-router";
 import React, { useRef, useState } from "react";
 import {
   FlatList,
-  LayoutChangeEvent,
   NativeScrollEvent,
   NativeSyntheticEvent,
   Pressable,
   StyleSheet,
   View,
+  useWindowDimensions,
 } from "react-native";
 import { Text, useTheme } from "react-native-paper";
 
 interface PagerCarouselProps {
   data: TrailOverview[];
   onItemPress?: (item: TrailOverview) => void;
+  containerPadding?: number;
 }
 
-export default function PagerCarousel({ data, onItemPress }: PagerCarouselProps) {
+export default function PagerCarousel({ data, onItemPress, containerPadding = 24 }: PagerCarouselProps) {
   const theme = useTheme();
   const listRef = useRef<FlatList<TrailOverview>>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [width, setWidth] = useState(0);
+  const { width: windowWidth } = useWindowDimensions();
 
+  const width = windowWidth - containerPadding;
   const imageHeight = Math.round(width * 0.6);
-
-  const onLayout = (e: LayoutChangeEvent) => {
-    const w = e.nativeEvent.layout.width;
-    if (w > 0) setWidth(w);
-  };
 
   const goTo = (index: number) => {
     const next = Math.max(0, Math.min(data.length - 1, index));
@@ -60,12 +57,8 @@ export default function PagerCarousel({ data, onItemPress }: PagerCarouselProps)
       ? item.trailImagesResponse[0].imageUrl
       : require("../../assets/images/noImage.png");
 
-  if (width === 0) {
-    return <View onLayout={onLayout} style={{ width: "100%" }} />;
-  }
-
   return (
-    <View onLayout={onLayout}>
+    <View>
       <View style={{ position: "relative" }}>
         <FlatList
           ref={listRef}
