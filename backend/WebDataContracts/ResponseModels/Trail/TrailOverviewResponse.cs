@@ -6,14 +6,14 @@ public class TrailOverviewResponse
     public string? Name { get; set; }
     public decimal TrailLength { get; set; }
     public decimal AverageRating { get; set; }
-    public IReadOnlyCollection<TrailImageResponse>? TrailImagesResponse { get; set; }
+    public TrailImageResponse? TrailImagesResponse { get; set; }
 
     public static TrailOverviewResponse Create(
         string identifier,
         string? name,
         decimal trailLength,
         decimal averageRating,
-        IEnumerable<TrailImageResponse>? trailImages)
+        TrailImageResponse? trailImage)
     {
         return new TrailOverviewResponse
         {
@@ -21,7 +21,7 @@ public class TrailOverviewResponse
             Name = name,
             TrailLength = trailLength,
             AverageRating = averageRating,
-            TrailImagesResponse = trailImages?.ToList(),
+            TrailImagesResponse = trailImage
         };
     }
 }

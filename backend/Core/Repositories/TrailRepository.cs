@@ -5,7 +5,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using NetTopologySuite.Geometries;
 using System.Linq.Expressions;
-using WebDataContracts.ResponseModels.Trail;
 
 namespace Core.Repositories;
 
@@ -20,7 +19,7 @@ public class TrailRepository : ITrailRepository
         _logger = logger;
     }
 
-    public async Task<RepositoryResult<IReadOnlyCollection<TrailShortInfoResponse>>> GetAllTrailsWithBasicInfoAsync(CancellationToken ctoken)
+    public async Task<RepositoryResult<IReadOnlyCollection<T>>> GetAllTrailsWithBasicInfoAsync<T>(Expression<Func<Trail, T>> selector, CancellationToken ctoken)
     {
         try
         {
@@ -28,25 +27,15 @@ public class TrailRepository : ITrailRepository
 
             var trails = await context.Trails.AsNoTracking()
                 .Where(t => t.IsVerified && t.GeoPath != null)
-                .Select(t => new TrailShortInfoResponse
-                {
-                    Identifier = t.Identifier,
-                    Name = t.Name,
-                    TrailLength = t.TrailLength,
-                    Accessibility = t.Accessibility,
-                    Classification = t.Classification,
-                    City = t.City,
-                    StartLongitude = (decimal?)t.GeoPath!.StartPoint.Coordinate.X,
-                    StartLatitude = (decimal?)t.GeoPath.StartPoint.Coordinate.Y,
-                })
+                .Select(selector)
                 .ToListAsync(ctoken);
 
-            return RepositoryResult<IReadOnlyCollection<TrailShortInfoResponse>>.Success(trails);
+            return RepositoryResult<IReadOnlyCollection<T>>.Success(trails);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "TrailRepository: GetAllTrailsWithBasicInfoAsync -> Something went wrong when fetching trails.");
-            return RepositoryResult<IReadOnlyCollection<TrailShortInfoResponse>>.Error();
+            return RepositoryResult<IReadOnlyCollection<T>>.Error();
         }
     }
 
@@ -73,52 +62,34 @@ public class TrailRepository : ITrailRepository
         }
     }
 
-    public async Task<RepositoryResult<IReadOnlyCollection<TrailOverviewResponse>>> GetPopularTrailOverviewsAsync(string presentableBaseUrl, double? userLatitude, double? userLongitude, CancellationToken ctoken)
+    public async Task<RepositoryResult<IReadOnlyCollection<T>>> GetPopularTrailOverviewsAsync<T>(
+        double? userLatitude,
+        double? userLongitude,
+        Expression<Func<Trail, T>> selector,
+        CancellationToken ctoken)
     {
         try
         {
             using var context = await _context.CreateDbContextAsync(ctoken);
 
-            var hasUserLocation = userLatitude.HasValue && userLongitude.HasValue;
             var userLocation = userLatitude.HasValue && userLongitude.HasValue ? Geometry.DefaultFactory.WithSRID(4326).CreatePoint(new Coordinate(userLongitude.Value, userLatitude.Value)) : null;
 
-            var trailQuery =
-                from t in context.Trails
-                where t.IsVerified
-                let trailInfo = new
-                {
-                    Id = t.Id,
-                    Identifier = t.Identifier,
-                    Name = t.Name,
-                    TrailLength = t.TrailLength,
-                    AverageRating =  t.Reviews!.Any() ? t.Reviews!.Average(r => r.Rating) : 0m,
-                    Image = t.TrailImages!.Select(i => new {
-                    			Identifier = i.Identifier,
-                    			ImageUrl = i.ImageUrl
-                    		}).FirstOrDefault(),                        
-                    StartPoint = t.GeoPath!.StartPoint
-                }
-                let score = (double)trailInfo.AverageRating + (userLocation != null ? (5.0 / (1.0 + trailInfo.StartPoint.Distance(userLocation) / 10.0)) : 0.0)
-                orderby score descending
-                select trailInfo;
+            var result = await context.Trails
+                .AsNoTracking()
+                .Where(t => t.IsVerified)
+                .OrderByDescending(t =>
+                  (double)(t.Reviews!.Any() ? t.Reviews!.Average(r => r.Rating) : 0m)
+                  + (userLocation != null ? 5.0 / (1.0 + t.GeoPath!.StartPoint.Distance(userLocation) / 10.0) : 0.0))
+                .Take(10)
+                .Select(selector)
+                .ToListAsync(ctoken);
 
-            var scoredTrails = await trailQuery.Take(10).ToListAsync(ctoken);
-
-            var result = scoredTrails
-                .Select(x => TrailOverviewResponse.Create(
-                    x.Identifier,
-                    x.Name,
-                    x.TrailLength,
-                    x.AverageRating,
-                    x.Image != null ? [TrailImageResponse.Create(presentableBaseUrl, x.Image.Identifier, x.Image.ImageUrl)] : Array.Empty<TrailImageResponse>()))
-                .ToList();
-
-            return RepositoryResult<IReadOnlyCollection<TrailOverviewResponse>>.Success(result);
+            return RepositoryResult<IReadOnlyCollection<T>>.Success(result);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "TrailRepository: GetPopularTrailOverviewsAsync -> Something went wrong when fetching popular trail overviews.");
-            return RepositoryResult<IReadOnlyCollection<TrailOverviewResponse>>.Error();
+            return RepositoryResult<IReadOnlyCollection<T>>.Error();
         }
     }
 
@@ -167,7 +138,7 @@ public class TrailRepository : ITrailRepository
         }
     }
 
-    public async Task<RepositoryResult<IReadOnlyCollection<TrailMarkerResponse>>> GetAllTrailMarkersAsync(CancellationToken ctoken)
+    public async Task<RepositoryResult<IReadOnlyCollection<T>>> GetAllTrailMarkersAsync<T>(Expression<Func<Trail, T>> selector, CancellationToken ctoken)
     {
         try
         {
@@ -175,22 +146,15 @@ public class TrailRepository : ITrailRepository
 
             var markers = await context.Trails.AsNoTracking()
                 .Where(t => t.IsVerified && t.GeoPath != null)
-                .Select(t => new TrailMarkerResponse
-                {
-                    Identifier = t.Identifier,
-                    Name = t.Name,
-                    IsAccessible = t.Accessibility,
-                    StartLongitude = (decimal?)t.GeoPath!.StartPoint.Coordinate.X,
-                    StartLatitude = (decimal?)t.GeoPath.StartPoint.Coordinate.Y,
-                })
+                .Select(selector)
                 .ToListAsync(ctoken);
 
-            return RepositoryResult<IReadOnlyCollection<TrailMarkerResponse>>.Success(markers);
+            return RepositoryResult<IReadOnlyCollection<T>>.Success(markers);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "TrailRepository: GetAllTrailMarkersAsync -> Something went wrong when fetching trail markers.");
-            return RepositoryResult<IReadOnlyCollection<TrailMarkerResponse>>.Error();
+            return RepositoryResult<IReadOnlyCollection<T>>.Error();
         }
     }
 

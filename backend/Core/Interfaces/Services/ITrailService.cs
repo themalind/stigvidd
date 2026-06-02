@@ -9,7 +9,7 @@ public interface ITrailService
     Task<Result<int>> GetTrailIdByIdentifierAsync(string identifier, CancellationToken ctoken);
     Task<Result<TrailResponse?>> GetTrailByIdentifierWithoutCoordinatesAsync(string identifier, CancellationToken ctoken);
     Task<Result<CoordinatesResponse?>> GetCoordinatesByTrailIdentifierAsync(string identifier, CancellationToken ctoken);
-    Task<Result<IReadOnlyCollection<TrailOverviewResponse?>>> GetPopularTrailOverviewsAsync(double? userLatitude, double? userLongitude, CancellationToken ctoken);
+    Task<Result<IReadOnlyCollection<TrailOverviewResponse>>> GetPopularTrailOverviewsAsync(double? userLatitude, double? userLongitude, CancellationToken ctoken);
     Task<Result<IReadOnlyCollection<TrailMarkerResponse>>> GetAllTrailMarkersAsync(CancellationToken ctoken);
     Task<Result<IReadOnlyCollection<TrailPathResponse>>> GetTrailPathsInBoundsAsync(double minLat, double minLon, double maxLat, double maxLon, CancellationToken ctoken);
     Task<Result<TrailCardResponse?>> GetTrailCardByIdentifierAsync(string identifier, CancellationToken ctoken);
