@@ -1,4 +1,5 @@
 import { authStateAtom } from "@/atoms/auth-atoms";
+import { secondaryMapActiveAtom } from "@/atoms/trail-map-active-atom";
 import { stigviddUserAtom } from "@/atoms/user-atoms";
 import BackButton from "@/components/back-button";
 import ErrorView from "@/components/error-view";
@@ -6,7 +7,7 @@ import LoadingIndicator from "@/components/loading-indicator";
 import TrailCreator from "@/components/trail/trail-creator/trail-creator";
 import * as Location from "expo-location";
 import { Redirect, useFocusEffect } from "expo-router";
-import { useAtom } from "jotai";
+import { useAtom, useSetAtom } from "jotai";
 import React, { useEffect, useRef, useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { Text, useTheme } from "react-native-paper";
@@ -18,10 +19,14 @@ export default function CreateHikeScreen() {
   const scrollViewRef = useRef<ScrollView>(null);
   const [locationGranted, setLocationGranted] = useState<boolean | null>(null);
 
+  const setSecondaryMapActive = useSetAtom(secondaryMapActiveAtom);
+
   useFocusEffect(
     React.useCallback(() => {
       scrollViewRef.current?.scrollTo({ y: 0, animated: false });
-    }, []),
+      setSecondaryMapActive(true);
+      return () => setSecondaryMapActive(false);
+    }, [setSecondaryMapActive]),
   );
 
   useEffect(() => {

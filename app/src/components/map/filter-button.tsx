@@ -1,6 +1,8 @@
+import { ELEVATION_SHADOW } from "@/constants/constants";
 import { MapMarkerFilter } from "@/data/types";
-import { useRef, useState, useMemo } from "react";
-import { Pressable, StyleSheet, Animated } from "react-native";
+import { useState } from "react";
+import { Pressable, StyleSheet } from "react-native";
+import Animated, { interpolate, useAnimatedStyle, useSharedValue, withSpring } from "react-native-reanimated";
 import { useTheme } from "react-native-paper";
 import { MaterialCommunityIcons, Ionicons, FontAwesome6 } from "@expo/vector-icons";
 
@@ -9,43 +11,68 @@ interface Props {
   onChange: (filter: MapMarkerFilter) => void;
 }
 
+const DISTANCE = 80;
+
 export default function FilterButton({ filter, onChange }: Props) {
   const theme = useTheme();
   const [isOpen, setIsOpen] = useState(false);
-  const animation = useRef(new Animated.Value(0)).current;
-
-  const scale = useRef(new Animated.Value(1)).current;
+  const animation = useSharedValue(0);
+  const scale = useSharedValue(1);
 
   const toggleMenu = () => {
     const next = !isOpen;
-
-    Animated.parallel([
-      Animated.spring(scale, { toValue: next ? 1.6 : 1, useNativeDriver: true }),
-      Animated.spring(animation, { toValue: next ? 1 : 0, useNativeDriver: true }),
-    ]).start();
-
     setIsOpen(next);
+    animation.value = withSpring(next ? 1 : 0);
+    scale.value = withSpring(next ? 1.6 : 1);
   };
 
-  const buttonStyles = useMemo(() => {
-    const makeStyle = (angle: number, distance: number) => {
-      const rad = (angle * Math.PI) / 180;
-      return {
-        transform: [
-          { translateX: animation.interpolate({ inputRange: [0, 1], outputRange: [0, Math.cos(rad) * distance] }) },
-          { translateY: animation.interpolate({ inputRange: [0, 1], outputRange: [0, -Math.sin(rad) * distance] }) },
-        ],
-        opacity: animation,
-      };
-    };
+  const mainStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  const trailsStyle = useAnimatedStyle(() => {
+    const rad = (90 * Math.PI) / 180;
     return {
-      trails: makeStyle(90, 80),
-      shelters: makeStyle(135, 80),
-      firePits: makeStyle(180, 80),
-      accessibility: makeStyle(225, 80),
+      transform: [
+        { translateX: interpolate(animation.value, [0, 1], [0, Math.cos(rad) * DISTANCE]) },
+        { translateY: interpolate(animation.value, [0, 1], [0, -Math.sin(rad) * DISTANCE]) },
+      ],
+      opacity: animation.value,
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  });
+
+  const sheltersStyle = useAnimatedStyle(() => {
+    const rad = (135 * Math.PI) / 180;
+    return {
+      transform: [
+        { translateX: interpolate(animation.value, [0, 1], [0, Math.cos(rad) * DISTANCE]) },
+        { translateY: interpolate(animation.value, [0, 1], [0, -Math.sin(rad) * DISTANCE]) },
+      ],
+      opacity: animation.value,
+    };
+  });
+
+  const firePitsStyle = useAnimatedStyle(() => {
+    const rad = (180 * Math.PI) / 180;
+    return {
+      transform: [
+        { translateX: interpolate(animation.value, [0, 1], [0, Math.cos(rad) * DISTANCE]) },
+        { translateY: interpolate(animation.value, [0, 1], [0, -Math.sin(rad) * DISTANCE]) },
+      ],
+      opacity: animation.value,
+    };
+  });
+
+  const accessibilityStyle = useAnimatedStyle(() => {
+    const rad = (225 * Math.PI) / 180;
+    return {
+      transform: [
+        { translateX: interpolate(animation.value, [0, 1], [0, Math.cos(rad) * DISTANCE]) },
+        { translateY: interpolate(animation.value, [0, 1], [0, -Math.sin(rad) * DISTANCE]) },
+      ],
+      opacity: animation.value,
+    };
+  });
 
   return (
     <>
@@ -53,13 +80,13 @@ export default function FilterButton({ filter, onChange }: Props) {
         style={[
           s.button,
           s.filter,
+          mainStyle,
           {
             backgroundColor:
               filter.trails || filter.shelters || filter.firePits || filter.accessibility
                 ? theme.colors.primary
                 : theme.colors.secondary,
             borderColor: theme.colors.onPrimary,
-            transform: [{ scale }],
           },
         ]}
       >
@@ -72,7 +99,7 @@ export default function FilterButton({ filter, onChange }: Props) {
         pointerEvents={isOpen ? "auto" : "none"}
         style={[
           s.button,
-          buttonStyles.trails,
+          trailsStyle,
           {
             backgroundColor: filter.trails ? theme.colors.primary : theme.colors.secondary,
             borderColor: theme.colors.onPrimary,
@@ -88,7 +115,7 @@ export default function FilterButton({ filter, onChange }: Props) {
         pointerEvents={isOpen ? "auto" : "none"}
         style={[
           s.button,
-          buttonStyles.shelters,
+          sheltersStyle,
           {
             backgroundColor: filter.shelters ? theme.colors.primary : theme.colors.secondary,
             borderColor: theme.colors.onPrimary,
@@ -104,7 +131,7 @@ export default function FilterButton({ filter, onChange }: Props) {
         pointerEvents={isOpen ? "auto" : "none"}
         style={[
           s.button,
-          buttonStyles.firePits,
+          firePitsStyle,
           {
             backgroundColor: filter.firePits ? theme.colors.primary : theme.colors.secondary,
             borderColor: theme.colors.onPrimary,
@@ -120,7 +147,7 @@ export default function FilterButton({ filter, onChange }: Props) {
         pointerEvents={isOpen ? "auto" : "none"}
         style={[
           s.button,
-          buttonStyles.accessibility,
+          accessibilityStyle,
           {
             backgroundColor: filter.accessibility ? theme.colors.primary : theme.colors.secondary,
             borderColor: theme.colors.onPrimary,
@@ -142,8 +169,8 @@ const s = StyleSheet.create({
     bottom: 80,
     padding: 12,
     borderRadius: 999,
-    elevation: 5,
     borderWidth: 2,
+    ...ELEVATION_SHADOW,
   },
   filter: {
     zIndex: 10,

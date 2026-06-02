@@ -1,14 +1,14 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useTheme } from "react-native-paper";
 export default function UserShare() {
   const theme = useTheme();
   return (
     <View style={s.container}>
-      <TouchableOpacity style={s.touchable}>
+      <Pressable style={s.touchable}>
         <MaterialIcons name="share" size={30} color={theme.colors.onSurface} />
         <Text style={[s.text, { color: theme.colors.onSurface }]}>Dela</Text>
-      </TouchableOpacity>
+      </Pressable>
     </View>
   );
 }

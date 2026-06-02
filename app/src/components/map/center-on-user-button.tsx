@@ -1,3 +1,4 @@
+import { ELEVATION_SHADOW } from "@/constants/constants";
 import { useUserLocation } from "@/hooks/useUserLocation";
 import { Ionicons } from "@expo/vector-icons";
 import { Pressable, StyleSheet } from "react-native";
@@ -45,6 +46,6 @@ const s = StyleSheet.create({
     padding: 12,
     borderWidth: 2,
     borderRadius: 999,
-    elevation: 5,
+    ...ELEVATION_SHADOW,
   },
 });

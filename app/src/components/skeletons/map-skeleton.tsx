@@ -1,19 +1,16 @@
 import { BORDER_RADIUS } from "@/constants/constants";
 import { useEffect } from "react";
-import { Dimensions, StyleSheet, Text, View } from "react-native";
+import { StyleProp, StyleSheet, Text, useWindowDimensions, View, ViewStyle } from "react-native";
 import { useTheme } from "react-native-paper";
 import Animated, { useAnimatedStyle, useSharedValue, withRepeat, withTiming } from "react-native-reanimated";
 
-const WIDTH = Dimensions.get("screen").width;
-const HEIGHT = Dimensions.get("screen").height;
-
-function ShimmerBlock({ style }: { style?: any }) {
+function ShimmerBlock({ style }: { style?: StyleProp<ViewStyle> }) {
   const theme = useTheme();
   const opacity = useSharedValue(0.3);
 
   useEffect(() => {
     opacity.value = withRepeat(withTiming(1, { duration: 800 }), -1, true);
-  }, [opacity]);
+  }, []);
 
   const animatedStyle = useAnimatedStyle(() => ({
     opacity: opacity.value,
@@ -28,12 +25,13 @@ function ShimmerBlock({ style }: { style?: any }) {
 
 export default function MapSkeleton({ text }: { text?: string }) {
   const theme = useTheme();
+  const { height: HEIGHT } = useWindowDimensions();
   return (
     <View style={s.container}>
       <ShimmerBlock
         style={{
           borderRadius: BORDER_RADIUS,
-          width: WIDTH * 0.9,
+          width: "100%",
           height: HEIGHT * 0.3,
         }}
       />
@@ -49,9 +47,6 @@ export default function MapSkeleton({ text }: { text?: string }) {
 const s = StyleSheet.create({
   container: {
     overflow: "hidden",
-  },
-  map: {
-    flex: 1,
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,

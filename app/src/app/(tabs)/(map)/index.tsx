@@ -1,30 +1,32 @@
 import CenterOnUserButton from "@/components/map/center-on-user-button";
 import FilterButton from "@/components/map/filter-button";
 import TrailMarkersMap from "@/components/map/trail-markers-map";
-import { START_COORDINATE_BORAS } from "@/constants/constants";
+import { ELEVATION_SHADOW, START_COORDINATE_BORAS } from "@/constants/constants";
 import { MapMarkerFilter } from "@/data/types";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTrailCard } from "@/hooks/useTrailCard";
 import { classificationParser } from "@/utils/classification-parser";
 import { getDifficultyIcon } from "@/utils/getDifficultyIcon";
 import { guardedNavigate } from "@/utils/navigation";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useFocusEffect, useRouter } from "expo-router";
-import { startTransition, useCallback, useRef, useState } from "react";
-import { ActivityIndicator, Image, StyleSheet, TouchableOpacity, View } from "react-native";
+import { useCallback, useRef, useState } from "react";
+import { Image } from "expo-image";
+import { ActivityIndicator, Pressable, StyleSheet, View } from "react-native";
 import MapView from "react-native-maps";
 import { Text, useTheme } from "react-native-paper";
 
 export default function MapScreen() {
   const theme = useTheme();
   const router = useRouter();
+  const { top: topInset } = useSafeAreaInsets();
   const [isMapReady, setIsMapReady] = useState(false);
-  const [isFocused, setIsFocused] = useState(true);
+  const [isFocused, setIsFocused] = useState(false);
   const mapRef = useRef<MapView>(null);
-
   useFocusEffect(
     useCallback(() => {
       setIsFocused(true);
-      return () => startTransition(() => setIsFocused(false));
+      return () => setIsFocused(false);
     }, []),
   );
 
@@ -41,18 +43,17 @@ export default function MapScreen() {
 
   return (
     <View style={s.container}>
-      {isFocused && (
-        <TrailMarkersMap
-          ref={mapRef}
-          filter={filters}
-          style={StyleSheet.absoluteFill}
-          initialRegion={START_COORDINATE_BORAS}
-          showsUserLocation
-          selectedIdentifier={selectedIdentifier}
-          onTrailSelect={setSelectedIdentifier}
-          onMapReady={handleMapReady}
-        />
-      )}
+      <TrailMarkersMap
+        ref={mapRef}
+        isFocused={isFocused}
+        filter={filters}
+        style={StyleSheet.absoluteFill}
+        initialRegion={START_COORDINATE_BORAS}
+        showsUserLocation
+        selectedIdentifier={selectedIdentifier}
+        onTrailSelect={setSelectedIdentifier}
+        onMapReady={handleMapReady}
+      />
       {(!isMapReady || !isFocused) && (
         <View style={[StyleSheet.absoluteFill, { backgroundColor: theme.colors.background }]} />
       )}
@@ -61,13 +62,20 @@ export default function MapScreen() {
       <FilterButton filter={filters} onChange={setFilters} />
 
       {selectedIdentifier && (
-        <View style={[s.infoPanel, { backgroundColor: theme.colors.surface }]}>
+        <View style={[s.infoPanel, { backgroundColor: theme.colors.surface, top: topInset + 16 }]}>
           {isLoading ? (
             <ActivityIndicator style={s.loader} color={theme.colors.primary} />
           ) : card ? (
             <>
               <View style={s.infoPanelHeader}>
-                {card.image && <Image source={{ uri: card.image.imageUrl }} style={s.trailImage} resizeMode="cover" />}
+                {card.image && (
+                  <Image
+                    source={card.image.imageUrl}
+                    style={s.trailImage}
+                    contentFit="cover"
+                    cachePolicy="memory-disk"
+                  />
+                )}
                 <View style={s.infoPanelMeta}>
                   <Text style={s.trailName} numberOfLines={1}>
                     {card.name}
@@ -87,11 +95,11 @@ export default function MapScreen() {
                     </Text>
                   </View>
                 </View>
-                <TouchableOpacity onPress={() => setSelectedIdentifier(null)} style={s.closeButton}>
+                <Pressable onPress={() => setSelectedIdentifier(null)} style={s.closeButton}>
                   <MaterialIcons name="close" size={20} color={theme.colors.onSurface} />
-                </TouchableOpacity>
+                </Pressable>
               </View>
-              <TouchableOpacity
+              <Pressable
                 style={[s.readMoreButton, { backgroundColor: theme.colors.primaryContainer }]}
                 onPress={() =>
                   guardedNavigate(() =>
@@ -105,7 +113,7 @@ export default function MapScreen() {
               >
                 <Text style={[s.readMoreText, { color: theme.colors.onPrimaryContainer }]}>Läs mer</Text>
                 <MaterialIcons name="arrow-forward" size={16} color={theme.colors.onPrimaryContainer} />
-              </TouchableOpacity>
+              </Pressable>
             </>
           ) : null}
         </View>
@@ -120,17 +128,12 @@ const s = StyleSheet.create({
   },
   infoPanel: {
     position: "absolute",
-    top: 16,
     left: 16,
     right: 16,
     borderRadius: 12,
     padding: 14,
     gap: 10,
-    elevation: 10,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
+    ...ELEVATION_SHADOW,
   },
   loader: {
     paddingVertical: 8,

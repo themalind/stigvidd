@@ -12,8 +12,9 @@ import GetRegionFromTrail from "@/utils/get-region-from-trail";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { BlurView } from "expo-blur";
+import { secondaryMapActiveAtom } from "@/atoms/trail-map-active-atom";
 import { useAtomValue, useSetAtom } from "jotai";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Dimensions, Pressable, StyleSheet, View } from "react-native";
 import MapView, { Polyline } from "react-native-maps";
 import { Button, Icon, Modal, Portal, Text, useTheme } from "react-native-paper";
@@ -36,6 +37,11 @@ export default function HikeDetails({ visible, hike, onDismiss }: Props) {
   const mapRef = useRef<MapView>(null);
   const theme = useTheme();
   const user = useAtomValue(stigviddUserAtom);
+  const setSecondaryMapActive = useSetAtom(secondaryMapActiveAtom);
+  useEffect(() => {
+    setSecondaryMapActive(visible);
+    return () => setSecondaryMapActive(false);
+  }, [visible, setSecondaryMapActive]);
   const queryClient = useQueryClient();
   const coordinates = CoordinateParser({ data: hike.coordinates ?? "", identifier: hike.identifier });
 

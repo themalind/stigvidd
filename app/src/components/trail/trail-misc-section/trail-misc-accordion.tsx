@@ -30,6 +30,7 @@ export default function TrailMiscInfo({ trail }: Props) {
               id="1"
               style={{ backgroundColor: theme.colors.surface }}
             >
+              <Divider />
               <VisitorInformationSection visitorInfo={trail.visitorInformation} />
             </List.Accordion>
             <Divider />
@@ -43,6 +44,7 @@ export default function TrailMiscInfo({ trail }: Props) {
               id="2"
               style={{ backgroundColor: theme.colors.surface }}
             >
+              <Divider />
               <FullDescriptionSection fullDescription={trail.fullDescription} />
             </List.Accordion>
             <Divider />
@@ -56,6 +58,7 @@ export default function TrailMiscInfo({ trail }: Props) {
             id="3"
             style={{ backgroundColor: theme.colors.surface }}
           >
+            <Divider />
             <LinkSection links={trail.trailLinksResponse} />
           </List.Accordion>
         ) : null}

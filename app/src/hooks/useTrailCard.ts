@@ -56,6 +56,8 @@ export function useTrailCard(identifier: string | null): { card: TrailCard | nul
     let cancelled = false;
 
     async function load() {
+      setCard(null);
+      setIsLoading(true);
       const key = `${CACHE_PREFIX}_${identifier}`;
 
       try {
@@ -64,9 +66,9 @@ export function useTrailCard(identifier: string | null): { card: TrailCard | nul
 
         if (raw) {
           const entry = JSON.parse(raw) as CacheEntry;
-          // Serve from cache without a loading indicator if still within TTL.
           if (Date.now() - entry.cachedAt < TTL_MS) {
             setCard(entry.data);
+            setIsLoading(false);
             return;
           }
         }
@@ -74,9 +76,7 @@ export function useTrailCard(identifier: string | null): { card: TrailCard | nul
         if (cancelled) return;
       }
 
-      // Cache miss or stale — fetch from network and show loading indicator.
-      setIsLoading(true);
-
+      // Cache miss or stale — fetch from network.
       try {
         const data = await getTrailCard(identifier!);
         if (cancelled) return;

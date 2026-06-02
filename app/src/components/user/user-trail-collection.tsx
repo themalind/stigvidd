@@ -61,7 +61,12 @@ export default function UserTrailCollection({
               >
                 <View style={s.trailContainer}>
                   {trail.trailImages ? (
-                    <Image style={s.trailImage} source={trail.trailImages[0].imageUrl} contentFit="cover" />
+                    <Image
+                      style={s.trailImage}
+                      source={trail.trailImages[0].imageUrl}
+                      contentFit="cover"
+                      cachePolicy="memory-disk"
+                    />
                   ) : null}
                   <View style={s.padding}>
                     <View style={s.titleRatingContainer}>

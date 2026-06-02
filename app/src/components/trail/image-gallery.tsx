@@ -32,7 +32,9 @@ export default function ImageGallery({ images }: GalleryProps) {
   return (
     <View style={s.container}>
       <View style={s.focusImageConatiner}>
-        {selectedImage && <Image source={selectedImage.imageUrl} style={s.focusImage} contentFit="cover" />}
+        {selectedImage && (
+          <Image source={selectedImage.imageUrl} style={s.focusImage} contentFit="cover" cachePolicy="memory-disk" />
+        )}
       </View>
       <View style={{ flex: 1 }}>
         <ScrollView
@@ -47,7 +49,7 @@ export default function ImageGallery({ images }: GalleryProps) {
           {images.map((image, index) => (
             <Pressable key={image.identifier} onPress={() => handleImagePress(image, index)}>
               <View>
-                <Image source={image.imageUrl} style={s.scrollImage} contentFit="cover" />
+                <Image source={image.imageUrl} style={s.scrollImage} contentFit="cover" cachePolicy="memory-disk" />
               </View>
             </Pressable>
           ))}

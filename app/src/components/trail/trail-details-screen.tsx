@@ -11,8 +11,11 @@ import { Review } from "@/data/types";
 import CoordinateParser from "@/utils/coordinate-parser";
 import { useQuery } from "@tanstack/react-query";
 import { useLocalSearchParams } from "expo-router";
-import { startTransition, useCallback, useEffect, useRef, useState } from "react";
-import { Platform, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { secondaryMapActiveAtom } from "@/atoms/trail-map-active-atom";
+import { useFocusEffect } from "expo-router";
+import { useSetAtom } from "jotai";
+import { useCallback, useRef, useState } from "react";
+import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { LatLng } from "react-native-maps";
 import { useTheme } from "react-native-paper";
 import BackButton from "../back-button";
@@ -25,19 +28,23 @@ import TrailMiscInfo from "./trail-misc-section/trail-misc-accordion";
 
 export default function TrailDetailsScreen() {
   const theme = useTheme();
+  const setSecondaryMapActive = useSetAtom(secondaryMapActiveAtom);
   const { identifier } = useLocalSearchParams<{ identifier: string }>();
+
+  // Safety valve: reset the atom if the user navigates away while a secondary
+  // map is open (e.g. via back gesture before TrailMap's own cleanup runs).
+  // TrailMap.tsx also resets the atom on unmount — whichever fires last wins.
+  useFocusEffect(
+    useCallback(() => {
+      return () => setSecondaryMapActive(false);
+    }, [setSecondaryMapActive]),
+  );
   const normalizedIdentifier: string = Array.isArray(identifier) ? identifier[0] : identifier;
   const scrollViewRef = useRef<ScrollView>(null);
   const surfaceToScrollToRef = useRef<View>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [reviewCount, setReviewCount] = useState(0);
   const [showObstacleModal, setShowObstacleModal] = useState(false);
-  const [transitionComplete, setTransitionComplete] = useState(false);
-
-  useEffect(() => {
-    startTransition(() => setTransitionComplete(true));
-  }, []);
-
   const handleReviewsLoaded = useCallback((loadedReviews: Review[], total: number) => {
     setReviewCount(total);
     setReviews(loadedReviews);
@@ -109,16 +116,16 @@ export default function TrailDetailsScreen() {
               <Text style={[s.ratingNumber, { color: theme.colors.onBackground }]}>{`(${reviewCount})`}</Text>
             </View>
             <View style={s.paddingLeft}>
-              <TouchableOpacity onPress={onPressScrollToRatings}>
+              <Pressable onPress={onPressScrollToRatings}>
                 <Text style={[s.text, { color: theme.colors.secondary }]}>Läs recensioner</Text>
-              </TouchableOpacity>
+              </Pressable>
             </View>
           </View>
           {trail && <TrailInfo trail={trail} />}
           {obstacles && obstacles.length > 0 && <TrailObstacleWarning onPress={() => setShowObstacleModal(true)} />}
           {trail && <UserBar trail={trail} />}
           {trail?.description && <TrailDescription trail={trail} />}
-          {coords?.coordinates && coordinates.length > 0 && transitionComplete ? (
+          {coords?.coordinates && coordinates.length > 0 ? (
             <TrailMap trail={coordinates} />
           ) : (
             <MapSkeleton text="Laddar karta..." />

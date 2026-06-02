@@ -1,4 +1,5 @@
 import { getFacilityMarkers, getTrailMarkers, getTrailPaths, TrailPathBounds } from "@/api/map-markers";
+import { secondaryMapActiveAtom } from "@/atoms/trail-map-active-atom";
 import { START_COORDINATE_BORAS } from "@/constants/constants";
 import { Facility, MapMarkerFilter, TrailMarkerResponse, TrailPathLite } from "@/data/types";
 import {
@@ -11,8 +12,9 @@ import {
 } from "@/services/trail-path-cache";
 import { FontAwesome6, Ionicons } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
+import { useAtomValue } from "jotai";
 import React, { forwardRef, memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ActivityIndicator, StyleProp, StyleSheet, View, ViewStyle } from "react-native";
+import { ActivityIndicator, Platform, StyleProp, StyleSheet, View, ViewStyle } from "react-native";
 import MapView, { LatLng, Marker, Polyline, Region } from "react-native-maps";
 import { useTheme } from "react-native-paper";
 import Map from "./map";
@@ -25,6 +27,7 @@ interface Props {
   selectedIdentifier: string | null;
   onTrailSelect: (identifier: string | null) => void;
   onMapReady?: () => void;
+  isFocused: boolean;
 }
 
 function regionToBounds(region: Region): TrailPathBounds {
@@ -59,28 +62,48 @@ const MapPin = memo(function MapPin({
 // Each trail gets its own memoized polyline. When selectedIdentifier changes
 // only the 1–2 affected instances re-render; all others bail out via React.memo
 // because their props are unchanged.
-// Note: iOS hit-area handling is intentionally omitted until iOS is addressed.
+// iOS uses a wide transparent overlay as hit target at zoom ≥ 2 (see showIosHitTarget).
 const TrailPolyline = memo(function TrailPolyline({
   identifier,
   path,
   selected,
   onPress,
+  zoomLevel,
 }: {
   identifier: string;
   path: LatLng[];
   selected: boolean;
   onPress: (id: string) => void;
+  zoomLevel: number;
 }) {
   const handlePress = useCallback(() => onPress(identifier), [onPress, identifier]);
+  const zIndex = selected ? 2 : 1;
+  // On iOS, Polyline onPress has a near-zero hit area. A wide transparent overlay
+  // fixes this, but only rendered at zoom ≥ 2 — intentional: at zoom 0–1 trails
+  // are too densely packed to select individually, so tappability isn't useful there.
+  const showIosHitTarget = Platform.OS === "ios" && zoomLevel >= 2;
+
   return (
-    <Polyline
-      coordinates={path}
-      strokeColor={selected ? "#1a5266" : "#2a8099"}
-      strokeWidth={selected ? 5 : 3}
-      zIndex={selected ? 2 : 1}
-      tappable
-      onPress={handlePress}
-    />
+    <>
+      <Polyline
+        coordinates={path}
+        strokeColor={selected ? "#1a5266" : "#2a8099"}
+        strokeWidth={selected ? 5 : 3}
+        zIndex={zIndex}
+        tappable={Platform.OS === "android"}
+        onPress={Platform.OS === "android" ? handlePress : undefined}
+      />
+      {showIosHitTarget && (
+        <Polyline
+          coordinates={path}
+          strokeColor="rgba(0,0,0,0.001)"
+          strokeWidth={20}
+          zIndex={zIndex}
+          tappable
+          onPress={handlePress}
+        />
+      )}
+    </>
   );
 });
 
@@ -149,15 +172,18 @@ const FacilityMarker = memo(function FacilityMarker({
 });
 
 export default forwardRef<MapView, Props>(function TrailMarkersMap(
-  { style, initialRegion, showsUserLocation, filter, selectedIdentifier, onTrailSelect, onMapReady }: Props,
+  { style, initialRegion, showsUserLocation, filter, selectedIdentifier, onTrailSelect, onMapReady, isFocused }: Props,
   mapRef,
 ) {
   const theme = useTheme();
+  const trailMapActive = useAtomValue(secondaryMapActiveAtom);
   const shelterColor = theme.dark ? "hsl(195, 40%, 52%)" : theme.colors.primary;
   const shelterIconColor = theme.dark ? "hsl(0, 0%, 96%)" : theme.colors.onPrimary;
 
   const fetchCounter = useRef(0);
   const lastLevelRef = useRef<number>(0);
+  const pendingRegion = useRef<Region | null>(null);
+  const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const initialRegionRef = initialRegion ?? START_COORDINATE_BORAS;
 
   const [viewState, setViewState] = useState({
@@ -171,14 +197,14 @@ export default forwardRef<MapView, Props>(function TrailMarkersMap(
   const { data: trailMarkers } = useQuery({
     queryKey: ["trails", "markers"],
     queryFn: getTrailMarkers,
-    enabled: filter.trails,
+    enabled: filter.trails && isFocused,
     staleTime: 5 * 60 * 1000,
   });
 
   const { data: facilities } = useQuery({
     queryKey: ["facilities", "markers"],
     queryFn: getFacilityMarkers,
-    enabled: filter.firePits || filter.shelters,
+    enabled: (filter.firePits || filter.shelters) && isFocused,
     staleTime: 5 * 60 * 1000,
   });
 
@@ -225,6 +251,8 @@ export default forwardRef<MapView, Props>(function TrailMarkersMap(
     [displayedPaths, filter.trails, filter.accessibility, accessibleIds],
   );
 
+  const zoomLevel = getZoomLevel(viewState.latitudeDelta);
+
   useEffect(() => {
     return () => {
       if (debounceTimer.current) clearTimeout(debounceTimer.current);
@@ -232,7 +260,7 @@ export default forwardRef<MapView, Props>(function TrailMarkersMap(
   }, []);
 
   useEffect(() => {
-    if (!filter.trails) {
+    if (!filter.trails || !isFocused) {
       setDisplayedPaths([]);
       setIsNetworkFetching(false);
       return;
@@ -299,10 +327,7 @@ export default forwardRef<MapView, Props>(function TrailMarkersMap(
     return () => {
       active = false;
     };
-  }, [viewState, filter.trails]);
-
-  const pendingRegion = useRef<Region | null>(null);
-  const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  }, [viewState, filter.trails, isFocused]);
 
   const handleRegionChange = useCallback((region: Region) => {
     pendingRegion.current = region;
@@ -317,6 +342,14 @@ export default forwardRef<MapView, Props>(function TrailMarkersMap(
     }, 150);
   }, []);
 
+  // Unmount the MapView while a secondary map is active to avoid running two
+  // native GL contexts simultaneously (causes jank/crashes on Android).
+  // Trade-off: remount cost when returning to this tab. Keeping it mounted with
+  // disabled interactions would still compete for the native GL context.
+  if (trailMapActive) {
+    return <View style={style} />;
+  }
+
   return (
     <View style={style}>
       <Map
@@ -326,7 +359,7 @@ export default forwardRef<MapView, Props>(function TrailMarkersMap(
         showsUserLocation={showsUserLocation}
         onRegionChangeComplete={handleRegionChange}
         onPress={() => onTrailSelect(null)}
-        {...(onMapReady !== undefined && { onMapReady })}
+        onMapReady={onMapReady}
       >
         {visiblePaths.map((t) => (
           <TrailPolyline
@@ -335,6 +368,7 @@ export default forwardRef<MapView, Props>(function TrailMarkersMap(
             path={t.path}
             selected={selectedIdentifier === t.identifier}
             onPress={onTrailSelect}
+            zoomLevel={zoomLevel}
           />
         ))}
 

@@ -7,3 +7,11 @@ export const START_COORDINATE_BORAS = {
   latitudeDelta: 0.2,
   longitudeDelta: 0.1,
 };
+
+export const ELEVATION_SHADOW = {
+  elevation: 5,
+  shadowColor: "#000",
+  shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 0.15,
+  shadowRadius: 4,
+} as const;
