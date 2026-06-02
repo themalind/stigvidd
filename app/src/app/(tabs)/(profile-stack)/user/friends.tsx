@@ -67,7 +67,7 @@ export default function FriendsScreen() {
           {showSearchResults && (
             <View style={s.section}>
               <SectionHeader icon="account-search" label="Sökresultat" color={theme.colors.primary} />
-              <Surface style={[s.card, { backgroundColor: theme.colors.surface }]} elevation={1}>
+              <Surface style={[s.card, { backgroundColor: theme.colors.surface }]} elevation={0}>
                 <View style={s.cardInner}>
                   {searchPending ? (
                     <ActivityIndicator style={s.loader} />
@@ -131,7 +131,7 @@ export default function FriendsScreen() {
                 label={`Inkommande (${incomingRequests?.length})`}
                 color={theme.colors.tertiary}
               />
-              <Surface style={[s.card, { backgroundColor: theme.colors.surface }]} elevation={1}>
+              <Surface style={[s.card, { backgroundColor: theme.colors.surface }]} elevation={0}>
                 <View style={s.cardInner}>
                   {(incomingExpanded ? incomingRequests : incomingRequests?.slice(0, PREVIEW_COUNT))?.map(
                     (req, i, arr) => (
@@ -185,7 +185,7 @@ export default function FriendsScreen() {
           {incomingError && (
             <View style={s.section}>
               <SectionHeader icon="account-arrow-down" label="Inkommande" color={theme.colors.tertiary} />
-              <Surface style={[s.card, { backgroundColor: theme.colors.surface }]} elevation={1}>
+              <Surface style={[s.card, { backgroundColor: theme.colors.surface }]} elevation={0}>
                 <View style={s.cardInner}>
                   <EmptyState text="Kunde inte hämta förfrågningar" />
                   <Button mode="text" onPress={() => refetchIncoming()} style={s.retryButton}>
@@ -203,7 +203,7 @@ export default function FriendsScreen() {
                 label={`Skickade (${outgoingRequests?.length})`}
                 color={theme.colors.secondary}
               />
-              <Surface style={[s.card, { backgroundColor: theme.colors.surface }]} elevation={1}>
+              <Surface style={[s.card, { backgroundColor: theme.colors.surface }]} elevation={0}>
                 <View style={s.cardInner}>
                   {(outgoingExpanded ? outgoingRequests : outgoingRequests?.slice(0, PREVIEW_COUNT))?.map(
                     (req, i, arr) => (
@@ -246,7 +246,7 @@ export default function FriendsScreen() {
           {outgoingError && (
             <View style={s.section}>
               <SectionHeader icon="account-arrow-right" label="Skickade" color={theme.colors.secondary} />
-              <Surface style={[s.card, { backgroundColor: theme.colors.surface }]} elevation={1}>
+              <Surface style={[s.card, { backgroundColor: theme.colors.surface }]} elevation={0}>
                 <View style={s.cardInner}>
                   <EmptyState text="Kunde inte hämta förfrågningar" />
                   <Button mode="text" onPress={() => refetchOutgoing()} style={s.retryButton}>
@@ -263,7 +263,7 @@ export default function FriendsScreen() {
               label={`Vänner${friends ? ` (${friends.length})` : ""}`}
               color={theme.colors.primary}
             />
-            <Surface style={[s.card, { backgroundColor: theme.colors.surface }]} elevation={1}>
+            <Surface style={[s.card, { backgroundColor: theme.colors.surface }]} elevation={0}>
               <View style={s.cardInner}>
                 {friendsPending ? (
                   <ActivityIndicator style={s.loader} />

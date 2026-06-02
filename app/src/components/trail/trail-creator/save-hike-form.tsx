@@ -135,7 +135,7 @@ export default function SaveHikeForm({ hike, onDismiss, onSaveSuccess }: Props) 
       </View>
 
       {route.length > 0 ? (
-        <Surface style={s.mapContainer}>
+        <Surface elevation={0} style={s.mapContainer}>
           <View style={s.mapInner}>
             <Map style={s.map} ref={mapRef} initialRegion={GetRegionFromTrail(route)}>
               <Polyline coordinates={route} strokeColor="#f00" strokeWidth={3} />

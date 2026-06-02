@@ -392,11 +392,6 @@ const s = StyleSheet.create({
     padding: 6,
     alignItems: "center",
     justifyContent: "center",
-    elevation: 3,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
   },
   pinTip: {
     width: 0,
@@ -414,10 +409,5 @@ const s = StyleSheet.create({
     backgroundColor: "rgba(255,255,255,0.85)",
     borderRadius: 16,
     padding: 6,
-    elevation: 4,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.15,
-    shadowRadius: 2,
   },
 });

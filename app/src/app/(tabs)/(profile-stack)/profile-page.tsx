@@ -15,8 +15,8 @@ import { Image } from "expo-image";
 import { Redirect, useFocusEffect, useNavigation } from "expo-router";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import React, { useRef, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, View } from "react-native";
-import { Text, useTheme } from "react-native-paper";
+import { ScrollView, StyleSheet, View } from "react-native";
+import { Button, Text, useTheme } from "react-native-paper";
 
 export default function ProfilePageScreen() {
   const [{ data: user, isLoading, isError, error }] = useAtom(stigviddUserAtom);
@@ -76,7 +76,7 @@ export default function ProfilePageScreen() {
               ? require("../../../assets/images/wizard-darkmode.png")
               : require("../../../assets/images/wizard-lightmode.png")
           }
-          style={[s.image, { borderColor: theme.colors.outline }]}
+          style={[s.image, { borderColor: theme.colors.outlineVariant }]}
         />
         <View style={s.userProfileInfoText}>
           <Text>{user?.nickName}</Text>
@@ -90,56 +90,56 @@ export default function ProfilePageScreen() {
         <ProfileMenuItem
           text="Mina vänner"
           route="/(tabs)/(profile-stack)/user/friends"
-          icon={<MaterialCommunityIcons name="account-group" size={30} color={theme.colors.tertiary} />}
+          icon={<MaterialCommunityIcons name="account-group" size={30} color={theme.colors.secondary} />}
           badge={incomingCount}
         />
         <ProfileMenuItem
           text="Favoriter"
           route="/(tabs)/(profile-stack)/user/favorites"
-          icon={<MaterialCommunityIcons name="cards-heart" size={30} color={theme.colors.tertiary} />}
+          icon={<MaterialCommunityIcons name="cards-heart" size={30} color={theme.colors.secondary} />}
         />
         <ProfileMenuItem
           text="Vill gå"
           route="/(tabs)/(profile-stack)/user/wishlist"
-          icon={<MaterialIcons name="star" size={30} color={theme.colors.tertiary} />}
+          icon={<MaterialIcons name="star" size={30} color={theme.colors.secondary} />}
         />
         <ProfileMenuItem
           text="Skapa en promenad"
           route="/(tabs)/(profile-stack)/user/create-hike"
-          icon={<MaterialIcons name="hiking" size={30} color={theme.colors.tertiary} />}
+          icon={<MaterialIcons name="hiking" size={30} color={theme.colors.secondary} />}
         />
         <ProfileMenuItem
           text="Mina egna promenader"
           route="/(tabs)/(profile-stack)/user/my-hikes"
-          icon={<MaterialCommunityIcons name="map-legend" size={30} color={theme.colors.tertiary} />}
+          icon={<MaterialCommunityIcons name="map-legend" size={30} color={theme.colors.secondary} />}
         />
         <ProfileMenuItem
           text="Promenader delade med mig"
           route="/(tabs)/(profile-stack)/user/shared-hikes"
-          icon={<Fontisto name="map" size={26} color={theme.colors.tertiary} />}
+          icon={<Fontisto name="map" size={26} color={theme.colors.secondary} />}
         />
         <ProfileMenuItem
           text="Utmärkelser"
           route="/(tabs)/(profile-stack)/profile-page"
-          icon={<MaterialIcons name="emoji-events" size={30} color={theme.colors.tertiary} />}
+          icon={<MaterialIcons name="emoji-events" size={30} color={theme.colors.secondary} />}
         />
         <ProfileMenuItem
           text="Statistik"
           route="/(tabs)/(profile-stack)/profile-page"
-          icon={<MaterialIcons name="bar-chart" size={30} color={theme.colors.tertiary} />}
+          icon={<MaterialIcons name="bar-chart" size={30} color={theme.colors.secondary} />}
         />
         <ProfileMenuItem
           text="Om Stigvidd"
           route="/(tabs)/(profile-stack)/about"
-          icon={<MaterialIcons name="perm-device-info" size={30} color={theme.colors.tertiary} />}
+          icon={<MaterialIcons name="perm-device-info" size={30} color={theme.colors.secondary} />}
         />
         <View style={s.accountActionsContainer}>
-          <Pressable onPress={handleSignOut}>
+          <Button mode="outlined" onPress={handleSignOut}>
             <Text style={s.actionText}>Logga ut</Text>
-          </Pressable>
-          <Pressable onPress={() => setVisible(true)}>
+          </Button>
+          <Button mode="outlined" onPress={() => setVisible(true)}>
             <Text style={s.actionText}>Avsluta konto</Text>
-          </Pressable>
+          </Button>
         </View>
       </View>
       <DeleteAccountModal visible={visible} onDismiss={() => setVisible(false)} />
@@ -155,6 +155,7 @@ const s = StyleSheet.create({
   },
   topTitle: {
     fontSize: 20,
+    letterSpacing: 0.5,
     alignSelf: "flex-start",
     paddingBottom: 10,
   },
@@ -188,7 +189,6 @@ const s = StyleSheet.create({
     paddingTop: 30,
   },
   actionText: {
-    textDecorationLine: "underline",
     fontSize: 16,
   },
 });

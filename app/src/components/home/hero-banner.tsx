@@ -11,7 +11,7 @@ function getGreeting(): string {
   if (h >= 5 && h < 10) return "God morgon";
   if (h >= 10 && h < 18) return "Hej";
   if (h >= 18 && h < 22) return "God kväll";
-  return "God natt";
+  return "God kväll";
 }
 
 function getWeatherIcon(code: number): keyof typeof Ionicons.glyphMap {

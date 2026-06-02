@@ -79,7 +79,7 @@ export default function AddReviewForm({ trailIdentifier, onSuccess }: ReviewForm
     <View style={s.formContainer}>
       <Divider />
       <View style={s.rowGap}>
-        <Text>Väl ett betyg *</Text>
+        <Text style={[s.fieldLabel, { color: theme.colors.onSurfaceVariant }]}>Välj ett betyg *</Text>
         <MaterialCommunityIcons
           name="information-slab-circle-outline"
           size={24}
@@ -116,7 +116,7 @@ export default function AddReviewForm({ trailIdentifier, onSuccess }: ReviewForm
       </View>
       <Divider />
       <View style={s.rowGap}>
-        <Text>Lägg till bild (valfritt)</Text>
+        <Text style={[s.fieldLabel, { color: theme.colors.onSurfaceVariant }]}>Lägg till bild (valfritt)</Text>
         <MaterialCommunityIcons
           name="information-slab-circle-outline"
           size={24}
@@ -142,7 +142,9 @@ export default function AddReviewForm({ trailIdentifier, onSuccess }: ReviewForm
       <Divider />
       <View style={s.gap}>
         <View style={s.rowGap}>
-          <Text>Skriv en recension eller kommentar</Text>
+          <Text style={[s.fieldLabel, { color: theme.colors.onSurfaceVariant }]}>
+            Skriv en recension eller kommentar
+          </Text>
           <MaterialCommunityIcons
             name="information-slab-circle-outline"
             size={24}
@@ -165,7 +167,9 @@ export default function AddReviewForm({ trailIdentifier, onSuccess }: ReviewForm
           control={control}
           render={({ field: { onChange, onBlur, value } }) => (
             <TextInput
+              mode="outlined"
               error={!!errors.trailReview}
+              style={{ backgroundColor: theme.colors.surfaceVariant }}
               onBlur={onBlur}
               autoCapitalize="sentences"
               multiline
@@ -175,11 +179,7 @@ export default function AddReviewForm({ trailIdentifier, onSuccess }: ReviewForm
               value={value}
               maxLength={500}
               label="Recension"
-              theme={{
-                colors: {
-                  primary: theme.colors.onSurface,
-                },
-              }}
+              theme={{ colors: { primary: theme.colors.onSurface } }}
             />
           )}
           name="trailReview"
@@ -205,7 +205,6 @@ export default function AddReviewForm({ trailIdentifier, onSuccess }: ReviewForm
 
 const s = StyleSheet.create({
   formContainer: {
-    padding: 10,
     gap: 20,
   },
   rowGap: {
@@ -218,5 +217,11 @@ const s = StyleSheet.create({
   },
   button: {
     borderRadius: BORDER_RADIUS,
+  },
+  fieldLabel: {
+    fontSize: 11,
+    fontWeight: "600",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
   },
 });

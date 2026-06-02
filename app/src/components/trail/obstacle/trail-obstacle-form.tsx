@@ -171,7 +171,7 @@ export default function TrailObstacleForm({ trailIdentifier, visible, onDismiss 
               </Pressable>
             </View>
 
-            <Surface style={s.surface}>
+            <Surface elevation={0} style={s.surface}>
               <Text style={[s.infoLabel, { color: theme.colors.onSurfaceVariant }]}>
                 Upptäcker du något som påverkar framkomligheten eller säkerheten på leden?
               </Text>

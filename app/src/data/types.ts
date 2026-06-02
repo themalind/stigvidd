@@ -30,7 +30,7 @@ export interface TrailOverview {
   name?: string;
   trailLength: number;
   averageRating: number;
-  trailImagesResponse?: TrailImage[];
+  trailImagesResponse?: TrailImage;
 }
 
 export interface TrailImage {

@@ -1,8 +1,9 @@
 import { BorasArea } from "@/data/areas-data";
+import { BORDER_RADIUS } from "@/constants/constants";
 import { guardedNavigate } from "@/utils/navigation";
 import { router } from "expo-router";
-import { Pressable } from "react-native";
-import { Button, Card, Icon, Text, useTheme } from "react-native-paper";
+import { Pressable, StyleSheet } from "react-native";
+import { Button, Card, Text, useTheme } from "react-native-paper";
 
 interface Props {
   area: BorasArea;
@@ -21,19 +22,61 @@ export default function AreaCard({ area }: Props) {
           }),
         )
       }
-      style={{ gap: 5 }}
+      style={s.pressable}
     >
-      <Card>
-        <Card.Cover style={{ padding: 10, backgroundColor: theme.colors.elevation.level1 }} source={area.image} />
-        <Card.Title title={area.name} subtitle={area.location} />
-        <Card.Content style={{ paddingTop: 10 }}>
-          <Text>{area.description}</Text>
+      <Card elevation={0} style={[s.card, { borderColor: theme.colors.outlineVariant }]}>
+        <Card.Cover source={area.image} style={s.cover} />
+        <Card.Title title={area.name} subtitle={area.location} titleStyle={s.title} subtitleStyle={s.subtitle} />
+        <Card.Content style={s.content}>
+          <Text style={s.description}>{area.description}</Text>
         </Card.Content>
         <Card.Actions>
-          <Button mode="text">Läs mer</Button>
-          <Icon source="chevron-right" size={24} color={theme.colors.primary} />
+          <Button mode="contained" icon="chevron-right" contentStyle={s.buttonContent} labelStyle={s.buttonLabel}>
+            Läs mer
+          </Button>
         </Card.Actions>
       </Card>
     </Pressable>
   );
 }
+
+const s = StyleSheet.create({
+  pressable: {
+    gap: 5,
+  },
+  cover: {
+    borderTopLeftRadius: BORDER_RADIUS,
+    borderTopRightRadius: BORDER_RADIUS,
+    borderBottomLeftRadius: 0,
+    borderBottomRightRadius: 0,
+  },
+  card: {
+    borderWidth: 1,
+    borderRadius: BORDER_RADIUS,
+  },
+  title: {
+    textTransform: "uppercase",
+    letterSpacing: 1.5,
+    fontSize: 13,
+    fontWeight: "700",
+  },
+  subtitle: {
+    fontSize: 12,
+    letterSpacing: 0.5,
+  },
+  content: {
+    paddingTop: 10,
+  },
+  description: {
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  buttonContent: {
+    flexDirection: "row-reverse",
+  },
+  buttonLabel: {
+    textTransform: "uppercase",
+    letterSpacing: 1.5,
+    fontSize: 11,
+  },
+});

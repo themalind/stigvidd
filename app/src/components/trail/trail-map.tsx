@@ -25,7 +25,7 @@ export default function TrailMap({ trail }: TrailMapProps) {
   }, [trail]);
 
   return (
-    <Surface style={s.container}>
+    <Surface elevation={0} style={[s.container, { borderColor: theme.colors.outlineVariant }]}>
       <View style={s.inner}>
         {trail.length > 0 && (
           <Map
@@ -58,6 +58,7 @@ const s = StyleSheet.create({
   container: {
     height: HEIGHT * 0.3,
     borderRadius: SURFACE_BORDER_RADIUS,
+    borderWidth: StyleSheet.hairlineWidth,
   },
   inner: {
     flex: 1,
@@ -80,11 +81,6 @@ const s = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 20,
     opacity: 0.9,
-    elevation: 2,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.15,
-    shadowRadius: 3,
   },
   lockText: {
     fontSize: 13,

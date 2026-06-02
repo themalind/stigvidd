@@ -88,9 +88,9 @@ export default function SettingsDrawer({ visible, onDismiss }: Props) {
         style={[
           s.panel,
           {
-            backgroundColor: theme.colors.surface,
+            backgroundColor: theme.colors.background,
             borderLeftColor: theme.colors.outlineVariant,
-            borderLeftWidth: 1,
+            borderLeftWidth: StyleSheet.hairlineWidth,
             paddingTop: insets.top + 10,
           },
         ]}

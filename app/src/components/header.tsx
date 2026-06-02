@@ -13,18 +13,23 @@ export default function Header() {
   const theme = useTheme();
 
   return (
-    <SafeAreaView style={{ backgroundColor: theme.colors.outlineVariant }} edges={["top"]}>
-      <View style={[s.container, { backgroundColor: theme.colors.outlineVariant }]}>
+    <SafeAreaView style={{ backgroundColor: theme.colors.background }} edges={["top"]}>
+      <View
+        style={[
+          s.container,
+          { backgroundColor: theme.colors.background, borderBottomColor: theme.colors.outlineVariant },
+        ]}
+      >
         <View style={s.stigviddContainer}>
           <Image style={s.image} source={require("../assets/images/mammaapp.png")} />
-          <Text style={[s.text, { color: theme.colors.onSurfaceVariant }]}>Stigvidd</Text>
+          <Text style={[s.text, { color: theme.colors.onBackground }]}>Stigvidd</Text>
         </View>
         <View style={s.iconContainer}>
           <Pressable hitSlop={12}>
-            <MaterialIcons name="search" size={24} color={theme.colors.onSurfaceVariant} />
+            <MaterialIcons name="search" size={24} color={theme.colors.onBackground} />
           </Pressable>
           <Pressable hitSlop={12} onPress={() => setVisible(true)}>
-            <MaterialIcons name="settings" size={24} color={theme.colors.onSurfaceVariant} />
+            <MaterialIcons name="settings" size={24} color={theme.colors.onBackground} />
           </Pressable>
         </View>
       </View>
@@ -41,6 +46,7 @@ const s = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 10,
     gap: 10,
+    borderBottomWidth: StyleSheet.hairlineWidth,
   },
   stigviddContainer: {
     flexDirection: "row",

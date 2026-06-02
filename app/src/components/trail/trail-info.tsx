@@ -18,7 +18,10 @@ export default function TrailInfo({ trail }: TrailinfoProps) {
   const [accessibiltyModal, setAccessibilityModal] = useState(false);
 
   return (
-    <Surface elevation={2} style={[s.container, { backgroundColor: theme.colors.surface }]}>
+    <Surface
+      elevation={0}
+      style={[s.container, { backgroundColor: theme.colors.surface, borderColor: theme.colors.outlineVariant }]}
+    >
       <Text style={[s.sectionTitle, { color: theme.colors.onSurface }]}>Information</Text>
       <View style={s.grid}>
         <View style={s.item}>
@@ -74,6 +77,7 @@ const s = StyleSheet.create({
     padding: 20,
     borderRadius: SURFACE_BORDER_RADIUS,
     gap: 12,
+    borderWidth: StyleSheet.hairlineWidth,
   },
   sectionTitle: {
     fontWeight: "700",

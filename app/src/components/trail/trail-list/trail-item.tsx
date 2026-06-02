@@ -28,7 +28,7 @@ function TrailItem({ item, handlePress }: TrailItemProps) {
   return (
     <Pressable
       onPress={() => handlePress(item.identifier)}
-      style={[s.trailCard, { backgroundColor: theme.colors.surface }]}
+      style={[s.trailCard, { backgroundColor: theme.colors.surface, borderColor: theme.colors.outlineVariant }]}
     >
       <View style={s.topRow}>
         <View style={s.nameRow}>
@@ -54,8 +54,10 @@ function TrailItem({ item, handlePress }: TrailItemProps) {
         <View style={s.classificationContainer}>
           {item.classification != null && item.classification !== 0 && (
             <>
-              <Text>{getDifficultyIcon(classificationParser(item.classification))}</Text>
-              <Text style={s.infoText}>{classificationParser(item.classification)}</Text>
+              <View style={s.difficultyIconWrapper}>
+                <Text>{getDifficultyIcon(classificationParser(item.classification))}</Text>
+              </View>
+              <Text style={[s.infoText, s.difficultyText]}>{classificationParser(item.classification)}</Text>
             </>
           )}
         </View>
@@ -72,6 +74,7 @@ const s = StyleSheet.create({
     borderRadius: BORDER_RADIUS,
     padding: 10,
     gap: 5,
+    borderWidth: StyleSheet.hairlineWidth,
   },
   topRow: {
     flexDirection: "row",
@@ -92,6 +95,7 @@ const s = StyleSheet.create({
     fontSize: 13,
     fontWeight: "700",
     flexShrink: 1,
+    letterSpacing: 0.4,
   },
   bottomRow: {
     flexDirection: "row",
@@ -102,15 +106,23 @@ const s = StyleSheet.create({
   },
   lengthText: {
     width: 60,
-    textAlign: "right",
+    textAlign: "left",
   },
   classificationContainer: {
-    width: 65,
+    width: 80,
     flexDirection: "row",
-    gap: 5,
     alignItems: "center",
-    justifyContent: "flex-end",
+    justifyContent: "flex-start",
+    gap: 4,
     paddingRight: 2,
+  },
+  difficultyIconWrapper: {
+    width: 16,
+    alignItems: "center",
+  },
+  difficultyText: {
+    width: 48,
+    textAlign: "left",
   },
   accessibilityBadge: {
     padding: 4,

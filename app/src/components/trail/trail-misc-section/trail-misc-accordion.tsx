@@ -14,7 +14,10 @@ export default function TrailMiscInfo({ trail }: Props) {
   const [expandedId, setExpandedId] = useState<string | number>("1");
   const theme = useTheme();
   return (
-    <Surface elevation={2} style={[s.container, { backgroundColor: theme.colors.surface }]}>
+    <Surface
+      elevation={0}
+      style={[s.container, { backgroundColor: theme.colors.surface, borderColor: theme.colors.outlineVariant }]}
+    >
       <List.AccordionGroup
         expandedId={expandedId}
         onAccordionPress={(id) => setExpandedId((prev) => (prev === id ? "" : id))}
@@ -66,6 +69,7 @@ const s = StyleSheet.create({
     gap: 10,
     padding: 10,
     borderRadius: SURFACE_BORDER_RADIUS,
+    borderWidth: StyleSheet.hairlineWidth,
   },
   titleText: {
     fontWeight: 700,

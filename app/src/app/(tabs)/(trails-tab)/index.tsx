@@ -137,7 +137,7 @@ export default function TrailsScreen() {
           <RefreshControl
             refreshing={isFetching}
             onRefresh={onRefresh}
-            tintColor="#007AFF"
+            tintColor={theme.colors.primary}
             title="Uppdaterar leder..."
           />
         }
@@ -198,6 +198,7 @@ const s = StyleSheet.create({
   },
   titleText: {
     fontSize: 20,
+    letterSpacing: 0.5,
   },
   filterButtonInner: {
     flexDirection: "row",

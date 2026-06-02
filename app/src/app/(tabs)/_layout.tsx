@@ -80,7 +80,7 @@ export default function TabsLayout() {
                 <MaterialCommunityIcons name="account-box-outline" size={30} color={theme.colors.onBackground} />
               ),
             tabBarBadge: incomingCount > 0 ? incomingCount : undefined,
-            tabBarBadgeStyle: { color: theme.colors.onPrimary, backgroundColor: theme.colors.primary },
+            tabBarBadgeStyle: { color: theme.colors.onTertiary, backgroundColor: theme.colors.tertiary },
           }}
         />
         <Tabs.Screen

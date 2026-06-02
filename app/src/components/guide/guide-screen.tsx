@@ -74,7 +74,7 @@ function AccordionSection({ icon, title, summary, children, defaultOpen = false 
         },
       ]}
     >
-      <Pressable onPress={toggle} style={[s.accordionHeader, { backgroundColor: theme.colors.secondaryContainer }]}>
+      <Pressable onPress={toggle} style={[s.accordionHeader, { backgroundColor: theme.colors.surface }]}>
         <View style={s.accordionHeaderLeft}>
           <View style={[s.iconWrap, { backgroundColor: theme.colors.secondaryContainer }]}>{icon}</View>
           <View style={s.titleGroup}>
@@ -261,11 +261,6 @@ const s = StyleSheet.create({
   accordion: {
     borderRadius: BORDER_RADIUS,
     overflow: "hidden",
-    elevation: 1,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
-    shadowRadius: 2,
   },
   accordionHeader: {
     flexDirection: "row",
