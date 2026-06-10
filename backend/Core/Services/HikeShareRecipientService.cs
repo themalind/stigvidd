@@ -26,21 +26,20 @@ public class HikeShareRecipientService : IHikeShareRecipientService
 
     public async Task<Result<IReadOnlyCollection<HikeShareRecipientResponse>>> GetAllHikesSharedWithUserAsync(string identifier, CancellationToken ctoken)
     {
-        var result = await _hikeShareRecipientRepository.GetAllHikesSharedWithUserAsync(identifier, hs => new HikeShareRecipientResponse
-        {
-            HikeIdentifier = hs.Hike!.Identifier,
-            HikeName = hs.Hike.Name,
-            Duration = hs.Hike.Duration,
-            HikeLength = hs.Hike.HikeLength,
-            Coordinates = hs.Hike.Coordinates,
-            SharedByName = hs.SharedBy!.NickName,
-            SharedByIdentifier = hs.SharedBy.Identifier,
-            CreatedByName = hs.Hike.User!.NickName,
-            SharedAt = hs.CreatedAt,
-            GettingThere = hs.Hike.GettingThere,
-            ParkingInfo = hs.Hike.ParkingInfo,
-            Description = hs.Hike.Description
-        }, ctoken);
+        var result = await _hikeShareRecipientRepository.GetAllHikesSharedWithUserAsync(identifier, hs => HikeShareRecipientResponse.Create(
+            hs.Hike!.Identifier,
+            hs.Hike.Name,
+            hs.Hike.HikeLength,
+            hs.Hike.Duration,
+            hs.Hike.Coordinates,
+            hs.Hike.User!.NickName,
+            hs.SharedBy!.NickName,
+            hs.SharedBy.Identifier,
+            hs.CreatedAt,
+            hs.Hike.GettingThere,
+            hs.Hike.ParkingInfo,
+            hs.Hike.Description
+        ), ctoken);
 
         if (!result.IsSuccess)
             return Result.Fail<IReadOnlyCollection<HikeShareRecipientResponse>>(new Message(500, "Something went wrong while fetching shared hikes"));

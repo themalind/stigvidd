@@ -636,19 +636,6 @@ public static class Utilities
             UserId = 1
         };
 
-        public static Trail Trail() => new()
-        {
-            Id = 4,
-            Identifier = Identifiers.Trail4,
-            Name = "Vildmarksleden Årås",
-            TrailLength = 8.5M,
-            Classification = 2,
-            Accessibility = true,
-            IsVerified = true,
-            City = "Arås",
-            Coordinates = "[{\"latitude\":57.62,\"longitude\":12.80}]"
-        };
-
         public static Review Review(bool withImages = false) => new()
         {
             Id = 1,
@@ -708,14 +695,6 @@ public static class Utilities
 
     public static class MockFactory
     {
-        public static Mock<IUserService> UserServiceFoundByIdentifier()
-        {
-            var mock = new Mock<IUserService>();
-            mock.Setup(u => u.GetUserByIdentifierAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(Result.Ok<UserResponseModel?>(Stubs.UserResponse()));
-            return mock;
-        }
-
         public static Mock<IUserService> UserServiceFoundById(int id = 1)
         {
             var mock = new Mock<IUserService>();
@@ -764,22 +743,6 @@ public static class Utilities
             var mock = new Mock<IUserRepository>();
             mock.Setup(r => r.GetUserByIdentifierAsync(It.IsAny<string>(), It.IsAny<Expression<Func<User, User>>>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(RepositoryResult<User>.Success(user));
-            return mock;
-        }
-
-        public static Mock<IUserRepository> UserRepositoryNotFoundByIdentifier()
-        {
-            var mock = new Mock<IUserRepository>();
-            mock.Setup(r => r.GetUserByIdentifierAsync(It.IsAny<string>(), It.IsAny<Expression<Func<User, User>>>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(RepositoryResult<User>.NotFound());
-            return mock;
-        }
-
-        public static Mock<IUserRepository> UserRepositoryFoundById(int id = 1)
-        {
-            var mock = new Mock<IUserRepository>();
-            mock.Setup(r => r.GetUserIdByIdentifierAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(RepositoryResult<int>.Success(id));
             return mock;
         }
     }

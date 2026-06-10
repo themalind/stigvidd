@@ -20,7 +20,16 @@ interface CacheEntry {
 
 // L1: module-level in-memory cache — survives component remounts within a session,
 // gives instant hits without the AsyncStorage async overhead.
+// Capped at MAX_MEM_TILES; oldest entry is evicted when the limit is reached.
+const MAX_MEM_TILES = 60;
 const memCache = new Map<string, CacheEntry>();
+
+function memSet(key: string, entry: CacheEntry): void {
+  if (memCache.size >= MAX_MEM_TILES && !memCache.has(key)) {
+    memCache.delete(memCache.keys().next().value!);
+  }
+  memCache.set(key, entry);
+}
 
 // Grid cell sizes (in degrees) per LOD level.
 const GRID_SIZES: Record<1 | 2 | 3, number> = {
@@ -78,7 +87,7 @@ async function getTileCached(x: number, y: number, level: number): Promise<Trail
     if (!raw) return null;
     const entry = JSON.parse(raw) as CacheEntry;
     if (now - entry.cachedAt >= TTL_MS) return null;
-    memCache.set(key, entry); // promote to L1
+    memSet(key, entry); // promote to L1
     return entry.data;
   } catch {
     return null;
@@ -89,7 +98,7 @@ async function getTileCached(x: number, y: number, level: number): Promise<Trail
 export async function setTileCached(x: number, y: number, level: number, data: TrailPathLite[]): Promise<void> {
   const key = tileKey(x, y, level);
   const entry: CacheEntry = { data, cachedAt: Date.now() };
-  memCache.set(key, entry);
+  memSet(key, entry);
   try {
     await AsyncStorage.setItem(key, JSON.stringify(entry));
   } catch {

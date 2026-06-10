@@ -65,7 +65,14 @@ public class FacilityService : IFacilityService
         return Result.Ok(_facilityResponseFactory.Create(result.Value));
     }
 
-    public async Task<Result<FacilityResponse>> UpdateFacilityAsync(string facilityIdentifier, string? name, int? facilityType, bool? isAccessible, decimal? longitude, decimal? latitude, CancellationToken ctoken)
+    public async Task<Result<FacilityResponse>> UpdateFacilityAsync(
+        string facilityIdentifier, 
+        string? name, 
+        int? facilityType, 
+        bool? isAccessible, 
+        decimal? longitude, 
+        decimal? latitude, 
+        CancellationToken ctoken)
     {
         var facility = await _facilityRepository.GetByIdentifierAsync(facilityIdentifier, ctoken);
 

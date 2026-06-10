@@ -4,9 +4,11 @@ using Core.Interfaces.Services;
 using Core.Services;
 using FluentAssertions;
 using Infrastructure.Data.Entities;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
+using NetTopologySuite.Geometries;
 using System.Linq.Expressions;
 using WebDataContracts.RequestModels.Trail;
 using WebDataContracts.ResponseModels.Trail;
@@ -86,7 +88,24 @@ public class TrailServiceTests
         // Assert
         result.Success.Should().BeFalse();
         result.Message.Should().NotBeNull();
-        result.Message!.StatusCode.Should().Be(404);
+        result.Message!.StatusCode.Should().Be(StatusCodes.Status404NotFound);
+    }
+
+    [Fact]
+    public async Task GetTrailIdByIdentifier_WhenError_ReturnsInternalServerError()
+    {
+        // Arrange
+        var repo = new Mock<ITrailRepository>();
+        repo.Setup(r => r.GetTrailIdByIdentifierAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<int>.Error());
+
+        // Act
+        var result = await Build(repo).GetTrailIdByIdentifierAsync("some-trail", CancellationToken.None);
+
+        // Assert
+        result.Success.Should().BeFalse();
+        result.Message.Should().NotBeNull();
+        result.Message!.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
     }
 
     [Fact]
@@ -120,7 +139,7 @@ public class TrailServiceTests
         // Assert
         result.Success.Should().BeFalse();
         result.Message.Should().NotBeNull();
-        result.Message!.StatusCode.Should().Be(404);
+        result.Message!.StatusCode.Should().Be(StatusCodes.Status404NotFound);
     }
 
     [Fact]
@@ -137,7 +156,7 @@ public class TrailServiceTests
         // Assert
         result.Success.Should().BeFalse();
         result.Message.Should().NotBeNull();
-        result.Message!.StatusCode.Should().Be(500);
+        result.Message!.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
     }
 
     [Fact]
@@ -171,7 +190,7 @@ public class TrailServiceTests
         // Assert
         result.Success.Should().BeFalse();
         result.Message.Should().NotBeNull();
-        result.Message!.StatusCode.Should().Be(404);
+        result.Message!.StatusCode.Should().Be(StatusCodes.Status404NotFound);
     }
 
     [Fact]
@@ -205,7 +224,7 @@ public class TrailServiceTests
         // Assert
         result.Success.Should().BeFalse();
         result.Message.Should().NotBeNull();
-        result.Message!.StatusCode.Should().Be(500);
+        result.Message!.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
     }
 
     [Fact]
@@ -224,7 +243,7 @@ public class TrailServiceTests
         // Assert
         result.Success.Should().BeFalse();
         result.Message.Should().NotBeNull();
-        result.Message!.StatusCode.Should().Be(500);
+        result.Message!.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
         webDav.Verify(w => w.DeleteFileAsync(It.IsAny<string>()), Times.Never);
     }
 
@@ -246,7 +265,7 @@ public class TrailServiceTests
         // Assert
         result.Success.Should().BeFalse();
         result.Message.Should().NotBeNull();
-        result.Message!.StatusCode.Should().Be(500);
+        result.Message!.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
         webDav.Verify(w => w.DeleteFileAsync("symbols/symbol.jpg"), Times.Once);
     }
 
@@ -264,7 +283,7 @@ public class TrailServiceTests
         // Assert
         result.Success.Should().BeFalse();
         result.Message.Should().NotBeNull();
-        result.Message!.StatusCode.Should().Be(500);
+        result.Message!.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
     }
 
     [Fact]
@@ -340,6 +359,29 @@ public class TrailServiceTests
     }
 
     [Fact]
+    public async Task GetPopularTrailOverviews_WhenSuccess_ImageUrlHasBaseUrlPrepended()
+    {
+        // Arrange
+        IReadOnlyCollection<TrailOverviewProjection> overviews =
+        [
+            new TrailOverviewProjection(Utilities.Identifiers.Trail4, "Trail A", 5M, 4.2M,
+                new TrailImageProjection("img-1", "trails/img.jpg"))
+        ];
+        var repo = new Mock<ITrailRepository>();
+        repo.Setup(r => r.GetPopularTrailOverviewsAsync(It.IsAny<double?>(), It.IsAny<double?>(), It.IsAny<Expression<Func<Trail, TrailOverviewProjection>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<IReadOnlyCollection<TrailOverviewProjection>>.Success(overviews));
+
+        // Act
+        var result = await Build(repo).GetPopularTrailOverviewsAsync(null, null, CancellationToken.None);
+
+        // Assert
+        result.Success.Should().BeTrue();
+        result.Value.Should().HaveCount(1);
+        result.Value.First().TrailImagesResponse.Should().NotBeNull();
+        result.Value.First().TrailImagesResponse!.ImageUrl.Should().StartWith("http://stigvidd.se/testing/");
+    }
+
+    [Fact]
     public async Task GetPopularTrailOverviews_WhenExceptionThrown_ReturnsInternalServerError()
     {
         // Arrange
@@ -353,7 +395,7 @@ public class TrailServiceTests
         // Assert
         result.Success.Should().BeFalse();
         result.Message.Should().NotBeNull();
-        result.Message.StatusCode.Should().Be(500);
+        result.Message.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
     }
 
     [Fact]
@@ -390,7 +432,7 @@ public class TrailServiceTests
         // Assert
         result.Success.Should().BeFalse();
         result.Message.Should().NotBeNull();
-        result.Message!.StatusCode.Should().Be(500);
+        result.Message!.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
     }
 
     [Fact]
@@ -441,7 +483,7 @@ public class TrailServiceTests
         // Assert
         result.Success.Should().BeFalse();
         result.Message.Should().NotBeNull();
-        result.Message.StatusCode.Should().Be(500);
+        result.Message.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
     }
 
     [Fact]
@@ -475,7 +517,7 @@ public class TrailServiceTests
         // Assert
         result.Success.Should().BeFalse();
         result.Message.Should().NotBeNull();
-        result.Message.StatusCode.Should().Be(404);
+        result.Message.StatusCode.Should().Be(StatusCodes.Status404NotFound);
     }
 
     [Fact]
@@ -495,7 +537,7 @@ public class TrailServiceTests
         // Assert
         result.Success.Should().BeFalse();
         result.Message.Should().NotBeNull();
-        result.Message.StatusCode.Should().Be(500);
+        result.Message.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
     }
 
     [Fact]
@@ -570,6 +612,79 @@ public class TrailServiceTests
     }
 
     [Fact]
+    public async Task GetTrailPaths_WhenRepositoryErrors_ReturnsInternalServerError()
+    {
+        // Arrange
+        var repo = new Mock<ITrailRepository>();
+        repo.Setup(r => r.GetTrailsInBoundsAsync(
+                It.IsAny<double>(), It.IsAny<double>(), It.IsAny<double>(), It.IsAny<double>(),
+                It.IsAny<Expression<Func<Trail, TrailPathProjection>>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<IReadOnlyCollection<TrailPathProjection>>.Error());
+
+        // Act
+        var result = await Build(repo).GetTrailPathsInBoundsAsync(57.0, 12.0, 58.0, 13.0, CancellationToken.None);
+
+        // Assert
+        result.Success.Should().BeFalse();
+        result.Message.Should().NotBeNull();
+        result.Message!.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
+    }
+
+    [Fact]
+    public async Task GetTrailPaths_WhenSuccess_ReturnsCoordinatesInLatLngOrder()
+    {
+        // Arrange — GeoPath uses (X = longitude, Y = latitude), response should swap to (lat, lng)
+        var lineString = new LineString([new Coordinate(12.8, 57.6), new Coordinate(12.9, 57.7)]);
+        IReadOnlyCollection<TrailPathProjection> paths =
+        [
+            new TrailPathProjection(Utilities.Identifiers.Trail4, lineString)
+        ];
+        var repo = new Mock<ITrailRepository>();
+        repo.Setup(r => r.GetTrailsInBoundsAsync(
+                It.IsAny<double>(), It.IsAny<double>(), It.IsAny<double>(), It.IsAny<double>(),
+                It.IsAny<Expression<Func<Trail, TrailPathProjection>>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<IReadOnlyCollection<TrailPathProjection>>.Success(paths));
+
+        // Act
+        var result = await Build(repo).GetTrailPathsInBoundsAsync(57.0, 12.0, 58.0, 13.0, CancellationToken.None);
+
+        // Assert
+        result.Success.Should().BeTrue();
+        result.Value.Should().HaveCount(1);
+        var first = result.Value.First();
+        first.Identifier.Should().Be(Utilities.Identifiers.Trail4);
+        first.Path.Should().HaveCount(2);
+        first.Path.First().Latitude.Should().Be(57.6);   // Y → lat
+        first.Path.First().Longitude.Should().Be(12.8);  // X → lng
+    }
+
+    [Fact]
+    public async Task GetTrailPaths_WhenGeoPathIsNull_ReturnsEmptyCoordinates()
+    {
+        // Arrange
+        IReadOnlyCollection<TrailPathProjection> paths =
+        [
+            new TrailPathProjection(Utilities.Identifiers.Trail4, null)
+        ];
+        var repo = new Mock<ITrailRepository>();
+        repo.Setup(r => r.GetTrailsInBoundsAsync(
+                It.IsAny<double>(), It.IsAny<double>(), It.IsAny<double>(), It.IsAny<double>(),
+                It.IsAny<Expression<Func<Trail, TrailPathProjection>>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<IReadOnlyCollection<TrailPathProjection>>.Success(paths));
+
+        // Act
+        var result = await Build(repo).GetTrailPathsInBoundsAsync(57.0, 12.0, 58.0, 13.0, CancellationToken.None);
+
+        // Assert
+        result.Success.Should().BeTrue();
+        result.Value.Should().HaveCount(1);
+        result.Value.First().Path.Should().BeEmpty();
+    }
+
+    [Fact]
     public async Task GetCoordinates_WhenError_ReturnsInternalServerError()
     {
         // Arrange
@@ -583,7 +698,7 @@ public class TrailServiceTests
         // Assert
         result.Success.Should().BeFalse();
         result.Message.Should().NotBeNull();
-        result.Message.StatusCode.Should().Be(500);
+        result.Message.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
     }
 
     [Fact]
@@ -623,7 +738,7 @@ public class TrailServiceTests
         // Assert
         result.Success.Should().BeFalse();
         result.Message.Should().NotBeNull();
-        result.Message.StatusCode.Should().Be(404);
+        result.Message.StatusCode.Should().Be(StatusCodes.Status404NotFound);
     }
 
     [Fact]
@@ -640,7 +755,54 @@ public class TrailServiceTests
         // Assert
         result.Success.Should().BeFalse();
         result.Message.Should().NotBeNull();
-        result.Message.StatusCode.Should().Be(500);
+        result.Message.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
+    }
+
+    [Fact]
+    public async Task UpdateTrail_WhenVisitorInformationProvided_SetsVisitorInformation()
+    {
+        // Arrange
+        Trail? captured = null;
+        var repo = new Mock<ITrailRepository>();
+        repo.Setup(r => r.UpdateTrailAsync(It.IsAny<Trail>(), It.IsAny<CancellationToken>()))
+            .Callback<Trail, CancellationToken>((t, _) => captured = t)
+            .ReturnsAsync((Trail t, CancellationToken _) => RepositoryResult<Trail>.Success(t));
+
+        var request = ValidUpdateRequest();
+        request.VisitorInformation = new UpdateVisitorInformationRequest
+        {
+            GettingThere = "Drive to parking",
+            Parking = "Free parking",
+            Illumination = true,
+        };
+
+        // Act
+        await Build(repo).UpdateTrailAsync(request, Utilities.Identifiers.Trail4, "user-id", CancellationToken.None);
+
+        // Assert
+        captured.Should().NotBeNull();
+        captured!.VisitorInformation.Should().NotBeNull();
+        captured.VisitorInformation!.GettingThere.Should().Be("Drive to parking");
+        captured.VisitorInformation.Parking.Should().Be("Free parking");
+        captured.VisitorInformation.Illumination.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task UpdateTrail_WhenVisitorInformationNotProvided_VisitorInformationIsNull()
+    {
+        // Arrange
+        Trail? captured = null;
+        var repo = new Mock<ITrailRepository>();
+        repo.Setup(r => r.UpdateTrailAsync(It.IsAny<Trail>(), It.IsAny<CancellationToken>()))
+            .Callback<Trail, CancellationToken>((t, _) => captured = t)
+            .ReturnsAsync((Trail t, CancellationToken _) => RepositoryResult<Trail>.Success(t));
+
+        // Act — ValidUpdateRequest() has VisitorInformation = null
+        await Build(repo).UpdateTrailAsync(ValidUpdateRequest(), Utilities.Identifiers.Trail4, "user-id", CancellationToken.None);
+
+        // Assert
+        captured.Should().NotBeNull();
+        captured!.VisitorInformation.Should().BeNull();
     }
 
     [Fact]
@@ -682,7 +844,7 @@ public class TrailServiceTests
         // Assert
         result.Success.Should().BeFalse();
         result.Message.Should().NotBeNull();
-        result.Message.StatusCode.Should().Be(404);
+        result.Message.StatusCode.Should().Be(StatusCodes.Status404NotFound);
     }
 
     [Fact]
@@ -702,7 +864,7 @@ public class TrailServiceTests
         // Assert
         result.Success.Should().BeFalse();
         result.Message.Should().NotBeNull();
-        result.Message.StatusCode.Should().Be(500);
+        result.Message.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
     }
 
     [Fact]
@@ -721,7 +883,32 @@ public class TrailServiceTests
         // Assert
         result.Success.Should().BeFalse();
         result.Message.Should().NotBeNull();
-        result.Message.StatusCode.Should().Be(500);
+        result.Message.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
+    }
+
+    [Fact]
+    public async Task AddTrailImages_WhenUploadThrowsAfterFirstSucceeds_CleansUpUploadedFile()
+    {
+        // Arrange — first upload succeeds, second throws
+        var repo = new Mock<ITrailRepository>();
+        repo.Setup(r => r.GetTrailIdByIdentifierAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<int>.Success(4));
+
+        var webDav = new Mock<IWebDavService>();
+        webDav.SetupSequence(w => w.UploadFileAsync(It.IsAny<Stream>(), It.IsAny<string>()))
+            .ReturnsAsync(Result.Ok<string?>("trails/img1.jpg"))
+            .ThrowsAsync(new Exception("disk full"));
+        webDav.Setup(w => w.DeleteFileAsync(It.IsAny<string>()))
+            .ReturnsAsync(Result.Ok(true));
+
+        // Act
+        var result = await Build(repo, webDav).AddTrailImagesAsync(Utilities.Identifiers.Trail4, Utilities.Stubs.TwoImages(), CancellationToken.None);
+
+        // Assert
+        result.Success.Should().BeFalse();
+        result.Message.Should().NotBeNull();
+        result.Message!.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
+        webDav.Verify(w => w.DeleteFileAsync("trails/img1.jpg"), Times.Once);
     }
 
     [Fact]
@@ -753,7 +940,7 @@ public class TrailServiceTests
         // Assert
         result.Success.Should().BeFalse();
         result.Message.Should().NotBeNull();
-        result.Message.StatusCode.Should().Be(404);
+        result.Message.StatusCode.Should().Be(StatusCodes.Status404NotFound);
     }
 
     [Fact]
@@ -770,6 +957,6 @@ public class TrailServiceTests
         // Assert
         result.Success.Should().BeFalse();
         result.Message.Should().NotBeNull();
-        result.Message.StatusCode.Should().Be(500);
+        result.Message.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
     }
 }

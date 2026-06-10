@@ -3,6 +3,7 @@ using Core.Interfaces.Repositories;
 using Core.Services;
 using FluentAssertions;
 using Infrastructure.Data.Entities;
+using Microsoft.AspNetCore.Http;
 using Moq;
 
 namespace UnitTests.ServiceTests;
@@ -42,7 +43,7 @@ public class FacilityServiceTests
     }
 
     [Fact]
-    public async Task CreateFacilityAsync_WhenRepositoryFails_Returns500()
+    public async Task CreateFacilityAsync_WhenRepositoryFails_ReturnsInternalServerError()
     {
         // Arrange
         var repo = new Mock<IFacilityRepository>();
@@ -55,7 +56,7 @@ public class FacilityServiceTests
         // Assert
         result.Success.Should().BeFalse();
         result.Message.Should().NotBeNull();
-        result.Message.StatusCode.Should().Be(500);
+        result.Message.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
     }
 
     [Theory]
@@ -118,7 +119,7 @@ public class FacilityServiceTests
     }
 
     [Fact]
-    public async Task GetAllAsync_WhenRepositoryFails_Returns500()
+    public async Task GetAllAsync_WhenRepositoryFails_ReturnsInternalServerError()
     {
         // Arrange
         var repo = new Mock<IFacilityRepository>();
@@ -131,7 +132,7 @@ public class FacilityServiceTests
         // Assert
         result.Success.Should().BeFalse();
         result.Message.Should().NotBeNull();
-        result.Message.StatusCode.Should().Be(500);
+        result.Message.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
     }
 
     [Fact]
@@ -152,7 +153,7 @@ public class FacilityServiceTests
     }
 
     [Fact]
-    public async Task GetByIdentifierAsync_WhenNotFound_Returns404()
+    public async Task GetByIdentifierAsync_WhenNotFound_ReturnsNotFound()
     {
         // Arrange
         var repo = new Mock<IFacilityRepository>();
@@ -165,11 +166,11 @@ public class FacilityServiceTests
         // Assert
         result.Success.Should().BeFalse();
         result.Message.Should().NotBeNull();
-        result.Message.StatusCode.Should().Be(404);
+        result.Message.StatusCode.Should().Be(StatusCodes.Status404NotFound);
     }
 
     [Fact]
-    public async Task GetByIdentifierAsync_WhenRepositoryFails_Returns500()
+    public async Task GetByIdentifierAsync_WhenRepositoryFails_ReturnsInternalServerError()
     {
         // Arrange
         var repo = new Mock<IFacilityRepository>();
@@ -182,7 +183,7 @@ public class FacilityServiceTests
         // Assert
         result.Success.Should().BeFalse();
         result.Message.Should().NotBeNull();
-        result.Message.StatusCode.Should().Be(500);
+        result.Message.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
     }
 
     [Fact]
@@ -203,7 +204,7 @@ public class FacilityServiceTests
     }
 
     [Fact]
-    public async Task UpdateFacilityAsync_WhenNotFound_Returns404()
+    public async Task UpdateFacilityAsync_WhenNotFound_ReturnsNotFound()
     {
         // Arrange
         var repo = new Mock<IFacilityRepository>();
@@ -216,11 +217,11 @@ public class FacilityServiceTests
         // Assert
         result.Success.Should().BeFalse();
         result.Message.Should().NotBeNull();
-        result.Message.StatusCode.Should().Be(404);
+        result.Message.StatusCode.Should().Be(StatusCodes.Status404NotFound);
     }
 
     [Fact]
-    public async Task UpdateFacilityAsync_WhenFetchFails_Returns500()
+    public async Task UpdateFacilityAsync_WhenFetchFails_ReturnsInternalServerError()
     {
         // Arrange
         var repo = new Mock<IFacilityRepository>();
@@ -233,11 +234,11 @@ public class FacilityServiceTests
         // Assert
         result.Success.Should().BeFalse();
         result.Message.Should().NotBeNull();
-        result.Message.StatusCode.Should().Be(500);
+        result.Message.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
     }
 
     [Fact]
-    public async Task UpdateFacilityAsync_WhenUpdateFails_Returns500()
+    public async Task UpdateFacilityAsync_WhenUpdateFails_ReturnsInternalServerError()
     {
         // Arrange
         var repo = new Mock<IFacilityRepository>();
@@ -252,7 +253,7 @@ public class FacilityServiceTests
         // Assert
         result.Success.Should().BeFalse();
         result.Message.Should().NotBeNull();
-        result.Message.StatusCode.Should().Be(500);
+        result.Message.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
     }
 
     [Fact]
@@ -300,7 +301,7 @@ public class FacilityServiceTests
     }
 
     [Fact]
-    public async Task DeleteAsync_WhenNotFound_Returns404()
+    public async Task DeleteAsync_WhenNotFound_ReturnsNotFound()
     {
         // Arrange
         var repo = new Mock<IFacilityRepository>();
@@ -313,11 +314,11 @@ public class FacilityServiceTests
         // Assert
         result.Success.Should().BeFalse();
         result.Message.Should().NotBeNull();
-        result.Message.StatusCode.Should().Be(404);
+        result.Message.StatusCode.Should().Be(StatusCodes.Status404NotFound);
     }
 
     [Fact]
-    public async Task DeleteAsync_WhenFetchFails_Returns500()
+    public async Task DeleteAsync_WhenFetchFails_ReturnsInternalServerError()
     {
         // Arrange
         var repo = new Mock<IFacilityRepository>();
@@ -330,11 +331,11 @@ public class FacilityServiceTests
         // Assert
         result.Success.Should().BeFalse();
         result.Message.Should().NotBeNull();
-        result.Message.StatusCode.Should().Be(500);
+        result.Message.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
     }
 
     [Fact]
-    public async Task DeleteAsync_WhenDeleteFails_Returns500()
+    public async Task DeleteAsync_WhenDeleteFails_ReturnsInternalServerError()
     {
         // Arrange
         var facility = MakeFacility();
@@ -350,6 +351,6 @@ public class FacilityServiceTests
         // Assert
         result.Success.Should().BeFalse();
         result.Message.Should().NotBeNull();
-        result.Message.StatusCode.Should().Be(500);
+        result.Message.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
     }
 }

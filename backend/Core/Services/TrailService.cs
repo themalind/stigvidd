@@ -144,7 +144,7 @@ public class TrailService : ITrailService
         // loaded on demand when the user taps a trail via the /card endpoint.
         var result = await _trailRepository.GetTrailsInBoundsAsync(
             minLat, minLon, maxLat, maxLon,
-            t => new { t.Identifier, t.GeoPath },
+            t => new TrailPathProjection(t.Identifier, t.GeoPath),
             ctoken);
 
         if (result.Status == RepositoryResultStatus.Error)
@@ -468,3 +468,4 @@ internal record TrailOverviewProjection(string Identifier,
     TrailImageProjection? Image);
 
 internal record TrailImageProjection(string Identifier, string ImageUrl);
+internal record TrailPathProjection(string Identifier, NetTopologySuite.Geometries.LineString? GeoPath);

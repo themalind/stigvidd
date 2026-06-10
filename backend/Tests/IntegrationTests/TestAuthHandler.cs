@@ -32,12 +32,12 @@ public class TestAuthHandler : AuthenticationHandler<AuthenticationSchemeOptions
     /// </returns>
     protected override Task<AuthenticateResult> HandleAuthenticateAsync()
     {
-        if (!Request.Headers.ContainsKey("Authorization"))
+        if (!Request.Headers.TryGetValue("Authorization", out Microsoft.Extensions.Primitives.StringValues value))
         {
             return Task.FromResult(AuthenticateResult.Fail("Missing Authorization header"));
         }
 
-        var authHeader = Request.Headers["Authorization"].ToString();
+        var authHeader = value.ToString();
 
         if (!authHeader.StartsWith("Bearer "))
         {

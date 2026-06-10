@@ -11,8 +11,7 @@ import { guardedNavigate } from "@/utils/navigation";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useRef, useState } from "react";
-import { Image } from "expo-image";
-import { ActivityIndicator, Pressable, StyleSheet, View } from "react-native";
+import { ActivityIndicator, Image, Pressable, StyleSheet, View } from "react-native";
 import MapView from "react-native-maps";
 import { Text, useTheme } from "react-native-paper";
 
@@ -70,10 +69,9 @@ export default function MapScreen() {
               <View style={s.infoPanelHeader}>
                 {card.image && (
                   <Image
-                    source={card.image.imageUrl}
+                    source={{ uri: card.image.imageUrl }}
                     style={s.trailImage}
-                    contentFit="cover"
-                    cachePolicy="memory-disk"
+                    resizeMode="cover"
                   />
                 )}
                 <View style={s.infoPanelMeta}>

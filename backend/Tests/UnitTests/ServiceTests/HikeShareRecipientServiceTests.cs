@@ -117,6 +117,7 @@ public class HikeShareRecipientServiceTests
 
         // Assert
         result.Success.Should().BeTrue();
+        result.Value.Should().NotBeNull();
         var hike = result.Value.First();
         hike.GettingThere.Should().Be("Take bus 42");
         hike.ParkingInfo.Should().Be("Park near the church");
