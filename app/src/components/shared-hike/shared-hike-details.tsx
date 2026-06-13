@@ -15,20 +15,25 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { BlurView } from "expo-blur";
 import { useAtomValue, useSetAtom } from "jotai";
 import { useRef, useState } from "react";
-import { Dimensions, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { ActivityIndicator, Dimensions, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import MapView, { Polyline } from "react-native-maps";
 import { Button, Divider, Icon, Modal, Portal, Text, useTheme } from "react-native-paper";
 import Map from "./../map/map";
 
 interface Props {
   visible: boolean;
-  sharedHike: SharedHike;
+  sharedHike: SharedHike | null;
   onDismiss: () => void;
+  onAccept?: () => void;
+  onReject?: () => void;
+  isPending?: boolean;
+  isLoading?: boolean;
+  isError?: boolean;
 }
 
 const HEIGHT = Dimensions.get("screen").height;
 
-export default function SharedHikeDetails({ visible, sharedHike, onDismiss }: Props) {
+export default function SharedHikeDetails({ visible, sharedHike, onDismiss, onAccept, onReject, isPending, isLoading, isError }: Props) {
   const setErrorMsg = useSetAtom(showErrorAtom);
   const setSuccessMsg = useSetAtom(showSuccessAtom);
   const [showOnDeleteDialog, setOnDeleteDialog] = useState(false);
@@ -38,7 +43,7 @@ export default function SharedHikeDetails({ visible, sharedHike, onDismiss }: Pr
   const theme = useTheme();
   const user = useAtomValue(stigviddUserAtom);
   const queryClient = useQueryClient();
-  const coordinates = CoordinateParser({ data: sharedHike.coordinates ?? "", identifier: sharedHike.hikeIdentifier });
+  const coordinates = sharedHike ? CoordinateParser({ data: sharedHike.coordinates ?? "", identifier: sharedHike.hikeIdentifier }) : [];
 
   const handleMapReady = () => {
     if (!mapRef.current || coordinates.length === 0) return;
@@ -92,113 +97,146 @@ export default function SharedHikeDetails({ visible, sharedHike, onDismiss }: Pr
         <Pressable style={s.closeIcon} hitSlop={12} onPress={onDismiss}>
           <Icon size={24} source="close" color={theme.colors.onSurface} />
         </Pressable>
-        <View style={[s.hikeDetailsContainer, { backgroundColor: theme.colors.outlineVariant }]}>
-          <View style={s.hikeNameContainer}>
-            <Fontisto name="map" size={20} color={theme.colors.primary} />
-            <Text style={[s.hikeName, { color: theme.colors.secondary }]}>{sharedHike.hikeName}</Text>
+        {isLoading || !sharedHike ? (
+          <View style={s.loadingContainer}>
+            {isError ? (
+              <Text>Kunde inte hämta promenaden, försök igen.</Text>
+            ) : (
+              <ActivityIndicator size="large" color={theme.colors.primary} />
+            )}
           </View>
-          <View style={s.hikeInfo}>
-            <Text>
-              <Icon color={theme.colors.tertiary} size={20} source="hiking" /> {sharedHike.hikeLength} km
-            </Text>
-            <Text>
-              <Icon color={theme.colors.tertiary} size={20} source="clock" /> {FormattedTime(sharedHike.duration)}
-            </Text>
-          </View>
-        </View>
+        ) : (
+          <>
+            <View style={[s.hikeDetailsContainer, { backgroundColor: theme.colors.outlineVariant }]}>
+              <View style={s.hikeNameContainer}>
+                <Fontisto name="map" size={20} color={theme.colors.primary} />
+                <Text style={[s.hikeName, { color: theme.colors.secondary }]}>{sharedHike.hikeName}</Text>
+              </View>
+              <View style={s.hikeInfo}>
+                <Text>
+                  <Icon color={theme.colors.tertiary} size={20} source="hiking" /> {sharedHike.hikeLength} km
+                </Text>
+                <Text>
+                  <Icon color={theme.colors.tertiary} size={20} source="clock" /> {FormattedTime(sharedHike.duration)}
+                </Text>
+              </View>
+            </View>
 
-        <View style={s.mapContainer}>
-          {sharedHike.coordinates && sharedHike.coordinates.length > 0 && (
-            <Map style={s.map} ref={mapRef} initialRegion={GetRegionFromTrail(coordinates)} onMapReady={handleMapReady}>
-              <Polyline coordinates={coordinates} strokeWidth={3} strokeColor="#eb3204" />
-            </Map>
-          )}
-        </View>
-        <ScrollView style={s.scrollArea} contentContainerStyle={s.scrollContent} bounces={false}>
-          <View style={s.sharedDetails}>
-            <View style={s.row}>
-              <Text style={[s.bold, { color: theme.colors.secondary }]}>Delad av: </Text>
-              <Text>{sharedHike.sharedByName}</Text>
-            </View>
-            <View style={s.row}>
-              <Text style={[s.bold, { color: theme.colors.secondary }]}>Datum: </Text>
-              <Text>{formatDate(sharedHike.sharedAt)}</Text>
-            </View>
-          </View>
-          {(sharedHike.gettingThere || sharedHike.parkingInfo || sharedHike.description) && (
-            <>
-              <Divider style={s.divider} />
-              {sharedHike.gettingThere && (
-                <View style={s.infoRow}>
-                  <Icon source="map-marker" size={18} color={theme.colors.primary} />
-                  <View style={s.infoText}>
-                    <Text style={[s.infoLabel, { color: theme.colors.secondary }]}>Hitta hit</Text>
-                    <Text>{sharedHike.gettingThere}</Text>
-                  </View>
-                </View>
+            <View style={s.mapContainer}>
+              {sharedHike.coordinates && sharedHike.coordinates.length > 0 && (
+                <Map style={s.map} ref={mapRef} initialRegion={GetRegionFromTrail(coordinates)} onMapReady={handleMapReady}>
+                  <Polyline coordinates={coordinates} strokeWidth={3} strokeColor="#eb3204" />
+                </Map>
               )}
-              {sharedHike.parkingInfo && (
-                <View style={s.infoRow}>
-                  <Icon source="car" size={18} color={theme.colors.primary} />
-                  <View style={s.infoText}>
-                    <Text style={[s.infoLabel, { color: theme.colors.secondary }]}>Parkering</Text>
-                    <Text>{sharedHike.parkingInfo}</Text>
-                  </View>
-                </View>
-              )}
-              {sharedHike.description && (
-                <View style={s.infoRow}>
-                  <Icon source="text" size={18} color={theme.colors.primary} />
-                  <View style={s.infoText}>
-                    <Text style={[s.infoLabel, { color: theme.colors.secondary }]}>Beskrivning</Text>
-                    <Text>{sharedHike.description}</Text>
-                  </View>
-                </View>
-              )}
-            </>
-          )}
-        </ScrollView>
-        <View style={s.buttonGroup}>
-          <Button style={s.button} mode="contained" onPress={() => setShowShareModal(true)}>
-            <View style={s.buttonContent}>
-              <Icon color={theme.colors.onPrimary} size={20} source="share" />
-              <Text style={{ color: theme.colors.onPrimary }}>Dela</Text>
             </View>
-          </Button>
-          <Button style={s.button} mode="outlined" onPress={handeleDelete}>
-            <View style={s.buttonContent}>
-              <Icon size={20} source="delete" />
-              <Text>Ta bort</Text>
-            </View>
-          </Button>
-        </View>
+            <ScrollView style={s.scrollArea} contentContainerStyle={s.scrollContent} bounces={false}>
+              <View style={s.sharedDetails}>
+                <View style={s.row}>
+                  <Text style={[s.bold, { color: theme.colors.secondary }]}>Delad av: </Text>
+                  <Text>{sharedHike.sharedByName}</Text>
+                </View>
+                <View style={s.row}>
+                  <Text style={[s.bold, { color: theme.colors.secondary }]}>Datum: </Text>
+                  <Text>{formatDate(sharedHike.sharedAt)}</Text>
+                </View>
+              </View>
+              {(sharedHike.gettingThere || sharedHike.parkingInfo || sharedHike.description) && (
+                <>
+                  <Divider style={s.divider} />
+                  {sharedHike.gettingThere && (
+                    <View style={s.infoRow}>
+                      <Icon source="map-marker" size={18} color={theme.colors.primary} />
+                      <View style={s.infoText}>
+                        <Text style={[s.infoLabel, { color: theme.colors.secondary }]}>Hitta hit</Text>
+                        <Text>{sharedHike.gettingThere}</Text>
+                      </View>
+                    </View>
+                  )}
+                  {sharedHike.parkingInfo && (
+                    <View style={s.infoRow}>
+                      <Icon source="car" size={18} color={theme.colors.primary} />
+                      <View style={s.infoText}>
+                        <Text style={[s.infoLabel, { color: theme.colors.secondary }]}>Parkering</Text>
+                        <Text>{sharedHike.parkingInfo}</Text>
+                      </View>
+                    </View>
+                  )}
+                  {sharedHike.description && (
+                    <View style={s.infoRow}>
+                      <Icon source="text" size={18} color={theme.colors.primary} />
+                      <View style={s.infoText}>
+                        <Text style={[s.infoLabel, { color: theme.colors.secondary }]}>Beskrivning</Text>
+                        <Text>{sharedHike.description}</Text>
+                      </View>
+                    </View>
+                  )}
+                </>
+              )}
+            </ScrollView>
+            {onAccept && onReject ? (
+              <View style={s.buttonGroup}>
+                <Button style={s.button} mode="contained" onPress={onAccept} disabled={isPending} loading={isPending}>
+                  <View style={s.buttonContent}>
+                    <Icon color={theme.colors.onPrimary} size={20} source="check" />
+                    <Text style={{ color: theme.colors.onPrimary }}>Acceptera</Text>
+                  </View>
+                </Button>
+                <Button style={s.button} mode="outlined" onPress={onReject} disabled={isPending}>
+                  <View style={s.buttonContent}>
+                    <Icon size={20} source="close" />
+                    <Text>Avvisa</Text>
+                  </View>
+                </Button>
+              </View>
+            ) : (
+              <View style={s.buttonGroup}>
+                <Button style={s.button} mode="contained" onPress={() => setShowShareModal(true)}>
+                  <View style={s.buttonContent}>
+                    <Icon color={theme.colors.onPrimary} size={20} source="share" />
+                    <Text style={{ color: theme.colors.onPrimary }}>Dela</Text>
+                  </View>
+                </Button>
+                <Button style={s.button} mode="outlined" onPress={handeleDelete}>
+                  <View style={s.buttonContent}>
+                    <Icon size={20} source="delete" />
+                    <Text>Ta bort</Text>
+                  </View>
+                </Button>
+              </View>
+            )}
+          </>
+        )}
 
-        <AlertDialog
-          visible={showOnDeleteDialog}
-          onDismiss={() => setOnDeleteDialog(false)}
-          title="Ta bort promenad"
-          infoText={["Vill du ta bort promenaden?"]}
-          textColor={theme.colors.onSurface}
-          confirmText="Ta bort"
-          cancelText="Avbryt"
-          onConfirm={() => deleteMutation.mutate(sharedHike.hikeIdentifier)}
-          backgroundColor={theme.colors.surface}
-        />
-        <ReshareHikeModal
-          visible={showShareModal}
-          onDismiss={() => setShowShareModal(false)}
-          onShare={(friendNickName) => {
-            if (friendNickName === sharedHike.createdByName) {
-              setShowShareModal(false);
-              onDismiss();
-              setErrorMsg("Du kan inte dela en promenad med dess skapare.");
-              return;
-            }
-            reShareMutation.mutate({ hikeIdentifier: sharedHike.hikeIdentifier, reShareToName: friendNickName });
-          }}
-          isPending={reShareMutation.isPending}
-          excludeNickName={sharedHike.sharedByName}
-        />
+        {sharedHike && (
+          <>
+            <AlertDialog
+              visible={showOnDeleteDialog}
+              onDismiss={() => setOnDeleteDialog(false)}
+              title="Ta bort promenad"
+              infoText={["Vill du ta bort promenaden?"]}
+              textColor={theme.colors.onSurface}
+              confirmText="Ta bort"
+              cancelText="Avbryt"
+              onConfirm={() => deleteMutation.mutate(sharedHike.hikeIdentifier)}
+              backgroundColor={theme.colors.surface}
+            />
+            <ReshareHikeModal
+              visible={showShareModal}
+              onDismiss={() => setShowShareModal(false)}
+              onShare={(friendNickName) => {
+                if (friendNickName === sharedHike.createdByName) {
+                  setShowShareModal(false);
+                  onDismiss();
+                  setErrorMsg("Du kan inte dela en promenad med dess skapare.");
+                  return;
+                }
+                reShareMutation.mutate({ hikeIdentifier: sharedHike.hikeIdentifier, reShareToName: friendNickName });
+              }}
+              isPending={reShareMutation.isPending}
+              excludeNickName={sharedHike.sharedByName}
+            />
+          </>
+        )}
       </Modal>
     </Portal>
   );
@@ -291,5 +329,10 @@ const s = StyleSheet.create({
   buttonContent: {
     gap: 5,
     flexDirection: "row",
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
   },
 });
