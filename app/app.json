@@ -10,6 +10,7 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
+      "bundleIdentifier": "com.stigvidd.app",
       "infoPlist": {
         "UIBackgroundModes": ["location"]
       }
@@ -52,7 +53,13 @@
           }
         }
       ],
-      "expo-notifications",
+      [
+        "expo-notifications",
+        {
+          "icon": "./src/assets/images/android-icon-foreground.png",
+          "color": "#68AE82"
+        }
+      ],
       [
         "expo-location",
         {
