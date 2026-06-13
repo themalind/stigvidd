@@ -1,4 +1,6 @@
 import { getFriends, getIncomingRequests, searchUsers } from "@/api/friends";
+import { getIncomingSharedHikes } from "@/api/shared-hikes";
+import { atom } from "jotai";
 import { atomWithQuery } from "jotai-tanstack-query";
 import { userAtom } from "./auth-atoms";
 
@@ -11,9 +13,16 @@ export const incomingRequestsAtom = atomWithQuery((get) => {
       return getIncomingRequests();
     },
     enabled: !!firebaseUser?.uid,
-    refetchInterval: 60_000,
-    retry: 1,
-    refetchIntervalInBackground: false,
+    staleTime: 0,
+  };
+});
+
+export const incomingSharedHikesAtom = atomWithQuery((get) => {
+  const firebaseUser = get(userAtom);
+  return {
+    queryKey: ["shared-hikes", "incoming", firebaseUser?.uid],
+    queryFn: () => getIncomingSharedHikes(),
+    enabled: !!firebaseUser?.uid,
     staleTime: 0,
   };
 });
@@ -34,3 +43,11 @@ export const userSearchAtomFamily = (query: string) =>
     enabled: query.trim().length >= 3, // bara sök vid 3+ tecken
     staleTime: 10_000,
   }));
+
+// Sum of all pending notification sources for the tab-bar badge.
+// Add incomingSharesAtom here when the shared-hikes feature lands.
+export const pendingNotificationsCountAtom = atom((get) => {
+  const requests = get(incomingRequestsAtom).data?.length ?? 0;
+  const shares = get(incomingSharedHikesAtom).data?.length ?? 0;
+  return requests + shares;
+});
