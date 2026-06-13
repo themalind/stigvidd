@@ -51,14 +51,6 @@ public class ExpoPushServiceTests
         );
     }
 
-    private static Mock<IUserRepository> UserRepoFoundWith(int userId = 1)
-    {
-        var mock = new Mock<IUserRepository>();
-        mock.Setup(r => r.GetUserIdByIdentifierAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(RepositoryResult<int>.Success(userId));
-        return mock;
-    }
-
     private static IEnumerable<UserPushToken> SingleToken(string token = "ExponentPushToken[test]") =>
         [new UserPushToken { UserId = 1, ExpoToken = token, Platform = "ios" }];
 
@@ -103,7 +95,7 @@ public class ExpoPushServiceTests
         tokenRepoMock.Setup(r => r.UpsertAsync(It.IsAny<int>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult.Error());
 
-        var service = Build(tokenRepoMock: tokenRepoMock, userRepoMock: UserRepoFoundWith());
+        var service = Build(tokenRepoMock: tokenRepoMock, userRepoMock: Utilities.MockFactory.UserRepositoryFoundById());
 
         var result = await service.RegisterTokenAsync("identifier", "token", "ios", CancellationToken.None);
 
@@ -119,7 +111,7 @@ public class ExpoPushServiceTests
         tokenRepoMock.Setup(r => r.UpsertAsync(It.IsAny<int>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult.Success());
 
-        var service = Build(tokenRepoMock: tokenRepoMock, userRepoMock: UserRepoFoundWith());
+        var service = Build(tokenRepoMock: tokenRepoMock, userRepoMock: Utilities.MockFactory.UserRepositoryFoundById());
 
         var result = await service.RegisterTokenAsync("identifier", "token", "ios", CancellationToken.None);
 
@@ -168,7 +160,7 @@ public class ExpoPushServiceTests
         tokenRepoMock.Setup(r => r.GetByTokenAndUserAsync(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<UserPushToken?>.Error());
 
-        var service = Build(tokenRepoMock: tokenRepoMock, userRepoMock: UserRepoFoundWith());
+        var service = Build(tokenRepoMock: tokenRepoMock, userRepoMock: Utilities.MockFactory.UserRepositoryFoundById());
 
         var result = await service.UnregisterTokenAsync("identifier", "token", CancellationToken.None);
 
@@ -184,7 +176,7 @@ public class ExpoPushServiceTests
         tokenRepoMock.Setup(r => r.GetByTokenAndUserAsync(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<UserPushToken?>.Success(null));
 
-        var service = Build(tokenRepoMock: tokenRepoMock, userRepoMock: UserRepoFoundWith());
+        var service = Build(tokenRepoMock: tokenRepoMock, userRepoMock: Utilities.MockFactory.UserRepositoryFoundById());
 
         var result = await service.UnregisterTokenAsync("identifier", "token", CancellationToken.None);
 
@@ -204,7 +196,7 @@ public class ExpoPushServiceTests
         tokenRepoMock.Setup(r => r.DeleteByTokenAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult.Error());
 
-        var service = Build(tokenRepoMock: tokenRepoMock, userRepoMock: UserRepoFoundWith());
+        var service = Build(tokenRepoMock: tokenRepoMock, userRepoMock: Utilities.MockFactory.UserRepositoryFoundById());
 
         var result = await service.UnregisterTokenAsync("identifier", "token", CancellationToken.None);
 
@@ -224,7 +216,7 @@ public class ExpoPushServiceTests
         tokenRepoMock.Setup(r => r.DeleteByTokenAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult.Success());
 
-        var service = Build(tokenRepoMock: tokenRepoMock, userRepoMock: UserRepoFoundWith());
+        var service = Build(tokenRepoMock: tokenRepoMock, userRepoMock: Utilities.MockFactory.UserRepositoryFoundById());
 
         var result = await service.UnregisterTokenAsync("identifier", "token", CancellationToken.None);
 
@@ -273,7 +265,7 @@ public class ExpoPushServiceTests
         tokenRepoMock.Setup(r => r.GetTokensForUserAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<IEnumerable<UserPushToken>>.Error());
 
-        var service = Build(tokenRepoMock: tokenRepoMock, userRepoMock: UserRepoFoundWith());
+        var service = Build(tokenRepoMock: tokenRepoMock, userRepoMock: Utilities.MockFactory.UserRepositoryFoundById());
 
         var result = await service.SendToUserAsync("identifier", "title", "body", new Dictionary<string, object>(), CancellationToken.None);
 
@@ -289,7 +281,7 @@ public class ExpoPushServiceTests
         tokenRepoMock.Setup(r => r.GetTokensForUserAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<IEnumerable<UserPushToken>>.Success([]));
 
-        var service = Build(tokenRepoMock: tokenRepoMock, userRepoMock: UserRepoFoundWith());
+        var service = Build(tokenRepoMock: tokenRepoMock, userRepoMock: Utilities.MockFactory.UserRepositoryFoundById());
 
         var result = await service.SendToUserAsync("identifier", "title", "body", new Dictionary<string, object>(), CancellationToken.None);
 
@@ -306,7 +298,7 @@ public class ExpoPushServiceTests
 
         var service = Build(
             tokenRepoMock: tokenRepoMock,
-            userRepoMock: UserRepoFoundWith(),
+            userRepoMock: Utilities.MockFactory.UserRepositoryFoundById(),
             httpClient: CreateHttpClient(HttpStatusCode.InternalServerError));
 
         var result = await service.SendToUserAsync("identifier", "title", "body", new Dictionary<string, object>(), CancellationToken.None);
@@ -327,7 +319,7 @@ public class ExpoPushServiceTests
 
         var service = Build(
             tokenRepoMock: tokenRepoMock,
-            userRepoMock: UserRepoFoundWith(),
+            userRepoMock: Utilities.MockFactory.UserRepositoryFoundById(),
             httpClient: CreateHttpClient(HttpStatusCode.OK, okJson));
 
         var result = await service.SendToUserAsync("identifier", "title", "body", new Dictionary<string, object>(), CancellationToken.None);
@@ -350,7 +342,7 @@ public class ExpoPushServiceTests
 
         var service = Build(
             tokenRepoMock: tokenRepoMock,
-            userRepoMock: UserRepoFoundWith(),
+            userRepoMock: Utilities.MockFactory.UserRepositoryFoundById(),
             httpClient: CreateHttpClient(HttpStatusCode.OK, staleJson));
 
         var result = await service.SendToUserAsync("identifier", "title", "body", new Dictionary<string, object>(), CancellationToken.None);
