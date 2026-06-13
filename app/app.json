@@ -12,7 +12,7 @@
       "supportsTablet": true,
       "infoPlist": {
         "UIBackgroundModes": ["location"]
-      } 
+      }
     },
     "android": {
       "softwareKeyboardLayoutMode": "pan",
@@ -32,7 +32,7 @@
         "android.permission.RECORD_AUDIO"
       ],
       "package": "com.stigvidd.app",
-       "googleServicesFile": "./google-services.json"
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "output": "static",
