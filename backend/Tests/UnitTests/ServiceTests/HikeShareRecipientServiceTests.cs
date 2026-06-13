@@ -117,6 +117,7 @@ public class HikeShareRecipientServiceTests
 
         // Assert
         result.Success.Should().BeTrue();
+        result.Value.Should().NotBeNull();
         var hike = result.Value.First();
         hike.GettingThere.Should().Be("Take bus 42");
         hike.ParkingInfo.Should().Be("Park near the church");
@@ -271,7 +272,7 @@ public class HikeShareRecipientServiceTests
         var userRepoMock = new Mock<IUserRepository>();
         userRepoMock.Setup(r => r.GetUserIdByIdentifierAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<int>.Success(1));
-        userRepoMock.Setup(r => r.GetUserIdByNameAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+        userRepoMock.Setup(r => r.GetUserByNickNameAsync(It.IsAny<string>(), It.IsAny<Expression<Func<User, int>>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<int>.NotFound());
 
         var hikeRepoMock = new Mock<IHikeRepository>();
@@ -301,7 +302,7 @@ public class HikeShareRecipientServiceTests
         var userRepoMock = new Mock<IUserRepository>();
         userRepoMock.Setup(r => r.GetUserIdByIdentifierAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<int>.Success(1));
-        userRepoMock.Setup(r => r.GetUserIdByNameAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+        userRepoMock.Setup(r => r.GetUserByNickNameAsync(It.IsAny<string>(), It.IsAny<Expression<Func<User, int>>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<int>.Error());
 
         var hikeRepoMock = new Mock<IHikeRepository>();
@@ -330,7 +331,7 @@ public class HikeShareRecipientServiceTests
         var userRepoMock = new Mock<IUserRepository>();
         userRepoMock.Setup(r => r.GetUserIdByIdentifierAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<int>.Success(1));
-        userRepoMock.Setup(r => r.GetUserIdByNameAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+        userRepoMock.Setup(r => r.GetUserByNickNameAsync(It.IsAny<string>(), It.IsAny<Expression<Func<User, int>>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<int>.Success(2));
 
         var hikeRepoMock = new Mock<IHikeRepository>();
@@ -364,7 +365,7 @@ public class HikeShareRecipientServiceTests
         var userRepoMock = new Mock<IUserRepository>();
         userRepoMock.Setup(r => r.GetUserIdByIdentifierAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<int>.Success(1));
-        userRepoMock.Setup(r => r.GetUserIdByNameAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+        userRepoMock.Setup(r => r.GetUserByNickNameAsync(It.IsAny<string>(), It.IsAny<Expression<Func<User, int>>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<int>.Success(1));
 
         var hikeRepoMock = new Mock<IHikeRepository>();
@@ -398,7 +399,7 @@ public class HikeShareRecipientServiceTests
         var userRepoMock = new Mock<IUserRepository>();
         userRepoMock.Setup(r => r.GetUserIdByIdentifierAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<int>.Success(1));
-        userRepoMock.Setup(r => r.GetUserIdByNameAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+        userRepoMock.Setup(r => r.GetUserByNickNameAsync(It.IsAny<string>(), It.IsAny<Expression<Func<User, int>>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<int>.Success(99)); // matches hike.UserId
 
         var hikeRepoMock = new Mock<IHikeRepository>();
@@ -432,7 +433,7 @@ public class HikeShareRecipientServiceTests
         var userRepoMock = new Mock<IUserRepository>();
         userRepoMock.Setup(r => r.GetUserIdByIdentifierAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<int>.Success(1));
-        userRepoMock.Setup(r => r.GetUserIdByNameAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+        userRepoMock.Setup(r => r.GetUserByNickNameAsync(It.IsAny<string>(), It.IsAny<Expression<Func<User, int>>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<int>.Success(2));
 
         var hikeRepoMock = new Mock<IHikeRepository>();
@@ -466,7 +467,7 @@ public class HikeShareRecipientServiceTests
         var userRepoMock = new Mock<IUserRepository>();
         userRepoMock.Setup(r => r.GetUserIdByIdentifierAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<int>.Success(1));
-        userRepoMock.Setup(r => r.GetUserIdByNameAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+        userRepoMock.Setup(r => r.GetUserByNickNameAsync(It.IsAny<string>(), It.IsAny<Expression<Func<User, int>>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<int>.Success(2));
 
         var hikeRepoMock = new Mock<IHikeRepository>();
@@ -501,7 +502,7 @@ public class HikeShareRecipientServiceTests
         var userRepoMock = new Mock<IUserRepository>();
         userRepoMock.Setup(r => r.GetUserIdByIdentifierAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<int>.Success(1));
-        userRepoMock.Setup(r => r.GetUserIdByNameAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+        userRepoMock.Setup(r => r.GetUserByNickNameAsync(It.IsAny<string>(), It.IsAny<Expression<Func<User, int>>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<int>.Success(2));
 
         var hikeRepoMock = new Mock<IHikeRepository>();
@@ -537,7 +538,7 @@ public class HikeShareRecipientServiceTests
         var userRepoMock = new Mock<IUserRepository>();
         userRepoMock.Setup(r => r.GetUserIdByIdentifierAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<int>.Success(1));
-        userRepoMock.Setup(r => r.GetUserIdByNameAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+        userRepoMock.Setup(r => r.GetUserByNickNameAsync(It.IsAny<string>(), It.IsAny<Expression<Func<User, int>>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<int>.Success(2));
 
         var hikeRepoMock = new Mock<IHikeRepository>();
