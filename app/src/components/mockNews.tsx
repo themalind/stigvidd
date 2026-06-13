@@ -33,7 +33,9 @@ export default function MockNews() {
             <Text style={[s.title, { color: theme.colors.onSurface }]} numberOfLines={2}>
               {t(asTranslationKey(`news.items.${index}.title`))}
             </Text>
-            <Text style={[s.date, { color: theme.colors.onSurfaceVariant }]}>{t(asTranslationKey(`news.items.${index}.date`))}</Text>
+            <Text style={[s.date, { color: theme.colors.onSurfaceVariant }]}>
+              {t(asTranslationKey(`news.items.${index}.date`))}
+            </Text>
           </View>
         </Pressable>
       ))}

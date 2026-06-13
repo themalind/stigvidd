@@ -224,7 +224,9 @@ export default function TrailObstacleForm({ trailIdentifier, visible, onDismiss 
                   )}
                 />
                 {errors.description && (
-                  <Text style={[s.bold, { color: theme.colors.error }]}>{t(asTranslationKey(errors.description.message as string))}</Text>
+                  <Text style={[s.bold, { color: theme.colors.error }]}>
+                    {t(asTranslationKey(errors.description.message as string))}
+                  </Text>
                 )}
               </View>
               <View style={s.locationRow}>

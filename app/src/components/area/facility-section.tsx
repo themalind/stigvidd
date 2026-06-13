@@ -41,7 +41,9 @@ export default function FacilitySection({ title, icon, items }: FacilitySectionP
             </View>
           ) : null}
           {item.description ? (
-            <Text style={[s.facilityMeta, { color: theme.colors.onSurfaceVariant }]}>{t(asTranslationKey(item.description))}</Text>
+            <Text style={[s.facilityMeta, { color: theme.colors.onSurfaceVariant }]}>
+              {t(asTranslationKey(item.description))}
+            </Text>
           ) : null}
         </View>
       ))}
