@@ -319,6 +319,17 @@ export interface OutgoingFriendRequest {
   createdAt: string;
 }
 
+export interface IncomingSharedHike {
+  hikeIdentifier: string;
+  hikeName: string;
+  hikeLength: number;
+  duration: number;
+  sharedByName: string;
+  sharedByIdentifier: string;
+  createdByName: string;
+  sharedAt: string;
+}
+
 export interface LoginData {
   email: string;
   password: string;
