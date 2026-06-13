@@ -2,6 +2,7 @@ import { SURFACE_BORDER_RADIUS } from "@/constants/constants";
 import { Trail } from "@/data/types";
 import { StyleSheet, Text, View } from "react-native";
 import { Surface, useTheme } from "react-native-paper";
+import { useTranslation } from "react-i18next";
 
 interface TrailDescriptionProps {
   trail: Trail;
@@ -9,10 +10,11 @@ interface TrailDescriptionProps {
 
 export default function TrailDescription({ trail }: TrailDescriptionProps) {
   const theme = useTheme();
+  const { t } = useTranslation();
   return (
     <Surface elevation={2} style={[s.container, { backgroundColor: theme.colors.surface }]}>
       <View style={s.descriptionContainer}>
-        <Text style={[s.sectionTitle, { color: theme.colors.onSurface }]}>Beskrivning</Text>
+        <Text style={[s.sectionTitle, { color: theme.colors.onSurface }]}>{t("trail.description")}</Text>
         <Text style={[s.description, { color: theme.colors.onSurface }]}>{trail.description}</Text>
       </View>
     </Surface>

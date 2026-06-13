@@ -1,5 +1,6 @@
 import { ApiError } from "@/api/users";
 import { MaterialIcons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 import { StyleSheet, Text, View } from "react-native";
 import { Button, useTheme } from "react-native-paper";
 
@@ -11,24 +12,25 @@ type ErrorInfo = {
   icon: IconName;
 };
 
-function getErrorInfo(error: unknown): ErrorInfo {
+function useErrorInfo(error: unknown): ErrorInfo {
+  const { t } = useTranslation();
   if (error instanceof ApiError) {
     switch (error.status) {
       case 400:
-        return { title: "Ogiltigt anrop", message: "Något gick fel med din förfrågan.", icon: "error-outline" };
+        return { title: t("error.400.title"), message: t("error.400.message"), icon: "error-outline" };
       case 401:
-        return { title: "Inte inloggad", message: "Du måste logga in för att fortsätta.", icon: "lock-outline" };
+        return { title: t("error.401.title"), message: t("error.401.message"), icon: "lock-outline" };
       case 403:
-        return { title: "Åtkomst nekad", message: "Du har inte behörighet att visa detta.", icon: "block" };
+        return { title: t("error.403.title"), message: t("error.403.message"), icon: "block" };
       case 404:
-        return { title: "Hittades inte", message: "Det du letar efter finns inte längre.", icon: "search-off" };
+        return { title: t("error.404.title"), message: t("error.404.message"), icon: "search-off" };
       case 500:
       case 502:
       case 503:
-        return { title: "Serverfel", message: "Något gick fel på servern. Försök igen senare.", icon: "cloud-off" };
+        return { title: t("error.500.title"), message: t("error.500.message"), icon: "cloud-off" };
     }
   }
-  return { title: "Något gick fel", message: "Kontrollera din internetanslutning och försök igen.", icon: "wifi-off" };
+  return { title: t("error.default.title"), message: t("error.default.message"), icon: "wifi-off" };
 }
 
 type Props = {
@@ -37,8 +39,9 @@ type Props = {
 };
 
 export default function ErrorView({ error, onRetry }: Props) {
+  const { t } = useTranslation();
   const theme = useTheme();
-  const { title, message, icon } = getErrorInfo(error);
+  const { title, message, icon } = useErrorInfo(error);
 
   return (
     <View style={[s.container, { backgroundColor: theme.colors.background }]}>
@@ -47,7 +50,7 @@ export default function ErrorView({ error, onRetry }: Props) {
       <Text style={[s.message, { color: theme.colors.onSurfaceVariant }]}>{message}</Text>
       {onRetry && (
         <Button mode="outlined" onPress={onRetry} style={s.button}>
-          Försök igen
+          {t("error.retry")}
         </Button>
       )}
     </View>

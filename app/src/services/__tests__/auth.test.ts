@@ -4,6 +4,19 @@ import { ApiError, createStigViddUser } from "../../api/users";
 import { RegisterData } from "../../data/types";
 import { registerUser } from "../auth";
 
+jest.mock("@/i18n", () => ({
+  __esModule: true,
+  default: {
+    t: (key: string) => {
+      const translations: Record<string, string> = {
+        "auth.nicknameTakenMsg": "Smeknamnet upptaget",
+        "auth.unknownError": "Ett oväntat fel inträffade",
+      };
+      return translations[key] ?? key;
+    },
+  },
+}));
+
 jest.mock("firebase/app", () => {
   class FirebaseError extends Error {
     code: string;

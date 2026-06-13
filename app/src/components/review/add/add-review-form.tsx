@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useSetAtom } from "jotai";
 import { useState } from "react";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 import { StyleSheet, View } from "react-native";
 import { Button, Divider, Text, TextInput, useTheme } from "react-native-paper";
 import StarRating from "react-native-star-rating-widget";
@@ -29,6 +30,7 @@ const newReviewForm = z.object({
 type FormFields = z.infer<typeof newReviewForm>;
 
 export default function AddReviewForm({ trailIdentifier, onSuccess }: ReviewFormProps) {
+  const { t } = useTranslation();
   const theme = useTheme();
   const [showImageInfoModal, setShowImageInfoModal] = useState(false);
   const [showStarInfoModal, setShowStarInfoModal] = useState(false);
@@ -49,18 +51,6 @@ export default function AddReviewForm({ trailIdentifier, onSuccess }: ReviewForm
     },
   });
 
-  const onImageInfoPress = () => {
-    setShowImageInfoModal(true);
-  };
-
-  const onStarRatingInfoPress = () => {
-    setShowStarInfoModal(true);
-  };
-
-  const onReviewInfoPress = () => {
-    setShowReviewInfoModal(true);
-  };
-
   const onSubmit: SubmitHandler<FormFields> = async (data) => {
     if (!trailIdentifier) {
       setError("Error: No TrailIdentifier");
@@ -79,18 +69,18 @@ export default function AddReviewForm({ trailIdentifier, onSuccess }: ReviewForm
     <View style={s.formContainer}>
       <Divider />
       <View style={s.rowGap}>
-        <Text>Väl ett betyg *</Text>
+        <Text>{t("review.rating")}</Text>
         <MaterialCommunityIcons
           name="information-slab-circle-outline"
           size={24}
           color={theme.colors.onSurface}
-          onPress={onStarRatingInfoPress}
+          onPress={() => setShowStarInfoModal(true)}
         />
         <AlertDialog
           visible={showStarInfoModal}
           onDismiss={() => setShowStarInfoModal(false)}
-          title="Sätt ett betyg ⭐️⭐️"
-          infoText={["Hur nöjd är du med promenaden?", "Ge upp till 5 stjärnor!"]}
+          title={t("review.ratingTitle")}
+          infoText={[t("review.ratingQuestion"), t("review.ratingInstruction")]}
           backgroundColor={theme.colors.background}
           textColor={theme.colors.onBackground}
         />
@@ -116,22 +106,18 @@ export default function AddReviewForm({ trailIdentifier, onSuccess }: ReviewForm
       </View>
       <Divider />
       <View style={s.rowGap}>
-        <Text>Lägg till bild (valfritt)</Text>
+        <Text>{t("review.addImage")}</Text>
         <MaterialCommunityIcons
           name="information-slab-circle-outline"
           size={24}
           color={theme.colors.onSurface}
-          onPress={onImageInfoPress}
+          onPress={() => setShowImageInfoModal(true)}
         />
         <AlertDialog
           visible={showImageInfoModal}
           onDismiss={() => setShowImageInfoModal(false)}
-          title="Lägg till bilder"
-          infoText={[
-            "Visa oss dina promenadäventyr!",
-            "Lägg gärna till bilder från promenaden, men undvik bilder som kan vara stötande eller olämpliga.",
-            "Max 3 bilder per promenad.",
-          ]}
+          title={t("review.addImageTitle")}
+          infoText={[t("review.addImageInfo1"), t("review.addImageInfo2"), t("review.addImageInfo3")]}
           backgroundColor={theme.colors.background}
           textColor={theme.colors.onBackground}
         />
@@ -142,21 +128,18 @@ export default function AddReviewForm({ trailIdentifier, onSuccess }: ReviewForm
       <Divider />
       <View style={s.gap}>
         <View style={s.rowGap}>
-          <Text>Skriv en recension eller kommentar</Text>
+          <Text>{t("review.writeReview")}</Text>
           <MaterialCommunityIcons
             name="information-slab-circle-outline"
             size={24}
             color={theme.colors.onSurface}
-            onPress={onReviewInfoPress}
+            onPress={() => setShowReviewInfoModal(true)}
           />
           <AlertDialog
             visible={showReviewInfoModal}
             onDismiss={() => setShowReviewInfoModal(false)}
-            title="Skriv något"
-            infoText={[
-              "Berätta för oss om promenaden!",
-              "Skriv en kommentar eller recension om dina upplevelser. Tänk på att hålla texten trevlig och respektfull.",
-            ]}
+            title={t("review.writeReviewTitle")}
+            infoText={[t("review.writeReviewInfo1"), t("review.writeReviewInfo2")]}
             backgroundColor={theme.colors.background}
             textColor={theme.colors.onBackground}
           />
@@ -174,7 +157,7 @@ export default function AddReviewForm({ trailIdentifier, onSuccess }: ReviewForm
               onChangeText={onChange}
               value={value}
               maxLength={500}
-              label="Recension"
+              label={t("review.reviewLabel")}
               theme={{
                 colors: {
                   primary: theme.colors.onSurface,
@@ -196,7 +179,7 @@ export default function AddReviewForm({ trailIdentifier, onSuccess }: ReviewForm
           })}
           disabled={isSubmitting || createReviewMutation.isPending}
         >
-          {createReviewMutation.isPending ? "Sparar..." : "Spara"}
+          {createReviewMutation.isPending ? t("common.saving") : t("common.save")}
         </Button>
       </View>
     </View>

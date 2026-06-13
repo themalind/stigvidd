@@ -1,5 +1,6 @@
 import { BORDER_RADIUS } from "@/constants/constants";
 import { MaterialIcons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 import { Pressable, StyleSheet, View } from "react-native";
 import { Text, useTheme } from "react-native-paper";
 
@@ -8,6 +9,7 @@ interface Props {
 }
 
 export default function TrailObstacleWarning({ onPress }: Props) {
+  const { t } = useTranslation();
   const theme = useTheme();
   return (
     <View style={[s.container, { backgroundColor: theme.colors.errorContainer, borderLeftColor: theme.colors.error }]}>
@@ -15,9 +17,7 @@ export default function TrailObstacleWarning({ onPress }: Props) {
         <View style={s.row}>
           <View style={s.rowGap}>
             <MaterialIcons name="warning-amber" size={18} color={theme.colors.onErrorContainer} />
-            <Text style={[s.bold, { color: theme.colors.onErrorContainer }]}>
-              Hinder rapporterade längs promenaden!
-            </Text>
+            <Text style={[s.bold, { color: theme.colors.onErrorContainer }]}>{t("obstacle.warningTitle")}</Text>
           </View>
           <MaterialIcons name="chevron-right" size={24} color={theme.colors.onErrorContainer} />
         </View>

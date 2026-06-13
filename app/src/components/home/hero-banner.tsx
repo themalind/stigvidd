@@ -5,14 +5,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { StyleSheet, View } from "react-native";
 import { MD3Theme, Text, useTheme } from "react-native-paper";
-
-function getGreeting(): string {
-  const h = new Date().getHours();
-  if (h >= 5 && h < 10) return "God morgon";
-  if (h >= 10 && h < 18) return "Hej";
-  if (h >= 18 && h < 22) return "God kväll";
-  return "God natt";
-}
+import { useTranslation } from "react-i18next";
 
 function getWeatherIcon(code: number): keyof typeof Ionicons.glyphMap {
   if (code === 1) return "sunny";
@@ -41,17 +34,26 @@ interface Props {
 
 export default function HeroBanner({ lat, lon }: Props) {
   const theme = useTheme();
+  const { t } = useTranslation();
   const { data: weather } = useWeather(lat, lon);
   const { data: cityName } = useCityName({ latitude: lat ? lat : 0, longitude: lon ? lon : 0 });
   const { tint, accent } = weather
     ? getWeatherStyle(weather.symbolCode, theme)
     : { tint: theme.colors.surfaceVariant, accent: theme.colors.onSurfaceVariant };
 
+  function getGreeting(): string {
+    const h = new Date().getHours();
+    if (h >= 5 && h < 10) return t("home.greetingMorning");
+    if (h >= 10 && h < 18) return t("home.greetingDay");
+    if (h >= 18 && h < 22) return t("home.greetingEvening");
+    return t("home.greetingNight");
+  }
+
   return (
     <View style={[s.card, { backgroundColor: tint }]}>
       <View style={s.left}>
         <Text style={[s.greeting, { color: theme.colors.onSurface }]}>{getGreeting()}!</Text>
-        <Text style={[s.subtitle, { color: theme.colors.onSurfaceVariant }]}>Dags för en promenad?</Text>
+        <Text style={[s.subtitle, { color: theme.colors.onSurfaceVariant }]}>{t("home.readyForWalk")}</Text>
       </View>
       <View style={s.rightColumn}>
         {weather && (

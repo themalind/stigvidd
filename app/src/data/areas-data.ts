@@ -38,9 +38,8 @@ export const borasAreas: BorasArea[] = [
   {
     identifier: "dalsjofors",
     name: "Dalsjöfors",
-    location: "Dalsjöfors, ca 10 km öster om Borås",
-    description:
-      "Dalsjöfors har ett omväxlande landskap med både skogspartier och öppen jordbruksmark. Intill samhället ligger Dalsjön med badplats och flera vandringsleder i omgivningarna.",
+    location: "areas.dalsjofors.location",
+    description: "areas.dalsjofors.description",
     image: { uri: "https://stigvidd.se/files/trails/area-dalsjofors.jpg" },
     url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/oster/dalsjofors.4.73feea1318de86063206c0bc.html",
     trails: [],
@@ -49,19 +48,19 @@ export const borasAreas: BorasArea[] = [
         {
           name: "Bergagärdesgrillen",
           location: "Banvallen, Dalsjöfors",
-          description: "Tillgänglighetsanpassad grillplats längs Banvallen.",
+          description: "areas.dalsjofors.firepit.0",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/oster/dalsjofors.4.73feea1318de86063206c0bc.html",
         },
         {
           name: "Slättåsgrillen",
           location: "Slättås, Dalsjöfors",
-          description: "Grillplats med vindskydd.",
+          description: "areas.dalsjofors.firepit.1",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/oster/dalsjofors.4.73feea1318de86063206c0bc.html",
         },
         {
           name: "Övrarpsgrillen",
           location: "Övrarp, Dalsjöfors",
-          description: "Grillplats i anslutning till vandringslederna vid Övrarp.",
+          description: "areas.dalsjofors.firepit.2",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/oster/dalsjofors.4.73feea1318de86063206c0bc.html",
         },
       ],
@@ -70,25 +69,25 @@ export const borasAreas: BorasArea[] = [
         {
           name: "Ankedammen",
           location: "Dalsjöfors",
-          description: "Fiskeplats vid Ankedammen.",
+          description: "areas.dalsjofors.fishing.0",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/oster/dalsjofors.4.73feea1318de86063206c0bc.html",
         },
         {
           name: "Häggån",
           location: "Dalsjöfors",
-          description: "Fiske i ån Häggån.",
+          description: "areas.dalsjofors.fishing.1",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/oster/dalsjofors.4.73feea1318de86063206c0bc.html",
         },
         {
           name: "Stora och Lilla Dalsjön",
           location: "Dalsjöfors",
-          description: "Fiske i Stora och Lilla Dalsjön.",
+          description: "areas.dalsjofors.fishing.2",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/oster/dalsjofors.4.73feea1318de86063206c0bc.html",
         },
         {
           name: "Ås-Tolken",
           location: "Dalsjöfors",
-          description: "Fiske i sjön Ås-Tolken.",
+          description: "areas.dalsjofors.fishing.3",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/oster/dalsjofors.4.73feea1318de86063206c0bc.html",
         },
       ],
@@ -96,7 +95,7 @@ export const borasAreas: BorasArea[] = [
         {
           name: "Dalsjöns badplats",
           location: "Dalsjön, Dalsjöfors",
-          description: "Badplats med sandstrand, brygga och klätterutrustning för barn.",
+          description: "areas.dalsjofors.swimming.0",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/oster/dalsjofors.4.73feea1318de86063206c0bc.html",
         },
       ],
@@ -104,7 +103,7 @@ export const borasAreas: BorasArea[] = [
         {
           name: "Rölle naturreservat",
           location: "Rölle, Dalsjöfors",
-          description: "Bokskogsnaturreservat på 8 hektar, bildat 1982. Skyddas för sina höga naturvärden.",
+          description: "areas.dalsjofors.naturereserv.0",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/oster/dalsjofors.4.73feea1318de86063206c0bc.html",
         },
       ],
@@ -113,9 +112,8 @@ export const borasAreas: BorasArea[] = [
   {
     identifier: "rya-asar",
     name: "Rya åsar",
-    location: "Väster om Borås centrum, Hestra–Almenäs",
-    description:
-      "562 hektar kommunalt naturreservat bildat 2001 med klippbranter, ekskogar och stigar för alla nivåer. Kulturlandskapet bär spår av en väg som Carl von Linné vandrade 1746.",
+    location: "areas.ryaAsar.location",
+    description: "areas.ryaAsar.description",
     image: { uri: "https://stigvidd.se/files/trails/area-rya.jpg" },
     url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/ryaasar.4.1601545718c38a990ab44a4c.html",
     trails: [],
@@ -124,13 +122,13 @@ export const borasAreas: BorasArea[] = [
         {
           name: "Rya åsar Fjällsjön",
           location: "Björbostugan, Rya åsar",
-          description: "Grillplats vid Fjällsjön i anslutning till Björbostugans startpunkt.",
+          description: "areas.ryaAsar.firepit.0",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/ryaasar.4.1601545718c38a990ab44a4c.html",
         },
         {
           name: "Rya åsar Högplatån",
           location: "Ålgården, Rya åsar",
-          description: "Grillplats på Högplatån vid Ålgårdens startpunkt.",
+          description: "areas.ryaAsar.firepit.1",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/ryaasar.4.1601545718c38a990ab44a4c.html",
         },
       ],
@@ -138,13 +136,13 @@ export const borasAreas: BorasArea[] = [
         {
           name: "Rya åsar Fjällsjön",
           location: "Björbostugan, Rya åsar",
-          description: "Vindskydd vid Fjällsjön.",
+          description: "areas.ryaAsar.shelter.0",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/ryaasar.4.1601545718c38a990ab44a4c.html",
         },
         {
           name: "Rya åsar Högplatån",
           location: "Ålgården, Rya åsar",
-          description: "Vindskydd på Högplatån.",
+          description: "areas.ryaAsar.shelter.1",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/ryaasar.4.1601545718c38a990ab44a4c.html",
         },
       ],
@@ -152,13 +150,13 @@ export const borasAreas: BorasArea[] = [
         {
           name: "Ryssbybäcken fiskevårdsområde",
           location: "Rya åsar",
-          description: "Delvis inom reservatsgränsen.",
+          description: "areas.ryaAsar.fishing.0",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/ryaasar.4.1601545718c38a990ab44a4c.html",
         },
         {
           name: "Öresjö fiskevårdsområde",
           location: "Norr om Borås",
-          description: "Fiske i Öresjö. Dricksvattentäkt sedan 1932 — tvåtaktsmotorer förbjudna.",
+          description: "areas.ryaAsar.fishing.1",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/ryaasar.4.1601545718c38a990ab44a4c.html",
         },
       ],
@@ -167,7 +165,7 @@ export const borasAreas: BorasArea[] = [
         {
           name: "Rya åsar naturreservat",
           location: "Borås",
-          description: "562 hektar kommunalt naturreservat bildat 2001 med gammal tallskog, klippbranter och ekskogar.",
+          description: "areas.ryaAsar.naturereserv.0",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/ryaasar.4.1601545718c38a990ab44a4c.html",
         },
       ],
@@ -176,9 +174,8 @@ export const borasAreas: BorasArea[] = [
   {
     identifier: "kype",
     name: "Kype",
-    location: "Norra Borås, vid Kypesjön",
-    description:
-      "Kype är ett friluftsområde i norra Borås med vandringsleder, motionsslingor, bad och fiske. Kypegårdens friluftsgård erbjuder dusch, vedeldad bastu och café.",
+    location: "areas.kype.location",
+    description: "areas.kype.description",
     image: { uri: "https://stigvidd.se/files/trails/area-kype.jpg" },
     url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/kype.4.73feea1318de86063206bb14.html",
     trails: [],
@@ -187,49 +184,49 @@ export const borasAreas: BorasArea[] = [
         {
           name: "Björkängsskogen Kypeskogen",
           location: "Kypeskogen, Borås",
-          description: "Grillplats med vindskydd i Kypeskogen.",
+          description: "areas.kype.firepit.0",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/kype.4.73feea1318de86063206bb14.html",
         },
         {
           name: "Kypegården Inte-nudda-marken-parken",
           location: "Kypegården, Borås",
-          description: "Grillplats vid Inte-nudda-marken-parken på Kypegården.",
+          description: "areas.kype.firepit.1",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/kype.4.73feea1318de86063206bb14.html",
         },
         {
           name: "Kypesjön badplatsen",
           location: "Kypesjön, Borås",
-          description: "Grillplats med vindskydd vid badplatsen.",
+          description: "areas.kype.firepit.2",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/kype.4.73feea1318de86063206bb14.html",
         },
         {
           name: "Kypesjön grillstuga",
           location: "Kypesjön, Borås",
-          description: "Tillgänglighetsanpassad grillstuga vid Kypesjön.",
+          description: "areas.kype.firepit.3",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/kype.4.73feea1318de86063206bb14.html",
         },
         {
           name: "Kypesjön pulkabacken",
           location: "Kypesjön, Borås",
-          description: "Grillplats vid pulkabacken.",
+          description: "areas.kype.firepit.4",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/kype.4.73feea1318de86063206bb14.html",
         },
         {
           name: "Kypeskogen Horsatorpet",
           location: "Kypeskogen, Borås",
-          description: "Grillplats vid Horsatorpet i Kypeskogen.",
+          description: "areas.kype.firepit.5",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/kype.4.73feea1318de86063206bb14.html",
         },
         {
           name: "Kypeskogen Klämmabäcken",
           location: "Kypeskogen, Borås",
-          description: "Grillplats vid Klämmabäcken i Kypeskogen.",
+          description: "areas.kype.firepit.6",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/kype.4.73feea1318de86063206bb14.html",
         },
         {
           name: "Rävsrydsberget Tosseryd",
           location: "Rävsrydsberget, Tosseryd",
-          description: "Grillplats på Rävsrydsberget vid Tosseryd.",
+          description: "areas.kype.firepit.7",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/kype.4.73feea1318de86063206bb14.html",
         },
       ],
@@ -237,13 +234,13 @@ export const borasAreas: BorasArea[] = [
         {
           name: "Björkängsskogen Kypeskogen",
           location: "Kypeskogen, Borås",
-          description: "Vindskydd i Kypeskogen.",
+          description: "areas.kype.shelter.0",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/kype.4.73feea1318de86063206bb14.html",
         },
         {
           name: "Kypesjön badplatsen",
           location: "Kypesjön, Borås",
-          description: "Vindskydd vid badplatsen.",
+          description: "areas.kype.shelter.1",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/kype.4.73feea1318de86063206bb14.html",
         },
       ],
@@ -252,7 +249,7 @@ export const borasAreas: BorasArea[] = [
         {
           name: "Kypesjöns badplats",
           location: "Kypesjön, Kypegården, Borås",
-          description: "Kommunal badplats med sandstrand och stor brygga.",
+          description: "areas.kype.swimming.0",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/kype.4.73feea1318de86063206bb14.html",
         },
       ],
@@ -262,9 +259,8 @@ export const borasAreas: BorasArea[] = [
   {
     identifier: "kransmossen",
     name: "Kransmossen",
-    location: "Östra Borås, mot Gånghester",
-    description:
-      "Kransmossen är ett stort idrotts- och friluftsområde med utegym, multisportarena, basketplan, hinderbana, boulebana och lekplats. Vintertid finns pulkabacke och belysta skidspår. Friluftsgård med dusch och bastu.",
+    location: "areas.kransmossen.location",
+    description: "areas.kransmossen.description",
     image: { uri: "https://stigvidd.se/files/trails/area-kransmossen.jpg" },
     url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/kransmossen.4.73feea1318de86063206bc07.html",
     trails: [],
@@ -273,55 +269,55 @@ export const borasAreas: BorasArea[] = [
         {
           name: "Fältspatsgruvan",
           location: "Kransmossen, Borås",
-          description: "Grillplats vid Fältspatsgruvan.",
+          description: "areas.kransmossen.firepit.0",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/kransmossen.4.73feea1318de86063206bc07.html",
         },
         {
           name: "Grillstugan",
           location: "Kransmossen, Borås",
-          description: "Grillstuga i Kransmosseområdet.",
+          description: "areas.kransmossen.firepit.1",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/kransmossen.4.73feea1318de86063206bc07.html",
         },
         {
           name: "Gånghester Lilla Häljasjö",
           location: "Gånghester, Borås",
-          description: "Grillplats vid Lilla Häljasjö i Gånghester.",
+          description: "areas.kransmossen.firepit.2",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/kransmossen.4.73feea1318de86063206bc07.html",
         },
         {
           name: "Gånghester Sjölid/Mulleängen",
           location: "Gånghester, Borås",
-          description: "Grillplats med vindskydd vid Sjölid/Mulleängen.",
+          description: "areas.kransmossen.firepit.3",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/kransmossen.4.73feea1318de86063206bc07.html",
         },
         {
           name: "Himlabacken",
           location: "Kransmossen, Borås",
-          description: "Grillplats med vindskydd vid pulkabacken Himlabacken.",
+          description: "areas.kransmossen.firepit.4",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/kransmossen.4.73feea1318de86063206bc07.html",
         },
         {
           name: "Kärleksängen",
           location: "Kransmossen, Borås",
-          description: "Tillgänglighetsanpassad grillplats vid Kärleksängen.",
+          description: "areas.kransmossen.firepit.5",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/kransmossen.4.73feea1318de86063206bc07.html",
         },
         {
           name: "MTB-höjden",
           location: "Kransmossen, Borås",
-          description: "Grillplats vid MTB-höjden.",
+          description: "areas.kransmossen.firepit.6",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/kransmossen.4.73feea1318de86063206bc07.html",
         },
         {
           name: "Slättholmen",
           location: "Kransmossen, Borås",
-          description: "Grillplats vid Slättholmen.",
+          description: "areas.kransmossen.firepit.7",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/kransmossen.4.73feea1318de86063206bc07.html",
         },
         {
           name: "Äppelängen",
           location: "Kransmossen, Borås",
-          description: "Grillplats vid Äppelängen.",
+          description: "areas.kransmossen.firepit.8",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/kransmossen.4.73feea1318de86063206bc07.html",
         },
       ],
@@ -329,13 +325,13 @@ export const borasAreas: BorasArea[] = [
         {
           name: "Gånghester Sjölid/Mulleängen",
           location: "Gånghester, Borås",
-          description: "Vindskydd vid Sjölid/Mulleängen.",
+          description: "areas.kransmossen.shelter.0",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/kransmossen.4.73feea1318de86063206bc07.html",
         },
         {
           name: "Himlabacken",
           location: "Kransmossen, Borås",
-          description: "Vindskydd vid pulkabacken.",
+          description: "areas.kransmossen.shelter.1",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/kransmossen.4.73feea1318de86063206bc07.html",
         },
       ],
@@ -343,7 +339,7 @@ export const borasAreas: BorasArea[] = [
         {
           name: "Lillån – Kransån fiskevårdsområde",
           location: "Kransmossen, Borås",
-          description: "Fiske i Lillån och Kransån vid Kransmosseområdet.",
+          description: "areas.kransmossen.fishing.0",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/kransmossen.4.73feea1318de86063206bc07.html",
         },
       ],
@@ -354,9 +350,8 @@ export const borasAreas: BorasArea[] = [
   {
     identifier: "almenas",
     name: "Almenäs",
-    location: "Öresjöns södra strand, nära Borås centrum",
-    description:
-      "Almenäs ligger vid Öresjöns södra strand och är hem till Borås största och mest populära kommunala badplats med sandstrand, brygga och badramp. Området sträcker sig även till Sjöbo vid Viskans strand med grönområden, leder och grillplatser. Elstängsel finns vid badplatsen för att hålla vildsvin borta.",
+    location: "areas.almenas.location",
+    description: "areas.almenas.description",
     image: { uri: "https://stigvidd.se/files/trails/area-almenas.jpg" },
     url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/almenas.4.1601545718c38a990ab486b1.html",
     trails: [],
@@ -365,37 +360,37 @@ export const borasAreas: BorasArea[] = [
         {
           name: "Almenäs beachvolleybollplanen",
           location: "Almenäs, Borås",
-          description: "Grillplats intill beachvolleybollplanen vid stranden.",
+          description: "areas.almenas.firepit.0",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/almenas.4.1601545718c38a990ab486b1.html",
         },
         {
           name: "Almenäs lilla stranden",
           location: "Almenäs, Borås",
-          description: "Tillgänglighetsanpassad grillplats med hårdgjord grusväg från parkeringen.",
+          description: "areas.almenas.firepit.1",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/almenas.4.1601545718c38a990ab486b1.html",
         },
         {
           name: "Almenäs Sjöbobron",
           location: "Sjöbobron, Borås",
-          description: "Grillplats nära bron mellan Almenäs och Sjöbo.",
+          description: "areas.almenas.firepit.2",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/almenas.4.1601545718c38a990ab486b1.html",
         },
         {
           name: "Almenäs Udden I",
           location: "Almenäsudden, Borås",
-          description: "Grillplats på Almenäsudden öster om stranden bland gamla tallar.",
+          description: "areas.almenas.firepit.3",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/almenas.4.1601545718c38a990ab486b1.html",
         },
         {
           name: "Sjöbo Rydastrand",
           location: "Sjöbo, Borås",
-          description: "Grillplats på Viskans västra sida vid Sjöbo.",
+          description: "areas.almenas.firepit.4",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/almenas.4.1601545718c38a990ab486b1.html",
         },
         {
           name: "Sjöbovallen",
           location: "Sjöbovallen, Borås",
-          description: "Grillplats vid Viskan intill idrottsanläggningen.",
+          description: "areas.almenas.firepit.5",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/almenas.4.1601545718c38a990ab486b1.html",
         },
       ],
@@ -404,8 +399,7 @@ export const borasAreas: BorasArea[] = [
         {
           name: "Öresjö fiskevårdsområde",
           location: "Öresjön, norr om Borås",
-          description:
-            "Fiske efter gädda, abborre och gös. Öresjö är dricksvattentäkt för Borås sedan 1932 — tvåtaktsmotorer är förbjudna.",
+          description: "areas.almenas.fishing.0",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/almenas.4.1601545718c38a990ab486b1.html",
         },
       ],
@@ -413,13 +407,13 @@ export const borasAreas: BorasArea[] = [
         {
           name: "Almenäs badplats",
           location: "Öresjöns södra strand, Borås",
-          description: "Kommunens största och mest populära badplats med sandstrand, brygga och badramp.",
+          description: "areas.almenas.swimming.0",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/almenas.4.1601545718c38a990ab486b1.html",
         },
         {
           name: "Sjöbo badplats",
           location: "Öresjöns sydöstra strand, Borås",
-          description: "Kommunal badplats med stora gräsytor och liten sandstrand.",
+          description: "areas.almenas.swimming.1",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/almenas.4.1601545718c38a990ab486b1.html",
         },
       ],
@@ -427,7 +421,7 @@ export const borasAreas: BorasArea[] = [
         {
           name: "Rya åsar naturreservat",
           location: "Almenäs, Borås",
-          description: "Kommunalt naturreservat bildat 2001, 562 hektar. Gammal tallskog med markerade vandringsleder.",
+          description: "areas.almenas.naturereserv.0",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/almenas.4.1601545718c38a990ab486b1.html",
         },
       ],
@@ -436,9 +430,8 @@ export const borasAreas: BorasArea[] = [
   {
     identifier: "aplared",
     name: "Aplared",
-    location: "Ca 15 km sydost om Borås",
-    description:
-      "Aplared är en by i ett småkuperat landskap med skog och jordbruksmarker. Intill byn finns Skansasjön med badplats och Lindåsabäcken naturreservat som skyddar flodpärlmusslan.",
+    location: "areas.aplared.location",
+    description: "areas.aplared.description",
     image: { uri: "https://stigvidd.se/files/trails/area-mock.jpg" },
     url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/oster/aplared.4.6b00451018e55e78a7c1d447.html",
     trails: [],
@@ -447,7 +440,7 @@ export const borasAreas: BorasArea[] = [
         {
           name: "Aplared Ekbacken",
           location: "Söder om fotbollsplanen, Aplared",
-          description: "Grillplats i Aplaredsskolans skog, nås via lederna från idrottsplatsen.",
+          description: "areas.aplared.firepit.0",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/oster/aplared.4.6b00451018e55e78a7c1d447.html",
         },
       ],
@@ -455,7 +448,7 @@ export const borasAreas: BorasArea[] = [
         {
           name: "Aplared Ekbacken vindskydd",
           location: "Söder om fotbollsplanen, Aplared",
-          description: "Vindskydd i anslutning till grillplatsen, nås via lederna från idrottsplatsen.",
+          description: "areas.aplared.shelter.0",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/oster/aplared.4.6b00451018e55e78a7c1d447.html",
         },
       ],
@@ -463,7 +456,7 @@ export const borasAreas: BorasArea[] = [
         {
           name: "Såken fiskevårdsområde",
           location: "Öster om Borås, vid Aplared",
-          description: "Fiskevårdsområde öster om Borås nära Aplared.",
+          description: "areas.aplared.fishing.0",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/oster/aplared.4.6b00451018e55e78a7c1d447.html",
         },
       ],
@@ -471,7 +464,7 @@ export const borasAreas: BorasArea[] = [
         {
           name: "Skansasjön badplats",
           location: "Ca 1,5 km nordväst om Aplared",
-          description: "Badplats med brygga och gräsyta vid Skansasjön.",
+          description: "areas.aplared.swimming.0",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/oster/aplared.4.6b00451018e55e78a7c1d447.html",
         },
       ],
@@ -479,7 +472,7 @@ export const borasAreas: BorasArea[] = [
         {
           name: "Lindåsabäckens naturreservat",
           location: "Svenljungavägen (väg 1698), Aplared",
-          description: "9 hektar skyddat område bildat 2008 för att bevara flodpärlmusslan.",
+          description: "areas.aplared.naturereserv.0",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/oster/aplared.4.6b00451018e55e78a7c1d447.html",
         },
       ],
@@ -488,9 +481,8 @@ export const borasAreas: BorasArea[] = [
   {
     identifier: "borgstena",
     name: "Borgstena",
-    location: "Nordligaste Borås kommun, norr om Fristad",
-    description:
-      "Borgstena ligger i kommunens nordligaste del med ett varierat landskap dominerat av ek- och bokskogar med historiska rötter från medeltid till modern tid.",
+    location: "areas.borgstena.location",
+    description: "areas.borgstena.description",
     image: { uri: "https://stigvidd.se/files/trails/area-mock.jpg" },
     url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/norr/borgstena.4.73feea1318de86063208414c.html",
     trails: [],
@@ -501,13 +493,13 @@ export const borasAreas: BorasArea[] = [
         {
           name: "Mollasjön fiskevårdsområde",
           location: "Norr om Borås och Fristad, vid Borgstena",
-          description: "Fiskevårdsområde norr om Fristad nära Borgstena.",
+          description: "areas.borgstena.fishing.0",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/norr/borgstena.4.73feea1318de86063208414c.html",
         },
         {
           name: "Myresjö fiskevårdsområde",
           location: "Norr om Borås, utanför Borgstena",
-          description: "Fiskevårdsområde strax utanför Borgstena.",
+          description: "areas.borgstena.fishing.1",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/norr/borgstena.4.73feea1318de86063208414c.html",
         },
       ],
@@ -518,9 +510,8 @@ export const borasAreas: BorasArea[] = [
   {
     identifier: "boras-centrala",
     name: "Borås, centrala",
-    location: "Borås centrum",
-    description:
-      "Centrala Borås är en levande stadskärna där kultur och natur möts. Tre huvudparker — Ramnaparken, Stadsparken och Annelundsparken — erbjuder vattennära promenader och rekreation mitt i staden.",
+    location: "areas.borasCentrala.location",
+    description: "areas.borasCentrala.description",
     image: { uri: "https://stigvidd.se/files/trails/area-annelund.jpg" },
     url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/borascentrala.4.73feea1318de86063206bf0f.html",
     trails: [],
@@ -529,13 +520,13 @@ export const borasAreas: BorasArea[] = [
         {
           name: "A-Ö-skogens grillplats Bodakullen",
           location: "Bodakullen vid Bodavallen, Borås",
-          description: "Grillplats längs elljusspåret, tillgänglig med barnvagn från västra sidan.",
+          description: "areas.borasCentrala.firepit.0",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/borascentrala.4.73feea1318de86063206bf0f.html",
         },
         {
           name: "Annelundsparken",
           location: "Annelundsparken, Borås centrum",
-          description: "Grillplats med regnskydd och ved, intill en stor lekplats.",
+          description: "areas.borasCentrala.firepit.1",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/borascentrala.4.73feea1318de86063206bf0f.html",
         },
       ],
@@ -543,7 +534,7 @@ export const borasAreas: BorasArea[] = [
         {
           name: "Annelundsparken regnskydd",
           location: "Annelundsparken, Borås centrum",
-          description: "Regnskydd i anslutning till grillplatsen vid stora lekplatsen.",
+          description: "areas.borasCentrala.shelter.0",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/borascentrala.4.73feea1318de86063206bf0f.html",
         },
       ],
@@ -555,9 +546,8 @@ export const borasAreas: BorasArea[] = [
   {
     identifier: "bredared",
     name: "Bredared",
-    location: "Ca 6 km väster om Fristad, norra Borås kommun",
-    description:
-      "Bredared har flera vandringsleder i varierande natur. Från Klockaregården utgår fem markerade leder genom barrskogslandskap med vyer över Hjortsbergsdalen och sjön Veksjön.",
+    location: "areas.bredared.location",
+    description: "areas.bredared.description",
     image: { uri: "https://stigvidd.se/files/trails/area-bredared.jpg" },
     url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/norr/bredared.4.5493346718e560a04fa6cfa9.html",
     trails: [],
@@ -572,9 +562,8 @@ export const borasAreas: BorasArea[] = [
   {
     identifier: "byttorp-kolbranningen",
     name: "Byttorp, Kolbränningen",
-    location: "Centrala Borås, vid sjön Kolbränningen",
-    description:
-      "Vid sjön Kolbränningen finns ett naturskönt område med kommunal badplats med sandstrand, gräsmatta och brygga. Vackra skogsstigar och promenadstråk löper genom omgivande bostadsområden.",
+    location: "areas.byttorpKolbranningen.location",
+    description: "areas.byttorpKolbranningen.description",
     image: { uri: "https://stigvidd.se/files/trails/area-kolbranningen.jpg" },
     url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/byttorpkolbranningen.4.5493346718e560a04fa5d2ec.html",
     trails: [],
@@ -583,13 +572,13 @@ export const borasAreas: BorasArea[] = [
         {
           name: "Byttorp badplats",
           location: "Byttorp badplats, Borås",
-          description: "Grillplats intill badplatsen längs Hestraskogsleden.",
+          description: "areas.byttorpKolbranningen.firepit.0",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/byttorpkolbranningen.4.5493346718e560a04fa5d2ec.html",
         },
         {
           name: "Kolbränningen",
           location: "Vid sjön Kolbränningen, Borås",
-          description: "Grillplats med bänkar vid sjön.",
+          description: "areas.byttorpKolbranningen.firepit.1",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/byttorpkolbranningen.4.5493346718e560a04fa5d2ec.html",
         },
       ],
@@ -599,7 +588,7 @@ export const borasAreas: BorasArea[] = [
         {
           name: "Byttorp, Kolbränningen badplats",
           location: "Sjön Kolbränningen, Borås",
-          description: "Kommunal badplats med sandstrand, gräsmatta, brygga och badflotte.",
+          description: "areas.byttorpKolbranningen.swimming.0",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/byttorpkolbranningen.4.5493346718e560a04fa5d2ec.html",
         },
       ],
@@ -609,9 +598,8 @@ export const borasAreas: BorasArea[] = [
   {
     identifier: "dannike",
     name: "Dannike",
-    location: "Ca 20 km öster om Borås",
-    description:
-      "Dannike ligger i ett småkuperat landskap med skog och jordbruksmarker. Rammsjön erbjuder en populär badplats med sandstrand och hopptorn, och i närheten finns Rölle naturreservat med lövskog och ängar.",
+    location: "areas.dannike.location",
+    description: "areas.dannike.description",
     image: { uri: "https://stigvidd.se/files/trails/area-mock.jpg" },
     url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/oster/dannike.4.73feea1318de860632084213.html",
     trails: [],
@@ -620,7 +608,7 @@ export const borasAreas: BorasArea[] = [
         {
           name: "Rammsjön grillplats",
           location: "Rammsjöns badplats, Dannike",
-          description: "Grillplats vid badplatsen, ej tillgänglighetsanpassad.",
+          description: "areas.dannike.firepit.0",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/oster/dannike.4.73feea1318de860632084213.html",
         },
       ],
@@ -629,19 +617,19 @@ export const borasAreas: BorasArea[] = [
         {
           name: "Boanäs fiskevårdsområde",
           location: "Yttre Åsunden och Torpasjön",
-          description: "Fiske i Yttre Åsunden och Torpasjön.",
+          description: "areas.dannike.fishing.0",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/oster/dannike.4.73feea1318de860632084213.html",
         },
         {
           name: "Rammsjön fiskevårdsområde",
           location: "Öster om Dannike",
-          description: "Fiske i Rammsjön öster om Dannike.",
+          description: "areas.dannike.fishing.1",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/oster/dannike.4.73feea1318de860632084213.html",
         },
         {
           name: "Torpasjön fiskevårdsområde",
           location: "Vid Torpa stenhus",
-          description: "Fiske i Torpasjön nära Torpa stenhus.",
+          description: "areas.dannike.fishing.2",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/oster/dannike.4.73feea1318de860632084213.html",
         },
       ],
@@ -649,7 +637,7 @@ export const borasAreas: BorasArea[] = [
         {
           name: "Rammsjöns badplats",
           location: "Rammsjön, Dannike",
-          description: "Badplats med sandstrand, två bryggor, hopptorn och gräsytor.",
+          description: "areas.dannike.swimming.0",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/oster/dannike.4.73feea1318de860632084213.html",
         },
       ],
@@ -657,7 +645,7 @@ export const borasAreas: BorasArea[] = [
         {
           name: "Rölle naturreservat",
           location: "Väg 1706 vid Rölle/Hulten",
-          description: "Statligt naturreservat bildat 1982, 8 hektar lövskog och ängar med värdefull flora.",
+          description: "areas.dannike.naturereserv.0",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/oster/dannike.4.73feea1318de860632084213.html",
         },
       ],
@@ -666,9 +654,8 @@ export const borasAreas: BorasArea[] = [
   {
     identifier: "fristad",
     name: "Fristad",
-    location: "Öresjöns norra strand, norra Borås kommun",
-    description:
-      "Fristad ligger vid Öresjöns norra strand med varierad geografi från bördig jordbruksmark till skogbeklädda höjder. Tre badplatser, sex grillplatser och två naturreservat gör Fristad till ett av kommunens rikaste friluftsområden.",
+    location: "areas.fristad.location",
+    description: "areas.fristad.description",
     image: { uri: "https://stigvidd.se/files/trails/area-fristad.jpg" },
     url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/norr/fristad.4.73feea1318de86063206a396.html",
     trails: [],
@@ -677,37 +664,37 @@ export const borasAreas: BorasArea[] = [
         {
           name: "Asklanda badplats (bryggan)",
           location: "Asklanda, västra Fristad",
-          description: "Grillplats vid bryggan på Asklanda badplats.",
+          description: "areas.fristad.firepit.0",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/norr/fristad.4.73feea1318de86063206a396.html",
         },
         {
           name: "Asklanda badplats (västra)",
           location: "Asklanda, västra Fristad",
-          description: "Grillplats på västra sidan av Asklanda badplats.",
+          description: "areas.fristad.firepit.1",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/norr/fristad.4.73feea1318de86063206a396.html",
         },
         {
           name: "Asklanda badplats (östra)",
           location: "Asklanda, västra Fristad",
-          description: "Grillplats på östra sidan av Asklanda badplats.",
+          description: "areas.fristad.firepit.2",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/norr/fristad.4.73feea1318de86063206a396.html",
         },
         {
           name: "Skalle badplats (bryggan)",
           location: "Östra Öresjöstranden, söder om Fristad",
-          description: "Grillplats vid bryggan på Skalle badplats.",
+          description: "areas.fristad.firepit.3",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/norr/fristad.4.73feea1318de86063206a396.html",
         },
         {
           name: "Skalle badplats (udden)",
           location: "Östra Öresjöstranden, söder om Fristad",
-          description: "Grillplats på udden vid Skalle badplats.",
+          description: "areas.fristad.firepit.4",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/norr/fristad.4.73feea1318de86063206a396.html",
         },
         {
           name: "Solviken badplats",
           location: "Sjön Ärtingen, 4 km väster om Fristad",
-          description: "Grillplats vid Solviken badplats.",
+          description: "areas.fristad.firepit.5",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/norr/fristad.4.73feea1318de86063206a396.html",
         },
       ],
@@ -716,25 +703,25 @@ export const borasAreas: BorasArea[] = [
         {
           name: "Säven fiskevårdsområde",
           location: "Norr om Fristad",
-          description: "Fiske i Säven norr om Fristad.",
+          description: "areas.fristad.fishing.0",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/norr/fristad.4.73feea1318de86063206a396.html",
         },
         {
           name: "Varnum & Marsjöarna",
           location: "Öster om Sparsör",
-          description: "Fiske i Varnum och Marsjöarna öster om Sparsör.",
+          description: "areas.fristad.fishing.1",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/norr/fristad.4.73feea1318de86063206a396.html",
         },
         {
           name: "Ärtingen fiskevårdsområde",
           location: "Väster om Fristad",
-          description: "Fiske i sjön Ärtingen väster om Fristad.",
+          description: "areas.fristad.fishing.2",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/norr/fristad.4.73feea1318de86063206a396.html",
         },
         {
           name: "Öresjö fiskevårdsområde",
           location: "Öresjön, Fristad",
-          description: "Fiske i Öresjö. Dricksvattentäkt sedan 1932 — tvåtaktsmotorer förbjudna.",
+          description: "areas.fristad.fishing.3",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/norr/fristad.4.73feea1318de86063206a396.html",
         },
       ],
@@ -742,19 +729,19 @@ export const borasAreas: BorasArea[] = [
         {
           name: "Asklanda badplats",
           location: "Västra Fristad, Öresjöns strand",
-          description: "Sandstrand med volleybollnät, klätternät och grillplatser.",
+          description: "areas.fristad.swimming.0",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/norr/fristad.4.73feea1318de86063206a396.html",
         },
         {
           name: "Skalle badplats",
           location: "Östra Öresjöstranden, söder om Fristad",
-          description: "Lång och vacker sandstrand med brygga och fågeltorn.",
+          description: "areas.fristad.swimming.1",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/norr/fristad.4.73feea1318de86063206a396.html",
         },
         {
           name: "Solviken badplats",
           location: "Sjön Ärtingen, 4 km väster om Fristad",
-          description: "Sandstrand med brygga och badflotte vid sjön Ärtingen.",
+          description: "areas.fristad.swimming.2",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/norr/fristad.4.73feea1318de86063206a396.html",
         },
       ],
@@ -762,13 +749,13 @@ export const borasAreas: BorasArea[] = [
         {
           name: "Mölarps naturreservat",
           location: "Där Viskan möter Öresjö, Fristad",
-          description: "66 hektar, bildat 1990. Känt fågelskådningsområde vid Viskans mynning i Öresjö.",
+          description: "areas.fristad.naturereserv.0",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/norr/fristad.4.73feea1318de86063206a396.html",
         },
         {
           name: "Vänga Mosse naturreservat",
           location: "Fristad",
-          description: "238 hektar, bildat 2010. Spänger och fågeltorn gör myren tillgänglig.",
+          description: "areas.fristad.naturereserv.1",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/norr/fristad.4.73feea1318de86063206a396.html",
         },
       ],
@@ -777,9 +764,8 @@ export const borasAreas: BorasArea[] = [
   {
     identifier: "frufallan",
     name: "Frufällan",
-    location: "Öster om Öresjö, norr om Borås",
-    description:
-      "Runt Frufällan finns en blandning av skog och öppna landskap vid Öresjöns östra strand. Badplats med brygga och sandstrand, fyra grillplatser och fiske i Öresjö.",
+    location: "areas.frufallan.location",
+    description: "areas.frufallan.description",
     image: { uri: "https://stigvidd.se/files/trails/area-frufallan.jpg" },
     url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/norr/frufallan.4.5493346718e560a04fa6d15b.html",
     trails: [],
@@ -788,25 +774,25 @@ export const borasAreas: BorasArea[] = [
         {
           name: "Frufällans badplats",
           location: "Frufällan, Borås",
-          description: "Grillplats vid badplatsen.",
+          description: "areas.frufallan.firepit.0",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/norr/frufallan.4.5493346718e560a04fa6d15b.html",
         },
         {
           name: "Kröklings hage",
           location: "Frufällan, Borås",
-          description: "Grillplats vid Kröklings hage.",
+          description: "areas.frufallan.firepit.1",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/norr/frufallan.4.5493346718e560a04fa6d15b.html",
         },
         {
           name: "Mölarps ö",
           location: "Frufällan, Borås",
-          description: "Grillplats på Mölarps ö.",
+          description: "areas.frufallan.firepit.2",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/norr/frufallan.4.5493346718e560a04fa6d15b.html",
         },
         {
           name: "Vikåsaudden",
           location: "Frufällan, Borås",
-          description: "Grillplats på Vikåsaudden med bänkar och grusvägar.",
+          description: "areas.frufallan.firepit.3",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/norr/frufallan.4.5493346718e560a04fa6d15b.html",
         },
       ],
@@ -815,7 +801,7 @@ export const borasAreas: BorasArea[] = [
         {
           name: "Öresjö fiskevårdsområde",
           location: "Öresjön, Frufällan",
-          description: "Fiske i Öresjö. Dricksvattentäkt sedan 1932 — tvåtaktsmotorer förbjudna.",
+          description: "areas.frufallan.fishing.0",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/norr/frufallan.4.5493346718e560a04fa6d15b.html",
         },
       ],
@@ -823,7 +809,7 @@ export const borasAreas: BorasArea[] = [
         {
           name: "Frufällans badplats",
           location: "Öresjöns östra strand, Frufällan",
-          description: "Badplats med brygga, sandstrand och gräsyta.",
+          description: "areas.frufallan.swimming.0",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/norr/frufallan.4.5493346718e560a04fa6d15b.html",
         },
       ],
@@ -833,9 +819,8 @@ export const borasAreas: BorasArea[] = [
   {
     identifier: "gasslosa",
     name: "Gässlösa",
-    location: "Söder om Borås centrum",
-    description:
-      "Gässlösa är ett naturskönt friluftsområde söder om Borås med skogssjöar och ädellövskog. Förutom vandringsleder och elljusspår finns en populär badplats vid Stora Transåssjön och fiske med regnbåge.",
+    location: "areas.gasslosa.location",
+    description: "areas.gasslosa.description",
     image: { uri: "https://stigvidd.se/files/trails/area-mock.jpg" },
     url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/gasslosa.4.73feea1318de86063206bca4.html",
     trails: [],
@@ -844,7 +829,7 @@ export const borasAreas: BorasArea[] = [
         {
           name: "Gässlösa elljusspår",
           location: "Gässlösa, Borås",
-          description: "Grillplats längs elljusspåret med utsikt över Borås.",
+          description: "areas.gasslosa.firepit.0",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/gasslosa.4.73feea1318de86063206bca4.html",
         },
       ],
@@ -853,7 +838,7 @@ export const borasAreas: BorasArea[] = [
         {
           name: "Kråkered – Stora Transåssjön",
           location: "Stora Transåssjön, Gässlösa",
-          description: "Fiske med utsättning av regnbåge. Sex uthyrningsbåtar finns tillgängliga.",
+          description: "areas.gasslosa.fishing.0",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/gasslosa.4.73feea1318de86063206bca4.html",
         },
       ],
@@ -861,7 +846,7 @@ export const borasAreas: BorasArea[] = [
         {
           name: "Transås badplats",
           location: "Stora Transåssjön, Gässlösa",
-          description: "Badplats med sandstrand, gräsyta och omklädningsrum.",
+          description: "areas.gasslosa.swimming.0",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/gasslosa.4.73feea1318de86063206bca4.html",
         },
       ],
@@ -871,9 +856,8 @@ export const borasAreas: BorasArea[] = [
   {
     identifier: "hedared",
     name: "Hedared",
-    location: "Ca 20 km nordväst om Borås",
-    description:
-      "Hedared omges av skogar och jordbruksmark med flera små sjöar. Sex vandringsleder startar vid Hedareds stavkyrka — en av de äldsta bevarade träkyrkorna i Skandinavien. Badplats med sandstrand vid Östra Valsjön.",
+    location: "areas.hedared.location",
+    description: "areas.hedared.description",
     image: { uri: "https://stigvidd.se/files/trails/area-hedared.jpg" },
     url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/vaster/hedared.4.5493346718e560a04fa6cd38.html",
     trails: [],
@@ -882,7 +866,7 @@ export const borasAreas: BorasArea[] = [
         {
           name: "Östra Valsjön",
           location: "Ca 2 km öster om Hedared",
-          description: "Grillplats vid badplatsen på Östra Valsjön.",
+          description: "areas.hedared.firepit.0",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/vaster/hedared.4.5493346718e560a04fa6cd38.html",
         },
       ],
@@ -892,7 +876,7 @@ export const borasAreas: BorasArea[] = [
         {
           name: "Östra Valsjöns badplats",
           location: "Ca 2 km öster om Hedared",
-          description: "Badplats med gräsytor, sandstrand och brygga.",
+          description: "areas.hedared.swimming.0",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/vaster/hedared.4.5493346718e560a04fa6cd38.html",
         },
       ],
@@ -902,9 +886,8 @@ export const borasAreas: BorasArea[] = [
   {
     identifier: "hestra",
     name: "Hestra",
-    location: "Södra Borås, Hestra/Ekås",
-    description:
-      "Hestra erbjuder flera motionsslingor och vandringsleder i varierande längd genom skogslandskapet. Hestrastugan på Ekås är bas för sju leder, och Rya åsar naturreservat gränsar till området.",
+    location: "areas.hestra.location",
+    description: "areas.hestra.description",
     image: { uri: "https://stigvidd.se/files/trails/area-mock.jpg" },
     url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/hestra.4.5493346718e560a04fa5d641.html",
     trails: [],
@@ -913,13 +896,13 @@ export const borasAreas: BorasArea[] = [
         {
           name: "Hestrastugan",
           location: "Ekås, Borås",
-          description: "Grillplats bakom stugan, ej tillgänglighetsanpassad.",
+          description: "areas.hestra.firepit.0",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/hestra.4.5493346718e560a04fa5d641.html",
         },
         {
           name: "Lomsjön Kypered",
           location: "Ca 1,7 km norr om Hestrastugan",
-          description: "Grillplats vid Lomsjön.",
+          description: "areas.hestra.firepit.1",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/hestra.4.5493346718e560a04fa5d641.html",
         },
       ],
@@ -930,7 +913,7 @@ export const borasAreas: BorasArea[] = [
         {
           name: "Rya åsar naturreservat",
           location: "Hestra, Borås",
-          description: "562 hektar kommunalt naturreservat bildat 2001 med gammal tallskog och markerade leder.",
+          description: "areas.hestra.naturereserv.0",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/hestra.4.5493346718e560a04fa5d641.html",
         },
       ],
@@ -939,9 +922,8 @@ export const borasAreas: BorasArea[] = [
   {
     identifier: "hofsnas-torpa",
     name: "Hofsnäs och Torpa",
-    location: "Östra Borås, vid Yttre Åsunden och Torpasjön",
-    description:
-      "Idylliska platser vid Yttre Åsunden och Torpasjön med rik historisk miljö. Hofsnäs herrgård och Torpa stenhus — ett välbevarat renässansslott från 1500-talet — ger området en unik karaktär. Elva grillplatser och en badplats gör det till ett omtyckt utflyktsmål.",
+    location: "areas.hofsnasTorpa.location",
+    description: "areas.hofsnasTorpa.description",
     image: { uri: "https://stigvidd.se/files/trails/area-hofsnas.jpg" },
     url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/oster/hofsnasochtorpa.4.73feea1318de86063206bd97.html",
     trails: [],
@@ -950,31 +932,31 @@ export const borasAreas: BorasArea[] = [
         {
           name: "Campingen",
           location: "Hofsnäs, Borås",
-          description: "Grillplats vid campingplatsen vid Hofsnäs.",
+          description: "areas.hofsnasTorpa.firepit.0",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/oster/hofsnasochtorpa.4.73feea1318de86063206bd97.html",
         },
         {
           name: "Ekenäs",
           location: "Hofsnäs, Borås",
-          description: "Grillplats vid Ekenäs.",
+          description: "areas.hofsnasTorpa.firepit.1",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/oster/hofsnasochtorpa.4.73feea1318de86063206bd97.html",
         },
         {
           name: "Flaxet",
           location: "Hofsnäs, Borås",
-          description: "Grillplats vid Flaxet.",
+          description: "areas.hofsnasTorpa.firepit.2",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/oster/hofsnasochtorpa.4.73feea1318de86063206bd97.html",
         },
         {
           name: "Näset",
           location: "Hofsnäs, Borås",
-          description: "Grillplats vid Näset.",
+          description: "areas.hofsnasTorpa.firepit.3",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/oster/hofsnasochtorpa.4.73feea1318de86063206bd97.html",
         },
         {
           name: "Ångbåtsbryggan",
           location: "Hofsnäs, Borås",
-          description: "Grillplats vid den gamla ångbåtsbryggan.",
+          description: "areas.hofsnasTorpa.firepit.4",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/oster/hofsnasochtorpa.4.73feea1318de86063206bd97.html",
         },
       ],
@@ -982,7 +964,7 @@ export const borasAreas: BorasArea[] = [
         {
           name: "Torpasjön vindskydd",
           location: "Torpasjön, Borås",
-          description: "Vindskydd vid Torpasjön.",
+          description: "areas.hofsnasTorpa.shelter.0",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/oster/hofsnasochtorpa.4.73feea1318de86063206bd97.html",
         },
       ],
@@ -990,7 +972,7 @@ export const borasAreas: BorasArea[] = [
         {
           name: "Torpasjön fiskevårdsområde",
           location: "Kring Torpanäsets naturreservat",
-          description: "Fiske i Torpasjöns vatten runt Torpanäsets naturreservat vid Torpa stenhus.",
+          description: "areas.hofsnasTorpa.fishing.0",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/oster/hofsnasochtorpa.4.73feea1318de86063206bd97.html",
         },
       ],
@@ -998,7 +980,7 @@ export const borasAreas: BorasArea[] = [
         {
           name: "Hofsnäs badplats",
           location: "Östra Torpasjön, Hofsnäs",
-          description: "Badplats med strand, brygga, gräsytor, två grillplatser och vindskydd.",
+          description: "areas.hofsnasTorpa.swimming.0",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/oster/hofsnasochtorpa.4.73feea1318de86063206bd97.html",
         },
       ],
@@ -1006,8 +988,7 @@ export const borasAreas: BorasArea[] = [
         {
           name: "Torpanäsets naturreservat",
           location: "Hofsnäs, östra Borås",
-          description:
-            "Statligt naturreservat, 159 hektar, bildat 2002. Leder genom betesmark, skog och strandmiljöer med rikt fågelliv.",
+          description: "areas.hofsnasTorpa.naturereserv.0",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/oster/hofsnasochtorpa.4.73feea1318de86063206bd97.html",
         },
       ],
@@ -1016,9 +997,8 @@ export const borasAreas: BorasArea[] = [
   {
     identifier: "sjomarken",
     name: "Sjömarken",
-    location: "Ca 7 km väster om Borås",
-    description:
-      "Sjömarken ligger vid Viaredssjön med omväxlande landskap av skog och öppna fält. Badplats med sandstrand och lång brygga, fyra grillplatser och fiske.",
+    location: "areas.sjomarken.location",
+    description: "areas.sjomarken.description",
     image: { uri: "https://stigvidd.se/files/trails/area-mock.jpg" },
     url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/vaster/sjomarken.4.73feea1318de8606320843ef.html",
     trails: [],
@@ -1027,25 +1007,25 @@ export const borasAreas: BorasArea[] = [
         {
           name: "Sjömarkens badplats (bryggan)",
           location: "Sjömarkens badplats, Borås",
-          description: "Grillplats vid bryggan.",
+          description: "areas.sjomarken.firepit.0",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/vaster/sjomarken.4.73feea1318de8606320843ef.html",
         },
         {
           name: "Sjömarkens badplats (stranden)",
           location: "Sjömarkens badplats, Borås",
-          description: "Grillplats vid stranden.",
+          description: "areas.sjomarken.firepit.1",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/vaster/sjomarken.4.73feea1318de8606320843ef.html",
         },
         {
           name: "Sjömarkens badplats (udden)",
           location: "Sjömarkens badplats, Borås",
-          description: "Grillplats på udden.",
+          description: "areas.sjomarken.firepit.2",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/vaster/sjomarken.4.73feea1318de8606320843ef.html",
         },
         {
           name: "Sjömarkens idrottsgård",
           location: "Sjömarkens idrottsgård, Borås",
-          description: "Grillplats vid idrottsgården.",
+          description: "areas.sjomarken.firepit.3",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/vaster/sjomarken.4.73feea1318de8606320843ef.html",
         },
       ],
@@ -1054,7 +1034,7 @@ export const borasAreas: BorasArea[] = [
         {
           name: "Viaredssjön fiskevårdsområde",
           location: "Viaredssjön, Sandared/Sjömarken",
-          description: "Fiske i Viaredssjön nära Sandared och Hultafors.",
+          description: "areas.sjomarken.fishing.0",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/vaster/sjomarken.4.73feea1318de8606320843ef.html",
         },
       ],
@@ -1062,7 +1042,7 @@ export const borasAreas: BorasArea[] = [
         {
           name: "Sjömarkens badplats",
           location: "Viaredssjön, Sjömarken",
-          description: "Sandstrand, stor gräsmatta och lång brygga. Två lekplatser och klätternät.",
+          description: "areas.sjomarken.swimming.0",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/vaster/sjomarken.4.73feea1318de8606320843ef.html",
         },
       ],
@@ -1072,9 +1052,8 @@ export const borasAreas: BorasArea[] = [
   {
     identifier: "knektas-tosseryd",
     name: "Knektås, Tosseryd",
-    location: "Tosseryd, norra Borås",
-    description:
-      "Knektås är sommarhalvåret en arena för mountainbike och vintertid kan man åka skidor här. Sex MTB-leder och en 1 100 meter lång rullskidspår sköts av Borås GIF.",
+    location: "areas.knektasTosseryd.location",
+    description: "areas.knektasTosseryd.description",
     image: { uri: "https://stigvidd.se/files/trails/area-knektas.jpg" },
     url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/norr/knektastosseryd.4.5493346718e560a04fa6d1b7.html",
     trails: [],
@@ -1083,7 +1062,7 @@ export const borasAreas: BorasArea[] = [
         {
           name: "Knektås GIF-stugan",
           location: "Kullen bakom Borås GIF:s klubbstuga, Knektås",
-          description: "Grillplats på kullen bakom klubbstugan, parkering ca 50 m bort.",
+          description: "areas.knektasTosseryd.firepit.0",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/norr/knektastosseryd.4.5493346718e560a04fa6d1b7.html",
         },
       ],
@@ -1096,9 +1075,8 @@ export const borasAreas: BorasArea[] = [
   {
     identifier: "rydboholm",
     name: "Rydboholm",
-    location: "Ca 8 km söder om Borås",
-    description:
-      "Rydboholm ligger i Viskan-dalen vid Storsjön med ett vackert landskap av skog och jordbruksmark. Sju vandringsleder, badplats vid Furusjön och fiske i Storsjön.",
+    location: "areas.rydboholm.location",
+    description: "areas.rydboholm.description",
     image: { uri: "https://stigvidd.se/files/trails/area-rydboholm.jpg" },
     url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/soder/rydboholm.4.73feea1318de860632085c53.html",
     trails: [],
@@ -1107,7 +1085,7 @@ export const borasAreas: BorasArea[] = [
         {
           name: "Maden Rydboholm",
           location: "Sven Eriksons väg, Rydboholm",
-          description: "Grillplats vid vattnet.",
+          description: "areas.rydboholm.firepit.0",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/soder/rydboholm.4.73feea1318de860632085c53.html",
         },
       ],
@@ -1116,7 +1094,7 @@ export const borasAreas: BorasArea[] = [
         {
           name: "Storsjön och Viskan fiskevårdsområde",
           location: "Storsjön, Rydboholm",
-          description: "Fiske i Storsjön och Viskan. Gratis bålramp tillgänglig.",
+          description: "areas.rydboholm.fishing.0",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/soder/rydboholm.4.73feea1318de860632085c53.html",
         },
       ],
@@ -1124,7 +1102,7 @@ export const borasAreas: BorasArea[] = [
         {
           name: "Furusjöns badplats",
           location: "Furusjön, Rydboholm",
-          description: "Mysig skogssjö med liten sandstrand och lugnt badvatten.",
+          description: "areas.rydboholm.swimming.0",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/soder/rydboholm.4.73feea1318de860632085c53.html",
         },
       ],
@@ -1134,9 +1112,8 @@ export const borasAreas: BorasArea[] = [
   {
     identifier: "rangedala",
     name: "Rångedala",
-    location: "Ca 15 km nordöst om Borås",
-    description:
-      "Rångedala har ett varierat landskap med skog och jordbruksmark. Sju vandringsleder startar från Rångedala Hembygdsgård i Algutstorp, och Marsjöns badplats erbjuder sandstrand och brygga.",
+    location: "areas.rangedala.location",
+    description: "areas.rangedala.description",
     image: { uri: "https://stigvidd.se/files/trails/area-rangedala.jpg" },
     url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/oster/rangedala.4.73feea1318de8606320845cd.html",
     trails: [],
@@ -1145,19 +1122,19 @@ export const borasAreas: BorasArea[] = [
         {
           name: "Algutstorp Bäckravinen",
           location: "Algutstorp, Rångedala",
-          description: "Grillplats vid bäckravinen nära hembygdsgården.",
+          description: "areas.rangedala.firepit.0",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/oster/rangedala.4.73feea1318de8606320845cd.html",
         },
         {
           name: "Algutstorp Ängen",
           location: "Algutstorp, Rångedala",
-          description: "Grillplats på ängen vid hembygdsgården.",
+          description: "areas.rangedala.firepit.1",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/oster/rangedala.4.73feea1318de8606320845cd.html",
         },
         {
           name: "Marsjöns badplats",
           location: "Marsjön, Rångedala",
-          description: "Grillplats vid badplatsen.",
+          description: "areas.rangedala.firepit.2",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/oster/rangedala.4.73feea1318de8606320845cd.html",
         },
       ],
@@ -1167,7 +1144,7 @@ export const borasAreas: BorasArea[] = [
         {
           name: "Marsjöns badplats",
           location: "Marsjön, Rångedala",
-          description: "Liten sandstrand med brygga och stor gräsmatta.",
+          description: "areas.rangedala.swimming.0",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/oster/rangedala.4.73feea1318de8606320845cd.html",
         },
       ],
@@ -1177,9 +1154,8 @@ export const borasAreas: BorasArea[] = [
   {
     identifier: "sandared",
     name: "Sandared",
-    location: "Ca 10 km väster om Borås",
-    description:
-      "Sandareds landskap präglas av skog och öppna ytor nära Viaredssjön. Två badplatser med sandstrand, fem grillplatser och nio markerade leder inklusive Sjuhäradsleden.",
+    location: "areas.sandared.location",
+    description: "areas.sandared.description",
     image: { uri: "https://stigvidd.se/files/trails/area-mock.jpg" },
     url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/vaster/sandared.4.73feea1318de86063206c004.html",
     trails: [],
@@ -1188,31 +1164,31 @@ export const borasAreas: BorasArea[] = [
         {
           name: "Björviksudden",
           location: "Viaredssjön, Sandared",
-          description: "Grillplats på Björviksudden.",
+          description: "areas.sandared.firepit.0",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/vaster/sandared.4.73feea1318de86063206c004.html",
         },
         {
           name: "Nordtorp",
           location: "SOK-stugan, Sandared",
-          description: "Grillplats vid SOK-stugan i Nordtorp.",
+          description: "areas.sandared.firepit.1",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/vaster/sandared.4.73feea1318de86063206c004.html",
         },
         {
           name: "Sandareds badplats väster",
           location: "Sandareds badplats, Sandared",
-          description: "Grillplats på västra sidan av badplatsen.",
+          description: "areas.sandared.firepit.2",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/vaster/sandared.4.73feea1318de86063206c004.html",
         },
         {
           name: "Sandareds badplats öster",
           location: "Sandareds badplats, Sandared",
-          description: "Grillplats på östra sidan av badplatsen.",
+          description: "areas.sandared.firepit.3",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/vaster/sandared.4.73feea1318de86063206c004.html",
         },
         {
           name: "Sandaredsån Ängen & Åkilen",
           location: "Sandaredsån, Sandared",
-          description: "Grillplats vid ån på Ängen och Åkilen.",
+          description: "areas.sandared.firepit.4",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/vaster/sandared.4.73feea1318de86063206c004.html",
         },
       ],
@@ -1221,7 +1197,7 @@ export const borasAreas: BorasArea[] = [
         {
           name: "Viaredssjön fiskevårdsområde",
           location: "Viaredssjön, Sandared",
-          description: "Fiske i Viaredssjön.",
+          description: "areas.sandared.fishing.0",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/vaster/sandared.4.73feea1318de86063206c004.html",
         },
       ],
@@ -1229,13 +1205,13 @@ export const borasAreas: BorasArea[] = [
         {
           name: "Rydets badplats",
           location: "Viaredssjön, Sandared",
-          description: "Stor sandstrand vid Viaredssjön.",
+          description: "areas.sandared.swimming.0",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/vaster/sandared.4.73feea1318de86063206c004.html",
         },
         {
           name: "Sandareds badplats",
           location: "Viaredssjön, Sandared",
-          description: "Generös sandstrand med brygga och hopptorn.",
+          description: "areas.sandared.swimming.1",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/vaster/sandared.4.73feea1318de86063206c004.html",
         },
       ],
@@ -1245,9 +1221,8 @@ export const borasAreas: BorasArea[] = [
   {
     identifier: "sandhult",
     name: "Sandhult",
-    location: "Ca 10 km nordväst om Borås",
-    description:
-      "Sandhult har ett naturskönt landskap med skog och öppna jordbruksmarker nära Trummesjön och Madsjön. Fyra markerade vandringsleder och en badplats med liten sandstrand.",
+    location: "areas.sandhult.location",
+    description: "areas.sandhult.description",
     image: { uri: "https://stigvidd.se/files/trails/area-mock.jpg" },
     url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/vaster/sandhult.4.73feea1318de860632085d1c.html",
     trails: [],
@@ -1256,7 +1231,7 @@ export const borasAreas: BorasArea[] = [
         {
           name: "Trummesjöns badplats",
           location: "Ca 2,5 km norr om Sandhult",
-          description: "Grillplats vid badplatsen med bänkar och bord.",
+          description: "areas.sandhult.firepit.0",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/vaster/sandhult.4.73feea1318de860632085d1c.html",
         },
       ],
@@ -1266,7 +1241,7 @@ export const borasAreas: BorasArea[] = [
         {
           name: "Trummesjöns badplats",
           location: "Ca 2,5 km norr om Sandhult",
-          description: "Liten sandstrand med brygga.",
+          description: "areas.sandhult.swimming.0",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/vaster/sandhult.4.73feea1318de860632085d1c.html",
         },
       ],
@@ -1276,9 +1251,8 @@ export const borasAreas: BorasArea[] = [
   {
     identifier: "seglora",
     name: "Seglora",
-    location: "Ca 20 km sydväst om Borås",
-    description:
-      "Seglora har ett varierat landskap med skog och jordbruksmark vid Viskan. Tranhults naturreservat skyddar en bokskogsklädd bergssida längs Viskans strand.",
+    location: "areas.seglora.location",
+    description: "areas.seglora.description",
     image: { uri: "https://stigvidd.se/files/trails/area-seglora.jpg" },
     url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/soder/seglora.4.73feea1318de8606320842db.html",
     trails: [],
@@ -1287,7 +1261,7 @@ export const borasAreas: BorasArea[] = [
         {
           name: "Bogryds badplats",
           location: "Bogrydssjön, Seglora",
-          description: "Grillplats vid badplatsen.",
+          description: "areas.seglora.firepit.0",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/soder/seglora.4.73feea1318de8606320842db.html",
         },
       ],
@@ -1296,7 +1270,7 @@ export const borasAreas: BorasArea[] = [
         {
           name: "Surtans övre fiskevårdsområde",
           location: "Sjön Hungern, Seglora",
-          description: "Sjön Hungern är det primära fiskevatnet i området.",
+          description: "areas.seglora.fishing.0",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/soder/seglora.4.73feea1318de8606320842db.html",
         },
       ],
@@ -1304,13 +1278,13 @@ export const borasAreas: BorasArea[] = [
         {
           name: "Bogrydssjön badplats",
           location: "Bogrydssjön, Seglora",
-          description: "Sandstrand med grillplats.",
+          description: "areas.seglora.swimming.0",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/soder/seglora.4.73feea1318de8606320842db.html",
         },
         {
           name: "Bua badplats",
           location: "Stora Hålsjön, Seglora",
-          description: "Badplats vid Stora Hålsjön.",
+          description: "areas.seglora.swimming.1",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/soder/seglora.4.73feea1318de8606320842db.html",
         },
       ],
@@ -1318,7 +1292,7 @@ export const borasAreas: BorasArea[] = [
         {
           name: "Tranhults naturreservat",
           location: "Viskans strand, Seglora",
-          description: "Statligt naturreservat, 3 hektar, bildat 1984. Bokskogsklädd bergssida längs Viskan.",
+          description: "areas.seglora.naturereserv.0",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/soder/seglora.4.73feea1318de8606320842db.html",
         },
       ],
@@ -1327,9 +1301,8 @@ export const borasAreas: BorasArea[] = [
   {
     identifier: "sparsor",
     name: "Sparsör",
-    location: "Vid Öresjö, norra Borås",
-    description:
-      "Sparsör ligger vid Öresjö med relativt kuperad terräng. Två naturreservat — Kröklings hage och Mölarp — finns i området, liksom kommunal badplats och vindskydd vid Trollevi.",
+    location: "areas.sparsor.location",
+    description: "areas.sparsor.description",
     image: { uri: "https://stigvidd.se/files/trails/area-mock.jpg" },
     url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/norr/sparsor.4.73feea1318de860632084504.html",
     trails: [],
@@ -1338,13 +1311,13 @@ export const borasAreas: BorasArea[] = [
         {
           name: "Sparsörs badplats",
           location: "Öresjöns östra strand, Sparsör",
-          description: "Grillplats vid kommunal badplats med lång brygga.",
+          description: "areas.sparsor.firepit.0",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/norr/sparsor.4.73feea1318de860632084504.html",
         },
         {
           name: "Trollevi",
           location: "Trollevi, Sparsör",
-          description: "Grillplats vid Trollevi idrottsanläggning.",
+          description: "areas.sparsor.firepit.1",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/norr/sparsor.4.73feea1318de860632084504.html",
         },
       ],
@@ -1352,7 +1325,7 @@ export const borasAreas: BorasArea[] = [
         {
           name: "Trollevi",
           location: "Norr om fotbollsplanerna, Sparsör",
-          description: "Vindskydd norr om fotbollsplanerna.",
+          description: "areas.sparsor.shelter.0",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/norr/sparsor.4.73feea1318de860632084504.html",
         },
       ],
@@ -1360,13 +1333,13 @@ export const borasAreas: BorasArea[] = [
         {
           name: "Gingri Ön fiskevårdsområde",
           location: "Viskans huvudfåra, Sparsör",
-          description: "Fiske i Viskans huvudfåra vid Gingri Ön.",
+          description: "areas.sparsor.fishing.0",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/norr/sparsor.4.73feea1318de860632084504.html",
         },
         {
           name: "Öresjö fiskevårdsområde",
           location: "Öresjön, Sparsör",
-          description: "Fiske i Öresjö. Dricksvattentäkt sedan 1932 — tvåtaktsmotorer förbjudna.",
+          description: "areas.sparsor.fishing.1",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/norr/sparsor.4.73feea1318de860632084504.html",
         },
       ],
@@ -1374,7 +1347,7 @@ export const borasAreas: BorasArea[] = [
         {
           name: "Sparsörs badplats",
           location: "Öresjöns östra strand, Sparsör",
-          description: "Kommunal badplats med lång brygga.",
+          description: "areas.sparsor.swimming.0",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/norr/sparsor.4.73feea1318de860632084504.html",
         },
       ],
@@ -1382,14 +1355,13 @@ export const borasAreas: BorasArea[] = [
         {
           name: "Kröklings hage naturreservat",
           location: "Mölarps kvarn, Sparsör",
-          description: "Statligt naturreservat, 14 hektar, bildat 1962. Ängsmark och ädellövskog.",
+          description: "areas.sparsor.naturereserv.0",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/norr/sparsor.4.73feea1318de860632084504.html",
         },
         {
           name: "Mölarps naturreservat",
           location: "Mölarps kvarn, Sparsör",
-          description:
-            "Statligt naturreservat, 66 hektar, bildat 1990. Där Viskan möter Öresjö — känt fågelskådningsområde.",
+          description: "areas.sparsor.naturereserv.1",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/norr/sparsor.4.73feea1318de860632084504.html",
         },
       ],
@@ -1398,9 +1370,8 @@ export const borasAreas: BorasArea[] = [
   {
     identifier: "svaneholm",
     name: "Svaneholm",
-    location: "Ca 15 km söder om Borås",
-    description:
-      "Svaneholm omges av ett vackert naturlandskap med skog och jordbruksmark vid Storsjön och Viskan. Storsjön naturreservat på 460 hektar ger en känsla av vildmark nära staden.",
+    location: "areas.svaneholm.location",
+    description: "areas.svaneholm.description",
     image: { uri: "https://stigvidd.se/files/trails/area-mock.jpg" },
     url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/soder/svaneholm.4.5493346718e560a04fa6d342.html",
     trails: [],
@@ -1411,7 +1382,7 @@ export const borasAreas: BorasArea[] = [
         {
           name: "Sävsjön fiskevårdsområde",
           location: "Söder om Borås, vid Svaneholm",
-          description: "Delvis i Marks kommun. Fiske söder om Borås.",
+          description: "areas.svaneholm.fishing.0",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/soder/svaneholm.4.5493346718e560a04fa6d342.html",
         },
       ],
@@ -1420,8 +1391,7 @@ export const borasAreas: BorasArea[] = [
         {
           name: "Storsjön naturreservat",
           location: "Ca 1 mil sydväst om Borås, vid Viskafors",
-          description:
-            "460 hektar kommunalt naturreservat bildat 2014 med vildmarkskänsla och populärt rekreationsområde.",
+          description: "areas.svaneholm.naturereserv.0",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/soder/svaneholm.4.5493346718e560a04fa6d342.html",
         },
       ],
@@ -1430,9 +1400,8 @@ export const borasAreas: BorasArea[] = [
   {
     identifier: "viskafors",
     name: "Viskafors",
-    location: "Ca 12 km sydväst om Borås",
-    description:
-      "Viskafors har ett varierat landskap vid Viskan och Storsjön. 12 grillplatser, 4 vindskydd, badplats med sandstrand och Storsjön naturreservat gör det till kommunens sydligaste friluftspärla.",
+    location: "areas.viskafors.location",
+    description: "areas.viskafors.description",
     image: { uri: "https://stigvidd.se/files/trails/area-mock.jpg" },
     url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/soder/viskafors.4.73feea1318de860632083f9d.html",
     trails: [],
@@ -1441,19 +1410,19 @@ export const borasAreas: BorasArea[] = [
         {
           name: "Storsjögården",
           location: "Storsjögården, Viskafors",
-          description: "Grillplats vid Storsjögården.",
+          description: "areas.viskafors.firepit.0",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/soder/viskafors.4.73feea1318de860632083f9d.html",
         },
         {
           name: "Klipporna",
           location: "Storsjön, Viskafors",
-          description: "Grillplats vid klipporna längs Storsjön.",
+          description: "areas.viskafors.firepit.1",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/soder/viskafors.4.73feea1318de860632083f9d.html",
         },
         {
           name: "Hultaberg",
           location: "Storsjön, Viskafors",
-          description: "Grillplats med vindskydd vid Hultaberg.",
+          description: "areas.viskafors.firepit.2",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/soder/viskafors.4.73feea1318de860632083f9d.html",
         },
       ],
@@ -1461,25 +1430,25 @@ export const borasAreas: BorasArea[] = [
         {
           name: "Storsjögården",
           location: "Storsjögården, Viskafors",
-          description: "Vindskydd vid Storsjögården.",
+          description: "areas.viskafors.shelter.0",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/soder/viskafors.4.73feea1318de860632083f9d.html",
         },
         {
           name: "Hultaberg",
           location: "Storsjön, Viskafors",
-          description: "Vindskydd vid Hultaberg.",
+          description: "areas.viskafors.shelter.1",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/soder/viskafors.4.73feea1318de860632083f9d.html",
         },
         {
           name: "Kopparhammaren",
           location: "Storsjön, Viskafors",
-          description: "Vindskydd vid Kopparhammaren.",
+          description: "areas.viskafors.shelter.2",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/soder/viskafors.4.73feea1318de860632083f9d.html",
         },
         {
           name: "Lomsjö",
           location: "Storsjön, Viskafors",
-          description: "Vindskydd vid Lomsjö.",
+          description: "areas.viskafors.shelter.3",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/soder/viskafors.4.73feea1318de860632083f9d.html",
         },
       ],
@@ -1487,25 +1456,25 @@ export const borasAreas: BorasArea[] = [
         {
           name: "Bålån fiskevårdsområde",
           location: "Bålån, Viskafors",
-          description: "3 km lång å med lugnt flöde.",
+          description: "areas.viskafors.fishing.0",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/soder/viskafors.4.73feea1318de860632083f9d.html",
         },
         {
           name: "Frisjön fiskevårdsområde",
           location: "Sydöst om Viskafors",
-          description: "Fiske i Frisjön sydöst om Viskafors.",
+          description: "areas.viskafors.fishing.1",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/soder/viskafors.4.73feea1318de860632083f9d.html",
         },
         {
           name: "Seglora fiskevårdsområde",
           location: "Viskan, Viskafors",
-          description: "Fiske i Viskan vid Seglora.",
+          description: "areas.viskafors.fishing.2",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/soder/viskafors.4.73feea1318de860632083f9d.html",
         },
         {
           name: "Storsjön & Viskan, Rydboholm",
           location: "Storsjön, Viskafors",
-          description: "Fiske i Storsjön och Viskan. Gratis bålramp tillgänglig.",
+          description: "areas.viskafors.fishing.3",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/soder/viskafors.4.73feea1318de860632083f9d.html",
         },
       ],
@@ -1513,7 +1482,7 @@ export const borasAreas: BorasArea[] = [
         {
           name: "Storsjöns badplats",
           location: "Storsjön, Viskafors",
-          description: "Sandstrand, gräsytor, brygga och grillplatser.",
+          description: "areas.viskafors.swimming.0",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/soder/viskafors.4.73feea1318de860632083f9d.html",
         },
       ],
@@ -1521,7 +1490,7 @@ export const borasAreas: BorasArea[] = [
         {
           name: "Storsjön naturreservat",
           location: "Viskafors",
-          description: "460 hektar kommunalt naturreservat bildat 2014. Ger en känsla av vildmark nära Borås.",
+          description: "areas.viskafors.naturereserv.0",
           url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/soder/viskafors.4.73feea1318de860632083f9d.html",
         },
       ],
@@ -1530,9 +1499,8 @@ export const borasAreas: BorasArea[] = [
   {
     identifier: "ymergarden",
     name: "Ymergården",
-    location: "Södra Borås, vid Borås skidstadion",
-    description:
-      "Ymergården är ett aktivitetsområde med utegym, boulebana, beachvolleyboll och en 27-håls disc golf-bana. Fyra vandringsleder och en rullskidsbana nära Borås skidstadion.",
+    location: "areas.ymergarden.location",
+    description: "areas.ymergarden.description",
     image: { uri: "https://stigvidd.se/files/trails/area-mock.jpg" },
     url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/ymergarden.4.5493346718e560a04fa5d5cd.html",
     trails: [],

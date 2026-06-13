@@ -15,6 +15,7 @@ import { startTransition, useCallback, useEffect, useRef, useState } from "react
 import { Platform, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { LatLng } from "react-native-maps";
 import { useTheme } from "react-native-paper";
+import { useTranslation } from "react-i18next";
 import BackButton from "../back-button";
 import ErrorView from "../error-view";
 import LoadingIndicator from "../loading-indicator";
@@ -25,6 +26,7 @@ import TrailMiscInfo from "./trail-misc-section/trail-misc-accordion";
 
 export default function TrailDetailsScreen() {
   const theme = useTheme();
+  const { t } = useTranslation();
   const { identifier } = useLocalSearchParams<{ identifier: string }>();
   const normalizedIdentifier: string = Array.isArray(identifier) ? identifier[0] : identifier;
   const scrollViewRef = useRef<ScrollView>(null);
@@ -110,7 +112,7 @@ export default function TrailDetailsScreen() {
             </View>
             <View style={s.paddingLeft}>
               <TouchableOpacity onPress={onPressScrollToRatings}>
-                <Text style={[s.text, { color: theme.colors.secondary }]}>Läs recensioner</Text>
+                <Text style={[s.text, { color: theme.colors.secondary }]}>{t("trail.readReviews")}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -121,7 +123,7 @@ export default function TrailDetailsScreen() {
           {coords?.coordinates && coordinates.length > 0 && transitionComplete ? (
             <TrailMap trail={coordinates} />
           ) : (
-            <MapSkeleton text="Laddar karta..." />
+            <MapSkeleton text={t("trail.loadingMap")} />
           )}
           {trail && <TrailMiscInfo trail={trail} />}
 
@@ -133,7 +135,7 @@ export default function TrailDetailsScreen() {
             />
           )}
           <Pressable style={s.backToTop} onPress={onPressScrollToTop}>
-            <Text style={[s.text, { color: theme.colors.secondary }]}>Tillbaka till toppen</Text>
+            <Text style={[s.text, { color: theme.colors.secondary }]}>{t("trail.backToTop")}</Text>
           </Pressable>
           <TrailObstacleModal
             visible={showObstacleModal}

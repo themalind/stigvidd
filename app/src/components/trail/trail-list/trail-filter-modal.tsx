@@ -5,6 +5,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Slider as RangeSlider } from "@miblanchard/react-native-slider";
 import SelectInput from "@/components/select-input";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Modal, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { Divider, Text, useTheme } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -36,39 +37,40 @@ export const TrailFilterModal: React.FC<TrailFilterModalProps> = ({
   onClearFilters,
   hasLocation,
 }) => {
+  const { t } = useTranslation();
   const theme = useTheme();
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
       <SafeAreaView style={[s.modalContainer, { backgroundColor: theme.colors.background }]}>
-        {/* Header */}
         <View style={s.header}>
           <Pressable
             style={[s.clearButtonWrapper, { backgroundColor: theme.colors.secondary }]}
             onPress={onClearFilters}
           >
-            <Text style={[s.clearButton, { color: theme.colors.onSecondary }]}>Rensa</Text>
+            <Text style={[s.clearButton, { color: theme.colors.onSecondary }]}>{t("filter.clear")}</Text>
           </Pressable>
-          <Text style={s.headerTitle}>Filter & Sortering</Text>
+          <Text style={s.headerTitle}>{t("filter.title")}</Text>
           <Pressable style={[s.doneButtonWrapper, { backgroundColor: theme.colors.primary }]} onPress={onClose}>
-            <Text style={[s.doneButton, { color: theme.colors.onPrimary }]}>Klar</Text>
+            <Text style={[s.doneButton, { color: theme.colors.onPrimary }]}>{t("filter.done")}</Text>
           </Pressable>
         </View>
         <Divider />
         <ScrollView style={s.content}>
-          {/* City Filter */}
           <View style={s.section}>
-            <Text style={s.sectionTitle}>Orter</Text>
+            <Text style={s.sectionTitle}>{t("filter.city")}</Text>
             <SelectInput
               selectedValue={filters.city || ""}
               onValueChange={(value) => onUpdateFilter("city", value === "" ? undefined : value)}
-              options={[{ label: "Alla orter", value: "" }, ...cities.map((city) => ({ label: city, value: city }))]}
+              options={[
+                { label: t("filter.allCities"), value: "" },
+                ...cities.map((city) => ({ label: city, value: city })),
+              ]}
             />
           </View>
           <Divider />
 
-          {/* Accessibility Filter */}
           <View style={s.section}>
-            <Text style={s.sectionTitle}>Tillgänglighet</Text>
+            <Text style={s.sectionTitle}>{t("filter.accessibility")}</Text>
             <View style={s.buttonGroup}>
               <Pressable
                 style={[
@@ -87,7 +89,7 @@ export const TrailFilterModal: React.FC<TrailFilterModalProps> = ({
                       : { color: theme.colors.onSurface },
                   ]}
                 >
-                  Alla
+                  {t("filter.all")}
                 </Text>
               </Pressable>
               <Pressable
@@ -117,7 +119,7 @@ export const TrailFilterModal: React.FC<TrailFilterModalProps> = ({
                         : { color: theme.colors.onSurface },
                     ]}
                   >
-                    Anpassad
+                    {t("filter.adapted")}
                   </Text>
                 </View>
               </Pressable>
@@ -125,10 +127,9 @@ export const TrailFilterModal: React.FC<TrailFilterModalProps> = ({
           </View>
           <Divider />
 
-          {/* Near Me Filter*/}
           {hasLocation && (
             <View style={s.section}>
-              <Text style={s.sectionTitle}>Nära mig</Text>
+              <Text style={s.sectionTitle}>{t("filter.nearMe")}</Text>
               <View style={s.buttonGroup}>
                 <Pressable
                   style={[
@@ -145,7 +146,7 @@ export const TrailFilterModal: React.FC<TrailFilterModalProps> = ({
                       filters.nearMe === true ? { color: theme.colors.onSurface } : { color: theme.colors.onPrimary },
                     ]}
                   >
-                    Alla
+                    {t("filter.all")}
                   </Text>
                 </Pressable>
                 <Pressable
@@ -163,13 +164,15 @@ export const TrailFilterModal: React.FC<TrailFilterModalProps> = ({
                       filters.nearMe === true ? { color: theme.colors.onPrimary } : { color: theme.colors.onSurface },
                     ]}
                   >
-                    Nära mig
+                    {t("filter.nearMe")}
                   </Text>
                 </Pressable>
               </View>
               {filters.nearMe && (
                 <>
-                  <Text style={[s.label, { marginTop: 15 }]}>Max avstånd: {filters.maxDistance || 50} km</Text>
+                  <Text style={[s.label, { marginTop: 15 }]}>
+                    {t("filter.maxDistance", { distance: filters.maxDistance || 50 })}
+                  </Text>
                   <RangeSlider
                     value={[filters.maxDistance || 50]}
                     minimumValue={5}
@@ -187,24 +190,22 @@ export const TrailFilterModal: React.FC<TrailFilterModalProps> = ({
           )}
           <Divider />
 
-          {/* Classification Filter */}
           <View style={s.section}>
-            <Text style={s.sectionTitle}>Svårighetsgrad</Text>
+            <Text style={s.sectionTitle}>{t("filter.difficulty")}</Text>
             <SelectInput
               selectedValue={filters.classification !== undefined ? String(filters.classification) : ""}
               onValueChange={(value) => onUpdateFilter("classification", value === "" ? undefined : Number(value))}
               options={[
-                { label: "Alla svårighetsgrader", value: "" },
+                { label: t("filter.allDifficulties"), value: "" },
                 ...classifications.map((c) => ({ label: classificationParser(c), value: String(c) })),
               ]}
             />
           </View>
           <Divider />
 
-          {/* Trail Length Filter */}
           <View style={s.section}>
             <Text style={s.sectionTitle}>
-              Ledlängd: {filters.minLength || 0} - {filters.maxLength || 150} km
+              {t("filter.trailLength", { min: filters.minLength || 0, max: filters.maxLength || 150 })}
             </Text>
             <RangeSlider
               value={[filters.minLength || 0, filters.maxLength || 150]}
@@ -220,18 +221,17 @@ export const TrailFilterModal: React.FC<TrailFilterModalProps> = ({
           </View>
           <Divider />
 
-          {/* Sort Options */}
           <View style={s.section}>
-            <Text style={s.sectionTitle}>Sortera efter</Text>
+            <Text style={s.sectionTitle}>{t("filter.sortBy")}</Text>
             <SelectInput
               selectedValue={sortBy}
               onValueChange={onUpdateSort}
               options={[
-                { label: "Namn (A-Ö)", value: "name-asc" },
-                { label: "Namn (Ö-A)", value: "name-desc" },
-                { label: "Längd (Kortast först)", value: "length-asc" },
-                { label: "Längd (Längst först)", value: "length-desc" },
-                ...(hasLocation ? [{ label: "Närmast först", value: "distance-asc" }] : []),
+                { label: t("filter.sortNameAsc"), value: "name-asc" },
+                { label: t("filter.sortNameDesc"), value: "name-desc" },
+                { label: t("filter.sortLengthAsc"), value: "length-asc" },
+                { label: t("filter.sortLengthDesc"), value: "length-desc" },
+                ...(hasLocation ? [{ label: t("filter.sortNearest"), value: "distance-asc" }] : []),
               ]}
             />
           </View>

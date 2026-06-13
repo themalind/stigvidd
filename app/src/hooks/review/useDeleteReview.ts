@@ -2,8 +2,10 @@ import { deleteReview } from "@/api/reviews";
 import { showErrorAtom, showSuccessAtom } from "@/atoms/snackbar-atoms";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSetAtom } from "jotai";
+import { useTranslation } from "react-i18next";
 
 export function useDeleteReview() {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const setSuccessMessage = useSetAtom(showSuccessAtom);
   const setError = useSetAtom(showErrorAtom);
@@ -15,9 +17,9 @@ export function useDeleteReview() {
       if (result.success) {
         queryClient.invalidateQueries({ queryKey: ["trail", trailIdentifier] });
         queryClient.invalidateQueries({ queryKey: ["reviews", trailIdentifier] });
-        setSuccessMessage("Recensionen har tagits bort");
+        setSuccessMessage(t("review.deleted"));
       } else {
-        setError("Kunde inte ta bort recensionen.");
+        setError(t("review.deleteError"));
       }
     },
   });

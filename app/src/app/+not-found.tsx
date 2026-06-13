@@ -2,19 +2,21 @@ import { router, Stack } from "expo-router";
 import { useTheme, Button } from "react-native-paper";
 import { MaterialIcons } from "@expo/vector-icons";
 import { StyleSheet, Text, View } from "react-native";
+import { useTranslation } from "react-i18next";
 
 export default function NotFoundScreen() {
   const theme = useTheme();
+  const { t } = useTranslation();
 
   return (
     <>
-      <Stack.Screen options={{ title: "Sidan hittades inte" }} />
+      <Stack.Screen options={{ title: t("notFound.title") }} />
       <View style={[s.container, { backgroundColor: theme.colors.background }]}>
         <MaterialIcons name="search-off" size={56} color={theme.colors.error} style={s.icon} />
-        <Text style={[s.title, { color: theme.colors.onBackground }]}>Sidan hittades inte</Text>
-        <Text style={[s.message, { color: theme.colors.onSurfaceVariant }]}>Det du letar efter finns inte längre.</Text>
+        <Text style={[s.title, { color: theme.colors.onBackground }]}>{t("notFound.title")}</Text>
+        <Text style={[s.message, { color: theme.colors.onSurfaceVariant }]}>{t("error.404.message")}</Text>
         <Button mode="outlined" onPress={() => router.replace("/")} style={s.button}>
-          Gå till startsidan
+          {t("notFound.goHome")}
         </Button>
       </View>
     </>

@@ -1,30 +1,14 @@
 import BackButton from "@/components/back-button";
 import { Platform, ScrollView, StyleSheet, View } from "react-native";
 import { Text, useTheme } from "react-native-paper";
-
-const features = [
-  "Utforska och filtrera vandringsleder (svårighetsgrad, tillgänglighet, längd, stad)",
-  "Interaktiv karta med ledermarkeringar och GPS-koordinater",
-  "GPS-spårning i bakgrunden under vandring med avståndsmätning",
-  "Lederrecensioner med stjärnbetyg och foton",
-  "Favoriter och önskelista med optimistisk UI-uppdatering",
-  "Rapportera hinder/faror med ett röstningssystem",
-  "Användarprofiler med vandringhistorik och statistik",
-  "Dela inspelade vandringar med vänner",
-];
-
-const techStack = [
-  { label: "App", value: "React Native · Expo SDK 54 · TypeScript" },
-  { label: "Routing", value: "Expo Router (filbaserad)" },
-  { label: "Karta & GPS", value: "React Native Maps · Expo Location" },
-  { label: "State", value: "TanStack Query · Jotai" },
-  { label: "UI", value: "React Native Paper (Material Design 3)" },
-  { label: "Backend", value: "ASP.NET Core 10 · C# · EF Core · SQL Server" },
-  { label: "Auth", value: "Firebase Authentication (JWT)" },
-];
+import { useTranslation } from "react-i18next";
 
 export default function AboutScreen() {
   const theme = useTheme();
+  const { t } = useTranslation();
+
+  const features = t("about.features", { returnObjects: true }) as string[];
+  const techStack = t("about.techStack", { returnObjects: true }) as { label: string; value: string }[];
 
   return (
     <View style={[s.screen, { backgroundColor: theme.colors.background }]}>
@@ -37,13 +21,12 @@ export default function AboutScreen() {
         </View>
         <View style={s.content}>
           <Text variant="bodyMedium" style={[s.description, { color: theme.colors.onBackground }]}>
-            Stigvidd är en fullstack-app för vandring, byggd som ett examensarbete. Utforska vandringsleder i
-            Boråsområdet, spela in egna vandringar med GPS, betygsätt leder och rapportera hinder längs vägen.
+            {t("about.description")}
           </Text>
 
           <View style={[s.section, { backgroundColor: theme.colors.secondaryContainer }]}>
             <Text variant="titleSmall" style={[s.sectionTitle, { color: theme.colors.onSecondaryContainer }]}>
-              Funktioner
+              {t("about.featuresTitle")}
             </Text>
             {features.map((f, i) => (
               <View key={i} style={s.featureRow}>
@@ -57,7 +40,7 @@ export default function AboutScreen() {
 
           <View style={[s.section, { backgroundColor: theme.colors.secondaryContainer }]}>
             <Text variant="titleSmall" style={[s.sectionTitle, { color: theme.colors.onSecondaryContainer }]}>
-              Teknik
+              {t("about.techTitle")}
             </Text>
             {techStack.map(({ label, value }) => (
               <View key={label} style={s.techRow}>
@@ -73,16 +56,15 @@ export default function AboutScreen() {
 
           <View style={[s.section, { backgroundColor: theme.colors.secondaryContainer }]}>
             <Text variant="titleSmall" style={[s.sectionTitle, { color: theme.colors.onSecondaryContainer }]}>
-              Datakälla
+              {t("about.dataSourceTitle")}
             </Text>
             <Text variant="bodyMedium" style={[s.featureText, { color: theme.colors.onSecondaryContainer }]}>
-              Leddata för Boråsområdet hämtas från Borås Stads öppna dataportal i GeoJSON-format och importeras via eget
-              ETL-verktyg.
+              {t("about.dataSourceText")}
             </Text>
           </View>
 
           <Text variant="bodySmall" style={[s.footer, { color: theme.colors.outline }]}>
-            Examensarbete · SUVNET24
+            {t("about.footer")}
           </Text>
         </View>
       </ScrollView>

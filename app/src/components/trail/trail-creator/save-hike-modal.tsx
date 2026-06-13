@@ -2,6 +2,7 @@ import { DIALOG_BORDER_RADIUS } from "@/constants/constants";
 import { ActiveHike } from "@/data/types";
 import { StyleSheet } from "react-native";
 import { Dialog, Portal, useTheme } from "react-native-paper";
+import { useTranslation } from "react-i18next";
 import SaveHikeForm from "./save-hike-form";
 
 interface Props {
@@ -14,6 +15,7 @@ interface Props {
 
 export default function SaveHikeModal({ visible, onDismiss, onConfirm, onSaveSuccess, hike }: Props) {
   const theme = useTheme();
+  const { t } = useTranslation();
 
   return (
     <Portal>
@@ -22,7 +24,7 @@ export default function SaveHikeModal({ visible, onDismiss, onConfirm, onSaveSuc
         visible={visible}
         onDismiss={onDismiss}
       >
-        <Dialog.Title>Spara Promenad</Dialog.Title>
+        <Dialog.Title>{t("hike.saveTitle")}</Dialog.Title>
         <Dialog.Content>
           <SaveHikeForm hike={hike} onDismiss={onDismiss} onSaveSuccess={onSaveSuccess} />
         </Dialog.Content>
