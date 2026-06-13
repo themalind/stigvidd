@@ -48,6 +48,7 @@ public class FriendRepository : IFriendRepository
             using var context = await _context.CreateDbContextAsync(ctoken);
 
             var friends = await context.Users
+                .AsNoTracking()
                 .Where(u => context.FriendRequests.Any(fr =>
                     fr.Status == FriendRequestStatus.Accepted &&
                     ((fr.RequesterId == userId && fr.ReceiverId == u.Id) ||
@@ -71,6 +72,7 @@ public class FriendRepository : IFriendRepository
             using var context = await _context.CreateDbContextAsync(ctoken);
 
             var incomingRequests = await context.FriendRequests
+                .AsNoTracking()
                 .Where(fr => fr.ReceiverId == userId && fr.Status == FriendRequestStatus.Pending)
                 .Select(selector)
                 .ToListAsync(ctoken);
@@ -92,6 +94,7 @@ public class FriendRepository : IFriendRepository
             using var context = await _context.CreateDbContextAsync(ctoken);
 
             var outgoingRequests = await context.FriendRequests
+                .AsNoTracking()
                 .Where(fr => fr.RequesterId == userId && fr.Status == FriendRequestStatus.Pending)
                 .Select(selector)
                 .ToListAsync(ctoken);
