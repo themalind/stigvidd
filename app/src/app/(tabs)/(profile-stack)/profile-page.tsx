@@ -1,6 +1,6 @@
 import { signOutUser } from "@/api/auth";
 import { authStateAtom } from "@/atoms/auth-atoms";
-import { incomingRequestsAtom } from "@/atoms/friends-atoms";
+import { incomingRequestsAtom, incomingSharedHikesAtom } from "@/atoms/friends-atoms";
 import { showErrorAtom } from "@/atoms/snackbar-atoms";
 import { stigviddUserAtom } from "@/atoms/user-atoms";
 import { userThemeAtom } from "@/atoms/user-theme-atom";
@@ -27,8 +27,10 @@ export default function ProfilePageScreen() {
   const [authState] = useAtom(authStateAtom);
   const [visible, setVisible] = useState(false);
   const navigation = useNavigation();
-  const { data: incoming } = useAtomValue(incomingRequestsAtom);
-  const incomingCount = incoming?.length ?? 0;
+  const { data: incomingFriendRequests } = useAtomValue(incomingRequestsAtom);
+  const { data: incomingSharedHikes } = useAtomValue(incomingSharedHikesAtom);
+  const incomingFriendRequestCount = incomingFriendRequests?.length ?? 0;
+  const incomingSharedHikeRequestCount = incomingSharedHikes?.length ?? 0;
 
   // Scrolla till toppen när skärmen fokuseras (vid tab-tryck)
   useFocusEffect(
@@ -91,7 +93,7 @@ export default function ProfilePageScreen() {
           text="Mina vänner"
           route="/(tabs)/(profile-stack)/user/friends"
           icon={<MaterialCommunityIcons name="account-group" size={30} color={theme.colors.tertiary} />}
-          badge={incomingCount}
+          badge={incomingFriendRequestCount}
         />
         <ProfileMenuItem
           text="Favoriter"
@@ -117,6 +119,7 @@ export default function ProfilePageScreen() {
           text="Promenader delade med mig"
           route="/(tabs)/(profile-stack)/user/shared-hikes"
           icon={<Fontisto name="map" size={26} color={theme.colors.tertiary} />}
+          badge={incomingSharedHikeRequestCount}
         />
         <ProfileMenuItem
           text="Utmärkelser"
