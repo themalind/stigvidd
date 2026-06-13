@@ -195,6 +195,9 @@ namespace Infrastructure.Migrations
                     b.Property<int?>("SharedById")
                         .HasColumnType("integer");
 
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
                     b.HasKey("HikeId", "SharedWithId");
 
                     b.HasIndex("SharedById");
