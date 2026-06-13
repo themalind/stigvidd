@@ -40,7 +40,7 @@ public class HikeShareService : IHikeShareService
             return Result.Fail(new Message(500, "Something went wrong when fetching user ID."));
         }
 
-        var sharedWithUserIdResult = await _userRepository.GetUserIdByNameAsync(sharedWithName, ctoken);
+        var sharedWithUserIdResult = await _userRepository.GetUserByNickNameAsync(sharedWithName, u => u.Id, ctoken);
         if (!sharedWithUserIdResult.IsSuccess)
         {
             if (sharedWithUserIdResult.Status == RepositoryResultStatus.NotFound)

@@ -76,7 +76,7 @@ public class HikeShareRecipientService : IHikeShareRecipientService
         if (!hasRighToShare.Value)
             return Result.Fail(new Message(403, "You do not have permission to reshare this hike."));
 
-        var sharedWithUserIdResult = await _userRepository.GetUserIdByNameAsync(reShareToName, ctoken);
+        var sharedWithUserIdResult = await _userRepository.GetUserByNickNameAsync(reShareToName, u => u.Id, ctoken);
         if (!sharedWithUserIdResult.IsSuccess)
         {
             if (sharedWithUserIdResult.Status == RepositoryResultStatus.NotFound)

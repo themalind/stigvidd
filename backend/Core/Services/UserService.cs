@@ -115,7 +115,7 @@ public class UserService : IUserService
 
     public async Task<Result<UserNameResponse>> SearchUsersByNickNameAsync(string query, int excludeUserId, CancellationToken ctoken)
     {
-        var result = await _userRepository.GetUserIdByNameAsync(query, ctoken);
+        var result = await _userRepository.GetUserByNickNameAsync(query, u => u.Id, ctoken);
 
         if (result.Status == RepositoryResultStatus.Error)
             return Result.Fail<UserNameResponse>(new Message(500, "An error occurred while searching for the user."));
