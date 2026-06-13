@@ -157,53 +157,55 @@ public class FriendService : IFriendService
 
     public async Task<Result> SendFriendRequestAsync(string currentUserIdentifier, string receiverNickName, CancellationToken ctoken)
     {
-        var currentUserIdResult = await _userRepository.GetUserByIdentifierAsync(currentUserIdentifier, u => new SenderProjection(u.Id, u.NickName), ctoken);
-        if (!currentUserIdResult.IsSuccess)
+        try
         {
-            if (currentUserIdResult.Status == RepositoryResultStatus.NotFound)
-                return Result.Fail(new Message(404, "Current user not found."));
-            return Result.Fail(new Message(500, "An error occurred while retrieving the current user."));
-        }
+            var currentUserIdResult = await _userRepository.GetUserByIdentifierAsync(currentUserIdentifier, u => new SenderProjection(u.Id, u.NickName), ctoken);
+            if (!currentUserIdResult.IsSuccess)
+            {
+                if (currentUserIdResult.Status == RepositoryResultStatus.NotFound)
+                    return Result.Fail(new Message(404, "Current user not found."));
+                return Result.Fail(new Message(500, "An error occurred while retrieving the current user."));
+            }
 
-        var receiverResult = await _userRepository.GetUserByNickNameAsync(receiverNickName, u => new ReceiverProjection(u.Id, u.Identifier), ctoken);
-        if (!receiverResult.IsSuccess)
-        {
-            if (receiverResult.Status == RepositoryResultStatus.NotFound)
-                return Result.Fail(new Message(404, "Receiver not found."));
-            return Result.Fail(new Message(500, "An error occurred while retrieving the receiver."));
-        }
+            var receiverResult = await _userRepository.GetUserByNickNameAsync(receiverNickName, u => new ReceiverProjection(u.Id, u.Identifier), ctoken);
+            if (!receiverResult.IsSuccess)
+            {
+                if (receiverResult.Status == RepositoryResultStatus.NotFound)
+                    return Result.Fail(new Message(404, "Receiver not found."));
+                return Result.Fail(new Message(500, "An error occurred while retrieving the receiver."));
+            }
 
-        if (currentUserIdResult.Value.Id == receiverResult.Value.Id)
-            return Result.Fail(new Message(400, "You cannot send a friend request to yourself."));
+            if (currentUserIdResult.Value.Id == receiverResult.Value.Id)
+                return Result.Fail(new Message(400, "You cannot send a friend request to yourself."));
 
-        var friendshipExistsResult = await _friendRepository.FriendshipExistsAsync(currentUserIdResult.Value.Id, receiverResult.Value.Id, ctoken);
-        if (!friendshipExistsResult.IsSuccess)
-            return Result.Fail(new Message(500, "An error occurred while checking friendship status."));
+            var friendshipExistsResult = await _friendRepository.FriendshipExistsAsync(currentUserIdResult.Value.Id, receiverResult.Value.Id, ctoken);
+            if (!friendshipExistsResult.IsSuccess)
+                return Result.Fail(new Message(500, "An error occurred while checking friendship status."));
 
-        if (friendshipExistsResult.Value)
-            return Result.Fail(new Message(409, "A friend request or friendship already exists."));
-
-        var result = await _friendRepository.SendRequestAsync(currentUserIdResult.Value.Id, receiverResult.Value.Id, ctoken);
-        if (!result.IsSuccess)
-        {
-            if (result.Status == RepositoryResultStatus.Conflict)
+            if (friendshipExistsResult.Value)
                 return Result.Fail(new Message(409, "A friend request or friendship already exists."));
 
-            return Result.Fail(new Message(500, "An error occurred while sending the friend request."));
+            var result = await _friendRepository.SendRequestAsync(currentUserIdResult.Value.Id, receiverResult.Value.Id, ctoken);
+            if (!result.IsSuccess)
+            {
+                if (result.Status == RepositoryResultStatus.Conflict)
+                    return Result.Fail(new Message(409, "A friend request or friendship already exists."));
+
+                return Result.Fail(new Message(500, "An error occurred while sending the friend request."));
+            }
+
+            // Send push notification to the receiver about the new friend request
+            var notificationResult = await _pushNotificationService.SendToUserAsync(
+            receiverResult.Value.Identifier, "Ny vänförfrågan", $"{currentUserIdResult.Value.NickName} vill bli vän med dig",
+            new Dictionary<string, object> { ["type"] = "friend_request" }, ctoken);
+
+            return Result.Ok();
         }
-
-        var notificationResult = await _pushNotificationService.SendToUserAsync(
-        receiverResult.Value.Identifier, "Ny vänförfrågan", $"{currentUserIdResult.Value.NickName} vill bli vän med dig",
-        new Dictionary<string, object> { ["type"] = "friend_request" }, ctoken);
-
-        if (!notificationResult.Success)
+        catch (Exception ex)
         {
-            // Log the error but don't fail the entire operation
-            _logger.LogWarning("Failed to send push notification for new friend request from {SenderId} to {ReceiverId}. Error: {ErrorMessage}", currentUserIdResult.Value.Id, receiverResult.Value.Id, notificationResult.Message?.ResultMessage);
+            _logger.LogError(ex, "An unexpected error occurred while sending a friend request.");
+            return Result.Fail(new Message(500, "An unexpected error occurred while sending the friend request."));
         }
-        ;
-
-        return Result.Ok();
     }
 
     internal record SenderProjection(int Id, string NickName);

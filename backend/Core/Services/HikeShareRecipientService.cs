@@ -152,4 +152,128 @@ public class HikeShareRecipientService : IHikeShareRecipientService
 
         return Result.Ok();
     }
+
+    public async Task<Result<IReadOnlyCollection<IncomingHikeShareResponse>>> GetIncomingPendingSharesAsync(string identifier, CancellationToken ctoken)
+    {
+        var userIdResult = await _userRepository.GetUserIdByIdentifierAsync(identifier, ctoken);
+        if (!userIdResult.IsSuccess)
+        {
+            if (userIdResult.Status == RepositoryResultStatus.NotFound)
+                return Result.Fail<IReadOnlyCollection<IncomingHikeShareResponse>>(new Message(404, "User not found with the given identifier."));
+
+            return Result.Fail<IReadOnlyCollection<IncomingHikeShareResponse>>(new Message(500, "Something went wrong when fetching user ID."));
+        }
+
+        var pendingSharesResult = await _hikeShareRecipientRepository.GetPendingSharesForUserAsync(userIdResult.Value, 
+            hs => IncomingHikeShareResponse.Create(
+                hs.Hike!.Identifier, 
+                hs.Hike.Name, 
+                hs.Hike.HikeLength, 
+                hs.Hike.Duration, 
+                hs.SharedBy!.NickName, 
+                hs.SharedBy.Identifier, 
+                hs.Hike.User!.NickName, 
+                hs.CreatedAt), 
+            ctoken);
+
+        if (!pendingSharesResult.IsSuccess)
+            return Result.Fail<IReadOnlyCollection<IncomingHikeShareResponse>>(new Message(500, "Something went wrong when fetching pending shares."));
+
+        return Result.Ok(pendingSharesResult.Value);
+    }
+
+    public async Task<Result<HikeShareRecipientResponse>> GetIncomingPendingShareAsync(string userIdentifier, string hikeIdentifier, CancellationToken ctoken)
+    {
+        var userIdResult = await _userRepository.GetUserIdByIdentifierAsync(userIdentifier, ctoken);
+        if (!userIdResult.IsSuccess)
+        {
+            if (userIdResult.Status == RepositoryResultStatus.NotFound)
+                return Result.Fail<HikeShareRecipientResponse>(new Message(404, "User not found with the given identifier."));
+
+            return Result.Fail<HikeShareRecipientResponse>(new Message(500, "Something went wrong when fetching user ID."));
+        }
+
+        var result = await _hikeShareRecipientRepository.GetPendingShareByIdentifierAsync(userIdResult.Value, hikeIdentifier, hs => HikeShareRecipientResponse.Create(
+            hs.Hike!.Identifier,
+            hs.Hike.Name,
+            hs.Hike.HikeLength,
+            hs.Hike.Duration,
+            hs.Hike.Coordinates,
+            hs.Hike.User!.NickName,
+            hs.SharedBy!.NickName,
+            hs.SharedBy.Identifier,
+            hs.CreatedAt,
+            hs.Hike.GettingThere,
+            hs.Hike.ParkingInfo,
+            hs.Hike.Description), ctoken);
+
+        if (!result.IsSuccess)
+        {
+            if (result.Status == RepositoryResultStatus.NotFound)
+                return Result.Fail<HikeShareRecipientResponse>(new Message(404, "Pending share not found."));
+
+            return Result.Fail<HikeShareRecipientResponse>(new Message(500, "Something went wrong while fetching the pending share."));
+        }
+
+        return Result.Ok(result.Value);
+    }
+
+    public async Task<Result> AcceptHikeShareAsync(string userIdentifier, string hikeIdentifier, CancellationToken ctoken)
+    {
+        var userIdResult = await _userRepository.GetUserIdByIdentifierAsync(userIdentifier, ctoken);
+        if (!userIdResult.IsSuccess)
+        {
+            if (userIdResult.Status == RepositoryResultStatus.NotFound)
+                return Result.Fail(new Message(404, "User not found with the given identifier."));
+
+            return Result.Fail(new Message(500, "Something went wrong when fetching user ID."));
+        }
+
+        var hikeIdResult = await _hikeRepository.GetHikeIdByIdentifierAsync(hikeIdentifier, ctoken);
+        if (!hikeIdResult.IsSuccess)
+        {
+            if (hikeIdResult.Status == RepositoryResultStatus.NotFound)
+                return Result.Fail(new Message(404, "Hike not found with the given identifier."));
+
+            return Result.Fail(new Message(500, "Something went wrong when fetching hike."));
+        }
+
+        var result = await _hikeShareRecipientRepository.AcceptHikeShareAsync(hikeIdResult.Value, userIdResult.Value, ctoken);
+        if (!result.IsSuccess)
+            return Result.Fail(new Message(500, "Something went wrong while accepting the hike share."));
+
+        return Result.Ok();
+    }
+
+    public async Task<Result> RejectHikeShareAsync(string userIdentifier, string hikeIdentifier, CancellationToken ctoken)
+    {
+        var userIdResult = await _userRepository.GetUserIdByIdentifierAsync(userIdentifier, ctoken);
+        if (!userIdResult.IsSuccess)
+        {
+            if (userIdResult.Status == RepositoryResultStatus.NotFound)
+                return Result.Fail(new Message(404, "User not found with the given identifier."));
+
+            return Result.Fail(new Message(500, "Something went wrong when fetching user ID."));
+        }
+
+        var hikeIdResult = await _hikeRepository.GetHikeIdByIdentifierAsync(hikeIdentifier, ctoken);
+        if (!hikeIdResult.IsSuccess)
+        {
+            if (hikeIdResult.Status == RepositoryResultStatus.NotFound)
+                return Result.Fail(new Message(404, "Hike not found with the given identifier."));
+
+            return Result.Fail(new Message(500, "Something went wrong when fetching hike."));
+        }
+
+        var result = await _hikeShareRecipientRepository.RejectHikeShareAsync(hikeIdResult.Value, userIdResult.Value, ctoken);
+        if (!result.IsSuccess)
+        {
+            if (result.Status == RepositoryResultStatus.NotFound)
+                return Result.Fail(new Message(404, "Hike share not found."));
+
+            return Result.Fail(new Message(500, "An error occurred while rejecting the hike share."));
+        }
+
+        return Result.Ok();
+    }
 }
