@@ -1,4 +1,4 @@
-import { incomingRequestsAtom } from "@/atoms/friends-atoms";
+import { pendingNotificationsCountAtom } from "@/atoms/friends-atoms";
 import Header from "@/components/header";
 import { FontAwesome, Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { Tabs, usePathname } from "expo-router";
@@ -9,8 +9,7 @@ import { useTheme } from "react-native-paper";
 export default function TabsLayout() {
   const theme = useTheme();
   const pathname = usePathname();
-  const { data: incoming } = useAtomValue(incomingRequestsAtom);
-  const incomingCount = incoming?.length ?? 0;
+  const incomingCount = useAtomValue(pendingNotificationsCountAtom);
 
   const shouldShowHeader = !pathname.includes("/login") && !pathname.includes("/register");
 
