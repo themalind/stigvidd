@@ -1,4 +1,6 @@
-﻿namespace Infrastructure.Data.Entities;
+﻿using Infrastructure.Enums;
+
+namespace Infrastructure.Data.Entities;
 
 public class HikeShare
 {
@@ -6,6 +8,7 @@ public class HikeShare
     public required int SharedWithId { get; set; }
     public int? SharedById { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public HikeShareStatus Status { get; set; } = HikeShareStatus.Pending;
 
     public Hike? Hike { get; set; }
     public User? SharedWith { get; set; }
