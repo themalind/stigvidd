@@ -2,7 +2,6 @@ import { signOutUser } from "@/api/auth";
 import { authStateAtom } from "@/atoms/auth-atoms";
 import { showErrorAtom } from "@/atoms/snackbar-atoms";
 import { useThemeToggle } from "@/hooks/useThemeToggle";
-import { AppLanguage, changeLanguage } from "@/i18n";
 import { MaterialIcons } from "@expo/vector-icons";
 import { CommonActions } from "@react-navigation/native";
 import { BlurView } from "expo-blur";
@@ -26,7 +25,7 @@ export default function SettingsDrawer({ visible, onDismiss }: Props) {
   const [authState] = useAtom(authStateAtom);
   const { userTheme, toggleTheme } = useThemeToggle();
   const theme = useTheme();
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const setError = useSetAtom(showErrorAtom);
   const [active, setActive] = React.useState("");
   const insets = useSafeAreaInsets();
@@ -35,12 +34,6 @@ export default function SettingsDrawer({ visible, onDismiss }: Props) {
   async function handleThemeToggle() {
     setActive("theme");
     await toggleTheme();
-  }
-
-  async function handleLanguageToggle() {
-    setActive("language");
-    const next: AppLanguage = i18n.language === "sv" ? "en" : "sv";
-    await changeLanguage(next);
   }
 
   function handleAbout() {
@@ -127,18 +120,6 @@ export default function SettingsDrawer({ visible, onDismiss }: Props) {
                 />
               )}
               onPress={handleThemeToggle}
-            />
-            <Drawer.Item
-              label={t("settings.language")}
-              icon="translate"
-              active={active === "language"}
-              theme={{ roundness: 1 }}
-              right={() => (
-                <Text style={{ color: active === "language" ? theme.colors.onSecondaryContainer : theme.colors.onSurfaceVariant, fontWeight: "600" }}>
-                  {i18n.language === "sv" ? "EN" : "SV"}
-                </Text>
-              )}
-              onPress={handleLanguageToggle}
             />
             <Drawer.Item
               label={t("settings.guide")}

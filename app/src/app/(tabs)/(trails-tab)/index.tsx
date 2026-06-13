@@ -8,6 +8,7 @@ import { BORDER_RADIUS } from "@/constants/constants";
 import { TrailShortInfoResponse } from "@/data/types";
 import { useTrailFilters } from "@/hooks/trail/useTrailFilters";
 import { useTrails } from "@/hooks/trail/useTrails";
+import { guardedNavigate } from "@/utils/navigation";
 import { MaterialIcons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { router } from "expo-router";
@@ -53,12 +54,15 @@ export default function TrailsScreen() {
   } = useTrailFilters(trails, userLocation);
 
   const [filterModalVisible, setFilterModalVisible] = useState(false);
+  const [showScrollToTop, setShowScrollToTop] = useState(false);
 
   const handlePress = useCallback((identifier: string) => {
-    router.push({
-      pathname: "/(tabs)/(trails-tab)/trail/[identifier]",
-      params: { identifier },
-    });
+    guardedNavigate(() =>
+      router.navigate({
+        pathname: "/(tabs)/(trails-tab)/trail/[identifier]",
+        params: { identifier },
+      }),
+    );
   }, []);
 
   const onPressScrollToTop = () => {
@@ -108,7 +112,7 @@ export default function TrailsScreen() {
           }}
         />
         <View style={s.filterContainer}>
-          <Text style={s.resultText}>{t("trailList.showing", { count: filteredCount, total: totalCount })}</Text>
+          <Text style={s.resultText}>{t("trailList.showing", { count: totalCount, shown: filteredCount })}</Text>
           {Object.values(filters).some((v) => v !== undefined) || searchQuery ? (
             <Pressable onPress={clearFilters}>
               <Text style={[s.clearFilters, { color: theme.colors.tertiary }]}>{t("trailList.clearFilters")}</Text>
@@ -122,6 +126,8 @@ export default function TrailsScreen() {
         renderItem={renderTrailItem}
         keyExtractor={(item) => item.identifier}
         contentContainerStyle={s.listContent}
+        onScroll={(e) => setShowScrollToTop(e.nativeEvent.contentOffset.y > 300)}
+        scrollEventThrottle={16}
         initialNumToRender={10}
         maxToRenderPerBatch={10}
         windowSize={5}
@@ -142,9 +148,11 @@ export default function TrailsScreen() {
           </View>
         }
         ListFooterComponent={
-          <Pressable style={s.backToTop} onPress={onPressScrollToTop}>
-            <Text style={[s.text, { color: theme.colors.secondary }]}>{t("trail.backToTop")}</Text>
-          </Pressable>
+          showScrollToTop ? (
+            <Pressable style={s.backToTop} onPress={onPressScrollToTop}>
+              <Text style={[s.text, { color: theme.colors.secondary }]}>{t("trail.backToTop")}</Text>
+            </Pressable>
+          ) : null
         }
       />
 

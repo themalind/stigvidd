@@ -2,7 +2,7 @@
 using Infrastructure.Data.Entities;
 using System.Globalization;
 using System.Text.Json;
-using Core.Enums;
+using Infrastructure.Enums;
 
 namespace MapData;
 

@@ -1,4 +1,5 @@
 import { createTrailObstacle, getObstacleIssueTypes } from "@/api/trail-obstacles";
+import { asTranslationKey } from "@/i18n";
 import { getCoordinatesByTrailIdentifier } from "@/api/trails";
 import { showErrorAtom, showSuccessAtom } from "@/atoms/snackbar-atoms";
 import SelectInput from "@/components/select-input";
@@ -223,7 +224,7 @@ export default function TrailObstacleForm({ trailIdentifier, visible, onDismiss 
                   )}
                 />
                 {errors.description && (
-                  <Text style={[s.bold, { color: theme.colors.error }]}>{t(errors.description.message as string)}</Text>
+                  <Text style={[s.bold, { color: theme.colors.error }]}>{t(asTranslationKey(errors.description.message as string))}</Text>
                 )}
               </View>
               <View style={s.locationRow}>

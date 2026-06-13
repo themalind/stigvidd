@@ -22,6 +22,8 @@ jobs:
         dotnet-version: 10.0.x
     - name: Install SpatiaLite
       run: sudo apt-get install libsqlite3-mod-spatialite
+    - name: Install SpatiaLite 2
+      run: sudo apt-get install libspatialite-dev
     - name: Restore dependencies
       run: dotnet restore
     - name: Build
@@ -32,22 +34,7 @@ jobs:
         # with SQLite in-memory, so the value is only there to pass the null-check.
         ConnectionStrings__StigVidd: "DataSource=:memory:"
       run: |
-        dotnet test Tests/UnitTests/UnitTests.csproj --no-build --verbosity normal --logger "trx;LogFileName=unti-test-results.trx"
-        dotnet test Tests/IntegrationTests/IntegrationTests.csproj --no-build --verbosity normal --logger "trx;LogFileName=integration-test-results.trx"
-    - name: Unit Test Report
-      uses: phoenix-actions/test-reporting@v8
-      if: success() || failure()
-      with:
-          name: Unit Tests
-          path: unit-test-results.trx
-          reporter: dotnet-trx
-    - name: Integration Test Report
-      uses: phoenix-actions/test-reporting@v8
-      if: success() || failure()
-      with:
-          name: Integration Tests
-          path: integration-test-results.trx
-          reporter: dotnet-trx
+        dotnet test --no-build
   app:
     runs-on: ubuntu-latest
     defaults:

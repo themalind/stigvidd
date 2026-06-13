@@ -1,5 +1,6 @@
 import { BORDER_RADIUS } from "@/constants/constants";
 import { UserFavoritesTrail, UserWishlistTrail } from "@/data/types";
+import { guardedNavigate } from "@/utils/navigation";
 import { Entypo } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
@@ -52,10 +53,12 @@ export default function UserTrailCollection({
               <Pressable
                 key={trail.identifier}
                 onPress={() =>
-                  router.push({
-                    pathname: "/(tabs)/(profile-stack)/trail/[identifier]",
-                    params: { identifier: trail.identifier },
-                  })
+                  guardedNavigate(() =>
+                    router.navigate({
+                      pathname: "/(tabs)/(profile-stack)/trail/[identifier]",
+                      params: { identifier: trail.identifier },
+                    }),
+                  )
                 }
               >
                 <View style={s.trailContainer}>

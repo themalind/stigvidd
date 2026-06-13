@@ -1,4 +1,5 @@
 import { borasAreas, FacilityType } from "@/data/areas-data";
+import { asTranslationKey } from "@/i18n";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useLocalSearchParams } from "expo-router";
 import React from "react";
@@ -35,10 +36,10 @@ export default function AreaDetailScreen() {
           <Text style={[s.title, { color: theme.colors.onBackground }]}>{area.name}</Text>
           <View style={s.locationRow}>
             <MaterialIcons name="place" size={16} color={theme.colors.primary} />
-            <Text style={[s.locationText, { color: theme.colors.onSurfaceVariant }]}>{t(area.location)}</Text>
+            <Text style={[s.locationText, { color: theme.colors.onSurfaceVariant }]}>{t(asTranslationKey(area.location))}</Text>
           </View>
         </View>
-        <Text style={[s.description, { color: theme.colors.onBackground }]}>{t(area.description)}</Text>
+        <Text style={[s.description, { color: theme.colors.onBackground }]}>{t(asTranslationKey(area.description))}</Text>
 
         {hasFacilities && (
           <>

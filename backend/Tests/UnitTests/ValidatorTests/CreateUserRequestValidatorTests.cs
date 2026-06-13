@@ -1,4 +1,4 @@
-using Core.Validators;
+using Core.Validators.User;
 using FluentAssertions;
 using WebDataContracts.RequestModels.User;
 

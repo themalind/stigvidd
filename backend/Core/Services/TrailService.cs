@@ -4,6 +4,7 @@ using Core.Interfaces.Services;
 using Infrastructure.Data.Entities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
+using NetTopologySuite.Simplify;
 using WebDataContracts.RequestModels.Trail;
 using WebDataContracts.ResponseModels.Trail;
 
@@ -26,6 +27,25 @@ public class TrailService : ITrailService
         _webDavService = webDavService;
         _logger = logger;
         _trailResponseFactory = factory;
+    }
+    public async Task<Result<IReadOnlyCollection<TrailShortInfoResponse>>> GetAllTrailsWithBasicInfoAsync(CancellationToken ctoken)
+    {
+        var result = await _trailRepository.GetAllTrailsWithBasicInfoAsync(ctoken);
+
+        if (!result.IsSuccess)
+            return Result.Fail<IReadOnlyCollection<TrailShortInfoResponse>>(new Message(500, "An error occurred while fetching trails."));
+
+        return Result.Ok(result.Value);
+    }
+
+    public async Task<Result<IReadOnlyCollection<TrailMarkerResponse>>> GetAllTrailMarkersAsync(CancellationToken ctoken)
+    {
+        var result = await _trailRepository.GetAllTrailMarkersAsync(ctoken);
+
+        if (!result.IsSuccess)
+            return Result.Fail<IReadOnlyCollection<TrailMarkerResponse>>(new Message(500, "An error occurred while fetching trail markers."));
+
+        return Result.Ok(result.Value);
     }
 
     public async Task<Result<int>> GetTrailIdByIdentifierAsync(string identifier, CancellationToken ctoken)
@@ -95,6 +115,81 @@ public class TrailService : ITrailService
             return Result.Fail<CoordinatesResponse?>(new Message(404, $"Coordinates with Trail identifier: {identifier} not found."));
 
         return Result.Ok<CoordinatesResponse?>(CoordinatesResponse.Create(result.Value));
+    }
+
+    public async Task<Result<IReadOnlyCollection<TrailPathResponse>>> GetTrailPathsInBoundsAsync(double minLat, double minLon, double maxLat, double maxLon, CancellationToken ctoken)
+    {
+        // Scale simplification tolerance to the viewport size (LOD).
+        // Large bbox → high tolerance → fewer coordinate points → less data over the wire.
+        // At close zoom (small bbox) tolerance is 0, meaning full coordinate precision.
+        var bboxHeight = maxLat - minLat;
+        var tolerance = bboxHeight > 0.5 ? 0.001 : bboxHeight > 0.1 ? 0.0003 : 0.0;
+
+        // Only fetch identifier + geometry — metadata (name, length, classification) is
+        // loaded on demand when the user taps a trail via the /card endpoint.
+        var result = await _trailRepository.GetTrailsInBoundsAsync(
+            minLat, minLon, maxLat, maxLon,
+            t => new { t.Identifier, t.GeoPath },
+            ctoken);
+
+        if (result.Status == RepositoryResultStatus.Error)
+            return Result.Fail<IReadOnlyCollection<TrailPathResponse>>(new Message(500, "An error occurred while fetching trail paths."));
+
+        if (result.Value is null)
+            return Result.Fail<IReadOnlyCollection<TrailPathResponse>>(new Message(500, "An error occurred while fetching trail paths."));
+
+        var paths = result.Value.Select(t =>
+        {
+            // Douglas-Peucker reduces the number of coordinate points while preserving
+            // the visual shape of the polyline. Skipped at close zoom (tolerance = 0).
+            var geometry = tolerance > 0 && t.GeoPath != null
+                ? DouglasPeuckerSimplifier.Simplify(t.GeoPath, tolerance)
+                : t.GeoPath;
+
+            // GeoPath uses (X = longitude, Y = latitude) — swap to LatLngPoint order.
+            return TrailPathResponse.Create(
+                t.Identifier,
+                geometry?.Coordinates.Select(c => new LatLngPoint(c.Y, c.X)).ToList() ?? []
+            );
+        }).ToList();
+
+        return Result.Ok<IReadOnlyCollection<TrailPathResponse>>(paths);
+    }
+
+    public async Task<Result<TrailCardResponse?>> GetTrailCardByIdentifierAsync(string identifier, CancellationToken ctoken)
+    {
+        var result = await _trailRepository.GetTrailByIdentifierAsync(
+            identifier,
+            t => new TrailCardProjection(
+                t.Identifier,
+                t.Name,
+                t.TrailLength,
+                t.Classification,
+                t.Accessibility,
+                t.Reviews!.Any() ? t.Reviews!.Average(r => r.Rating) : 0m,
+                t.TrailImages!.Select(i => new TrailCardImageProjection(i.Identifier, i.ImageUrl)).FirstOrDefault()
+            ),
+            ctoken);
+
+        if (result.Status == RepositoryResultStatus.Error)
+            return Result.Fail<TrailCardResponse?>(new Message(500, "An error occurred while fetching trail card."));
+
+        if (!result.IsSuccess)
+            return Result.Fail<TrailCardResponse?>(new Message(404, $"Trail with identifier {identifier} not found."));
+
+        var v = result.Value;
+        var image = v.Image != null
+            ? TrailImageResponse.Create(_trailResponseFactory.PresentableBaseUrl, v.Image.Identifier, v.Image.ImageUrl)
+            : null;
+
+        return Result.Ok<TrailCardResponse?>(TrailCardResponse.Create(
+            v.Identifier,
+            v.Name,
+            v.TrailLength,
+            v.Classification,
+            v.Accessibility,
+            v.AverageRating,
+            image));
     }
 
     public async Task<Result<IReadOnlyCollection<TrailOverviewResponse?>>> GetPopularTrailOverviewsAsync(
@@ -319,24 +414,11 @@ public class TrailService : ITrailService
 
         return Result.Ok();
     }
-
-    public async Task<Result<IReadOnlyCollection<TrailShortInfoResponse>>> GetAllTrailsWithBasicInfoAsync(CancellationToken ctoken)
-    {
-        var result = await _trailRepository.GetAllTrailsWithBasicInfoAsync(ctoken);
-
-        if (!result.IsSuccess)
-            return Result.Fail<IReadOnlyCollection<TrailShortInfoResponse>>(new Message(500, "An error occurred while fetching trails."));
-
-        return Result.Ok(result.Value);
-    }
-
-    public async Task<Result<IReadOnlyCollection<TrailMarkerResponse>>> GetAllTrailMarkersAsync(CancellationToken ctoken)
-    {
-        var result = await _trailRepository.GetAllTrailMarkersAsync(ctoken);
-
-        if (!result.IsSuccess)
-            return Result.Fail<IReadOnlyCollection<TrailMarkerResponse>>(new Message(500, "An error occurred while fetching trail markers."));
-
-        return Result.Ok(result.Value);
-    }
 }
+
+internal record TrailCardProjection(
+    string Identifier, string Name, decimal TrailLength,
+    int Classification, bool Accessibility, decimal AverageRating,
+    TrailCardImageProjection? Image);
+
+internal record TrailCardImageProjection(string Identifier, string ImageUrl);

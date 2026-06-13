@@ -1,4 +1,5 @@
 import BackButton from "@/components/back-button";
+import { asTranslationKey } from "@/i18n";
 import { BORDER_RADIUS } from "@/constants/constants";
 import { DIFFICULTIES } from "@/data/trail-content";
 import { classificationParser } from "@/utils/classification-parser";
@@ -148,9 +149,9 @@ export default function GuideScreen() {
                 <View key={item.value} style={[s.difficultyCard, { borderColor: theme.colors.outlineVariant }]}>
                   <View style={s.difficultyCardHeader}>
                     {getDifficultyIcon(classificationParser(item.value))}
-                    <Text style={[s.cardLabel, { color: cardText }]}>{t(item.label)}</Text>
+                    <Text style={[s.cardLabel, { color: cardText }]}>{t(asTranslationKey(item.label))}</Text>
                   </View>
-                  <Text style={[s.bodyText, { color: cardText }]}>{t(item.description)}</Text>
+                  <Text style={[s.bodyText, { color: cardText }]}>{t(asTranslationKey(item.description))}</Text>
                 </View>
               ))}
             </View>

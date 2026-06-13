@@ -1,4 +1,5 @@
 import { getObstacleIssueTypes, updateTrailObstacle } from "@/api/trail-obstacles";
+import { asTranslationKey } from "@/i18n";
 import { showErrorAtom, showSuccessAtom } from "@/atoms/snackbar-atoms";
 import SelectInput from "@/components/select-input";
 import { BORDER_RADIUS } from "@/constants/constants";
@@ -145,7 +146,7 @@ export default function TrailObstacleUpdateForm({
             />
             {errors.description && (
               <Text style={[s.bold, { color: theme.colors.error }]}>
-                {errors.description.message ? t(errors.description.message) : ""}
+                {errors.description.message ? t(asTranslationKey(errors.description.message)) : ""}
               </Text>
             )}
           </View>

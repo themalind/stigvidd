@@ -1,5 +1,5 @@
 using Core;
-using Core.Validators;
+using Core.Validators.User;
 using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;

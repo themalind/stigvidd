@@ -11,7 +11,7 @@ import { Review } from "@/data/types";
 import CoordinateParser from "@/utils/coordinate-parser";
 import { useQuery } from "@tanstack/react-query";
 import { useLocalSearchParams } from "expo-router";
-import { useRef, useState } from "react";
+import { startTransition, useCallback, useEffect, useRef, useState } from "react";
 import { Platform, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { LatLng } from "react-native-maps";
 import { useTheme } from "react-native-paper";
@@ -34,6 +34,16 @@ export default function TrailDetailsScreen() {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [reviewCount, setReviewCount] = useState(0);
   const [showObstacleModal, setShowObstacleModal] = useState(false);
+  const [transitionComplete, setTransitionComplete] = useState(false);
+
+  useEffect(() => {
+    startTransition(() => setTransitionComplete(true));
+  }, []);
+
+  const handleReviewsLoaded = useCallback((loadedReviews: Review[], total: number) => {
+    setReviewCount(total);
+    setReviews(loadedReviews);
+  }, []);
 
   const {
     data: trail,
@@ -110,8 +120,8 @@ export default function TrailDetailsScreen() {
           {obstacles && obstacles.length > 0 && <TrailObstacleWarning onPress={() => setShowObstacleModal(true)} />}
           {trail && <UserBar trail={trail} />}
           {trail?.description && <TrailDescription trail={trail} />}
-          {coords?.coordinates ? (
-            coordinates.length > 0 && <TrailMap trail={coordinates} />
+          {coords?.coordinates && coordinates.length > 0 && transitionComplete ? (
+            <TrailMap trail={coordinates} />
           ) : (
             <MapSkeleton text={t("trail.loadingMap")} />
           )}
@@ -121,10 +131,7 @@ export default function TrailDetailsScreen() {
             <TrailReviewsContainer
               trail={trail}
               surfaceToScrollToRef={surfaceToScrollToRef}
-              onReviewsLoaded={(reviews, total) => {
-                setReviewCount(total);
-                setReviews(reviews);
-              }}
+              onReviewsLoaded={handleReviewsLoaded}
             />
           )}
           <Pressable style={s.backToTop} onPress={onPressScrollToTop}>

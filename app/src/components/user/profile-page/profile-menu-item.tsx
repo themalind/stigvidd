@@ -1,4 +1,5 @@
 import { BORDER_RADIUS } from "@/constants/constants";
+import { guardedNavigate } from "@/utils/navigation";
 import { MaterialIcons } from "@expo/vector-icons";
 import { Href, router } from "expo-router";
 import { Pressable, StyleSheet, View } from "react-native";
@@ -12,7 +13,7 @@ interface MenuItemProps {
 }
 
 const handlePress = (route: Href) => {
-  router.push(route);
+  guardedNavigate(() => router.navigate(route));
 };
 
 export default function ProfileMenuItem({ text, route, icon, badge }: MenuItemProps) {

@@ -5,8 +5,9 @@ import MockNews from "@/components/mockNews";
 import PagerCarouselSkeleton from "@/components/skeletons/pager-carousel-skeleton";
 import PagerCarousel from "@/components/trail/pager-carousel";
 import { SURFACE_BORDER_RADIUS } from "@/constants/constants";
+import { guardedNavigate } from "@/utils/navigation";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { Image } from "expo-image";
 import { router, useFocusEffect } from "expo-router";
 import { useAtomValue } from "jotai";
@@ -25,6 +26,7 @@ export default function HomeScreen() {
     queryKey: ["trails", "popular", userLocation?.latitude, userLocation?.longitude],
     queryFn: () => getPopularTrails(userLocation?.latitude, userLocation?.longitude),
     enabled: locationResolved,
+    placeholderData: keepPreviousData,
   });
 
   // Scroll to top when screen is focused or bottomtab is pressed.
@@ -45,7 +47,10 @@ export default function HomeScreen() {
       </View>
 
       <View style={s.cardRow}>
-        <Pressable style={[s.guideCard, s.halfCard]} onPress={() => router.push("/(tabs)/(settings)/guide")}>
+        <Pressable
+          style={[s.guideCard, s.halfCard]}
+          onPress={() => guardedNavigate(() => router.navigate("/(tabs)/(settings)/guide"))}
+        >
           <Image source={require("../../../assets/images/guide_cover.jpg")} style={s.cardImage} contentFit="cover" />
           <View style={[s.cardText, { backgroundColor: theme.colors.surface }]}>
             <Text style={[s.cardTitle, { color: theme.colors.onSurface }]}>{t("home.guide")}</Text>
@@ -57,7 +62,7 @@ export default function HomeScreen() {
 
         <Pressable
           style={[s.areasCard, s.halfCard]}
-          onPress={() => router.push("/(tabs)/(home)/area/area-list-screen")}
+          onPress={() => guardedNavigate(() => router.navigate("/(tabs)/(home)/area/area-list-screen"))}
         >
           <View style={s.collage}>
             <View style={s.collageRow}>

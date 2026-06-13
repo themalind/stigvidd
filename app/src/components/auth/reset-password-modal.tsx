@@ -1,4 +1,5 @@
 import { userPasswordReset } from "@/api/auth";
+import { asTranslationKey } from "@/i18n";
 import { getPasswordResetErrorMessage } from "@/api/firebase-errors";
 import { showSuccessAtom } from "@/atoms/snackbar-atoms";
 import { BORDER_RADIUS } from "@/constants/constants";
@@ -97,7 +98,7 @@ export default function ResetPasswordModal({ visible, onDismiss }: Props) {
                     fontWeight: 600,
                   }}
                 >
-                  {errors.email.message ? t(errors.email.message) : ""}
+                  {errors.email.message ? t(asTranslationKey(errors.email.message)) : ""}
                 </Text>
               </View>
             )}

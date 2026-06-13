@@ -1,4 +1,5 @@
 import { DeleteUserAccount } from "@/api/auth";
+import { asTranslationKey } from "@/i18n";
 import { getDeleteAccountErrorMessage } from "@/api/firebase-errors";
 import { BORDER_RADIUS } from "@/constants/constants";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -100,7 +101,7 @@ export default function DeleteAccountModal({ visible, onDismiss }: Props) {
                     fontWeight: 600,
                   }}
                 >
-                  {errors.password.message ? t(errors.password.message) : ""}
+                  {errors.password.message ? t(asTranslationKey(errors.password.message)) : ""}
                 </Text>
               </View>
             )}

@@ -564,7 +564,7 @@ export const borasAreas: BorasArea[] = [
     name: "Byttorp, Kolbränningen",
     location: "areas.byttorpKolbranningen.location",
     description: "areas.byttorpKolbranningen.description",
-    image: { uri: "https://stigvidd.se/files/trails/area-mock.jpg" },
+    image: { uri: "https://stigvidd.se/files/trails/area-kolbranningen.jpg" },
     url: "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur/byttorpkolbranningen.4.5493346718e560a04fa5d2ec.html",
     trails: [],
     facilities: {

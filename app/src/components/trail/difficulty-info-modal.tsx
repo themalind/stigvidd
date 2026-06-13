@@ -1,4 +1,5 @@
 import { BORDER_RADIUS } from "@/constants/constants";
+import { asTranslationKey } from "@/i18n";
 import { DIFFICULTIES } from "@/data/trail-content";
 import { classificationParser } from "@/utils/classification-parser";
 import { getDifficultyIcon } from "@/utils/getDifficultyIcon";
@@ -54,9 +55,9 @@ export default function DifficultyInfoModal({ difficulty, visible, onDismiss }: 
                 >
                   <View style={s.classificationIcon}>
                     {getDifficultyIcon(classificationParser(item.value))}
-                    <Text style={s.infoLabel}>{t(item.label)}</Text>
+                    <Text style={s.infoLabel}>{t(asTranslationKey(item.label))}</Text>
                   </View>
-                  <Text style={s.infoBody}>{t(item.description)}</Text>
+                  <Text style={s.infoBody}>{t(asTranslationKey(item.description))}</Text>
                 </View>
               );
             })}

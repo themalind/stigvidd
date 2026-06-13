@@ -1,7 +1,7 @@
 ﻿using FluentValidation;
 using WebDataContracts.RequestModels.User;
 
-namespace Core.Validators;
+namespace Core.Validators.User;
 
 public class CreateUserRequestValidator : AbstractValidator<CreateUserRequest>
 {

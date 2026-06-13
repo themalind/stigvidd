@@ -1,4 +1,5 @@
 import { signInUser } from "@/api/auth";
+import { asTranslationKey } from "@/i18n";
 import { getLoginErrorMessage } from "@/api/firebase-errors";
 import { userThemeAtom } from "@/atoms/user-theme-atom";
 import PasswordInputField from "@/components/auth/password-input-field";
@@ -125,7 +126,7 @@ export default function LoginScreen({ showBackButton = false }: { showBackButton
                       fontWeight: 600,
                     }}
                   >
-                    {errors.email.message ? t(errors.email.message) : ""}
+                    {errors.email.message ? t(asTranslationKey(errors.email.message)) : ""}
                   </Text>
                 )}
               </View>
@@ -151,7 +152,7 @@ export default function LoginScreen({ showBackButton = false }: { showBackButton
                       fontWeight: 600,
                     }}
                   >
-                    {errors.password.message ? t(errors.password.message) : ""}
+                    {errors.password.message ? t(asTranslationKey(errors.password.message)) : ""}
                   </Text>
                 )}
               </View>

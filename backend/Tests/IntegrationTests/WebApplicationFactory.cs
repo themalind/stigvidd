@@ -49,7 +49,7 @@ public class StigViddWebApplicationFactory<TProgram>
             services.AddDbContextFactory<StigViddDbContext>((container, options) =>
             {
                 var connection = container.GetRequiredService<DbConnection>();
-                options.UseSqlite(connection, e =>
+                options.UseSqlite(_connection, e =>
                 {
                     e.UseNetTopologySuite();
                 });

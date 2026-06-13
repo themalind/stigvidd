@@ -1,4 +1,4 @@
-using Core.Validators;
+using Core.Validators.Hike;
 using FluentAssertions;
 using WebDataContracts.RequestModels.Hike;
 

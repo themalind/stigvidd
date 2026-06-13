@@ -179,7 +179,7 @@ export default function AddReviewForm({ trailIdentifier, onSuccess }: ReviewForm
           })}
           disabled={isSubmitting || createReviewMutation.isPending}
         >
-          {createReviewMutation.isPending ? t("review.saving") : t("review.save")}
+          {createReviewMutation.isPending ? t("common.saving") : t("common.save")}
         </Button>
       </View>
     </View>

@@ -27,7 +27,7 @@ public class TrailRepository : ITrailRepository
             using var context = await _context.CreateDbContextAsync(ctoken);
 
             var trails = await context.Trails.AsNoTracking()
-                .Where(t => t.IsVerified)
+                .Where(t => t.IsVerified && t.GeoPath != null)
                 .Select(t => new TrailShortInfoResponse
                 {
                     Identifier = t.Identifier,
@@ -173,15 +173,17 @@ public class TrailRepository : ITrailRepository
         {
             using var context = await _context.CreateDbContextAsync(ctoken);
 
-            var markers = await context.Trails.AsNoTracking().Select(t => new TrailMarkerResponse
-            {
-                Identifier = t.Identifier,
-                Name = t.Name,
-                IsAccessible = t.Accessibility,
-                StartLongitude = (decimal?)t.GeoPath!.StartPoint.Coordinate.X,
-                StartLatitude = (decimal?)t.GeoPath.StartPoint.Coordinate.Y,
-            })
-            .ToListAsync(ctoken);
+            var markers = await context.Trails.AsNoTracking()
+                .Where(t => t.IsVerified && t.GeoPath != null)
+                .Select(t => new TrailMarkerResponse
+                {
+                    Identifier = t.Identifier,
+                    Name = t.Name,
+                    IsAccessible = t.Accessibility,
+                    StartLongitude = (decimal?)t.GeoPath!.StartPoint.Coordinate.X,
+                    StartLatitude = (decimal?)t.GeoPath.StartPoint.Coordinate.Y,
+                })
+                .ToListAsync(ctoken);
 
             return RepositoryResult<IReadOnlyCollection<TrailMarkerResponse>>.Success(markers);
         }
@@ -189,6 +191,34 @@ public class TrailRepository : ITrailRepository
         {
             _logger.LogError(ex, "TrailRepository: GetAllTrailMarkersAsync -> Something went wrong when fetching trail markers.");
             return RepositoryResult<IReadOnlyCollection<TrailMarkerResponse>>.Error();
+        }
+    }
+
+    public async Task<RepositoryResult<IReadOnlyCollection<T>>> GetTrailsInBoundsAsync<T>(double minLat, double minLon, double maxLat, double maxLon, Expression<Func<Trail, T>> selector, CancellationToken ctoken)
+    {
+        try
+        {
+            using var context = await _context.CreateDbContextAsync(ctoken);
+
+            // Build a bounding-box geometry in WGS84 (SRID 4326).
+            // Envelope takes (minX, maxX, minY, maxY) = (minLon, maxLon, minLat, maxLat).
+            var factory = new GeometryFactory(new PrecisionModel(), 4326);
+            var bbox = factory.ToGeometry(new Envelope(minLon, maxLon, minLat, maxLat));
+
+            // Intersects performs a spatial index lookup (GiST index on GeoPath in PostGIS),
+            // returning only trails whose geometry overlaps the viewport bounding box.
+            var trails = await context.Trails
+                .AsNoTracking()
+                .Where(t => t.IsVerified && t.GeoPath != null && t.GeoPath.Intersects(bbox))
+                .Select(selector)
+                .ToListAsync(ctoken);
+
+            return RepositoryResult<IReadOnlyCollection<T>>.Success(trails);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "TrailRepository: GetTrailsInBoundsAsync -> Something went wrong when fetching trails in bounds.");
+            return RepositoryResult<IReadOnlyCollection<T>>.Error();
         }
     }
 

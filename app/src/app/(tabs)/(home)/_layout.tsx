@@ -6,7 +6,7 @@ export default function HomeStackLayout() {
       <Stack.Screen name="index" />
       <Stack.Screen name="trail/[identifier]" />
       <Stack.Screen name="area/[identifier]" />
-      <Stack.Screen name="area/area-list-screen" />
+      <Stack.Screen name="area/area-list-screen" options={{ animation: "none" }} />
     </Stack>
   );
 }

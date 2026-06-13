@@ -1,4 +1,5 @@
 import { BORDER_RADIUS } from "@/constants/constants";
+import { asTranslationKey } from "@/i18n";
 import { ACCESSIBILITY_INFO } from "@/data/trail-content";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
@@ -46,7 +47,7 @@ export default function AccesibilityInfoModal({ visible, onDismiss }: Props) {
             </View>
 
             {ACCESSIBILITY_INFO.map((info) => {
-              const paragraphs = t(info.description)
+              const paragraphs = t(asTranslationKey(info.description))
                 .split("\n")
                 .filter((p) => p.trim().length > 0);
 
@@ -63,7 +64,7 @@ export default function AccesibilityInfoModal({ visible, onDismiss }: Props) {
                 >
                   <View style={s.infoHeader}>
                     <MaterialCommunityIcons name={info.iconName} size={24} color={theme.colors.primary} />
-                    <Text style={s.infoLabel}>{t(info.title)}</Text>
+                    <Text style={s.infoLabel}>{t(asTranslationKey(info.title))}</Text>
                   </View>
                   {paragraphs.map((paragraph, i) => (
                     <Text key={i} style={[s.infoBody, i > 0 && s.infoBodySpacing]}>

@@ -419,6 +419,10 @@ public class UserRepository : IUserRepository
             using var transaction = await context.Database.BeginTransactionAsync(ctoken);
 
             context.Users.Remove(user);
+#if !WINDOWS
+            // In-memory SQLite EF provider on Linux doesn't support cascade deletes, so we have to manually delete related entities.
+            context.TrailObstacleSolvedVotes.Where(v => v.UserId == user.Id).ToList().ForEach(v => context.TrailObstacleSolvedVotes.Remove(v));
+#endif
             await context.SaveChangesAsync(ctoken);
 
             await _firebaseAuthRepository.DeleteUserAsync(user.FirebaseUid, ctoken);

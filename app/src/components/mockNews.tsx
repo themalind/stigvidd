@@ -1,4 +1,5 @@
 import { BORDER_RADIUS } from "@/constants/constants";
+import { asTranslationKey } from "@/i18n";
 import { Image } from "expo-image";
 import { useTranslation } from "react-i18next";
 import { Pressable, StyleSheet, View } from "react-native";
@@ -30,9 +31,9 @@ export default function MockNews() {
           <Image source={image} style={s.thumbnail} contentFit="cover" />
           <View style={s.textBlock}>
             <Text style={[s.title, { color: theme.colors.onSurface }]} numberOfLines={2}>
-              {t(`news.items.${index}.title`)}
+              {t(asTranslationKey(`news.items.${index}.title`))}
             </Text>
-            <Text style={[s.date, { color: theme.colors.onSurfaceVariant }]}>{t(`news.items.${index}.date`)}</Text>
+            <Text style={[s.date, { color: theme.colors.onSurfaceVariant }]}>{t(asTranslationKey(`news.items.${index}.date`))}</Text>
           </View>
         </Pressable>
       ))}

@@ -1,4 +1,5 @@
 import { getRegisterErrorMessage } from "@/api/firebase-errors";
+import { asTranslationKey } from "@/i18n";
 import { registerUserAtom } from "@/atoms/auth-atoms";
 import { userThemeAtom } from "@/atoms/user-theme-atom";
 import PasswordInputField from "@/components/auth/password-input-field";
@@ -139,7 +140,7 @@ export default function RegisterScreen() {
                       fontWeight: 600,
                     }}
                   >
-                    {errors.nickName?.message ? t(errors.nickName.message) : ""}
+                    {errors.nickName?.message ? t(asTranslationKey(errors.nickName.message)) : ""}
                   </Text>
                 )}
               </View>
@@ -173,7 +174,7 @@ export default function RegisterScreen() {
                       fontWeight: 600,
                     }}
                   >
-                    {errors.email?.message ? t(errors.email.message) : ""}
+                    {errors.email?.message ? t(asTranslationKey(errors.email.message)) : ""}
                   </Text>
                 )}
               </View>
@@ -198,7 +199,7 @@ export default function RegisterScreen() {
                       fontWeight: 600,
                     }}
                   >
-                    {errors.password?.message ? t(errors.password.message) : ""}
+                    {errors.password?.message ? t(asTranslationKey(errors.password.message)) : ""}
                   </Text>
                 )}
               </View>
@@ -224,7 +225,7 @@ export default function RegisterScreen() {
                       fontWeight: 600,
                     }}
                   >
-                    {errors.confirmPassword?.message ? t(errors.confirmPassword.message) : ""}
+                    {errors.confirmPassword?.message ? t(asTranslationKey(errors.confirmPassword.message)) : ""}
                   </Text>
                 )}
               </View>
