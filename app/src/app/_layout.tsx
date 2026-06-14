@@ -18,6 +18,7 @@ import { Stack, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { queryClientAtom } from "jotai-tanstack-query";
+import { Inter_600SemiBold, useFonts } from "@expo-google-fonts/inter";
 import React, { useEffect, useMemo, useState } from "react";
 import { Platform, StyleSheet, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -112,10 +113,12 @@ export default function RootLayout() {
     NavigationBar.setButtonStyleAsync(theme.dark ? "light" : "dark");
   }, [theme.dark]);
 
+  const [fontsLoaded] = useFonts({ Inter_600SemiBold });
+
   // Render nothing until auth has resolved — prevents the remount-blink that
   // happened when the key changed from "guest" to user.uid at startup.
   // Firebase reads auth state from local cache so this is only ~100–200 ms.
-  if (stableKey === null) return null;
+  if (stableKey === null || !fontsLoaded) return null;
 
   return (
     <QueryClientProvider client={queryClient}>
