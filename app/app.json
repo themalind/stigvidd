@@ -39,6 +39,10 @@
       "output": "static",
       "favicon": ""
     },
+    "notification": {
+      "androidMode": "collapse",
+      "androidCollapsedTitle": "#{unread_notifications} nya aviseringar"
+    },
     "plugins": [
       "expo-router",
       [
