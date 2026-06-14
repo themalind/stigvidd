@@ -1,6 +1,7 @@
 using Core.Repositories;
 using FluentAssertions;
 using Infrastructure.Data.Entities;
+using Infrastructure.Enums;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace UnitTests.RepositoryTests;
@@ -15,6 +16,54 @@ public class HikeShareRepositoryTests : TestBase
     private const string Hike1Identifier = "3f9c1b7e-8a42-4e6d-9c5f-2a7b1d8e4f90";
     private const string Hike2Identifier = "b7a2d4c1-5e9f-4a63-8c1d-0f2e7b9a6c34";
     private const string User6Identifier = "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5a44";
+
+    // IsAlreadySharedAsync
+
+    [Fact]
+    public async Task IsAlreadySharedAsync_WhenAcceptedShareExists_ReturnsTrue()
+    {
+        // Arrange — Hike1 is Accepted for User2 (id=2)
+        var repo = new HikeShareRepository(CreateSeededFactory(), NullLogger<HikeShareRepository>.Instance);
+
+        // Act
+        var result = await repo.IsAlreadySharedAsync(1, 2, CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task IsAlreadySharedAsync_WhenPendingShareExists_ReturnsTrue()
+    {
+        // Arrange — add a Pending share: Hike2 pending for User1
+        var factory = CreateSeededFactory(ctx =>
+            ctx.HikeShares.Add(new HikeShare { HikeId = 2, SharedWithId = 1, SharedById = 2, Status = HikeShareStatus.Pending }));
+        var repo = new HikeShareRepository(factory, NullLogger<HikeShareRepository>.Instance);
+
+        // Act
+        var result = await repo.IsAlreadySharedAsync(2, 1, CancellationToken.None);
+
+        // Assert — pending shares must also block re-sharing
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task IsAlreadySharedAsync_WhenNoShareExists_ReturnsFalse()
+    {
+        // Arrange — Hike1 has no share with User6 (id=6)
+        var repo = new HikeShareRepository(CreateSeededFactory(), NullLogger<HikeShareRepository>.Instance);
+
+        // Act
+        var result = await repo.IsAlreadySharedAsync(1, 6, CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().BeFalse();
+    }
+
+    // GetHikeShareCountAsync
 
     [Fact]
     public async Task GetHikeShareCountAsync_WhenHikeHasShares_ReturnsCorrectCount()

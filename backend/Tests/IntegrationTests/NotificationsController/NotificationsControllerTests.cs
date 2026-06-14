@@ -41,82 +41,106 @@ public class NotificationsControllerTests : IClassFixture<StigViddWebApplication
     [Fact]
     public async Task RegisterToken_WhenUnauthenticated_ReturnsUnauthorized()
     {
+        // Arrange
         var client = _factory.CreateClient();
 
+        // Act
         var response = await client.PostAsJsonAsync($"{BASE_URL}/tokens", ValidRequest(), TestContext.Current.CancellationToken);
 
+        // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
 
     [Fact]
     public async Task RegisterToken_WhenUnknownUser_ReturnsUnauthorized()
     {
+        // Arrange
         var client = CreateAuthenticatedClient(UnknownUserUid);
 
+        // Act
         var response = await client.PostAsJsonAsync($"{BASE_URL}/tokens", ValidRequest(), TestContext.Current.CancellationToken);
 
+        // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
 
     [Fact]
     public async Task RegisterToken_WithInvalidPlatform_ReturnsBadRequest()
     {
+        // Arrange
         var client = CreateAuthenticatedClient(NaturElskarenUid);
 
+        // Act
         var response = await client.PostAsJsonAsync($"{BASE_URL}/tokens", ValidRequest(platform: "web"), TestContext.Current.CancellationToken);
 
+        // Assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
 
     [Fact]
     public async Task RegisterToken_WithEmptyExpoToken_ReturnsBadRequest()
     {
+        // Arrange
         var client = CreateAuthenticatedClient(NaturElskarenUid);
 
+        // Act
         var response = await client.PostAsJsonAsync($"{BASE_URL}/tokens", ValidRequest(token: ""), TestContext.Current.CancellationToken);
 
+        // Assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
 
     [Fact]
     public async Task RegisterToken_WithValidIosToken_ReturnsOk()
     {
+        // Arrange
         var client = CreateAuthenticatedClient(NaturElskarenUid);
 
+        // Act
         var response = await client.PostAsJsonAsync($"{BASE_URL}/tokens", ValidRequest(platform: "ios"), TestContext.Current.CancellationToken);
 
+        // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
     }
 
     [Fact]
     public async Task RegisterToken_WithValidAndroidToken_ReturnsOk()
     {
+        // Arrange
         var client = CreateAuthenticatedClient(NaturElskarenUid);
 
+        // Act
         var response = await client.PostAsJsonAsync($"{BASE_URL}/tokens", ValidRequest(platform: "android"), TestContext.Current.CancellationToken);
 
+        // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
     }
 
     [Fact]
     public async Task RegisterToken_WhenSameTokenRegisteredTwice_ReturnsOkBothTimes()
     {
+        // Arrange
         var client = CreateAuthenticatedClient(NaturElskarenUid);
         await client.PostAsJsonAsync($"{BASE_URL}/tokens", ValidRequest(), TestContext.Current.CancellationToken);
 
+        // Act
         var response = await client.PostAsJsonAsync($"{BASE_URL}/tokens", ValidRequest(), TestContext.Current.CancellationToken);
 
+        // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
     }
 
     [Fact]
     public async Task RegisterToken_WhenSameTokenUpdatedToDifferentPlatform_ReturnsOk()
     {
+        // Arrange
         var client = CreateAuthenticatedClient(NaturElskarenUid);
         await client.PostAsJsonAsync($"{BASE_URL}/tokens", ValidRequest(platform: "ios"), TestContext.Current.CancellationToken);
 
+        // Act
         var response = await client.PostAsJsonAsync($"{BASE_URL}/tokens", ValidRequest(platform: "android"), TestContext.Current.CancellationToken);
 
+        // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
     }
 
@@ -127,65 +151,83 @@ public class NotificationsControllerTests : IClassFixture<StigViddWebApplication
     [Fact]
     public async Task DeleteToken_WhenUnauthenticated_ReturnsUnauthorized()
     {
+        // Arrange
         var client = _factory.CreateClient();
 
+        // Act
         var response = await client.DeleteAsync($"{BASE_URL}/tokens/{TestToken}", TestContext.Current.CancellationToken);
 
+        // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
 
     [Fact]
     public async Task DeleteToken_WhenUnknownUser_ReturnsUnauthorized()
     {
+        // Arrange
         var client = CreateAuthenticatedClient(UnknownUserUid);
 
+        // Act
         var response = await client.DeleteAsync($"{BASE_URL}/tokens/{TestToken}", TestContext.Current.CancellationToken);
 
+        // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
 
     [Fact]
     public async Task DeleteToken_WhenTokenDoesNotExist_ReturnsNotFound()
     {
+        // Arrange
         var client = CreateAuthenticatedClient(NaturElskarenUid);
 
+        // Act
         var response = await client.DeleteAsync($"{BASE_URL}/tokens/nonexistent-token", TestContext.Current.CancellationToken);
 
+        // Assert
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
 
     [Fact]
     public async Task DeleteToken_WhenTokenExists_ReturnsOk()
     {
+        // Arrange
         var client = CreateAuthenticatedClient(NaturElskarenUid);
         await client.PostAsJsonAsync($"{BASE_URL}/tokens", ValidRequest(), TestContext.Current.CancellationToken);
 
+        // Act
         var response = await client.DeleteAsync($"{BASE_URL}/tokens/{TestToken}", TestContext.Current.CancellationToken);
 
+        // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
     }
 
     [Fact]
     public async Task DeleteToken_WhenTokenDeletedTwice_ReturnsNotFoundOnSecondDelete()
     {
+        // Arrange
         var client = CreateAuthenticatedClient(NaturElskarenUid);
         await client.PostAsJsonAsync($"{BASE_URL}/tokens", ValidRequest(), TestContext.Current.CancellationToken);
         await client.DeleteAsync($"{BASE_URL}/tokens/{TestToken}", TestContext.Current.CancellationToken);
 
+        // Act
         var response = await client.DeleteAsync($"{BASE_URL}/tokens/{TestToken}", TestContext.Current.CancellationToken);
 
+        // Assert
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
 
     [Fact]
     public async Task DeleteToken_WhenTokenBelongsToAnotherUser_ReturnsNotFound()
     {
+        // Arrange
         var user1Client = CreateAuthenticatedClient(NaturElskarenUid);
         await user1Client.PostAsJsonAsync($"{BASE_URL}/tokens", ValidRequest(), TestContext.Current.CancellationToken);
-
         var user2Client = CreateAuthenticatedClient(VandrarVennenUid);
+
+        // Act
         var response = await user2Client.DeleteAsync($"{BASE_URL}/tokens/{TestToken}", TestContext.Current.CancellationToken);
 
+        // Assert
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
 

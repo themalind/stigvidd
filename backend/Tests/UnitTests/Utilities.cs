@@ -374,11 +374,11 @@ public static class Utilities
     {
         return new List<HikeShare>
         {
-            new HikeShare { HikeId = 1, SharedWithId = 2, SharedById = 1, CreatedAt = SeedDates.Created },
-            new HikeShare { HikeId = 2, SharedWithId = 3, SharedById = 1, CreatedAt = SeedDates.Created },
-            new HikeShare { HikeId = 3, SharedWithId = 1, SharedById = 2, CreatedAt = SeedDates.Created },
-            new HikeShare { HikeId = 4, SharedWithId = 4, SharedById = 2, CreatedAt = SeedDates.Created },
-            new HikeShare { HikeId = 5, SharedWithId = 5, SharedById = 3, CreatedAt = SeedDates.Created }
+            new HikeShare { HikeId = 1, SharedWithId = 2, SharedById = 1, CreatedAt = SeedDates.Created, Status = HikeShareStatus.Accepted },
+            new HikeShare { HikeId = 2, SharedWithId = 3, SharedById = 1, CreatedAt = SeedDates.Created, Status = HikeShareStatus.Accepted },
+            new HikeShare { HikeId = 3, SharedWithId = 1, SharedById = 2, CreatedAt = SeedDates.Created, Status = HikeShareStatus.Accepted },
+            new HikeShare { HikeId = 4, SharedWithId = 4, SharedById = 2, CreatedAt = SeedDates.Created, Status = HikeShareStatus.Accepted },
+            new HikeShare { HikeId = 5, SharedWithId = 5, SharedById = 3, CreatedAt = SeedDates.Created, Status = HikeShareStatus.Accepted }
         };
     }
 

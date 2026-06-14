@@ -215,7 +215,7 @@ public class UsersControllerIntegrationTests : IClassFixture<StigViddWebApplicat
         client.DefaultRequestHeaders.Authorization =
          new AuthenticationHeaderValue("Bearer", UserWithFavorites);
 
-        // StorsjoledenIdentifier is in VandrarVennen's favorites
+        // Act — StorsjoledenIdentifier is in VandrarVennen's favorites
         var request = new HttpRequestMessage(HttpMethod.Delete, $"/api/v1/users/favorites/{StorsjoledenIdentifier}");
         var response = await client.SendAsync(request, TestContext.Current.CancellationToken);
 
@@ -419,7 +419,7 @@ public class UsersControllerIntegrationTests : IClassFixture<StigViddWebApplicat
         client.DefaultRequestHeaders.Authorization =
          new AuthenticationHeaderValue("Bearer", UserWithWishlist);
 
-        // VildmarksledenArasIdentifier is in NaturElskaren's wishlist
+        // Act — VildmarksledenArasIdentifier is in NaturElskaren's wishlist
         var request = new HttpRequestMessage(HttpMethod.Delete, $"/api/v1/users/wishlist/{VildmarksledenArasIdentifier}");
         var response = await client.SendAsync(request, TestContext.Current.CancellationToken);
 
@@ -435,7 +435,7 @@ public class UsersControllerIntegrationTests : IClassFixture<StigViddWebApplicat
         client.DefaultRequestHeaders.Authorization =
          new AuthenticationHeaderValue("Bearer", UserWithWishlist);
 
-        // HultaforsIdentifier is NOT in NaturElskaren's wishlist
+        // Act — HultaforsIdentifier is NOT in NaturElskaren's wishlist
         var request = new HttpRequestMessage(HttpMethod.Delete, $"/api/v1/users/wishlist/{HultaforsIdentifier}");
         var response = await client.SendAsync(request, TestContext.Current.CancellationToken);
 
