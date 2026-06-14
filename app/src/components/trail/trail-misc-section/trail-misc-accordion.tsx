@@ -3,6 +3,7 @@ import { Trail } from "@/data/types";
 import React, { useState } from "react";
 import { StyleSheet } from "react-native";
 import { Divider, List, Surface, useTheme } from "react-native-paper";
+import { useTranslation } from "react-i18next";
 import FullDescriptionSection from "./full-description-section";
 import LinkSection from "./link-section";
 import VisitorInformationSection from "./visitor-information-section";
@@ -13,6 +14,7 @@ interface Props {
 export default function TrailMiscInfo({ trail }: Props) {
   const [expandedId, setExpandedId] = useState<string | number>("1");
   const theme = useTheme();
+  const { t } = useTranslation();
   return (
     <Surface elevation={0} style={[s.container, { backgroundColor: theme.colors.surface }]}>
       <List.AccordionGroup
@@ -24,7 +26,7 @@ export default function TrailMiscInfo({ trail }: Props) {
             <List.Accordion
               titleStyle={[s.titleText, { color: theme.colors.onSurface }]}
               contentStyle={s.accordionContent}
-              title="Praktisk information"
+              title={t("trail.practicalInfo")}
               id="1"
               style={{ backgroundColor: theme.colors.surface }}
               right={(props) => (
@@ -45,7 +47,7 @@ export default function TrailMiscInfo({ trail }: Props) {
             <List.Accordion
               titleStyle={[s.titleText, { color: theme.colors.onSurface }]}
               contentStyle={s.accordionContent}
-              title="Detaljerad beskrivning"
+              title={t("trail.detailedDescription")}
               id="2"
               style={{ backgroundColor: theme.colors.surface }}
               right={(props) => (
@@ -65,8 +67,8 @@ export default function TrailMiscInfo({ trail }: Props) {
         {trail.trailLinksResponse?.length ? (
           <List.Accordion
             titleStyle={[s.titleText, { color: theme.colors.onSurface }]}
-              contentStyle={s.accordionContent}
-            title="Länkar"
+            contentStyle={s.accordionContent}
+            title={t("trail.links")}
             id="3"
             style={{ backgroundColor: theme.colors.surface }}
             right={(props) => (

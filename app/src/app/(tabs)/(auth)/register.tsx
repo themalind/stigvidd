@@ -1,4 +1,5 @@
 import { getRegisterErrorMessage } from "@/api/firebase-errors";
+import { asTranslationKey } from "@/i18n";
 import { registerUserAtom } from "@/atoms/auth-atoms";
 import { userThemeAtom } from "@/atoms/user-theme-atom";
 import PasswordInputField from "@/components/auth/password-input-field";
@@ -10,6 +11,7 @@ import { Link } from "expo-router";
 import { useAtom } from "jotai";
 import React, { useState } from "react";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 import { Appearance, Dimensions, ImageBackground, StyleSheet, Text, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { Button, TextInput, useTheme } from "react-native-paper";
@@ -21,23 +23,23 @@ const WIDTH = Dimensions.get("screen").width;
 const registerFields = z
   .object({
     nickName: z
-      .string({ required_error: "Ange ett användarnamn" })
+      .string({ required_error: "auth.validation.nicknameRequired" })
       .min(1)
-      .max(20, "Namn för långt. Max 20 tecken")
-      .regex(/^[a-zA-Z0-9_-]+$/, "Endast a–z, 0–9, _ och - är tillåtna"),
-    email: z.string({ required_error: "Du måste ange en e-post" }).email("Ange en giltig e-post"),
-    password: z.string({ required_error: "Ange ett lösenord" }).min(8, "Lösenordet måste vara minst 8 tecken"),
+      .max(20, "auth.validation.nicknameTooLong")
+      .regex(/^[a-zA-Z0-9_-]+$/, "auth.validation.nicknameInvalidChars"),
+    email: z.string({ required_error: "auth.validation.emailRequired" }).email("auth.validation.emailInvalid"),
+    password: z
+      .string({ required_error: "auth.validation.passwordRequired" })
+      .min(8, "auth.validation.passwordTooShort"),
     confirmPassword: z
-      .string({
-        required_error: "Upprepa lösenord",
-      })
-      .min(8, "Lösenordet måste vara minst 8 tecken"),
+      .string({ required_error: "auth.validation.confirmPasswordRequired" })
+      .min(8, "auth.validation.passwordTooShort"),
   })
   .superRefine(({ confirmPassword, password }, ctx) => {
     if (confirmPassword !== password) {
       ctx.addIssue({
         code: "custom",
-        message: "Lösenorden matchar inte",
+        message: "auth.validation.passwordMismatch",
         path: ["confirmPassword"],
       });
     }
@@ -52,6 +54,7 @@ const addOpacity = (color: string, opacity: number): string => {
 };
 
 export default function RegisterScreen() {
+  const { t } = useTranslation();
   const theme = useTheme();
   const [firebaseError, setFirebaseError] = useState("");
   const [userTheme] = useAtom(userThemeAtom);
@@ -80,7 +83,7 @@ export default function RegisterScreen() {
     if (!result.success || !result.user) {
       const errorCode = result.error?.code || "unknown";
       if (errorCode === "api/nickname-taken") {
-        setError("nickName", { message: "Smeknamnet upptaget!" });
+        setError("nickName", { message: t("auth.validation.nicknameTaken") });
         return;
       }
       setFirebaseError(getRegisterErrorMessage(errorCode));
@@ -107,7 +110,7 @@ export default function RegisterScreen() {
               <Image source={require("../../../assets/images/mammaapp.png")} style={s.logo} contentFit="contain" />
             </View>
             <View style={s.textInputContainer}>
-              <Text style={[s.text, { color: theme.colors.onSurface }]}>Skapa konto</Text>
+              <Text style={[s.text, { color: theme.colors.onSurface }]}>{t("auth.register")}</Text>
               <Controller
                 control={control}
                 render={({ field: { onChange, onBlur, value } }) => (
@@ -117,7 +120,7 @@ export default function RegisterScreen() {
                     onBlur={onBlur}
                     onChangeText={onChange}
                     value={value}
-                    label="Smeknamn"
+                    label={t("auth.nickname")}
                     autoCapitalize="words"
                     theme={{
                       colors: {
@@ -137,7 +140,7 @@ export default function RegisterScreen() {
                       fontWeight: 600,
                     }}
                   >
-                    {errors.nickName?.message}
+                    {errors.nickName?.message ? t(asTranslationKey(errors.nickName.message)) : ""}
                   </Text>
                 )}
               </View>
@@ -150,7 +153,7 @@ export default function RegisterScreen() {
                     onBlur={onBlur}
                     onChangeText={onChange}
                     value={value}
-                    label="Epost"
+                    label={t("auth.email")}
                     autoCapitalize="none"
                     keyboardType="email-address"
                     theme={{
@@ -171,7 +174,7 @@ export default function RegisterScreen() {
                       fontWeight: 600,
                     }}
                   >
-                    {errors.email?.message}
+                    {errors.email?.message ? t(asTranslationKey(errors.email.message)) : ""}
                   </Text>
                 )}
               </View>
@@ -182,7 +185,7 @@ export default function RegisterScreen() {
                     passwordCallback={onChange}
                     error={!!errors.password}
                     onBlur={onBlur}
-                    label="Lösenord"
+                    label={t("auth.password")}
                   />
                 )}
                 name="password"
@@ -196,7 +199,7 @@ export default function RegisterScreen() {
                       fontWeight: 600,
                     }}
                   >
-                    {errors.password?.message}
+                    {errors.password?.message ? t(asTranslationKey(errors.password.message)) : ""}
                   </Text>
                 )}
               </View>
@@ -207,7 +210,7 @@ export default function RegisterScreen() {
                     passwordCallback={onChange}
                     error={!!errors.password}
                     onBlur={onBlur}
-                    label=" Upprepa Lösenord"
+                    label={t("auth.repeatPassword")}
                     onSubmitEditing={handleSubmit(onSubmit)}
                   />
                 )}
@@ -222,23 +225,23 @@ export default function RegisterScreen() {
                       fontWeight: 600,
                     }}
                   >
-                    {errors.confirmPassword?.message}
+                    {errors.confirmPassword?.message ? t(asTranslationKey(errors.confirmPassword.message)) : ""}
                   </Text>
                 )}
               </View>
               <View style={s.actionContainer}>
                 <Button mode="contained" style={s.button} onPress={handleSubmit(onSubmit)} disabled={isSubmitting}>
-                  {isSubmitting ? "Skapar konto..." : "Skapa konto"}
+                  {isSubmitting ? t("auth.registering") : t("auth.register")}
                 </Button>
                 {firebaseError && <Text style={[s.errorText, { color: theme.colors.error }]}>{firebaseError}</Text>}
                 <Link style={[s.linkText, { color: theme.colors.onSurface }]} replace href="./login">
-                  <Text>Redan medlem? </Text>
+                  <Text>{t("auth.alreadyMember")} </Text>
                   <Text
                     style={{
                       color: theme.colors.tertiary,
                     }}
                   >
-                    Logga in här.
+                    {t("auth.loginHere")}
                   </Text>
                 </Link>
               </View>

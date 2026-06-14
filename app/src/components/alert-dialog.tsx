@@ -2,6 +2,7 @@ import { DIALOG_BORDER_RADIUS } from "@/constants/constants";
 import React from "react";
 import { Text, View } from "react-native";
 import { Button, Dialog, Portal } from "react-native-paper";
+import { useTranslation } from "react-i18next";
 
 interface AlertDialogProps {
   visible: boolean;
@@ -24,8 +25,10 @@ export default function AlertDialog({
   textColor,
   confirmText,
   onConfirm,
-  cancelText = "Ok",
+  cancelText,
 }: AlertDialogProps) {
+  const { t } = useTranslation();
+  const resolvedCancelText = cancelText ?? t("common.ok");
   return (
     <Portal>
       <Dialog
@@ -45,7 +48,7 @@ export default function AlertDialog({
         </Dialog.Content>
         <Dialog.Actions>
           <Button onPress={onDismiss}>
-            <Text style={{ fontSize: 18, color: textColor }}>{cancelText}</Text>
+            <Text style={{ fontSize: 18, color: textColor }}>{resolvedCancelText}</Text>
           </Button>
           {confirmText && onConfirm && (
             <Button onPress={onConfirm}>

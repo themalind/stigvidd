@@ -17,6 +17,7 @@ import { useRef, useState } from "react";
 import { Dimensions, Pressable, StyleSheet, View } from "react-native";
 import MapView, { Polyline } from "react-native-maps";
 import { Button, Icon, Modal, Portal, Text, useTheme } from "react-native-paper";
+import { useTranslation } from "react-i18next";
 import Map from "../../map/map";
 
 interface Props {
@@ -35,6 +36,7 @@ export default function HikeDetails({ visible, hike, onDismiss }: Props) {
 
   const mapRef = useRef<MapView>(null);
   const theme = useTheme();
+  const { t } = useTranslation();
   const user = useAtomValue(stigviddUserAtom);
   const queryClient = useQueryClient();
   const coordinates = CoordinateParser({ data: hike.coordinates ?? "", identifier: hike.identifier });
@@ -53,7 +55,7 @@ export default function HikeDetails({ visible, hike, onDismiss }: Props) {
       queryClient.invalidateQueries({ queryKey: ["hikes", user.data?.identifier] });
     },
     onError: () => {
-      setErrorMsg("Kunde inte uppdatera promenaden");
+      setErrorMsg(t("hike.updateError"));
     },
   });
 
@@ -62,10 +64,10 @@ export default function HikeDetails({ visible, hike, onDismiss }: Props) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["hikes", user.data?.identifier] });
       onDismiss();
-      setSuccessMsg("Din promenad har tagits bort!");
+      setSuccessMsg(t("hike.deleted"));
     },
     onError: () => {
-      setErrorMsg("Något gick fel försök igen senare.");
+      setErrorMsg(t("hike.genericError"));
     },
   });
 
@@ -74,15 +76,15 @@ export default function HikeDetails({ visible, hike, onDismiss }: Props) {
     onSuccess: () => {
       setShowShareModal(false);
       onDismiss();
-      setSuccessMsg("Promenaden har delats!");
+      setSuccessMsg(t("hike.shared"));
     },
     onError: (error) => {
       setShowShareModal(false);
       onDismiss();
       if (error instanceof ApiError && error.status === 409) {
-        setErrorMsg("Mottagaren har redan promenaden.");
+        setErrorMsg(t("hike.alreadyHas"));
       } else {
-        setErrorMsg("Något gick fel försök igen senare.");
+        setErrorMsg(t("hike.genericError"));
       }
     },
   });
@@ -127,20 +129,20 @@ export default function HikeDetails({ visible, hike, onDismiss }: Props) {
         </View>
         <View style={s.buttonGroup}>
           <Button style={s.button} mode="contained" icon="share" onPress={() => setShowShareModal(true)}>
-            Dela
+            {t("hike.share")}
           </Button>
           <Button style={s.button} mode="outlined" icon="delete" onPress={handeleDelete}>
-            Ta bort
+            {t("hike.delete")}
           </Button>
         </View>
         <AlertDialog
           visible={showOnDeleteDialog}
           onDismiss={() => setOnDeleteDialog(false)}
-          title="Ta bort promenad"
-          infoText={["Vill du ta bort promenaden?"]}
+          title={t("hike.deleteTitle")}
+          infoText={[t("hike.deleteConfirm")]}
           textColor={theme.colors.onSurface}
-          confirmText="Ta bort"
-          cancelText="Avbryt"
+          confirmText={t("hike.delete")}
+          cancelText={t("common.cancel")}
           onConfirm={() => deleteMutation.mutate(hike.identifier)}
           backgroundColor={theme.colors.surface}
         />

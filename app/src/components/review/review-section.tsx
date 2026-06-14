@@ -8,6 +8,7 @@ import { useAtom, useSetAtom } from "jotai";
 import { Fragment } from "react";
 import { Alert, Pressable, StyleSheet, View } from "react-native";
 import { Divider, List, Text, useTheme } from "react-native-paper";
+import { useTranslation } from "react-i18next";
 import { Rating } from "./rating";
 import ReviewImageGrid from "./review-image-grid ";
 
@@ -17,19 +18,19 @@ interface ReviewProps {
 
 export default function ReviewSection({ reviews }: ReviewProps) {
   const theme = useTheme();
+  const { t } = useTranslation();
   const [{ data: user }] = useAtom(stigviddUserAtom);
   const setSuccessMessage = useSetAtom(showSuccessAtom);
   const deleteMutation = useDeleteReview();
 
   const handleDelete = async (reviewIdentifier: string, trailIdentifier: string) => {
-    // Byt till nåt snyggare typ alertdialogen
-    Alert.alert("Ta bort recension", "Är du säker på att du vill ta bort din recension?", [
+    Alert.alert(t("review.deleteTitle"), t("review.deleteConfirm"), [
       {
-        text: "Avbryt",
+        text: t("common.cancel"),
         style: "cancel",
       },
       {
-        text: "Ta bort",
+        text: t("common.delete"),
         style: "destructive",
         onPress: () => {
           deleteMutation.mutate({ reviewIdentifier, trailIdentifier });
@@ -39,7 +40,6 @@ export default function ReviewSection({ reviews }: ReviewProps) {
   };
 
   const handleReportReview = () => {
-    // Hej admin här kommer en olämplig review
     setSuccessMessage("For Gnomeregan!");
   };
 

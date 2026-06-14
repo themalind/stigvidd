@@ -10,6 +10,7 @@ import { useAtom } from "jotai";
 import React, { useState } from "react";
 import { Platform, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { ActivityIndicator, Avatar, Button, IconButton, Searchbar, Surface, Text, useTheme } from "react-native-paper";
+import { useTranslation } from "react-i18next";
 
 const PREVIEW_COUNT = 5;
 
@@ -17,6 +18,7 @@ export default function FriendsScreen() {
   const [query, setQuery] = useState("");
   const { acceptMutation, rejectMutation, sendRequestMutation, removeFriendMutation } = useFriendMutations();
   const theme = useTheme();
+  const { t } = useTranslation();
   const [friendToRemoveId, setFriendToRemoveId] = useState<string | null>(null);
   const [friendsExpanded, setFriendsExpanded] = useState(false);
   const [incomingExpanded, setIncomingExpanded] = useState(false);
@@ -53,11 +55,11 @@ export default function FriendsScreen() {
         <View style={s.header}>
           <BackButton />
           <MaterialCommunityIcons name="account-group" size={24} color={theme.colors.onSurfaceVariant} />
-          <Text style={s.headerTitle}>Vänner</Text>
+          <Text style={s.headerTitle}>{t("friends.title")}</Text>
         </View>
         <View style={s.content}>
           <Searchbar
-            placeholder="Sök användare"
+            placeholder={t("friends.search")}
             value={query}
             onChangeText={setQuery}
             style={[s.searchbar, { backgroundColor: theme.colors.surface }]}
@@ -66,15 +68,15 @@ export default function FriendsScreen() {
 
           {showSearchResults && (
             <View style={s.section}>
-              <SectionHeader icon="account-search" label="Sökresultat" color={theme.colors.onSurfaceVariant} />
+              <SectionHeader icon="account-search" label={t("friends.searchResults")} color={theme.colors.onSurfaceVariant} />
               <Surface style={[s.card, { backgroundColor: theme.colors.surface }]} elevation={0}>
                 <View style={s.cardInner}>
                   {searchPending ? (
                     <ActivityIndicator style={s.loader} />
                   ) : searchError ? (
-                    <EmptyState text="Något gick fel vid sökning" />
+                    <EmptyState text={t("friends.searchError")} />
                   ) : searchResults?.length === 0 ? (
-                    <EmptyState text="Inga användare hittades" />
+                    <EmptyState text={t("friends.noResults")} />
                   ) : (
                     <>
                       {(searchExpanded ? searchResults : searchResults?.slice(0, PREVIEW_COUNT))?.map(
@@ -118,7 +120,9 @@ export default function FriendsScreen() {
                       )}
                       {(searchResults?.length ?? 0) > PREVIEW_COUNT && (
                         <Button mode="text" onPress={() => setSearchExpanded((v) => !v)} style={s.retryButton}>
-                          {searchExpanded ? "Visa färre" : `Visa alla (${searchResults?.length})`}
+                          {searchExpanded
+                            ? t("friends.showLess")
+                            : t("friends.showAll", { count: searchResults?.length })}
                         </Button>
                       )}
                     </>
@@ -132,7 +136,7 @@ export default function FriendsScreen() {
             <View style={s.section}>
               <SectionHeader
                 icon="account-arrow-down"
-                label={`Inkommande (${incomingRequests?.length})`}
+                label={t("friends.incomingCount", { count: incomingRequests?.length })}
                 color={theme.colors.onSurfaceVariant}
               />
               <Surface style={[s.card, { backgroundColor: theme.colors.surface }]} elevation={0}>
@@ -179,7 +183,9 @@ export default function FriendsScreen() {
                   )}
                   {(incomingRequests?.length ?? 0) > PREVIEW_COUNT && (
                     <Button mode="text" onPress={() => setIncomingExpanded((v) => !v)} style={s.retryButton}>
-                      {incomingExpanded ? "Visa färre" : `Visa alla (${incomingRequests?.length})`}
+                      {incomingExpanded
+                        ? t("friends.showLess")
+                        : t("friends.showAll", { count: incomingRequests?.length })}
                     </Button>
                   )}
                 </View>
@@ -188,12 +194,12 @@ export default function FriendsScreen() {
           )}
           {incomingError && (
             <View style={s.section}>
-              <SectionHeader icon="account-arrow-down" label="Inkommande" color={theme.colors.onSurfaceVariant} />
+              <SectionHeader icon="account-arrow-down" label={t("friends.incomingTitle")} color={theme.colors.onSurfaceVariant} />
               <Surface style={[s.card, { backgroundColor: theme.colors.surface }]} elevation={0}>
                 <View style={s.cardInner}>
-                  <EmptyState text="Kunde inte hämta förfrågningar" />
+                  <EmptyState text={t("friends.incomingError")} />
                   <Button mode="text" onPress={() => refetchIncoming()} style={s.retryButton}>
-                    Försök igen
+                    {t("friends.retry")}
                   </Button>
                 </View>
               </Surface>
@@ -204,7 +210,7 @@ export default function FriendsScreen() {
             <View style={s.section}>
               <SectionHeader
                 icon="account-arrow-right"
-                label={`Skickade (${outgoingRequests?.length})`}
+                label={t("friends.outgoingCount", { count: outgoingRequests?.length })}
                 color={theme.colors.onSurfaceVariant}
               />
               <Surface style={[s.card, { backgroundColor: theme.colors.surface }]} elevation={0}>
@@ -240,7 +246,9 @@ export default function FriendsScreen() {
                   )}
                   {(outgoingRequests?.length ?? 0) > PREVIEW_COUNT && (
                     <Button mode="text" onPress={() => setOutgoingExpanded((v) => !v)} style={s.retryButton}>
-                      {outgoingExpanded ? "Visa färre" : `Visa alla (${outgoingRequests?.length})`}
+                      {outgoingExpanded
+                        ? t("friends.showLess")
+                        : t("friends.showAll", { count: outgoingRequests?.length })}
                     </Button>
                   )}
                 </View>
@@ -249,12 +257,12 @@ export default function FriendsScreen() {
           )}
           {outgoingError && (
             <View style={s.section}>
-              <SectionHeader icon="account-arrow-right" label="Skickade" color={theme.colors.onSurfaceVariant} />
+              <SectionHeader icon="account-arrow-right" label={t("friends.outgoingTitle")} color={theme.colors.onSurfaceVariant} />
               <Surface style={[s.card, { backgroundColor: theme.colors.surface }]} elevation={0}>
                 <View style={s.cardInner}>
-                  <EmptyState text="Kunde inte hämta förfrågningar" />
+                  <EmptyState text={t("friends.outgoingError")} />
                   <Button mode="text" onPress={() => refetchOutgoing()} style={s.retryButton}>
-                    Försök igen
+                    {t("friends.retry")}
                   </Button>
                 </View>
               </Surface>
@@ -264,7 +272,7 @@ export default function FriendsScreen() {
           <View style={s.section}>
             <SectionHeader
               icon="account-group"
-              label={`Vänner${friends ? ` (${friends.length})` : ""}`}
+              label={friends ? t("friends.friendsCount", { count: friends.length }) : t("friends.friendsTitle")}
               color={theme.colors.onSurfaceVariant}
             />
             <Surface style={[s.card, { backgroundColor: theme.colors.surface }]} elevation={0}>
@@ -273,13 +281,13 @@ export default function FriendsScreen() {
                   <ActivityIndicator style={s.loader} />
                 ) : friendsError ? (
                   <>
-                    <EmptyState text="Kunde inte hämta vänner" />
+                    <EmptyState text={t("friends.friendsError")} />
                     <Button mode="text" onPress={() => refetchFriends()} style={s.retryButton}>
-                      Försök igen
+                      {t("friends.retry")}
                     </Button>
                   </>
                 ) : friends?.length === 0 ? (
-                  <EmptyState text="Du har inga vänner än — sök ovan för att lägga till någon!" />
+                  <EmptyState text={t("friends.noFriends")} />
                 ) : (
                   <>
                     {(friendsExpanded ? friends : friends?.slice(0, PREVIEW_COUNT))?.map((friend, i, arr) => (
@@ -311,7 +319,7 @@ export default function FriendsScreen() {
                     ))}
                     {(friends?.length ?? 0) > PREVIEW_COUNT && (
                       <Button mode="text" onPress={() => setFriendsExpanded((v) => !v)} style={s.retryButton}>
-                        {friendsExpanded ? "Visa färre" : `Visa alla (${friends?.length})`}
+                        {friendsExpanded ? t("friends.showLess") : t("friends.showAll", { count: friends?.length })}
                       </Button>
                     )}
                   </>
@@ -325,13 +333,15 @@ export default function FriendsScreen() {
                 if (friendToRemoveId) removeFriendMutation.mutate(friendToRemoveId);
                 setFriendToRemoveId(null);
               }}
-              title="Ta bort vän"
+              title={t("friends.removeTitle")}
               infoText={[
-                `Du håller på att ta avsluta din vänskap med ${friends?.find((f) => f.identifier === friendToRemoveId)?.nickName ?? ""}`,
-                "Vill du fortsätta?",
+                t("friends.removeInfo", {
+                  name: friends?.find((f) => f.identifier === friendToRemoveId)?.nickName ?? "",
+                }),
+                t("friends.removeContinue"),
               ]}
-              cancelText="Avbryt"
-              confirmText="Ta bort"
+              cancelText={t("common.cancel")}
+              confirmText={t("friends.remove")}
               backgroundColor={theme.colors.surface}
               textColor={theme.colors.onSurface}
             />

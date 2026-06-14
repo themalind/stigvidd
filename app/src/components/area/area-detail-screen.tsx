@@ -1,14 +1,17 @@
 import { borasAreas, FacilityType } from "@/data/areas-data";
+import { asTranslationKey } from "@/i18n";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useLocalSearchParams } from "expo-router";
 import React from "react";
 import { Image, ScrollView, StyleSheet, View } from "react-native";
 import { ActivityIndicator, Divider, Text, useTheme } from "react-native-paper";
+import { useTranslation } from "react-i18next";
 import BackButton from "../back-button";
 import FacilitySection from "./facility-section";
 
 export default function AreaDetailScreen() {
   const theme = useTheme();
+  const { t } = useTranslation();
   const params = useLocalSearchParams<{ identifier: string }>();
   const identifier = Array.isArray(params.identifier) ? params.identifier[0] : params.identifier;
   const area = borasAreas.find((i) => i.identifier === identifier);
@@ -33,19 +36,23 @@ export default function AreaDetailScreen() {
           <Text style={[s.title, { color: theme.colors.onBackground }]}>{area.name}</Text>
           <View style={s.locationRow}>
             <MaterialIcons name="place" size={16} color={theme.colors.primary} />
-            <Text style={[s.locationText, { color: theme.colors.onSurfaceVariant }]}>{area.location}</Text>
+            <Text style={[s.locationText, { color: theme.colors.onSurfaceVariant }]}>
+              {t(asTranslationKey(area.location))}
+            </Text>
           </View>
         </View>
-        <Text style={[s.description, { color: theme.colors.onBackground }]}>{area.description}</Text>
+        <Text style={[s.description, { color: theme.colors.onBackground }]}>
+          {t(asTranslationKey(area.description))}
+        </Text>
 
         {hasFacilities && (
           <>
             <Divider />
-            <Text style={[s.facilitiesHeading, { color: theme.colors.onBackground }]}>Faciliteter</Text>
-            <FacilitySection title="Grillplatser" icon="outdoor-grill" items={firePits} />
-            <FacilitySection title="Vindskydd" icon="cabin" items={shelter} />
-            <FacilitySection title="Fiske" icon="set-meal" items={fishing} />
-            <FacilitySection title="Badplatser" icon="pool" items={swimming} />
+            <Text style={[s.facilitiesHeading, { color: theme.colors.onBackground }]}>{t("area.facilities")}</Text>
+            <FacilitySection title={t("area.firePits")} icon="outdoor-grill" items={firePits} />
+            <FacilitySection title={t("area.shelters")} icon="cabin" items={shelter} />
+            <FacilitySection title={t("area.fishing")} icon="set-meal" items={fishing} />
+            <FacilitySection title={t("area.swimming")} icon="pool" items={swimming} />
           </>
         )}
       </ScrollView>

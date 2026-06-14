@@ -1,4 +1,5 @@
 import { userPasswordReset } from "@/api/auth";
+import { asTranslationKey } from "@/i18n";
 import { getPasswordResetErrorMessage } from "@/api/firebase-errors";
 import { showSuccessAtom } from "@/atoms/snackbar-atoms";
 import { BORDER_RADIUS } from "@/constants/constants";
@@ -7,6 +8,7 @@ import { BlurView } from "expo-blur";
 import { useSetAtom } from "jotai";
 import { useState } from "react";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 import { Dimensions, Pressable, StyleSheet, View } from "react-native";
 import { Button, Icon, Modal, Portal, Text, TextInput, useTheme } from "react-native-paper";
 import { z } from "zod";
@@ -17,7 +19,7 @@ interface Props {
 }
 
 const resetFields = z.object({
-  email: z.string({ required_error: "Du måste ange en e-post" }).email("Ange en giltig e-post"),
+  email: z.string({ required_error: "auth.validation.emailRequired" }).email("auth.validation.emailInvalid"),
 });
 
 type FormFields = z.infer<typeof resetFields>;
@@ -25,6 +27,7 @@ type FormFields = z.infer<typeof resetFields>;
 const { width } = Dimensions.get("screen");
 
 export default function ResetPasswordModal({ visible, onDismiss }: Props) {
+  const { t } = useTranslation();
   const theme = useTheme();
   const [firebaseError, setFirebaseError] = useState("");
   const setSuccessMessage = useSetAtom(showSuccessAtom);
@@ -46,7 +49,7 @@ export default function ResetPasswordModal({ visible, onDismiss }: Props) {
     }
 
     onDismiss();
-    setSuccessMessage("Kolla din e-post! Kika även i skräpposten.");
+    setSuccessMessage(t("auth.checkEmail"));
   };
 
   return (
@@ -59,7 +62,7 @@ export default function ResetPasswordModal({ visible, onDismiss }: Props) {
       >
         <View style={{ gap: 20, padding: 20 }}>
           <View style={s.titleDismissView}>
-            <Text style={s.textTitle}>Återställ ditt lösenord </Text>
+            <Text style={s.textTitle}>{t("auth.resetPassword")} </Text>
             <Pressable hitSlop={12} onPress={onDismiss}>
               <Icon source="close" size={24} />
             </Pressable>
@@ -74,7 +77,7 @@ export default function ResetPasswordModal({ visible, onDismiss }: Props) {
                   onBlur={onBlur}
                   onChangeText={onChange}
                   value={value}
-                  label="Ange e-post"
+                  label={t("auth.enterEmail")}
                   autoCapitalize="none"
                   keyboardType="email-address"
                   theme={{
@@ -95,16 +98,16 @@ export default function ResetPasswordModal({ visible, onDismiss }: Props) {
                     fontWeight: 600,
                   }}
                 >
-                  {errors.email.message}
+                  {errors.email.message ? t(asTranslationKey(errors.email.message)) : ""}
                 </Text>
               </View>
             )}
           </View>
           <Button mode="contained" style={s.button} disabled={isSubmitting} onPress={handleSubmit(onSubmit)}>
-            {isSubmitting ? "Skickar..." : "Skicka"}
+            {isSubmitting ? t("common.sending") : t("common.send")}
           </Button>
           {firebaseError && <Text style={[s.errorText, { color: theme.colors.error }]}>{firebaseError}</Text>}
-          <Text style={{ textAlign: "center" }}>Får du inget mail? Kika i din skräppost!</Text>
+          <Text style={{ textAlign: "center" }}>{t("auth.checkSpam")}</Text>
         </View>
       </Modal>
     </Portal>

@@ -7,9 +7,11 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Redirect } from "expo-router";
 import { useAtom } from "jotai";
 import { useTheme } from "react-native-paper";
+import { useTranslation } from "react-i18next";
 
 export default function FavoritesScreen() {
   const theme = useTheme();
+  const { t } = useTranslation();
   const [{ data, isLoading, isError, error }] = useAtom(userFavoritesAtom);
   const [removeFromFavorite] = useAtom(removeFromFavoritesAtom);
   const [authState] = useAtom(authStateAtom);
@@ -32,9 +34,9 @@ export default function FavoritesScreen() {
 
   return (
     <UserTrailCollection
-      title="Mina favoriter"
-      description="Här är dina sparade favoriter."
-      noTrailsSavedInfo="Inga Favoriter sparade än. Gå till en promenad och tryck på hjärtat för att lägga till."
+      title={t("collection.favorites.title")}
+      description={t("collection.favorites.description")}
+      noTrailsSavedInfo={t("collection.favorites.empty")}
       onDelete={handleDelete}
       trails={data ?? []}
       icon={<MaterialCommunityIcons name="cards-heart" size={24} color={theme.colors.tertiary} />}

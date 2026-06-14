@@ -15,9 +15,11 @@ import { useAtom, useAtomValue } from "jotai";
 import { useState } from "react";
 import { Platform, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { Divider, Icon, Text, useTheme } from "react-native-paper";
+import { useTranslation } from "react-i18next";
 
 export default function MyHikesScreen() {
   const theme = useTheme();
+  const { t } = useTranslation();
   const [authState] = useAtom(authStateAtom);
   const user = useAtomValue(stigviddUserAtom);
   const [visible, setVisible] = useState(false);
@@ -52,7 +54,7 @@ export default function MyHikesScreen() {
         <View style={s.header}>
           <BackButton />
           <Icon source="hiking" size={24} color={theme.colors.tertiary} />
-          <Text style={s.titleTextBold}>Mina sparade promenader</Text>
+          <Text style={s.titleTextBold}>{t("hike.myHikesTitle")}</Text>
         </View>
         <View style={s.content}>
           <Divider bold={true} />
@@ -61,7 +63,7 @@ export default function MyHikesScreen() {
           </Text>
           {hikes?.length === 0 ? (
             <Text style={{ color: theme.colors.onBackground, textAlign: "center", paddingVertical: 20 }}>
-              No hikes saved
+              {t("hike.noHikes")}
             </Text>
           ) : (
             hikes?.map((hike, index) => (

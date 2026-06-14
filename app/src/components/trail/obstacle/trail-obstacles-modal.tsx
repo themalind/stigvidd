@@ -3,6 +3,7 @@ import { TrailObstacle } from "@/data/types";
 import { MaterialIcons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Dimensions, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { Modal, Portal, Text, useTheme } from "react-native-paper";
 import TrailObstacleItem from "./trail-obstacle-item";
@@ -17,6 +18,7 @@ interface Props {
 const { height } = Dimensions.get("screen");
 
 export default function TrailObstacleModal({ visible, onDismiss, obstacles, trailIdentifier }: Props) {
+  const { t } = useTranslation();
   const theme = useTheme();
   return (
     <Portal>
@@ -29,20 +31,15 @@ export default function TrailObstacleModal({ visible, onDismiss, obstacles, trai
         <View style={s.header}>
           <View style={s.headerLeft}>
             <MaterialIcons name="warning-amber" size={18} color={theme.colors.error} />
-            <Text style={s.title}>Rapporterade hinder</Text>
+            <Text style={s.title}>{t("obstacle.modalTitle")}</Text>
           </View>
           <Pressable hitSlop={12} onPress={onDismiss}>
             <MaterialIcons name="close" size={24} color={theme.colors.onSurface} />
           </Pressable>
         </View>
         <View style={[s.infoBox, { backgroundColor: theme.colors.surfaceVariant }]}>
-          <Text style={[s.infoLabel, { color: theme.colors.onSurfaceVariant }]}>
-            Här visas rapporterade hinder längs leden.
-          </Text>
-          <Text style={[s.infoBody, { color: theme.colors.onSurfaceVariant }]}>
-            Hjälp gärna till genom att markera ett hinder som löst om det är åtgärdat. Det gör du genom att trycka på
-            bockikonen (✓) på det hinder du vill markera. Varningen tas bort efter 3 bekräftelser eller 30 dagar.
-          </Text>
+          <Text style={[s.infoLabel, { color: theme.colors.onSurfaceVariant }]}>{t("obstacle.modalInfo")}</Text>
+          <Text style={[s.infoBody, { color: theme.colors.onSurfaceVariant }]}>{t("obstacle.modalBody")}</Text>
         </View>
         <ScrollView contentContainerStyle={s.scrollContent} style={s.scrollView} showsVerticalScrollIndicator={false}>
           {obstacles?.map((obstacle) => (

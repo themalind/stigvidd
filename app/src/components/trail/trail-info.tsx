@@ -5,6 +5,7 @@ import { getDifficultyIcon } from "@/utils/getDifficultyIcon";
 import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Icon, Surface, useTheme } from "react-native-paper";
+import { useTranslation } from "react-i18next";
 import AccesibilityInfoModal from "./accessibility-info-modal";
 import DifficultyInfoModal from "./difficulty-info-modal";
 
@@ -14,24 +15,25 @@ interface TrailinfoProps {
 
 export default function TrailInfo({ trail }: TrailinfoProps) {
   const theme = useTheme();
+  const { t } = useTranslation();
   const [difficultyModal, setDifficultyModal] = useState(false);
   const [accessibiltyModal, setAccessibilityModal] = useState(false);
 
   return (
     <Surface elevation={0} style={[s.container, { backgroundColor: theme.colors.surface }]}>
-      <Text style={[s.sectionTitle, { color: theme.colors.onSurface }]}>Information</Text>
+      <Text style={[s.sectionTitle, { color: theme.colors.onSurface }]}>{t("trail.info")}</Text>
       <View style={s.grid}>
         <View style={s.item}>
-          <Text style={[s.label, { color: theme.colors.onSurfaceVariant }]}>Markering</Text>
+          <Text style={[s.label, { color: theme.colors.onSurfaceVariant }]}>{t("trail.marking")}</Text>
           <Text style={[s.value, { color: theme.colors.onSurface }]}>{trail.trailSymbol}</Text>
         </View>
         <View style={s.item}>
-          <Text style={[s.label, { color: theme.colors.onSurfaceVariant }]}>Längd</Text>
+          <Text style={[s.label, { color: theme.colors.onSurfaceVariant }]}>{t("trail.length")}</Text>
           <Text style={[s.value, { color: theme.colors.onSurface }]}>{trail.trailLenght} km</Text>
         </View>
         <View style={s.item}>
           <View style={s.infoIconContainer}>
-            <Text style={[s.label, { color: theme.colors.onSurfaceVariant }]}>Svårighetsgrad</Text>
+            <Text style={[s.label, { color: theme.colors.onSurfaceVariant }]}>{t("trail.difficulty")}</Text>
             <Pressable hitSlop={16} onPress={() => setDifficultyModal(true)}>
               <Icon source="information" size={17} color={theme.colors.onSurfaceVariant} />
             </Pressable>
@@ -50,18 +52,18 @@ export default function TrailInfo({ trail }: TrailinfoProps) {
         </View>
         <View style={s.item}>
           <View style={s.infoIconContainer}>
-            <Text style={[s.label, { color: theme.colors.onSurfaceVariant }]}>Tillgänglighet</Text>
+            <Text style={[s.label, { color: theme.colors.onSurfaceVariant }]}>{t("trail.accessibility")}</Text>
             <Pressable hitSlop={16} onPress={() => setAccessibilityModal(true)}>
               <Icon source="information" size={17} color={theme.colors.onSurfaceVariant} />
             </Pressable>
             <AccesibilityInfoModal onDismiss={() => setAccessibilityModal(false)} visible={accessibiltyModal} />
           </View>
           <Text style={[s.value, { color: theme.colors.onSurface }]}>
-            {trail.accessibility ? "Anpassad" : "Ej anpassad"}
+            {trail.accessibility ? t("trail.adapted") : t("trail.notAdapted")}
           </Text>
         </View>
         <View style={s.itemFull}>
-          <Text style={[s.label, { color: theme.colors.onSurfaceVariant }]}>Variation</Text>
+          <Text style={[s.label, { color: theme.colors.onSurfaceVariant }]}>{t("trail.variation")}</Text>
           <Text style={[s.value, { color: theme.colors.onSurface }]}>{trail.accessibilityInfo}</Text>
         </View>
       </View>

@@ -10,11 +10,13 @@ import { useAtom } from "jotai";
 import { useEffect, useState } from "react";
 import { Platform, StyleSheet, View } from "react-native";
 import { Text, useTheme } from "react-native-paper";
+import { useTranslation } from "react-i18next";
 
 export default function CreateHikeScreen() {
   const [{ isLoading, isError, error }] = useAtom(stigviddUserAtom);
   const [authState] = useAtom(authStateAtom);
   const theme = useTheme();
+  const { t } = useTranslation();
   const [locationGranted, setLocationGranted] = useState<boolean | null>(null);
 
   useEffect(() => {
@@ -32,9 +34,7 @@ export default function CreateHikeScreen() {
   }
 
   if (!locationGranted) {
-    return (
-      <Text style={{ color: theme.colors.error }}>Du behöver dela din plats för att kunna skapa en egen promenad.</Text>
-    );
+    return <Text style={{ color: theme.colors.error }}>{t("createHike.locationRequired")}</Text>;
   }
 
   if (isError) {

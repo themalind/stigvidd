@@ -1,7 +1,9 @@
 import { FacilityItem } from "@/data/areas-data";
+import { asTranslationKey } from "@/i18n";
 import { MaterialIcons } from "@expo/vector-icons";
 import { StyleSheet, View } from "react-native";
 import { Text, useTheme } from "react-native-paper";
+import { useTranslation } from "react-i18next";
 
 interface FacilitySectionProps {
   title: string;
@@ -11,6 +13,7 @@ interface FacilitySectionProps {
 
 export default function FacilitySection({ title, icon, items }: FacilitySectionProps) {
   const theme = useTheme();
+  const { t } = useTranslation();
   if (items.length === 0) return null;
   return (
     <View style={s.section}>
@@ -38,7 +41,9 @@ export default function FacilitySection({ title, icon, items }: FacilitySectionP
             </View>
           ) : null}
           {item.description ? (
-            <Text style={[s.facilityMeta, { color: theme.colors.onSurfaceVariant }]}>{item.description}</Text>
+            <Text style={[s.facilityMeta, { color: theme.colors.onSurfaceVariant }]}>
+              {t(asTranslationKey(item.description))}
+            </Text>
           ) : null}
         </View>
       ))}

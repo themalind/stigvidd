@@ -17,11 +17,13 @@ import { useAtom, useAtomValue } from "jotai";
 import React, { useState } from "react";
 import { Platform, ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
 import { Button, Divider, Icon, IconButton, Surface, Text, useTheme } from "react-native-paper";
+import { useTranslation } from "react-i18next";
 
 const PREVIEW_COUNT = 5;
 
 export default function SharedHikesScreen() {
   const theme = useTheme();
+  const { t } = useTranslation();
   const { acceptMutation, rejectMutation } = useSharedHikeMutations();
   const [incomingExpanded, setIncomingExpanded] = useState(false);
   const [authState] = useAtom(authStateAtom);
@@ -72,7 +74,7 @@ export default function SharedHikesScreen() {
         <View style={s.header}>
           <BackButton />
           <Icon source="hiking" size={24} color={theme.colors.onSurfaceVariant} />
-          <Text style={s.headerText}>Delade promenader</Text>
+          <Text style={s.headerText}>{t("hike.sharedHikesTitle")}</Text>
         </View>
         <View style={s.content}>
           <Divider bold={true} />
@@ -82,7 +84,7 @@ export default function SharedHikesScreen() {
               <View style={s.section}>
                 <SectionHeader
                   icon="map-marker-plus"
-                  label={`Inkommande (${incomingRequests?.length})`}
+                  label={t("friends.incomingCount", { count: incomingRequests?.length })}
                   color={theme.colors.onSurfaceVariant}
                   subtitle="Tryck på en promenad för att se detaljer"
                 />
@@ -107,7 +109,7 @@ export default function SharedHikesScreen() {
                                 {req.hikeName}
                               </Text>
                               <Text variant="bodySmall" style={{ color: theme.colors.secondary }}>
-                                Delad av: {req.sharedByName}
+                                {t("hike.sharedByLabel", { name: req.sharedByName })}
                               </Text>
                             </View>
                             <View style={s.rowActions}>
@@ -139,7 +141,7 @@ export default function SharedHikesScreen() {
                     )}
                     {(incomingRequests?.length ?? 0) > PREVIEW_COUNT && (
                       <Button mode="text" onPress={() => setIncomingExpanded((v) => !v)} style={s.showMoreButton}>
-                        {incomingExpanded ? "Visa färre" : `Visa alla (${incomingRequests?.length})`}
+                        {incomingExpanded ? t("friends.showLess") : t("friends.showAll", { count: incomingRequests?.length })}
                       </Button>
                     )}
                   </View>

@@ -10,6 +10,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import MapView, { Polyline, Region } from "react-native-maps";
 import { Text, useTheme } from "react-native-paper";
+import { useTranslation } from "react-i18next";
 import SaveHikeModal from "./save-hike-modal";
 
 export default function TrailCreator() {
@@ -25,6 +26,7 @@ export default function TrailCreator() {
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [initialRegion, setInitialRegion] = useState<Region | undefined>(undefined);
   const theme = useTheme();
+  const { t } = useTranslation();
 
   const polylineCoords = useMemo(() => {
     const finished = hike.segments.flatMap((segment) => segment.coordinates.map((locationData) => locationData.data));
@@ -116,7 +118,7 @@ export default function TrailCreator() {
             onPress={() => startTracking()}
           >
             <MaterialIcons name="hiking" size={28} color={theme.colors.onPrimary} />
-            <Text style={[s.buttonText, { color: theme.colors.onPrimary }]}>Starta vandring</Text>
+            <Text style={[s.buttonText, { color: theme.colors.onPrimary }]}>{t("createHike.start")}</Text>
           </Pressable>
         ) : isTracking ? (
           <Pressable style={[s.actionButton, { backgroundColor: theme.colors.surface }]} onPress={() => stopTracking()}>
@@ -130,21 +132,21 @@ export default function TrailCreator() {
               onPress={() => setShowDeleteDialog(true)}
             >
               <MaterialIcons name="close" size={28} color={theme.colors.error} />
-              <Text style={s.buttonText}>Nollställ</Text>
+              <Text style={s.buttonText}>{t("createHike.reset")}</Text>
             </Pressable>
             <Pressable
               style={[s.actionButton, { backgroundColor: theme.colors.primary }]}
               onPress={() => setShowSaveModal(true)}
             >
               <MaterialIcons name="save" size={28} color={theme.colors.onPrimary} />
-              <Text style={[s.buttonText, { color: theme.colors.onPrimary }]}>Spara</Text>
+              <Text style={[s.buttonText, { color: theme.colors.onPrimary }]}>{t("common.save")}</Text>
             </Pressable>
             <Pressable
               style={[s.actionButton, { backgroundColor: theme.colors.outlineVariant }]}
               onPress={() => startTracking()}
             >
               <MaterialIcons name="play-arrow" size={28} color={theme.colors.onSurface} />
-              <Text style={[s.buttonText, { color: theme.colors.onSurface }]}>Återuppta</Text>
+              <Text style={[s.buttonText, { color: theme.colors.onSurface }]}>{t("createHike.resume")}</Text>
             </Pressable>
           </>
         )}
@@ -158,12 +160,12 @@ export default function TrailCreator() {
           resetTracking();
           setShowDeleteDialog(false);
         }}
-        title={"Avbryt pågående promenad"}
-        infoText={["Vill du verkligen avbryta den pågående promenad?", "Detta går inte att ångra."]}
+        title={t("createHike.cancelTitle")}
+        infoText={[t("createHike.cancelConfirm"), t("createHike.cancelWarning")]}
         backgroundColor={theme.colors.background}
         textColor={theme.colors.onBackground}
-        cancelText={"Nej"}
-        confirmText={"Ja"}
+        cancelText={t("createHike.no")}
+        confirmText={t("createHike.yes")}
       />
 
       <SaveHikeModal

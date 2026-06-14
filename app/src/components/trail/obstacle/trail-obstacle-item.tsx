@@ -13,6 +13,7 @@ import { useAtom, useAtomValue } from "jotai";
 import { useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { Divider, Text, useTheme } from "react-native-paper";
+import { useTranslation } from "react-i18next";
 import TrailObstacleUpdateForm from "./trail-obstacle-update-form";
 
 interface Props {
@@ -23,6 +24,7 @@ interface Props {
 
 export default function TrailObstacleItem({ obstacle, trailIdentifier, onCloseModal }: Props) {
   const theme = useTheme();
+  const { t } = useTranslation();
   const [authState] = useAtom(authStateAtom);
   const { data: stigviddUser } = useAtomValue(stigviddUserAtom);
   const [showAuthDialog, setAuthDialog] = useState(false);
@@ -95,7 +97,7 @@ export default function TrailObstacleItem({ obstacle, trailIdentifier, onCloseMo
     <View style={[s.container, { borderColor: theme.colors.outlineVariant }]}>
       <View style={s.categoryRow}>
         <View style={s.field}>
-          <Text style={[s.label, { color: theme.colors.onSurfaceVariant }]}>Kategori</Text>
+          <Text style={[s.label, { color: theme.colors.onSurfaceVariant }]}>{t("obstacle.category")}</Text>
           <Text style={[s.value, { color: theme.colors.onSurface }]}>{issueTypeParser(obstacle.issueType)}</Text>
         </View>
         {isOwner && (
@@ -111,12 +113,12 @@ export default function TrailObstacleItem({ obstacle, trailIdentifier, onCloseMo
       </View>
       <Divider />
       <View style={s.field}>
-        <Text style={[s.label, { color: theme.colors.onSurfaceVariant }]}>Beskrivning</Text>
+        <Text style={[s.label, { color: theme.colors.onSurfaceVariant }]}>{t("obstacle.description")}</Text>
         <Text style={[s.description, { color: theme.colors.onSurface }]}>{obstacle.description}</Text>
       </View>
       <View style={s.footer}>
         <View style={s.field}>
-          <Text style={[s.label, { color: theme.colors.onSurfaceVariant }]}>Datum</Text>
+          <Text style={[s.label, { color: theme.colors.onSurfaceVariant }]}>{t("obstacle.date")}</Text>
           <Text style={[s.value, { color: theme.colors.onSurface }]}>{formatDate(obstacle.createdAt)}</Text>
         </View>
 
@@ -144,11 +146,11 @@ export default function TrailObstacleItem({ obstacle, trailIdentifier, onCloseMo
       <AlertDialog
         visible={showDeleteDialog}
         onDismiss={() => setShowDeleteDialog(false)}
-        title="Ta bort hinder"
-        infoText={["Är du säker på att du vill ta bort den här rapporten?", "Åtgärden kan inte ångras."]}
+        title={t("obstacle.deleteTitle")}
+        infoText={[t("obstacle.deleteConfirm"), t("obstacle.deleteWarning")]}
         onConfirm={handleDelete}
-        confirmText="Ta bort"
-        cancelText="Avbryt"
+        confirmText={t("common.delete")}
+        cancelText={t("common.cancel")}
         backgroundColor={theme.colors.surface}
         textColor={theme.colors.onSurface}
       />
@@ -156,34 +158,27 @@ export default function TrailObstacleItem({ obstacle, trailIdentifier, onCloseMo
         visible={showAuthDialog}
         onDissmiss={() => setAuthDialog(false)}
         onBeforeNavigate={onCloseModal}
-        infoMessage="Du behöver vara inloggad för att markera ett hinder som löst."
+        infoMessage={t("obstacle.notAuthVote")}
       />
       <AlertDialog
         visible={showVoteDialog}
         onDismiss={() => setShowVoteDialog(false)}
-        title="Hinder åtgärdat"
-        infoText={[
-          "Vill du markera detta hinder som löst?",
-          "När du markerar som åtgärdat intygar du att hindret inte längre finns kvar. Vill du fortsätta?",
-        ]}
+        title={t("obstacle.fixedTitle")}
+        infoText={[t("obstacle.fixedConfirm"), t("obstacle.fixedInfo")]}
         onConfirm={handleAddVote}
-        confirmText="Ok"
-        cancelText="Avbryt"
+        confirmText={t("common.ok")}
+        cancelText={t("common.cancel")}
         backgroundColor={theme.colors.surface}
         textColor={theme.colors.onSurface}
       />
       <AlertDialog
         visible={showUndoDialog}
         onDismiss={() => setShowUndoDialog(false)}
-        title="Ta bort markering"
-        infoText={[
-          "Du har redan markerat detta hinder som löst.",
-          "Vill du ta bort din markering?",
-          "Detta innebär att hindret inte längre räknas som åtgärdat från din sida.",
-        ]}
+        title={t("obstacle.undoTitle")}
+        infoText={[t("obstacle.undoInfo1"), t("obstacle.undoInfo2"), t("obstacle.undoInfo3")]}
         onConfirm={handleRemoveVote}
-        confirmText="Ta bort"
-        cancelText="Avbryt"
+        confirmText={t("common.delete")}
+        cancelText={t("common.cancel")}
         backgroundColor={theme.colors.surface}
         textColor={theme.colors.onSurface}
       />

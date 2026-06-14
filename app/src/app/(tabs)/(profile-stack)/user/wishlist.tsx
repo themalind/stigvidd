@@ -7,9 +7,11 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { Redirect } from "expo-router";
 import { useAtom } from "jotai";
 import { Text, useTheme } from "react-native-paper";
+import { useTranslation } from "react-i18next";
 
 export default function WishlistScreen() {
   const theme = useTheme();
+  const { t } = useTranslation();
   const [{ data, isLoading, isError, error }] = useAtom(userWishlistAtom);
   const [removeUserWishlist] = useAtom(removeFromWishlistAtom);
   const [authState] = useAtom(authStateAtom);
@@ -32,9 +34,9 @@ export default function WishlistScreen() {
 
   return (
     <UserTrailCollection
-      title="Vill gå"
-      description="Här är promenader du sparat att du vill gå."
-      noTrailsSavedInfo="Du har inga sparade promenader som du vill gå än. Gå till en promenad och tryck på plusset för att lägga till."
+      title={t("collection.wishlist.title")}
+      description={t("collection.wishlist.description")}
+      noTrailsSavedInfo={t("collection.wishlist.empty")}
       onDelete={handleDelete}
       trails={data ?? []}
       icon={<MaterialIcons name="star" size={24} color={theme.colors.tertiary} />}

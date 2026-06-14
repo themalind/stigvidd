@@ -18,6 +18,7 @@ import { useRef, useState } from "react";
 import { ActivityIndicator, Dimensions, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import MapView, { Polyline } from "react-native-maps";
 import { Button, Divider, Icon, Modal, Portal, Text, useTheme } from "react-native-paper";
+import { useTranslation } from "react-i18next";
 import Map from "./../map/map";
 
 interface Props {
@@ -50,6 +51,7 @@ export default function SharedHikeDetails({
 
   const mapRef = useRef<MapView>(null);
   const theme = useTheme();
+  const { t } = useTranslation();
   const user = useAtomValue(stigviddUserAtom);
   const queryClient = useQueryClient();
   const coordinates = sharedHike
@@ -69,10 +71,10 @@ export default function SharedHikeDetails({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["shared-hikes", user.data?.identifier] });
       onDismiss();
-      setSuccessMsg("Promenaden har tagits bort!");
+      setSuccessMsg(t("hike.sharedHikeDeleted"));
     },
     onError: () => {
-      setErrorMsg("Något gick fel försök igen senare.");
+      setErrorMsg(t("hike.genericError"));
     },
   });
 
@@ -81,17 +83,17 @@ export default function SharedHikeDetails({
     onSuccess: () => {
       setShowShareModal(false);
       onDismiss();
-      setSuccessMsg("Promenaden har delats!");
+      setSuccessMsg(t("hike.shared"));
     },
     onError: (error) => {
       setShowShareModal(false);
       onDismiss();
       if (error instanceof ApiError && error.status === 409) {
-        setErrorMsg("Mottagaren har redan promenaden.");
+        setErrorMsg(t("hike.sharedHikeAlreadyHas"));
       } else if (error instanceof ApiError && error.status === 400) {
-        setErrorMsg("Du kan inte dela promenaden med dess skapare.");
+        setErrorMsg(t("hike.cannotShareWithCreator"));
       } else {
-        setErrorMsg("Något gick fel försök igen senare.");
+        setErrorMsg(t("hike.genericError"));
       }
     },
   });
@@ -150,11 +152,11 @@ export default function SharedHikeDetails({
             <ScrollView style={s.scrollArea} contentContainerStyle={s.scrollContent} bounces={false}>
               <View style={s.sharedDetails}>
                 <View style={s.row}>
-                  <Text style={[s.bold, { color: theme.colors.secondary }]}>Delad av: </Text>
+                  <Text style={[s.bold, { color: theme.colors.secondary }]}>{t("hike.sharedBy")} </Text>
                   <Text>{sharedHike.sharedByName}</Text>
                 </View>
                 <View style={s.row}>
-                  <Text style={[s.bold, { color: theme.colors.secondary }]}>Datum: </Text>
+                  <Text style={[s.bold, { color: theme.colors.secondary }]}>{t("hike.date")} </Text>
                   <Text>{formatDate(sharedHike.sharedAt)}</Text>
                 </View>
               </View>
@@ -165,7 +167,7 @@ export default function SharedHikeDetails({
                     <View style={s.infoRow}>
                       <Icon source="map-marker" size={18} color={theme.colors.primary} />
                       <View style={s.infoText}>
-                        <Text style={[s.infoLabel, { color: theme.colors.secondary }]}>Hitta hit</Text>
+                        <Text style={[s.infoLabel, { color: theme.colors.secondary }]}>{t("hike.gettingThere")}</Text>
                         <Text>{sharedHike.gettingThere}</Text>
                       </View>
                     </View>
@@ -174,7 +176,7 @@ export default function SharedHikeDetails({
                     <View style={s.infoRow}>
                       <Icon source="car" size={18} color={theme.colors.primary} />
                       <View style={s.infoText}>
-                        <Text style={[s.infoLabel, { color: theme.colors.secondary }]}>Parkering</Text>
+                        <Text style={[s.infoLabel, { color: theme.colors.secondary }]}>{t("hike.parking")}</Text>
                         <Text>{sharedHike.parkingInfo}</Text>
                       </View>
                     </View>
@@ -183,7 +185,7 @@ export default function SharedHikeDetails({
                     <View style={s.infoRow}>
                       <Icon source="text" size={18} color={theme.colors.primary} />
                       <View style={s.infoText}>
-                        <Text style={[s.infoLabel, { color: theme.colors.secondary }]}>Beskrivning</Text>
+                        <Text style={[s.infoLabel, { color: theme.colors.secondary }]}>{t("hike.description")}</Text>
                         <Text>{sharedHike.description}</Text>
                       </View>
                     </View>
@@ -211,13 +213,13 @@ export default function SharedHikeDetails({
                 <Button style={s.button} mode="contained" onPress={() => setShowShareModal(true)}>
                   <View style={s.buttonContent}>
                     <Icon color={theme.colors.onPrimary} size={20} source="share" />
-                    <Text style={{ color: theme.colors.onPrimary }}>Dela</Text>
+                    <Text style={{ color: theme.colors.onPrimary }}>{t("common.share")}</Text>
                   </View>
                 </Button>
                 <Button style={s.button} mode="outlined" onPress={handeleDelete}>
                   <View style={s.buttonContent}>
                     <Icon size={20} source="delete" />
-                    <Text>Ta bort</Text>
+                    <Text>{t("common.delete")}</Text>
                   </View>
                 </Button>
               </View>
@@ -230,11 +232,11 @@ export default function SharedHikeDetails({
             <AlertDialog
               visible={showOnDeleteDialog}
               onDismiss={() => setOnDeleteDialog(false)}
-              title="Ta bort promenad"
-              infoText={["Vill du ta bort promenaden?"]}
+              title={t("hike.deleteTitle")}
+              infoText={[t("hike.deleteConfirm")]}
               textColor={theme.colors.onSurface}
-              confirmText="Ta bort"
-              cancelText="Avbryt"
+              confirmText={t("common.delete")}
+              cancelText={t("common.cancel")}
               onConfirm={() => deleteMutation.mutate(sharedHike.hikeIdentifier)}
               backgroundColor={theme.colors.surface}
             />

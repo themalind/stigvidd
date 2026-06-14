@@ -5,6 +5,7 @@ import { loadUserTheme, userThemeAtom } from "@/atoms/user-theme-atom";
 import { GlobalSnackbar } from "@/components/global-snackbar";
 import { useInitLocation } from "@/hooks/useInitLocation";
 import { useUserTheme } from "@/hooks/useUserTheme";
+import { loadStoredLanguage } from "@/i18n";
 import "@/services/location-task";
 import {
   NOTIFICATION_QUERY_KEYS,
@@ -98,6 +99,7 @@ export default function RootLayout() {
   }, [setUserTheme]);
 
   useEffect(() => {
+    loadStoredLanguage();
     pruneTrailPathCache();
     pruneTrailCardCache();
   }, []);

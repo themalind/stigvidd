@@ -12,6 +12,7 @@ import { router } from "expo-router";
 import { useAtomValue, useSetAtom } from "jotai";
 import { useEffect, useMemo, useRef } from "react";
 import { Controller, useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 import { Pressable, StyleSheet, View } from "react-native";
 import MapView, { LatLng, Polyline } from "react-native-maps";
 import { Divider, Text, TextInput, useTheme } from "react-native-paper";
@@ -27,6 +28,7 @@ type SaveHikeFormData = {
 };
 
 export default function SaveHikeForm({ hike, onDismiss, onSaveSuccess }: Props) {
+  const { t } = useTranslation();
   const theme = useTheme();
   const setErrorMsg = useSetAtom(showErrorAtom);
   const mapRef = useRef<MapView>(null);
@@ -42,7 +44,7 @@ export default function SaveHikeForm({ hike, onDismiss, onSaveSuccess }: Props) 
       router.replace("/(tabs)/(profile-stack)/user/my-hikes");
     },
     onError: () => {
-      setErrorMsg("Något gick fel försök igen senare.");
+      setErrorMsg(t("hike.errorSaving"));
     },
   });
 
@@ -97,15 +99,13 @@ export default function SaveHikeForm({ hike, onDismiss, onSaveSuccess }: Props) 
             onChangeText={onChange}
             onBlur={onBlur}
             value={value}
-            label="Promenadnamn"
+            label={t("hike.name")}
             mode="outlined"
           />
         )}
         rules={{ required: true, minLength: 3, maxLength: 60 }}
       />
-      {errors.hikeName && (
-        <Text style={[s.errorText, { color: theme.colors.error }]}>Ange ett promenadnamn (minst 3 tecken)</Text>
-      )}
+      {errors.hikeName && <Text style={[s.errorText, { color: theme.colors.error }]}>{t("hike.nameRequired")}</Text>}
 
       <View style={[s.statsCard, { backgroundColor: theme.colors.outlineVariant }]}>
         <View style={s.statItem}>
@@ -136,7 +136,7 @@ export default function SaveHikeForm({ hike, onDismiss, onSaveSuccess }: Props) 
           onPress={onDismiss}
         >
           <MaterialIcons name="arrow-back" size={22} color={theme.colors.onSurface} />
-          <Text style={s.buttonText}>Gå tillbaka</Text>
+          <Text style={s.buttonText}>{t("hike.goBack")}</Text>
         </Pressable>
         <Pressable
           style={[s.actionButton, { backgroundColor: theme.colors.primary }]}
@@ -145,7 +145,7 @@ export default function SaveHikeForm({ hike, onDismiss, onSaveSuccess }: Props) 
         >
           <MaterialIcons name="save" size={22} color={theme.colors.onPrimary} />
           <Text style={[s.buttonText, { color: theme.colors.onPrimary }]}>
-            {isPending ? "Sparar..." : "Spara"}
+            {isPending ? t("common.saving") : t("common.save")}
           </Text>
         </Pressable>
       </View>
