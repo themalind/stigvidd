@@ -102,7 +102,7 @@ public class HikeShareRecipientService : IHikeShareRecipientService
         if (isOwner)
             return Result.Fail(new Message(400, "You cannot reshare a hike to the owner."));
 
-        // Already shared with user
+        // Already shared with user (pending or accepted)
         var alreadyShared = await _hikeShareRecipientRepository.HasHikeSharedWithUserAsync(sharedWithUserIdResult.Value, hikeResult.Value.Id, ctoken);
         if (!alreadyShared.IsSuccess)
             return Result.Fail(new Message(500, "Something went wrong when checking if hike is already shared."));

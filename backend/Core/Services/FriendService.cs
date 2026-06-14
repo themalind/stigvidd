@@ -53,6 +53,13 @@ public class FriendService : IFriendService
             return Result.Fail(new Message(500, "An error occurred while accepting the friend request."));
         }
 
+        await _pushNotificationService.SendToUserAsync(
+            requesterIdentifier,
+            "Vänförfrågan accepterad",
+            "Din vänförfrågan har accepterats",
+            new Dictionary<string, object> { ["type"] = "friend_request_accepted" },
+            ctoken);
+
         return Result.Ok();
     }
 
@@ -210,5 +217,4 @@ public class FriendService : IFriendService
 
     internal record SenderProjection(int Id, string NickName);
     internal record ReceiverProjection(int Id, string Identifier);
-
 }

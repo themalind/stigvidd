@@ -19,7 +19,7 @@ public class HikeShareService : IHikeShareService
         IUserRepository userRepository,
         IHikeRepository hikeRepository,
         IFriendRepository friendRepository,
-        IPushNotificationService pushNotificationService, 
+        IPushNotificationService pushNotificationService,
         ILogger<HikeShareService> logger)
     {
         _hikeShareRepository = hikeShareRepository;
@@ -44,39 +44,34 @@ public class HikeShareService : IHikeShareService
     {
         try
         {
-            // Get user ID of the sender
-            var userIdResult = await _userRepository.GetUserByIdentifierAsync(identifier, u => new SenderProjection(u.Id, u.NickName), ctoken);
-            if (!userIdResult.IsSuccess)
+            var senderResult = await _userRepository.GetUserByIdentifierAsync(identifier, u => new SenderProjection(u.Id, u.NickName), ctoken);
+            if (!senderResult.IsSuccess)
             {
-                if (userIdResult.Status == RepositoryResultStatus.NotFound)
+                if (senderResult.Status == RepositoryResultStatus.NotFound)
                     return Result.Fail(new Message(404, "User not found with the given identifier."));
 
                 return Result.Fail(new Message(500, "Something went wrong when fetching user ID."));
             }
 
-            // Get user ID of the recipient
-            var sharedWithUserIdResult = await _userRepository.GetUserByNickNameAsync(sharedWithName, u => new ReceiverProjection(u.Id, u.Identifier), ctoken);
-            if (!sharedWithUserIdResult.IsSuccess)
+            var recipientResult = await _userRepository.GetUserByNickNameAsync(sharedWithName, u => new ReceiverProjection(u.Id, u.Identifier), ctoken);
+            if (!recipientResult.IsSuccess)
             {
-                if (sharedWithUserIdResult.Status == RepositoryResultStatus.NotFound)
+                if (recipientResult.Status == RepositoryResultStatus.NotFound)
                     return Result.Fail(new Message(404, "User not found with the given name."));
 
                 return Result.Fail(new Message(500, "Something went wrong when fetching user ID."));
             }
 
-            // Make sure the recipient is a friend
-            var areFriendsResult = await _friendRepository.FriendshipExistsAsync(userIdResult.Value.Id, sharedWithUserIdResult.Value.Id, ctoken);
+            var areFriendsResult = await _friendRepository.FriendshipExistsAsync(senderResult.Value.Id, recipientResult.Value.Id, ctoken);
             if (!areFriendsResult.IsSuccess)
                 return Result.Fail(new Message(500, "Something went wrong when checking friendship status."));
 
             if (!areFriendsResult.Value)
                 return Result.Fail(new Message(403, "You can only share a hike with a friend."));
 
-            // Can not share to yourself
-            if (userIdResult.Value.Id == sharedWithUserIdResult.Value.Id)
+            if (senderResult.Value.Id == recipientResult.Value.Id)
                 return Result.Fail(new Message(400, "You cannot share a hike with yourself."));
 
-            // Get hike by identifier
             var hikeResult = await _hikeRepository.GetHikeByIdentifierAsync(hikeIdentifier, ctoken);
             if (!hikeResult.IsSuccess)
             {
@@ -86,25 +81,30 @@ public class HikeShareService : IHikeShareService
                 return Result.Fail(new Message(500, "Something went wrong when fetching hike."));
             }
 
-            // Make sure the sender is the creator of the hike
             if (hikeResult.Value.CreatedBy != identifier)
                 return Result.Fail(new Message(403, "You do not have permission to share this hike."));
 
+            var alreadySharedResult = await _hikeShareRepository.IsAlreadySharedAsync(hikeResult.Value.Id, recipientResult.Value.Id, ctoken);
+            if (!alreadySharedResult.IsSuccess)
+                return Result.Fail(new Message(500, "Something went wrong when checking if hike is already shared."));
+
+            if (alreadySharedResult.Value)
+                return Result.Fail(new Message(409, "This hike has already been shared with this user."));
+
             var hikeShare = new HikeShare
             {
-                SharedById = userIdResult.Value.Id,
+                SharedById = senderResult.Value.Id,
                 HikeId = hikeResult.Value.Id,
-                SharedWithId = sharedWithUserIdResult.Value.Id,
+                SharedWithId = recipientResult.Value.Id,
             };
 
             var result = await _hikeShareRepository.ShareHikeAsync(hikeShare, ctoken);
             if (!result.IsSuccess)
                 return Result.Fail(new Message(500, "Something went wrong when sharing the hike."));
 
-            // Send push notification to the recipient
             await _pushNotificationService.SendToUserAsync(
-                 sharedWithUserIdResult.Value.Identifier, "Ny delad vandring",
-                 $"{userIdResult.Value.NickName} vill dela en vandring med dig",
+                 recipientResult.Value.Identifier, "Ny delad vandring",
+                 $"{senderResult.Value.NickName} vill dela en vandring med dig",
                   new Dictionary<string, object> { ["type"] = "hike_share" }, ctoken);
 
             return Result.Ok();
@@ -115,7 +115,6 @@ public class HikeShareService : IHikeShareService
             return Result.Fail(new Message(500, "An unexpected error occurred while sharing the hike."));
         }
     }
-
     internal record SenderProjection(int Id, string NickName);
     internal record ReceiverProjection(int Id, string Identifier);
 }
