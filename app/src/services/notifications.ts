@@ -16,12 +16,14 @@ Notifications.setNotificationHandler({
 // Maps data.type from the push payload → the React Query key to invalidate.
 export const NOTIFICATION_QUERY_KEYS: Record<string, unknown[]> = {
   friend_request: ["friends", "incoming"],
-  hike_share: ["shared-hikes"], // added when incoming-shares feature lands
+  friend_request_accepted: ["friends"],
+  hike_share: ["shared-hikes"],
 };
 
 // Maps data.type → the screen to navigate to when the user taps the notification.
 export const NOTIFICATION_ROUTES: Record<string, string> = {
   friend_request: "/(tabs)/(profile-stack)/user/friends",
+  friend_request_accepted: "/(tabs)/(profile-stack)/user/friends",
   hike_share: "/(tabs)/(profile-stack)/user/shared-hikes",
 };
 
