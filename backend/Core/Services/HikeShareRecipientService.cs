@@ -240,7 +240,12 @@ public class HikeShareRecipientService : IHikeShareRecipientService
 
         var result = await _hikeShareRecipientRepository.AcceptHikeShareAsync(hikeIdResult.Value, userIdResult.Value, ctoken);
         if (!result.IsSuccess)
+        {
+            if (result.Status == RepositoryResultStatus.NotFound)
+                return Result.Fail(new Message(404, "Pending share not found."));
+
             return Result.Fail(new Message(500, "Something went wrong while accepting the hike share."));
+        }
 
         return Result.Ok();
     }
