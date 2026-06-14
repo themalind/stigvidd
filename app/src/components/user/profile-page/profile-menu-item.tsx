@@ -27,7 +27,7 @@ export default function ProfileMenuItem({ text, route, icon, badge }: MenuItemPr
         </View>
         <View style={s.right}>
           {badge !== undefined && badge > 0 && (
-            <Badge size={24} style={{ backgroundColor: theme.colors.tertiary }}>
+            <Badge size={24} style={{ backgroundColor: theme.colors.tertiary, color: theme.colors.onTertiary }}>
               {badge}
             </Badge>
           )}

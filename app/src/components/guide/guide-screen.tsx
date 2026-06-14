@@ -1,14 +1,14 @@
 import BackButton from "@/components/back-button";
-import { asTranslationKey } from "@/i18n";
 import { BORDER_RADIUS } from "@/constants/constants";
 import { DIFFICULTIES } from "@/data/trail-content";
+import { asTranslationKey } from "@/i18n";
 import { classificationParser } from "@/utils/classification-parser";
 import { getDifficultyIcon } from "@/utils/getDifficultyIcon";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { LayoutAnimation, Linking, Platform, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { Divider, Text, useTheme } from "react-native-paper";
-import { useTranslation } from "react-i18next";
 
 interface AccordionProps {
   icon: React.ReactNode;
@@ -42,11 +42,7 @@ function AccordionSection({ icon, title, summary, children, defaultOpen = false 
           <View style={s.titleGroup}>
             <Text style={[s.sectionTitle, { color: theme.colors.onSurface }]}>{title}</Text>
             {!open && (
-              <Text
-                style={[s.summaryText, { color: theme.colors.onSurface }]}
-                numberOfLines={1}
-                ellipsizeMode="tail"
-              >
+              <Text style={[s.summaryText, { color: theme.colors.onSurface }]} numberOfLines={1} ellipsizeMode="tail">
                 {summary}
               </Text>
             )}
@@ -77,9 +73,7 @@ export default function GuideScreen() {
       <ScrollView contentContainerStyle={s.container} showsVerticalScrollIndicator={false}>
         <View style={s.header}>
           <BackButton />
-          <Text style={[s.pageTitle, { color: theme.colors.onBackground }]}>
-            {t("guide.title")}
-          </Text>
+          <Text style={[s.pageTitle, { color: theme.colors.onBackground }]}>{t("guide.title")}</Text>
         </View>
         <View style={s.content}>
           <AccordionSection
@@ -104,7 +98,9 @@ export default function GuideScreen() {
           </AccordionSection>
 
           <AccordionSection
-            icon={<MaterialCommunityIcons name="shield-check-outline" size={18} color={theme.colors.onSurfaceVariant} />}
+            icon={
+              <MaterialCommunityIcons name="shield-check-outline" size={18} color={theme.colors.onSurfaceVariant} />
+            }
             title={t("guide.naturreservatTitle")}
             summary={t("guide.naturreservatSummary")}
           >
@@ -122,7 +118,9 @@ export default function GuideScreen() {
           </AccordionSection>
 
           <AccordionSection
-            icon={<MaterialCommunityIcons name="wheelchair-accessibility" size={18} color={theme.colors.onSurfaceVariant} />}
+            icon={
+              <MaterialCommunityIcons name="wheelchair-accessibility" size={18} color={theme.colors.onSurfaceVariant} />
+            }
             title={t("guide.accessibilityGuideTitle")}
             summary={t("guide.accessibilityGuideSummary")}
           >
@@ -210,7 +208,7 @@ const s = StyleSheet.create({
   },
   pageTitle: {
     fontFamily: "Inter_600SemiBold",
-    fontSize: 14,
+    fontSize: 16,
   },
   accordion: {
     borderRadius: BORDER_RADIUS,

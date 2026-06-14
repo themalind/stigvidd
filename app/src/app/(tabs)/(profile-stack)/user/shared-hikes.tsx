@@ -86,7 +86,7 @@ export default function SharedHikesScreen() {
                   icon="map-marker-plus"
                   label={t("friends.incomingCount", { count: incomingRequests?.length })}
                   color={theme.colors.onSurfaceVariant}
-                  subtitle="Tryck på en promenad för att se detaljer"
+                  subtitle={t("hike.tapForDetails")}
                 />
                 <Surface style={[s.card, { backgroundColor: theme.colors.surface }]} elevation={0}>
                   <View style={s.cardInner}>
@@ -153,12 +153,12 @@ export default function SharedHikesScreen() {
 
           {incomingError && (
             <View style={s.section}>
-              <SectionHeader icon="account-arrow-down" label="Inkommande" color={theme.colors.onSurfaceVariant} />
+              <SectionHeader icon="account-arrow-down" label={t("friends.incomingTitle")} color={theme.colors.onSurfaceVariant} />
               <Surface style={[s.card, { backgroundColor: theme.colors.surface }]} elevation={0}>
                 <View style={s.cardInner}>
-                  <EmptyState text="Kunde inte hämta förfrågningar" />
+                  <EmptyState text={t("friends.incomingError")} />
                   <Button mode="text" onPress={() => refetchIncoming()} style={s.showMoreButton}>
-                    Försök igen
+                    {t("common.retry")}
                   </Button>
                 </View>
               </Surface>
@@ -168,14 +168,14 @@ export default function SharedHikesScreen() {
           <View style={s.section}>
             <SectionHeader
               icon="routes"
-              label="Mottagna promenader"
-              subtitle="Tryck på en promenad för att se detaljer"
+              label={t("hike.receivedHikes")}
+              subtitle={t("hike.tapForDetails")}
               color={theme.colors.onSurfaceVariant}
             />
             <Surface style={[s.card, { backgroundColor: theme.colors.surface }]} elevation={0}>
               <View style={s.cardInner}>
                 {(hikes?.length ?? 0) === 0 ? (
-                  <EmptyState text="Inga delade promenader här än" />
+                  <EmptyState text={t("hike.noShared")} />
                 ) : (
                   hikes?.map((hike, index) => (
                     <View key={index}>
@@ -199,7 +199,7 @@ export default function SharedHikesScreen() {
                             <Text variant="bodySmall">{FormattedTime(hike.duration)}</Text>
                           </View>
                           <Text variant="bodySmall" style={{ color: theme.colors.secondary }}>
-                            Delad av: {hike.sharedByName}
+                            {t("hike.sharedByLabel", { name: hike.sharedByName })}
                           </Text>
                         </View>
                         <Icon source="chevron-right" size={20} />

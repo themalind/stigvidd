@@ -1,3 +1,4 @@
+import i18n from "@/i18n";
 import { AuthResult, LoginData, UpdateUserResult } from "@/data/types";
 import { FirebaseError } from "firebase/app";
 import {
@@ -30,7 +31,7 @@ export const signInUser = async (data: LoginData): Promise<AuthResult> => {
       user: null,
       error: {
         code: "unknown",
-        message: "Ett oväntat fel inträffade",
+        message: i18n.t("auth.unknownError"),
       },
     };
   }
@@ -43,7 +44,7 @@ export async function signOutUser() {
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Kunde inte logga ut",
+      error: error instanceof Error ? error.message : i18n.t("auth.couldNotLogout"),
     };
   }
 }
@@ -76,7 +77,7 @@ export async function DeleteUserAccount(password: string): Promise<UpdateUserRes
   const user = auth.currentUser;
 
   if (!user || !user.email) {
-    return { success: false, error: { code: "unknown", message: "Ingen användare inloggad" } };
+    return { success: false, error: { code: "unknown", message: i18n.t("auth.notLoggedIn") } };
   }
 
   // Step 1: Re-authenticate to verify identity before destructive action
@@ -87,14 +88,14 @@ export async function DeleteUserAccount(password: string): Promise<UpdateUserRes
     if (error instanceof FirebaseError) {
       return { success: false, error: { code: error.code, message: error.message } };
     }
-    return { success: false, error: { code: "unknown", message: "Ett oväntat fel inträffade" } };
+    return { success: false, error: { code: "unknown", message: i18n.t("auth.unknownError") } };
   }
 
   // Step 2: Backend deletes StigVidd user from DB and Firebase account atomically
   try {
     await deleteStigViddUser();
   } catch {
-    return { success: false, error: { code: "api/delete-failed", message: "Kunde inte ta bort kontot från servern" } };
+    return { success: false, error: { code: "api/delete-failed", message: i18n.t("auth.couldNotDeleteFromServer") } };
   }
 
   // Step 3: Sign out locally — Firebase account is already gone

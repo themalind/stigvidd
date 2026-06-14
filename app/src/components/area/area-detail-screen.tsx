@@ -3,9 +3,9 @@ import { asTranslationKey } from "@/i18n";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useLocalSearchParams } from "expo-router";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Image, ScrollView, StyleSheet, View } from "react-native";
 import { ActivityIndicator, Divider, Text, useTheme } from "react-native-paper";
-import { useTranslation } from "react-i18next";
 import BackButton from "../back-button";
 import FacilitySection from "./facility-section";
 
@@ -69,7 +69,6 @@ const s = StyleSheet.create({
     paddingBottom: 32,
   },
   backButtonRow: {
-    paddingLeft: 4,
     paddingTop: 4,
   },
   heroImage: {
@@ -81,7 +80,7 @@ const s = StyleSheet.create({
     gap: 6,
   },
   title: {
-    fontSize: 22,
+    fontSize: 16,
     fontFamily: "Inter_600SemiBold",
   },
   locationRow: {

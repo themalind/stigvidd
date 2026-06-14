@@ -115,7 +115,7 @@ export default function SharedHikeDetails({
         {isLoading || !sharedHike ? (
           <View style={s.loadingContainer}>
             {isError ? (
-              <Text>Kunde inte hämta promenaden, försök igen.</Text>
+              <Text>{t("hike.couldNotFetch")}</Text>
             ) : (
               <ActivityIndicator size="large" color={theme.colors.primary} />
             )}
@@ -198,13 +198,13 @@ export default function SharedHikeDetails({
                 <Button style={s.button} mode="contained" onPress={onAccept} disabled={isPending} loading={isPending}>
                   <View style={s.buttonContent}>
                     <Icon color={theme.colors.onPrimary} size={20} source="check" />
-                    <Text style={{ color: theme.colors.onPrimary }}>Acceptera</Text>
+                    <Text style={{ color: theme.colors.onPrimary }}>{t("hike.accept")}</Text>
                   </View>
                 </Button>
                 <Button style={s.button} mode="outlined" onPress={onReject} disabled={isPending}>
                   <View style={s.buttonContent}>
                     <Icon size={20} source="close" />
-                    <Text>Avvisa</Text>
+                    <Text>{t("hike.reject")}</Text>
                   </View>
                 </Button>
               </View>
