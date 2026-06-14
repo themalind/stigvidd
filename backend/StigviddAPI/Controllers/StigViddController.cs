@@ -1,5 +1,4 @@
-﻿using Core;
-using Core.Interfaces.Services;
+﻿using Core.Interfaces.Services;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
 using System.Security.Claims;
@@ -17,6 +16,7 @@ public abstract class StigViddController : Controller
             (int)HttpStatusCode.BadRequest => BadRequest(message.ResultMessage),
             (int)HttpStatusCode.Conflict => Conflict(message.ResultMessage),
             (int)HttpStatusCode.Unauthorized => Unauthorized(message.ResultMessage),
+            (int)HttpStatusCode.Forbidden => StatusCode(StatusCodes.Status403Forbidden, message.ResultMessage),
             _ => StatusCode(StatusCodes.Status500InternalServerError)
         };
 
