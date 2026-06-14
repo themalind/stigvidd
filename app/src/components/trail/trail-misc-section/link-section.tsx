@@ -10,18 +10,18 @@ interface Props {
 export default function LinkSection({ links }: Props) {
   const theme = useTheme();
   return (
-    <View style={[s.container, { backgroundColor: theme.colors.secondaryContainer }]}>
+    <View style={[s.container, { backgroundColor: theme.colors.surface }]}>
       {links.map((link, index) => (
         <View key={link.identifier}>
-          {index > 0 && <Divider style={{ backgroundColor: theme.colors.onSurface }} />}
+          {index > 0 && <Divider />}
           <Pressable style={s.linkContainer} onPress={() => Linking.openURL(link.link)}>
             <View
               style={[
                 s.iconBox,
-                { backgroundColor: theme.colors.tertiaryContainer, borderColor: theme.colors.tertiary },
+                { backgroundColor: theme.colors.surfaceVariant, borderColor: theme.colors.outlineVariant },
               ]}
             >
-              <MaterialCommunityIcons name="link-variant" size={24} color={theme.colors.onTertiaryContainer} />
+              <MaterialCommunityIcons name="link-variant" size={24} color={theme.colors.onSurfaceVariant} />
             </View>
             <Text style={s.propertyText}>{link.title}</Text>
           </Pressable>

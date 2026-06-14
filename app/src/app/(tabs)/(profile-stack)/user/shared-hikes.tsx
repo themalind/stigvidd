@@ -296,8 +296,8 @@ const s = StyleSheet.create({
     paddingVertical: 6,
   },
   headerText: {
-    fontSize: 17,
-    fontWeight: "700",
+    fontFamily: "Inter_600SemiBold",
+    fontSize: 16,
   },
   iconCircle: {
     width: 42,
@@ -313,8 +313,7 @@ const s = StyleSheet.create({
   },
   scrollContent: {
     paddingTop: 8,
-    paddingBottom: 20,
-    gap: 16,
+    gap: 5,
   },
   content: {
     paddingHorizontal: 10,

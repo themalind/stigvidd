@@ -10,47 +10,47 @@ interface Props {
 export default function VisitorInformationSection({ visitorInfo }: Props) {
   const theme = useTheme();
   return (
-    <View style={[s.container, { backgroundColor: theme.colors.secondaryContainer }]}>
+    <View style={[s.container, { backgroundColor: theme.colors.surface }]}>
       <View style={s.propertyContainer}>
         <View
-          style={[s.iconBox, { backgroundColor: theme.colors.tertiaryContainer, borderColor: theme.colors.tertiary }]}
+          style={[s.iconBox, { backgroundColor: theme.colors.surfaceVariant, borderColor: theme.colors.outlineVariant }]}
         >
-          <Icon size={25} source="map-search-outline" color={theme.colors.onTertiaryContainer} />
+          <Icon size={25} source="map-search-outline" color={theme.colors.onSurfaceVariant} />
         </View>
         <Text style={s.propertyText}>{visitorInfo.gettingThere}</Text>
       </View>
-      <Divider style={{ backgroundColor: theme.colors.onSurface }} />
+      <Divider />
 
       <View style={s.propertyContainer}>
         <View
-          style={[s.iconBox, { backgroundColor: theme.colors.tertiaryContainer, borderColor: theme.colors.tertiary }]}
+          style={[s.iconBox, { backgroundColor: theme.colors.surfaceVariant, borderColor: theme.colors.outlineVariant }]}
         >
-          <Icon size={25} source="bus" color={theme.colors.onTertiaryContainer} />
+          <Icon size={25} source="bus" color={theme.colors.onSurfaceVariant} />
         </View>
         <Text style={s.propertyText}>{visitorInfo.publicTransport}</Text>
       </View>
-      <Divider style={{ backgroundColor: theme.colors.onSurface }} />
+      <Divider />
 
       <View style={s.propertyContainer}>
         <View
-          style={[s.iconBox, { backgroundColor: theme.colors.tertiaryContainer, borderColor: theme.colors.tertiary }]}
+          style={[s.iconBox, { backgroundColor: theme.colors.surfaceVariant, borderColor: theme.colors.outlineVariant }]}
         >
-          <Icon size={25} source="parking" color={theme.colors.onTertiaryContainer} />
+          <Icon size={25} source="parking" color={theme.colors.onSurfaceVariant} />
         </View>
         <Text style={s.propertyText}>{visitorInfo.parking}</Text>
       </View>
 
       {visitorInfo.maintainedBy && (
         <>
-          <Divider style={{ backgroundColor: theme.colors.onSurface }} />
+          <Divider />
           <View style={s.propertyContainer}>
             <View
               style={[
                 s.iconBox,
-                { backgroundColor: theme.colors.tertiaryContainer, borderColor: theme.colors.tertiary },
+                { backgroundColor: theme.colors.surfaceVariant, borderColor: theme.colors.outlineVariant },
               ]}
             >
-              <Icon source={"account-hard-hat"} size={25} color={theme.colors.onTertiaryContainer} />
+              <Icon source={"account-hard-hat"} size={25} color={theme.colors.onSurfaceVariant} />
             </View>
             <Text style={s.propertyText}>{visitorInfo.maintainedBy}</Text>
           </View>
@@ -58,15 +58,15 @@ export default function VisitorInformationSection({ visitorInfo }: Props) {
       )}
       {visitorInfo.illumination && visitorInfo.illuminationText && (
         <>
-          <Divider style={{ backgroundColor: theme.colors.onSurface }} />
+          <Divider />
           <View style={s.propertyContainer}>
             <View
               style={[
                 s.iconBox,
-                { backgroundColor: theme.colors.tertiaryContainer, borderColor: theme.colors.tertiary },
+                { backgroundColor: theme.colors.surfaceVariant, borderColor: theme.colors.outlineVariant },
               ]}
             >
-              <Icon source="outdoor-lamp" size={25} color={theme.colors.onTertiaryContainer} />
+              <Icon source="outdoor-lamp" size={25} color={theme.colors.onSurfaceVariant} />
             </View>
             <Text style={s.propertyText}>{visitorInfo.illuminationText}</Text>
           </View>

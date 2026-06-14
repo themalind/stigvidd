@@ -45,6 +45,5 @@ const s = StyleSheet.create({
     padding: 12,
     borderWidth: 2,
     borderRadius: 999,
-    elevation: 5,
   },
 });

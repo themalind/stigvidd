@@ -14,10 +14,10 @@ interface Props {
   onDismiss: () => void;
   onShare: (friendNickName: string) => void;
   isPending?: boolean;
-  excludeNickName?: string;
+  excludeNickNames?: string[];
 }
 
-export default function ReshareHikeModal({ visible, onDismiss, onShare, isPending, excludeNickName }: Props) {
+export default function ReshareHikeModal({ visible, onDismiss, onShare, isPending, excludeNickNames }: Props) {
   const theme = useTheme();
   const currentUser = useAtomValue(stigviddUserAtom);
 
@@ -28,7 +28,7 @@ export default function ReshareHikeModal({ visible, onDismiss, onShare, isPendin
   });
 
   const friends = friendsRaw?.filter(
-    (f) => f.nickName !== currentUser.data?.nickName && f.nickName !== excludeNickName,
+    (f) => f.nickName !== currentUser.data?.nickName && !excludeNickNames?.includes(f.nickName),
   );
 
   return (

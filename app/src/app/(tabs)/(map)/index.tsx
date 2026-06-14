@@ -126,11 +126,6 @@ const s = StyleSheet.create({
     borderRadius: 12,
     padding: 14,
     gap: 10,
-    elevation: 10,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
   },
   loader: {
     paddingVertical: 8,

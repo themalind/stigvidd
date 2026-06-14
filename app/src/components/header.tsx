@@ -13,8 +13,17 @@ export default function Header() {
   const theme = useTheme();
 
   return (
-    <SafeAreaView style={{ backgroundColor: theme.colors.outlineVariant }} edges={["top"]}>
-      <View style={[s.container, { backgroundColor: theme.colors.outlineVariant }]}>
+    <SafeAreaView style={{ backgroundColor: theme.colors.background }} edges={["top"]}>
+      <View
+        style={[
+          s.container,
+          {
+            backgroundColor: theme.colors.background,
+            borderBottomColor: theme.colors.outlineVariant,
+            borderBottomWidth: StyleSheet.hairlineWidth,
+          },
+        ]}
+      >
         <View style={s.stigviddContainer}>
           <Image style={s.image} source={require("../assets/images/mammaapp.png")} />
           <Text style={[s.text, { color: theme.colors.onSurfaceVariant }]}>Stigvidd</Text>

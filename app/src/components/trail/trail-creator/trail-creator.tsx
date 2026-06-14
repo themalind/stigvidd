@@ -4,10 +4,10 @@ import Map from "@/components/map/map";
 import { BORDER_RADIUS } from "@/constants/constants";
 import { useLocationTracking } from "@/services/use-location-tracking";
 import FormattedTime from "@/utils/format-time-from-ms";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import * as Location from "expo-location";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import MapView, { Polyline, Region } from "react-native-maps";
 import { Text, useTheme } from "react-native-paper";
 import SaveHikeModal from "./save-hike-modal";
@@ -17,26 +17,21 @@ export default function TrailCreator() {
   const { startTracking, stopTracking, resetTracking, isTracking, hike, currentSegment, getActiveTime, debugAddPoint } =
     useLocationTracking();
 
-  // Displayed time in ms, updated every second while tracking
   const [displayTime, setDisplayTime] = useState(0);
-  // Ref so the interval callback always calls the latest version of getActiveTime
   const getActiveTimeRef = useRef(getActiveTime);
   getActiveTimeRef.current = getActiveTime;
 
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showSaveModal, setShowSaveModal] = useState(false);
-  // Set once on mount from the device's current GPS position
   const [initialRegion, setInitialRegion] = useState<Region | undefined>(undefined);
   const theme = useTheme();
 
-  // Flattens all completed segments + the active segment into a single coordinate array for the polyline
   const polylineCoords = useMemo(() => {
     const finished = hike.segments.flatMap((segment) => segment.coordinates.map((locationData) => locationData.data));
     const current = currentSegment ? currentSegment.coordinates.map((locationData) => locationData.data) : [];
     return [...finished, ...current];
   }, [hike.segments, currentSegment]);
 
-  // Ticks the displayed time every second while tracking; freezes it on pause
   useEffect(() => {
     if (!isTracking) {
       setDisplayTime(getActiveTimeRef.current());
@@ -48,17 +43,15 @@ export default function TrailCreator() {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [isTracking]);
+  }, [isTracking, hike.totalTime]);
 
   const formattedTime = FormattedTime(displayTime);
 
-  // Converts totalDistance from meters to a "x.xx km" string
   const formattedDistance = useMemo(() => {
     const km = hike.totalDistance / 1000;
     return `${km.toFixed(2)} km`;
   }, [hike.totalDistance]);
 
-  // On mount: fetch the user's current position to center the map before any tracking starts
   useEffect(() => {
     (async () => {
       const { status } = await Location.requestForegroundPermissionsAsync();
@@ -75,101 +68,88 @@ export default function TrailCreator() {
     })();
   }, []);
 
-  // Keep the map camera centered on the latest recorded point as the route grows
   useEffect(() => {
     const last = polylineCoords.at(-1);
     if (!last || !mapRef.current) return;
 
-    mapRef.current.animateCamera(
-      {
-        center: last,
-        zoom: 17,
-      },
-      { duration: 500 },
-    );
+    mapRef.current.animateCamera({ center: last, zoom: 17 }, { duration: 500 });
   }, [polylineCoords]);
 
-  // Controls which action buttons are shown:
-  // no data → only "Start", tracking → only "Pause", paused with data → "Reset / Save / Resume"
   const hasData = hike.segments.length > 0 || (currentSegment && currentSegment.coordinates.length > 0);
 
-  // Wait until we have the user's position before rendering the map
   if (!initialRegion) return <LoadingIndicator />;
 
   return (
-    <ScrollView contentContainerStyle={s.content}>
-      {/* Debug bar — shows node/segment counts and a button to inject fake GPS points */}
-      <View style={s.debug}>
-        <Text>
-          debug: {polylineCoords.length} nodes, {hike.segments.length} segments
-        </Text>
-
-        <Pressable onPress={() => debugAddPoint()}>
-          <Text>Add</Text>
-        </Pressable>
-      </View>
-
+    <View style={s.container}>
+      {__DEV__ && (
+        <View style={s.debugBar}>
+          <Text style={s.debugText}>
+            {polylineCoords.length} noder, {hike.segments.length} segment
+          </Text>
+          <Pressable style={s.debugButton} onPress={() => debugAddPoint()}>
+            <Text style={s.debugText}>+ Lägg till punkt</Text>
+          </Pressable>
+        </View>
+      )}
       <View style={s.mapContainer}>
         <Map ref={mapRef} style={s.map} initialRegion={initialRegion} showsUserLocation>
-          {/* Draws the recorded route as a red line on the map */}
-          <Polyline coordinates={polylineCoords} strokeColor="#ff0000" strokeWidth={4} />
+          <Polyline coordinates={polylineCoords} strokeColor={theme.colors.primary} strokeWidth={4} />
         </Map>
       </View>
 
-      {/* Elapsed time display */}
-      <View style={[s.infoSection, { backgroundColor: theme.colors.surface }]}>
-        <Text style={s.infoText}>{formattedTime}</Text>
-      </View>
-
-      {/* Total distance display */}
-      <View style={[s.infoSection, { backgroundColor: theme.colors.surface }]}>
-        <Text style={s.infoText}>{formattedDistance}</Text>
+      <View style={[s.statsCard, { backgroundColor: theme.colors.outlineVariant }]}>
+        <View style={s.statItem}>
+          <Text style={s.statLabel}>Tid</Text>
+          <Text style={s.statValue}>{formattedTime}</Text>
+        </View>
+        <View style={[s.statDivider, { backgroundColor: theme.colors.outline }]} />
+        <View style={s.statItem}>
+          <Text style={s.statLabel}>Distans</Text>
+          <Text style={s.statValue}>{formattedDistance}</Text>
+        </View>
       </View>
 
       <View style={s.actions}>
         {!hasData ? (
-          // No recording yet — show the start button
           <Pressable
-            style={[s.actionButton, { backgroundColor: theme.colors.surface }]}
+            style={[s.actionButton, { backgroundColor: theme.colors.primary }]}
             onPress={() => startTracking()}
           >
-            <Ionicons name="walk-outline" size={30} color={theme.colors.onSurface} />
-            <Text style={{ color: theme.colors.onSurface }}>Starta vandring</Text>
+            <MaterialIcons name="hiking" size={28} color={theme.colors.onPrimary} />
+            <Text style={[s.buttonText, { color: theme.colors.onPrimary }]}>Starta vandring</Text>
           </Pressable>
         ) : isTracking ? (
-          // Currently recording — only allow pausing
           <Pressable style={[s.actionButton, { backgroundColor: theme.colors.surface }]} onPress={() => stopTracking()}>
-            <Ionicons name="pause" size={30} color={theme.colors.onSurface} />
+            <Ionicons name="pause" size={28} color={theme.colors.onSurface} />
+            <Text style={s.buttonText}>Pausa</Text>
           </Pressable>
         ) : (
-          // Paused with data — allow reset, save, or resume
           <>
             <Pressable
-              style={[s.actionButton, { backgroundColor: theme.colors.errorContainer }]}
+              style={[s.actionButton, { backgroundColor: theme.colors.outlineVariant }]}
               onPress={() => setShowDeleteDialog(true)}
             >
-              <Ionicons name="close" size={30} color={theme.colors.onSurface} />
-              <Text>Nollställ</Text>
+              <MaterialIcons name="close" size={28} color={theme.colors.error} />
+              <Text style={s.buttonText}>Nollställ</Text>
             </Pressable>
             <Pressable
-              style={[s.actionButton, { backgroundColor: theme.colors.inversePrimary }]}
+              style={[s.actionButton, { backgroundColor: theme.colors.primary }]}
               onPress={() => setShowSaveModal(true)}
             >
-              <Ionicons name="checkmark-sharp" size={30} color={theme.colors.onSurface} />
-              <Text>Spara</Text>
+              <MaterialIcons name="save" size={28} color={theme.colors.onPrimary} />
+              <Text style={[s.buttonText, { color: theme.colors.onPrimary }]}>Spara</Text>
             </Pressable>
             <Pressable
-              style={[s.actionButton, { backgroundColor: theme.colors.surface }]}
+              style={[s.actionButton, { backgroundColor: theme.colors.outlineVariant }]}
               onPress={() => startTracking()}
             >
-              <Ionicons name="play" size={30} color={theme.colors.onSurface} />
-              <Text>Återuppta</Text>
+              <MaterialIcons name="play-arrow" size={28} color={theme.colors.onSurface} />
+              <Text style={[s.buttonText, { color: theme.colors.onSurface }]}>Återuppta</Text>
             </Pressable>
           </>
         )}
       </View>
 
-      {/* Confirm dialog shown before wiping all recorded data */}
       <AlertDialog
         visible={showDeleteDialog}
         onDismiss={() => setShowDeleteDialog(false)}
@@ -186,7 +166,6 @@ export default function TrailCreator() {
         confirmText={"Ja"}
       />
 
-      {/* Modal where the user names and confirms saving the hike */}
       <SaveHikeModal
         visible={showSaveModal}
         onDismiss={() => setShowSaveModal(false)}
@@ -194,49 +173,67 @@ export default function TrailCreator() {
         onSaveSuccess={resetTracking}
         hike={hike}
       />
-    </ScrollView>
+    </View>
   );
 }
 
 const s = StyleSheet.create({
-  debug: {
-    backgroundColor: "#a00",
-    flexDirection: "row",
-    justifyContent: "space-between",
-    padding: 5,
-  },
-  content: {
+  container: {
     flex: 1,
-  },
-  buttons: {
-    flexDirection: "row",
-    justifyContent: "center",
-    gap: 15,
+    gap: 10,
   },
   map: {
     flex: 1,
   },
   mapContainer: {
     flex: 1,
-    minHeight: 200,
     borderRadius: BORDER_RADIUS,
     overflow: "hidden",
-    marginBottom: 20,
   },
-  infoSection: {
-    justifyContent: "center",
-    alignItems: "center",
+  statsCard: {
+    flexDirection: "row",
     borderRadius: BORDER_RADIUS,
-    height: 80,
-    marginBottom: 5,
+    padding: 16,
   },
-  infoText: {
-    fontSize: 40,
+  statItem: {
+    flex: 1,
+    alignItems: "center",
+    gap: 4,
+  },
+  statLabel: {
+    fontSize: 11,
+    fontWeight: "600",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+    opacity: 0.6,
+  },
+  statValue: {
+    fontSize: 32,
+  },
+  statDivider: {
+    width: 1,
+    marginVertical: 4,
+  },
+  debugBar: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: "#a00",
+    borderRadius: BORDER_RADIUS,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  debugButton: {
+    padding: 4,
+  },
+  debugText: {
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: "600",
   },
   actions: {
     flexDirection: "row",
-    marginTop: "auto",
-    gap: 20,
+    gap: 12,
   },
   actionButton: {
     flex: 1,
@@ -245,7 +242,11 @@ const s = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     borderRadius: BORDER_RADIUS,
-    gap: 10,
+    gap: 8,
     height: 60,
+  },
+  buttonText: {
+    fontSize: 15,
+    fontWeight: "600",
   },
 });

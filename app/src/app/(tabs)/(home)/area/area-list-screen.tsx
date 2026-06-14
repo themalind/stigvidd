@@ -11,7 +11,7 @@ export default function AreaListScreen() {
     <ScrollView contentContainerStyle={[s.scrollContent, { backgroundColor: theme.colors.background }]}>
       <View style={[s.header, { backgroundColor: theme.colors.background }]}>
         <BackButton />
-        <Text style={s.title}>Områden</Text>
+        <Text style={[s.title, { color: theme.colors.onBackground }]}>Områden</Text>
       </View>
       <View style={s.content}>
         {borasAreas.map((area, index) => {
@@ -29,8 +29,8 @@ const s = StyleSheet.create({
     paddingLeft: Platform.select({ ios: 0, default: 10 }),
   },
   title: {
-    fontWeight: "700",
-    fontSize: 20,
+    fontFamily: "Inter_600SemiBold",
+    fontSize: 16,
   },
   scrollContent: {
     paddingTop: 8,

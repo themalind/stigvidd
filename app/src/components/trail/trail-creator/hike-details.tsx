@@ -1,5 +1,5 @@
 import { deleteHike, shareHike, updateHike } from "@/api/hikes";
-import { ApiError } from "@/api/users";
+import { ApiError } from "@/api/api-error";
 import { showErrorAtom, showSuccessAtom } from "@/atoms/snackbar-atoms";
 import { stigviddUserAtom } from "@/atoms/user-atoms";
 import AlertDialog from "@/components/alert-dialog";

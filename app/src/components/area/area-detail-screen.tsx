@@ -75,7 +75,7 @@ const s = StyleSheet.create({
   },
   title: {
     fontSize: 22,
-    fontWeight: "700",
+    fontFamily: "Inter_600SemiBold",
   },
   locationRow: {
     flexDirection: "row",
@@ -92,7 +92,7 @@ const s = StyleSheet.create({
   },
   facilitiesHeading: {
     paddingHorizontal: 12,
-    fontSize: 17,
-    fontWeight: "700",
+    fontSize: 16,
+    fontFamily: "Inter_600SemiBold",
   },
 });

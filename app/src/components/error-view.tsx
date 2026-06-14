@@ -1,4 +1,4 @@
-import { ApiError } from "@/api/users";
+import { ApiError } from "@/api/api-error";
 import { MaterialIcons } from "@expo/vector-icons";
 import { StyleSheet, Text, View } from "react-native";
 import { Button, useTheme } from "react-native-paper";

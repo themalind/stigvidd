@@ -142,7 +142,6 @@ const s = StyleSheet.create({
     bottom: 80,
     padding: 12,
     borderRadius: 999,
-    elevation: 5,
     borderWidth: 2,
   },
   filter: {

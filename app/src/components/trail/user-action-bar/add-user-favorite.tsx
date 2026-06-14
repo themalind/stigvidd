@@ -1,4 +1,4 @@
-import { ApiError } from "@/api/users";
+import { ApiError } from "@/api/api-error";
 import { authStateAtom } from "@/atoms/auth-atoms";
 import { showErrorAtom, showWarningAtom } from "@/atoms/snackbar-atoms";
 import { addToFavoritesAtom, removeFromFavoritesAtom, userFavoritesAtom } from "@/atoms/user-atoms";

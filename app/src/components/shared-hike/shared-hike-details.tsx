@@ -1,5 +1,5 @@
 import { removeSharedHike, reshareHike } from "@/api/shared-hikes";
-import { ApiError } from "@/api/users";
+import { ApiError } from "@/api/api-error";
 import { showErrorAtom, showSuccessAtom } from "@/atoms/snackbar-atoms";
 import { stigviddUserAtom } from "@/atoms/user-atoms";
 import AlertDialog from "@/components/alert-dialog";
@@ -33,7 +33,16 @@ interface Props {
 
 const HEIGHT = Dimensions.get("screen").height;
 
-export default function SharedHikeDetails({ visible, sharedHike, onDismiss, onAccept, onReject, isPending, isLoading, isError }: Props) {
+export default function SharedHikeDetails({
+  visible,
+  sharedHike,
+  onDismiss,
+  onAccept,
+  onReject,
+  isPending,
+  isLoading,
+  isError,
+}: Props) {
   const setErrorMsg = useSetAtom(showErrorAtom);
   const setSuccessMsg = useSetAtom(showSuccessAtom);
   const [showOnDeleteDialog, setOnDeleteDialog] = useState(false);
@@ -43,7 +52,9 @@ export default function SharedHikeDetails({ visible, sharedHike, onDismiss, onAc
   const theme = useTheme();
   const user = useAtomValue(stigviddUserAtom);
   const queryClient = useQueryClient();
-  const coordinates = sharedHike ? CoordinateParser({ data: sharedHike.coordinates ?? "", identifier: sharedHike.hikeIdentifier }) : [];
+  const coordinates = sharedHike
+    ? CoordinateParser({ data: sharedHike.coordinates ?? "", identifier: sharedHike.hikeIdentifier })
+    : [];
 
   const handleMapReady = () => {
     if (!mapRef.current || coordinates.length === 0) return;
@@ -77,6 +88,8 @@ export default function SharedHikeDetails({ visible, sharedHike, onDismiss, onAc
       onDismiss();
       if (error instanceof ApiError && error.status === 409) {
         setErrorMsg("Mottagaren har redan promenaden.");
+      } else if (error instanceof ApiError && error.status === 400) {
+        setErrorMsg("Du kan inte dela promenaden med dess skapare.");
       } else {
         setErrorMsg("Något gick fel försök igen senare.");
       }
@@ -124,7 +137,12 @@ export default function SharedHikeDetails({ visible, sharedHike, onDismiss, onAc
 
             <View style={s.mapContainer}>
               {sharedHike.coordinates && sharedHike.coordinates.length > 0 && (
-                <Map style={s.map} ref={mapRef} initialRegion={GetRegionFromTrail(coordinates)} onMapReady={handleMapReady}>
+                <Map
+                  style={s.map}
+                  ref={mapRef}
+                  initialRegion={GetRegionFromTrail(coordinates)}
+                  onMapReady={handleMapReady}
+                >
                   <Polyline coordinates={coordinates} strokeWidth={3} strokeColor="#eb3204" />
                 </Map>
               )}
@@ -224,16 +242,10 @@ export default function SharedHikeDetails({ visible, sharedHike, onDismiss, onAc
               visible={showShareModal}
               onDismiss={() => setShowShareModal(false)}
               onShare={(friendNickName) => {
-                if (friendNickName === sharedHike.createdByName) {
-                  setShowShareModal(false);
-                  onDismiss();
-                  setErrorMsg("Du kan inte dela en promenad med dess skapare.");
-                  return;
-                }
                 reShareMutation.mutate({ hikeIdentifier: sharedHike.hikeIdentifier, reShareToName: friendNickName });
               }}
               isPending={reShareMutation.isPending}
-              excludeNickName={sharedHike.sharedByName}
+              excludeNickNames={[sharedHike.sharedByName, sharedHike.createdByName].filter((n): n is string => !!n)}
             />
           </>
         )}

@@ -27,11 +27,11 @@ export default function ProfileMenuItem({ text, route, icon, badge }: MenuItemPr
         </View>
         <View style={s.right}>
           {badge !== undefined && badge > 0 && (
-            <Badge size={24} style={{ backgroundColor: theme.colors.primary }}>
+            <Badge size={24} style={{ backgroundColor: theme.colors.tertiary }}>
               {badge}
             </Badge>
           )}
-          <MaterialIcons name="chevron-right" size={24} color={theme.colors.onSurface} />
+          <MaterialIcons name="chevron-right" size={24} color={theme.colors.outline} />
         </View>
       </View>
     </Pressable>
@@ -57,7 +57,7 @@ const s = StyleSheet.create({
     gap: 8,
   },
   choiceText: {
-    fontWeight: "700",
-    fontSize: 16,
+    fontFamily: "Inter_600SemiBold",
+    fontSize: 14,
   },
 });

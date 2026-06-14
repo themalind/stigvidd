@@ -372,8 +372,8 @@ const s = StyleSheet.create({
     paddingLeft: Platform.select({ ios: 0, default: 12 }),
   },
   headerTitle: {
-    fontSize: 17,
-    fontWeight: "700",
+    fontFamily: "Inter_600SemiBold",
+    fontSize: 16,
   },
   searchbarInput: {
     fontSize: 15,

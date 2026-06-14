@@ -8,7 +8,7 @@ interface Props {
 export default function FullDescriptionSection({ fullDescription }: Props) {
   const theme = useTheme();
   return (
-    <View style={[s.propertyContainer, { backgroundColor: theme.colors.secondaryContainer }]}>
+    <View style={[s.propertyContainer, { backgroundColor: theme.colors.surface }]}>
       <Text style={s.propertyText}>{fullDescription}</Text>
     </View>
   );

@@ -254,7 +254,7 @@ const s = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: "700",
+    fontFamily: "Inter_600SemiBold",
   },
   clearButtonWrapper: {
     borderRadius: BORDER_RADIUS,
@@ -279,7 +279,7 @@ const s = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 16,
-    fontWeight: "700",
+    fontFamily: "Inter_600SemiBold",
     marginBottom: 10,
   },
   label: {

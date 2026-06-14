@@ -157,7 +157,8 @@ const s = StyleSheet.create({
     gap: 10,
   },
   topTitle: {
-    fontSize: 20,
+    fontFamily: "Inter_600SemiBold",
+    fontSize: 16,
     alignSelf: "flex-start",
     paddingBottom: 10,
   },

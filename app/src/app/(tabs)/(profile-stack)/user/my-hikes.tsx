@@ -118,8 +118,8 @@ const s = StyleSheet.create({
     paddingLeft: Platform.select({ ios: 0, default: 10 }),
   },
   titleTextBold: {
-    fontSize: 17,
-    fontWeight: "700",
+    fontFamily: "Inter_600SemiBold",
+    fontSize: 16,
   },
   iconCircle: {
     width: 42,
@@ -141,7 +141,7 @@ const s = StyleSheet.create({
     flex: 1,
   },
   name: {
-    fontWeight: "bold",
+    fontFamily: "Inter_600SemiBold",
   },
   info: {
     flexDirection: "row",

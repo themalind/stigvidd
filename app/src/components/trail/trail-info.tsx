@@ -18,7 +18,7 @@ export default function TrailInfo({ trail }: TrailinfoProps) {
   const [accessibiltyModal, setAccessibilityModal] = useState(false);
 
   return (
-    <Surface elevation={2} style={[s.container, { backgroundColor: theme.colors.surface }]}>
+    <Surface elevation={0} style={[s.container, { backgroundColor: theme.colors.surface }]}>
       <Text style={[s.sectionTitle, { color: theme.colors.onSurface }]}>Information</Text>
       <View style={s.grid}>
         <View style={s.item}>
@@ -33,7 +33,7 @@ export default function TrailInfo({ trail }: TrailinfoProps) {
           <View style={s.infoIconContainer}>
             <Text style={[s.label, { color: theme.colors.onSurfaceVariant }]}>Svårighetsgrad</Text>
             <Pressable hitSlop={16} onPress={() => setDifficultyModal(true)}>
-              <Icon source="information" size={17} color={theme.colors.secondary} />
+              <Icon source="information" size={17} color={theme.colors.onSurfaceVariant} />
             </Pressable>
             <DifficultyInfoModal
               difficulty={trail.classification}
@@ -52,7 +52,7 @@ export default function TrailInfo({ trail }: TrailinfoProps) {
           <View style={s.infoIconContainer}>
             <Text style={[s.label, { color: theme.colors.onSurfaceVariant }]}>Tillgänglighet</Text>
             <Pressable hitSlop={16} onPress={() => setAccessibilityModal(true)}>
-              <Icon source="information" size={17} color={theme.colors.secondary} />
+              <Icon source="information" size={17} color={theme.colors.onSurfaceVariant} />
             </Pressable>
             <AccesibilityInfoModal onDismiss={() => setAccessibilityModal(false)} visible={accessibiltyModal} />
           </View>
