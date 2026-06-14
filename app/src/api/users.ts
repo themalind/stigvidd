@@ -2,16 +2,7 @@ import { CreateStigViddUserCredentials, User, UserFavoritesTrail, UserWishlistTr
 import { getIdToken } from "@firebase/auth";
 import { auth } from "../../firebase-config";
 import { BASE_URL } from "./api-config";
-
-export class ApiError extends Error {
-  status?: number;
-
-  constructor(message: string, status?: number) {
-    super(message); // Super är samma som base i c#. Så det blir errors message som används.
-    this.name = "ApiError";
-    this.status = status;
-  }
-}
+export { ApiError } from "./api-error";
 
 export async function getUserToken(): Promise<string | null> {
   return auth.currentUser ? await getIdToken(auth.currentUser) : null;
