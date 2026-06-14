@@ -55,10 +55,7 @@ describe("createHike", () => {
   it("makes POST to /hikes", async () => {
     mockFetch(true);
     await createHike(baseRequest);
-    expect(fetch).toHaveBeenCalledWith(
-      "http://test/api/v1/hikes",
-      expect.objectContaining({ method: "POST" }),
-    );
+    expect(fetch).toHaveBeenCalledWith("http://test/api/v1/hikes", expect.objectContaining({ method: "POST" }));
   });
 
   it("returns success: true when the response is ok", async () => {

@@ -20,7 +20,7 @@ import { StatusBar } from "expo-status-bar";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { queryClientAtom } from "jotai-tanstack-query";
 import { Inter_600SemiBold, useFonts } from "@expo-google-fonts/inter";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Platform, StyleSheet, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { PaperProvider } from "react-native-paper";
@@ -69,11 +69,23 @@ export default function RootLayout() {
   // so there is no remount-blink at startup. Subsequent changes (login/logout)
   // still trigger a remount, resetting all local state as before.
   const [stableKey, setStableKey] = useState<string | null>(null);
+  const prevStableKey = useRef<string | null>(null);
   useEffect(() => {
     if (!authLoading) {
       setStableKey(user?.uid ?? "guest");
     }
   }, [user, authLoading]);
+
+  const router = useRouter();
+  useEffect(() => {
+    // Navigate to profile after login remount. prevStableKey is above the key
+    // boundary so it survives the GestureHandlerRootView remount, letting us
+    // detect "guest → uid" (login) vs a cold start when already authenticated.
+    if (prevStableKey.current === "guest" && stableKey && user) {
+      router.replace("/(tabs)/(profile-stack)/profile-page");
+    }
+    prevStableKey.current = stableKey;
+  }, [stableKey]);
 
   // Fresh QueryClient per stableKey — resets cache on login/logout.
   // eslint-disable-next-line react-hooks/exhaustive-deps

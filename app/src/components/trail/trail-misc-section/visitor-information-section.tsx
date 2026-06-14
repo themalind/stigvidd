@@ -13,7 +13,10 @@ export default function VisitorInformationSection({ visitorInfo }: Props) {
     <View style={[s.container, { backgroundColor: theme.colors.surface }]}>
       <View style={s.propertyContainer}>
         <View
-          style={[s.iconBox, { backgroundColor: theme.colors.surfaceVariant, borderColor: theme.colors.outlineVariant }]}
+          style={[
+            s.iconBox,
+            { backgroundColor: theme.colors.surfaceVariant, borderColor: theme.colors.outlineVariant },
+          ]}
         >
           <Icon size={25} source="map-search-outline" color={theme.colors.onSurfaceVariant} />
         </View>
@@ -23,7 +26,10 @@ export default function VisitorInformationSection({ visitorInfo }: Props) {
 
       <View style={s.propertyContainer}>
         <View
-          style={[s.iconBox, { backgroundColor: theme.colors.surfaceVariant, borderColor: theme.colors.outlineVariant }]}
+          style={[
+            s.iconBox,
+            { backgroundColor: theme.colors.surfaceVariant, borderColor: theme.colors.outlineVariant },
+          ]}
         >
           <Icon size={25} source="bus" color={theme.colors.onSurfaceVariant} />
         </View>
@@ -33,7 +39,10 @@ export default function VisitorInformationSection({ visitorInfo }: Props) {
 
       <View style={s.propertyContainer}>
         <View
-          style={[s.iconBox, { backgroundColor: theme.colors.surfaceVariant, borderColor: theme.colors.outlineVariant }]}
+          style={[
+            s.iconBox,
+            { backgroundColor: theme.colors.surfaceVariant, borderColor: theme.colors.outlineVariant },
+          ]}
         >
           <Icon size={25} source="parking" color={theme.colors.onSurfaceVariant} />
         </View>

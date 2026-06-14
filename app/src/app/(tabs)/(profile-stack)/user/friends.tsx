@@ -68,7 +68,11 @@ export default function FriendsScreen() {
 
           {showSearchResults && (
             <View style={s.section}>
-              <SectionHeader icon="account-search" label={t("friends.searchResults")} color={theme.colors.onSurfaceVariant} />
+              <SectionHeader
+                icon="account-search"
+                label={t("friends.searchResults")}
+                color={theme.colors.onSurfaceVariant}
+              />
               <Surface style={[s.card, { backgroundColor: theme.colors.surface }]} elevation={0}>
                 <View style={s.cardInner}>
                   {searchPending ? (
@@ -194,7 +198,11 @@ export default function FriendsScreen() {
           )}
           {incomingError && (
             <View style={s.section}>
-              <SectionHeader icon="account-arrow-down" label={t("friends.incomingTitle")} color={theme.colors.onSurfaceVariant} />
+              <SectionHeader
+                icon="account-arrow-down"
+                label={t("friends.incomingTitle")}
+                color={theme.colors.onSurfaceVariant}
+              />
               <Surface style={[s.card, { backgroundColor: theme.colors.surface }]} elevation={0}>
                 <View style={s.cardInner}>
                   <EmptyState text={t("friends.incomingError")} />
@@ -257,7 +265,11 @@ export default function FriendsScreen() {
           )}
           {outgoingError && (
             <View style={s.section}>
-              <SectionHeader icon="account-arrow-right" label={t("friends.outgoingTitle")} color={theme.colors.onSurfaceVariant} />
+              <SectionHeader
+                icon="account-arrow-right"
+                label={t("friends.outgoingTitle")}
+                color={theme.colors.onSurfaceVariant}
+              />
               <Surface style={[s.card, { backgroundColor: theme.colors.surface }]} elevation={0}>
                 <View style={s.cardInner}>
                   <EmptyState text={t("friends.outgoingError")} />

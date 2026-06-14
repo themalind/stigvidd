@@ -25,11 +25,7 @@ jest.mock("@/api/notifications", () => ({
 
 import * as Notifications from "expo-notifications";
 import { registerPushToken } from "@/api/notifications";
-import {
-  NOTIFICATION_QUERY_KEYS,
-  NOTIFICATION_ROUTES,
-  registerForPushNotificationsAsync,
-} from "../notifications";
+import { NOTIFICATION_QUERY_KEYS, NOTIFICATION_ROUTES, registerForPushNotificationsAsync } from "../notifications";
 
 const mockGetPermissionsAsync = Notifications.getPermissionsAsync as jest.Mock;
 const mockRequestPermissionsAsync = Notifications.requestPermissionsAsync as jest.Mock;

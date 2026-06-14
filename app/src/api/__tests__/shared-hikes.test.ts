@@ -13,12 +13,7 @@ jest.mock("@/api/users", () => ({
 }));
 
 import { getUserToken } from "@/api/users";
-import {
-  getIncomingSharedHikes,
-  getIncomingSharedHike,
-  acceptSharedHike,
-  rejectSharedHike,
-} from "../shared-hikes";
+import { getIncomingSharedHikes, getIncomingSharedHike, acceptSharedHike, rejectSharedHike } from "../shared-hikes";
 
 const mockGetUserToken = getUserToken as jest.Mock;
 

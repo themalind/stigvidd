@@ -141,7 +141,9 @@ export default function SharedHikesScreen() {
                     )}
                     {(incomingRequests?.length ?? 0) > PREVIEW_COUNT && (
                       <Button mode="text" onPress={() => setIncomingExpanded((v) => !v)} style={s.showMoreButton}>
-                        {incomingExpanded ? t("friends.showLess") : t("friends.showAll", { count: incomingRequests?.length })}
+                        {incomingExpanded
+                          ? t("friends.showLess")
+                          : t("friends.showAll", { count: incomingRequests?.length })}
                       </Button>
                     )}
                   </View>
@@ -153,7 +155,11 @@ export default function SharedHikesScreen() {
 
           {incomingError && (
             <View style={s.section}>
-              <SectionHeader icon="account-arrow-down" label={t("friends.incomingTitle")} color={theme.colors.onSurfaceVariant} />
+              <SectionHeader
+                icon="account-arrow-down"
+                label={t("friends.incomingTitle")}
+                color={theme.colors.onSurfaceVariant}
+              />
               <Surface style={[s.card, { backgroundColor: theme.colors.surface }]} elevation={0}>
                 <View style={s.cardInner}>
                   <EmptyState text={t("friends.incomingError")} />
@@ -315,6 +321,7 @@ const s = StyleSheet.create({
   },
   scrollContent: {
     paddingTop: 8,
+    paddingBottom: 32,
     gap: 5,
   },
   content: {

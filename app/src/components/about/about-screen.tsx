@@ -15,9 +15,7 @@ export default function AboutScreen() {
       <ScrollView contentContainerStyle={s.container} showsVerticalScrollIndicator={false}>
         <View style={s.header}>
           <BackButton />
-          <Text style={[s.appName, { color: theme.colors.onBackground }]}>
-            Stigvidd
-          </Text>
+          <Text style={[s.appName, { color: theme.colors.onBackground }]}>Stigvidd</Text>
         </View>
         <View style={s.content}>
           <Text variant="bodyMedium" style={[s.description, { color: theme.colors.onBackground }]}>
