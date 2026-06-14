@@ -74,6 +74,7 @@ public class FriendRepository : IFriendRepository
             var incomingRequests = await context.FriendRequests
                 .AsNoTracking()
                 .Where(fr => fr.ReceiverId == userId && fr.Status == FriendRequestStatus.Pending)
+                .OrderByDescending(fr => fr.CreatedAt)
                 .Select(selector)
                 .ToListAsync(ctoken);
 

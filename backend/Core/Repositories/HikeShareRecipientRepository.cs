@@ -46,14 +46,15 @@ public class HikeShareRecipientRepository : IHikeShareRecipientRepository
         {
             using var context = await _dbContext.CreateDbContextAsync(ctoken);
 
-            var hasHikeSharedWithUser = await context.HikeShares
-                .AnyAsync(hs => hs.SharedWithId == userId && hs.HikeId == hikeId && hs.Status == HikeShareStatus.Accepted, ctoken);
+            var exists = await context.HikeShares
+                .AnyAsync(hs => hs.SharedWithId == userId && hs.HikeId == hikeId, ctoken);
 
-            return RepositoryResult<bool>.Success(hasHikeSharedWithUser);
+            return RepositoryResult<bool>.Success(exists);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "HikeShareRecipientRepository: HasHikeSharedWithUserAsync -> Something went wrong when checking if hike with ID {hikeId} is shared with user with ID {userId}.", hikeId, userId);
+            _logger.LogError(ex,
+                "HikeShareRecipientRepository: HasAnyHikeShareWithUserAsync -> Something went wrong when checking if hike with ID {hikeId} has any share with user with ID {userId}.", hikeId, userId);
             return RepositoryResult<bool>.Error();
         }
     }
@@ -113,6 +114,7 @@ public class HikeShareRecipientRepository : IHikeShareRecipientRepository
                 .Include(hs => hs.Hike) // exclude coordinates?
                 .Include(hs => hs.SharedBy)
                 .Where(hs => hs.SharedWithId == sharedWithId && hs.Status == HikeShareStatus.Pending)
+                .OrderByDescending(hs => hs.CreatedAt)
                 .Select(selector)
                 .ToListAsync(ctoken);
 
