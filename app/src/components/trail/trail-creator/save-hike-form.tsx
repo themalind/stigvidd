@@ -1,20 +1,21 @@
 import { createHike } from "@/api/hikes";
 import { showErrorAtom } from "@/atoms/snackbar-atoms";
+import { stigviddUserAtom } from "@/atoms/user-atoms";
 import Map from "@/components/map/map";
 import { BORDER_RADIUS } from "@/constants/constants";
 import { ActiveHike, CreateHikeRequest } from "@/data/types";
 import FormattedTime from "@/utils/format-time-from-ms";
 import GetRegionFromTrail from "@/utils/get-region-from-trail";
+import { MaterialIcons } from "@expo/vector-icons";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { useAtomValue, useSetAtom } from "jotai";
-import { stigviddUserAtom } from "@/atoms/user-atoms";
 import { useEffect, useMemo, useRef } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { Pressable, StyleSheet, View } from "react-native";
 import MapView, { LatLng, Polyline } from "react-native-maps";
-import { Divider, Surface, Text, TextInput, useTheme } from "react-native-paper";
+import { Divider, Text, TextInput, useTheme } from "react-native-paper";
 
 interface Props {
   hike: ActiveHike;
@@ -52,9 +53,7 @@ export default function SaveHikeForm({ hike, onDismiss, onSaveSuccess }: Props) 
     handleSubmit,
     formState: { errors },
   } = useForm<SaveHikeFormData>({
-    defaultValues: {
-      hikeName: "",
-    },
+    defaultValues: { hikeName: "" },
   });
 
   const submit = async (data: SaveHikeFormData) => {
@@ -64,49 +63,39 @@ export default function SaveHikeForm({ hike, onDismiss, onSaveSuccess }: Props) 
       duration: hike.totalTime,
       coordinates: [],
     };
-
     hike.segments.forEach((segment) => {
       segment.coordinates.forEach((coords) => {
         newHike.coordinates.push(coords.data);
       });
     });
-
     mutate(newHike);
   };
 
-  const time = FormattedTime(hike.totalTime);
-
   const route = useMemo<LatLng[]>(() => {
     const coords: LatLng[] = [];
-
     hike.segments.forEach((segment) => {
       segment.coordinates.forEach((coordinate) => {
-        coords.push({
-          latitude: coordinate.data.latitude,
-          longitude: coordinate.data.longitude,
-        });
+        coords.push({ latitude: coordinate.data.latitude, longitude: coordinate.data.longitude });
       });
     });
-
     return coords;
   }, [hike.segments]);
 
   useEffect(() => {
     if (!mapRef.current || hike.totalDistance === 0) return;
-
     mapRef.current.animateToRegion(GetRegionFromTrail(route), 500);
   }, [route, hike.totalDistance]);
 
   const openDialogIfValid = handleSubmit(submit);
 
   return (
-    <View>
+    <View style={s.container}>
       <Controller
         name="hikeName"
         control={control}
         render={({ field: { onChange, onBlur, value } }) => (
           <TextInput
-            style={[s.inputText, { backgroundColor: theme.colors.surface }]}
+            style={{ backgroundColor: theme.colors.surface }}
             onChangeText={onChange}
             onBlur={onBlur}
             value={value}
@@ -114,85 +103,90 @@ export default function SaveHikeForm({ hike, onDismiss, onSaveSuccess }: Props) 
             mode="outlined"
           />
         )}
-        rules={{
-          required: true,
-          minLength: 3,
-          maxLength: 60,
-        }}
+        rules={{ required: true, minLength: 3, maxLength: 60 }}
       />
-      {errors.hikeName && <Text style={s.errorText}>{t("hike.nameRequired")}</Text>}
+      {errors.hikeName && <Text style={[s.errorText, { color: theme.colors.error }]}>{t("hike.nameRequired")}</Text>}
 
-      <View style={s.summary}>
-        <View style={s.Left}>
-          {hike.totalDistance > 100 ? (
-            <Text style={s.summaryText}>{(hike.totalDistance / 1000).toFixed(2)} km</Text>
-          ) : (
-            <Text style={s.summaryText}>{hike.totalDistance} m</Text>
-          )}
+      <View style={[s.statsCard, { backgroundColor: theme.colors.outlineVariant }]}>
+        <View style={s.statItem}>
+          <Text style={s.statLabel}>Distans</Text>
+          <Text style={s.statValue}>
+            {hike.totalDistance > 100 ? `${(hike.totalDistance / 1000).toFixed(2)} km` : `${hike.totalDistance} m`}
+          </Text>
         </View>
-        <Divider style={{ width: StyleSheet.hairlineWidth, height: "100%" }} />
-        <View style={s.Right}>
-          <Text style={s.summaryText}>{time}</Text>
+        <Divider style={[s.statDivider, { backgroundColor: theme.colors.outline }]} />
+        <View style={s.statItem}>
+          <Text style={s.statLabel}>Tid</Text>
+          <Text style={s.statValue}>{FormattedTime(hike.totalTime)}</Text>
         </View>
       </View>
 
-      {route.length > 0 ? (
-        <Surface style={s.mapContainer}>
-          <View style={s.mapInner}>
-            <Map style={s.map} ref={mapRef} initialRegion={GetRegionFromTrail(route)}>
-              <Polyline coordinates={route} strokeColor="#f00" strokeWidth={3} />
-            </Map>
-          </View>
-        </Surface>
-      ) : null}
+      {route.length > 0 && (
+        <View style={s.mapContainer}>
+          <Map style={s.map} ref={mapRef} initialRegion={GetRegionFromTrail(route)}>
+            <Polyline coordinates={route} strokeColor={theme.colors.primary} strokeWidth={3} />
+          </Map>
+        </View>
+      )}
 
       <View style={s.actions}>
-        <View style={s.Left}>
-          <Pressable style={s.action} disabled={isPending} onPress={onDismiss}>
-            <Text>{t("hike.goBack")}</Text>
-          </Pressable>
-        </View>
-        <View style={s.Right}>
-          <Pressable style={s.action} disabled={isPending} onPress={openDialogIfValid}>
-            <Text>{t("hike.confirm")}</Text>
-          </Pressable>
-        </View>
+        <Pressable
+          style={[s.actionButton, { backgroundColor: theme.colors.outlineVariant }]}
+          disabled={isPending}
+          onPress={onDismiss}
+        >
+          <MaterialIcons name="arrow-back" size={22} color={theme.colors.onSurface} />
+          <Text style={s.buttonText}>{t("hike.goBack")}</Text>
+        </Pressable>
+        <Pressable
+          style={[s.actionButton, { backgroundColor: theme.colors.primary }]}
+          disabled={isPending}
+          onPress={openDialogIfValid}
+        >
+          <MaterialIcons name="save" size={22} color={theme.colors.onPrimary} />
+          <Text style={[s.buttonText, { color: theme.colors.onPrimary }]}>
+            {isPending ? t("common.saving") : t("common.save")}
+          </Text>
+        </Pressable>
       </View>
     </View>
   );
 }
 
 const s = StyleSheet.create({
-  inputText: {},
+  container: {
+    gap: 12,
+  },
   errorText: {
-    color: "#e00",
-    alignSelf: "flex-start",
-    paddingLeft: 16,
+    fontSize: 12,
+    paddingLeft: 4,
   },
-  summary: {
+  statsCard: {
     flexDirection: "row",
-    justifyContent: "center",
-    paddingTop: 20,
-    gap: 20,
+    borderRadius: BORDER_RADIUS,
+    padding: 16,
   },
-  summaryText: {
-    fontSize: 18,
-  },
-  Left: {
+  statItem: {
     flex: 1,
-    alignItems: "flex-end",
+    alignItems: "center",
+    gap: 4,
   },
-  Right: {
-    flex: 1,
-    alignItems: "flex-start",
+  statLabel: {
+    fontSize: 11,
+    fontWeight: "600",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+    opacity: 0.6,
+  },
+  statValue: {
+    fontSize: 24,
+  },
+  statDivider: {
+    width: 1,
+    marginVertical: 4,
   },
   mapContainer: {
-    height: 300,
-    borderRadius: BORDER_RADIUS,
-    marginVertical: 20,
-  },
-  mapInner: {
-    flex: 1,
+    height: 200,
     borderRadius: BORDER_RADIUS,
     overflow: "hidden",
   },
@@ -201,10 +195,19 @@ const s = StyleSheet.create({
   },
   actions: {
     flexDirection: "row",
-    justifyContent: "center",
-    gap: 25,
+    gap: 12,
   },
-  action: {
-    padding: 15,
+  actionButton: {
+    flex: 1,
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: BORDER_RADIUS,
+    gap: 8,
+    height: 52,
+  },
+  buttonText: {
+    fontSize: 15,
+    fontWeight: "600",
   },
 });

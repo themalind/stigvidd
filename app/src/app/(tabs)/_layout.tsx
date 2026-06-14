@@ -1,4 +1,4 @@
-import { incomingRequestsAtom } from "@/atoms/friends-atoms";
+import { pendingNotificationsCountAtom } from "@/atoms/friends-atoms";
 import Header from "@/components/header";
 import { FontAwesome, Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { Tabs, usePathname } from "expo-router";
@@ -11,8 +11,7 @@ export default function TabsLayout() {
   const theme = useTheme();
   const { t } = useTranslation();
   const pathname = usePathname();
-  const { data: incoming } = useAtomValue(incomingRequestsAtom);
-  const incomingCount = incoming?.length ?? 0;
+  const incomingCount = useAtomValue(pendingNotificationsCountAtom);
 
   const shouldShowHeader = !pathname.includes("/login") && !pathname.includes("/register");
 
@@ -82,7 +81,7 @@ export default function TabsLayout() {
                 <MaterialCommunityIcons name="account-box-outline" size={30} color={theme.colors.onBackground} />
               ),
             tabBarBadge: incomingCount > 0 ? incomingCount : undefined,
-            tabBarBadgeStyle: { color: theme.colors.onPrimary, backgroundColor: theme.colors.primary },
+            tabBarBadgeStyle: { color: theme.colors.onTertiary, backgroundColor: theme.colors.tertiary },
           }}
         />
         <Tabs.Screen

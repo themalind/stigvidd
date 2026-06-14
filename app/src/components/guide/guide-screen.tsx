@@ -1,14 +1,14 @@
 import BackButton from "@/components/back-button";
-import { asTranslationKey } from "@/i18n";
 import { BORDER_RADIUS } from "@/constants/constants";
 import { DIFFICULTIES } from "@/data/trail-content";
+import { asTranslationKey } from "@/i18n";
 import { classificationParser } from "@/utils/classification-parser";
 import { getDifficultyIcon } from "@/utils/getDifficultyIcon";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { LayoutAnimation, Linking, Platform, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { Divider, Text, useTheme } from "react-native-paper";
-import { useTranslation } from "react-i18next";
 
 interface AccordionProps {
   icon: React.ReactNode;
@@ -36,23 +36,19 @@ function AccordionSection({ icon, title, summary, children, defaultOpen = false 
         },
       ]}
     >
-      <Pressable onPress={toggle} style={[s.accordionHeader, { backgroundColor: theme.colors.secondaryContainer }]}>
+      <Pressable onPress={toggle} style={[s.accordionHeader, { backgroundColor: theme.colors.surfaceVariant }]}>
         <View style={s.accordionHeaderLeft}>
-          <View style={[s.iconWrap, { backgroundColor: theme.colors.secondaryContainer }]}>{icon}</View>
+          <View style={[s.iconWrap, { backgroundColor: theme.colors.surfaceVariant }]}>{icon}</View>
           <View style={s.titleGroup}>
-            <Text style={[s.sectionTitle, { color: theme.colors.onSecondaryContainer }]}>{title}</Text>
+            <Text style={[s.sectionTitle, { color: theme.colors.onSurface }]}>{title}</Text>
             {!open && (
-              <Text
-                style={[s.summaryText, { color: theme.colors.onSecondaryContainer }]}
-                numberOfLines={1}
-                ellipsizeMode="tail"
-              >
+              <Text style={[s.summaryText, { color: theme.colors.onSurface }]} numberOfLines={1} ellipsizeMode="tail">
                 {summary}
               </Text>
             )}
           </View>
         </View>
-        <Ionicons name={open ? "chevron-up" : "chevron-down"} size={18} color={theme.colors.onSecondaryContainer} />
+        <Ionicons name={open ? "chevron-up" : "chevron-down"} size={18} color={theme.colors.onSurfaceVariant} />
       </Pressable>
 
       {open && (
@@ -77,13 +73,11 @@ export default function GuideScreen() {
       <ScrollView contentContainerStyle={s.container} showsVerticalScrollIndicator={false}>
         <View style={s.header}>
           <BackButton />
-          <Text variant="headlineMedium" style={[s.pageTitle, { color: theme.colors.primary }]}>
-            {t("guide.title")}
-          </Text>
+          <Text style={[s.pageTitle, { color: theme.colors.onBackground }]}>{t("guide.title")}</Text>
         </View>
         <View style={s.content}>
           <AccordionSection
-            icon={<MaterialCommunityIcons name="walk" size={18} color={theme.colors.primary} />}
+            icon={<MaterialCommunityIcons name="walk" size={18} color={theme.colors.onSurfaceVariant} />}
             title={t("guide.allemansrattenTitle")}
             summary={t("guide.allemansrattenSummary")}
             defaultOpen
@@ -104,7 +98,9 @@ export default function GuideScreen() {
           </AccordionSection>
 
           <AccordionSection
-            icon={<MaterialCommunityIcons name="shield-check-outline" size={18} color={theme.colors.primary} />}
+            icon={
+              <MaterialCommunityIcons name="shield-check-outline" size={18} color={theme.colors.onSurfaceVariant} />
+            }
             title={t("guide.naturreservatTitle")}
             summary={t("guide.naturreservatSummary")}
           >
@@ -122,7 +118,9 @@ export default function GuideScreen() {
           </AccordionSection>
 
           <AccordionSection
-            icon={<MaterialCommunityIcons name="wheelchair-accessibility" size={18} color={theme.colors.primary} />}
+            icon={
+              <MaterialCommunityIcons name="wheelchair-accessibility" size={18} color={theme.colors.onSurfaceVariant} />
+            }
             title={t("guide.accessibilityGuideTitle")}
             summary={t("guide.accessibilityGuideSummary")}
           >
@@ -140,7 +138,7 @@ export default function GuideScreen() {
           </AccordionSection>
 
           <AccordionSection
-            icon={<Ionicons name="trail-sign-outline" size={18} color={theme.colors.primary} />}
+            icon={<Ionicons name="trail-sign-outline" size={18} color={theme.colors.onSurfaceVariant} />}
             title={t("guide.difficultiesGuideTitle")}
             summary={t("guide.difficultiesGuideSummary")}
           >
@@ -158,7 +156,7 @@ export default function GuideScreen() {
           </AccordionSection>
 
           <AccordionSection
-            icon={<Ionicons name="book-outline" size={18} color={theme.colors.primary} />}
+            icon={<Ionicons name="book-outline" size={18} color={theme.colors.onSurfaceVariant} />}
             title={t("guide.readMoreTitle")}
             summary={t("guide.readMoreSummary")}
           >
@@ -169,10 +167,10 @@ export default function GuideScreen() {
                   <View
                     style={[
                       s.linkIconBox,
-                      { backgroundColor: theme.colors.tertiaryContainer, borderColor: theme.colors.tertiary },
+                      { backgroundColor: theme.colors.surfaceVariant, borderColor: theme.colors.outlineVariant },
                     ]}
                   >
-                    <MaterialCommunityIcons name="link-variant" size={20} color={theme.colors.onTertiaryContainer} />
+                    <MaterialCommunityIcons name="link-variant" size={20} color={theme.colors.onSurfaceVariant} />
                   </View>
                   <Text style={[s.linkText, { color: theme.colors.onSurface }]}>{label}</Text>
                 </Pressable>
@@ -209,16 +207,12 @@ const s = StyleSheet.create({
     gap: 12,
   },
   pageTitle: {
-    fontWeight: "bold",
+    fontFamily: "Inter_600SemiBold",
+    fontSize: 16,
   },
   accordion: {
     borderRadius: BORDER_RADIUS,
     overflow: "hidden",
-    elevation: 1,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
-    shadowRadius: 2,
   },
   accordionHeader: {
     flexDirection: "row",
@@ -244,8 +238,8 @@ const s = StyleSheet.create({
     gap: 2,
   },
   sectionTitle: {
-    fontSize: 15,
-    fontWeight: "700",
+    fontSize: 16,
+    fontFamily: "Inter_600SemiBold",
   },
   summaryText: {
     fontSize: 12,

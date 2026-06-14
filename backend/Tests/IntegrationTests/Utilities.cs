@@ -727,17 +727,18 @@ public static class Utilities
     {
         return
         [
-            // VandrarVennen (User 2) shares Hike 3 with NaturElskaren (User 1).
+            // VandrarVennen (User 2) shares Hike 3 with NaturElskaren (User 1) — Accepted.
             // When VandrarVennen deletes, Hike 3 is preserved (not soft-deleted) because
-            // a HikeShare record exists for it; the DB cascade nulls its UserId.
+            // a HikeShare record exists for it; the DB cascade nulls SharedById.
             new HikeShare
             {
                 HikeId = 3,
                 SharedById = 2,   // VandrarVennen
                 SharedWithId = 1, // NaturElskaren
                 CreatedAt = SeedDates.Created,
+                Status = HikeShareStatus.Accepted,
             },
-            // SkogsGreven (User 3) shares Hike 5 with VandrarVennen (User 2).
+            // SkogsGreven (User 3) shares Hike 5 with VandrarVennen (User 2) — Accepted.
             // When VandrarVennen deletes, this recipient record is removed by
             // DeleteHikeSharesByUserIdAsync (SharedWithId == VandrarVennen's Id).
             new HikeShare
@@ -746,6 +747,7 @@ public static class Utilities
                 SharedById = 3,   // SkogsGreven
                 SharedWithId = 2, // VandrarVennen
                 CreatedAt = SeedDates.Created,
+                Status = HikeShareStatus.Accepted,
             },
         ];
     }

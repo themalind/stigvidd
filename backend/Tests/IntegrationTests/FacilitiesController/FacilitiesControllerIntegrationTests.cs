@@ -29,43 +29,55 @@ public class FacilitiesControllerIntegrationTests : IClassFixture<StigViddWebApp
     [Fact]
     public async Task GetAll_WhenFacilitiesExist_ShouldReturnOk()
     {
+        // Arrange
         var client = _factory.CreateClient();
 
+        // Act
         var response = await client.GetAsync("/api/v1/facilities", TestContext.Current.CancellationToken);
 
+        // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
     }
 
     [Fact]
     public async Task GetAll_ShouldReturnAllSeededFacilities()
     {
+        // Arrange
         var client = _factory.CreateClient();
 
+        // Act
         var response = await client.GetAsync("/api/v1/facilities", TestContext.Current.CancellationToken);
         var facilities = await response.Content.ReadFromJsonAsync<List<FacilityResponse>>(TestContext.Current.CancellationToken);
 
+        // Assert
         facilities.Should().NotBeNull().And.HaveCount(2);
     }
 
     [Fact]
     public async Task GetAll_WithoutAuthentication_ShouldReturnOk()
     {
+        // Arrange
         var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Authorization = null;
 
+        // Act
         var response = await client.GetAsync("/api/v1/facilities", TestContext.Current.CancellationToken);
 
+        // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
     }
 
     [Fact]
     public async Task GetByIdentifier_WhenFound_ShouldReturnOk()
     {
+        // Arrange
         var client = _factory.CreateClient();
 
+        // Act
         var response = await client.GetAsync($"/api/v1/facilities/{Facility1Identifier}", TestContext.Current.CancellationToken);
         var facility = await response.Content.ReadFromJsonAsync<FacilityResponse>(TestContext.Current.CancellationToken);
 
+        // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         facility.Should().NotBeNull();
         facility!.Identifier.Should().Be(Facility1Identifier);
@@ -75,27 +87,34 @@ public class FacilitiesControllerIntegrationTests : IClassFixture<StigViddWebApp
     [Fact]
     public async Task GetByIdentifier_WhenNotFound_ShouldReturnNotFound()
     {
+        // Arrange
         var client = _factory.CreateClient();
 
+        // Act
         var response = await client.GetAsync($"/api/v1/facilities/{NonExistentIdentifier}", TestContext.Current.CancellationToken);
 
+        // Assert
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
 
     [Fact]
     public async Task GetByIdentifier_WithoutAuthentication_ShouldReturnOk()
     {
+        // Arrange
         var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Authorization = null;
 
+        // Act
         var response = await client.GetAsync($"/api/v1/facilities/{Facility1Identifier}", TestContext.Current.CancellationToken);
 
+        // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
     }
 
     [Fact]
     public async Task Create_WithAuthenticatedUser_ShouldReturnOk()
     {
+        // Arrange
         var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", AuthenticatedUser);
@@ -109,9 +128,11 @@ public class FacilitiesControllerIntegrationTests : IClassFixture<StigViddWebApp
             Longitude = 12.8
         };
 
+        // Act
         var response = await client.PostAsJsonAsync("/api/v1/facilities", request, TestContext.Current.CancellationToken);
         var facility = await response.Content.ReadFromJsonAsync<FacilityResponse>(TestContext.Current.CancellationToken);
 
+        // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         facility.Should().NotBeNull();
         facility!.Name.Should().Be("Ny grillplats");
@@ -121,6 +142,7 @@ public class FacilitiesControllerIntegrationTests : IClassFixture<StigViddWebApp
     [Fact]
     public async Task Create_WithoutAuthentication_ShouldReturnUnauthorized()
     {
+        // Arrange
         var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Authorization = null;
 
@@ -133,14 +155,17 @@ public class FacilitiesControllerIntegrationTests : IClassFixture<StigViddWebApp
             Longitude = 12.8
         };
 
+        // Act
         var response = await client.PostAsJsonAsync("/api/v1/facilities", request, TestContext.Current.CancellationToken);
 
+        // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
 
     [Fact]
     public async Task Create_WithEmptyName_ShouldReturnBadRequest()
     {
+        // Arrange
         var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", AuthenticatedUser);
@@ -154,14 +179,17 @@ public class FacilitiesControllerIntegrationTests : IClassFixture<StigViddWebApp
             Longitude = 12.8
         };
 
+        // Act
         var response = await client.PostAsJsonAsync("/api/v1/facilities", request, TestContext.Current.CancellationToken);
 
+        // Assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
 
     [Fact]
     public async Task Create_WithLatitudeOutOfRange_ShouldReturnBadRequest()
     {
+        // Arrange
         var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", AuthenticatedUser);
@@ -175,14 +203,17 @@ public class FacilitiesControllerIntegrationTests : IClassFixture<StigViddWebApp
             Longitude = 12.8
         };
 
+        // Act
         var response = await client.PostAsJsonAsync("/api/v1/facilities", request, TestContext.Current.CancellationToken);
 
+        // Assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
 
     [Fact]
     public async Task Create_WithLongitudeOutOfRange_ShouldReturnBadRequest()
     {
+        // Arrange
         var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", AuthenticatedUser);
@@ -196,22 +227,27 @@ public class FacilitiesControllerIntegrationTests : IClassFixture<StigViddWebApp
             Longitude = 181
         };
 
+        // Act
         var response = await client.PostAsJsonAsync("/api/v1/facilities", request, TestContext.Current.CancellationToken);
 
+        // Assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
 
     [Fact]
     public async Task Update_WithAuthenticatedUser_ShouldReturnOk()
     {
+        // Arrange
         var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", AuthenticatedUser);
 
         var request = new UpdateFacilityRequest { Name = "Uppdaterat namn" };
 
+        // Act
         var response = await client.PutAsJsonAsync($"{UpdateRoute}/{Facility2Identifier}", request, TestContext.Current.CancellationToken);
 
+        // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         var facility = await response.Content.ReadFromJsonAsync<FacilityResponse>(TestContext.Current.CancellationToken);
         facility.Should().NotBeNull();
@@ -221,76 +257,94 @@ public class FacilitiesControllerIntegrationTests : IClassFixture<StigViddWebApp
     [Fact]
     public async Task Update_WithoutAuthentication_ShouldReturnUnauthorized()
     {
+        // Arrange
         var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Authorization = null;
 
         var request = new UpdateFacilityRequest { Name = "Uppdaterat namn" };
 
+        // Act
         var response = await client.PutAsJsonAsync($"{UpdateRoute}/{Facility1Identifier}", request, TestContext.Current.CancellationToken);
 
+        // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
 
     [Fact]
     public async Task Update_WithNonExistentFacility_ShouldReturnNotFound()
     {
+        // Arrange
         var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", AuthenticatedUser);
 
         var request = new UpdateFacilityRequest { Name = "Uppdaterat namn" };
 
+        // Act
         var response = await client.PutAsJsonAsync($"{UpdateRoute}/{NonExistentIdentifier}", request, TestContext.Current.CancellationToken);
 
+        // Assert
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
 
     [Fact]
     public async Task Update_WithInvalidLatitude_ShouldReturnBadRequest()
     {
+        // Arrange
         var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", AuthenticatedUser);
 
         var request = new UpdateFacilityRequest { Latitude = 91 };
 
+        // Act
         var response = await client.PutAsJsonAsync($"{UpdateRoute}/{Facility1Identifier}", request, TestContext.Current.CancellationToken);
 
+        // Assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
 
     [Fact]
     public async Task Delete_WithAuthenticatedUser_ShouldReturnNoContent()
     {
+        // Arrange
         var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", AuthenticatedUser);
 
+        // Act
         var response = await client.DeleteAsync($"/api/v1/facilities/{Facility1Identifier}", TestContext.Current.CancellationToken);
 
+        // Assert
         response.StatusCode.Should().Be(HttpStatusCode.NoContent);
     }
 
     [Fact]
     public async Task Delete_WithoutAuthentication_ShouldReturnUnauthorized()
     {
+        // Arrange
         var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Authorization = null;
 
+        // Act
         var response = await client.DeleteAsync($"/api/v1/facilities/{Facility1Identifier}", TestContext.Current.CancellationToken);
 
+        // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
 
     [Fact]
     public async Task Delete_WithNonExistentFacility_ShouldReturnNotFound()
     {
+        // Arrange
         var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", AuthenticatedUser);
 
+        // Act
         var response = await client.DeleteAsync($"/api/v1/facilities/{NonExistentIdentifier}", TestContext.Current.CancellationToken);
 
+        // Assert
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
 }

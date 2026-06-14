@@ -175,8 +175,8 @@ const s = StyleSheet.create({
     gap: 3,
   },
   sectionTitle: {
-    fontWeight: "700",
-    fontSize: 18,
+    fontFamily: "Inter_600SemiBold",
+    fontSize: 15,
   },
   backToTop: {
     alignSelf: "center",

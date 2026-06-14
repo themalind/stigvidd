@@ -67,10 +67,10 @@ const s = StyleSheet.create({
     flexGrow: 1,
   },
   title: {
-    fontSize: 25,
+    fontSize: 17,
     fontWeight: 600,
   },
   text: {
-    fontSize: 20,
+    fontSize: 15,
   },
 });

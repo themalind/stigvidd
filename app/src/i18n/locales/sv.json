@@ -49,6 +49,7 @@
     "couldNotLogout": "Kunde inte logga ut.",
     "notLoggedIn": "Du är inte inloggad",
     "goToLogin": "Logga in",
+    "couldNotDeleteFromServer": "Kunde inte ta bort kontot från servern",
     "validation": {
       "nicknameRequired": "Ange ett användarnamn",
       "nicknameTooLong": "Namn för långt. Max 20 tecken",
@@ -271,7 +272,14 @@
     "noShared": "Inga delade promenader här än",
     "sharedByLabel": "Delad av: {{name}}",
     "sharedHikeDeleted": "Promenaden har tagits bort!",
-    "sharedHikeAlreadyHas": "Mottagaren har redan promenaden."
+    "sharedHikeAlreadyHas": "Mottagaren har redan promenaden.",
+    "hikeAdded": "Promenaden tillagd!",
+    "incomingRejected": "Promenaden har tagits bort",
+    "couldNotFetch": "Kunde inte hämta promenaden, försök igen.",
+    "accept": "Acceptera",
+    "reject": "Avvisa",
+    "receivedHikes": "Mottagna promenader",
+    "tapForDetails": "Tryck på en promenad för att se detaljer"
   },
   "userActions": {
     "favorite": "Favorit",

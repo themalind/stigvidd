@@ -1,6 +1,6 @@
 import { signOutUser } from "@/api/auth";
 import { authStateAtom } from "@/atoms/auth-atoms";
-import { incomingRequestsAtom } from "@/atoms/friends-atoms";
+import { incomingRequestsAtom, incomingSharedHikesAtom } from "@/atoms/friends-atoms";
 import { showErrorAtom } from "@/atoms/snackbar-atoms";
 import { stigviddUserAtom } from "@/atoms/user-atoms";
 import { userThemeAtom } from "@/atoms/user-theme-atom";
@@ -29,8 +29,10 @@ export default function ProfilePageScreen() {
   const [authState] = useAtom(authStateAtom);
   const [visible, setVisible] = useState(false);
   const navigation = useNavigation();
-  const { data: incoming } = useAtomValue(incomingRequestsAtom);
-  const incomingCount = incoming?.length ?? 0;
+  const { data: incomingFriendRequests } = useAtomValue(incomingRequestsAtom);
+  const { data: incomingSharedHikes } = useAtomValue(incomingSharedHikesAtom);
+  const incomingFriendRequestCount = incomingFriendRequests?.length ?? 0;
+  const incomingSharedHikeRequestCount = incomingSharedHikes?.length ?? 0;
 
   useFocusEffect(
     React.useCallback(() => {
@@ -89,48 +91,49 @@ export default function ProfilePageScreen() {
         <ProfileMenuItem
           text={t("profile.friends")}
           route="/(tabs)/(profile-stack)/user/friends"
-          icon={<MaterialCommunityIcons name="account-group" size={30} color={theme.colors.tertiary} />}
-          badge={incomingCount}
+          icon={<MaterialCommunityIcons name="account-group" size={30} color={theme.colors.onSurfaceVariant} />}
+          badge={incomingFriendRequestCount}
         />
         <ProfileMenuItem
           text={t("profile.favorites")}
           route="/(tabs)/(profile-stack)/user/favorites"
-          icon={<MaterialCommunityIcons name="cards-heart" size={30} color={theme.colors.tertiary} />}
+          icon={<MaterialCommunityIcons name="cards-heart" size={30} color={theme.colors.onSurfaceVariant} />}
         />
         <ProfileMenuItem
           text={t("profile.wishlist")}
           route="/(tabs)/(profile-stack)/user/wishlist"
-          icon={<MaterialIcons name="star" size={30} color={theme.colors.tertiary} />}
+          icon={<MaterialIcons name="star" size={30} color={theme.colors.onSurfaceVariant} />}
         />
         <ProfileMenuItem
           text={t("profile.createHike")}
           route="/(tabs)/(profile-stack)/user/create-hike"
-          icon={<MaterialIcons name="hiking" size={30} color={theme.colors.tertiary} />}
+          icon={<MaterialIcons name="hiking" size={30} color={theme.colors.onSurfaceVariant} />}
         />
         <ProfileMenuItem
           text={t("profile.myHikes")}
           route="/(tabs)/(profile-stack)/user/my-hikes"
-          icon={<MaterialCommunityIcons name="map-legend" size={30} color={theme.colors.tertiary} />}
+          icon={<MaterialCommunityIcons name="map-legend" size={30} color={theme.colors.onSurfaceVariant} />}
         />
         <ProfileMenuItem
           text={t("profile.sharedHikes")}
           route="/(tabs)/(profile-stack)/user/shared-hikes"
-          icon={<Fontisto name="map" size={26} color={theme.colors.tertiary} />}
+          icon={<Fontisto name="map" size={26} color={theme.colors.onSurfaceVariant} />}
+          badge={incomingSharedHikeRequestCount}
         />
         <ProfileMenuItem
           text={t("profile.achievements")}
           route="/(tabs)/(profile-stack)/profile-page"
-          icon={<MaterialIcons name="emoji-events" size={30} color={theme.colors.tertiary} />}
+          icon={<MaterialIcons name="emoji-events" size={30} color={theme.colors.onSurfaceVariant} />}
         />
         <ProfileMenuItem
           text={t("profile.statistics")}
           route="/(tabs)/(profile-stack)/profile-page"
-          icon={<MaterialIcons name="bar-chart" size={30} color={theme.colors.tertiary} />}
+          icon={<MaterialIcons name="bar-chart" size={30} color={theme.colors.onSurfaceVariant} />}
         />
         <ProfileMenuItem
           text={t("profile.about")}
           route="/(tabs)/(profile-stack)/about"
-          icon={<MaterialIcons name="perm-device-info" size={30} color={theme.colors.tertiary} />}
+          icon={<MaterialIcons name="perm-device-info" size={30} color={theme.colors.onSurfaceVariant} />}
         />
         <View style={s.accountActionsContainer}>
           <Pressable onPress={handleSignOut}>
@@ -153,7 +156,8 @@ const s = StyleSheet.create({
     gap: 10,
   },
   topTitle: {
-    fontSize: 20,
+    fontFamily: "Inter_600SemiBold",
+    fontSize: 16,
     alignSelf: "flex-start",
     paddingBottom: 10,
   },

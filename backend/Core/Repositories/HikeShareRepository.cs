@@ -3,6 +3,7 @@ using Infrastructure.Data;
 using Infrastructure.Data.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Npgsql;
 
 namespace Core.Repositories;
 
@@ -34,6 +35,22 @@ public class HikeShareRepository : IHikeShareRepository
         {
             _logger.LogError(ex, "HikeShareRepository: GetHikeShareCountAsync -> Something went wrong when fetching hike share count for hike {hikeIdentifier}.", hikeIdentifier);
             return RepositoryResult<int>.Error();
+        }
+    }
+
+    public async Task<RepositoryResult<bool>> IsAlreadySharedAsync(int hikeId, int sharedWithId, CancellationToken ctoken)
+    {
+        try
+        {
+            using var context = await _dbContext.CreateDbContextAsync(ctoken);
+            var exists = await context.HikeShares
+                .AnyAsync(hs => hs.HikeId == hikeId && hs.SharedWithId == sharedWithId, ctoken);
+            return RepositoryResult<bool>.Success(exists);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "HikeShareRepository: IsAlreadySharedAsync -> Something went wrong when checking if hike {hikeId} is already shared with user {sharedWithId}.", hikeId, sharedWithId);
+            return RepositoryResult<bool>.Error();
         }
     }
 

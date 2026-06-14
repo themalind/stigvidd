@@ -1,9 +1,10 @@
+import { BORDER_RADIUS } from "@/constants/constants";
 import { BorasArea } from "@/data/areas-data";
 import { asTranslationKey } from "@/i18n";
 import { guardedNavigate } from "@/utils/navigation";
 import { router } from "expo-router";
 import { useTranslation } from "react-i18next";
-import { Pressable } from "react-native";
+import { Pressable, StyleSheet } from "react-native";
 import { Button, Card, Icon, Text, useTheme } from "react-native-paper";
 
 interface Props {
@@ -26,8 +27,18 @@ export default function AreaCard({ area }: Props) {
       }
       style={{ gap: 5 }}
     >
-      <Card>
-        <Card.Cover style={{ padding: 10, backgroundColor: theme.colors.elevation.level1 }} source={area.image} />
+      <Card
+        elevation={0}
+        style={{
+          borderWidth: StyleSheet.hairlineWidth,
+          borderColor: theme.colors.outlineVariant,
+          borderRadius: BORDER_RADIUS,
+        }}
+      >
+        <Card.Cover
+          style={{ padding: 10, backgroundColor: theme.colors.elevation.level1, borderRadius: BORDER_RADIUS }}
+          source={area.image}
+        />
         <Card.Title title={area.name} subtitle={t(asTranslationKey(area.location))} />
         <Card.Content style={{ paddingTop: 10 }}>
           <Text>{t(asTranslationKey(area.description))}</Text>

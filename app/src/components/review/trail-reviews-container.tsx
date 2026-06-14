@@ -77,11 +77,11 @@ export default function TrailReviewsContainer({ trail, surfaceToScrollToRef, onR
 
   return (
     <View ref={surfaceToScrollToRef}>
-      <Surface elevation={4} mode="elevated" style={[s.surface, { backgroundColor: theme.colors.surface, gap: 10 }]}>
+      <Surface elevation={0} style={[s.surface, { backgroundColor: theme.colors.surface, gap: 10 }]}>
         <View style={{ flexDirection: "row" }}>
           <View style={s.ratingSection}>
             <Text style={[s.title, { color: theme.colors.onSurface }]}>{t("review.title")}</Text>
-            <Text style={[s.ratingNumber, { color: theme.colors.tertiary }]}>{`(${totalReviewsCount})`}</Text>
+            <Text style={[s.ratingNumber, { color: theme.colors.onSurfaceVariant }]}>{`(${totalReviewsCount})`}</Text>
           </View>
           <View style={s.iconSection}>
             <Pressable onPress={handleAddReviewPress}>
@@ -98,9 +98,8 @@ export default function TrailReviewsContainer({ trail, surfaceToScrollToRef, onR
         </View>
         {reviews.length === 0 ? (
           <Surface
-            elevation={4}
+            elevation={0}
             ref={surfaceToScrollToRef}
-            mode="elevated"
             style={[s.surface, { backgroundColor: theme.colors.surface }]}
           >
             <Text style={{ color: theme.colors.onBackground }}>{t("review.noReviews")}</Text>
@@ -139,7 +138,7 @@ const s = StyleSheet.create({
   },
   title: {
     fontWeight: 700,
-    fontSize: 20,
+    fontSize: 16,
   },
   iconSection: {
     gap: 15,

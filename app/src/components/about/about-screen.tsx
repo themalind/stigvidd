@@ -15,9 +15,7 @@ export default function AboutScreen() {
       <ScrollView contentContainerStyle={s.container} showsVerticalScrollIndicator={false}>
         <View style={s.header}>
           <BackButton />
-          <Text variant="headlineMedium" style={[s.appName, { color: theme.colors.primary }]}>
-            Stigvidd
-          </Text>
+          <Text style={[s.appName, { color: theme.colors.onBackground }]}>Stigvidd</Text>
         </View>
         <View style={s.content}>
           <Text variant="bodyMedium" style={[s.description, { color: theme.colors.onBackground }]}>
@@ -83,7 +81,8 @@ const s = StyleSheet.create({
     paddingLeft: Platform.select({ ios: 0, default: 12 }),
   },
   appName: {
-    fontWeight: "bold",
+    fontFamily: "Inter_600SemiBold",
+    fontSize: 16,
     marginBottom: 4,
   },
   container: {

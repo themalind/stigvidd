@@ -54,7 +54,7 @@ export default function FriendsScreen() {
       <ScrollView style={{ backgroundColor: theme.colors.background }} contentContainerStyle={s.scrollContent}>
         <View style={s.header}>
           <BackButton />
-          <MaterialCommunityIcons name="account-group" size={24} color={theme.colors.primary} />
+          <MaterialCommunityIcons name="account-group" size={24} color={theme.colors.onSurfaceVariant} />
           <Text style={s.headerTitle}>{t("friends.title")}</Text>
         </View>
         <View style={s.content}>
@@ -68,8 +68,12 @@ export default function FriendsScreen() {
 
           {showSearchResults && (
             <View style={s.section}>
-              <SectionHeader icon="account-search" label={t("friends.searchResults")} color={theme.colors.primary} />
-              <Surface style={[s.card, { backgroundColor: theme.colors.surface }]} elevation={1}>
+              <SectionHeader
+                icon="account-search"
+                label={t("friends.searchResults")}
+                color={theme.colors.onSurfaceVariant}
+              />
+              <Surface style={[s.card, { backgroundColor: theme.colors.surface }]} elevation={0}>
                 <View style={s.cardInner}>
                   {searchPending ? (
                     <ActivityIndicator style={s.loader} />
@@ -87,14 +91,18 @@ export default function FriendsScreen() {
                                 <Avatar.Text
                                   size={40}
                                   label={getInitials(user.nickName)}
-                                  style={{ backgroundColor: theme.colors.primaryContainer }}
-                                  labelStyle={{ color: theme.colors.onPrimaryContainer, fontSize: 14 }}
+                                  style={{ backgroundColor: theme.colors.surfaceVariant }}
+                                  labelStyle={{ color: theme.colors.onSurfaceVariant, fontSize: 14 }}
                                 />
                                 <Text style={s.rowName} variant="bodyLarge">
                                   {user.nickName}
                                 </Text>
                                 {friends?.some((f) => f.identifier === user.identifier) ? (
-                                  <MaterialCommunityIcons name="account-check" size={22} color={theme.colors.primary} />
+                                  <MaterialCommunityIcons
+                                    name="account-check"
+                                    size={22}
+                                    color={theme.colors.onSurfaceVariant}
+                                  />
                                 ) : outgoingRequests?.some((r) => r.receiverIdentifier === user.identifier) ? (
                                   <MaterialCommunityIcons name="clock-outline" size={22} color={theme.colors.outline} />
                                 ) : (
@@ -133,9 +141,9 @@ export default function FriendsScreen() {
               <SectionHeader
                 icon="account-arrow-down"
                 label={t("friends.incomingCount", { count: incomingRequests?.length })}
-                color={theme.colors.tertiary}
+                color={theme.colors.onSurfaceVariant}
               />
-              <Surface style={[s.card, { backgroundColor: theme.colors.surface }]} elevation={1}>
+              <Surface style={[s.card, { backgroundColor: theme.colors.surface }]} elevation={0}>
                 <View style={s.cardInner}>
                   {(incomingExpanded ? incomingRequests : incomingRequests?.slice(0, PREVIEW_COUNT))?.map(
                     (req, i, arr) => (
@@ -144,8 +152,8 @@ export default function FriendsScreen() {
                           <Avatar.Text
                             size={40}
                             label={getInitials(req.requesterNickName)}
-                            style={{ backgroundColor: theme.colors.tertiaryContainer }}
-                            labelStyle={{ color: theme.colors.onTertiaryContainer, fontSize: 14 }}
+                            style={{ backgroundColor: theme.colors.secondaryContainer }}
+                            labelStyle={{ color: theme.colors.secondary, fontSize: 14 }}
                           />
                           <Text style={s.rowName} variant="bodyLarge">
                             {req.requesterNickName}
@@ -153,8 +161,8 @@ export default function FriendsScreen() {
                           <View style={s.rowActions}>
                             <IconButton
                               hitSlop={16}
-                              icon="check"
-                              size={25}
+                              icon="check-circle-outline"
+                              size={30}
                               iconColor={theme.colors.primary}
                               onPress={() => acceptMutation.mutate(req.requesterIdentifier)}
                               disabled={acceptMutation.isPending || rejectMutation.isPending}
@@ -162,8 +170,8 @@ export default function FriendsScreen() {
                             />
                             <IconButton
                               hitSlop={16}
-                              icon="close"
-                              size={25}
+                              icon="close-circle-outline"
+                              size={30}
                               iconColor={theme.colors.error}
                               onPress={() => rejectMutation.mutate(req.requesterIdentifier)}
                               disabled={acceptMutation.isPending || rejectMutation.isPending}
@@ -193,9 +201,9 @@ export default function FriendsScreen() {
               <SectionHeader
                 icon="account-arrow-down"
                 label={t("friends.incomingTitle")}
-                color={theme.colors.tertiary}
+                color={theme.colors.onSurfaceVariant}
               />
-              <Surface style={[s.card, { backgroundColor: theme.colors.surface }]} elevation={1}>
+              <Surface style={[s.card, { backgroundColor: theme.colors.surface }]} elevation={0}>
                 <View style={s.cardInner}>
                   <EmptyState text={t("friends.incomingError")} />
                   <Button mode="text" onPress={() => refetchIncoming()} style={s.retryButton}>
@@ -211,9 +219,9 @@ export default function FriendsScreen() {
               <SectionHeader
                 icon="account-arrow-right"
                 label={t("friends.outgoingCount", { count: outgoingRequests?.length })}
-                color={theme.colors.secondary}
+                color={theme.colors.onSurfaceVariant}
               />
-              <Surface style={[s.card, { backgroundColor: theme.colors.surface }]} elevation={1}>
+              <Surface style={[s.card, { backgroundColor: theme.colors.surface }]} elevation={0}>
                 <View style={s.cardInner}>
                   {(outgoingExpanded ? outgoingRequests : outgoingRequests?.slice(0, PREVIEW_COUNT))?.map(
                     (req, i, arr) => (
@@ -222,8 +230,8 @@ export default function FriendsScreen() {
                           <Avatar.Text
                             size={40}
                             label={getInitials(req.receiverNickName)}
-                            style={{ backgroundColor: theme.colors.secondaryContainer }}
-                            labelStyle={{ color: theme.colors.onSecondaryContainer, fontSize: 14 }}
+                            style={{ backgroundColor: theme.colors.surfaceVariant }}
+                            labelStyle={{ color: theme.colors.onSurfaceVariant, fontSize: 14 }}
                           />
                           <Text style={s.rowName} variant="bodyLarge">
                             {req.receiverNickName}
@@ -260,9 +268,9 @@ export default function FriendsScreen() {
               <SectionHeader
                 icon="account-arrow-right"
                 label={t("friends.outgoingTitle")}
-                color={theme.colors.secondary}
+                color={theme.colors.onSurfaceVariant}
               />
-              <Surface style={[s.card, { backgroundColor: theme.colors.surface }]} elevation={1}>
+              <Surface style={[s.card, { backgroundColor: theme.colors.surface }]} elevation={0}>
                 <View style={s.cardInner}>
                   <EmptyState text={t("friends.outgoingError")} />
                   <Button mode="text" onPress={() => refetchOutgoing()} style={s.retryButton}>
@@ -277,9 +285,9 @@ export default function FriendsScreen() {
             <SectionHeader
               icon="account-group"
               label={friends ? t("friends.friendsCount", { count: friends.length }) : t("friends.friendsTitle")}
-              color={theme.colors.primary}
+              color={theme.colors.onSurfaceVariant}
             />
-            <Surface style={[s.card, { backgroundColor: theme.colors.surface }]} elevation={1}>
+            <Surface style={[s.card, { backgroundColor: theme.colors.surface }]} elevation={0}>
               <View style={s.cardInner}>
                 {friendsPending ? (
                   <ActivityIndicator style={s.loader} />
@@ -300,8 +308,8 @@ export default function FriendsScreen() {
                           <Avatar.Text
                             size={40}
                             label={getInitials(friend.nickName)}
-                            style={{ backgroundColor: theme.colors.primaryContainer }}
-                            labelStyle={{ color: theme.colors.onPrimaryContainer, fontSize: 14 }}
+                            style={{ backgroundColor: theme.colors.surfaceVariant }}
+                            labelStyle={{ color: theme.colors.onSurfaceVariant, fontSize: 14 }}
                           />
                           <Text style={s.rowName} variant="bodyLarge">
                             {friend.nickName}
@@ -386,8 +394,8 @@ const s = StyleSheet.create({
     paddingLeft: Platform.select({ ios: 0, default: 12 }),
   },
   headerTitle: {
-    fontSize: 17,
-    fontWeight: "700",
+    fontFamily: "Inter_600SemiBold",
+    fontSize: 16,
   },
   searchbarInput: {
     fontSize: 15,

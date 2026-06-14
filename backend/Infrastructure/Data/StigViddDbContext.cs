@@ -19,6 +19,7 @@ public class StigViddDbContext(DbContextOptions<StigViddDbContext> options) : Db
     public DbSet<HikeShare> HikeShares { get; set; }
     public DbSet<HikeImage> HikeImages { get; set; }
     public DbSet<FriendRequest> FriendRequests { get; set; }
+    public DbSet<UserPushToken> UserPushTokens { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -151,6 +152,16 @@ public class StigViddDbContext(DbContextOptions<StigViddDbContext> options) : Db
             .WithMany()
             .HasForeignKey(fr => fr.ReceiverId)
             .OnDelete(DeleteBehavior.NoAction);
+
+        modelBuilder.Entity<UserPushToken>()
+            .HasOne(upt => upt.User)
+            .WithMany()
+            .HasForeignKey(upt => upt.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<UserPushToken>()
+            .HasIndex(upt => upt.ExpoToken)
+            .IsUnique();
 
         // Decimal precision for entity properties
         modelBuilder.Entity<Trail>()

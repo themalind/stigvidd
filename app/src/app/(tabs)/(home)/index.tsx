@@ -123,8 +123,8 @@ const s = StyleSheet.create({
     alignItems: "center",
   },
   sectionTitle: {
-    fontWeight: "700",
-    fontSize: 15,
+    fontFamily: "Inter_600SemiBold",
+    fontSize: 16,
   },
   cardRow: {
     flexDirection: "row",
@@ -164,8 +164,8 @@ const s = StyleSheet.create({
     flex: 1,
   },
   cardTitle: {
-    fontSize: 15,
-    fontWeight: "700",
+    fontSize: 14,
+    fontFamily: "Inter_600SemiBold",
   },
   cardSubtitle: {
     fontSize: 11,

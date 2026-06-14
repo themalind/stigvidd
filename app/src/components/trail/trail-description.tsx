@@ -12,7 +12,7 @@ export default function TrailDescription({ trail }: TrailDescriptionProps) {
   const theme = useTheme();
   const { t } = useTranslation();
   return (
-    <Surface elevation={2} style={[s.container, { backgroundColor: theme.colors.surface }]}>
+    <Surface elevation={0} style={[s.container, { backgroundColor: theme.colors.surface }]}>
       <View style={s.descriptionContainer}>
         <Text style={[s.sectionTitle, { color: theme.colors.onSurface }]}>{t("trail.description")}</Text>
         <Text style={[s.description, { color: theme.colors.onSurface }]}>{trail.description}</Text>

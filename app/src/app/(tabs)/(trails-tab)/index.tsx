@@ -91,9 +91,9 @@ export default function TrailsScreen() {
             <Text style={[s.titleText, { color: theme.colors.onBackground }]}>{t("trailList.title")}</Text>
           </View>
           <Pressable onPress={() => setFilterModalVisible(true)}>
-            <View style={[s.filterButtonInner, { backgroundColor: theme.colors.primary }]}>
-              <MaterialIcons name="filter-list" size={24} color={theme.colors.onPrimary} />
-              <Text style={[s.filterButtonText, { color: theme.colors.onPrimary }]}>{t("trailList.filter")}</Text>
+            <View style={[s.filterButtonInner, { backgroundColor: theme.colors.secondary }]}>
+              <MaterialIcons name="filter-list" size={24} color={theme.colors.onSecondary} />
+              <Text style={[s.filterButtonText, { color: theme.colors.onSecondary }]}>{t("trailList.filter")}</Text>
             </View>
           </Pressable>
         </View>
@@ -197,7 +197,8 @@ const s = StyleSheet.create({
     gap: 10,
   },
   titleText: {
-    fontSize: 20,
+    fontFamily: "Inter_600SemiBold",
+    fontSize: 16,
   },
   filterButtonInner: {
     flexDirection: "row",
@@ -209,8 +210,8 @@ const s = StyleSheet.create({
     borderRadius: BORDER_RADIUS,
   },
   filterButtonText: {
-    fontWeight: "600",
-    fontSize: 16,
+    fontFamily: "Inter_600SemiBold",
+    fontSize: 14,
   },
   emptyContainer: {
     alignItems: "center",

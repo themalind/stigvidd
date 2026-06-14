@@ -2,7 +2,6 @@ import { BORDER_RADIUS } from "@/constants/constants";
 import { ReviewImage } from "@/data/types";
 import { BlurView } from "expo-blur";
 import { Image } from "expo-image";
-import { LinearGradient } from "expo-linear-gradient";
 import React, { useState } from "react";
 import { Animated, Dimensions, NativeScrollEvent, NativeSyntheticEvent, StyleSheet, View } from "react-native";
 import { Modal, Portal, useTheme } from "react-native-paper";
@@ -88,22 +87,6 @@ export default function ImageViewer({ images, visible, onDismiss }: ModalProps) 
               </View>
             )}
           </View>
-
-          {/* Gradienterna ligger här - på samma nivå som View ovan */}
-          <LinearGradient
-            colors={[theme.colors.inverseOnSurface, "transparent"]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={s.leftGradient}
-            pointerEvents="none"
-          />
-          <LinearGradient
-            colors={["transparent", theme.colors.inverseOnSurface]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={s.rightGradient}
-            pointerEvents="none"
-          />
         </View>
       </Modal>
     </Portal>

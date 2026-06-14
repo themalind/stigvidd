@@ -49,6 +49,7 @@
     "couldNotLogout": "Could not log out.",
     "notLoggedIn": "You are not logged in",
     "goToLogin": "Log in",
+    "couldNotDeleteFromServer": "Could not delete account from server",
     "validation": {
       "nicknameRequired": "Enter a username",
       "nicknameTooLong": "Name too long. Max 20 characters",
@@ -271,7 +272,14 @@
     "noShared": "No shared walks yet",
     "sharedByLabel": "Shared by: {{name}}",
     "sharedHikeDeleted": "The walk has been deleted!",
-    "sharedHikeAlreadyHas": "The recipient already has this walk."
+    "sharedHikeAlreadyHas": "The recipient already has this walk.",
+    "hikeAdded": "Hike added!",
+    "incomingRejected": "Hike removed",
+    "couldNotFetch": "Could not fetch the hike, try again.",
+    "accept": "Accept",
+    "reject": "Decline",
+    "receivedHikes": "Received hikes",
+    "tapForDetails": "Tap a hike to see details"
   },
   "userActions": {
     "favorite": "Favorite",

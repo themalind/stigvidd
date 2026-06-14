@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "221346127482",
+    "project_id": "stigvidd-b4cd0",
+    "storage_bucket": "stigvidd-b4cd0.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:221346127482:android:2e38a277898a16338f65c3",
+        "android_client_info": {
+          "package_name": "com.stigvidd.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDB0rmQ243bd5HimCoJpyC4JCSsZ2sJBhM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

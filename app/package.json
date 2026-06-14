@@ -19,9 +19,13 @@
     ],
     "transformIgnorePatterns": [
       "node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@sentry/react-native|native-base|react-native-svg|react-native-maps)"
-    ]
+    ],
+    "moduleNameMapper": {
+      "^@/(.*)$": "<rootDir>/src/$1"
+    }
   },
   "dependencies": {
+    "@expo-google-fonts/inter": "^0.4.2",
     "@expo/vector-icons": "^15.0.3",
     "@hookform/resolvers": "^5.2.2",
     "@likashefqet/react-native-image-zoom": "^4.3.0",
@@ -35,6 +39,8 @@
     "expo": "~54.0.34",
     "expo-blur": "~15.0.8",
     "expo-constants": "~18.0.13",
+    "expo-dev-client": "~6.0.21",
+    "expo-device": "~8.0.10",
     "expo-font": "~14.0.11",
     "expo-haptics": "~15.0.8",
     "expo-image": "~3.0.11",
@@ -43,7 +49,8 @@
     "expo-linking": "~8.0.12",
     "expo-location": "~19.0.8",
     "expo-navigation-bar": "~5.0.10",
-    "expo-router": "~6.0.23",
+    "expo-notifications": "~0.32.17",
+    "expo-router": "~6.0.24",
     "expo-splash-screen": "~31.0.13",
     "expo-status-bar": "~3.0.9",
     "expo-symbols": "~1.0.8",

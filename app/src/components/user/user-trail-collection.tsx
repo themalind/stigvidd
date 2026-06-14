@@ -91,11 +91,6 @@ export default function UserTrailCollection({
           )}
         </View>
       </ScrollView>
-      <LinearGradient
-        colors={["transparent", theme.colors.background]}
-        style={s.fadeGradientBottom}
-        pointerEvents="none"
-      />
     </View>
   );
 }
@@ -133,7 +128,8 @@ const s = StyleSheet.create({
     gap: 15,
   },
   title: {
-    fontSize: 20,
+    fontFamily: "Inter_600SemiBold",
+    fontSize: 16,
   },
   titleRatingContainer: {
     flexDirection: "row",
@@ -145,8 +141,8 @@ const s = StyleSheet.create({
     flex: 1,
   },
   trailName: {
-    fontWeight: "700",
-    fontSize: 15,
+    fontFamily: "Inter_600SemiBold",
+    fontSize: 14,
     flex: 1,
     flexShrink: 1,
   },

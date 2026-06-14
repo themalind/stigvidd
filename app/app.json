@@ -10,6 +10,7 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
+      "bundleIdentifier": "com.stigvidd.app",
       "infoPlist": {
         "UIBackgroundModes": ["location"]
       }
@@ -31,11 +32,16 @@
         "android.permission.FOREGROUND_SERVICE_LOCATION",
         "android.permission.RECORD_AUDIO"
       ],
-      "package": "com.stigvidd.app"
+      "package": "com.stigvidd.app",
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "output": "static",
       "favicon": ""
+    },
+    "notification": {
+      "androidMode": "collapse",
+      "androidCollapsedTitle": "#{unread_notifications} nya aviseringar"
     },
     "plugins": [
       "expo-router",
@@ -49,6 +55,13 @@
           "dark": {
             "backgroundColor": "#68AE82"
           }
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./src/assets/images/android-icon-foreground.png",
+          "color": "#68AE82"
         }
       ],
       [

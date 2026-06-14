@@ -65,6 +65,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IHikeShareRepository, HikeShareRepository>();
         services.AddTransient<IHikeShareRecipientRepository, HikeShareRecipientRepository>();
         services.AddTransient<IFriendRepository, FriendRepository>();
+        services.AddTransient<IUserPushTokenRepository, UserPushTokenRepository>();
 
         // Services
         services.AddTransient<ITrailService, TrailService>();
@@ -77,6 +78,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IHikeShareService, HikeShareService>();
         services.AddTransient<IHikeShareRecipientService, HikeShareRecipientService>();
         services.AddTransient<IFriendService, FriendService>();
+        services.AddHttpClient<IPushNotificationService, ExpoPushService>(c => c.BaseAddress = new Uri("https://exp.host"));
 
         services.AddTransient<Func<IWebDavClient>>(sp =>
         {
@@ -101,12 +103,3 @@ public static class ServiceCollectionExtensions
         services.AddTransient<FacilityResponseFactory>();
     }
 }
-
-// Extension-metoder används för att utöka IServiceCollection, vilket gör konfigurationen modulär och enkel att hantera.
-// Vi kan anropa den på en IServiceCollection-instans som om den var en inbyggd metod.
-
-// AddDbContextFactory<StigViddDbContext>: Registrerar en DbContext Factory, 
-// vilket innebär att StigViddDbContext kan skapas vid behov istället för att ha en enda instans per Scoped request.
-// Detta ger förbättrad prestanda vid scenarion där DbContext används tillfälligt, t.ex. i bakgrundstjänster.
-// Undviker problem med trådhantering i asynkrona operationer.
-

@@ -367,13 +367,13 @@ public class UserRepositoryTests : TestBase
     }
 
     [Fact]
-    public async Task GetUserIdByName_WhenFound_ReturnsId()
+    public async Task GetUserByNickName_WhenFound_ReturnsId()
     {
         // Arrange
         var repo = BuildRepo();
 
         // Act
-        var result = await repo.GetUserIdByNameAsync("NaturElskaren", CancellationToken.None);
+        var result = await repo.GetUserByNickNameAsync("NaturElskaren", u => u.Id, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -381,13 +381,13 @@ public class UserRepositoryTests : TestBase
     }
 
     [Fact]
-    public async Task GetUserIdByName_WhenNotFound_ReturnsNotFound()
+    public async Task GetUserByNickName_WhenNotFound_ReturnsNotFound()
     {
         // Arrange
         var repo = BuildRepo();
 
         // Act
-        var result = await repo.GetUserIdByNameAsync("NoSuchNickname", CancellationToken.None);
+        var result = await repo.GetUserByNickNameAsync("NoSuchNickname", u => u.Id, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeFalse();

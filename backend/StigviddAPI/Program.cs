@@ -91,6 +91,20 @@ public class Program
         });
 
         var app = builder.Build();
+
+        app.UseExceptionHandler(appError =>
+        {
+            appError.Run(async context =>
+            {
+                var exception = context.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerFeature>()?.Error;
+                var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
+                logger.LogError(exception, "Unhandled exception");
+
+                context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+                await context.Response.CompleteAsync();
+            });
+        });
+
         app.UseCors("AllowFrontend");
 
         // Configure the HTTP request pipeline.

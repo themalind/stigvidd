@@ -40,6 +40,66 @@ public class HikeShareRecipientController : StigViddController
         return Ok(result.Value);
     }
 
+    [HttpGet]
+    [Route("incoming/{hikeIdentifier}")]
+    public async Task<ActionResult<HikeShareRecipientResponse>> GetIncomingPendingShare([FromRoute] string hikeIdentifier, CancellationToken ctoken)
+    {
+        var userResponse = await GetAuthenticatedUserAsync(_userService, ctoken);
+        if (userResponse == null)
+        {
+            return Unauthorized();
+        }
+
+        var result = await _hikeShareRecipientService.GetIncomingPendingShareAsync(userResponse.Identifier, hikeIdentifier, ctoken);
+
+        if (!result.Success && result.Message != null)
+        {
+            return ToActionResult(result.Message);
+        }
+
+        return Ok(result.Value);
+    }
+
+    [HttpGet]
+    [Route("incoming")]
+    public async Task<ActionResult<IReadOnlyCollection<HikeShareRecipientResponse>>> GetPendingShares(CancellationToken ctoken)
+    {
+        var userResponse = await GetAuthenticatedUserAsync(_userService, ctoken);
+        if (userResponse == null)
+        {
+            return Unauthorized();
+        }
+
+        var result = await _hikeShareRecipientService.GetIncomingPendingSharesAsync(userResponse.Identifier, ctoken);
+
+        if (!result.Success && result.Message != null)
+        {
+            return ToActionResult(result.Message);
+        }
+
+        return Ok(result.Value);
+    }
+
+    [HttpPut]
+    [Route("accept/{hikeIdentifier}")]
+    public async Task<ActionResult> AcceptSharedHike([FromRoute] string hikeIdentifier, CancellationToken ctoken)
+    {
+        var userResponse = await GetAuthenticatedUserAsync(_userService, ctoken);
+        if (userResponse == null)
+        {
+            return Unauthorized();
+        }
+
+        var result = await _hikeShareRecipientService.AcceptHikeShareAsync(userResponse.Identifier, hikeIdentifier, ctoken);
+
+        if (!result.Success && result.Message != null)
+        {
+            return ToActionResult(result.Message);
+        }
+
+        return Ok();
+    }
+
     [HttpPost]
     [Route("re-share")]
     public async Task<ActionResult> ReshareSharedHike([FromBody] ReshareSharedHikeRequest request, CancellationToken ctoken)
@@ -51,6 +111,26 @@ public class HikeShareRecipientController : StigViddController
         }
 
         var result = await _hikeShareRecipientService.ReshareSharedHikeAsync(request.HikeIdentifier, userResponse.Identifier, request.ReShareToName, ctoken);
+
+        if (!result.Success && result.Message != null)
+        {
+            return ToActionResult(result.Message);
+        }
+
+        return Ok();
+    }
+
+    [HttpDelete]
+    [Route("reject/{hikeIdentifier}")]
+    public async Task<ActionResult> RejectSharedHike([FromRoute] string hikeIdentifier, CancellationToken ctoken)
+    {
+        var userResponse = await GetAuthenticatedUserAsync(_userService, ctoken);
+        if (userResponse == null)
+        {
+            return Unauthorized();
+        }
+
+        var result = await _hikeShareRecipientService.RejectHikeShareAsync(userResponse.Identifier, hikeIdentifier, ctoken);
 
         if (!result.Success && result.Message != null)
         {

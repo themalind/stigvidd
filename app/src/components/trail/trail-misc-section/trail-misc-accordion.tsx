@@ -16,7 +16,7 @@ export default function TrailMiscInfo({ trail }: Props) {
   const theme = useTheme();
   const { t } = useTranslation();
   return (
-    <Surface elevation={2} style={[s.container, { backgroundColor: theme.colors.surface }]}>
+    <Surface elevation={0} style={[s.container, { backgroundColor: theme.colors.surface }]}>
       <List.AccordionGroup
         expandedId={expandedId}
         onAccordionPress={(id) => setExpandedId((prev) => (prev === id ? "" : id))}
@@ -25,9 +25,17 @@ export default function TrailMiscInfo({ trail }: Props) {
           <>
             <List.Accordion
               titleStyle={[s.titleText, { color: theme.colors.onSurface }]}
+              contentStyle={s.accordionContent}
               title={t("trail.practicalInfo")}
               id="1"
               style={{ backgroundColor: theme.colors.surface }}
+              right={(props) => (
+                <List.Icon
+                  {...props}
+                  icon={props.isExpanded ? "chevron-up" : "chevron-down"}
+                  color={theme.colors.onSurfaceVariant}
+                />
+              )}
             >
               <VisitorInformationSection visitorInfo={trail.visitorInformation} />
             </List.Accordion>
@@ -38,9 +46,17 @@ export default function TrailMiscInfo({ trail }: Props) {
           <>
             <List.Accordion
               titleStyle={[s.titleText, { color: theme.colors.onSurface }]}
+              contentStyle={s.accordionContent}
               title={t("trail.detailedDescription")}
               id="2"
               style={{ backgroundColor: theme.colors.surface }}
+              right={(props) => (
+                <List.Icon
+                  {...props}
+                  icon={props.isExpanded ? "chevron-up" : "chevron-down"}
+                  color={theme.colors.onSurfaceVariant}
+                />
+              )}
             >
               <FullDescriptionSection fullDescription={trail.fullDescription} />
             </List.Accordion>
@@ -51,9 +67,17 @@ export default function TrailMiscInfo({ trail }: Props) {
         {trail.trailLinksResponse?.length ? (
           <List.Accordion
             titleStyle={[s.titleText, { color: theme.colors.onSurface }]}
+            contentStyle={s.accordionContent}
             title={t("trail.links")}
             id="3"
             style={{ backgroundColor: theme.colors.surface }}
+            right={(props) => (
+              <List.Icon
+                {...props}
+                icon={props.isExpanded ? "chevron-up" : "chevron-down"}
+                color={theme.colors.onSurfaceVariant}
+              />
+            )}
           >
             <LinkSection links={trail.trailLinksResponse} />
           </List.Accordion>
@@ -70,6 +94,10 @@ const s = StyleSheet.create({
     borderRadius: SURFACE_BORDER_RADIUS,
   },
   titleText: {
-    fontWeight: 700,
+    fontFamily: "Inter_600SemiBold",
+    fontSize: 14,
+  },
+  accordionContent: {
+    paddingLeft: 10,
   },
 });

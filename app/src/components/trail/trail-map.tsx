@@ -37,7 +37,7 @@ export default function TrailMap({ trail }: TrailMapProps) {
             rotateEnabled={active}
             pitchEnabled={active}
           >
-            <Polyline coordinates={trail} strokeWidth={3} strokeColor="#eb3204" />
+            <Polyline coordinates={trail} strokeWidth={3} strokeColor={theme.colors.primary} />
           </Map>
         )}
         {!active && (
@@ -80,11 +80,6 @@ const s = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 20,
     opacity: 0.9,
-    elevation: 2,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.15,
-    shadowRadius: 3,
   },
   lockText: {
     fontSize: 13,

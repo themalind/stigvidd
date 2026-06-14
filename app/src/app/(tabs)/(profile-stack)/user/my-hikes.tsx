@@ -57,10 +57,10 @@ export default function MyHikesScreen() {
           <Text style={s.titleTextBold}>{t("hike.myHikesTitle")}</Text>
         </View>
         <View style={s.content}>
-          <View style={[s.infoBox, { backgroundColor: theme.colors.outlineVariant }]}>
-            <Text>{t("hike.pressForInfo")}</Text>
-          </View>
           <Divider bold={true} />
+          <Text variant="bodySmall" style={s.sectionSubtitle}>
+            Tryck på en promenad för att se detaljer
+          </Text>
           {hikes?.length === 0 ? (
             <Text style={{ color: theme.colors.onBackground, textAlign: "center", paddingVertical: 20 }}>
               {t("hike.noHikes")}
@@ -120,8 +120,8 @@ const s = StyleSheet.create({
     paddingLeft: Platform.select({ ios: 0, default: 10 }),
   },
   titleTextBold: {
-    fontSize: 17,
-    fontWeight: "700",
+    fontFamily: "Inter_600SemiBold",
+    fontSize: 16,
   },
   iconCircle: {
     width: 42,
@@ -143,7 +143,7 @@ const s = StyleSheet.create({
     flex: 1,
   },
   name: {
-    fontWeight: "bold",
+    fontFamily: "Inter_600SemiBold",
   },
   info: {
     flexDirection: "row",
@@ -169,5 +169,9 @@ const s = StyleSheet.create({
   content: {
     paddingHorizontal: 10,
     gap: 10,
+  },
+  sectionSubtitle: {
+    opacity: 0.6,
+    paddingHorizontal: 2,
   },
 });

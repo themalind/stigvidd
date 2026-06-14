@@ -113,6 +113,7 @@ const s = StyleSheet.create({
   },
   title: {
     fontWeight: 700,
+    fontSize: 14,
     paddingBottom: 10,
     alignItems: "center",
   },

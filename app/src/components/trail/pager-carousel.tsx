@@ -128,8 +128,8 @@ const s = StyleSheet.create({
     gap: 2,
   },
   name: {
-    fontWeight: "700",
-    fontSize: 16,
+    fontFamily: "Inter_600SemiBold",
+    fontSize: 14,
   },
   sub: {
     fontSize: 13,

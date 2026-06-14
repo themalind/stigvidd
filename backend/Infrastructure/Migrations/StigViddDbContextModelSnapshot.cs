@@ -195,6 +195,9 @@ namespace Infrastructure.Migrations
                     b.Property<int?>("SharedById")
                         .HasColumnType("integer");
 
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
                     b.HasKey("HikeId", "SharedWithId");
 
                     b.HasIndex("SharedById");
@@ -562,6 +565,45 @@ namespace Infrastructure.Migrations
                     b.ToTable("Users", "dbo");
                 });
 
+            modelBuilder.Entity("Infrastructure.Data.Entities.UserPushToken", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ExpoToken")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Identifier")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("LastUpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Platform")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ExpoToken")
+                        .IsUnique();
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("UserPushTokens", "dbo");
+                });
+
             modelBuilder.Entity("Infrastructure.Data.Entities.VisitorInformation", b =>
                 {
                     b.Property<int>("Id")
@@ -799,6 +841,17 @@ namespace Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("TrailObstacle");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Infrastructure.Data.Entities.UserPushToken", b =>
+                {
+                    b.HasOne("Infrastructure.Data.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("User");
                 });

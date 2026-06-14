@@ -120,19 +120,22 @@ export function useLocationTracking() {
     // Persist before starting the task so the task always finds a valid state
     await writeHikeState(newState);
 
-    // Avoid registering the task twice if it somehow survived a previous session
-    const isAlreadyRunning = await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME);
-    if (!isAlreadyRunning) {
-      await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
-        accuracy: Location.Accuracy.High,
-        timeInterval: SAMPLE_INTERVAL,
-        distanceInterval: MIN_DISTANCE,
-        // Shows a persistent notification so Android keeps the app alive in the background
-        foregroundService: {
-          notificationTitle: "Stigvidd",
-          notificationBody: t("createHike.notificationBody"),
-        },
-      });
+    // startLocationUpdatesAsync requires the background location capability compiled in,
+    // which Expo Go lacks — skip the task in dev and rely on debugAddPoint for testing
+    if (!__DEV__) {
+      // Avoid registering the task twice if it somehow survived a previous session
+      const isAlreadyRunning = await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME);
+      if (!isAlreadyRunning) {
+        await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
+          accuracy: Location.Accuracy.High,
+          timeInterval: SAMPLE_INTERVAL,
+          distanceInterval: MIN_DISTANCE,
+          foregroundService: {
+            notificationTitle: "Stigvidd",
+            notificationBody: t("createHike.notificationBody"),
+          },
+        });
+      }
     }
 
     applyState(newState);

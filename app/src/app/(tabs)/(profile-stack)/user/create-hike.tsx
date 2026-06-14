@@ -5,10 +5,10 @@ import ErrorView from "@/components/error-view";
 import LoadingIndicator from "@/components/loading-indicator";
 import TrailCreator from "@/components/trail/trail-creator/trail-creator";
 import * as Location from "expo-location";
-import { Redirect, useFocusEffect } from "expo-router";
+import { Redirect } from "expo-router";
 import { useAtom } from "jotai";
-import React, { useEffect, useRef, useState } from "react";
-import { ScrollView, StyleSheet, View } from "react-native";
+import { useEffect, useState } from "react";
+import { Platform, StyleSheet, View } from "react-native";
 import { Text, useTheme } from "react-native-paper";
 import { useTranslation } from "react-i18next";
 
@@ -17,14 +17,7 @@ export default function CreateHikeScreen() {
   const [authState] = useAtom(authStateAtom);
   const theme = useTheme();
   const { t } = useTranslation();
-  const scrollViewRef = useRef<ScrollView>(null);
   const [locationGranted, setLocationGranted] = useState<boolean | null>(null);
-
-  useFocusEffect(
-    React.useCallback(() => {
-      scrollViewRef.current?.scrollTo({ y: 0, animated: false });
-    }, []),
-  );
 
   useEffect(() => {
     Location.requestForegroundPermissionsAsync().then(({ granted }) => {
@@ -49,27 +42,37 @@ export default function CreateHikeScreen() {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
-      <ScrollView ref={scrollViewRef} contentContainerStyle={s.container}>
+    <View style={[s.screen, { backgroundColor: theme.colors.background }]}>
+      <View style={s.header}>
         <BackButton />
-        <View style={s.content}>
-          <TrailCreator />
-        </View>
-      </ScrollView>
+        <Text style={s.title}>Skapa promenad</Text>
+      </View>
+      <View style={s.content}>
+        <TrailCreator />
+      </View>
     </View>
   );
 }
 
 const s = StyleSheet.create({
-  container: {
-    flexGrow: 1,
+  screen: {
+    flex: 1,
     paddingTop: 8,
     paddingBottom: 20,
-    gap: 8,
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingLeft: Platform.select({ ios: 0, default: 10 }),
+    paddingBottom: 8,
+    gap: 4,
+  },
+  title: {
+    fontFamily: "Inter_600SemiBold",
+    fontSize: 16,
   },
   content: {
+    flex: 1,
     paddingHorizontal: 10,
-    flexGrow: 1,
-    gap: 10,
   },
 });
