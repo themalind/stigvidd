@@ -15,7 +15,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Redirect } from "expo-router";
 import { useAtom, useAtomValue } from "jotai";
 import React, { useState } from "react";
-import { Platform, Pressable, ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
+import { Platform, ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
 import { Button, Divider, Icon, IconButton, Surface, Text, useTheme } from "react-native-paper";
 
 const PREVIEW_COUNT = 5;
@@ -71,13 +71,10 @@ export default function SharedHikesScreen() {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={s.scrollContent}>
         <View style={s.header}>
           <BackButton />
-          <Icon source="hiking" size={24} color={theme.colors.tertiary} />
+          <Icon source="hiking" size={24} color={theme.colors.onSurfaceVariant} />
           <Text style={s.headerText}>Delade promenader</Text>
         </View>
         <View style={s.content}>
-          <View style={[s.infoBox, { backgroundColor: theme.colors.outlineVariant }]}>
-            <Text>Tryck på en promenad för att se mer information eller ta bort den.</Text>
-          </View>
           <Divider bold={true} />
 
           {!incomingPending && !incomingError && (incomingRequests?.length ?? 0) > 0 && (
@@ -86,9 +83,10 @@ export default function SharedHikesScreen() {
                 <SectionHeader
                   icon="map-marker-plus"
                   label={`Inkommande (${incomingRequests?.length})`}
-                  color={theme.colors.tertiary}
+                  color={theme.colors.onSurfaceVariant}
+                  subtitle="Tryck på en promenad för att se detaljer"
                 />
-                <Surface style={[s.card, { backgroundColor: theme.colors.surface }]} elevation={1}>
+                <Surface style={[s.card, { backgroundColor: theme.colors.surface }]} elevation={0}>
                   <View style={s.cardInner}>
                     {(incomingExpanded ? incomingRequests : incomingRequests?.slice(0, PREVIEW_COUNT))?.map(
                       (req, i, arr) => (
@@ -101,13 +99,13 @@ export default function SharedHikesScreen() {
                               setIncomingDetailVisible(true);
                             }}
                           >
+                            <View style={[s.iconCircle, { backgroundColor: theme.colors.secondaryContainer }]}>
+                              <Fontisto name="map" size={15} color={theme.colors.secondary} />
+                            </View>
                             <View style={s.rowLeft}>
-                              <View style={s.rowNameRow}>
-                                <Fontisto name="map" size={15} color={theme.colors.secondary} />
-                                <Text style={s.rowName} variant="bodyLarge" numberOfLines={1}>
-                                  {req.hikeName}
-                                </Text>
-                              </View>
+                              <Text style={s.rowName} variant="bodyLarge" numberOfLines={1}>
+                                {req.hikeName}
+                              </Text>
                               <Text variant="bodySmall" style={{ color: theme.colors.secondary }}>
                                 Delad av: {req.sharedByName}
                               </Text>
@@ -115,8 +113,8 @@ export default function SharedHikesScreen() {
                             <View style={s.rowActions}>
                               <IconButton
                                 hitSlop={16}
-                                icon="check"
-                                size={25}
+                                icon="check-circle-outline"
+                                size={30}
                                 iconColor={theme.colors.primary}
                                 onPress={() => acceptMutation.mutate(req.hikeIdentifier)}
                                 disabled={acceptMutation.isPending || rejectMutation.isPending}
@@ -124,8 +122,8 @@ export default function SharedHikesScreen() {
                               />
                               <IconButton
                                 hitSlop={16}
-                                icon="close"
-                                size={25}
+                                icon="close-circle-outline"
+                                size={30}
                                 iconColor={theme.colors.error}
                                 onPress={() => rejectMutation.mutate(req.hikeIdentifier)}
                                 disabled={acceptMutation.isPending || rejectMutation.isPending}
@@ -140,7 +138,7 @@ export default function SharedHikesScreen() {
                       ),
                     )}
                     {(incomingRequests?.length ?? 0) > PREVIEW_COUNT && (
-                      <Button mode="text" onPress={() => setIncomingExpanded((v) => !v)} style={s.retryButton}>
+                      <Button mode="text" onPress={() => setIncomingExpanded((v) => !v)} style={s.showMoreButton}>
                         {incomingExpanded ? "Visa färre" : `Visa alla (${incomingRequests?.length})`}
                       </Button>
                     )}
@@ -150,13 +148,14 @@ export default function SharedHikesScreen() {
               <Divider />
             </>
           )}
+
           {incomingError && (
             <View style={s.section}>
-              <SectionHeader icon="account-arrow-down" label="Inkommande" color={theme.colors.tertiary} />
-              <Surface style={[s.card, { backgroundColor: theme.colors.surface }]} elevation={1}>
+              <SectionHeader icon="account-arrow-down" label="Inkommande" color={theme.colors.onSurfaceVariant} />
+              <Surface style={[s.card, { backgroundColor: theme.colors.surface }]} elevation={0}>
                 <View style={s.cardInner}>
                   <EmptyState text="Kunde inte hämta förfrågningar" />
-                  <Button mode="text" onPress={() => refetchIncoming()} style={s.retryButton}>
+                  <Button mode="text" onPress={() => refetchIncoming()} style={s.showMoreButton}>
                     Försök igen
                   </Button>
                 </View>
@@ -164,41 +163,54 @@ export default function SharedHikesScreen() {
             </View>
           )}
 
-          {hikes?.length === 0 ? (
-            <Text style={[s.emptyHikes, { color: theme.colors.onBackground }]}>
-              Inga delade promenader här än
-            </Text>
-          ) : (
-            hikes?.map((hike, index) => (
-              <Pressable
-                style={[s.hikePressable, { backgroundColor: theme.colors.surface }]}
-                key={index}
-                onPress={() => {
-                  setSelectedSharedHike(hike);
-                  setVisible(true);
-                }}
-              >
-                <View style={s.hikeInfo}>
-                  <View style={[s.iconCircle, { backgroundColor: theme.colors.primaryContainer }]}>
-                    <Fontisto name="map" size={24} color={theme.colors.secondary} />
-                  </View>
-                  <View style={s.flex}>
-                    <Text style={s.name} numberOfLines={1}>
-                      {hike.hikeName}
-                    </Text>
-                    <View style={s.info}>
-                      <Text variant="bodySmall">{hike.hikeLength} km</Text>
-                      <Text variant="bodySmall">{FormattedTime(hike.duration)}</Text>
+          <View style={s.section}>
+            <SectionHeader
+              icon="routes"
+              label="Mottagna promenader"
+              subtitle="Tryck på en promenad för att se detaljer"
+              color={theme.colors.onSurfaceVariant}
+            />
+            <Surface style={[s.card, { backgroundColor: theme.colors.surface }]} elevation={0}>
+              <View style={s.cardInner}>
+                {(hikes?.length ?? 0) === 0 ? (
+                  <EmptyState text="Inga delade promenader här än" />
+                ) : (
+                  hikes?.map((hike, index) => (
+                    <View key={index}>
+                      <TouchableOpacity
+                        style={s.row}
+                        activeOpacity={0.6}
+                        onPress={() => {
+                          setSelectedSharedHike(hike);
+                          setVisible(true);
+                        }}
+                      >
+                        <View style={[s.iconCircle, { backgroundColor: theme.colors.surfaceVariant }]}>
+                          <Fontisto name="map" size={15} color={theme.colors.onSurfaceVariant} />
+                        </View>
+                        <View style={s.rowLeft}>
+                          <Text style={s.rowName} numberOfLines={1}>
+                            {hike.hikeName}
+                          </Text>
+                          <View style={s.metaRow}>
+                            <Text variant="bodySmall">{hike.hikeLength} km</Text>
+                            <Text variant="bodySmall">{FormattedTime(hike.duration)}</Text>
+                          </View>
+                          <Text variant="bodySmall" style={{ color: theme.colors.secondary }}>
+                            Delad av: {hike.sharedByName}
+                          </Text>
+                        </View>
+                        <Icon source="chevron-right" size={20} />
+                      </TouchableOpacity>
+                      {index < hikes.length - 1 && (
+                        <View style={[s.divider, { backgroundColor: theme.colors.outlineVariant }]} />
+                      )}
                     </View>
-                    <Text variant="bodySmall" style={{ color: theme.colors.secondary }}>
-                      Delad av: {hike.sharedByName}
-                    </Text>
-                  </View>
-                  <Icon source="chevron-right" size={20} />
-                </View>
-              </Pressable>
-            ))
-          )}
+                  ))
+                )}
+              </View>
+            </Surface>
+          </View>
         </View>
       </ScrollView>
       {sharedHike && (
@@ -236,13 +248,30 @@ export default function SharedHikesScreen() {
   );
 }
 
-function SectionHeader({ icon, label, color }: { icon: string; label: string; color: string }) {
+function SectionHeader({
+  icon,
+  label,
+  color,
+  subtitle,
+}: {
+  icon: string;
+  label: string;
+  color: string;
+  subtitle?: string;
+}) {
   return (
     <View style={s.sectionHeader}>
-      <MaterialCommunityIcons name={icon as any} size={18} color={color} />
-      <Text variant="titleSmall" style={[s.sectionLabel, { color }]}>
-        {label}
-      </Text>
+      <View style={s.sectionHeaderRow}>
+        <MaterialCommunityIcons name={icon as any} size={18} color={color} />
+        <Text variant="titleSmall" style={[s.sectionLabel, { color }]}>
+          {label}
+        </Text>
+      </View>
+      {subtitle && (
+        <Text variant="bodySmall" style={s.sectionSubtitle}>
+          {subtitle}
+        </Text>
+      )}
     </View>
   );
 }
@@ -264,22 +293,11 @@ const s = StyleSheet.create({
     alignItems: "center",
     gap: 10,
     paddingLeft: Platform.select({ ios: 0, default: 10 }),
+    paddingVertical: 6,
   },
   headerText: {
     fontSize: 17,
     fontWeight: "700",
-  },
-  hikePressable: {
-    padding: 10,
-    borderRadius: BORDER_RADIUS,
-  },
-  hikeInfo: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-  flex: {
-    flex: 1,
   },
   iconCircle: {
     width: 42,
@@ -288,25 +306,10 @@ const s = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  name: {
-    fontWeight: "bold",
-  },
-  info: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    gap: 12,
-    marginTop: 2,
-  },
   infoBox: {
     borderRadius: BORDER_RADIUS,
     padding: 12,
     gap: 6,
-  },
-  infoLabel: {
-    fontSize: 11,
-    fontWeight: "600",
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
   },
   scrollContent: {
     paddingTop: 8,
@@ -318,14 +321,22 @@ const s = StyleSheet.create({
     gap: 10,
   },
   sectionHeader: {
+    gap: 2,
+    paddingHorizontal: 4,
+  },
+  sectionHeaderRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
-    paddingHorizontal: 4,
   },
   sectionLabel: {
     fontWeight: "600",
+    alignSelf: "flex-start",
     letterSpacing: 0.3,
+  },
+  sectionSubtitle: {
+    opacity: 0.6,
+    paddingHorizontal: 2,
   },
   section: {
     gap: 8,
@@ -341,14 +352,30 @@ const s = StyleSheet.create({
   row: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
     paddingHorizontal: 16,
     paddingVertical: 10,
     gap: 14,
   },
-  rowName: {
+  rowLeft: {
     flex: 1,
-    fontWeight: "500",
+  },
+  rowName: {
+    fontWeight: "600",
+  },
+  metaRow: {
+    flexDirection: "row",
+    gap: 12,
+    marginTop: 2,
+  },
+  rowActions: {
+    flexDirection: "row",
+  },
+  actionButton: {
+    margin: 0,
+  },
+  divider: {
+    height: StyleSheet.hairlineWidth,
+    marginHorizontal: 16,
   },
   emptyText: {
     textAlign: "center",
@@ -356,30 +383,7 @@ const s = StyleSheet.create({
     paddingHorizontal: 16,
     opacity: 0.55,
   },
-  retryButton: {
+  showMoreButton: {
     marginBottom: 8,
-  },
-  divider: {
-    height: StyleSheet.hairlineWidth,
-    marginHorizontal: 16,
-  },
-  actionButton: {
-    margin: 0,
-  },
-  rowActions: {
-    flexDirection: "row",
-    gap: 0,
-  },
-  rowLeft: {
-    flex: 1,
-  },
-  rowNameRow: {
-    flexDirection: "row",
-    gap: 10,
-    alignItems: "center",
-  },
-  emptyHikes: {
-    textAlign: "center",
-    paddingVertical: 20,
   },
 });

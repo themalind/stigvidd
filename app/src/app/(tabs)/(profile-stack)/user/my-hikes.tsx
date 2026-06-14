@@ -55,10 +55,10 @@ export default function MyHikesScreen() {
           <Text style={s.titleTextBold}>Mina sparade promenader</Text>
         </View>
         <View style={s.content}>
-          <View style={[s.infoBox, { backgroundColor: theme.colors.outlineVariant }]}>
-            <Text>Tryck på en promenad för att se mer information eller ta bort den.</Text>
-          </View>
           <Divider bold={true} />
+          <Text variant="bodySmall" style={s.sectionSubtitle}>
+            Tryck på en promenad för att se detaljer
+          </Text>
           {hikes?.length === 0 ? (
             <Text style={{ color: theme.colors.onBackground, textAlign: "center", paddingVertical: 20 }}>
               No hikes saved
@@ -167,5 +167,9 @@ const s = StyleSheet.create({
   content: {
     paddingHorizontal: 10,
     gap: 10,
+  },
+  sectionSubtitle: {
+    opacity: 0.6,
+    paddingHorizontal: 2,
   },
 });
