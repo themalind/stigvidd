@@ -4,6 +4,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { StyleSheet, View } from "react-native";
 import { Text, useTheme } from "react-native-paper";
 import { useTranslation } from "react-i18next";
+import { SCREEN_PADDING } from "@/constants/constants";
 
 interface FacilitySectionProps {
   title: string;
@@ -65,7 +66,7 @@ const s = StyleSheet.create({
     fontSize: 13,
   },
   section: {
-    paddingHorizontal: 12,
+    paddingHorizontal: SCREEN_PADDING,
     gap: 8,
   },
   sectionHeader: {

@@ -1,3 +1,4 @@
+import { SCREEN_PADDING } from "@/constants/constants";
 import { MaterialIcons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import { Image, Pressable, StyleSheet, View } from "react-native";
@@ -47,8 +48,8 @@ const s = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 10,
-    paddingVertical: 10,
+    paddingHorizontal: SCREEN_PADDING,
+    paddingVertical: SCREEN_PADDING,
     gap: 10,
   },
   stigviddContainer: {

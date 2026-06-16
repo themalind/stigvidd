@@ -1,19 +1,17 @@
-import { BORDER_RADIUS } from "@/constants/constants";
+import { BORDER_RADIUS, SCREEN_PADDING } from "@/constants/constants";
 import { UserFavoritesTrail, UserWishlistTrail } from "@/data/types";
 import { guardedNavigate } from "@/utils/navigation";
 import { Entypo } from "@expo/vector-icons";
 import { Image } from "expo-image";
-import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
+import { useTranslation } from "react-i18next";
 import { Platform, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { Divider, Text, useTheme } from "react-native-paper";
-import { useTranslation } from "react-i18next";
 import BackButton from "../back-button";
 import { Rating } from "../review/rating";
 
 interface UserTrailCollectionProps {
   title: string;
-  description?: string;
   noTrailsSavedInfo: string;
   trails: UserFavoritesTrail[] | UserWishlistTrail[];
   onDelete: (identifier: string) => void;
@@ -22,7 +20,6 @@ interface UserTrailCollectionProps {
 
 export default function UserTrailCollection({
   title,
-  description,
   trails,
   noTrailsSavedInfo,
   onDelete,
@@ -43,11 +40,11 @@ export default function UserTrailCollection({
           <Text style={s.title}>{title}</Text>
         </View>
         <View style={s.content}>
+          <Text variant="bodySmall" style={s.sectionSubtitle}>
+            {t("collection.tapInfo")}
+          </Text>
           <Divider bold={true} />
-          <View style={[s.infoBox, { backgroundColor: theme.colors.outlineVariant }]}>
-            {description && <Text style={s.infoDescription}>{description}</Text>}
-            <Text>{t("collection.tapInfo")}</Text>
-          </View>
+
           {trails?.length ? (
             trails?.map((trail) => (
               <Pressable
@@ -105,8 +102,12 @@ const s = StyleSheet.create({
     gap: 16,
   },
   content: {
-    paddingHorizontal: 10,
-    gap: 10,
+    paddingHorizontal: SCREEN_PADDING,
+    gap: 5,
+  },
+  sectionSubtitle: {
+    opacity: 0.6,
+    paddingHorizontal: 2,
   },
   trash: {
     alignSelf: "flex-start",
@@ -121,7 +122,7 @@ const s = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
-    paddingLeft: Platform.select({ ios: 0, default: 10 }),
+    paddingLeft: Platform.select({ ios: 0, default: SCREEN_PADDING }),
   },
   icons: {
     flexDirection: "row",

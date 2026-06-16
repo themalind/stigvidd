@@ -35,7 +35,6 @@ export default function WishlistScreen() {
   return (
     <UserTrailCollection
       title={t("collection.wishlist.title")}
-      description={t("collection.wishlist.description")}
       noTrailsSavedInfo={t("collection.wishlist.empty")}
       onDelete={handleDelete}
       trails={data ?? []}

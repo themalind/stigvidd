@@ -1,5 +1,5 @@
 import BackButton from "@/components/back-button";
-import { BORDER_RADIUS } from "@/constants/constants";
+import { BORDER_RADIUS, SCREEN_PADDING } from "@/constants/constants";
 import { DIFFICULTIES } from "@/data/trail-content";
 import { asTranslationKey } from "@/i18n";
 import { classificationParser } from "@/utils/classification-parser";
@@ -195,7 +195,7 @@ const s = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
-    paddingLeft: Platform.select({ ios: 0, default: 12 }),
+    paddingLeft: Platform.select({ ios: 0, default: SCREEN_PADDING }),
   },
   container: {
     paddingTop: 8,
@@ -203,7 +203,7 @@ const s = StyleSheet.create({
     gap: 8,
   },
   content: {
-    paddingHorizontal: 12,
+    paddingHorizontal: SCREEN_PADDING,
     gap: 12,
   },
   pageTitle: {

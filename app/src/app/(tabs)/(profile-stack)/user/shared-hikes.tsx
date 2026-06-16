@@ -6,7 +6,7 @@ import BackButton from "@/components/back-button";
 import ErrorView from "@/components/error-view";
 import LoadingIndicator from "@/components/loading-indicator";
 import SharedHikeDetails from "@/components/shared-hike/shared-hike-details";
-import { BORDER_RADIUS } from "@/constants/constants";
+import { BORDER_RADIUS, SCREEN_PADDING } from "@/constants/constants";
 import { SharedHike } from "@/data/types";
 import { useSharedHikeMutations } from "@/hooks/shared-hikes/useSharedHikeMutations";
 import FormattedTime from "@/utils/format-time-from-ms";
@@ -15,9 +15,9 @@ import { useQuery } from "@tanstack/react-query";
 import { Redirect } from "expo-router";
 import { useAtom, useAtomValue } from "jotai";
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Platform, ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
 import { Button, Divider, Icon, IconButton, Surface, Text, useTheme } from "react-native-paper";
-import { useTranslation } from "react-i18next";
 
 const PREVIEW_COUNT = 5;
 
@@ -300,7 +300,7 @@ const s = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
-    paddingLeft: Platform.select({ ios: 0, default: 10 }),
+    paddingLeft: Platform.select({ ios: 0, default: SCREEN_PADDING }),
     paddingVertical: 6,
   },
   headerText: {
@@ -325,7 +325,7 @@ const s = StyleSheet.create({
     gap: 5,
   },
   content: {
-    paddingHorizontal: 10,
+    paddingHorizontal: SCREEN_PADDING,
     gap: 10,
   },
   sectionHeader: {

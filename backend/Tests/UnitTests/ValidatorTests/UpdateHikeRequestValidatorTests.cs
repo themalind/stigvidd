@@ -55,9 +55,9 @@ public class UpdateHikeRequestValidatorTests
     }
 
     [Fact]
-    public void Validate_WithNameAt60Characters_ShouldPass()
+    public void Validate_WithNameAt40Characters_ShouldPass()
     {
-        var request = new UpdateHikeRequest { Name = new string('a', 60) };
+        var request = new UpdateHikeRequest { Name = new string('a', 40) };
 
         var result = _validator.Validate(request);
 
@@ -65,9 +65,9 @@ public class UpdateHikeRequestValidatorTests
     }
 
     [Fact]
-    public void Validate_WithNameExceeding60Characters_ShouldFail()
+    public void Validate_WithNameExceeding40Characters_ShouldFail()
     {
-        var request = new UpdateHikeRequest { Name = new string('a', 61) };
+        var request = new UpdateHikeRequest { Name = new string('a', 41) };
 
         var result = _validator.Validate(request);
 

@@ -41,7 +41,7 @@ public class CreateHikeRequestValidatorTests
     public void Validate_WithNameAtMaxLength_ShouldPass()
     {
         var request = ValidRequest();
-        request.Name = new string('a', 60);
+        request.Name = new string('a', 40);
 
         var result = _validator.Validate(request);
 
@@ -52,7 +52,7 @@ public class CreateHikeRequestValidatorTests
     public void Validate_WithNameExceedingMaxLength_ShouldFail()
     {
         var request = ValidRequest();
-        request.Name = new string('a', 61);
+        request.Name = new string('a', 41);
 
         var result = _validator.Validate(request);
 

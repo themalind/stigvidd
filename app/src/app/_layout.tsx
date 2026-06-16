@@ -3,6 +3,7 @@ import { pruneTrailCardCache } from "@/hooks/useTrailCard";
 import { pruneTrailPathCache } from "@/services/trail-path-cache";
 import { loadUserTheme, userThemeAtom } from "@/atoms/user-theme-atom";
 import { GlobalSnackbar } from "@/components/global-snackbar";
+import { useAppState } from "@/hooks/useAppState";
 import { useInitLocation } from "@/hooks/useInitLocation";
 import { useUserTheme } from "@/hooks/useUserTheme";
 import { loadStoredLanguage } from "@/i18n";
@@ -31,6 +32,7 @@ function NotificationHandler() {
   const queryClient = useQueryClient();
   const user = useAtomValue(userAtom);
   const lastResponse = Notifications.useLastNotificationResponse();
+  const handledNotificationId = useRef<string | null>(null);
 
   // Foreground: notification arrives while app is open — just refresh data, no navigation.
   useEffect(() => {
@@ -43,8 +45,12 @@ function NotificationHandler() {
   }, [queryClient]);
 
   // Background tap or cold-start tap: navigate to the right screen after auth resolves.
+  // handledNotificationId prevents re-navigation if the app is restarted after a tap.
   useEffect(() => {
     if (!lastResponse || !user) return;
+    const notifId = lastResponse.notification.request.identifier;
+    if (notifId === handledNotificationId.current) return;
+    handledNotificationId.current = notifId;
     const type = lastResponse.notification.request.content.data?.type as string | undefined;
     if (!type) return;
     const keys = NOTIFICATION_QUERY_KEYS[type];
@@ -98,6 +104,11 @@ export default function RootLayout() {
 
   // Fetch location on mount
   useInitLocation();
+
+  // Wires AppState changes to React Query's focusManager, so queries refetch
+  // when the app returns to the foreground — regardless of how it was opened
+  // (notification tap, app switcher, or tapping the home screen icon).
+  useAppState();
 
   useEffect(() => {
     const unsubscribe = initAuth();

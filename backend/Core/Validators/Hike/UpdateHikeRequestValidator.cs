@@ -9,7 +9,7 @@ public class UpdateHikeRequestValidator : AbstractValidator<UpdateHikeRequest>
     {
         RuleFor(x => x.Name)
             .NotEmpty()
-            .MaximumLength(60)
+            .MaximumLength(40)
             .WithMessage("Name cannot be empty.")
             .When(x => x.Name != null);
         RuleFor(x => x.ParkingInfo)

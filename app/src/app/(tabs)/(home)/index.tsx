@@ -4,7 +4,7 @@ import HeroBanner from "@/components/home/hero-banner";
 import MockNews from "@/components/mockNews";
 import PagerCarouselSkeleton from "@/components/skeletons/pager-carousel-skeleton";
 import PagerCarousel from "@/components/trail/pager-carousel";
-import { SURFACE_BORDER_RADIUS } from "@/constants/constants";
+import { SCREEN_PADDING, SURFACE_BORDER_RADIUS } from "@/constants/constants";
 import { guardedNavigate } from "@/utils/navigation";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
@@ -130,7 +130,7 @@ const s = StyleSheet.create({
     flexDirection: "row",
     alignItems: "stretch",
     gap: 8,
-    paddingHorizontal: 12,
+    paddingHorizontal: SCREEN_PADDING,
   },
   halfCard: {
     flex: 1,
@@ -146,7 +146,7 @@ const s = StyleSheet.create({
     gap: 2,
   },
   newsSection: {
-    marginHorizontal: 12,
+    marginHorizontal: SCREEN_PADDING,
     borderRadius: SURFACE_BORDER_RADIUS,
   },
   guideCard: {},

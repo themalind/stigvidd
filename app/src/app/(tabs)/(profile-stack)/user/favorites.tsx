@@ -6,8 +6,8 @@ import UserTrailCollection from "@/components/user/user-trail-collection";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Redirect } from "expo-router";
 import { useAtom } from "jotai";
-import { useTheme } from "react-native-paper";
 import { useTranslation } from "react-i18next";
+import { useTheme } from "react-native-paper";
 
 export default function FavoritesScreen() {
   const theme = useTheme();
@@ -35,7 +35,6 @@ export default function FavoritesScreen() {
   return (
     <UserTrailCollection
       title={t("collection.favorites.title")}
-      description={t("collection.favorites.description")}
       noTrailsSavedInfo={t("collection.favorites.empty")}
       onDelete={handleDelete}
       trails={data ?? []}

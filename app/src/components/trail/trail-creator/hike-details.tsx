@@ -1,5 +1,5 @@
-import { deleteHike, shareHike, updateHike } from "@/api/hikes";
 import { ApiError } from "@/api/api-error";
+import { deleteHike, shareHike, updateHike } from "@/api/hikes";
 import { showErrorAtom, showSuccessAtom } from "@/atoms/snackbar-atoms";
 import { stigviddUserAtom } from "@/atoms/user-atoms";
 import AlertDialog from "@/components/alert-dialog";
@@ -14,10 +14,10 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { BlurView } from "expo-blur";
 import { useAtomValue, useSetAtom } from "jotai";
 import { useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Dimensions, Pressable, StyleSheet, View } from "react-native";
 import MapView, { Polyline } from "react-native-maps";
 import { Button, Icon, Modal, Portal, Text, useTheme } from "react-native-paper";
-import { useTranslation } from "react-i18next";
 import Map from "../../map/map";
 
 interface Props {
@@ -107,7 +107,7 @@ export default function HikeDetails({ visible, hike, onDismiss }: Props) {
         <View style={[s.hikeDetailsContainer, { backgroundColor: theme.colors.outlineVariant }]}>
           <View style={s.hikeNameContainer}>
             <MaterialCommunityIcons name="map-legend" size={24} color={theme.colors.primary} />
-            <Text style={s.hikeName} numberOfLines={2}>
+            <Text style={s.hikeName} numberOfLines={1}>
               {hike.name}
             </Text>
           </View>
@@ -123,7 +123,7 @@ export default function HikeDetails({ visible, hike, onDismiss }: Props) {
         <View style={s.mapContainer}>
           {hike.coordinates && hike.coordinates.length > 0 && (
             <Map style={s.map} ref={mapRef} initialRegion={GetRegionFromTrail(coordinates)} onMapReady={handleMapReady}>
-              <Polyline coordinates={coordinates} strokeWidth={3} strokeColor="#eb3204" />
+              <Polyline coordinates={coordinates} strokeWidth={3} strokeColor={theme.colors.primary} />
             </Map>
           )}
         </View>
@@ -186,16 +186,19 @@ const s = StyleSheet.create({
     justifyContent: "space-between",
     padding: 10,
     borderRadius: BORDER_RADIUS,
+    overflow: "hidden",
   },
   hikeNameContainer: {
     flexDirection: "row",
     alignItems: "center",
     gap: 5,
+    minWidth: 0,
   },
   hikeName: {
-    fontSize: 17,
+    fontSize: 15,
     fontWeight: 700,
     flex: 1,
+    minWidth: 0,
   },
   hikeInfo: {
     flexDirection: "row",

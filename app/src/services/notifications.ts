@@ -1,4 +1,4 @@
-import { registerPushToken } from "@/api/notifications";
+import { registerPushToken, unregisterPushToken } from "@/api/notifications";
 import * as Device from "expo-device";
 import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
@@ -26,6 +26,9 @@ export const NOTIFICATION_ROUTES: Record<string, string> = {
   friend_request_accepted: "/(tabs)/(profile-stack)/user/friends",
   hike_share: "/(tabs)/(profile-stack)/user/shared-hikes",
 };
+
+let _currentExpoToken: string | null = null;
+let _tokenListener: Notifications.Subscription | null = null;
 
 // Requests notification permissions, fetches an Expo push token, and sends it
 // to the backend so the server can target this device. Safe to call on every
@@ -68,12 +71,30 @@ export async function registerForPushNotificationsAsync(): Promise<void> {
   // notifications through the correct APNs/FCM credentials.
   const projectId = "f436d9c7-ff9c-4a60-b51f-1aefd5672205";
   const { data: expoToken } = await Notifications.getExpoPushTokenAsync({ projectId });
+  _currentExpoToken = expoToken;
 
   // Persist the token in the backend so the server knows where to send pushes.
   await registerPushToken(expoToken, Platform.OS);
 
   // Re-register automatically if the token rotates (rare but possible).
-  Notifications.addPushTokenListener(async ({ data: newToken }) => {
+  // Remove any previous listener before adding a new one to avoid duplicates
+  // across login/logout cycles.
+  _tokenListener?.remove();
+  _tokenListener = Notifications.addPushTokenListener(async ({ data: newToken }) => {
+    _currentExpoToken = newToken;
     await registerPushToken(newToken, Platform.OS);
   });
+}
+
+// Removes the current device's push token from the backend and cleans up the
+// local listener. Called on logout so the user stops receiving notifications
+// on this device.
+export async function unregisterForPushNotificationsAsync(): Promise<void> {
+  _tokenListener?.remove();
+  _tokenListener = null;
+
+  if (_currentExpoToken) {
+    await unregisterPushToken(_currentExpoToken);
+    _currentExpoToken = null;
+  }
 }

@@ -1,4 +1,5 @@
 import BackButton from "@/components/back-button";
+import { SCREEN_PADDING } from "@/constants/constants";
 import { Platform, ScrollView, StyleSheet, View } from "react-native";
 import { Text, useTheme } from "react-native-paper";
 import { useTranslation } from "react-i18next";
@@ -78,7 +79,7 @@ const s = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
-    paddingLeft: Platform.select({ ios: 0, default: 12 }),
+    paddingLeft: Platform.select({ ios: 0, default: SCREEN_PADDING }),
   },
   appName: {
     fontFamily: "Inter_600SemiBold",
@@ -91,7 +92,7 @@ const s = StyleSheet.create({
     gap: 8,
   },
   content: {
-    paddingHorizontal: 12,
+    paddingHorizontal: SCREEN_PADDING,
     gap: 16,
   },
   description: {

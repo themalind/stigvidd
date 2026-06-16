@@ -5,7 +5,7 @@ import BackButton from "@/components/back-button";
 import ErrorView from "@/components/error-view";
 import LoadingIndicator from "@/components/loading-indicator";
 import HikeDetails from "@/components/trail/trail-creator/hike-details";
-import { BORDER_RADIUS } from "@/constants/constants";
+import { BORDER_RADIUS, SCREEN_PADDING } from "@/constants/constants";
 import { Hike } from "@/data/types";
 import FormattedTime from "@/utils/format-time-from-ms";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -117,7 +117,7 @@ const s = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
-    paddingLeft: Platform.select({ ios: 0, default: 10 }),
+    paddingLeft: Platform.select({ ios: 0, default: SCREEN_PADDING }),
   },
   titleTextBold: {
     fontFamily: "Inter_600SemiBold",
@@ -167,7 +167,7 @@ const s = StyleSheet.create({
     gap: 16,
   },
   content: {
-    paddingHorizontal: 10,
+    paddingHorizontal: SCREEN_PADDING,
     gap: 10,
   },
   sectionSubtitle: {

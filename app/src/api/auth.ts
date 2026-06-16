@@ -1,5 +1,6 @@
 import i18n from "@/i18n";
 import { AuthResult, LoginData, UpdateUserResult } from "@/data/types";
+import { unregisterForPushNotificationsAsync } from "@/services/notifications";
 import { FirebaseError } from "firebase/app";
 import {
   EmailAuthProvider,
@@ -39,6 +40,7 @@ export const signInUser = async (data: LoginData): Promise<AuthResult> => {
 
 export async function signOutUser() {
   try {
+    await unregisterForPushNotificationsAsync().catch(() => {});
     await signOut(auth);
     return { success: true, error: null };
   } catch (error) {

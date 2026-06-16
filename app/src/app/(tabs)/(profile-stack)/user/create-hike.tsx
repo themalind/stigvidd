@@ -8,6 +8,7 @@ import * as Location from "expo-location";
 import { Redirect } from "expo-router";
 import { useAtom } from "jotai";
 import { useEffect, useState } from "react";
+import { SCREEN_PADDING } from "@/constants/constants";
 import { Platform, StyleSheet, View } from "react-native";
 import { Text, useTheme } from "react-native-paper";
 import { useTranslation } from "react-i18next";
@@ -63,7 +64,7 @@ const s = StyleSheet.create({
   header: {
     flexDirection: "row",
     alignItems: "center",
-    paddingLeft: Platform.select({ ios: 0, default: 10 }),
+    paddingLeft: Platform.select({ ios: 0, default: SCREEN_PADDING }),
     paddingBottom: 8,
     gap: 4,
   },
@@ -73,6 +74,6 @@ const s = StyleSheet.create({
   },
   content: {
     flex: 1,
-    paddingHorizontal: 10,
+    paddingHorizontal: SCREEN_PADDING,
   },
 });

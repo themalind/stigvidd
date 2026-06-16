@@ -233,6 +233,8 @@
   "hike": {
     "name": "Walk name",
     "nameRequired": "Enter a walk name",
+    "nameTooShort": "Name too short. Min 3 characters",
+    "nameTooLong": "Name too long. Max 40 characters",
     "goBack": "Go back",
     "confirm": "Confirm",
     "errorSaving": "Something went wrong, please try again later.",
@@ -390,10 +392,9 @@
     "removeError": "Could not remove friend, please try again later!"
   },
   "collection": {
-    "tapInfo": "Tap a trail for more info. Tap X to remove.",
+    "tapInfo": "Tap a walk to see more information or delete it.",
     "favorites": {
       "title": "My favorites",
-      "description": "Here are your saved favorites.",
       "empty": "No favorites saved yet. Go to a trail and tap the heart to add one."
     },
     "wishlist": {

@@ -1,5 +1,5 @@
-import { removeSharedHike, reshareHike } from "@/api/shared-hikes";
 import { ApiError } from "@/api/api-error";
+import { removeSharedHike, reshareHike } from "@/api/shared-hikes";
 import { showErrorAtom, showSuccessAtom } from "@/atoms/snackbar-atoms";
 import { stigviddUserAtom } from "@/atoms/user-atoms";
 import AlertDialog from "@/components/alert-dialog";
@@ -15,10 +15,10 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { BlurView } from "expo-blur";
 import { useAtomValue, useSetAtom } from "jotai";
 import { useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { ActivityIndicator, Dimensions, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import MapView, { Polyline } from "react-native-maps";
 import { Button, Divider, Icon, Modal, Portal, Text, useTheme } from "react-native-paper";
-import { useTranslation } from "react-i18next";
 import Map from "./../map/map";
 
 interface Props {
@@ -125,7 +125,9 @@ export default function SharedHikeDetails({
             <View style={[s.hikeDetailsContainer, { backgroundColor: theme.colors.outlineVariant }]}>
               <View style={s.hikeNameContainer}>
                 <Fontisto name="map" size={20} color={theme.colors.primary} />
-                <Text style={[s.hikeName, { color: theme.colors.secondary }]}>{sharedHike.hikeName}</Text>
+                <Text numberOfLines={1} style={[s.hikeName, { color: theme.colors.secondary }]}>
+                  {sharedHike.hikeName}
+                </Text>
               </View>
               <View style={s.hikeInfo}>
                 <Text>
@@ -145,7 +147,7 @@ export default function SharedHikeDetails({
                   initialRegion={GetRegionFromTrail(coordinates)}
                   onMapReady={handleMapReady}
                 >
-                  <Polyline coordinates={coordinates} strokeWidth={3} strokeColor="#eb3204" />
+                  <Polyline coordinates={coordinates} strokeWidth={3} strokeColor={theme.colors.primary} />
                 </Map>
               )}
             </View>
@@ -279,7 +281,7 @@ const s = StyleSheet.create({
     gap: 5,
   },
   hikeName: {
-    fontSize: 18,
+    fontSize: 15,
     fontWeight: 700,
   },
   hikeInfo: {

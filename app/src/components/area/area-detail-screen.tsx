@@ -8,6 +8,7 @@ import { Image, ScrollView, StyleSheet, View } from "react-native";
 import { ActivityIndicator, Divider, Text, useTheme } from "react-native-paper";
 import BackButton from "../back-button";
 import FacilitySection from "./facility-section";
+import { SCREEN_PADDING } from "@/constants/constants";
 
 export default function AreaDetailScreen() {
   const theme = useTheme();
@@ -76,7 +77,7 @@ const s = StyleSheet.create({
     height: 220,
   },
   header: {
-    paddingHorizontal: 12,
+    paddingHorizontal: SCREEN_PADDING,
     gap: 6,
   },
   title: {
@@ -92,12 +93,12 @@ const s = StyleSheet.create({
     fontSize: 14,
   },
   description: {
-    paddingHorizontal: 12,
+    paddingHorizontal: SCREEN_PADDING,
     fontSize: 15,
     lineHeight: 22,
   },
   facilitiesHeading: {
-    paddingHorizontal: 12,
+    paddingHorizontal: SCREEN_PADDING,
     fontSize: 16,
     fontFamily: "Inter_600SemiBold",
   },

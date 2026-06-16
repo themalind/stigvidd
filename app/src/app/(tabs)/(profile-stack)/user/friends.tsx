@@ -2,7 +2,7 @@ import { getOutgoingRequests } from "@/api/friends";
 import { friendsAtom, incomingRequestsAtom, userSearchAtomFamily } from "@/atoms/friends-atoms";
 import AlertDialog from "@/components/alert-dialog";
 import BackButton from "@/components/back-button";
-import { BORDER_RADIUS } from "@/constants/constants";
+import { BORDER_RADIUS, SCREEN_PADDING } from "@/constants/constants";
 import { useFriendMutations } from "@/hooks/friends/useFriendMutations";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
@@ -391,7 +391,7 @@ const s = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
-    paddingLeft: Platform.select({ ios: 0, default: 12 }),
+    paddingLeft: Platform.select({ ios: 0, default: SCREEN_PADDING }),
   },
   headerTitle: {
     fontFamily: "Inter_600SemiBold",
@@ -406,7 +406,7 @@ const s = StyleSheet.create({
     gap: 8,
   },
   content: {
-    paddingHorizontal: 12,
+    paddingHorizontal: SCREEN_PADDING,
     gap: 20,
   },
   searchbar: {

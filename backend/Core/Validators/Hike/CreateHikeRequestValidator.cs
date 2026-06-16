@@ -9,7 +9,7 @@ public class CreateHikeRequestValidator : AbstractValidator<CreateHikeRequest>
     {
         RuleFor(x => x.Name)
             .NotEmpty()
-            .MaximumLength(60);
+            .MaximumLength(40);
 
         RuleFor(x => x.HikeLength)
             .GreaterThan(0)

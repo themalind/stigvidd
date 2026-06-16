@@ -35,7 +35,7 @@ public class HikeService : IHikeService
         }
 
         if (string.IsNullOrWhiteSpace(request.Name) ||
-            request.Name.Length > 60 ||
+            request.Name.Length > 40 ||
             request.HikeLength == 0 ||
             request.Duration == 0)
         {

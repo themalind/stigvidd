@@ -4,18 +4,21 @@ import { stigviddUserAtom } from "@/atoms/user-atoms";
 import Map from "@/components/map/map";
 import { BORDER_RADIUS } from "@/constants/constants";
 import { ActiveHike, CreateHikeRequest } from "@/data/types";
+import { asTranslationKey } from "@/i18n";
 import FormattedTime from "@/utils/format-time-from-ms";
 import GetRegionFromTrail from "@/utils/get-region-from-trail";
 import { MaterialIcons } from "@expo/vector-icons";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { useAtomValue, useSetAtom } from "jotai";
 import { useEffect, useMemo, useRef } from "react";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, SubmitHandler, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { Pressable, StyleSheet, View } from "react-native";
 import MapView, { LatLng, Polyline } from "react-native-maps";
 import { Divider, Text, TextInput, useTheme } from "react-native-paper";
+import { z } from "zod";
 
 interface Props {
   hike: ActiveHike;
@@ -23,9 +26,11 @@ interface Props {
   onSaveSuccess: () => void;
 }
 
-type SaveHikeFormData = {
-  hikeName: string;
-};
+const saveHikeFields = z.object({
+  hikeName: z.string({ required_error: "hike.nameRequired" }).min(3, "hike.nameTooShort").max(40, "hike.nameTooLong"),
+});
+
+type SaveHikeFormData = z.infer<typeof saveHikeFields>;
 
 export default function SaveHikeForm({ hike, onDismiss, onSaveSuccess }: Props) {
   const { t } = useTranslation();
@@ -53,10 +58,11 @@ export default function SaveHikeForm({ hike, onDismiss, onSaveSuccess }: Props) 
     handleSubmit,
     formState: { errors },
   } = useForm<SaveHikeFormData>({
+    resolver: zodResolver(saveHikeFields),
     defaultValues: { hikeName: "" },
   });
 
-  const submit = async (data: SaveHikeFormData) => {
+  const submit: SubmitHandler<SaveHikeFormData> = async (data) => {
     const newHike: CreateHikeRequest = {
       name: data.hikeName,
       hikeLength: hike.totalDistance,
@@ -95,17 +101,20 @@ export default function SaveHikeForm({ hike, onDismiss, onSaveSuccess }: Props) 
         control={control}
         render={({ field: { onChange, onBlur, value } }) => (
           <TextInput
+            error={!!errors.hikeName}
             style={{ backgroundColor: theme.colors.surface }}
             onChangeText={onChange}
             onBlur={onBlur}
             value={value}
             label={t("hike.name")}
             mode="outlined"
+            maxLength={40}
           />
         )}
-        rules={{ required: true, minLength: 3, maxLength: 60 }}
       />
-      {errors.hikeName && <Text style={[s.errorText, { color: theme.colors.error }]}>{t("hike.nameRequired")}</Text>}
+      {errors.hikeName?.message && (
+        <Text style={[s.errorText, { color: theme.colors.error }]}>{t(asTranslationKey(errors.hikeName.message))}</Text>
+      )}
 
       <View style={[s.statsCard, { backgroundColor: theme.colors.outlineVariant }]}>
         <View style={s.statItem}>

@@ -1,6 +1,7 @@
 import AreaCard from "@/components/area/area-card";
 import BackButton from "@/components/back-button";
 import { borasAreas } from "@/data/areas-data";
+import { SCREEN_PADDING } from "@/constants/constants";
 import { Platform, ScrollView, StyleSheet, View } from "react-native";
 import { Text, useTheme } from "react-native-paper";
 
@@ -26,7 +27,7 @@ const s = StyleSheet.create({
   header: {
     flexDirection: "row",
     alignItems: "center",
-    paddingLeft: Platform.select({ ios: 0, default: 10 }),
+    paddingLeft: Platform.select({ ios: 0, default: SCREEN_PADDING }),
   },
   title: {
     fontFamily: "Inter_600SemiBold",
@@ -38,7 +39,7 @@ const s = StyleSheet.create({
     gap: 8,
   },
   content: {
-    paddingHorizontal: 10,
+    paddingHorizontal: SCREEN_PADDING,
     gap: 15,
   },
 });

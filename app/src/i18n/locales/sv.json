@@ -233,6 +233,8 @@
   "hike": {
     "name": "Promenadnamn",
     "nameRequired": "Ange ett promenadnamn",
+    "nameTooShort": "Namnet är för kort. Minst 3 tecken",
+    "nameTooLong": "Namnet är för långt. Max 40 tecken",
     "goBack": "Gå tillbaka",
     "confirm": "Bekräfta",
     "errorSaving": "Något gick fel försök igen senare.",
@@ -390,10 +392,9 @@
     "removeError": "Kunde inte ta bort vän, försök igen senare!"
   },
   "collection": {
-    "tapInfo": "Tryck på ett spår för mer info. Tryck på X för att ta bort.",
+    "tapInfo": "Tryck på en promenad för att se detaljer ",
     "favorites": {
       "title": "Mina favoriter",
-      "description": "Här är dina sparade favoriter.",
       "empty": "Inga Favoriter sparade än. Gå till en promenad och tryck på hjärtat för att lägga till."
     },
     "wishlist": {
