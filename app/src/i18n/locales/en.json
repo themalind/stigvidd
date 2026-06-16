@@ -258,6 +258,8 @@
     "gettingThere": "Getting there",
     "parking": "Parking",
     "description": "Description",
+    "length": "Length",
+    "time": "Time",
     "gettingThereHeading": "How to find the start of the walk",
     "gettingThereHelp": "Describe how to get there with simple directions",
     "gettingThereOptional": "Getting there (optional)",

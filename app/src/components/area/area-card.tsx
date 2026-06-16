@@ -27,14 +27,7 @@ export default function AreaCard({ area }: Props) {
       }
       style={{ gap: 5 }}
     >
-      <Card
-        elevation={0}
-        style={{
-          borderWidth: StyleSheet.hairlineWidth,
-          borderColor: theme.colors.outlineVariant,
-          borderRadius: BORDER_RADIUS,
-        }}
-      >
+      <Card elevation={0} style={s.borderRadius}>
         <Card.Cover
           style={{ padding: 10, backgroundColor: theme.colors.elevation.level1, borderRadius: BORDER_RADIUS }}
           source={area.image}
@@ -51,3 +44,9 @@ export default function AreaCard({ area }: Props) {
     </Pressable>
   );
 }
+
+const s = StyleSheet.create({
+  borderRadius: {
+    borderRadius: BORDER_RADIUS,
+  },
+});

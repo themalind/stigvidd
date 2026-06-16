@@ -15,9 +15,9 @@ import { BlurView } from "expo-blur";
 import { useAtomValue, useSetAtom } from "jotai";
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Dimensions, Pressable, StyleSheet, View } from "react-native";
+import { Dimensions, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import MapView, { Polyline } from "react-native-maps";
-import { Button, Icon, Modal, Portal, Text, useTheme } from "react-native-paper";
+import { Button, Divider, Icon, Modal, Portal, Text, useTheme } from "react-native-paper";
 import Map from "../../map/map";
 
 interface Props {
@@ -104,21 +104,12 @@ export default function HikeDetails({ visible, hike, onDismiss }: Props) {
         <Pressable style={s.closeButton} hitSlop={12} onPress={onDismiss}>
           <Icon size={24} source="close" color={theme.colors.onSurface} />
         </Pressable>
-        <View style={[s.hikeDetailsContainer, { backgroundColor: theme.colors.outlineVariant }]}>
-          <View style={s.hikeNameContainer}>
-            <MaterialCommunityIcons name="map-legend" size={24} color={theme.colors.primary} />
-            <Text style={s.hikeName} numberOfLines={1}>
-              {hike.name}
-            </Text>
-          </View>
-          <View style={s.hikeInfo}>
-            <Text>
-              <Icon color={theme.colors.tertiary} size={20} source="hiking" /> {hike.hikeLength} km
-            </Text>
-            <Text>
-              <Icon color={theme.colors.tertiary} size={20} source="clock" /> {FormattedTime(hike.duration)}
-            </Text>
-          </View>
+        <View style={s.hikeNameContainer}>
+          <MaterialCommunityIcons name="map-legend" size={24} color={theme.colors.primary} />
+          <Text style={s.hikeName} numberOfLines={1}>
+            {hike.name}
+          </Text>
+          <View style={s.closeButtonSpacer} />
         </View>
         <View style={s.mapContainer}>
           {hike.coordinates && hike.coordinates.length > 0 && (
@@ -127,6 +118,56 @@ export default function HikeDetails({ visible, hike, onDismiss }: Props) {
             </Map>
           )}
         </View>
+        <View style={[s.statsCard, { backgroundColor: theme.colors.outlineVariant }]}>
+          <View style={s.statItem}>
+            <Text style={s.statLabel}>{t("hike.length")}</Text>
+            <Text style={s.statValue}>{hike.hikeLength} km</Text>
+          </View>
+          <Divider style={[s.statDivider, { backgroundColor: theme.colors.outline }]} />
+          <View style={s.statItem}>
+            <Text style={s.statLabel}>{t("hike.time")}</Text>
+            <Text style={s.statValue}>{FormattedTime(hike.duration)}</Text>
+          </View>
+        </View>
+        <ScrollView
+          style={s.infoScroll}
+          contentContainerStyle={s.infoScrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {(hike.gettingThere || hike.parkingInfo || hike.description) && (
+            <>
+              <Divider style={s.divider} />
+
+              {hike.gettingThere && (
+                <View style={s.infoRow}>
+                  <Icon source="map-marker" size={18} color={theme.colors.primary} />
+                  <View style={s.infoText}>
+                    <Text style={[s.infoLabel, { color: theme.colors.secondary }]}>{t("hike.gettingThere")}</Text>
+                    <Text>{hike.gettingThere}</Text>
+                  </View>
+                </View>
+              )}
+              {hike.parkingInfo && (
+                <View style={s.infoRow}>
+                  <Icon source="car" size={18} color={theme.colors.primary} />
+                  <View style={s.infoText}>
+                    <Text style={[s.infoLabel, { color: theme.colors.secondary }]}>{t("hike.parking")}</Text>
+                    <Text>{hike.parkingInfo}</Text>
+                  </View>
+                </View>
+              )}
+              {hike.description && (
+                <View style={s.infoRow}>
+                  <Icon source="text" size={18} color={theme.colors.primary} />
+                  <View style={s.infoText}>
+                    <Text style={[s.infoLabel, { color: theme.colors.secondary }]}>{t("hike.description")}</Text>
+                    <Text>{hike.description}</Text>
+                  </View>
+                </View>
+              )}
+            </>
+          )}
+        </ScrollView>
         <View style={s.buttonGroup}>
           <Button style={s.button} mode="contained" icon="share" onPress={() => setShowShareModal(true)}>
             {t("hike.share")}
@@ -172,21 +213,20 @@ export default function HikeDetails({ visible, hike, onDismiss }: Props) {
 
 const s = StyleSheet.create({
   closeButton: {
-    alignSelf: "flex-end",
+    position: "absolute",
+    top: 15,
+    right: 15,
+    zIndex: 1,
+  },
+  closeButtonSpacer: {
+    width: 24,
   },
   contentContainerStyle: {
     justifyContent: "flex-start",
-    height: HEIGHT * 0.8,
+    maxHeight: HEIGHT * 0.9,
     borderRadius: BORDER_RADIUS,
     padding: 15,
     gap: 15,
-  },
-  hikeDetailsContainer: {
-    gap: 10,
-    justifyContent: "space-between",
-    padding: 10,
-    borderRadius: BORDER_RADIUS,
-    overflow: "hidden",
   },
   hikeNameContainer: {
     flexDirection: "row",
@@ -200,12 +240,34 @@ const s = StyleSheet.create({
     flex: 1,
     minWidth: 0,
   },
-  hikeInfo: {
+  statsCard: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    borderRadius: BORDER_RADIUS,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+  },
+  statItem: {
+    flex: 1,
+    alignItems: "center",
+    gap: 2,
+  },
+  statLabel: {
+    fontSize: 11,
+    fontWeight: "600",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+    opacity: 0.6,
+  },
+  statValue: {
+    fontSize: 18,
+  },
+  statDivider: {
+    width: 1,
+    marginVertical: 4,
   },
   mapContainer: {
     height: HEIGHT * 0.4,
+    flexShrink: 0,
     borderRadius: SURFACE_BORDER_RADIUS,
     overflow: "hidden",
   },
@@ -214,11 +276,35 @@ const s = StyleSheet.create({
   },
   buttonGroup: {
     flexDirection: "row",
-    marginTop: "auto",
     gap: 20,
   },
   button: {
     borderRadius: BORDER_RADIUS,
     flex: 1,
+  },
+  infoScroll: {
+    flexShrink: 1,
+  },
+  infoScrollContent: {
+    gap: 12,
+    paddingBottom: 4,
+  },
+  infoRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 10,
+  },
+  infoText: {
+    flex: 1,
+    gap: 2,
+  },
+  infoLabel: {
+    fontSize: 11,
+    fontWeight: "600",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  divider: {
+    marginVertical: 4,
   },
 });

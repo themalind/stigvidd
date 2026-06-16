@@ -122,21 +122,12 @@ export default function SharedHikeDetails({
           </View>
         ) : (
           <>
-            <View style={[s.hikeDetailsContainer, { backgroundColor: theme.colors.outlineVariant }]}>
-              <View style={s.hikeNameContainer}>
-                <Fontisto name="map" size={20} color={theme.colors.primary} />
-                <Text numberOfLines={1} style={[s.hikeName, { color: theme.colors.secondary }]}>
-                  {sharedHike.hikeName}
-                </Text>
-              </View>
-              <View style={s.hikeInfo}>
-                <Text>
-                  <Icon color={theme.colors.tertiary} size={20} source="hiking" /> {sharedHike.hikeLength} km
-                </Text>
-                <Text>
-                  <Icon color={theme.colors.tertiary} size={20} source="clock" /> {FormattedTime(sharedHike.duration)}
-                </Text>
-              </View>
+            <View style={s.hikeNameContainer}>
+              <Fontisto name="map" size={20} color={theme.colors.primary} />
+              <Text numberOfLines={1} style={[s.hikeName, { color: theme.colors.secondary }]}>
+                {sharedHike.hikeName}
+              </Text>
+              <View style={s.closeButtonSpacer} />
             </View>
 
             <View style={s.mapContainer}>
@@ -150,6 +141,17 @@ export default function SharedHikeDetails({
                   <Polyline coordinates={coordinates} strokeWidth={3} strokeColor={theme.colors.primary} />
                 </Map>
               )}
+            </View>
+            <View style={[s.statsCard, { backgroundColor: theme.colors.outlineVariant }]}>
+              <View style={s.statItem}>
+                <Text style={s.statLabel}>{t("hike.length")}</Text>
+                <Text style={s.statValue}>{sharedHike.hikeLength} km</Text>
+              </View>
+              <Divider style={[s.statDivider, { backgroundColor: theme.colors.outline }]} />
+              <View style={s.statItem}>
+                <Text style={s.statLabel}>{t("hike.time")}</Text>
+                <Text style={s.statValue}>{FormattedTime(sharedHike.duration)}</Text>
+              </View>
             </View>
             <ScrollView style={s.scrollArea} contentContainerStyle={s.scrollContent} bounces={false}>
               <View style={s.sharedDetails}>
@@ -261,32 +263,56 @@ export default function SharedHikeDetails({
 const s = StyleSheet.create({
   contentContainerStyle: {
     justifyContent: "flex-start",
-    height: HEIGHT * 0.9,
+    maxHeight: HEIGHT * 0.9,
     borderRadius: BORDER_RADIUS,
     padding: 15,
     gap: 10,
   },
   closeIcon: {
-    alignSelf: "flex-end",
+    position: "absolute",
+    top: 15,
+    right: 15,
+    zIndex: 1,
   },
-  hikeDetailsContainer: {
-    gap: 10,
-    justifyContent: "space-between",
-    padding: 10,
-    borderRadius: BORDER_RADIUS,
+  closeButtonSpacer: {
+    width: 24,
   },
   hikeNameContainer: {
     flexDirection: "row",
     alignItems: "center",
     gap: 5,
+    minWidth: 0,
   },
   hikeName: {
     fontSize: 15,
     fontWeight: 700,
+    flex: 1,
+    minWidth: 0,
   },
-  hikeInfo: {
+  statsCard: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    borderRadius: BORDER_RADIUS,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+  },
+  statItem: {
+    flex: 1,
+    alignItems: "center",
+    gap: 2,
+  },
+  statLabel: {
+    fontSize: 11,
+    fontWeight: "600",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+    opacity: 0.6,
+  },
+  statValue: {
+    fontSize: 18,
+  },
+  statDivider: {
+    width: 1,
+    marginVertical: 4,
   },
   sharedDetails: {
     flexDirection: "row",
@@ -302,6 +328,7 @@ const s = StyleSheet.create({
     borderWidth: 0.3,
     borderColor: "black",
     height: HEIGHT * 0.4,
+    flexShrink: 0,
     borderRadius: SURFACE_BORDER_RADIUS,
     overflow: "hidden",
   },
@@ -309,7 +336,7 @@ const s = StyleSheet.create({
     flex: 1,
   },
   scrollArea: {
-    flex: 1,
+    flexShrink: 1,
   },
   scrollContent: {
     gap: 10,
@@ -347,7 +374,7 @@ const s = StyleSheet.create({
     flexDirection: "row",
   },
   loadingContainer: {
-    flex: 1,
+    minHeight: HEIGHT * 0.5,
     justifyContent: "center",
     alignItems: "center",
   },
