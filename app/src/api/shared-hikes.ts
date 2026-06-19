@@ -1,6 +1,7 @@
 import { IncomingSharedHike, ReshareSharedHikeRequest, SharedHike } from "@/data/types";
 import { BASE_URL } from "./api-config";
-import { ApiError, getUserToken } from "./users";
+import { getUserToken } from "./users";
+import { ApiError } from "./api-error";
 
 export async function getSharedHikes(): Promise<SharedHike[]> {
   try {

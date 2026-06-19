@@ -1,6 +1,7 @@
 import { CreateTrailObstacleRequest, TrailObstacle, UpdateTrailObstacleRequest } from "@/data/types";
 import { BASE_URL } from "./api-config";
-import { ApiError, getUserToken } from "./users";
+import {  getUserToken } from "./users";
+import { ApiError } from "./api-error";
 
 export async function getTrailObstaclesByTrailIdentifier(trailIdentifier: string): Promise<TrailObstacle[]> {
   try {

@@ -2,7 +2,7 @@ import { CreateStigViddUserCredentials, User, UserFavoritesTrail, UserWishlistTr
 import { getIdToken } from "@firebase/auth";
 import { auth } from "../../firebase-config";
 import { BASE_URL } from "./api-config";
-export { ApiError } from "./api-error";
+import { ApiError } from "./api-error";
 
 export async function getUserToken(): Promise<string | null> {
   return auth.currentUser ? await getIdToken(auth.currentUser) : null;

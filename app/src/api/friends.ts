@@ -1,6 +1,7 @@
 import { Friend, FriendRequest, OutgoingFriendRequest } from "@/data/types";
 import { BASE_URL } from "./api-config";
-import { ApiError, getUserToken } from "./users";
+import { getUserToken } from "./users";
+import { ApiError } from "./api-error";
 
 export async function sendFriendRequest(receiverNickName: string): Promise<{ success: boolean }> {
   try {

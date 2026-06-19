@@ -1,5 +1,6 @@
 import { BASE_URL } from "./api-config";
-import { ApiError, getUserToken } from "./users";
+import { ApiError } from "./api-error";
+import { getUserToken } from "./users";
 
 export async function registerPushToken(expoToken: string, platform: string): Promise<void> {
   try {
