@@ -1,9 +1,10 @@
-import { ApiError, createStigViddUser } from "@/api/users";
+import { createStigViddUser } from "@/api/users";
 import { AuthResult, RegisterData } from "@/data/types";
 import i18n from "@/i18n";
 import { FirebaseError } from "firebase/app";
 import { User, createUserWithEmailAndPassword, deleteUser } from "firebase/auth";
 import { auth } from "../../firebase-config";
+import { ApiError } from "@/api/api-error";
 
 // Detta är tänkt att fungera som en transaction. Om något av stegen går fel ska ingen användare skapas.
 export async function registerUser(data: RegisterData): Promise<AuthResult> {

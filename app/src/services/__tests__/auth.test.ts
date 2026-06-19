@@ -1,8 +1,9 @@
 import { FirebaseError } from "firebase/app";
 import { createUserWithEmailAndPassword, deleteUser } from "firebase/auth";
-import { ApiError, createStigViddUser } from "../../api/users";
+import {createStigViddUser } from "../../api/users";
 import { RegisterData } from "../../data/types";
 import { registerUser } from "../auth";
+import { ApiError } from "@/api/api-error";
 
 jest.mock("@/i18n", () => ({
   __esModule: true,
