@@ -91,7 +91,8 @@ export default function SaveHikeForm({ hike, onDismiss, onSaveSuccess }: Props) 
   const bounds = useMemo(() => getBoundsFromTrail(routePositions), [routePositions]);
 
   const fitToRoute = useCallback(() => {
-    if (bounds) cameraRef.current?.fitBounds(bounds, { padding: { top: 30, right: 30, bottom: 30, left: 30 }, duration: 0 });
+    if (bounds)
+      cameraRef.current?.fitBounds(bounds, { padding: { top: 30, right: 30, bottom: 30, left: 30 }, duration: 0 });
   }, [bounds]);
 
   const openDialogIfValid = handleSubmit(submit);

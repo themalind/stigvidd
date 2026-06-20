@@ -38,7 +38,8 @@ export default function TrailMap({ trail, onPress }: TrailMapProps) {
   const lineShape = useMemo(() => lineStringFromPositions(trail), [trail]);
 
   const fitToTrail = useCallback(() => {
-    if (bounds) cameraRef.current?.fitBounds(bounds, { padding: { top: 40, right: 40, bottom: 40, left: 40 }, duration: 0 });
+    if (bounds)
+      cameraRef.current?.fitBounds(bounds, { padding: { top: 40, right: 40, bottom: 40, left: 40 }, duration: 0 });
   }, [bounds]);
 
   return (

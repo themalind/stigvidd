@@ -95,9 +95,7 @@ export default function TrailDetailsScreen({ followRoute }: { followRoute: Follo
   }
 
   const handleOpenFollowMap = () => {
-    guardedNavigate(() =>
-      router.navigate({ pathname: followRoute, params: { identifier: normalizedIdentifier } }),
-    );
+    guardedNavigate(() => router.navigate({ pathname: followRoute, params: { identifier: normalizedIdentifier } }));
   };
 
   const onPressScrollToRatings = () => {
@@ -127,10 +125,7 @@ export default function TrailDetailsScreen({ followRoute }: { followRoute: Follo
               <Text style={[s.ratingNumber, { color: theme.colors.onBackground }]}>{`(${reviewCount})`}</Text>
             </View>
             <View style={s.paddingLeft}>
-              <Pressable
-                onPress={onPressScrollToRatings}
-                style={({ pressed }) => pressed && { opacity: 0.7 }}
-              >
+              <Pressable onPress={onPressScrollToRatings} style={({ pressed }) => pressed && { opacity: 0.7 }}>
                 <Text style={[s.text, { color: theme.colors.secondary }]}>{t("trail.readReviews")}</Text>
               </Pressable>
             </View>

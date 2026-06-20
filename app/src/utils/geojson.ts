@@ -5,9 +5,7 @@ import { Facility, TrailMarkerResponse } from "@/data/types";
 // they are not bidirectional conversion shims. GeoJSON.* types come from the
 // global namespace declared by @types/geojson.
 
-export function featureCollectionFromMarkers(
-  markers: TrailMarkerResponse[],
-): GeoJSON.FeatureCollection<GeoJSON.Point> {
+export function featureCollectionFromMarkers(markers: TrailMarkerResponse[]): GeoJSON.FeatureCollection<GeoJSON.Point> {
   // Single pass: skip markers without a start coordinate while building, so we
   // never emit a feature with undefined coordinates.
   const features: GeoJSON.Feature<GeoJSON.Point>[] = [];

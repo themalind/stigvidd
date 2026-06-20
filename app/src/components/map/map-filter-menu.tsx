@@ -79,9 +79,7 @@ export default function MapFilterMenu({ filter, onChange }: Props) {
                     />
                   )}
                 </View>
-                <Text
-                  style={[s.rowText, { color: selected ? theme.colors.onSurface : theme.colors.onSurfaceVariant }]}
-                >
+                <Text style={[s.rowText, { color: selected ? theme.colors.onSurface : theme.colors.onSurfaceVariant }]}>
                   {t(asTranslationKey(item.label))}
                 </Text>
                 <MaterialIcons

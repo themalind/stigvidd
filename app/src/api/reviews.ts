@@ -1,7 +1,7 @@
 import { CreateReviewRequest, PagedReviewResponse } from "@/data/types";
 import uuid from "react-native-uuid";
 import { BASE_URL } from "./api-config";
-import {getUserToken } from "./users";
+import { getUserToken } from "./users";
 import { ApiError } from "./api-error";
 
 export async function getReviewsByTrailIdentifier(

@@ -206,7 +206,9 @@ const CarouselCard = memo(function CarouselCard({
                   </Text>
                 </View>
                 <Text style={[s.infoText, { color: theme.colors.onSurfaceVariant }]}>
-                  {Number(card.averageRating) > 0 ? `★ ${Number(card.averageRating).toFixed(1)}` : t("review.noReviews")}
+                  {Number(card.averageRating) > 0
+                    ? `★ ${Number(card.averageRating).toFixed(1)}`
+                    : t("review.noReviews")}
                 </Text>
               </View>
             </View>

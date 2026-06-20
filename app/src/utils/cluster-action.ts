@@ -3,9 +3,7 @@
 // map layer stays a thin shell that only performs the resulting camera move or
 // carousel open — see trail-markers-map.tsx.
 
-export type ClusterAction =
-  | { readonly kind: "zoom"; readonly zoom: number }
-  | { readonly kind: "carousel" };
+export type ClusterAction = { readonly kind: "zoom"; readonly zoom: number } | { readonly kind: "carousel" };
 
 export interface ClusterActionConfig {
   /**
@@ -31,11 +29,7 @@ export function decideClusterAction(
   expansionZoom: number | null | undefined,
   config: ClusterActionConfig,
 ): ClusterAction {
-  if (
-    expansionZoom != null &&
-    expansionZoom <= config.clusterMaxZoom &&
-    pointCount > config.carouselMaxCount
-  ) {
+  if (expansionZoom != null && expansionZoom <= config.clusterMaxZoom && pointCount > config.carouselMaxCount) {
     return { kind: "zoom", zoom: expansionZoom };
   }
 

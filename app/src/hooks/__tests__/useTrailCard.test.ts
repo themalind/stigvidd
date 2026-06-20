@@ -242,9 +242,7 @@ describe("useTrailCards", () => {
 
     const { result } = renderHook(() => useTrailCards(["t1", "t2", "t3"]));
 
-    await waitFor(() =>
-      expect(result.current.cards).toEqual({ t1: cachedCard, t2: fetchedStale, t3: fetchedMissing }),
-    );
+    await waitFor(() => expect(result.current.cards).toEqual({ t1: cachedCard, t2: fetchedStale, t3: fetchedMissing }));
     // Exactly one batched call, for only the missing/stale ids.
     expect(mockGetTrailCards).toHaveBeenCalledTimes(1);
     expect(mockGetTrailCards).toHaveBeenCalledWith(["t2", "t3"]);
