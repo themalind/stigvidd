@@ -1,4 +1,5 @@
 import { getFacilityMarkers, getTrailMarkers } from "@/api/map-markers";
+import { useUserLocation } from "@/hooks/useUserLocation";
 import { showErrorAtom } from "@/atoms/snackbar-atoms";
 import { BORDER_RADIUS, START_COORDINATE_BORAS } from "@/constants/constants";
 import { FacilityType, hasFacilityType, MapMarkerFilter } from "@/data/types";
@@ -14,6 +15,7 @@ import {
   Layer,
   Marker,
   type PressEventWithFeatures,
+  useCurrentPosition,
   type ViewStateChangeEvent,
 } from "@maplibre/maplibre-react-native";
 import { useQuery } from "@tanstack/react-query";
@@ -21,13 +23,19 @@ import { useSetAtom } from "jotai";
 import { RefObject, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { NativeSyntheticEvent, StyleProp, StyleSheet, View, ViewStyle } from "react-native";
-import { Text, useTheme } from "react-native-paper";
+import { ActivityIndicator, Text, useTheme } from "react-native-paper";
 import Map from "./map";
-import { HIGHLIGHT_MARKER_COLORS, MARKER_COLORS } from "./marker-styles";
+import { HIGHLIGHT_MARKER_COLORS, MARKER_COLORS, type MarkerColors } from "./marker-styles";
+
+type FacilityTypeValue = (typeof FacilityType)[keyof typeof FacilityType];
 
 interface SelectedFacility {
   name: string;
   coordinates: [number, number];
+  // Which filter/layer this facility was tapped in, so its label can be dismissed
+  // the moment that layer stops rendering.
+  type: FacilityTypeValue;
+  isAccessible: boolean;
 }
 
 interface Props {
@@ -95,6 +103,77 @@ export interface MapHighlight {
   radius: number;
 }
 
+// A clustered facility source (fire pits or shelters). Clusters exactly like the
+// trail source — same radii/step thresholds — so every category groups and breaks
+// apart at the same zooms. Coloured per category via `colors`.
+function FacilityClusterSource({
+  id,
+  data,
+  colors,
+  sourceRef,
+  onPress,
+}: {
+  id: string;
+  data: GeoJSON.FeatureCollection<GeoJSON.Point>;
+  colors: MarkerColors;
+  sourceRef: RefObject<GeoJSONSourceRef | null>;
+  onPress: (event: NativeSyntheticEvent<PressEventWithFeatures>) => void;
+}) {
+  return (
+    <GeoJSONSource
+      id={id}
+      ref={sourceRef}
+      data={data}
+      cluster
+      clusterRadius={60}
+      clusterMaxZoom={CLUSTER_MAX_ZOOM}
+      onPress={onPress}
+    >
+      <Layer
+        type="circle"
+        id={`${id}-clusters`}
+        filter={HAS_COUNT}
+        paint={{
+          "circle-color": colors.fill,
+          "circle-radius": [
+            "step",
+            ["get", "point_count"],
+            CLUSTER_RADIUS_BASE,
+            CLUSTER_COUNT_MED,
+            CLUSTER_RADIUS_MED,
+            CLUSTER_COUNT_LARGE,
+            CLUSTER_RADIUS_LARGE,
+          ],
+          "circle-stroke-width": 2,
+          "circle-stroke-color": colors.stroke,
+        }}
+      />
+      <Layer
+        type="symbol"
+        id={`${id}-cluster-count`}
+        filter={HAS_COUNT}
+        layout={{
+          "text-field": ["get", "point_count_abbreviated"],
+          "text-font": ["Noto Sans Regular"],
+          "text-size": 12,
+        }}
+        paint={{ "text-color": colors.stroke }}
+      />
+      <Layer
+        type="circle"
+        id={`${id}-points`}
+        filter={NO_COUNT}
+        paint={{
+          "circle-color": colors.fill,
+          "circle-radius": 6,
+          "circle-stroke-width": 2,
+          "circle-stroke-color": colors.stroke,
+        }}
+      />
+    </GeoJSONSource>
+  );
+}
+
 export default function TrailMarkersMap({
   style,
   filter,
@@ -110,13 +189,41 @@ export default function TrailMarkersMap({
   const { t } = useTranslation();
   const showError = useSetAtom(showErrorAtom);
   const trailSourceRef = useRef<GeoJSONSourceRef>(null);
-  // Facilities have no detail screen yet, so a tap just shows the name in a bubble.
+
+  // The location-puck has its own native GPS engine that can take tens of seconds for
+  // a first fix. useCurrentPosition subscribes to that same engine (a shared singleton,
+  // safe to use alongside the puck), so it turns non-null exactly when the puck appears.
+  // We gate the "locating…" pill on a fix actually being expected: useUserLocation tells
+  // us we have a real (non-fallback) position — when permission is denied none ever comes.
+  const { data: userLocation } = useUserLocation();
+  const currentPosition = useCurrentPosition();
+  const isLocating = !!userLocation && !userLocation.isFallback && !currentPosition;
+  // Facility sources cluster like trails; their refs let a cluster tap resolve the
+  // zoom at which it breaks apart.
+  const firePitSourceRef = useRef<GeoJSONSourceRef>(null);
+  const shelterSourceRef = useRef<GeoJSONSourceRef>(null);
+  // Facilities have no detail screen yet, so a tap on a single pin just shows the
+  // name in a bubble.
   const [selectedFacility, setSelectedFacility] = useState<SelectedFacility | null>(null);
 
   const handleMapPress = useCallback(() => {
     setSelectedFacility(null);
     onMapPress?.();
   }, [onMapPress]);
+
+  // Dismiss a facility's name bubble as soon as its marker stops rendering — when
+  // its type filter is turned off, or the accessibility filter hides it. Without
+  // this the label lingers over an empty spot after the pin disappears.
+  useEffect(() => {
+    setSelectedFacility((prev) => {
+      if (!prev) return prev;
+      const typeVisible =
+        (prev.type === FacilityType.FirePit && filter.firePits) ||
+        (prev.type === FacilityType.Shelter && filter.shelters);
+      const accessibilityVisible = !filter.accessibility || prev.isAccessible;
+      return typeVisible && accessibilityVisible ? prev : null;
+    });
+  }, [filter.firePits, filter.shelters, filter.accessibility]);
 
   const { data: trailMarkers, isError: trailMarkersError } = useQuery({
     queryKey: ["trails", "markers"],
@@ -208,15 +315,33 @@ export default function TrailMarkersMap({
     [cameraRef, onClusterOpen],
   );
 
-  const handleFacilityPress = useCallback((event: NativeSyntheticEvent<PressEventWithFeatures>) => {
-    // Stop the press from dismissing the map, then show the facility's name.
-    event.stopPropagation();
-    const feature = event.nativeEvent.features?.[0];
-    if (!feature) return;
-    const name = feature.properties?.name as string | undefined;
-    const coordinates = (feature.geometry as GeoJSON.Point).coordinates as [number, number];
-    if (name) setSelectedFacility({ name, coordinates });
-  }, []);
+  const handleFacilityPress = useCallback(
+    (type: FacilityTypeValue, sourceRef: RefObject<GeoJSONSourceRef | null>) =>
+      async (event: NativeSyntheticEvent<PressEventWithFeatures>) => {
+        // Stop the press from dismissing the map.
+        event.stopPropagation();
+        const feature = event.nativeEvent.features?.[0];
+        if (!feature) return;
+        const props = feature.properties ?? {};
+        const [lng, lat] = (feature.geometry as GeoJSON.Point).coordinates;
+
+        // Cluster tap: facilities have no carousel, so just zoom in to the level
+        // where the cluster breaks apart into its members.
+        if (props.point_count != null) {
+          setSelectedFacility(null);
+          const clusterId = props.cluster_id as number;
+          const expansionZoom = await sourceRef.current?.getClusterExpansionZoom(clusterId);
+          cameraRef.current?.flyTo({ center: [lng, lat], zoom: expansionZoom ?? CLUSTER_MAX_ZOOM, duration: 500 });
+          return;
+        }
+
+        // Single pin: show its name in a bubble.
+        const name = props.name as string | undefined;
+        const isAccessible = Boolean(props.isAccessible);
+        if (name) setSelectedFacility({ name, coordinates: [lng, lat], type, isAccessible });
+      },
+    [cameraRef],
+  );
 
   return (
     <View style={style}>
@@ -294,33 +419,23 @@ export default function TrailMarkersMap({
         )}
 
         {filter.firePits && (
-          <GeoJSONSource id="firepits" data={firePitFC} onPress={handleFacilityPress}>
-            <Layer
-              type="circle"
-              id="firepit-points"
-              paint={{
-                "circle-color": MARKER_COLORS.firePits.fill,
-                "circle-radius": 6,
-                "circle-stroke-width": 2,
-                "circle-stroke-color": MARKER_COLORS.firePits.stroke,
-              }}
-            />
-          </GeoJSONSource>
+          <FacilityClusterSource
+            id="firepits"
+            sourceRef={firePitSourceRef}
+            data={firePitFC}
+            colors={MARKER_COLORS.firePits}
+            onPress={handleFacilityPress(FacilityType.FirePit, firePitSourceRef)}
+          />
         )}
 
         {filter.shelters && (
-          <GeoJSONSource id="shelters" data={shelterFC} onPress={handleFacilityPress}>
-            <Layer
-              type="circle"
-              id="shelter-points"
-              paint={{
-                "circle-color": MARKER_COLORS.shelters.fill,
-                "circle-radius": 6,
-                "circle-stroke-width": 2,
-                "circle-stroke-color": MARKER_COLORS.shelters.stroke,
-              }}
-            />
-          </GeoJSONSource>
+          <FacilityClusterSource
+            id="shelters"
+            sourceRef={shelterSourceRef}
+            data={shelterFC}
+            colors={MARKER_COLORS.shelters}
+            onPress={handleFacilityPress(FacilityType.Shelter, shelterSourceRef)}
+          />
         )}
 
         {/* Declared last so the selection ring draws above every trail/cluster/
@@ -343,6 +458,15 @@ export default function TrailMarkersMap({
           </GeoJSONSource>
         )}
       </Map>
+
+      {isLocating && (
+        <View style={[s.locatingPill, { backgroundColor: theme.colors.elevation.level3 }]} pointerEvents="none">
+          <ActivityIndicator size={16} color={theme.colors.onSurface} />
+          <Text variant="bodySmall" style={{ color: theme.colors.onSurface }}>
+            {t("map.locating")}
+          </Text>
+        </View>
+      )}
     </View>
   );
 }
@@ -357,5 +481,16 @@ const s = StyleSheet.create({
   calloutText: {
     fontSize: 14,
     fontFamily: "Inter_600SemiBold",
+  },
+  locatingPill: {
+    position: "absolute",
+    top: 8,
+    left: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: BORDER_RADIUS,
   },
 });

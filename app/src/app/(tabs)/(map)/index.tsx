@@ -4,11 +4,12 @@ import TrailCardCarousel from "@/components/map/trail-card-carousel";
 import TrailMarkersMap, { type MapHighlight } from "@/components/map/trail-markers-map";
 import { SCREEN_PADDING } from "@/constants/constants";
 import { MapMarkerFilter } from "@/data/types";
+import { useUserLocation } from "@/hooks/useUserLocation";
 import { type ClusterZoomBand, clusterZoomBand, isZoomOutsideBand } from "@/utils/cluster-zoom-band";
 import { guardedNavigate } from "@/utils/navigation";
 import { type CameraRef, type InitialViewState, type ViewStateChangeEvent } from "@maplibre/maplibre-react-native";
 import { useFocusEffect, useRouter } from "expo-router";
-import { startTransition, useCallback, useRef, useState } from "react";
+import { startTransition, useCallback, useEffect, useRef, useState } from "react";
 import { NativeSyntheticEvent, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "react-native-paper";
@@ -28,6 +29,13 @@ export default function MapScreen() {
   // when nothing is open (or the zoom wasn't known at tap time). See cluster-zoom-band.ts.
   const clusterZoomRange = useRef<ClusterZoomBand | null>(null);
 
+  // Opens the map on the user's position, falling back to Borås when there's no
+  // location (permission denied or unavailable — the hook reports that via isFallback).
+  const { data: userLocation } = useUserLocation();
+  // Guards the one-time open-on-user animation so it never fights a remembered view
+  // or re-triggers when the user later pans away.
+  const didAutoCenter = useRef(false);
+
   const [isMapReady, setIsMapReady] = useState(false);
   const [isFocused, setIsFocused] = useState(true);
   const [filters, setFilters] = useState<MapMarkerFilter>({
@@ -40,6 +48,19 @@ export default function MapScreen() {
   const [highlight, setHighlight] = useState<MapHighlight | null>(null);
 
   const handleMapReady = useCallback(() => setIsMapReady(true), []);
+
+  // On the first open, glide the camera to the user once their location arrives. The
+  // didAutoCenter ref limits this to one glide per session; since MapScreen stays
+  // mounted across the map's blur/focus, a real return visit still finds it set and
+  // keeps the remembered view. Skipped when there's no real fix (fallback → Borås).
+  // Note: we deliberately don't gate on lastViewState — the map's initial camera
+  // settle writes it before the location resolves, which would wrongly cancel the glide.
+  useEffect(() => {
+    if (didAutoCenter.current || !isMapReady) return;
+    if (!userLocation || userLocation.isFallback) return;
+    didAutoCenter.current = true;
+    cameraRef.current?.flyTo({ center: [userLocation.longitude, userLocation.latitude], zoom: 12, duration: 1000 });
+  }, [isMapReady, userLocation]);
 
   // Ring the tapped cluster/trail for as long as its carousel is open. The position
   // comes from the tap, so the highlight stays put while you swipe between cards —
@@ -106,6 +127,16 @@ export default function MapScreen() {
     }, []),
   );
 
+  // The remembered view wins on return; otherwise seed from the user's location when
+  // it's already cached (no Borås flash on a warm re-entry). On a cold start the
+  // location isn't ready yet, so we open at the Borås default and the effect below
+  // animates over once the fix arrives.
+  const seededViewState: InitialViewState | undefined =
+    lastViewState.current ??
+    (userLocation && !userLocation.isFallback
+      ? { center: [userLocation.longitude, userLocation.latitude], zoom: 12 }
+      : undefined);
+
   return (
     <View style={s.container}>
       {isFocused && (
@@ -114,7 +145,7 @@ export default function MapScreen() {
           style={StyleSheet.absoluteFill}
           cameraRef={cameraRef}
           highlight={highlight}
-          initialViewState={lastViewState.current ?? undefined}
+          initialViewState={seededViewState}
           onRegionDidChange={handleRegionDidChange}
           onClusterOpen={openCarousel}
           onMapPress={closeCarousel}

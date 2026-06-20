@@ -111,7 +111,8 @@
     "directions": "Vägbeskrivning",
     "directionsTitle": "Vägbeskrivning",
     "directionsMessage": "Vill du öppna vägbeskrivning till ledens start i din kartapp?",
-    "directionsConfirm": "Öppna i Kartor"
+    "directionsConfirm": "Öppna i Kartor",
+    "locating": "Hittar din position…"
   },
   "review": {
     "added": "Recensionen har lagts till",

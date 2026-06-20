@@ -111,7 +111,8 @@
     "directions": "Directions",
     "directionsTitle": "Directions",
     "directionsMessage": "Open directions to the trailhead in your maps app?",
-    "directionsConfirm": "Open in Maps"
+    "directionsConfirm": "Open in Maps",
+    "locating": "Finding your location…"
   },
   "review": {
     "added": "Review added",
