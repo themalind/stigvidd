@@ -4,9 +4,11 @@ import { useTrailCards } from "@/hooks/useTrailCard";
 import { classificationParser } from "@/utils/classification-parser";
 import { getDifficultyIcon } from "@/utils/getDifficultyIcon";
 import { MaterialIcons } from "@expo/vector-icons";
+import { Image } from "expo-image";
 import { memo, useCallback, useEffect, useRef, useState } from "react";
-import { ActivityIndicator, Dimensions, FlatList, Image, StyleSheet, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Dimensions, FlatList, StyleSheet, TouchableOpacity, View } from "react-native";
 import type { NativeScrollEvent, NativeSyntheticEvent } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 import { Text, useTheme } from "react-native-paper";
 
@@ -28,13 +30,14 @@ const SINGLE_CARD_WIDTH = SCREEN_WIDTH - SCREEN_PADDING * 2;
 
 export default function TrailCardCarousel({ identifiers, onClose, onReadMore, onShowOnMap }: Props) {
   const theme = useTheme();
+  const insets = useSafeAreaInsets();
   const [activeIndex, setActiveIndex] = useState(0);
   const listRef = useRef<FlatList<string>>(null);
   const multiple = identifiers.length > 1;
   const cardWidth = multiple ? CARD_WIDTH : SINGLE_CARD_WIDTH;
 
   // One batched fetch for the whole cluster instead of one request per card.
-  const { cards } = useTrailCards(identifiers);
+  const { cards, isError, refetch } = useTrailCards(identifiers);
 
   // Reset to the first card whenever a different cluster is opened — otherwise the
   // list keeps its previous scroll offset / index (e.g. lands on "3/4").
@@ -57,12 +60,14 @@ export default function TrailCardCarousel({ identifiers, onClose, onReadMore, on
         identifier={item}
         card={cards[item]}
         cardWidth={cardWidth}
+        isError={isError}
+        onRetry={refetch}
         position={identifiers.length > 1 ? `${index + 1}/${identifiers.length}` : undefined}
         onReadMore={onReadMore}
         onShowOnMap={onShowOnMap}
       />
     ),
-    [cards, cardWidth, identifiers.length, onReadMore, onShowOnMap],
+    [cards, cardWidth, isError, refetch, identifiers.length, onReadMore, onShowOnMap],
   );
 
   // Fixed-width cards → give the list their geometry so it doesn't measure them.
@@ -76,7 +81,7 @@ export default function TrailCardCarousel({ identifiers, onClose, onReadMore, on
   );
 
   return (
-    <View style={s.wrapper}>
+    <View style={[s.wrapper, { bottom: insets.bottom + 16 }]}>
       <TouchableOpacity
         onPress={onClose}
         hitSlop={10}
@@ -125,6 +130,8 @@ const CarouselCard = memo(function CarouselCard({
   identifier,
   card,
   cardWidth,
+  isError,
+  onRetry,
   position,
   onReadMore,
   onShowOnMap,
@@ -132,6 +139,8 @@ const CarouselCard = memo(function CarouselCard({
   identifier: string;
   card?: TrailCard;
   cardWidth: number;
+  isError: boolean;
+  onRetry: () => void;
   position?: string;
   onReadMore: (identifier: string) => void;
   onShowOnMap: (identifier: string) => void;
@@ -141,12 +150,27 @@ const CarouselCard = memo(function CarouselCard({
 
   return (
     <View style={[s.card, { width: cardWidth, backgroundColor: theme.colors.surface }]}>
-      {!card ? (
+      {!card && isError ? (
+        // The batched fetch failed and this card has no cached data — offer a retry
+        // instead of an indefinite spinner.
+        <View style={s.stateBox}>
+          <Text style={[s.errorText, { color: theme.colors.onSurfaceVariant }]} numberOfLines={2}>
+            {t("map.cardError")}
+          </Text>
+          <TouchableOpacity
+            style={[s.button, s.retryButton, { backgroundColor: theme.colors.surfaceVariant }]}
+            onPress={onRetry}
+          >
+            <MaterialIcons name="refresh" size={16} color={theme.colors.onSurfaceVariant} />
+            <Text style={[s.buttonText, { color: theme.colors.onSurfaceVariant }]}>{t("common.retry")}</Text>
+          </TouchableOpacity>
+        </View>
+      ) : !card ? (
         <ActivityIndicator style={s.loader} color={theme.colors.primary} />
       ) : (
         <>
           <View style={s.header}>
-            {card.image && <Image source={{ uri: card.image.imageUrl }} style={s.image} resizeMode="cover" />}
+            {card.image && <Image source={{ uri: card.image.imageUrl }} style={s.image} contentFit="cover" />}
             <View style={s.meta}>
               <Text style={s.name} numberOfLines={1}>
                 {card.name}
@@ -192,7 +216,6 @@ const CarouselCard = memo(function CarouselCard({
 const s = StyleSheet.create({
   wrapper: {
     position: "absolute",
-    bottom: 16,
     left: 0,
     right: 0,
   },
@@ -209,6 +232,19 @@ const s = StyleSheet.create({
   },
   loader: {
     paddingVertical: 8,
+  },
+  stateBox: {
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+  },
+  errorText: {
+    fontSize: 13,
+    textAlign: "center",
+  },
+  retryButton: {
+    flex: 0,
+    paddingHorizontal: 16,
   },
   header: {
     flexDirection: "row",

@@ -1,11 +1,13 @@
 import { getCoordinatesByTrailIdentifier } from "@/api/trails";
 import CenterOnUserButton from "@/components/map/center-on-user-button";
 import Map from "@/components/map/map";
+import { ROUTE_LINE_COLOR, START_MARKER_COLORS } from "@/components/map/marker-styles";
 import { SURFACE_BORDER_RADIUS } from "@/constants/constants";
 import { useTrailCard } from "@/hooks/useTrailCard";
 import CoordinateParser from "@/utils/coordinate-parser";
-import { lineStringFromPositions } from "@/utils/geojson";
+import { lineStringFromPositions, pointFeatureFromPosition } from "@/utils/geojson";
 import getBoundsFromTrail from "@/utils/get-bounds-from-trail";
+import { openDirectionsToStart } from "@/utils/open-directions";
 import { MaterialIcons } from "@expo/vector-icons";
 import { Camera, type CameraRef, GeoJSONSource, Layer } from "@maplibre/maplibre-react-native";
 import { useQuery } from "@tanstack/react-query";
@@ -13,6 +15,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useTranslation } from "react-i18next";
 import { ActivityIndicator, Text, useTheme } from "react-native-paper";
 
 // Fullscreen "follow" view: a single trail's route drawn cleanly with the user's
@@ -25,6 +28,7 @@ export default function TrailFollowScreen() {
   const theme = useTheme();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { t } = useTranslation();
 
   const cameraRef = useRef<CameraRef>(null);
   const mapReadyRef = useRef(false);
@@ -46,6 +50,18 @@ export default function TrailFollowScreen() {
   );
   const lineShape = useMemo(() => lineStringFromPositions(path), [path]);
   const bounds = useMemo(() => getBoundsFromTrail(path), [path]);
+  // Trailhead drawn as a GeoJSON point layer rather than a view-hosted <Marker>:
+  // consistent with the route layer and avoids the fragile annotation path on
+  // iOS + New Architecture.
+  const startShape = useMemo(
+    () => (path.length > 0 ? pointFeatureFromPosition(path[0]) : undefined),
+    [path],
+  );
+
+  // Tapping the trailhead hands off to the device's maps app for directions.
+  const openDirections = useCallback(() => {
+    if (path.length > 0) openDirectionsToStart(path[0], t);
+  }, [path, t]);
 
   // Fit to the trail once both the map and the coordinates are ready — whichever
   // arrives last triggers the fit (map-ready callback, or this effect on bounds).
@@ -72,7 +88,44 @@ export default function TrailFollowScreen() {
               type="line"
               id="follow-trail-line"
               layout={{ "line-join": "round", "line-cap": "round" }}
-              paint={{ "line-color": theme.colors.primary, "line-width": 5 }}
+              paint={{ "line-color": ROUTE_LINE_COLOR, "line-width": 5 }}
+            />
+          </GeoJSONSource>
+        )}
+        {startShape && (
+          <GeoJSONSource id="follow-start" data={startShape} onPress={openDirections}>
+            {/* Invisible, finger-sized hit target so the small visible dot is easy to tap. */}
+            <Layer
+              type="circle"
+              id="follow-start-hit"
+              paint={{ "circle-color": START_MARKER_COLORS.fill, "circle-opacity": 0, "circle-radius": 22 }}
+            />
+            <Layer
+              type="circle"
+              id="follow-start-point"
+              paint={{
+                "circle-color": START_MARKER_COLORS.fill,
+                "circle-radius": 8,
+                "circle-stroke-width": 3,
+                "circle-stroke-color": START_MARKER_COLORS.stroke,
+              }}
+            />
+            <Layer
+              type="symbol"
+              id="follow-start-label"
+              layout={{
+                "text-field": t("map.start"),
+                "text-font": ["Noto Sans Regular"],
+                "text-size": 13,
+                "text-anchor": "bottom",
+                "text-offset": [0, -1],
+                "text-allow-overlap": true,
+              }}
+              paint={{
+                "text-color": START_MARKER_COLORS.fill,
+                "text-halo-color": START_MARKER_COLORS.stroke,
+                "text-halo-width": 1.5,
+              }}
             />
           </GeoJSONSource>
         )}

@@ -103,7 +103,14 @@
   },
   "map": {
     "readMore": "Läs mer",
-    "showOnMap": "Se på karta"
+    "showOnMap": "Se på karta",
+    "loadError": "Kunde inte ladda kartdata",
+    "cardError": "Kunde inte ladda den här leden",
+    "start": "Start",
+    "directions": "Vägbeskrivning",
+    "directionsTitle": "Vägbeskrivning",
+    "directionsMessage": "Vill du öppna vägbeskrivning till ledens start i din kartapp?",
+    "directionsConfirm": "Öppna i Kartor"
   },
   "review": {
     "added": "Recensionen har lagts till",

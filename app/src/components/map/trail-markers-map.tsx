@@ -1,6 +1,8 @@
 import { getFacilityMarkers, getTrailMarkers } from "@/api/map-markers";
+import { showErrorAtom } from "@/atoms/snackbar-atoms";
 import { BORDER_RADIUS, START_COORDINATE_BORAS } from "@/constants/constants";
 import { MapMarkerFilter } from "@/data/types";
+import { type ClusterActionConfig, decideClusterAction } from "@/utils/cluster-action";
 import { featureCollectionFromFacilities, featureCollectionFromMarkers } from "@/utils/geojson";
 import {
   Camera,
@@ -13,7 +15,9 @@ import {
   type PressEventWithFeatures,
 } from "@maplibre/maplibre-react-native";
 import { useQuery } from "@tanstack/react-query";
-import { RefObject, useCallback, useMemo, useRef, useState } from "react";
+import { useSetAtom } from "jotai";
+import { RefObject, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { NativeSyntheticEvent, StyleProp, StyleSheet, View, ViewStyle } from "react-native";
 import { Text, useTheme } from "react-native-paper";
 import Map from "./map";
@@ -42,6 +46,11 @@ const CLUSTER_MAX_ZOOM = 16;
 // clusters zoom in to break apart instead.
 const CAROUSEL_MAX_COUNT = 10;
 
+const CLUSTER_ACTION_CONFIG: ClusterActionConfig = {
+  clusterMaxZoom: CLUSTER_MAX_ZOOM,
+  carouselMaxCount: CAROUSEL_MAX_COUNT,
+};
+
 const HAS_COUNT: FilterSpecification = ["has", "point_count"];
 const NO_COUNT: FilterSpecification = ["!", ["has", "point_count"]];
 
@@ -54,6 +63,8 @@ export default function TrailMarkersMap({
   onMapReady,
 }: Props) {
   const theme = useTheme();
+  const { t } = useTranslation();
+  const showError = useSetAtom(showErrorAtom);
   const trailSourceRef = useRef<GeoJSONSourceRef>(null);
   // Facilities have no detail screen yet, so a tap just shows the name in a bubble.
   const [selectedFacility, setSelectedFacility] = useState<SelectedFacility | null>(null);
@@ -63,19 +74,27 @@ export default function TrailMarkersMap({
     onMapPress?.();
   }, [onMapPress]);
 
-  const { data: trailMarkers } = useQuery({
+  const { data: trailMarkers, isError: trailMarkersError } = useQuery({
     queryKey: ["trails", "markers"],
     queryFn: getTrailMarkers,
     enabled: filter.trails,
     staleTime: 5 * 60 * 1000,
   });
 
-  const { data: facilities } = useQuery({
+  const { data: facilities, isError: facilitiesError } = useQuery({
     queryKey: ["facilities", "markers"],
     queryFn: getFacilityMarkers,
     enabled: filter.firePits || filter.shelters,
     staleTime: 5 * 60 * 1000,
   });
+
+  // Surface load failures without blanking the map: keep whatever tiles/markers
+  // are already shown and report the error via the global snackbar.
+  useEffect(() => {
+    if (trailMarkersError || facilitiesError) {
+      showError(t("map.loadError"));
+    }
+  }, [trailMarkersError, facilitiesError, showError, t]);
 
   const trailFC = useMemo(() => {
     const markers = (trailMarkers ?? []).filter((m) => !filter.accessibility || m.isAccessible);
@@ -110,12 +129,9 @@ export default function TrailMarkersMap({
         const [lng, lat] = (feature.geometry as GeoJSON.Point).coordinates;
 
         const expansionZoom = await trailSourceRef.current?.getClusterExpansionZoom(clusterId);
-        // A cluster that only "expands" beyond CLUSTER_MAX_ZOOM is effectively
-        // co-located — zooming won't separate it. Zoom in only for large clusters
-        // that genuinely break apart; otherwise open the carousel.
-        const separable = expansionZoom != null && expansionZoom <= CLUSTER_MAX_ZOOM;
-        if (pointCount > CAROUSEL_MAX_COUNT && separable && expansionZoom != null) {
-          cameraRef.current?.flyTo({ center: [lng, lat], zoom: expansionZoom, duration: 500 });
+        const action = decideClusterAction(pointCount, expansionZoom, CLUSTER_ACTION_CONFIG);
+        if (action.kind === "zoom") {
+          cameraRef.current?.flyTo({ center: [lng, lat], zoom: action.zoom, duration: 500 });
           return;
         }
 

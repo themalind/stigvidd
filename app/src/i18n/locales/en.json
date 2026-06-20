@@ -103,7 +103,14 @@
   },
   "map": {
     "readMore": "Read more",
-    "showOnMap": "Show on map"
+    "showOnMap": "Show on map",
+    "loadError": "Could not load the map data",
+    "cardError": "Could not load this trail",
+    "start": "Start",
+    "directions": "Directions",
+    "directionsTitle": "Directions",
+    "directionsMessage": "Open directions to the trailhead in your maps app?",
+    "directionsConfirm": "Open in Maps"
   },
   "review": {
     "added": "Review added",

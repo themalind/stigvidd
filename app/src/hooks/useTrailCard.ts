@@ -1,5 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { getTrailCard, getTrailCards } from "@/api/trails";
 import { TrailCard } from "@/data/types";
 
@@ -102,23 +102,37 @@ export function useTrailCard(identifier: string | null): { card: TrailCard | nul
 // from the same per-trail AsyncStorage cache, then fetches everything missing or
 // stale in a SINGLE request instead of one network call per card. Returns a map
 // keyed by identifier so each card can read its own entry.
-export function useTrailCards(identifiers: string[]): { cards: Record<string, TrailCard>; isLoading: boolean } {
+export function useTrailCards(identifiers: string[]): {
+  cards: Record<string, TrailCard>;
+  isLoading: boolean;
+  isError: boolean;
+  refetch: () => void;
+} {
   const [cards, setCards] = useState<Record<string, TrailCard>>({});
   const [isLoading, setIsLoading] = useState(false);
+  // Only reflects a failure of the batched network fetch for missing cards —
+  // entries already served from cache stay visible regardless.
+  const [isError, setIsError] = useState(false);
+  // Bumping this re-runs the effect to retry after a failure.
+  const [reloadIndex, setReloadIndex] = useState(0);
 
   // Depend on the identifier set, not the (per-render) array reference.
   const key = identifiers.join(",");
+
+  const refetch = useCallback(() => setReloadIndex((i) => i + 1), []);
 
   useEffect(() => {
     if (identifiers.length === 0) {
       setCards({});
       setIsLoading(false);
+      setIsError(false);
       return;
     }
 
     let cancelled = false;
 
     async function load() {
+      setIsError(false);
       const resolved: Record<string, TrailCard> = {};
       const missing: string[] = [];
 
@@ -159,7 +173,9 @@ export function useTrailCards(identifiers: string[]): { cards: Record<string, Tr
         }
         setCards({ ...resolved });
       } catch {
-        // Keep whatever resolved from cache
+        // Keep whatever resolved from cache, but flag the failure so the UI can
+        // offer a retry instead of spinning forever on the missing cards.
+        if (!cancelled) setIsError(true);
       } finally {
         if (!cancelled) setIsLoading(false);
       }
@@ -170,7 +186,7 @@ export function useTrailCards(identifiers: string[]): { cards: Record<string, Tr
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [key]);
+  }, [key, reloadIndex]);
 
-  return { cards, isLoading };
+  return { cards, isLoading, isError, refetch };
 }

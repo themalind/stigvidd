@@ -24,3 +24,13 @@ export const MARKER_COLORS: Record<MarkerCategory, MarkerColors> = {
   shelters: { fill: colors.tertiary, stroke: colors.onTertiary },
   firePits: { fill: colors.secondary, stroke: colors.onSecondary },
 };
+
+// The route line and the trailhead "start" marker sit on the same always-light
+// basemap, so they must use the fixed light palette too — never useTheme(), which
+// would turn them orange in the app's dark mode (the basemap stays light there).
+export const ROUTE_LINE_COLOR = colors.primary;
+
+export const START_MARKER_COLORS: MarkerColors = {
+  fill: colors.primary,
+  stroke: colors.onPrimary,
+};
