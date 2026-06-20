@@ -37,6 +37,18 @@ The project consists of three parts: a cross-platform mobile app, a web-based ad
     <td><img src="screenshots/trail-practical-info.jpg" width="180"/></td>
     <td><img src="screenshots/trail-filter-screen.jpg" width="180"/></td>
   </tr>
+  <tr>
+    <td align="center"><b>Map overview</b></td>
+    <td align="center"><b>Map filter</b></td>
+    <td></td>
+    <td></td>
+  </tr>
+  <tr>
+    <td><img src="screenshots/map_overview.jpg" width="180"/></td>
+    <td><img src="screenshots/map_filter.jpg" width="180"/></td>
+    <td></td>
+    <td></td>
+  </tr>
 </table>
 
 ---

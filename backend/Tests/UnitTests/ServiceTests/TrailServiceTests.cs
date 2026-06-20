@@ -323,13 +323,13 @@ public class TrailServiceTests
     public async Task GetPopularTrailOverviews_WhenSuccess_ReturnsTrails()
     {
         // Arrange
-        IReadOnlyCollection<TrailOverviewResponse> overviews =
+        IReadOnlyCollection<TrailOverviewProjection> overviews =
         [
-            TrailOverviewResponse.Create(Utilities.Identifiers.Trail4, "Trail A", 5M, 4.2M, null)
+            new TrailOverviewProjection(Utilities.Identifiers.Trail4, "Trail A", 5M, 4.2M, null)
         ];
         var repo = new Mock<ITrailRepository>();
-        repo.Setup(r => r.GetPopularTrailOverviewsAsync(It.IsAny<string>(), It.IsAny<double?>(), It.IsAny<double?>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(RepositoryResult<IReadOnlyCollection<TrailOverviewResponse>>.Success(overviews));
+        repo.Setup(r => r.GetPopularTrailOverviewsAsync(It.IsAny<double?>(), It.IsAny<double?>(), It.IsAny<Expression<Func<Trail, TrailOverviewProjection>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<IReadOnlyCollection<TrailOverviewProjection>>.Success(overviews));
 
         // Act
         var result = await Build(repo).GetPopularTrailOverviewsAsync(null, null, CancellationToken.None);
@@ -344,8 +344,8 @@ public class TrailServiceTests
     {
         // Arrange
         var repo = new Mock<ITrailRepository>();
-        repo.Setup(r => r.GetPopularTrailOverviewsAsync(It.IsAny<string>(), It.IsAny<double?>(), It.IsAny<double?>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(RepositoryResult<IReadOnlyCollection<TrailOverviewResponse>>.Error());
+        repo.Setup(r => r.GetPopularTrailOverviewsAsync(It.IsAny<double?>(), It.IsAny<double?>(), It.IsAny<Expression<Func<Trail, TrailOverviewProjection>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<IReadOnlyCollection<TrailOverviewProjection>>.Error());
 
         // Act
         var result = await Build(repo).GetPopularTrailOverviewsAsync(57.0, 12.0, CancellationToken.None);
@@ -360,13 +360,13 @@ public class TrailServiceTests
     public async Task GetAllTrailsWithBasicInfo_WhenSuccess_ReturnsTrails()
     {
         // Arrange
-        IReadOnlyCollection<TrailShortInfoResponse> trails =
+        IReadOnlyCollection<TrailShortInfoProjection> trails =
         [
-            TrailShortInfoResponse.Create(Utilities.Identifiers.Trail4, "Trail A", 5M, true, 2, "Gothenburg")
+            new TrailShortInfoProjection(Utilities.Identifiers.Trail4, "Trail A", 5M, true, 2, "Gothenburg", null, null)
         ];
         var repo = new Mock<ITrailRepository>();
-        repo.Setup(r => r.GetAllTrailsWithBasicInfoAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(RepositoryResult<IReadOnlyCollection<TrailShortInfoResponse>>.Success(trails));
+        repo.Setup(r => r.GetAllTrailsWithBasicInfoAsync(It.IsAny<Expression<Func<Trail, TrailShortInfoProjection>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<IReadOnlyCollection<TrailShortInfoProjection>>.Success(trails));
 
         // Act
         var result = await Build(repo).GetAllTrailsWithBasicInfoAsync(CancellationToken.None);
@@ -381,8 +381,8 @@ public class TrailServiceTests
     {
         // Arrange
         var repo = new Mock<ITrailRepository>();
-        repo.Setup(r => r.GetAllTrailsWithBasicInfoAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(RepositoryResult<IReadOnlyCollection<TrailShortInfoResponse>>.Error());
+        repo.Setup(r => r.GetAllTrailsWithBasicInfoAsync(It.IsAny<Expression<Func<Trail, TrailShortInfoProjection>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<IReadOnlyCollection<TrailShortInfoProjection>>.Error());
 
         // Act
         var result = await Build(repo).GetAllTrailsWithBasicInfoAsync(CancellationToken.None);
@@ -398,7 +398,7 @@ public class TrailServiceTests
     {
         // Arrange
         var repo = new Mock<ITrailRepository>();
-        repo.Setup(r => r.GetAllTrailsWithBasicInfoAsync(It.IsAny<CancellationToken>()))
+        repo.Setup(r => r.GetAllTrailsWithBasicInfoAsync(It.IsAny<Expression<Func<Trail, TrailShortInfoProjection>>>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new InvalidOperationException("database unavailable"));
 
         // Act & Assert
@@ -411,13 +411,13 @@ public class TrailServiceTests
     public async Task GetAllTrailMarkers_WhenSuccess_ReturnsMarkers()
     {
         // Arrange
-        IReadOnlyCollection<TrailMarkerResponse> markers =
+        IReadOnlyCollection<TrailMarkerProjection> markers =
         [
-            new TrailMarkerResponse { Identifier = Utilities.Identifiers.Trail4, Name = "Trail A", StartLatitude = 57.6M, StartLongitude = 12.8M }
+            new TrailMarkerProjection(Utilities.Identifiers.Trail4, "Trail A", false, 57.6M, 12.8M)
         ];
         var repo = new Mock<ITrailRepository>();
-        repo.Setup(r => r.GetAllTrailMarkersAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(RepositoryResult<IReadOnlyCollection<TrailMarkerResponse>>.Success(markers));
+        repo.Setup(r => r.GetAllTrailMarkersAsync(It.IsAny<Expression<Func<Trail, TrailMarkerProjection>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<IReadOnlyCollection<TrailMarkerProjection>>.Success(markers));
 
         // Act
         var result = await Build(repo).GetAllTrailMarkersAsync(CancellationToken.None);
@@ -432,8 +432,8 @@ public class TrailServiceTests
     {
         // Arrange
         var repo = new Mock<ITrailRepository>();
-        repo.Setup(r => r.GetAllTrailMarkersAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(RepositoryResult<IReadOnlyCollection<TrailMarkerResponse>>.Error());
+        repo.Setup(r => r.GetAllTrailMarkersAsync(It.IsAny<Expression<Func<Trail, TrailMarkerProjection>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<IReadOnlyCollection<TrailMarkerProjection>>.Error());
 
         // Act
         var result = await Build(repo).GetAllTrailMarkersAsync(CancellationToken.None);
@@ -449,7 +449,7 @@ public class TrailServiceTests
     {
         // Arrange — no try/catch in the service method, so unexpected exceptions bubble up
         var repo = new Mock<ITrailRepository>();
-        repo.Setup(r => r.GetAllTrailMarkersAsync(It.IsAny<CancellationToken>()))
+        repo.Setup(r => r.GetAllTrailMarkersAsync(It.IsAny<Expression<Func<Trail, TrailMarkerProjection>>>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new InvalidOperationException("database unavailable"));
 
         // Act & Assert
@@ -567,6 +567,99 @@ public class TrailServiceTests
         result.Success.Should().BeTrue();
         result.Value.Should().NotBeNull();
         result.Value.Image.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task GetTrailCards_WhenSuccess_ReturnsCards()
+    {
+        // Arrange
+        IReadOnlyCollection<TrailCardProjection> projections =
+        [
+            new TrailCardProjection(Utilities.Identifiers.Trail4, "Trail A", 5M, 1, true, 4.0M, null),
+            new TrailCardProjection("trail-b", "Trail B", 8M, 2, false, 3.0M, null)
+        ];
+        var repo = new Mock<ITrailRepository>();
+        repo.Setup(r => r.GetTrailsByIdentifiersAsync(
+                It.IsAny<IReadOnlyCollection<string>>(),
+                It.IsAny<Expression<Func<Trail, TrailCardProjection>>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<IReadOnlyCollection<TrailCardProjection>>.Success(projections));
+
+        // Act
+        var result = await Build(repo).GetTrailCardsByIdentifiersAsync(
+            [Utilities.Identifiers.Trail4, "trail-b"], CancellationToken.None);
+
+        // Assert
+        result.Success.Should().BeTrue();
+        result.Value.Should().HaveCount(2);
+        result.Value.Should().Contain(c => c.Identifier == Utilities.Identifiers.Trail4);
+    }
+
+    [Fact]
+    public async Task GetTrailCards_WhenRepositoryErrors_ReturnsInternalServerError()
+    {
+        // Arrange
+        var repo = new Mock<ITrailRepository>();
+        repo.Setup(r => r.GetTrailsByIdentifiersAsync(
+                It.IsAny<IReadOnlyCollection<string>>(),
+                It.IsAny<Expression<Func<Trail, TrailCardProjection>>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<IReadOnlyCollection<TrailCardProjection>>.Error());
+
+        // Act
+        var result = await Build(repo).GetTrailCardsByIdentifiersAsync(["any-trail"], CancellationToken.None);
+
+        // Assert
+        result.Success.Should().BeFalse();
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(500);
+    }
+
+    [Fact]
+    public async Task GetTrailCards_WhenNoneFound_ReturnsEmptyCollection()
+    {
+        // Arrange
+        var repo = new Mock<ITrailRepository>();
+        repo.Setup(r => r.GetTrailsByIdentifiersAsync(
+                It.IsAny<IReadOnlyCollection<string>>(),
+                It.IsAny<Expression<Func<Trail, TrailCardProjection>>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<IReadOnlyCollection<TrailCardProjection>>.Success([]));
+
+        // Act
+        var result = await Build(repo).GetTrailCardsByIdentifiersAsync(["no-trail"], CancellationToken.None);
+
+        // Assert
+        result.Success.Should().BeTrue();
+        result.Value.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task GetTrailCards_WhenFound_ImageUrlHasBaseUrlPrepended()
+    {
+        // Arrange
+        IReadOnlyCollection<TrailCardProjection> projections =
+        [
+            new TrailCardProjection(
+                Utilities.Identifiers.Trail4, "Trail", 5M, 1, false, 3.0M,
+                new TrailCardImageProjection("img-1", "trails/img.jpg"))
+        ];
+        var repo = new Mock<ITrailRepository>();
+        repo.Setup(r => r.GetTrailsByIdentifiersAsync(
+                It.IsAny<IReadOnlyCollection<string>>(),
+                It.IsAny<Expression<Func<Trail, TrailCardProjection>>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<IReadOnlyCollection<TrailCardProjection>>.Success(projections));
+
+        // Act
+        var result = await Build(repo).GetTrailCardsByIdentifiersAsync(
+            [Utilities.Identifiers.Trail4], CancellationToken.None);
+
+        // Assert
+        result.Success.Should().BeTrue();
+        result.Value.Should().ContainSingle();
+        result.Value.First().Image.Should().NotBeNull();
+        result.Value.First().Image!.ImageUrl.Should().Be("http://stigvidd.se/testing/trails/img.jpg");
     }
 
     [Fact]

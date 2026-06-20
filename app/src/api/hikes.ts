@@ -1,6 +1,6 @@
 import { CreateHikeRequest, Hike, ShareHikeRequest, UpdateHikeRequest } from "@/data/types";
 import { BASE_URL } from "./api-config";
-import {getUserToken } from "./users";
+import { getUserToken } from "./users";
 import { ApiError } from "./api-error";
 
 export async function createHike(request: CreateHikeRequest): Promise<{ success: boolean }> {

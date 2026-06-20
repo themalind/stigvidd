@@ -78,6 +78,10 @@
   },
   "filter": {
     "title": "Filter & Sortering",
+    "label": "Filter",
+    "trails": "Leder",
+    "shelters": "Vindskydd",
+    "firePits": "Grillplatser",
     "clear": "Rensa",
     "done": "Klar",
     "city": "Orter",
@@ -96,6 +100,19 @@
     "sortLengthAsc": "Längd (Kortast först)",
     "sortLengthDesc": "Längd (Längst först)",
     "sortNearest": "Närmast först"
+  },
+  "map": {
+    "readMore": "Läs mer",
+    "showOnMap": "Se på karta",
+    "loadError": "Kunde inte ladda kartdata",
+    "cardError": "Kunde inte ladda den här leden",
+    "cardNotFound": "Den här leden är inte längre tillgänglig",
+    "start": "Start",
+    "directions": "Vägbeskrivning",
+    "directionsTitle": "Vägbeskrivning",
+    "directionsMessage": "Vill du öppna vägbeskrivning till ledens start i din kartapp?",
+    "directionsConfirm": "Öppna i Kartor",
+    "locating": "Hittar din position…"
   },
   "review": {
     "added": "Recensionen har lagts till",

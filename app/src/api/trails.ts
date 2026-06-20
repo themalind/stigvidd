@@ -73,6 +73,25 @@ export async function getTrailCard(identifier: string): Promise<TrailCard> {
   }
 }
 
+export async function getTrailCards(identifiers: string[]): Promise<TrailCard[]> {
+  try {
+    const response = await fetch(`${BASE_URL}/trails/cards`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ identifiers }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`getTrailCards: HTTP error ${response.status}`);
+    }
+
+    return response.json();
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+}
+
 export async function getCoordinatesByTrailIdentifier(identifier: string): Promise<Coordinates> {
   try {
     const response = await fetch(`${BASE_URL}/trails/${identifier}/coordinates`);

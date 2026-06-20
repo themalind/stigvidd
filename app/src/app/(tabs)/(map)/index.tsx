@@ -1,25 +1,124 @@
 import CenterOnUserButton from "@/components/map/center-on-user-button";
-import FilterButton from "@/components/map/filter-button";
-import TrailMarkersMap from "@/components/map/trail-markers-map";
-import { START_COORDINATE_BORAS } from "@/constants/constants";
+import MapFilterMenu from "@/components/map/map-filter-menu";
+import TrailCardCarousel from "@/components/map/trail-card-carousel";
+import TrailMarkersMap, { type MapHighlight } from "@/components/map/trail-markers-map";
+import { SCREEN_PADDING } from "@/constants/constants";
 import { MapMarkerFilter } from "@/data/types";
-import { useTrailCard } from "@/hooks/useTrailCard";
-import { classificationParser } from "@/utils/classification-parser";
-import { getDifficultyIcon } from "@/utils/getDifficultyIcon";
+import { useUserLocation } from "@/hooks/useUserLocation";
+import { type ClusterZoomBand, clusterZoomBand, isZoomOutsideBand } from "@/utils/cluster-zoom-band";
 import { guardedNavigate } from "@/utils/navigation";
-import { MaterialIcons } from "@expo/vector-icons";
+import { type CameraRef, type InitialViewState, type ViewStateChangeEvent } from "@maplibre/maplibre-react-native";
 import { useFocusEffect, useRouter } from "expo-router";
-import { startTransition, useCallback, useRef, useState } from "react";
-import { ActivityIndicator, Image, StyleSheet, TouchableOpacity, View } from "react-native";
-import MapView from "react-native-maps";
-import { Text, useTheme } from "react-native-paper";
+import { startTransition, useCallback, useEffect, useRef, useState } from "react";
+import { NativeSyntheticEvent, StyleSheet, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useTheme } from "react-native-paper";
 
 export default function MapScreen() {
   const theme = useTheme();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
+
+  const cameraRef = useRef<CameraRef>(null);
+  // Remembers the camera between mounts: the map unmounts on blur (and so loses its
+  // view), but this screen stays mounted, so we re-seed the camera from here on
+  // return. A ref, not state, so panning/zooming doesn't re-render the whole map.
+  const lastViewState = useRef<InitialViewState | null>(null);
+  // The zoom band within which the open selection still matches the map; a later zoom
+  // out of this band dismisses the carousel. Computed by clusterZoomBand() on tap; null
+  // when nothing is open (or the zoom wasn't known at tap time). See cluster-zoom-band.ts.
+  const clusterZoomRange = useRef<ClusterZoomBand | null>(null);
+
+  // Opens the map on the user's position, falling back to Borås when there's no
+  // location (permission denied or unavailable — the hook reports that via isFallback).
+  const { data: userLocation } = useUserLocation();
+  // Guards the one-time open-on-user animation so it never fights a remembered view
+  // or re-triggers when the user later pans away.
+  const didAutoCenter = useRef(false);
+
   const [isMapReady, setIsMapReady] = useState(false);
   const [isFocused, setIsFocused] = useState(true);
-  const mapRef = useRef<MapView>(null);
+  const [filters, setFilters] = useState<MapMarkerFilter>({
+    trails: true,
+    shelters: false,
+    firePits: false,
+    accessibility: false,
+  });
+  const [carouselIds, setCarouselIds] = useState<string[] | null>(null);
+  const [highlight, setHighlight] = useState<MapHighlight | null>(null);
+
+  const handleMapReady = useCallback(() => setIsMapReady(true), []);
+
+  // On the first open, glide the camera to the user once their location arrives. The
+  // didAutoCenter ref limits this to one glide per session; since MapScreen stays
+  // mounted across the map's blur/focus, a real return visit still finds it set and
+  // keeps the remembered view. Skipped when there's no real fix (fallback → Borås).
+  // Note: we deliberately don't gate on lastViewState — the map's initial camera
+  // settle writes it before the location resolves, which would wrongly cancel the glide.
+  useEffect(() => {
+    if (didAutoCenter.current || !isMapReady) return;
+    if (!userLocation || userLocation.isFallback) return;
+    didAutoCenter.current = true;
+    cameraRef.current?.flyTo({ center: [userLocation.longitude, userLocation.latitude], zoom: 12, duration: 1000 });
+  }, [isMapReady, userLocation]);
+
+  // Ring the tapped cluster/trail for as long as its carousel is open. The position
+  // comes from the tap, so the highlight stays put while you swipe between cards —
+  // co-located trails would all share the same spot anyway. From the cluster's
+  // expansion zoom we derive the band of zooms where the cluster holds together so a
+  // later zoom (in or out) can dismiss it once that's no longer the case.
+  const openCarousel = useCallback((ids: string[], tapped: MapHighlight, expansionZoom?: number) => {
+    setCarouselIds(ids);
+    setHighlight(tapped);
+    clusterZoomRange.current = clusterZoomBand(lastViewState.current?.zoom, expansionZoom);
+  }, []);
+
+  const closeCarousel = useCallback(() => {
+    setCarouselIds(null);
+    setHighlight(null);
+    clusterZoomRange.current = null;
+  }, []);
+
+  const handleRegionDidChange = useCallback(
+    (event: NativeSyntheticEvent<ViewStateChangeEvent>) => {
+      const { center, zoom, bearing, pitch, userInteraction } = event.nativeEvent;
+      lastViewState.current = { center, zoom, bearing, pitch };
+
+      // Zoom in past the top and the cluster has split; zoom out past the bottom and
+      // it has merged into a bigger cluster — either way the open carousel no longer
+      // matches the map, so close it. Panning and small zooms within the band keep
+      // the cluster intact. Programmatic moves (e.g. the camera restore on return)
+      // aren't user interaction, so they never close it.
+      if (userInteraction && isZoomOutsideBand(zoom, clusterZoomRange.current)) {
+        closeCarousel();
+      }
+    },
+    [closeCarousel],
+  );
+
+  const showOnMap = useCallback(
+    (identifier: string) => {
+      guardedNavigate(() =>
+        router.navigate({
+          pathname: "/(tabs)/(map)/follow/[identifier]",
+          params: { identifier },
+        }),
+      );
+    },
+    [router],
+  );
+
+  const readMore = useCallback(
+    (identifier: string) => {
+      guardedNavigate(() =>
+        router.navigate({
+          pathname: "/(tabs)/(map)/trail/[identifier]",
+          params: { identifier },
+        }),
+      );
+    },
+    [router],
+  );
 
   useFocusEffect(
     useCallback(() => {
@@ -28,28 +127,28 @@ export default function MapScreen() {
     }, []),
   );
 
-  const [filters, setFilters] = useState<MapMarkerFilter>({
-    trails: true,
-    shelters: false,
-    firePits: false,
-    accessibility: false,
-  });
-  const [selectedIdentifier, setSelectedIdentifier] = useState<string | null>(null);
-  const { card, isLoading } = useTrailCard(selectedIdentifier);
-
-  const handleMapReady = useCallback(() => setIsMapReady(true), []);
+  // The remembered view wins on return; otherwise seed from the user's location when
+  // it's already cached (no Borås flash on a warm re-entry). On a cold start the
+  // location isn't ready yet, so we open at the Borås default and the effect below
+  // animates over once the fix arrives.
+  const seededViewState: InitialViewState | undefined =
+    lastViewState.current ??
+    (userLocation && !userLocation.isFallback
+      ? { center: [userLocation.longitude, userLocation.latitude], zoom: 12 }
+      : undefined);
 
   return (
     <View style={s.container}>
       {isFocused && (
         <TrailMarkersMap
-          ref={mapRef}
           filter={filters}
           style={StyleSheet.absoluteFill}
-          initialRegion={START_COORDINATE_BORAS}
-          showsUserLocation
-          selectedIdentifier={selectedIdentifier}
-          onTrailSelect={setSelectedIdentifier}
+          cameraRef={cameraRef}
+          highlight={highlight}
+          initialViewState={seededViewState}
+          onRegionDidChange={handleRegionDidChange}
+          onClusterOpen={openCarousel}
+          onMapPress={closeCarousel}
           onMapReady={handleMapReady}
         />
       )}
@@ -57,58 +156,19 @@ export default function MapScreen() {
         <View style={[StyleSheet.absoluteFill, { backgroundColor: theme.colors.background }]} />
       )}
 
-      <CenterOnUserButton mapRef={mapRef} />
-      <FilterButton filter={filters} onChange={setFilters} />
+      <View style={[s.topBar, { top: insets.top + 8 }]}>
+        <MapFilterMenu filter={filters} onChange={setFilters} />
+      </View>
 
-      {selectedIdentifier && (
-        <View style={[s.infoPanel, { backgroundColor: theme.colors.surface }]}>
-          {isLoading ? (
-            <ActivityIndicator style={s.loader} color={theme.colors.primary} />
-          ) : card ? (
-            <>
-              <View style={s.infoPanelHeader}>
-                {card.image && <Image source={{ uri: card.image.imageUrl }} style={s.trailImage} resizeMode="cover" />}
-                <View style={s.infoPanelMeta}>
-                  <Text style={s.trailName} numberOfLines={1}>
-                    {card.name}
-                  </Text>
-                  <View style={s.infoRow}>
-                    {card.trailLength != null && (
-                      <Text style={[s.infoText, { color: theme.colors.onSurfaceVariant }]}>{card.trailLength} km</Text>
-                    )}
-                    <View style={s.difficultyRow}>
-                      {getDifficultyIcon(classificationParser(card.classification ?? 0))}
-                      <Text style={[s.infoText, { color: theme.colors.onSurfaceVariant }]}>
-                        {classificationParser(card.classification ?? 0)}
-                      </Text>
-                    </View>
-                    <Text style={[s.infoText, { color: theme.colors.onSurfaceVariant }]}>
-                      {Number(card.averageRating) > 0 ? `★ ${Number(card.averageRating).toFixed(1)}` : "Inga betyg"}
-                    </Text>
-                  </View>
-                </View>
-                <TouchableOpacity onPress={() => setSelectedIdentifier(null)} style={s.closeButton}>
-                  <MaterialIcons name="close" size={20} color={theme.colors.onSurface} />
-                </TouchableOpacity>
-              </View>
-              <TouchableOpacity
-                style={[s.readMoreButton, { backgroundColor: theme.colors.primaryContainer }]}
-                onPress={() =>
-                  guardedNavigate(() =>
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    router.navigate({
-                      pathname: "/(tabs)/(map)/trail/[identifier]" as any,
-                      params: { identifier: selectedIdentifier },
-                    }),
-                  )
-                }
-              >
-                <Text style={[s.readMoreText, { color: theme.colors.onPrimaryContainer }]}>Läs mer</Text>
-                <MaterialIcons name="arrow-forward" size={16} color={theme.colors.onPrimaryContainer} />
-              </TouchableOpacity>
-            </>
-          ) : null}
-        </View>
+      {!carouselIds && <CenterOnUserButton cameraRef={cameraRef} />}
+
+      {carouselIds && (
+        <TrailCardCarousel
+          identifiers={carouselIds}
+          onClose={closeCarousel}
+          onReadMore={readMore}
+          onShowOnMap={showOnMap}
+        />
       )}
     </View>
   );
@@ -118,64 +178,8 @@ const s = StyleSheet.create({
   container: {
     flex: 1,
   },
-  infoPanel: {
+  topBar: {
     position: "absolute",
-    top: 16,
-    left: 16,
-    right: 16,
-    borderRadius: 12,
-    padding: 14,
-    gap: 10,
-  },
-  loader: {
-    paddingVertical: 8,
-  },
-  infoPanelHeader: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 10,
-  },
-  trailImage: {
-    width: 72,
-    height: 72,
-    borderRadius: 8,
-    flexShrink: 0,
-  },
-  infoPanelMeta: {
-    flex: 1,
-    gap: 4,
-  },
-  trailName: {
-    fontSize: 15,
-    fontWeight: "700",
-  },
-  infoRow: {
-    flexDirection: "row",
-    gap: 10,
-    flexWrap: "wrap",
-    alignItems: "center",
-  },
-  difficultyRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-  },
-  infoText: {
-    fontSize: 13,
-  },
-  closeButton: {
-    paddingLeft: 4,
-  },
-  readMoreButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 6,
-    paddingVertical: 8,
-    borderRadius: 8,
-  },
-  readMoreText: {
-    fontSize: 14,
-    fontWeight: "600",
+    right: SCREEN_PADDING,
   },
 });

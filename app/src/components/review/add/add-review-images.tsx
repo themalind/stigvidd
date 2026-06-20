@@ -4,7 +4,7 @@ import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import { useSetAtom } from "jotai";
 import { useState } from "react";
-import { Alert, Dimensions, Pressable, StyleSheet, TouchableOpacity, View } from "react-native";
+import { Alert, Dimensions, Pressable, StyleSheet, View } from "react-native";
 import { useTheme } from "react-native-paper";
 import { useTranslation } from "react-i18next";
 
@@ -91,19 +91,20 @@ export default function AddReviewImages({ setReviewImages }: ReviewImageProp) {
         ))}
 
       {images.length < 3 && (
-        <TouchableOpacity
+        <Pressable
           onPress={pickImage}
-          style={[
+          style={({ pressed }) => [
             s.imageButton,
             {
               backgroundColor: theme.colors.surface,
               borderColor: theme.colors.primary,
               borderWidth: 2,
             },
+            pressed && { opacity: 0.7 },
           ]}
         >
           <MaterialCommunityIcons name="file-image-plus-outline" size={40} color={theme.colors.primary} />
-        </TouchableOpacity>
+        </Pressable>
       )}
     </View>
   );

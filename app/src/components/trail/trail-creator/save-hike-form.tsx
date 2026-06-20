@@ -6,17 +6,18 @@ import { BORDER_RADIUS } from "@/constants/constants";
 import { ActiveHike, CreateHikeRequest } from "@/data/types";
 import { asTranslationKey } from "@/i18n";
 import FormattedTime from "@/utils/format-time-from-ms";
-import GetRegionFromTrail from "@/utils/get-region-from-trail";
+import { lineStringFromPositions } from "@/utils/geojson";
+import getBoundsFromTrail from "@/utils/get-bounds-from-trail";
 import { MaterialIcons } from "@expo/vector-icons";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Camera, type CameraRef, GeoJSONSource, Layer } from "@maplibre/maplibre-react-native";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { useAtomValue, useSetAtom } from "jotai";
-import { useEffect, useMemo, useRef } from "react";
+import { useCallback, useMemo, useRef } from "react";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { Pressable, StyleSheet, View } from "react-native";
-import MapView, { LatLng, Polyline } from "react-native-maps";
 import { Divider, Text, TextInput, useTheme } from "react-native-paper";
 import { z } from "zod";
 
@@ -36,7 +37,7 @@ export default function SaveHikeForm({ hike, onDismiss, onSaveSuccess }: Props) 
   const { t } = useTranslation();
   const theme = useTheme();
   const setErrorMsg = useSetAtom(showErrorAtom);
-  const mapRef = useRef<MapView>(null);
+  const cameraRef = useRef<CameraRef>(null);
   const queryClient = useQueryClient();
   const user = useAtomValue(stigviddUserAtom);
 
@@ -77,20 +78,22 @@ export default function SaveHikeForm({ hike, onDismiss, onSaveSuccess }: Props) 
     mutate(newHike);
   };
 
-  const route = useMemo<LatLng[]>(() => {
-    const coords: LatLng[] = [];
-    hike.segments.forEach((segment) => {
-      segment.coordinates.forEach((coordinate) => {
-        coords.push({ latitude: coordinate.data.latitude, longitude: coordinate.data.longitude });
-      });
-    });
-    return coords;
-  }, [hike.segments]);
+  // GeoJSON positions ([lng, lat]) used only for rendering the route preview.
+  const routePositions = useMemo<GeoJSON.Position[]>(
+    () =>
+      hike.segments.flatMap((segment) =>
+        segment.coordinates.map((c) => [c.data.longitude, c.data.latitude] as GeoJSON.Position),
+      ),
+    [hike.segments],
+  );
 
-  useEffect(() => {
-    if (!mapRef.current || hike.totalDistance === 0) return;
-    mapRef.current.animateToRegion(GetRegionFromTrail(route), 500);
-  }, [route, hike.totalDistance]);
+  const routeShape = useMemo(() => lineStringFromPositions(routePositions), [routePositions]);
+  const bounds = useMemo(() => getBoundsFromTrail(routePositions), [routePositions]);
+
+  const fitToRoute = useCallback(() => {
+    if (bounds)
+      cameraRef.current?.fitBounds(bounds, { padding: { top: 30, right: 30, bottom: 30, left: 30 }, duration: 0 });
+  }, [bounds]);
 
   const openDialogIfValid = handleSubmit(submit);
 
@@ -130,10 +133,18 @@ export default function SaveHikeForm({ hike, onDismiss, onSaveSuccess }: Props) 
         </View>
       </View>
 
-      {route.length > 0 && (
+      {routePositions.length > 0 && (
         <View style={s.mapContainer}>
-          <Map style={s.map} ref={mapRef} initialRegion={GetRegionFromTrail(route)}>
-            <Polyline coordinates={route} strokeColor={theme.colors.primary} strokeWidth={3} />
+          <Map style={s.map} showsUserLocation={false} onDidFinishLoadingMap={fitToRoute}>
+            <Camera ref={cameraRef} />
+            <GeoJSONSource id="save-hike-route" data={routeShape}>
+              <Layer
+                type="line"
+                id="save-hike-route-line"
+                layout={{ "line-join": "round", "line-cap": "round" }}
+                paint={{ "line-color": theme.colors.primary, "line-width": 3 }}
+              />
+            </GeoJSONSource>
           </Map>
         </View>
       )}

@@ -1,5 +1,12 @@
 import { User as firebaseUser } from "firebase/auth";
-import { LatLng } from "react-native-maps";
+
+// App-owned geographic coordinate in the device/wire format ({ latitude, longitude }).
+// Used by GPS tracking, geolib distance and the hike-creation request payload.
+// Map rendering uses GeoJSON Position ([lng, lat]) instead — see utils/geojson.ts.
+export interface LatLng {
+  latitude: number;
+  longitude: number;
+}
 
 // Response types
 export interface Trail {
@@ -133,11 +140,6 @@ export interface TrailMarkerResponse {
   startLongitude?: number;
 }
 
-export interface TrailPathLite {
-  identifier: string;
-  path: LatLng[];
-}
-
 export interface TrailCard {
   identifier: string;
   name: string;
@@ -261,6 +263,15 @@ export interface CreateFacilityRequest {
   longitude: number;
 }
 
+// Facility kinds. Mirrors the backend's [Flags] FacilityType enum: a facility can
+// carry several flags at once (a combined fire pit + shelter is 3 = FirePit | Shelter),
+// so test membership with hasFacilityType() (bitwise), never equality.
+export const FacilityType = {
+  None: 0,
+  FirePit: 1,
+  Shelter: 2,
+} as const;
+
 export interface Facility {
   identifier: string;
   name: string;
@@ -268,6 +279,10 @@ export interface Facility {
   isAccessible: boolean;
   latitude: number;
   longitude: number;
+}
+
+export function hasFacilityType(facilityType: number, type: (typeof FacilityType)[keyof typeof FacilityType]): boolean {
+  return (facilityType & type) !== 0;
 }
 
 export interface SharedHike {

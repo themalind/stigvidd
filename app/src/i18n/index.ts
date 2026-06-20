@@ -1,3 +1,6 @@
+// i18next's default export IS the i18n instance, so i18n.use()/i18n.changeLanguage()
+// are the intended API — not a mistaken access of a same-named named export.
+/* eslint-disable import/no-named-as-default-member */
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import i18n, { ParseKeys } from "i18next";
 import { initReactI18next } from "react-i18next";

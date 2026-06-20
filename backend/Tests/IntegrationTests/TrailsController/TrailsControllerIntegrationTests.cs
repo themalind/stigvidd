@@ -235,24 +235,6 @@ public class TrailsControllerIntegrationTests : IClassFixture<StigViddWebApplica
     }
 
     [Fact]
-    public async Task GetTrailPaths_ShouldReturnOk_WithValidBounds()
-    {
-        // Arrange
-        var client = _factory.CreateClient();
-
-        // Act — broad bounds covering the test area; seed trails may have no GeoPath set,
-        // which is acceptable: the endpoint should return 200 with an empty or populated array
-        var response = await client.GetAsync(
-            "/api/v1/trails/paths?minLat=55.0&minLon=10.0&maxLat=60.0&maxLon=15.0",
-            TestContext.Current.CancellationToken);
-
-        // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
-        var paths = await response.Content.ReadFromJsonAsync<IReadOnlyCollection<TrailPathResponse>>(TestContext.Current.CancellationToken);
-        paths.Should().NotBeNull();
-    }
-
-    [Fact]
     public async Task GetTrailCard_ShouldReturnImageUrlWithBaseUrl()
     {
         // Arrange
@@ -342,5 +324,117 @@ public class TrailsControllerIntegrationTests : IClassFixture<StigViddWebApplica
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task GetTrailCards_ShouldReturnCards_WhenIdentifiersExist()
+    {
+        // Arrange
+        var client = _factory.CreateClient();
+        var request = new { identifiers = new[] { StorsjoledenIdentifier } };
+
+        // Act
+        var response = await client.PostAsJsonAsync("/api/v1/trails/cards", request, TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var cards = await response.Content.ReadFromJsonAsync<List<TrailCardResponse>>(TestContext.Current.CancellationToken);
+        cards.Should().NotBeNull();
+        cards!.Should().ContainSingle(c => c.Identifier == StorsjoledenIdentifier);
+    }
+
+    [Fact]
+    public async Task GetTrailCards_ShouldReturnOnlyExistingCards_WhenSomeIdentifiersDoNotExist()
+    {
+        // Arrange
+        var client = _factory.CreateClient();
+        var request = new { identifiers = new[] { StorsjoledenIdentifier, "non-existent-trail-identifier" } };
+
+        // Act
+        var response = await client.PostAsJsonAsync("/api/v1/trails/cards", request, TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var cards = await response.Content.ReadFromJsonAsync<List<TrailCardResponse>>(TestContext.Current.CancellationToken);
+        cards.Should().NotBeNull();
+        cards!.Should().ContainSingle();
+        cards![0].Identifier.Should().Be(StorsjoledenIdentifier);
+    }
+
+    [Fact]
+    public async Task GetTrailCards_ShouldReturnBadRequest_WhenIdentifiersAreEmpty()
+    {
+        // Arrange
+        var client = _factory.CreateClient();
+        var request = new { identifiers = Array.Empty<string>() };
+
+        // Act
+        var response = await client.PostAsJsonAsync("/api/v1/trails/cards", request, TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task GetAllTrails_ShouldReturnTrails()
+    {
+        // Arrange
+        var client = _factory.CreateClient();
+
+        // Act
+        var response = await client.GetAsync("/api/v1/trails", TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var trails = await response.Content.ReadFromJsonAsync<List<TrailShortInfoResponse>>(TestContext.Current.CancellationToken);
+        trails.Should().NotBeNullOrEmpty();
+        trails!.Should().Contain(t => t.Identifier == StorsjoledenIdentifier);
+    }
+
+    [Fact]
+    public async Task GetTrailMarkers_ShouldReturnMarkers()
+    {
+        // Arrange
+        var client = _factory.CreateClient();
+
+        // Act
+        var response = await client.GetAsync("/api/v1/trails/markers", TestContext.Current.CancellationToken);
+
+        // Assert — verifies the GeoPath start-point projection against real geometry
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var markers = await response.Content.ReadFromJsonAsync<List<TrailMarkerResponse>>(TestContext.Current.CancellationToken);
+        markers.Should().NotBeNullOrEmpty();
+        markers!.Should().Contain(m => m.Identifier == StorsjoledenIdentifier && m.StartLatitude != null && m.StartLongitude != null);
+    }
+
+    [Fact]
+    public async Task GetPopularTrails_ShouldReturnTrails()
+    {
+        // Arrange
+        var client = _factory.CreateClient();
+
+        // Act
+        var response = await client.GetAsync("/api/v1/trails/popular", TestContext.Current.CancellationToken);
+
+        // Assert — rating-only scoring path (no user location)
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var overviews = await response.Content.ReadFromJsonAsync<List<TrailOverviewResponse>>(TestContext.Current.CancellationToken);
+        overviews.Should().NotBeNullOrEmpty();
+    }
+
+    [Fact]
+    public async Task GetPopularTrails_WithUserLocation_ShouldReturnTrails()
+    {
+        // Arrange
+        var client = _factory.CreateClient();
+
+        // Act — with coordinates, the score adds a proximity boost (StartPoint.Distance),
+        // which is the most translation-sensitive part of the query.
+        var response = await client.GetAsync("/api/v1/trails/popular?latitude=57.72&longitude=12.94", TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var overviews = await response.Content.ReadFromJsonAsync<List<TrailOverviewResponse>>(TestContext.Current.CancellationToken);
+        overviews.Should().NotBeNullOrEmpty();
     }
 }

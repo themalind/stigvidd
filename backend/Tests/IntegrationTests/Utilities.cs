@@ -1,6 +1,7 @@
 ﻿using Infrastructure.Data;
 using Infrastructure.Data.Entities;
 using Infrastructure.Enums;
+using NetTopologySuite.Geometries;
 
 namespace IntegrationTests;
 
@@ -89,6 +90,16 @@ public static class Utilities
     {
         var coordinates = "[{latitude=57.62141010663575, longitude= 12.805517126805371,}]";
 
+        // A real LineString so trails satisfy the `GeoPath != null` filters and their start
+        // point can be projected. SRID is left at the factory default (0) to match the SRID
+        // the SQLite/SpatiaLite test schema creates the geometry column with. Coordinate order
+        // is (X = longitude, Y = latitude).
+        var geoPath = Geometry.DefaultFactory.CreateLineString(
+        [
+            new Coordinate(12.805517126805371, 57.62141010663575),
+            new Coordinate(12.806620, 57.622500),
+        ]);
+
         return
         [
             new Trail
@@ -105,6 +116,7 @@ public static class Utilities
                 TrailSymbol = "Röd markering",
                 TrailSymbolImage = "https://inkaben.se/stigvidd/mock/mock-trail-symbol.png",
                 Coordinates = coordinates,
+                GeoPath = geoPath,
                 IsVerified = true,
                 City = "Tiveden",
                 CreatedAt = DateTime.UtcNow,
@@ -148,6 +160,7 @@ public static class Utilities
                 TrailSymbol = "Blå markering",
                 TrailSymbolImage = "https://inkaben.se/stigvidd/mock/mock-trail-symbol.png",
                 Coordinates = coordinates,
+                GeoPath = geoPath,
                 IsVerified = true,
                 City = "Viskafors",
                 CreatedAt = DateTime.UtcNow,
@@ -184,6 +197,7 @@ public static class Utilities
                 TrailSymbol = "Orange markering",
                 TrailSymbolImage = "https://inkaben.se/stigvidd/mock/mock-trail-symbol.png",
                 Coordinates = coordinates,
+                GeoPath = geoPath,
                 IsVerified = true,
                 City = "Dannike",
                 CreatedAt = DateTime.UtcNow,
@@ -203,6 +217,7 @@ public static class Utilities
                 TrailSymbol = "Grön markering",
                 TrailSymbolImage = "https://inkaben.se/stigvidd/mock/mock-trail-symbol.png",
                 Coordinates = coordinates,
+                GeoPath = geoPath,
                 IsVerified = true,
                 City = "Arås",
                 CreatedAt = DateTime.UtcNow,
@@ -239,6 +254,7 @@ public static class Utilities
                 TrailSymbol = "Röd markering med en 6:a på",
                 TrailSymbolImage = "https://inkaben.se/stigvidd/mock/mock-trail-symbol.png",
                 Coordinates = coordinates,
+                GeoPath = geoPath,
                 City = "Gesebol",
                 CreatedAt = DateTime.UtcNow,
                 LastUpdatedAt = DateTime.UtcNow
@@ -257,6 +273,7 @@ public static class Utilities
                 TrailSymbol = "Blå markering",
                 TrailSymbolImage = "https://inkaben.se/stigvidd/mock/mock-trail-symbol.png",
                 Coordinates = coordinates,
+                GeoPath = geoPath,
                 IsVerified = true,
                 City = "Hultafors",
                 CreatedAt = DateTime.UtcNow,
@@ -276,6 +293,7 @@ public static class Utilities
                 TrailSymbol = "Nässla",
                 TrailSymbolImage = "https://inkaben.se/stigvidd/mock/nassla.png",
                 Coordinates = coordinates,
+                GeoPath = geoPath,
                 IsVerified = true,
                 City = "Nässehult",
                 CreatedAt = DateTime.UtcNow,

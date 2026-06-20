@@ -10,6 +10,7 @@ export default function ProfileStackLayout() {
       <Stack.Screen name="profile-page" />
       <Stack.Screen name="about" />
       <Stack.Screen name="trail/[identifier]" />
+      <Stack.Screen name="follow/[identifier]" />
       <Stack.Protected guard={authState.isAuthenticated}>
         <Stack.Screen name="user/favorites" />
         <Stack.Screen name="user/wishlist" />

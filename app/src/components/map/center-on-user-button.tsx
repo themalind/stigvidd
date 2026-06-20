@@ -1,38 +1,39 @@
+import { AppDefaultTheme } from "@/constants/theme";
 import { useUserLocation } from "@/hooks/useUserLocation";
 import { Ionicons } from "@expo/vector-icons";
+import { type CameraRef } from "@maplibre/maplibre-react-native";
+import { RefObject } from "react";
 import { Pressable, StyleSheet } from "react-native";
-import MapView from "react-native-maps";
-import { useTheme } from "react-native-paper";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 interface Props {
-  mapRef: React.RefObject<MapView | null>;
+  cameraRef: RefObject<CameraRef | null>;
 }
 
-export default function CenterOnUserButton({ mapRef }: Props) {
-  const theme = useTheme();
+// Map controls sit on the always-light basemap, so they use the fixed light
+// palette — never useTheme(), which would turn the button orange in dark mode.
+const CONTROL_COLORS = AppDefaultTheme.colors;
+
+export default function CenterOnUserButton({ cameraRef }: Props) {
+  const insets = useSafeAreaInsets();
   const { data: location } = useUserLocation();
 
   const centerOnUser = () => {
     if (!location || location.isFallback) return;
-    mapRef.current?.animateToRegion(
-      {
-        latitude: location.latitude,
-        longitude: location.longitude,
-        latitudeDelta: 0.05,
-        longitudeDelta: 0.05,
-      },
-      800,
-    );
+    cameraRef.current?.flyTo({ center: [location.longitude, location.latitude], zoom: 14, duration: 800 });
   };
 
   if (!location || location.isFallback) return null;
 
   return (
     <Pressable
-      style={[s.center, { backgroundColor: theme.colors.primary, borderColor: theme.colors.onPrimary }]}
+      style={[
+        s.center,
+        { bottom: insets.bottom + 18, backgroundColor: CONTROL_COLORS.primary, borderColor: CONTROL_COLORS.onPrimary },
+      ]}
       onPress={centerOnUser}
     >
-      <Ionicons name="locate" size={24} color={theme.colors.onPrimary} />
+      <Ionicons name="locate" size={24} color={CONTROL_COLORS.onPrimary} />
     </Pressable>
   );
 }
@@ -41,7 +42,6 @@ const s = StyleSheet.create({
   center: {
     position: "absolute",
     right: 15,
-    bottom: 18,
     padding: 12,
     borderWidth: 2,
     borderRadius: 999,

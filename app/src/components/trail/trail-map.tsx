@@ -1,28 +1,46 @@
 import { SURFACE_BORDER_RADIUS } from "@/constants/constants";
-import GetRegionFromTrail from "@/utils/get-region-from-trail";
-import Ionicons from "@expo/vector-icons/Ionicons";
-import { useEffect, useRef, useState } from "react";
+import { lineStringFromPositions } from "@/utils/geojson";
+import getBoundsFromTrail from "@/utils/get-bounds-from-trail";
+import { openDirectionsToStart } from "@/utils/open-directions";
+import { MaterialIcons } from "@expo/vector-icons";
+import { Camera, type CameraRef, GeoJSONSource, Layer } from "@maplibre/maplibre-react-native";
+import { useCallback, useMemo, useRef } from "react";
 import { Dimensions, Pressable, StyleSheet, View } from "react-native";
-import MapView, { LatLng, Polyline } from "react-native-maps";
+import { useTranslation } from "react-i18next";
 import { Surface, Text, useTheme } from "react-native-paper";
 import Map from "../map/map";
+import { ROUTE_LINE_COLOR } from "../map/marker-styles";
+import StartMarker from "../map/start-marker";
 
 interface TrailMapProps {
-  trail: LatLng[];
+  trail: GeoJSON.Position[];
+  onPress: () => void;
 }
 
-const WIDTH = Dimensions.get("screen").width;
 const HEIGHT = Dimensions.get("screen").height;
+// On narrow phones the two corner pills would crowd each other, so the directions
+// pill drops its label and shows just the icon below this width (app is portrait-locked).
+const COMPACT_DIRECTIONS = Dimensions.get("window").width < 380;
 
-export default function TrailMap({ trail }: TrailMapProps) {
-  const mapRef = useRef<MapView>(null);
+// Static map preview on the trail detail screen: shows the route and the user's
+// position, but is not pannable — the whole surface is a button that opens the
+// fullscreen follow view (the map itself is the entry point).
+export default function TrailMap({ trail, onPress }: TrailMapProps) {
+  const cameraRef = useRef<CameraRef>(null);
   const theme = useTheme();
-  const [active, setActive] = useState(false);
+  const { t } = useTranslation();
 
-  useEffect(() => {
-    if (!mapRef.current || trail.length === 0) return;
-    mapRef.current.animateToRegion(GetRegionFromTrail(trail), 500);
-  }, [trail]);
+  const bounds = useMemo(() => getBoundsFromTrail(trail), [trail]);
+  const center = useMemo<[number, number] | undefined>(
+    () => (bounds ? [(bounds[0] + bounds[2]) / 2, (bounds[1] + bounds[3]) / 2] : undefined),
+    [bounds],
+  );
+  const lineShape = useMemo(() => lineStringFromPositions(trail), [trail]);
+
+  const fitToTrail = useCallback(() => {
+    if (bounds)
+      cameraRef.current?.fitBounds(bounds, { padding: { top: 40, right: 40, bottom: 40, left: 40 }, duration: 0 });
+  }, [bounds]);
 
   return (
     <Surface style={s.container}>
@@ -30,25 +48,49 @@ export default function TrailMap({ trail }: TrailMapProps) {
         {trail.length > 0 && (
           <Map
             style={s.map}
-            ref={mapRef}
-            initialRegion={GetRegionFromTrail(trail)}
-            scrollEnabled={active}
-            zoomEnabled={active}
-            rotateEnabled={active}
-            pitchEnabled={active}
+            showsUserLocation
+            dragPan={false}
+            touchZoom={false}
+            touchRotate={false}
+            touchPitch={false}
+            doubleTapZoom={false}
+            onDidFinishLoadingMap={fitToTrail}
           >
-            <Polyline coordinates={trail} strokeWidth={3} strokeColor={theme.colors.primary} />
+            <Camera ref={cameraRef} initialViewState={center ? { center, zoom: 12 } : undefined} />
+            {trail.length > 1 && (
+              <GeoJSONSource id="trail-route" data={lineShape}>
+                <Layer
+                  type="line"
+                  id="trail-route-line"
+                  layout={{ "line-join": "round", "line-cap": "round" }}
+                  paint={{ "line-color": ROUTE_LINE_COLOR, "line-width": 3 }}
+                />
+              </GeoJSONSource>
+            )}
+            {trail.length > 0 && <StartMarker id="trail-start" position={trail[0]} label={t("map.start")} />}
           </Map>
         )}
-        {!active && (
-          <Pressable style={s.lockOverlay} onPress={() => setActive(true)}>
-            <View style={[s.lockBadge, { backgroundColor: theme.colors.surface }]}>
-              <Ionicons name="finger-print-outline" size={20} color={theme.colors.onSurface} />
-              <Text style={[s.lockText, { color: theme.colors.onSurface }]}>Tryck för att interagera</Text>
-            </View>
+        <Pressable style={s.overlay} onPress={onPress}>
+          <View style={[s.badge, { backgroundColor: theme.colors.surface }]}>
+            <MaterialIcons name="open-in-full" size={16} color={theme.colors.onSurface} />
+            <Text style={[s.badgeText, { color: theme.colors.onSurface }]}>{t("map.showOnMap")}</Text>
+          </View>
+        </Pressable>
+        {/* Sits on top of the overlay so its tap opens directions instead of the
+            follow view; rendered last to win the touch in its corner. */}
+        {trail.length > 0 && (
+          <Pressable
+            style={[s.directions, { backgroundColor: theme.colors.surface }]}
+            onPress={() => openDirectionsToStart(trail[0], t)}
+            hitSlop={6}
+            accessibilityLabel={t("map.directions")}
+          >
+            <MaterialIcons name="directions" size={16} color={theme.colors.onSurface} />
+            {!COMPACT_DIRECTIONS && (
+              <Text style={[s.badgeText, { color: theme.colors.onSurface }]}>{t("map.directions")}</Text>
+            )}
           </Pressable>
         )}
-        {active && <Pressable style={s.dismissArea} onPress={() => setActive(false)} />}
       </View>
     </Surface>
   );
@@ -67,29 +109,35 @@ const s = StyleSheet.create({
   map: {
     flex: 1,
   },
-  lockOverlay: {
+  overlay: {
     ...StyleSheet.absoluteFillObject,
-    justifyContent: "center",
-    alignItems: "center",
+    alignItems: "flex-end",
+    justifyContent: "flex-end",
+    padding: 10,
   },
-  lockBadge: {
+  badge: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
     borderRadius: 20,
-    opacity: 0.9,
+    opacity: 0.95,
   },
-  lockText: {
-    fontSize: 13,
-    fontWeight: "600",
-  },
-  dismissArea: {
+  directions: {
     position: "absolute",
-    top: 8,
-    right: 8,
-    width: 36,
-    height: 36,
+    left: 10,
+    bottom: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 20,
+    opacity: 0.95,
+  },
+  badgeText: {
+    fontSize: 13,
+    fontFamily: "Inter_600SemiBold",
   },
 });

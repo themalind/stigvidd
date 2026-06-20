@@ -1,6 +1,5 @@
 using Infrastructure.Data.Entities;
 using System.Linq.Expressions;
-using WebDataContracts.ResponseModels.Trail;
 
 namespace Core.Interfaces.Repositories;
 
@@ -8,11 +7,11 @@ public interface ITrailRepository
 {
     Task<RepositoryResult<int>> GetTrailIdByIdentifierAsync(string identifier, CancellationToken ctoken);
     Task<RepositoryResult<T>> GetTrailByIdentifierAsync<T>(string identifier, Expression<Func<Trail, T>> selector, CancellationToken ctoken);
+    Task<RepositoryResult<IReadOnlyCollection<T>>> GetTrailsByIdentifiersAsync<T>(IReadOnlyCollection<string> identifiers, Expression<Func<Trail, T>> selector, CancellationToken ctoken);
     Task<RepositoryResult<string>> GetCoordinatesByTrailIdentifierAsync(string identifier, CancellationToken ctoken);
-    Task<RepositoryResult<IReadOnlyCollection<TrailShortInfoResponse>>> GetAllTrailsWithBasicInfoAsync(CancellationToken ctoken);
-    Task<RepositoryResult<IReadOnlyCollection<TrailMarkerResponse>>> GetAllTrailMarkersAsync(CancellationToken ctoken);
-    Task<RepositoryResult<IReadOnlyCollection<T>>> GetTrailsInBoundsAsync<T>(double minLat, double minLon, double maxLat, double maxLon, Expression<Func<Trail, T>> selector, CancellationToken ctoken);
-    Task<RepositoryResult<IReadOnlyCollection<TrailOverviewResponse>>> GetPopularTrailOverviewsAsync(string presentableBaseUrl, double? userLatitude, double? userLongitude, CancellationToken ctoken);
+    Task<RepositoryResult<IReadOnlyCollection<T>>> GetAllTrailsWithBasicInfoAsync<T>(Expression<Func<Trail, T>> selector, CancellationToken ctoken);
+    Task<RepositoryResult<IReadOnlyCollection<T>>> GetAllTrailMarkersAsync<T>(Expression<Func<Trail, T>> selector, CancellationToken ctoken);
+    Task<RepositoryResult<IReadOnlyCollection<T>>> GetPopularTrailOverviewsAsync<T>(double? userLatitude, double? userLongitude, Expression<Func<Trail, T>> selector, CancellationToken ctoken);
     Task<RepositoryResult<Trail>> AddTrailAsync(Trail trail, CancellationToken ctoken);
     Task<RepositoryResult<Trail>> UpdateTrailAsync(Trail trail, CancellationToken ctoken);
     Task<RepositoryResult<IReadOnlyCollection<TrailImage>>> AddTrailImagesAsync(int trailId, IReadOnlyCollection<TrailImage> images, CancellationToken ctoken);
