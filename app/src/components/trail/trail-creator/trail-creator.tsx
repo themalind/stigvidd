@@ -3,18 +3,19 @@ import LoadingIndicator from "@/components/loading-indicator";
 import Map from "@/components/map/map";
 import { BORDER_RADIUS } from "@/constants/constants";
 import { useLocationTracking } from "@/services/use-location-tracking";
+import { lineStringFromPositions } from "@/utils/geojson";
 import FormattedTime from "@/utils/format-time-from-ms";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
+import { Camera, type CameraRef, GeoJSONSource, Layer } from "@maplibre/maplibre-react-native";
 import * as Location from "expo-location";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
-import MapView, { Polyline, Region } from "react-native-maps";
 import { Text, useTheme } from "react-native-paper";
 import { useTranslation } from "react-i18next";
 import SaveHikeModal from "./save-hike-modal";
 
 export default function TrailCreator() {
-  const mapRef = useRef<MapView>(null);
+  const cameraRef = useRef<CameraRef>(null);
   const { startTracking, stopTracking, resetTracking, isTracking, hike, currentSegment, getActiveTime, debugAddPoint } =
     useLocationTracking();
 
@@ -24,15 +25,21 @@ export default function TrailCreator() {
 
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showSaveModal, setShowSaveModal] = useState(false);
-  const [initialRegion, setInitialRegion] = useState<Region | undefined>(undefined);
+  const [initialCenter, setInitialCenter] = useState<[number, number] | undefined>(undefined);
   const theme = useTheme();
   const { t } = useTranslation();
 
-  const polylineCoords = useMemo(() => {
-    const finished = hike.segments.flatMap((segment) => segment.coordinates.map((locationData) => locationData.data));
-    const current = currentSegment ? currentSegment.coordinates.map((locationData) => locationData.data) : [];
+  const routePositions = useMemo<[number, number][]>(() => {
+    const finished = hike.segments.flatMap((segment) =>
+      segment.coordinates.map((l) => [l.data.longitude, l.data.latitude] as [number, number]),
+    );
+    const current = currentSegment
+      ? currentSegment.coordinates.map((l) => [l.data.longitude, l.data.latitude] as [number, number])
+      : [];
     return [...finished, ...current];
   }, [hike.segments, currentSegment]);
+
+  const routeShape = useMemo(() => lineStringFromPositions(routePositions), [routePositions]);
 
   useEffect(() => {
     if (!isTracking) {
@@ -60,33 +67,26 @@ export default function TrailCreator() {
       if (status !== "granted") return;
 
       const location = await Location.getCurrentPositionAsync();
-
-      setInitialRegion({
-        latitude: location.coords.latitude,
-        longitude: location.coords.longitude,
-        latitudeDelta: 0.005,
-        longitudeDelta: 0.005,
-      });
+      setInitialCenter([location.coords.longitude, location.coords.latitude]);
     })();
   }, []);
 
   useEffect(() => {
-    const last = polylineCoords.at(-1);
-    if (!last || !mapRef.current) return;
-
-    mapRef.current.animateCamera({ center: last, zoom: 17 }, { duration: 500 });
-  }, [polylineCoords]);
+    const last = routePositions.at(-1);
+    if (!last) return;
+    cameraRef.current?.easeTo({ center: last, zoom: 17, duration: 500 });
+  }, [routePositions]);
 
   const hasData = hike.segments.length > 0 || (currentSegment && currentSegment.coordinates.length > 0);
 
-  if (!initialRegion) return <LoadingIndicator />;
+  if (!initialCenter) return <LoadingIndicator />;
 
   return (
     <View style={s.container}>
       {__DEV__ && (
         <View style={s.debugBar}>
           <Text style={s.debugText}>
-            {polylineCoords.length} noder, {hike.segments.length} segment
+            {routePositions.length} noder, {hike.segments.length} segment
           </Text>
           <Pressable style={s.debugButton} onPress={() => debugAddPoint()}>
             <Text style={s.debugText}>+ Lägg till punkt</Text>
@@ -94,8 +94,16 @@ export default function TrailCreator() {
         </View>
       )}
       <View style={s.mapContainer}>
-        <Map ref={mapRef} style={s.map} initialRegion={initialRegion} showsUserLocation>
-          <Polyline coordinates={polylineCoords} strokeColor={theme.colors.primary} strokeWidth={4} />
+        <Map style={s.map} showsUserLocation>
+          <Camera ref={cameraRef} initialViewState={{ center: initialCenter, zoom: 16 }} />
+          <GeoJSONSource id="hike-route" data={routeShape}>
+            <Layer
+              type="line"
+              id="hike-route-line"
+              layout={{ "line-join": "round", "line-cap": "round" }}
+              paint={{ "line-color": theme.colors.primary, "line-width": 4 }}
+            />
+          </GeoJSONSource>
         </Map>
       </View>
 

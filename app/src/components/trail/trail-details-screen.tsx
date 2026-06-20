@@ -9,11 +9,11 @@ import TrailMap from "@/components/trail/trail-map";
 import UserBar from "@/components/trail/user-action-bar/user-bar";
 import { Review } from "@/data/types";
 import CoordinateParser from "@/utils/coordinate-parser";
+import { guardedNavigate } from "@/utils/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { startTransition, useCallback, useEffect, useRef, useState } from "react";
 import { Platform, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { LatLng } from "react-native-maps";
 import { useTheme } from "react-native-paper";
 import { useTranslation } from "react-i18next";
 import BackButton from "../back-button";
@@ -24,9 +24,19 @@ import TrailObstacleWarning from "./obstacle/trail-obstacle-warning";
 import TrailObstacleModal from "./obstacle/trail-obstacles-modal";
 import TrailMiscInfo from "./trail-misc-section/trail-misc-accordion";
 
-export default function TrailDetailsScreen() {
+// The trail detail screen is rendered inside four different tab stacks. Each
+// stack's route file passes its own follow route, so tapping the embedded map
+// opens the follow view in the *same* stack and back returns here.
+export type FollowRoute =
+  | "/(tabs)/(map)/follow/[identifier]"
+  | "/(tabs)/(trails-tab)/follow/[identifier]"
+  | "/(tabs)/(profile-stack)/follow/[identifier]"
+  | "/(tabs)/(home)/follow/[identifier]";
+
+export default function TrailDetailsScreen({ followRoute }: { followRoute: FollowRoute }) {
   const theme = useTheme();
   const { t } = useTranslation();
+  const router = useRouter();
   const { identifier } = useLocalSearchParams<{ identifier: string }>();
   const normalizedIdentifier: string = Array.isArray(identifier) ? identifier[0] : identifier;
   const scrollViewRef = useRef<ScrollView>(null);
@@ -78,11 +88,17 @@ export default function TrailDetailsScreen() {
   }
 
   const images = trail?.trailImagesResponse || [];
-  let coordinates: LatLng[] = [];
+  let coordinates: GeoJSON.Position[] = [];
 
   if (coords) {
     coordinates = CoordinateParser({ data: coords.coordinates, identifier: trail!.identifier });
   }
+
+  const handleOpenFollowMap = () => {
+    guardedNavigate(() =>
+      router.navigate({ pathname: followRoute, params: { identifier: normalizedIdentifier } }),
+    );
+  };
 
   const onPressScrollToRatings = () => {
     surfaceToScrollToRef.current?.measure((_x, _y, _width, _height, _pageX, pageY) => {
@@ -121,7 +137,7 @@ export default function TrailDetailsScreen() {
           {trail && <UserBar trail={trail} />}
           {trail?.description && <TrailDescription trail={trail} />}
           {coords?.coordinates && coordinates.length > 0 && transitionComplete ? (
-            <TrailMap trail={coordinates} />
+            <TrailMap trail={coordinates} onPress={handleOpenFollowMap} />
           ) : (
             <MapSkeleton text={t("trail.loadingMap")} />
           )}

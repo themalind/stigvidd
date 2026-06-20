@@ -1,6 +1,5 @@
 import { authLoadingAtom, initAuthAtom, userAtom } from "@/atoms/auth-atoms";
 import { pruneTrailCardCache } from "@/hooks/useTrailCard";
-import { pruneTrailPathCache } from "@/services/trail-path-cache";
 import { loadUserTheme, userThemeAtom } from "@/atoms/user-theme-atom";
 import { GlobalSnackbar } from "@/components/global-snackbar";
 import { useAppState } from "@/hooks/useAppState";
@@ -91,6 +90,9 @@ export default function RootLayout() {
       router.replace("/(tabs)/(profile-stack)/profile-page");
     }
     prevStableKey.current = stableKey;
+    // Intentionally keyed on stableKey only — this should run once per login/logout
+    // remount, not whenever router/user identities change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stableKey]);
 
   // Fresh QueryClient per stableKey — resets cache on login/logout.
@@ -123,7 +125,6 @@ export default function RootLayout() {
 
   useEffect(() => {
     loadStoredLanguage();
-    pruneTrailPathCache();
     pruneTrailCardCache();
   }, []);
 
@@ -131,6 +132,9 @@ export default function RootLayout() {
   useEffect(() => {
     if (!user) return;
     registerForPushNotificationsAsync().catch(console.error);
+    // Keyed on the uid so registration runs once per signed-in user, not on every
+    // change to the user object reference.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.uid]);
 
   useEffect(() => {

@@ -78,6 +78,10 @@
   },
   "filter": {
     "title": "Filter & Sort",
+    "label": "Filter",
+    "trails": "Trails",
+    "shelters": "Wind shelters",
+    "firePits": "Fire pits",
     "clear": "Clear",
     "done": "Done",
     "city": "Cities",
@@ -96,6 +100,10 @@
     "sortLengthAsc": "Length (Shortest first)",
     "sortLengthDesc": "Length (Longest first)",
     "sortNearest": "Nearest first"
+  },
+  "map": {
+    "readMore": "Read more",
+    "showOnMap": "Show on map"
   },
   "review": {
     "added": "Review added",

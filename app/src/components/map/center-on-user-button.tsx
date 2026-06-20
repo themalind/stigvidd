@@ -1,28 +1,21 @@
 import { useUserLocation } from "@/hooks/useUserLocation";
 import { Ionicons } from "@expo/vector-icons";
+import { type CameraRef } from "@maplibre/maplibre-react-native";
+import { RefObject } from "react";
 import { Pressable, StyleSheet } from "react-native";
-import MapView from "react-native-maps";
 import { useTheme } from "react-native-paper";
 
 interface Props {
-  mapRef: React.RefObject<MapView | null>;
+  cameraRef: RefObject<CameraRef | null>;
 }
 
-export default function CenterOnUserButton({ mapRef }: Props) {
+export default function CenterOnUserButton({ cameraRef }: Props) {
   const theme = useTheme();
   const { data: location } = useUserLocation();
 
   const centerOnUser = () => {
     if (!location || location.isFallback) return;
-    mapRef.current?.animateToRegion(
-      {
-        latitude: location.latitude,
-        longitude: location.longitude,
-        latitudeDelta: 0.05,
-        longitudeDelta: 0.05,
-      },
-      800,
-    );
+    cameraRef.current?.flyTo({ center: [location.longitude, location.latitude], zoom: 14, duration: 800 });
   };
 
   if (!location || location.isFallback) return null;

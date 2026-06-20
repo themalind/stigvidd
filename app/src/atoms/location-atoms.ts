@@ -1,6 +1,6 @@
 import { START_COORDINATE_BORAS } from "@/constants/constants";
+import { LatLng } from "@/data/types";
 import { atom } from "jotai";
-import { LatLng } from "react-native-maps";
 
 export const userLocationAtom = atom<LatLng | null>({
   latitude: START_COORDINATE_BORAS.latitude,

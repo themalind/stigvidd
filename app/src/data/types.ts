@@ -1,5 +1,12 @@
 import { User as firebaseUser } from "firebase/auth";
-import { LatLng } from "react-native-maps";
+
+// App-owned geographic coordinate in the device/wire format ({ latitude, longitude }).
+// Used by GPS tracking, geolib distance and the hike-creation request payload.
+// Map rendering uses GeoJSON Position ([lng, lat]) instead — see utils/geojson.ts.
+export interface LatLng {
+  latitude: number;
+  longitude: number;
+}
 
 // Response types
 export interface Trail {
@@ -131,11 +138,6 @@ export interface TrailMarkerResponse {
   isAccessible: boolean;
   startLatitude?: number;
   startLongitude?: number;
-}
-
-export interface TrailPathLite {
-  identifier: string;
-  path: LatLng[];
 }
 
 export interface TrailCard {

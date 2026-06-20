@@ -1,7 +1,6 @@
-import { FilterOptions, TrailShortInfoResponse } from "@/data/types";
+import { FilterOptions, LatLng, TrailShortInfoResponse } from "@/data/types";
 import { getDistance } from "geolib";
 import { useMemo, useState } from "react";
-import { LatLng } from "react-native-maps";
 
 export type SortOption = "name-asc" | "name-desc" | "length-asc" | "length-desc" | "distance-asc";
 

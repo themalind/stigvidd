@@ -78,6 +78,10 @@
   },
   "filter": {
     "title": "Filter & Sortering",
+    "label": "Filter",
+    "trails": "Leder",
+    "shelters": "Vindskydd",
+    "firePits": "Grillplatser",
     "clear": "Rensa",
     "done": "Klar",
     "city": "Orter",
@@ -96,6 +100,10 @@
     "sortLengthAsc": "Längd (Kortast först)",
     "sortLengthDesc": "Längd (Längst först)",
     "sortNearest": "Närmast först"
+  },
+  "map": {
+    "readMore": "Läs mer",
+    "showOnMap": "Se på karta"
   },
   "review": {
     "added": "Recensionen har lagts till",

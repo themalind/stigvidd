@@ -1,25 +1,59 @@
 import CenterOnUserButton from "@/components/map/center-on-user-button";
-import FilterButton from "@/components/map/filter-button";
+import MapFilterMenu from "@/components/map/map-filter-menu";
+import TrailCardCarousel from "@/components/map/trail-card-carousel";
 import TrailMarkersMap from "@/components/map/trail-markers-map";
-import { START_COORDINATE_BORAS } from "@/constants/constants";
+import { SCREEN_PADDING } from "@/constants/constants";
 import { MapMarkerFilter } from "@/data/types";
-import { useTrailCard } from "@/hooks/useTrailCard";
-import { classificationParser } from "@/utils/classification-parser";
-import { getDifficultyIcon } from "@/utils/getDifficultyIcon";
 import { guardedNavigate } from "@/utils/navigation";
-import { MaterialIcons } from "@expo/vector-icons";
+import { type CameraRef } from "@maplibre/maplibre-react-native";
 import { useFocusEffect, useRouter } from "expo-router";
 import { startTransition, useCallback, useRef, useState } from "react";
-import { ActivityIndicator, Image, StyleSheet, TouchableOpacity, View } from "react-native";
-import MapView from "react-native-maps";
-import { Text, useTheme } from "react-native-paper";
+import { StyleSheet, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useTheme } from "react-native-paper";
 
 export default function MapScreen() {
   const theme = useTheme();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
+
+  const cameraRef = useRef<CameraRef>(null);
+
   const [isMapReady, setIsMapReady] = useState(false);
   const [isFocused, setIsFocused] = useState(true);
-  const mapRef = useRef<MapView>(null);
+  const [filters, setFilters] = useState<MapMarkerFilter>({
+    trails: true,
+    shelters: false,
+    firePits: false,
+    accessibility: false,
+  });
+  const [carouselIds, setCarouselIds] = useState<string[] | null>(null);
+
+  const handleMapReady = useCallback(() => setIsMapReady(true), []);
+
+  const showOnMap = useCallback(
+    (identifier: string) => {
+      guardedNavigate(() =>
+        router.navigate({
+          pathname: "/(tabs)/(map)/follow/[identifier]",
+          params: { identifier },
+        }),
+      );
+    },
+    [router],
+  );
+
+  const readMore = useCallback(
+    (identifier: string) => {
+      guardedNavigate(() =>
+        router.navigate({
+          pathname: "/(tabs)/(map)/trail/[identifier]",
+          params: { identifier },
+        }),
+      );
+    },
+    [router],
+  );
 
   useFocusEffect(
     useCallback(() => {
@@ -28,28 +62,15 @@ export default function MapScreen() {
     }, []),
   );
 
-  const [filters, setFilters] = useState<MapMarkerFilter>({
-    trails: true,
-    shelters: false,
-    firePits: false,
-    accessibility: false,
-  });
-  const [selectedIdentifier, setSelectedIdentifier] = useState<string | null>(null);
-  const { card, isLoading } = useTrailCard(selectedIdentifier);
-
-  const handleMapReady = useCallback(() => setIsMapReady(true), []);
-
   return (
     <View style={s.container}>
       {isFocused && (
         <TrailMarkersMap
-          ref={mapRef}
           filter={filters}
           style={StyleSheet.absoluteFill}
-          initialRegion={START_COORDINATE_BORAS}
-          showsUserLocation
-          selectedIdentifier={selectedIdentifier}
-          onTrailSelect={setSelectedIdentifier}
+          cameraRef={cameraRef}
+          onClusterOpen={setCarouselIds}
+          onMapPress={() => setCarouselIds(null)}
           onMapReady={handleMapReady}
         />
       )}
@@ -57,58 +78,19 @@ export default function MapScreen() {
         <View style={[StyleSheet.absoluteFill, { backgroundColor: theme.colors.background }]} />
       )}
 
-      <CenterOnUserButton mapRef={mapRef} />
-      <FilterButton filter={filters} onChange={setFilters} />
+      <View style={[s.topBar, { top: insets.top + 8 }]}>
+        <MapFilterMenu filter={filters} onChange={setFilters} />
+      </View>
 
-      {selectedIdentifier && (
-        <View style={[s.infoPanel, { backgroundColor: theme.colors.surface }]}>
-          {isLoading ? (
-            <ActivityIndicator style={s.loader} color={theme.colors.primary} />
-          ) : card ? (
-            <>
-              <View style={s.infoPanelHeader}>
-                {card.image && <Image source={{ uri: card.image.imageUrl }} style={s.trailImage} resizeMode="cover" />}
-                <View style={s.infoPanelMeta}>
-                  <Text style={s.trailName} numberOfLines={1}>
-                    {card.name}
-                  </Text>
-                  <View style={s.infoRow}>
-                    {card.trailLength != null && (
-                      <Text style={[s.infoText, { color: theme.colors.onSurfaceVariant }]}>{card.trailLength} km</Text>
-                    )}
-                    <View style={s.difficultyRow}>
-                      {getDifficultyIcon(classificationParser(card.classification ?? 0))}
-                      <Text style={[s.infoText, { color: theme.colors.onSurfaceVariant }]}>
-                        {classificationParser(card.classification ?? 0)}
-                      </Text>
-                    </View>
-                    <Text style={[s.infoText, { color: theme.colors.onSurfaceVariant }]}>
-                      {Number(card.averageRating) > 0 ? `★ ${Number(card.averageRating).toFixed(1)}` : "Inga betyg"}
-                    </Text>
-                  </View>
-                </View>
-                <TouchableOpacity onPress={() => setSelectedIdentifier(null)} style={s.closeButton}>
-                  <MaterialIcons name="close" size={20} color={theme.colors.onSurface} />
-                </TouchableOpacity>
-              </View>
-              <TouchableOpacity
-                style={[s.readMoreButton, { backgroundColor: theme.colors.primaryContainer }]}
-                onPress={() =>
-                  guardedNavigate(() =>
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    router.navigate({
-                      pathname: "/(tabs)/(map)/trail/[identifier]" as any,
-                      params: { identifier: selectedIdentifier },
-                    }),
-                  )
-                }
-              >
-                <Text style={[s.readMoreText, { color: theme.colors.onPrimaryContainer }]}>Läs mer</Text>
-                <MaterialIcons name="arrow-forward" size={16} color={theme.colors.onPrimaryContainer} />
-              </TouchableOpacity>
-            </>
-          ) : null}
-        </View>
+      {!carouselIds && <CenterOnUserButton cameraRef={cameraRef} />}
+
+      {carouselIds && (
+        <TrailCardCarousel
+          identifiers={carouselIds}
+          onClose={() => setCarouselIds(null)}
+          onReadMore={readMore}
+          onShowOnMap={showOnMap}
+        />
       )}
     </View>
   );
@@ -118,64 +100,8 @@ const s = StyleSheet.create({
   container: {
     flex: 1,
   },
-  infoPanel: {
+  topBar: {
     position: "absolute",
-    top: 16,
-    left: 16,
-    right: 16,
-    borderRadius: 12,
-    padding: 14,
-    gap: 10,
-  },
-  loader: {
-    paddingVertical: 8,
-  },
-  infoPanelHeader: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 10,
-  },
-  trailImage: {
-    width: 72,
-    height: 72,
-    borderRadius: 8,
-    flexShrink: 0,
-  },
-  infoPanelMeta: {
-    flex: 1,
-    gap: 4,
-  },
-  trailName: {
-    fontSize: 15,
-    fontWeight: "700",
-  },
-  infoRow: {
-    flexDirection: "row",
-    gap: 10,
-    flexWrap: "wrap",
-    alignItems: "center",
-  },
-  difficultyRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-  },
-  infoText: {
-    fontSize: 13,
-  },
-  closeButton: {
-    paddingLeft: 4,
-  },
-  readMoreButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 6,
-    paddingVertical: 8,
-    borderRadius: 8,
-  },
-  readMoreText: {
-    fontSize: 14,
-    fontWeight: "600",
+    right: SCREEN_PADDING,
   },
 });

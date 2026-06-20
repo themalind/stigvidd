@@ -25,10 +25,11 @@ describe("haversineDistance", () => {
 });
 
 describe("isNearTrail", () => {
-  const trailCoords = [
-    { latitude: 57.7, longitude: 12.0 },
-    { latitude: 57.71, longitude: 12.01 },
-    { latitude: 57.72, longitude: 12.02 },
+  // GeoJSON positions: [longitude, latitude]
+  const trailCoords: [number, number][] = [
+    [12.0, 57.7],
+    [12.01, 57.71],
+    [12.02, 57.72],
   ];
 
   it("returns true when user is within threshold of a trail point", () => {

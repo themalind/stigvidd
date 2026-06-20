@@ -9,15 +9,15 @@ describe("CoordinateParser", () => {
     jest.restoreAllMocks();
   });
 
-  it("parses a valid array of coordinates", () => {
+  it("parses a valid array of coordinates into GeoJSON positions ([lng, lat])", () => {
     const data = JSON.stringify([
       { latitude: 57.7, longitude: 12.0 },
       { latitude: 57.8, longitude: 12.1 },
     ]);
     const result = CoordinateParser({ data, identifier: "trail-1" });
     expect(result).toEqual([
-      { latitude: 57.7, longitude: 12.0 },
-      { latitude: 57.8, longitude: 12.1 },
+      [12.0, 57.7],
+      [12.1, 57.8],
     ]);
   });
 

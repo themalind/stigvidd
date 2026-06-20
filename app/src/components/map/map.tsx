@@ -1,40 +1,34 @@
-import { userThemeAtom } from "@/atoms/user-theme-atom";
-import { useAtom } from "jotai";
+import { Map as MapLibreMap, type MapProps, type MapRef, UserLocation } from "@maplibre/maplibre-react-native";
 import React, { forwardRef } from "react";
-import { StyleProp, useColorScheme, ViewStyle } from "react-native";
-import MapView, { MapViewProps, Region, UrlTile } from "react-native-maps";
+import { StyleProp, ViewStyle } from "react-native";
+import { getMapStyle } from "./map-style";
 
-interface Props extends MapViewProps {
+type Props = Partial<Omit<MapProps, "mapStyle" | "ref" | "style">> & {
   style?: StyleProp<ViewStyle>;
-  initialRegion: Region;
   showsUserLocation?: boolean;
   children?: React.ReactNode;
-}
+};
 
-const LIGHT_TILE_URL = "https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png";
-const DARK_TILE_URL = "https://basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png";
-
-export default forwardRef<MapView, Props>(function Map(
-  { style, initialRegion, showsUserLocation = true, children, ...rest },
-  mapRef,
+// Shared MapLibre base map: applies the detailed Thunderforest outdoor style and
+// the user-location puck, and forwards a MapRef. Callers add their own <Camera>,
+// <GeoJSONSource> and <Layer> children. Ornaments (logo, attribution, compass)
+// are hidden so the app can lay out its own controls.
+export default forwardRef<MapRef, Props>(function Map(
+  { style, showsUserLocation = true, children, ...rest },
+  ref,
 ) {
-  const [theme] = useAtom(userThemeAtom);
-  const deviceScheme = useColorScheme();
-  const isDark = (theme === "auto" ? deviceScheme : theme) === "dark";
-
   return (
-    <MapView
-      ref={mapRef}
+    <MapLibreMap
+      ref={ref}
       style={style}
-      mapType="none"
-      initialRegion={initialRegion}
-      showsUserLocation={showsUserLocation}
-      showsMyLocationButton={false}
-      toolbarEnabled={false}
+      mapStyle={getMapStyle()}
+      logo={false}
+      attribution={false}
+      compass={false}
       {...rest}
     >
-      <UrlTile urlTemplate={isDark ? DARK_TILE_URL : LIGHT_TILE_URL} maximumZ={19} flipY={false} />
+      {showsUserLocation && <UserLocation />}
       {children}
-    </MapView>
+    </MapLibreMap>
   );
 });

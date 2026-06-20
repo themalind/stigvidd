@@ -5,6 +5,7 @@ export default function TrailsStackLayout() {
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="index" />
       <Stack.Screen name="trail/[identifier]" />
+      <Stack.Screen name="follow/[identifier]" />
     </Stack>
   );
 }

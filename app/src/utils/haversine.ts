@@ -1,5 +1,3 @@
-import { LatLng } from "react-native-maps";
-
 export function haversineDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
   const R = 6371000; // Earth's radius in meters
   const toRad = (deg: number) => (deg * Math.PI) / 180;
@@ -15,10 +13,8 @@ export function haversineDistance(lat1: number, lon1: number, lat2: number, lon2
 export function isNearTrail(
   userLat: number,
   userLon: number,
-  trailCoords: LatLng[],
+  trailCoords: GeoJSON.Position[],
   thresholdMeters: number = 500,
 ): boolean {
-  return trailCoords.some(
-    (point) => haversineDistance(userLat, userLon, point.latitude, point.longitude) <= thresholdMeters,
-  );
+  return trailCoords.some(([lon, lat]) => haversineDistance(userLat, userLon, lat, lon) <= thresholdMeters);
 }

@@ -6,7 +6,7 @@ import UserTrailCollection from "@/components/user/user-trail-collection";
 import { MaterialIcons } from "@expo/vector-icons";
 import { Redirect } from "expo-router";
 import { useAtom } from "jotai";
-import { Text, useTheme } from "react-native-paper";
+import { useTheme } from "react-native-paper";
 import { useTranslation } from "react-i18next";
 
 export default function WishlistScreen() {

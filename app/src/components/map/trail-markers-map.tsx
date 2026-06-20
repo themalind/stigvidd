@@ -1,172 +1,67 @@
-import { getFacilityMarkers, getTrailMarkers, getTrailPaths, TrailPathBounds } from "@/api/map-markers";
-import { START_COORDINATE_BORAS } from "@/constants/constants";
-import { Facility, MapMarkerFilter, TrailMarkerResponse, TrailPathLite } from "@/data/types";
+import { getFacilityMarkers, getTrailMarkers } from "@/api/map-markers";
+import { BORDER_RADIUS, START_COORDINATE_BORAS } from "@/constants/constants";
+import { MapMarkerFilter } from "@/data/types";
+import { featureCollectionFromFacilities, featureCollectionFromMarkers } from "@/utils/geojson";
 import {
-  getCachedTiles,
-  getZoomLevel,
-  getTilesForBounds,
-  mergePathTiles,
-  setTileCached,
-  tileBounds,
-} from "@/services/trail-path-cache";
-import { FontAwesome6, Ionicons } from "@expo/vector-icons";
+  Camera,
+  type CameraRef,
+  type FilterSpecification,
+  GeoJSONSource,
+  type GeoJSONSourceRef,
+  Layer,
+  Marker,
+  type PressEventWithFeatures,
+} from "@maplibre/maplibre-react-native";
 import { useQuery } from "@tanstack/react-query";
-import React, { forwardRef, memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ActivityIndicator, StyleProp, StyleSheet, View, ViewStyle } from "react-native";
-import MapView, { LatLng, Marker, Polyline, Region } from "react-native-maps";
-import { useTheme } from "react-native-paper";
+import { RefObject, useCallback, useMemo, useRef, useState } from "react";
+import { NativeSyntheticEvent, StyleProp, StyleSheet, View, ViewStyle } from "react-native";
+import { Text, useTheme } from "react-native-paper";
 import Map from "./map";
+import { MARKER_COLORS } from "./marker-styles";
+
+interface SelectedFacility {
+  name: string;
+  coordinates: [number, number];
+}
 
 interface Props {
   style?: StyleProp<ViewStyle>;
-  initialRegion?: Region;
-  showsUserLocation?: boolean;
   filter: MapMarkerFilter;
-  selectedIdentifier: string | null;
-  onTrailSelect: (identifier: string | null) => void;
+  cameraRef: RefObject<CameraRef | null>;
+  onClusterOpen: (identifiers: string[]) => void;
+  onMapPress?: () => void;
   onMapReady?: () => void;
 }
 
-function regionToBounds(region: Region): TrailPathBounds {
-  return {
-    minLat: Math.round((region.latitude - region.latitudeDelta / 2) * 1000) / 1000,
-    maxLat: Math.round((region.latitude + region.latitudeDelta / 2) * 1000) / 1000,
-    minLon: Math.round((region.longitude - region.longitudeDelta / 2) * 1000) / 1000,
-    maxLon: Math.round((region.longitude + region.longitudeDelta / 2) * 1000) / 1000,
-  };
-}
+const BORAS_CENTER: [number, number] = [START_COORDINATE_BORAS.longitude, START_COORDINATE_BORAS.latitude];
+// Keep points clustered up to a high zoom so overlapping trailheads stay a single
+// tappable cluster instead of un-tappable stacked individual pins.
+const CLUSTER_MAX_ZOOM = 16;
+// Small clusters open the carousel directly — they're usually trails sharing a
+// trailhead that won't separate usefully by zooming. Larger, genuinely separable
+// clusters zoom in to break apart instead.
+const CAROUSEL_MAX_COUNT = 10;
 
-// Memoized so the JSX subtree is not recreated on every parent render.
-// onLayout is used by markers to know when the view has been measured so
-// they can disable tracksViewChanges after the first layout pass.
-const MapPin = memo(function MapPin({
-  color,
-  children,
-  onLayout,
-}: {
-  color: string;
-  children: React.ReactNode;
-  onLayout?: () => void;
-}) {
-  return (
-    <View style={s.pinWrapper} onLayout={onLayout}>
-      <View style={[s.pinBody, { backgroundColor: color }]}>{children}</View>
-      <View style={[s.pinTip, { borderTopColor: color }]} />
-    </View>
-  );
-});
+const HAS_COUNT: FilterSpecification = ["has", "point_count"];
+const NO_COUNT: FilterSpecification = ["!", ["has", "point_count"]];
 
-// Each trail gets its own memoized polyline. When selectedIdentifier changes
-// only the 1–2 affected instances re-render; all others bail out via React.memo
-// because their props are unchanged.
-// Note: iOS hit-area handling is intentionally omitted until iOS is addressed.
-const TrailPolyline = memo(function TrailPolyline({
-  identifier,
-  path,
-  selected,
-  onPress,
-}: {
-  identifier: string;
-  path: LatLng[];
-  selected: boolean;
-  onPress: (id: string) => void;
-}) {
-  const handlePress = useCallback(() => onPress(identifier), [onPress, identifier]);
-  return (
-    <Polyline
-      coordinates={path}
-      strokeColor={selected ? "#1a5266" : "#2a8099"}
-      strokeWidth={selected ? 5 : 3}
-      zIndex={selected ? 2 : 1}
-      tappable
-      onPress={handlePress}
-    />
-  );
-});
-
-// tracksViewChanges starts true so the native layer can measure the custom view,
-// then flips to false after the first layout — stopping the per-frame re-render
-// polling that causes lag on older devices.
-const TrailStartMarker = memo(function TrailStartMarker({
-  trail,
-  color,
-  iconColor,
-  onPress,
-}: {
-  trail: TrailMarkerResponse;
-  color: string;
-  iconColor: string;
-  onPress: (id: string) => void;
-}) {
-  const [tracksViewChanges, setTracksViewChanges] = useState(true);
-  const handlePress = useCallback(() => onPress(trail.identifier), [onPress, trail.identifier]);
-  const handleLayout = useCallback(() => setTracksViewChanges(false), []);
-  return (
-    <Marker
-      coordinate={{ latitude: Number(trail.startLatitude), longitude: Number(trail.startLongitude) }}
-      anchor={{ x: 0.5, y: 1 }}
-      tracksViewChanges={tracksViewChanges}
-      onPress={handlePress}
-    >
-      <MapPin color={color} onLayout={handleLayout}>
-        <Ionicons name="trail-sign-outline" size={14} color={iconColor} />
-      </MapPin>
-    </Marker>
-  );
-});
-
-const FacilityMarker = memo(function FacilityMarker({
-  facility,
-  color,
-  iconColor,
-  icon,
-  iconSize,
-}: {
-  facility: Facility;
-  color: string;
-  iconColor: string;
-  icon: "bonfire-outline" | "tent";
-  iconSize: number;
-}) {
-  const [tracksViewChanges, setTracksViewChanges] = useState(true);
-  const handleLayout = useCallback(() => setTracksViewChanges(false), []);
-  return (
-    <Marker
-      coordinate={{ latitude: Number(facility.latitude), longitude: Number(facility.longitude) }}
-      title={facility.name}
-      anchor={{ x: 0.5, y: 1 }}
-      tracksViewChanges={tracksViewChanges}
-    >
-      <MapPin color={color} onLayout={handleLayout}>
-        {icon === "tent" ? (
-          <FontAwesome6 name="tent" size={iconSize} color={iconColor} />
-        ) : (
-          <Ionicons name="bonfire-outline" size={iconSize} color={iconColor} />
-        )}
-      </MapPin>
-    </Marker>
-  );
-});
-
-export default forwardRef<MapView, Props>(function TrailMarkersMap(
-  { style, initialRegion, showsUserLocation, filter, selectedIdentifier, onTrailSelect, onMapReady }: Props,
-  mapRef,
-) {
+export default function TrailMarkersMap({
+  style,
+  filter,
+  cameraRef,
+  onClusterOpen,
+  onMapPress,
+  onMapReady,
+}: Props) {
   const theme = useTheme();
-  const shelterColor = theme.dark ? "hsl(195, 40%, 52%)" : theme.colors.primary;
-  const shelterIconColor = theme.dark ? "hsl(0, 0%, 96%)" : theme.colors.onPrimary;
+  const trailSourceRef = useRef<GeoJSONSourceRef>(null);
+  // Facilities have no detail screen yet, so a tap just shows the name in a bubble.
+  const [selectedFacility, setSelectedFacility] = useState<SelectedFacility | null>(null);
 
-  const fetchCounter = useRef(0);
-  const lastLevelRef = useRef<number>(0);
-  const initialRegionRef = initialRegion ?? START_COORDINATE_BORAS;
-
-  const [viewState, setViewState] = useState({
-    bounds: regionToBounds(initialRegionRef),
-    latitudeDelta: initialRegionRef.latitudeDelta,
-  });
-
-  const [displayedPaths, setDisplayedPaths] = useState<TrailPathLite[]>([]);
-  const [isNetworkFetching, setIsNetworkFetching] = useState(false);
+  const handleMapPress = useCallback(() => {
+    setSelectedFacility(null);
+    onMapPress?.();
+  }, [onMapPress]);
 
   const { data: trailMarkers } = useQuery({
     queryKey: ["trails", "markers"],
@@ -182,232 +77,180 @@ export default forwardRef<MapView, Props>(function TrailMarkersMap(
     staleTime: 5 * 60 * 1000,
   });
 
-  // O(1) accessibility lookup — replaces the O(n) .find() that was nested inside
-  // every .filter() call, making the old code O(n²) per render.
-  const accessibleIds = useMemo(
-    () => new Set(trailMarkers?.filter((m) => m.isAccessible).map((m) => m.identifier) ?? []),
-    [trailMarkers],
-  );
+  const trailFC = useMemo(() => {
+    const markers = (trailMarkers ?? []).filter((m) => !filter.accessibility || m.isAccessible);
+    return featureCollectionFromMarkers(markers);
+  }, [trailMarkers, filter.accessibility]);
 
-  const firePits = useMemo(
-    () => facilities?.filter((f) => f.facilityType === 1 || f.facilityType === 3) ?? [],
-    [facilities],
-  );
-  const shelters = useMemo(
-    () => facilities?.filter((f) => f.facilityType === 2 || f.facilityType === 3) ?? [],
-    [facilities],
-  );
+  const firePitFC = useMemo(() => {
+    const items = (facilities ?? []).filter(
+      (f) => (f.facilityType === 1 || f.facilityType === 3) && (!filter.accessibility || f.isAccessible),
+    );
+    return featureCollectionFromFacilities(items);
+  }, [facilities, filter.accessibility]);
 
-  const visibleTrailMarkers = useMemo(
-    () =>
-      trailMarkers?.filter(
-        (t) =>
-          t.startLatitude != null &&
-          t.startLongitude != null &&
-          (!filter.accessibility || accessibleIds.has(t.identifier)),
-      ) ?? [],
-    [trailMarkers, filter.accessibility, accessibleIds],
-  );
+  const shelterFC = useMemo(() => {
+    const items = (facilities ?? []).filter(
+      (f) => (f.facilityType === 2 || f.facilityType === 3) && (!filter.accessibility || f.isAccessible),
+    );
+    return featureCollectionFromFacilities(items);
+  }, [facilities, filter.accessibility]);
 
-  const visibleFirePits = useMemo(
-    () => firePits.filter((f) => !filter.accessibility || f.isAccessible),
-    [firePits, filter.accessibility],
-  );
+  const handleTrailPress = useCallback(
+    async (event: NativeSyntheticEvent<PressEventWithFeatures>) => {
+      event.stopPropagation();
+      setSelectedFacility(null);
+      const feature = event.nativeEvent.features?.[0];
+      if (!feature) return;
+      const props = feature.properties ?? {};
 
-  const visibleShelters = useMemo(
-    () => shelters.filter((f) => !filter.accessibility || f.isAccessible),
-    [shelters, filter.accessibility],
-  );
+      if (props.point_count != null) {
+        const clusterId = props.cluster_id as number;
+        const pointCount = props.point_count as number;
+        const [lng, lat] = (feature.geometry as GeoJSON.Point).coordinates;
 
-  // Pre-filter paths once so accessibility isn't re-evaluated per render.
-  const visiblePaths = useMemo(
-    () => (filter.trails ? displayedPaths.filter((t) => !filter.accessibility || accessibleIds.has(t.identifier)) : []),
-    [displayedPaths, filter.trails, filter.accessibility, accessibleIds],
-  );
-
-  useEffect(() => {
-    return () => {
-      if (debounceTimer.current) clearTimeout(debounceTimer.current);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!filter.trails) {
-      setDisplayedPaths([]);
-      setIsNetworkFetching(false);
-      return;
-    }
-
-    const level = getZoomLevel(viewState.latitudeDelta);
-
-    if (level === 0) {
-      setDisplayedPaths([]);
-      setIsNetworkFetching(false);
-      lastLevelRef.current = 0;
-      return;
-    }
-
-    const levelChanged = lastLevelRef.current !== level;
-    lastLevelRef.current = level;
-    if (levelChanged) setDisplayedPaths([]);
-
-    let active = true;
-    const thisRequest = ++fetchCounter.current;
-
-    async function fetchPaths() {
-      const tiles = getTilesForBounds(viewState.bounds, level as 1 | 2 | 3);
-      const { hits, misses } = await getCachedTiles(tiles, level as 1 | 2 | 3);
-
-      const isCurrent = () => active && fetchCounter.current === thisRequest;
-
-      if (misses.length === 0) {
-        if (isCurrent()) {
-          setDisplayedPaths((prev) => mergePathTiles([prev, ...[...hits.values()]]));
-          setIsNetworkFetching(false);
+        const expansionZoom = await trailSourceRef.current?.getClusterExpansionZoom(clusterId);
+        // A cluster that only "expands" beyond CLUSTER_MAX_ZOOM is effectively
+        // co-located — zooming won't separate it. Zoom in only for large clusters
+        // that genuinely break apart; otherwise open the carousel.
+        const separable = expansionZoom != null && expansionZoom <= CLUSTER_MAX_ZOOM;
+        if (pointCount > CAROUSEL_MAX_COUNT && separable && expansionZoom != null) {
+          cameraRef.current?.flyTo({ center: [lng, lat], zoom: expansionZoom, duration: 500 });
+          return;
         }
+
+        const leaves = await trailSourceRef.current?.getClusterLeaves(clusterId, pointCount, 0);
+        const ids = (leaves ?? [])
+          .map((leaf) => leaf.properties?.identifier as string | undefined)
+          .filter((id): id is string => !!id);
+        if (ids.length > 0) onClusterOpen(ids);
         return;
       }
 
-      // Show cached tiles immediately; always fetch misses to populate the
-      // cache even if this request is no longer the active one.
-      if (isCurrent()) {
-        if (hits.size > 0) setDisplayedPaths((prev) => mergePathTiles([prev, ...[...hits.values()]]));
-        setIsNetworkFetching(true);
-      }
+      if (props.identifier) onClusterOpen([props.identifier as string]);
+    },
+    [cameraRef, onClusterOpen],
+  );
 
-      const results = await Promise.allSettled(
-        misses.map(async ({ x, y }) => {
-          const data = await getTrailPaths(tileBounds(x, y, level as 1 | 2 | 3));
-          await setTileCached(x, y, level, data);
-          return data;
-        }),
-      );
-
-      if (!isCurrent()) return;
-
-      const fetched = results
-        .filter((r): r is PromiseFulfilledResult<TrailPathLite[]> => r.status === "fulfilled")
-        .map((r) => r.value);
-
-      // hits are already in prev from the partial-render above; only add fetched.
-      setDisplayedPaths((prev) => mergePathTiles([prev, ...fetched]));
-      setIsNetworkFetching(false);
-    }
-
-    fetchPaths();
-
-    return () => {
-      active = false;
-    };
-  }, [viewState, filter.trails]);
-
-  const pendingRegion = useRef<Region | null>(null);
-  const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const handleRegionChange = useCallback((region: Region) => {
-    pendingRegion.current = region;
-    if (debounceTimer.current) clearTimeout(debounceTimer.current);
-    debounceTimer.current = setTimeout(() => {
-      if (pendingRegion.current) {
-        setViewState({
-          bounds: regionToBounds(pendingRegion.current),
-          latitudeDelta: pendingRegion.current.latitudeDelta,
-        });
-      }
-    }, 150);
+  const handleFacilityPress = useCallback((event: NativeSyntheticEvent<PressEventWithFeatures>) => {
+    // Stop the press from dismissing the map, then show the facility's name.
+    event.stopPropagation();
+    const feature = event.nativeEvent.features?.[0];
+    if (!feature) return;
+    const name = feature.properties?.name as string | undefined;
+    const coordinates = (feature.geometry as GeoJSON.Point).coordinates as [number, number];
+    if (name) setSelectedFacility({ name, coordinates });
   }, []);
 
   return (
     <View style={style}>
       <Map
-        ref={mapRef}
         style={StyleSheet.absoluteFill}
-        initialRegion={initialRegionRef}
-        showsUserLocation={showsUserLocation}
-        onRegionChangeComplete={handleRegionChange}
-        onPress={() => onTrailSelect(null)}
-        {...(onMapReady !== undefined && { onMapReady })}
+        showsUserLocation
+        onPress={handleMapPress}
+        onDidFinishLoadingMap={onMapReady}
       >
-        {visiblePaths.map((t) => (
-          <TrailPolyline
-            key={t.identifier}
-            identifier={t.identifier}
-            path={t.path}
-            selected={selectedIdentifier === t.identifier}
-            onPress={onTrailSelect}
-          />
-        ))}
+        <Camera ref={cameraRef} initialViewState={{ center: BORAS_CENTER, zoom: 9.5 }} />
 
-        {filter.trails &&
-          visibleTrailMarkers.map((t) => (
-            <TrailStartMarker
-              key={`${t.identifier}-${theme.dark}`}
-              trail={t}
-              color={theme.colors.tertiary}
-              iconColor={theme.colors.onTertiary}
-              onPress={onTrailSelect}
-            />
-          ))}
+        {selectedFacility && (
+          <Marker lngLat={selectedFacility.coordinates} anchor="bottom" offset={[0, -8]}>
+            <View style={[s.callout, { backgroundColor: theme.colors.elevation.level3 }]}>
+              <Text style={[s.calloutText, { color: theme.colors.onSurface }]} numberOfLines={2}>
+                {selectedFacility.name}
+              </Text>
+            </View>
+          </Marker>
+        )}
 
-        {filter.firePits &&
-          visibleFirePits.map((f) => (
-            <FacilityMarker
-              key={`${f.identifier}-${theme.dark}`}
-              facility={f}
-              color={theme.colors.secondary}
-              iconColor={theme.colors.onSecondary}
-              icon="bonfire-outline"
-              iconSize={14}
+        {filter.trails && (
+          <GeoJSONSource
+            id="trails"
+            ref={trailSourceRef}
+            data={trailFC}
+            cluster
+            clusterRadius={60}
+            clusterMaxZoom={CLUSTER_MAX_ZOOM}
+            onPress={handleTrailPress}
+          >
+            <Layer
+              type="circle"
+              id="trail-clusters"
+              filter={HAS_COUNT}
+              paint={{
+                "circle-color": MARKER_COLORS.trails.fill,
+                "circle-radius": ["step", ["get", "point_count"], 16, 10, 20, 50, 26],
+                "circle-stroke-width": 2,
+                "circle-stroke-color": MARKER_COLORS.trails.stroke,
+              }}
             />
-          ))}
+            <Layer
+              type="symbol"
+              id="trail-cluster-count"
+              filter={HAS_COUNT}
+              layout={{
+                "text-field": ["get", "point_count_abbreviated"],
+                "text-font": ["Noto Sans Regular"],
+                "text-size": 12,
+              }}
+              paint={{ "text-color": MARKER_COLORS.trails.stroke }}
+            />
+            <Layer
+              type="circle"
+              id="trail-points"
+              filter={NO_COUNT}
+              paint={{
+                "circle-color": MARKER_COLORS.trails.fill,
+                "circle-radius": 9,
+                "circle-stroke-width": 2,
+                "circle-stroke-color": MARKER_COLORS.trails.stroke,
+              }}
+            />
+          </GeoJSONSource>
+        )}
 
-        {filter.shelters &&
-          visibleShelters.map((f) => (
-            <FacilityMarker
-              key={`${f.identifier}-${theme.dark}`}
-              facility={f}
-              color={shelterColor}
-              iconColor={shelterIconColor}
-              icon="tent"
-              iconSize={12}
+        {filter.firePits && (
+          <GeoJSONSource id="firepits" data={firePitFC} onPress={handleFacilityPress}>
+            <Layer
+              type="circle"
+              id="firepit-points"
+              paint={{
+                "circle-color": MARKER_COLORS.firePits.fill,
+                "circle-radius": 6,
+                "circle-stroke-width": 2,
+                "circle-stroke-color": MARKER_COLORS.firePits.stroke,
+              }}
             />
-          ))}
+          </GeoJSONSource>
+        )}
+
+        {filter.shelters && (
+          <GeoJSONSource id="shelters" data={shelterFC} onPress={handleFacilityPress}>
+            <Layer
+              type="circle"
+              id="shelter-points"
+              paint={{
+                "circle-color": MARKER_COLORS.shelters.fill,
+                "circle-radius": 6,
+                "circle-stroke-width": 2,
+                "circle-stroke-color": MARKER_COLORS.shelters.stroke,
+              }}
+            />
+          </GeoJSONSource>
+        )}
       </Map>
-
-      {isNetworkFetching && (
-        <View style={s.fetchingIndicator} pointerEvents="none">
-          <ActivityIndicator size="small" color={theme.colors.primary} />
-        </View>
-      )}
     </View>
   );
-});
+}
 
 const s = StyleSheet.create({
-  pinWrapper: {
-    alignItems: "center",
+  callout: {
+    maxWidth: 220,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: BORDER_RADIUS,
   },
-  pinBody: {
-    borderRadius: 8,
-    padding: 6,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  pinTip: {
-    width: 0,
-    height: 0,
-    borderLeftWidth: 5,
-    borderRightWidth: 5,
-    borderTopWidth: 7,
-    borderLeftColor: "transparent",
-    borderRightColor: "transparent",
-  },
-  fetchingIndicator: {
-    position: "absolute",
-    top: 12,
-    right: 12,
-    backgroundColor: "rgba(255,255,255,0.85)",
-    borderRadius: 16,
-    padding: 6,
+  calloutText: {
+    fontSize: 14,
+    fontFamily: "Inter_600SemiBold",
   },
 });
