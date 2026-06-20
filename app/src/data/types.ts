@@ -263,6 +263,15 @@ export interface CreateFacilityRequest {
   longitude: number;
 }
 
+// Facility kinds. Mirrors the backend's [Flags] FacilityType enum: a facility can
+// carry several flags at once (a combined fire pit + shelter is 3 = FirePit | Shelter),
+// so test membership with hasFacilityType() (bitwise), never equality.
+export const FacilityType = {
+  None: 0,
+  FirePit: 1,
+  Shelter: 2,
+} as const;
+
 export interface Facility {
   identifier: string;
   name: string;
@@ -270,6 +279,10 @@ export interface Facility {
   isAccessible: boolean;
   latitude: number;
   longitude: number;
+}
+
+export function hasFacilityType(facilityType: number, type: (typeof FacilityType)[keyof typeof FacilityType]): boolean {
+  return (facilityType & type) !== 0;
 }
 
 export interface SharedHike {

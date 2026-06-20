@@ -10,7 +10,10 @@ public class GetTrailCardsRequestValidator : AbstractValidator<GetTrailCardsRequ
 
     public GetTrailCardsRequestValidator()
     {
+        // Stop after the first failure so the Count check below never runs on a null
+        // collection (e.g. an explicit `"identifiers": null` in the request body).
         RuleFor(request => request.Identifiers)
+            .Cascade(CascadeMode.Stop)
             .NotEmpty().WithMessage("At least one identifier is required.")
             .Must(identifiers => identifiers.Count <= MaxIdentifiers)
             .WithMessage($"A maximum of {MaxIdentifiers} identifiers can be requested at once.");

@@ -570,6 +570,99 @@ public class TrailServiceTests
     }
 
     [Fact]
+    public async Task GetTrailCards_WhenSuccess_ReturnsCards()
+    {
+        // Arrange
+        IReadOnlyCollection<TrailCardProjection> projections =
+        [
+            new TrailCardProjection(Utilities.Identifiers.Trail4, "Trail A", 5M, 1, true, 4.0M, null),
+            new TrailCardProjection("trail-b", "Trail B", 8M, 2, false, 3.0M, null)
+        ];
+        var repo = new Mock<ITrailRepository>();
+        repo.Setup(r => r.GetTrailsByIdentifiersAsync(
+                It.IsAny<IReadOnlyCollection<string>>(),
+                It.IsAny<Expression<Func<Trail, TrailCardProjection>>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<IReadOnlyCollection<TrailCardProjection>>.Success(projections));
+
+        // Act
+        var result = await Build(repo).GetTrailCardsByIdentifiersAsync(
+            [Utilities.Identifiers.Trail4, "trail-b"], CancellationToken.None);
+
+        // Assert
+        result.Success.Should().BeTrue();
+        result.Value.Should().HaveCount(2);
+        result.Value.Should().Contain(c => c.Identifier == Utilities.Identifiers.Trail4);
+    }
+
+    [Fact]
+    public async Task GetTrailCards_WhenRepositoryErrors_ReturnsInternalServerError()
+    {
+        // Arrange
+        var repo = new Mock<ITrailRepository>();
+        repo.Setup(r => r.GetTrailsByIdentifiersAsync(
+                It.IsAny<IReadOnlyCollection<string>>(),
+                It.IsAny<Expression<Func<Trail, TrailCardProjection>>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<IReadOnlyCollection<TrailCardProjection>>.Error());
+
+        // Act
+        var result = await Build(repo).GetTrailCardsByIdentifiersAsync(["any-trail"], CancellationToken.None);
+
+        // Assert
+        result.Success.Should().BeFalse();
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(500);
+    }
+
+    [Fact]
+    public async Task GetTrailCards_WhenNoneFound_ReturnsEmptyCollection()
+    {
+        // Arrange
+        var repo = new Mock<ITrailRepository>();
+        repo.Setup(r => r.GetTrailsByIdentifiersAsync(
+                It.IsAny<IReadOnlyCollection<string>>(),
+                It.IsAny<Expression<Func<Trail, TrailCardProjection>>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<IReadOnlyCollection<TrailCardProjection>>.Success([]));
+
+        // Act
+        var result = await Build(repo).GetTrailCardsByIdentifiersAsync(["no-trail"], CancellationToken.None);
+
+        // Assert
+        result.Success.Should().BeTrue();
+        result.Value.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task GetTrailCards_WhenFound_ImageUrlHasBaseUrlPrepended()
+    {
+        // Arrange
+        IReadOnlyCollection<TrailCardProjection> projections =
+        [
+            new TrailCardProjection(
+                Utilities.Identifiers.Trail4, "Trail", 5M, 1, false, 3.0M,
+                new TrailCardImageProjection("img-1", "trails/img.jpg"))
+        ];
+        var repo = new Mock<ITrailRepository>();
+        repo.Setup(r => r.GetTrailsByIdentifiersAsync(
+                It.IsAny<IReadOnlyCollection<string>>(),
+                It.IsAny<Expression<Func<Trail, TrailCardProjection>>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<IReadOnlyCollection<TrailCardProjection>>.Success(projections));
+
+        // Act
+        var result = await Build(repo).GetTrailCardsByIdentifiersAsync(
+            [Utilities.Identifiers.Trail4], CancellationToken.None);
+
+        // Assert
+        result.Success.Should().BeTrue();
+        result.Value.Should().ContainSingle();
+        result.Value.First().Image.Should().NotBeNull();
+        result.Value.First().Image!.ImageUrl.Should().Be("http://stigvidd.se/testing/trails/img.jpg");
+    }
+
+    [Fact]
     public async Task GetCoordinates_WhenError_ReturnsInternalServerError()
     {
         // Arrange

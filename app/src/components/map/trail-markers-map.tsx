@@ -1,18 +1,20 @@
 import { getFacilityMarkers, getTrailMarkers } from "@/api/map-markers";
 import { showErrorAtom } from "@/atoms/snackbar-atoms";
 import { BORDER_RADIUS, START_COORDINATE_BORAS } from "@/constants/constants";
-import { MapMarkerFilter } from "@/data/types";
+import { FacilityType, hasFacilityType, MapMarkerFilter } from "@/data/types";
 import { type ClusterActionConfig, decideClusterAction } from "@/utils/cluster-action";
-import { featureCollectionFromFacilities, featureCollectionFromMarkers } from "@/utils/geojson";
+import { featureCollectionFromFacilities, featureCollectionFromMarkers, pointFeatureFromPosition } from "@/utils/geojson";
 import {
   Camera,
   type CameraRef,
   type FilterSpecification,
   GeoJSONSource,
   type GeoJSONSourceRef,
+  type InitialViewState,
   Layer,
   Marker,
   type PressEventWithFeatures,
+  type ViewStateChangeEvent,
 } from "@maplibre/maplibre-react-native";
 import { useQuery } from "@tanstack/react-query";
 import { useSetAtom } from "jotai";
@@ -21,7 +23,7 @@ import { useTranslation } from "react-i18next";
 import { NativeSyntheticEvent, StyleProp, StyleSheet, View, ViewStyle } from "react-native";
 import { Text, useTheme } from "react-native-paper";
 import Map from "./map";
-import { MARKER_COLORS } from "./marker-styles";
+import { HIGHLIGHT_MARKER_COLORS, MARKER_COLORS } from "./marker-styles";
 
 interface SelectedFacility {
   name: string;
@@ -32,12 +34,23 @@ interface Props {
   style?: StyleProp<ViewStyle>;
   filter: MapMarkerFilter;
   cameraRef: RefObject<CameraRef | null>;
-  onClusterOpen: (identifiers: string[]) => void;
+  // The tapped cluster/trail to ring on the map while its carousel is open.
+  highlight?: MapHighlight | null;
+  // Seeds the camera on mount. The screen remembers the last view here so the map
+  // reopens where the user left it (instead of resetting) after navigating away.
+  initialViewState?: InitialViewState;
+  // expansionZoom is the level at which this cluster breaks apart, so the screen can
+  // dismiss the carousel once a zoom moves out of the range where the cluster holds
+  // together. Omitted for a single trail, which never splits or merges.
+  onClusterOpen: (identifiers: string[], highlight: MapHighlight, expansionZoom?: number) => void;
+  onRegionDidChange?: (event: NativeSyntheticEvent<ViewStateChangeEvent>) => void;
   onMapPress?: () => void;
   onMapReady?: () => void;
 }
 
 const BORAS_CENTER: [number, number] = [START_COORDINATE_BORAS.longitude, START_COORDINATE_BORAS.latitude];
+// Where the camera opens the first time, before any view has been remembered.
+const DEFAULT_VIEW_STATE: InitialViewState = { center: BORAS_CENTER, zoom: 9.5 };
 // Keep points clustered up to a high zoom so overlapping trailheads stay a single
 // tappable cluster instead of un-tappable stacked individual pins.
 const CLUSTER_MAX_ZOOM = 16;
@@ -54,11 +67,42 @@ const CLUSTER_ACTION_CONFIG: ClusterActionConfig = {
 const HAS_COUNT: FilterSpecification = ["has", "point_count"];
 const NO_COUNT: FilterSpecification = ["!", ["has", "point_count"]];
 
+// Circle radii for the trail source's rendered layers. Kept as named constants so
+// the selection ring can be sized from the same numbers and always sit just outside
+// whatever was tapped (a point or a cluster of any size).
+const POINT_RADIUS = 9;
+const CLUSTER_RADIUS_BASE = 16;
+const CLUSTER_RADIUS_MED = 20;
+const CLUSTER_RADIUS_LARGE = 26;
+const CLUSTER_COUNT_MED = 10;
+const CLUSTER_COUNT_LARGE = 50;
+// Gap between the marker edge and the selection ring.
+const RING_GAP = 5;
+
+// The rendered radius of a tapped feature — null pointCount means a single trail
+// point; otherwise mirror the cluster circle-radius step below.
+function markerRadius(pointCount: number | null): number {
+  if (pointCount == null) return POINT_RADIUS;
+  if (pointCount >= CLUSTER_COUNT_LARGE) return CLUSTER_RADIUS_LARGE;
+  if (pointCount >= CLUSTER_COUNT_MED) return CLUSTER_RADIUS_MED;
+  return CLUSTER_RADIUS_BASE;
+}
+
+// The tapped cluster/trail to ring on the map while its carousel is open. The
+// radius sizes the ring to hug that specific marker.
+export interface MapHighlight {
+  coordinate: [number, number];
+  radius: number;
+}
+
 export default function TrailMarkersMap({
   style,
   filter,
   cameraRef,
+  highlight,
+  initialViewState,
   onClusterOpen,
+  onRegionDidChange,
   onMapPress,
   onMapReady,
 }: Props) {
@@ -103,17 +147,28 @@ export default function TrailMarkersMap({
 
   const firePitFC = useMemo(() => {
     const items = (facilities ?? []).filter(
-      (f) => (f.facilityType === 1 || f.facilityType === 3) && (!filter.accessibility || f.isAccessible),
+      (f) => hasFacilityType(f.facilityType, FacilityType.FirePit) && (!filter.accessibility || f.isAccessible),
     );
     return featureCollectionFromFacilities(items);
   }, [facilities, filter.accessibility]);
 
   const shelterFC = useMemo(() => {
     const items = (facilities ?? []).filter(
-      (f) => (f.facilityType === 2 || f.facilityType === 3) && (!filter.accessibility || f.isAccessible),
+      (f) => hasFacilityType(f.facilityType, FacilityType.Shelter) && (!filter.accessibility || f.isAccessible),
     );
     return featureCollectionFromFacilities(items);
   }, [facilities, filter.accessibility]);
+
+  // A thin ring around the tapped cluster/trail while its carousel is open. Set once
+  // on tap (not per swipe) so co-located trails — whose ring would never visibly
+  // move — don't make the map look like it's stuttering. The radius travels in the
+  // feature so the ring layer can hug markers of any size.
+  const highlightFC = useMemo<GeoJSON.FeatureCollection<GeoJSON.Point>>(() => {
+    if (!highlight) return { type: "FeatureCollection", features: [] };
+    const feature = pointFeatureFromPosition(highlight.coordinate);
+    feature.properties = { radius: highlight.radius + RING_GAP };
+    return { type: "FeatureCollection", features: [feature] };
+  }, [highlight]);
 
   const handleTrailPress = useCallback(
     async (event: NativeSyntheticEvent<PressEventWithFeatures>) => {
@@ -139,11 +194,16 @@ export default function TrailMarkersMap({
         const ids = (leaves ?? [])
           .map((leaf) => leaf.properties?.identifier as string | undefined)
           .filter((id): id is string => !!id);
-        if (ids.length > 0) onClusterOpen(ids);
+        if (ids.length > 0) {
+          onClusterOpen(ids, { coordinate: [lng, lat], radius: markerRadius(pointCount) }, expansionZoom ?? undefined);
+        }
         return;
       }
 
-      if (props.identifier) onClusterOpen([props.identifier as string]);
+      if (props.identifier) {
+        const [lng, lat] = (feature.geometry as GeoJSON.Point).coordinates;
+        onClusterOpen([props.identifier as string], { coordinate: [lng, lat], radius: markerRadius(null) });
+      }
     },
     [cameraRef, onClusterOpen],
   );
@@ -165,8 +225,9 @@ export default function TrailMarkersMap({
         showsUserLocation
         onPress={handleMapPress}
         onDidFinishLoadingMap={onMapReady}
+        onRegionDidChange={onRegionDidChange}
       >
-        <Camera ref={cameraRef} initialViewState={{ center: BORAS_CENTER, zoom: 9.5 }} />
+        <Camera ref={cameraRef} initialViewState={initialViewState ?? DEFAULT_VIEW_STATE} />
 
         {selectedFacility && (
           <Marker lngLat={selectedFacility.coordinates} anchor="bottom" offset={[0, -8]}>
@@ -194,7 +255,15 @@ export default function TrailMarkersMap({
               filter={HAS_COUNT}
               paint={{
                 "circle-color": MARKER_COLORS.trails.fill,
-                "circle-radius": ["step", ["get", "point_count"], 16, 10, 20, 50, 26],
+                "circle-radius": [
+                  "step",
+                  ["get", "point_count"],
+                  CLUSTER_RADIUS_BASE,
+                  CLUSTER_COUNT_MED,
+                  CLUSTER_RADIUS_MED,
+                  CLUSTER_COUNT_LARGE,
+                  CLUSTER_RADIUS_LARGE,
+                ],
                 "circle-stroke-width": 2,
                 "circle-stroke-color": MARKER_COLORS.trails.stroke,
               }}
@@ -216,7 +285,7 @@ export default function TrailMarkersMap({
               filter={NO_COUNT}
               paint={{
                 "circle-color": MARKER_COLORS.trails.fill,
-                "circle-radius": 9,
+                "circle-radius": POINT_RADIUS,
                 "circle-stroke-width": 2,
                 "circle-stroke-color": MARKER_COLORS.trails.stroke,
               }}
@@ -249,6 +318,26 @@ export default function TrailMarkersMap({
                 "circle-radius": 6,
                 "circle-stroke-width": 2,
                 "circle-stroke-color": MARKER_COLORS.shelters.stroke,
+              }}
+            />
+          </GeoJSONSource>
+        )}
+
+        {/* Declared last so the selection ring draws above every trail/cluster/
+            facility layer. It's a stroke-only ring sized just outside the tapped
+            marker, so it hugs the selection without covering a cluster's count.
+            Built as a plain circle layer (never a view-hosted <Marker>), the
+            iOS/Fabric-safe path used throughout the map. */}
+        {highlightFC.features.length > 0 && (
+          <GeoJSONSource id="trail-highlight" data={highlightFC}>
+            <Layer
+              type="circle"
+              id="trail-highlight-ring"
+              paint={{
+                "circle-radius": ["get", "radius"],
+                "circle-opacity": 0,
+                "circle-stroke-width": 3,
+                "circle-stroke-color": HIGHLIGHT_MARKER_COLORS.ring,
               }}
             />
           </GeoJSONSource>

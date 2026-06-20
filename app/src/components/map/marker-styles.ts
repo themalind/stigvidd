@@ -34,3 +34,10 @@ export const START_MARKER_COLORS: MarkerColors = {
   fill: colors.primary,
   stroke: colors.onPrimary,
 };
+
+// The selection ring drawn around the tapped cluster/trail while its carousel is
+// open: a thin warm tertiary outline that hugs the marker and pops against the
+// other (teal) trail pins and clusters. Same fixed light palette as every marker.
+export const HIGHLIGHT_MARKER_COLORS = {
+  ring: colors.tertiary,
+};

@@ -106,6 +106,7 @@
     "showOnMap": "Show on map",
     "loadError": "Could not load the map data",
     "cardError": "Could not load this trail",
+    "cardNotFound": "This trail is no longer available",
     "start": "Start",
     "directions": "Directions",
     "directionsTitle": "Directions",

@@ -106,6 +106,7 @@
     "showOnMap": "Se på karta",
     "loadError": "Kunde inte ladda kartdata",
     "cardError": "Kunde inte ladda den här leden",
+    "cardNotFound": "Den här leden är inte längre tillgänglig",
     "start": "Start",
     "directions": "Vägbeskrivning",
     "directionsTitle": "Vägbeskrivning",

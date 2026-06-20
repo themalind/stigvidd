@@ -22,7 +22,7 @@ const ITEMS: { key: keyof MapMarkerFilter; label: string; icon: keyof typeof Mat
 ];
 
 // Collapsed filter control for the map: a slim pill that expands into a checkbox
-// menu. Floats in the top-left corner; uses elevation colour (not shadows) for depth.
+// menu. Floats in the top-right corner; uses elevation colour (not shadows) for depth.
 export default function MapFilterMenu({ filter, onChange }: Props) {
   const theme = useTheme();
   const { t } = useTranslation();

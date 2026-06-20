@@ -13,7 +13,7 @@ import { guardedNavigate } from "@/utils/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { startTransition, useCallback, useEffect, useRef, useState } from "react";
-import { Platform, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useTheme } from "react-native-paper";
 import { useTranslation } from "react-i18next";
 import BackButton from "../back-button";
@@ -127,9 +127,12 @@ export default function TrailDetailsScreen({ followRoute }: { followRoute: Follo
               <Text style={[s.ratingNumber, { color: theme.colors.onBackground }]}>{`(${reviewCount})`}</Text>
             </View>
             <View style={s.paddingLeft}>
-              <TouchableOpacity onPress={onPressScrollToRatings}>
+              <Pressable
+                onPress={onPressScrollToRatings}
+                style={({ pressed }) => pressed && { opacity: 0.7 }}
+              >
                 <Text style={[s.text, { color: theme.colors.secondary }]}>{t("trail.readReviews")}</Text>
-              </TouchableOpacity>
+              </Pressable>
             </View>
           </View>
           {trail && <TrailInfo trail={trail} />}

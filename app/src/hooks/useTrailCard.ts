@@ -106,6 +106,7 @@ export function useTrailCards(identifiers: string[]): {
   cards: Record<string, TrailCard>;
   isLoading: boolean;
   isError: boolean;
+  notFound: Set<string>;
   refetch: () => void;
 } {
   const [cards, setCards] = useState<Record<string, TrailCard>>({});
@@ -113,6 +114,10 @@ export function useTrailCards(identifiers: string[]): {
   // Only reflects a failure of the batched network fetch for missing cards —
   // entries already served from cache stay visible regardless.
   const [isError, setIsError] = useState(false);
+  // Identifiers the server omitted from an otherwise successful response (e.g. a
+  // trail unverified/removed after its map marker loaded). Without this they would
+  // never resolve and the card would spin forever.
+  const [notFound, setNotFound] = useState<Set<string>>(new Set());
   // Bumping this re-runs the effect to retry after a failure.
   const [reloadIndex, setReloadIndex] = useState(0);
 
@@ -126,6 +131,7 @@ export function useTrailCards(identifiers: string[]): {
       setCards({});
       setIsLoading(false);
       setIsError(false);
+      setNotFound(new Set());
       return;
     }
 
@@ -133,6 +139,7 @@ export function useTrailCards(identifiers: string[]): {
 
     async function load() {
       setIsError(false);
+      setNotFound(new Set());
       const resolved: Record<string, TrailCard> = {};
       const missing: string[] = [];
 
@@ -172,6 +179,12 @@ export function useTrailCards(identifiers: string[]): {
           ).catch(() => {});
         }
         setCards({ ...resolved });
+
+        // Flag any requested id the server didn't return so the UI can show a
+        // "no longer available" state instead of an endless spinner.
+        const returned = new Set(fetched.map((c) => c.identifier));
+        const absent = missing.filter((id) => !returned.has(id));
+        if (absent.length > 0) setNotFound(new Set(absent));
       } catch {
         // Keep whatever resolved from cache, but flag the failure so the UI can
         // offer a retry instead of spinning forever on the missing cards.
@@ -188,5 +201,5 @@ export function useTrailCards(identifiers: string[]): {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key, reloadIndex]);
 
-  return { cards, isLoading, isError, refetch };
+  return { cards, isLoading, isError, notFound, refetch };
 }

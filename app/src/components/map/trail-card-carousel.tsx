@@ -6,7 +6,7 @@ import { getDifficultyIcon } from "@/utils/getDifficultyIcon";
 import { MaterialIcons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { memo, useCallback, useEffect, useRef, useState } from "react";
-import { ActivityIndicator, Dimensions, FlatList, StyleSheet, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Dimensions, FlatList, Pressable, StyleSheet, View } from "react-native";
 import type { NativeScrollEvent, NativeSyntheticEvent } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
@@ -37,7 +37,7 @@ export default function TrailCardCarousel({ identifiers, onClose, onReadMore, on
   const cardWidth = multiple ? CARD_WIDTH : SINGLE_CARD_WIDTH;
 
   // One batched fetch for the whole cluster instead of one request per card.
-  const { cards, isError, refetch } = useTrailCards(identifiers);
+  const { cards, isError, notFound, refetch } = useTrailCards(identifiers);
 
   // Reset to the first card whenever a different cluster is opened — otherwise the
   // list keeps its previous scroll offset / index (e.g. lands on "3/4").
@@ -61,13 +61,14 @@ export default function TrailCardCarousel({ identifiers, onClose, onReadMore, on
         card={cards[item]}
         cardWidth={cardWidth}
         isError={isError}
+        isNotFound={notFound.has(item)}
         onRetry={refetch}
         position={identifiers.length > 1 ? `${index + 1}/${identifiers.length}` : undefined}
         onReadMore={onReadMore}
         onShowOnMap={onShowOnMap}
       />
     ),
-    [cards, cardWidth, isError, refetch, identifiers.length, onReadMore, onShowOnMap],
+    [cards, cardWidth, isError, notFound, refetch, identifiers.length, onReadMore, onShowOnMap],
   );
 
   // Fixed-width cards → give the list their geometry so it doesn't measure them.
@@ -82,13 +83,17 @@ export default function TrailCardCarousel({ identifiers, onClose, onReadMore, on
 
   return (
     <View style={[s.wrapper, { bottom: insets.bottom + 16 }]}>
-      <TouchableOpacity
+      <Pressable
         onPress={onClose}
         hitSlop={10}
-        style={[s.dismissButton, { backgroundColor: theme.colors.surface }]}
+        style={({ pressed }) => [
+          s.dismissButton,
+          { backgroundColor: theme.colors.surface },
+          pressed && { opacity: 0.7 },
+        ]}
       >
         <MaterialIcons name="keyboard-arrow-down" size={24} color={theme.colors.onSurfaceVariant} />
-      </TouchableOpacity>
+      </Pressable>
       <FlatList
         ref={listRef}
         data={identifiers}
@@ -131,6 +136,7 @@ const CarouselCard = memo(function CarouselCard({
   card,
   cardWidth,
   isError,
+  isNotFound,
   onRetry,
   position,
   onReadMore,
@@ -140,6 +146,7 @@ const CarouselCard = memo(function CarouselCard({
   card?: TrailCard;
   cardWidth: number;
   isError: boolean;
+  isNotFound: boolean;
   onRetry: () => void;
   position?: string;
   onReadMore: (identifier: string) => void;
@@ -150,20 +157,33 @@ const CarouselCard = memo(function CarouselCard({
 
   return (
     <View style={[s.card, { width: cardWidth, backgroundColor: theme.colors.surface }]}>
-      {!card && isError ? (
+      {!card && isNotFound ? (
+        // The server returned successfully but omitted this trail (e.g. it was
+        // unverified/removed after its marker loaded) — there is nothing to retry.
+        <View style={s.stateBox}>
+          <Text style={[s.errorText, { color: theme.colors.onSurfaceVariant }]} numberOfLines={2}>
+            {t("map.cardNotFound")}
+          </Text>
+        </View>
+      ) : !card && isError ? (
         // The batched fetch failed and this card has no cached data — offer a retry
         // instead of an indefinite spinner.
         <View style={s.stateBox}>
           <Text style={[s.errorText, { color: theme.colors.onSurfaceVariant }]} numberOfLines={2}>
             {t("map.cardError")}
           </Text>
-          <TouchableOpacity
-            style={[s.button, s.retryButton, { backgroundColor: theme.colors.surfaceVariant }]}
+          <Pressable
+            style={({ pressed }) => [
+              s.button,
+              s.retryButton,
+              { backgroundColor: theme.colors.surfaceVariant },
+              pressed && { opacity: 0.7 },
+            ]}
             onPress={onRetry}
           >
             <MaterialIcons name="refresh" size={16} color={theme.colors.onSurfaceVariant} />
             <Text style={[s.buttonText, { color: theme.colors.onSurfaceVariant }]}>{t("common.retry")}</Text>
-          </TouchableOpacity>
+          </Pressable>
         </View>
       ) : !card ? (
         <ActivityIndicator style={s.loader} color={theme.colors.primary} />
@@ -193,19 +213,27 @@ const CarouselCard = memo(function CarouselCard({
             {position && <Text style={[s.counter, { color: theme.colors.onSurfaceVariant }]}>{position}</Text>}
           </View>
           <View style={s.buttonRow}>
-            <TouchableOpacity
-              style={[s.button, { backgroundColor: theme.colors.surfaceVariant }]}
+            <Pressable
+              style={({ pressed }) => [
+                s.button,
+                { backgroundColor: theme.colors.surfaceVariant },
+                pressed && { opacity: 0.7 },
+              ]}
               onPress={() => onReadMore(identifier)}
             >
               <Text style={[s.buttonText, { color: theme.colors.onSurfaceVariant }]}>{t("map.readMore")}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[s.button, { backgroundColor: theme.colors.primaryContainer }]}
+            </Pressable>
+            <Pressable
+              style={({ pressed }) => [
+                s.button,
+                { backgroundColor: theme.colors.primaryContainer },
+                pressed && { opacity: 0.7 },
+              ]}
               onPress={() => onShowOnMap(identifier)}
             >
               <MaterialIcons name="map" size={16} color={theme.colors.onPrimaryContainer} />
               <Text style={[s.buttonText, { color: theme.colors.onPrimaryContainer }]}>{t("map.showOnMap")}</Text>
-            </TouchableOpacity>
+            </Pressable>
           </View>
         </>
       )}

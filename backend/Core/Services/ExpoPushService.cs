@@ -148,7 +148,6 @@ public class ExpoPushService : IPushNotificationService
             _logger.LogError(ex, "ExpoPushService: SendToUserAsync -> An unexpected error occurred while sending push notifications to user {Identifier}.", userIdentifier);
             return Result.Fail(new Message(500, "An error occurred while sending push notifications."));
         }
-
     }
 
     public async Task<Result> UnregisterTokenAsync(string userIdentifier, string expoToken, CancellationToken ctoken)

@@ -79,7 +79,7 @@ public class TrailRepository : ITrailRepository
             // from the caller's selector so the repository never builds a response model.
             var rankedTrails =
                 from t in context.Trails.AsNoTracking()
-                where t.IsVerified
+                where t.IsVerified && t.GeoPath != null
                 let score = (double)(t.Reviews!.Any() ? t.Reviews!.Average(r => r.Rating) : 0m)
                     + (userLocation != null ? (5.0 / (1.0 + t.GeoPath!.StartPoint.Distance(userLocation) / 10.0)) : 0.0)
                 orderby score descending

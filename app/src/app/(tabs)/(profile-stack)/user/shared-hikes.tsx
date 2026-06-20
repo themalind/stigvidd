@@ -16,7 +16,7 @@ import { Redirect } from "expo-router";
 import { useAtom, useAtomValue } from "jotai";
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Platform, ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
+import { Platform, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { Button, Divider, Icon, IconButton, Surface, Text, useTheme } from "react-native-paper";
 
 const PREVIEW_COUNT = 5;
@@ -93,9 +93,8 @@ export default function SharedHikesScreen() {
                     {(incomingExpanded ? incomingRequests : incomingRequests?.slice(0, PREVIEW_COUNT))?.map(
                       (req, i, arr) => (
                         <View key={req.hikeIdentifier}>
-                          <TouchableOpacity
-                            style={s.row}
-                            activeOpacity={0.6}
+                          <Pressable
+                            style={({ pressed }) => [s.row, pressed && { opacity: 0.7 }]}
                             onPress={() => {
                               setSelectedIncomingId(req.hikeIdentifier);
                               setIncomingDetailVisible(true);
@@ -132,7 +131,7 @@ export default function SharedHikesScreen() {
                                 style={s.actionButton}
                               />
                             </View>
-                          </TouchableOpacity>
+                          </Pressable>
                           {i < arr.length - 1 && (
                             <View style={[s.divider, { backgroundColor: theme.colors.outlineVariant }]} />
                           )}
@@ -185,9 +184,8 @@ export default function SharedHikesScreen() {
                 ) : (
                   hikes?.map((hike, index) => (
                     <View key={index}>
-                      <TouchableOpacity
-                        style={s.row}
-                        activeOpacity={0.6}
+                      <Pressable
+                        style={({ pressed }) => [s.row, pressed && { opacity: 0.7 }]}
                         onPress={() => {
                           setSelectedSharedHike(hike);
                           setVisible(true);
@@ -209,7 +207,7 @@ export default function SharedHikesScreen() {
                           </Text>
                         </View>
                         <Icon source="chevron-right" size={20} />
-                      </TouchableOpacity>
+                      </Pressable>
                       {index < hikes.length - 1 && (
                         <View style={[s.divider, { backgroundColor: theme.colors.outlineVariant }]} />
                       )}
