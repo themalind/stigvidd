@@ -1,6 +1,7 @@
 import AlertDialog from "@/components/alert-dialog";
 import LoadingIndicator from "@/components/loading-indicator";
 import Map from "@/components/map/map";
+import { ROUTE_LINE_COLOR } from "@/components/map/marker-styles";
 import { BORDER_RADIUS } from "@/constants/constants";
 import { useLocationTracking } from "@/services/use-location-tracking";
 import { lineStringFromPositions } from "@/utils/geojson";
@@ -96,14 +97,17 @@ export default function TrailCreator() {
       <View style={s.mapContainer}>
         <Map style={s.map} showsUserLocation>
           <Camera ref={cameraRef} initialViewState={{ center: initialCenter, zoom: 16 }} />
-          <GeoJSONSource id="hike-route" data={routeShape}>
-            <Layer
-              type="line"
-              id="hike-route-line"
-              layout={{ "line-join": "round", "line-cap": "round" }}
-              paint={{ "line-color": theme.colors.primary, "line-width": 4 }}
-            />
-          </GeoJSONSource>
+          {/* A LineString needs >= 2 points; while tracking starts (0–1 nodes) the line isn't drawn yet. */}
+          {routePositions.length > 1 && (
+            <GeoJSONSource id="hike-route" data={routeShape}>
+              <Layer
+                type="line"
+                id="hike-route-line"
+                layout={{ "line-join": "round", "line-cap": "round" }}
+                paint={{ "line-color": ROUTE_LINE_COLOR, "line-width": 4 }}
+              />
+            </GeoJSONSource>
+          )}
         </Map>
       </View>
 

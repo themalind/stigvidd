@@ -1,5 +1,5 @@
 import { SURFACE_BORDER_RADIUS } from "@/constants/constants";
-import { lineStringFromPositions, pointFeatureFromPosition } from "@/utils/geojson";
+import { lineStringFromPositions } from "@/utils/geojson";
 import getBoundsFromTrail from "@/utils/get-bounds-from-trail";
 import { openDirectionsToStart } from "@/utils/open-directions";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -9,7 +9,8 @@ import { Dimensions, Pressable, StyleSheet, View } from "react-native";
 import { useTranslation } from "react-i18next";
 import { Surface, Text, useTheme } from "react-native-paper";
 import Map from "../map/map";
-import { ROUTE_LINE_COLOR, START_MARKER_COLORS } from "../map/marker-styles";
+import { ROUTE_LINE_COLOR } from "../map/marker-styles";
+import StartMarker from "../map/start-marker";
 
 interface TrailMapProps {
   trail: GeoJSON.Position[];
@@ -35,13 +36,6 @@ export default function TrailMap({ trail, onPress }: TrailMapProps) {
     [bounds],
   );
   const lineShape = useMemo(() => lineStringFromPositions(trail), [trail]);
-  // Draw the trailhead as a GeoJSON point layer (not a view-hosted <Marker>):
-  // consistent with the rest of the map and avoids the fragile annotation path
-  // on iOS + New Architecture.
-  const startShape = useMemo(
-    () => (trail.length > 0 ? pointFeatureFromPosition(trail[0]) : undefined),
-    [trail],
-  );
 
   const fitToTrail = useCallback(() => {
     if (bounds) cameraRef.current?.fitBounds(bounds, { padding: { top: 40, right: 40, bottom: 40, left: 40 }, duration: 0 });
@@ -62,45 +56,17 @@ export default function TrailMap({ trail, onPress }: TrailMapProps) {
             onDidFinishLoadingMap={fitToTrail}
           >
             <Camera ref={cameraRef} initialViewState={center ? { center, zoom: 12 } : undefined} />
-            <GeoJSONSource id="trail-route" data={lineShape}>
-              <Layer
-                type="line"
-                id="trail-route-line"
-                layout={{ "line-join": "round", "line-cap": "round" }}
-                paint={{ "line-color": ROUTE_LINE_COLOR, "line-width": 3 }}
-              />
-            </GeoJSONSource>
-            {startShape && (
-              <GeoJSONSource id="trail-start" data={startShape}>
+            {trail.length > 1 && (
+              <GeoJSONSource id="trail-route" data={lineShape}>
                 <Layer
-                  type="circle"
-                  id="trail-start-point"
-                  paint={{
-                    "circle-color": START_MARKER_COLORS.fill,
-                    "circle-radius": 7,
-                    "circle-stroke-width": 3,
-                    "circle-stroke-color": START_MARKER_COLORS.stroke,
-                  }}
-                />
-                <Layer
-                  type="symbol"
-                  id="trail-start-label"
-                  layout={{
-                    "text-field": t("map.start"),
-                    "text-font": ["Noto Sans Regular"],
-                    "text-size": 12,
-                    "text-anchor": "bottom",
-                    "text-offset": [0, -1],
-                    "text-allow-overlap": true,
-                  }}
-                  paint={{
-                    "text-color": START_MARKER_COLORS.fill,
-                    "text-halo-color": START_MARKER_COLORS.stroke,
-                    "text-halo-width": 1.5,
-                  }}
+                  type="line"
+                  id="trail-route-line"
+                  layout={{ "line-join": "round", "line-cap": "round" }}
+                  paint={{ "line-color": ROUTE_LINE_COLOR, "line-width": 3 }}
                 />
               </GeoJSONSource>
             )}
+            {trail.length > 0 && <StartMarker id="trail-start" position={trail[0]} label={t("map.start")} />}
           </Map>
         )}
         <Pressable style={s.overlay} onPress={onPress}>

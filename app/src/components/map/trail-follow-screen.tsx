@@ -1,11 +1,12 @@
 import { getCoordinatesByTrailIdentifier } from "@/api/trails";
 import CenterOnUserButton from "@/components/map/center-on-user-button";
 import Map from "@/components/map/map";
-import { ROUTE_LINE_COLOR, START_MARKER_COLORS } from "@/components/map/marker-styles";
+import { ROUTE_LINE_COLOR } from "@/components/map/marker-styles";
+import StartMarker from "@/components/map/start-marker";
 import { SURFACE_BORDER_RADIUS } from "@/constants/constants";
 import { useTrailCard } from "@/hooks/useTrailCard";
 import CoordinateParser from "@/utils/coordinate-parser";
-import { lineStringFromPositions, pointFeatureFromPosition } from "@/utils/geojson";
+import { lineStringFromPositions } from "@/utils/geojson";
 import getBoundsFromTrail from "@/utils/get-bounds-from-trail";
 import { openDirectionsToStart } from "@/utils/open-directions";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -50,13 +51,6 @@ export default function TrailFollowScreen() {
   );
   const lineShape = useMemo(() => lineStringFromPositions(path), [path]);
   const bounds = useMemo(() => getBoundsFromTrail(path), [path]);
-  // Trailhead drawn as a GeoJSON point layer rather than a view-hosted <Marker>:
-  // consistent with the route layer and avoids the fragile annotation path on
-  // iOS + New Architecture.
-  const startShape = useMemo(
-    () => (path.length > 0 ? pointFeatureFromPosition(path[0]) : undefined),
-    [path],
-  );
 
   // Tapping the trailhead hands off to the device's maps app for directions.
   const openDirections = useCallback(() => {
@@ -82,7 +76,7 @@ export default function TrailFollowScreen() {
     <View style={s.container}>
       <Map style={StyleSheet.absoluteFill} showsUserLocation onDidFinishLoadingMap={handleMapReady}>
         <Camera ref={cameraRef} />
-        {path.length > 0 && (
+        {path.length > 1 && (
           <GeoJSONSource id="follow-trail" data={lineShape}>
             <Layer
               type="line"
@@ -92,42 +86,8 @@ export default function TrailFollowScreen() {
             />
           </GeoJSONSource>
         )}
-        {startShape && (
-          <GeoJSONSource id="follow-start" data={startShape} onPress={openDirections}>
-            {/* Invisible, finger-sized hit target so the small visible dot is easy to tap. */}
-            <Layer
-              type="circle"
-              id="follow-start-hit"
-              paint={{ "circle-color": START_MARKER_COLORS.fill, "circle-opacity": 0, "circle-radius": 22 }}
-            />
-            <Layer
-              type="circle"
-              id="follow-start-point"
-              paint={{
-                "circle-color": START_MARKER_COLORS.fill,
-                "circle-radius": 8,
-                "circle-stroke-width": 3,
-                "circle-stroke-color": START_MARKER_COLORS.stroke,
-              }}
-            />
-            <Layer
-              type="symbol"
-              id="follow-start-label"
-              layout={{
-                "text-field": t("map.start"),
-                "text-font": ["Noto Sans Regular"],
-                "text-size": 13,
-                "text-anchor": "bottom",
-                "text-offset": [0, -1],
-                "text-allow-overlap": true,
-              }}
-              paint={{
-                "text-color": START_MARKER_COLORS.fill,
-                "text-halo-color": START_MARKER_COLORS.stroke,
-                "text-halo-width": 1.5,
-              }}
-            />
-          </GeoJSONSource>
+        {path.length > 0 && (
+          <StartMarker id="follow-start" position={path[0]} label={t("map.start")} onPress={openDirections} />
         )}
       </Map>
 

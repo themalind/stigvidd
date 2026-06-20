@@ -10,6 +10,7 @@ import CoordinateParser from "@/utils/coordinate-parser";
 import FormattedTime from "@/utils/format-time-from-ms";
 import { lineStringFromPositions } from "@/utils/geojson";
 import getBoundsFromTrail from "@/utils/get-bounds-from-trail";
+import { openDirectionsToStart } from "@/utils/open-directions";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Camera, type CameraRef, GeoJSONSource, Layer } from "@maplibre/maplibre-react-native";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -20,6 +21,8 @@ import { useTranslation } from "react-i18next";
 import { Dimensions, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { Button, Divider, Icon, Modal, Portal, Text, useTheme } from "react-native-paper";
 import Map from "../../map/map";
+import { ROUTE_LINE_COLOR } from "../../map/marker-styles";
+import StartMarker from "../../map/start-marker";
 
 interface Props {
   visible: boolean;
@@ -115,14 +118,22 @@ export default function HikeDetails({ visible, hike, onDismiss }: Props) {
           {coordinates.length > 0 && (
             <Map style={s.map} showsUserLocation={false} onDidFinishLoadingMap={handleMapReady}>
               <Camera ref={cameraRef} />
-              <GeoJSONSource id="hike-details-route" data={routeShape}>
-                <Layer
-                  type="line"
-                  id="hike-details-route-line"
-                  layout={{ "line-join": "round", "line-cap": "round" }}
-                  paint={{ "line-color": theme.colors.primary, "line-width": 3 }}
-                />
-              </GeoJSONSource>
+              {coordinates.length > 1 && (
+                <GeoJSONSource id="hike-details-route" data={routeShape}>
+                  <Layer
+                    type="line"
+                    id="hike-details-route-line"
+                    layout={{ "line-join": "round", "line-cap": "round" }}
+                    paint={{ "line-color": ROUTE_LINE_COLOR, "line-width": 3 }}
+                  />
+                </GeoJSONSource>
+              )}
+              <StartMarker
+                id="hike-details-start"
+                position={coordinates[0]}
+                label={t("map.start")}
+                onPress={() => openDirectionsToStart(coordinates[0], t)}
+              />
             </Map>
           )}
         </View>
