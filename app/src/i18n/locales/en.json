@@ -61,7 +61,9 @@
       "passwordTooShort": "Password must be at least 8 characters",
       "passwordMismatch": "Passwords do not match",
       "confirmPasswordRequired": "Repeat password"
-    }
+    },
+    "oidcLoginFailed": "Login failed. Please try again.",
+    "invalidCredentials": "Incorrect email or password."
   },
   "profile": {
     "title": "My Stigvidd",
@@ -313,12 +315,30 @@
     "notAuthReport": "You need to be logged in to report an incident."
   },
   "error": {
-    "400": { "title": "Invalid request", "message": "Something went wrong with your request." },
-    "401": { "title": "Not logged in", "message": "You must log in to continue." },
-    "403": { "title": "Access denied", "message": "You do not have permission to view this." },
-    "404": { "title": "Not found", "message": "What you are looking for no longer exists." },
-    "500": { "title": "Server error", "message": "Something went wrong on the server. Please try again later." },
-    "default": { "title": "Something went wrong", "message": "Check your internet connection and try again." },
+    "400": {
+      "title": "Invalid request",
+      "message": "Something went wrong with your request."
+    },
+    "401": {
+      "title": "Not logged in",
+      "message": "You must log in to continue."
+    },
+    "403": {
+      "title": "Access denied",
+      "message": "You do not have permission to view this."
+    },
+    "404": {
+      "title": "Not found",
+      "message": "What you are looking for no longer exists."
+    },
+    "500": {
+      "title": "Server error",
+      "message": "Something went wrong on the server. Please try again later."
+    },
+    "default": {
+      "title": "Something went wrong",
+      "message": "Check your internet connection and try again."
+    },
     "retry": "Try again"
   },
   "firebaseErrors": {
@@ -466,13 +486,34 @@
       "Share recorded walks with friends"
     ],
     "techStack": [
-      { "label": "App", "value": "React Native · Expo SDK 54 · TypeScript" },
-      { "label": "Routing", "value": "Expo Router (file-based)" },
-      { "label": "Map & GPS", "value": "React Native Maps · Expo Location" },
-      { "label": "State", "value": "TanStack Query · Jotai" },
-      { "label": "UI", "value": "React Native Paper (Material Design 3)" },
-      { "label": "Backend", "value": "ASP.NET Core 10 · C# · EF Core · SQL Server" },
-      { "label": "Auth", "value": "Firebase Authentication (JWT)" }
+      {
+        "label": "App",
+        "value": "React Native · Expo SDK 54 · TypeScript"
+      },
+      {
+        "label": "Routing",
+        "value": "Expo Router (file-based)"
+      },
+      {
+        "label": "Map & GPS",
+        "value": "React Native Maps · Expo Location"
+      },
+      {
+        "label": "State",
+        "value": "TanStack Query · Jotai"
+      },
+      {
+        "label": "UI",
+        "value": "React Native Paper (Material Design 3)"
+      },
+      {
+        "label": "Backend",
+        "value": "ASP.NET Core 10 · C# · EF Core · SQL Server"
+      },
+      {
+        "label": "Auth",
+        "value": "Firebase Authentication (JWT)"
+      }
     ]
   },
   "guide": {
@@ -510,7 +551,10 @@
     "readMoreTitle": "Read more",
     "readMoreSummary": "External sources and further reading",
     "links": [
-      { "label": "Right of Public Access — Swedish EPA", "url": "https://www.naturvardsverket.se/allemansratten" },
+      {
+        "label": "Right of Public Access — Swedish EPA",
+        "url": "https://www.naturvardsverket.se/allemansratten"
+      },
       {
         "label": "Nature Reserves — Swedish EPA",
         "url": "https://www.naturvardsverket.se/amnesomraden/skyddad-natur/olika-former-av-naturskydd/naturreservat/"
@@ -527,9 +571,18 @@
         "label": "Outdoor recreation & nature — City of Borås",
         "url": "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur.4.1601545718c38a990ab4455a.html"
       },
-      { "label": "Hiking trails — Borås.com", "url": "https://www.boras.com/lista/vandringsleder/" },
-      { "label": "SMHI — weather forecast", "url": "https://www.smhi.se/" },
-      { "label": "Friluftsfrämjandet", "url": "https://www.friluftsframjandet.se/" }
+      {
+        "label": "Hiking trails — Borås.com",
+        "url": "https://www.boras.com/lista/vandringsleder/"
+      },
+      {
+        "label": "SMHI — weather forecast",
+        "url": "https://www.smhi.se/"
+      },
+      {
+        "label": "Friluftsfrämjandet",
+        "url": "https://www.friluftsframjandet.se/"
+      }
     ]
   },
   "createHike": {
@@ -563,11 +616,26 @@
   },
   "news": {
     "items": [
-      { "title": "Spring is here and it's time to get moving! 🥾", "date": "5 Apr 2026" },
-      { "title": "It's now easier than ever to find the right trail in Borås! 🌲🥾", "date": "18 Feb 2026" },
-      { "title": "Coming soon to the app: achievements! 🎉", "date": "28 Jan 2026" },
-      { "title": "Picke wins again! Stigvidd's most walked trail of 2025!", "date": "14 Jan 2026" },
-      { "title": "Snow chaos! ❄️ Walks you can do despite the snow", "date": "10 Jan 2026" }
+      {
+        "title": "Spring is here and it's time to get moving! 🥾",
+        "date": "5 Apr 2026"
+      },
+      {
+        "title": "It's now easier than ever to find the right trail in Borås! 🌲🥾",
+        "date": "18 Feb 2026"
+      },
+      {
+        "title": "Coming soon to the app: achievements! 🎉",
+        "date": "28 Jan 2026"
+      },
+      {
+        "title": "Picke wins again! Stigvidd's most walked trail of 2025!",
+        "date": "14 Jan 2026"
+      },
+      {
+        "title": "Snow chaos! ❄️ Walks you can do despite the snow",
+        "date": "10 Jan 2026"
+      }
     ]
   },
   "trailList": {

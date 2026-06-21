@@ -75,13 +75,13 @@ public class StigViddWebApplicationFactory<TProgram>
 
             services.AddSingleton(mockWebDavService.Object);
 
-            // Prevent real Firebase Admin calls during integration tests
-            var mockFirebaseAuthService = new Mock<IFirebaseAuthRepository>();
-            mockFirebaseAuthService
+            // Prevent real Keycloak Admin calls during integration tests
+            var mockKeycloakAdmin = new Mock<IKeycloakAdminRepository>();
+            mockKeycloakAdmin
                 .Setup(x => x.DeleteUserAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .Returns(Task.CompletedTask);
 
-            services.AddSingleton(mockFirebaseAuthService.Object);
+            services.AddSingleton(mockKeycloakAdmin.Object);
         });
 
         builder.UseEnvironment("Development");

@@ -1,6 +1,5 @@
 import { userPasswordReset } from "@/api/auth";
 import { asTranslationKey } from "@/i18n";
-import { getPasswordResetErrorMessage } from "@/api/firebase-errors";
 import { showSuccessAtom } from "@/atoms/snackbar-atoms";
 import { BORDER_RADIUS } from "@/constants/constants";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -29,7 +28,7 @@ const { width } = Dimensions.get("screen");
 export default function ResetPasswordModal({ visible, onDismiss }: Props) {
   const { t } = useTranslation();
   const theme = useTheme();
-  const [firebaseError, setFirebaseError] = useState("");
+  const [resetError, setResetError] = useState("");
   const setSuccessMessage = useSetAtom(showSuccessAtom);
   const {
     control,
@@ -38,13 +37,12 @@ export default function ResetPasswordModal({ visible, onDismiss }: Props) {
   } = useForm<FormFields>({ resolver: zodResolver(resetFields) });
 
   const onSubmit: SubmitHandler<FormFields> = async (data) => {
-    setFirebaseError("");
+    setResetError("");
 
     const result = await userPasswordReset(data.email);
 
     if (!result.success) {
-      const errorCode = result.error?.code || "unknown";
-      setFirebaseError(getPasswordResetErrorMessage(errorCode));
+      setResetError(t("auth.unknownError"));
       return;
     }
 
@@ -106,7 +104,7 @@ export default function ResetPasswordModal({ visible, onDismiss }: Props) {
           <Button mode="contained" style={s.button} disabled={isSubmitting} onPress={handleSubmit(onSubmit)}>
             {isSubmitting ? t("common.sending") : t("common.send")}
           </Button>
-          {firebaseError && <Text style={[s.errorText, { color: theme.colors.error }]}>{firebaseError}</Text>}
+          {resetError && <Text style={[s.errorText, { color: theme.colors.error }]}>{resetError}</Text>}
           <Text style={{ textAlign: "center" }}>{t("auth.checkSpam")}</Text>
         </View>
       </Modal>

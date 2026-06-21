@@ -13,21 +13,21 @@ public class UserRepositoryTests : TestBase
 {
     private const string NaturElskarenIdentifier = "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d"; // wishlist only
     private const string VandrarVennenIdentifier = "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e"; // favorites only
-    private const string ExistingFirebaseUid = "firebase-uid-12345";
+    private const string ExistingSubjectId = "firebase-uid-12345";
     private const string TivedenIdentifier = "11a1b2c3-d4e5-4f6a-7b8c-9d0e1f2a3b4c";
     private const string NassehultIdentifier = "77a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c";
 
-    private UserRepository BuildRepo(IFirebaseAuthRepository? firebase = null) =>
-        new(CreateSeededFactory(), firebase ?? new Mock<IFirebaseAuthRepository>().Object, NullLogger<UserRepository>.Instance);
+    private UserRepository BuildRepo(IKeycloakAdminRepository? keycloak = null) =>
+        new(CreateSeededFactory(), keycloak ?? new Mock<IKeycloakAdminRepository>().Object, NullLogger<UserRepository>.Instance);
 
     [Fact]
-    public async Task GetUserByFirebaseUid_WhenFound_ReturnsSuccess()
+    public async Task GetUserBySubjectId_WhenFound_ReturnsSuccess()
     {
         // Arrange
         var repo = BuildRepo();
 
         // Act
-        var result = await repo.GetUserByFirebaseUidAsync(ExistingFirebaseUid, u => u.Identifier, CancellationToken.None);
+        var result = await repo.GetUserBySubjectAsync(ExistingSubjectId, u => u.Identifier, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -35,13 +35,13 @@ public class UserRepositoryTests : TestBase
     }
 
     [Fact]
-    public async Task GetUserByFirebaseUid_WhenNotFound_ReturnsNotFound()
+    public async Task GetUserBySubjectId_WhenNotFound_ReturnsNotFound()
     {
         // Arrange
         var repo = BuildRepo();
 
         // Act
-        var result = await repo.GetUserByFirebaseUidAsync("no-such-uid", u => u.Identifier, CancellationToken.None);
+        var result = await repo.GetUserBySubjectAsync("no-such-uid", u => u.Identifier, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -170,11 +170,11 @@ public class UserRepositoryTests : TestBase
     {
         // Arrange
         var factory = CreateSeededFactory();
-        var repo = new UserRepository(factory, new Mock<IFirebaseAuthRepository>().Object, NullLogger<UserRepository>.Instance);
+        var repo = new UserRepository(factory, new Mock<IKeycloakAdminRepository>().Object, NullLogger<UserRepository>.Instance);
         var newUser = new User
         {
             Identifier = Guid.NewGuid().ToString(),
-            FirebaseUid = "brand-new-firebase-uid",
+            SubjectId = "brand-new-firebase-uid",
             NickName = "Glenn",
             Email = "glenn@example.com",
             MyFavorites = [],
@@ -189,7 +189,7 @@ public class UserRepositoryTests : TestBase
         result.Value.Should().NotBeNull();
         result.Value.NickName.Should().Be("Glenn");
 
-        var verify = await repo.GetUserByFirebaseUidAsync("brand-new-firebase-uid", u => u.Identifier, CancellationToken.None);
+        var verify = await repo.GetUserBySubjectAsync("brand-new-firebase-uid", u => u.Identifier, CancellationToken.None);
         verify.IsSuccess.Should().BeTrue();
     }
 

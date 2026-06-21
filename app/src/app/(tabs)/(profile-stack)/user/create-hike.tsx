@@ -1,4 +1,3 @@
-import { authStateAtom } from "@/atoms/auth-atoms";
 import { stigviddUserAtom } from "@/atoms/user-atoms";
 import BackButton from "@/components/back-button";
 import ErrorView from "@/components/error-view";
@@ -7,6 +6,7 @@ import TrailCreator from "@/components/trail/trail-creator/trail-creator";
 import * as Location from "expo-location";
 import { Redirect } from "expo-router";
 import { useAtom } from "jotai";
+import { useAuth } from "@/components/auth/auth-provider";
 import { useEffect, useState } from "react";
 import { SCREEN_PADDING } from "@/constants/constants";
 import { Platform, StyleSheet, View } from "react-native";
@@ -15,7 +15,7 @@ import { useTranslation } from "react-i18next";
 
 export default function CreateHikeScreen() {
   const [{ isLoading, isError, error }] = useAtom(stigviddUserAtom);
-  const [authState] = useAtom(authStateAtom);
+  const { isAuthenticated } = useAuth();
   const theme = useTheme();
   const { t } = useTranslation();
   const [locationGranted, setLocationGranted] = useState<boolean | null>(null);
@@ -26,7 +26,7 @@ export default function CreateHikeScreen() {
     });
   }, []);
 
-  if (!authState.isAuthenticated) {
+  if (!isAuthenticated) {
     return <Redirect href="/(tabs)/(auth)/login" />;
   }
 

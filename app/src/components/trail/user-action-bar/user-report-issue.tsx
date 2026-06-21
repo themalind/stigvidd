@@ -1,13 +1,12 @@
-import { authStateAtom } from "@/atoms/auth-atoms";
 import NotAuthenticatedDialog from "@/components/auth/not-authenticated-msg-dialog";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useQueryClient } from "@tanstack/react-query";
-import { useAtom } from "jotai";
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Pressable, StyleSheet, View } from "react-native";
 import { Text, useTheme } from "react-native-paper";
 import TrailObstacleForm from "../obstacle/trail-obstacle-form";
+import { useAuth } from "@/components/auth/auth-provider";
 
 interface Props {
   trailIdentifier: string;
@@ -16,13 +15,13 @@ interface Props {
 export default function UserReportIssue({ trailIdentifier }: Props) {
   const { t } = useTranslation();
   const theme = useTheme();
-  const [authState] = useAtom(authStateAtom);
+  const { isAuthenticated } = useAuth();
   const [showForm, setShowForm] = useState(false);
   const [showAuthDialog, setAuthDialog] = useState(false);
   const queryClient = useQueryClient();
 
   function handlePress() {
-    if (!authState.isAuthenticated) {
+    if (!isAuthenticated) {
       setAuthDialog(true);
       return;
     }

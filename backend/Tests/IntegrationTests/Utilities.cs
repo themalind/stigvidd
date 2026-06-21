@@ -334,7 +334,7 @@ public static class Utilities
             {
                 Id = 1,
                 Identifier = "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
-                FirebaseUid = "firebase-uid-12345",
+                SubjectId = "firebase-uid-12345",
                 Email = "natur@example.local",
                 NickName = "NaturElskaren",
                 CreatedAt = SeedDates.Created,
@@ -350,7 +350,7 @@ public static class Utilities
             {
                 Id = 2,
                 Identifier = "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e",
-                FirebaseUid = "firebase-uid-12346",
+                SubjectId = "firebase-uid-12346",
                 Email = "vandrar@example.local",
                 NickName = "VandrarVennen",
                 CreatedAt = SeedDates.Created,
@@ -366,7 +366,7 @@ public static class Utilities
             {
                 Id = 3,
                 Identifier = "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d67",
-                FirebaseUid = "firebase-uid-12347",
+                SubjectId = "firebase-uid-12347",
                 Email = "glenn@example.local",
                 NickName = "SkogsGreven",
                 CreatedAt = SeedDates.Created,
@@ -384,7 +384,7 @@ public static class Utilities
             {
                 Id = 4,
                 Identifier = "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d22",
-                FirebaseUid = "firebase-uid-12345",
+                SubjectId = "firebase-uid-12345",
                 Email = "artemis@example.local",
                 NickName = "Eremiten",
                 CreatedAt = SeedDates.Created,
@@ -401,7 +401,7 @@ public static class Utilities
             {
                 Id = 5,
                 Identifier = "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5a33",
-                FirebaseUid = "firebase-uid-12345",
+                SubjectId = "firebase-uid-12345",
                 Email = "ragnar@example.local",
                 NickName = "Kattleten",
                 CreatedAt = SeedDates.Created,
@@ -418,7 +418,7 @@ public static class Utilities
             {
                 Id = 6,
                 Identifier = "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5a44",
-                FirebaseUid = "firebase-uid-12345",
+                SubjectId = "firebase-uid-12345",
                 Email = "molgan@example.local",
                 NickName = "Molgan75",
                 CreatedAt = SeedDates.Created,

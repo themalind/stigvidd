@@ -1,5 +1,4 @@
 import { getIncomingSharedHike, getSharedHikes } from "@/api/shared-hikes";
-import { authStateAtom } from "@/atoms/auth-atoms";
 import { incomingSharedHikesAtom } from "@/atoms/friends-atoms";
 import { stigviddUserAtom } from "@/atoms/user-atoms";
 import BackButton from "@/components/back-button";
@@ -14,7 +13,8 @@ import { Fontisto, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
 import { Redirect } from "expo-router";
 import { useAtom, useAtomValue } from "jotai";
-import React, { useState } from "react";
+import { useState } from "react";
+import { useAuth } from "@/components/auth/auth-provider";
 import { useTranslation } from "react-i18next";
 import { Platform, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { Button, Divider, Icon, IconButton, Surface, Text, useTheme } from "react-native-paper";
@@ -23,10 +23,10 @@ const PREVIEW_COUNT = 5;
 
 export default function SharedHikesScreen() {
   const theme = useTheme();
+  const { isAuthenticated } = useAuth();
   const { t } = useTranslation();
   const { acceptMutation, rejectMutation } = useSharedHikeMutations();
   const [incomingExpanded, setIncomingExpanded] = useState(false);
-  const [authState] = useAtom(authStateAtom);
   const user = useAtomValue(stigviddUserAtom);
   const [visible, setVisible] = useState(false);
   const [sharedHike, setSelectedSharedHike] = useState<SharedHike | null>(null);
@@ -53,10 +53,10 @@ export default function SharedHikesScreen() {
   } = useQuery({
     queryKey: ["shared-hikes", user.data?.identifier],
     queryFn: () => getSharedHikes(),
-    enabled: !!authState.isAuthenticated && !!user?.data,
+    enabled: isAuthenticated && !!user?.data,
   });
 
-  if (!authState.isAuthenticated) {
+  if (!isAuthenticated) {
     return <Redirect href="/(tabs)/(auth)/login" />;
   }
 

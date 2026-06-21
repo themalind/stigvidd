@@ -16,7 +16,7 @@ public class NotificationsControllerTests
     private static NotificationsController BuildController(
         Mock<IPushNotificationService>? pushServiceMock = null,
         Mock<IUserService>? userServiceMock = null,
-        string? firebaseUid = "firebase-uid")
+        string? subjectId = "firebase-uid")
     {
         var controller = new NotificationsController(
             pushServiceMock?.Object ?? new Mock<IPushNotificationService>().Object,
@@ -27,9 +27,9 @@ public class NotificationsControllerTests
         {
             HttpContext = new DefaultHttpContext
             {
-                User = firebaseUid is null
+                User = subjectId is null
                     ? new ClaimsPrincipal()
-                    : new ClaimsPrincipal(new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, firebaseUid)]))
+                    : new ClaimsPrincipal(new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, subjectId)]))
             }
         };
 
@@ -40,7 +40,7 @@ public class NotificationsControllerTests
     {
         var mock = new Mock<IUserService>();
         var response = user ?? UserResponse.Create(Utilities.Identifiers.User, "NaturElskaren", "natur@example.local");
-        mock.Setup(u => u.GetUserByFirebaseUidAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+        mock.Setup(u => u.GetUserBySubjectAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Ok<UserResponse?>(response));
         return mock;
     }
@@ -56,7 +56,7 @@ public class NotificationsControllerTests
     [Fact]
     public async Task RegisterTokenAsync_WhenNoAuthClaim_ReturnsUnauthorized()
     {
-        var controller = BuildController(firebaseUid: null);
+        var controller = BuildController(subjectId: null);
 
         var result = await controller.RegisterTokenAsync(ValidRegisterRequest(), CancellationToken.None);
 
@@ -67,7 +67,7 @@ public class NotificationsControllerTests
     public async Task RegisterTokenAsync_WhenUserNotFoundInService_ReturnsUnauthorized()
     {
         var userServiceMock = new Mock<IUserService>();
-        userServiceMock.Setup(u => u.GetUserByFirebaseUidAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+        userServiceMock.Setup(u => u.GetUserBySubjectAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Ok<UserResponse?>(null));
 
         var controller = BuildController(userServiceMock: userServiceMock);
@@ -126,7 +126,7 @@ public class NotificationsControllerTests
     [Fact]
     public async Task DeleteTokenAsync_WhenNoAuthClaim_ReturnsUnauthorized()
     {
-        var controller = BuildController(firebaseUid: null);
+        var controller = BuildController(subjectId: null);
 
         var result = await controller.DeleteTokenAsync("ExponentPushToken[xxx]", CancellationToken.None);
 
@@ -137,7 +137,7 @@ public class NotificationsControllerTests
     public async Task DeleteTokenAsync_WhenUserNotFoundInService_ReturnsUnauthorized()
     {
         var userServiceMock = new Mock<IUserService>();
-        userServiceMock.Setup(u => u.GetUserByFirebaseUidAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+        userServiceMock.Setup(u => u.GetUserBySubjectAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Ok<UserResponse?>(null));
 
         var controller = BuildController(userServiceMock: userServiceMock);

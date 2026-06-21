@@ -1,5 +1,4 @@
 import { ApiError } from "@/api/api-error";
-import { authStateAtom } from "@/atoms/auth-atoms";
 import { showErrorAtom, showWarningAtom } from "@/atoms/snackbar-atoms";
 import { addToWishlistAtom, removeFromWishlistAtom, userWishlistAtom } from "@/atoms/user-atoms";
 import NotAuthenticatedDialog from "@/components/auth/not-authenticated-msg-dialog";
@@ -8,6 +7,7 @@ import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { useAuth } from "@/components/auth/auth-provider";
 import { useTheme } from "react-native-paper";
 
 interface Props {
@@ -17,7 +17,7 @@ interface Props {
 export default function AddToUserWishlist({ trailIdentifier }: Props) {
   const { t } = useTranslation();
   const theme = useTheme();
-  const [authState] = useAtom(authStateAtom);
+  const { isAuthenticated } = useAuth();
   const [showAuthDialog, setAuthDialog] = useState(false);
   const { data } = useAtomValue(userWishlistAtom);
   const [removeUserWishlist] = useAtom(removeFromWishlistAtom);
@@ -26,7 +26,7 @@ export default function AddToUserWishlist({ trailIdentifier }: Props) {
   const setError = useSetAtom(showErrorAtom);
 
   const handlePress = () => {
-    if (!authState.isAuthenticated) {
+    if (!isAuthenticated) {
       setAuthDialog(true);
       return;
     }

@@ -30,10 +30,10 @@ public class UserService : IUserService
         _friendRepository = friendRepository;
     }
 
-    public async Task<Result<UserResponse?>> GetUserByFirebaseUidAsync(string firebaseUid, CancellationToken ctoken)
+    public async Task<Result<UserResponse?>> GetUserBySubjectAsync(string subjectId, CancellationToken ctoken)
     {
-        var result = await _userRepository.GetUserByFirebaseUidAsync(
-            firebaseUid,
+        var result = await _userRepository.GetUserBySubjectAsync(
+            subjectId,
             u => UserResponse.Create(u.Identifier, u.NickName, u.Email),
             ctoken);
 
@@ -41,7 +41,7 @@ public class UserService : IUserService
             return Result.Fail<UserResponse?>(new Message(500, "An error occurred while fetching the user."));
 
         if (!result.IsSuccess)
-            return Result.Fail<UserResponse?>(new Message(404, $"User with Firebase UID {firebaseUid} not found."));
+            return Result.Fail<UserResponse?>(new Message(404, $"User with subject id {subjectId} not found."));
 
         return Result.Ok<UserResponse?>(result.Value);
     }
@@ -153,7 +153,7 @@ public class UserService : IUserService
         return Result.Ok(UserNameResponse.Create(username, result.Value));
     }
 
-    public async Task<Result<UserResponse?>> CreateUserAsync(string email, string nickName, string firebaseUid, CancellationToken ctoken)
+    public async Task<Result<UserResponse?>> CreateUserAsync(string email, string nickName, string subjectId, CancellationToken ctoken)
     {
         var nicknameCheck = await _userRepository.CheckUserNicknameAvaliability(nickName, ctoken);
         if (!nicknameCheck.IsSuccess)
@@ -164,17 +164,17 @@ public class UserService : IUserService
             return Result.Fail<UserResponse?>(new Message(500, "An error occurred while creating the user."));
         }
 
-        var existing = await _userRepository.GetUserByFirebaseUidAsync(firebaseUid, u => u.Identifier, ctoken);
+        var existing = await _userRepository.GetUserBySubjectAsync(subjectId, u => u.Identifier, ctoken);
 
         if (existing.Status == RepositoryResultStatus.Error)
             return Result.Fail<UserResponse?>(new Message(500, "An error occurred while creating the user."));
 
         if (existing.IsSuccess)
-            return Result.Fail<UserResponse?>(new Message(409, $"User with identifier {firebaseUid} already exists."));
+            return Result.Fail<UserResponse?>(new Message(409, $"User with identifier {subjectId} already exists."));
 
         var newUser = new User
         {
-            FirebaseUid = firebaseUid,
+            SubjectId = subjectId,
             NickName = nickName,
             Email = email,
             MyFavorites = [],

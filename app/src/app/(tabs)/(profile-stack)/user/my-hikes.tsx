@@ -1,5 +1,4 @@
 import { getAllHikesByUserId } from "@/api/hikes";
-import { authStateAtom } from "@/atoms/auth-atoms";
 import { stigviddUserAtom } from "@/atoms/user-atoms";
 import BackButton from "@/components/back-button";
 import ErrorView from "@/components/error-view";
@@ -11,16 +10,17 @@ import FormattedTime from "@/utils/format-time-from-ms";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
 import { Redirect } from "expo-router";
-import { useAtom, useAtomValue } from "jotai";
+import { useAtomValue } from "jotai";
 import { useState } from "react";
 import { Platform, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { useAuth } from "@/components/auth/auth-provider";
 import { Divider, Icon, Text, useTheme } from "react-native-paper";
 import { useTranslation } from "react-i18next";
 
 export default function MyHikesScreen() {
   const theme = useTheme();
+  const { isAuthenticated } = useAuth();
   const { t } = useTranslation();
-  const [authState] = useAtom(authStateAtom);
   const user = useAtomValue(stigviddUserAtom);
   const [visible, setVisible] = useState(false);
   const [hike, setSelectedhike] = useState<Hike | null>(null);
@@ -33,10 +33,10 @@ export default function MyHikesScreen() {
   } = useQuery({
     queryKey: ["hikes", user.data?.identifier],
     queryFn: () => getAllHikesByUserId(user.data!.identifier),
-    enabled: !!authState.isAuthenticated && !!user?.data,
+    enabled: isAuthenticated && !!user?.data,
   });
 
-  if (!authState.isAuthenticated) {
+  if (!isAuthenticated) {
     return <Redirect href="/(tabs)/(auth)/login" />;
   }
 

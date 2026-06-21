@@ -23,10 +23,10 @@ public class NotificationsControllerTests : IClassFixture<StigViddWebApplication
         _factory.SeedDatabase();
     }
 
-    private HttpClient CreateAuthenticatedClient(string firebaseUid)
+    private HttpClient CreateAuthenticatedClient(string subjectId)
     {
         var client = _factory.CreateClient();
-        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", firebaseUid);
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", subjectId);
         return client;
     }
 

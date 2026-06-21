@@ -1,12 +1,11 @@
-import { authStateAtom } from "@/atoms/auth-atoms";
 import NotAuthenticatedDialog from "@/components/auth/not-authenticated-msg-dialog";
 import AddReview from "@/components/review/add/add-review-modal";
 import { Trail } from "@/data/types";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useQueryClient } from "@tanstack/react-query";
-import { useAtom } from "jotai";
 import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { useAuth } from "@/components/auth/auth-provider";
 import { useTheme } from "react-native-paper";
 import { useTranslation } from "react-i18next";
 
@@ -16,14 +15,14 @@ interface UserRatingProps {
 
 export default function UserRating({ trail }: UserRatingProps) {
   const theme = useTheme();
+  const { isAuthenticated } = useAuth();
   const { t } = useTranslation();
-  const [authState] = useAtom(authStateAtom);
   const [showAuthDialog, setAuthDialog] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const queryClient = useQueryClient();
 
   const onPress = () => {
-    if (!authState.isAuthenticated) {
+    if (!isAuthenticated) {
       setAuthDialog(true);
       return;
     }

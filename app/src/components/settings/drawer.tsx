@@ -1,5 +1,3 @@
-import { signOutUser } from "@/api/auth";
-import { authStateAtom } from "@/atoms/auth-atoms";
 import { showErrorAtom } from "@/atoms/snackbar-atoms";
 import { useThemeToggle } from "@/hooks/useThemeToggle";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -7,10 +5,11 @@ import { CommonActions } from "@react-navigation/native";
 import { BlurView } from "expo-blur";
 import { Image } from "expo-image";
 import { router, useNavigation } from "expo-router";
-import { useAtom, useSetAtom } from "jotai";
+import { useSetAtom } from "jotai";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Dimensions, Modal, Pressable, StyleSheet, View } from "react-native";
+import { useAuth } from "@/components/auth/auth-provider";
 import { Divider, Drawer, Text, useTheme } from "react-native-paper";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -22,7 +21,7 @@ interface Props {
 const width = Dimensions.get("screen").width;
 
 export default function SettingsDrawer({ visible, onDismiss }: Props) {
-  const [authState] = useAtom(authStateAtom);
+  const { isAuthenticated, logout } = useAuth();
   const { userTheme, toggleTheme } = useThemeToggle();
   const theme = useTheme();
   const { t } = useTranslation();
@@ -45,7 +44,7 @@ export default function SettingsDrawer({ visible, onDismiss }: Props) {
   async function handleSignOut() {
     setActive("logout");
     try {
-      await signOutUser();
+      await logout();
     } catch (e) {
       console.log(e);
       setError(t("auth.couldNotLogout"));
@@ -135,7 +134,7 @@ export default function SettingsDrawer({ visible, onDismiss }: Props) {
               theme={{ roundness: 1 }}
               onPress={handleAbout}
             />
-            {authState.isAuthenticated ? (
+            {isAuthenticated ? (
               <Drawer.Item
                 label={t("auth.logout")}
                 icon="logout"

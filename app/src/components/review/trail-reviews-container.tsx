@@ -1,10 +1,8 @@
 import { getReviewsByTrailIdentifier } from "@/api/reviews";
-import { authStateAtom } from "@/atoms/auth-atoms";
 import { BORDER_RADIUS, SURFACE_BORDER_RADIUS } from "@/constants/constants";
 import { Review, Trail } from "@/data/types";
 import { Ionicons } from "@expo/vector-icons";
 import { useInfiniteQuery } from "@tanstack/react-query";
-import { useAtom } from "jotai";
 import React, { RefObject, useEffect, useMemo, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { Button, Surface, Text, useTheme } from "react-native-paper";
@@ -14,6 +12,7 @@ import ErrorView from "../error-view";
 import LoadingIndicator from "../loading-indicator";
 import AddReview from "./add/add-review-modal";
 import ReviewSection from "./review-section";
+import { useAuth } from "@/components/auth/auth-provider";
 
 interface ReviewWrapperProps {
   trail: Trail;
@@ -22,7 +21,7 @@ interface ReviewWrapperProps {
 }
 
 export default function TrailReviewsContainer({ trail, surfaceToScrollToRef, onReviewsLoaded }: ReviewWrapperProps) {
-  const [authState] = useAtom(authStateAtom);
+  const { isAuthenticated } = useAuth();
   const [isReviewModalVisible, setIsReviewModalVisible] = useState(false);
   const [isAuthDialogVisible, setIsAuthDialogVisible] = useState(false);
   const theme = useTheme();
@@ -64,7 +63,7 @@ export default function TrailReviewsContainer({ trail, surfaceToScrollToRef, onR
   }
 
   const handleAddReviewPress = () => {
-    if (!authState.isAuthenticated) {
+    if (!isAuthenticated) {
       setIsAuthDialogVisible(true);
       return;
     }

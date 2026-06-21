@@ -1,6 +1,5 @@
-import { getRegisterErrorMessage } from "@/api/firebase-errors";
+import { ApiError } from "@/api/api-error";
 import { asTranslationKey } from "@/i18n";
-import { registerUserAtom } from "@/atoms/auth-atoms";
 import { userThemeAtom } from "@/atoms/user-theme-atom";
 import PasswordInputField from "@/components/auth/password-input-field";
 import BackButton from "@/components/back-button";
@@ -17,6 +16,7 @@ import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view
 import { Button, TextInput, useTheme } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { z } from "zod";
+import { useAuth } from "@/components/auth/auth-provider";
 
 const WIDTH = Dimensions.get("screen").width;
 
@@ -56,10 +56,10 @@ const addOpacity = (color: string, opacity: number): string => {
 export default function RegisterScreen() {
   const { t } = useTranslation();
   const theme = useTheme();
-  const [firebaseError, setFirebaseError] = useState("");
+  const [registerError, setRegisterError] = useState("");
   const [userTheme] = useAtom(userThemeAtom);
-  const [, registerUser] = useAtom(registerUserAtom);
   const colorScheme = Appearance.getColorScheme();
+  const { register } = useAuth();
 
   const finalTheme = userTheme === "auto" ? (colorScheme ?? "light") : userTheme;
 
@@ -76,20 +76,18 @@ export default function RegisterScreen() {
   } = useForm<FormFields>({ resolver: zodResolver(registerFields) });
 
   const onSubmit: SubmitHandler<FormFields> = async (data) => {
-    setFirebaseError("");
+    setRegisterError("");
 
-    const result = await registerUser(data);
-
-    if (!result.success || !result.user) {
-      const errorCode = result.error?.code || "unknown";
-      if (errorCode === "api/nickname-taken") {
-        setError("nickName", { message: t("auth.validation.nicknameTaken") });
+    try {
+      await register(data);
+    } catch (error) {
+      if (error instanceof ApiError && error.message === "nickname-taken") {
+        setError("nickName", { message: "auth.validation.nicknameTaken" });
         return;
       }
-      setFirebaseError(getRegisterErrorMessage(errorCode));
+      setRegisterError(t("auth.unknownError"));
       return;
     }
-    console.log("Registrerad", result.user.email, result.user.displayName);
   };
 
   return (
@@ -233,7 +231,7 @@ export default function RegisterScreen() {
                 <Button mode="contained" style={s.button} onPress={handleSubmit(onSubmit)} disabled={isSubmitting}>
                   {isSubmitting ? t("auth.registering") : t("auth.register")}
                 </Button>
-                {firebaseError && <Text style={[s.errorText, { color: theme.colors.error }]}>{firebaseError}</Text>}
+                {registerError && <Text style={[s.errorText, { color: theme.colors.error }]}>{registerError}</Text>}
                 <Link style={[s.linkText, { color: theme.colors.onSurface }]} replace href="./login">
                   <Text>{t("auth.alreadyMember")} </Text>
                   <Text

@@ -1,5 +1,4 @@
 import { addSolvedVote, deleteSolvedVote, deleteTrailObstacle } from "@/api/trail-obstacles";
-import { authStateAtom } from "@/atoms/auth-atoms";
 import { stigviddUserAtom } from "@/atoms/user-atoms";
 import AlertDialog from "@/components/alert-dialog";
 import NotAuthenticatedDialog from "@/components/auth/not-authenticated-msg-dialog";
@@ -9,12 +8,13 @@ import { formatDate } from "@/utils/format-date";
 import issueTypeParser from "@/utils/issue-type-parser";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useAtom, useAtomValue } from "jotai";
+import { useAtomValue } from "jotai";
 import { useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { Divider, Text, useTheme } from "react-native-paper";
 import { useTranslation } from "react-i18next";
 import TrailObstacleUpdateForm from "./trail-obstacle-update-form";
+import { useAuth } from "@/components/auth/auth-provider";
 
 interface Props {
   obstacle: TrailObstacle;
@@ -24,8 +24,8 @@ interface Props {
 
 export default function TrailObstacleItem({ obstacle, trailIdentifier, onCloseModal }: Props) {
   const theme = useTheme();
+  const { isAuthenticated } = useAuth();
   const { t } = useTranslation();
-  const [authState] = useAtom(authStateAtom);
   const { data: stigviddUser } = useAtomValue(stigviddUserAtom);
   const [showAuthDialog, setAuthDialog] = useState(false);
   const [showVoteDialog, setShowVoteDialog] = useState(false);
@@ -58,7 +58,7 @@ export default function TrailObstacleItem({ obstacle, trailIdentifier, onCloseMo
   });
 
   const handlePress = () => {
-    if (!authState.isAuthenticated) {
+    if (!isAuthenticated) {
       setAuthDialog(true);
       return;
     }
@@ -71,7 +71,7 @@ export default function TrailObstacleItem({ obstacle, trailIdentifier, onCloseMo
   };
 
   function handleEdit() {
-    if (!authState.isAuthenticated) {
+    if (!isAuthenticated) {
       setAuthDialog(true);
       return;
     }

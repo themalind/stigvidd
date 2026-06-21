@@ -26,14 +26,14 @@ public abstract class StigViddController : Controller
         IUserService userService,
         CancellationToken ctoken)
     {
-        var firebaseUid = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var subjectId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-        if (string.IsNullOrEmpty(firebaseUid))
+        if (string.IsNullOrEmpty(subjectId))
         {
             return null;
         }
 
-        var userResult = await userService.GetUserByFirebaseUidAsync(firebaseUid, ctoken);
+        var userResult = await userService.GetUserBySubjectAsync(subjectId, ctoken);
 
         return userResult?.Value;
     }

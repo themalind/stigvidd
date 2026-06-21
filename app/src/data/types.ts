@@ -1,5 +1,3 @@
-import { User as firebaseUser } from "firebase/auth";
-
 // App-owned geographic coordinate in the device/wire format ({ latitude, longitude }).
 // Used by GPS tracking, geolib distance and the hike-creation request payload.
 // Map rendering uses GeoJSON Position ([lng, lat]) instead — see utils/geojson.ts.
@@ -107,6 +105,17 @@ export interface User {
   email: string;
   myWishList: UserWishlistTrail[];
   myFavorites: UserFavoritesTrail[];
+}
+
+/**
+ * Authenticated identity derived from a Keycloak token.
+ * `id` is the Keycloak `sub` claim. Distinct from `User`, which is the
+ * StigVidd profile stored in our own database.
+ */
+export interface AuthUser {
+  id: string;
+  email: string;
+  username: string;
 }
 
 export interface UserName {
@@ -348,12 +357,6 @@ export interface IncomingSharedHike {
 export interface LoginData {
   email: string;
   password: string;
-}
-
-export interface AuthResult {
-  success: boolean;
-  user: firebaseUser | null;
-  error: { code: string; message: string } | null;
 }
 
 export interface UpdateUserResult {

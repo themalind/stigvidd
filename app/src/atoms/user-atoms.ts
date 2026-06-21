@@ -12,41 +12,41 @@ import { atomWithMutation, atomWithQuery, queryClientAtom } from "jotai-tanstack
 import { userAtom } from "./auth-atoms";
 
 export const stigviddUserAtom = atomWithQuery((get) => {
-  const firebaseUser = get(userAtom);
-  const firebaseUid = firebaseUser?.uid;
+  const user = get(userAtom);
+  const subjectId = user?.id;
 
   return {
-    queryKey: ["currentUser", firebaseUid],
+    queryKey: ["currentUser", subjectId],
     queryFn: async () => {
       return await getStigViddUser();
     },
-    enabled: !!firebaseUid,
+    enabled: !!subjectId,
     retry: 3,
   };
 });
 
 export const userFavoritesAtom = atomWithQuery((get) => {
-  const firebaseUser = get(userAtom);
+  const user = get(userAtom);
 
   return {
-    queryKey: ["userFavorites", firebaseUser?.uid],
+    queryKey: ["userFavorites", user?.id],
     queryFn: async () => {
       return getUserFavorites();
     },
-    enabled: !!firebaseUser,
+    enabled: !!user,
   };
 });
 
 // För att få tillgång till en global lista med "vill gå"
 export const userWishlistAtom = atomWithQuery((get) => {
-  const firebaseUser = get(userAtom);
+  const user = get(userAtom);
 
   return {
-    queryKey: ["userWishlist", firebaseUser?.uid],
+    queryKey: ["userWishlist", user?.id],
     queryFn: async () => {
       return getUserWishlist();
     },
-    enabled: !!firebaseUser,
+    enabled: !!user,
   };
 });
 
@@ -54,7 +54,7 @@ export const userWishlistAtom = atomWithQuery((get) => {
 // Här används atomWithMutation för att man tex ska kunna komma åt isPending för att disabla knappen när en request sker.
 export const addToFavoritesAtom = atomWithMutation((get) => {
   const queryClient = get(queryClientAtom);
-  const uid = get(userAtom)?.uid;
+  const uid = get(userAtom)?.id;
 
   return {
     mutationKey: ["addToFavorites"],
@@ -98,7 +98,7 @@ export const addToFavoritesAtom = atomWithMutation((get) => {
 // Lägga till en ny i "vill gå"-listan
 export const addToWishlistAtom = atomWithMutation((get) => {
   const queryClient = get(queryClientAtom);
-  const uid = get(userAtom)?.uid;
+  const uid = get(userAtom)?.id;
 
   return {
     mutationKey: ["addToWishlist"],
@@ -143,7 +143,7 @@ export const addToWishlistAtom = atomWithMutation((get) => {
 // https://tanstack.com/query/v4/docs/framework/react/guides/optimistic-updates
 export const removeFromWishlistAtom = atomWithMutation((get) => {
   const queryClient = get(queryClientAtom);
-  const uid = get(userAtom)?.uid;
+  const uid = get(userAtom)?.id;
 
   return {
     mutationKey: ["removeFromWishlist"],
@@ -185,7 +185,7 @@ export const removeFromWishlistAtom = atomWithMutation((get) => {
 
 export const removeFromFavoritesAtom = atomWithMutation((get) => {
   const queryClient = get(queryClientAtom);
-  const uid = get(userAtom)?.uid;
+  const uid = get(userAtom)?.id;
 
   return {
     mutationKey: ["removeFromFavorites"],

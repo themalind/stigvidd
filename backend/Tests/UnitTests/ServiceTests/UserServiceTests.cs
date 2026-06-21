@@ -30,15 +30,15 @@ public class UserServiceTests
     }
 
     [Fact]
-    public async Task GetUserByFirebaseUid_WhenFound_ReturnsSuccess()
+    public async Task GetUserBySubjectId_WhenFound_ReturnsSuccess()
     {
         // Arrange
         var repo = new Mock<IUserRepository>();
-        repo.Setup(r => r.GetUserByFirebaseUidAsync(Utilities.Identifiers.UserFirebaseUid, It.IsAny<Expression<Func<User, UserResponse>>>(), It.IsAny<CancellationToken>()))
+        repo.Setup(r => r.GetUserBySubjectAsync(Utilities.Identifiers.UserSubjectId, It.IsAny<Expression<Func<User, UserResponse>>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<UserResponse>.Success(Utilities.Stubs.UserResponse()));
 
         // Act
-        var result = await Build(repo).GetUserByFirebaseUidAsync(Utilities.Identifiers.UserFirebaseUid, CancellationToken.None);
+        var result = await Build(repo).GetUserBySubjectAsync(Utilities.Identifiers.UserSubjectId, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -46,15 +46,15 @@ public class UserServiceTests
     }
 
     [Fact]
-    public async Task GetUserByFirebaseUid_WhenNotFound_ReturnsNotFound()
+    public async Task GetUserBySubjectId_WhenNotFound_ReturnsNotFound()
     {
         // Arrange
         var repo = new Mock<IUserRepository>();
-        repo.Setup(r => r.GetUserByFirebaseUidAsync(It.IsAny<string>(), It.IsAny<Expression<Func<User, UserResponse>>>(), It.IsAny<CancellationToken>()))
+        repo.Setup(r => r.GetUserBySubjectAsync(It.IsAny<string>(), It.IsAny<Expression<Func<User, UserResponse>>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<UserResponse>.NotFound());
 
         // Act
-        var result = await Build(repo).GetUserByFirebaseUidAsync("no-uid", CancellationToken.None);
+        var result = await Build(repo).GetUserBySubjectAsync("no-uid", CancellationToken.None);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -205,13 +205,13 @@ public class UserServiceTests
     }
 
     [Fact]
-    public async Task CreateUser_WhenFirebaseUidIsNew_ReturnsSuccess()
+    public async Task CreateUser_WhenSubjectIdIsNew_ReturnsSuccess()
     {
         // Arrange
         var repo = new Mock<IUserRepository>();
         repo.Setup(r => r.CheckUserNicknameAvaliability(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult.Success());
-        repo.Setup(r => r.GetUserByFirebaseUidAsync("new-uid", It.IsAny<Expression<Func<User, string>>>(), It.IsAny<CancellationToken>()))
+        repo.Setup(r => r.GetUserBySubjectAsync("new-uid", It.IsAny<Expression<Func<User, string>>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<string>.NotFound());
         repo.Setup(r => r.CreateUserAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((User u, CancellationToken _) => RepositoryResult<User>.Success(u));
@@ -244,17 +244,17 @@ public class UserServiceTests
     }
 
     [Fact]
-    public async Task CreateUser_WhenFirebaseUidAlreadyExists_ReturnsConflict()
+    public async Task CreateUser_WhenSubjectIdAlreadyExists_ReturnsConflict()
     {
         // Arrange
         var repo = new Mock<IUserRepository>();
         repo.Setup(r => r.CheckUserNicknameAvaliability(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult.Success());
-        repo.Setup(r => r.GetUserByFirebaseUidAsync(Utilities.Identifiers.UserFirebaseUid, It.IsAny<Expression<Func<User, string>>>(), It.IsAny<CancellationToken>()))
+        repo.Setup(r => r.GetUserBySubjectAsync(Utilities.Identifiers.UserSubjectId, It.IsAny<Expression<Func<User, string>>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<string>.Success(Utilities.Identifiers.User));
 
         // Act
-        var result = await Build(repo).CreateUserAsync("other@test.com", "Other", Utilities.Identifiers.UserFirebaseUid, CancellationToken.None);
+        var result = await Build(repo).CreateUserAsync("other@test.com", "Other", Utilities.Identifiers.UserSubjectId, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeFalse();

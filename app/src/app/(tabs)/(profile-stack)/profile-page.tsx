@@ -1,5 +1,3 @@
-import { signOutUser } from "@/api/auth";
-import { authStateAtom } from "@/atoms/auth-atoms";
 import { incomingRequestsAtom, incomingSharedHikesAtom } from "@/atoms/friends-atoms";
 import { showErrorAtom } from "@/atoms/snackbar-atoms";
 import { stigviddUserAtom } from "@/atoms/user-atoms";
@@ -17,6 +15,7 @@ import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import React, { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { useAuth } from "@/components/auth/auth-provider";
 import { Text, useTheme } from "react-native-paper";
 
 export default function ProfilePageScreen() {
@@ -26,13 +25,14 @@ export default function ProfilePageScreen() {
   const scrollViewRef = useRef<ScrollView>(null);
   const userTheme = useAtomValue(userThemeAtom);
   const theme = useTheme();
-  const [authState] = useAtom(authStateAtom);
   const [visible, setVisible] = useState(false);
   const navigation = useNavigation();
+  const { isAuthenticated } = useAuth();
   const { data: incomingFriendRequests } = useAtomValue(incomingRequestsAtom);
   const { data: incomingSharedHikes } = useAtomValue(incomingSharedHikesAtom);
   const incomingFriendRequestCount = incomingFriendRequests?.length ?? 0;
   const incomingSharedHikeRequestCount = incomingSharedHikes?.length ?? 0;
+  const { logout } = useAuth();
 
   useFocusEffect(
     React.useCallback(() => {
@@ -40,7 +40,7 @@ export default function ProfilePageScreen() {
     }, []),
   );
 
-  if (!authState.isAuthenticated) {
+  if (!isAuthenticated) {
     return <Redirect href="/(tabs)/(auth)/login" />;
   }
 
@@ -54,7 +54,7 @@ export default function ProfilePageScreen() {
 
   async function handleSignOut() {
     try {
-      await signOutUser();
+      await logout();
     } catch (e) {
       console.log(e);
       setError(t("auth.couldNotLogout"));

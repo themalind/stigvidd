@@ -29,7 +29,7 @@ public class TrailObstacleRepositoryTests : TestBase
 
         using var ctx = new StigViddDbContext(options);
         ctx.Trails.Add(new Trail { Id = 10, Identifier = TivedenIdentifier, Name = "Test", TrailLength = 5, City = "Test" });
-        ctx.Users.Add(new User { Id = 10, Identifier = "test-user", Email = "test@test.com", NickName = "Test", FirebaseUid = "uid" });
+        ctx.Users.Add(new User { Id = 10, Identifier = "test-user", Email = "test@test.com", NickName = "Test", SubjectId = "uid" });
         ctx.TrailObstacles.Add(new TrailObstacle
         {
             Id = 10,

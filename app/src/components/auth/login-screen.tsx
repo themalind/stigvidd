@@ -1,6 +1,5 @@
-import { signInUser } from "@/api/auth";
 import { asTranslationKey } from "@/i18n";
-import { getLoginErrorMessage } from "@/api/firebase-errors";
+import { InvalidCredentialsError } from "@/services/keycloak-auth";
 import { userThemeAtom } from "@/atoms/user-theme-atom";
 import PasswordInputField from "@/components/auth/password-input-field";
 import BackButton from "@/components/back-button";
@@ -18,6 +17,7 @@ import { Button, TextInput, useTheme } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { z } from "zod";
 import ResetPasswordModal from "./reset-password-modal";
+import { useAuth } from "@/components/auth/auth-provider";
 
 const HEIGHT = Dimensions.get("screen").height;
 const WIDTH = Dimensions.get("screen").width;
@@ -39,7 +39,7 @@ export default function LoginScreen({ showBackButton = false }: { showBackButton
   const { t } = useTranslation();
   const theme = useTheme();
   const [visible, setVisible] = useState(false);
-  const [firebaseError, setFirebaseError] = useState("");
+  const [loginError, setLoginError] = useState("");
   const [userTheme] = useAtom(userThemeAtom);
   const colorScheme = Appearance.getColorScheme();
   const finalTheme = userTheme === "auto" ? (colorScheme ?? "light") : userTheme;
@@ -47,6 +47,7 @@ export default function LoginScreen({ showBackButton = false }: { showBackButton
     finalTheme === "dark"
       ? require("../../assets/images/darkmode_login.jpg")
       : require("../../assets/images/lightmode_login.jpg");
+  const { login } = useAuth()
 
   const {
     control,
@@ -55,17 +56,16 @@ export default function LoginScreen({ showBackButton = false }: { showBackButton
   } = useForm<FormFields>({ resolver: zodResolver(loginFields) });
 
   const onSubmit: SubmitHandler<FormFields> = async (data) => {
-    setFirebaseError("");
+    setLoginError("");
 
-    const result = await signInUser(data);
-
-    if (!result.success || !result.user) {
-      const errorCode = result.error?.code || "unknown";
-      setFirebaseError(getLoginErrorMessage(errorCode));
+    try {
+      await login(data.email, data.password);
+    } catch (error) {
+      setLoginError(
+        error instanceof InvalidCredentialsError ? t("auth.invalidCredentials") : t("auth.oidcLoginFailed"),
+      );
       return;
     }
-
-    console.log("Inloggad", result.user.email);
   };
 
   return (
@@ -161,7 +161,7 @@ export default function LoginScreen({ showBackButton = false }: { showBackButton
               <Button mode="contained" style={s.button} onPress={handleSubmit(onSubmit)} disabled={isSubmitting}>
                 {isSubmitting ? t("auth.loggingIn") : t("auth.login")}
               </Button>
-              {firebaseError && <Text style={[s.errorText, { color: theme.colors.error }]}>{firebaseError}</Text>}
+              {loginError && <Text style={[s.errorText, { color: theme.colors.error }]}>{loginError}</Text>}
               <Pressable style={{ flexDirection: "row" }} hitSlop={12} onPress={() => setVisible(true)}>
                 <Text style={[s.linkText, { color: theme.colors.onSurface }]}>{t("auth.forgotPassword")} </Text>
                 <Text

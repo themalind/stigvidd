@@ -5,7 +5,7 @@ namespace Core.Interfaces.Repositories;
 
 public interface IUserRepository
 {
-    Task<RepositoryResult<T>> GetUserByFirebaseUidAsync<T>(string firebaseUid, Expression<Func<User, T>> selector, CancellationToken ctoken);
+    Task<RepositoryResult<T>> GetUserBySubjectAsync<T>(string subjectId, Expression<Func<User, T>> selector, CancellationToken ctoken);
     Task<RepositoryResult<int>> GetUserIdByIdentifierAsync(string identifier, CancellationToken ctoken);
     Task<RepositoryResult<T>> GetUserByIdentifierAsync<T>(string identifier, Expression<Func<User, T>> selector, CancellationToken ctoken);
     Task<RepositoryResult<T>> GetUserByNickNameAsync<T>(string nickName, Expression<Func<User, T>> selector, CancellationToken ctoken);

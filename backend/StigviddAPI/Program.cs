@@ -1,11 +1,14 @@
+using System.Globalization;
+using System.Text.Json;
 using Core;
 using Core.Validators.User;
+using Duende.AccessTokenManagement;
 using FluentValidation;
+using Keycloak.AuthServices.Common;
+using Keycloak.AuthServices.Sdk;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using SharpGrip.FluentValidation.AutoValidation.Mvc.Extensions;
-using System.Globalization;
-using System.Text.Json;
 
 namespace StigviddAPI;
 
@@ -35,19 +38,28 @@ public class Program
                 });
         });
 
-        builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-         .AddJwtBearer(options =>
-         {
-             options.Authority = "https://securetoken.google.com/stigvidd-b4cd0";
-             options.TokenValidationParameters = new TokenValidationParameters
-             {
-                 ValidateIssuer = true,
-                 ValidateAudience = true,
-                 ValidateLifetime = true,
-                 ValidIssuer = "https://securetoken.google.com/stigvidd-b4cd0",
-                 ValidAudience = "stigvidd-b4cd0",
-             };
-         });
+        builder.Services.AddKeycloakWebApiAuthentication(builder.Configuration);
+        builder.Services.AddAuthorization();
+
+        var options = builder.Configuration.GetKeycloakOptions<KeycloakAdminClientOptions>(configSectionName: "KeycloakAdminClient")
+            ?? throw new InvalidOperationException("KeycloakAdminClientOptions not found in configuration.");
+
+        builder.Services.AddDistributedMemoryCache();
+        builder.Services
+            .AddClientCredentialsTokenManagement()
+            .AddClient(
+                "KeycloakAdminTokenClient",
+                client =>
+                {
+                    client.ClientId = ClientId.Parse(options.Resource);
+                    client.ClientSecret = ClientSecret.Parse(options.Credentials.Secret);
+                    client.TokenEndpoint = new Uri(options.KeycloakTokenEndpoint);
+                }
+            );
+
+        builder.Services
+            .AddKeycloakAdminHttpClient(options)
+            .AddClientCredentialsTokenHandler(ClientCredentialsClientName.Parse("KeycloakAdminTokenClient"));
 
         builder.Services.AddControllers()
         .AddJsonOptions(options =>
@@ -82,7 +94,7 @@ public class Program
                 BearerFormat = "JWT",
                 In = NSwag.OpenApiSecurityApiKeyLocation.Header,
                 Name = "Authorization",
-                Description = "Skriv: Bearer {din Firebase idToken}"
+                Description = "Skriv: Bearer {din Keycloak access token}"
             });
 
             config.OperationProcessors.Add(

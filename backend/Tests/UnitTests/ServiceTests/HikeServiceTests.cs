@@ -423,7 +423,7 @@ public class HikeServiceTests
             .ReturnsAsync(RepositoryResult<Hike>.Success(hike));
 
         var userRepo = new Mock<IUserRepository>();
-        var otherUser = new User { Id = 2, Identifier = "other-user", NickName = "Other", Email = "other@test.com", FirebaseUid = "uid2" };
+        var otherUser = new User { Id = 2, Identifier = "other-user", NickName = "Other", Email = "other@test.com", SubjectId = "uid2" };
         userRepo.Setup(r => r.GetUserByIdentifierAsync(It.IsAny<string>(), It.IsAny<Expression<Func<User, User>>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<User>.Success(otherUser));
 

@@ -5,34 +5,34 @@ import { atomWithQuery } from "jotai-tanstack-query";
 import { userAtom } from "./auth-atoms";
 
 export const incomingRequestsAtom = atomWithQuery((get) => {
-  const firebaseUser = get(userAtom);
+  const user = get(userAtom);
   return {
-    queryKey: ["friends", "incoming", firebaseUser?.uid],
+    queryKey: ["friends", "incoming", user?.id],
     queryFn: () => {
-      if (!firebaseUser?.uid) return Promise.resolve([]);
+      if (!user?.id) return Promise.resolve([]);
       return getIncomingRequests();
     },
-    enabled: !!firebaseUser?.uid,
+    enabled: !!user?.id,
     staleTime: 0,
   };
 });
 
 export const incomingSharedHikesAtom = atomWithQuery((get) => {
-  const firebaseUser = get(userAtom);
+  const user = get(userAtom);
   return {
-    queryKey: ["shared-hikes", "incoming", firebaseUser?.uid],
+    queryKey: ["shared-hikes", "incoming", user?.id],
     queryFn: () => getIncomingSharedHikes(),
-    enabled: !!firebaseUser?.uid,
+    enabled: !!user?.id,
     staleTime: 0,
   };
 });
 
 export const friendsAtom = atomWithQuery((get) => {
-  const firebaseUser = get(userAtom);
+  const user = get(userAtom);
   return {
-    queryKey: ["friends", firebaseUser?.uid],
+    queryKey: ["friends", user?.id],
     queryFn: () => getFriends(),
-    enabled: !!firebaseUser?.uid,
+    enabled: !!user?.id,
   };
 });
 

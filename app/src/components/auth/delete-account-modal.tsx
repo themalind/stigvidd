@@ -1,6 +1,6 @@
-import { DeleteUserAccount } from "@/api/auth";
+import { useAuth } from "@/components/auth/auth-provider";
 import { asTranslationKey } from "@/i18n";
-import { getDeleteAccountErrorMessage } from "@/api/firebase-errors";
+import { InvalidCredentialsError } from "@/services/keycloak-auth";
 import { BORDER_RADIUS } from "@/constants/constants";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { BlurView } from "expo-blur";
@@ -30,7 +30,8 @@ const { width } = Dimensions.get("screen");
 export default function DeleteAccountModal({ visible, onDismiss }: Props) {
   const { t } = useTranslation();
   const theme = useTheme();
-  const [firebaseError, setFirebaseError] = useState("");
+  const { deleteAccount } = useAuth();
+  const [deleteError, setDeleteError] = useState("");
   const [confirmVisible, setConfirmVisible] = useState(false);
   const [pendingPassword, setPendingPassword] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
@@ -41,7 +42,7 @@ export default function DeleteAccountModal({ visible, onDismiss }: Props) {
   } = useForm<FormFields>({ resolver: zodResolver(deleteUserFields) });
 
   const onSubmit: SubmitHandler<FormFields> = async (data) => {
-    setFirebaseError("");
+    setDeleteError("");
     setPendingPassword(data.password);
     setConfirmVisible(true);
   };
@@ -49,11 +50,14 @@ export default function DeleteAccountModal({ visible, onDismiss }: Props) {
   const handleConfirm = async () => {
     setConfirmVisible(false);
     setIsDeleting(true);
-    const result = await DeleteUserAccount(pendingPassword);
-
-    if (!result.success) {
-      const errorCode = result.error?.code ?? "unknown";
-      setFirebaseError(getDeleteAccountErrorMessage(errorCode));
+    try {
+      await deleteAccount(pendingPassword);
+    } catch (error) {
+      setDeleteError(
+        error instanceof InvalidCredentialsError
+          ? t("auth.invalidCredentials")
+          : t("auth.couldNotDeleteFromServer"),
+      );
       setIsDeleting(false);
       return;
     }
@@ -115,7 +119,7 @@ export default function DeleteAccountModal({ visible, onDismiss }: Props) {
           >
             {isDeleting ? t("auth.deletingAccount") : t("common.send")}
           </Button>
-          {firebaseError && <Text style={[s.errorText, { color: theme.colors.error }]}>{firebaseError}</Text>}
+          {deleteError && <Text style={[s.errorText, { color: theme.colors.error }]}>{deleteError}</Text>}
         </View>
       </Modal>
       <AlertDialog

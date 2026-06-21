@@ -23,7 +23,7 @@ public class TestAuthHandler : AuthenticationHandler<AuthenticationSchemeOptions
 
     /// <summary>
     /// Handles authentication for incoming requests.
-    /// Extracts the user identifier from the token (format: "Bearer {firebaseUid}")
+    /// Extracts the user identifier from the token (format: "Bearer {subjectId}")
     /// and creates a test user principal with that identifier.
     /// </summary>
     /// <returns>
@@ -45,9 +45,9 @@ public class TestAuthHandler : AuthenticationHandler<AuthenticationSchemeOptions
         }
 
         // Extract the firebase UID from the token (everything after "Bearer ")
-        var firebaseUid = authHeader["Bearer ".Length..];
+        var subjectId = authHeader["Bearer ".Length..];
 
-        if (string.IsNullOrWhiteSpace(firebaseUid))
+        if (string.IsNullOrWhiteSpace(subjectId))
         {
             return Task.FromResult(AuthenticateResult.Fail("Missing user identifier in token"));
         }
@@ -55,7 +55,7 @@ public class TestAuthHandler : AuthenticationHandler<AuthenticationSchemeOptions
         var claims = new[]
         {
             new Claim(ClaimTypes.Name, "Test User"),
-            new Claim(ClaimTypes.NameIdentifier, firebaseUid)
+            new Claim(ClaimTypes.NameIdentifier, subjectId)
         };
 
         var identity = new ClaimsIdentity(claims, "Test");

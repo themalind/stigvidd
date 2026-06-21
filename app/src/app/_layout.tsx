@@ -1,4 +1,3 @@
-import { authLoadingAtom, initAuthAtom, userAtom } from "@/atoms/auth-atoms";
 import { pruneTrailCardCache } from "@/hooks/useTrailCard";
 import { loadUserTheme, userThemeAtom } from "@/atoms/user-theme-atom";
 import { GlobalSnackbar } from "@/components/global-snackbar";
@@ -17,7 +16,7 @@ import * as NavigationBar from "expo-navigation-bar";
 import * as Notifications from "expo-notifications";
 import { Stack, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { useAtom, useAtomValue, useSetAtom } from "jotai";
+import { useSetAtom } from "jotai";
 import { queryClientAtom } from "jotai-tanstack-query";
 import { Inter_600SemiBold, useFonts } from "@expo-google-fonts/inter";
 import React, { useEffect, useMemo, useRef, useState } from "react";
@@ -25,11 +24,13 @@ import { Platform, StyleSheet, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { PaperProvider } from "react-native-paper";
 import "react-native-reanimated";
+import { useAuth, useInitAuth } from "@/components/auth/auth-provider";
+
 
 function NotificationHandler() {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const user = useAtomValue(userAtom);
+  const { user } = useAuth();
   const lastResponse = Notifications.useLastNotificationResponse();
   const handledNotificationId = useRef<string | null>(null);
 
@@ -62,12 +63,13 @@ function NotificationHandler() {
 }
 
 export default function RootLayout() {
-  const initAuth = useSetAtom(initAuthAtom);
   const setUserTheme = useSetAtom(userThemeAtom);
   const theme = useUserTheme();
-  const [user] = useAtom(userAtom);
-  const authLoading = useAtomValue(authLoadingAtom);
   const statusBarStyle = theme.dark ? "light" : "dark";
+
+  // Restore the Keycloak session once on startup (outside the render gate below).
+  useInitAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
 
   // stableKey is null until auth has resolved for the first time.
   // This ensures the component tree mounts once with the correct key,
@@ -76,10 +78,9 @@ export default function RootLayout() {
   const [stableKey, setStableKey] = useState<string | null>(null);
   const prevStableKey = useRef<string | null>(null);
   useEffect(() => {
-    if (!authLoading) {
-      setStableKey(user?.uid ?? "guest");
-    }
-  }, [user, authLoading]);
+      if (isLoading) return;
+      setStableKey((isAuthenticated && user?.id) ? user.id : "guest");
+  }, [user, isAuthenticated, isLoading]);
 
   const router = useRouter();
   useEffect(() => {
@@ -112,12 +113,6 @@ export default function RootLayout() {
   // (notification tap, app switcher, or tapping the home screen icon).
   useAppState();
 
-  useEffect(() => {
-    const unsubscribe = initAuth();
-    return () => unsubscribe?.();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   // Load theme
   useEffect(() => {
     loadUserTheme().then(setUserTheme);
@@ -132,10 +127,7 @@ export default function RootLayout() {
   useEffect(() => {
     if (!user) return;
     registerForPushNotificationsAsync().catch(console.error);
-    // Keyed on the uid so registration runs once per signed-in user, not on every
-    // change to the user object reference.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.uid]);
+  }, [user]);
 
   useEffect(() => {
     if (Platform.OS !== "android") return;
@@ -146,7 +138,7 @@ export default function RootLayout() {
 
   // Render nothing until auth has resolved — prevents the remount-blink that
   // happened when the key changed from "guest" to user.uid at startup.
-  // Firebase reads auth state from local cache so this is only ~100–200 ms.
+  // Session is restored from the stored refresh token, so this is brief.
   if (stableKey === null || !fontsLoaded) return null;
 
   return (

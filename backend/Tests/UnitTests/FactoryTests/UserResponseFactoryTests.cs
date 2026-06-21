@@ -21,7 +21,7 @@ public class UserResponseFactoryTests
         Identifier = "user-id",
         NickName = "Nick",
         Email = "nick@test.com",
-        FirebaseUid = "uid",
+        SubjectId = "uid",
         MyWishList = null,
         MyFavorites = null
     };

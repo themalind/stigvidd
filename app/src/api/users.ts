@@ -1,11 +1,10 @@
 import { CreateStigViddUserCredentials, User, UserFavoritesTrail, UserWishlistTrail } from "@/data/types";
-import { getIdToken } from "@firebase/auth";
-import { auth } from "../../firebase-config";
+import { getValidAccessToken } from "@/services/keycloak-auth";
 import { BASE_URL } from "./api-config";
 import { ApiError } from "./api-error";
 
 export async function getUserToken(): Promise<string | null> {
-  return auth.currentUser ? await getIdToken(auth.currentUser) : null;
+  return getValidAccessToken();
 }
 
 export async function createStigViddUser({ email, nickname }: CreateStigViddUserCredentials): Promise<User> {

@@ -3,9 +3,6 @@ using Core.Interfaces.Repositories;
 using Core.Interfaces.Services;
 using Core.Repositories;
 using Core.Services;
-using FirebaseAdmin;
-using FirebaseAdmin.Auth;
-using Google.Apis.Auth.OAuth2;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -35,27 +32,10 @@ public static class ServiceCollectionExtensions
         // Bra att börja med transient. Märker man att en annan livstid behövs är det lättare att ändra till längre livstid än kortare.
         // Transient: En ny instans skapas varje gång tjänsten begärs. Garbage collected när den inte längre används.
 
-        // Firebase Admin
-        services.AddSingleton(sp =>
-        {
-            var config = sp.GetRequiredService<IConfiguration>();
-            var credentialPath = config["Firebase:ServiceAccountPath"]
-                ?? throw new InvalidOperationException("Firebase:ServiceAccountPath configuration is missing");
-
-#pragma warning disable CS0618
-            var credential = GoogleCredential.FromFile(credentialPath);
-#pragma warning restore CS0618
-
-            var app = FirebaseApp.DefaultInstance ?? FirebaseApp.Create(new AppOptions
-            {
-                Credential = credential
-            });
-
-            return FirebaseAuth.GetAuth(app);
-        });
-
         // Repositories
-        services.AddTransient<IFirebaseAuthRepository, FirebaseAuthRepository>();
+        // NOTE: IKeycloakUserClient (used by KeycloakAdminRepository) is registered in Program.cs
+        // via AddKeycloakAdminHttpClient before AddStigVidd is called.
+        services.AddTransient<IKeycloakAdminRepository, KeycloakAdminRepository>();
         services.AddTransient<ITrailRepository, TrailRepository>();
         services.AddTransient<IUserRepository, UserRepository>();
         services.AddTransient<IReviewRepository, ReviewRepository>();

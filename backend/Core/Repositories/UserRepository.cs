@@ -10,17 +10,17 @@ namespace Core.Repositories;
 public class UserRepository : IUserRepository
 {
     private readonly IDbContextFactory<StigViddDbContext> _context;
-    private readonly IFirebaseAuthRepository _firebaseAuthRepository;
+    private readonly IKeycloakAdminRepository _keycloakAdminRepository;
     private readonly ILogger<UserRepository> _logger;
 
-    public UserRepository(IDbContextFactory<StigViddDbContext> context, IFirebaseAuthRepository firebaseAuthRepository, ILogger<UserRepository> logger)
+    public UserRepository(IDbContextFactory<StigViddDbContext> context, IKeycloakAdminRepository keycloakAdminRepository, ILogger<UserRepository> logger)
     {
         _context = context;
-        _firebaseAuthRepository = firebaseAuthRepository;
+        _keycloakAdminRepository = keycloakAdminRepository;
         _logger = logger;
     }
 
-    public async Task<RepositoryResult<T>> GetUserByFirebaseUidAsync<T>(string firebaseUid, Expression<Func<User, T>> selector, CancellationToken ctoken)
+    public async Task<RepositoryResult<T>> GetUserBySubjectAsync<T>(string subjectId, Expression<Func<User, T>> selector, CancellationToken ctoken)
     {
         try
         {
@@ -28,7 +28,7 @@ public class UserRepository : IUserRepository
 
             var result = await context.Users
                 .AsNoTracking()
-                .Where(u => u.FirebaseUid == firebaseUid)
+                .Where(u => u.SubjectId == subjectId)
                 .Select(selector)
                 .FirstOrDefaultAsync(ctoken);
 
@@ -38,7 +38,7 @@ public class UserRepository : IUserRepository
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "UserRepository: GetUserByFirebaseUidAsync -> Something went wrong when fetching user with Firebase UID {firebaseUid}.", firebaseUid);
+            _logger.LogError(ex, "UserRepository: GetUserBySubjectAsync -> Something went wrong when fetching user with subject id {subjectId}.", subjectId);
             return RepositoryResult<T>.Error();
         }
     }
@@ -391,7 +391,7 @@ public class UserRepository : IUserRepository
             if (user is null)
                 return RepositoryResult.NotFound();
 
-            // Wrap in a transaction so the DB deletion is rolled back if Firebase deletion fails.
+            // Wrap in a transaction so the DB deletion is rolled back if the Keycloak deletion fails.
             // Both deletions must succeed together — a partial delete would leave the systems out of sync.
             using var transaction = await context.Database.BeginTransactionAsync(ctoken);
 
@@ -402,7 +402,7 @@ public class UserRepository : IUserRepository
 #endif
             await context.SaveChangesAsync(ctoken);
 
-            await _firebaseAuthRepository.DeleteUserAsync(user.FirebaseUid, ctoken);
+            await _keycloakAdminRepository.DeleteUserAsync(user.SubjectId, ctoken);
 
             await transaction.CommitAsync(ctoken);
 

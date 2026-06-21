@@ -25,13 +25,13 @@ public class UsersController : StigViddController
         [FromBody] CreateUserRequest createUserRequest,
               CancellationToken ctoken)
     {
-        var firebaseUid = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(firebaseUid))
+        var subjectId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(subjectId))
         {
-            return Unauthorized("Firebase UID not found in token.");
+            return Unauthorized("Subject id not found in token.");
         }
 
-        var result = await _userService.CreateUserAsync(createUserRequest.Email, createUserRequest.NickName, firebaseUid, ctoken);
+        var result = await _userService.CreateUserAsync(createUserRequest.Email, createUserRequest.NickName, subjectId, ctoken);
 
         if (!result.Success && result.Message != null)
         {
@@ -49,13 +49,13 @@ public class UsersController : StigViddController
     public async Task<ActionResult<UserResponse?>> GetStigViddUser(
        CancellationToken ctoken)
     {
-        var firebaseUid = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(firebaseUid))
+        var subjectId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(subjectId))
         {
-            return Unauthorized("Firebase UID not found in token.");
+            return Unauthorized("Subject id not found in token.");
         }
 
-        var result = await _userService.GetUserByFirebaseUidAsync(firebaseUid, ctoken);
+        var result = await _userService.GetUserBySubjectAsync(subjectId, ctoken);
 
         if (!result.Success && result.Message != null)
         {

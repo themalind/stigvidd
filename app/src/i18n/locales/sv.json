@@ -61,7 +61,9 @@
       "passwordTooShort": "Lösenordet måste vara minst 8 tecken",
       "passwordMismatch": "Lösenorden matchar inte",
       "confirmPasswordRequired": "Upprepa lösenord"
-    }
+    },
+    "oidcLoginFailed": "Inloggning misslyckades. Försök igen.",
+    "invalidCredentials": "Fel e-post eller lösenord."
   },
   "profile": {
     "title": "Mitt Stigvidd",

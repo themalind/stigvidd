@@ -277,7 +277,7 @@ public static class Utilities
             {
                 Id = 1,
                 Identifier = "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
-                FirebaseUid = "firebase-uid-12345",
+                SubjectId = "firebase-uid-12345",
                 Email = "natur@example.local",
                 NickName = "NaturElskaren",
                 CreatedAt = SeedDates.Created,
@@ -292,7 +292,7 @@ public static class Utilities
             {
                 Id = 2,
                 Identifier = "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e",
-                FirebaseUid = "firebase-uid-12345",
+                SubjectId = "firebase-uid-12345",
                 Email = "vandrar@example.local",
                 NickName = "VandrarVennen",
                 CreatedAt = SeedDates.Created,
@@ -307,7 +307,7 @@ public static class Utilities
             {
                 Id = 3,
                 Identifier = "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d67",
-                FirebaseUid = "firebase-uid-12345",
+                SubjectId = "firebase-uid-12345",
                 Email = "glenn@example.local",
                 NickName = "SkogsGreven",
                 CreatedAt = SeedDates.Created,
@@ -323,7 +323,7 @@ public static class Utilities
             {
                 Id = 4,
                 Identifier = "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d22",
-                FirebaseUid = "firebase-uid-12345",
+                SubjectId = "firebase-uid-12345",
                 Email = "artemis@example.local",
                 NickName = "Eremiten",
                 CreatedAt = SeedDates.Created,
@@ -339,7 +339,7 @@ public static class Utilities
             {
                 Id = 5,
                 Identifier = "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5a33",
-                FirebaseUid = "firebase-uid-12345",
+                SubjectId = "firebase-uid-12345",
                 Email = "ragnar@example.local",
                 NickName = "Kattleten",
                 CreatedAt = SeedDates.Created,
@@ -355,7 +355,7 @@ public static class Utilities
             {
                 Id = 6,
                 Identifier = "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5a44",
-                FirebaseUid = "firebase-uid-12345",
+                SubjectId = "firebase-uid-12345",
                 Email = "molgan@example.local",
                 NickName = "Molgan75",
                 CreatedAt = SeedDates.Created,
@@ -611,7 +611,7 @@ public static class Utilities
         public const string User = "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d";
         public const string UserWithNoFavorites = "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5a33";
         public const string UserWithNoWishlist = "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5a44";
-        public const string UserFirebaseUid = "firebase-uid-12345";
+        public const string UserSubjectId = "firebase-uid-12345";
         public const string Trail1 = "11a1b2c3-d4e5-4f6a-7b8c-9d0e1f2a3b4c";
         public const string Trail4 = "44d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f";
         public const string Trail7 = "77a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c";
@@ -655,7 +655,7 @@ public static class Utilities
             Identifier = Identifiers.Review5,
             TrailReview = "Great trail",
             Rating = 4.0M,
-            User = new User { Id = 1, Identifier = Identifiers.User, NickName = "Nick", Email = "nick@test.com", FirebaseUid = "uid" },
+            User = new User { Id = 1, Identifier = Identifiers.User, NickName = "Nick", Email = "nick@test.com", SubjectId = "uid" },
             Trail = new Trail { Id = 7, Identifier = Identifiers.Trail7, Name = "Nässehult", TrailLength = 5M },
             CreatedAt = DateTime.UtcNow,
             ReviewImages = withImages
@@ -671,7 +671,7 @@ public static class Utilities
             IssueType = TrailIssueType.FallenTree,
             TrailId = 1,
             UserId = 1,
-            User = new User { Id = 1, Identifier = Identifiers.User, NickName = "Nick", Email = "nick@test.com", FirebaseUid = "uid" },
+            User = new User { Id = 1, Identifier = Identifiers.User, NickName = "Nick", Email = "nick@test.com", SubjectId = "uid" },
             SolvedVotes = votes ?? []
         };
 
@@ -681,7 +681,7 @@ public static class Utilities
             Identifier = "vote-1",
             TrailObstacleId = 1,
             UserId = 1,
-            User = new User { Id = 1, Identifier = Identifiers.User, NickName = "Nick", Email = "nick@test.com", FirebaseUid = "uid" }
+            User = new User { Id = 1, Identifier = Identifiers.User, NickName = "Nick", Email = "nick@test.com", SubjectId = "uid" }
         };
 
         public static UserResponseModel UserResponse() =>
@@ -760,7 +760,7 @@ public static class Utilities
 
         public static Mock<IUserRepository> UserRepositoryFoundByIdentifier()
         {
-            var user = new User { Id = 1, Identifier = Identifiers.User, NickName = "Nick", Email = "nick@test.com", FirebaseUid = "uid" };
+            var user = new User { Id = 1, Identifier = Identifiers.User, NickName = "Nick", Email = "nick@test.com", SubjectId = "uid" };
             var mock = new Mock<IUserRepository>();
             mock.Setup(r => r.GetUserByIdentifierAsync(It.IsAny<string>(), It.IsAny<Expression<Func<User, User>>>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(RepositoryResult<User>.Success(user));

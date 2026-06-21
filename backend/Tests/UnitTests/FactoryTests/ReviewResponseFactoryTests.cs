@@ -23,7 +23,7 @@ public class ReviewResponseFactoryTests
         TrailReview = "Great trail",
         Rating = 4.0M,
         CreatedAt = DateTime.UtcNow,
-        User = new User { Id = 1, Identifier = "user-id", NickName = "Nick", Email = "nick@test.com", FirebaseUid = "uid" },
+        User = new User { Id = 1, Identifier = "user-id", NickName = "Nick", Email = "nick@test.com", SubjectId = "uid" },
         Trail = new Trail { Id = 1, Identifier = "trail-id", Name = "Test Trail", TrailLength = 5M },
         ReviewImages = []
     };

@@ -1,12 +1,15 @@
-import { authStateAtom } from "@/atoms/auth-atoms";
-import { Stack } from "expo-router";
+import { Redirect, Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { useAtom } from "jotai";
+import { useAuth } from "@/components/auth/auth-provider";
 import { useTheme } from "react-native-paper";
 
 export default function AuthLayout() {
-  const [authState] = useAtom(authStateAtom);
+  const { isAuthenticated } = useAuth();
   const theme = useTheme();
+
+  if (isAuthenticated) {
+    return <Redirect href="/(tabs)/(profile-stack)/profile-page" />;
+  }
 
   return (
     <>
@@ -18,7 +21,7 @@ export default function AuthLayout() {
           contentStyle: { backgroundColor: theme.colors.background },
         }}
       >
-        <Stack.Protected guard={!authState.isAuthenticated}>
+        <Stack.Protected guard={!isAuthenticated}>
           <Stack.Screen name="login" />
           <Stack.Screen name="register" />
         </Stack.Protected>
