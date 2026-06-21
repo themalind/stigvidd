@@ -6,8 +6,6 @@ using Duende.AccessTokenManagement;
 using FluentValidation;
 using Keycloak.AuthServices.Common;
 using Keycloak.AuthServices.Sdk;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
 using SharpGrip.FluentValidation.AutoValidation.Mvc.Extensions;
 
 namespace StigviddAPI;
@@ -32,7 +30,8 @@ public class Program
             options.AddPolicy("AllowFrontend",
                 policy =>
                 {
-                    policy.WithOrigins("http://localhost:5173")
+                    policy
+                        .WithOrigins("http://localhost:5173", "https://stigvidd.se")
                         .AllowAnyHeader()
                         .AllowAnyMethod();
                 });
