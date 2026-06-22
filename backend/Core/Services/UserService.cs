@@ -113,34 +113,21 @@ public class UserService : IUserService
         return Result.Ok<IReadOnlyCollection<UserWishlistTrailResponse?>>(result.Value ?? []);
     }
 
-    public async Task<Result<UserNameResponse>> SearchUsersByNickNameAsync(string query, int excludeUserId, CancellationToken ctoken)
+    public async Task<Result<IReadOnlyCollection<SearchFriendResultResponse>>> FindUsersByNickNameAsync(string username, string currentUserIdentifier, CancellationToken ctoken)
     {
-        var result = await _userRepository.GetUserByNickNameAsync(query, u => u.Id, ctoken);
-
-        if (result.Status == RepositoryResultStatus.Error)
-            return Result.Fail<UserNameResponse>(new Message(500, "An error occurred while searching for the user."));
-
-        if (!result.IsSuccess)
-            return Result.Ok(UserNameResponse.Create(query, false));
-
-        var exists = result.Value != excludeUserId;
-        return Result.Ok(UserNameResponse.Create(query, exists));
-    }
-
-    public async Task<Result<FriendResponse?>> SearchForUserByUsernameAsync(string username, CancellationToken ctoken)
-    {
-        var result = await _userRepository.GetUserByNickNameAsync(
+        var result = await _userRepository.FindUsersByNickNameAsync(
             username,
-            u => FriendResponse.Create(u.Identifier, u.NickName),
+            currentUserIdentifier,
+            u => SearchFriendResultResponse.Create(u.Identifier, u.NickName),
             ctoken);
 
         if (result.Status == RepositoryResultStatus.NotFound)
-            return Result.Ok<FriendResponse?>(null);
+            return Result.Ok<IReadOnlyCollection<SearchFriendResultResponse>>([]);
 
         if (!result.IsSuccess)
-            return Result.Fail<FriendResponse?>(new Message(500, "An error occurred while searching for the user."));
+            return Result.Fail<IReadOnlyCollection<SearchFriendResultResponse>>(new Message(500, "An error occurred while searching for the user."));
 
-        return Result.Ok<FriendResponse?>(result.Value);
+        return Result.Ok(result.Value);
     }
 
     public async Task<Result<UserNameResponse>> CheckForUsername(string username, CancellationToken ctoken)

@@ -37,11 +37,23 @@ describe("searchUsers", () => {
     expect(result).toEqual([]);
   });
 
-  it("wraps the result in an array when found", async () => {
-    const user = { userIdentifier: "uid-1", nickName: "alice" };
-    mockFetch(200, user);
-    const result = await searchUsers("alice");
-    expect(result).toEqual([user]);
+  it("returns the list of matching users", async () => {
+    const matches = [
+      { userIdentifier: "uid-1", nickName: "alice" },
+      { userIdentifier: "uid-2", nickName: "alicia" },
+    ];
+    mockFetch(200, matches);
+    const result = await searchUsers("ali");
+    expect(result).toEqual(matches);
+  });
+
+  it("calls the search endpoint with the query URL-encoded", async () => {
+    mockFetch(200, []);
+    await searchUsers("a b&c");
+    expect(fetch).toHaveBeenCalledWith(
+      "http://test/api/v1/users/search?username=a%20b%26c",
+      expect.objectContaining({ method: "GET" }),
+    );
   });
 
   it("throws on other error statuses", async () => {
