@@ -13,11 +13,3 @@ export const userAtom = atom<AuthUser | null>(null);
  * Gates the first render so there is no auth-resolution blink at startup.
  */
 export const authLoadingAtom = atom<boolean>(true);
-
-/**
- * Write-only atom to update user profile
- */
-export const updateUserAtom = atom(null, (get, set, user: AuthUser | null) => {
-  set(userAtom, user);
-  console.log("userAtom uppdaterad!");
-});

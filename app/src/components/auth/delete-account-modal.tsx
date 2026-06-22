@@ -54,16 +54,14 @@ export default function DeleteAccountModal({ visible, onDismiss }: Props) {
       await deleteAccount(pendingPassword);
     } catch (error) {
       setDeleteError(
-        error instanceof InvalidCredentialsError
-          ? t("auth.invalidCredentials")
-          : t("auth.couldNotDeleteFromServer"),
+        error instanceof InvalidCredentialsError ? t("auth.invalidCredentials") : t("auth.couldNotDeleteFromServer"),
       );
       setIsDeleting(false);
       return;
     }
 
     onDismiss();
-    router.replace("/(tabs)/(auth)/login");
+    router.replace("/(tabs)/(profile-stack)/login");
   };
 
   return (

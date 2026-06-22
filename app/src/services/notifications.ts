@@ -70,7 +70,18 @@ export async function registerForPushNotificationsAsync(): Promise<void> {
   // The project ID links the token to our EAS project so Expo can route
   // notifications through the correct APNs/FCM credentials.
   const projectId = "f436d9c7-ff9c-4a60-b51f-1aefd5672205";
-  const { data: expoToken } = await Notifications.getExpoPushTokenAsync({ projectId });
+
+  // Fetching the token hits Expo's servers (exp.host). A transient network
+  // failure here is not fatal — bail out quietly so it can be retried on the
+  // next launch instead of surfacing as an unhandled error.
+  let expoToken: string;
+  try {
+    const { data } = await Notifications.getExpoPushTokenAsync({ projectId });
+    expoToken = data;
+  } catch (error) {
+    console.warn("registerForPushNotificationsAsync: could not fetch Expo push token:", error);
+    return;
+  }
   _currentExpoToken = expoToken;
 
   // Persist the token in the backend so the server knows where to send pushes.

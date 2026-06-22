@@ -1,19 +1,32 @@
 import { pendingNotificationsCountAtom } from "@/atoms/friends-atoms";
 import Header from "@/components/header";
 import { FontAwesome, Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import { Tabs, usePathname } from "expo-router";
+import { Tabs, usePathname, useSegments } from "expo-router";
 import { useAtomValue } from "jotai";
 import { View } from "react-native";
 import { useTheme } from "react-native-paper";
 import { useTranslation } from "react-i18next";
+import { useAuth } from "@/components/auth/auth-provider";
 
 export default function TabsLayout() {
   const theme = useTheme();
   const { t } = useTranslation();
   const pathname = usePathname();
+  const segments = useSegments() as string[];
+  const { isAuthenticated } = useAuth();
   const incomingCount = useAtomValue(pendingNotificationsCountAtom);
 
-  const shouldShowHeader = !pathname.includes("/login") && !pathname.includes("/register");
+  // On the profile tab, login/register live inside the stack and Stack.Protected
+  // swaps them in/out imperatively when auth flips — usePathname() lags one
+  // transition behind that swap, so deriving header visibility from the leaf path
+  // here is unreliable. The tab segment "(profile-stack)" is stable across the
+  // flip (you never leave the tab) and isAuthenticated is the lag-free source of
+  // truth for which screen Protected shows, so use that on the profile tab.
+  // Other tabs (incl. the separate settings login) keep the pathname check.
+  const onProfileTab = segments.includes("(profile-stack)");
+  const shouldShowHeader = onProfileTab
+    ? isAuthenticated
+    : !pathname.includes("/login") && !pathname.includes("/register");
 
   return (
     <>
@@ -82,12 +95,6 @@ export default function TabsLayout() {
               ),
             tabBarBadge: incomingCount > 0 ? incomingCount : undefined,
             tabBarBadgeStyle: { color: theme.colors.onTertiary, backgroundColor: theme.colors.tertiary },
-          }}
-        />
-        <Tabs.Screen
-          name="(auth)"
-          options={{
-            href: null,
           }}
         />
         <Tabs.Screen

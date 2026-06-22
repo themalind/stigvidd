@@ -6,6 +6,7 @@ using Infrastructure.Data.Entities;
 using Microsoft.Extensions.Configuration;
 using Moq;
 using System.Linq.Expressions;
+using WebDataContracts.ResponseModels.Friend;
 using WebDataContracts.ResponseModels.User;
 
 namespace UnitTests.ServiceTests;
@@ -614,6 +615,73 @@ public class UserServiceTests
 
         // Act
         var result = await Build(repo, hikeRepo, trailObstacleRepo, friendRepo).DeleteUserAsync(Utilities.Identifiers.User, CancellationToken.None);
+
+        // Assert
+        result.Success.Should().BeFalse();
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(500);
+    }
+
+    [Fact]
+    public async Task FindUsersByNickName_WhenMatchesFound_ReturnsList()
+    {
+        // Arrange
+        IReadOnlyCollection<SearchFriendResultResponse> matches =
+        [
+            SearchFriendResultResponse.Create("id-1", "alice"),
+            SearchFriendResultResponse.Create("id-2", "alicia"),
+        ];
+        var repo = new Mock<IUserRepository>();
+        repo.Setup(r => r.FindUsersByNickNameAsync(
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<Expression<Func<User, SearchFriendResultResponse>>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<IReadOnlyCollection<SearchFriendResultResponse>>.Success(matches));
+
+        // Act
+        var result = await Build(repo).FindUsersByNickNameAsync("ali", Utilities.Identifiers.User, CancellationToken.None);
+
+        // Assert
+        result.Success.Should().BeTrue();
+        result.Value.Should().HaveCount(2);
+    }
+
+    [Fact]
+    public async Task FindUsersByNickName_WhenNoMatches_ReturnsEmptyList()
+    {
+        // Arrange
+        var repo = new Mock<IUserRepository>();
+        repo.Setup(r => r.FindUsersByNickNameAsync(
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<Expression<Func<User, SearchFriendResultResponse>>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<IReadOnlyCollection<SearchFriendResultResponse>>.NotFound());
+
+        // Act
+        var result = await Build(repo).FindUsersByNickNameAsync("ghost", Utilities.Identifiers.User, CancellationToken.None);
+
+        // Assert
+        result.Success.Should().BeTrue();
+        result.Value.Should().NotBeNull();
+        result.Value.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task FindUsersByNickName_WhenRepositoryErrors_ReturnsInternalServerError()
+    {
+        // Arrange
+        var repo = new Mock<IUserRepository>();
+        repo.Setup(r => r.FindUsersByNickNameAsync(
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<Expression<Func<User, SearchFriendResultResponse>>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<IReadOnlyCollection<SearchFriendResultResponse>>.Error());
+
+        // Act
+        var result = await Build(repo).FindUsersByNickNameAsync("ali", Utilities.Identifiers.User, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeFalse();

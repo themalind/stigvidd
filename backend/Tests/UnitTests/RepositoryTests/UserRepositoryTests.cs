@@ -377,7 +377,7 @@ public class UserRepositoryTests : TestBase
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        result.Value.Should().BeGreaterThan(0);
+        result.Value.Should().BePositive();
     }
 
     [Fact]

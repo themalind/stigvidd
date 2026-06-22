@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using WebDataContracts.RequestModels.User;
+using WebDataContracts.ResponseModels.Friend;
 using WebDataContracts.ResponseModels.User;
 
 namespace StigviddAPI.Controllers;
@@ -177,7 +178,7 @@ public class UsersController : StigViddController
 
     [HttpGet]
     [Route("search")]
-    public async Task<ActionResult> SearchForUserByUsername([FromQuery] CheckUsernameRequest request, CancellationToken ctoken)
+    public async Task<ActionResult<IReadOnlyCollection<SearchFriendResultResponse>>> SearchForUserByUsername([FromQuery] CheckUsernameRequest request, CancellationToken ctoken)
     {
         var userResponse = await GetAuthenticatedUserAsync(_userService, ctoken);
         if (userResponse == null)
@@ -185,7 +186,7 @@ public class UsersController : StigViddController
             return Unauthorized("User not found");
         }
 
-        var result = await _userService.SearchForUserByUsernameAsync(request.Username, ctoken);
+        var result = await _userService.FindUsersByNickNameAsync(request.Username, userResponse.Identifier, ctoken);
 
         if (!result.Success && result.Message != null)
         {

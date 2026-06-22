@@ -19,13 +19,12 @@ import { StatusBar } from "expo-status-bar";
 import { useSetAtom } from "jotai";
 import { queryClientAtom } from "jotai-tanstack-query";
 import { Inter_600SemiBold, useFonts } from "@expo-google-fonts/inter";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef } from "react";
 import { Platform, StyleSheet, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { PaperProvider } from "react-native-paper";
 import "react-native-reanimated";
 import { useAuth, useInitAuth } from "@/components/auth/auth-provider";
-
 
 function NotificationHandler() {
   const router = useRouter();
@@ -69,36 +68,15 @@ export default function RootLayout() {
 
   // Restore the Keycloak session once on startup (outside the render gate below).
   useInitAuth();
-  const { user, isAuthenticated, isLoading } = useAuth();
+  const { user, isLoading } = useAuth();
 
-  // stableKey is null until auth has resolved for the first time.
-  // This ensures the component tree mounts once with the correct key,
-  // so there is no remount-blink at startup. Subsequent changes (login/logout)
-  // still trigger a remount, resetting all local state as before.
-  const [stableKey, setStableKey] = useState<string | null>(null);
-  const prevStableKey = useRef<string | null>(null);
-  useEffect(() => {
-      if (isLoading) return;
-      setStableKey((isAuthenticated && user?.id) ? user.id : "guest");
-  }, [user, isAuthenticated, isLoading]);
-
-  const router = useRouter();
-  useEffect(() => {
-    // Navigate to profile after login remount. prevStableKey is above the key
-    // boundary so it survives the GestureHandlerRootView remount, letting us
-    // detect "guest → uid" (login) vs a cold start when already authenticated.
-    if (prevStableKey.current === "guest" && stableKey && user) {
-      router.replace("/(tabs)/(profile-stack)/profile-page");
-    }
-    prevStableKey.current = stableKey;
-    // Intentionally keyed on stableKey only — this should run once per login/logout
-    // remount, not whenever router/user identities change.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [stableKey]);
-
-  // Fresh QueryClient per stableKey — resets cache on login/logout.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const queryClient = useMemo(() => new QueryClient(), [stableKey]);
+  // One QueryClient for the app's lifetime. Cross-user isolation is handled by
+  // user-scoped query keys (e.g. ["userFavorites", user.id]) with enabled: !!user,
+  // so a different user can never read the previous user's cache. logout() calls
+  // queryClient.clear() to drop the signed-out user's cached data from memory.
+  // Auth-specific screens reset on login/logout because Stack.Protected unmounts
+  // them when the guard flips — no full navigator remount needed.
+  const queryClient = useMemo(() => new QueryClient(), []);
 
   const setQueryClient = useSetAtom(queryClientAtom);
   useEffect(() => {
@@ -136,16 +114,16 @@ export default function RootLayout() {
 
   const [fontsLoaded] = useFonts({ Inter_600SemiBold });
 
-  // Render nothing until auth has resolved — prevents the remount-blink that
-  // happened when the key changed from "guest" to user.uid at startup.
-  // Session is restored from the stored refresh token, so this is brief.
-  if (stableKey === null || !fontsLoaded) return null;
+  // Render nothing until the initial session restore has resolved — prevents an
+  // auth-resolution blink at startup. Session is restored from the stored refresh
+  // token, so this is brief.
+  if (isLoading || !fontsLoaded) return null;
 
   return (
     <QueryClientProvider client={queryClient}>
       <PaperProvider theme={theme}>
         <StatusBar style={statusBarStyle} />
-        <GestureHandlerRootView key={stableKey}>
+        <GestureHandlerRootView>
           <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
             <NotificationHandler />
             <Stack>

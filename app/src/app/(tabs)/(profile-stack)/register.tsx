@@ -1,13 +1,14 @@
 import { ApiError } from "@/api/api-error";
 import { asTranslationKey } from "@/i18n";
+import { showSuccessAtom } from "@/atoms/snackbar-atoms";
 import { userThemeAtom } from "@/atoms/user-theme-atom";
 import PasswordInputField from "@/components/auth/password-input-field";
 import BackButton from "@/components/back-button";
 import { BORDER_RADIUS, SURFACE_BORDER_RADIUS } from "@/constants/constants";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Image } from "expo-image";
-import { Link } from "expo-router";
-import { useAtom } from "jotai";
+import { Link, router } from "expo-router";
+import { useAtom, useSetAtom } from "jotai";
 import React, { useState } from "react";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -16,7 +17,7 @@ import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view
 import { Button, TextInput, useTheme } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { z } from "zod";
-import { useAuth } from "@/components/auth/auth-provider";
+import { RegisteredButLoginFailedError, useAuth } from "@/components/auth/auth-provider";
 
 const WIDTH = Dimensions.get("screen").width;
 
@@ -60,6 +61,7 @@ export default function RegisterScreen() {
   const [userTheme] = useAtom(userThemeAtom);
   const colorScheme = Appearance.getColorScheme();
   const { register } = useAuth();
+  const showSuccess = useSetAtom(showSuccessAtom);
 
   const finalTheme = userTheme === "auto" ? (colorScheme ?? "light") : userTheme;
 
@@ -83,6 +85,13 @@ export default function RegisterScreen() {
     } catch (error) {
       if (error instanceof ApiError && error.message === "nickname-taken") {
         setError("nickName", { message: "auth.validation.nicknameTaken" });
+        return;
+      }
+      // Account was created but auto-login failed: send the user to login with a
+      // friendly note rather than a generic error — they just need to sign in.
+      if (error instanceof RegisteredButLoginFailedError) {
+        showSuccess(t("auth.registeredPleaseLogin"));
+        router.replace("./login");
         return;
       }
       setRegisterError(t("auth.unknownError"));

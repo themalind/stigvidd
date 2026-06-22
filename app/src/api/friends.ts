@@ -1,7 +1,7 @@
-import { Friend, FriendRequest, OutgoingFriendRequest } from "@/data/types";
+import { FriendRequest, OutgoingFriendRequest, SearchFriendResult } from "@/data/types";
 import { BASE_URL } from "./api-config";
-import { getUserToken } from "./users";
 import { ApiError } from "./api-error";
+import { getUserToken } from "./users";
 
 export async function sendFriendRequest(receiverNickName: string): Promise<{ success: boolean }> {
   try {
@@ -85,10 +85,10 @@ export async function rejectFriendRequest(otherIdentifier: string): Promise<{ su
   }
 }
 
-export async function getFriends(): Promise<Friend[]> {
+export async function getFriends(): Promise<SearchFriendResult[]> {
   try {
     const token = await getUserToken();
-console.log(`Fetching friends from ${BASE_URL}/friends... with token: ${token}`);
+    console.log(`Fetching friends from ${BASE_URL}/friends... with token: ${token}`);
     if (!token) {
       throw new Error("User not authenticated");
     }
@@ -193,7 +193,7 @@ export async function removeFriend(friendIdentifier: string): Promise<{ success:
   }
 }
 
-export async function searchUsers(query: string): Promise<Friend[]> {
+export async function searchUsers(query: string): Promise<SearchFriendResult[]> {
   try {
     const token = await getUserToken();
 
@@ -215,8 +215,8 @@ export async function searchUsers(query: string): Promise<Friend[]> {
       throw new ApiError(`HTTP error: searchUsers: ${response.status}`, response.status);
     }
 
-    const result: Friend = await response.json();
-    return [result];
+    const result: SearchFriendResult[] = await response.json();
+    return result;
   } catch (error) {
     console.log("searchUsers -> Error while searching users:", error);
     throw error;

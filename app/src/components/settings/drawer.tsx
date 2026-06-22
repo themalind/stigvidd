@@ -1,10 +1,9 @@
 import { showErrorAtom } from "@/atoms/snackbar-atoms";
 import { useThemeToggle } from "@/hooks/useThemeToggle";
 import { MaterialIcons } from "@expo/vector-icons";
-import { CommonActions } from "@react-navigation/native";
 import { BlurView } from "expo-blur";
 import { Image } from "expo-image";
-import { router, useNavigation } from "expo-router";
+import { router } from "expo-router";
 import { useSetAtom } from "jotai";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
@@ -28,7 +27,6 @@ export default function SettingsDrawer({ visible, onDismiss }: Props) {
   const setError = useSetAtom(showErrorAtom);
   const [active, setActive] = React.useState("");
   const insets = useSafeAreaInsets();
-  const navigation = useNavigation();
 
   async function handleThemeToggle() {
     setActive("theme");
@@ -50,28 +48,16 @@ export default function SettingsDrawer({ visible, onDismiss }: Props) {
       setError(t("auth.couldNotLogout"));
     }
     onDismiss();
-    // Reset the entire navigation tree back to auth/login,
-    // clearing all tab history and nested stack history.
-    navigation.dispatch(
-      CommonActions.reset({
-        index: 0,
-        routes: [
-          {
-            name: "(tabs)",
-            state: {
-              index: 0,
-              routes: [{ name: "(auth)", state: { routes: [{ name: "login" }] } }],
-            },
-          },
-        ],
-      }),
-    );
+    // No navigation needed: logout() flips userAtom → the (profile-stack) guard
+    // swaps the protected screens for the login screen in place.
   }
 
   function handleLogin() {
     setActive("login");
     onDismiss();
-    router.replace("/(tabs)/(settings)/login");
+    // Send login into the profile stack so the auth guard lands on the profile
+    // page once signed in. The (settings) stack has no post-login destination.
+    router.replace("/(tabs)/(profile-stack)/login");
   }
 
   function handleGuide() {

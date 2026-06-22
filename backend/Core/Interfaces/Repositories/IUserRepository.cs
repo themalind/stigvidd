@@ -9,6 +9,7 @@ public interface IUserRepository
     Task<RepositoryResult<int>> GetUserIdByIdentifierAsync(string identifier, CancellationToken ctoken);
     Task<RepositoryResult<T>> GetUserByIdentifierAsync<T>(string identifier, Expression<Func<User, T>> selector, CancellationToken ctoken);
     Task<RepositoryResult<T>> GetUserByNickNameAsync<T>(string nickName, Expression<Func<User, T>> selector, CancellationToken ctoken);
+    Task<RepositoryResult<IReadOnlyCollection<T>>> FindUsersByNickNameAsync<T>(string nickName, string excludeUserIdentifier, Expression<Func<User, T>> selector, CancellationToken ctoken);
     Task<RepositoryResult> CheckUserNicknameAvaliability(string nickname, CancellationToken ctoken);
     Task<RepositoryResult<IReadOnlyCollection<T>>> GetFavoritesByUserIdentifierAsync<T>(string userIdentifier, Expression<Func<Trail, T>> selector, CancellationToken ctoken);
     Task<RepositoryResult<IReadOnlyCollection<T>>> GetWishListByUserIdentifierAsync<T>(string userIdentifier, Expression<Func<Trail, T>> selector, CancellationToken ctoken);

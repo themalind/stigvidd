@@ -11,7 +11,6 @@ import { useSharedHikeMutations } from "@/hooks/shared-hikes/useSharedHikeMutati
 import FormattedTime from "@/utils/format-time-from-ms";
 import { Fontisto, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
-import { Redirect } from "expo-router";
 import { useAtom, useAtomValue } from "jotai";
 import { useState } from "react";
 import { useAuth } from "@/components/auth/auth-provider";
@@ -55,10 +54,6 @@ export default function SharedHikesScreen() {
     queryFn: () => getSharedHikes(),
     enabled: isAuthenticated && !!user?.data,
   });
-
-  if (!isAuthenticated) {
-    return <Redirect href="/(tabs)/(auth)/login" />;
-  }
 
   if (isLoading || incomingPending) {
     return <LoadingIndicator />;

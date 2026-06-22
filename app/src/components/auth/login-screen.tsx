@@ -47,7 +47,7 @@ export default function LoginScreen({ showBackButton = false }: { showBackButton
     finalTheme === "dark"
       ? require("../../assets/images/darkmode_login.jpg")
       : require("../../assets/images/lightmode_login.jpg");
-  const { login } = useAuth()
+  const { login } = useAuth();
 
   const {
     control,

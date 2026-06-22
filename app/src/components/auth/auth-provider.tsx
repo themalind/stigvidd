@@ -3,9 +3,29 @@ import { registerAccount } from "@/api/auth";
 import { deleteStigViddUser } from "@/api/users";
 import { AuthUser, RegisterData } from "@/data/types";
 import { unregisterForPushNotificationsAsync } from "@/services/notifications";
-import { loadTokens, logoutKeycloak, passwordGrant, refreshGrant } from "@/services/keycloak-auth";
+import {
+  loadTokens,
+  logoutKeycloak,
+  passwordGrant,
+  refreshGrant,
+  setSessionExpiredHandler,
+} from "@/services/keycloak-auth";
 import { useAtomValue, useSetAtom } from "jotai";
+import { queryClientAtom } from "jotai-tanstack-query";
 import { useEffect } from "react";
+
+/**
+ * Thrown by register() when the account was provisioned successfully but the
+ * follow-up auto-login failed. The account exists — the user just needs to log
+ * in manually — so callers should route to the login screen, not show a generic
+ * error.
+ */
+export class RegisteredButLoginFailedError extends Error {
+  constructor() {
+    super("registered-but-login-failed");
+    this.name = "RegisteredButLoginFailedError";
+  }
+}
 
 interface Auth {
   user: AuthUser | null;
@@ -27,6 +47,10 @@ export function useAuth(): Auth {
   const user = useAtomValue(userAtom);
   const isLoading = useAtomValue(authLoadingAtom);
   const setUser = useSetAtom(userAtom);
+  // Read the QueryClient from the jotai atom (set in the root layout) rather than
+  // useQueryClient(): useAuth() also runs in RootLayout, which renders the
+  // QueryClientProvider and therefore sits above it — useQueryClient() would throw.
+  const queryClient = useAtomValue(queryClientAtom);
 
   const login = async (email: string, password: string) => {
     setUser(await passwordGrant(email, password));
@@ -35,14 +59,23 @@ export function useAuth(): Auth {
   const register = async (data: RegisterData) => {
     // Backend provisions the Keycloak user and the StigVidd DB record.
     await registerAccount(data);
-    // Then auto-login via Direct Access Grant.
-    setUser(await passwordGrant(data.email, data.password));
+    // Then auto-login via Direct Access Grant. The account already exists at this
+    // point, so a login failure here is recoverable — surface it distinctly so the
+    // screen can route to login instead of showing a generic "registration failed".
+    try {
+      setUser(await passwordGrant(data.email, data.password));
+    } catch {
+      throw new RegisteredButLoginFailedError();
+    }
   };
 
   const logout = async () => {
     await unregisterForPushNotificationsAsync().catch(() => {});
     await logoutKeycloak();
     setUser(null);
+    // Drop the signed-out user's cached data from memory. Correctness is already
+    // guaranteed by user-scoped query keys; this is memory hygiene.
+    queryClient.clear();
   };
 
   const deleteAccount = async (password: string) => {
@@ -67,6 +100,18 @@ export function useAuth(): Auth {
 export function useInitAuth(): void {
   const setUser = useSetAtom(userAtom);
   const setIsLoading = useSetAtom(authLoadingAtom);
+  const queryClient = useAtomValue(queryClientAtom);
+
+  // When a refresh fails mid-session, drop back to the signed-out state so the
+  // route guards swap to the login screen instead of stranding the user on a
+  // screen whose API calls all 401.
+  useEffect(() => {
+    setSessionExpiredHandler(() => {
+      setUser(null);
+      queryClient.clear();
+    });
+    return () => setSessionExpiredHandler(null);
+  }, [setUser, queryClient]);
 
   useEffect(() => {
     let cancelled = false;

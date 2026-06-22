@@ -1,16 +1,16 @@
 import { getFriends } from "@/api/friends";
 import { stigviddUserAtom } from "@/atoms/user-atoms";
 import { BORDER_RADIUS } from "@/constants/constants";
-import { Friend } from "@/data/types";
+import { SearchFriendResult } from "@/data/types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
 import { useState } from "react";
 import { Control, Controller, FieldError, SubmitHandler, useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 import { ActivityIndicator, Dimensions, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { Button, Divider, Icon, Modal, Portal, Text, TextInput, useTheme } from "react-native-paper";
-import { useTranslation } from "react-i18next";
 import { z } from "zod";
 
 const HEIGHT = Dimensions.get("screen").height;
@@ -188,7 +188,7 @@ export default function ShareHikeModal({
               </Pressable>
               <Divider />
               <ScrollView bounces={false} style={s.flex}>
-                {friends.map((item: Friend, index: number) => (
+                {friends.map((item: SearchFriendResult, index: number) => (
                   <View key={item.identifier}>
                     <Pressable
                       style={({ pressed }) => [

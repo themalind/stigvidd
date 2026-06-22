@@ -3,9 +3,7 @@ import ErrorView from "@/components/error-view";
 import LoadingIndicator from "@/components/loading-indicator";
 import UserTrailCollection from "@/components/user/user-trail-collection";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { Redirect } from "expo-router";
 import { useAtom } from "jotai";
-import { useAuth } from "@/components/auth/auth-provider";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "react-native-paper";
 
@@ -14,11 +12,6 @@ export default function FavoritesScreen() {
   const { t } = useTranslation();
   const [{ data, isLoading, isError, error }] = useAtom(userFavoritesAtom);
   const [removeFromFavorite] = useAtom(removeFromFavoritesAtom);
-  const { isAuthenticated } = useAuth();
-
-  if (!isAuthenticated) {
-    return <Redirect href="/(tabs)/(auth)/login" />;
-  }
 
   if (isLoading) {
     return <LoadingIndicator />;

@@ -112,6 +112,29 @@ public class UserRepository : IUserRepository
         }
     }
 
+    public async Task<RepositoryResult<IReadOnlyCollection<T>>> FindUsersByNickNameAsync<T>(string nickName, string excludeUserIdentifier, Expression<Func<User, T>> selector, CancellationToken ctoken)
+    {
+        try
+        {
+            using var context = await _context.CreateDbContextAsync(ctoken);
+
+            var results = await context.Users
+                .AsNoTracking()
+                .Where(u => u.Identifier != excludeUserIdentifier && EF.Functions.ILike(u.NickName, $"%{nickName}%"))
+                .Select(selector)
+                .ToListAsync(ctoken);
+
+            return results is null || results.Count == 0
+                ? RepositoryResult<IReadOnlyCollection<T>>.NotFound()
+                : RepositoryResult<IReadOnlyCollection<T>>.Success(results);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "UserRepository: FindUsersByNickNameAsync -> Something went wrong when searching for users with nickname {NickName}.", nickName);
+            return RepositoryResult<IReadOnlyCollection<T>>.Error();
+        }
+    }
+
     public async Task<RepositoryResult> CheckUserNicknameAvaliability(string nickname, CancellationToken ctoken)
     {
         try

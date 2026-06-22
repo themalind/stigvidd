@@ -1,10 +1,8 @@
 import { Stack } from "expo-router";
-import { useAuth } from "@/components/auth/auth-provider";
 import { useTheme } from "react-native-paper";
 
 export default function SettingsLayout() {
   const theme = useTheme();
-  const { isAuthenticated } = useAuth();
 
   return (
     <Stack
@@ -14,9 +12,6 @@ export default function SettingsLayout() {
       }}
     >
       <Stack.Screen name="about" />
-      <Stack.Protected guard={!isAuthenticated}>
-        <Stack.Screen name="login" />
-      </Stack.Protected>
       <Stack.Screen name="guide" />
     </Stack>
   );
