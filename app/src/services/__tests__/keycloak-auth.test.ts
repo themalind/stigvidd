@@ -158,9 +158,7 @@ describe("passwordGrant", () => {
 
   it("throws a generic error (not InvalidCredentialsError) on 500", async () => {
     mockFetch(500);
-    await expect(passwordGrant("alice@example.com", "password123")).rejects.not.toBeInstanceOf(
-      InvalidCredentialsError,
-    );
+    await expect(passwordGrant("alice@example.com", "password123")).rejects.not.toBeInstanceOf(InvalidCredentialsError);
   });
 });
 
@@ -205,7 +203,7 @@ describe("logoutKeycloak", () => {
 
     const [url, options] = (fetch as jest.Mock).mock.calls[0];
     expect(url).toBe(LOGOUT_ENDPOINT);
-    expect((options.body as string)).toContain("refresh_token=refresh-1");
+    expect(options.body as string).toContain("refresh_token=refresh-1");
     expect(mockDeleteItem).toHaveBeenCalledWith(STORAGE_KEYS.refreshToken);
   });
 
