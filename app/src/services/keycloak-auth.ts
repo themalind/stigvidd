@@ -55,6 +55,15 @@ let refreshToken: string | null = null;
 let accessExpiresAt = 0; // epoch ms
 let refreshPromise: Promise<string | null> | null = null;
 
+// Called when a refresh fails and the session is gone, so the auth layer can
+// flip back to the signed-out state. Registered once by useInitAuth.
+let onSessionExpired: (() => void) | null = null;
+
+/** Register (or clear, with null) the callback fired when a refresh fails mid-session. */
+export function setSessionExpiredHandler(handler: (() => void) | null): void {
+  onSessionExpired = handler;
+}
+
 function nowSeconds(): number {
   return Math.floor(Date.now() / 1000);
 }
@@ -158,6 +167,7 @@ export async function refreshGrant(token: string): Promise<AuthUser | null> {
     return decodeUser(tokens.id_token ?? tokens.access_token);
   } catch {
     await clearTokens();
+    onSessionExpired?.();
     return null;
   }
 }

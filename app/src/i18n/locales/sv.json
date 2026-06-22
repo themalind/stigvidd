@@ -63,7 +63,8 @@
       "confirmPasswordRequired": "Upprepa lösenord"
     },
     "oidcLoginFailed": "Inloggning misslyckades. Försök igen.",
-    "invalidCredentials": "Fel e-post eller lösenord."
+    "invalidCredentials": "Fel e-post eller lösenord.",
+    "registeredPleaseLogin": "Kontot har skapats. Logga in."
   },
   "profile": {
     "title": "Mitt Stigvidd",

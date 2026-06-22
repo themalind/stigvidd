@@ -326,7 +326,7 @@ export interface UpdateHikeRequest {
   description: string | null;
 }
 
-export interface Friend {
+export interface SearchFriendResult {
   identifier: string;
   nickName: string;
 }

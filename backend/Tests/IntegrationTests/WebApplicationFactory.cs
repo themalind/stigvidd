@@ -20,6 +20,13 @@ public class StigViddWebApplicationFactory<TProgram>
     : WebApplicationFactory<TProgram> where TProgram : class
 {
     private SqliteConnection? _connection;
+
+    /// <summary>
+    /// The Keycloak Admin mock backing the test host. Exposed so tests that exercise
+    /// AccountController can configure per-test behaviour (provisioning conflicts,
+    /// provisioning failures that trigger rollback, password-reset outcomes).
+    /// </summary>
+    public Mock<IKeycloakAdminRepository> KeycloakAdminMock { get; } = new();
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.ConfigureServices(services =>
@@ -75,13 +82,12 @@ public class StigViddWebApplicationFactory<TProgram>
 
             services.AddSingleton(mockWebDavService.Object);
 
-            // Prevent real Keycloak Admin calls during integration tests
-            var mockKeycloakAdmin = new Mock<IKeycloakAdminRepository>();
-            mockKeycloakAdmin
+            // Prevent real Keycloak Admin calls during integration tests.
+            KeycloakAdminMock
                 .Setup(x => x.DeleteUserAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .Returns(Task.CompletedTask);
 
-            services.AddSingleton(mockKeycloakAdmin.Object);
+            services.AddSingleton(KeycloakAdminMock.Object);
         });
 
         builder.UseEnvironment("Development");

@@ -27,7 +27,7 @@ export default function NotAuthenticatedDialog({ infoMessage, visible, onDissmis
         onConfirm={() => {
           onDissmiss();
           onBeforeNavigate?.();
-          router.navigate("/(tabs)/(auth)/login");
+          router.navigate("/(tabs)/(profile-stack)/login");
         }}
       />
     </View>

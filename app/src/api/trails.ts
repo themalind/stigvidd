@@ -30,7 +30,6 @@ export async function getPopularTrails(latitude?: number, longitude?: number): P
 
 export async function getAllTrails(): Promise<TrailShortInfoResponse[]> {
   try {
-    
     const response = await fetch(`${BASE_URL}/trails`);
     if (!response.ok) {
       throw new Error(`HTTP error ${response.status}`);

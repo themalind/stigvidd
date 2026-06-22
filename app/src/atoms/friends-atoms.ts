@@ -37,12 +37,15 @@ export const friendsAtom = atomWithQuery((get) => {
 });
 
 export const userSearchAtomFamily = (query: string) =>
-  atomWithQuery(() => ({
-    queryKey: ["users", "search", query],
-    queryFn: () => searchUsers(query),
-    enabled: query.trim().length >= 3, // bara sök vid 3+ tecken
-    staleTime: 10_000,
-  }));
+  atomWithQuery((get) => {
+    const user = get(userAtom);
+    return {
+      queryKey: ["users", "search", user?.id, query],
+      queryFn: () => searchUsers(query),
+      enabled: !!user?.id && query.trim().length >= 3, // bara sök vid 3+ tecken
+      staleTime: 10_000,
+    };
+  });
 
 // Sum of all pending notification sources for the tab-bar badge.
 // Add incomingSharesAtom here when the shared-hikes feature lands.

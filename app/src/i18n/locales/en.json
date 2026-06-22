@@ -63,7 +63,8 @@
       "confirmPasswordRequired": "Repeat password"
     },
     "oidcLoginFailed": "Login failed. Please try again.",
-    "invalidCredentials": "Incorrect email or password."
+    "invalidCredentials": "Incorrect email or password.",
+    "registeredPleaseLogin": "Account created. Please log in."
   },
   "profile": {
     "title": "My Stigvidd",

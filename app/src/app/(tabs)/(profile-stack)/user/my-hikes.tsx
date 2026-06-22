@@ -9,7 +9,6 @@ import { Hike } from "@/data/types";
 import FormattedTime from "@/utils/format-time-from-ms";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
-import { Redirect } from "expo-router";
 import { useAtomValue } from "jotai";
 import { useState } from "react";
 import { Platform, Pressable, ScrollView, StyleSheet, View } from "react-native";
@@ -35,10 +34,6 @@ export default function MyHikesScreen() {
     queryFn: () => getAllHikesByUserId(user.data!.identifier),
     enabled: isAuthenticated && !!user?.data,
   });
-
-  if (!isAuthenticated) {
-    return <Redirect href="/(tabs)/(auth)/login" />;
-  }
 
   if (isLoading) {
     return <LoadingIndicator />;

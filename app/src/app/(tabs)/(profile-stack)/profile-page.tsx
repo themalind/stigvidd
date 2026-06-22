@@ -8,9 +8,8 @@ import LoadingIndicator from "@/components/loading-indicator";
 import ThemeToggle from "@/components/theme-toggle";
 import ProfileMenuItem from "@/components/user/profile-page/profile-menu-item";
 import { Fontisto, MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
-import { CommonActions } from "@react-navigation/native";
 import { Image } from "expo-image";
-import { Redirect, useFocusEffect, useNavigation } from "expo-router";
+import { useFocusEffect } from "expo-router";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import React, { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -26,8 +25,6 @@ export default function ProfilePageScreen() {
   const userTheme = useAtomValue(userThemeAtom);
   const theme = useTheme();
   const [visible, setVisible] = useState(false);
-  const navigation = useNavigation();
-  const { isAuthenticated } = useAuth();
   const { data: incomingFriendRequests } = useAtomValue(incomingRequestsAtom);
   const { data: incomingSharedHikes } = useAtomValue(incomingSharedHikesAtom);
   const incomingFriendRequestCount = incomingFriendRequests?.length ?? 0;
@@ -39,10 +36,6 @@ export default function ProfilePageScreen() {
       scrollViewRef.current?.scrollTo({ y: 0, animated: false });
     }, []),
   );
-
-  if (!isAuthenticated) {
-    return <Redirect href="/(tabs)/(auth)/login" />;
-  }
 
   if (isLoading) {
     return <LoadingIndicator />;
@@ -59,12 +52,8 @@ export default function ProfilePageScreen() {
       console.log(e);
       setError(t("auth.couldNotLogout"));
     }
-    navigation.getParent()?.dispatch(
-      CommonActions.reset({
-        index: 0,
-        routes: [{ name: "(auth)", state: { routes: [{ name: "login" }] } }],
-      }),
-    );
+    // No navigation needed: logout() flips userAtom → the (profile-stack) guard
+    // swaps the protected screens for the login screen in place.
   }
 
   return (

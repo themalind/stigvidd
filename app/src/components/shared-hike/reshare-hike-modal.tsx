@@ -1,12 +1,12 @@
 import { getFriends } from "@/api/friends";
 import { stigviddUserAtom } from "@/atoms/user-atoms";
 import { BORDER_RADIUS } from "@/constants/constants";
-import { Friend } from "@/data/types";
+import { SearchFriendResult } from "@/data/types";
 import { useQuery } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
+import { useTranslation } from "react-i18next";
 import { ActivityIndicator, Dimensions, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { Divider, Icon, Modal, Portal, Text, useTheme } from "react-native-paper";
-import { useTranslation } from "react-i18next";
 
 const HEIGHT = Dimensions.get("screen").height;
 
@@ -53,7 +53,7 @@ export default function ReshareHikeModal({ visible, onDismiss, onShare, isPendin
             </View>
           ) : friends && friends.length > 0 ? (
             <ScrollView bounces={false} style={s.flex}>
-              {friends.map((item: Friend, index: number) => (
+              {friends.map((item: SearchFriendResult, index: number) => (
                 <View key={item.identifier}>
                   <Pressable
                     style={({ pressed }) => [s.friendItem, pressed && { backgroundColor: theme.colors.surfaceVariant }]}

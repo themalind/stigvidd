@@ -6,11 +6,15 @@ export default function ProfileStackLayout() {
 
   return (
     <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="profile-page" />
-      <Stack.Screen name="about" />
-      <Stack.Screen name="trail/[identifier]" />
-      <Stack.Screen name="follow/[identifier]" />
+      <Stack.Protected guard={!isAuthenticated}>
+        <Stack.Screen name="login" options={{ animation: "none" }} />
+        <Stack.Screen name="register" options={{ animation: "none" }} />
+      </Stack.Protected>
       <Stack.Protected guard={isAuthenticated}>
+        <Stack.Screen name="profile-page" />
+        <Stack.Screen name="about" />
+        <Stack.Screen name="trail/[identifier]" />
+        <Stack.Screen name="follow/[identifier]" />
         <Stack.Screen name="user/favorites" />
         <Stack.Screen name="user/wishlist" />
         <Stack.Screen name="user/my-hikes" />
