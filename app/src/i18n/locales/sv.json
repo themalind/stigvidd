@@ -260,6 +260,8 @@
     "confirm": "Bekräfta",
     "errorSaving": "Något gick fel försök igen senare.",
     "saveTitle": "Spara Promenad",
+    "trimRoute": "Trimma rutt",
+    "trimHint": "Dra i reglagen för att klippa bort oönskade punkter i början eller slutet.",
     "share": "Dela",
     "delete": "Ta bort",
     "deleteTitle": "Ta bort promenad",
@@ -548,7 +550,13 @@
     "resume": "Återuppta",
     "fgPermissionDenied": "Åtkomst till plats nekades.",
     "bgPermissionDenied": "Åtkomst till bakgrundsplats nekades.",
-    "notificationBody": "Spelar in vandring..."
+    "notificationBody": "Spelar in vandring...",
+    "infoTitle": "Innan du börjar",
+    "infoIntro": "Inspelningen fortsätter i bakgrunden tills du stoppar den.",
+    "infoInactivity": "Om du inte rör dig på {{minutes}} minuter stoppas inspelningen automatiskt och behåller tiden fram till din senaste rörelse.",
+    "infoMaxDuration": "Inspelningen stoppas också automatiskt efter {{hours}} timmar.",
+    "infoTrimHint": "Glömde du att stoppa? Du kan trimma början och slutet av din rutt innan du sparar.",
+    "dontShowAgain": "Visa inte detta igen"
   },
   "tabs": {
     "home": "Start",

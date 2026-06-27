@@ -2,7 +2,8 @@ import AlertDialog from "@/components/alert-dialog";
 import LoadingIndicator from "@/components/loading-indicator";
 import Map from "@/components/map/map";
 import { ROUTE_LINE_COLOR } from "@/components/map/marker-styles";
-import { BORDER_RADIUS } from "@/constants/constants";
+import { BORDER_RADIUS, START_COORDINATE_BORAS } from "@/constants/constants";
+import { dismissRecordingInfo, shouldShowRecordingInfo } from "@/services/location-task";
 import { useLocationTracking } from "@/services/use-location-tracking";
 import { lineStringFromPositions } from "@/utils/geojson";
 import FormattedTime from "@/utils/format-time-from-ms";
@@ -13,11 +14,16 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { Text, useTheme } from "react-native-paper";
 import { useTranslation } from "react-i18next";
+import RecordingInfoDialog from "./recording-info-dialog";
 import SaveHikeModal from "./save-hike-modal";
+
+// Map center used until a real position is available — keeps the map from
+// rendering over the ocean while the first GPS fix resolves.
+const FALLBACK_CENTER: [number, number] = [START_COORDINATE_BORAS.longitude, START_COORDINATE_BORAS.latitude];
 
 export default function TrailCreator() {
   const cameraRef = useRef<CameraRef>(null);
-  const { startTracking, stopTracking, resetTracking, isTracking, hike, currentSegment, getActiveTime, debugAddPoint } =
+  const { startTracking, stopTracking, resetTracking, isTracking, hike, currentSegment, getActiveTime } =
     useLocationTracking();
 
   const [displayTime, setDisplayTime] = useState(0);
@@ -26,6 +32,8 @@ export default function TrailCreator() {
 
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showSaveModal, setShowSaveModal] = useState(false);
+  // Pre-start info dialog that gates the first start.
+  const [showStartInfo, setShowStartInfo] = useState(false);
   const [initialCenter, setInitialCenter] = useState<[number, number] | undefined>(undefined);
   const theme = useTheme();
   const { t } = useTranslation();
@@ -41,6 +49,11 @@ export default function TrailCreator() {
   }, [hike.segments, currentSegment]);
 
   const routeShape = useMemo(() => lineStringFromPositions(routePositions), [routePositions]);
+
+  // Kept in a ref so the one-shot load effect can read the latest route without
+  // re-running when points come in.
+  const routePositionsRef = useRef(routePositions);
+  routePositionsRef.current = routePositions;
 
   useEffect(() => {
     if (!isTracking) {
@@ -63,14 +76,50 @@ export default function TrailCreator() {
   }, [hike.totalDistance]);
 
   useEffect(() => {
+    let cancelled = false;
     (async () => {
       const { status } = await Location.requestForegroundPermissionsAsync();
+
+      // Render the map immediately from the cached last-known position (instant,
+      // no GPS lock) — or a fallback center — instead of blocking on a cold fix.
+      const last = status === "granted" ? await Location.getLastKnownPositionAsync() : null;
+      if (cancelled) return;
+      setInitialCenter(last ? [last.coords.longitude, last.coords.latitude] : FALLBACK_CENTER);
+
       if (status !== "granted") return;
 
-      const location = await Location.getCurrentPositionAsync();
-      setInitialCenter([location.coords.longitude, location.coords.latitude]);
+      // Refine with a precise fix in the background and nudge the camera there,
+      // unless the user has already started moving (then the route drives it).
+      try {
+        const precise = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+        if (cancelled || routePositionsRef.current.length > 0) return;
+        cameraRef.current?.easeTo({
+          center: [precise.coords.longitude, precise.coords.latitude],
+          zoom: 16,
+          duration: 500,
+        });
+      } catch {
+        // Keep the last-known / fallback center if the precise fix never arrives.
+      }
     })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
+
+  const handleStartPress = async () => {
+    if (await shouldShowRecordingInfo()) {
+      setShowStartInfo(true);
+      return;
+    }
+    startTracking();
+  };
+
+  const handleConfirmStart = async (dontShowAgain: boolean) => {
+    setShowStartInfo(false);
+    if (dontShowAgain) await dismissRecordingInfo();
+    startTracking();
+  };
 
   useEffect(() => {
     const last = routePositions.at(-1);
@@ -84,16 +133,6 @@ export default function TrailCreator() {
 
   return (
     <View style={s.container}>
-      {__DEV__ && (
-        <View style={s.debugBar}>
-          <Text style={s.debugText}>
-            {routePositions.length} noder, {hike.segments.length} segment
-          </Text>
-          <Pressable style={s.debugButton} onPress={() => debugAddPoint()}>
-            <Text style={s.debugText}>+ Lägg till punkt</Text>
-          </Pressable>
-        </View>
-      )}
       <View style={s.mapContainer}>
         <Map style={s.map} showsUserLocation>
           <Camera ref={cameraRef} initialViewState={{ center: initialCenter, zoom: 16 }} />
@@ -124,18 +163,15 @@ export default function TrailCreator() {
       </View>
 
       <View style={s.actions}>
-        {!hasData ? (
-          <Pressable
-            style={[s.actionButton, { backgroundColor: theme.colors.primary }]}
-            onPress={() => startTracking()}
-          >
-            <MaterialIcons name="hiking" size={28} color={theme.colors.onPrimary} />
-            <Text style={[s.buttonText, { color: theme.colors.onPrimary }]}>{t("createHike.start")}</Text>
-          </Pressable>
-        ) : isTracking ? (
+        {isTracking ? (
           <Pressable style={[s.actionButton, { backgroundColor: theme.colors.surface }]} onPress={() => stopTracking()}>
             <Ionicons name="pause" size={28} color={theme.colors.onSurface} />
             <Text style={s.buttonText}>Pausa</Text>
+          </Pressable>
+        ) : !hasData ? (
+          <Pressable style={[s.actionButton, { backgroundColor: theme.colors.primary }]} onPress={handleStartPress}>
+            <MaterialIcons name="hiking" size={28} color={theme.colors.onPrimary} />
+            <Text style={[s.buttonText, { color: theme.colors.onPrimary }]}>{t("createHike.start")}</Text>
           </Pressable>
         ) : (
           <>
@@ -187,6 +223,12 @@ export default function TrailCreator() {
         onSaveSuccess={resetTracking}
         hike={hike}
       />
+
+      <RecordingInfoDialog
+        visible={showStartInfo}
+        onDismiss={() => setShowStartInfo(false)}
+        onStart={handleConfirmStart}
+      />
     </View>
   );
 }
@@ -227,23 +269,6 @@ const s = StyleSheet.create({
   statDivider: {
     width: 1,
     marginVertical: 4,
-  },
-  debugBar: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    backgroundColor: "#a00",
-    borderRadius: BORDER_RADIUS,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-  },
-  debugButton: {
-    padding: 4,
-  },
-  debugText: {
-    color: "#fff",
-    fontSize: 12,
-    fontWeight: "600",
   },
   actions: {
     flexDirection: "row",

@@ -8,13 +8,15 @@ import { asTranslationKey } from "@/i18n";
 import FormattedTime from "@/utils/format-time-from-ms";
 import { lineStringFromPositions } from "@/utils/geojson";
 import getBoundsFromTrail from "@/utils/get-bounds-from-trail";
+import { recomputeTrimmedHike } from "@/utils/trim-hike";
 import { MaterialIcons } from "@expo/vector-icons";
+import { Slider } from "@miblanchard/react-native-slider";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Camera, type CameraRef, GeoJSONSource, Layer } from "@maplibre/maplibre-react-native";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { useAtomValue, useSetAtom } from "jotai";
-import { useCallback, useMemo, useRef } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { Pressable, StyleSheet, View } from "react-native";
@@ -63,32 +65,46 @@ export default function SaveHikeForm({ hike, onDismiss, onSaveSuccess }: Props) 
     defaultValues: { hikeName: "" },
   });
 
+  // Total recorded points across all segments — the trim slider's domain.
+  const totalPoints = useMemo(
+    () => hike.segments.reduce((sum, segment) => sum + segment.coordinates.length, 0),
+    [hike.segments],
+  );
+
+  // Inclusive [start, end] index window the user keeps. Defaults to the full route.
+  const [trim, setTrim] = useState<[number, number]>(() => [0, Math.max(0, totalPoints - 1)]);
+
+  // Distance, duration and coordinates recomputed for the kept window.
+  const trimmed = useMemo(() => recomputeTrimmedHike(hike.segments, trim[0], trim[1]), [hike.segments, trim]);
+
+  const canTrim = totalPoints > 2;
+
   const submit: SubmitHandler<SaveHikeFormData> = async (data) => {
     const newHike: CreateHikeRequest = {
       name: data.hikeName,
-      hikeLength: hike.totalDistance,
-      duration: hike.totalTime,
-      coordinates: [],
+      hikeLength: trimmed.distance,
+      duration: trimmed.duration,
+      coordinates: trimmed.coordinates,
     };
-    hike.segments.forEach((segment) => {
-      segment.coordinates.forEach((coords) => {
-        newHike.coordinates.push(coords.data);
-      });
-    });
     mutate(newHike);
   };
 
-  // GeoJSON positions ([lng, lat]) used only for rendering the route preview.
-  const routePositions = useMemo<GeoJSON.Position[]>(
+  // Full route shown faded for context; the kept portion drawn solid on top.
+  const fullPositions = useMemo<GeoJSON.Position[]>(
     () =>
       hike.segments.flatMap((segment) =>
         segment.coordinates.map((c) => [c.data.longitude, c.data.latitude] as GeoJSON.Position),
       ),
     [hike.segments],
   );
+  const keptPositions = useMemo<GeoJSON.Position[]>(
+    () => trimmed.coordinates.map((c) => [c.longitude, c.latitude] as GeoJSON.Position),
+    [trimmed.coordinates],
+  );
 
-  const routeShape = useMemo(() => lineStringFromPositions(routePositions), [routePositions]);
-  const bounds = useMemo(() => getBoundsFromTrail(routePositions), [routePositions]);
+  const fullShape = useMemo(() => lineStringFromPositions(fullPositions), [fullPositions]);
+  const keptShape = useMemo(() => lineStringFromPositions(keptPositions), [keptPositions]);
+  const bounds = useMemo(() => getBoundsFromTrail(fullPositions), [fullPositions]);
 
   const fitToRoute = useCallback(() => {
     if (bounds)
@@ -123,29 +139,65 @@ export default function SaveHikeForm({ hike, onDismiss, onSaveSuccess }: Props) 
         <View style={s.statItem}>
           <Text style={s.statLabel}>Distans</Text>
           <Text style={s.statValue}>
-            {hike.totalDistance > 100 ? `${(hike.totalDistance / 1000).toFixed(2)} km` : `${hike.totalDistance} m`}
+            {trimmed.distance > 100 ? `${(trimmed.distance / 1000).toFixed(2)} km` : `${trimmed.distance} m`}
           </Text>
         </View>
         <Divider style={[s.statDivider, { backgroundColor: theme.colors.outline }]} />
         <View style={s.statItem}>
           <Text style={s.statLabel}>Tid</Text>
-          <Text style={s.statValue}>{FormattedTime(hike.totalTime)}</Text>
+          <Text style={s.statValue}>{FormattedTime(trimmed.duration)}</Text>
         </View>
       </View>
 
-      {routePositions.length > 0 && (
+      {fullPositions.length > 0 && (
         <View style={s.mapContainer}>
           <Map style={s.map} showsUserLocation={false} onDidFinishLoadingMap={fitToRoute}>
             <Camera ref={cameraRef} />
-            <GeoJSONSource id="save-hike-route" data={routeShape}>
+            {/* Full route, faded — the trimmed-away portions stay visible for context. */}
+            <GeoJSONSource id="save-hike-route-full" data={fullShape}>
               <Layer
                 type="line"
-                id="save-hike-route-line"
+                id="save-hike-route-full-line"
                 layout={{ "line-join": "round", "line-cap": "round" }}
-                paint={{ "line-color": theme.colors.primary, "line-width": 3 }}
+                paint={{ "line-color": theme.colors.outline, "line-width": 3 }}
               />
             </GeoJSONSource>
+            {/* Kept portion drawn solid on top. */}
+            {keptPositions.length > 1 && (
+              <GeoJSONSource id="save-hike-route-kept" data={keptShape}>
+                <Layer
+                  type="line"
+                  id="save-hike-route-kept-line"
+                  layout={{ "line-join": "round", "line-cap": "round" }}
+                  paint={{ "line-color": theme.colors.primary, "line-width": 4 }}
+                />
+              </GeoJSONSource>
+            )}
           </Map>
+        </View>
+      )}
+
+      {canTrim && (
+        <View style={s.trimSection}>
+          <Text variant="bodySmall" style={s.trimLabel}>
+            {t("hike.trimRoute")}
+          </Text>
+          <Slider
+            value={trim}
+            minimumValue={0}
+            maximumValue={totalPoints - 1}
+            step={1}
+            minimumTrackTintColor={theme.colors.primary}
+            maximumTrackTintColor={theme.colors.outline}
+            thumbTintColor={theme.colors.primary}
+            onValueChange={(value) => {
+              const [start, end] = value as number[];
+              setTrim([Math.round(Math.min(start, end)), Math.round(Math.max(start, end))]);
+            }}
+          />
+          <Text variant="bodySmall" style={[s.trimHint, { color: theme.colors.onSurfaceVariant }]}>
+            {t("hike.trimHint")}
+          </Text>
         </View>
       )}
 
@@ -212,6 +264,15 @@ const s = StyleSheet.create({
   },
   map: {
     flex: 1,
+  },
+  trimSection: {
+    gap: 4,
+  },
+  trimLabel: {
+    fontFamily: "Inter_600SemiBold",
+  },
+  trimHint: {
+    fontSize: 12,
   },
   actions: {
     flexDirection: "row",

@@ -260,6 +260,8 @@
     "confirm": "Confirm",
     "errorSaving": "Something went wrong, please try again later.",
     "saveTitle": "Save Walk",
+    "trimRoute": "Trim route",
+    "trimHint": "Drag the handles to cut unwanted points from the start or end.",
     "share": "Share",
     "delete": "Delete",
     "deleteTitle": "Delete walk",
@@ -599,7 +601,13 @@
     "resume": "Resume",
     "fgPermissionDenied": "Permission to access location was denied.",
     "bgPermissionDenied": "Permission to access background location was denied.",
-    "notificationBody": "Recording walk..."
+    "notificationBody": "Recording walk...",
+    "infoTitle": "Before you start",
+    "infoIntro": "Recording keeps running in the background until you stop it.",
+    "infoInactivity": "If you don't move for {{minutes}} minutes, recording stops automatically and keeps the time up to your last movement.",
+    "infoMaxDuration": "Recording also stops automatically after {{hours}} hours.",
+    "infoTrimHint": "Forgot to stop? You can trim the start and end of your route before saving.",
+    "dontShowAgain": "Don't show this again"
   },
   "tabs": {
     "home": "Home",

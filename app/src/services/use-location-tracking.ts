@@ -1,16 +1,18 @@
 import { showErrorAtom } from "@/atoms/snackbar-atoms";
-import { ActiveHike, LocationData, Segment } from "@/data/types";
+import { ActiveHike, Segment } from "@/data/types";
+import Constants, { ExecutionEnvironment } from "expo-constants";
 import * as Location from "expo-location";
-import { getDistance } from "geolib";
 import { useSetAtom } from "jotai";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AppState } from "react-native";
 import {
   LOCATION_TASK_NAME,
+  MIN_SEGMENT_DISTANCE,
   StoredHikeState,
   clearHikeState,
   defaultHikeState,
+  maybeFinalizeStaleHike,
   readHikeState,
   writeHikeState,
 } from "./location-task";
@@ -19,12 +21,13 @@ import {
 const SAMPLE_INTERVAL = 3000;
 // Minimum meters between accepted GPS points
 const MIN_DISTANCE = 3;
-// Maximum meters between accepted GPS points — filters GPS jumps
-const MAX_DISTANCE = 100;
-// A segment shorter than this (meters) is discarded on pause
-const MIN_SEGMENT_DISTANCE = 10;
 // How often the UI reads AsyncStorage to reflect background task updates (ms)
 const POLL_INTERVAL = 2000;
+
+// Expo Go lacks the compiled-in background location capability, so the task can't
+// run there. Detect it specifically (rather than __DEV__) so development builds —
+// which DO have the native capability — record normally with live reload.
+const isExpoGo = Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
 
 export function useLocationTracking() {
   const { t } = useTranslation();
@@ -43,9 +46,20 @@ export function useLocationTracking() {
     setIsTracking(state.isTracking);
   }, []);
 
-  // Reads the latest state from AsyncStorage and syncs it into React state
+  // Reads the latest state from AsyncStorage and syncs it into React state.
+  // Also auto-finalizes a forgotten recording (inactive or past the hard cap)
+  // so reopening the app — or just polling while it's open — can never surface a
+  // session that has been silently running for hours.
   const syncFromStorage = useCallback(async () => {
     const state = await readHikeState();
+    const finalized = maybeFinalizeStaleHike(state, Date.now());
+    if (finalized) {
+      const isTaskRunning = await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME);
+      if (isTaskRunning) await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
+      await writeHikeState(finalized);
+      applyState(finalized);
+      return;
+    }
     applyState(state);
   }, [applyState]);
 
@@ -92,8 +106,8 @@ export function useLocationTracking() {
       return;
     }
 
-    // Background permission is skipped in dev — the task won't run in Expo Go anyway
-    if (!__DEV__) {
+    // Background permission is skipped in Expo Go — the task can't run there anyway
+    if (!isExpoGo) {
       const { status: bgPermission } = await Location.requestBackgroundPermissionsAsync();
       if (bgPermission !== "granted") {
         setError(t("createHike.bgPermissionDenied"));
@@ -120,9 +134,9 @@ export function useLocationTracking() {
     // Persist before starting the task so the task always finds a valid state
     await writeHikeState(newState);
 
-    // startLocationUpdatesAsync requires the background location capability compiled in,
-    // which Expo Go lacks — skip the task in dev and rely on debugAddPoint for testing
-    if (!__DEV__) {
+    // startLocationUpdatesAsync requires the background location capability compiled
+    // in, which Expo Go lacks — skip the task there (no points are recorded)
+    if (!isExpoGo) {
       // Avoid registering the task twice if it somehow survived a previous session
       const isAlreadyRunning = await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME);
       if (!isAlreadyRunning) {
@@ -197,48 +211,6 @@ export function useLocationTracking() {
     return completedTime + (Date.now() - currentSegment.startTime);
   };
 
-  // Dev-only helper: injects a random nearby GPS point without real device movement
-  const debugAddPoint = async () => {
-    const state = await readHikeState();
-    if (!state.currentSegment) return;
-
-    const lastPoint = state.currentSegment.coordinates.at(-1);
-    const prevLng = lastPoint?.data.longitude ?? 12;
-    const prevLat = lastPoint?.data.latitude ?? 57;
-
-    const newPoint: LocationData = {
-      data: {
-        longitude: prevLng + (Math.random() - 0.5) * 0.0005,
-        latitude: prevLat + (Math.random() - 0.5) * 0.0005,
-      },
-      timeStamp: Date.now(),
-    };
-
-    let distanceToAdd = 0;
-
-    if (lastPoint) {
-      const distance = getDistance(lastPoint.data, newPoint.data);
-      // Apply the same distance filter as the real background task
-      if (distance < MIN_DISTANCE || distance > MAX_DISTANCE) return;
-      distanceToAdd = distance;
-    }
-
-    const updatedSegment = {
-      ...state.currentSegment,
-      coordinates: [...state.currentSegment.coordinates, newPoint],
-      distance: state.currentSegment.distance + distanceToAdd,
-    };
-
-    const updatedHike = {
-      ...state.hike,
-      totalDistance: state.hike.totalDistance + distanceToAdd,
-    };
-
-    const newState = { ...state, currentSegment: updatedSegment, hike: updatedHike };
-    await writeHikeState(newState);
-    applyState(newState);
-  };
-
   return {
     startTracking,
     stopTracking,
@@ -247,6 +219,5 @@ export function useLocationTracking() {
     hike,
     currentSegment,
     getActiveTime,
-    debugAddPoint,
   };
 }
