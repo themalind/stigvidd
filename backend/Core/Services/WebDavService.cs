@@ -1,11 +1,17 @@
 ﻿using Core.Interfaces.Services;
 using Microsoft.Extensions.Logging;
+using System.Net.Sockets;
 using WebDav;
 
 namespace Core.Services;
 
 public class WebDavService : IWebDavService
 {
+    // The WebDAV server intermittently resets the connection mid-upload (SocketException 10054).
+    // It's transient — a fresh connection almost always succeeds — so we retry a few times.
+    private const int MaxUploadAttempts = 3;
+    private const int RetryBaseDelayMs = 300;
+
     private readonly ILogger<WebDavService> _logger;
     private readonly Func<IWebDavClient> _clientFactory;
 
@@ -26,28 +32,50 @@ public class WebDavService : IWebDavService
            ? $"{subDirectory.TrimEnd('/')}/{fileName}"
            : fileName;
 
-        try
+        // Buffer the content once so each retry can re-send it from the start
+        // (the incoming stream is forward-only and would be drained after attempt 1).
+        using var buffer = new MemoryStream();
+        await stream.CopyToAsync(buffer);
+
+        Exception? lastError = null;
+
+        for (var attempt = 1; attempt <= MaxUploadAttempts; attempt++)
         {
-            using var client = _clientFactory();
+            buffer.Position = 0;
 
-            var result = await client.PutFile(remotePath, stream);
-
-            if (!result.IsSuccessful)
+            try
             {
-                _logger.LogError("UploadFileAsync: Could not upload image {remotePath}", remotePath);
+                using var client = _clientFactory();
+
+                var result = await client.PutFile(remotePath, buffer);
+
+                if (result.IsSuccessful)
+                    return Result.Ok<string?>($"{remotePath}");
+
+                // A real HTTP status (e.g. 403/409/500) is not a transient transport error — don't retry.
+                _logger.LogError("UploadFileAsync: Could not upload image {remotePath}. Status {Status}", remotePath, result.StatusCode);
 
                 return Result.Fail<string?>(new Message(result.StatusCode, $"UploadFileAsync: Could not upload files. {result.StatusCode}"));
             }
+            catch (Exception ex) when (IsTransient(ex))
+            {
+                lastError = ex;
+                _logger.LogWarning(ex, "UploadFileAsync: transient failure uploading {remotePath} (attempt {Attempt}/{Max}).", remotePath, attempt, MaxUploadAttempts);
 
-            return Result.Ok<string?>($"{remotePath}");
+                if (attempt < MaxUploadAttempts)
+                    await Task.Delay(RetryBaseDelayMs * attempt);
+            }
         }
-        catch (Exception ex)
-        {
-            _logger.LogError("UploadFileAsync: Could not upload image. Threw exception: {ex}", ex);
 
-            throw new Exception("Error uploading file", ex);
-        }
+        _logger.LogError(lastError, "UploadFileAsync: Could not upload image {remotePath} after {Max} attempts.", remotePath, MaxUploadAttempts);
+
+        throw new Exception("Error uploading file", lastError);
     }
+
+    // Connection-level failures (reset/refused/timeout) are worth retrying; anything else is not.
+    private static bool IsTransient(Exception ex) =>
+        ex is HttpRequestException or IOException or SocketException
+        || ex.InnerException is HttpRequestException or IOException or SocketException;
 
     public async Task<Result<bool>> DeleteFileAsync(string relativePath)
     {

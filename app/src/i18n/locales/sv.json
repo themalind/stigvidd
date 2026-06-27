@@ -145,7 +145,8 @@
     "loadMore": "Ladda fler",
     "loadingMore": "Laddar fler...",
     "title": "Recensioner",
-    "rate": "Betygsätt"
+    "rate": "Betygsätt",
+    "addImageError": "Kunde inte spara bilder"
   },
   "trail": {
     "classification": {

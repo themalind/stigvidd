@@ -14,6 +14,7 @@ import {
 import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query";
 import * as NavigationBar from "expo-navigation-bar";
 import * as Notifications from "expo-notifications";
+import { ThemeProvider } from "@react-navigation/native";
 import { Stack, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useSetAtom } from "jotai";
@@ -122,16 +123,18 @@ export default function RootLayout() {
   return (
     <QueryClientProvider client={queryClient}>
       <PaperProvider theme={theme}>
-        <StatusBar style={statusBarStyle} />
-        <GestureHandlerRootView>
-          <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-            <NotificationHandler />
-            <Stack>
-              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            </Stack>
-            <GlobalSnackbar />
-          </View>
-        </GestureHandlerRootView>
+        <ThemeProvider value={theme}>
+          <StatusBar style={statusBarStyle} />
+          <GestureHandlerRootView>
+            <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+              <NotificationHandler />
+              <Stack>
+                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+              </Stack>
+              <GlobalSnackbar />
+            </View>
+          </GestureHandlerRootView>
+        </ThemeProvider>
       </PaperProvider>
     </QueryClientProvider>
   );

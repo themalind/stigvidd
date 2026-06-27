@@ -7,7 +7,8 @@ using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using System.Net;
+using System.Net.Http.Headers;
+using System.Text;
 using WebDav;
 
 namespace Core;
@@ -67,11 +68,18 @@ public static class ServiceCollectionExtensions
             var userName = config["WebDav:Username"] ?? throw new InvalidOperationException("WebDav:Username configuration is missing");
             var password = config["WebDav:Password"] ?? throw new InvalidOperationException("WebDav:Password configuration is missing");
 
-            return () => new WebDavClient(new WebDavClientParams
+            // Preemptive Basic auth: send the Authorization header on the first request instead of
+            // waiting for a 401 challenge. The challenge flow resends the request body after the 401,
+            // which intermittently gets the connection reset mid-upload on large PUTs.
+            var basicAuth = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{userName}:{password}"));
+
+            return () =>
             {
-                BaseAddress = new Uri(baseUrl),
-                Credentials = new NetworkCredential(userName, password)
-            });
+                var httpClient = new HttpClient { BaseAddress = new Uri(baseUrl) };
+                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", basicAuth);
+
+                return new WebDavClient(httpClient);
+            };
         });
 
         // Factories

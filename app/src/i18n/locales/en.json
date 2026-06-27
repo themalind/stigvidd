@@ -145,7 +145,8 @@
     "loadMore": "Load more",
     "loadingMore": "Loading more...",
     "title": "Reviews",
-    "rate": "Rate"
+    "rate": "Rate",
+    "addImageError": "Could not save images"
   },
   "trail": {
     "classification": {
