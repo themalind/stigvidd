@@ -20,6 +20,7 @@
     <PackageReference Include="NSwag.AspNetCore" Version="14.7.1" />
     <PackageReference Include="NSwag.Core" Version="14.7.1" />
     <PackageReference Include="NSwag.Generation" Version="14.7.1" />
+    <PackageReference Include="System.Security.Cryptography.Xml" Version="8.0.3" />
   </ItemGroup>
 
   <ItemGroup>
