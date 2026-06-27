@@ -1,4 +1,5 @@
 import { getCoordinatesByTrailIdentifier } from "@/api/trails";
+import { TRAIL_COORDINATES_STALE_TIME } from "@/constants/cache";
 import CenterOnUserButton from "@/components/map/center-on-user-button";
 import Map from "@/components/map/map";
 import { ROUTE_LINE_COLOR } from "@/components/map/marker-styles";
@@ -43,6 +44,7 @@ export default function TrailFollowScreen() {
     queryKey: ["cords", normalizedIdentifier],
     queryFn: () => getCoordinatesByTrailIdentifier(normalizedIdentifier),
     enabled: !!normalizedIdentifier,
+    staleTime: TRAIL_COORDINATES_STALE_TIME,
   });
 
   const path = useMemo(

@@ -1,4 +1,5 @@
 import { getFriends } from "@/api/friends";
+import { FRIENDS_STALE_TIME } from "@/constants/cache";
 import { stigviddUserAtom } from "@/atoms/user-atoms";
 import { BORDER_RADIUS } from "@/constants/constants";
 import { SearchFriendResult } from "@/data/types";
@@ -96,6 +97,7 @@ export default function ShareHikeModal({
     queryKey: ["friends"],
     queryFn: getFriends,
     enabled: visible,
+    staleTime: FRIENDS_STALE_TIME,
   });
 
   const friends = friendsRaw?.filter(

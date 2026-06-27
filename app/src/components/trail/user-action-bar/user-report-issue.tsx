@@ -1,6 +1,5 @@
 import NotAuthenticatedDialog from "@/components/auth/not-authenticated-msg-dialog";
 import { MaterialIcons } from "@expo/vector-icons";
-import { useQueryClient } from "@tanstack/react-query";
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Pressable, StyleSheet, View } from "react-native";
@@ -18,7 +17,6 @@ export default function UserReportIssue({ trailIdentifier }: Props) {
   const { isAuthenticated } = useAuth();
   const [showForm, setShowForm] = useState(false);
   const [showAuthDialog, setAuthDialog] = useState(false);
-  const queryClient = useQueryClient();
 
   function handlePress() {
     if (!isAuthenticated) {
@@ -28,9 +26,10 @@ export default function UserReportIssue({ trailIdentifier }: Props) {
     setShowForm(true);
   }
 
+  // The form's create mutation already invalidates ["obstacles", trailIdentifier]
+  // on success, so there's nothing to refresh here — just close the sheet.
   function handleReportAdded() {
     setShowForm(false);
-    queryClient.invalidateQueries();
   }
 
   return (

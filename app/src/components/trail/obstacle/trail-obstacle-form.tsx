@@ -11,6 +11,7 @@ import issueTypeParser from "@/utils/issue-type-parser";
 import { MaterialIcons } from "@expo/vector-icons";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { ISSUE_TYPES_STALE_TIME, TRAIL_COORDINATES_STALE_TIME } from "@/constants/cache";
 import { BlurView } from "expo-blur";
 import * as ExpoLinking from "expo-linking";
 import * as Location from "expo-location";
@@ -54,15 +55,21 @@ export default function TrailObstacleForm({ trailIdentifier, visible, onDismiss 
   const setSuccessMsg = useSetAtom(showSuccessAtom);
   const queryClient = useQueryClient();
 
+  // Only fetch once the report form is actually opened — this component is always
+  // mounted inside UserBar, so without the visible gate these would fire on every
+  // trail-detail load even when the user never opens the report sheet.
   const { data: issueTypes } = useQuery({
     queryKey: ["issueTypes", "obstacle"],
     queryFn: () => getObstacleIssueTypes(),
+    enabled: visible,
+    staleTime: ISSUE_TYPES_STALE_TIME,
   });
 
   const { data: trailCords } = useQuery({
     queryKey: ["cords", trailIdentifier],
     queryFn: () => getCoordinatesByTrailIdentifier(trailIdentifier),
-    enabled: !!trailIdentifier,
+    enabled: visible && !!trailIdentifier,
+    staleTime: TRAIL_COORDINATES_STALE_TIME,
   });
 
   const { mutate, isPending } = useMutation({

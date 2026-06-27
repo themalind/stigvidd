@@ -1,5 +1,6 @@
 import { getReviewsByTrailIdentifier } from "@/api/reviews";
 import { BORDER_RADIUS, SURFACE_BORDER_RADIUS } from "@/constants/constants";
+import { REVIEWS_STALE_TIME } from "@/constants/cache";
 import { Review, Trail } from "@/data/types";
 import { Ionicons } from "@expo/vector-icons";
 import { useInfiniteQuery } from "@tanstack/react-query";
@@ -40,6 +41,7 @@ export default function TrailReviewsContainer({ trail, surfaceToScrollToRef, onR
     queryFn: ({ pageParam }) => getReviewsByTrailIdentifier(trail.identifier, pageParam, 5), // pageParam är vilken omgång av hämtningar
     getNextPageParam: (lastPage, allPages) => (lastPage.hasMore ? allPages.length : undefined),
     initialPageParam: 0, // Startparamvärde
+    staleTime: REVIEWS_STALE_TIME,
   });
 
   const reviews = useMemo(() => {

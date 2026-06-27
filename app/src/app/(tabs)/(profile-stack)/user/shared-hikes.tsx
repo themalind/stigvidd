@@ -1,6 +1,7 @@
 import { getIncomingSharedHike, getSharedHikes } from "@/api/shared-hikes";
 import { incomingSharedHikesAtom } from "@/atoms/friends-atoms";
 import { stigviddUserAtom } from "@/atoms/user-atoms";
+import { SHARED_HIKES_STALE_TIME } from "@/constants/cache";
 import BackButton from "@/components/back-button";
 import ErrorView from "@/components/error-view";
 import LoadingIndicator from "@/components/loading-indicator";
@@ -53,6 +54,7 @@ export default function SharedHikesScreen() {
     queryKey: ["shared-hikes", user.data?.identifier],
     queryFn: () => getSharedHikes(),
     enabled: isAuthenticated && !!user?.data,
+    staleTime: SHARED_HIKES_STALE_TIME,
   });
 
   if (isLoading || incomingPending) {

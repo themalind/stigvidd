@@ -1,5 +1,6 @@
 import { getAllHikesByUserId } from "@/api/hikes";
 import { stigviddUserAtom } from "@/atoms/user-atoms";
+import { HIKES_STALE_TIME } from "@/constants/cache";
 import BackButton from "@/components/back-button";
 import ErrorView from "@/components/error-view";
 import LoadingIndicator from "@/components/loading-indicator";
@@ -33,6 +34,7 @@ export default function MyHikesScreen() {
     queryKey: ["hikes", user.data?.identifier],
     queryFn: () => getAllHikesByUserId(user.data!.identifier),
     enabled: isAuthenticated && !!user?.data,
+    staleTime: HIKES_STALE_TIME,
   });
 
   if (isLoading) {

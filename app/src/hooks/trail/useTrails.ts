@@ -1,4 +1,5 @@
 import { getAllTrails } from "@/api/trails";
+import { TRAIL_LIST_STALE_TIME } from "@/constants/cache";
 import { TrailShortInfoResponse } from "@/data/types";
 import { useQuery } from "@tanstack/react-query";
 
@@ -7,9 +8,8 @@ export const useTrails = () => {
     queryKey: ["trailList", "trailsWithShortInfo"],
     queryFn: getAllTrails,
 
-    // Cache for 24 hours
-    staleTime: 24 * 60 * 60 * 1000, // 24 hours
-    gcTime: 24 * 60 * 60 * 1000, // Keep in cache for 24 hours
+    staleTime: TRAIL_LIST_STALE_TIME,
+    gcTime: TRAIL_LIST_STALE_TIME, // keep in cache as long as it stays fresh
 
     // Show cached data immediately while refetching in background
     refetchOnMount: "always",

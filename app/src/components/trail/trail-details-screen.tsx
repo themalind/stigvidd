@@ -10,6 +10,7 @@ import UserBar from "@/components/trail/user-action-bar/user-bar";
 import { Review } from "@/data/types";
 import CoordinateParser from "@/utils/coordinate-parser";
 import { guardedNavigate } from "@/utils/navigation";
+import { TRAIL_DETAIL_STALE_TIME } from "@/constants/cache";
 import { useQuery } from "@tanstack/react-query";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { startTransition, useCallback, useEffect, useRef, useState } from "react";
@@ -65,18 +66,21 @@ export default function TrailDetailsScreen({ followRoute }: { followRoute: Follo
     queryKey: ["trail", normalizedIdentifier],
     queryFn: () => getTrailByIdentifier(normalizedIdentifier),
     enabled: !!normalizedIdentifier && typeof normalizedIdentifier === "string",
+    staleTime: TRAIL_DETAIL_STALE_TIME,
   });
 
   const { data: obstacles } = useQuery({
     queryKey: ["obstacles", normalizedIdentifier],
     queryFn: () => getTrailObstaclesByTrailIdentifier(normalizedIdentifier),
     enabled: !!normalizedIdentifier,
+    staleTime: TRAIL_DETAIL_STALE_TIME,
   });
 
   const { data: coords } = useQuery({
     queryKey: ["cords", normalizedIdentifier],
     queryFn: () => getCoordinatesByTrailIdentifier(normalizedIdentifier),
     enabled: !!normalizedIdentifier,
+    staleTime: TRAIL_DETAIL_STALE_TIME,
   });
 
   if (isLoading) {

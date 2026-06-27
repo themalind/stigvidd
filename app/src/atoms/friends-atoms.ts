@@ -2,6 +2,7 @@ import { getFriends, getIncomingRequests, searchUsers } from "@/api/friends";
 import { getIncomingSharedHikes } from "@/api/shared-hikes";
 import { atom } from "jotai";
 import { atomWithQuery } from "jotai-tanstack-query";
+import { FRIENDS_STALE_TIME } from "@/constants/cache";
 import { userAtom } from "./auth-atoms";
 
 export const incomingRequestsAtom = atomWithQuery((get) => {
@@ -33,6 +34,7 @@ export const friendsAtom = atomWithQuery((get) => {
     queryKey: ["friends", user?.id],
     queryFn: () => getFriends(),
     enabled: !!user?.id,
+    staleTime: FRIENDS_STALE_TIME,
   };
 });
 

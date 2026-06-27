@@ -8,6 +8,7 @@ import issueTypeParser from "@/utils/issue-type-parser";
 import { MaterialIcons } from "@expo/vector-icons";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { ISSUE_TYPES_STALE_TIME } from "@/constants/cache";
 import { BlurView } from "expo-blur";
 import { useSetAtom } from "jotai";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
@@ -54,6 +55,7 @@ export default function TrailObstacleUpdateForm({
   const { data: issueTypes } = useQuery({
     queryKey: ["issueTypes", "obstacle"],
     queryFn: () => getObstacleIssueTypes(),
+    staleTime: ISSUE_TYPES_STALE_TIME,
   });
 
   const { mutate, isPending } = useMutation({

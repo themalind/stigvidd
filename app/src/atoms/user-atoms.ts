@@ -9,6 +9,7 @@ import {
 } from "@/api/users";
 import { UserFavoritesTrail, UserWishlistTrail } from "@/data/types";
 import { atomWithMutation, atomWithQuery, queryClientAtom } from "jotai-tanstack-query";
+import { CURRENT_USER_STALE_TIME, USER_LIST_STALE_TIME } from "@/constants/cache";
 import { userAtom } from "./auth-atoms";
 
 export const stigviddUserAtom = atomWithQuery((get) => {
@@ -22,6 +23,7 @@ export const stigviddUserAtom = atomWithQuery((get) => {
     },
     enabled: !!subjectId,
     retry: 3,
+    staleTime: CURRENT_USER_STALE_TIME,
   };
 });
 
@@ -34,6 +36,7 @@ export const userFavoritesAtom = atomWithQuery((get) => {
       return getUserFavorites();
     },
     enabled: !!user,
+    staleTime: USER_LIST_STALE_TIME,
   };
 });
 
@@ -47,6 +50,7 @@ export const userWishlistAtom = atomWithQuery((get) => {
       return getUserWishlist();
     },
     enabled: !!user,
+    staleTime: USER_LIST_STALE_TIME,
   };
 });
 
