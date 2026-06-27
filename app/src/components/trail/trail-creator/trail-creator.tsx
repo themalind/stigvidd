@@ -12,7 +12,7 @@ import { Camera, type CameraRef, GeoJSONSource, Layer } from "@maplibre/maplibre
 import * as Location from "expo-location";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
-import { Text, useTheme } from "react-native-paper";
+import { ActivityIndicator, Text, useTheme } from "react-native-paper";
 import { useTranslation } from "react-i18next";
 import RecordingInfoDialog from "./recording-info-dialog";
 import SaveHikeModal from "./save-hike-modal";
@@ -35,6 +35,8 @@ export default function TrailCreator() {
   // Pre-start info dialog that gates the first start.
   const [showStartInfo, setShowStartInfo] = useState(false);
   const [initialCenter, setInitialCenter] = useState<[number, number] | undefined>(undefined);
+  // True while we're still waiting on a precise GPS fix after the map first renders.
+  const [isLocating, setIsLocating] = useState(false);
   const theme = useTheme();
   const { t } = useTranslation();
 
@@ -90,6 +92,7 @@ export default function TrailCreator() {
 
       // Refine with a precise fix in the background and nudge the camera there,
       // unless the user has already started moving (then the route drives it).
+      setIsLocating(true);
       try {
         const precise = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
         if (cancelled || routePositionsRef.current.length > 0) return;
@@ -100,6 +103,8 @@ export default function TrailCreator() {
         });
       } catch {
         // Keep the last-known / fallback center if the precise fix never arrives.
+      } finally {
+        if (!cancelled) setIsLocating(false);
       }
     })();
     return () => {
@@ -148,6 +153,14 @@ export default function TrailCreator() {
             </GeoJSONSource>
           )}
         </Map>
+        {isLocating && (
+          <View style={[s.locatingPill, { backgroundColor: theme.colors.elevation.level3 }]} pointerEvents="none">
+            <ActivityIndicator size={16} color={theme.colors.onSurface} />
+            <Text variant="bodySmall" style={{ color: theme.colors.onSurface }}>
+              {t("map.locating")}
+            </Text>
+          </View>
+        )}
       </View>
 
       <View style={[s.statsCard, { backgroundColor: theme.colors.outlineVariant }]}>
@@ -245,6 +258,17 @@ const s = StyleSheet.create({
     flex: 1,
     borderRadius: BORDER_RADIUS,
     overflow: "hidden",
+  },
+  locatingPill: {
+    position: "absolute",
+    top: 8,
+    left: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: BORDER_RADIUS,
   },
   statsCard: {
     flexDirection: "row",
