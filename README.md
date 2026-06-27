@@ -64,7 +64,8 @@ stigvidd/
 │   ├── Core/               # Services, validators, factories
 │   ├── Infrastructure/     # EF Core entities, DbContext, migrations
 │   ├── WebDataContracts/   # Request/response DTOs
-│   └── MapData/            # GeoJSON ETL tool (see below)
+│   ├── MapData/            # GeoJSON/CSV import ETL tool (see below)
+│   └── Tests/              # Unit and integration tests
 ```
 
 ---
@@ -76,10 +77,12 @@ stigvidd/
 - React Native with Expo (SDK 54)
 - TypeScript
 - Expo Router (file-based routing)
-- React Native Maps + Expo Location (GPS tracking)
+- MapLibre Native + Thunderforest "Outdoors" tiles, with Expo Location (GPS tracking)
 - TanStack Query (server state) + Jotai (global state)
 - React Hook Form + Zod (form validation)
 - React Native Paper (Material Design 3)
+- Expo Notifications (push notifications)
+- i18next / react-i18next (Swedish + English, in progress — not yet user-facing)
 
 ### Admin Dashboard
 
@@ -87,13 +90,14 @@ stigvidd/
 - TypeScript
 - React Router v7
 - Tailwind CSS v4
+- Keycloak (JWT / OpenID Connect)
 
 ### Backend
 
 - ASP.NET Core 10 (Web API)
 - C# / .NET 10
-- Entity Framework Core 10 with SQL Server
-- Firebase Authentication (JWT)
+- Entity Framework Core 10 with PostgreSQL + PostGIS
+- Keycloak (JWT / OpenID Connect)
 - FluentValidation with auto-validation middleware
 - WebDAV for image file storage
 - NSwag / Swagger for API docs
@@ -108,25 +112,34 @@ stigvidd/
 - Trail reviews with star ratings and photos
 - Favorites and wishlist with optimistic UI updates
 - Report trail obstacles/hazards with a voting system
+- Share completed hikes with other users
+- Push notifications
 - User profiles with hike history
 - Admin dashboard for trail management
 
+> **In progress:** Swedish/English language support (i18n) is being built but not yet user-facing.
+
 ---
 
-## MapData – GeoJSON Import Tool
+## MapData – Import Tool
 
-`backend/MapData` is a C# console application that imports trail data from Borås municipality's open data portal into the database. It is an ETL (Extract, Transform, Load) pipeline that:
+`backend/MapData` is a C# console application that imports geographic data from Borås municipality's open data portal into the database. It contains two separate ETL (Extract, Transform, Load) parsers:
 
-1. **Extracts** trail data from a GeoJSON file (`spar_leder.json`) provided by Borås municipality
-2. **Transforms** the data:
-   - Parses Swedish property names and values (`"lätt"/"medel"/"svår"` → Classification enum)
-   - Converts Swedish decimal format (`"2,3 km"` → decimal)
-   - Swaps GeoJSON coordinate order (`[longitude, latitude]` → `{latitude, longitude}`)
-   - Maps accessibility values (`"JA"/"NEJ"` → bool)
-   - Handles missing and null fields gracefully
-3. **Loads** the transformed trail entities into SQL Server via Entity Framework Core
+- **`TransmogrifyBorasData`** — imports trail data from a GeoJSON file (`spar_leder.json`)
+- **`FacilityImporter`** — imports facility data (grill sites, wind shelters) from a CSV file
 
-To run the import, place `spar_leder.json` in the expected path and run the `MapData` project. Connection string is configured via .NET user secrets.
+Both parsers:
+
+1. **Extract** the source data from the municipality-provided file
+2. **Transform** the data:
+   - Parse Swedish property names and values (`"lätt"/"medel"/"svår"` → Classification enum)
+   - Convert Swedish decimal format (`"2,3 km"` → decimal)
+   - Swap GeoJSON coordinate order (`[longitude, latitude]` → `{latitude, longitude}`)
+   - Map accessibility values (`"JA"/"NEJ"` → bool)
+   - Handle missing and null fields gracefully
+3. **Load** the transformed entities into PostgreSQL (PostGIS) via Entity Framework Core
+
+To run an import, place the source file in the expected path and run the `MapData` project. Connection string is configured via .NET user secrets.
 
 ---
 
@@ -136,9 +149,9 @@ To run the import, place `spar_leder.json` in the expected path and run the `Map
 
 - Node.js 20+
 - .NET 10 SDK
-- SQL Server (local or remote)
-- Firebase project with Authentication enabled
-- Google Maps API key (Android)
+- PostgreSQL with the PostGIS extension (local or remote)
+- A Keycloak realm (for backend, mobile app and admin dashboard authentication)
+- A Thunderforest API key (for map tiles in the mobile app)
 - Expo Go app or Android/iOS emulator
 
 ---
@@ -157,13 +170,15 @@ To run the import, place `spar_leder.json` in the expected path and run the `Map
    dotnet user-secrets set "ConnectionStrings:StigVidd" "your_connection_string"
    ```
 
-3. Apply database migrations:
+3. Configure your Keycloak realm settings (`Keycloak` and `KeycloakAdminClient` sections) in `appsettings.json` or user secrets.
+
+4. Apply database migrations:
 
    ```bash
    dotnet ef database update --project ../Infrastructure
    ```
 
-4. Run the API:
+5. Run the API:
    ```bash
    dotnet run
    ```
@@ -186,15 +201,14 @@ The API will be available at `https://localhost:7xxx`. Swagger UI is available a
    npm install
    ```
 
-3. Create a `.env` file with your Firebase and API config:
+3. Create a `.env` file with your API, Keycloak and Thunderforest config:
 
    ```
-   EXPO_PUBLIC_API_URL=https://localhost:7xxx
-   EXPO_PUBLIC_FIREBASE_API_KEY=...
-   EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN=...
-   EXPO_PUBLIC_FIREBASE_PROJECT_ID=...
-   EXPO_PUBLIC_FIREBASE_APP_ID=...
-   GOOGLE_MAPS_API_KEY=...
+   EXPO_PUBLIC_API_HOST=https://localhost:7xxx
+   EXPO_PUBLIC_OIDC_URL=https://your-keycloak-host/auth
+   EXPO_PUBLIC_OIDC_REALM=stigvidd
+   EXPO_PUBLIC_CLIENT_ID=...
+   EXPO_PUBLIC_THUNDERFOREST_API_KEY=...
    ```
 
 4. Start the development server:
@@ -218,7 +232,15 @@ The API will be available at `https://localhost:7xxx`. Swagger UI is available a
    npm install
    ```
 
-3. Start the development server:
+3. Create a `.env` file with your Keycloak config:
+
+   ```
+   VITE_OIDC_URL=https://your-keycloak-host/auth
+   VITE_OIDC_REALM=stigvidd
+   VITE_CLIENT_ID=...
+   ```
+
+4. Start the development server:
    ```bash
    npm run dev
    ```
@@ -227,10 +249,10 @@ The API will be available at `https://localhost:7xxx`. Swagger UI is available a
 
 ## Authentication
 
-Authentication is handled by Firebase. The mobile app and web client obtain a JWT from Firebase on login, which is passed as a Bearer token in API requests. The backend validates the token against Google's secure token endpoint for the Firebase project.
+Authentication is handled by Keycloak. The mobile app and admin dashboard obtain a JWT from Keycloak on login (OpenID Connect), which is passed as a Bearer token in API requests. The backend validates incoming tokens against the Keycloak realm via `AddKeycloakWebApiAuthentication`.
 
 ---
 
 ## Data Source
 
-Trail data for the Borås area is sourced from [Borås Stad's open data portal](https://www.boras.se) in GeoJSON format and imported using the `MapData` ETL tool.
+Trail and facility data (grill sites, wind shelters) for the Borås area is sourced from [Borås Stad's open data portal](https://www.boras.se) in GeoJSON/CSV format and imported using the `MapData` ETL tool.
