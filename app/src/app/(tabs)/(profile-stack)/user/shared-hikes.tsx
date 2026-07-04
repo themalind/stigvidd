@@ -1,11 +1,12 @@
 import { getIncomingSharedHike, getSharedHikes } from "@/api/shared-hikes";
 import { incomingSharedHikesAtom } from "@/atoms/friends-atoms";
 import { stigviddUserAtom } from "@/atoms/user-atoms";
-import { SHARED_HIKES_STALE_TIME } from "@/constants/cache";
+import { useAuth } from "@/components/auth/auth-provider";
 import BackButton from "@/components/back-button";
 import ErrorView from "@/components/error-view";
 import LoadingIndicator from "@/components/loading-indicator";
 import SharedHikeDetails from "@/components/shared-hike/shared-hike-details";
+import { SHARED_HIKES_STALE_TIME } from "@/constants/cache";
 import { BORDER_RADIUS, SCREEN_PADDING } from "@/constants/constants";
 import { SharedHike } from "@/data/types";
 import { useSharedHikeMutations } from "@/hooks/shared-hikes/useSharedHikeMutations";
@@ -14,7 +15,6 @@ import { Fontisto, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
 import { useAtom, useAtomValue } from "jotai";
 import { useState } from "react";
-import { useAuth } from "@/components/auth/auth-provider";
 import { useTranslation } from "react-i18next";
 import { Platform, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { Button, Divider, Icon, IconButton, Surface, Text, useTheme } from "react-native-paper";
@@ -167,19 +167,19 @@ export default function SharedHikesScreen() {
             </View>
           )}
 
-          <View style={s.section}>
-            <SectionHeader
-              icon="routes"
-              label={t("hike.receivedHikes")}
-              subtitle={t("hike.tapForDetails")}
-              color={theme.colors.onSurfaceVariant}
-            />
-            <Surface style={[s.card, { backgroundColor: theme.colors.surface }]} elevation={0}>
-              <View style={s.cardInner}>
-                {(hikes?.length ?? 0) === 0 ? (
-                  <EmptyState text={t("hike.noShared")} />
-                ) : (
-                  hikes?.map((hike, index) => (
+          {(hikes?.length ?? 0) === 0 && <EmptyState text={t("hike.noShared")} />}
+
+          {(hikes?.length ?? 0) > 0 && (
+            <View style={s.section}>
+              <SectionHeader
+                icon="routes"
+                label={t("hike.receivedHikes")}
+                subtitle={t("hike.tapForDetails")}
+                color={theme.colors.onSurfaceVariant}
+              />
+              <View style={[s.card, { backgroundColor: theme.colors.surface }]}>
+                <View style={s.cardInner}>
+                  {hikes?.map((hike, index) => (
                     <View key={index}>
                       <Pressable
                         style={({ pressed }) => [s.row, pressed && { opacity: 0.7 }]}
@@ -209,11 +209,11 @@ export default function SharedHikesScreen() {
                         <View style={[s.divider, { backgroundColor: theme.colors.outlineVariant }]} />
                       )}
                     </View>
-                  ))
-                )}
+                  ))}
+                </View>
               </View>
-            </Surface>
-          </View>
+            </View>
+          )}
         </View>
       </ScrollView>
       {sharedHike && (
@@ -280,6 +280,7 @@ function SectionHeader({
 }
 
 function EmptyState({ text }: { text: string }) {
+  const theme = useTheme();
   return (
     <Text variant="bodyMedium" style={s.emptyText}>
       {text}
