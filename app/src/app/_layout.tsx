@@ -1,4 +1,6 @@
 import { pruneTrailCardCache } from "@/hooks/useTrailCard";
+import { initMapTiler } from "@/components/map/map-style";
+import { initMapCache } from "@/utils/map-cache";
 import { loadUserTheme, userThemeAtom } from "@/atoms/user-theme-atom";
 import { GlobalSnackbar } from "@/components/global-snackbar";
 import { useAppState } from "@/hooks/useAppState";
@@ -100,6 +102,8 @@ export default function RootLayout() {
   useEffect(() => {
     loadStoredLanguage();
     pruneTrailCardCache();
+    initMapTiler();
+    initMapCache();
   }, []);
 
   // Register for push notifications once the user is signed in.

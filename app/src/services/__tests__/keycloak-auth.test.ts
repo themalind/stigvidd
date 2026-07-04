@@ -22,6 +22,7 @@ const {
   refreshGrant,
   logoutKeycloak,
   getValidAccessToken,
+  restoreSession,
   loadTokens,
   clearTokens,
   setSessionExpiredHandler,
@@ -123,6 +124,14 @@ describe("passwordGrant", () => {
     expect(body).toContain("password=password123");
   });
 
+  it("requests the offline_access scope so the refresh token survives long-term", async () => {
+    mockFetch(200, tokenResponse);
+    await passwordGrant("alice@example.com", "password123");
+
+    const body = (fetch as jest.Mock).mock.calls[0][1].body as string;
+    expect(body).toContain("offline_access");
+  });
+
   it("persists all three tokens and returns the decoded user", async () => {
     mockFetch(200, tokenResponse);
     const user = await passwordGrant("alice@example.com", "password123");
@@ -170,19 +179,39 @@ describe("refreshGrant", () => {
     expect(mockSetItem).toHaveBeenCalledWith(STORAGE_KEYS.accessToken, "access-1");
   });
 
-  it("clears tokens and returns null when refresh fails", async () => {
+  it("clears tokens and returns null when the refresh token is rejected (invalid_grant)", async () => {
     mockFetch(400);
     const user = await refreshGrant("expired-refresh");
     expect(user).toBeNull();
     expect(mockDeleteItem).toHaveBeenCalledWith(STORAGE_KEYS.refreshToken);
   });
 
-  it("invokes the registered session-expired handler on failure", async () => {
+  it("invokes the registered session-expired handler when the refresh token is rejected", async () => {
     const handler = jest.fn();
     setSessionExpiredHandler(handler);
     mockFetch(400);
     await refreshGrant("expired-refresh");
     expect(handler).toHaveBeenCalledTimes(1);
+  });
+
+  it("preserves tokens and does not end the session on a transient 5xx failure", async () => {
+    const handler = jest.fn();
+    setSessionExpiredHandler(handler);
+    mockFetch(503);
+    const user = await refreshGrant("refresh-1");
+    expect(user).toBeNull();
+    expect(handler).not.toHaveBeenCalled();
+    expect(mockDeleteItem).not.toHaveBeenCalled();
+  });
+
+  it("preserves tokens and does not end the session on a network error", async () => {
+    const handler = jest.fn();
+    setSessionExpiredHandler(handler);
+    global.fetch = jest.fn().mockRejectedValue(new Error("network down"));
+    const user = await refreshGrant("refresh-1");
+    expect(user).toBeNull();
+    expect(handler).not.toHaveBeenCalled();
+    expect(mockDeleteItem).not.toHaveBeenCalled();
   });
 
   it("does not invoke the handler after it has been cleared", async () => {
@@ -253,6 +282,35 @@ describe("getValidAccessToken", () => {
     const [a, b] = await Promise.all([getValidAccessToken(), getValidAccessToken()]);
     expect(a).toBe("access-2");
     expect(b).toBe("access-2");
+    expect(fetch).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("restoreSession", () => {
+  it("returns null when there are no stored tokens", async () => {
+    mockGetItem.mockResolvedValue(null);
+    global.fetch = jest.fn();
+    expect(await restoreSession()).toBeNull();
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it("returns the user from a still-valid stored access token without refreshing", async () => {
+    jest.spyOn(Date, "now").mockReturnValue(NOW_MS);
+    await seedTokens((NOW_S + 300) * 1000); // valid well beyond the skew window
+    global.fetch = jest.fn();
+
+    const user = await restoreSession();
+    expect(user).toEqual({ id: "user-1", email: "alice@example.com", username: "alice" });
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it("refreshes once through the single-flight path when the stored access token is expired", async () => {
+    jest.spyOn(Date, "now").mockReturnValue(NOW_MS);
+    await seedTokens((NOW_S - 10) * 1000); // expired
+    mockFetch(200, { ...tokenResponse, access_token: "access-2" });
+
+    const user = await restoreSession();
+    expect(user).toEqual({ id: "user-1", email: "alice@example.com", username: "alice" });
     expect(fetch).toHaveBeenCalledTimes(1);
   });
 });

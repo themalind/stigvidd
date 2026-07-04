@@ -221,6 +221,28 @@ describe("location background task", () => {
     expect(written.hike.totalDistance).toBe(0);
   });
 
+  it("rejects a move that stays within the fix's accuracy radius (stationary drift)", async () => {
+    const stateWithPoint: StoredHikeState = {
+      ...activeState,
+      currentSegment: {
+        ...baseSegment,
+        coordinates: [{ data: { latitude: 57.7, longitude: 11.97 }, timeStamp: NOW - 100 }],
+      },
+    };
+    mockGetItem.mockResolvedValue(JSON.stringify(stateWithPoint));
+    // 8m hop but the fix's accuracy is 15m — the move is within the noise envelope.
+    mockGetDistance.mockReturnValue(8);
+
+    await locationTaskCallback({
+      data: { locations: [makeLocation(57.70007, 11.97, 15)] },
+      error: null,
+    });
+
+    const written = JSON.parse(mockSetItem.mock.calls[0][1]);
+    expect(written.currentSegment.coordinates).toHaveLength(1); // unchanged
+    expect(written.hike.totalDistance).toBe(0);
+  });
+
   it("accepts a valid point and accumulates the distance", async () => {
     const stateWithPoint: StoredHikeState = {
       ...activeState,
@@ -364,6 +386,21 @@ describe("maybeFinalizeStaleHike", () => {
     expect(result!.isTracking).toBe(false);
     expect(result!.hike.segments).toHaveLength(0);
     expect(result!.hike.totalTime).toBe(0);
+  });
+
+  it("rolls back the discarded short segment's distance from the total", () => {
+    // The task had already accumulated the short segment's 9m into totalDistance.
+    const state: StoredHikeState = {
+      isTracking: true,
+      hike: { segments: [], totalDistance: 9, totalTime: 0 },
+      currentSegment: { coordinates: [point(NOW)], distance: 9, startTime: NOW - 1000 },
+    };
+
+    const result = maybeFinalizeStaleHike(state, NOW + INACTIVITY_TIMEOUT + 1);
+
+    expect(result).not.toBeNull();
+    expect(result!.hike.segments).toHaveLength(0);
+    expect(result!.hike.totalDistance).toBe(0); // phantom distance removed
   });
 
   it("clamps the kept time to the hard cap when the user keeps moving", () => {

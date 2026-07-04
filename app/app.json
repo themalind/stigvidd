@@ -11,9 +11,14 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.stigvidd.app",
+      "buildNumber": "1",
       "infoPlist": {
-        "UIBackgroundModes": ["location"]
-      }
+        "UIBackgroundModes": [
+          "location"
+        ],
+        "ITSAppUsesNonExemptEncryption": false
+      },
+      "config": {}
     },
     "android": {
       "softwareKeyboardLayoutMode": "pan",
@@ -76,8 +81,8 @@
       [
         "expo-location",
         {
-          "locationAlwaysAndWhenInUsePermission": "Tillåt att $(PRODUCT_NAME) använder din plats.",
-          "locationWhenInUsePermission": "Tillåt att $(PRODUCT_NAME) använder din plats när appen används.",
+          "locationAlwaysAndWhenInUsePermission": "$(PRODUCT_NAME) använder din plats för att registrera din vandringsrutt – även när appen är i bakgrunden eller skärmen är släckt – så att hela vandringen spåras korrekt.",
+          "locationWhenInUsePermission": "$(PRODUCT_NAME) använder din plats för att visa var du är på kartan och registrera din vandringsrutt medan appen är öppen.",
           "isIosBackgroundLocationEnabled": true,
           "isAndroidBackgroundLocationEnabled": true
         }

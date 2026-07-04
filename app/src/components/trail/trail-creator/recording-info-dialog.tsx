@@ -43,7 +43,11 @@ export default function RecordingInfoDialog({ visible, onDismiss, onStart }: Pro
           </View>
           {onStart && (
             <Pressable style={s.checkboxRow} onPress={() => setDontShowAgain((prev) => !prev)}>
-              <Checkbox status={dontShowAgain ? "checked" : "unchecked"} />
+              <Checkbox.Android
+                status={dontShowAgain ? "checked" : "unchecked"}
+                color={theme.colors.primary}
+                uncheckedColor={theme.colors.onSurfaceVariant}
+              />
               <Text variant="bodyMedium">{t("createHike.dontShowAgain")}</Text>
             </Pressable>
           )}

@@ -18,6 +18,15 @@ export const TRAIL_LIST_STALE_TIME = 24 * 60 * 60 * 1000; // full trail list (al
 export const TRAIL_DETAIL_STALE_TIME = 5 * 60 * 1000; // trail info, obstacles, coordinates on the detail screen
 export const REVIEWS_STALE_TIME = 5 * 60 * 1000; // reviews + derived rating
 
+// --- MapLibre ambient tile-cache (self-healing) ---
+// maplibre-native keeps a local SQLite ambient cache for vector tiles/glyphs.
+// It can intermittently fall into a corrupt state where every tile request is
+// cancelled ("permanent error: Canceled") and the map stays blank. We cap its
+// size and reset it on each new build to neutralise that trigger — see
+// `app/src/utils/map-cache.ts`.
+export const MAP_AMBIENT_CACHE_MAX_BYTES = 50 * 1024 * 1024; // 50 MB ceiling on ambient cache growth
+export const MAP_CACHE_BUILD_KEY = "@stigvidd/map_cache_build"; // AsyncStorage key: last build the cache was reset for
+
 // --- User-scoped lists (refreshed via mutation invalidation) ---
 // The current-user profile has no edit flow (users API is get/create/delete only)
 // and its embedded favorites/wishlist are never read, so it's safe to cache. If a

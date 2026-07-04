@@ -10,7 +10,7 @@ import FormattedTime from "@/utils/format-time-from-ms";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { Camera, type CameraRef, GeoJSONSource, Layer } from "@maplibre/maplibre-react-native";
 import * as Location from "expo-location";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { ActivityIndicator, Text, useTheme } from "react-native-paper";
 import { useTranslation } from "react-i18next";
@@ -57,6 +57,30 @@ export default function TrailCreator() {
   const routePositionsRef = useRef(routePositions);
   routePositionsRef.current = routePositions;
 
+  // Camera commands sent before the native map has finished loading hit a view
+  // whose tag can't be resolved yet (ReactTagResolver: resolved to null). Gate
+  // every move on this flag and, if the map isn't ready, remember the latest
+  // target and apply it once it is — so no centering is lost to the load race.
+  const mapReadyRef = useRef(false);
+  const pendingCenterRef = useRef<{ center: [number, number]; zoom: number } | null>(null);
+
+  const moveCamera = useCallback((center: [number, number], zoom: number) => {
+    if (mapReadyRef.current) {
+      cameraRef.current?.easeTo({ center, zoom, duration: 500 });
+    } else {
+      pendingCenterRef.current = { center, zoom };
+    }
+  }, []);
+
+  const handleMapReady = useCallback(() => {
+    mapReadyRef.current = true;
+    const pending = pendingCenterRef.current;
+    if (pending) {
+      pendingCenterRef.current = null;
+      cameraRef.current?.easeTo({ ...pending, duration: 500 });
+    }
+  }, []);
+
   useEffect(() => {
     if (!isTracking) {
       setDisplayTime(getActiveTimeRef.current());
@@ -96,11 +120,7 @@ export default function TrailCreator() {
       try {
         const precise = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
         if (cancelled || routePositionsRef.current.length > 0) return;
-        cameraRef.current?.easeTo({
-          center: [precise.coords.longitude, precise.coords.latitude],
-          zoom: 16,
-          duration: 500,
-        });
+        moveCamera([precise.coords.longitude, precise.coords.latitude], 16);
       } catch {
         // Keep the last-known / fallback center if the precise fix never arrives.
       } finally {
@@ -110,7 +130,7 @@ export default function TrailCreator() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [moveCamera]);
 
   const handleStartPress = async () => {
     if (await shouldShowRecordingInfo()) {
@@ -129,8 +149,8 @@ export default function TrailCreator() {
   useEffect(() => {
     const last = routePositions.at(-1);
     if (!last) return;
-    cameraRef.current?.easeTo({ center: last, zoom: 17, duration: 500 });
-  }, [routePositions]);
+    moveCamera(last, 17);
+  }, [routePositions, moveCamera]);
 
   const hasData = hike.segments.length > 0 || (currentSegment && currentSegment.coordinates.length > 0);
 
@@ -139,7 +159,7 @@ export default function TrailCreator() {
   return (
     <View style={s.container}>
       <View style={s.mapContainer}>
-        <Map style={s.map} showsUserLocation>
+        <Map style={s.map} showsUserLocation onDidFinishLoadingMap={handleMapReady}>
           <Camera ref={cameraRef} initialViewState={{ center: initialCenter, zoom: 16 }} />
           {/* A LineString needs >= 2 points; while tracking starts (0–1 nodes) the line isn't drawn yet. */}
           {routePositions.length > 1 && (

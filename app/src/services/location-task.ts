@@ -92,6 +92,8 @@ export function maybeFinalizeStaleHike(state: StoredHikeState, now: number): Sto
   const segmentDuration = Math.max(0, endTime - seg.startTime);
 
   // Only keep the segment if the user actually moved a meaningful distance.
+  // When discarding it, roll back the distance the task already accumulated for
+  // this segment so totalDistance can't stay stuck at a phantom value.
   const hike =
     seg.distance >= MIN_SEGMENT_DISTANCE
       ? {
@@ -99,7 +101,10 @@ export function maybeFinalizeStaleHike(state: StoredHikeState, now: number): Sto
           segments: [...state.hike.segments, { ...seg, endTime }],
           totalTime: state.hike.totalTime + segmentDuration,
         }
-      : state.hike;
+      : {
+          ...state.hike,
+          totalDistance: Math.max(0, state.hike.totalDistance - seg.distance),
+        };
 
   return { isTracking: false, hike, currentSegment: null };
 }
@@ -127,7 +132,8 @@ TaskManager.defineTask(
       let totalDistance = state.hike.totalDistance;
 
       for (const location of locations) {
-        if (!location.coords.accuracy || location.coords.accuracy > MAX_ACCURACY) {
+        const accuracy = location.coords.accuracy;
+        if (!accuracy || accuracy > MAX_ACCURACY) {
           continue;
         }
 
@@ -144,7 +150,16 @@ TaskManager.defineTask(
 
         if (lastPoint) {
           const distance = getDistance(lastPoint.data, newPoint.data);
-          if (distance < MIN_DISTANCE || distance > MAX_DISTANCE) {
+          // Reject teleport-sized jumps outright.
+          if (distance > MAX_DISTANCE) {
+            continue;
+          }
+          // A stationary phone jitters within its own accuracy radius, so only
+          // count a move once it clears that noise envelope (never below
+          // MIN_DISTANCE). Otherwise GPS drift piles up phantom distance while
+          // standing still.
+          const minStep = Math.max(MIN_DISTANCE, accuracy);
+          if (distance < minStep) {
             continue;
           }
           distanceToAdd = distance;

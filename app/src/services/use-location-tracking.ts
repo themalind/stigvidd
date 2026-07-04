@@ -1,4 +1,4 @@
-import { showErrorAtom } from "@/atoms/snackbar-atoms";
+import { showErrorAtom, showWarningAtom } from "@/atoms/snackbar-atoms";
 import { ActiveHike, Segment } from "@/data/types";
 import Constants, { ExecutionEnvironment } from "expo-constants";
 import * as Location from "expo-location";
@@ -32,6 +32,7 @@ const isExpoGo = Constants.executionEnvironment === ExecutionEnvironment.StoreCl
 export function useLocationTracking() {
   const { t } = useTranslation();
   const setError = useSetAtom(showErrorAtom);
+  const setWarning = useSetAtom(showWarningAtom);
   // Holds the setInterval handle for the polling loop
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -99,19 +100,22 @@ export function useLocationTracking() {
   }, [isTracking, syncFromStorage]);
 
   const startTracking = async () => {
-    // Foreground permission is always required
+    // Foreground ("When In Use") is the only hard requirement to start recording.
     const { status: fgPermission } = await Location.requestForegroundPermissionsAsync();
     if (fgPermission !== "granted") {
       setError(t("createHike.fgPermissionDenied"));
       return;
     }
 
-    // Background permission is skipped in Expo Go — the task can't run there anyway
+    // Background permission is skipped in Expo Go — the task can't run there anyway.
+    // iOS never grants "Always" on the first request (it only offers "When In Use"
+    // and escalates later), so a non-granted result must NOT block recording. With
+    // foreground access + the location background mode, iOS records provisionally in
+    // the background and prompts for "Always" on its own; we just nudge the user.
     if (!isExpoGo) {
       const { status: bgPermission } = await Location.requestBackgroundPermissionsAsync();
       if (bgPermission !== "granted") {
-        setError(t("createHike.bgPermissionDenied"));
-        return;
+        setWarning(t("createHike.bgPermissionWarning"));
       }
     }
 
@@ -179,6 +183,14 @@ export function useLocationTracking() {
           segments: [...state.hike.segments, completedSegment],
           // Accumulate the wall-clock duration of this segment into the total
           totalTime: state.hike.totalTime + segmentDuration,
+        };
+      } else {
+        // Discard the too-short segment as noise, and roll back the distance the
+        // background task already accumulated for it — otherwise distance stays
+        // stuck at a phantom value while the segment and its time are thrown away.
+        updatedHike = {
+          ...state.hike,
+          totalDistance: Math.max(0, state.hike.totalDistance - seg.distance),
         };
       }
     }
