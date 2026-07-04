@@ -300,7 +300,7 @@ public class HikeShareServiceTests
                 It.IsAny<string>(), It.IsAny<Expression<Func<User, ReceiverProjection>>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<ReceiverProjection>.Success(Receiver()));
 
-        var hike = new Hike { Id = 1, Identifier = "hike-identifier", Name = "Test", CreatedBy = "another-user-identifier", UserId = 3, Coordinates = "", HikeLength = 10, Duration = 3600 };
+        var hike = new Hike { Id = 1, Identifier = "hike-identifier", Name = "Test", CreatedBy = "another-user-identifier", UserId = 3, GeoPath = Utilities.GeoPath(), HikeLength = 10, Duration = 3600 };
         var hikeRepoMock = new Mock<IHikeRepository>();
         hikeRepoMock.Setup(r => r.GetHikeByIdentifierAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<Hike>.Success(hike));
@@ -334,7 +334,7 @@ public class HikeShareServiceTests
                 It.IsAny<string>(), It.IsAny<Expression<Func<User, ReceiverProjection>>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<ReceiverProjection>.Success(Receiver()));
 
-        var hike = new Hike { Id = 1, Identifier = "hike-identifier", Name = "Test", CreatedBy = userIdentifier, UserId = 1, Coordinates = "", HikeLength = 10, Duration = 3600 };
+        var hike = new Hike { Id = 1, Identifier = "hike-identifier", Name = "Test", CreatedBy = userIdentifier, UserId = 1, GeoPath = Utilities.GeoPath(), HikeLength = 10, Duration = 3600 };
         var hikeRepoMock = new Mock<IHikeRepository>();
         hikeRepoMock.Setup(r => r.GetHikeByIdentifierAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<Hike>.Success(hike));
@@ -371,7 +371,7 @@ public class HikeShareServiceTests
                 It.IsAny<string>(), It.IsAny<Expression<Func<User, ReceiverProjection>>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<ReceiverProjection>.Success(Receiver()));
 
-        var hike = new Hike { Id = 1, Identifier = "hike-identifier", Name = "Test", CreatedBy = userIdentifier, UserId = 1, Coordinates = "", HikeLength = 10, Duration = 3600 };
+        var hike = new Hike { Id = 1, Identifier = "hike-identifier", Name = "Test", CreatedBy = userIdentifier, UserId = 1, GeoPath = Utilities.GeoPath(), HikeLength = 10, Duration = 3600 };
         var hikeRepoMock = new Mock<IHikeRepository>();
         hikeRepoMock.Setup(r => r.GetHikeByIdentifierAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<Hike>.Success(hike));
@@ -409,7 +409,7 @@ public class HikeShareServiceTests
                 It.IsAny<string>(), It.IsAny<Expression<Func<User, ReceiverProjection>>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<ReceiverProjection>.Success(Receiver()));
 
-        var hike = new Hike { Id = 1, Identifier = "hike-identifier", Name = "Test", CreatedBy = userIdentifier, UserId = 1, Coordinates = "", HikeLength = 10, Duration = 3600 };
+        var hike = new Hike { Id = 1, Identifier = "hike-identifier", Name = "Test", CreatedBy = userIdentifier, UserId = 1, GeoPath = Utilities.GeoPath(), HikeLength = 10, Duration = 3600 };
         var hikeRepoMock = new Mock<IHikeRepository>();
         hikeRepoMock.Setup(r => r.GetHikeByIdentifierAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<Hike>.Success(hike));
@@ -448,7 +448,7 @@ public class HikeShareServiceTests
                 It.IsAny<string>(), It.IsAny<Expression<Func<User, ReceiverProjection>>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<ReceiverProjection>.Success(Receiver()));
 
-        var hike = new Hike { Id = 1, Identifier = "hike-identifier", Name = "Test", CreatedBy = userIdentifier, UserId = 1, Coordinates = "", HikeLength = 10, Duration = 3600 };
+        var hike = new Hike { Id = 1, Identifier = "hike-identifier", Name = "Test", CreatedBy = userIdentifier, UserId = 1, GeoPath = Utilities.GeoPath(), HikeLength = 10, Duration = 3600 };
         var hikeRepoMock = new Mock<IHikeRepository>();
         hikeRepoMock.Setup(r => r.GetHikeByIdentifierAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<Hike>.Success(hike));
@@ -488,7 +488,7 @@ public class HikeShareServiceTests
                 It.IsAny<string>(), It.IsAny<Expression<Func<User, ReceiverProjection>>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<ReceiverProjection>.Success(receiver));
 
-        var hike = new Hike { Id = 1, Identifier = "hike-identifier", Name = "Test", CreatedBy = userIdentifier, UserId = 1, Coordinates = "", HikeLength = 10, Duration = 3600 };
+        var hike = new Hike { Id = 1, Identifier = "hike-identifier", Name = "Test", CreatedBy = userIdentifier, UserId = 1, GeoPath = Utilities.GeoPath(), HikeLength = 10, Duration = 3600 };
         var hikeRepoMock = new Mock<IHikeRepository>();
         hikeRepoMock.Setup(r => r.GetHikeByIdentifierAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<Hike>.Success(hike));

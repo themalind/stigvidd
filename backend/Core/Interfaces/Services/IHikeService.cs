@@ -10,7 +10,7 @@ public interface IHikeService
     Task<Result<HikeResponse>> GetHikeByIdentifierAsync(string hikeIdentifier, CancellationToken ctoken);
     Task<Result<IReadOnlyCollection<HikeOverviewResponse>>> GetHikesAsync(string? createdBy, CancellationToken ctoken);
     Task<Result> HandleUserHikesOnUserDeleteAsync(int userId, CancellationToken ctoken);
-    Task<Result<Hike>> UpdateHikeAsync(string hikeIdentifier, string userIdentifier, string? name, string? description, string? gettingThere, string? parkingInfo, CancellationToken ctoken);
+    Task<Result<HikeResponse>> UpdateHikeAsync(string hikeIdentifier, string userIdentifier, string? name, string? description, string? gettingThere, string? parkingInfo, CancellationToken ctoken);
     Task<Result> SoftDeleteHikeAsync(string hikeIdentifier, string userIdentifier, CancellationToken ctoken);
     Task<Result> DeleteHikeSharesByUserIdAsync(int userId, CancellationToken ctoken);
     Task<Result> DeleteHikesByUserIdentifierAsync(string userIdentifier, CancellationToken ctoken);

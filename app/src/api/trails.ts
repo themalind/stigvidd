@@ -23,7 +23,7 @@ export async function getPopularTrails(latitude?: number, longitude?: number): P
 
     return response.json();
   } catch (error) {
-    console.log(error);
+    console.log(`Error fetching popular trails: ${error.cause || error.message}`);
     throw error;
   }
 }
@@ -37,7 +37,7 @@ export async function getAllTrails(): Promise<TrailShortInfoResponse[]> {
 
     return response.json();
   } catch (error) {
-    console.log(error);
+    console.log(`Error fetching all trails: ${error.cause || error.message}`);
     throw error;
   }
 }
@@ -53,7 +53,7 @@ export async function getTrailByIdentifier(identifier: string): Promise<Trail> {
 
     return json;
   } catch (error) {
-    console.log(error);
+    console.log("Error fetching trail by identifier:", error);
     throw error;
   }
 }
@@ -68,7 +68,7 @@ export async function getTrailCard(identifier: string): Promise<TrailCard> {
 
     return response.json();
   } catch (error) {
-    console.log(error);
+    console.log("Error fetching trail card:", error);
     throw error;
   }
 }
@@ -87,7 +87,7 @@ export async function getTrailCards(identifiers: string[]): Promise<TrailCard[]>
 
     return response.json();
   } catch (error) {
-    console.log(error);
+    console.log("Error fetching trail cards:", error);
     throw error;
   }
 }

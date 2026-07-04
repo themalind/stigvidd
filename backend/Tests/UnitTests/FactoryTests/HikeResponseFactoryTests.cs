@@ -19,7 +19,7 @@ public class HikeResponseFactoryTests
             Name = "Test Hike",
             HikeLength = 12.5M,
             Duration = 3600000,
-            Coordinates = "[{\"latitude\":57.62,\"longitude\":12.80}]",
+            GeoPath = UnitTests.Utilities.GeoPath((12.81, 57.62), (12.83, 57.64)),
             CreatedBy = "user-id",
             GettingThere = "Take the E20 west",
             ParkingInfo = "Free parking at trailhead",
@@ -34,7 +34,7 @@ public class HikeResponseFactoryTests
         result.Name.Should().Be("Test Hike");
         result.HikeLength.Should().Be(12.5M);
         result.Duration.Should().Be(3600000);
-        result.Coordinates.Should().Be("[{\"latitude\":57.62,\"longitude\":12.80}]");
+        result.Coordinates.Should().Be("[{\"latitude\":57.62,\"longitude\":12.81},{\"latitude\":57.64,\"longitude\":12.83}]");
         result.CreatedBy.Should().Be("user-id");
         result.GettingThere.Should().Be("Take the E20 west");
         result.ParkingInfo.Should().Be("Free parking at trailhead");
@@ -52,7 +52,7 @@ public class HikeResponseFactoryTests
             Name = "Test Hike",
             HikeLength = 12.5M,
             Duration = 3600000,
-            Coordinates = "[]",
+            GeoPath = UnitTests.Utilities.GeoPath(),
             CreatedBy = "user-id",
             GettingThere = null,
             ParkingInfo = null,

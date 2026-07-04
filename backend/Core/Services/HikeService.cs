@@ -2,6 +2,7 @@ using Core.Factories;
 using Core.Interfaces.Repositories;
 using Core.Interfaces.Services;
 using Infrastructure.Data.Entities;
+using NetTopologySuite.Geometries;
 using WebDataContracts.RequestModels.Hike;
 using WebDataContracts.ResponseModels.Hike;
 
@@ -42,12 +43,20 @@ public class HikeService : IHikeService
             return Result.Fail<HikeResponse>(new Message(400, "Hike properties are invalid."));
         }
 
+        //parse json coordinates to NetTopologySuite.Geometries.Coordinate array
+        var parsedCoordinates = Newtonsoft.Json.JsonConvert.DeserializeObject<WebDataContracts.Coordinate[]>(request.Coordinates);
+        if(parsedCoordinates is null || parsedCoordinates.Length < 2)
+        {
+            return Result.Fail<HikeResponse>(new Message(400, "Hike coordinates are invalid."));
+        }
+        var coords = new LineString([.. parsedCoordinates.Select(c => new NetTopologySuite.Geometries.Coordinate(c.Longitude, c.Latitude))]);
+
         var hike = new Hike
         {
             Name = request.Name,
             HikeLength = request.HikeLength / 1000,
             Duration = request.Duration,
-            Coordinates = request.Coordinates,
+            GeoPath = coords,
             CreatedBy = userIdentifier,
             UserId = userIdResult.Value,
             ParkingInfo = request?.ParkingInfo,
@@ -96,6 +105,8 @@ public class HikeService : IHikeService
             userId = userIdResult.Value;
         }
 
+        // GeoPathSerializer runs in the top-level projection, which EF Core evaluates
+        // client-side after materializing the geometry column.
         var result = await _hikeRepository.GetHikesAsync(
             userId,
             h => HikeOverviewResponse.Create(
@@ -103,7 +114,7 @@ public class HikeService : IHikeService
                 h.Name,
                 h.HikeLength,
                 h.Duration,
-                h.Coordinates,
+                GeoPathSerializer.ToCoordinateJson(h.GeoPath),
                 h.CreatedBy,
                 h.GettingThere,
                 h.ParkingInfo,
@@ -117,7 +128,7 @@ public class HikeService : IHikeService
         return Result.Ok(result.Value);
     }
 
-    public async Task<Result<Hike>> UpdateHikeAsync(
+    public async Task<Result<HikeResponse>> UpdateHikeAsync(
         string hikeIdentifier,
         string userIdentifier,
         string? name,
@@ -128,21 +139,21 @@ public class HikeService : IHikeService
         var userIdResult = await _userRepository.GetUserByIdentifierAsync(userIdentifier, u => u.Id, ctoken);
 
         if (!userIdResult.IsSuccess)
-            return Result.Fail<Hike>(new Message(404, "User not found"));
+            return Result.Fail<HikeResponse>(new Message(404, "User not found"));
 
         var hikeResult = await _hikeRepository.GetHikeByIdentifierAsync(hikeIdentifier, ctoken);
 
         if (!hikeResult.IsSuccess)
         {
             if (hikeResult.Status == RepositoryResultStatus.Error)
-                return Result.Fail<Hike>(new Message(500, "An error occurred while fetching the hike."));
+                return Result.Fail<HikeResponse>(new Message(500, "An error occurred while fetching the hike."));
 
             if (hikeResult.Status == RepositoryResultStatus.NotFound || hikeResult.Value is null)
-                return Result.Fail<Hike>(new Message(404, "Hike not found"));
+                return Result.Fail<HikeResponse>(new Message(404, "Hike not found"));
         }
 
         if (hikeResult.Value.UserId != userIdResult.Value)
-            return Result.Fail<Hike>(new Message(401, "Hike does not belong to the user"));
+            return Result.Fail<HikeResponse>(new Message(401, "Hike does not belong to the user"));
 
 
         if (!string.IsNullOrEmpty(name))
@@ -167,7 +178,7 @@ public class HikeService : IHikeService
 
         await _hikeRepository.UpdateHikeAsync(hikeResult.Value, ctoken);
 
-        return Result.Ok(hikeResult.Value);
+        return Result.Ok(_hikeResponseFactory.Create(hikeResult.Value));
     }
 
     public async Task<Result> SoftDeleteHikeAsync(string hikeIdentifier, string userIdentifier, CancellationToken ctoken)

@@ -12,7 +12,7 @@ public class HikeResponseFactory
             hike.Name,
             hike.HikeLength,
             hike.Duration,
-            hike.Coordinates,
+            GeoPathSerializer.ToCoordinateJson(hike.GeoPath),
             hike.CreatedBy,
             hike.GettingThere,
             hike.ParkingInfo,

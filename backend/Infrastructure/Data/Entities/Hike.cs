@@ -1,3 +1,5 @@
+using NetTopologySuite.Geometries;
+
 namespace Infrastructure.Data.Entities;
 
 public class Hike : SoftDeletableEntity
@@ -5,7 +7,7 @@ public class Hike : SoftDeletableEntity
     public required string Name { get; set; }
     public decimal HikeLength { get; set; }
     public int Duration { get; set; }
-    public required string Coordinates { get; set; }
+    public required LineString GeoPath { get; set; }
     public required string CreatedBy { get; set; }
     public string? ParkingInfo { get; set; }
     public string? GettingThere { get; set; }
