@@ -23,7 +23,7 @@ export function GlobalSnackbar() {
       >
         <View style={s.contentContainer}>
           {snackbar.icon && <MaterialIcons name={snackbar.icon as any} size={20} color={theme.colors.onSecondary} />}
-          <Text style={{ color: theme.colors.onSecondary }}>{snackbar.message}</Text>
+          <Text style={[s.message, { color: theme.colors.onSecondary }]}>{snackbar.message}</Text>
         </View>
       </Snackbar>
     </Portal>
@@ -33,7 +33,9 @@ const s = StyleSheet.create({
   contentContainer: {
     flexDirection: "row",
     gap: 10,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: "flex-start",
+  },
+  message: {
+    flexShrink: 1,
   },
 });

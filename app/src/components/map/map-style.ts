@@ -1,11 +1,13 @@
 import { LogManager, TransformRequestManager } from "@maplibre/maplibre-react-native";
 
-// MapTiler vector basemap. We use a *custom* style published in MapTiler's
-// Customize editor (a clone of "Outdoor" / outdoor-v4 with the marked
-// hiking-route relation layers hidden, keeping contours, hillshade and
-// footpaths) so the app's own trail overlays are the only routes drawn. Both
-// the key and the custom style id are read from EXPO_PUBLIC_* env vars, the
-// same mechanism as BASE_URL in api-config — never hard-coded.
+// MapTiler vector basemap. The style is selected by id from an env var and is
+// currently the built-in "Outdoor" (outdoor-v2). The planned end state is a
+// *custom* clone published in MapTiler's Customize editor with the marked
+// hiking-route relation layers hidden (keeping contours, hillshade and
+// footpaths) so the app's own trail overlays are the only routes drawn — that
+// only requires swapping the published style id into the env var. Both the key
+// and the style id are read from EXPO_PUBLIC_* env vars, the same mechanism as
+// BASE_URL in api-config — never hard-coded.
 const MAPTILER_API_KEY = process.env.EXPO_PUBLIC_MAPTILER_API_KEY;
 const MAPTILER_STYLE_ID = process.env.EXPO_PUBLIC_MAPTILER_STYLE_ID;
 

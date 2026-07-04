@@ -552,7 +552,7 @@
     "resume": "Återuppta",
     "fgPermissionDenied": "Åtkomst till plats nekades.",
     "bgPermissionDenied": "Åtkomst till bakgrundsplats nekades.",
-    "bgPermissionWarning": "För tillförlitlig spårning med släckt skärm, tillåt platsåtkomst \"Alltid\" i Inställningar.",
+    "bgPermissionWarning": "Tillåt platsåtkomst \"Alltid\" i Inställningar för spårning i bakgrunden.",
     "notificationBody": "Spelar in vandring...",
     "infoTitle": "Innan du börjar",
     "infoIntro": "Inspelningen fortsätter i bakgrunden tills du stoppar den.",

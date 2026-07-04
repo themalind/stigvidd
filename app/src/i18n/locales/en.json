@@ -603,7 +603,7 @@
     "resume": "Resume",
     "fgPermissionDenied": "Permission to access location was denied.",
     "bgPermissionDenied": "Permission to access background location was denied.",
-    "bgPermissionWarning": "For reliable tracking with the screen off, allow \"Always\" location access in Settings.",
+    "bgPermissionWarning": "Allow \"Always\" location access in Settings for background tracking.",
     "notificationBody": "Recording walk...",
     "infoTitle": "Before you start",
     "infoIntro": "Recording keeps running in the background until you stop it.",

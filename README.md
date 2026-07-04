@@ -77,7 +77,7 @@ stigvidd/
 - React Native with Expo (SDK 54)
 - TypeScript
 - Expo Router (file-based routing)
-- MapLibre Native + Thunderforest "Outdoors" tiles, with Expo Location (GPS tracking)
+- MapLibre Native + MapTiler "Outdoor" vector tiles, with Expo Location (GPS tracking)
 - TanStack Query (server state) + Jotai (global state)
 - React Hook Form + Zod (form validation)
 - React Native Paper (Material Design 3)
@@ -151,7 +151,7 @@ To run an import, place the source file in the expected path and run the `MapDat
 - .NET 10 SDK
 - PostgreSQL with the PostGIS extension (local or remote)
 - A Keycloak realm (for backend, mobile app and admin dashboard authentication)
-- A Thunderforest API key (for map tiles in the mobile app)
+- A MapTiler API key and style id (for map tiles in the mobile app)
 - Expo Go app or Android/iOS emulator
 
 ---
@@ -201,14 +201,15 @@ The API will be available at `https://localhost:7xxx`. Swagger UI is available a
    npm install
    ```
 
-3. Create a `.env` file with your API, Keycloak and Thunderforest config:
+3. Create a `.env` file with your API, Keycloak and MapTiler config:
 
    ```
    EXPO_PUBLIC_API_HOST=https://localhost:7xxx
    EXPO_PUBLIC_OIDC_URL=https://your-keycloak-host/auth
    EXPO_PUBLIC_OIDC_REALM=stigvidd
    EXPO_PUBLIC_CLIENT_ID=...
-   EXPO_PUBLIC_THUNDERFOREST_API_KEY=...
+   EXPO_PUBLIC_MAPTILER_API_KEY=...
+   EXPO_PUBLIC_MAPTILER_STYLE_ID=...
    ```
 
 4. Start the development server:

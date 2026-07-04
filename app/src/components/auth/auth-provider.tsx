@@ -3,12 +3,7 @@ import { registerAccount } from "@/api/auth";
 import { deleteStigViddUser } from "@/api/users";
 import { AuthUser, RegisterData } from "@/data/types";
 import { unregisterForPushNotificationsAsync } from "@/services/notifications";
-import {
-  logoutKeycloak,
-  passwordGrant,
-  restoreSession,
-  setSessionExpiredHandler,
-} from "@/services/keycloak-auth";
+import { logoutKeycloak, passwordGrant, restoreSession, setSessionExpiredHandler } from "@/services/keycloak-auth";
 import { useAtomValue, useSetAtom } from "jotai";
 import { queryClientAtom } from "jotai-tanstack-query";
 import { useEffect } from "react";

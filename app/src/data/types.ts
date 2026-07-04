@@ -169,7 +169,7 @@ export interface Hike {
   gettingThere?: string;
   parkingInfo?: string;
   description?: string;
-  createdAt:string;
+  createdAt: string;
 }
 
 export interface UpdateTrailObstacleRequest {
