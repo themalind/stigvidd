@@ -31,7 +31,7 @@ public class HikeShareRecipientServiceTests
         Name = "Test",
         CreatedBy = "owner-identifier",
         UserId = 99,
-        Coordinates = "",
+        GeoPath = UnitTests.Utilities.GeoPath(),
         HikeLength = 10,
         Duration = 3600
     };

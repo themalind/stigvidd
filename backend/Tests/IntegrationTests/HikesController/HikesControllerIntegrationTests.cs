@@ -154,7 +154,7 @@ public class HikesControllerIntegrationTests : IClassFixture<StigViddWebApplicat
             Name = "TestHike1",
             HikeLength = 1000,
             Duration = 60000,
-            Coordinates = "[]"
+            Coordinates = "[{\"latitude\":57.62,\"longitude\":12.81},{\"latitude\":57.64,\"longitude\":12.83}]"
         };
 
         // Act

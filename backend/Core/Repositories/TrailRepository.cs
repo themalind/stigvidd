@@ -46,15 +46,15 @@ public class TrailRepository : ITrailRepository
         {
             using var context = await _context.CreateDbContextAsync(ctoken);
 
-            var coordinates = await context.Trails
+            var match = await context.Trails
                 .AsNoTracking()
                 .Where(t => t.Identifier == identifier && t.IsVerified == true)
-                .Select(t => t.Coordinates)
+                .Select(t => new { t.GeoPath })
                 .FirstOrDefaultAsync(ctoken);
 
-            return coordinates is null
+            return match is null
                 ? RepositoryResult<string>.NotFound()
-                : RepositoryResult<string>.Success(coordinates);
+                : RepositoryResult<string>.Success(GeoPathSerializer.ToCoordinateJson(match.GeoPath));
         }
         catch (Exception ex)
         {

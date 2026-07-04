@@ -103,7 +103,7 @@ public class HikeRepositoryTests : TestBase
             Name = "NewHike",
             HikeLength = 7,
             Duration = 3600000,
-            Coordinates = "[]",
+            GeoPath = Utilities.GeoPath(),
             CreatedBy = UserIdentifier
         };
 

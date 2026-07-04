@@ -12,7 +12,13 @@ namespace IntegrationTests;
 /// Provides methods to populate the database with predefined test data for integration tests.
 /// </summary>
 public static class Utilities
-{   /// <summary>
+{
+    // Builds a Hike.GeoPath LineString from (longitude, latitude) pairs.
+    // No arguments yields an empty LineString (a valid path with no points).
+    public static LineString GeoPath(params (double Longitude, double Latitude)[] points) =>
+        new([.. points.Select(p => new Coordinate(p.Longitude, p.Latitude))]);
+
+    /// <summary>
     /// Initializes the database with seed data for unit tests.
     /// Populates the database with predefined trails, users and reviews.
     /// </summary>
@@ -582,7 +588,7 @@ public static class Utilities
                 Name = "TestHike1",
                 HikeLength = 10,
                 Duration = 3600000,
-                Coordinates = string.Empty,
+                GeoPath = GeoPath(),
                 CreatedBy = users[0].Identifier,
                 UserId = users[0].Id
             },
@@ -593,7 +599,7 @@ public static class Utilities
                 Name = "TestHike2",
                 HikeLength = 20,
                 Duration = 7200000,
-                Coordinates = string.Empty,
+                GeoPath = GeoPath(),
                 CreatedBy = users[0].Identifier,
                 UserId = users[0].Id
             },
@@ -604,7 +610,7 @@ public static class Utilities
                 Name = "TestHike3",
                 HikeLength = 30,
                 Duration = 10800000,
-                Coordinates = string.Empty,
+                GeoPath = GeoPath(),
                 CreatedBy = users[1].Identifier,
                 UserId = users[1].Id
             },
@@ -615,7 +621,7 @@ public static class Utilities
                 Name = "TestHike4",
                 HikeLength = 40,
                 Duration = 14400000,
-                Coordinates = string.Empty,
+                GeoPath = GeoPath(),
                 CreatedBy = users[1].Identifier,
                 UserId = users[1].Id
             },
@@ -626,7 +632,7 @@ public static class Utilities
                 Name = "TestHike5",
                 HikeLength = 50,
                 Duration = 18000000,
-                Coordinates = string.Empty,
+                GeoPath = GeoPath(),
                 CreatedBy = users[2].Identifier,
                 UserId = users[2].Id
             }

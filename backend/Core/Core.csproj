@@ -11,6 +11,7 @@
     <PackageReference Include="FluentValidation" Version="12.1.1" />
     <PackageReference Include="Keycloak.AuthServices.Sdk" Version="3.0.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.9" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.2" />
     <PackageReference Include="SharpGrip.FluentValidation.AutoValidation.Mvc" Version="2.0.0" />
     <PackageReference Include="WebDav.Client" Version="2.9.0" />
