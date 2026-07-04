@@ -21,9 +21,9 @@ jobs:
       with:
         dotnet-version: 10.0.x
     - name: Install SpatiaLite
-      run: sudo apt-get install libsqlite3-mod-spatialite
-    - name: Install SpatiaLite 2
-      run: sudo apt-get install libspatialite-dev
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libsqlite3-mod-spatialite libspatialite-dev
     - name: Restore dependencies
       run: dotnet restore
     - name: Build
