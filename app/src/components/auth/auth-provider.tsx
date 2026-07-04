@@ -4,10 +4,9 @@ import { deleteStigViddUser } from "@/api/users";
 import { AuthUser, RegisterData } from "@/data/types";
 import { unregisterForPushNotificationsAsync } from "@/services/notifications";
 import {
-  loadTokens,
   logoutKeycloak,
   passwordGrant,
-  refreshGrant,
+  restoreSession,
   setSessionExpiredHandler,
 } from "@/services/keycloak-auth";
 import { useAtomValue, useSetAtom } from "jotai";
@@ -116,8 +115,7 @@ export function useInitAuth(): void {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const { refreshToken } = await loadTokens();
-      const restored = refreshToken ? await refreshGrant(refreshToken) : null;
+      const restored = await restoreSession();
       if (!cancelled) {
         setUser(restored);
         setIsLoading(false);

@@ -20,7 +20,12 @@ const REALM_BASE = `${OIDC_URL}/realms/${REALM}/protocol/openid-connect`;
 const TOKEN_ENDPOINT = `${REALM_BASE}/token`;
 const LOGOUT_ENDPOINT = `${REALM_BASE}/logout`;
 
-const SCOPE = "openid profile email";
+// `offline_access` requests an OFFLINE refresh token. Without it Keycloak issues
+// an online refresh token bound to the SSO session, which dies on the realm's SSO
+// Session Idle (default 30 min) / Session Max (default 10 h) timeouts — i.e. the
+// user gets silently logged out. The offline token's lifetime is governed instead
+// by the realm's Offline Session settings, letting the session persist long-term.
+const SCOPE = "openid profile email offline_access";
 
 // Refresh slightly before the token actually expires to avoid races.
 const EXPIRY_SKEW_SECONDS = 30;
@@ -155,7 +160,16 @@ export async function passwordGrant(email: string, password: string): Promise<Au
   return decodeUser(tokens.id_token ?? tokens.access_token);
 }
 
-/** Exchange the refresh token for a fresh access token. Returns the user, or null if refresh fails. */
+/**
+ * Exchange the refresh token for a fresh access token. Returns the user, or null
+ * if the refresh did not yield a session.
+ *
+ * Only a genuine rejection of the refresh token (Keycloak `invalid_grant`, surfaced
+ * as InvalidCredentialsError) ends the session and signals the auth layer. Transient
+ * failures — network errors, timeouts, 5xx — must NOT clear the stored tokens: a
+ * momentary blip would otherwise permanently log the user out. Those are left intact
+ * so a later call can retry.
+ */
 export async function refreshGrant(token: string): Promise<AuthUser | null> {
   try {
     const tokens = await requestToken({
@@ -165,9 +179,11 @@ export async function refreshGrant(token: string): Promise<AuthUser | null> {
     });
     await persistTokens(tokens);
     return decodeUser(tokens.id_token ?? tokens.access_token);
-  } catch {
-    await clearTokens();
-    onSessionExpired?.();
+  } catch (error) {
+    if (error instanceof InvalidCredentialsError) {
+      await clearTokens();
+      onSessionExpired?.();
+    }
     return null;
   }
 }
@@ -194,6 +210,20 @@ export async function logoutKeycloak(): Promise<void> {
  * This is the single choke point the API layer calls via getUserToken().
  * Concurrent callers share one in-flight refresh.
  */
+/**
+ * Restore the signed-in user on app start. Loads persisted tokens, then obtains a
+ * valid access token through the SAME single-flight path the API layer uses, so the
+ * startup refresh and any concurrent first API calls share ONE refresh request. This
+ * matters under Keycloak refresh-token rotation: two concurrent uses of the same
+ * refresh token would make one fail with `invalid_grant` and log the user out.
+ * Returns the decoded user, or null if no session could be restored.
+ */
+export async function restoreSession(): Promise<AuthUser | null> {
+  await loadTokens();
+  const token = await getValidAccessToken();
+  return token ? decodeUser(token) : null;
+}
+
 export async function getValidAccessToken(): Promise<string | null> {
   if (!accessToken && !refreshToken) {
     return null;
