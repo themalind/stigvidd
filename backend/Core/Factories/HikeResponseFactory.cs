@@ -16,7 +16,8 @@ public class HikeResponseFactory
             hike.CreatedBy,
             hike.GettingThere,
             hike.ParkingInfo,
-            hike.Description
+            hike.Description,
+            hike.CreatedAt
         );
     }
 }

@@ -277,6 +277,7 @@
     "back": "Tillbaka",
     "next": "Nästa",
     "sharedBy": "Delad av:",
+    "createdAt": "Skapad:",
     "date": "Datum:",
     "gettingThere": "Hitta hit",
     "parking": "Parkering",
@@ -463,22 +464,23 @@
     "footer": "Examensarbete · SUVNET24",
     "features": [
       "Utforska och filtrera vandringsleder (svårighetsgrad, tillgänglighet, längd, stad)",
-      "Interaktiv karta med ledermarkeringar och GPS-koordinater",
+      "Interaktiv topografisk karta med klustrade ledermarkeringar, följa-läge och vägbeskrivning till leden",
       "GPS-spårning i bakgrunden under vandring med avståndsmätning",
       "Lederrecensioner med stjärnbetyg och foton",
       "Favoriter och önskelista med optimistisk UI-uppdatering",
       "Rapportera hinder/faror med ett röstningssystem",
       "Användarprofiler med vandringhistorik och statistik",
-      "Dela inspelade vandringar med vänner"
+      "Dela inspelade vandringar med vänner",
+      "Push-notiser för vänförfrågningar och delade vandringar"
     ],
     "techStack": [
       { "label": "App", "value": "React Native · Expo SDK 54 · TypeScript" },
       { "label": "Routing", "value": "Expo Router (filbaserad)" },
-      { "label": "Karta & GPS", "value": "React Native Maps · Expo Location" },
+      { "label": "Karta & GPS", "value": "MapLibre · MapTiler · Expo Location" },
       { "label": "State", "value": "TanStack Query · Jotai" },
       { "label": "UI", "value": "React Native Paper (Material Design 3)" },
-      { "label": "Backend", "value": "ASP.NET Core 10 · C# · EF Core · SQL Server" },
-      { "label": "Auth", "value": "Firebase Authentication (JWT)" }
+      { "label": "Backend", "value": "ASP.NET Core 10 · C# · EF Core · PostgreSQL/PostGIS" },
+      { "label": "Auth", "value": "Keycloak (OAuth2 / OIDC)" }
     ]
   },
   "guide": {
@@ -550,6 +552,7 @@
     "resume": "Återuppta",
     "fgPermissionDenied": "Åtkomst till plats nekades.",
     "bgPermissionDenied": "Åtkomst till bakgrundsplats nekades.",
+    "bgPermissionWarning": "För tillförlitlig spårning med släckt skärm, tillåt platsåtkomst \"Alltid\" i Inställningar.",
     "notificationBody": "Spelar in vandring...",
     "infoTitle": "Innan du börjar",
     "infoIntro": "Inspelningen fortsätter i bakgrunden tills du stoppar den.",

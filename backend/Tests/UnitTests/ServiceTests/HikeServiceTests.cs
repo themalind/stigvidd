@@ -236,10 +236,11 @@ public class HikeServiceTests
     public async Task GetHikes_WithoutFilter_ReturnsAll()
     {
         // Arrange
+        var createdAtDate = DateTime.UtcNow;
         IReadOnlyCollection<HikeOverviewResponse> list =
         [
-            HikeOverviewResponse.Create("id1", "H1", 10, 3600000, "[]", Utilities.Identifiers.User, null, null, null),
-            HikeOverviewResponse.Create("id2", "H2", 20, 7200000, "[]", Utilities.Identifiers.User, null, null, null),
+            HikeOverviewResponse.Create("id1", "H1", 10, 3600000, "[]", Utilities.Identifiers.User, null, null, null, createdAtDate),
+            HikeOverviewResponse.Create("id2", "H2", 20, 7200000, "[]", Utilities.Identifiers.User, null, null, null, createdAtDate),
         ];
         var hikeRepo = new Mock<IHikeRepository>();
         hikeRepo.Setup(r => r.GetHikesAsync(It.IsAny<int?>(), It.IsAny<Expression<Func<Hike, HikeOverviewResponse>>>(), It.IsAny<CancellationToken>()))

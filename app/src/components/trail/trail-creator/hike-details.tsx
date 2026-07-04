@@ -7,6 +7,7 @@ import ShareHikeModal, { ShareHikeFormFields } from "@/components/shared-hike/sh
 import { BORDER_RADIUS, SURFACE_BORDER_RADIUS } from "@/constants/constants";
 import { Hike, ShareHikeRequest, UpdateHikeRequest } from "@/data/types";
 import CoordinateParser from "@/utils/coordinate-parser";
+import { formatDate } from "@/utils/format-date";
 import FormattedTime from "@/utils/format-time-from-ms";
 import { lineStringFromPositions } from "@/utils/geojson";
 import getBoundsFromTrail from "@/utils/get-bounds-from-trail";
@@ -108,10 +109,17 @@ export default function HikeDetails({ visible, hike, onDismiss }: Props) {
           <Icon size={24} source="close" color={theme.colors.onSurface} />
         </Pressable>
         <View style={s.hikeNameContainer}>
-          <MaterialCommunityIcons name="map-legend" size={24} color={theme.colors.primary} />
-          <Text style={s.hikeName} numberOfLines={1}>
-            {hike.name}
-          </Text>
+          <View style={s.hikeTitleColumn}>
+            <View style={s.hikeTitleRow}>
+              <MaterialCommunityIcons name="map-legend" size={24} color={theme.colors.primary} />
+              <Text style={s.hikeName} numberOfLines={1}>
+                {hike.name}
+              </Text>
+            </View>
+            <Text variant="bodySmall" style={[s.hikeCreatedAt, { color: theme.colors.onSurfaceVariant }]}>
+              {t("hike.createdAt")} {formatDate(hike.createdAt)}
+            </Text>
+          </View>
           <View style={s.closeButtonSpacer} />
         </View>
         <View style={s.mapContainer}>
@@ -249,15 +257,25 @@ const s = StyleSheet.create({
   },
   hikeNameContainer: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-start",
     gap: 5,
-    minWidth: 0,
+  },
+  hikeTitleColumn: {
+    flex: 1,
+    gap: 2,
+  },
+  hikeTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
   },
   hikeName: {
     fontSize: 15,
     fontWeight: 700,
     flex: 1,
-    minWidth: 0,
+  },
+  hikeCreatedAt: {
+    marginLeft: 32,
   },
   statsCard: {
     flexDirection: "row",

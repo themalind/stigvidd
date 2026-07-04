@@ -7,8 +7,6 @@ namespace Core.Services;
 
 public class WebDavService : IWebDavService
 {
-    // The WebDAV server intermittently resets the connection mid-upload (SocketException 10054).
-    // It's transient — a fresh connection almost always succeeds — so we retry a few times.
     private const int MaxUploadAttempts = 3;
     private const int RetryBaseDelayMs = 300;
 
@@ -25,7 +23,7 @@ public class WebDavService : IWebDavService
 
     public async Task<Result<string?>> UploadFileAsync(Stream stream, string? subDirectory)
     {
-        // Skapar en sträng ex "reviews/guid.jpeg"
+        // Creates a safe file name for the uploaded file
         var fileName = $"{Guid.NewGuid()}.jpeg";
 
         var remotePath = subDirectory != null
@@ -107,7 +105,7 @@ public class WebDavService : IWebDavService
 
         var result = await client.Mkcol(directoryPath);
 
-        if (!result.IsSuccessful && result.StatusCode != 405) // 405 = redan finns
+        if (!result.IsSuccessful && result.StatusCode != 405) // 405 = already exists
         {
             throw new Exception($"Could not create directory: {result.StatusCode}");
         }

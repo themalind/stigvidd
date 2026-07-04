@@ -1,10 +1,11 @@
 import { getAllHikesByUserId } from "@/api/hikes";
 import { stigviddUserAtom } from "@/atoms/user-atoms";
-import { HIKES_STALE_TIME } from "@/constants/cache";
+import { useAuth } from "@/components/auth/auth-provider";
 import BackButton from "@/components/back-button";
 import ErrorView from "@/components/error-view";
 import LoadingIndicator from "@/components/loading-indicator";
 import HikeDetails from "@/components/trail/trail-creator/hike-details";
+import { HIKES_STALE_TIME } from "@/constants/cache";
 import { BORDER_RADIUS, SCREEN_PADDING } from "@/constants/constants";
 import { Hike } from "@/data/types";
 import FormattedTime from "@/utils/format-time-from-ms";
@@ -12,10 +13,9 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
 import { useState } from "react";
-import { Platform, Pressable, ScrollView, StyleSheet, View } from "react-native";
-import { useAuth } from "@/components/auth/auth-provider";
-import { Divider, Icon, Text, useTheme } from "react-native-paper";
 import { useTranslation } from "react-i18next";
+import { Platform, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { Divider, Icon, Text, useTheme } from "react-native-paper";
 
 export default function MyHikesScreen() {
   const theme = useTheme();
@@ -55,11 +55,15 @@ export default function MyHikesScreen() {
         </View>
         <View style={s.content}>
           <Divider bold={true} />
-          <Text variant="bodySmall" style={s.sectionSubtitle}>
-            Tryck på en promenad för att se detaljer
-          </Text>
+
+          {(hikes?.length ?? 0) > 0 && (
+            <Text variant="bodySmall" style={s.sectionSubtitle}>
+              Tryck på en promenad för att se detaljer
+            </Text>
+          )}
+
           {hikes?.length === 0 ? (
-            <Text style={{ color: theme.colors.onBackground, textAlign: "center", paddingVertical: 20 }}>
+            <Text style={{ color: theme.colors.outline, textAlign: "center", paddingVertical: 20 }}>
               {t("hike.noHikes")}
             </Text>
           ) : (

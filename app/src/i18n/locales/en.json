@@ -277,6 +277,7 @@
     "back": "Back",
     "next": "Next",
     "sharedBy": "Shared by:",
+    "createdAt": "Created:",
     "date": "Date:",
     "gettingThere": "Getting there",
     "parking": "Parking",
@@ -481,13 +482,14 @@
     "footer": "Thesis project · SUVNET24",
     "features": [
       "Explore and filter hiking trails (difficulty, accessibility, length, city)",
-      "Interactive map with trail markers and GPS coordinates",
+      "Interactive topographic map with clustered trail markers, follow mode and directions to the trail",
       "Background GPS tracking during walks with distance measurement",
       "Trail reviews with star ratings and photos",
       "Favorites and wishlist with optimistic UI updates",
       "Report obstacles/hazards with a voting system",
       "User profiles with hiking history and statistics",
-      "Share recorded walks with friends"
+      "Share recorded walks with friends",
+      "Push notifications for friend requests and shared walks"
     ],
     "techStack": [
       {
@@ -500,7 +502,7 @@
       },
       {
         "label": "Map & GPS",
-        "value": "React Native Maps · Expo Location"
+        "value": "MapLibre · MapTiler · Expo Location"
       },
       {
         "label": "State",
@@ -512,11 +514,11 @@
       },
       {
         "label": "Backend",
-        "value": "ASP.NET Core 10 · C# · EF Core · SQL Server"
+        "value": "ASP.NET Core 10 · C# · EF Core · PostgreSQL/PostGIS"
       },
       {
         "label": "Auth",
-        "value": "Firebase Authentication (JWT)"
+        "value": "Keycloak (OAuth2 / OIDC)"
       }
     ]
   },
@@ -601,6 +603,7 @@
     "resume": "Resume",
     "fgPermissionDenied": "Permission to access location was denied.",
     "bgPermissionDenied": "Permission to access background location was denied.",
+    "bgPermissionWarning": "For reliable tracking with the screen off, allow \"Always\" location access in Settings.",
     "notificationBody": "Recording walk...",
     "infoTitle": "Before you start",
     "infoIntro": "Recording keeps running in the background until you stop it.",

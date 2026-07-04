@@ -11,6 +11,7 @@ public class HikeResponse
     public string? GettingThere { get; set; }
     public string? ParkingInfo { get; set; }
     public string? Description { get; set; }
+    public DateTime CreatedAt { get; set; }
 
     public static HikeResponse Create(
         string identifier,
@@ -21,7 +22,8 @@ public class HikeResponse
         string createdBy,
         string? gettingThere,
         string? parkingInfo,
-        string? description)
+        string? description,
+        DateTime createdAt)
     {
         return new HikeResponse
         {
@@ -33,7 +35,8 @@ public class HikeResponse
             CreatedBy = createdBy,
             GettingThere = gettingThere,
             ParkingInfo = parkingInfo,
-            Description = description
+            Description = description,
+            CreatedAt = createdAt
         };
     }
 }

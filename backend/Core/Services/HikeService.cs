@@ -107,7 +107,8 @@ public class HikeService : IHikeService
                 h.CreatedBy,
                 h.GettingThere,
                 h.ParkingInfo,
-                h.Description),
+                h.Description,
+                h.CreatedAt),
             ctoken);
 
         if (!result.IsSuccess)

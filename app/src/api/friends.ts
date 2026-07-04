@@ -88,7 +88,7 @@ export async function rejectFriendRequest(otherIdentifier: string): Promise<{ su
 export async function getFriends(): Promise<SearchFriendResult[]> {
   try {
     const token = await getUserToken();
-    console.log(`Fetching friends from ${BASE_URL}/friends... with token: ${token}`);
+
     if (!token) {
       throw new Error("User not authenticated");
     }

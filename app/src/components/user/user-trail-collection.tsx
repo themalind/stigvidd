@@ -32,7 +32,7 @@ export default function UserTrailCollection({
       <ScrollView
         showsVerticalScrollIndicator={false}
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={[s.container, !trails?.length && s.scrollContentCenter]}
+        contentContainerStyle={[s.container]}
       >
         <View style={s.header}>
           <BackButton />
@@ -178,10 +178,5 @@ const s = StyleSheet.create({
     fontSize: 15,
     textAlign: "center",
     paddingHorizontal: 20,
-  },
-  scrollContentCenter: {
-    flexGrow: 1,
-    justifyContent: "center",
-    alignItems: "center",
   },
 });
