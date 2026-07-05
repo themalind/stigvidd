@@ -17,7 +17,7 @@ namespace Infrastructure.Migrations
                 schema: "dbo",
                 table: "Hikes",
                 type: "geometry",
-                nullable: false);
+                nullable: true);
 
             migrationBuilder.Sql("""
             ;with geo ("Id", "Geometry") as (
@@ -31,6 +31,13 @@ namespace Infrastructure.Migrations
             FROM geo WHERE t."Id"=geo."Id";
             """
             );                      
+
+            migrationBuilder.AlterColumn<LineString>(
+                name: "GeoPath",
+                schema: "dbo",
+                table: "Hikes",
+                type: "geometry",
+                nullable: false);
 
             migrationBuilder.DropColumn(
                 name: "Coordinates",
