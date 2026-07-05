@@ -1,7 +1,7 @@
 import type { MediaItemResponse } from "@/types/types";
 import { getValidAccessToken } from "@/services/keycloak-auth";
 
-const BASE_URL = `http://${import.meta.env.VITE_API_HOST}/api/v1/media`;
+const BASE_URL = `${import.meta.env.VITE_API_URL}/api/v1/media`;
 
 export async function getAllMedia(): Promise<MediaItemResponse[]> {
   const token = await getValidAccessToken();

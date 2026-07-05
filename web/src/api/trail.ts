@@ -8,7 +8,7 @@ import type {
 import { getValidAccessToken } from "@/services/keycloak-auth";
 import { appendProcessingOptions } from "./image-options";
 
-const BASE_URL = `http://${import.meta.env.VITE_API_HOST}/api/v1/trails`;
+const BASE_URL = `${import.meta.env.VITE_API_URL}/api/v1/trails`;
 
 export async function getAllTrails(): Promise<TrailShortInfoResponse[]> {
   try {
