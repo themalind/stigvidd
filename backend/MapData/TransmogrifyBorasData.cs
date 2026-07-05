@@ -3,6 +3,7 @@ using Infrastructure.Data.Entities;
 using System.Globalization;
 using System.Text.Json;
 using Infrastructure.Enums;
+using NetTopologySuite.Geometries;
 
 namespace MapData;
 
@@ -37,16 +38,14 @@ internal class TransmogrifyBorasData
             }
 
             // Säker hämtning av coordinates från geometry
-            string? coordinatesJson = null;
+            LineString? coordinatesLineString = null;
             if (feature.TryGetProperty("geometry", out var geometry) &&
                 geometry.ValueKind == JsonValueKind.Object &&
                 geometry.TryGetProperty("coordinates", out var coordinates) &&
                 coordinates.ValueKind == JsonValueKind.Array)
             {
                 var rawCoordinates = JsonSerializer.Deserialize<double[][]>(coordinates.ToString());
-                coordinatesJson = rawCoordinates is null
-                    ? null
-                    : CleanCoordinates(rawCoordinates);
+                coordinatesLineString = new LineString([.. rawCoordinates?.Select(c => new NetTopologySuite.Geometries.Coordinate(c[0], c[1])) ?? []]);
             }
 
             // Hämta länk för TrailLink
@@ -74,7 +73,7 @@ internal class TransmogrifyBorasData
                 TrailSymbolImage = string.Empty,
                 Description = string.Empty,
                 FullDescription = string.Empty,
-                Coordinates = coordinatesJson,
+                GeoPath = coordinatesLineString,
                 CreatedBy = "Borås Stad"
             };
 

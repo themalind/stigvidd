@@ -92,7 +92,7 @@ public class TrailsControllerIntegrationTests : IClassFixture<StigViddWebApplica
             { new StringContent("[\"skog\", \"sjö\", \"klippor\", \"vildmark\"]"), "Tags" },
             { trailSymbolImageContent, "trailSymbolImage", "trailSymbol.jpg" },
             { trailImageContent, "images", "trail-image-1.jpg" },
-            { new StringContent("[{latitude=57.62141010663575, longitude= 12.805517126805371,}]"), "Coordinates" },
+            { new StringContent("[{\"latitude\": 57.62141010663575, \"longitude\": 12.805517126805371}, {\"latitude\": 58.62141010663575, \"longitude\": 13.805517126805371}]"), "Coordinates" },
             { new StringContent("false"), "IsVerified" },
             { new StringContent("Test City"), "City" }
         };
@@ -274,7 +274,7 @@ public class TrailsControllerIntegrationTests : IClassFixture<StigViddWebApplica
             { new StringContent("Full description"), "FullDescription" },
             { new StringContent("[\"skog\"]"), "Tags" },
             { symbolImageContent, "trailSymbolImage", "symbol.jpg" },
-            { new StringContent("[{latitude=57.62141010663575, longitude= 12.805517126805371,}]"), "Coordinates" },
+            { new StringContent("[{\"latitude\": 57.62141010663575, \"longitude\": 12.805517126805371}, {\"latitude\": 58.62141010663575, \"longitude\": 13.805517126805371}]"), "Coordinates" },
             { new StringContent("false"), "IsVerified" },
             { new StringContent("Test City"), "City" }
             // no "images" parts — trail image collection is optional
@@ -314,7 +314,7 @@ public class TrailsControllerIntegrationTests : IClassFixture<StigViddWebApplica
             { new StringContent("[\"skog\", \"sjö\", \"klippor\", \"vildmark\"]"), "Tags" },
             { trailSymbolImageContent, "trailSymbolImage", "trailSymbol.jpg" },
             { trailImageContent, "images", "trail-image-1.jpg" },
-            { new StringContent("[{latitude=57.62141010663575, longitude= 12.805517126805371,}]"), "Coordinates" },
+            { new StringContent("[{\"latitude\": 57.62141010663575, \"longitude\": 12.805517126805371}, {\"latitude\": 58.62141010663575, \"longitude\": 13.805517126805371}]"), "Coordinates" },
             { new StringContent("false"), "IsVerified" },
             { new StringContent("Test City"), "City" }
         };

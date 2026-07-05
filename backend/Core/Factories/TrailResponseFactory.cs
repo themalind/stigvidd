@@ -50,7 +50,7 @@ public class TrailResponseFactory
         trail.TrailSymbolImage ?? string.Empty,
         trail.Description ?? string.Empty,
         trail.FullDescription ?? string.Empty,
-        trail.Coordinates ?? string.Empty,
+        GeoPathSerializer.ToCoordinateJson(trail.GeoPath),
         trail.Tags ?? string.Empty,
         trail.CreatedBy ?? string.Empty,
         trail.IsVerified,

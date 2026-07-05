@@ -53,7 +53,7 @@ public class TrailServiceTests
         Accessibility = true,
         Description = "A test trail",
         FullDescription = "Full description",
-        Coordinates = "[{\"latitude\":57.62,\"longitude\":12.80}]",
+        Coordinates = "[{\"latitude\":57.62,\"longitude\":12.80},{\"latitude\":57.63,\"longitude\":12.81}]",
         Tags = "[\"skog\"]",
         City = "Test City"
     };

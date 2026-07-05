@@ -23,7 +23,6 @@ public class TrailRepositoryTests : TestBase
         TrailLength = 5M,
         IsVerified = true,
         City = "City",
-        Coordinates = "[]",
         GeoPath = Geometry.DefaultFactory.CreateLineString(
             [new Coordinate(12.80, 57.62), new Coordinate(12.81, 57.63)]),
         Reviews = rating.HasValue
@@ -150,7 +149,8 @@ public class TrailRepositoryTests : TestBase
             FullDescription = string.Empty,
             TrailSymbol = "Red",
             TrailSymbolImage = "http://example.com/symbol.png",
-            Coordinates = "[]",
+            GeoPath = Geometry.DefaultFactory.CreateLineString(
+                [new Coordinate(12.80, 57.62), new Coordinate(12.81, 57.63)]),
             Tags = "[]",
             IsVerified = true,
             City = "TestCity",
@@ -338,25 +338,38 @@ public class TrailRepositoryTests : TestBase
     [Fact]
     public async Task GetAllTrailMarkers_ProjectsStartPoint_AndExcludesTrailsWithoutGeoPath()
     {
-        // Arrange — the standard seed trails have no GeoPath, so they are filtered out;
-        // only this added verified trail with geometry should come back.
+        // Arrange — a verified trail with geometry is projected; a trail without a
+        // GeoPath is filtered out.
         const double startLat = 57.62;
         const double startLon = 12.80;
-        var factory = CreateSeededFactory(ctx => ctx.Trails.Add(new Trail
+        var factory = CreateSeededFactory(ctx =>
         {
-            Identifier = "geo-trail",
-            Name = "Geo Trail",
-            TrailLength = 5M,
-            Accessibility = true,
-            IsVerified = true,
-            City = "Geo",
-            Coordinates = "[]",
-            GeoPath = Geometry.DefaultFactory.CreateLineString(
-            [
-                new Coordinate(startLon, startLat),
-                new Coordinate(startLon + 0.01, startLat + 0.01),
-            ]),
-        }));
+            ctx.Trails.Add(new Trail
+            {
+                Identifier = "geo-trail",
+                Name = "Geo Trail",
+                TrailLength = 5M,
+                Accessibility = true,
+                IsVerified = true,
+                City = "Geo",
+                GeoPath = Geometry.DefaultFactory.CreateLineString(
+                [
+                    new Coordinate(startLon, startLat),
+                    new Coordinate(startLon + 0.01, startLat + 0.01),
+                ]),
+            });
+            // No GeoPath -> excluded from the markers projection
+            ctx.Trails.Add(new Trail
+            {
+                Identifier = "no-geo-trail",
+                Name = "No Geo Trail",
+                TrailLength = 5M,
+                Accessibility = true,
+                IsVerified = true,
+                City = "NoGeo",
+                GeoPath = null,
+            });
+        });
         var repo = new TrailRepository(factory, NullLogger<TrailRepository>.Instance);
 
         // Act
@@ -366,8 +379,8 @@ public class TrailRepositoryTests : TestBase
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        var marker = result.Value.Should().ContainSingle().Which;
-        marker.Identifier.Should().Be("geo-trail");
+        result.Value.Should().NotContain(m => m.Identifier == "no-geo-trail");
+        var marker = result.Value.Should().ContainSingle(m => m.Identifier == "geo-trail").Which;
         marker.Lat.Should().NotBeNull();
         marker.Lon.Should().NotBeNull();
         marker.Lat!.Value.Should().BeApproximately(startLat, 0.0001);
@@ -388,7 +401,6 @@ public class TrailRepositoryTests : TestBase
                 TrailLength = 5M,
                 IsVerified = true,
                 City = "Geo",
-                Coordinates = "[]",
                 GeoPath = Geometry.DefaultFactory.CreateLineString(
                     [new Coordinate(12.80, 57.62), new Coordinate(12.81, 57.63)]),
             });
@@ -400,21 +412,21 @@ public class TrailRepositoryTests : TestBase
                 TrailLength = 5M,
                 IsVerified = false,
                 City = "U",
-                Coordinates = "[]",
                 GeoPath = Geometry.DefaultFactory.CreateLineString(
                     [new Coordinate(1.0, 2.0), new Coordinate(1.1, 2.1)]),
             });
         });
         var repo = new TrailRepository(factory, NullLogger<TrailRepository>.Instance);
 
-        // Act — seed trails (verified, no GeoPath) are also excluded
+        // Act
         var result = await repo.GetAllTrailsWithBasicInfoAsync(
             t => t.Identifier,
             CancellationToken.None);
 
-        // Assert
+        // Assert — verified trail with a GeoPath is included; the unverified one is filtered out
         result.IsSuccess.Should().BeTrue();
-        result.Value.Should().BeEquivalentTo(["geo-trail"]);
+        result.Value.Should().Contain("geo-trail");
+        result.Value.Should().NotContain("unverified-geo");
     }
 
     [Fact]

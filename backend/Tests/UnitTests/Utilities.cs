@@ -53,7 +53,6 @@ public static class Utilities
 
     public static List<Trail> GetSeedingTrails()
     {
-        var coordinates = "[{ latitude=57.62141010663575, longitude= 12.805517126805371,}]";
         var tags = "[\"skog\", \"sjö\", \"klippor\", \"vildmark\"]";
 
         return
@@ -71,7 +70,8 @@ public static class Utilities
                 FullDescription = string.Empty,
                 TrailSymbol = "Röd markering",
                 TrailSymbolImage = "https://inkaben.se/stigvidd/mock/mock-trail-symbol.png",
-                Coordinates = coordinates,
+                GeoPath = Geometry.DefaultFactory.CreateLineString(
+                    [new Coordinate(12.80, 57.62), new Coordinate(12.81, 57.63)]),
                 Tags = tags,
                 City = "Tiveden",
                 CreatedAt = DateTime.UtcNow,
@@ -114,7 +114,8 @@ public static class Utilities
                 FullDescription = string.Empty,
                 TrailSymbol = "Blå markering",
                 TrailSymbolImage = "https://inkaben.se/stigvidd/mock/mock-trail-symbol.png",
-                Coordinates = coordinates,
+                GeoPath = Geometry.DefaultFactory.CreateLineString(
+                    [new Coordinate(12.80, 57.62), new Coordinate(12.81, 57.63)]),
                 Tags = tags,
                 IsVerified = true,
                 City = "Viskafors",
@@ -151,7 +152,8 @@ public static class Utilities
                 FullDescription = string.Empty,
                 TrailSymbol = "Orange markering",
                 TrailSymbolImage = "https://inkaben.se/stigvidd/mock/mock-trail-symbol.png",
-                Coordinates = coordinates,
+                GeoPath = Geometry.DefaultFactory.CreateLineString(
+                    [new Coordinate(12.80, 57.62), new Coordinate(12.81, 57.63)]),
                 Tags = tags,
                 IsVerified = true,
                 City = "Dannike",
@@ -171,7 +173,8 @@ public static class Utilities
                 FullDescription = string.Empty,
                 TrailSymbol = "Grön markering",
                 TrailSymbolImage = "https://inkaben.se/stigvidd/mock/mock-trail-symbol.png",
-                Coordinates = coordinates,
+                GeoPath = Geometry.DefaultFactory.CreateLineString(
+                    [new Coordinate(12.80, 57.62), new Coordinate(12.81, 57.63)]),
                 Tags = tags,
                 IsVerified = true,
                 City = "Arås",
@@ -208,7 +211,8 @@ public static class Utilities
                 FullDescription = string.Empty,
                 TrailSymbol = "Röd markering med en 6:a på",
                 TrailSymbolImage = "https://inkaben.se/stigvidd/mock/mock-trail-symbol.png",
-                Coordinates = coordinates,
+                GeoPath = Geometry.DefaultFactory.CreateLineString(
+                    [new Coordinate(12.80, 57.62), new Coordinate(12.81, 57.63)]),
                 Tags = tags,
                 IsVerified = true,
                 City = "Gesebol",
@@ -228,7 +232,8 @@ public static class Utilities
                 FullDescription = string.Empty,
                 TrailSymbol = "Blå markering",
                 TrailSymbolImage = "https://inkaben.se/stigvidd/mock/mock-trail-symbol.png",
-                Coordinates = coordinates,
+                GeoPath = Geometry.DefaultFactory.CreateLineString(
+                    [new Coordinate(12.80, 57.62), new Coordinate(12.81, 57.63)]),
                 Tags = tags,
                 IsVerified = true,
                 City = "Hultafors",
@@ -248,7 +253,8 @@ public static class Utilities
                 FullDescription = string.Empty,
                 TrailSymbol = "Nässla",
                 TrailSymbolImage = "https://inkaben.se/stigvidd/mock/nassla.png",
-                Coordinates = coordinates,
+                GeoPath = Geometry.DefaultFactory.CreateLineString(
+                    [new Coordinate(12.80, 57.62), new Coordinate(12.81, 57.63)]),
                 Tags = tags,
                 IsVerified= true,
                 City = "Nässehult",
@@ -652,7 +658,8 @@ public static class Utilities
             Accessibility = true,
             IsVerified = true,
             City = "Arås",
-            Coordinates = "[{\"latitude\":57.62,\"longitude\":12.80}]"
+            GeoPath = Geometry.DefaultFactory.CreateLineString(
+                [new Coordinate(12.80, 57.62), new Coordinate(12.81, 57.63)]),
         };
 
         public static Review Review(bool withImages = false) => new()

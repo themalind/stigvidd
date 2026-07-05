@@ -13,8 +13,6 @@ public class Trail : BaseEntity
     public string TrailSymbolImage { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
     public string FullDescription { get; set; } = string.Empty;
-    public string? Coordinates { get; set; }
-    public Geometry? Geometry { get; set; }
     public LineString? GeoPath { get; set; }
     public string Tags { get; set; } = string.Empty;
     public string? CreatedBy { get; set; } = string.Empty;
