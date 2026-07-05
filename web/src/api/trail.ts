@@ -5,23 +5,25 @@ import type {
   TrailShortInfoResponse,
   UpdateTrailRequest,
 } from "@/types/types";
-import { getValidAccessToken } from "@/services/keycloak-auth";
+import {
+  getTrailsAddTrailImagesUrl,
+  getTrailsDeleteTrailImageUrl,
+  getTrailsSetTrailSymbolUrl,
+  trailsGetAllTrails,
+  trailsGetTrailByIdentifier,
+  trailsUpdateTrail,
+} from "./generated/trails/trails";
+import { customFetch } from "./mutator";
 import { appendProcessingOptions } from "./image-options";
 
-const BASE_URL = `${import.meta.env.VITE_API_URL}/api/v1/trails`;
+// These wrappers preserve the app's existing signatures/return types while
+// routing every request through the orval-generated client (see orval.config.ts).
+// The generated models are looser (nullable/optional) than the UI's hand-written
+// types, so responses are asserted back to those types at this boundary.
+// Auth + base URL are handled centrally by the `customFetch` mutator.
 
 export async function getAllTrails(): Promise<TrailShortInfoResponse[]> {
-  try {
-    const response = await fetch(BASE_URL);
-    if (!response.ok) {
-      throw new Error(`HTTP error ${response.status}`);
-    }
-
-    return (await response.json()) as TrailShortInfoResponse[];
-  } catch (error) {
-    console.log(error);
-    throw error;
-  }
+  return (await trailsGetAllTrails()) as TrailShortInfoResponse[];
 }
 
 export async function getTrailByIdentifier({
@@ -29,41 +31,18 @@ export async function getTrailByIdentifier({
 }: {
   identifier: string;
 }): Promise<TrailResponse> {
-  try {
-    const response = await fetch(`${BASE_URL}/${identifier}`);
-    if (!response.ok) {
-      throw new Error(`HTTP error ${response.status}`);
-    }
-
-    return (await response.json()) as TrailResponse;
-  } catch (error) {
-    console.log(error);
-    throw error;
-  }
+  return (await trailsGetTrailByIdentifier(identifier)) as TrailResponse;
 }
 
 export async function updateTrail(
   identifier: string,
   request: UpdateTrailRequest,
 ): Promise<TrailResponse> {
-  const token = await getValidAccessToken();
-  try {
-    const response = await fetch(`${BASE_URL}/${identifier}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-      body: JSON.stringify(request),
-    });
-    if (!response.ok) {
-      throw new Error(`HTTP error ${response.status}`);
-    }
-    return (await response.json()) as TrailResponse;
-  } catch (error) {
-    console.log(error);
-    throw error;
-  }
+  const result = await trailsUpdateTrail(
+    identifier,
+    request as Parameters<typeof trailsUpdateTrail>[1],
+  );
+  return result as TrailResponse;
 }
 
 export async function addTrailImages(
@@ -71,26 +50,15 @@ export async function addTrailImages(
   images: File[],
   options?: ImageProcessingOptions,
 ): Promise<TrailImageResponse[]> {
-  const token = await getValidAccessToken();
+  // The generated multipart function can't express the `images` + option-fields
+  // body shape, so build the FormData here and post through the mutator.
   const formData = new FormData();
   images.forEach((file) => formData.append("images", file));
   appendProcessingOptions(formData, options);
-  try {
-    const response = await fetch(`${BASE_URL}/${identifier}/images`, {
-      method: "POST",
-      headers: {
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-      body: formData,
-    });
-    if (!response.ok) {
-      throw new Error(`HTTP error ${response.status}`);
-    }
-    return (await response.json()) as TrailImageResponse[];
-  } catch (error) {
-    console.log(error);
-    throw error;
-  }
+  return customFetch<TrailImageResponse[]>(
+    getTrailsAddTrailImagesUrl(identifier),
+    { method: "POST", body: formData },
+  );
 }
 
 export async function setTrailSymbol(
@@ -98,42 +66,17 @@ export async function setTrailSymbol(
   symbol: File,
   options?: ImageProcessingOptions,
 ): Promise<{ symbolUrl: string }> {
-  const token = await getValidAccessToken();
   const formData = new FormData();
   formData.append("symbol", symbol);
   appendProcessingOptions(formData, options);
-  try {
-    const response = await fetch(`${BASE_URL}/${identifier}/symbol`, {
-      method: "POST",
-      headers: {
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-      body: formData,
-    });
-    if (!response.ok) {
-      throw new Error(`HTTP error ${response.status}`);
-    }
-    return (await response.json()) as { symbolUrl: string };
-  } catch (error) {
-    console.log(error);
-    throw error;
-  }
+  return customFetch<{ symbolUrl: string }>(
+    getTrailsSetTrailSymbolUrl(identifier),
+    { method: "POST", body: formData },
+  );
 }
 
 export async function deleteTrailImage(imageIdentifier: string): Promise<void> {
-  const token = await getValidAccessToken();
-  try {
-    const response = await fetch(`${BASE_URL}/images/${imageIdentifier}`, {
-      method: "DELETE",
-      headers: {
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-    });
-    if (!response.ok) {
-      throw new Error(`HTTP error ${response.status}`);
-    }
-  } catch (error) {
-    console.log(error);
-    throw error;
-  }
+  await customFetch<void>(getTrailsDeleteTrailImageUrl(imageIdentifier), {
+    method: "DELETE",
+  });
 }

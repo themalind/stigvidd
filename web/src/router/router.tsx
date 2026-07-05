@@ -1,49 +1,68 @@
 import { ProtectedRoute } from "@/components/auth/protected-route";
-import CommingSoonPage from "@/pages/comming-soon/comming-soon-page";
-import DashboardPage from "@/pages/dashboard/dashboard-page";
-import Layout from "@/pages/Layout";
-import LoginPage from "@/pages/login/login-page";
-import MediaPage from "@/pages/media/media-page";
-import NotFoundPage from "@/pages/NotFoundPage";
-import TrailsPage from "@/pages/trails/trails-page";
-import UsersPage from "@/pages/users/users-page";
+import { Loader2 } from "lucide-react";
+import { lazy, Suspense, type ComponentType } from "react";
 import { createBrowserRouter } from "react-router";
+
+const CommingSoonPage = lazy(() => import("@/pages/comming-soon/comming-soon-page"));
+const DashboardPage = lazy(() => import("@/pages/dashboard/dashboard-page"));
+const Layout = lazy(() => import("@/pages/Layout"));
+const LoginPage = lazy(() => import("@/pages/login/login-page"));
+const MediaPage = lazy(() => import("@/pages/media/media-page"));
+const NotFoundPage = lazy(() => import("@/pages/NotFoundPage"));
+const TrailsPage = lazy(() => import("@/pages/trails/trails-page"));
+const UsersPage = lazy(() => import("@/pages/users/users-page"));
+
+function PageFallback() {
+  return (
+    <div className="flex h-svh w-full items-center justify-center">
+      <Loader2 className="size-6 animate-spin text-muted-foreground" />
+    </div>
+  );
+}
+
+function withSuspense(Component: ComponentType) {
+  return (
+    <Suspense fallback={<PageFallback />}>
+      <Component />
+    </Suspense>
+  );
+}
 
 export const router = createBrowserRouter([
   {
     path: "/",
-    element: <CommingSoonPage />,
-    errorElement: <NotFoundPage />,
+    element: withSuspense(CommingSoonPage),
+    errorElement: withSuspense(NotFoundPage),
   },
   {
     path: "/login",
-    element: <LoginPage />,
+    element: withSuspense(LoginPage),
   },
   {
     element: <ProtectedRoute />,
     children: [
       {
-        element: <Layout />,
+        element: withSuspense(Layout),
         children: [
           {
             path: "/dashboard",
             handle: { title: "Dashboard" },
-            element: <DashboardPage />,
+            element: withSuspense(DashboardPage),
           },
           {
             path: "/users",
             handle: { title: "Users" },
-            element: <UsersPage />,
+            element: withSuspense(UsersPage),
           },
           {
             path: "/trails",
             handle: { title: "Trails" },
-            element: <TrailsPage />,
+            element: withSuspense(TrailsPage),
           },
           {
             path: "/media",
             handle: { title: "Media Library" },
-            element: <MediaPage />,
+            element: withSuspense(MediaPage),
           },
         ],
       },

@@ -86,7 +86,7 @@ export type ImageProcessingOptions = {
 export type TrailResponse = {
   identifier: string;
   name: string;
-  trailLenght: number;
+  trailLength: number;
   classification: number;
   accessibility: boolean;
   accessibilityInfo: string;

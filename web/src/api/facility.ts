@@ -3,22 +3,22 @@ import type {
   ImageProcessingOptions,
   TrailImageResponse,
 } from "@/types/types";
-import { getValidAccessToken } from "@/services/keycloak-auth";
+import {
+  getFacilitiesAddFacilityImagesUrl,
+  getFacilitiesDeleteFacilityImageUrl,
+  getFacilitiesGetAllUrl,
+} from "./generated/facilities/facilities";
+import { customFetch } from "./mutator";
 import { appendProcessingOptions } from "./image-options";
 
-const BASE_URL = `${import.meta.env.VITE_API_URL}/api/v1/facilities`;
+// See trail.ts for the wrapper rationale. The generated facility GET/DELETE
+// functions are typed `Blob` (the backend didn't annotate those responses), so
+// they go through the URL builder + `customFetch` mutator with the real types.
 
 export async function getAllFacilities(): Promise<FacilityResponse[]> {
-  try {
-    const response = await fetch(BASE_URL);
-    if (!response.ok) {
-      throw new Error(`HTTP error ${response.status}`);
-    }
-    return (await response.json()) as FacilityResponse[];
-  } catch (error) {
-    console.log(error);
-    throw error;
-  }
+  return customFetch<FacilityResponse[]>(getFacilitiesGetAllUrl(), {
+    method: "GET",
+  });
 }
 
 export async function uploadFacilityImages(
@@ -26,44 +26,19 @@ export async function uploadFacilityImages(
   images: File[],
   options?: ImageProcessingOptions,
 ): Promise<TrailImageResponse[]> {
-  const token = await getValidAccessToken();
   const formData = new FormData();
   images.forEach((file) => formData.append("images", file));
   appendProcessingOptions(formData, options);
-  try {
-    const response = await fetch(`${BASE_URL}/${identifier}/images`, {
-      method: "POST",
-      headers: {
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-      body: formData,
-    });
-    if (!response.ok) {
-      throw new Error(`HTTP error ${response.status}`);
-    }
-    return (await response.json()) as TrailImageResponse[];
-  } catch (error) {
-    console.log(error);
-    throw error;
-  }
+  return customFetch<TrailImageResponse[]>(
+    getFacilitiesAddFacilityImagesUrl(identifier),
+    { method: "POST", body: formData },
+  );
 }
 
 export async function deleteFacilityImage(
   imageIdentifier: string,
 ): Promise<void> {
-  const token = await getValidAccessToken();
-  try {
-    const response = await fetch(`${BASE_URL}/images/${imageIdentifier}`, {
-      method: "DELETE",
-      headers: {
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-    });
-    if (!response.ok) {
-      throw new Error(`HTTP error ${response.status}`);
-    }
-  } catch (error) {
-    console.log(error);
-    throw error;
-  }
+  await customFetch<void>(getFacilitiesDeleteFacilityImageUrl(imageIdentifier), {
+    method: "DELETE",
+  });
 }

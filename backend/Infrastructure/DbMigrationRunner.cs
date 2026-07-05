@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure;
 
-internal class DbMigrationRunner(IDbContextFactory<StigViddDbContext> dbContextFactory) : IDbMigrationRunner
+public class DbMigrationRunner(IDbContextFactory<StigViddDbContext> dbContextFactory) : IDbMigrationRunner
 {
     private readonly IDbContextFactory<StigViddDbContext> dbContextFactory = dbContextFactory;
 

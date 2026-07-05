@@ -4,7 +4,7 @@ public class TrailResponse
 {
     public required string Identifier { get; set; }
     public string? Name { get; set; }
-    public decimal? TrailLenght { get; set; }
+    public decimal? TrailLength { get; set; }
     public int? Classification { get; set; }
     public bool? Accessibility { get; set; }
     public string? AccessibilityInfo { get; set; }
@@ -25,7 +25,7 @@ public class TrailResponse
     public static TrailResponse Create(
         string identifier,
         string name,
-        decimal trailLenght,
+        decimal trailLength,
         int classification,
         bool accessibility,
         string accessibilityInfo,
@@ -47,7 +47,7 @@ public class TrailResponse
         {
             Identifier = identifier,
             Name = name,
-            TrailLenght = trailLenght,
+            TrailLength = trailLength,
             Classification = classification,
             Accessibility = accessibility,
             AccessibilityInfo = accessibilityInfo,
@@ -69,7 +69,7 @@ public class TrailResponse
     public static TrailResponse Create(
        string identifier,
        string name,
-       decimal trailLenght,
+       decimal trailLength,
        int classification,
        bool accessibility,
        string accessibilityInfo,
@@ -90,7 +90,7 @@ public class TrailResponse
         {
             Identifier = identifier,
             Name = name,
-            TrailLenght = trailLenght,
+            TrailLength = trailLength,
             Classification = classification,
             Accessibility = accessibility,
             AccessibilityInfo = accessibilityInfo,

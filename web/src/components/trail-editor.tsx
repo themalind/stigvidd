@@ -72,7 +72,7 @@ export default function TrailEditor({ data, selected }: Props) {
       const trail = await getTrailByIdentifier({ identifier: data.identifier });
       setFormData({
         name: trail.name,
-        trailLength: trail.trailLenght,
+        trailLength: trail.trailLength,
         classification: trail.classification,
         accessibility: trail.accessibility,
         accessibilityInfo: trail.accessibilityInfo,

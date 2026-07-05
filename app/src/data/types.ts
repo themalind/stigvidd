@@ -10,7 +10,7 @@ export interface LatLng {
 export interface Trail {
   identifier: string;
   name: string;
-  trailLenght: number;
+  trailLength: number;
   classification: number;
   accessibility: boolean;
   accessibilityInfo: string;
