@@ -79,6 +79,10 @@ export default function SaveHikeForm({ hike, onDismiss, onSaveSuccess }: Props) 
 
   const canTrim = totalPoints > 2;
 
+  // The backend rejects a hike with no distance or duration; guard here so the user
+  // gets a clear message instead of a generic save error after a too-tight trim.
+  const canSave = trimmed.distance > 0 && trimmed.duration > 0;
+
   const submit: SubmitHandler<SaveHikeFormData> = async (data) => {
     const newHike: CreateHikeRequest = {
       name: data.hikeName,
@@ -137,15 +141,21 @@ export default function SaveHikeForm({ hike, onDismiss, onSaveSuccess }: Props) 
 
       <View style={[s.statsCard, { backgroundColor: theme.colors.outlineVariant }]}>
         <View style={s.statItem}>
-          <Text style={s.statLabel}>Distans</Text>
-          <Text style={s.statValue}>
+          <Text variant="labelSmall" style={[s.statLabel, { color: theme.colors.onSurfaceVariant }]}>
+            {t("hike.distance")}
+          </Text>
+          <Text variant="headlineSmall" style={s.statValue}>
             {trimmed.distance > 100 ? `${(trimmed.distance / 1000).toFixed(2)} km` : `${trimmed.distance} m`}
           </Text>
         </View>
         <Divider style={[s.statDivider, { backgroundColor: theme.colors.outline }]} />
         <View style={s.statItem}>
-          <Text style={s.statLabel}>Tid</Text>
-          <Text style={s.statValue}>{FormattedTime(trimmed.duration)}</Text>
+          <Text variant="labelSmall" style={[s.statLabel, { color: theme.colors.onSurfaceVariant }]}>
+            {t("hike.time")}
+          </Text>
+          <Text variant="headlineSmall" style={s.statValue}>
+            {FormattedTime(trimmed.duration)}
+          </Text>
         </View>
       </View>
 
@@ -201,6 +211,8 @@ export default function SaveHikeForm({ hike, onDismiss, onSaveSuccess }: Props) 
         </View>
       )}
 
+      {!canSave && <Text style={[s.errorText, { color: theme.colors.error }]}>{t("hike.trimTooShort")}</Text>}
+
       <View style={s.actions}>
         <Pressable
           style={[s.actionButton, { backgroundColor: theme.colors.outlineVariant }]}
@@ -211,8 +223,12 @@ export default function SaveHikeForm({ hike, onDismiss, onSaveSuccess }: Props) 
           <Text style={s.buttonText}>{t("hike.goBack")}</Text>
         </Pressable>
         <Pressable
-          style={[s.actionButton, { backgroundColor: theme.colors.primary }]}
-          disabled={isPending}
+          style={[
+            s.actionButton,
+            { backgroundColor: theme.colors.primary },
+            (isPending || !canSave) && s.disabledButton,
+          ]}
+          disabled={isPending || !canSave}
           onPress={openDialogIfValid}
         >
           <MaterialIcons name="save" size={22} color={theme.colors.onPrimary} />
@@ -244,11 +260,8 @@ const s = StyleSheet.create({
     gap: 4,
   },
   statLabel: {
-    fontSize: 11,
-    fontWeight: "600",
     textTransform: "uppercase",
     letterSpacing: 0.5,
-    opacity: 0.6,
   },
   statValue: {
     fontSize: 24,
@@ -286,6 +299,9 @@ const s = StyleSheet.create({
     borderRadius: BORDER_RADIUS,
     gap: 8,
     height: 52,
+  },
+  disabledButton: {
+    opacity: 0.5,
   },
   buttonText: {
     fontSize: 15,

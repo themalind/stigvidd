@@ -10,9 +10,17 @@ export const HIKE_STORAGE_KEY = "@stigvidd_active_hike";
 // "don't show again". Versioned so changing the rules can re-surface the dialog.
 export const RECORDING_INFO_KEY = "@stigvidd_recording_info_dismissed";
 
-const MIN_DISTANCE = 3;
+// Minimum meters between accepted points. Also used as the GPS distanceInterval.
+export const MIN_DISTANCE = 3;
+// A jump larger than this (meters) between two fixes is a GPS teleport, not travel.
 const MAX_DISTANCE = 100;
-const MAX_ACCURACY = 20;
+// Fixes reported less precise than this (meters) are dropped. Kept generous so a
+// brief accuracy dip (tree cover, buildings) pauses recording instead of freezing
+// it — with BestForNavigation the real accuracy sits well under this.
+const MAX_ACCURACY = 30;
+// Physically impossible speed (m/s) between two fixes ⇒ GPS glitch, not movement.
+// ~10 m/s (36 km/h) clears hiking/running/cycling while catching teleport spikes.
+const MAX_SPEED = 10;
 
 // A segment shorter than this (meters) is discarded when finalized — it's noise,
 // not a walk. Shared by stopTracking and the stale-session finalizer.
@@ -109,6 +117,38 @@ export function maybeFinalizeStaleHike(state: StoredHikeState, now: number): Sto
   return { isTracking: false, hike, currentSegment: null };
 }
 
+export type PointDecision = { accept: boolean; distance: number };
+
+// Decides whether a freshly-sampled GPS fix joins the track, and how much distance
+// it adds relative to the last accepted point. Shared by the background task and
+// the foreground live watcher so both filter identically. Rejects low-accuracy
+// fixes, jitter within the noise envelope, and impossible speed/teleport spikes.
+export function evaluatePoint(
+  lastPoint: LocationData | undefined,
+  candidate: LocationData,
+  accuracy: number | null | undefined,
+): PointDecision {
+  if (!accuracy || accuracy > MAX_ACCURACY) return { accept: false, distance: 0 };
+  if (!lastPoint) return { accept: true, distance: 0 };
+
+  const distance = getDistance(lastPoint.data, candidate.data);
+
+  // Speed spike: a jump faster than a person can travel is a GPS glitch, not a walk.
+  const dtSeconds = (candidate.timeStamp - lastPoint.timeStamp) / 1000;
+  if (dtSeconds > 0 && distance / dtSeconds > MAX_SPEED) return { accept: false, distance: 0 };
+
+  // Teleport guard for the case where timestamps are missing or non-increasing.
+  if (distance > MAX_DISTANCE) return { accept: false, distance: 0 };
+
+  // A stationary phone wanders within its accuracy radius, so only count a move
+  // once it clears that noise envelope (never below MIN_DISTANCE) — otherwise GPS
+  // drift piles up phantom distance and zig-zags while standing still.
+  const minStep = Math.max(MIN_DISTANCE, accuracy);
+  if (distance < minStep) return { accept: false, distance: 0 };
+
+  return { accept: true, distance };
+}
+
 type LocationTaskData = {
   locations: Location.LocationObject[];
 };
@@ -132,11 +172,6 @@ TaskManager.defineTask(
       let totalDistance = state.hike.totalDistance;
 
       for (const location of locations) {
-        const accuracy = location.coords.accuracy;
-        if (!accuracy || accuracy > MAX_ACCURACY) {
-          continue;
-        }
-
         const newPoint: LocationData = {
           data: {
             latitude: location.coords.latitude,
@@ -146,32 +181,18 @@ TaskManager.defineTask(
         };
 
         const lastPoint = currentSegment.coordinates.at(-1);
-        let distanceToAdd = 0;
-
-        if (lastPoint) {
-          const distance = getDistance(lastPoint.data, newPoint.data);
-          // Reject teleport-sized jumps outright.
-          if (distance > MAX_DISTANCE) {
-            continue;
-          }
-          // A stationary phone jitters within its own accuracy radius, so only
-          // count a move once it clears that noise envelope (never below
-          // MIN_DISTANCE). Otherwise GPS drift piles up phantom distance while
-          // standing still.
-          const minStep = Math.max(MIN_DISTANCE, accuracy);
-          if (distance < minStep) {
-            continue;
-          }
-          distanceToAdd = distance;
+        const { accept, distance } = evaluatePoint(lastPoint, newPoint, location.coords.accuracy);
+        if (!accept) {
+          continue;
         }
 
         currentSegment = {
           ...currentSegment,
           coordinates: [...currentSegment.coordinates, newPoint],
-          distance: currentSegment.distance + distanceToAdd,
+          distance: currentSegment.distance + distance,
         };
 
-        totalDistance += distanceToAdd;
+        totalDistance += distance;
       }
 
       const updated: StoredHikeState = {

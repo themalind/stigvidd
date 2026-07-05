@@ -1,17 +1,25 @@
 import AlertDialog from "@/components/alert-dialog";
 import LoadingIndicator from "@/components/loading-indicator";
 import Map from "@/components/map/map";
+import CenterOnUserButton from "@/components/map/center-on-user-button";
 import { ROUTE_LINE_COLOR } from "@/components/map/marker-styles";
 import { BORDER_RADIUS, START_COORDINATE_BORAS } from "@/constants/constants";
+import { LocationData } from "@/data/types";
 import { dismissRecordingInfo, shouldShowRecordingInfo } from "@/services/location-task";
 import { useLocationTracking } from "@/services/use-location-tracking";
 import { lineStringFromPositions } from "@/utils/geojson";
 import FormattedTime from "@/utils/format-time-from-ms";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
-import { Camera, type CameraRef, GeoJSONSource, Layer } from "@maplibre/maplibre-react-native";
+import {
+  Camera,
+  type CameraRef,
+  GeoJSONSource,
+  Layer,
+  type ViewStateChangeEvent,
+} from "@maplibre/maplibre-react-native";
 import * as Location from "expo-location";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Pressable, StyleSheet, View } from "react-native";
+import { NativeSyntheticEvent, Pressable, StyleSheet, View } from "react-native";
 import { ActivityIndicator, Text, useTheme } from "react-native-paper";
 import { useTranslation } from "react-i18next";
 import RecordingInfoDialog from "./recording-info-dialog";
@@ -23,8 +31,16 @@ const FALLBACK_CENTER: [number, number] = [START_COORDINATE_BORAS.longitude, STA
 
 export default function TrailCreator() {
   const cameraRef = useRef<CameraRef>(null);
-  const { startTracking, stopTracking, resetTracking, isTracking, hike, currentSegment, getActiveTime } =
-    useLocationTracking();
+  const {
+    startTracking,
+    stopTracking,
+    resetTracking,
+    isTracking,
+    hike,
+    currentSegment,
+    liveCoordinates,
+    getActiveTime,
+  } = useLocationTracking();
 
   const [displayTime, setDisplayTime] = useState(0);
   const getActiveTimeRef = useRef(getActiveTime);
@@ -41,14 +57,20 @@ export default function TrailCreator() {
   const { t } = useTranslation();
 
   const routePositions = useMemo<[number, number][]>(() => {
-    const finished = hike.segments.flatMap((segment) =>
-      segment.coordinates.map((l) => [l.data.longitude, l.data.latitude] as [number, number]),
-    );
-    const current = currentSegment
-      ? currentSegment.coordinates.map((l) => [l.data.longitude, l.data.latitude] as [number, number])
-      : [];
-    return [...finished, ...current];
-  }, [hike.segments, currentSegment]);
+    const toPos = (l: LocationData): [number, number] => [l.data.longitude, l.data.latitude];
+
+    const finished = hike.segments.flatMap((segment) => segment.coordinates.map(toPos));
+
+    // Active segment: the persisted (background-task) points are the committed base;
+    // on top we append live foreground points newer than the last persisted one.
+    // The live tail makes the line follow the dot in real time, while the persisted
+    // base fills in whatever was recorded while the app was backgrounded.
+    const persistedActive = currentSegment?.coordinates ?? [];
+    const lastPersistedTs = persistedActive.at(-1)?.timeStamp ?? 0;
+    const liveTail = isTracking ? liveCoordinates.filter((l) => l.timeStamp > lastPersistedTs) : [];
+
+    return [...finished, ...persistedActive.map(toPos), ...liveTail.map(toPos)];
+  }, [hike.segments, currentSegment, liveCoordinates, isTracking]);
 
   const routeShape = useMemo(() => lineStringFromPositions(routePositions), [routePositions]);
 
@@ -62,11 +84,17 @@ export default function TrailCreator() {
   // every move on this flag and, if the map isn't ready, remember the latest
   // target and apply it once it is — so no centering is lost to the load race.
   const mapReadyRef = useRef(false);
-  const pendingCenterRef = useRef<{ center: [number, number]; zoom: number } | null>(null);
+  const pendingCenterRef = useRef<{ center: [number, number]; zoom?: number } | null>(null);
 
-  const moveCamera = useCallback((center: [number, number], zoom: number) => {
+  // Auto-follow the recorded route until the user pans/zooms the map themselves;
+  // recentering (the locate button) turns it back on. Keeps the camera from
+  // yanking away from a user who is inspecting the map mid-hike.
+  const followRef = useRef(true);
+
+  // zoom is optional: omit it to recenter without overriding the user's zoom level.
+  const moveCamera = useCallback((center: [number, number], zoom?: number) => {
     if (mapReadyRef.current) {
-      cameraRef.current?.easeTo({ center, zoom, duration: 500 });
+      cameraRef.current?.easeTo({ center, ...(zoom !== undefined ? { zoom } : {}), duration: 500 });
     } else {
       pendingCenterRef.current = { center, zoom };
     }
@@ -80,6 +108,18 @@ export default function TrailCreator() {
       cameraRef.current?.easeTo({ ...pending, duration: 500 });
     }
   }, []);
+
+  // A user-driven pan/zoom (never a programmatic easeTo) hands camera control to
+  // the user by disabling auto-follow.
+  const handleRegionDidChange = useCallback((event: NativeSyntheticEvent<ViewStateChangeEvent>) => {
+    if (event.nativeEvent.userInteraction) followRef.current = false;
+  }, []);
+
+  const recenterAndFollow = useCallback(() => {
+    followRef.current = true;
+    const last = routePositionsRef.current.at(-1);
+    if (last) moveCamera(last);
+  }, [moveCamera]);
 
   useEffect(() => {
     if (!isTracking) {
@@ -147,9 +187,11 @@ export default function TrailCreator() {
   };
 
   useEffect(() => {
+    if (!followRef.current) return;
     const last = routePositions.at(-1);
     if (!last) return;
-    moveCamera(last, 17);
+    // No zoom argument: follow the route at whatever zoom the user last set.
+    moveCamera(last);
   }, [routePositions, moveCamera]);
 
   const hasData = hike.segments.length > 0 || (currentSegment && currentSegment.coordinates.length > 0);
@@ -159,7 +201,12 @@ export default function TrailCreator() {
   return (
     <View style={s.container}>
       <View style={s.mapContainer}>
-        <Map style={s.map} showsUserLocation onDidFinishLoadingMap={handleMapReady}>
+        <Map
+          style={s.map}
+          showsUserLocation
+          onDidFinishLoadingMap={handleMapReady}
+          onRegionDidChange={handleRegionDidChange}
+        >
           <Camera ref={cameraRef} initialViewState={{ center: initialCenter, zoom: 16 }} />
           {/* A LineString needs >= 2 points; while tracking starts (0–1 nodes) the line isn't drawn yet. */}
           {routePositions.length > 1 && (
@@ -173,6 +220,7 @@ export default function TrailCreator() {
             </GeoJSONSource>
           )}
         </Map>
+        <CenterOnUserButton cameraRef={cameraRef} onPress={recenterAndFollow} />
         {isLocating && (
           <View style={[s.locatingPill, { backgroundColor: theme.colors.elevation.level3 }]} pointerEvents="none">
             <ActivityIndicator size={16} color={theme.colors.onSurface} />
@@ -185,13 +233,21 @@ export default function TrailCreator() {
 
       <View style={[s.statsCard, { backgroundColor: theme.colors.outlineVariant }]}>
         <View style={s.statItem}>
-          <Text style={s.statLabel}>Tid</Text>
-          <Text style={s.statValue}>{formattedTime}</Text>
+          <Text variant="labelSmall" style={[s.statLabel, { color: theme.colors.onSurfaceVariant }]}>
+            {t("hike.time")}
+          </Text>
+          <Text variant="headlineMedium" style={s.statValue}>
+            {formattedTime}
+          </Text>
         </View>
         <View style={[s.statDivider, { backgroundColor: theme.colors.outline }]} />
         <View style={s.statItem}>
-          <Text style={s.statLabel}>Distans</Text>
-          <Text style={s.statValue}>{formattedDistance}</Text>
+          <Text variant="labelSmall" style={[s.statLabel, { color: theme.colors.onSurfaceVariant }]}>
+            {t("hike.distance")}
+          </Text>
+          <Text variant="headlineMedium" style={s.statValue}>
+            {formattedDistance}
+          </Text>
         </View>
       </View>
 
@@ -199,7 +255,7 @@ export default function TrailCreator() {
         {isTracking ? (
           <Pressable style={[s.actionButton, { backgroundColor: theme.colors.surface }]} onPress={() => stopTracking()}>
             <Ionicons name="pause" size={28} color={theme.colors.onSurface} />
-            <Text style={s.buttonText}>Pausa</Text>
+            <Text style={s.buttonText}>{t("createHike.pause")}</Text>
           </Pressable>
         ) : !hasData ? (
           <Pressable style={[s.actionButton, { backgroundColor: theme.colors.primary }]} onPress={handleStartPress}>
@@ -301,11 +357,8 @@ const s = StyleSheet.create({
     gap: 4,
   },
   statLabel: {
-    fontSize: 11,
-    fontWeight: "600",
     textTransform: "uppercase",
     letterSpacing: 0.5,
-    opacity: 0.6,
   },
   statValue: {
     fontSize: 32,

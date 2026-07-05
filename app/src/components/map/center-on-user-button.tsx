@@ -8,17 +8,21 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 interface Props {
   cameraRef: RefObject<CameraRef | null>;
+  // Optional extra action run when the button is pressed, in addition to centering
+  // (e.g. re-enabling auto-follow on a screen that pauses following on user pan).
+  onPress?: () => void;
 }
 
 // Map controls sit on the always-light basemap, so they use the fixed light
 // palette — never useTheme(), which would turn the button orange in dark mode.
 const CONTROL_COLORS = AppDefaultTheme.colors;
 
-export default function CenterOnUserButton({ cameraRef }: Props) {
+export default function CenterOnUserButton({ cameraRef, onPress }: Props) {
   const insets = useSafeAreaInsets();
   const { data: location } = useUserLocation();
 
   const centerOnUser = () => {
+    onPress?.();
     if (!location || location.isFallback) return;
     cameraRef.current?.flyTo({ center: [location.longitude, location.latitude], zoom: 14, duration: 800 });
   };
