@@ -1,13 +1,14 @@
 import { createContext, useContext } from "react";
-import type { User } from "firebase/auth";
-import type { StigviddUser } from "@/types/types";
+import type { AuthUser, StigviddUser } from "@/types/types";
 
 export type AuthContextValue = {
-  user: User | null;
+  user: AuthUser | null;
   stigviddUser: StigviddUser | null;
   isLoading: boolean;
   isAuthenticated: boolean;
   getToken: () => Promise<string | null>;
+  login: (email: string, password: string) => Promise<void>;
+  logout: () => Promise<void>;
 };
 
 export const AuthContext = createContext<AuthContextValue | null>(null);

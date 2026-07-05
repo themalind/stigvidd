@@ -8,12 +8,17 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { signInUser } from "@/api/auth";
+import { useAuth } from "@/providers/auth/auth-context";
+import {
+  InvalidCredentialsError,
+  NotAuthorizedError,
+} from "@/services/keycloak-auth";
 import { useState } from "react";
 import { useNavigate } from "react-router";
 
 export function LoginCard() {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -24,18 +29,13 @@ export function LoginCard() {
     setError(null);
     setLoading(true);
 
-    const result = await signInUser(email, password);
-
-    if (!result.success) {
-      const code = result.error?.code ?? "";
-      if (
-        code === "auth/wrong-password" ||
-        code === "auth/user-not-found" ||
-        code === "auth/invalid-credential"
-      ) {
+    try {
+      await login(email, password);
+    } catch (err) {
+      if (err instanceof InvalidCredentialsError) {
         setError("Invalid email or password.");
-      } else if (code === "auth/too-many-requests") {
-        setError("Too many attempts. Please try again later.");
+      } else if (err instanceof NotAuthorizedError) {
+        setError("Du har inte behörighet till administrationsverktyget.");
       } else {
         setError("Something went wrong. Please try again.");
       }

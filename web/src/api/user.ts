@@ -1,12 +1,10 @@
-import { IP } from "@/../ipconfig";
-import { auth } from "../../firebase-config";
 import type { StigviddUser } from "@/types/types";
-import { getIdToken } from "firebase/auth";
+import { getValidAccessToken } from "@/services/keycloak-auth";
 
-const BASE_URL = `http://${IP}/api/v1/users`;
+const BASE_URL = `http://${import.meta.env.VITE_API_HOST}/api/v1/users`;
 
 export async function getStigviddUser(): Promise<StigviddUser> {
-  const token = auth.currentUser ? await getIdToken(auth.currentUser) : null;
+  const token = await getValidAccessToken();
 
   const response = await fetch(BASE_URL, {
     headers: token ? { Authorization: `Bearer ${token}` } : {},

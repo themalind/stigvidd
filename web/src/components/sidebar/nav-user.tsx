@@ -15,12 +15,11 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { useAuth } from "@/providers/auth/auth-context";
-import { signOutUser } from "@/api/auth";
 import { useNavigate } from "react-router";
 
 export function NavUser() {
   const { isMobile } = useSidebar();
-  const { user, stigviddUser } = useAuth();
+  const { user, stigviddUser, logout } = useAuth();
   const navigate = useNavigate();
 
   const email = stigviddUser?.email ?? user?.email ?? "";
@@ -28,7 +27,7 @@ export function NavUser() {
   const initials = nickName.slice(0, 2).toUpperCase();
 
   async function handleSignOut() {
-    await signOutUser();
+    await logout();
     navigate("/login");
   }
 

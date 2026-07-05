@@ -15,6 +15,16 @@ export type StigviddUser = {
   email: string;
 };
 
+/**
+ * Authenticated identity derived from a Keycloak token. `id` is the `sub` claim.
+ * Distinct from StigviddUser, which is the profile stored in our own database.
+ */
+export type AuthUser = {
+  id: string;
+  email: string;
+  username: string;
+};
+
 export type VisitorInformation = {
   identifier: string;
   gettingThere: string;

@@ -1,14 +1,12 @@
-import { IP } from "@/../ipconfig";
-import { auth } from "../../firebase-config";
 import type {
   TrailImageResponse,
   TrailResponse,
   TrailShortInfoResponse,
   UpdateTrailRequest,
 } from "@/types/types";
-import { getIdToken } from "firebase/auth";
+import { getValidAccessToken } from "@/services/keycloak-auth";
 
-const BASE_URL = `http://${IP}/api/v1/trails`;
+const BASE_URL = `http://${import.meta.env.VITE_API_HOST}/api/v1/trails`;
 
 export async function getAllTrails(): Promise<TrailShortInfoResponse[]> {
   try {
@@ -46,7 +44,7 @@ export async function updateTrail(
   identifier: string,
   request: UpdateTrailRequest,
 ): Promise<TrailResponse> {
-  const token = auth.currentUser ? await getIdToken(auth.currentUser) : null;
+  const token = await getValidAccessToken();
   try {
     const response = await fetch(`${BASE_URL}/${identifier}`, {
       method: "PUT",
@@ -70,7 +68,7 @@ export async function addTrailImages(
   identifier: string,
   images: File[],
 ): Promise<TrailImageResponse[]> {
-  const token = auth.currentUser ? await getIdToken(auth.currentUser) : null;
+  const token = await getValidAccessToken();
   const formData = new FormData();
   images.forEach((file) => formData.append("images", file));
   try {
@@ -92,7 +90,7 @@ export async function addTrailImages(
 }
 
 export async function deleteTrailImage(imageIdentifier: string): Promise<void> {
-  const token = auth.currentUser ? await getIdToken(auth.currentUser) : null;
+  const token = await getValidAccessToken();
   try {
     const response = await fetch(`${BASE_URL}/images/${imageIdentifier}`, {
       method: "DELETE",
