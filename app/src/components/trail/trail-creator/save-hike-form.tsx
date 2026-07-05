@@ -137,14 +137,14 @@ export default function SaveHikeForm({ hike, onDismiss, onSaveSuccess }: Props) 
 
       <View style={[s.statsCard, { backgroundColor: theme.colors.outlineVariant }]}>
         <View style={s.statItem}>
-          <Text style={s.statLabel}>Distans</Text>
+          <Text style={s.statLabel}>{t("common.distance")}</Text>
           <Text style={s.statValue}>
             {trimmed.distance > 100 ? `${(trimmed.distance / 1000).toFixed(2)} km` : `${trimmed.distance} m`}
           </Text>
         </View>
         <Divider style={[s.statDivider, { backgroundColor: theme.colors.outline }]} />
         <View style={s.statItem}>
-          <Text style={s.statLabel}>Tid</Text>
+          <Text style={s.statLabel}>{t("common.time")}</Text>
           <Text style={s.statValue}>{FormattedTime(trimmed.duration)}</Text>
         </View>
       </View>

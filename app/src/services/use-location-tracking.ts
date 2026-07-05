@@ -1,6 +1,5 @@
 import { showErrorAtom, showWarningAtom } from "@/atoms/snackbar-atoms";
 import { ActiveHike, Segment } from "@/data/types";
-import Constants, { ExecutionEnvironment } from "expo-constants";
 import * as Location from "expo-location";
 import { useSetAtom } from "jotai";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -13,21 +12,16 @@ import {
   clearHikeState,
   defaultHikeState,
   maybeFinalizeStaleHike,
-  readHikeState,
-  writeHikeState,
+  mutateHikeState,
 } from "./location-task";
 
-// How often the background task samples GPS (ms)
+// How often the background task samples GPS (ms). Android-only — on iOS the
+// sampling cadence is driven purely by distanceInterval (see startTracking).
 const SAMPLE_INTERVAL = 3000;
 // Minimum meters between accepted GPS points
 const MIN_DISTANCE = 3;
 // How often the UI reads AsyncStorage to reflect background task updates (ms)
 const POLL_INTERVAL = 2000;
-
-// Expo Go lacks the compiled-in background location capability, so the task can't
-// run there. Detect it specifically (rather than __DEV__) so development builds —
-// which DO have the native capability — record normally with live reload.
-const isExpoGo = Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
 
 export function useLocationTracking() {
   const { t } = useTranslation();
@@ -52,14 +46,21 @@ export function useLocationTracking() {
   // so reopening the app — or just polling while it's open — can never surface a
   // session that has been silently running for hours.
   const syncFromStorage = useCallback(async () => {
-    const state = await readHikeState();
-    const finalized = maybeFinalizeStaleHike(state, Date.now());
-    if (finalized) {
+    // Check-and-finalize atomically so a concurrent task batch can't slip a write
+    // in between the read and the finalize. Returns null (no write) when the
+    // session isn't stale, in which case we just reflect the current state.
+    let didFinalize = false;
+    const state = await mutateHikeState((current) => {
+      const finalized = maybeFinalizeStaleHike(current, Date.now());
+      if (finalized) {
+        didFinalize = true;
+        return finalized;
+      }
+      return null;
+    });
+    if (didFinalize) {
       const isTaskRunning = await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME);
       if (isTaskRunning) await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
-      await writeHikeState(finalized);
-      applyState(finalized);
-      return;
     }
     applyState(state);
   }, [applyState]);
@@ -107,20 +108,14 @@ export function useLocationTracking() {
       return;
     }
 
-    // Background permission is skipped in Expo Go — the task can't run there anyway.
     // iOS never grants "Always" on the first request (it only offers "When In Use"
     // and escalates later), so a non-granted result must NOT block recording. With
     // foreground access + the location background mode, iOS records provisionally in
     // the background and prompts for "Always" on its own; we just nudge the user.
-    if (!isExpoGo) {
-      const { status: bgPermission } = await Location.requestBackgroundPermissionsAsync();
-      if (bgPermission !== "granted") {
-        setWarning(t("createHike.bgPermissionWarning"));
-      }
+    const { status: bgPermission } = await Location.requestBackgroundPermissionsAsync();
+    if (bgPermission !== "granted") {
+      setWarning(t("createHike.bgPermissionWarning"));
     }
-
-    // Preserve paused hike data when resuming so segments accumulate correctly
-    const existingState = await readHikeState();
 
     // Each press of "start" opens a new segment
     const newSegment: Segment = {
@@ -129,31 +124,46 @@ export function useLocationTracking() {
       startTime: Date.now(),
     };
 
-    const newState: StoredHikeState = {
+    // Preserve paused hike data when resuming so segments accumulate correctly.
+    // Read + write atomically so a lingering task batch can't clobber the start,
+    // and persist before starting the task so it always finds a valid state.
+    const newState = await mutateHikeState((existing) => ({
       isTracking: true,
-      hike: existingState.hike,
+      hike: existing.hike,
       currentSegment: newSegment,
-    };
+    }));
 
-    // Persist before starting the task so the task always finds a valid state
-    await writeHikeState(newState);
-
-    // startLocationUpdatesAsync requires the background location capability compiled
-    // in, which Expo Go lacks — skip the task there (no points are recorded)
-    if (!isExpoGo) {
-      // Avoid registering the task twice if it somehow survived a previous session
-      const isAlreadyRunning = await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME);
-      if (!isAlreadyRunning) {
-        await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
-          accuracy: Location.Accuracy.High,
-          timeInterval: SAMPLE_INTERVAL,
-          distanceInterval: MIN_DISTANCE,
-          foregroundService: {
-            notificationTitle: "Stigvidd",
-            notificationBody: t("createHike.notificationBody"),
-          },
-        });
-      }
+    // Avoid registering the task twice if it somehow survived a previous session
+    const isAlreadyRunning = await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME);
+    if (!isAlreadyRunning) {
+      await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
+        // High (~10m) rather than BestForNavigation: the latter pins the GPS at
+        // maximum power for turn-by-turn nav and drains the battery over a
+        // multi-hour hike, without meaningfully improving a walking track.
+        accuracy: Location.Accuracy.High,
+        // Android-only: caps how often the task fires. On iOS this is ignored and
+        // distanceInterval alone drives sampling.
+        timeInterval: SAMPLE_INTERVAL,
+        distanceInterval: MIN_DISTANCE,
+        // iOS-only (safely ignored on Android). Without these, iOS defaults to
+        // pausesUpdatesAutomatically = true and pauses background updates when it
+        // decides the user is stationary (a rest stop, a viewpoint) without
+        // reliably resuming — which both drops track points and, after
+        // INACTIVITY_TIMEOUT with no fixes, lets maybeFinalizeStaleHike end the
+        // hike behind the user's back. Flagging this as a Fitness activity and
+        // disabling auto-pause keeps a hike recording across breaks.
+        pausesUpdatesAutomatically: false,
+        activityType: Location.ActivityType.Fitness,
+        // Show the blue "using your location" status-bar indicator while recording
+        // in the background, as Apple expects for continuous-location apps.
+        showsBackgroundLocationIndicator: true,
+        // Android foreground service: the persistent notification that keeps the
+        // OS from killing the recording while backgrounded.
+        foregroundService: {
+          notificationTitle: "Stigvidd",
+          notificationBody: t("createHike.notificationBody"),
+        },
+      });
     }
 
     applyState(newState);
@@ -165,43 +175,45 @@ export function useLocationTracking() {
       await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
     }
 
-    // Read the latest state written by the background task before we finalize
-    const state = await readHikeState();
-    const seg = state.currentSegment;
+    // Finalize atomically against the latest task-written state. A batch still
+    // in flight when we stopped either lands before this mutation (its points are
+    // included) or after it (it no-ops because isTracking is now false) — never a
+    // clobber.
+    const newState = await mutateHikeState((state) => {
+      const seg = state.currentSegment;
+      let updatedHike = state.hike;
 
-    let updatedHike = state.hike;
+      if (seg) {
+        const endTime = Date.now();
+        const segmentDuration = endTime - seg.startTime;
+        const completedSegment: Segment = { ...seg, endTime };
 
-    if (seg) {
-      const endTime = Date.now();
-      const segmentDuration = endTime - seg.startTime;
-      const completedSegment: Segment = { ...seg, endTime };
-
-      // Only keep the segment if the user actually moved a meaningful distance
-      if (completedSegment.distance >= MIN_SEGMENT_DISTANCE) {
-        updatedHike = {
-          ...state.hike,
-          segments: [...state.hike.segments, completedSegment],
-          // Accumulate the wall-clock duration of this segment into the total
-          totalTime: state.hike.totalTime + segmentDuration,
-        };
-      } else {
-        // Discard the too-short segment as noise, and roll back the distance the
-        // background task already accumulated for it — otherwise distance stays
-        // stuck at a phantom value while the segment and its time are thrown away.
-        updatedHike = {
-          ...state.hike,
-          totalDistance: Math.max(0, state.hike.totalDistance - seg.distance),
-        };
+        // Only keep the segment if the user actually moved a meaningful distance
+        if (completedSegment.distance >= MIN_SEGMENT_DISTANCE) {
+          updatedHike = {
+            ...state.hike,
+            segments: [...state.hike.segments, completedSegment],
+            // Accumulate the wall-clock duration of this segment into the total
+            totalTime: state.hike.totalTime + segmentDuration,
+          };
+        } else {
+          // Discard the too-short segment as noise, and roll back the distance the
+          // background task already accumulated for it — otherwise distance stays
+          // stuck at a phantom value while the segment and its time are thrown away.
+          updatedHike = {
+            ...state.hike,
+            totalDistance: Math.max(0, state.hike.totalDistance - seg.distance),
+          };
+        }
       }
-    }
 
-    const newState: StoredHikeState = {
-      isTracking: false,
-      hike: updatedHike,
-      currentSegment: null,
-    };
+      return {
+        isTracking: false,
+        hike: updatedHike,
+        currentSegment: null,
+      };
+    });
 
-    await writeHikeState(newState);
     applyState(newState);
   };
 

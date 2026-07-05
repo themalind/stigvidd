@@ -53,8 +53,40 @@ export async function writeHikeState(state: StoredHikeState): Promise<void> {
   await AsyncStorage.setItem(HIKE_STORAGE_KEY, JSON.stringify(state));
 }
 
+// Serializes read-modify-write access to the stored hike state. The background
+// location task and the UI (start/stop/reset/sync) all mutate the same
+// AsyncStorage record; while the app is alive they share one JS runtime, so a
+// promise-chain lock makes each read→modify→write atomic. Without it, a late
+// task batch can read pre-stop state and write its points back after a Pause —
+// resurrecting a finished recording or double-counting distance.
+let hikeStateLock: Promise<unknown> = Promise.resolve();
+
+function withHikeStateLock<T>(fn: () => Promise<T>): Promise<T> {
+  const result = hikeStateLock.then(() => fn());
+  // Keep the chain alive on rejection so one failed mutation can't wedge the lock.
+  hikeStateLock = result.then(
+    () => undefined,
+    () => undefined,
+  );
+  return result;
+}
+
+// Atomically read the current state, apply `mutator`, and persist the result.
+// A mutator that returns null leaves storage untouched (no write). Returns the
+// state after the mutation (or the unchanged current state when null).
+export async function mutateHikeState(
+  mutator: (state: StoredHikeState) => StoredHikeState | null,
+): Promise<StoredHikeState> {
+  return withHikeStateLock(async () => {
+    const current = await readHikeState();
+    const next = mutator(current);
+    if (next) await writeHikeState(next);
+    return next ?? current;
+  });
+}
+
 export async function clearHikeState(): Promise<void> {
-  await AsyncStorage.removeItem(HIKE_STORAGE_KEY);
+  await withHikeStateLock(() => AsyncStorage.removeItem(HIKE_STORAGE_KEY));
 }
 
 // Whether the recording-info dialog should be shown before starting. Hidden only
@@ -125,72 +157,83 @@ TaskManager.defineTask(
     if (!locations?.length) return;
 
     try {
-      const state = await readHikeState();
-      if (!state.isTracking || !state.currentSegment) return;
+      // Whether this batch finalized a stale session — so we can stop the task
+      // outside the state lock once the finished state is safely persisted.
+      let didFinalize = false;
 
-      let currentSegment = state.currentSegment;
-      let totalDistance = state.hike.totalDistance;
+      await mutateHikeState((state) => {
+        if (!state.isTracking || !state.currentSegment) return null;
 
-      for (const location of locations) {
-        const accuracy = location.coords.accuracy;
-        if (!accuracy || accuracy > MAX_ACCURACY) {
-          continue;
-        }
+        let currentSegment = state.currentSegment;
+        let totalDistance = state.hike.totalDistance;
 
-        const newPoint: LocationData = {
-          data: {
-            latitude: location.coords.latitude,
-            longitude: location.coords.longitude,
-          },
-          timeStamp: location.timestamp,
-        };
-
-        const lastPoint = currentSegment.coordinates.at(-1);
-        let distanceToAdd = 0;
-
-        if (lastPoint) {
-          const distance = getDistance(lastPoint.data, newPoint.data);
-          // Reject teleport-sized jumps outright.
-          if (distance > MAX_DISTANCE) {
+        for (const location of locations) {
+          const accuracy = location.coords.accuracy;
+          if (!accuracy || accuracy > MAX_ACCURACY) {
             continue;
           }
-          // A stationary phone jitters within its own accuracy radius, so only
-          // count a move once it clears that noise envelope (never below
-          // MIN_DISTANCE). Otherwise GPS drift piles up phantom distance while
-          // standing still.
-          const minStep = Math.max(MIN_DISTANCE, accuracy);
-          if (distance < minStep) {
-            continue;
+
+          const newPoint: LocationData = {
+            data: {
+              latitude: location.coords.latitude,
+              longitude: location.coords.longitude,
+            },
+            timeStamp: location.timestamp,
+          };
+
+          const lastPoint = currentSegment.coordinates.at(-1);
+          let distanceToAdd = 0;
+
+          if (lastPoint) {
+            const distance = getDistance(lastPoint.data, newPoint.data);
+            // Reject teleport-sized jumps outright.
+            if (distance > MAX_DISTANCE) {
+              continue;
+            }
+            // A stationary phone jitters within its own accuracy radius, so only
+            // count a move once it clears that noise envelope (never below
+            // MIN_DISTANCE). Otherwise GPS drift piles up phantom distance while
+            // standing still.
+            const minStep = Math.max(MIN_DISTANCE, accuracy);
+            if (distance < minStep) {
+              continue;
+            }
+            distanceToAdd = distance;
           }
-          distanceToAdd = distance;
+
+          currentSegment = {
+            ...currentSegment,
+            coordinates: [...currentSegment.coordinates, newPoint],
+            distance: currentSegment.distance + distanceToAdd,
+          };
+
+          totalDistance += distanceToAdd;
         }
 
-        currentSegment = {
-          ...currentSegment,
-          coordinates: [...currentSegment.coordinates, newPoint],
-          distance: currentSegment.distance + distanceToAdd,
+        const updated: StoredHikeState = {
+          ...state,
+          currentSegment,
+          hike: { ...state.hike, totalDistance },
         };
 
-        totalDistance += distanceToAdd;
-      }
+        // Auto-stop a forgotten recording: if the session has gone inactive or
+        // hit the hard cap, persist the finalized state. Stopping the task
+        // itself happens after the lock releases.
+        const finalized = maybeFinalizeStaleHike(updated, Date.now());
+        if (finalized) {
+          didFinalize = true;
+          return finalized;
+        }
 
-      const updated: StoredHikeState = {
-        ...state,
-        currentSegment,
-        hike: { ...state.hike, totalDistance },
-      };
+        return updated;
+      });
 
-      // Auto-stop a forgotten recording: if the session has gone inactive or hit
-      // the hard cap, finalize it and stop the background task so it can't run on.
-      const finalized = maybeFinalizeStaleHike(updated, Date.now());
-      if (finalized) {
+      // The finalized state (isTracking: false) is now persisted, so any batch
+      // still in flight will no-op on read — safe to stop the task.
+      if (didFinalize) {
         const isRunning = await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME);
         if (isRunning) await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
-        await writeHikeState(finalized);
-        return;
       }
-
-      await writeHikeState(updated);
     } catch (e) {
       console.error("[LocationTask] Processing error:", e);
     }

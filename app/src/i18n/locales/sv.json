@@ -16,7 +16,9 @@
     "delete": "Ta bort",
     "share": "Dela",
     "next": "Nästa",
-    "select": "Välj..."
+    "select": "Välj...",
+    "time": "Tid",
+    "distance": "Distans"
   },
   "auth": {
     "login": "Logga in",
@@ -547,7 +549,9 @@
     "cancelWarning": "Detta går inte att ångra.",
     "no": "Nej",
     "yes": "Ja",
+    "title": "Skapa promenad",
     "start": "Starta vandring",
+    "pause": "Pausa",
     "reset": "Nollställ",
     "resume": "Återuppta",
     "fgPermissionDenied": "Åtkomst till plats nekades.",

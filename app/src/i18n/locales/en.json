@@ -16,7 +16,9 @@
     "delete": "Delete",
     "share": "Share",
     "next": "Next",
-    "select": "Select..."
+    "select": "Select...",
+    "time": "Time",
+    "distance": "Distance"
   },
   "auth": {
     "login": "Log in",
@@ -598,7 +600,9 @@
     "cancelWarning": "This cannot be undone.",
     "no": "No",
     "yes": "Yes",
+    "title": "Create walk",
     "start": "Start walk",
+    "pause": "Pause",
     "reset": "Reset",
     "resume": "Resume",
     "fgPermissionDenied": "Permission to access location was denied.",

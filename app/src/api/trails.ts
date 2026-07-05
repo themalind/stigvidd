@@ -23,7 +23,7 @@ export async function getPopularTrails(latitude?: number, longitude?: number): P
 
     return response.json();
   } catch (error) {
-    console.log(`Error fetching popular trails: ${error.cause || error.message}`);
+    console.log(`Error fetching popular trails: ${error instanceof Error ? error.cause || error.message : error}`);
     throw error;
   }
 }
@@ -37,7 +37,7 @@ export async function getAllTrails(): Promise<TrailShortInfoResponse[]> {
 
     return response.json();
   } catch (error) {
-    console.log(`Error fetching all trails: ${error.cause || error.message}`);
+    console.log(`Error fetching all trails: ${error instanceof Error ? error.cause || error.message : error}`);
     throw error;
   }
 }

@@ -104,15 +104,12 @@ export default function TrailCreator() {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-
-      // Render the map immediately from the cached last-known position (instant,
-      // no GPS lock) — or a fallback center — instead of blocking on a cold fix.
-      const last = status === "granted" ? await Location.getLastKnownPositionAsync() : null;
+      // Foreground permission is already granted (the screen gates on it). Render
+      // the map immediately from the cached last-known position (instant, no GPS
+      // lock) — or a fallback center — instead of blocking on a cold fix.
+      const last = await Location.getLastKnownPositionAsync();
       if (cancelled) return;
       setInitialCenter(last ? [last.coords.longitude, last.coords.latitude] : FALLBACK_CENTER);
-
-      if (status !== "granted") return;
 
       // Refine with a precise fix in the background and nudge the camera there,
       // unless the user has already started moving (then the route drives it).
@@ -185,12 +182,12 @@ export default function TrailCreator() {
 
       <View style={[s.statsCard, { backgroundColor: theme.colors.outlineVariant }]}>
         <View style={s.statItem}>
-          <Text style={s.statLabel}>Tid</Text>
+          <Text style={s.statLabel}>{t("common.time")}</Text>
           <Text style={s.statValue}>{formattedTime}</Text>
         </View>
         <View style={[s.statDivider, { backgroundColor: theme.colors.outline }]} />
         <View style={s.statItem}>
-          <Text style={s.statLabel}>Distans</Text>
+          <Text style={s.statLabel}>{t("common.distance")}</Text>
           <Text style={s.statValue}>{formattedDistance}</Text>
         </View>
       </View>
@@ -199,7 +196,7 @@ export default function TrailCreator() {
         {isTracking ? (
           <Pressable style={[s.actionButton, { backgroundColor: theme.colors.surface }]} onPress={() => stopTracking()}>
             <Ionicons name="pause" size={28} color={theme.colors.onSurface} />
-            <Text style={s.buttonText}>Pausa</Text>
+            <Text style={s.buttonText}>{t("createHike.pause")}</Text>
           </Pressable>
         ) : !hasData ? (
           <Pressable style={[s.actionButton, { backgroundColor: theme.colors.primary }]} onPress={handleStartPress}>
