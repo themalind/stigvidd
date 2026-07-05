@@ -1,5 +1,6 @@
 import { Link } from "react-router";
 import CommingSoonImages from "./comming-soon-images";
+import iconUrl from "../../assets/icon.png";
 
 export default function CommingSoonPage() {
   return (
@@ -14,7 +15,7 @@ export default function CommingSoonPage() {
             <Link to={"/login"}>
               <div className="flex items-center mb-3">
                 <div className="w-20 aspect-square rounded-full overflow-hidden">
-                  <img src="src/assets/icon.png" />
+                  <img src={iconUrl} alt="Stigvidd Logo" />
                 </div>
                 <div className="pl-3">
                   <h1 className="text-3xl text-stone-200">Stigvidd</h1>
