@@ -183,7 +183,7 @@ public class ReviewServiceTests
     {
         // Arrange
         var webDav = new Mock<IWebDavService>();
-        webDav.Setup(w => w.UploadFileAsync(It.IsAny<Stream>(), It.IsAny<string>()))
+        webDav.Setup(w => w.UploadFileAsync(It.IsAny<Stream>(), It.IsAny<string>(), It.IsAny<string>()))
             .ReturnsAsync(Result.Fail<string?>(new Message(500, "Upload failed")));
 
         // Act
@@ -200,7 +200,7 @@ public class ReviewServiceTests
     {
         // Arrange
         var webDav = new Mock<IWebDavService>();
-        webDav.Setup(w => w.UploadFileAsync(It.IsAny<Stream>(), It.IsAny<string>()))
+        webDav.Setup(w => w.UploadFileAsync(It.IsAny<Stream>(), It.IsAny<string>(), It.IsAny<string>()))
             .ThrowsAsync(new Exception("network error"));
 
         // Act

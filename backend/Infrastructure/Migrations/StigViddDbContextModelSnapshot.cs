@@ -66,6 +66,56 @@ namespace Infrastructure.Migrations
                     b.ToTable("Facilities", "dbo");
                 });
 
+            modelBuilder.Entity("Infrastructure.Data.Entities.FacilityImage", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AltText")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Caption")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("FacilityId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Height")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Identifier")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ImageUrl")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("LastUpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<long>("SizeBytes")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Width")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FacilityId");
+
+                    b.ToTable("FacilityImages", "dbo");
+                });
+
             modelBuilder.Entity("Infrastructure.Data.Entities.FriendRequest", b =>
                 {
                     b.Property<int>("RequesterId")
@@ -373,8 +423,17 @@ namespace Infrastructure.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("AltText")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Caption")
+                        .HasColumnType("text");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Height")
+                        .HasColumnType("integer");
 
                     b.Property<string>("Identifier")
                         .IsRequired()
@@ -387,7 +446,16 @@ namespace Infrastructure.Migrations
                     b.Property<DateTime>("LastUpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<long>("SizeBytes")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer");
+
                     b.Property<int>("TrailId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Width")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
@@ -689,6 +757,17 @@ namespace Infrastructure.Migrations
                     b.ToTable("UserWishList", "dbo");
                 });
 
+            modelBuilder.Entity("Infrastructure.Data.Entities.FacilityImage", b =>
+                {
+                    b.HasOne("Infrastructure.Data.Entities.Facility", "Facility")
+                        .WithMany("Images")
+                        .HasForeignKey("FacilityId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Facility");
+                });
+
             modelBuilder.Entity("Infrastructure.Data.Entities.FriendRequest", b =>
                 {
                     b.HasOne("Infrastructure.Data.Entities.User", "Receiver")
@@ -892,6 +971,11 @@ namespace Infrastructure.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Infrastructure.Data.Entities.Facility", b =>
+                {
+                    b.Navigation("Images");
                 });
 
             modelBuilder.Entity("Infrastructure.Data.Entities.Hike", b =>

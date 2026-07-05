@@ -9,4 +9,6 @@ public interface IFacilityRepository
     Task<RepositoryResult<Facility>> GetByIdentifierAsync(string identifier, CancellationToken ctoken);
     Task<RepositoryResult<Facility>> UpdateAsync(Facility facility, CancellationToken ctoken);
     Task<RepositoryResult> DeleteAsync(Facility facility, CancellationToken ctoken);
+    Task<RepositoryResult<IReadOnlyCollection<FacilityImage>>> AddFacilityImagesAsync(int facilityId, IReadOnlyCollection<FacilityImage> images, CancellationToken ctoken);
+    Task<RepositoryResult> DeleteFacilityImageAsync(string imageIdentifier, CancellationToken ctoken);
 }

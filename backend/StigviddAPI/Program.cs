@@ -4,6 +4,7 @@ using Core;
 using Core.Validators.User;
 using Duende.AccessTokenManagement;
 using FluentValidation;
+using Infrastructure;
 using Keycloak.AuthServices.Common;
 using Keycloak.AuthServices.Sdk;
 using SharpGrip.FluentValidation.AutoValidation.Mvc.Extensions;
@@ -12,7 +13,7 @@ namespace StigviddAPI;
 
 public class Program
 {
-    private static void Main(string[] args)
+    private static async Task Main(string[] args)
     {
         CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
         CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.InvariantCulture;
@@ -31,7 +32,7 @@ public class Program
                 policy =>
                 {
                     policy
-                        .WithOrigins("http://localhost:5173", "https://stigvidd.se")
+                        .WithOrigins("http://localhost:5173", "https://stigvidd.se", "http://localhost:5174")
                         .AllowAnyHeader()
                         .AllowAnyMethod();
                 });
@@ -102,6 +103,12 @@ public class Program
         });
 
         var app = builder.Build();
+
+        // Run database migrations at startup
+        foreach (var migrationRunner in app.Services.GetServices<IDbMigrationRunner>())
+        {
+            await migrationRunner.RunMigrationsAsync(app.Lifetime.ApplicationStopping);
+        }
 
         app.UseExceptionHandler(appError =>
         {

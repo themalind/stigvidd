@@ -1,6 +1,8 @@
 ﻿using Core.Interfaces.Services;
+using Core.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using WebDataContracts.RequestModels.Media;
 using WebDataContracts.RequestModels.Trail;
 using WebDataContracts.ResponseModels.Trail;
 
@@ -195,6 +197,7 @@ public class TrailsController : StigViddController
     public async Task<ActionResult<IReadOnlyCollection<TrailImageResponse>>> AddTrailImages(
         string identifier,
         [FromForm] IFormFileCollection images,
+        [FromForm] ImageProcessingOptionsRequest options,
         CancellationToken ctoken)
     {
         var userResponse = await GetAuthenticatedUserAsync(_userService, ctoken);
@@ -202,7 +205,7 @@ public class TrailsController : StigViddController
         if (userResponse == null)
             return Unauthorized("User not found");
 
-        var result = await _trailService.AddTrailImagesAsync(identifier, images, ctoken);
+        var result = await _trailService.AddTrailImagesAsync(identifier, images, options.ToOptions(), ctoken);
 
         if (!result.Success && result.Message != null)
         {
@@ -213,6 +216,32 @@ public class TrailsController : StigViddController
         }
 
         return Ok(result.Value);
+    }
+
+    [Authorize]
+    [HttpPost("{identifier}/symbol")]
+    public async Task<ActionResult<string>> SetTrailSymbol(
+        string identifier,
+        [FromForm] IFormFile symbol,
+        [FromForm] ImageProcessingOptionsRequest options,
+        CancellationToken ctoken)
+    {
+        var userResponse = await GetAuthenticatedUserAsync(_userService, ctoken);
+
+        if (userResponse == null)
+            return Unauthorized("User not found");
+
+        var result = await _trailService.SetTrailSymbolAsync(identifier, symbol, options.ToOptions(), ctoken);
+
+        if (!result.Success && result.Message != null)
+        {
+            _logger.LogInformation(
+                "SetTrailSymbol: Failed to set symbol for trail with identifier: {identifier}.", identifier);
+
+            return ToActionResult(result.Message);
+        }
+
+        return Ok(new { symbolUrl = result.Value });
     }
 
     [Authorize]

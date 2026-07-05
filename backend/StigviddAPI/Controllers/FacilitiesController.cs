@@ -1,7 +1,9 @@
 ﻿using Core.Interfaces.Services;
+using Core.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WebDataContracts.RequestModels.Facility;
+using WebDataContracts.RequestModels.Media;
 using WebDataContracts.ResponseModels.Facility;
 
 namespace StigviddAPI.Controllers
@@ -103,6 +105,52 @@ namespace StigviddAPI.Controllers
             }
 
             var result = await _facilityService.DeleteAsync(identifier, ctoken);
+
+            if (!result.Success && result.Message != null)
+            {
+                return ToActionResult(result.Message);
+            }
+
+            return NoContent();
+        }
+
+        [Authorize]
+        [HttpPost("{identifier}/images")]
+        public async Task<ActionResult<IReadOnlyCollection<FacilityImageResponse>>> AddFacilityImages(
+            string identifier,
+            [FromForm] IFormFileCollection images,
+            [FromForm] ImageProcessingOptionsRequest options,
+            CancellationToken ctoken)
+        {
+            var userResponse = await GetAuthenticatedUserAsync(_userService, ctoken);
+
+            if (userResponse == null)
+            {
+                return Unauthorized("User not found");
+            }
+
+            var result = await _facilityService.AddFacilityImagesAsync(identifier, images, options.ToOptions(), ctoken);
+
+            if (!result.Success && result.Message != null)
+            {
+                return ToActionResult(result.Message);
+            }
+
+            return Ok(result.Value);
+        }
+
+        [Authorize]
+        [HttpDelete("images/{imageIdentifier}")]
+        public async Task<ActionResult> DeleteFacilityImage(string imageIdentifier, CancellationToken ctoken)
+        {
+            var userResponse = await GetAuthenticatedUserAsync(_userService, ctoken);
+
+            if (userResponse == null)
+            {
+                return Unauthorized("User not found");
+            }
+
+            var result = await _facilityService.DeleteFacilityImageAsync(imageIdentifier, ctoken);
 
             if (!result.Success && result.Message != null)
             {

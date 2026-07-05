@@ -74,7 +74,7 @@ public class StigViddWebApplicationFactory<TProgram>
             // Prevent real WebDAV network calls during integration tests
             var mockWebDavService = new Mock<IWebDavService>();
             mockWebDavService
-                .Setup(x => x.UploadFileAsync(It.IsAny<Stream>(), It.IsAny<string>()))
+                .Setup(x => x.UploadFileAsync(It.IsAny<Stream>(), It.IsAny<string>(), It.IsAny<string>()))
                 .ReturnsAsync(Result.Ok<string?>("mock/uploaded-file.jpg"));
             mockWebDavService
                 .Setup(x => x.DeleteFileAsync(It.IsAny<string>()))

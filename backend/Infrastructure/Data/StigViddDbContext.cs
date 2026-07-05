@@ -16,6 +16,7 @@ public class StigViddDbContext(DbContextOptions<StigViddDbContext> options) : Db
     public DbSet<TrailObstacle> TrailObstacles { get; set; }
     public DbSet<TrailObstacleSolvedVote> TrailObstacleSolvedVotes { get; set; }
     public DbSet<Facility> Facilities { get; set; }
+    public DbSet<FacilityImage> FacilityImages { get; set; }
     public DbSet<HikeShare> HikeShares { get; set; }
     public DbSet<HikeImage> HikeImages { get; set; }
     public DbSet<FriendRequest> FriendRequests { get; set; }
@@ -136,6 +137,13 @@ public class StigViddDbContext(DbContextOptions<StigViddDbContext> options) : Db
             .HasOne(hi => hi.Hike)
             .WithMany(h => h.Images)
             .HasForeignKey(hi => hi.HikeId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // FacilityImage → Facility (cascade delete)
+        modelBuilder.Entity<FacilityImage>()
+            .HasOne(fi => fi.Facility)
+            .WithMany(f => f.Images)
+            .HasForeignKey(fi => fi.FacilityId)
             .OnDelete(DeleteBehavior.Cascade);
 
         modelBuilder.Entity<FriendRequest>()

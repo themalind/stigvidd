@@ -3,6 +3,7 @@ import CommingSoonPage from "@/pages/comming-soon/comming-soon-page";
 import DashboardPage from "@/pages/dashboard/dashboard-page";
 import Layout from "@/pages/Layout";
 import LoginPage from "@/pages/login/login-page";
+import MediaPage from "@/pages/media/media-page";
 import NotFoundPage from "@/pages/NotFoundPage";
 import TrailsPage from "@/pages/trails/trails-page";
 import UsersPage from "@/pages/users/users-page";
@@ -38,6 +39,11 @@ export const router = createBrowserRouter([
             path: "/trails",
             handle: { title: "Trails" },
             element: <TrailsPage />,
+          },
+          {
+            path: "/media",
+            handle: { title: "Media Library" },
+            element: <MediaPage />,
           },
         ],
       },

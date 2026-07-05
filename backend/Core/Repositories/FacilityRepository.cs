@@ -110,4 +110,54 @@ public class FacilityRepository : IFacilityRepository
             return RepositoryResult.Error();
         }
     }
+
+    public async Task<RepositoryResult<IReadOnlyCollection<FacilityImage>>> AddFacilityImagesAsync(int facilityId, IReadOnlyCollection<FacilityImage> images, CancellationToken ctoken)
+    {
+        try
+        {
+            using var context = await _dbContextFactory.CreateDbContextAsync(ctoken);
+
+            var facilityExists = await context.Facilities.AnyAsync(f => f.Id == facilityId, ctoken);
+
+            if (!facilityExists)
+                return RepositoryResult<IReadOnlyCollection<FacilityImage>>.NotFound();
+
+            foreach (var image in images)
+                image.FacilityId = facilityId;
+
+            context.FacilityImages.AddRange(images);
+            await context.SaveChangesAsync(ctoken);
+
+            return RepositoryResult<IReadOnlyCollection<FacilityImage>>.Success(images);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "FacilityRepository: AddFacilityImagesAsync -> Something went wrong when adding images to facility with ID {FacilityId}.", facilityId);
+            return RepositoryResult<IReadOnlyCollection<FacilityImage>>.Error();
+        }
+    }
+
+    public async Task<RepositoryResult> DeleteFacilityImageAsync(string imageIdentifier, CancellationToken ctoken)
+    {
+        try
+        {
+            using var context = await _dbContextFactory.CreateDbContextAsync(ctoken);
+
+            var image = await context.FacilityImages
+                .FirstOrDefaultAsync(img => img.Identifier == imageIdentifier, ctoken);
+
+            if (image is null)
+                return RepositoryResult.NotFound();
+
+            context.FacilityImages.Remove(image);
+            await context.SaveChangesAsync(ctoken);
+
+            return RepositoryResult.Success();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "FacilityRepository: DeleteFacilityImageAsync -> Something went wrong when deleting image with identifier {ImageIdentifier}.", imageIdentifier);
+            return RepositoryResult.Error();
+        }
+    }
 }

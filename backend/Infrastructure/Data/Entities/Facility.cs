@@ -9,4 +9,6 @@ public class Facility : BaseEntity
     public bool IsAccessible { get; set; }
     public decimal Latitude { get; set; }
     public decimal Longitude { get; set; }
+
+    public ICollection<FacilityImage>? Images { get; set; }
 }

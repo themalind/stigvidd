@@ -47,12 +47,16 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IHikeShareRecipientRepository, HikeShareRecipientRepository>();
         services.AddTransient<IFriendRepository, FriendRepository>();
         services.AddTransient<IUserPushTokenRepository, UserPushTokenRepository>();
+        services.AddTransient<IMediaRepository, MediaRepository>();
 
         // Services
         services.AddTransient<ITrailService, TrailService>();
         services.AddTransient<IUserService, UserService>();
         services.AddTransient<IReviewService, ReviewService>();
         services.AddTransient<IWebDavService, WebDavService>();
+        services.AddTransient<IImageProcessingService, ImageProcessingService>();
+        services.AddTransient<IMediaUploadService, MediaUploadService>();
+        services.AddTransient<IMediaService, MediaService>();
         services.AddTransient<IHikeService, HikeService>();
         services.AddTransient<ITrailObstaclesService, TrailObstaclesService>();
         services.AddTransient<IFacilityService, FacilityService>();

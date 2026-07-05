@@ -757,10 +757,19 @@ public static class Utilities
         public static Mock<IWebDavService> WebDavService()
         {
             var mock = new Mock<IWebDavService>();
-            mock.Setup(w => w.UploadFileAsync(It.IsAny<Stream>(), It.IsAny<string>()))
+            mock.Setup(w => w.UploadFileAsync(It.IsAny<Stream>(), It.IsAny<string>(), It.IsAny<string>()))
                 .ReturnsAsync(Result.Ok<string?>("uploads/test-image.jpg"));
             mock.Setup(w => w.DeleteFileAsync(It.IsAny<string>()))
                 .ReturnsAsync(Result.Ok(true));
+            return mock;
+        }
+
+        public static Mock<IMediaUploadService> MediaUploadService()
+        {
+            var mock = new Mock<IMediaUploadService>();
+            mock.Setup(m => m.ProcessAndUploadAsync(It.IsAny<Stream>(), It.IsAny<string>(), It.IsAny<ImageProcessingOptions>()))
+                .ReturnsAsync((Stream _, string subDir, ImageProcessingOptions _) =>
+                    Result.Ok(new UploadedMedia($"{subDir}/test-image.jpg", 800, 600, 12345)));
             return mock;
         }
 

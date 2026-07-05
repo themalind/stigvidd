@@ -12,6 +12,7 @@ namespace Core.Services;
 public class TrailService : ITrailService
 {
     private readonly IWebDavService _webDavService;
+    private readonly IMediaUploadService _mediaUploadService;
     private readonly ILogger<TrailService> _logger;
     private readonly TrailResponseFactory _trailResponseFactory;
     private readonly ITrailRepository _trailRepository;
@@ -19,11 +20,13 @@ public class TrailService : ITrailService
     public TrailService(
         ITrailRepository trailResponseRepository,
         IWebDavService webDavService,
+        IMediaUploadService mediaUploadService,
         ILogger<TrailService> logger,
         TrailResponseFactory factory)
     {
         _trailRepository = trailResponseRepository;
         _webDavService = webDavService;
+        _mediaUploadService = mediaUploadService;
         _logger = logger;
         _trailResponseFactory = factory;
     }
@@ -379,6 +382,7 @@ public class TrailService : ITrailService
     public async Task<Result<IReadOnlyCollection<TrailImageResponse>>> AddTrailImagesAsync(
         string trailIdentifier,
         IFormFileCollection images,
+        ImageProcessingOptions options,
         CancellationToken ctoken)
     {
         var uploadedUrls = new List<string>();
@@ -397,16 +401,19 @@ public class TrailService : ITrailService
 
             foreach (var image in images)
             {
-                var uploadResult = await _webDavService.UploadFileAsync(image.OpenReadStream(), "trails");
+                var uploadResult = await _mediaUploadService.ProcessAndUploadAsync(image.OpenReadStream(), "trails", options);
 
-                if (uploadResult.IsFailure)
+                if (uploadResult.IsFailure || uploadResult.Value == null)
                     return Result.Fail<IReadOnlyCollection<TrailImageResponse>>(new Message(500, "Something went wrong uploading images. Try again later."));
 
-                if (uploadResult.Value != null)
+                uploadedUrls.Add(uploadResult.Value.Path);
+                trailImages.Add(new TrailImage
                 {
-                    uploadedUrls.Add(uploadResult.Value);
-                    trailImages.Add(new TrailImage { ImageUrl = uploadResult.Value });
-                }
+                    ImageUrl = uploadResult.Value.Path,
+                    Width = uploadResult.Value.Width,
+                    Height = uploadResult.Value.Height,
+                    SizeBytes = uploadResult.Value.SizeBytes
+                });
             }
 
             var addResult = await _trailRepository.AddTrailImagesAsync(trailIdResult.Value, trailImages, ctoken);
@@ -415,7 +422,9 @@ public class TrailService : ITrailService
                 return Result.Fail<IReadOnlyCollection<TrailImageResponse>>(new Message(500, "An error occurred while saving images."));
 
             IReadOnlyCollection<TrailImageResponse> response = addResult.Value
-                .Select(img => TrailImageResponse.Create(_trailResponseFactory.PresentableBaseUrl, img.Identifier, img.ImageUrl))
+                .Select(img => TrailImageResponse.Create(
+                    _trailResponseFactory.PresentableBaseUrl, img.Identifier, img.ImageUrl,
+                    img.AltText, img.Caption, img.Width, img.Height, img.SizeBytes))
                 .ToList();
 
             return Result.Ok(response);
@@ -428,6 +437,44 @@ public class TrailService : ITrailService
                 await CleanupUploadedImagesAsync(uploadedUrls);
 
             return Result.Fail<IReadOnlyCollection<TrailImageResponse>>(new Message(500, "An error occurred while adding images."));
+        }
+    }
+
+    public async Task<Result<string>> SetTrailSymbolAsync(
+        string trailIdentifier,
+        IFormFile symbol,
+        ImageProcessingOptions options,
+        CancellationToken ctoken)
+    {
+        string? uploadedPath = null;
+
+        try
+        {
+            var uploadResult = await _mediaUploadService.ProcessAndUploadAsync(symbol.OpenReadStream(), "symbols", options);
+
+            if (uploadResult.IsFailure || uploadResult.Value == null)
+                return Result.Fail<string>(new Message(500, "Something went wrong uploading the trail symbol. Try again later."));
+
+            uploadedPath = uploadResult.Value.Path;
+
+            var updateResult = await _trailRepository.UpdateTrailSymbolAsync(trailIdentifier, uploadedPath, ctoken);
+
+            if (updateResult.Status == RepositoryResultStatus.Error)
+                return Result.Fail<string>(new Message(500, "An error occurred while updating the trail symbol."));
+
+            if (!updateResult.IsSuccess)
+                return Result.Fail<string>(new Message(404, $"Trail with identifier {trailIdentifier} not found."));
+
+            return Result.Ok($"{_trailResponseFactory.PresentableBaseUrl}{uploadedPath}");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "TrailService: SetTrailSymbolAsync -> Error setting symbol for trail {TrailIdentifier}", trailIdentifier);
+
+            if (uploadedPath != null)
+                await CleanupUploadedImagesAsync([uploadedPath]);
+
+            return Result.Fail<string>(new Message(500, "An error occurred while setting the trail symbol."));
         }
     }
 

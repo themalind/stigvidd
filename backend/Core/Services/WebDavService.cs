@@ -21,10 +21,11 @@ public class WebDavService : IWebDavService
 
     // https://github.com/skazantsev/WebDavClient/tree/main/src/WebDav.Client/Request
 
-    public async Task<Result<string?>> UploadFileAsync(Stream stream, string? subDirectory)
+    public async Task<Result<string?>> UploadFileAsync(Stream stream, string? subDirectory, string extension = "jpeg")
     {
-        // Creates a safe file name for the uploaded file
-        var fileName = $"{Guid.NewGuid()}.jpeg";
+        // Creates a safe file name for the uploaded file, preserving the (processed) format's extension.
+        var safeExtension = string.IsNullOrWhiteSpace(extension) ? "jpeg" : extension.TrimStart('.');
+        var fileName = $"{Guid.NewGuid()}.{safeExtension}";
 
         var remotePath = subDirectory != null
            ? $"{subDirectory.TrimEnd('/')}/{fileName}"

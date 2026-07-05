@@ -17,7 +17,8 @@ public class TrailServiceTests
 {
     private TrailService Build(
         Mock<ITrailRepository>? trailRepo = null,
-        Mock<IWebDavService>? webDav = null)
+        Mock<IWebDavService>? webDav = null,
+        Mock<IMediaUploadService>? mediaUpload = null)
     {
         var cfg = new Mock<IConfiguration>();
         cfg.Setup(c => c["PresentableBaseUrl"]).Returns("http://stigvidd.se/testing/");
@@ -25,6 +26,7 @@ public class TrailServiceTests
         return new TrailService(
             (trailRepo ?? new Mock<ITrailRepository>()).Object,
             (webDav ?? Utilities.MockFactory.WebDavService()).Object,
+            (mediaUpload ?? Utilities.MockFactory.MediaUploadService()).Object,
             new Mock<ILogger<TrailService>>().Object,
             new TrailResponseFactory(cfg.Object));
     }
@@ -196,7 +198,7 @@ public class TrailServiceTests
     {
         // Arrange
         var webDav = new Mock<IWebDavService>();
-        webDav.Setup(w => w.UploadFileAsync(It.IsAny<Stream>(), It.IsAny<string>()))
+        webDav.Setup(w => w.UploadFileAsync(It.IsAny<Stream>(), It.IsAny<string>(), It.IsAny<string>()))
             .ReturnsAsync(Result.Fail<string?>(new Message(500, "Upload failed")));
 
         // Act
@@ -213,7 +215,7 @@ public class TrailServiceTests
     {
         // Arrange — throw on the very first upload, so uploadedUrls is empty and no cleanup is expected
         var webDav = new Mock<IWebDavService>();
-        webDav.Setup(w => w.UploadFileAsync(It.IsAny<Stream>(), It.IsAny<string>()))
+        webDav.Setup(w => w.UploadFileAsync(It.IsAny<Stream>(), It.IsAny<string>(), It.IsAny<string>()))
             .ThrowsAsync(new Exception("network error"));
         webDav.Setup(w => w.DeleteFileAsync(It.IsAny<string>()))
             .ReturnsAsync(Result.Ok(true));
@@ -234,7 +236,7 @@ public class TrailServiceTests
         // Arrange — symbol upload succeeds (adds URL), first image upload throws
         var repo = new Mock<ITrailRepository>();
         var webDav = new Mock<IWebDavService>();
-        webDav.SetupSequence(w => w.UploadFileAsync(It.IsAny<Stream>(), It.IsAny<string>()))
+        webDav.SetupSequence(w => w.UploadFileAsync(It.IsAny<Stream>(), It.IsAny<string>(), It.IsAny<string>()))
             .ReturnsAsync(Result.Ok<string?>("symbols/symbol.jpg"))
             .ThrowsAsync(new Exception("disk full"));
         webDav.Setup(w => w.DeleteFileAsync(It.IsAny<string>()))
@@ -278,7 +280,7 @@ public class TrailServiceTests
             .ReturnsAsync((Trail t, CancellationToken _) => RepositoryResult<Trail>.Success(t));
 
         var webDav = new Mock<IWebDavService>();
-        webDav.SetupSequence(w => w.UploadFileAsync(It.IsAny<Stream>(), It.IsAny<string>()))
+        webDav.SetupSequence(w => w.UploadFileAsync(It.IsAny<Stream>(), It.IsAny<string>(), It.IsAny<string>()))
             .ReturnsAsync(Result.Ok<string?>("symbols/symbol.jpg"))
             .ReturnsAsync(Result.Ok<string?>("trails/img1.jpg"))
             .ReturnsAsync(Result.Ok<string?>("trails/img2.jpg"));
@@ -304,7 +306,7 @@ public class TrailServiceTests
             .ReturnsAsync((Trail t, CancellationToken _) => RepositoryResult<Trail>.Success(t));
 
         var webDav = new Mock<IWebDavService>();
-        webDav.Setup(w => w.UploadFileAsync(It.IsAny<Stream>(), It.IsAny<string>()))
+        webDav.Setup(w => w.UploadFileAsync(It.IsAny<Stream>(), It.IsAny<string>(), It.IsAny<string>()))
             .ReturnsAsync(Result.Ok<string?>("trails/img.jpg"));
 
         // Act
@@ -752,7 +754,7 @@ public class TrailServiceTests
             .ReturnsAsync(RepositoryResult<IReadOnlyCollection<TrailImage>>.Success(savedImages));
 
         // Act
-        var result = await Build(repo).AddTrailImagesAsync(Utilities.Identifiers.Trail4, Utilities.Stubs.TwoImages(), CancellationToken.None);
+        var result = await Build(repo).AddTrailImagesAsync(Utilities.Identifiers.Trail4, Utilities.Stubs.TwoImages(), new ImageProcessingOptions(), CancellationToken.None);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -770,7 +772,7 @@ public class TrailServiceTests
             .ReturnsAsync(RepositoryResult<int>.NotFound());
 
         // Act
-        var result = await Build(repo).AddTrailImagesAsync("no-trail", Utilities.Stubs.TwoImages(), CancellationToken.None);
+        var result = await Build(repo).AddTrailImagesAsync("no-trail", Utilities.Stubs.TwoImages(), new ImageProcessingOptions(), CancellationToken.None);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -785,12 +787,12 @@ public class TrailServiceTests
         var repo = new Mock<ITrailRepository>();
         repo.Setup(r => r.GetTrailIdByIdentifierAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<int>.Success(4));
-        var webDav = new Mock<IWebDavService>();
-        webDav.Setup(w => w.UploadFileAsync(It.IsAny<Stream>(), It.IsAny<string>()))
-            .ReturnsAsync(Result.Fail<string?>(new Message(500, "Upload failed")));
+        var mediaUpload = new Mock<IMediaUploadService>();
+        mediaUpload.Setup(m => m.ProcessAndUploadAsync(It.IsAny<Stream>(), It.IsAny<string>(), It.IsAny<ImageProcessingOptions>()))
+            .ReturnsAsync(Result.Fail<UploadedMedia>(new Message(500, "Upload failed")));
 
         // Act
-        var result = await Build(repo, webDav).AddTrailImagesAsync(Utilities.Identifiers.Trail4, Utilities.Stubs.TwoImages(), CancellationToken.None);
+        var result = await Build(repo, mediaUpload: mediaUpload).AddTrailImagesAsync(Utilities.Identifiers.Trail4, Utilities.Stubs.TwoImages(), new ImageProcessingOptions(), CancellationToken.None);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -809,7 +811,7 @@ public class TrailServiceTests
             .ReturnsAsync(RepositoryResult<IReadOnlyCollection<TrailImage>>.Error());
 
         // Act
-        var result = await Build(repo).AddTrailImagesAsync(Utilities.Identifiers.Trail4, Utilities.Stubs.TwoImages(), CancellationToken.None);
+        var result = await Build(repo).AddTrailImagesAsync(Utilities.Identifiers.Trail4, Utilities.Stubs.TwoImages(), new ImageProcessingOptions(), CancellationToken.None);
 
         // Assert
         result.Success.Should().BeFalse();

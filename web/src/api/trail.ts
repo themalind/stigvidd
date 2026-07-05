@@ -1,10 +1,12 @@
 import type {
+  ImageProcessingOptions,
   TrailImageResponse,
   TrailResponse,
   TrailShortInfoResponse,
   UpdateTrailRequest,
 } from "@/types/types";
 import { getValidAccessToken } from "@/services/keycloak-auth";
+import { appendProcessingOptions } from "./image-options";
 
 const BASE_URL = `http://${import.meta.env.VITE_API_HOST}/api/v1/trails`;
 
@@ -67,10 +69,12 @@ export async function updateTrail(
 export async function addTrailImages(
   identifier: string,
   images: File[],
+  options?: ImageProcessingOptions,
 ): Promise<TrailImageResponse[]> {
   const token = await getValidAccessToken();
   const formData = new FormData();
   images.forEach((file) => formData.append("images", file));
+  appendProcessingOptions(formData, options);
   try {
     const response = await fetch(`${BASE_URL}/${identifier}/images`, {
       method: "POST",
@@ -83,6 +87,33 @@ export async function addTrailImages(
       throw new Error(`HTTP error ${response.status}`);
     }
     return (await response.json()) as TrailImageResponse[];
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+}
+
+export async function setTrailSymbol(
+  identifier: string,
+  symbol: File,
+  options?: ImageProcessingOptions,
+): Promise<{ symbolUrl: string }> {
+  const token = await getValidAccessToken();
+  const formData = new FormData();
+  formData.append("symbol", symbol);
+  appendProcessingOptions(formData, options);
+  try {
+    const response = await fetch(`${BASE_URL}/${identifier}/symbol`, {
+      method: "POST",
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: formData,
+    });
+    if (!response.ok) {
+      throw new Error(`HTTP error ${response.status}`);
+    }
+    return (await response.json()) as { symbolUrl: string };
   } catch (error) {
     console.log(error);
     throw error;

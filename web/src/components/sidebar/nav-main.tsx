@@ -1,4 +1,4 @@
-import { Gauge, Settings2, Users } from "lucide-react";
+import { Gauge, Images, Settings2, Users } from "lucide-react";
 import {
   SidebarGroup,
   SidebarGroupContent,
@@ -26,6 +26,14 @@ export default function NavMain() {
               <NavLink to={"/trails"}>
                 <Settings2 />
                 <span>Trails</span>
+              </NavLink>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild>
+              <NavLink to={"/media"}>
+                <Images />
+                <span>Media Library</span>
               </NavLink>
             </SidebarMenuButton>
           </SidebarMenuItem>

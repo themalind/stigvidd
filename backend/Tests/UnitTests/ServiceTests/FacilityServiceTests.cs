@@ -1,8 +1,11 @@
 using Core.Factories;
 using Core.Interfaces.Repositories;
+using Core.Interfaces.Services;
 using Core.Services;
 using FluentAssertions;
 using Infrastructure.Data.Entities;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Moq;
 
 namespace UnitTests.ServiceTests;
@@ -11,8 +14,21 @@ public class FacilityServiceTests
 {
     private const string FacilityIdentifier = "fac1a1b2-c3d4-4e5f-6a7b-8c9d0e1f2a3b";
 
-    private static FacilityService Build(Mock<IFacilityRepository>? repo = null) =>
-        new((repo ?? new Mock<IFacilityRepository>()).Object, new FacilityResponseFactory());
+    private static FacilityService Build(
+        Mock<IFacilityRepository>? repo = null,
+        Mock<IMediaUploadService>? mediaUpload = null)
+    {
+        var cfg = new Mock<IConfiguration>();
+        cfg.Setup(c => c["PresentableBaseUrl"]).Returns("http://stigvidd.se/testing/");
+
+        return new FacilityService(
+            (repo ?? new Mock<IFacilityRepository>()).Object,
+            new FacilityResponseFactory(),
+            (mediaUpload ?? Utilities.MockFactory.MediaUploadService()).Object,
+            Utilities.MockFactory.WebDavService().Object,
+            new Mock<ILogger<FacilityService>>().Object,
+            cfg.Object);
+    }
 
     private static Facility MakeFacility() => new()
     {

@@ -228,6 +228,32 @@ public class TrailRepository : ITrailRepository
         }
     }
 
+    public async Task<RepositoryResult> UpdateTrailSymbolAsync(string trailIdentifier, string symbolPath, CancellationToken ctoken)
+    {
+        try
+        {
+            using var context = await _context.CreateDbContextAsync(ctoken);
+
+            var trail = await context.Trails
+                .FirstOrDefaultAsync(t => t.Identifier == trailIdentifier, ctoken);
+
+            if (trail is null)
+                return RepositoryResult.NotFound();
+
+            trail.TrailSymbolImage = symbolPath;
+            trail.LastUpdatedAt = DateTime.UtcNow;
+
+            await context.SaveChangesAsync(ctoken);
+
+            return RepositoryResult.Success();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "TrailRepository: UpdateTrailSymbolAsync -> Something went wrong updating symbol for trail {TrailIdentifier}.", trailIdentifier);
+            return RepositoryResult.Error();
+        }
+    }
+
     public async Task<RepositoryResult> DeleteTrailImageAsync(string imageIdentifier, CancellationToken ctoken)
     {
         try

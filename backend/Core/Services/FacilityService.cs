@@ -2,6 +2,9 @@ using Core.Factories;
 using Core.Interfaces.Repositories;
 using Core.Interfaces.Services;
 using Infrastructure.Data.Entities;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using WebDataContracts.ResponseModels.Facility;
 
 namespace Core.Services;
@@ -10,11 +13,26 @@ public class FacilityService : IFacilityService
 {
     private readonly IFacilityRepository _facilityRepository;
     private readonly FacilityResponseFactory _facilityResponseFactory;
+    private readonly IMediaUploadService _mediaUploadService;
+    private readonly IWebDavService _webDavService;
+    private readonly ILogger<FacilityService> _logger;
+    private readonly string _presentableBaseUrl;
 
-    public FacilityService(IFacilityRepository facilityRepository, FacilityResponseFactory facilityResponseFactory)
+    public FacilityService(
+        IFacilityRepository facilityRepository,
+        FacilityResponseFactory facilityResponseFactory,
+        IMediaUploadService mediaUploadService,
+        IWebDavService webDavService,
+        ILogger<FacilityService> logger,
+        IConfiguration configuration)
     {
         _facilityRepository = facilityRepository;
         _facilityResponseFactory = facilityResponseFactory;
+        _mediaUploadService = mediaUploadService;
+        _webDavService = webDavService;
+        _logger = logger;
+        _presentableBaseUrl = configuration["PresentableBaseUrl"]
+            ?? throw new InvalidOperationException("PresentableBaseUrl configuration is missing");
     }
 
     public async Task<Result<FacilityResponse>> CreateFacilityAsync(
@@ -105,6 +123,83 @@ public class FacilityService : IFacilityService
 
         if (!deleteResult.IsSuccess)
             return Result.Fail(new Message(500, "Failed to delete the facility."));
+
+        return Result.Ok();
+    }
+
+    public async Task<Result<IReadOnlyCollection<FacilityImageResponse>>> AddFacilityImagesAsync(
+        string facilityIdentifier,
+        IFormFileCollection images,
+        ImageProcessingOptions options,
+        CancellationToken ctoken)
+    {
+        var uploadedUrls = new List<string>();
+
+        try
+        {
+            var facilityResult = await _facilityRepository.GetByIdentifierAsync(facilityIdentifier, ctoken);
+
+            if (facilityResult.Status == RepositoryResultStatus.Error)
+                return Result.Fail<IReadOnlyCollection<FacilityImageResponse>>(new Message(500, "An error occurred while fetching the facility."));
+
+            if (!facilityResult.IsSuccess)
+                return Result.Fail<IReadOnlyCollection<FacilityImageResponse>>(new Message(404, $"No facility found with identifier: {facilityIdentifier}"));
+
+            var facilityImages = new List<FacilityImage>();
+
+            foreach (var image in images)
+            {
+                var uploadResult = await _mediaUploadService.ProcessAndUploadAsync(image.OpenReadStream(), "facilities", options);
+
+                if (uploadResult.IsFailure || uploadResult.Value == null)
+                    return Result.Fail<IReadOnlyCollection<FacilityImageResponse>>(new Message(500, "Something went wrong uploading images. Try again later."));
+
+                uploadedUrls.Add(uploadResult.Value.Path);
+                facilityImages.Add(new FacilityImage
+                {
+                    ImageUrl = uploadResult.Value.Path,
+                    Width = uploadResult.Value.Width,
+                    Height = uploadResult.Value.Height,
+                    SizeBytes = uploadResult.Value.SizeBytes
+                });
+            }
+
+            var addResult = await _facilityRepository.AddFacilityImagesAsync(facilityResult.Value.Id, facilityImages, ctoken);
+
+            if (!addResult.IsSuccess)
+                return Result.Fail<IReadOnlyCollection<FacilityImageResponse>>(new Message(500, "An error occurred while saving images."));
+
+            IReadOnlyCollection<FacilityImageResponse> response = addResult.Value
+                .Select(img => FacilityImageResponse.Create(
+                    _presentableBaseUrl, img.Identifier, img.ImageUrl,
+                    img.AltText, img.Caption, img.Width, img.Height, img.SizeBytes))
+                .ToList();
+
+            return Result.Ok(response);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "FacilityService: AddFacilityImagesAsync -> Error adding images to facility {FacilityIdentifier}", facilityIdentifier);
+
+            foreach (var url in uploadedUrls)
+            {
+                try { await _webDavService.DeleteFileAsync(url); }
+                catch (Exception cleanupEx) { _logger.LogWarning(cleanupEx, "Failed to cleanup uploaded image: {Url}", url); }
+            }
+
+            return Result.Fail<IReadOnlyCollection<FacilityImageResponse>>(new Message(500, "An error occurred while adding images."));
+        }
+    }
+
+    public async Task<Result> DeleteFacilityImageAsync(string imageIdentifier, CancellationToken ctoken)
+    {
+        var result = await _facilityRepository.DeleteFacilityImageAsync(imageIdentifier, ctoken);
+
+        if (result.Status == RepositoryResultStatus.Error)
+            return Result.Fail(new Message(500, "An error occurred while deleting the image."));
+
+        if (!result.IsSuccess)
+            return Result.Fail(new Message(404, $"Image with identifier {imageIdentifier} not found."));
 
         return Result.Ok();
     }
