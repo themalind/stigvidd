@@ -14,11 +14,13 @@ public class HikeServiceTests
 {
     private HikeService Build(
         Mock<IHikeRepository>? hikeRepo = null,
-        Mock<IUserRepository>? userRepo = null) =>
+        Mock<IUserRepository>? userRepo = null,
+        Mock<IHikeShareRecipientRepository>? shareRepo = null) =>
         new(
             (hikeRepo ?? new Mock<IHikeRepository>()).Object,
             new HikeResponseFactory(),
-            (userRepo ?? new Mock<IUserRepository>()).Object);
+            (userRepo ?? new Mock<IUserRepository>()).Object,
+            (shareRepo ?? new Mock<IHikeShareRecipientRepository>()).Object);
 
     private static CreateHikeRequest ValidRequest() => new()
     {
@@ -73,22 +75,26 @@ public class HikeServiceTests
         result.Message.StatusCode.Should().Be(404);
     }
 
-    [Fact]
-    public async Task CreateHike_WithEmptyName_ReturnsBadRequest()
+    // Name/HikeLength/Duration validation lives in CreateHikeRequestValidator (see
+    // CreateHikeRequestValidatorTests) and is enforced by auto-validation before the
+    // service runs. The service is only responsible for parsing/bounding coordinates.
+
+    private static Mock<IUserRepository> UserExistsRepo()
     {
-        // Arrange
         var userRepo = new Mock<IUserRepository>();
         userRepo.Setup(r => r.GetUserIdByIdentifierAsync(Utilities.Identifiers.User, It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<int>.Success(1));
+        return userRepo;
+    }
 
-        var hikeRepo = new Mock<IHikeRepository>();
-        hikeRepo.Setup(r => r.CreateHikeAsync(It.IsAny<Hike>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(RepositoryResult<Hike>.Success(Utilities.Stubs.Hike()));
-
-        var request = new CreateHikeRequest { Name = "", HikeLength = 5000, Duration = 1800000, Coordinates = "[]" };
+    [Fact]
+    public async Task CreateHike_WithMalformedCoordinatesJson_ReturnsBadRequest()
+    {
+        // Arrange — a malformed blob must not bubble up as an unhandled 500.
+        var request = new CreateHikeRequest { Name = "Hike", HikeLength = 5000, Duration = 1800000, Coordinates = "{not valid json" };
 
         // Act
-        var result = await Build(userRepo: userRepo, hikeRepo: hikeRepo).CreateHikeAsync(request, Utilities.Identifiers.User, CancellationToken.None);
+        var result = await Build(userRepo: UserExistsRepo()).CreateHikeAsync(request, Utilities.Identifiers.User, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -97,21 +103,13 @@ public class HikeServiceTests
     }
 
     [Fact]
-    public async Task CreateHike_WithZeroHikeLength_ReturnsBadRequest()
+    public async Task CreateHike_WithFewerThanTwoCoordinates_ReturnsBadRequest()
     {
         // Arrange
-        var userRepo = new Mock<IUserRepository>();
-        userRepo.Setup(r => r.GetUserIdByIdentifierAsync(Utilities.Identifiers.User, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(RepositoryResult<int>.Success(1));
-
-        var hikeRepo = new Mock<IHikeRepository>();
-        hikeRepo.Setup(r => r.CreateHikeAsync(It.IsAny<Hike>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(RepositoryResult<Hike>.Success(Utilities.Stubs.Hike()));
-
-        var request = new CreateHikeRequest { Name = "Hike", HikeLength = 0, Duration = 1800000, Coordinates = "[]" };
+        var request = new CreateHikeRequest { Name = "Hike", HikeLength = 5000, Duration = 1800000, Coordinates = "[{\"latitude\":57.6,\"longitude\":12.8}]" };
 
         // Act
-        var result = await Build(userRepo: userRepo, hikeRepo: hikeRepo).CreateHikeAsync(request, Utilities.Identifiers.User, CancellationToken.None);
+        var result = await Build(userRepo: UserExistsRepo()).CreateHikeAsync(request, Utilities.Identifiers.User, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -120,21 +118,40 @@ public class HikeServiceTests
     }
 
     [Fact]
-    public async Task CreateHike_WithZeroDuration_ReturnsBadRequest()
+    public async Task CreateHike_WithTooManyCoordinates_ReturnsBadRequest()
     {
-        // Arrange
-        var userRepo = new Mock<IUserRepository>();
-        userRepo.Setup(r => r.GetUserIdByIdentifierAsync(Utilities.Identifiers.User, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(RepositoryResult<int>.Success(1));
-
-        var hikeRepo = new Mock<IHikeRepository>();
-        hikeRepo.Setup(r => r.CreateHikeAsync(It.IsAny<Hike>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(RepositoryResult<Hike>.Success(Utilities.Stubs.Hike()));
-
-        var request = new CreateHikeRequest { Name = "Hike", HikeLength = 5000, Duration = 0, Coordinates = "[]" };
+        // Arrange — build an array well past the 20,000-point cap.
+        var points = Enumerable.Repeat("{\"latitude\":57.6,\"longitude\":12.8}", 20_001);
+        var request = new CreateHikeRequest
+        {
+            Name = "Hike",
+            HikeLength = 5000,
+            Duration = 1800000,
+            Coordinates = "[" + string.Join(",", points) + "]",
+        };
 
         // Act
-        var result = await Build(userRepo: userRepo, hikeRepo: hikeRepo).CreateHikeAsync(request, Utilities.Identifiers.User, CancellationToken.None);
+        var result = await Build(userRepo: UserExistsRepo()).CreateHikeAsync(request, Utilities.Identifiers.User, CancellationToken.None);
+
+        // Assert
+        result.Success.Should().BeFalse();
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(400);
+    }
+
+    [Theory]
+    [InlineData("[{\"latitude\":91,\"longitude\":12.8},{\"latitude\":57.6,\"longitude\":12.8}]")]   // lat > 90
+    [InlineData("[{\"latitude\":-91,\"longitude\":12.8},{\"latitude\":57.6,\"longitude\":12.8}]")]  // lat < -90
+    [InlineData("[{\"latitude\":57.6,\"longitude\":181},{\"latitude\":57.6,\"longitude\":12.8}]")]  // lng > 180
+    [InlineData("[{\"latitude\":57.6,\"longitude\":-181},{\"latitude\":57.6,\"longitude\":12.8}]")] // lng < -180
+    public async Task CreateHike_WithOutOfRangeCoordinates_ReturnsBadRequest(string coordinates)
+    {
+        // Arrange — neither the geometry column nor NetTopologySuite rejects points
+        // outside WGS84 bounds, so the service must guard against them.
+        var request = new CreateHikeRequest { Name = "Hike", HikeLength = 5000, Duration = 1800000, Coordinates = coordinates };
+
+        // Act
+        var result = await Build(userRepo: UserExistsRepo()).CreateHikeAsync(request, Utilities.Identifiers.User, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -172,13 +189,62 @@ public class HikeServiceTests
             .ReturnsAsync(RepositoryResult<Hike>.Success(Utilities.Stubs.Hike()));
 
         // Act
-        var result = await Build(hikeRepo).GetHikeByIdentifierAsync(Utilities.Identifiers.Hike1, CancellationToken.None);
+        var result = await Build(hikeRepo).GetHikeByIdentifierAsync(Utilities.Identifiers.Hike1, Utilities.Identifiers.User, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeTrue();
         result.Value.Should().NotBeNull();
         result.Value.Identifier.Should().Be(Utilities.Identifiers.Hike1);
         result.Value.Name.Should().Be("TestHike1");
+    }
+
+    [Fact]
+    public async Task GetHikeByIdentifier_WhenNotOwnerAndNotSharedWith_ReturnsForbidden()
+    {
+        // Arrange
+        var hikeRepo = new Mock<IHikeRepository>();
+        hikeRepo.Setup(r => r.GetHikeByIdentifierAsync(Utilities.Identifiers.Hike1, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<Hike>.Success(Utilities.Stubs.Hike()));
+
+        var userRepo = new Mock<IUserRepository>();
+        userRepo.Setup(r => r.GetUserIdByIdentifierAsync("some-other-user", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<int>.Success(99));
+
+        var shareRepo = new Mock<IHikeShareRecipientRepository>();
+        shareRepo.Setup(r => r.HasHikeSharedWithUserAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<bool>.Success(false));
+
+        // Act — a different user with no share requests someone else's private hike
+        var result = await Build(hikeRepo, userRepo, shareRepo).GetHikeByIdentifierAsync(Utilities.Identifiers.Hike1, "some-other-user", CancellationToken.None);
+
+        // Assert
+        result.Success.Should().BeFalse();
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(403);
+    }
+
+    [Fact]
+    public async Task GetHikeByIdentifier_WhenSharedWithUser_ReturnsSuccess()
+    {
+        // Arrange
+        var hikeRepo = new Mock<IHikeRepository>();
+        hikeRepo.Setup(r => r.GetHikeByIdentifierAsync(Utilities.Identifiers.Hike1, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<Hike>.Success(Utilities.Stubs.Hike()));
+
+        var userRepo = new Mock<IUserRepository>();
+        userRepo.Setup(r => r.GetUserIdByIdentifierAsync("recipient", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<int>.Success(99));
+
+        var shareRepo = new Mock<IHikeShareRecipientRepository>();
+        shareRepo.Setup(r => r.HasHikeSharedWithUserAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<bool>.Success(true));
+
+        // Act — a recipient of a shared hike may read it
+        var result = await Build(hikeRepo, userRepo, shareRepo).GetHikeByIdentifierAsync(Utilities.Identifiers.Hike1, "recipient", CancellationToken.None);
+
+        // Assert
+        result.Success.Should().BeTrue();
+        result.Value.Should().NotBeNull();
     }
 
     [Fact]
@@ -205,7 +271,7 @@ public class HikeServiceTests
             .ReturnsAsync(RepositoryResult<Hike>.Success(hike));
 
         // Act
-        var result = await Build(hikeRepo).GetHikeByIdentifierAsync(Utilities.Identifiers.Hike1, CancellationToken.None);
+        var result = await Build(hikeRepo).GetHikeByIdentifierAsync(Utilities.Identifiers.Hike1, Utilities.Identifiers.User, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -224,7 +290,7 @@ public class HikeServiceTests
             .ReturnsAsync(RepositoryResult<Hike>.NotFound());
 
         // Act
-        var result = await Build(hikeRepo).GetHikeByIdentifierAsync("no-such-hike", CancellationToken.None);
+        var result = await Build(hikeRepo).GetHikeByIdentifierAsync("no-such-hike", Utilities.Identifiers.User, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -357,7 +423,7 @@ public class HikeServiceTests
     }
 
     [Fact]
-    public async Task UpdateHike_WhenNotOwner_ReturnsUnauthorized()
+    public async Task UpdateHike_WhenNotOwner_ReturnsForbidden()
     {
         // Arrange
         var hike = Utilities.Stubs.Hike(); // UserId = 1
@@ -376,7 +442,7 @@ public class HikeServiceTests
         // Assert
         result.Success.Should().BeFalse();
         result.Message.Should().NotBeNull();
-        result.Message.StatusCode.Should().Be(401);
+        result.Message.StatusCode.Should().Be(403);
     }
 
     [Fact]
@@ -415,7 +481,7 @@ public class HikeServiceTests
     }
 
     [Fact]
-    public async Task DeleteHike_WhenNotOwner_ReturnsUnauthorized()
+    public async Task DeleteHike_WhenNotOwner_ReturnsForbidden()
     {
         // Arrange
         var hike = Utilities.Stubs.Hike();
@@ -434,6 +500,6 @@ public class HikeServiceTests
         // Assert
         result.Success.Should().BeFalse();
         result.Message.Should().NotBeNull();
-        result.Message.StatusCode.Should().Be(401);
+        result.Message.StatusCode.Should().Be(403);
     }
 }

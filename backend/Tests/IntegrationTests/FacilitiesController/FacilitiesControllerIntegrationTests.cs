@@ -124,8 +124,8 @@ public class FacilitiesControllerIntegrationTests : IClassFixture<StigViddWebApp
             Name = "Ny grillplats",
             FacilityType = 1,
             IsAccessible = true,
-            Latitude = 57.7,
-            Longitude = 12.8
+            Latitude = 57.7m,
+            Longitude = 12.8m
         };
 
         // Act
@@ -151,8 +151,8 @@ public class FacilitiesControllerIntegrationTests : IClassFixture<StigViddWebApp
             Name = "Ny grillplats",
             FacilityType = 1,
             IsAccessible = true,
-            Latitude = 57.7,
-            Longitude = 12.8
+            Latitude = 57.7m,
+            Longitude = 12.8m
         };
 
         // Act
@@ -175,8 +175,8 @@ public class FacilitiesControllerIntegrationTests : IClassFixture<StigViddWebApp
             Name = string.Empty,
             FacilityType = 1,
             IsAccessible = true,
-            Latitude = 57.7,
-            Longitude = 12.8
+            Latitude = 57.7m,
+            Longitude = 12.8m
         };
 
         // Act
@@ -199,8 +199,8 @@ public class FacilitiesControllerIntegrationTests : IClassFixture<StigViddWebApp
             Name = "Grillplats",
             FacilityType = 1,
             IsAccessible = true,
-            Latitude = 91,
-            Longitude = 12.8
+            Latitude = 91m,
+            Longitude = 12.8m
         };
 
         // Act
@@ -223,8 +223,8 @@ public class FacilitiesControllerIntegrationTests : IClassFixture<StigViddWebApp
             Name = "Grillplats",
             FacilityType = 1,
             IsAccessible = true,
-            Latitude = 57.7,
-            Longitude = 181
+            Latitude = 57.7m,
+            Longitude = 181m
         };
 
         // Act

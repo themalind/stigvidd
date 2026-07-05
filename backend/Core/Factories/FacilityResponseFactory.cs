@@ -3,6 +3,7 @@ using WebDataContracts.ResponseModels.Facility;
 
 namespace Core.Factories;
 
+// Add missing properties
 public class FacilityResponseFactory
 {
     public FacilityResponse Create(Facility facility)
@@ -12,8 +13,8 @@ public class FacilityResponseFactory
             facility.Name,
             (int)facility.FacilityType,
             facility.IsAccessible,
-            facility.Latitude,
-            facility.Longitude
+            facility.Latitude.GetValueOrDefault(),
+            facility.Longitude.GetValueOrDefault()
         );
     }
 
@@ -24,8 +25,8 @@ public class FacilityResponseFactory
             facility.Name,
             (int)facility.FacilityType,
             facility.IsAccessible,
-            facility.Latitude,
-            facility.Longitude
+            facility.Latitude.GetValueOrDefault(),
+            facility.Longitude.GetValueOrDefault()
         )).ToList();
     }
 }

@@ -48,6 +48,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IFriendRepository, FriendRepository>();
         services.AddTransient<IUserPushTokenRepository, UserPushTokenRepository>();
         services.AddTransient<IMediaRepository, MediaRepository>();
+        services.AddTransient<ICityAreaRepository, CityAreaRepository>();
 
         // Services
         services.AddTransient<ITrailService, TrailService>();
@@ -63,6 +64,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IHikeShareService, HikeShareService>();
         services.AddTransient<IHikeShareRecipientService, HikeShareRecipientService>();
         services.AddTransient<IFriendService, FriendService>();
+        services.AddTransient<ICityAreaService, CityAreaService>();
         services.AddHttpClient<IPushNotificationService, ExpoPushService>(c => c.BaseAddress = new Uri("https://exp.host"));
 
         services.AddTransient<Func<IWebDavClient>>(sp =>
@@ -93,5 +95,6 @@ public static class ServiceCollectionExtensions
         services.AddTransient<HikeResponseFactory>();
         services.AddTransient<TrailObstaclesResponseFactory>();
         services.AddTransient<FacilityResponseFactory>();
+        services.AddTransient<CityAreaResponseFactory>();
     }
 }

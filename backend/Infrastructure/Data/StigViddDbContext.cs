@@ -21,6 +21,7 @@ public class StigViddDbContext(DbContextOptions<StigViddDbContext> options) : Db
     public DbSet<HikeImage> HikeImages { get; set; }
     public DbSet<FriendRequest> FriendRequests { get; set; }
     public DbSet<UserPushToken> UserPushTokens { get; set; }
+    public DbSet<CityArea> CityAreas { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -58,6 +59,34 @@ public class StigViddDbContext(DbContextOptions<StigViddDbContext> options) : Db
                 {
                     j.HasKey("UserId", "TrailId");
                     j.ToTable("UserFavorites");
+                });
+
+        // CityArea ↔ Trail (many-to-many): a trail can pass through several areas
+        modelBuilder.Entity<CityArea>()
+            .HasMany(a => a.Trails)
+            .WithMany(t => t.CityAreas)
+            .UsingEntity<Dictionary<string, object>>(
+                "CityAreaTrail",  // Explicit tabellnamn
+                r => r.HasOne<Trail>().WithMany().HasForeignKey("TrailId"),
+                l => l.HasOne<CityArea>().WithMany().HasForeignKey("CityAreaId"),
+                j =>
+                {
+                    j.HasKey("CityAreaId", "TrailId");
+                    j.ToTable("CityAreaTrail");
+                });
+
+        // CityArea ↔ Facility (many-to-many): a facility can belong to several areas
+        modelBuilder.Entity<CityArea>()
+            .HasMany(a => a.Facilities)
+            .WithMany(f => f.CityAreas)
+            .UsingEntity<Dictionary<string, object>>(
+                "CityAreaFacility",  // Explicit tabellnamn
+                r => r.HasOne<Facility>().WithMany().HasForeignKey("FacilityId"),
+                l => l.HasOne<CityArea>().WithMany().HasForeignKey("CityAreaId"),
+                j =>
+                {
+                    j.HasKey("CityAreaId", "FacilityId");
+                    j.ToTable("CityAreaFacility");
                 });
 
         // Configures a one-to-one relationship where Trail has a VisitorInformation,

@@ -153,6 +153,17 @@ public class CreateHikeRequestValidatorTests
         result.IsValid.Should().BeFalse();
     }
 
+    [Fact]
+    public void Validate_WithCoordinatesExceedingMaxLength_ShouldFail()
+    {
+        var request = ValidRequest();
+        request.Coordinates = new string('0', 2_000_001);
+
+        var result = _validator.Validate(request);
+
+        result.IsValid.Should().BeFalse();
+    }
+
     // --- ParkingInfo ---
 
     [Fact]

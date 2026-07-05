@@ -24,4 +24,5 @@ public class Trail : BaseEntity
     public ICollection<Review>? Reviews { get; set; }
     public ICollection<TrailLink>? TrailLinks { get; set; }
     public ICollection<TrailObstacle>? TrailObstacles { get; set; }
+    public ICollection<CityArea>? CityAreas { get; set; }
 }

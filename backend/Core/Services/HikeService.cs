@@ -10,17 +10,25 @@ namespace Core.Services;
 
 public class HikeService : IHikeService
 {
+    // Upper bound on recorded points per hike. The app caps a recording at 12 h and
+    // samples every ~3 s (~14,400 points); this leaves generous headroom while
+    // rejecting oversized payloads. Mirror the raw-string cap in CreateHikeRequestValidator.
+    private const int MaxCoordinates = 20_000;
+
     private readonly HikeResponseFactory _hikeResponseFactory;
     private readonly IUserRepository _userRepository;
     private readonly IHikeRepository _hikeRepository;
+    private readonly IHikeShareRecipientRepository _hikeShareRecipientRepository;
 
     public HikeService(IHikeRepository hikeRepository,
         HikeResponseFactory hikeResponseFactory,
-        IUserRepository userRepository)
+        IUserRepository userRepository,
+        IHikeShareRecipientRepository hikeShareRecipientRepository)
     {
         _hikeRepository = hikeRepository;
         _hikeResponseFactory = hikeResponseFactory;
         _userRepository = userRepository;
+        _hikeShareRecipientRepository = hikeShareRecipientRepository;
     }
 
     public async Task<Result<HikeResponse>> CreateHikeAsync(CreateHikeRequest request, string userIdentifier, CancellationToken ctoken)
@@ -35,20 +43,38 @@ public class HikeService : IHikeService
             return Result.Fail<HikeResponse>(new Message(404, "User not found"));
         }
 
-        if (string.IsNullOrWhiteSpace(request.Name) ||
-            request.Name.Length > 40 ||
-            request.HikeLength == 0 ||
-            request.Duration == 0)
-        {
-            return Result.Fail<HikeResponse>(new Message(400, "Hike properties are invalid."));
-        }
+        // Name/HikeLength/Duration/Coordinates are validated by CreateHikeRequestValidator,
+        // which SharpGrip auto-validation runs before this service is reached.
 
-        //parse json coordinates to NetTopologySuite.Geometries.Coordinate array
-        var parsedCoordinates = Newtonsoft.Json.JsonConvert.DeserializeObject<WebDataContracts.Coordinate[]>(request.Coordinates);
-        if(parsedCoordinates is null || parsedCoordinates.Length < 2)
+        // Parse the JSON coordinate blob into a NetTopologySuite Coordinate array.
+        // A malformed blob is expected client input, so map the parse failure to a
+        // 400 rather than letting it bubble up as an unhandled 500.
+        WebDataContracts.Coordinate[]? parsedCoordinates;
+        try
+        {
+            parsedCoordinates = Newtonsoft.Json.JsonConvert.DeserializeObject<WebDataContracts.Coordinate[]>(request.Coordinates);
+        }
+        catch (Newtonsoft.Json.JsonException)
         {
             return Result.Fail<HikeResponse>(new Message(400, "Hike coordinates are invalid."));
         }
+
+        if (parsedCoordinates is null || parsedCoordinates.Length < 2 || parsedCoordinates.Length > MaxCoordinates)
+        {
+            return Result.Fail<HikeResponse>(new Message(400, "Hike coordinates are invalid."));
+        }
+
+        // Neither the geometry column nor NetTopologySuite enforces geographic ranges,
+        // so guard here: any point outside WGS84 bounds (lat ±90, lng ±180) or non-finite
+        // is a bad payload that would otherwise persist and corrupt the rendered route.
+        if (parsedCoordinates.Any(c =>
+                !double.IsFinite(c.Latitude) || !double.IsFinite(c.Longitude) ||
+                c.Latitude < -90 || c.Latitude > 90 ||
+                c.Longitude < -180 || c.Longitude > 180))
+        {
+            return Result.Fail<HikeResponse>(new Message(400, "Hike coordinates are invalid."));
+        }
+
         var coords = new LineString([.. parsedCoordinates.Select(c => new NetTopologySuite.Geometries.Coordinate(c.Longitude, c.Latitude))]);
 
         var hike = new Hike
@@ -72,7 +98,7 @@ public class HikeService : IHikeService
         return Result.Ok(_hikeResponseFactory.Create(result.Value));
     }
 
-    public async Task<Result<HikeResponse>> GetHikeByIdentifierAsync(string identifier, CancellationToken ctoken)
+    public async Task<Result<HikeResponse>> GetHikeByIdentifierAsync(string identifier, string userIdentifier, CancellationToken ctoken)
     {
         var result = await _hikeRepository.GetHikeByIdentifierAsync(identifier, ctoken);
 
@@ -81,6 +107,19 @@ public class HikeService : IHikeService
 
         if (!result.IsSuccess)
             return Result.Fail<HikeResponse>(new Message(404, "Hike not found"));
+
+        // Hikes are private: readable by the creator, or by a user the hike has been
+        // shared with (pending or accepted). Everyone else is forbidden.
+        if (result.Value.CreatedBy != userIdentifier)
+        {
+            var userIdResult = await _userRepository.GetUserIdByIdentifierAsync(userIdentifier, ctoken);
+            if (!userIdResult.IsSuccess)
+                return Result.Fail<HikeResponse>(new Message(403, "Hike does not belong to the user"));
+
+            var shareResult = await _hikeShareRecipientRepository.HasHikeSharedWithUserAsync(userIdResult.Value, result.Value.Id, ctoken);
+            if (!shareResult.IsSuccess || !shareResult.Value)
+                return Result.Fail<HikeResponse>(new Message(403, "Hike does not belong to the user"));
+        }
 
         return Result.Ok(_hikeResponseFactory.Create(result.Value));
     }
@@ -153,7 +192,7 @@ public class HikeService : IHikeService
         }
 
         if (hikeResult.Value.UserId != userIdResult.Value)
-            return Result.Fail<HikeResponse>(new Message(401, "Hike does not belong to the user"));
+            return Result.Fail<HikeResponse>(new Message(403, "Hike does not belong to the user"));
 
 
         if (!string.IsNullOrEmpty(name))
@@ -197,7 +236,7 @@ public class HikeService : IHikeService
             return Result.Fail(new Message(404, $"Could not remove hike with id {hikeIdentifier}."));
 
         if (result.Value.UserId != userResult.Value.Id)
-            return Result.Fail(new Message(401, $"Hike {hikeIdentifier} does not belong to {userResult.Value.Id}"));
+            return Result.Fail(new Message(403, $"Hike {hikeIdentifier} does not belong to {userResult.Value.Id}"));
 
         await _hikeRepository.SoftDeleteHikeAsync(result.Value, ctoken);
 
