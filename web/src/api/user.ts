@@ -1,7 +1,7 @@
 import type { StigviddUser } from "@/types/types";
 import { getValidAccessToken } from "@/services/keycloak-auth";
 
-const BASE_URL = `http://${import.meta.env.VITE_API_HOST}/api/v1/users`;
+const BASE_URL = `${import.meta.env.VITE_API_URL}/api/v1/users`;
 
 export async function getStigviddUser(): Promise<StigviddUser> {
   const token = await getValidAccessToken();
