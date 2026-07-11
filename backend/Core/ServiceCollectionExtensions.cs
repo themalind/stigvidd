@@ -3,6 +3,7 @@ using Core.Interfaces.Repositories;
 using Core.Interfaces.Services;
 using Core.Repositories;
 using Core.Services;
+using Infrastructure;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -96,5 +97,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<TrailObstaclesResponseFactory>();
         services.AddTransient<FacilityResponseFactory>();
         services.AddTransient<CityAreaResponseFactory>();
+
+        services.AddTransient<IDbMigrationRunner, DbMigrationRunner>();
     }
 }

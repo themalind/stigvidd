@@ -11,12 +11,12 @@ const { height } = Dimensions.get("screen");
 interface AddReviewProps {
   trailIdentifier: string;
   trailName: string;
-  trailLenght: number;
+  trailLength: number;
   visible: boolean;
   onDismiss: () => void;
 }
 
-export default function AddReview({ visible, onDismiss, trailIdentifier, trailName, trailLenght }: AddReviewProps) {
+export default function AddReview({ visible, onDismiss, trailIdentifier, trailName, trailLength }: AddReviewProps) {
   const theme = useTheme();
   const { t } = useTranslation();
   return (
@@ -36,7 +36,7 @@ export default function AddReview({ visible, onDismiss, trailIdentifier, trailNa
           <View style={s.titleAndCloseContainer}>
             <View style={s.topTextContainer}>
               <Text style={s.title}>{t("review.createTitle")}</Text>
-              <Text style={s.text}>{`${trailName} ${trailLenght} km`}</Text>
+              <Text style={s.text}>{`${trailName} ${trailLength} km`}</Text>
             </View>
             <Pressable hitSlop={12} onPress={onDismiss}>
               <Icon size={30} source="close" />

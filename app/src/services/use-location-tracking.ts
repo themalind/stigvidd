@@ -7,10 +7,12 @@ import { useTranslation } from "react-i18next";
 import { AppState } from "react-native";
 import {
   LOCATION_TASK_NAME,
+  MIN_DISTANCE,
   MIN_SEGMENT_DISTANCE,
   StoredHikeState,
   clearHikeState,
   defaultHikeState,
+  evaluatePoint,
   maybeFinalizeStaleHike,
   mutateHikeState,
 } from "./location-task";
@@ -18,8 +20,6 @@ import {
 // How often the background task samples GPS (ms). Android-only — on iOS the
 // sampling cadence is driven purely by distanceInterval (see startTracking).
 const SAMPLE_INTERVAL = 3000;
-// Minimum meters between accepted GPS points
-const MIN_DISTANCE = 3;
 // How often the UI reads AsyncStorage to reflect background task updates (ms)
 const POLL_INTERVAL = 2000;
 
@@ -33,6 +33,17 @@ export function useLocationTracking() {
   const [hike, setHike] = useState<ActiveHike>(defaultHikeState.hike);
   const [currentSegment, setCurrentSegment] = useState<Segment | null>(null);
   const [isTracking, setIsTracking] = useState(false);
+
+  // Live foreground track of the active segment, updated on every GPS fix. Drives
+  // the drawn route so it follows the user dot in real time instead of catching up
+  // in polling-sized jumps. Purely visual — the background task remains the source
+  // of truth for persisted distance and segments (see routePositions in the UI).
+  const [liveCoordinates, setLiveCoordinates] = useState<LocationData[]>([]);
+  const liveCoordsRef = useRef<LocationData[]>([]);
+  const setLive = useCallback((coords: LocationData[]) => {
+    liveCoordsRef.current = coords;
+    setLiveCoordinates(coords);
+  }, []);
 
   // Applies a StoredHikeState snapshot into React state
   const applyState = useCallback((state: StoredHikeState) => {
@@ -99,6 +110,45 @@ export function useLocationTracking() {
       }
     };
   }, [isTracking, syncFromStorage]);
+
+  // Foreground GPS watcher: while tracking, append every accepted fix to the live
+  // tail so the drawn route follows the user dot smoothly. Runs only while the app
+  // is foregrounded (iOS suspends JS in the background) — the background task keeps
+  // recording to storage during that time, and the UI stitches the two by
+  // timestamp. Uses the same filter as the task so both agree on what counts.
+  useEffect(() => {
+    if (!isTracking) return;
+
+    let subscription: Location.LocationSubscription | null = null;
+    let active = true;
+
+    (async () => {
+      try {
+        const sub = await Location.watchPositionAsync(
+          { accuracy: Location.Accuracy.BestForNavigation, distanceInterval: MIN_DISTANCE },
+          (location) => {
+            const candidate: LocationData = {
+              data: { latitude: location.coords.latitude, longitude: location.coords.longitude },
+              timeStamp: location.timestamp,
+            };
+            const { accept } = evaluatePoint(liveCoordsRef.current.at(-1), candidate, location.coords.accuracy);
+            if (!accept) return;
+            setLive([...liveCoordsRef.current, candidate]);
+          },
+        );
+        // If tracking stopped while awaiting, tear down immediately.
+        if (active) subscription = sub;
+        else sub.remove();
+      } catch {
+        // If the foreground watcher can't start, the polled line still renders.
+      }
+    })();
+
+    return () => {
+      active = false;
+      subscription?.remove();
+    };
+  }, [isTracking, setLive]);
 
   const startTracking = async () => {
     // Foreground ("When In Use") is the only hard requirement to start recording.
@@ -170,10 +220,11 @@ export function useLocationTracking() {
   };
 
   const stopTracking = async () => {
-    const isTaskRunning = await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME);
-    if (isTaskRunning) {
-      await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
-    }
+    try {
+      const isTaskRunning = await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME);
+      if (isTaskRunning) {
+        await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
+      }
 
     // Finalize atomically against the latest task-written state. A batch still
     // in flight when we stopped either lands before this mutation (its points are
@@ -206,6 +257,24 @@ export function useLocationTracking() {
           };
         }
       }
+        // Only keep the segment if the user actually moved a meaningful distance
+        if (completedSegment.distance >= MIN_SEGMENT_DISTANCE) {
+          updatedHike = {
+            ...state.hike,
+            segments: [...state.hike.segments, completedSegment],
+            // Accumulate the wall-clock duration of this segment into the total
+            totalTime: state.hike.totalTime + segmentDuration,
+          };
+        } else {
+          // Discard the too-short segment as noise, and roll back the distance the
+          // background task already accumulated for it — otherwise distance stays
+          // stuck at a phantom value while the segment and its time are thrown away.
+          updatedHike = {
+            ...state.hike,
+            totalDistance: Math.max(0, state.hike.totalDistance - seg.distance),
+          };
+        }
+      }
 
       return {
         isTracking: false,
@@ -218,21 +287,36 @@ export function useLocationTracking() {
   };
 
   const resetTracking = async () => {
-    // Stop the background task if it's still running
-    const isTaskRunning = await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME);
-    if (isTaskRunning) {
-      await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
+    try {
+      // Stop the background task if it's still running
+      const isTaskRunning = await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME);
+      if (isTaskRunning) {
+        await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
+      }
+      // Wipe persisted state and reset UI back to the initial empty hike
+      await clearHikeState();
+      setLive([]);
+      applyState(defaultHikeState);
+    } catch {
+      setError(t("createHike.trackingError"));
     }
-    // Wipe persisted state and reset UI back to the initial empty hike
-    await clearHikeState();
-    applyState(defaultHikeState);
   };
 
-  // Returns total elapsed time including the currently active segment (if any)
+  // Returns total recorded time including the currently active segment (if any).
+  // The active portion is measured as the span of recorded GPS timestamps
+  // (first → latest fix, including the live foreground tail) rather than wall-clock,
+  // so it matches the span-based duration recomputeTrimmedHike will ultimately save
+  // and never counts startup lag or standing still before the first fix.
   const getActiveTime = () => {
     const completedTime = hike.totalTime;
     if (!currentSegment) return completedTime;
-    return completedTime + (Date.now() - currentSegment.startTime);
+
+    const firstTs = currentSegment.coordinates[0]?.timeStamp;
+    if (firstTs === undefined) return completedTime; // no fix recorded yet
+
+    const lastTs = liveCoordsRef.current.at(-1)?.timeStamp ?? currentSegment.coordinates.at(-1)?.timeStamp ?? firstTs;
+
+    return completedTime + Math.max(0, lastTs - firstTs);
   };
 
   return {
@@ -242,6 +326,7 @@ export function useLocationTracking() {
     isTracking,
     hike,
     currentSegment,
+    liveCoordinates,
     getActiveTime,
   };
 }

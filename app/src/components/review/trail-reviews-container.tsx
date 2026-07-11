@@ -90,7 +90,7 @@ export default function TrailReviewsContainer({ trail, surfaceToScrollToRef, onR
               <AddReview
                 trailIdentifier={trail.identifier}
                 trailName={trail.name}
-                trailLenght={trail.trailLenght}
+                trailLength={trail.trailLength}
                 visible={isReviewModalVisible}
                 onDismiss={handleReviewAdded}
               />

@@ -43,7 +43,7 @@ export default function UserRating({ trail }: UserRatingProps) {
       <AddReview
         trailIdentifier={trail.identifier}
         trailName={trail.name}
-        trailLenght={trail.trailLenght}
+        trailLength={trail.trailLength}
         visible={showModal}
         onDismiss={handleReviewAdded}
       />

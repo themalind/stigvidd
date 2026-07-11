@@ -1,5 +1,6 @@
 import { Coordinates, CreateTrailRequest, Trail, TrailCard, TrailOverview, TrailShortInfoResponse } from "@/data/types";
 import uuid from "react-native-uuid";
+import { ApiError } from "./api-error";
 import { BASE_URL } from "./api-config";
 import { getUserToken } from "./users";
 
@@ -23,7 +24,8 @@ export async function getPopularTrails(latitude?: number, longitude?: number): P
 
     return response.json();
   } catch (error) {
-    console.log(`Error fetching popular trails: ${error instanceof Error ? error.cause || error.message : error}`);
+    const message = error instanceof Error ? String(error.cause ?? error.message) : String(error);
+    console.log(`Error fetching popular trails: ${message}`);
     throw error;
   }
 }
@@ -37,7 +39,8 @@ export async function getAllTrails(): Promise<TrailShortInfoResponse[]> {
 
     return response.json();
   } catch (error) {
-    console.log(`Error fetching all trails: ${error instanceof Error ? error.cause || error.message : error}`);
+    const message = error instanceof Error ? String(error.cause ?? error.message) : String(error);
+    console.log(`Error fetching all trails: ${message}`);
     throw error;
   }
 }
@@ -154,7 +157,7 @@ export async function addTrail(request: CreateTrailRequest): Promise<{ success: 
     });
 
     if (!response.ok) {
-      console.log(response.body);
+      throw new ApiError(`addTrail: HTTP error ${response.status}`, response.status);
     }
 
     return { success: true };
