@@ -29,7 +29,7 @@ export default function TrailInfo({ trail }: TrailinfoProps) {
         </View>
         <View style={s.item}>
           <Text style={[s.label, { color: theme.colors.onSurfaceVariant }]}>{t("trail.length")}</Text>
-          <Text style={[s.value, { color: theme.colors.onSurface }]}>{trail.trailLenght} km</Text>
+          <Text style={[s.value, { color: theme.colors.onSurface }]}>{trail.trailLength} km</Text>
         </View>
         <View style={s.item}>
           <View style={s.infoIconContainer}>
