@@ -1,10 +1,10 @@
-import { showErrorAtom, showWarningAtom } from "@/atoms/snackbar-atoms";
-import { ActiveHike, Segment } from "@/data/types";
+import { showErrorAtom } from "@/atoms/snackbar-atoms";
+import { ActiveHike, LocationData, Segment } from "@/data/types";
 import * as Location from "expo-location";
 import { useSetAtom } from "jotai";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { AppState } from "react-native";
+import { Alert, AppState, Linking } from "react-native";
 import {
   LOCATION_TASK_NAME,
   MIN_DISTANCE,
@@ -26,7 +26,6 @@ const POLL_INTERVAL = 2000;
 export function useLocationTracking() {
   const { t } = useTranslation();
   const setError = useSetAtom(showErrorAtom);
-  const setWarning = useSetAtom(showWarningAtom);
   // Holds the setInterval handle for the polling loop
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -161,10 +160,20 @@ export function useLocationTracking() {
     // iOS never grants "Always" on the first request (it only offers "When In Use"
     // and escalates later), so a non-granted result must NOT block recording. With
     // foreground access + the location background mode, iOS records provisionally in
-    // the background and prompts for "Always" on its own; we just nudge the user.
+    // the background and prompts for "Always" on its own. But "When In Use" only
+    // survives while the app stays alive in the background — if iOS suspends it under
+    // memory pressure mid-hike, only "Always" relaunches it. So we surface a firm,
+    // actionable prompt (Open Settings) rather than a transient snackbar, while still
+    // letting the recording start provisionally.
     const { status: bgPermission } = await Location.requestBackgroundPermissionsAsync();
     if (bgPermission !== "granted") {
-      setWarning(t("createHike.bgPermissionWarning"));
+      Alert.alert(t("createHike.bgPermissionTitle"), t("createHike.bgPermissionMessage"), [
+        { text: t("createHike.bgPermissionContinue"), style: "cancel" },
+        {
+          text: t("createHike.bgPermissionOpenSettings"),
+          onPress: () => Linking.openSettings().catch(() => undefined),
+        },
+      ]);
     }
 
     // Each press of "start" opens a new segment
@@ -183,14 +192,22 @@ export function useLocationTracking() {
       currentSegment: newSegment,
     }));
 
+    // Each new segment starts with an empty live tail so it never carries points
+    // from the previous (now finalized) segment.
+    setLive([]);
+
     // Avoid registering the task twice if it somehow survived a previous session
     const isAlreadyRunning = await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME);
     if (!isAlreadyRunning) {
       await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
-        // High (~10m) rather than BestForNavigation: the latter pins the GPS at
-        // maximum power for turn-by-turn nav and drains the battery over a
-        // multi-hour hike, without meaningfully improving a walking track.
-        accuracy: Location.Accuracy.High,
+        // BestForNavigation keeps the GPS pinned hot for the duration of a recording.
+        // High (~kCLLocationAccuracyNearestTenMeters, ~10m target) is too coarse for a
+        // walking track: in a pocket with a locked screen the body blocks the antenna
+        // and fixes scatter 10-30m, so the drawn line cuts through buildings and many
+        // fixes fail the accuracy gate (looking like tracking "stopped"). The battery
+        // cost is the standard fitness-app trade-off — we only run this while actively
+        // recording and stop the task the moment the user stops.
+        accuracy: Location.Accuracy.BestForNavigation,
         // Android-only: caps how often the task fires. On iOS this is ignored and
         // distanceInterval alone drives sampling.
         timeInterval: SAMPLE_INTERVAL,
@@ -226,64 +243,55 @@ export function useLocationTracking() {
         await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
       }
 
-    // Finalize atomically against the latest task-written state. A batch still
-    // in flight when we stopped either lands before this mutation (its points are
-    // included) or after it (it no-ops because isTracking is now false) — never a
-    // clobber.
-    const newState = await mutateHikeState((state) => {
-      const seg = state.currentSegment;
-      let updatedHike = state.hike;
+      // Finalize atomically against the latest task-written state. A batch still
+      // in flight when we stopped either lands before this mutation (its points are
+      // included) or after it (it no-ops because isTracking is now false) — never a
+      // clobber.
+      const newState = await mutateHikeState((state) => {
+        const seg = state.currentSegment;
+        let updatedHike = state.hike;
 
-      if (seg) {
-        const endTime = Date.now();
-        const segmentDuration = endTime - seg.startTime;
-        const completedSegment: Segment = { ...seg, endTime };
+        if (seg) {
+          const endTime = Date.now();
+          // Duration is the span of recorded GPS timestamps, matching the value
+          // recomputeTrimmedHike saves — so the live timer and the saved hike agree.
+          // Falls back to 0 for a segment with fewer than two fixes.
+          const coords = seg.coordinates;
+          const segmentDuration = coords.length > 1 ? coords[coords.length - 1].timeStamp - coords[0].timeStamp : 0;
+          const completedSegment: Segment = { ...seg, endTime };
 
-        // Only keep the segment if the user actually moved a meaningful distance
-        if (completedSegment.distance >= MIN_SEGMENT_DISTANCE) {
-          updatedHike = {
-            ...state.hike,
-            segments: [...state.hike.segments, completedSegment],
-            // Accumulate the wall-clock duration of this segment into the total
-            totalTime: state.hike.totalTime + segmentDuration,
-          };
-        } else {
-          // Discard the too-short segment as noise, and roll back the distance the
-          // background task already accumulated for it — otherwise distance stays
-          // stuck at a phantom value while the segment and its time are thrown away.
-          updatedHike = {
-            ...state.hike,
-            totalDistance: Math.max(0, state.hike.totalDistance - seg.distance),
-          };
+          // Only keep the segment if the user actually moved a meaningful distance
+          if (completedSegment.distance >= MIN_SEGMENT_DISTANCE) {
+            updatedHike = {
+              ...state.hike,
+              segments: [...state.hike.segments, completedSegment],
+              // Accumulate the recorded span of this segment into the total
+              totalTime: state.hike.totalTime + segmentDuration,
+            };
+          } else {
+            // Discard the too-short segment as noise, and roll back the distance the
+            // background task already accumulated for it — otherwise distance stays
+            // stuck at a phantom value while the segment and its time are thrown away.
+            updatedHike = {
+              ...state.hike,
+              totalDistance: Math.max(0, state.hike.totalDistance - seg.distance),
+            };
+          }
         }
-      }
-        // Only keep the segment if the user actually moved a meaningful distance
-        if (completedSegment.distance >= MIN_SEGMENT_DISTANCE) {
-          updatedHike = {
-            ...state.hike,
-            segments: [...state.hike.segments, completedSegment],
-            // Accumulate the wall-clock duration of this segment into the total
-            totalTime: state.hike.totalTime + segmentDuration,
-          };
-        } else {
-          // Discard the too-short segment as noise, and roll back the distance the
-          // background task already accumulated for it — otherwise distance stays
-          // stuck at a phantom value while the segment and its time are thrown away.
-          updatedHike = {
-            ...state.hike,
-            totalDistance: Math.max(0, state.hike.totalDistance - seg.distance),
-          };
-        }
-      }
 
-      return {
-        isTracking: false,
-        hike: updatedHike,
-        currentSegment: null,
-      };
-    });
+        return {
+          isTracking: false,
+          hike: updatedHike,
+          currentSegment: null,
+        };
+      });
 
-    applyState(newState);
+      applyState(newState);
+    } catch {
+      // Surface the failure instead of leaving an unhandled rejection and a UI that
+      // silently disagrees with the (possibly still-running) background task.
+      setError(t("createHike.trackingError"));
+    }
   };
 
   const resetTracking = async () => {

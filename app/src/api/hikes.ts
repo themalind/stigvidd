@@ -10,28 +10,23 @@ export async function createHike(request: CreateHikeRequest): Promise<{ success:
     throw new Error("User not authenticated");
   }
 
-  try {
-    const response = await fetch(`${BASE_URL}/hikes`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        ...request,
-        coordinates: JSON.stringify(request.coordinates),
-      }),
-    });
+  const response = await fetch(`${BASE_URL}/hikes`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      ...request,
+      coordinates: JSON.stringify(request.coordinates),
+    }),
+  });
 
-    if (!response.ok) {
-      throw new ApiError(`HTTP error: createHike: ${response.status}`, response.status);
-    }
-
-    return { success: true };
-  } catch (error) {
-    console.log("Fel vid skapandet av promenad:", error);
-    throw error;
+  if (!response.ok) {
+    throw new ApiError(`HTTP error: createHike: ${response.status}`, response.status);
   }
+
+  return { success: true };
 }
 
 export async function updateHike(request: UpdateHikeRequest): Promise<Hike> {

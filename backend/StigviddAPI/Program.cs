@@ -7,6 +7,7 @@ using FluentValidation;
 using Infrastructure;
 using Keycloak.AuthServices.Common;
 using Keycloak.AuthServices.Sdk;
+using Microsoft.AspNetCore.Http.Features;
 using SharpGrip.FluentValidation.AutoValidation.Mvc.Extensions;
 
 namespace StigviddAPI;
@@ -26,15 +27,35 @@ public class Program
             options.ValidateScopes = true;
         });
 
+        // A single gallery/symbol upload can carry several full-size photos, which
+        // blows past Kestrel's ~30 MB default. Images are downscaled server-side after
+        // upload, so we accept a generous multipart body and shrink it afterwards.
+        const long maxUploadBytes = 100L * 1024 * 1024; // 100 MB
+        builder.WebHost.ConfigureKestrel(options => options.Limits.MaxRequestBodySize = maxUploadBytes);
+        builder.Services.Configure<FormOptions>(options => options.MultipartBodyLengthLimit = maxUploadBytes);
+
         builder.Services.AddCors(options =>
         {
             options.AddPolicy("AllowFrontend",
                 policy =>
                 {
-                    policy
-                        .WithOrigins("http://localhost:5173", "https://stigvidd.se", "http://localhost:5174")
-                        .AllowAnyHeader()
-                        .AllowAnyMethod();
+                    if (builder.Environment.IsDevelopment())
+                    {
+                        // Dev is reached from localhost and from LAN IPs (device / cross-machine
+                        // testing), so reflect any origin. Safe here: auth is Bearer-token based,
+                        // not cookie based, so we are not exposing credentialed requests.
+                        policy
+                            .SetIsOriginAllowed(_ => true)
+                            .AllowAnyHeader()
+                            .AllowAnyMethod();
+                    }
+                    else
+                    {
+                        policy
+                            .WithOrigins("https://stigvidd.se")
+                            .AllowAnyHeader()
+                            .AllowAnyMethod();
+                    }
                 });
         });
 

@@ -147,9 +147,9 @@ describe("location background task", () => {
     expect(mockSetItem).not.toHaveBeenCalled();
   });
 
-  it("discards a location whose accuracy is worse than 30m", async () => {
+  it("discards a location whose accuracy is worse than 40m", async () => {
     await locationTaskCallback({
-      data: { locations: [makeLocation(57.7, 11.97, 35)] },
+      data: { locations: [makeLocation(57.7, 11.97, 45)] },
       error: null,
     });
 
@@ -253,11 +253,12 @@ describe("location background task", () => {
       },
     };
     mockGetItem.mockResolvedValue(JSON.stringify(stateWithPoint));
-    // 8m hop but the fix's accuracy is 15m — the move is within the noise envelope.
+    // 8m hop but the fix's accuracy is 20m — half the accuracy radius (10m) is the
+    // noise envelope on iOS, so an 8m move is still within it and must be rejected.
     mockGetDistance.mockReturnValue(8);
 
     await locationTaskCallback({
-      data: { locations: [makeLocation(57.70007, 11.97, 15, NOW + 3000)] },
+      data: { locations: [makeLocation(57.70007, 11.97, 20, NOW + 3000)] },
       error: null,
     });
 
@@ -352,7 +353,7 @@ describe("location background task", () => {
     (Date.now as jest.Mock).mockReturnValue(NOW + INACTIVITY_TIMEOUT + 5000);
 
     await locationTaskCallback({
-      data: { locations: [makeLocation(57.7, 11.97, 35)] }, // bad accuracy → no new movement
+      data: { locations: [makeLocation(57.7, 11.97, 45)] }, // bad accuracy → no new movement
       error: null,
     });
 

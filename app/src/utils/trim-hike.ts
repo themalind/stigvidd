@@ -60,5 +60,9 @@ export function recomputeTrimmedHike(segments: Segment[], startIndex: number, en
   let duration = 0;
   for (const span of spans.values()) duration += span.max - span.min;
 
-  return { coordinates: kept.map((p) => p.data), distance, duration };
+  // The backend's Duration is an int (ms). On iOS location.timestamp carries
+  // fractional milliseconds, so span sums come out non-integer and the API
+  // rejects the payload (400) before saving — round to keep it a whole number.
+  // On Android timestamps are already integers, so this is a no-op there.
+  return { coordinates: kept.map((p) => p.data), distance, duration: Math.round(duration) };
 }

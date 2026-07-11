@@ -1,14 +1,14 @@
 import AlertDialog from "@/components/alert-dialog";
 import LoadingIndicator from "@/components/loading-indicator";
-import CenterOnUserButton from "@/components/map/center-on-user-button";
 import Map from "@/components/map/map";
+import CenterOnUserButton from "@/components/map/center-on-user-button";
 import { ROUTE_LINE_COLOR } from "@/components/map/marker-styles";
 import { BORDER_RADIUS, START_COORDINATE_BORAS } from "@/constants/constants";
 import { LocationData } from "@/data/types";
 import { dismissRecordingInfo, shouldShowRecordingInfo } from "@/services/location-task";
 import { useLocationTracking } from "@/services/use-location-tracking";
-import FormattedTime from "@/utils/format-time-from-ms";
 import { lineStringFromPositions } from "@/utils/geojson";
+import FormattedTime from "@/utils/format-time-from-ms";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import {
   Camera,
@@ -19,9 +19,9 @@ import {
 } from "@maplibre/maplibre-react-native";
 import * as Location from "expo-location";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useTranslation } from "react-i18next";
 import { NativeSyntheticEvent, Pressable, StyleSheet, View } from "react-native";
 import { ActivityIndicator, Text, useTheme } from "react-native-paper";
+import { useTranslation } from "react-i18next";
 import RecordingInfoDialog from "./recording-info-dialog";
 import SaveHikeModal from "./save-hike-modal";
 

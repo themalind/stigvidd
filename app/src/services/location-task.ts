@@ -1,8 +1,9 @@
-import { ActiveHike, LocationData, Segment } from "@/data/types";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { ActiveHike, LocationData, Segment } from "@/data/types";
 import * as Location from "expo-location";
 import * as TaskManager from "expo-task-manager";
 import { getDistance } from "geolib";
+import { Platform } from "react-native";
 
 export const LOCATION_TASK_NAME = "stigvidd-background-location";
 export const HIKE_STORAGE_KEY = "@stigvidd_active_hike";
@@ -14,10 +15,13 @@ export const RECORDING_INFO_KEY = "@stigvidd_recording_info_dismissed";
 export const MIN_DISTANCE = 3;
 // A jump larger than this (meters) between two fixes is a GPS teleport, not travel.
 const MAX_DISTANCE = 100;
-// Fixes reported less precise than this (meters) are dropped. Kept generous so a
-// brief accuracy dip (tree cover, buildings) pauses recording instead of freezing
-// it — with BestForNavigation the real accuracy sits well under this.
-const MAX_ACCURACY = 30;
+// Drop fixes worse than this (meters). iOS-only relaxation to 40m: in a pocket
+// with a locked screen iOS routinely reports 20-50m even at BestForNavigation,
+// and dropping all of those leaves long gaps that get bridged by a single
+// straight line through buildings — a 40m fix on a hike is still a useful point.
+// Android recording is already tuned and left at its original 20m gate so this
+// change can't regress it.
+const MAX_ACCURACY = Platform.OS === "ios" ? 40 : 20;
 // Physically impossible speed (m/s) between two fixes ⇒ GPS glitch, not movement.
 // ~10 m/s (36 km/h) clears hiking/running/cycling while catching teleport spikes.
 const MAX_SPEED = 10;
@@ -174,8 +178,14 @@ export function evaluatePoint(
 
   // A stationary phone wanders within its accuracy radius, so only count a move
   // once it clears that noise envelope (never below MIN_DISTANCE) — otherwise GPS
-  // drift piles up phantom distance and zig-zags while standing still.
-  const minStep = Math.max(MIN_DISTANCE, accuracy);
+  // drift piles up phantom distance and zig-zags while standing still. iOS uses
+  // half the accuracy rather than the full radius: consecutive good fixes are
+  // correlated, so their relative noise is much smaller than a single fix's
+  // absolute error, and gating on the full radius flattened genuine curves into
+  // corner-cutting straight lines when a fix was loose. Android keeps the original
+  // full-radius envelope so its (already good) recording behaviour is unchanged.
+  const noiseFloor = Platform.OS === "ios" ? accuracy / 2 : accuracy;
+  const minStep = Math.max(MIN_DISTANCE, noiseFloor);
   if (distance < minStep) return { accept: false, distance: 0 };
 
   return { accept: true, distance };
@@ -208,11 +218,6 @@ TaskManager.defineTask(
         let totalDistance = state.hike.totalDistance;
 
         for (const location of locations) {
-          const accuracy = location.coords.accuracy;
-          if (!accuracy || accuracy > MAX_ACCURACY) {
-            continue;
-          }
-
           const newPoint: LocationData = {
             data: {
               latitude: location.coords.latitude,
@@ -221,33 +226,21 @@ TaskManager.defineTask(
             timeStamp: location.timestamp,
           };
 
+          // Same filter as the foreground live watcher (see evaluatePoint) so the
+          // recorded track and the drawn live tail always agree on what counts.
           const lastPoint = currentSegment.coordinates.at(-1);
-          let distanceToAdd = 0;
-
-          if (lastPoint) {
-            const distance = getDistance(lastPoint.data, newPoint.data);
-            // Reject teleport-sized jumps outright.
-            if (distance > MAX_DISTANCE) {
-              continue;
-            }
-            // A stationary phone jitters within its own accuracy radius, so only
-            // count a move once it clears that noise envelope (never below
-            // MIN_DISTANCE). Otherwise GPS drift piles up phantom distance while
-            // standing still.
-            const minStep = Math.max(MIN_DISTANCE, accuracy);
-            if (distance < minStep) {
-              continue;
-            }
-            distanceToAdd = distance;
+          const { accept, distance } = evaluatePoint(lastPoint, newPoint, location.coords.accuracy);
+          if (!accept) {
+            continue;
           }
 
           currentSegment = {
             ...currentSegment,
             coordinates: [...currentSegment.coordinates, newPoint],
-            distance: currentSegment.distance + distanceToAdd,
+            distance: currentSegment.distance + distance,
           };
 
-          totalDistance += distanceToAdd;
+          totalDistance += distance;
         }
 
         const updated: StoredHikeState = {

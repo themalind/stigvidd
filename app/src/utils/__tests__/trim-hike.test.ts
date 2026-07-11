@@ -54,6 +54,20 @@ describe("recomputeTrimmedHike", () => {
     expect(result.duration).toBe(9000);
   });
 
+  it("rounds duration to a whole number so iOS fractional-ms timestamps stay int-safe", () => {
+    // iOS reports location.timestamp with fractional milliseconds; the backend's
+    // Duration is an int, so a non-integer duration is rejected (400) on save.
+    const iosSegment: Segment[] = [
+      segment([
+        [57.0, 12.0, 1000.1],
+        [57.001, 12.0, 4000.2],
+      ]),
+    ];
+    const result = recomputeTrimmedHike(iosSegment, 0, 1);
+    expect(Number.isInteger(result.duration)).toBe(true);
+    expect(result.duration).toBe(3000); // Math.round(4000.2 - 1000.1)
+  });
+
   it("does not count the pause gap between segments as distance or time", () => {
     // Two segments far apart in space and time (a long pause between them).
     const segments: Segment[] = [
