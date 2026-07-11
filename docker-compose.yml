@@ -1,0 +1,79 @@
+# Full Stigvidd stack: PostgreSQL (with PostGIS), the .NET backend API and the
+# Vite web frontend. Designed to be portable — `docker compose up -d --build`
+# brings the whole thing up on any host. Copy `.env.example` to `.env` and
+# adjust the values before the first run.
+
+name: stigvidd
+
+services:
+  db:
+    # PostGIS is required — the EF migrations create the `postgis` extension.
+    image: postgis/postgis:16-3.4
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-stigvidd}
+      POSTGRES_USER: ${POSTGRES_USER:-stigvidd}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      # Runs only on first init (empty data dir); guarantees the extension is
+      # present. Migrations also create it, so this is belt-and-suspenders.
+      - ./db/init:/docker-entrypoint-initdb.d:ro
+    networks:
+      - internal
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-stigvidd} -d ${POSTGRES_DB:-stigvidd}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  api:
+    # CI builds & pushes this tag; the deploy host pulls it. REGISTRY/IMAGE_TAG
+    # come from the environment (or .env), defaulting to a local build.
+    image: ${REGISTRY:-stigvidd}/stigvidd-api:${IMAGE_TAG:-latest}
+    build:
+      context: ./backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
+      # Npgsql connection string consumed as ConnectionStrings:StigVidd.
+      ConnectionStrings__StigVidd: "Host=db;Port=5432;Database=${POSTGRES_DB:-stigvidd};Username=${POSTGRES_USER:-stigvidd};Password=${POSTGRES_PASSWORD}"
+    ports:
+      - "${API_PORT:-5265}:8080"
+    networks:
+      - internal   # reach the database
+      - public     # reach Keycloak / the internet + be reachable from outside
+
+  web:
+    image: ${REGISTRY:-stigvidd}/stigvidd-web:${IMAGE_TAG:-latest}
+    build:
+      context: ./web
+      args:
+        # Baked into the static bundle at build time — see .env.example.
+        # `:-` defaults keep `compose pull`/`up` on the deploy host (which does
+        # not build) quiet even when these are unset there.
+        VITE_API_URL: ${VITE_API_URL:-}
+        VITE_OIDC_URL: ${VITE_OIDC_URL:-}
+        VITE_OIDC_REALM: ${VITE_OIDC_REALM:-}
+        VITE_CLIENT_ID: ${VITE_CLIENT_ID:-}
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - "${WEB_PORT:-8080}:80"
+    networks:
+      - public
+
+networks:
+  # DB <-> API traffic only; no route to the outside world.
+  internal:
+    internal: true
+  # Public-facing + internet egress (frontend, and the API's Keycloak calls).
+  public:
+
+volumes:
+  pgdata:
