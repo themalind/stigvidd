@@ -1,6 +1,7 @@
 ﻿using Core;
 using Core.Interfaces.Repositories;
 using Core.Interfaces.Services;
+using Infrastructure;
 using Infrastructure.Data;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
@@ -10,6 +11,7 @@ using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Moq;
 using System.Data.Common;
 using System.Net.Http.Headers;
@@ -88,6 +90,8 @@ public class StigViddWebApplicationFactory<TProgram>
                 .Returns(Task.CompletedTask);
 
             services.AddSingleton(KeycloakAdminMock.Object);
+
+            services.RemoveAll<IDbMigrationRunner>();
         });
 
         builder.UseEnvironment("Development");
