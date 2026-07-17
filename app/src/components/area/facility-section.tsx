@@ -1,15 +1,15 @@
-import { FacilityItem } from "@/data/areas-data";
+import { SCREEN_PADDING } from "@/constants/constants";
+import { Facility } from "@/data/types";
 import { asTranslationKey } from "@/i18n";
 import { MaterialIcons } from "@expo/vector-icons";
+import { useTranslation } from "react-i18next";
 import { StyleSheet, View } from "react-native";
 import { Text, useTheme } from "react-native-paper";
-import { useTranslation } from "react-i18next";
-import { SCREEN_PADDING } from "@/constants/constants";
 
 interface FacilitySectionProps {
   title: string;
   icon: keyof typeof MaterialIcons.glyphMap;
-  items: FacilityItem[];
+  items: Facility[];
 }
 
 export default function FacilitySection({ title, icon, items }: FacilitySectionProps) {
@@ -59,8 +59,8 @@ const s = StyleSheet.create({
     gap: 4,
   },
   facilityName: {
-    fontWeight: "600",
     fontSize: 14,
+    fontFamily: "Inter_600SemiBold",
   },
   facilityMeta: {
     fontSize: 13,
@@ -76,7 +76,7 @@ const s = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 15,
-    fontWeight: "700",
+    fontFamily: "Inter_600SemiBold",
   },
   locationRow: {
     flexDirection: "row",

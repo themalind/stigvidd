@@ -1,30 +1,50 @@
-import { borasAreas, FacilityType } from "@/data/areas-data";
+import { getAreaByIdentifier } from "@/api/areas";
+import { CITY_AREAS_STALE_TIME } from "@/constants/cache";
+import { SCREEN_PADDING } from "@/constants/constants";
 import { asTranslationKey } from "@/i18n";
 import { MaterialIcons } from "@expo/vector-icons";
+import { useQuery } from "@tanstack/react-query";
 import { useLocalSearchParams } from "expo-router";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { Image, ScrollView, StyleSheet, View } from "react-native";
-import { ActivityIndicator, Divider, Text, useTheme } from "react-native-paper";
+import { Divider, Text, useTheme } from "react-native-paper";
 import BackButton from "../back-button";
+import ErrorView from "../error-view";
+import LoadingIndicator from "../loading-indicator";
+import AreaTrailSection from "./area-trail-section";
 import FacilitySection from "./facility-section";
-import { SCREEN_PADDING } from "@/constants/constants";
 
 export default function AreaDetailScreen() {
   const theme = useTheme();
   const { t } = useTranslation();
   const params = useLocalSearchParams<{ identifier: string }>();
-  const identifier = Array.isArray(params.identifier) ? params.identifier[0] : params.identifier;
-  const area = borasAreas.find((i) => i.identifier === identifier);
 
-  if (!area) return <ActivityIndicator style={{ flex: 1 }} />;
+  const {
+    data: area,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: ["cityArea", params.identifier],
+    queryFn: () => getAreaByIdentifier(params.identifier),
+    staleTime: CITY_AREAS_STALE_TIME,
+  });
 
-  const firePits = area.facilities[FacilityType.Firepit];
-  const fishing = area.facilities[FacilityType.FishingArea];
-  const shelter = area.facilities[FacilityType.Shelter];
-  const swimming = area.facilities[FacilityType.SwimmingArea];
+  if (isLoading) {
+    return <LoadingIndicator />;
+  }
 
-  const hasFacilities = firePits.length > 0 || fishing.length > 0 || shelter.length > 0 || swimming.length > 0;
+  if (isError || area === undefined) {
+    return <ErrorView error={error} onRetry={refetch} />;
+  }
+
+  const firePits = area.facilities.filter((f) => f.facilityType === 1);
+  const fishing = area.facilities.filter((f) => f.facilityType === 4);
+  const shelter = area.facilities.filter((f) => f.facilityType === 2);
+  const swimming = area.facilities.filter((f) => f.facilityType === 8);
+  const naturereserve = area.facilities.filter((f) => f.facilityType === 16);
 
   return (
     <View style={[s.screen, { backgroundColor: theme.colors.background }]}>
@@ -32,21 +52,29 @@ export default function AreaDetailScreen() {
         <View style={s.backButtonRow}>
           <BackButton />
         </View>
-        <Image source={area.image} style={s.heroImage} resizeMode="cover" />
+        <Image source={{ uri: area.imageUrl }} style={s.heroImage} resizeMode="cover" />
         <View style={s.header}>
-          <Text style={[s.title, { color: theme.colors.onBackground }]}>{area.name}</Text>
+          <Text style={[s.title, { color: theme.colors.onBackground }]}>{area?.name}</Text>
           <View style={s.locationRow}>
             <MaterialIcons name="place" size={16} color={theme.colors.primary} />
             <Text style={[s.locationText, { color: theme.colors.onSurfaceVariant }]}>
-              {t(asTranslationKey(area.location))}
+              {t(asTranslationKey(area?.location))}
             </Text>
           </View>
         </View>
-        <Text style={[s.description, { color: theme.colors.onBackground }]}>
-          {t(asTranslationKey(area.description))}
-        </Text>
-
-        {hasFacilities && (
+        {area.description ? (
+          <Text style={[s.description, { color: theme.colors.onBackground }]}>
+            {t(asTranslationKey(area.description))}
+          </Text>
+        ) : null}
+        {area.trails && area.trails.length > 0 && (
+          <>
+            <Divider />
+            <Text style={[s.facilitiesHeading, { color: theme.colors.onBackground }]}>{t("area.trails")}</Text>
+            <AreaTrailSection trails={area.trails} />
+          </>
+        )}
+        {area.facilities && area.facilities.length > 0 && (
           <>
             <Divider />
             <Text style={[s.facilitiesHeading, { color: theme.colors.onBackground }]}>{t("area.facilities")}</Text>
@@ -54,6 +82,7 @@ export default function AreaDetailScreen() {
             <FacilitySection title={t("area.shelters")} icon="cabin" items={shelter} />
             <FacilitySection title={t("area.fishing")} icon="set-meal" items={fishing} />
             <FacilitySection title={t("area.swimming")} icon="pool" items={swimming} />
+            <FacilitySection title={t("area.natureReserve")} icon="park" items={naturereserve} />
           </>
         )}
       </ScrollView>
