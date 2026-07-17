@@ -18,13 +18,8 @@ public class CityAreaRepository : ICityAreaRepository
         _logger = logger;
     }
 
-    public Task<RepositoryResult> CreateCityAreaAsync(CityArea cityArea, CancellationToken ctoken)
-    {
-        throw new NotImplementedException();
-    }
-
-       public async Task<RepositoryResult<IReadOnlyCollection<T>>> GetAllAsync<T>(
-        Expression<Func<CityArea, T>> selector, CancellationToken ctoken)
+    public async Task<RepositoryResult<IReadOnlyCollection<T>>> GetAllAsync<T>(
+     Expression<Func<CityArea, T>> selector, CancellationToken ctoken)
     {
         try
         {
@@ -66,15 +61,5 @@ public class CityAreaRepository : ICityAreaRepository
             _logger.LogError(ex, "CityAreaRepository: GetByIdentifierAsync -> Something went wrong when fetching city area with identifier {identifier}", identifier);
             return RepositoryResult<T>.Error();
         }
-    }
-
-    public Task<RepositoryResult> UpdateCityAreaAsync(CityArea cityArea, CancellationToken ctoken)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task<RepositoryResult> DeleteCityAreaAsync(string identifier, CancellationToken ctoken)
-    {
-        throw new NotImplementedException();
     }
 }

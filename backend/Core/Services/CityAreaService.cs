@@ -1,8 +1,6 @@
 using Core.Factories;
 using Core.Interfaces.Repositories;
 using Core.Interfaces.Services;
-using Microsoft.AspNetCore.Http;
-using WebDataContracts.RequestModels.CityArea;
 using WebDataContracts.ResponseModels.CityArea;
 
 namespace Core.Services;
@@ -18,14 +16,6 @@ public class CityAreaService : ICityAreaService
         _cityAreaResponseFactory = cityAreaResponseFactory;
     }
 
-    public Task<Result> CreateCityAreaAsync(
-        CreateCityAreaRequest createCityAreaRequest,
-        IFormFile? cityAreaImage, 
-        CancellationToken ctoken)
-    {
-        throw new NotImplementedException();
-    }
-
     public async Task<Result<IReadOnlyCollection<CityAreaResponse>>> GetAllAsync(CancellationToken ctoken)
     {
         var result = await _cityAreaRepository.GetAllAsync(
@@ -36,10 +26,18 @@ public class CityAreaService : ICityAreaService
                 area.Description,
                 area.ImageUrl,
                 area.Url,
-                area.Facilities!.Select(f => new CityAreaFacilityProjection(
-                    f.Identifier, f.Name, (int)f.FacilityType, f.IsAccessible, f.Location, f.Description, f.Url)).ToList(),
-                area.Trails!.Select(t => new CityAreaTrailProjection(
-                    t.Identifier, t.Name, t.TrailLength, t.Classification, t.Description)).ToList()),
+                area.Facilities!
+                    .Select(f => new CityAreaFacilityProjection(f.Identifier, f.Name, (int)f.FacilityType, f.IsAccessible, f.Location, f.Description, f.Url)).ToList(),
+                area.Trails!
+                    .Where(t => t.IsVerified)
+                    .Select(t => new CityAreaTrailProjection(
+                        t.Identifier,
+                        t.Name,
+                        t.TrailLength,
+                        t.Classification,
+                        t.Description,
+                        t.Reviews!.Any() ? t.Reviews!.Average(r => r.Rating) : 0m,
+                        t.TrailImages!.Select(i => new CityAreaTrailImageProjection(i.Identifier, i.ImageUrl)).FirstOrDefault())).ToList()),
             ctoken);
 
         if (!result.IsSuccess)
@@ -59,10 +57,19 @@ public class CityAreaService : ICityAreaService
                 area.Description,
                 area.ImageUrl,
                 area.Url,
-                area.Facilities!.Select(f => new CityAreaFacilityProjection(
-                    f.Identifier, f.Name, (int)f.FacilityType, f.IsAccessible, f.Location, f.Description, f.Url)).ToList(),
-                area.Trails!.Select(t => new CityAreaTrailProjection(
-                    t.Identifier, t.Name, t.TrailLength, t.Classification, t.Description)).ToList()),
+                area.Facilities!
+                    .Select(f => new CityAreaFacilityProjection(
+                        f.Identifier, f.Name, (int)f.FacilityType, f.IsAccessible, f.Location, f.Description, f.Url)).ToList(),
+                area.Trails!
+                    .Where(t => t.IsVerified)
+                    .Select(t => new CityAreaTrailProjection(
+                        t.Identifier,
+                        t.Name,
+                        t.TrailLength,
+                        t.Classification,
+                        t.Description,
+                        t.Reviews!.Any() ? t.Reviews!.Average(r => r.Rating) : 0m,
+                        t.TrailImages!.Select(i => new CityAreaTrailImageProjection(i.Identifier, i.ImageUrl)).FirstOrDefault())).ToList()),
             ctoken);
 
         if (result.Status == RepositoryResultStatus.Error)
@@ -72,16 +79,6 @@ public class CityAreaService : ICityAreaService
             return Result.Fail<CityAreaResponse>(new Message(404, $"No city area found with identifier: {identifier}"));
 
         return Result.Ok(_cityAreaResponseFactory.Create(result.Value));
-    }
-
-    public Task<Result> UpdateCityAreaAsync(CityAreaResponse cityAreaResponse, CancellationToken ctoken)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task<Result> DeleteCityAreaAsync(string identifier, CancellationToken ctoken)
-    {
-        throw new NotImplementedException();
     }
 }
 
@@ -109,4 +106,10 @@ public record CityAreaTrailProjection(
     string Name,
     decimal TrailLength,
     int Classification,
-    string? Description);
+    string? Description,
+    decimal AverageRating,
+    CityAreaTrailImageProjection? Image);
+
+public record CityAreaTrailImageProjection(
+    string Identifier,
+    string ImageUrl);
