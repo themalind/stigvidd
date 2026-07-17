@@ -30,8 +30,7 @@ internal class Program
         var cancellationToken = new CancellationTokenSource().Token;
 
         Console.WriteLine("Importerar data...");
-        var areasJsonPath = Path.Combine(AppContext.BaseDirectory, "areas.json");
-        await cityAreaImporter.ImportAsync(areasJsonPath, cancellationToken);
+    
         Console.WriteLine("Färdigt!");
         Console.ReadLine();
     }
