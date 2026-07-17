@@ -1,4 +1,4 @@
-import { LatLng } from './geo';
+import { LatLng } from "./geo";
 
 export interface Hike {
   identifier: string;

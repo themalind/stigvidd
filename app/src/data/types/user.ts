@@ -1,5 +1,5 @@
-import { RatingResponse } from './review';
-import { TrailImage } from './trail';
+import { RatingResponse } from "./review";
+import { TrailImage } from "./trail";
 
 export interface UserFavoritesTrail {
   identifier: string;

@@ -64,12 +64,7 @@ export default function AreaTrailSection({ trails }: AreaTrailSectionProps) {
                 </Text>
               ) : null}
             </View>
-            <MaterialIcons
-              name="chevron-right"
-              size={22}
-              color={theme.colors.onSurfaceVariant}
-              style={s.chevron}
-            />
+            <MaterialIcons name="chevron-right" size={22} color={theme.colors.onSurfaceVariant} style={s.chevron} />
           </Pressable>
         );
       })}
