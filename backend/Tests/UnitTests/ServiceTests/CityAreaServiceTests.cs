@@ -4,6 +4,7 @@ using Core.Interfaces.Repositories;
 using Core.Services;
 using FluentAssertions;
 using Infrastructure.Data.Entities;
+using Microsoft.Extensions.Configuration;
 using Moq;
 
 namespace UnitTests.ServiceTests;
@@ -12,8 +13,16 @@ public class CityAreaServiceTests
 {
     private const string CityAreaIdentifier = "area-dalsjofors";
 
+    private static CityAreaResponseFactory BuildFactory()
+    {
+        var cfg = new Mock<IConfiguration>();
+        cfg.Setup(c => c["PresentableBaseUrl"]).Returns("http://stigvidd.se/testing/");
+
+        return new CityAreaResponseFactory(cfg.Object);
+    }
+
     private static CityAreaService Build(Mock<ICityAreaRepository>? repo = null) =>
-        new((repo ?? new Mock<ICityAreaRepository>()).Object, new CityAreaResponseFactory());
+        new((repo ?? new Mock<ICityAreaRepository>()).Object, BuildFactory());
 
     private static CityAreaProjection MakeCityArea() =>
         new(CityAreaIdentifier, "Dalsjöfors", "Öster om Borås", null, null, null, [], []);

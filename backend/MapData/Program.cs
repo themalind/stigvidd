@@ -16,20 +16,22 @@ internal class Program
               .AddUserSecrets<Program>()
               .Build();
 
-        var connectionString = configuration.GetConnectionString("DefaultConnection");
+        var connectionString = configuration.GetConnectionString("StigVidd");
 
         var options = new DbContextOptionsBuilder<StigViddDbContext>()
-            .UseNpgsql(connectionString)
+            .UseNpgsql(connectionString, o => o.UseNetTopologySuite())
             .Options;
 
         var context = new StigViddDbContext(options);
 
         var transMogrifier = new TransmogrifyBorasData(context);
         var facilityImporter = new FacilityImporter(context);
+        var cityAreaImporter = new CityAreaImporter(context);
         var cancellationToken = new CancellationTokenSource().Token;
+
         Console.WriteLine("Importerar data...");
-        //await transMogrifier.TransmogrifyAsync("C:\\projekt\\suvnet24\\examensarbete\\spar_leder.json", ct: cancellationToken);
-        //await facilityImporter.ImportAsync("C:\\projekt\\suvnet24\\examensarbete\\grillplats_vindskydd_wgs84.csv", cancellationToken);
+        var areasJsonPath = Path.Combine(AppContext.BaseDirectory, "areas.json");
+        await cityAreaImporter.ImportAsync(areasJsonPath, cancellationToken);
         Console.WriteLine("Färdigt!");
         Console.ReadLine();
     }

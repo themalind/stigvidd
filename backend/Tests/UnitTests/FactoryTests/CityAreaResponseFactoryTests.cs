@@ -2,12 +2,20 @@ using Core.Factories;
 using Core.Services;
 using FluentAssertions;
 using Infrastructure.Enums;
+using Microsoft.Extensions.Configuration;
+using Moq;
 
 namespace UnitTests.FactoryTests;
 
 public class CityAreaResponseFactoryTests
 {
-    private static CityAreaResponseFactory BuildFactory() => new();
+    private static CityAreaResponseFactory BuildFactory()
+    {
+        var cfg = new Mock<IConfiguration>();
+        cfg.Setup(c => c["PresentableBaseUrl"]).Returns("http://stigvidd.se/testing/");
+
+        return new CityAreaResponseFactory(cfg.Object);
+    }
 
     private static CityAreaProjection AreaWithLinks() => new(
         "area-dalsjofors",
@@ -23,7 +31,9 @@ public class CityAreaResponseFactoryTests
         ],
         Trails:
         [
-            new CityAreaTrailProjection("trail-tiveden", "Tiveden", 9.5M, 2, "En vandringsled genom skogen.")
+            new CityAreaTrailProjection(
+                "trail-tiveden", "Tiveden", 9.5M, 2, "En vandringsled genom skogen.",
+                4.5M, new CityAreaTrailImageProjection("img-tiveden", "tiveden.jpg"))
         ]);
 
     [Fact]
@@ -52,7 +62,10 @@ public class CityAreaResponseFactoryTests
             t.Name == "Tiveden" &&
             t.TrailLength == 9.5M &&
             t.Classification == 2 &&
-            t.Description == "En vandringsled genom skogen.");
+            t.Description == "En vandringsled genom skogen." &&
+            t.AverageRating == 4.5M &&
+            t.Image!.Identifier == "img-tiveden" &&
+            t.Image.ImageUrl == "http://stigvidd.se/testing/tiveden.jpg");
     }
 
     [Fact]

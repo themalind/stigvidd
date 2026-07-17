@@ -1,7 +1,5 @@
 using Core.Interfaces.Services;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using WebDataContracts.RequestModels.CityArea;
 
 namespace StigviddAPI.Controllers
 {
@@ -41,21 +39,6 @@ namespace StigviddAPI.Controllers
             }
 
             return Ok(result.Value);
-        }
-
-        [Authorize]
-        [HttpPost]
-        [Route("create")]
-        public async Task<IActionResult> CreateCityArea(CreateCityAreaRequest createCityAreaRequest, IFormFile? cityAreaImage, CancellationToken ctoken)
-        {
-            var result = await _cityAreaService.CreateCityAreaAsync(createCityAreaRequest, cityAreaImage, ctoken);
-
-            if (!result.Success && result.Message != null)
-            {
-                return ToActionResult(result.Message);
-            }
-
-            return Ok();
         }
     }
 }

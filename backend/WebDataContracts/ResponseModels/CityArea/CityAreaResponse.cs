@@ -1,3 +1,5 @@
+using WebDataContracts.ResponseModels.Facility;
+
 namespace WebDataContracts.ResponseModels.CityArea;
 
 public class CityAreaResponse
@@ -8,8 +10,8 @@ public class CityAreaResponse
     public string? Description { get; set; }
     public string? ImageUrl { get; set; }
     public string? Url { get; set; }
-    public required IReadOnlyCollection<CityAreaFacilityResponse> Facilities { get; set; }
-    public required IReadOnlyCollection<CityAreaTrailReferenceResponse> Trails { get; set; }
+    public required IReadOnlyCollection<FacilityResponse> Facilities { get; set; }
+    public required IReadOnlyCollection<CityAreaTrailResponse> Trails { get; set; }
 
     public static CityAreaResponse Create(
         string identifier,
@@ -18,8 +20,8 @@ public class CityAreaResponse
         string? description,
         string? imageUrl,
         string? url,
-        IReadOnlyCollection<CityAreaFacilityResponse> facilities,
-        IReadOnlyCollection<CityAreaTrailReferenceResponse> trails)
+        IReadOnlyCollection<FacilityResponse> facilities,
+        IReadOnlyCollection<CityAreaTrailResponse> trails)
     {
         return new CityAreaResponse
         {
