@@ -11,6 +11,7 @@ import type { NativeScrollEvent, NativeSyntheticEvent } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 import { Text, useTheme } from "react-native-paper";
+import { Rating } from "../review/rating";
 
 interface Props {
   identifiers: string[];
@@ -205,11 +206,11 @@ const CarouselCard = memo(function CarouselCard({
                     {classificationParser(card.classification ?? 0)}
                   </Text>
                 </View>
-                <Text style={[s.infoText, { color: theme.colors.onSurfaceVariant }]}>
-                  {Number(card.averageRating) > 0
-                    ? `★ ${Number(card.averageRating).toFixed(1)}`
-                    : t("review.noReviews")}
-                </Text>
+                <Rating
+                  averageRating={Number(card.averageRating)}
+                  starColor={theme.colors.onSurfaceVariant}
+                  textStyle={[s.infoText, { color: theme.colors.onSurfaceVariant }]}
+                />
               </View>
             </View>
             {position && <Text style={[s.counter, { color: theme.colors.onSurfaceVariant }]}>{position}</Text>}
