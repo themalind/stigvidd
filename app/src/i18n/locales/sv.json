@@ -452,11 +452,15 @@
     }
   },
   "area": {
+    "title": "Områden",
+    "readMore": "Läs mer",
+    "trails": "Vandring, motion & promenadstigar",
     "facilities": "Faciliteter",
     "firePits": "Grillplatser",
     "shelters": "Vindskydd",
     "fishing": "Fiske",
-    "swimming": "Badplatser"
+    "swimming": "Badplatser",
+    "natureReserve": "Naturreservat"
   },
   "home": {
     "popularNearYou": "Populära promenader nära dig",

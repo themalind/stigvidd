@@ -452,11 +452,15 @@
     }
   },
   "area": {
+    "title": "Areas",
+    "readMore": "Read more",
+    "trails": "Hiking, exercise & walking paths",
     "facilities": "Facilities",
     "firePits": "Fire pits",
     "shelters": "Wind shelters",
     "fishing": "Fishing",
-    "swimming": "Swimming spots"
+    "swimming": "Swimming spots",
+    "natureReserve": "Nature reserv"
   },
   "home": {
     "popularNearYou": "Popular walks near you",
