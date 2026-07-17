@@ -14,7 +14,10 @@ public class FacilityResponseFactory
             (int)facility.FacilityType,
             facility.IsAccessible,
             facility.Latitude.GetValueOrDefault(),
-            facility.Longitude.GetValueOrDefault()
+            facility.Longitude.GetValueOrDefault(),
+            facility.Location,
+            facility.Description,
+            facility.Url
         );
     }
 
@@ -26,7 +29,10 @@ public class FacilityResponseFactory
             (int)facility.FacilityType,
             facility.IsAccessible,
             facility.Latitude.GetValueOrDefault(),
-            facility.Longitude.GetValueOrDefault()
+            facility.Longitude.GetValueOrDefault(),
+            facility.Location,
+            facility.Description,
+            facility.Url
         )).ToList();
     }
 }
