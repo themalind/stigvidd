@@ -41,7 +41,11 @@ public class FacilityRepository : IFacilityRepository
         {
             using var dbContext = await _dbContextFactory.CreateDbContextAsync(ctoken);
 
-            var facilities = await dbContext.Facilities.ToListAsync(ctoken);
+            // This feeds the map-marker endpoint, so only return facilities that have coordinates.
+            // Coordinate-less facilities (fishing/swimming/nature reserves) are consumed via CityAreas instead.
+            var facilities = await dbContext.Facilities
+                .Where(f => f.Latitude != null && f.Longitude != null)
+                .ToListAsync(ctoken);
 
             return RepositoryResult<IReadOnlyCollection<Facility>>.Success(facilities);
         }

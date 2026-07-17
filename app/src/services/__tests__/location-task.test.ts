@@ -147,9 +147,9 @@ describe("location background task", () => {
     expect(mockSetItem).not.toHaveBeenCalled();
   });
 
-  it("discards a location whose accuracy is worse than 20m", async () => {
+  it("discards a location whose accuracy is worse than 40m", async () => {
     await locationTaskCallback({
-      data: { locations: [makeLocation(57.7, 11.97, 25)] },
+      data: { locations: [makeLocation(57.7, 11.97, 45)] },
       error: null,
     });
 
@@ -191,7 +191,7 @@ describe("location background task", () => {
     mockGetDistance.mockReturnValue(2); // 2m — below MIN_DISTANCE of 3m
 
     await locationTaskCallback({
-      data: { locations: [makeLocation(57.70001, 11.97, 10)] },
+      data: { locations: [makeLocation(57.70001, 11.97, 10, NOW + 3000)] },
       error: null,
     });
 
@@ -211,13 +211,36 @@ describe("location background task", () => {
     mockGetItem.mockResolvedValue(JSON.stringify(stateWithPoint));
     mockGetDistance.mockReturnValue(150); // 150m — above MAX_DISTANCE of 100m
 
+    // Spread over 16s so the speed guard passes and the distance cap is what rejects it.
     await locationTaskCallback({
-      data: { locations: [makeLocation(57.702, 11.97, 10)] },
+      data: { locations: [makeLocation(57.702, 11.97, 10, NOW + 16000)] },
       error: null,
     });
 
     const written = JSON.parse(mockSetItem.mock.calls[0][1]);
     expect(written.currentSegment.coordinates).toHaveLength(1);
+    expect(written.hike.totalDistance).toBe(0);
+  });
+
+  it("rejects a point implying an impossible speed even when under the distance cap", async () => {
+    const stateWithPoint: StoredHikeState = {
+      ...activeState,
+      currentSegment: {
+        ...baseSegment,
+        coordinates: [{ data: { latitude: 57.7, longitude: 11.97 }, timeStamp: NOW - 1000 }],
+      },
+    };
+    mockGetItem.mockResolvedValue(JSON.stringify(stateWithPoint));
+    // 80m (< 100m cap) but only 1s elapsed ⇒ 80 m/s: a GPS teleport, not travel.
+    mockGetDistance.mockReturnValue(80);
+
+    await locationTaskCallback({
+      data: { locations: [makeLocation(57.7007, 11.97, 10, NOW)] },
+      error: null,
+    });
+
+    const written = JSON.parse(mockSetItem.mock.calls[0][1]);
+    expect(written.currentSegment.coordinates).toHaveLength(1); // unchanged
     expect(written.hike.totalDistance).toBe(0);
   });
 
@@ -230,11 +253,12 @@ describe("location background task", () => {
       },
     };
     mockGetItem.mockResolvedValue(JSON.stringify(stateWithPoint));
-    // 8m hop but the fix's accuracy is 15m — the move is within the noise envelope.
+    // 8m hop but the fix's accuracy is 20m — half the accuracy radius (10m) is the
+    // noise envelope on iOS, so an 8m move is still within it and must be rejected.
     mockGetDistance.mockReturnValue(8);
 
     await locationTaskCallback({
-      data: { locations: [makeLocation(57.70007, 11.97, 15)] },
+      data: { locations: [makeLocation(57.70007, 11.97, 20, NOW + 3000)] },
       error: null,
     });
 
@@ -254,8 +278,9 @@ describe("location background task", () => {
     mockGetItem.mockResolvedValue(JSON.stringify(stateWithPoint));
     mockGetDistance.mockReturnValue(50); // valid: between 3m and 100m
 
+    // 50m over 6s = ~8 m/s — under the speed cap.
     await locationTaskCallback({
-      data: { locations: [makeLocation(57.7005, 11.97, 10)] },
+      data: { locations: [makeLocation(57.7005, 11.97, 10, NOW + 6000)] },
       error: null,
     });
 
@@ -278,12 +303,14 @@ describe("location background task", () => {
     };
     mockGetItem.mockResolvedValue(JSON.stringify(stateWithPoint));
 
+    // Gaps large enough that the accepted hops stay under the speed cap:
+    // 50m/~6s and 30m/4s. The 1m hop is rejected as jitter regardless.
     await locationTaskCallback({
       data: {
         locations: [
-          makeLocation(57.7005, 11.97, 10, NOW + 1),
-          makeLocation(57.70051, 11.97, 10, NOW + 2),
-          makeLocation(57.701, 11.97, 10, NOW + 3),
+          makeLocation(57.7005, 11.97, 10, NOW + 6000),
+          makeLocation(57.70051, 11.97, 10, NOW + 7000),
+          makeLocation(57.701, 11.97, 10, NOW + 10000),
         ],
       },
       error: null,
@@ -326,7 +353,7 @@ describe("location background task", () => {
     (Date.now as jest.Mock).mockReturnValue(NOW + INACTIVITY_TIMEOUT + 5000);
 
     await locationTaskCallback({
-      data: { locations: [makeLocation(57.7, 11.97, 25)] }, // bad accuracy → no new movement
+      data: { locations: [makeLocation(57.7, 11.97, 45)] }, // bad accuracy → no new movement
       error: null,
     });
 

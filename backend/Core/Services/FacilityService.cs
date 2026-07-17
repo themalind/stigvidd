@@ -39,8 +39,8 @@ public class FacilityService : IFacilityService
         string name,
         int facilityType,
         bool IsAccessible,
-        decimal longitude,
-        decimal latitude,
+        decimal? longitude,
+        decimal? latitude,
         CancellationToken ctoken)
     {
         var facility = new Facility

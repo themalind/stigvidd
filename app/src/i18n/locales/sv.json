@@ -16,7 +16,9 @@
     "delete": "Ta bort",
     "share": "Dela",
     "next": "Nästa",
-    "select": "Välj..."
+    "select": "Välj...",
+    "time": "Tid",
+    "distance": "Distans"
   },
   "auth": {
     "login": "Logga in",
@@ -284,6 +286,8 @@
     "description": "Beskrivning",
     "length": "Längd",
     "time": "Tid",
+    "distance": "Distans",
+    "trimTooShort": "Den valda rutten är för kort för att sparas. Justera trimningen.",
     "gettingThereHeading": "Hitta till promenadens start",
     "gettingThereHelp": "Beskriv hur man hittar med en enkel beskriving",
     "gettingThereOptional": "Hitta hit (valfritt)",
@@ -320,12 +324,30 @@
     "notAuthReport": "Du behöver vara inloggad för att rapportera en händelse."
   },
   "error": {
-    "400": { "title": "Ogiltigt anrop", "message": "Något gick fel med din förfrågan." },
-    "401": { "title": "Inte inloggad", "message": "Du måste logga in för att fortsätta." },
-    "403": { "title": "Åtkomst nekad", "message": "Du har inte behörighet att visa detta." },
-    "404": { "title": "Hittades inte", "message": "Det du letar efter finns inte längre." },
-    "500": { "title": "Serverfel", "message": "Något gick fel på servern. Försök igen senare." },
-    "default": { "title": "Något gick fel", "message": "Kontrollera din internetanslutning och försök igen." },
+    "400": {
+      "title": "Ogiltigt anrop",
+      "message": "Något gick fel med din förfrågan."
+    },
+    "401": {
+      "title": "Inte inloggad",
+      "message": "Du måste logga in för att fortsätta."
+    },
+    "403": {
+      "title": "Åtkomst nekad",
+      "message": "Du har inte behörighet att visa detta."
+    },
+    "404": {
+      "title": "Hittades inte",
+      "message": "Det du letar efter finns inte längre."
+    },
+    "500": {
+      "title": "Serverfel",
+      "message": "Något gick fel på servern. Försök igen senare."
+    },
+    "default": {
+      "title": "Något gick fel",
+      "message": "Kontrollera din internetanslutning och försök igen."
+    },
     "retry": "Försök igen"
   },
   "firebaseErrors": {
@@ -430,11 +452,15 @@
     }
   },
   "area": {
+    "title": "Områden",
+    "readMore": "Läs mer",
+    "trails": "Vandring, motion & promenadstigar",
     "facilities": "Faciliteter",
     "firePits": "Grillplatser",
     "shelters": "Vindskydd",
     "fishing": "Fiske",
-    "swimming": "Badplatser"
+    "swimming": "Badplatser",
+    "natureReserve": "Naturreservat"
   },
   "home": {
     "popularNearYou": "Populära promenader nära dig",
@@ -474,13 +500,34 @@
       "Push-notiser för vänförfrågningar och delade vandringar"
     ],
     "techStack": [
-      { "label": "App", "value": "React Native · Expo SDK 54 · TypeScript" },
-      { "label": "Routing", "value": "Expo Router (filbaserad)" },
-      { "label": "Karta & GPS", "value": "MapLibre · MapTiler · Expo Location" },
-      { "label": "State", "value": "TanStack Query · Jotai" },
-      { "label": "UI", "value": "React Native Paper (Material Design 3)" },
-      { "label": "Backend", "value": "ASP.NET Core 10 · C# · EF Core · PostgreSQL/PostGIS" },
-      { "label": "Auth", "value": "Keycloak (OAuth2 / OIDC)" }
+      {
+        "label": "App",
+        "value": "React Native · Expo SDK 54 · TypeScript"
+      },
+      {
+        "label": "Routing",
+        "value": "Expo Router (filbaserad)"
+      },
+      {
+        "label": "Karta & GPS",
+        "value": "MapLibre · MapTiler · Expo Location"
+      },
+      {
+        "label": "State",
+        "value": "TanStack Query · Jotai"
+      },
+      {
+        "label": "UI",
+        "value": "React Native Paper (Material Design 3)"
+      },
+      {
+        "label": "Backend",
+        "value": "ASP.NET Core 10 · C# · EF Core · PostgreSQL/PostGIS"
+      },
+      {
+        "label": "Auth",
+        "value": "Keycloak (OAuth2 / OIDC)"
+      }
     ]
   },
   "guide": {
@@ -518,7 +565,10 @@
     "readMoreTitle": "Läs mer",
     "readMoreSummary": "Externa källor och vidare läsning",
     "links": [
-      { "label": "Allemansrätten — Naturvårdsverket", "url": "https://www.naturvardsverket.se/allemansratten" },
+      {
+        "label": "Allemansrätten — Naturvårdsverket",
+        "url": "https://www.naturvardsverket.se/allemansratten"
+      },
       {
         "label": "Naturreservat — Naturvårdsverket",
         "url": "https://www.naturvardsverket.se/amnesomraden/skyddad-natur/olika-former-av-naturskydd/naturreservat/"
@@ -535,9 +585,18 @@
         "label": "Friluftsliv & natur — Borås Stad",
         "url": "https://www.boras.se/upplevaochgora/friluftslivochnatur/platserforfriluftslivochnatur.4.1601545718c38a990ab4455a.html"
       },
-      { "label": "Vandringsleder — Borås.com", "url": "https://www.boras.com/lista/vandringsleder/" },
-      { "label": "SMHI — väderprognos", "url": "https://www.smhi.se/" },
-      { "label": "Friluftsfrämjandet", "url": "https://www.friluftsframjandet.se/" }
+      {
+        "label": "Vandringsleder — Borås.com",
+        "url": "https://www.boras.com/lista/vandringsleder/"
+      },
+      {
+        "label": "SMHI — väderprognos",
+        "url": "https://www.smhi.se/"
+      },
+      {
+        "label": "Friluftsfrämjandet",
+        "url": "https://www.friluftsframjandet.se/"
+      }
     ]
   },
   "createHike": {
@@ -547,19 +606,25 @@
     "cancelWarning": "Detta går inte att ångra.",
     "no": "Nej",
     "yes": "Ja",
+    "title": "Skapa promenad",
     "start": "Starta vandring",
+    "pause": "Pausa",
     "reset": "Nollställ",
     "resume": "Återuppta",
+    "trackingError": "Något gick fel med inspelningen. Försök igen.",
     "fgPermissionDenied": "Åtkomst till plats nekades.",
     "bgPermissionDenied": "Åtkomst till bakgrundsplats nekades.",
-    "bgPermissionWarning": "Tillåt platsåtkomst \"Alltid\" i Inställningar för spårning i bakgrunden.",
     "notificationBody": "Spelar in vandring...",
     "infoTitle": "Innan du börjar",
     "infoIntro": "Inspelningen fortsätter i bakgrunden tills du stoppar den.",
     "infoInactivity": "Om du inte rör dig på {{minutes}} minuter stoppas inspelningen automatiskt och behåller tiden fram till din senaste rörelse.",
     "infoMaxDuration": "Inspelningen stoppas också automatiskt efter {{hours}} timmar.",
     "infoTrimHint": "Glömde du att stoppa? Du kan trimma början och slutet av din rutt innan du sparar.",
-    "dontShowAgain": "Visa inte detta igen"
+    "dontShowAgain": "Visa inte detta igen",
+    "bgPermissionTitle": "Aktivera platsåtkomst \"Alltid\"",
+    "bgPermissionMessage": "Inspelningen kan starta nu, men för att spårningen ska fungera tillförlitligt med släckt skärm eller telefonen i fickan behöver du ställa in platsåtkomst på \"Alltid\" i Inställningar.",
+    "bgPermissionOpenSettings": "Öppna inställningar",
+    "bgPermissionContinue": "Fortsätt ändå"
   },
   "tabs": {
     "home": "Start",
@@ -578,11 +643,26 @@
   },
   "news": {
     "items": [
-      { "title": "Våren är här och det är dags att röra på sig! 🥾", "date": "5 apr 2026" },
-      { "title": "Nu blir det enklare än någonsin att hitta rätt led i Borås! 🌲🥾", "date": "18 feb 2026" },
-      { "title": "Snart i appen: achievements! 🎉", "date": "28 jan 2026" },
-      { "title": "Picke vann igen! Stigvidds mest promenerade promenad 2025!", "date": "14 jan 2026" },
-      { "title": "Snökaos! ❄️ Promenader du kan gå trots snön", "date": "10 jan 2026" }
+      {
+        "title": "Våren är här och det är dags att röra på sig! 🥾",
+        "date": "5 apr 2026"
+      },
+      {
+        "title": "Nu blir det enklare än någonsin att hitta rätt led i Borås! 🌲🥾",
+        "date": "18 feb 2026"
+      },
+      {
+        "title": "Snart i appen: achievements! 🎉",
+        "date": "28 jan 2026"
+      },
+      {
+        "title": "Picke vann igen! Stigvidds mest promenerade promenad 2025!",
+        "date": "14 jan 2026"
+      },
+      {
+        "title": "Snökaos! ❄️ Promenader du kan gå trots snön",
+        "date": "10 jan 2026"
+      }
     ]
   },
   "trailList": {
@@ -595,439 +675,5 @@
     "refreshing": "Uppdaterar leder...",
     "noResults": "Inga leder hittades",
     "noResultsHint": "Prova att ändra dina filter"
-  },
-  "areas": {
-    "dalsjofors": {
-      "location": "Öster om Borås",
-      "description": "Dalsjöfors bjuder på varierad natur med sjöar, vattendrag och skogsmarker öster om Borås. Här finns grillplatser, badplatser och fiske för hela familjen.",
-      "firepit": {
-        "0": "Grillplats längs den gamla banvallen i Dalsjöfors.",
-        "1": "Grillplats vid Slättås med tillgång till naturmark.",
-        "2": "Grillplats vid Övrarp omgiven av skog."
-      },
-      "fishing": {
-        "0": "Ankedammen är ett populärt fiskevatten i Dalsjöfors.",
-        "1": "Häggån erbjuder fiske i ett naturligt vattendrag.",
-        "2": "Stora och Lilla Dalsjön är fiskrika sjöar i Dalsjöfors.",
-        "3": "Ås-Tolken är ett fiskevårdsområde med goda fiskeförhållanden."
-      },
-      "swimming": {
-        "0": "Dalsjöns badplats med brygga och sandstrand vid den vackra sjön Dalsjön."
-      },
-      "naturereserv": {
-        "0": "Rölle naturreservat skyddar värdefull natur med gamla träd och varierade naturmiljöer."
-      }
-    },
-    "ryaAsar": {
-      "location": "Norr om Borås",
-      "description": "Rya åsar är ett omtyckt friluftsområde norr om Borås med kuperad terräng, sjöar och vidsträckta skogsmarker. Naturreservatet erbjuder vandring, skidåkning och fina naturupplevelser.",
-      "firepit": {
-        "0": "Grillplats vid Fjällsjön med vindskydd och natursköna omgivningar.",
-        "1": "Grillplats på Högplatån med fin utsikt över omgivande landskap."
-      },
-      "shelter": {
-        "0": "Vindskydd vid Fjällsjön med grillmöjligheter och rastplats.",
-        "1": "Vindskydd på Högplatån vid Ålgården, lämpligt för längre vistelse."
-      },
-      "fishing": {
-        "0": "Ryssbybäcken fiskevårdsområde erbjuder fiske i ett naturligt vattendrag.",
-        "1": "Öresjö är en stor sjö med goda fiskemöjligheter norr om Borås."
-      },
-      "naturereserv": {
-        "0": "Rya åsar naturreservat skyddar kuperade åsar med rik fauna och flora, och erbjuder friluftsliv för hela familjen."
-      }
-    },
-    "kype": {
-      "location": "Centrala Borås",
-      "description": "Kype är ett populärt friluftsområde i centrala Borås med Kypesjön som nav. Området erbjuder badplatser, grillplatser och fina promenadstråk för boråsarna.",
-      "firepit": {
-        "0": "Grillplats i Björkängsskogen vid Kypeskogen.",
-        "1": "Grillplats vid Kypegården i den populära Inte-nudda-marken-parken.",
-        "2": "Grillplats vid Kypesjöns badplats med strandnära läge.",
-        "3": "Grillstuga vid Kypesjön med möjlighet att grilla i skydd.",
-        "4": "Grillplats vid Kypesjöns pulkabacke med vinteraktiviteter.",
-        "5": "Grillplats i Kypeskogen vid det historiska Horsatorpet.",
-        "6": "Grillplats i Kypeskogen vid Klämmabäcken.",
-        "7": "Grillplats vid Rävsrydsberget i Tosseryd med fin utsikt."
-      },
-      "shelter": {
-        "0": "Vindskydd i Björkängsskogen vid Kypeskogen.",
-        "1": "Vindskydd vid Kypesjöns badplats."
-      },
-      "swimming": {
-        "0": "Kypesjöns badplats vid Kypegården med brygga, sandstrand och omklädningsrum."
-      }
-    },
-    "kransmossen": {
-      "location": "Södra Borås",
-      "description": "Kransmossen är ett stort friluftsområde i södra Borås med varierad natur. Området har många grillplatser, vindskydd och möjligheter till fiske och naturupplevelser.",
-      "firepit": {
-        "0": "Grillplats vid den gamla fältspatsgruvan i Kransmossen.",
-        "1": "Grillstuga i Kransmossen med möjlighet att grilla i skyddad miljö.",
-        "2": "Grillplats vid Lilla Häljasjö i Gånghester.",
-        "3": "Grillplats vid Sjölid och Mulleängen i Gånghester.",
-        "4": "Grillplats vid Himlabacken i Kransmossen.",
-        "5": "Grillplats vid Kärleksängen i Kransmossen.",
-        "6": "Grillplats vid MTB-höjden i Kransmossen.",
-        "7": "Grillplats vid Slättholmen i Kransmossen.",
-        "8": "Grillplats vid Äppelängen i Kransmossen."
-      },
-      "shelter": {
-        "0": "Vindskydd vid Sjölid och Mulleängen i Gånghester.",
-        "1": "Vindskydd vid Himlabacken i Kransmossen."
-      },
-      "fishing": {
-        "0": "Lillån–Kransån fiskevårdsområde med fiske i naturliga vattendrag i Kransmossen."
-      }
-    },
-    "almenas": {
-      "location": "Norr om Borås, vid Öresjön",
-      "description": "Almenäs ligger vid Öresjöns södra strand och erbjuder fina badplatser, grillplatser och fiskemöjligheter. Området är ett välbesökt utflyktsmål för boråsarna.",
-      "firepit": {
-        "0": "Grillplats vid beachvolleybollplanen i Almenäs.",
-        "1": "Grillplats vid lilla stranden i Almenäs.",
-        "2": "Grillplats vid Sjöbobron i Almenäs.",
-        "3": "Grillplats vid Almenäsudden.",
-        "4": "Grillplats vid Sjöbo Rydastrand.",
-        "5": "Grillplats vid Sjöbovallen i Borås."
-      },
-      "fishing": {
-        "0": "Öresjö fiskevårdsområde vid den stora sjön Öresjön norr om Borås."
-      },
-      "swimming": {
-        "0": "Almenäs badplats vid Öresjöns södra strand med brygga och sandstrand.",
-        "1": "Sjöbo badplats vid Öresjöns sydöstra strand med goda badmöjligheter."
-      },
-      "naturereserv": {
-        "0": "Rya åsar naturreservat i anslutning till Almenäsområdet."
-      }
-    },
-    "aplared": {
-      "location": "Öster om Borås",
-      "description": "Aplared är en ort öster om Borås med naturmarker och fiskemöjligheter. Ekbacken erbjuder grillplats och vindskydd i natursköna omgivningar.",
-      "firepit": {
-        "0": "Grillplats vid Ekbacken söder om fotbollsplanen i Aplared."
-      },
-      "shelter": {
-        "0": "Vindskydd vid Aplared Ekbacken söder om fotbollsplanen."
-      },
-      "fishing": {
-        "0": "Såken fiskevårdsområde öster om Borås vid Aplared."
-      },
-      "swimming": {
-        "0": "Skansasjöns badplats ca 1,5 km nordväst om Aplared."
-      },
-      "naturereserv": {
-        "0": "Lindåsabäckens naturreservat längs Svenljungavägen vid Aplared."
-      }
-    },
-    "borgstena": {
-      "location": "Norr om Borås, vid Fristad",
-      "description": "Borgstena är en liten ort norr om Borås med sjöar och naturmarker. Området erbjuder fiskemöjligheter i Mollasjön och Myresjö.",
-      "fishing": {
-        "0": "Mollasjön fiskevårdsområde norr om Borås och Fristad vid Borgstena.",
-        "1": "Myresjö fiskevårdsområde norr om Borås utanför Borgstena."
-      }
-    },
-    "borasCentrala": {
-      "location": "Centrala Borås",
-      "description": "Borås centrala friluftsområde erbjuder grönska och rekreation mitt i staden. Annelundsparken och A-Ö-skogen ger boråsarna natur nära till hands.",
-      "firepit": {
-        "0": "Grillplats vid Bodakullen i A-Ö-skogen vid Bodavallen.",
-        "1": "Grillplats i Annelundsparken i Borås centrum."
-      },
-      "shelter": {
-        "0": "Regnskydd i Annelundsparken i Borås centrum."
-      }
-    },
-    "bredared": {
-      "location": "Norr om Borås",
-      "description": "Bredared är ett naturskönt område norr om Borås med skog och vattendrag. Området passar för promenader och naturupplevelser."
-    },
-    "byttorpKolbranningen": {
-      "location": "Västra Borås",
-      "description": "Byttorp och Kolbränningen ligger i västra Borås med badplats vid sjön Kolbränningen och grillplatser i natursköna omgivningar.",
-      "firepit": {
-        "0": "Grillplats vid Byttorp badplats.",
-        "1": "Grillplats vid sjön Kolbränningen i Borås."
-      },
-      "swimming": {
-        "0": "Byttorp, Kolbränningen badplats vid sjön Kolbränningen i Borås."
-      }
-    },
-    "dannike": {
-      "location": "Öster om Borås",
-      "description": "Dannike är ett område öster om Borås med sjöar, natur och kulturhistoriska miljöer. Rammsjöns badplats och fiskemöjligheter i flera sjöar lockar besökare.",
-      "firepit": {
-        "0": "Grillplats vid Rammsjöns badplats i Dannike."
-      },
-      "fishing": {
-        "0": "Boanäs fiskevårdsområde med fiske i Yttre Åsunden och Torpasjön.",
-        "1": "Rammsjön fiskevårdsområde öster om Dannike.",
-        "2": "Torpasjön fiskevårdsområde vid Torpa stenhus."
-      },
-      "swimming": {
-        "0": "Rammsjöns badplats vid Rammsjön i Dannike."
-      },
-      "naturereserv": {
-        "0": "Rölle naturreservat längs väg 1706 vid Rölle och Hulten."
-      }
-    },
-    "fristad": {
-      "location": "Norr om Borås",
-      "description": "Fristad är en ort norr om Borås med Öresjön och flera sjöar i omgivningen. Området erbjuder badplatser, grillplatser och fiskemöjligheter i en vacker sjömiljö.",
-      "firepit": {
-        "0": "Grillplats vid bryggan på Asklanda badplats, västra Fristad.",
-        "1": "Grillplats på västra delen av Asklanda badplats.",
-        "2": "Grillplats på östra delen av Asklanda badplats.",
-        "3": "Grillplats vid bryggan på Skalle badplats, söder om Fristad.",
-        "4": "Grillplats på udden vid Skalle badplats.",
-        "5": "Grillplats vid Solviken badplats vid sjön Ärtingen."
-      },
-      "fishing": {
-        "0": "Säven fiskevårdsområde norr om Fristad.",
-        "1": "Varnum och Marsjöarna fiskevårdsområde öster om Sparsör.",
-        "2": "Ärtingen fiskevårdsområde väster om Fristad.",
-        "3": "Öresjö fiskevårdsområde vid Öresjön, Fristad."
-      },
-      "swimming": {
-        "0": "Asklanda badplats vid Öresjöns västra strand i Fristad.",
-        "1": "Skalle badplats vid Öresjöns östra strand söder om Fristad.",
-        "2": "Solviken badplats vid sjön Ärtingen, ca 4 km väster om Fristad."
-      },
-      "naturereserv": {
-        "0": "Mölarps naturreservat där Viskan möter Öresjö i Fristad.",
-        "1": "Vänga Mosse naturreservat i Fristad."
-      }
-    },
-    "frufallan": {
-      "location": "Norr om Borås, vid Öresjön",
-      "description": "Frufällan ligger vid Öresjöns östra strand norr om Borås. Området erbjuder badplats, grillplatser och fiskemöjligheter i en vacker sjönära miljö.",
-      "firepit": {
-        "0": "Grillplats vid Frufällans badplats.",
-        "1": "Grillplats vid Kröklings hage i Frufällan.",
-        "2": "Grillplats vid Mölarps ö i Frufällan.",
-        "3": "Grillplats vid Vikåsaudden i Frufällan."
-      },
-      "fishing": {
-        "0": "Öresjö fiskevårdsområde vid Öresjön i Frufällan."
-      },
-      "swimming": {
-        "0": "Frufällans badplats vid Öresjöns östra strand med brygga och badmöjligheter."
-      }
-    },
-    "gasslosa": {
-      "location": "Södra Borås",
-      "description": "Gässlösa är ett område i södra Borås med elljusspår och naturmark. Transåssjön erbjuder badplats och fiskemöjligheter i natursköna omgivningar.",
-      "firepit": {
-        "0": "Grillplats vid Gässlösa elljusspår."
-      },
-      "fishing": {
-        "0": "Kråkered–Stora Transåssjön fiskevårdsområde vid Gässlösa."
-      },
-      "swimming": {
-        "0": "Transås badplats vid Stora Transåssjön i Gässlösa."
-      }
-    },
-    "hedared": {
-      "location": "Väster om Borås",
-      "description": "Hedared är känt för sin medeltida stavkyrka och natursköna omgivningar väster om Borås. Östra Valsjön erbjuder bad och grillmöjligheter.",
-      "firepit": {
-        "0": "Grillplats vid Östra Valsjön ca 2 km öster om Hedared."
-      },
-      "swimming": {
-        "0": "Östra Valsjöns badplats ca 2 km öster om Hedared."
-      }
-    },
-    "hestra": {
-      "location": "Söder om Borås",
-      "description": "Hestra är ett friluftsområde söder om Borås med Rya åsar naturreservat i närheten. Hestrastugan och Lomsjön erbjuder grillplatser i skog och natur.",
-      "firepit": {
-        "0": "Grillplats vid Hestrastugan i Ekås, Borås.",
-        "1": "Grillplats vid Lomsjön i Kypered, ca 1,7 km norr om Hestrastugan."
-      },
-      "naturereserv": {
-        "0": "Rya åsar naturreservat i anslutning till Hestra."
-      }
-    },
-    "hofsnasTorpa": {
-      "location": "Öster om Borås",
-      "description": "Hofsnäs och Torpa är ett populärt friluftsområde öster om Borås vid Torpasjön. Området erbjuder badplats, grillplatser, fiske och det historiska Torpa stenhus.",
-      "firepit": {
-        "0": "Grillplats vid campingen i Hofsnäs.",
-        "1": "Grillplats vid Ekenäs i Hofsnäs.",
-        "2": "Grillplats vid Flaxet i Hofsnäs.",
-        "3": "Grillplats vid Näset i Hofsnäs.",
-        "4": "Grillplats vid Ångbåtsbryggan i Hofsnäs."
-      },
-      "shelter": {
-        "0": "Vindskydd vid Torpasjön."
-      },
-      "fishing": {
-        "0": "Torpasjön fiskevårdsområde kring Torpanäsets naturreservat."
-      },
-      "swimming": {
-        "0": "Hofsnäs badplats vid östra Torpasjön med brygga och vackra omgivningar."
-      },
-      "naturereserv": {
-        "0": "Torpanäsets naturreservat vid Hofsnäs öster om Borås."
-      }
-    },
-    "sjomarken": {
-      "location": "Väster om Borås",
-      "description": "Sjömarken ligger vid Viaredssjön väster om Borås och erbjuder en populär badplats och grillplatser. Området är välbesökt under sommaren.",
-      "firepit": {
-        "0": "Grillplats vid bryggan på Sjömarkens badplats.",
-        "1": "Grillplats vid stranden på Sjömarkens badplats.",
-        "2": "Grillplats vid udden på Sjömarkens badplats.",
-        "3": "Grillplats vid Sjömarkens idrottsgård."
-      },
-      "fishing": {
-        "0": "Viaredssjön fiskevårdsområde vid Viaredssjön i Sandared/Sjömarken."
-      },
-      "swimming": {
-        "0": "Sjömarkens badplats vid Viaredssjön med brygga och sandstrand."
-      }
-    },
-    "knektasTosseryd": {
-      "location": "Norr om Borås",
-      "description": "Knektås och Tosseryd ligger norr om Borås med naturmark och friluftsanläggningar. Grillplatsen vid GIF-stugan på Knektås är ett populärt utflyktsmål.",
-      "firepit": {
-        "0": "Grillplats på kullen bakom Borås GIF:s klubbstuga vid Knektås."
-      }
-    },
-    "rydboholm": {
-      "location": "Söder om Borås",
-      "description": "Rydboholm är ett naturskönt område söder om Borås med Storsjön och Furusjön. Området erbjuder badplats, grillplats och fiske i vacker sjönatur.",
-      "firepit": {
-        "0": "Grillplats vid Maden i Rydboholm längs Sven Eriksons väg."
-      },
-      "fishing": {
-        "0": "Storsjön och Viskan fiskevårdsområde vid Storsjön i Rydboholm."
-      },
-      "swimming": {
-        "0": "Furusjöns badplats vid Furusjön i Rydboholm."
-      }
-    },
-    "rangedala": {
-      "location": "Öster om Borås",
-      "description": "Rångedala är ett område öster om Borås med Marsjön och Algutstorp. Området erbjuder badplats, grillplatser och naturupplevelser.",
-      "firepit": {
-        "0": "Grillplats vid Bäckravinen i Algutstorp, Rångedala.",
-        "1": "Grillplats vid Ängen i Algutstorp, Rångedala.",
-        "2": "Grillplats vid Marsjöns badplats."
-      },
-      "swimming": {
-        "0": "Marsjöns badplats vid Marsjön i Rångedala."
-      }
-    },
-    "sandared": {
-      "location": "Väster om Borås",
-      "description": "Sandared ligger vid Viaredssjön väster om Borås och erbjuder fina badplatser, grillplatser och fiskemöjligheter. Området är omtyckt för friluftsliv vid sjön.",
-      "firepit": {
-        "0": "Grillplats vid Björviksudden vid Viaredssjön, Sandared.",
-        "1": "Grillplats vid Nordtorp vid SOK-stugan i Sandared.",
-        "2": "Grillplats på västra delen av Sandareds badplats.",
-        "3": "Grillplats på östra delen av Sandareds badplats.",
-        "4": "Grillplats vid Sandaredsån vid Ängen och Åkilen."
-      },
-      "fishing": {
-        "0": "Viaredssjön fiskevårdsområde vid Viaredssjön i Sandared."
-      },
-      "swimming": {
-        "0": "Rydets badplats vid Viaredssjön i Sandared.",
-        "1": "Sandareds badplats vid Viaredssjön med brygga och sandstrand."
-      }
-    },
-    "sandhult": {
-      "location": "Väster om Borås",
-      "description": "Sandhult är en ort väster om Borås med Trummesjön i närheten. Sjön erbjuder bad och rekreation i en lugn naturmiljö.",
-      "firepit": {
-        "0": "Grillplats vid Trummesjöns badplats ca 2,5 km norr om Sandhult."
-      },
-      "swimming": {
-        "0": "Trummesjöns badplats ca 2,5 km norr om Sandhult."
-      }
-    },
-    "seglora": {
-      "location": "Söder om Borås",
-      "description": "Seglora är ett naturskönt område söder om Borås med sjöar och Viskan. Området erbjuder badplatser, fiske och naturreservat.",
-      "firepit": {
-        "0": "Grillplats vid Bogrydssjöns badplats i Seglora."
-      },
-      "fishing": {
-        "0": "Surtans övre fiskevårdsområde vid sjön Hungern i Seglora."
-      },
-      "swimming": {
-        "0": "Bogrydssjön badplats vid Bogrydssjön i Seglora.",
-        "1": "Bua badplats vid Stora Hålsjön i Seglora."
-      },
-      "naturereserv": {
-        "0": "Tranhults naturreservat längs Viskans strand i Seglora."
-      }
-    },
-    "sparsor": {
-      "location": "Norr om Borås, vid Öresjön",
-      "description": "Sparsör ligger vid Öresjöns östra strand norr om Borås. Området erbjuder badplats, grillplatser, fiskemöjligheter och naturreservat.",
-      "firepit": {
-        "0": "Grillplats vid Sparsörs badplats vid Öresjöns östra strand.",
-        "1": "Grillplats vid Trollevi i Sparsör."
-      },
-      "shelter": {
-        "0": "Vindskydd vid Trollevi norr om fotbollsplanerna i Sparsör."
-      },
-      "fishing": {
-        "0": "Gingri Ön fiskevårdsområde i Viskans huvudfåra vid Sparsör.",
-        "1": "Öresjö fiskevårdsområde vid Öresjön i Sparsör."
-      },
-      "swimming": {
-        "0": "Sparsörs badplats vid Öresjöns östra strand."
-      },
-      "naturereserv": {
-        "0": "Kröklings hage naturreservat vid Mölarps kvarn i Sparsör.",
-        "1": "Mölarps naturreservat vid Mölarps kvarn i Sparsör."
-      }
-    },
-    "svaneholm": {
-      "location": "Söder om Borås",
-      "description": "Svaneholm är ett lugnt område söder om Borås med Sävsjön och naturreservat. Storsjön naturreservat ligger i närheten.",
-      "fishing": {
-        "0": "Sävsjön fiskevårdsområde söder om Borås vid Svaneholm."
-      },
-      "naturereserv": {
-        "0": "Storsjön naturreservat ca 1 mil sydväst om Borås vid Viskafors."
-      }
-    },
-    "viskafors": {
-      "location": "Söder om Borås",
-      "description": "Viskafors är en ort söder om Borås vid Storsjön. Det populära friluftsområdet erbjuder badplats, grillplatser, vindskydd och fiskemöjligheter i en vacker sjömiljö.",
-      "firepit": {
-        "0": "Grillplats vid Storsjögården i Viskafors.",
-        "1": "Grillplats vid Klipporna vid Storsjön i Viskafors.",
-        "2": "Grillplats vid Hultaberg vid Storsjön."
-      },
-      "shelter": {
-        "0": "Vindskydd vid Storsjögården i Viskafors.",
-        "1": "Vindskydd vid Hultaberg vid Storsjön.",
-        "2": "Vindskydd vid Kopparhammaren vid Storsjön.",
-        "3": "Vindskydd vid Lomsjö vid Storsjön."
-      },
-      "fishing": {
-        "0": "Bålån fiskevårdsområde i Bålån vid Viskafors.",
-        "1": "Frisjön fiskevårdsområde sydöst om Viskafors.",
-        "2": "Seglora fiskevårdsområde i Viskan vid Viskafors.",
-        "3": "Storsjön och Viskan, Rydboholm fiskevårdsområde vid Storsjön."
-      },
-      "swimming": {
-        "0": "Storsjöns badplats vid Storsjön i Viskafors."
-      },
-      "naturereserv": {
-        "0": "Storsjön naturreservat i Viskafors."
-      }
-    },
-    "ymergarden": {
-      "location": "Västra Borås",
-      "description": "Ymergården är ett friluftsområde i västra Borås med naturmark och promenadmöjligheter."
-    }
   }
 }

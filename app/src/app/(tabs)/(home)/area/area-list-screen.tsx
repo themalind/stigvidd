@@ -1,21 +1,48 @@
+import { getAreas } from "@/api/areas";
 import AreaCard from "@/components/area/area-card";
 import BackButton from "@/components/back-button";
-import { borasAreas } from "@/data/areas-data";
+import ErrorView from "@/components/error-view";
+import LoadingIndicator from "@/components/loading-indicator";
+
+import { CITY_AREAS_STALE_TIME } from "@/constants/cache";
 import { SCREEN_PADDING } from "@/constants/constants";
+import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { Platform, ScrollView, StyleSheet, View } from "react-native";
 import { Text, useTheme } from "react-native-paper";
 
 export default function AreaListScreen() {
   const theme = useTheme();
+  const { t } = useTranslation();
+
+  const {
+    data: areas,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: ["cityAreas"],
+    queryFn: () => getAreas(),
+    staleTime: CITY_AREAS_STALE_TIME,
+  });
+
+  if (isLoading) {
+    return <LoadingIndicator />;
+  }
+
+  if (isError) {
+    return <ErrorView error={error} onRetry={refetch} />;
+  }
 
   return (
     <ScrollView contentContainerStyle={[s.scrollContent, { backgroundColor: theme.colors.background }]}>
       <View style={[s.header, { backgroundColor: theme.colors.background }]}>
         <BackButton />
-        <Text style={[s.title, { color: theme.colors.onBackground }]}>Områden</Text>
+        <Text style={[s.title, { color: theme.colors.onBackground }]}>{t("area.title")}</Text>
       </View>
       <View style={s.content}>
-        {borasAreas.map((area, index) => {
+        {areas?.map((area, index) => {
           return <AreaCard key={index} area={area} />;
         })}
       </View>

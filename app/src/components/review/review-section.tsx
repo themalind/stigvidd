@@ -70,7 +70,7 @@ export default function ReviewSection({ reviews }: ReviewProps) {
                   transform: [{ translateX: -5 }],
                 }}
               >
-                <Rating review={review} starSize={13} starColor={theme.colors.secondary} />
+                <Rating review={review} variant="stars" starColor={theme.colors.secondary} />
               </View>
             }
           >

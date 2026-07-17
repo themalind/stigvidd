@@ -5,6 +5,11 @@ namespace Core.Validators.Hike;
 
 public class CreateHikeRequestValidator : AbstractValidator<CreateHikeRequest>
 {
+    // Pre-parse guard on the raw coordinate JSON string. Sized to comfortably hold
+    // the ~20,000-point ceiling enforced after parsing in HikeService, while
+    // rejecting grossly oversized payloads before they are deserialized.
+    private const int MaxCoordinatesLength = 2_000_000;
+
     public CreateHikeRequestValidator()
     {
         RuleFor(x => x.Name)
@@ -19,7 +24,8 @@ public class CreateHikeRequestValidator : AbstractValidator<CreateHikeRequest>
             .GreaterThan(0);
 
         RuleFor(x => x.Coordinates)
-            .NotEmpty();
+            .NotEmpty()
+            .MaximumLength(MaxCoordinatesLength);
 
         RuleFor(x => x.ParkingInfo)
             .NotEmpty()

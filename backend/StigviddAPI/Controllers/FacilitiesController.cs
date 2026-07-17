@@ -59,7 +59,7 @@ namespace StigviddAPI.Controllers
                 return Unauthorized("User not found");
             }
 
-            var result = await _facilityService.CreateFacilityAsync(request.Name, request.FacilityType, request.IsAccessible, (decimal)request.Longitude, (decimal)request.Latitude, ctoken);
+            var result = await _facilityService.CreateFacilityAsync(request.Name, request.FacilityType, request.IsAccessible, request.Longitude, request.Latitude, ctoken);
 
             if (!result.Success && result.Message != null)
             {

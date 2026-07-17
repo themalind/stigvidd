@@ -3,6 +3,7 @@ import { ActiveHike, LocationData, Segment } from "@/data/types";
 import * as Location from "expo-location";
 import * as TaskManager from "expo-task-manager";
 import { getDistance } from "geolib";
+import { Platform } from "react-native";
 
 export const LOCATION_TASK_NAME = "stigvidd-background-location";
 export const HIKE_STORAGE_KEY = "@stigvidd_active_hike";
@@ -10,9 +11,20 @@ export const HIKE_STORAGE_KEY = "@stigvidd_active_hike";
 // "don't show again". Versioned so changing the rules can re-surface the dialog.
 export const RECORDING_INFO_KEY = "@stigvidd_recording_info_dismissed";
 
-const MIN_DISTANCE = 3;
+// Minimum meters between accepted points. Also used as the GPS distanceInterval.
+export const MIN_DISTANCE = 3;
+// A jump larger than this (meters) between two fixes is a GPS teleport, not travel.
 const MAX_DISTANCE = 100;
-const MAX_ACCURACY = 20;
+// Drop fixes worse than this (meters). iOS-only relaxation to 40m: in a pocket
+// with a locked screen iOS routinely reports 20-50m even at BestForNavigation,
+// and dropping all of those leaves long gaps that get bridged by a single
+// straight line through buildings — a 40m fix on a hike is still a useful point.
+// Android recording is already tuned and left at its original 20m gate so this
+// change can't regress it.
+const MAX_ACCURACY = Platform.OS === "ios" ? 40 : 20;
+// Physically impossible speed (m/s) between two fixes ⇒ GPS glitch, not movement.
+// ~10 m/s (36 km/h) clears hiking/running/cycling while catching teleport spikes.
+const MAX_SPEED = 10;
 
 // A segment shorter than this (meters) is discarded when finalized — it's noise,
 // not a walk. Shared by stopTracking and the stale-session finalizer.
@@ -53,8 +65,40 @@ export async function writeHikeState(state: StoredHikeState): Promise<void> {
   await AsyncStorage.setItem(HIKE_STORAGE_KEY, JSON.stringify(state));
 }
 
+// Serializes read-modify-write access to the stored hike state. The background
+// location task and the UI (start/stop/reset/sync) all mutate the same
+// AsyncStorage record; while the app is alive they share one JS runtime, so a
+// promise-chain lock makes each read→modify→write atomic. Without it, a late
+// task batch can read pre-stop state and write its points back after a Pause —
+// resurrecting a finished recording or double-counting distance.
+let hikeStateLock: Promise<unknown> = Promise.resolve();
+
+function withHikeStateLock<T>(fn: () => Promise<T>): Promise<T> {
+  const result = hikeStateLock.then(() => fn());
+  // Keep the chain alive on rejection so one failed mutation can't wedge the lock.
+  hikeStateLock = result.then(
+    () => undefined,
+    () => undefined,
+  );
+  return result;
+}
+
+// Atomically read the current state, apply `mutator`, and persist the result.
+// A mutator that returns null leaves storage untouched (no write). Returns the
+// state after the mutation (or the unchanged current state when null).
+export async function mutateHikeState(
+  mutator: (state: StoredHikeState) => StoredHikeState | null,
+): Promise<StoredHikeState> {
+  return withHikeStateLock(async () => {
+    const current = await readHikeState();
+    const next = mutator(current);
+    if (next) await writeHikeState(next);
+    return next ?? current;
+  });
+}
+
 export async function clearHikeState(): Promise<void> {
-  await AsyncStorage.removeItem(HIKE_STORAGE_KEY);
+  await withHikeStateLock(() => AsyncStorage.removeItem(HIKE_STORAGE_KEY));
 }
 
 // Whether the recording-info dialog should be shown before starting. Hidden only
@@ -109,6 +153,44 @@ export function maybeFinalizeStaleHike(state: StoredHikeState, now: number): Sto
   return { isTracking: false, hike, currentSegment: null };
 }
 
+export type PointDecision = { accept: boolean; distance: number };
+
+// Decides whether a freshly-sampled GPS fix joins the track, and how much distance
+// it adds relative to the last accepted point. Shared by the background task and
+// the foreground live watcher so both filter identically. Rejects low-accuracy
+// fixes, jitter within the noise envelope, and impossible speed/teleport spikes.
+export function evaluatePoint(
+  lastPoint: LocationData | undefined,
+  candidate: LocationData,
+  accuracy: number | null | undefined,
+): PointDecision {
+  if (!accuracy || accuracy > MAX_ACCURACY) return { accept: false, distance: 0 };
+  if (!lastPoint) return { accept: true, distance: 0 };
+
+  const distance = getDistance(lastPoint.data, candidate.data);
+
+  // Speed spike: a jump faster than a person can travel is a GPS glitch, not a walk.
+  const dtSeconds = (candidate.timeStamp - lastPoint.timeStamp) / 1000;
+  if (dtSeconds > 0 && distance / dtSeconds > MAX_SPEED) return { accept: false, distance: 0 };
+
+  // Teleport guard for the case where timestamps are missing or non-increasing.
+  if (distance > MAX_DISTANCE) return { accept: false, distance: 0 };
+
+  // A stationary phone wanders within its accuracy radius, so only count a move
+  // once it clears that noise envelope (never below MIN_DISTANCE) — otherwise GPS
+  // drift piles up phantom distance and zig-zags while standing still. iOS uses
+  // half the accuracy rather than the full radius: consecutive good fixes are
+  // correlated, so their relative noise is much smaller than a single fix's
+  // absolute error, and gating on the full radius flattened genuine curves into
+  // corner-cutting straight lines when a fix was loose. Android keeps the original
+  // full-radius envelope so its (already good) recording behaviour is unchanged.
+  const noiseFloor = Platform.OS === "ios" ? accuracy / 2 : accuracy;
+  const minStep = Math.max(MIN_DISTANCE, noiseFloor);
+  if (distance < minStep) return { accept: false, distance: 0 };
+
+  return { accept: true, distance };
+}
+
 type LocationTaskData = {
   locations: Location.LocationObject[];
 };
@@ -125,72 +207,66 @@ TaskManager.defineTask(
     if (!locations?.length) return;
 
     try {
-      const state = await readHikeState();
-      if (!state.isTracking || !state.currentSegment) return;
+      // Whether this batch finalized a stale session — so we can stop the task
+      // outside the state lock once the finished state is safely persisted.
+      let didFinalize = false;
 
-      let currentSegment = state.currentSegment;
-      let totalDistance = state.hike.totalDistance;
+      await mutateHikeState((state) => {
+        if (!state.isTracking || !state.currentSegment) return null;
 
-      for (const location of locations) {
-        const accuracy = location.coords.accuracy;
-        if (!accuracy || accuracy > MAX_ACCURACY) {
-          continue;
-        }
+        let currentSegment = state.currentSegment;
+        let totalDistance = state.hike.totalDistance;
 
-        const newPoint: LocationData = {
-          data: {
-            latitude: location.coords.latitude,
-            longitude: location.coords.longitude,
-          },
-          timeStamp: location.timestamp,
-        };
+        for (const location of locations) {
+          const newPoint: LocationData = {
+            data: {
+              latitude: location.coords.latitude,
+              longitude: location.coords.longitude,
+            },
+            timeStamp: location.timestamp,
+          };
 
-        const lastPoint = currentSegment.coordinates.at(-1);
-        let distanceToAdd = 0;
-
-        if (lastPoint) {
-          const distance = getDistance(lastPoint.data, newPoint.data);
-          // Reject teleport-sized jumps outright.
-          if (distance > MAX_DISTANCE) {
+          // Same filter as the foreground live watcher (see evaluatePoint) so the
+          // recorded track and the drawn live tail always agree on what counts.
+          const lastPoint = currentSegment.coordinates.at(-1);
+          const { accept, distance } = evaluatePoint(lastPoint, newPoint, location.coords.accuracy);
+          if (!accept) {
             continue;
           }
-          // A stationary phone jitters within its own accuracy radius, so only
-          // count a move once it clears that noise envelope (never below
-          // MIN_DISTANCE). Otherwise GPS drift piles up phantom distance while
-          // standing still.
-          const minStep = Math.max(MIN_DISTANCE, accuracy);
-          if (distance < minStep) {
-            continue;
-          }
-          distanceToAdd = distance;
+
+          currentSegment = {
+            ...currentSegment,
+            coordinates: [...currentSegment.coordinates, newPoint],
+            distance: currentSegment.distance + distance,
+          };
+
+          totalDistance += distance;
         }
 
-        currentSegment = {
-          ...currentSegment,
-          coordinates: [...currentSegment.coordinates, newPoint],
-          distance: currentSegment.distance + distanceToAdd,
+        const updated: StoredHikeState = {
+          ...state,
+          currentSegment,
+          hike: { ...state.hike, totalDistance },
         };
 
-        totalDistance += distanceToAdd;
-      }
+        // Auto-stop a forgotten recording: if the session has gone inactive or
+        // hit the hard cap, persist the finalized state. Stopping the task
+        // itself happens after the lock releases.
+        const finalized = maybeFinalizeStaleHike(updated, Date.now());
+        if (finalized) {
+          didFinalize = true;
+          return finalized;
+        }
 
-      const updated: StoredHikeState = {
-        ...state,
-        currentSegment,
-        hike: { ...state.hike, totalDistance },
-      };
+        return updated;
+      });
 
-      // Auto-stop a forgotten recording: if the session has gone inactive or hit
-      // the hard cap, finalize it and stop the background task so it can't run on.
-      const finalized = maybeFinalizeStaleHike(updated, Date.now());
-      if (finalized) {
+      // The finalized state (isTracking: false) is now persisted, so any batch
+      // still in flight will no-op on read — safe to stop the task.
+      if (didFinalize) {
         const isRunning = await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME);
         if (isRunning) await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
-        await writeHikeState(finalized);
-        return;
       }
-
-      await writeHikeState(updated);
     } catch (e) {
       console.error("[LocationTask] Processing error:", e);
     }

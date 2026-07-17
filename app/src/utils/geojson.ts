@@ -30,19 +30,25 @@ export function featureCollectionFromMarkers(markers: TrailMarkerResponse[]): Ge
 }
 
 export function featureCollectionFromFacilities(facilities: Facility[]): GeoJSON.FeatureCollection<GeoJSON.Point> {
-  const features: GeoJSON.Feature<GeoJSON.Point>[] = facilities.map((f) => ({
-    type: "Feature",
-    id: f.identifier,
-    properties: {
-      identifier: f.identifier,
-      name: f.name,
-      isAccessible: f.isAccessible,
-    },
-    geometry: {
-      type: "Point",
-      coordinates: [f.longitude, f.latitude],
-    },
-  }));
+  // Single pass: skip facilities without coordinates while building, so we
+  // never emit a feature with undefined coordinates.
+  const features: GeoJSON.Feature<GeoJSON.Point>[] = [];
+  for (const f of facilities) {
+    if (f.longitude == null || f.latitude == null) continue;
+    features.push({
+      type: "Feature",
+      id: f.identifier,
+      properties: {
+        identifier: f.identifier,
+        name: f.name,
+        isAccessible: f.isAccessible,
+      },
+      geometry: {
+        type: "Point",
+        coordinates: [f.longitude, f.latitude],
+      },
+    });
+  }
 
   return { type: "FeatureCollection", features };
 }

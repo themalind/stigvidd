@@ -25,6 +25,76 @@ namespace Infrastructure.Migrations
             NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "postgis");
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("CityAreaFacility", b =>
+                {
+                    b.Property<int>("CityAreaId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("FacilityId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("CityAreaId", "FacilityId");
+
+                    b.HasIndex("FacilityId");
+
+                    b.ToTable("CityAreaFacility", "dbo");
+                });
+
+            modelBuilder.Entity("CityAreaTrail", b =>
+                {
+                    b.Property<int>("CityAreaId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("TrailId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("CityAreaId", "TrailId");
+
+                    b.HasIndex("TrailId");
+
+                    b.ToTable("CityAreaTrail", "dbo");
+                });
+
+            modelBuilder.Entity("Infrastructure.Data.Entities.CityArea", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Identifier")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ImageUrl")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("LastUpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Location")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Url")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("CityAreas", "dbo");
+                });
+
             modelBuilder.Entity("Infrastructure.Data.Entities.Facility", b =>
                 {
                     b.Property<int>("Id")
@@ -35,6 +105,9 @@ namespace Infrastructure.Migrations
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
 
                     b.Property<int>("FacilityType")
                         .HasColumnType("integer");
@@ -49,16 +122,22 @@ namespace Infrastructure.Migrations
                     b.Property<DateTime>("LastUpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<decimal>("Latitude")
+                    b.Property<decimal?>("Latitude")
                         .HasPrecision(18, 5)
                         .HasColumnType("numeric(18,5)");
 
-                    b.Property<decimal>("Longitude")
+                    b.Property<string>("Location")
+                        .HasColumnType("text");
+
+                    b.Property<decimal?>("Longitude")
                         .HasPrecision(18, 5)
                         .HasColumnType("numeric(18,5)");
 
                     b.Property<string>("Name")
                         .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Url")
                         .HasColumnType("text");
 
                     b.HasKey("Id");
@@ -749,6 +828,36 @@ namespace Infrastructure.Migrations
                     b.HasIndex("TrailId");
 
                     b.ToTable("UserWishList", "dbo");
+                });
+
+            modelBuilder.Entity("CityAreaFacility", b =>
+                {
+                    b.HasOne("Infrastructure.Data.Entities.CityArea", null)
+                        .WithMany()
+                        .HasForeignKey("CityAreaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Infrastructure.Data.Entities.Facility", null)
+                        .WithMany()
+                        .HasForeignKey("FacilityId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("CityAreaTrail", b =>
+                {
+                    b.HasOne("Infrastructure.Data.Entities.CityArea", null)
+                        .WithMany()
+                        .HasForeignKey("CityAreaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Infrastructure.Data.Entities.Trail", null)
+                        .WithMany()
+                        .HasForeignKey("TrailId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Infrastructure.Data.Entities.FacilityImage", b =>

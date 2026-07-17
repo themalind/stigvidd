@@ -41,7 +41,7 @@ export default function CreateHikeScreen() {
     <View style={[s.screen, { backgroundColor: theme.colors.background }]}>
       <View style={s.header}>
         <BackButton />
-        <Text style={s.title}>Skapa promenad</Text>
+        <Text style={s.title}>{t("createHike.title")}</Text>
         <IconButton
           icon="information-outline"
           size={20}

@@ -16,7 +16,9 @@
     "delete": "Delete",
     "share": "Share",
     "next": "Next",
-    "select": "Select..."
+    "select": "Select...",
+    "time": "Time",
+    "distance": "Distance"
   },
   "auth": {
     "login": "Log in",
@@ -284,6 +286,8 @@
     "description": "Description",
     "length": "Length",
     "time": "Time",
+    "distance": "Distance",
+    "trimTooShort": "The selected route is too short to save. Adjust the trim.",
     "gettingThereHeading": "How to find the start of the walk",
     "gettingThereHelp": "Describe how to get there with simple directions",
     "gettingThereOptional": "Getting there (optional)",
@@ -448,11 +452,15 @@
     }
   },
   "area": {
+    "title": "Areas",
+    "readMore": "Read more",
+    "trails": "Hiking, exercise & walking paths",
     "facilities": "Facilities",
     "firePits": "Fire pits",
     "shelters": "Wind shelters",
     "fishing": "Fishing",
-    "swimming": "Swimming spots"
+    "swimming": "Swimming spots",
+    "natureReserve": "Nature reserv"
   },
   "home": {
     "popularNearYou": "Popular walks near you",
@@ -598,19 +606,25 @@
     "cancelWarning": "This cannot be undone.",
     "no": "No",
     "yes": "Yes",
+    "title": "Create walk",
     "start": "Start walk",
+    "pause": "Pause",
     "reset": "Reset",
     "resume": "Resume",
+    "trackingError": "Something went wrong with the recording. Please try again.",
     "fgPermissionDenied": "Permission to access location was denied.",
     "bgPermissionDenied": "Permission to access background location was denied.",
-    "bgPermissionWarning": "Allow \"Always\" location access in Settings for background tracking.",
     "notificationBody": "Recording walk...",
     "infoTitle": "Before you start",
     "infoIntro": "Recording keeps running in the background until you stop it.",
     "infoInactivity": "If you don't move for {{minutes}} minutes, recording stops automatically and keeps the time up to your last movement.",
     "infoMaxDuration": "Recording also stops automatically after {{hours}} hours.",
     "infoTrimHint": "Forgot to stop? You can trim the start and end of your route before saving.",
-    "dontShowAgain": "Don't show this again"
+    "dontShowAgain": "Don't show this again",
+    "bgPermissionTitle": "Enable \"Always\" location",
+    "bgPermissionMessage": "Recording can start now, but to keep tracking reliably with the screen locked or the phone in your pocket, set location access to \"Always\" in Settings.",
+    "bgPermissionOpenSettings": "Open settings",
+    "bgPermissionContinue": "Continue anyway"
   },
   "tabs": {
     "home": "Home",
@@ -661,439 +675,5 @@
     "refreshing": "Updating trails...",
     "noResults": "No trails found",
     "noResultsHint": "Try adjusting your filters"
-  },
-  "areas": {
-    "dalsjofors": {
-      "location": "East of Borås",
-      "description": "Dalsjöfors offers varied nature with lakes, streams and forests east of Borås. There are plenty of outdoor recreation opportunities with barbecue areas, beaches and fishing.",
-      "firepit": {
-        "0": "Barbecue area along the old railway embankment in Dalsjöfors.",
-        "1": "Barbecue area at Slättås with access to natural parkland.",
-        "2": "Barbecue area at Övrarp surrounded by forest."
-      },
-      "fishing": {
-        "0": "Ankedammen is a popular fishing spot in Dalsjöfors.",
-        "1": "Häggån offers fishing in a natural stream.",
-        "2": "Stora and Lilla Dalsjön are fish-rich lakes in Dalsjöfors.",
-        "3": "Ås-Tolken is a fishing conservation area with good fishing conditions."
-      },
-      "swimming": {
-        "0": "Dalsjön beach with a pier and sandy shore at the beautiful lake Dalsjön."
-      },
-      "naturereserv": {
-        "0": "Rölle nature reserve protects valuable nature with old trees and varied natural environments."
-      }
-    },
-    "ryaAsar": {
-      "location": "North of Borås",
-      "description": "Rya åsar is a popular outdoor area north of Borås with hilly terrain, lakes and vast forests. The nature reserve offers excellent hiking, skiing and nature experiences.",
-      "firepit": {
-        "0": "Barbecue area at Fjällsjön with a wind shelter and scenic surroundings.",
-        "1": "Barbecue area on Högplatån with a fine view over the surrounding landscape."
-      },
-      "shelter": {
-        "0": "Wind shelter at Fjällsjön with barbecue facilities and a rest area.",
-        "1": "Wind shelter on Högplatån at Ålgården, suitable for longer stays."
-      },
-      "fishing": {
-        "0": "Ryssbybäcken fishing conservation area offers fishing in a natural stream.",
-        "1": "Öresjö is a large lake with good fishing opportunities north of Borås."
-      },
-      "naturereserv": {
-        "0": "Rya åsar nature reserve protects hilly ridges with rich fauna and flora, offering outdoor activities for the whole family."
-      }
-    },
-    "kype": {
-      "location": "Central Borås",
-      "description": "Kype is a popular recreational area in central Borås with Lake Kypesjön at its centre. The area offers beaches, barbecue areas and pleasant walking trails for local residents.",
-      "firepit": {
-        "0": "Barbecue area in Björkängsskogen at Kypeskogen.",
-        "1": "Barbecue area at Kypegården in the popular Inte-nudda-marken park.",
-        "2": "Barbecue area at Kypesjön beach with a lakeside setting.",
-        "3": "Barbecue cabin at Kypesjön with sheltered grilling facilities.",
-        "4": "Barbecue area at Kypesjön's sledding hill with winter activities.",
-        "5": "Barbecue area in Kypeskogen at the historic Horsatorpet.",
-        "6": "Barbecue area in Kypeskogen at Klämmabäcken.",
-        "7": "Barbecue area at Rävsrydsberget in Tosseryd with a fine view."
-      },
-      "shelter": {
-        "0": "Wind shelter in Björkängsskogen at Kypeskogen.",
-        "1": "Wind shelter at Kypesjön beach."
-      },
-      "swimming": {
-        "0": "Kypesjön beach at Kypegården with pier, sandy beach and changing rooms."
-      }
-    },
-    "kransmossen": {
-      "location": "Southern Borås",
-      "description": "Kransmossen is a large recreational area in southern Borås with varied nature. The area has many barbecue spots, wind shelters and opportunities for fishing and nature experiences.",
-      "firepit": {
-        "0": "Barbecue area at the old feldspar mine in Kransmossen.",
-        "1": "Barbecue cabin in Kransmossen with sheltered grilling facilities.",
-        "2": "Barbecue area at Lilla Häljasjö in Gånghester.",
-        "3": "Barbecue area at Sjölid and Mulleängen in Gånghester.",
-        "4": "Barbecue area at Himlabacken in Kransmossen.",
-        "5": "Barbecue area at Kärleksängen in Kransmossen.",
-        "6": "Barbecue area at the MTB hill in Kransmossen.",
-        "7": "Barbecue area at Slättholmen in Kransmossen.",
-        "8": "Barbecue area at Äppelängen in Kransmossen."
-      },
-      "shelter": {
-        "0": "Wind shelter at Sjölid and Mulleängen in Gånghester.",
-        "1": "Wind shelter at Himlabacken in Kransmossen."
-      },
-      "fishing": {
-        "0": "Lillån–Kransån fishing conservation area with fishing in natural streams in Kransmossen."
-      }
-    },
-    "almenas": {
-      "location": "North of Borås, by Lake Öresjön",
-      "description": "Almenäs is situated on the southern shore of Lake Öresjön and offers fine beaches, barbecue areas and fishing. It is a popular day-trip destination for locals.",
-      "firepit": {
-        "0": "Barbecue area at the beach volleyball court in Almenäs.",
-        "1": "Barbecue area at the little beach in Almenäs.",
-        "2": "Barbecue area at Sjöbobron in Almenäs.",
-        "3": "Barbecue area at Almenäsudden.",
-        "4": "Barbecue area at Sjöbo Rydastrand.",
-        "5": "Barbecue area at Sjöbovallen in Borås."
-      },
-      "fishing": {
-        "0": "Öresjö fishing conservation area in the large lake Öresjön north of Borås."
-      },
-      "swimming": {
-        "0": "Almenäs beach on the southern shore of Lake Öresjön with pier and sandy beach.",
-        "1": "Sjöbo beach on the southeastern shore of Lake Öresjön."
-      },
-      "naturereserv": {
-        "0": "Rya åsar nature reserve adjacent to the Almenäs area."
-      }
-    },
-    "aplared": {
-      "location": "East of Borås",
-      "description": "Aplared is a village east of Borås with natural parkland and fishing opportunities. Ekbacken offers a barbecue area and wind shelter in scenic surroundings.",
-      "firepit": {
-        "0": "Barbecue area at Ekbacken south of the football pitch in Aplared."
-      },
-      "shelter": {
-        "0": "Wind shelter at Aplared Ekbacken south of the football pitch."
-      },
-      "fishing": {
-        "0": "Såken fishing conservation area east of Borås at Aplared."
-      },
-      "swimming": {
-        "0": "Skansasjön beach approximately 1.5 km northwest of Aplared."
-      },
-      "naturereserv": {
-        "0": "Lindåsabäcken nature reserve along Svenljungavägen at Aplared."
-      }
-    },
-    "borgstena": {
-      "location": "North of Borås, near Fristad",
-      "description": "Borgstena is a small village north of Borås with lakes and natural parkland. The area offers fishing in Mollasjön and Myresjö.",
-      "fishing": {
-        "0": "Mollasjön fishing conservation area north of Borås and Fristad at Borgstena.",
-        "1": "Myresjö fishing conservation area north of Borås outside Borgstena."
-      }
-    },
-    "borasCentrala": {
-      "location": "Central Borås",
-      "description": "Central Borås recreational area offers greenery and recreation in the heart of the city. Annelundsparken and A-Ö-skogen provide residents with nature close at hand.",
-      "firepit": {
-        "0": "Barbecue area at Bodakullen in A-Ö-skogen at Bodavallen.",
-        "1": "Barbecue area in Annelundsparken in central Borås."
-      },
-      "shelter": {
-        "0": "Rain shelter in Annelundsparken in central Borås."
-      }
-    },
-    "bredared": {
-      "location": "North of Borås",
-      "description": "Bredared is a scenic area north of Borås with forests and streams. The area is suited for walks and nature experiences."
-    },
-    "byttorpKolbranningen": {
-      "location": "Western Borås",
-      "description": "Byttorp and Kolbränningen are located in western Borås with a beach at Lake Kolbränningen and barbecue areas in scenic surroundings.",
-      "firepit": {
-        "0": "Barbecue area at Byttorp beach.",
-        "1": "Barbecue area at Lake Kolbränningen in Borås."
-      },
-      "swimming": {
-        "0": "Byttorp, Kolbränningen beach at Lake Kolbränningen in Borås."
-      }
-    },
-    "dannike": {
-      "location": "East of Borås",
-      "description": "Dannike is an area east of Borås with lakes, nature and cultural heritage sites. Rammsjön beach and fishing in several lakes attract visitors.",
-      "firepit": {
-        "0": "Barbecue area at Rammsjön beach in Dannike."
-      },
-      "fishing": {
-        "0": "Boanäs fishing conservation area in Yttre Åsunden and Torpasjön.",
-        "1": "Rammsjön fishing conservation area east of Dannike.",
-        "2": "Torpasjön fishing conservation area at Torpa stone house."
-      },
-      "swimming": {
-        "0": "Rammsjön beach at Lake Rammsjön in Dannike."
-      },
-      "naturereserv": {
-        "0": "Rölle nature reserve along road 1706 at Rölle and Hulten."
-      }
-    },
-    "fristad": {
-      "location": "North of Borås",
-      "description": "Fristad is a village north of Borås with Lake Öresjön and several lakes nearby. The area offers beaches, barbecue areas and fishing in a beautiful lake environment.",
-      "firepit": {
-        "0": "Barbecue area at the pier of Asklanda beach, western Fristad.",
-        "1": "Barbecue area on the western part of Asklanda beach.",
-        "2": "Barbecue area on the eastern part of Asklanda beach.",
-        "3": "Barbecue area at the pier of Skalle beach, south of Fristad.",
-        "4": "Barbecue area at the headland at Skalle beach.",
-        "5": "Barbecue area at Solviken beach at Lake Ärtingen."
-      },
-      "fishing": {
-        "0": "Säven fishing conservation area north of Fristad.",
-        "1": "Varnum and Marsjöarna fishing conservation area east of Sparsör.",
-        "2": "Ärtingen fishing conservation area west of Fristad.",
-        "3": "Öresjö fishing conservation area at Lake Öresjön, Fristad."
-      },
-      "swimming": {
-        "0": "Asklanda beach on the western shore of Lake Öresjön in Fristad.",
-        "1": "Skalle beach on the eastern shore of Lake Öresjön south of Fristad.",
-        "2": "Solviken beach at Lake Ärtingen, approx. 4 km west of Fristad."
-      },
-      "naturereserv": {
-        "0": "Mölarps nature reserve where the river Viskan meets Lake Öresjön in Fristad.",
-        "1": "Vänga Mosse nature reserve in Fristad."
-      }
-    },
-    "frufallan": {
-      "location": "North of Borås, by Lake Öresjön",
-      "description": "Frufällan is situated on the eastern shore of Lake Öresjön north of Borås. The area offers a beach, barbecue areas and fishing in a beautiful lakeside setting.",
-      "firepit": {
-        "0": "Barbecue area at Frufällan beach.",
-        "1": "Barbecue area at Kröklings hage in Frufällan.",
-        "2": "Barbecue area at Mölarps island in Frufällan.",
-        "3": "Barbecue area at Vikåsaudden in Frufällan."
-      },
-      "fishing": {
-        "0": "Öresjö fishing conservation area at Lake Öresjön in Frufällan."
-      },
-      "swimming": {
-        "0": "Frufällan beach on the eastern shore of Lake Öresjön with pier and swimming facilities."
-      }
-    },
-    "gasslosa": {
-      "location": "Southern Borås",
-      "description": "Gässlösa is an area in southern Borås with a floodlit trail and natural parkland. Transåssjön offers a beach and fishing in scenic surroundings.",
-      "firepit": {
-        "0": "Barbecue area at Gässlösa floodlit trail."
-      },
-      "fishing": {
-        "0": "Kråkered–Stora Transåssjön fishing conservation area at Gässlösa."
-      },
-      "swimming": {
-        "0": "Transås beach at Stora Transåssjön in Gässlösa."
-      }
-    },
-    "hedared": {
-      "location": "West of Borås",
-      "description": "Hedared is known for its medieval stave church and scenic surroundings west of Borås. Östra Valsjön offers swimming and barbecue facilities.",
-      "firepit": {
-        "0": "Barbecue area at Östra Valsjön approx. 2 km east of Hedared."
-      },
-      "swimming": {
-        "0": "Östra Valsjön beach approx. 2 km east of Hedared."
-      }
-    },
-    "hestra": {
-      "location": "South of Borås",
-      "description": "Hestra is a recreational area south of Borås with Rya åsar nature reserve nearby. Hestrastugan and Lomsjön offer barbecue spots in forests and nature.",
-      "firepit": {
-        "0": "Barbecue area at Hestrastugan in Ekås, Borås.",
-        "1": "Barbecue area at Lomsjön in Kypered, approx. 1.7 km north of Hestrastugan."
-      },
-      "naturereserv": {
-        "0": "Rya åsar nature reserve adjacent to Hestra."
-      }
-    },
-    "hofsnasTorpa": {
-      "location": "East of Borås",
-      "description": "Hofsnäs and Torpa is a popular recreational area east of Borås by Lake Torpasjön. The scenic area offers a beach, barbecue areas, fishing and the historic Torpa castle.",
-      "firepit": {
-        "0": "Barbecue area at the campsite in Hofsnäs.",
-        "1": "Barbecue area at Ekenäs in Hofsnäs.",
-        "2": "Barbecue area at Flaxet in Hofsnäs.",
-        "3": "Barbecue area at Näset in Hofsnäs.",
-        "4": "Barbecue area at the old steamboat pier in Hofsnäs."
-      },
-      "shelter": {
-        "0": "Wind shelter at Lake Torpasjön."
-      },
-      "fishing": {
-        "0": "Torpasjön fishing conservation area around Torpanäsets nature reserve."
-      },
-      "swimming": {
-        "0": "Hofsnäs beach on the eastern shore of Lake Torpasjön with pier and beautiful surroundings."
-      },
-      "naturereserv": {
-        "0": "Torpanäsets nature reserve at Hofsnäs east of Borås."
-      }
-    },
-    "sjomarken": {
-      "location": "West of Borås",
-      "description": "Sjömarken is located by Lake Viaredssjön west of Borås and offers a popular beach and barbecue areas. The area is well-visited during summer.",
-      "firepit": {
-        "0": "Barbecue area at the pier of Sjömarken beach.",
-        "1": "Barbecue area on the shore at Sjömarken beach.",
-        "2": "Barbecue area at the headland of Sjömarken beach.",
-        "3": "Barbecue area at Sjömarken sports club."
-      },
-      "fishing": {
-        "0": "Viaredssjön fishing conservation area at Lake Viaredssjön in Sandared/Sjömarken."
-      },
-      "swimming": {
-        "0": "Sjömarken beach at Lake Viaredssjön with pier and sandy beach."
-      }
-    },
-    "knektasTosseryd": {
-      "location": "North of Borås",
-      "description": "Knektås and Tosseryd are located north of Borås with natural parkland and recreational facilities. The barbecue area at the GIF cabin on Knektås is a popular outing destination.",
-      "firepit": {
-        "0": "Barbecue area on the hill behind Borås GIF's club cabin at Knektås."
-      }
-    },
-    "rydboholm": {
-      "location": "South of Borås",
-      "description": "Rydboholm is a scenic area south of Borås with Storsjön and Furusjön. The area offers a beach, barbecue area and fishing in beautiful lake scenery.",
-      "firepit": {
-        "0": "Barbecue area at Maden in Rydboholm along Sven Eriksons väg."
-      },
-      "fishing": {
-        "0": "Storsjön and Viskan fishing conservation area at Lake Storsjön in Rydboholm."
-      },
-      "swimming": {
-        "0": "Furusjön beach at Lake Furusjön in Rydboholm."
-      }
-    },
-    "rangedala": {
-      "location": "East of Borås",
-      "description": "Rångedala is an area east of Borås with Lake Marsjön and Algutstorp. The area offers a beach, barbecue areas and nature experiences.",
-      "firepit": {
-        "0": "Barbecue area at the ravine at Algutstorp, Rångedala.",
-        "1": "Barbecue area at the meadow at Algutstorp, Rångedala.",
-        "2": "Barbecue area at Marsjön beach."
-      },
-      "swimming": {
-        "0": "Marsjön beach at Lake Marsjön in Rångedala."
-      }
-    },
-    "sandared": {
-      "location": "West of Borås",
-      "description": "Sandared is located by Lake Viaredssjön west of Borås and offers fine beaches, barbecue areas and fishing. The area is popular for outdoor recreation by the lake.",
-      "firepit": {
-        "0": "Barbecue area at Björviksudden by Lake Viaredssjön, Sandared.",
-        "1": "Barbecue area at Nordtorp at the SOK cabin in Sandared.",
-        "2": "Barbecue area on the western part of Sandared beach.",
-        "3": "Barbecue area on the eastern part of Sandared beach.",
-        "4": "Barbecue area at Sandaredsån at Ängen and Åkilen."
-      },
-      "fishing": {
-        "0": "Viaredssjön fishing conservation area at Lake Viaredssjön in Sandared."
-      },
-      "swimming": {
-        "0": "Rydet beach at Lake Viaredssjön in Sandared.",
-        "1": "Sandared beach at Lake Viaredssjön with pier and sandy beach."
-      }
-    },
-    "sandhult": {
-      "location": "West of Borås",
-      "description": "Sandhult is a village west of Borås with Lake Trummesjön nearby. The lake offers swimming and recreation in a peaceful natural setting.",
-      "firepit": {
-        "0": "Barbecue area at Trummesjön beach approx. 2.5 km north of Sandhult."
-      },
-      "swimming": {
-        "0": "Trummesjön beach approx. 2.5 km north of Sandhult."
-      }
-    },
-    "seglora": {
-      "location": "South of Borås",
-      "description": "Seglora is a scenic area south of Borås with lakes and the river Viskan. The area offers beaches, fishing and nature reserves.",
-      "firepit": {
-        "0": "Barbecue area at Bogrydssjön beach in Seglora."
-      },
-      "fishing": {
-        "0": "Surtan upper fishing conservation area at Lake Hungern in Seglora."
-      },
-      "swimming": {
-        "0": "Bogrydssjön beach at Lake Bogrydssjön in Seglora.",
-        "1": "Bua beach at Stora Hålsjön in Seglora."
-      },
-      "naturereserv": {
-        "0": "Tranhult nature reserve along the banks of the river Viskan in Seglora."
-      }
-    },
-    "sparsor": {
-      "location": "North of Borås, by Lake Öresjön",
-      "description": "Sparsör is situated on the eastern shore of Lake Öresjön north of Borås. The area offers a beach, barbecue areas, fishing and nature reserves.",
-      "firepit": {
-        "0": "Barbecue area at Sparsör beach on the eastern shore of Lake Öresjön.",
-        "1": "Barbecue area at Trollevi in Sparsör."
-      },
-      "shelter": {
-        "0": "Wind shelter at Trollevi north of the football pitches in Sparsör."
-      },
-      "fishing": {
-        "0": "Gingri Ön fishing conservation area in the main course of the river Viskan at Sparsör.",
-        "1": "Öresjö fishing conservation area at Lake Öresjön in Sparsör."
-      },
-      "swimming": {
-        "0": "Sparsör beach on the eastern shore of Lake Öresjön."
-      },
-      "naturereserv": {
-        "0": "Kröklings hage nature reserve at Mölarps kvarn in Sparsör.",
-        "1": "Mölarps nature reserve at Mölarps kvarn in Sparsör."
-      }
-    },
-    "svaneholm": {
-      "location": "South of Borås",
-      "description": "Svaneholm is a quiet area south of Borås with Lake Sävsjön and nature reserves. Storsjön nature reserve is nearby.",
-      "fishing": {
-        "0": "Sävsjön fishing conservation area south of Borås at Svaneholm."
-      },
-      "naturereserv": {
-        "0": "Storsjön nature reserve approx. 10 km southwest of Borås at Viskafors."
-      }
-    },
-    "viskafors": {
-      "location": "South of Borås",
-      "description": "Viskafors is a village south of Borås by Lake Storsjön. The popular recreational area offers a beach, barbecue areas, wind shelters and fishing in a beautiful lake setting.",
-      "firepit": {
-        "0": "Barbecue area at Storsjögården in Viskafors.",
-        "1": "Barbecue area at Klipporna by Lake Storsjön in Viskafors.",
-        "2": "Barbecue area at Hultaberg by Lake Storsjön."
-      },
-      "shelter": {
-        "0": "Wind shelter at Storsjögården in Viskafors.",
-        "1": "Wind shelter at Hultaberg by Lake Storsjön.",
-        "2": "Wind shelter at Kopparhammaren by Lake Storsjön.",
-        "3": "Wind shelter at Lomsjö by Lake Storsjön."
-      },
-      "fishing": {
-        "0": "Bålån fishing conservation area in the river Bålån at Viskafors.",
-        "1": "Frisjön fishing conservation area southeast of Viskafors.",
-        "2": "Seglora fishing conservation area in the river Viskan at Viskafors.",
-        "3": "Storsjön and Viskan, Rydboholm fishing conservation area at Lake Storsjön."
-      },
-      "swimming": {
-        "0": "Storsjön beach at Lake Storsjön in Viskafors."
-      },
-      "naturereserv": {
-        "0": "Storsjön nature reserve in Viskafors."
-      }
-    },
-    "ymergarden": {
-      "location": "Western Borås",
-      "description": "Ymergården is a recreational area in western Borås with natural parkland and walking opportunities."
-    }
   }
 }

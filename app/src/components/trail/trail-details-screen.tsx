@@ -7,16 +7,16 @@ import TrailDescription from "@/components/trail/trail-description";
 import TrailInfo from "@/components/trail/trail-info";
 import TrailMap from "@/components/trail/trail-map";
 import UserBar from "@/components/trail/user-action-bar/user-bar";
+import { TRAIL_DETAIL_STALE_TIME } from "@/constants/cache";
 import { Review } from "@/data/types";
 import CoordinateParser from "@/utils/coordinate-parser";
 import { guardedNavigate } from "@/utils/navigation";
-import { TRAIL_DETAIL_STALE_TIME } from "@/constants/cache";
 import { useQuery } from "@tanstack/react-query";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { startTransition, useCallback, useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useTheme } from "react-native-paper";
-import { useTranslation } from "react-i18next";
 import BackButton from "../back-button";
 import ErrorView from "../error-view";
 import LoadingIndicator from "../loading-indicator";
@@ -124,15 +124,13 @@ export default function TrailDetailsScreen({ followRoute }: { followRoute: Follo
             <ImageGallery images={images} />
           </View>
           <View style={s.ratingSection}>
-            <View style={s.rating}>
-              <Rating trailReviews={reviews} starSize={20} starColor={theme.colors.secondary} />
-              <Text style={[s.ratingNumber, { color: theme.colors.onBackground }]}>{`(${reviewCount})`}</Text>
-            </View>
-            <View style={s.paddingLeft}>
-              <Pressable onPress={onPressScrollToRatings} style={({ pressed }) => pressed && { opacity: 0.7 }}>
-                <Text style={[s.text, { color: theme.colors.secondary }]}>{t("trail.readReviews")}</Text>
-              </Pressable>
-            </View>
+            <Rating trailReviews={reviews} starColor={theme.colors.secondary} textStyle={s.ratingNumber} />
+            <Pressable onPress={onPressScrollToRatings} style={({ pressed }) => pressed && { opacity: 0.7 }}>
+              <Text style={[s.ratingNumber, { color: theme.colors.secondary }]}>
+                <Text style={s.text}>{t("trail.readReviews")}</Text>
+                {` (${reviewCount})`}
+              </Text>
+            </Pressable>
           </View>
           {trail && <TrailInfo trail={trail} />}
           {obstacles && obstacles.length > 0 && <TrailObstacleWarning onPress={() => setShowObstacleModal(true)} />}
@@ -187,11 +185,6 @@ const s = StyleSheet.create({
     paddingHorizontal: 12,
     gap: 15,
   },
-  rating: {
-    flexDirection: "row",
-    justifyContent: "flex-start",
-    gap: 3,
-  },
   sectionTitle: {
     fontFamily: "Inter_600SemiBold",
     fontSize: 15,
@@ -210,10 +203,8 @@ const s = StyleSheet.create({
   },
   ratingSection: {
     flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  paddingLeft: {
-    paddingRight: 10,
+    alignItems: "center",
+    gap: 10,
   },
   imageContainer: {
     alignItems: "center",

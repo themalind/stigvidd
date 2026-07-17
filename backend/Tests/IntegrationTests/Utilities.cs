@@ -33,6 +33,7 @@ public static class Utilities
         var solvedVotes = GetSeedingTrailObstacleSolvedVotes(obstacles, users);
         var facilities = GetSeedingFacilities();
         var hikeShares = GetSeedingHikeShares(hikes, users);
+        var cityAreas = GetSeedingCityAreas(trails, facilities);
 
         db.Trails.AddRange(trails);
         db.Users.AddRange(users);
@@ -42,6 +43,7 @@ public static class Utilities
         db.TrailObstacleSolvedVotes.AddRange(solvedVotes);
         db.Facilities.AddRange(facilities);
         db.HikeShares.AddRange(hikeShares);
+        db.CityAreas.AddRange(cityAreas);
 
         db.SaveChanges();
     }
@@ -71,6 +73,62 @@ public static class Utilities
                 IsAccessible = false,
                 Latitude = 57.6M,
                 Longitude = 12.8M,
+                CreatedAt = SeedDates.Created,
+                LastUpdatedAt = SeedDates.Updated
+            }
+        ];
+    }
+
+    /// <summary>
+    /// Creates city areas for testing the many-to-many links to trails and facilities.
+    /// Area 1 (Dalsjöfors) links an existing firepit facility and an existing trail, and owns a
+    /// coordinate-less fishing facility (so the /facilities marker endpoint filter can be verified).
+    /// Area 2 (Viskafors) has no links, exercising the empty-collection path.
+    /// </summary>
+    public static List<CityArea> GetSeedingCityAreas(List<Trail> trails, List<Facility> facilities)
+    {
+        return
+        [
+            new CityArea
+            {
+                Id = 1,
+                Identifier = "area-dalsjofors",
+                Name = "Dalsjöfors",
+                Location = "Öster om Borås",
+                Description = "Ett friluftsområde öster om Borås.",
+                ImageUrl = "https://stigvidd.se/files/trails/area-dalsjofors.jpg",
+                Url = "https://www.boras.se/dalsjofors",
+                CreatedAt = SeedDates.Created,
+                LastUpdatedAt = SeedDates.Updated,
+                Trails = [trails.First(t => t.Id == 1)],       // Tiveden
+                Facilities =
+                [
+                    facilities.First(f => f.Id == 1),          // Grillplats Tiveden (firepit, has coords)
+                    new Facility
+                    {
+                        Id = 100,
+                        Identifier = "fac-fishing-ankedammen",
+                        Name = "Ankedammen",
+                        FacilityType = FacilityType.FishingArea,
+                        IsAccessible = false,
+                        Latitude = null,
+                        Longitude = null,
+                        Location = "Dalsjöfors",
+                        Description = "Fiskevatten i Dalsjöfors.",
+                        CreatedAt = SeedDates.Created,
+                        LastUpdatedAt = SeedDates.Updated
+                    }
+                ]
+            },
+            new CityArea
+            {
+                Id = 2,
+                Identifier = "area-viskafors",
+                Name = "Viskafors",
+                Location = "Söder om Borås",
+                Description = null,
+                ImageUrl = null,
+                Url = null,
                 CreatedAt = SeedDates.Created,
                 LastUpdatedAt = SeedDates.Updated
             }

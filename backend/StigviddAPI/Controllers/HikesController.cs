@@ -33,7 +33,7 @@ public class HikesController : StigViddController
             return Unauthorized("User not found");
         }
 
-        var result = await _hikeService.GetHikeByIdentifierAsync(hikeIdentifier, ctoken);
+        var result = await _hikeService.GetHikeByIdentifierAsync(hikeIdentifier, userResponse.Identifier, ctoken);
 
         if (!result.Success && result.Message != null)
         {
@@ -56,7 +56,15 @@ public class HikesController : StigViddController
             return Unauthorized("User not found");
         }
 
-        var result = await _hikeService.GetHikesAsync(createdBy, ctoken);
+        // Hikes are private: a caller may only list their own. The client-supplied
+        // createdBy is never trusted for filtering — it may only self-select. Shared
+        // hikes are read through HikeShareRecipientController, not here.
+        if (createdBy is not null && createdBy != userResponse.Identifier)
+        {
+            return StatusCode(StatusCodes.Status403Forbidden);
+        }
+
+        var result = await _hikeService.GetHikesAsync(userResponse.Identifier, ctoken);
 
         return Ok(result.Value);
     }
@@ -114,7 +122,7 @@ public class HikesController : StigViddController
             return ToActionResult(result.Message);
         }
 
-        return Ok(result);
+        return Ok(result.Value);
     }
 
     [Authorize]

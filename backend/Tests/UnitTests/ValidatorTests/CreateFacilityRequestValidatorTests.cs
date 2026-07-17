@@ -16,8 +16,8 @@ public class CreateFacilityRequestValidatorTests
             Name = "Grillplats Tiveden",
             FacilityType = 1,
             IsAccessible = true,
-            Latitude = 58.9,
-            Longitude = 14.5
+            Latitude = 58.9m,
+            Longitude = 14.5m
         });
 
         result.IsValid.Should().BeTrue();
@@ -33,8 +33,8 @@ public class CreateFacilityRequestValidatorTests
             Name = string.Empty,
             FacilityType = 1,
             IsAccessible = true,
-            Latitude = 58.9,
-            Longitude = 14.5
+            Latitude = 58.9m,
+            Longitude = 14.5m
         });
 
         result.IsValid.Should().BeFalse();
@@ -50,8 +50,8 @@ public class CreateFacilityRequestValidatorTests
             Name = "Grillplats",
             FacilityType = 0,
             IsAccessible = true,
-            Latitude = 58.9,
-            Longitude = 14.5
+            Latitude = 58.9m,
+            Longitude = 14.5m   
         });
 
         result.IsValid.Should().BeFalse();
@@ -68,8 +68,8 @@ public class CreateFacilityRequestValidatorTests
             Name = "Grillplats",
             FacilityType = facilityType,
             IsAccessible = true,
-            Latitude = 58.9,
-            Longitude = 14.5
+            Latitude = 58.9m,
+            Longitude = 14.5m
         });
 
         result.IsValid.Should().BeTrue();
@@ -85,8 +85,8 @@ public class CreateFacilityRequestValidatorTests
             Name = "Grillplats",
             FacilityType = 1,
             IsAccessible = true,
-            Latitude = 90,
-            Longitude = 14.5
+            Latitude = 90m,
+            Longitude = 14.5m
         });
 
         result.IsValid.Should().BeTrue();
@@ -100,8 +100,8 @@ public class CreateFacilityRequestValidatorTests
             Name = "Grillplats",
             FacilityType = 1,
             IsAccessible = true,
-            Latitude = 90.0001,
-            Longitude = 14.5
+            Latitude = 90.0001m,
+            Longitude = 14.5m
         });
 
         result.IsValid.Should().BeFalse();
@@ -115,8 +115,8 @@ public class CreateFacilityRequestValidatorTests
             Name = "Grillplats",
             FacilityType = 1,
             IsAccessible = true,
-            Latitude = -90,
-            Longitude = 14.5
+            Latitude = -90m,
+            Longitude = 14.5m
         });
 
         result.IsValid.Should().BeTrue();
@@ -130,8 +130,8 @@ public class CreateFacilityRequestValidatorTests
             Name = "Grillplats",
             FacilityType = 1,
             IsAccessible = true,
-            Latitude = -90.0001,
-            Longitude = 14.5
+            Latitude = -90.0001m,
+            Longitude = 14.5m
         });
 
         result.IsValid.Should().BeFalse();
@@ -147,8 +147,8 @@ public class CreateFacilityRequestValidatorTests
             Name = "Grillplats",
             FacilityType = 1,
             IsAccessible = true,
-            Latitude = 58.9,
-            Longitude = 180
+            Latitude = 58.9m,
+            Longitude = 180m
         });
 
         result.IsValid.Should().BeTrue();
@@ -162,8 +162,8 @@ public class CreateFacilityRequestValidatorTests
             Name = "Grillplats",
             FacilityType = 1,
             IsAccessible = true,
-            Latitude = 58.9,
-            Longitude = 180.0001
+            Latitude = 58.9m,
+            Longitude = 180.0001m
         });
 
         result.IsValid.Should().BeFalse();
@@ -177,8 +177,8 @@ public class CreateFacilityRequestValidatorTests
             Name = "Grillplats",
             FacilityType = 1,
             IsAccessible = true,
-            Latitude = 58.9,
-            Longitude = -180
+            Latitude = 58.9m,
+            Longitude = -180m
         });
 
         result.IsValid.Should().BeTrue();
@@ -192,8 +192,8 @@ public class CreateFacilityRequestValidatorTests
             Name = "Grillplats",
             FacilityType = 1,
             IsAccessible = true,
-            Latitude = 58.9,
-            Longitude = -180.0001
+            Latitude = 58.9m,
+            Longitude = -180.0001m
         });
 
         result.IsValid.Should().BeFalse();

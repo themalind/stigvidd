@@ -18,10 +18,12 @@ public class HikesControllerIntegrationTests : IClassFixture<StigViddWebApplicat
 
     // Users
     private const string NaturElskarenIdentifier = "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d"; // User 1
+    private const string VandrarVennenIdentifier = "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e"; // User 2 (creator of TestHike3)
 
     // Hikes
     private const string TestHike1Identifier = "3f9c1b7e-8a42-4e6d-9c5f-2a7b1d8e4f90"; // by NaturElskaren
-    private const string TestHike3Identifier = "91e4c2d7-3b8f-4f6a-9d1c-7a2e5b0c8f13"; // by VandrarVennen (different creator)
+    private const string TestHike3Identifier = "91e4c2d7-3b8f-4f6a-9d1c-7a2e5b0c8f13"; // by VandrarVennen, shared with NaturElskaren
+    private const string TestHike4Identifier = "c4d8a1b9-6f3e-4c72-8a5d-1e9b2f7c0a46"; // by VandrarVennen, NOT shared
     #endregion
 
     private readonly StigViddWebApplicationFactory<Program> _factory;
@@ -110,20 +112,48 @@ public class HikesControllerIntegrationTests : IClassFixture<StigViddWebApplicat
     }
 
     [Fact]
-    public async Task GetHikesAsync_ShouldReturnOk_WhenQueryIsUsedAndHasNoMatch()
+    public async Task GetHikesAsync_ShouldReturnForbidden_WhenCreatedByIsAnotherUser()
+    {
+        // Arrange — hikes are private; a caller may only list their own.
+        var client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", AUTHENTICATED_USER);
+
+        // Act — NaturElskaren attempts to list VandrarVennen's hikes.
+        var response = await client.GetAsync($"{BASE_URL}?createdBy={VandrarVennenIdentifier}", TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+    }
+
+    [Fact]
+    public async Task GetHikeByIdentifierAsync_ShouldReturnForbidden_WhenNotOwnerAndNotSharedWith()
     {
         // Arrange
         var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", AUTHENTICATED_USER);
 
-        // Act
-        var response = await client.GetAsync($"{BASE_URL}?createdBy=not-a-valid-user", TestContext.Current.CancellationToken);
-        var responseObject = await response.Content.ReadFromJsonAsync<HikeResponse[]>(TestContext.Current.CancellationToken);
+        // Act — TestHike4 is owned by VandrarVennen and not shared with NaturElskaren.
+        var response = await client.GetAsync($"{BASE_URL}{TestHike4Identifier}", TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+    }
+
+    [Fact]
+    public async Task GetHikeByIdentifierAsync_ShouldReturnOk_WhenSharedWithCaller()
+    {
+        // Arrange
+        var client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", AUTHENTICATED_USER);
+
+        // Act — TestHike3 (owned by VandrarVennen) was shared with NaturElskaren.
+        var response = await client.GetAsync($"{BASE_URL}{TestHike3Identifier}", TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        responseObject.Should().HaveCount(0);
     }
 
     [Fact]
@@ -276,7 +306,7 @@ public class HikesControllerIntegrationTests : IClassFixture<StigViddWebApplicat
     }
 
     [Fact]
-    public async Task UpdateHikeAsync_ShouldReturnUnauthorized_WhenUserIsNotCreator()
+    public async Task UpdateHikeAsync_ShouldReturnForbidden_WhenUserIsNotCreator()
     {
         // Arrange
         var client = _factory.CreateClient();
@@ -289,7 +319,7 @@ public class HikesControllerIntegrationTests : IClassFixture<StigViddWebApplicat
         var response = await client.PutAsJsonAsync($"{BASE_URL}{TestHike3Identifier}", request, TestContext.Current.CancellationToken);
 
         // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
     }
 
     [Fact]
@@ -340,7 +370,7 @@ public class HikesControllerIntegrationTests : IClassFixture<StigViddWebApplicat
     }
 
     [Fact]
-    public async Task DeleteHikeAsync_ShouldReturnUnauthorized_WhenUserIsNotCreator()
+    public async Task DeleteHikeAsync_ShouldReturnForbidden_WhenUserIsNotCreator()
     {
         // Arrange
         var client = _factory.CreateClient();
@@ -351,7 +381,7 @@ public class HikesControllerIntegrationTests : IClassFixture<StigViddWebApplicat
         var response = await client.DeleteAsync($"{BASE_URL}{TestHike3Identifier}", TestContext.Current.CancellationToken);
 
         // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
     }
 
     [Fact]
