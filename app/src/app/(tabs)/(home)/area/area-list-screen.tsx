@@ -7,13 +7,11 @@ import LoadingIndicator from "@/components/loading-indicator";
 import { CITY_AREAS_STALE_TIME } from "@/constants/cache";
 import { SCREEN_PADDING } from "@/constants/constants";
 import { useQuery } from "@tanstack/react-query";
-import { useTranslation } from "react-i18next";
 import { Platform, ScrollView, StyleSheet, View } from "react-native";
-import { Text, useTheme } from "react-native-paper";
+import { useTheme } from "react-native-paper";
 
 export default function AreaListScreen() {
   const theme = useTheme();
-  const { t } = useTranslation();
 
   const {
     data: areas,
@@ -39,7 +37,6 @@ export default function AreaListScreen() {
     <ScrollView contentContainerStyle={[s.scrollContent, { backgroundColor: theme.colors.background }]}>
       <View style={[s.header, { backgroundColor: theme.colors.background }]}>
         <BackButton />
-        <Text style={[s.title, { color: theme.colors.onBackground }]}>{t("area.title")}</Text>
       </View>
       <View style={s.content}>
         {areas?.map((area, index) => {
@@ -56,10 +53,6 @@ const s = StyleSheet.create({
     alignItems: "center",
     paddingLeft: Platform.select({ ios: 0, default: SCREEN_PADDING }),
   },
-  title: {
-    fontFamily: "Inter_600SemiBold",
-    fontSize: 16,
-  },
   scrollContent: {
     paddingTop: 8,
     paddingBottom: 20,
@@ -67,6 +60,6 @@ const s = StyleSheet.create({
   },
   content: {
     paddingHorizontal: SCREEN_PADDING,
-    gap: 15,
+    gap: 16,
   },
 });

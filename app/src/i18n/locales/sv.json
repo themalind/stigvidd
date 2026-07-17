@@ -454,6 +454,8 @@
   "area": {
     "title": "Områden",
     "readMore": "Läs mer",
+    "trailsShort": "leder",
+    "km": "km",
     "trails": "Vandring, motion & promenadstigar",
     "facilities": "Faciliteter",
     "firePits": "Grillplatser",
@@ -482,52 +484,24 @@
     "language": "Språk"
   },
   "about": {
-    "description": "Stigvidd är en fullstack-app för vandring, byggd som ett examensarbete. Utforska vandringsleder i Boråsområdet, spela in egna vandringar med GPS, betygsätt leder och rapportera hinder längs vägen.",
-    "featuresTitle": "Funktioner",
-    "techTitle": "Teknik",
-    "dataSourceTitle": "Datakälla",
-    "dataSourceText": "Leddata för Boråsområdet hämtas från Borås Stads öppna dataportal i GeoJSON-format och importeras via eget ETL-verktyg.",
-    "footer": "Examensarbete · SUVNET24",
+    "tagline": "Upptäck leder nära dig",
+    "description": "Stigvidd är en vandringsapp skapad som ett hobbyprojekt, av kärlek till naturen. Utforska vandringsleder i Boråsområdet, spela in egna vandringar med GPS, betygsätt lederna du gillar och hjälp andra vandrare genom att rapportera hinder längs vägen.",
+    "featuresTitle": "Det här kan du göra",
+    "dataSourceTitle": "Data & källor",
+    "dataSourceText": "Leddata för Boråsområdet kommer från Borås Stads öppna dataportal. Kartor tillhandahålls av MapTiler och MapLibre.",
+    "contactTitle": "Hör av dig",
+    "contactText": "Har du synpunkter, hittat ett fel eller vill tipsa om en led? Vi vill gärna höra från dig.",
+    "contactEmail": "info@lingonberg.se",
+    "versionLabel": "Version",
+    "footer": "Skapad med omtanke om naturen",
     "features": [
-      "Utforska och filtrera vandringsleder (svårighetsgrad, tillgänglighet, längd, stad)",
-      "Interaktiv topografisk karta med klustrade ledermarkeringar, följa-läge och vägbeskrivning till leden",
-      "GPS-spårning i bakgrunden under vandring med avståndsmätning",
-      "Lederrecensioner med stjärnbetyg och foton",
-      "Favoriter och önskelista med optimistisk UI-uppdatering",
-      "Rapportera hinder/faror med ett röstningssystem",
-      "Användarprofiler med vandringhistorik och statistik",
-      "Dela inspelade vandringar med vänner",
-      "Push-notiser för vänförfrågningar och delade vandringar"
-    ],
-    "techStack": [
-      {
-        "label": "App",
-        "value": "React Native · Expo SDK 54 · TypeScript"
-      },
-      {
-        "label": "Routing",
-        "value": "Expo Router (filbaserad)"
-      },
-      {
-        "label": "Karta & GPS",
-        "value": "MapLibre · MapTiler · Expo Location"
-      },
-      {
-        "label": "State",
-        "value": "TanStack Query · Jotai"
-      },
-      {
-        "label": "UI",
-        "value": "React Native Paper (Material Design 3)"
-      },
-      {
-        "label": "Backend",
-        "value": "ASP.NET Core 10 · C# · EF Core · PostgreSQL/PostGIS"
-      },
-      {
-        "label": "Auth",
-        "value": "Keycloak (OAuth2 / OIDC)"
-      }
+      "Utforska och filtrera vandringsleder efter svårighetsgrad, tillgänglighet och längd",
+      "Följ en interaktiv karta med vägbeskrivning till ledens start",
+      "Spela in dina vandringar med GPS och se hur långt du går",
+      "Betygsätt leder och dela dina foton i recensioner",
+      "Spara favoriter och bygg en önskelista med leder att testa",
+      "Rapportera hinder och faror för att hjälpa andra vandrare",
+      "Dela dina inspelade vandringar med vänner"
     ]
   },
   "guide": {

@@ -454,6 +454,8 @@
   "area": {
     "title": "Areas",
     "readMore": "Read more",
+    "trailsShort": "trails",
+    "km": "km",
     "trails": "Hiking, exercise & walking paths",
     "facilities": "Facilities",
     "firePits": "Fire pits",
@@ -482,52 +484,24 @@
     "language": "Language"
   },
   "about": {
-    "description": "Stigvidd is a full-stack hiking app built as a thesis project. Explore trails in the Borås area, record your own walks with GPS, rate trails and report obstacles along the way.",
-    "featuresTitle": "Features",
-    "techTitle": "Technology",
-    "dataSourceTitle": "Data source",
-    "dataSourceText": "Trail data for the Borås area is fetched from the City of Borås open data portal in GeoJSON format and imported via a custom ETL tool.",
-    "footer": "Thesis project · SUVNET24",
+    "tagline": "Discover trails near you",
+    "description": "Stigvidd is a hiking app made as a hobby project, for the love of the outdoors. Explore trails in the Borås area, record your own walks with GPS, rate the trails you enjoy and help other hikers by reporting obstacles along the way.",
+    "featuresTitle": "What you can do",
+    "dataSourceTitle": "Data & credits",
+    "dataSourceText": "Trail data for the Borås area comes from the City of Borås open data portal. Maps are provided by MapTiler and MapLibre.",
+    "contactTitle": "Get in touch",
+    "contactText": "Have feedback, found a bug or want to suggest a trail? We'd love to hear from you.",
+    "contactEmail": "info@lingonberg.se",
+    "versionLabel": "Version",
+    "footer": "Made with care for the outdoors",
     "features": [
-      "Explore and filter hiking trails (difficulty, accessibility, length, city)",
-      "Interactive topographic map with clustered trail markers, follow mode and directions to the trail",
-      "Background GPS tracking during walks with distance measurement",
-      "Trail reviews with star ratings and photos",
-      "Favorites and wishlist with optimistic UI updates",
-      "Report obstacles/hazards with a voting system",
-      "User profiles with hiking history and statistics",
-      "Share recorded walks with friends",
-      "Push notifications for friend requests and shared walks"
-    ],
-    "techStack": [
-      {
-        "label": "App",
-        "value": "React Native · Expo SDK 54 · TypeScript"
-      },
-      {
-        "label": "Routing",
-        "value": "Expo Router (file-based)"
-      },
-      {
-        "label": "Map & GPS",
-        "value": "MapLibre · MapTiler · Expo Location"
-      },
-      {
-        "label": "State",
-        "value": "TanStack Query · Jotai"
-      },
-      {
-        "label": "UI",
-        "value": "React Native Paper (Material Design 3)"
-      },
-      {
-        "label": "Backend",
-        "value": "ASP.NET Core 10 · C# · EF Core · PostgreSQL/PostGIS"
-      },
-      {
-        "label": "Auth",
-        "value": "Keycloak (OAuth2 / OIDC)"
-      }
+      "Explore and filter hiking trails by difficulty, accessibility and length",
+      "Follow an interactive map with directions to the trailhead",
+      "Record your walks with GPS and see the distance you cover",
+      "Rate trails and share your photos in reviews",
+      "Save favorites and build a wishlist of trails to try",
+      "Report obstacles and hazards to help other hikers",
+      "Share your recorded walks with friends"
     ]
   },
   "guide": {

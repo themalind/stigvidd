@@ -1,4 +1,4 @@
-import { SCREEN_PADDING } from "@/constants/constants";
+import { BORDER_RADIUS, SCREEN_PADDING } from "@/constants/constants";
 import { Facility } from "@/data/types";
 import { asTranslationKey } from "@/i18n";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -54,7 +54,7 @@ export default function FacilitySection({ title, icon, items }: FacilitySectionP
 
 const s = StyleSheet.create({
   facilityCard: {
-    borderRadius: 10,
+    borderRadius: BORDER_RADIUS,
     padding: 12,
     gap: 4,
   },

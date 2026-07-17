@@ -1,6 +1,7 @@
 import BackButton from "@/components/back-button";
 import { SCREEN_PADDING } from "@/constants/constants";
-import { Platform, ScrollView, StyleSheet, View } from "react-native";
+import Constants from "expo-constants";
+import { Linking, Platform, ScrollView, StyleSheet, View } from "react-native";
 import { Text, useTheme } from "react-native-paper";
 import { useTranslation } from "react-i18next";
 
@@ -9,7 +10,8 @@ export default function AboutScreen() {
   const { t } = useTranslation();
 
   const features = t("about.features", { returnObjects: true }) as string[];
-  const techStack = t("about.techStack", { returnObjects: true }) as { label: string; value: string }[];
+  const version = Constants.expoConfig?.version;
+  const email = t("about.contactEmail");
 
   return (
     <View style={[s.screen, { backgroundColor: theme.colors.background }]}>
@@ -19,6 +21,9 @@ export default function AboutScreen() {
           <Text style={[s.appName, { color: theme.colors.onBackground }]}>Stigvidd</Text>
         </View>
         <View style={s.content}>
+          <Text variant="titleMedium" style={[s.tagline, { color: theme.colors.onBackground }]}>
+            {t("about.tagline")}
+          </Text>
           <Text variant="bodyMedium" style={[s.description, { color: theme.colors.onBackground }]}>
             {t("about.description")}
           </Text>
@@ -39,18 +44,18 @@ export default function AboutScreen() {
 
           <View style={[s.section, { backgroundColor: theme.colors.secondaryContainer }]}>
             <Text variant="titleSmall" style={[s.sectionTitle, { color: theme.colors.onSecondaryContainer }]}>
-              {t("about.techTitle")}
+              {t("about.contactTitle")}
             </Text>
-            {techStack.map(({ label, value }) => (
-              <View key={label} style={s.techRow}>
-                <Text variant="bodySmall" style={[s.techLabel, { color: theme.colors.onSecondaryContainer }]}>
-                  {label}
-                </Text>
-                <Text variant="bodySmall" style={[s.techValue, { color: theme.colors.onSecondaryContainer }]}>
-                  {value}
-                </Text>
-              </View>
-            ))}
+            <Text variant="bodyMedium" style={[s.featureText, { color: theme.colors.onSecondaryContainer }]}>
+              {t("about.contactText")}
+            </Text>
+            <Text
+              variant="bodyMedium"
+              style={[s.link, { color: theme.colors.primary }]}
+              onPress={() => Linking.openURL(`mailto:${email}`)}
+            >
+              {email}
+            </Text>
           </View>
 
           <View style={[s.section, { backgroundColor: theme.colors.secondaryContainer }]}>
@@ -62,6 +67,11 @@ export default function AboutScreen() {
             </Text>
           </View>
 
+          {version ? (
+            <Text variant="bodySmall" style={[s.version, { color: theme.colors.outline }]}>
+              {t("about.versionLabel")} {version}
+            </Text>
+          ) : null}
           <Text variant="bodySmall" style={[s.footer, { color: theme.colors.outline }]}>
             {t("about.footer")}
           </Text>
@@ -95,6 +105,9 @@ const s = StyleSheet.create({
     paddingHorizontal: SCREEN_PADDING,
     gap: 16,
   },
+  tagline: {
+    fontFamily: "Inter_600SemiBold",
+  },
   description: {
     lineHeight: 22,
   },
@@ -116,21 +129,14 @@ const s = StyleSheet.create({
     flex: 1,
     lineHeight: 20,
   },
-  techRow: {
-    flexDirection: "row",
-    gap: 12,
-    alignItems: "flex-start",
-  },
-  techLabel: {
+  link: {
     fontWeight: "600",
-    width: 70,
   },
-  techValue: {
-    flex: 1,
-    lineHeight: 18,
+  version: {
+    textAlign: "center",
+    marginTop: 8,
   },
   footer: {
     textAlign: "center",
-    marginTop: 8,
   },
 });
