@@ -1,0 +1,38 @@
+# Caddy reverse proxy with automatic Let's Encrypt certificates.
+# Domains and ACME contact come from the environment (set in .env); Caddy
+# substitutes {$VAR} at load time. Each site block gets its own auto-renewed
+# certificate over HTTP-01/TLS-ALPN on ports 80/443.
+
+{
+	email {$ACME_EMAIL}
+	# Default is Let's Encrypt production. To avoid rate limits while testing,
+	# set ACME_CA=https://acme-staging-v02.api.letsencrypt.org/directory
+	acme_ca {$ACME_CA:https://acme-v02.api.letsencrypt.org/directory}
+}
+
+# Web frontend.
+{$WEB_DOMAIN} {
+	encode zstd gzip
+	reverse_proxy web:80
+}
+
+# Backend API.
+{$API_DOMAIN} {
+	encode zstd gzip
+	reverse_proxy api:8080
+}
+
+# Keycloak (identity provider). Passes X-Forwarded-* so Keycloak builds correct
+# public URLs (it's configured with KC_PROXY_HEADERS=xforwarded).
+{$AUTH_DOMAIN} {
+	encode zstd gzip
+	reverse_proxy keycloak:8080
+}
+
+# Media (own subdomain — swap for a CDN origin later without touching the app).
+# Public GETs are served; write methods still require the basic auth only the
+# API holds (and the API uploads over the internal network, not through here).
+{$MEDIA_DOMAIN} {
+	encode zstd gzip
+	reverse_proxy media:80
+}

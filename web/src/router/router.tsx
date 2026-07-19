@@ -8,6 +8,7 @@ const DashboardPage = lazy(() => import("@/pages/dashboard/dashboard-page"));
 const Layout = lazy(() => import("@/pages/Layout"));
 const LoginPage = lazy(() => import("@/pages/login/login-page"));
 const MediaPage = lazy(() => import("@/pages/media/media-page"));
+const MigrationPage = lazy(() => import("@/pages/admin/migration-page"));
 const NotFoundPage = lazy(() => import("@/pages/NotFoundPage"));
 const TrailsPage = lazy(() => import("@/pages/trails/trails-page"));
 const UsersPage = lazy(() => import("@/pages/users/users-page"));
@@ -63,6 +64,11 @@ export const router = createBrowserRouter([
             path: "/media",
             handle: { title: "Media Library" },
             element: withSuspense(MediaPage),
+          },
+          {
+            path: "/migration",
+            handle: { title: "Migration" },
+            element: withSuspense(MigrationPage),
           },
         ],
       },

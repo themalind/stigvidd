@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Text.Json;
+using Microsoft.AspNetCore.Authentication;
 using Core;
 using Core.Validators.User;
 using Duende.AccessTokenManagement;
@@ -60,7 +61,15 @@ public class Program
         });
 
         builder.Services.AddKeycloakWebApiAuthentication(builder.Configuration);
-        builder.Services.AddAuthorization();
+
+        // Flatten Keycloak realm roles into Role claims, then gate admin-only
+        // endpoints (export/import) on a configurable realm role.
+        builder.Services.AddSingleton<IClaimsTransformation, StigviddAPI.Authorization.KeycloakRealmRolesTransformation>();
+        var adminRole = builder.Configuration["Authorization:AdminRole"] ?? "admin";
+        builder.Services.AddAuthorization(options =>
+        {
+            options.AddPolicy("Admin", policy => policy.RequireRole(adminRole));
+        });
 
         var options = builder.Configuration.GetKeycloakOptions<KeycloakAdminClientOptions>(configSectionName: "KeycloakAdminClient")
             ?? throw new InvalidOperationException("KeycloakAdminClientOptions not found in configuration.");

@@ -111,4 +111,35 @@ public class WebDavService : IWebDavService
             throw new Exception($"Could not create directory: {result.StatusCode}");
         }
     }
+
+    public async Task<Stream?> DownloadFileAsync(string relativePath)
+    {
+        var client = _clientFactory();
+        var response = await client.GetRawFile(relativePath);
+
+        if (!response.IsSuccessful)
+        {
+            _logger.LogWarning("DownloadFileAsync: {Path} -> {Status}", relativePath, response.StatusCode);
+            return null;
+        }
+
+        return response.Stream;
+    }
+
+    public async Task<Result<bool>> UploadToPathAsync(Stream stream, string exactPath)
+    {
+        var client = _clientFactory();
+
+        // Buffer so nginx (create_full_put_path) gets a length-known body and a
+        // rewindable source.
+        using var buffer = new MemoryStream();
+        await stream.CopyToAsync(buffer);
+        buffer.Position = 0;
+
+        var result = await client.PutFile(exactPath, buffer);
+
+        return result.IsSuccessful
+            ? Result.Ok(true)
+            : Result.Fail<bool>(new Message(result.StatusCode, $"UploadToPathAsync: could not write {exactPath}"));
+    }
 }

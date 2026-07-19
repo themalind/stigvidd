@@ -1,0 +1,188 @@
+# Full Stigvidd stack: PostgreSQL (with PostGIS), the .NET backend API and the
+# Vite web frontend. Designed to be portable — `docker compose up -d --build`
+# brings the whole thing up on any host. Copy `.env.example` to `.env` and
+# adjust the values before the first run.
+
+name: stigvidd
+
+services:
+  db:
+    # PostGIS is required — the EF migrations create the `postgis` extension.
+    image: postgis/postgis:16-3.4
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-stigvidd}
+      POSTGRES_USER: ${POSTGRES_USER:-stigvidd}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      # Runs only on first init (empty data dir); guarantees the extension is
+      # present. Migrations also create it, so this is belt-and-suspenders.
+      - ./db/init:/docker-entrypoint-initdb.d:ro
+    networks:
+      - internal
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-stigvidd} -d ${POSTGRES_DB:-stigvidd}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  api:
+    # CI builds & pushes this tag; the deploy host pulls it. REGISTRY/IMAGE_TAG
+    # come from the environment (or .env), defaulting to a local build.
+    image: ${REGISTRY:-stigvidd}/stigvidd-api:${IMAGE_TAG:-latest}
+    build:
+      context: ./backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      media:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
+      # Npgsql connection string consumed as ConnectionStrings:StigVidd.
+      ConnectionStrings__StigVidd: "Host=db;Port=5432;Database=${POSTGRES_DB:-stigvidd};Username=${POSTGRES_USER:-stigvidd};Password=${POSTGRES_PASSWORD}"
+      # Media/WebDAV: the API uploads here over the internal network...
+      WebDav__BaseUrl: "http://media/"
+      WebDav__Username: ${WEBDAV_USER:?WEBDAV_USER must be set}
+      WebDav__Password: ${WEBDAV_PASSWORD:?WEBDAV_PASSWORD must be set}
+      # ...and hands clients this public base to read them back. Must be a URL
+      # the browser/app can reach the media service on (see .env.example).
+      PresentableBaseUrl: ${PRESENTABLE_BASE_URL:?PRESENTABLE_BASE_URL must be set}
+      # Point auth at the self-hosted Keycloak (overrides appsettings.json).
+      # Must be the PUBLIC issuer URL — token `iss` is validated against it. The
+      # proxy's network alias makes this resolve internally with a valid cert.
+      Keycloak__auth-server-url: ${KEYCLOAK_URL:?KEYCLOAK_URL must be set}
+      KeycloakAdminClient__auth-server-url: ${KEYCLOAK_URL}
+      # Name of Keycloak's database (same Postgres) — used by admin export/import.
+      KEYCLOAK_DB: ${KEYCLOAK_DB:-keycloak}
+    # No host ports — the proxy is the only ingress. Reachable as `api:8080`
+    # on the `public` network.
+    networks:
+      - internal   # reach the database + media
+      - public     # reach Keycloak / the internet + the proxy
+
+  web:
+    image: ${REGISTRY:-stigvidd}/stigvidd-web:${IMAGE_TAG:-latest}
+    build:
+      context: ./web
+      args:
+        # Baked into the static bundle at build time — see .env.example.
+        # `:-` defaults keep `compose pull`/`up` on the deploy host (which does
+        # not build) quiet even when these are unset there.
+        VITE_API_URL: ${VITE_API_URL:-}
+        VITE_OIDC_URL: ${VITE_OIDC_URL:-}
+        VITE_OIDC_REALM: ${VITE_OIDC_REALM:-}
+        VITE_CLIENT_ID: ${VITE_CLIENT_ID:-}
+    restart: unless-stopped
+    depends_on:
+      - api
+    # Served by the proxy as `web:80` on the `public` network.
+    networks:
+      - public
+
+  media:
+    # WebDAV media server (nginx). API writes here (basic auth); browsers read
+    # (public). Data lives in the `media` volume — part of the migration path.
+    image: ${REGISTRY:-stigvidd}/stigvidd-media:${IMAGE_TAG:-latest}
+    build:
+      context: ./media
+    restart: unless-stopped
+    environment:
+      WEBDAV_USER: ${WEBDAV_USER:?WEBDAV_USER must be set}
+      WEBDAV_PASSWORD: ${WEBDAV_PASSWORD:?WEBDAV_PASSWORD must be set}
+    volumes:
+      - media:/data
+    # No host ports — public reads come via the proxy (media.<domain>); API
+    # uploads come over the internal network.
+    networks:
+      - internal   # API uploads over the internal network
+      - public     # public reads via the proxy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://127.0.0.1/healthz"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+
+  keycloak:
+    # Self-hosted identity provider at auth.<domain>. Uses a dedicated
+    # `keycloak` database in the app's Postgres, so its data rides along with
+    # the pgdata migration. TLS is terminated at the proxy.
+    image: ${REGISTRY:-stigvidd}/stigvidd-keycloak:${IMAGE_TAG:-latest}
+    build:
+      context: ./keycloak
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      KC_DB: postgres
+      KC_DB_URL_HOST: db
+      KC_DB_URL_DATABASE: ${KEYCLOAK_DB:-keycloak}
+      KC_DB_USERNAME: ${POSTGRES_USER:-stigvidd}
+      KC_DB_PASSWORD: ${POSTGRES_PASSWORD}
+      # Public base URL — issuer + redirect URLs are built from this.
+      KC_HOSTNAME: ${KEYCLOAK_URL:?KEYCLOAK_URL must be set}
+      KC_HTTP_ENABLED: "true"          # TLS is terminated at the proxy
+      KC_PROXY_HEADERS: xforwarded     # trust X-Forwarded-* from the proxy
+      # (KC_HEALTH_ENABLED is a build-time option — baked into the image.)
+      # First-boot admin bootstrap (change/rotate after first login).
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KC_ADMIN_USER:?KC_ADMIN_USER must be set}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KC_ADMIN_PASSWORD:?KC_ADMIN_PASSWORD must be set}
+    networks:
+      - internal   # reach the database
+      - public     # be reachable from the proxy
+
+  proxy:
+    # Caddy: TLS termination + automatic Let's Encrypt certs, routing each
+    # subdomain to its service. The ONLY service that publishes host ports.
+    image: ${REGISTRY:-stigvidd}/stigvidd-proxy:${IMAGE_TAG:-latest}
+    build:
+      context: ./proxy
+    restart: unless-stopped
+    depends_on:
+      - web
+      - api
+      - media
+      - keycloak
+    environment:
+      WEB_DOMAIN: ${WEB_DOMAIN:?WEB_DOMAIN must be set}
+      API_DOMAIN: ${API_DOMAIN:?API_DOMAIN must be set}
+      MEDIA_DOMAIN: ${MEDIA_DOMAIN:?MEDIA_DOMAIN must be set}
+      AUTH_DOMAIN: ${AUTH_DOMAIN:?AUTH_DOMAIN must be set}
+      ACME_EMAIL: ${ACME_EMAIL:?ACME_EMAIL must be set}
+      # Optional: point at LE staging while testing to dodge rate limits.
+      ACME_CA: ${ACME_CA:-https://acme-v02.api.letsencrypt.org/directory}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"   # HTTP/3
+    volumes:
+      - caddy_data:/data      # issued certs + ACME account — keep this!
+      - caddy_config:/config
+    networks:
+      public:
+        # Make the public hostnames resolve to the proxy from INSIDE the stack,
+        # so the API's server-to-server calls to https://auth.<domain> hit Caddy
+        # (valid cert) instead of hairpinning out to the public IP.
+        aliases:
+          - ${WEB_DOMAIN}
+          - ${API_DOMAIN}
+          - ${MEDIA_DOMAIN}
+          - ${AUTH_DOMAIN}
+
+networks:
+  # DB <-> API traffic only; no route to the outside world.
+  internal:
+    internal: true
+  # Public-facing + internet egress (frontend, and the API's Keycloak calls).
+  public:
+
+volumes:
+  pgdata:
+  media:
+  caddy_data:
+  caddy_config:

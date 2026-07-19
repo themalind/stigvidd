@@ -59,6 +59,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IImageProcessingService, ImageProcessingService>();
         services.AddTransient<IMediaUploadService, MediaUploadService>();
         services.AddTransient<IMediaService, MediaService>();
+        services.AddTransient<IDataTransferService, DataTransferService>();
         services.AddTransient<IHikeService, HikeService>();
         services.AddTransient<ITrailObstaclesService, TrailObstaclesService>();
         services.AddTransient<IFacilityService, FacilityService>();
