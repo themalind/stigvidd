@@ -1,4 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { LocationData } from "@/data/types";
 import * as Location from "expo-location";
 import { getDistance } from "geolib";
 import {
@@ -6,8 +7,12 @@ import {
   INACTIVITY_TIMEOUT,
   MAX_DURATION,
   MIN_SEGMENT_DISTANCE,
+  RawFix,
   StoredHikeState,
   defaultHikeState,
+  evaluatePoint,
+  finalizeActiveSegment,
+  ingestFixes,
   maybeFinalizeStaleHike,
   readHikeState,
 } from "../location-task";
@@ -200,20 +205,46 @@ describe("location background task", () => {
     expect(written.hike.totalDistance).toBe(0);
   });
 
-  it("discards a point that is too far from the previous point (> 100m)", async () => {
+  it("accepts a far point after a suspension gap (large distance, plausible speed) so the track re-anchors", async () => {
     const stateWithPoint: StoredHikeState = {
       ...activeState,
       currentSegment: {
         ...baseSegment,
-        coordinates: [{ data: { latitude: 57.7, longitude: 11.97 }, timeStamp: NOW - 100 }],
+        startTime: NOW - 121000,
+        coordinates: [{ data: { latitude: 57.7, longitude: 11.97 }, timeStamp: NOW - 120000 }],
+      },
+    };
+    mockGetItem.mockResolvedValue(JSON.stringify(stateWithPoint));
+    // 170m from the last recorded point, but 120s elapsed — the app was suspended
+    // in a pocket while the user kept walking (~1.4 m/s). This is legitimate travel,
+    // so it must be accepted; rejecting it as a "teleport" wedged the recording.
+    mockGetDistance.mockReturnValue(170);
+
+    await locationTaskCallback({
+      data: { locations: [makeLocation(57.702, 11.97, 10, NOW)] },
+      error: null,
+    });
+
+    const written = JSON.parse(mockSetItem.mock.calls[0][1]);
+    expect(written.currentSegment.coordinates).toHaveLength(2);
+    expect(written.hike.totalDistance).toBe(170);
+  });
+
+  it("rejects a far point when timestamps are non-increasing (teleport with no usable time delta)", async () => {
+    const stateWithPoint: StoredHikeState = {
+      ...activeState,
+      currentSegment: {
+        ...baseSegment,
+        coordinates: [{ data: { latitude: 57.7, longitude: 11.97 }, timeStamp: NOW }],
       },
     };
     mockGetItem.mockResolvedValue(JSON.stringify(stateWithPoint));
     mockGetDistance.mockReturnValue(150); // 150m — above MAX_DISTANCE of 100m
 
-    // Spread over 16s so the speed guard passes and the distance cap is what rejects it.
+    // Same timestamp as the last point ⇒ dt = 0, so the speed check can't apply and
+    // the absolute distance cap is what catches the glitch.
     await locationTaskCallback({
-      data: { locations: [makeLocation(57.702, 11.97, 10, NOW + 16000)] },
+      data: { locations: [makeLocation(57.702, 11.97, 10, NOW)] },
       error: null,
     });
 
@@ -443,5 +474,256 @@ describe("maybeFinalizeStaleHike", () => {
     expect(result).not.toBeNull();
     expect(result!.hike.segments[0].endTime).toBe(startTime + MAX_DURATION);
     expect(result!.hike.totalTime).toBe(MAX_DURATION);
+  });
+});
+
+// finalizeActiveSegment always closes the active segment (trimming to the last GPS
+// point), unlike maybeFinalizeStaleHike which only does so when the session is stale.
+// It backs the cold-launch recovery path: a killed recording is recovered as a
+// paused, completed segment rather than a phantom "still recording" state.
+describe("finalizeActiveSegment", () => {
+  const point = (timeStamp: number) => ({ data: { latitude: 57.7, longitude: 11.97 }, timeStamp });
+
+  it("finalizes even a recent, non-stale session (recovery closes it regardless)", () => {
+    const lastMovement = NOW - 1000;
+    const state: StoredHikeState = {
+      ...activeState,
+      currentSegment: { coordinates: [point(lastMovement)], distance: 50, startTime: NOW - 2000 },
+    };
+
+    // maybeFinalizeStaleHike would leave this running; finalizeActiveSegment closes it.
+    expect(maybeFinalizeStaleHike(state, NOW)).toBeNull();
+
+    const result = finalizeActiveSegment(state);
+    expect(result.isTracking).toBe(false);
+    expect(result.currentSegment).toBeNull();
+    expect(result.hike.segments).toHaveLength(1);
+    // End trimmed to the last recorded point, not "now" — the process died at that
+    // point, so time after it must not be counted.
+    expect(result.hike.segments[0].endTime).toBe(lastMovement);
+    expect(result.hike.totalTime).toBe(lastMovement - (NOW - 2000));
+  });
+
+  it("discards a segment that never covered the minimum distance and rolls back its distance", () => {
+    const state: StoredHikeState = {
+      isTracking: true,
+      hike: { segments: [], totalDistance: 9, totalTime: 0 },
+      currentSegment: { coordinates: [point(NOW)], distance: 9, startTime: NOW - 1000 },
+    };
+
+    const result = finalizeActiveSegment(state);
+    expect(result.hike.segments).toHaveLength(0);
+    expect(result.hike.totalDistance).toBe(0);
+    expect(result.isTracking).toBe(false);
+  });
+
+  it("clamps the kept time to the hard cap", () => {
+    const startTime = NOW;
+    const state: StoredHikeState = {
+      ...activeState,
+      currentSegment: { coordinates: [point(startTime + MAX_DURATION + 60_000)], distance: 5000, startTime },
+    };
+
+    const result = finalizeActiveSegment(state);
+    expect(result.hike.segments[0].endTime).toBe(startTime + MAX_DURATION);
+    expect(result.hike.totalTime).toBe(MAX_DURATION);
+  });
+
+  it("just clears tracking when there is no active segment", () => {
+    const result = finalizeActiveSegment({ ...activeState, currentSegment: null });
+    expect(result.isTracking).toBe(false);
+    expect(result.currentSegment).toBeNull();
+    expect(result.hike.segments).toHaveLength(0);
+  });
+});
+
+// evaluatePoint is the single filter shared by every recording path (Android task,
+// iOS native drain, foreground live tail). getDistance is mocked so each test sets
+// the metres between the two points directly. Jest runs as iOS by default, so these
+// exercise the iOS tuning (40m gate, half-accuracy noise floor); the Android
+// divergence is covered separately below.
+describe("evaluatePoint", () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  const point = (timeStamp: number): LocationData => ({ data: { latitude: 57.7, longitude: 11.97 }, timeStamp });
+
+  it("accepts the first point (no previous) with zero distance", () => {
+    expect(evaluatePoint(undefined, point(NOW), 10)).toEqual({ accept: true, distance: 0 });
+  });
+
+  it("rejects a fix with null accuracy", () => {
+    expect(evaluatePoint(undefined, point(NOW), null)).toEqual({ accept: false, distance: 0 });
+  });
+
+  it("rejects a fix with zero accuracy", () => {
+    expect(evaluatePoint(undefined, point(NOW), 0)).toEqual({ accept: false, distance: 0 });
+  });
+
+  it("rejects a fix with negative accuracy (iOS reports it when accuracy is unknown)", () => {
+    // Guard for the negative-accuracy edge: a plain falsiness check lets -1 through,
+    // so it must be rejected explicitly or a garbage fix slips past the gate.
+    expect(evaluatePoint(undefined, point(NOW), -1)).toEqual({ accept: false, distance: 0 });
+  });
+
+  it("accepts a fix whose accuracy sits exactly on the iOS gate (40m)", () => {
+    expect(evaluatePoint(undefined, point(NOW), 40)).toEqual({ accept: true, distance: 0 });
+  });
+
+  it("rejects a fix just worse than the iOS gate (41m)", () => {
+    expect(evaluatePoint(undefined, point(NOW), 41)).toEqual({ accept: false, distance: 0 });
+  });
+
+  it("rejects a move that stays within the iOS half-accuracy noise floor", () => {
+    mockGetDistance.mockReturnValue(8); // accuracy 20 → floor 10; 8 < 10
+    expect(evaluatePoint(point(NOW - 3000), point(NOW), 20)).toEqual({ accept: false, distance: 0 });
+  });
+
+  it("accepts a move that clears the iOS half-accuracy noise floor", () => {
+    mockGetDistance.mockReturnValue(12); // accuracy 20 → floor 10; 12 ≥ 10
+    expect(evaluatePoint(point(NOW - 3000), point(NOW), 20)).toEqual({ accept: true, distance: 12 });
+  });
+
+  it("never drops the step floor below MIN_DISTANCE, even for a pinpoint fix", () => {
+    // accuracy 4 → half 2, but MIN_DISTANCE (3) is the floor.
+    mockGetDistance.mockReturnValue(2);
+    expect(evaluatePoint(point(NOW - 3000), point(NOW), 4)).toEqual({ accept: false, distance: 0 });
+    mockGetDistance.mockReturnValue(3);
+    expect(evaluatePoint(point(NOW - 3000), point(NOW), 4)).toEqual({ accept: true, distance: 3 });
+  });
+
+  it("rejects an impossible speed when the time delta is valid", () => {
+    mockGetDistance.mockReturnValue(80); // 80m in 1s = 80 m/s
+    expect(evaluatePoint(point(NOW - 1000), point(NOW), 10)).toEqual({ accept: false, distance: 0 });
+  });
+
+  it("accepts a jump at exactly the speed cap", () => {
+    mockGetDistance.mockReturnValue(10); // 10m in 1s = 10 m/s (== MAX_SPEED, not over)
+    expect(evaluatePoint(point(NOW - 1000), point(NOW), 10)).toEqual({ accept: true, distance: 10 });
+  });
+
+  it("accepts a large jump over a long gap so the track re-anchors after a suspension", () => {
+    mockGetDistance.mockReturnValue(300); // 300m over 120s = 2.5 m/s
+    expect(evaluatePoint(point(NOW - 120000), point(NOW), 10)).toEqual({ accept: true, distance: 300 });
+  });
+
+  it("falls back to the absolute distance cap when the time delta is not usable", () => {
+    mockGetDistance.mockReturnValue(150); // dt = 0, 150 > MAX_DISTANCE
+    expect(evaluatePoint(point(NOW), point(NOW), 10)).toEqual({ accept: false, distance: 0 });
+  });
+
+  it("accepts a within-cap move when the time delta is not usable", () => {
+    mockGetDistance.mockReturnValue(50); // dt = 0, 50 ≤ cap and clears the floor
+    expect(evaluatePoint(point(NOW), point(NOW), 10)).toEqual({ accept: true, distance: 50 });
+  });
+});
+
+// The iOS and Android gates diverge deliberately (see evaluatePoint): iOS relaxes
+// the accuracy gate to 40m and halves the noise floor. These load a fresh copy of
+// the module with Platform.OS forced to "android" and assert the same inputs decide
+// differently — a guard against the two platforms being accidentally unified.
+describe("evaluatePoint — Android platform divergence", () => {
+  function loadAndroid() {
+    let evaluatePointFn!: typeof evaluatePoint;
+    let getDistanceMock!: jest.Mock;
+    jest.isolateModules(() => {
+      jest.doMock("react-native", () => ({ Platform: { OS: "android" } }));
+      // Dynamic require is required to re-load the module under the forced platform.
+      /* eslint-disable @typescript-eslint/no-require-imports */
+      evaluatePointFn = require("../location-task").evaluatePoint;
+      getDistanceMock = require("geolib").getDistance as jest.Mock;
+      /* eslint-enable @typescript-eslint/no-require-imports */
+    });
+    jest.dontMock("react-native");
+    return { evaluatePoint: evaluatePointFn, getDistance: getDistanceMock };
+  }
+
+  const point = (timeStamp: number): LocationData => ({ data: { latitude: 57.7, longitude: 11.97 }, timeStamp });
+
+  it("uses the stricter 20m accuracy gate that iOS relaxes to 40m", () => {
+    const { evaluatePoint: evalAndroid } = loadAndroid();
+    // 25m accuracy: accepted on iOS (< 40), rejected on Android (> 20).
+    expect(evaluatePoint(undefined, point(NOW), 25)).toEqual({ accept: true, distance: 0 });
+    expect(evalAndroid(undefined, point(NOW), 25)).toEqual({ accept: false, distance: 0 });
+  });
+
+  it("uses the full accuracy radius as its noise floor where iOS uses half", () => {
+    const { evaluatePoint: evalAndroid, getDistance: getDistanceAndroid } = loadAndroid();
+    mockGetDistance.mockReturnValue(15);
+    getDistanceAndroid.mockReturnValue(15);
+    // 15m move, accuracy 20: iOS floor 10 → accept; Android floor 20 → reject.
+    expect(evaluatePoint(point(NOW - 3000), point(NOW), 20)).toEqual({ accept: true, distance: 15 });
+    expect(evalAndroid(point(NOW - 3000), point(NOW), 20)).toEqual({ accept: false, distance: 0 });
+  });
+});
+
+// ingestFixes is the shared write path: it runs a batch of raw fixes through
+// evaluatePoint into stored state atomically. The Android TaskManager task and the
+// iOS native drain both go through it, so these tests cover that shared behaviour
+// directly (the task-callback tests above exercise the same path via Android).
+describe("ingestFixes", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    jest.spyOn(Date, "now").mockReturnValue(NOW);
+    mockGetItem.mockResolvedValue(JSON.stringify(activeState));
+    mockSetItem.mockResolvedValue(undefined);
+  });
+
+  afterAll(() => jest.restoreAllMocks());
+
+  const fix = (accuracy: number, timestamp = NOW): RawFix => ({
+    latitude: 57.7,
+    longitude: 11.97,
+    accuracy,
+    timestamp,
+  });
+
+  it("reports notTracking and writes nothing when no recording is active", async () => {
+    mockGetItem.mockResolvedValue(JSON.stringify({ ...activeState, isTracking: false }));
+
+    const result = await ingestFixes([fix(10)]);
+
+    expect(result.notTracking).toBe(true);
+    expect(mockSetItem).not.toHaveBeenCalled();
+  });
+
+  it("ingests a batch, accumulating distance and reporting the point count", async () => {
+    const stateWithPoint: StoredHikeState = {
+      ...activeState,
+      currentSegment: {
+        ...baseSegment,
+        coordinates: [{ data: { latitude: 57.7, longitude: 11.97 }, timeStamp: NOW - 100 }],
+      },
+    };
+    mockGetItem.mockResolvedValue(JSON.stringify(stateWithPoint));
+    mockGetDistance.mockReturnValueOnce(50).mockReturnValueOnce(30);
+
+    const result = await ingestFixes([fix(10, NOW + 6000), fix(10, NOW + 12000)]);
+
+    expect(result.notTracking).toBe(false);
+    expect(result.didFinalize).toBe(false);
+    expect(result.resultPts).toBe(3); // 1 existing + 2 accepted
+    const written = JSON.parse(mockSetItem.mock.calls[0][1]);
+    expect(written.hike.totalDistance).toBe(80);
+  });
+
+  it("finalizes and reports didFinalize when the batch leaves the session stale", async () => {
+    const stateWithPoint: StoredHikeState = {
+      ...activeState,
+      currentSegment: {
+        ...baseSegment,
+        distance: 50, // far enough to be kept
+        coordinates: [{ data: { latitude: 57.7, longitude: 11.97 }, timeStamp: NOW - 100 }],
+      },
+    };
+    mockGetItem.mockResolvedValue(JSON.stringify(stateWithPoint));
+    (Date.now as jest.Mock).mockReturnValue(NOW + INACTIVITY_TIMEOUT + 5000);
+
+    // Bad accuracy → no accepted movement, so the session goes stale and finalizes.
+    const result = await ingestFixes([fix(45)]);
+
+    expect(result.didFinalize).toBe(true);
+    const written = JSON.parse(mockSetItem.mock.calls[0][1]);
+    expect(written.isTracking).toBe(false);
+    expect(written.hike.segments).toHaveLength(1);
   });
 });

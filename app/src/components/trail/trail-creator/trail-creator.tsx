@@ -122,17 +122,23 @@ export default function TrailCreator() {
   }, [moveCamera]);
 
   useEffect(() => {
+    // Tick the stopwatch once a second while recording. When paused/stopped the
+    // interval clears and we snap the display to the finalized total once — keyed
+    // on segments so a just-completed segment's time is reflected immediately.
     if (!isTracking) {
       setDisplayTime(getActiveTimeRef.current());
       return;
     }
 
+    // Update immediately so the first visible value isn't a second behind, then
+    // every second after.
+    setDisplayTime(getActiveTimeRef.current());
     const interval = setInterval(() => {
       setDisplayTime(getActiveTimeRef.current());
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [isTracking, hike.totalTime]);
+  }, [isTracking, hike.segments]);
 
   const formattedTime = FormattedTime(displayTime);
 

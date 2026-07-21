@@ -15,12 +15,11 @@ export const RECORDING_INFO_KEY = "@stigvidd_recording_info_dismissed";
 export const MIN_DISTANCE = 3;
 // A jump larger than this (meters) between two fixes is a GPS teleport, not travel.
 const MAX_DISTANCE = 100;
-// Drop fixes worse than this (meters). iOS-only relaxation to 40m: in a pocket
-// with a locked screen iOS routinely reports 20-50m even at BestForNavigation,
-// and dropping all of those leaves long gaps that get bridged by a single
-// straight line through buildings — a 40m fix on a hike is still a useful point.
-// Android recording is already tuned and left at its original 20m gate so this
-// change can't regress it.
+// Drop fixes worse than this (metres). iOS uses a looser gate than Android: in a
+// pocket with a locked screen iOS routinely reports 20-50m even at
+// BestForNavigation, and a 40m fix on a hike is still a useful point — too strict
+// a gate leaves gaps that render as straight lines through buildings. Android GPS
+// runs tighter in practice, so it keeps the stricter 20m gate.
 const MAX_ACCURACY = Platform.OS === "ios" ? 40 : 20;
 // Physically impossible speed (m/s) between two fixes ⇒ GPS glitch, not movement.
 // ~10 m/s (36 km/h) clears hiking/running/cycling while catching teleport spikes.
@@ -117,27 +116,22 @@ export async function dismissRecordingInfo(): Promise<void> {
   await AsyncStorage.setItem(RECORDING_INFO_KEY, String(RECORDING_INFO_VERSION));
 }
 
-// Finalizes an in-progress hike that has been left running. Returns the updated
-// state if the session is stale (inactive past INACTIVITY_TIMEOUT, or longer than
-// MAX_DURATION), otherwise null. The active segment's end is trimmed back to the
-// last recorded GPS point so time spent not moving (or after the app was killed)
-// is never counted, and is clamped to the hard cap. Pure — callers persist/stop.
-export function maybeFinalizeStaleHike(state: StoredHikeState, now: number): StoredHikeState | null {
-  if (!state.isTracking || !state.currentSegment) return null;
-
+// Closes the active segment and stops tracking. Its end is trimmed back to the last
+// recorded GPS point so time spent not moving (or after the app stopped recording)
+// is never counted, and is clamped to the hard cap. The segment is kept only if it
+// covered a meaningful distance; otherwise it's discarded and the distance already
+// accumulated for it is rolled back so totalDistance can't stay stuck at a phantom
+// value. Pure. Always finalizes — callers decide *whether* to: maybeFinalizeStaleHike
+// gates on staleness, and the cold-launch recovery path (use-location-tracking)
+// calls it directly to recover a killed recording as paused.
+export function finalizeActiveSegment(state: StoredHikeState): StoredHikeState {
   const seg = state.currentSegment;
-  const lastMovementTime = seg.coordinates.at(-1)?.timeStamp ?? seg.startTime;
-  const isInactive = now - lastMovementTime > INACTIVITY_TIMEOUT;
-  const isOverCap = now - seg.startTime > MAX_DURATION;
-  if (!isInactive && !isOverCap) return null;
+  if (!seg) return { ...state, isTracking: false, currentSegment: null };
 
-  // Keep time up to the last real movement; never beyond the hard cap.
+  const lastMovementTime = seg.coordinates.at(-1)?.timeStamp ?? seg.startTime;
   const endTime = Math.min(lastMovementTime, seg.startTime + MAX_DURATION);
   const segmentDuration = Math.max(0, endTime - seg.startTime);
 
-  // Only keep the segment if the user actually moved a meaningful distance.
-  // When discarding it, roll back the distance the task already accumulated for
-  // this segment so totalDistance can't stay stuck at a phantom value.
   const hike =
     seg.distance >= MIN_SEGMENT_DISTANCE
       ? {
@@ -153,6 +147,22 @@ export function maybeFinalizeStaleHike(state: StoredHikeState, now: number): Sto
   return { isTracking: false, hike, currentSegment: null };
 }
 
+// Finalizes an in-progress hike that has been left running, but only when it's
+// actually stale — inactive past INACTIVITY_TIMEOUT, or running longer than
+// MAX_DURATION. Returns the finalized state when stale, otherwise null (callers
+// leave the recording running).
+export function maybeFinalizeStaleHike(state: StoredHikeState, now: number): StoredHikeState | null {
+  if (!state.isTracking || !state.currentSegment) return null;
+
+  const seg = state.currentSegment;
+  const lastMovementTime = seg.coordinates.at(-1)?.timeStamp ?? seg.startTime;
+  const isInactive = now - lastMovementTime > INACTIVITY_TIMEOUT;
+  const isOverCap = now - seg.startTime > MAX_DURATION;
+  if (!isInactive && !isOverCap) return null;
+
+  return finalizeActiveSegment(state);
+}
+
 export type PointDecision = { accept: boolean; distance: number };
 
 // Decides whether a freshly-sampled GPS fix joins the track, and how much distance
@@ -164,31 +174,126 @@ export function evaluatePoint(
   candidate: LocationData,
   accuracy: number | null | undefined,
 ): PointDecision {
-  if (!accuracy || accuracy > MAX_ACCURACY) return { accept: false, distance: 0 };
+  // Reject missing/zero and negative accuracy (iOS reports a negative
+  // horizontalAccuracy when it can't determine one — the fix is unusable), as well
+  // as anything worse than the platform gate.
+  if (!accuracy || accuracy < 0 || accuracy > MAX_ACCURACY) return { accept: false, distance: 0 };
   if (!lastPoint) return { accept: true, distance: 0 };
 
   const distance = getDistance(lastPoint.data, candidate.data);
 
-  // Speed spike: a jump faster than a person can travel is a GPS glitch, not a walk.
   const dtSeconds = (candidate.timeStamp - lastPoint.timeStamp) / 1000;
-  if (dtSeconds > 0 && distance / dtSeconds > MAX_SPEED) return { accept: false, distance: 0 };
+  if (dtSeconds > 0) {
+    // With a valid time delta, speed — not an absolute distance cap — is the
+    // plausibility gate. A suspension gap (pocket, locked screen) legitimately
+    // places the next fix hundreds of metres from the last recorded point: the user
+    // kept walking while JS wasn't running, so a large jump over a long gap is a
+    // low, plausible speed. Accepting it re-anchors the track to the user's real
+    // position; a large jump over a short gap is a GPS glitch and is rejected.
+    if (distance / dtSeconds > MAX_SPEED) return { accept: false, distance: 0 };
+  } else if (distance > MAX_DISTANCE) {
+    // No usable time delta (missing or non-increasing timestamps): fall back to an
+    // absolute distance cap to reject teleport glitches.
+    return { accept: false, distance: 0 };
+  }
 
-  // Teleport guard for the case where timestamps are missing or non-increasing.
-  if (distance > MAX_DISTANCE) return { accept: false, distance: 0 };
-
-  // A stationary phone wanders within its accuracy radius, so only count a move
-  // once it clears that noise envelope (never below MIN_DISTANCE) — otherwise GPS
-  // drift piles up phantom distance and zig-zags while standing still. iOS uses
-  // half the accuracy rather than the full radius: consecutive good fixes are
-  // correlated, so their relative noise is much smaller than a single fix's
-  // absolute error, and gating on the full radius flattened genuine curves into
-  // corner-cutting straight lines when a fix was loose. Android keeps the original
-  // full-radius envelope so its (already good) recording behaviour is unchanged.
+  // A stationary phone wanders within its accuracy radius, so a move only counts
+  // once it clears that noise envelope (but never below MIN_DISTANCE) — otherwise
+  // drift piles up phantom distance and zig-zags in place. iOS uses half the
+  // accuracy radius: consecutive fixes are correlated, so their relative noise is
+  // smaller than one fix's absolute error, and gating on the full radius would
+  // flatten real curves into corner-cutting straight lines. Android uses the full
+  // radius, which suits its steadier fixes.
   const noiseFloor = Platform.OS === "ios" ? accuracy / 2 : accuracy;
   const minStep = Math.max(MIN_DISTANCE, noiseFloor);
   if (distance < minStep) return { accept: false, distance: 0 };
 
   return { accept: true, distance };
+}
+
+// A minimal GPS fix as it arrives from a source (the Android background task or the
+// iOS native background engine), before it's filtered/joined to the track. `accuracy`
+// is horizontal accuracy in metres; `timestamp` is ms since the Unix epoch.
+export type RawFix = {
+  latitude: number;
+  longitude: number;
+  accuracy: number | null | undefined;
+  timestamp: number;
+};
+
+// Outcome of ingesting a batch — used by callers for task control.
+export type IngestResult = {
+  // No active recording, so nothing was written.
+  notTracking: boolean;
+  // The batch tripped the stale-session finalizer and stopped the recording.
+  didFinalize: boolean;
+  // Point count of the active segment after ingesting.
+  resultPts: number;
+};
+
+// Runs a batch of raw GPS fixes through evaluatePoint into the stored hike,
+// atomically. This is the single write path shared by the Android background
+// TaskManager task and the iOS native drain, so both platforms filter, accumulate
+// distance, and auto-finalize through the exact same logic. Pure of platform APIs —
+// the caller decides what to do with the result (e.g. stop the task on finalize).
+export async function ingestFixes(fixes: RawFix[]): Promise<IngestResult> {
+  let notTracking = false;
+  let didFinalize = false;
+  let resultPts = 0;
+
+  await mutateHikeState((state) => {
+    if (!state.isTracking || !state.currentSegment) {
+      notTracking = true;
+      return null;
+    }
+
+    let currentSegment = state.currentSegment;
+    let totalDistance = state.hike.totalDistance;
+
+    for (const fix of fixes) {
+      const newPoint: LocationData = {
+        data: { latitude: fix.latitude, longitude: fix.longitude },
+        timeStamp: fix.timestamp,
+      };
+
+      // Same filter as the foreground live watcher (see evaluatePoint) so the
+      // recorded track and the drawn live tail always agree on what counts.
+      const lastPoint = currentSegment.coordinates.at(-1);
+      const { accept, distance } = evaluatePoint(lastPoint, newPoint, fix.accuracy);
+      if (!accept) {
+        continue;
+      }
+
+      currentSegment = {
+        ...currentSegment,
+        coordinates: [...currentSegment.coordinates, newPoint],
+        distance: currentSegment.distance + distance,
+      };
+
+      totalDistance += distance;
+    }
+
+    resultPts = currentSegment.coordinates.length;
+
+    const updated: StoredHikeState = {
+      ...state,
+      currentSegment,
+      hike: { ...state.hike, totalDistance },
+    };
+
+    // Auto-stop a forgotten recording: if the session has gone inactive or hit the
+    // hard cap, persist the finalized state. Stopping the source itself happens in
+    // the caller, after the lock releases.
+    const finalized = maybeFinalizeStaleHike(updated, Date.now());
+    if (finalized) {
+      didFinalize = true;
+      return finalized;
+    }
+
+    return updated;
+  });
+
+  return { notTracking, didFinalize, resultPts };
 }
 
 type LocationTaskData = {
@@ -207,59 +312,14 @@ TaskManager.defineTask(
     if (!locations?.length) return;
 
     try {
-      // Whether this batch finalized a stale session — so we can stop the task
-      // outside the state lock once the finished state is safely persisted.
-      let didFinalize = false;
+      const fixes: RawFix[] = locations.map((location) => ({
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+        accuracy: location.coords.accuracy,
+        timestamp: location.timestamp,
+      }));
 
-      await mutateHikeState((state) => {
-        if (!state.isTracking || !state.currentSegment) return null;
-
-        let currentSegment = state.currentSegment;
-        let totalDistance = state.hike.totalDistance;
-
-        for (const location of locations) {
-          const newPoint: LocationData = {
-            data: {
-              latitude: location.coords.latitude,
-              longitude: location.coords.longitude,
-            },
-            timeStamp: location.timestamp,
-          };
-
-          // Same filter as the foreground live watcher (see evaluatePoint) so the
-          // recorded track and the drawn live tail always agree on what counts.
-          const lastPoint = currentSegment.coordinates.at(-1);
-          const { accept, distance } = evaluatePoint(lastPoint, newPoint, location.coords.accuracy);
-          if (!accept) {
-            continue;
-          }
-
-          currentSegment = {
-            ...currentSegment,
-            coordinates: [...currentSegment.coordinates, newPoint],
-            distance: currentSegment.distance + distance,
-          };
-
-          totalDistance += distance;
-        }
-
-        const updated: StoredHikeState = {
-          ...state,
-          currentSegment,
-          hike: { ...state.hike, totalDistance },
-        };
-
-        // Auto-stop a forgotten recording: if the session has gone inactive or
-        // hit the hard cap, persist the finalized state. Stopping the task
-        // itself happens after the lock releases.
-        const finalized = maybeFinalizeStaleHike(updated, Date.now());
-        if (finalized) {
-          didFinalize = true;
-          return finalized;
-        }
-
-        return updated;
-      });
+      const { didFinalize } = await ingestFixes(fixes);
 
       // The finalized state (isTracking: false) is now persisted, so any batch
       // still in flight will no-op on read — safe to stop the task.

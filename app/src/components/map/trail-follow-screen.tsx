@@ -4,7 +4,9 @@ import CenterOnUserButton from "@/components/map/center-on-user-button";
 import Map from "@/components/map/map";
 import { ROUTE_LINE_COLOR } from "@/components/map/marker-styles";
 import StartMarker from "@/components/map/start-marker";
+import UserLocationMarker from "@/components/map/user-location-marker";
 import { SURFACE_BORDER_RADIUS } from "@/constants/constants";
+import { useLiveUserLocation } from "@/hooks/useLiveUserLocation";
 import { useTrailCard } from "@/hooks/useTrailCard";
 import CoordinateParser from "@/utils/coordinate-parser";
 import { lineStringFromPositions } from "@/utils/geojson";
@@ -39,6 +41,10 @@ export default function TrailFollowScreen() {
   const normalizedIdentifier: string = Array.isArray(identifier) ? identifier[0] : identifier;
 
   const { card } = useTrailCard(normalizedIdentifier ?? null);
+
+  // The puck is driven by the app's own location watcher, not MapLibre's built-in
+  // engine (which froze the dot mid-walk on both platforms — see the hook).
+  const userLocation = useLiveUserLocation();
 
   const { data: coords, isLoading } = useQuery({
     queryKey: ["cords", normalizedIdentifier],
@@ -76,7 +82,7 @@ export default function TrailFollowScreen() {
 
   return (
     <View style={s.container}>
-      <Map style={StyleSheet.absoluteFill} showsUserLocation onDidFinishLoadingMap={handleMapReady}>
+      <Map style={StyleSheet.absoluteFill} showsUserLocation={false} onDidFinishLoadingMap={handleMapReady}>
         <Camera ref={cameraRef} />
         {path.length > 1 && (
           <GeoJSONSource id="follow-trail" data={lineShape}>
@@ -90,6 +96,14 @@ export default function TrailFollowScreen() {
         )}
         {path.length > 0 && (
           <StartMarker id="follow-start" position={path[0]} label={t("map.start")} onPress={openDirections} />
+        )}
+        {userLocation && (
+          <UserLocationMarker
+            id="follow-user"
+            position={userLocation.position}
+            heading={userLocation.heading}
+            aboveLayerId="follow-trail-line"
+          />
         )}
       </Map>
 
@@ -116,7 +130,7 @@ export default function TrailFollowScreen() {
         </View>
       )}
 
-      <CenterOnUserButton cameraRef={cameraRef} />
+      <CenterOnUserButton cameraRef={cameraRef} position={userLocation?.position ?? null} />
     </View>
   );
 }
