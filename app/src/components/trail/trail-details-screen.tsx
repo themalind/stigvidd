@@ -123,15 +123,17 @@ export default function TrailDetailsScreen({ followRoute }: { followRoute: Follo
           <View style={s.imageContainer}>
             <ImageGallery images={images} />
           </View>
-          <View style={s.ratingSection}>
-            <Rating trailReviews={reviews} starColor={theme.colors.secondary} textStyle={s.ratingNumber} />
-            <Pressable onPress={onPressScrollToRatings} style={({ pressed }) => pressed && { opacity: 0.7 }}>
-              <Text style={[s.ratingNumber, { color: theme.colors.secondary }]}>
-                <Text style={s.text}>{t("trail.readReviews")}</Text>
-                {` (${reviewCount})`}
-              </Text>
-            </Pressable>
-          </View>
+          {reviewCount > 0 && (
+            <View style={s.ratingSection}>
+              <Rating trailReviews={reviews} starColor={theme.colors.secondary} textStyle={s.ratingNumber} />
+              <Pressable onPress={onPressScrollToRatings} style={({ pressed }) => pressed && { opacity: 0.7 }}>
+                <Text style={[s.ratingNumber, { color: theme.colors.secondary }]}>
+                  <Text style={s.text}>{t("trail.readReviews")}</Text>
+                  {` (${reviewCount})`}
+                </Text>
+              </Pressable>
+            </View>
+          )}
           {trail && <TrailInfo trail={trail} />}
           {obstacles && obstacles.length > 0 && <TrailObstacleWarning onPress={() => setShowObstacleModal(true)} />}
           {trail && <UserBar trail={trail} />}

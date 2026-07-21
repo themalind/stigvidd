@@ -56,7 +56,7 @@ export default function TrailReviewsContainer({ trail, surfaceToScrollToRef, onR
     }
   }, [reviews, totalReviewsCount, onReviewsLoaded]);
 
-  if (isLoading) {
+  if (isLoading || !reviewResponse) {
     return <LoadingIndicator />;
   }
 
@@ -98,11 +98,7 @@ export default function TrailReviewsContainer({ trail, surfaceToScrollToRef, onR
           </View>
         </View>
         {reviews.length === 0 ? (
-          <Surface
-            elevation={0}
-            ref={surfaceToScrollToRef}
-            style={[s.surface, { backgroundColor: theme.colors.surface }]}
-          >
+          <Surface elevation={0} style={[s.surface, { backgroundColor: theme.colors.surface }]}>
             <Text style={{ color: theme.colors.onBackground }}>{t("review.noReviews")}</Text>
           </Surface>
         ) : (

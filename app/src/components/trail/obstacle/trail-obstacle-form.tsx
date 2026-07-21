@@ -21,7 +21,7 @@ import { Controller, SubmitHandler, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { Dimensions, Pressable, StyleSheet, Switch, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
-import { Button, Modal, Portal, Surface, Text, TextInput, useTheme } from "react-native-paper";
+import { ActivityIndicator, Button, Modal, Portal, Surface, Text, TextInput, useTheme } from "react-native-paper";
 import { z } from "zod";
 
 const obstacleFields = z.object({
@@ -136,9 +136,9 @@ export default function TrailObstacleForm({ trailIdentifier, visible, onDismiss 
         return;
       }
 
-      const location = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.Balanced,
-      });
+      const location =
+        (await Location.getLastKnownPositionAsync({ maxAge: 30000, requiredAccuracy: 100 })) ??
+        (await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced }));
 
       if (parsed.length === 0 || !isNearTrail(location.coords.latitude, location.coords.longitude, parsed)) {
         setLocationError(t("obstacle.notOnTrail"));
@@ -248,14 +248,20 @@ export default function TrailObstacleForm({ trailIdentifier, visible, onDismiss 
                       trackColor={{ false: theme.colors.outlineVariant, true: theme.colors.tertiary }}
                       thumbColor={value ? theme.colors.outlineVariant : theme.colors.tertiary}
                       style={s.switch}
-                      value={value}
+                      value={value || isLocating}
                       disabled={isLocating}
                       onValueChange={(enabled) => handleLocationToggle(enabled, onChange)}
                     />
                   )}
                 />
               </View>
-              {watch("useLocation") && <Text>{t("obstacle.locationAttached")}</Text>}
+              {isLocating && (
+                <View style={s.locatingRow}>
+                  <ActivityIndicator size="small" color={theme.colors.tertiary} />
+                  <Text style={{ color: theme.colors.onSurfaceVariant }}>{t("obstacle.locating")}</Text>
+                </View>
+              )}
+              {!isLocating && watch("useLocation") && <Text>{t("obstacle.locationAttached")}</Text>}
               {locationError && <Text style={[s.bold, { color: theme.colors.error }]}>{locationError}</Text>}
             </KeyboardAwareScrollView>
 
@@ -351,6 +357,11 @@ const s = StyleSheet.create({
     fontWeight: "600",
     textTransform: "uppercase",
     letterSpacing: 0.5,
+  },
+  locatingRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
   },
   switch: {
     transform: [{ scaleX: 1.1 }, { scaleY: 1.1 }],
