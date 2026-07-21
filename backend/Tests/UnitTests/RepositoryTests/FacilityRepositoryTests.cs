@@ -169,4 +169,82 @@ public class FacilityRepositoryTests : TestBase
         verify.IsSuccess.Should().BeFalse();
         verify.Status.Should().Be(RepositoryResultStatus.NotFound);
     }
+
+    private static FacilityImage MakeImage(string identifier, string url = "facilities/img.jpg") => new()
+    {
+        Identifier = identifier,
+        ImageUrl = url,
+        Width = 800,
+        Height = 600,
+        SizeBytes = 12345,
+        CreatedAt = DateTime.UtcNow,
+        LastUpdatedAt = DateTime.UtcNow
+    };
+
+    [Fact]
+    public async Task AddFacilityImagesAsync_WhenFacilityExists_PersistsImagesLinkedToFacility()
+    {
+        // Arrange — seeded facility with Id 1 is "Grillplats Tiveden".
+        var factory = CreateSeededFactory();
+        var repo = new FacilityRepository(factory, NullLogger<FacilityRepository>.Instance);
+        var images = new List<FacilityImage> { MakeImage("fac-img-1"), MakeImage("fac-img-2") };
+
+        // Act
+        var result = await repo.AddFacilityImagesAsync(1, images, CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().HaveCount(2);
+        result.Value.Should().OnlyContain(i => i.FacilityId == 1);
+    }
+
+    [Fact]
+    public async Task AddFacilityImagesAsync_WhenFacilityMissing_ReturnsNotFound()
+    {
+        // Arrange
+        var factory = CreateSeededFactory();
+        var repo = new FacilityRepository(factory, NullLogger<FacilityRepository>.Instance);
+        var images = new List<FacilityImage> { MakeImage("fac-img-1") };
+
+        // Act
+        var result = await repo.AddFacilityImagesAsync(9999, images, CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.Should().BeFalse();
+        result.Status.Should().Be(RepositoryResultStatus.NotFound);
+    }
+
+    [Fact]
+    public async Task DeleteFacilityImageAsync_WhenImageExists_RemovesIt()
+    {
+        // Arrange
+        var factory = CreateSeededFactory();
+        var repo = new FacilityRepository(factory, NullLogger<FacilityRepository>.Instance);
+        await repo.AddFacilityImagesAsync(1, new List<FacilityImage> { MakeImage("fac-img-del") }, CancellationToken.None);
+
+        // Act
+        var result = await repo.DeleteFacilityImageAsync("fac-img-del", CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+
+        // Deleting again should now report NotFound, confirming it was removed.
+        var second = await repo.DeleteFacilityImageAsync("fac-img-del", CancellationToken.None);
+        second.Status.Should().Be(RepositoryResultStatus.NotFound);
+    }
+
+    [Fact]
+    public async Task DeleteFacilityImageAsync_WhenImageMissing_ReturnsNotFound()
+    {
+        // Arrange
+        var factory = CreateSeededFactory();
+        var repo = new FacilityRepository(factory, NullLogger<FacilityRepository>.Instance);
+
+        // Act
+        var result = await repo.DeleteFacilityImageAsync("no-such-image", CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.Should().BeFalse();
+        result.Status.Should().Be(RepositoryResultStatus.NotFound);
+    }
 }
