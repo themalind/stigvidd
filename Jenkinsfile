@@ -36,6 +36,15 @@
 //     outside /usr/bin may be missing. If `dotnet` or `node` are not found, add
 //     them via Manage Jenkins > Tools, or uncomment the PATH line below.
 //
+//     Container network: the image builds run apt-get and `dotnet restore`
+//     inside build containers. Image PULLS are performed by the daemon over the
+//     host's network, so they keep working even when containers have no usable
+//     egress — the failure then shows up only as "Temporary failure resolving"
+//     minutes into `compose build`. The host resolving names is NOT evidence
+//     that containers can: they reach the nameserver from the bridge subnet,
+//     which the network may not route or the resolver may not answer.
+//     Preflight probes the build path so this fails immediately and by name.
+//
 //     Package caches (~/.nuget/packages, ~/.npm) live in the Jenkins user's
 //     home and warm themselves — nothing to configure.
 //
@@ -102,6 +111,38 @@ pipeline {
           node --version
           npm --version
           docker compose version
+
+          # Several web deps declare engines >=22 (orval wants >=22.18). On an
+          # older Node, npm only prints EBADENGINE warnings and carries on, so
+          # assert it here instead of shipping a bundle built by a Node the
+          # dependencies never claimed to support.
+          NODE_MAJOR=$(node -p 'process.versions.node.split(".")[0]')
+          if [ "$NODE_MAJOR" -lt 22 ]; then
+            echo "ERROR: agent Node is v$NODE_MAJOR; web dependencies require >= 22." >&2
+            exit 1
+          fi
+          if [ "$NODE_MAJOR" != "24" ]; then
+            echo "WARNING: agent Node is v$NODE_MAJOR but web/Dockerfile builds the" >&2
+            echo "         shipped bundle on node:24-alpine. Keep the two in step." >&2
+          fi
+
+          # Image builds run apt-get and `dotnet restore` INSIDE build
+          # containers. Image PULLS are done by the daemon and use the host's
+          # network, so they succeed even when the container network is broken —
+          # which is why that failure only ever surfaces minutes into
+          # `compose build`. Probe the same path here (a build, not a
+          # `docker run`: the two can resolve differently). --no-cache stops
+          # BuildKit from caching a pass and never re-testing.
+          if ! printf 'FROM alpine:3\\nRUN getent hosts api.nuget.org\\n' \\
+               | docker build --no-cache -q - >/dev/null 2>&1; then
+            echo "ERROR: build containers cannot resolve api.nuget.org." >&2
+            echo "       The host resolving fine does not cover this: the" >&2
+            echo "       container needs its own route to that nameserver." >&2
+            echo "       Compare host and container resolvers with:" >&2
+            echo "         cat /etc/resolv.conf" >&2
+            echo "         docker run --rm alpine:3 cat /etc/resolv.conf" >&2
+            exit 1
+          fi
         '''
         // Immutable per-commit tag; keeps deploys traceable and rollbacks easy.
         // Resolved once here, after checkout, so every later stage agrees.
