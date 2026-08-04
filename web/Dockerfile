@@ -1,7 +1,10 @@
 # syntax=docker/dockerfile:1
 
 # ---- Build stage ---------------------------------------------------------
-FROM node:22-alpine AS build
+# Keep in step with the Node on the Jenkins agent (and with the `app` job in
+# .github/workflows/ci.yml) — CI lints and type-checks the same source this
+# stage bundles, so a version split lets CI pass on a build that then differs.
+FROM node:24-alpine AS build
 WORKDIR /app
 
 COPY package.json package-lock.json ./

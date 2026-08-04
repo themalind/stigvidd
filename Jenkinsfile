@@ -3,6 +3,9 @@
 // Flow: test -> build images -> push to registry -> deploy to a remote host
 // over SSH (docker compose pull && up -d).
 //
+// The agent runs directly on the Jenkins host — the toolchains are installed
+// natively, so only the *image builds* use Docker.
+//
 // ─────────────────────────────────────────────────────────────────────────
 // One-time setup on the Jenkins controller / agent:
 //
@@ -12,35 +15,49 @@
 //           user: stigvidd   (password stored in Jenkins, never in git)
 //       - id: deploy-ssh-key         type: SSH Username with private key (deploy host)
 //
-//  2. Plugins: Docker Pipeline, SSH Agent, Workspace Cleanup, Timestamper.
+//  2. Plugins: SSH Agent, Timestamper. (No Docker Pipeline plugin needed —
+//     nothing runs `inside` a container any more.)
 //
-//  3. The agent runs directly on the host (NOT itself in a container) and needs:
+//  3. The agent host needs:
+//       - .NET SDK 10                      (backend build/test)
+//       - Node.js 24 + npm                 (web lint/build)
+//       - libsqlite3-mod-spatialite        (see note below)
 //       - docker + `docker compose` v2, with the Jenkins user in the `docker`
-//         group (`usermod -aG docker jenkins`, then restart the agent)
+//         group: `usermod -aG docker jenkins`, then restart the agent
 //       - ssh + scp
-//     No .NET SDK or Node is required on the host — the test stages bring their
-//     own toolchain containers.
 //
-//  4. Package caches, so restores don't re-download the world every build.
-//     Create them once, owned by the Jenkins user (uid the agent runs as):
-//       sudo install -d -o jenkins -g jenkins /var/lib/jenkins-cache/nuget
-//       sudo install -d -o jenkins -g jenkins /var/lib/jenkins-cache/npm
-//     Adjust CACHE_ROOT below if you put them elsewhere.
+//     SpatiaLite: IntegrationTests.csproj references Sqlite.Core +
+//     SQLitePCLRaw.provider.sqlite3 on Unix (rather than the bundled provider)
+//     precisely so it links the SYSTEM sqlite and can load mod_spatialite.
+//     Without the package the integration tests fail at DbContext setup:
+//       apt-get install -y libsqlite3-mod-spatialite libspatialite-dev
 //
-//  5. On the DEPLOY HOST, at $DEPLOY_PATH, keep a persistent `.env` holding the
+//     PATH: Jenkins runs `sh` steps in a non-login shell, so anything installed
+//     outside /usr/bin may be missing. If `dotnet` or `node` are not found, add
+//     them via Manage Jenkins > Tools, or uncomment the PATH line below.
+//
+//     Package caches (~/.nuget/packages, ~/.npm) live in the Jenkins user's
+//     home and warm themselves — nothing to configure.
+//
+//  4. On the DEPLOY HOST, at $DEPLOY_PATH, keep a persistent `.env` holding the
 //     runtime secrets that must NOT live in Jenkins/git:
 //       POSTGRES_PASSWORD=...   (+ POSTGRES_DB / POSTGRES_USER / ports if non-default)
 //     REGISTRY and IMAGE_TAG are injected by this pipeline at deploy time.
 //
-//  6. Adjust the CONFIGURE block below (registry, deploy host/path, VITE_* build
+//  5. Adjust the CONFIGURE block below (registry, deploy host/path, VITE_* build
 //     values). VITE_* are public (client id + URLs), baked into the web bundle.
 // ─────────────────────────────────────────────────────────────────────────
 
 pipeline {
-  agent none
+  // One agent, one workspace, one checkout for the whole run. Every stage
+  // reuses it, so bin/obj and node_modules survive between builds and the
+  // Build/Deploy stages don't re-clone the repo.
+  agent any
 
   options {
     timestamps()
+    // Also protects the shared ~/.nuget and ~/.npm caches from concurrent
+    // writes now that builds are not isolated in containers.
     disableConcurrentBuilds()
     buildDiscarder(logRotator(numToKeepStr: '20'))
     timeout(time: 40, unit: 'MINUTES')
@@ -55,6 +72,9 @@ pipeline {
     DEPLOY_HOST    = 'deploy@app-server.example.com'    // ssh target
     DEPLOY_PATH    = '/opt/stigvidd'                    // compose dir on host
 
+    // Uncomment and adjust if the toolchains are not on the agent's default PATH.
+    // PATH = "/usr/local/bin:/usr/share/dotnet:${env.PATH}"
+
     // Web build-time config (public values, baked into the SPA bundle).
     VITE_API_URL    = 'https://api.stigvidd.se'
     VITE_OIDC_URL   = 'https://inkaben.se/auth'
@@ -62,35 +82,47 @@ pipeline {
     VITE_CLIENT_ID  = 'stigvidd-admin'
     // ========================================================================
 
-    // Quieter, faster toolchains inside the test containers.
     DOTNET_NOLOGO = '1'
     DOTNET_CLI_TELEMETRY_OPTOUT = '1'
-    // IMAGE_TAG is resolved from the checked-out commit in 'Build & Push'
-    // (env.GIT_COMMIT is not reliably populated while `agent none` is active).
+    // Nothing here is interactive; stop npm from rendering progress bars into
+    // the build log.
+    NPM_CONFIG_FUND = 'false'
+    NPM_CONFIG_AUDIT = 'false'
+    NPM_CONFIG_PROGRESS = 'false'
   }
 
   stages {
+    stage('Preflight') {
+      steps {
+        // Fails in one obvious place with a readable message instead of
+        // "dotnet: not found" halfway through a parallel stage.
+        sh '''
+          set -e
+          dotnet --version
+          node --version
+          npm --version
+          docker compose version
+        '''
+        // Immutable per-commit tag; keeps deploys traceable and rollbacks easy.
+        // Resolved once here, after checkout, so every later stage agrees.
+        script {
+          env.IMAGE_TAG = sh(
+            script: 'git rev-parse --short=12 HEAD',
+            returnStdout: true).trim()
+        }
+        echo "Building ${env.IMAGE_TAG}"
+      }
+    }
+
     stage('Test') {
+      // No per-stage agents: both branches run concurrently in the shared
+      // workspace. backend/ and web/ are disjoint, so they cannot collide.
       parallel {
         stage('backend') {
-          agent {
-            // Built locally from ci/backend-test.Dockerfile and layer-cached on
-            // the agent, so the SpatiaLite install is not re-run per build.
-            // Runs as the Jenkins uid (no `-u root`) — root-owned bin/obj in a
-            // host workspace is what makes the *next* build fail on cleanup.
-            // That uid has no /etc/passwd entry in the image, hence explicit
-            // HOME/DOTNET_CLI_HOME pointing somewhere writable.
-            dockerfile {
-              dir 'ci'
-              filename 'backend-test.Dockerfile'
-              args '-e HOME=/tmp -e DOTNET_CLI_HOME=/tmp ' +
-                   '-e NUGET_PACKAGES=/cache/nuget ' +
-                   '-v /var/lib/jenkins-cache/nuget:/cache/nuget'
-            }
-          }
           steps {
             dir('backend') {
               sh '''
+                set -e
                 dotnet restore
                 dotnet build --no-restore
               '''
@@ -101,43 +133,29 @@ pipeline {
               }
             }
           }
-          post { always { cleanWs() } }
         }
 
         stage('web') {
-          agent {
-            docker {
-              image 'node:24'
-              args '-e HOME=/tmp -e npm_config_cache=/cache/npm ' +
-                   '-v /var/lib/jenkins-cache/npm:/cache/npm'
-            }
-          }
           steps {
             dir('web') {
+              // `npm run build` is `tsc -b && vite build` — it is the type
+              // check, and it fails fast on PRs that never reach the image
+              // build below.
               sh '''
+                set -e
                 npm ci
                 npm run lint
                 npm run build
               '''
             }
           }
-          post { always { cleanWs() } }
         }
       }
     }
 
     stage('Build & Push images') {
-      agent any
       when { branch 'main' }   // only publish from main; PRs stop after Test
       steps {
-        // Immutable per-commit tag; keeps deploys traceable and rollbacks easy.
-        // Read from the working tree after checkout so every later stage sees
-        // the same value.
-        script {
-          env.IMAGE_TAG = sh(
-            script: 'git rev-parse --short=12 HEAD',
-            returnStdout: true).trim()
-        }
         withCredentials([usernamePassword(
           credentialsId: 'registry-credentials',
           usernameVariable: 'REG_USER',
@@ -166,7 +184,6 @@ pipeline {
           // five new per-commit images — without this the disk fills up.
           // Keeps the current build's tags so their layers stay cached.
           sh '''
-            # Bail out rather than untag everything if the tag never resolved.
             [ -n "${IMAGE_TAG:-}" ] || exit 0
             docker image ls --filter "reference=${REGISTRY}/stigvidd-*:*" \
                             --format '{{.Repository}}:{{.Tag}}' \
@@ -174,13 +191,11 @@ pipeline {
               | xargs -r docker rmi || true
             docker image prune -f >/dev/null || true
           '''
-          cleanWs()
         }
       }
     }
 
     stage('Deploy') {
-      agent any
       when { branch 'main' }
       steps {
         withCredentials([usernamePassword(
@@ -211,7 +226,6 @@ pipeline {
           }
         }
       }
-      post { always { cleanWs() } }
     }
   }
 }
