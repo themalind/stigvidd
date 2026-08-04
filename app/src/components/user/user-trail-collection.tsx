@@ -1,3 +1,4 @@
+import ExampleImageOverlay from "@/components/example-image-overlay";
 import { BORDER_RADIUS, SCREEN_PADDING } from "@/constants/constants";
 import { UserFavoritesTrail, UserWishlistTrail } from "@/data/types";
 import { guardedNavigate } from "@/utils/navigation";
@@ -60,14 +61,17 @@ export default function UserTrailCollection({
               >
                 <View style={s.trailContainer}>
                   {trail.trailImages ? (
-                    <Image style={s.trailImage} source={trail.trailImages[0].imageUrl} contentFit="cover" />
+                    <View>
+                      <Image style={s.trailImage} source={trail.trailImages[0].imageUrl} contentFit="cover" />
+                      <ExampleImageOverlay source={trail.trailImages[0].imageUrl} />
+                    </View>
                   ) : null}
                   <View style={s.padding}>
                     <View style={s.titleRatingContainer}>
                       <Text style={s.trailName} numberOfLines={1}>
                         {trail.name}
                       </Text>
-                      {trail.ratingResponse ? (
+                      {trail.ratingResponse?.length ? (
                         <Rating ratings={trail.ratingResponse} starColor={theme.colors.tertiary} />
                       ) : null}
                     </View>
@@ -136,6 +140,7 @@ const s = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    gap: 8,
   },
   padding: {
     padding: 10,

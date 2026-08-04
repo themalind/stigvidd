@@ -18,7 +18,9 @@
     "next": "Nästa",
     "select": "Välj...",
     "time": "Tid",
-    "distance": "Distans"
+    "distance": "Distans",
+    "exampleImage": "Exempelbild",
+    "exampleImageShort": "Exempel"
   },
   "auth": {
     "login": "Logga in",

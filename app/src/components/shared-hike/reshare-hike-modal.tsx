@@ -1,8 +1,8 @@
 import { getFriends } from "@/api/friends";
-import { FRIENDS_STALE_TIME } from "@/constants/cache";
 import { stigviddUserAtom } from "@/atoms/user-atoms";
+import { FRIENDS_STALE_TIME } from "@/constants/cache";
 import { BORDER_RADIUS } from "@/constants/constants";
-import { SearchFriendResult } from "@/data/types";
+import { FriendResponse } from "@/data/types";
 import { useQuery } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
 import { useTranslation } from "react-i18next";
@@ -55,7 +55,7 @@ export default function ReshareHikeModal({ visible, onDismiss, onShare, isPendin
             </View>
           ) : friends && friends.length > 0 ? (
             <ScrollView bounces={false} style={s.flex}>
-              {friends.map((item: SearchFriendResult, index: number) => (
+              {friends.map((item: FriendResponse, index: number) => (
                 <View key={item.identifier}>
                   <Pressable
                     style={({ pressed }) => [s.friendItem, pressed && { backgroundColor: theme.colors.surfaceVariant }]}

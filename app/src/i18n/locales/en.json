@@ -18,7 +18,9 @@
     "next": "Next",
     "select": "Select...",
     "time": "Time",
-    "distance": "Distance"
+    "distance": "Distance",
+    "exampleImage": "Example image",
+    "exampleImageShort": "Example"
   },
   "auth": {
     "login": "Log in",

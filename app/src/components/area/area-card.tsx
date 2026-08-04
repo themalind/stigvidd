@@ -1,3 +1,4 @@
+import ExampleImageOverlay from "@/components/example-image-overlay";
 import { BORDER_RADIUS } from "@/constants/constants";
 import { CityArea, FacilityType, hasFacilityType } from "@/data/types";
 import { guardedNavigate } from "@/utils/navigation";
@@ -74,6 +75,7 @@ export default function AreaCard({ area }: Props) {
           transition={200}
           recyclingKey={area.identifier}
         />
+        <ExampleImageOverlay source={{ uri: area.imageUrl }} />
         <LinearGradient
           colors={["transparent", "rgba(0,0,0,0.15)", "rgba(0,0,0,0.75)"]}
           locations={[0, 0.5, 1]}

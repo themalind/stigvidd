@@ -1,3 +1,4 @@
+import ExampleImageOverlay from "@/components/example-image-overlay";
 import { SCREEN_PADDING, SURFACE_BORDER_RADIUS } from "@/constants/constants";
 import { TrailCard } from "@/data/types";
 import { useTrailCards } from "@/hooks/useTrailCard";
@@ -191,7 +192,12 @@ const CarouselCard = memo(function CarouselCard({
       ) : (
         <>
           <View style={s.header}>
-            {card.image && <Image source={{ uri: card.image.imageUrl }} style={s.image} contentFit="cover" />}
+            {card.image && (
+              <View>
+                <Image source={{ uri: card.image.imageUrl }} style={s.image} contentFit="cover" />
+                <ExampleImageOverlay source={{ uri: card.image.imageUrl }} />
+              </View>
+            )}
             <View style={s.meta}>
               <Text style={s.name} numberOfLines={1}>
                 {card.name}

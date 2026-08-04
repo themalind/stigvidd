@@ -1,4 +1,5 @@
 import { getAreaByIdentifier } from "@/api/areas";
+import ExampleImageOverlay from "@/components/example-image-overlay";
 import { CITY_AREAS_STALE_TIME } from "@/constants/cache";
 import { SCREEN_PADDING } from "@/constants/constants";
 import { FacilityType, hasFacilityType } from "@/data/types";
@@ -63,6 +64,7 @@ export default function AreaDetailScreen() {
       <ScrollView contentContainerStyle={s.container} showsVerticalScrollIndicator={false}>
         <View style={s.hero}>
           <Image source={{ uri: area.imageUrl }} style={s.heroImage} contentFit="cover" transition={200} />
+          <ExampleImageOverlay source={{ uri: area.imageUrl }} />
           <LinearGradient
             colors={["rgba(0,0,0,0.35)", "transparent", "rgba(0,0,0,0.15)", "rgba(0,0,0,0.8)"]}
             locations={[0, 0.35, 0.6, 1]}

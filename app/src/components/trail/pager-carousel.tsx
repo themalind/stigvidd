@@ -1,3 +1,4 @@
+import ExampleImageOverlay from "@/components/example-image-overlay";
 import { BORDER_RADIUS } from "@/constants/constants";
 import { TrailOverview } from "@/data/types";
 import { guardedNavigate } from "@/utils/navigation";
@@ -74,13 +75,16 @@ export default function PagerCarousel({ data, onItemPress, containerPadding = 24
           getItemLayout={(_, index) => ({ length: width, offset: width * index, index })}
           renderItem={({ item }) => (
             <Pressable onPress={() => handlePress(item)} style={{ width }}>
-              <ExpoImage
-                source={imageSource(item)}
-                style={{ width, height: imageHeight, borderRadius: BORDER_RADIUS }}
-                contentFit="cover"
-                cachePolicy="disk"
-                priority="high"
-              />
+              <View>
+                <ExpoImage
+                  source={imageSource(item)}
+                  style={{ width, height: imageHeight, borderRadius: BORDER_RADIUS }}
+                  contentFit="cover"
+                  cachePolicy="disk"
+                  priority="high"
+                />
+                <ExampleImageOverlay source={imageSource(item)} />
+              </View>
               <View style={s.textRow}>
                 <Text style={[s.name, { color: theme.colors.onSurface }]}>{item.name}</Text>
                 <Text style={[s.sub, { color: theme.colors.onSurfaceVariant }]}>{item.trailLength} km</Text>

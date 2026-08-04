@@ -1,3 +1,4 @@
+import ExampleImageOverlay from "@/components/example-image-overlay";
 import { BORDER_RADIUS, SCREEN_PADDING } from "@/constants/constants";
 import { CityAreaTrail } from "@/data/types";
 import { classificationParser } from "@/utils/classification-parser";
@@ -41,7 +42,10 @@ export default function AreaTrailSection({ trails }: AreaTrailSectionProps) {
               pressed && { opacity: 0.7 },
             ]}
           >
-            <Image source={trail.image?.imageUrl} contentFit="cover" style={s.image} />
+            <View>
+              <Image source={trail.image?.imageUrl} contentFit="cover" style={s.image} />
+              <ExampleImageOverlay source={trail.image?.imageUrl} />
+            </View>
             <View style={s.body}>
               <Text style={[s.name, { color: theme.colors.onSurface }]} numberOfLines={1}>
                 {trail.name}

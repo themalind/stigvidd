@@ -1,3 +1,4 @@
+import ExampleImageOverlay from "@/components/example-image-overlay";
 import { BORDER_RADIUS } from "@/constants/constants";
 import { TrailImage } from "@/data/types";
 import { Image } from "expo-image";
@@ -33,6 +34,7 @@ export default function ImageGallery({ images }: GalleryProps) {
     <View style={s.container}>
       <View style={s.focusImageConatiner}>
         {selectedImage && <Image source={selectedImage.imageUrl} style={s.focusImage} contentFit="cover" />}
+        {selectedImage && <ExampleImageOverlay source={selectedImage.imageUrl} />}
       </View>
       <View style={{ flex: 1 }}>
         <ScrollView
@@ -48,6 +50,7 @@ export default function ImageGallery({ images }: GalleryProps) {
             <Pressable key={image.identifier} onPress={() => handleImagePress(image, index)}>
               <View>
                 <Image source={image.imageUrl} style={s.scrollImage} contentFit="cover" />
+                <ExampleImageOverlay source={image.imageUrl} />
               </View>
             </Pressable>
           ))}
