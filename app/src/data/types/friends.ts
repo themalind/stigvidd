@@ -3,6 +3,12 @@ export interface SearchFriendResult {
   nickName: string;
 }
 
+export interface FriendResponse {
+  identifier: string;
+  nickName: string;
+  email: string;
+}
+
 export interface FriendRequest {
   requesterIdentifier: string;
   requesterNickName: string;

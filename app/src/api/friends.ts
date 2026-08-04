@@ -1,4 +1,4 @@
-import { FriendRequest, OutgoingFriendRequest, SearchFriendResult } from "@/data/types";
+import { FriendRequest, FriendResponse, OutgoingFriendRequest, SearchFriendResult } from "@/data/types";
 import { BASE_URL } from "./api-config";
 import { ApiError } from "./api-error";
 import { getUserToken } from "./users";
@@ -85,7 +85,7 @@ export async function rejectFriendRequest(otherIdentifier: string): Promise<{ su
   }
 }
 
-export async function getFriends(): Promise<SearchFriendResult[]> {
+export async function getFriends(): Promise<FriendResponse[]> {
   try {
     const token = await getUserToken();
 

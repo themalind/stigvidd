@@ -94,7 +94,7 @@ export default function FriendsScreen() {
                                   style={{ backgroundColor: theme.colors.surfaceVariant }}
                                   labelStyle={{ color: theme.colors.onSurfaceVariant, fontSize: 14 }}
                                 />
-                                <Text style={s.rowName} variant="bodyLarge">
+                                <Text style={s.rowName} variant="bodyLarge" numberOfLines={1}>
                                   {user.nickName}
                                 </Text>
                                 {friends?.some((f) => f.identifier === user.identifier) ? (
@@ -155,7 +155,7 @@ export default function FriendsScreen() {
                             style={{ backgroundColor: theme.colors.secondaryContainer }}
                             labelStyle={{ color: theme.colors.secondary, fontSize: 14 }}
                           />
-                          <Text style={s.rowName} variant="bodyLarge">
+                          <Text style={s.rowName} variant="bodyLarge" numberOfLines={1}>
                             {req.requesterNickName}
                           </Text>
                           <View style={s.rowActions}>
@@ -233,7 +233,7 @@ export default function FriendsScreen() {
                             style={{ backgroundColor: theme.colors.surfaceVariant }}
                             labelStyle={{ color: theme.colors.onSurfaceVariant, fontSize: 14 }}
                           />
-                          <Text style={s.rowName} variant="bodyLarge">
+                          <Text style={s.rowName} variant="bodyLarge" numberOfLines={1}>
                             {req.receiverNickName}
                           </Text>
                           <IconButton
@@ -311,9 +311,21 @@ export default function FriendsScreen() {
                             style={{ backgroundColor: theme.colors.surfaceVariant }}
                             labelStyle={{ color: theme.colors.onSurfaceVariant, fontSize: 14 }}
                           />
-                          <Text style={s.rowName} variant="bodyLarge">
-                            {friend.nickName}
-                          </Text>
+                          <View style={s.rowText}>
+                            <Text style={s.rowName} variant="bodyLarge" numberOfLines={1}>
+                              {friend.nickName}
+                            </Text>
+                            {friend.email ? (
+                              <Text
+                                style={[s.rowSubtitle, { color: theme.colors.onSurfaceVariant }]}
+                                variant="bodySmall"
+                                numberOfLines={1}
+                                ellipsizeMode="middle"
+                              >
+                                {friend.email}
+                              </Text>
+                            ) : null}
+                          </View>
                           <IconButton
                             hitSlop={16}
                             icon="account-remove"
@@ -441,9 +453,15 @@ const s = StyleSheet.create({
     paddingVertical: 10,
     gap: 14,
   },
+  rowText: {
+    flex: 1,
+  },
   rowName: {
     flex: 1,
     fontWeight: "500",
+  },
+  rowSubtitle: {
+    opacity: 0.75,
   },
   rowActions: {
     flexDirection: "row",
