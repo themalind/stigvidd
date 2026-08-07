@@ -106,11 +106,25 @@
     "sortNameDesc": "Name (Z-A)",
     "sortLengthAsc": "Length (Shortest first)",
     "sortLengthDesc": "Length (Longest first)",
-    "sortNearest": "Nearest first"
+    "sortNearest": "Nearest first",
+    "distanceAway": "{{distance}} away",
+    "moreFilters": "More filters…",
+    "fieldName": "Name",
+    "fieldDate": "Date",
+    "fieldShared": "Shared",
+    "fieldLength": "Length",
+    "fieldDuration": "Duration",
+    "fieldDistance": "Distance",
+    "hikeLength": "Length: {{min}} - {{max}} km",
+    "duration": "Duration",
+    "durationRange": "Time: {{min}} - {{max}} min",
+    "sharedBy": "Shared by",
+    "allSharers": "All"
   },
   "map": {
     "readMore": "Read more",
     "showOnMap": "Show on map",
+    "showMapView": "Show map view",
     "loadError": "Could not load the map data",
     "cardError": "Could not load this trail",
     "cardNotFound": "This trail is no longer available",
@@ -314,7 +328,11 @@
     "accept": "Accept",
     "reject": "Decline",
     "receivedHikes": "Received hikes",
-    "tapForDetails": "Tap a hike to see details"
+    "tapForDetails": "Tap a hike to see details",
+    "showing_one": "Showing {{shown}} of {{count}} walk",
+    "showing_other": "Showing {{shown}} of {{count}} walks",
+    "searchPlaceholder": "Search walks...",
+    "noResults": "No walks found"
   },
   "userActions": {
     "favorite": "Favorite",
@@ -452,7 +470,8 @@
       "title": "Wishlist",
       "description": "Here are walks you have saved to do.",
       "empty": "You have no saved walks on your wishlist yet. Go to a trail and tap the plus to add one."
-    }
+    },
+    "searchPlaceholder": "Search for a trail or town..."
   },
   "area": {
     "title": "Areas",

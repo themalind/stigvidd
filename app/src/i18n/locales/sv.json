@@ -106,11 +106,25 @@
     "sortNameDesc": "Namn (Ö-A)",
     "sortLengthAsc": "Längd (Kortast först)",
     "sortLengthDesc": "Längd (Längst först)",
-    "sortNearest": "Närmast först"
+    "sortNearest": "Närmast först",
+    "distanceAway": "{{distance}} bort",
+    "moreFilters": "Fler filter…",
+    "fieldName": "Namn",
+    "fieldDate": "Datum",
+    "fieldShared": "Delad",
+    "fieldLength": "Längd",
+    "fieldDuration": "Tid",
+    "fieldDistance": "Avstånd",  
+    "hikeLength": "Längd: {{min}} - {{max}} km",
+    "duration": "Varaktighet",
+    "durationRange": "Tid: {{min}} - {{max}} min",
+    "sharedBy": "Delad av",
+    "allSharers": "Alla"
   },
   "map": {
     "readMore": "Läs mer",
     "showOnMap": "Se på karta",
+    "showMapView": "Visa kartvy",
     "loadError": "Kunde inte ladda kartdata",
     "cardError": "Kunde inte ladda den här leden",
     "cardNotFound": "Den här leden är inte längre tillgänglig",
@@ -314,7 +328,11 @@
     "accept": "Acceptera",
     "reject": "Avvisa",
     "receivedHikes": "Mottagna promenader",
-    "tapForDetails": "Tryck på en promenad för att se detaljer"
+    "tapForDetails": "Tryck på en promenad för att se detaljer",
+    "showing_one": "Visar {{shown}} av {{count}} promenad",
+    "showing_other": "Visar {{shown}} av {{count}} promenader",
+    "searchPlaceholder": "Sök bland promenader...",
+    "noResults": "Inga promenader hittades"
   },
   "userActions": {
     "favorite": "Favorit",
@@ -452,7 +470,8 @@
       "title": "Vill gå",
       "description": "Här är promenader du sparat att du vill gå.",
       "empty": "Du har inga sparade promenader som du vill gå än. Gå till en promenad och tryck på plusset för att lägga till."
-    }
+    },
+    "searchPlaceholder": "Sök efter led eller ort..."
   },
   "area": {
     "title": "Områden",
