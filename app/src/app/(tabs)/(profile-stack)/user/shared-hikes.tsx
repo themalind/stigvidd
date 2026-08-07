@@ -4,22 +4,45 @@ import { stigviddUserAtom } from "@/atoms/user-atoms";
 import { useAuth } from "@/components/auth/auth-provider";
 import BackButton from "@/components/back-button";
 import ErrorView from "@/components/error-view";
+import { HikeFilterModal } from "@/components/hike/hike-filter-modal";
+import ListHeaderActions, { SortField } from "@/components/list-header-actions";
 import LoadingIndicator from "@/components/loading-indicator";
 import SharedHikeDetails from "@/components/shared-hike/shared-hike-details";
 import { SHARED_HIKES_STALE_TIME } from "@/constants/cache";
 import { BORDER_RADIUS, SCREEN_PADDING } from "@/constants/constants";
 import { SharedHike } from "@/data/types";
+import { HikeAccessors, HikeSortOption, useHikeFilters } from "@/hooks/hike/useHikeFilters";
 import { useSharedHikeMutations } from "@/hooks/shared-hikes/useSharedHikeMutations";
+import { formatDate } from "@/utils/format-date";
 import FormattedTime from "@/utils/format-time-from-ms";
 import { Fontisto, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
 import { useAtom, useAtomValue } from "jotai";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Platform, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { Button, Divider, Icon, IconButton, Surface, Text, useTheme } from "react-native-paper";
 
 const PREVIEW_COUNT = 5;
+
+// Same shape as my-hikes, reading SharedHike's differently named fields — this is what
+// the accessor design buys: one hook, two API types, no shared interface.
+const ACCESSORS: HikeAccessors<SharedHike> = {
+  name: (h) => h.hikeName,
+  length: (h) => h.hikeLength,
+  duration: (h) => h.duration,
+  date: (h) => h.sharedAt,
+  sharedBy: (h) => h.sharedByName,
+};
+
+const SORT_FIELDS: SortField[] = [
+  { key: "name", labelKey: "filter.fieldName" },
+  // Still the "date" sort key — only the label differs, because here the date is when
+  // the hike was shared with you.
+  { key: "date", labelKey: "filter.fieldShared", defaultDirection: "desc" },
+  { key: "length", labelKey: "filter.fieldLength" },
+  { key: "duration", labelKey: "filter.fieldDuration" },
+];
 
 export default function SharedHikesScreen() {
   const theme = useTheme();
@@ -30,6 +53,7 @@ export default function SharedHikesScreen() {
   const user = useAtomValue(stigviddUserAtom);
   const [visible, setVisible] = useState(false);
   const [sharedHike, setSelectedSharedHike] = useState<SharedHike | null>(null);
+  const [filterModalVisible, setFilterModalVisible] = useState(false);
   const [selectedIncomingId, setSelectedIncomingId] = useState<string | null>(null);
   const [incomingDetailVisible, setIncomingDetailVisible] = useState(false);
   const [{ data: incomingRequests, isPending: incomingPending, isError: incomingError, refetch: refetchIncoming }] =
@@ -57,6 +81,33 @@ export default function SharedHikesScreen() {
     staleTime: SHARED_HIKES_STALE_TIME,
   });
 
+  // Filtering covers received hikes only. Incoming requests are an action list — you work
+  // through them and they disappear — so they keep their preview cap and their own order.
+  const {
+    filteredHikes,
+    filters,
+    updateFilter,
+    updateRangeFilter,
+    clearFilters,
+    sortBy,
+    setSortBy,
+    sharedByNames,
+    totalCount,
+    filteredCount,
+    searchQuery,
+    setSearchQuery,
+  } = useHikeFilters(hikes, ACCESSORS);
+
+  // Each range is one choice to the user even though it is stored as two keys.
+  const activeFilterCount = useMemo(() => {
+    const { minLength, maxLength, minDuration, maxDuration, ...rest } = filters;
+    return (
+      Object.values(rest).filter((v) => v !== undefined).length +
+      (minLength !== undefined || maxLength !== undefined ? 1 : 0) +
+      (minDuration !== undefined || maxDuration !== undefined ? 1 : 0)
+    );
+  }, [filters]);
+
   if (isLoading || incomingPending) {
     return <LoadingIndicator />;
   }
@@ -67,12 +118,27 @@ export default function SharedHikesScreen() {
 
   return (
     <View style={[s.screen, { backgroundColor: theme.colors.background }]}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={s.scrollContent}>
-        <View style={s.header}>
+      {/* Outside the ScrollView so the sort popover stays anchored to the screen.
+          The controls sit above both sections but govern only the received hikes. */}
+      <View style={s.stickyHeader}>
+        <ListHeaderActions
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          searchPlaceholder={t("hike.searchPlaceholder")}
+          sortFields={SORT_FIELDS}
+          sortBy={sortBy}
+          onSortChange={(v) => setSortBy(v as HikeSortOption)}
+          onOpenFilters={() => setFilterModalVisible(true)}
+          activeFilterCount={activeFilterCount}
+          showingLabel={t("hike.showing", { count: totalCount, shown: filteredCount })}
+          onClearFilters={clearFilters}
+        >
           <BackButton />
           <Icon source="hiking" size={24} color={theme.colors.onSurfaceVariant} />
           <Text style={s.headerText}>{t("hike.sharedHikesTitle")}</Text>
-        </View>
+        </ListHeaderActions>
+      </View>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={s.scrollContent}>
         <View style={s.content}>
           <Divider bold={true} />
 
@@ -167,9 +233,9 @@ export default function SharedHikesScreen() {
             </View>
           )}
 
-          {(hikes?.length ?? 0) === 0 && <EmptyState text={t("hike.noShared")} />}
+          {totalCount === 0 && <EmptyState text={t("hike.noShared")} />}
 
-          {(hikes?.length ?? 0) > 0 && (
+          {totalCount > 0 && (
             <View style={s.section}>
               <SectionHeader
                 icon="routes"
@@ -179,8 +245,11 @@ export default function SharedHikesScreen() {
               />
               <View style={[s.card, { backgroundColor: theme.colors.surface }]}>
                 <View style={s.cardInner}>
-                  {hikes?.map((hike, index) => (
-                    <View key={index}>
+                  {filteredHikes.length === 0 && <EmptyState text={t("hike.noResults")} />}
+                  {filteredHikes.map((hike, index) => (
+                    // Identifier, not index: sorting reorders the list, and index keys
+                    // would make React reuse the wrong row.
+                    <View key={hike.hikeIdentifier}>
                       <Pressable
                         style={({ pressed }) => [s.row, pressed && { opacity: 0.7 }]}
                         onPress={() => {
@@ -199,13 +268,24 @@ export default function SharedHikesScreen() {
                             <Text variant="bodySmall">{hike.hikeLength} km</Text>
                             <Text variant="bodySmall">{FormattedTime(hike.duration)}</Text>
                           </View>
-                          <Text variant="bodySmall" style={{ color: theme.colors.secondary }}>
-                            {t("hike.sharedByLabel", { name: hike.sharedByName })}
-                          </Text>
+                          {/* Who and when on one line: sorting by "shared" is invisible
+                              unless the list shows the date it is ordered by. */}
+                          <View style={s.sharedRow}>
+                            <Text
+                              variant="bodySmall"
+                              style={[s.sharedBy, { color: theme.colors.secondary }]}
+                              numberOfLines={1}
+                            >
+                              {t("hike.sharedByLabel", { name: hike.sharedByName })}
+                            </Text>
+                            <Text variant="bodySmall" style={s.sharedDate}>
+                              {formatDate(hike.sharedAt)}
+                            </Text>
+                          </View>
                         </View>
                         <Icon source="chevron-right" size={20} />
                       </Pressable>
-                      {index < hikes.length - 1 && (
+                      {index < filteredHikes.length - 1 && (
                         <View style={[s.divider, { backgroundColor: theme.colors.outlineVariant }]} />
                       )}
                     </View>
@@ -247,6 +327,15 @@ export default function SharedHikesScreen() {
         }}
         isPending={acceptMutation.isPending || rejectMutation.isPending}
       />
+      <HikeFilterModal
+        visible={filterModalVisible}
+        onClose={() => setFilterModalVisible(false)}
+        filters={filters}
+        sharedByNames={sharedByNames}
+        onUpdateFilter={updateFilter}
+        onUpdateRangeFilter={updateRangeFilter}
+        onClearFilters={clearFilters}
+      />
     </View>
   );
 }
@@ -280,7 +369,6 @@ function SectionHeader({
 }
 
 function EmptyState({ text }: { text: string }) {
-  const theme = useTheme();
   return (
     <Text variant="bodyMedium" style={s.emptyText}>
       {text}
@@ -292,12 +380,9 @@ const s = StyleSheet.create({
   screen: {
     flex: 1,
   },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    paddingLeft: Platform.select({ ios: 0, default: SCREEN_PADDING }),
-    paddingVertical: 6,
+  stickyHeader: {
+    paddingTop: 8,
+    paddingBottom: 8,
   },
   headerText: {
     fontFamily: "Inter_600SemiBold",
@@ -370,6 +455,18 @@ const s = StyleSheet.create({
     flexDirection: "row",
     gap: 12,
     marginTop: 2,
+  },
+  sharedRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  // Flexible so a long sharer name truncates instead of pushing the date off the row.
+  sharedBy: {
+    flex: 1,
+  },
+  sharedDate: {
+    opacity: 0.6,
   },
   rowActions: {
     flexDirection: "row",

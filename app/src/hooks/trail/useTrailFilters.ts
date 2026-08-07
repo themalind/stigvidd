@@ -1,12 +1,23 @@
-import { FilterOptions, LatLng, TrailShortInfoResponse } from "@/data/types";
+import { FilterOptions, LatLng } from "@/data/types";
 import { getDistance } from "geolib";
 import { useMemo, useState } from "react";
 
-export type SortOption = "name-asc" | "name-desc" | "length-asc" | "length-desc" | "distance-asc";
+export type SortOption = "name-asc" | "name-desc" | "length-asc" | "length-desc" | "distance-asc" | "distance-desc";
 
-export const useTrailFilters = (trails: TrailShortInfoResponse[] | undefined, userLocation: LatLng | null) => {
+export interface FilterableTrail {
+  identifier: string;
+  name: string;
+  trailLength: number;
+  accessibility: boolean;
+  classification: number;
+  city: string;
+  startLatitude?: number;
+  startLongitude?: number;
+}
+
+export const useTrailFilters = <T extends FilterableTrail>(trails: T[] | undefined, userLocation: LatLng | null) => {
   const [filters, setFilters] = useState<FilterOptions>({});
-  const [sortBy, setSortBy] = useState("name-asc");
+  const [sortBy, setSortBy] = useState<SortOption>("name-asc");
   const [searchQuery, setSearchQuery] = useState("");
 
   // Extracts a sorted list of unique city names from the trails
@@ -109,6 +120,9 @@ export const useTrailFilters = (trails: TrailShortInfoResponse[] | undefined, us
         break;
       case "distance-asc":
         result.sort((a, b) => (a.distanceKm ?? Infinity) - (b.distanceKm ?? Infinity));
+        break;
+      case "distance-desc":
+        result.sort((a, b) => (b.distanceKm ?? -Infinity) - (a.distanceKm ?? -Infinity));
     }
     return result;
   }, [trailsWithDistance, trails, filters, sortBy, userLocation, searchQuery]);

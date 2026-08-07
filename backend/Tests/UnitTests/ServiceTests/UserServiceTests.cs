@@ -135,7 +135,7 @@ public class UserServiceTests
         // Arrange
         IReadOnlyCollection<UserFavoritesTrailResponse> list =
         [
-            UserFavoritesTrailResponse.Create("t1", "Trail", 5M, "Desc", null, null)
+            UserFavoritesTrailResponse.Create("t1", "Trail", 5M, "Borås", 1, false, null, null,null, null)
         ];
         var repo = new Mock<IUserRepository>();
         repo.Setup(r => r.GetFavoritesByUserIdentifierAsync(Utilities.Identifiers.User, It.IsAny<Expression<Func<Trail, UserFavoritesTrailResponse>>>(), It.IsAny<CancellationToken>()))
@@ -175,7 +175,7 @@ public class UserServiceTests
         // Arrange
         IReadOnlyCollection<UserWishlistTrailResponse> list =
         [
-            UserWishlistTrailResponse.Create("t2", "Trail 2", 8M, "Desc", null, null)
+            UserWishlistTrailResponse.Create("t2", "Trail 2", 8M, "Borås", 1, false, null, null,null, null)
         ];
         var repo = new Mock<IUserRepository>();
         repo.Setup(r => r.GetWishListByUserIdentifierAsync(Utilities.Identifiers.User, It.IsAny<Expression<Func<Trail, UserWishlistTrailResponse>>>(), It.IsAny<CancellationToken>()))
@@ -267,7 +267,7 @@ public class UserServiceTests
     public async Task AddTrailToFavorites_WhenSuccess_ReturnsSuccess()
     {
         // Arrange
-        var response = UserFavoritesTrailResponse.Create(Utilities.Identifiers.Trail1, "Trail", 5M, "Desc", null, null);
+        var response = UserFavoritesTrailResponse.Create(Utilities.Identifiers.Trail1, "Trail", 5M, "Borås", 1, false, null, null,null, null);
         var repo = new Mock<IUserRepository>();
         repo.Setup(r => r.AddTrailToUserFavoritesListAsync(Utilities.Identifiers.User, Utilities.Identifiers.Trail1, It.IsAny<Expression<Func<Trail, UserFavoritesTrailResponse>>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<UserFavoritesTrailResponse>.Success(response));
@@ -318,7 +318,7 @@ public class UserServiceTests
     public async Task AddTrailToWishList_WhenSuccess_ReturnsSuccess()
     {
         // Arrange
-        var response = UserWishlistTrailResponse.Create(Utilities.Identifiers.Trail1, "Trail", 5M, "Desc", null, null);
+        var response = UserWishlistTrailResponse.Create(Utilities.Identifiers.Trail1, "Trail", 5M, "Borås", 1, false, null, null,null, null);
         var repo = new Mock<IUserRepository>();
         repo.Setup(r => r.AddTrailToUserWishListAsync(Utilities.Identifiers.User, Utilities.Identifiers.Trail1, It.IsAny<Expression<Func<Trail, UserWishlistTrailResponse>>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<UserWishlistTrailResponse>.Success(response));

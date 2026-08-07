@@ -8,7 +8,11 @@ public class UserFavoritesTrailResponse
     public required string Identifier { get; set; }
     public string Name { get; set; } = string.Empty;
     public decimal TrailLength { get; set; }
-    public string Description { get; set; } = string.Empty;
+    public required string City { get; set; }
+    public int? Classification { get; set; }
+    public bool Accessibility { get; set; }
+    public decimal? StartLatitude { get; set; }
+    public decimal? StartLongitude { get; set; }
     public IReadOnlyCollection<RatingResponse>? RatingResponse { get; set; }
     public IReadOnlyCollection<TrailImageResponse>? TrailImages { get; set; }
 
@@ -16,7 +20,11 @@ public class UserFavoritesTrailResponse
         string identifier,
         string? name,
         decimal trailLength,
-        string? description,
+        string city,
+        int? classification,
+        bool accessibility,
+        decimal? startLatitude,
+        decimal? startLongitude,
         IEnumerable<RatingResponse>? ratingResponses,
         IEnumerable<TrailImageResponse>? trailImages
         )
@@ -26,7 +34,11 @@ public class UserFavoritesTrailResponse
             Identifier = identifier,
             Name = name ?? string.Empty,
             TrailLength = trailLength,
-            Description = description ?? string.Empty,
+            City = city,
+            Classification = classification,
+            Accessibility = accessibility,
+            StartLatitude = startLatitude,
+            StartLongitude = startLongitude,
             RatingResponse = ratingResponses?.ToList(),
             TrailImages = trailImages?.ToList(),
         };

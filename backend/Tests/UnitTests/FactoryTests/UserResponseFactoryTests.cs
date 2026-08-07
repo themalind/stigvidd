@@ -36,7 +36,7 @@ public class UserResponseFactoryTests
         [
             new Trail
             {
-                Identifier = "trail-id", Name = "Trail", TrailLength = 5M,
+                Identifier = "trail-id", Name = "Trail", TrailLength = 5M, City="City", Classification =1, Accessibility = true,
                 TrailImages = [new TrailImage { Identifier = "img-1", ImageUrl = "trails/img.jpg", TrailId = 1 }]
             }
         ];

@@ -1,9 +1,10 @@
+import SelectInput from "@/components/select-input";
 import { BORDER_RADIUS } from "@/constants/constants";
 import { FilterOptions } from "@/data/types";
+import { SortOption } from "@/hooks/trail/useTrailFilters";
 import { classificationParser } from "@/utils/classification-parser";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Slider as RangeSlider } from "@miblanchard/react-native-slider";
-import SelectInput from "@/components/select-input";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { Modal, Pressable, ScrollView, StyleSheet, View } from "react-native";
@@ -16,12 +17,13 @@ interface TrailFilterModalProps {
   cities: string[];
   classifications: number[];
   filters: FilterOptions;
-  sortBy: string;
+  sortBy: SortOption;
+  onUpdateSort: (value: SortOption) => void;
   onUpdateFilter: (key: keyof FilterOptions, value: any) => void;
   onUpdateLengthFilter: (min: number, max: number) => void;
-  onUpdateSort: (value: string) => void;
   onClearFilters: () => void;
   hasLocation: boolean;
+  showSort?: boolean;
 }
 
 export const TrailFilterModal: React.FC<TrailFilterModalProps> = ({
@@ -36,6 +38,7 @@ export const TrailFilterModal: React.FC<TrailFilterModalProps> = ({
   onUpdateSort,
   onClearFilters,
   hasLocation,
+  showSort = true,
 }) => {
   const { t } = useTranslation();
   const theme = useTheme();
@@ -68,7 +71,6 @@ export const TrailFilterModal: React.FC<TrailFilterModalProps> = ({
             />
           </View>
           <Divider />
-
           <View style={s.section}>
             <Text style={s.sectionTitle}>{t("filter.accessibility")}</Text>
             <View style={s.buttonGroup}>
@@ -221,21 +223,26 @@ export const TrailFilterModal: React.FC<TrailFilterModalProps> = ({
           </View>
           <Divider />
 
-          <View style={s.section}>
-            <Text style={s.sectionTitle}>{t("filter.sortBy")}</Text>
-            <SelectInput
-              selectedValue={sortBy}
-              onValueChange={onUpdateSort}
-              options={[
-                { label: t("filter.sortNameAsc"), value: "name-asc" },
-                { label: t("filter.sortNameDesc"), value: "name-desc" },
-                { label: t("filter.sortLengthAsc"), value: "length-asc" },
-                { label: t("filter.sortLengthDesc"), value: "length-desc" },
-                ...(hasLocation ? [{ label: t("filter.sortNearest"), value: "distance-asc" }] : []),
-              ]}
-            />
-          </View>
-          <Divider />
+          {/* Hidden where sorting lives in the list header's popover instead. */}
+          {showSort && (
+            <>
+              <View style={s.section}>
+                <Text style={s.sectionTitle}>{t("filter.sortBy")}</Text>
+                <SelectInput
+                  selectedValue={sortBy}
+                  onValueChange={(v) => onUpdateSort(v as SortOption)}
+                  options={[
+                    { label: t("filter.sortNameAsc"), value: "name-asc" },
+                    { label: t("filter.sortNameDesc"), value: "name-desc" },
+                    { label: t("filter.sortLengthAsc"), value: "length-asc" },
+                    { label: t("filter.sortLengthDesc"), value: "length-desc" },
+                    ...(hasLocation ? [{ label: t("filter.sortNearest"), value: "distance-asc" }] : []),
+                  ]}
+                />
+              </View>
+              <Divider />
+            </>
+          )}
         </ScrollView>
       </SafeAreaView>
     </Modal>

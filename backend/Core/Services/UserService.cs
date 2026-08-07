@@ -80,12 +80,16 @@ public class UserService : IUserService
         var result = await _userRepository.GetFavoritesByUserIdentifierAsync(
             userIdentifier,
             t => UserFavoritesTrailResponse.Create(
-                 t.Identifier,
-                 t.Name ?? string.Empty,
-                 t.TrailLength,
-                 t.Description ?? string.Empty,
-                 t.Reviews!.Select(r => RatingResponse.Create(r.Identifier, r.Rating)).ToList(),
-                 t.TrailImages!.Select(ti => TrailImageResponse.Create(_userResponseFactory.PresentableBaseUrl, ti.Identifier, ti.ImageUrl)).Take(1).ToList()
+                t.Identifier,
+                t.Name ?? string.Empty,
+                t.TrailLength,
+                t.City,
+                t.Classification,
+                t.Accessibility,
+                (decimal?)t.GeoPath!.StartPoint.Coordinate.Y,
+                (decimal?)t.GeoPath.StartPoint.Coordinate.X,
+                t.Reviews!.Select(r => RatingResponse.Create(r.Identifier, r.Rating)).ToList(),
+                t.TrailImages!.Select(ti => TrailImageResponse.Create(_userResponseFactory.PresentableBaseUrl, ti.Identifier, ti.ImageUrl)).Take(1).ToList()
             ), ctoken);
 
         if (result.Status == RepositoryResultStatus.Error)
@@ -102,7 +106,11 @@ public class UserService : IUserService
                  t.Identifier,
                  t.Name ?? string.Empty,
                  t.TrailLength,
-                 t.Description ?? string.Empty,
+                 t.City,
+                 t.Classification,
+                 t.Accessibility,
+                 (decimal?)t.GeoPath!.StartPoint.Coordinate.Y,
+                 (decimal?)t.GeoPath.StartPoint.Coordinate.X,
                  t.Reviews!.Select(r => RatingResponse.Create(r.Identifier, r.Rating)).ToList(),
                  t.TrailImages!.Select(ti => TrailImageResponse.Create(_userResponseFactory.PresentableBaseUrl, ti.Identifier, ti.ImageUrl)).Take(1).ToList()
             ), ctoken);
@@ -186,7 +194,11 @@ public class UserService : IUserService
                 t.Identifier,
                 t.Name ?? string.Empty,
                 t.TrailLength,
-                t.Description ?? string.Empty,
+                t.City,
+                t.Classification,
+                t.Accessibility,
+                (decimal?)t.GeoPath!.StartPoint.Coordinate.Y,
+                (decimal?)t.GeoPath.StartPoint.Coordinate.X,
                 t.Reviews!.Select(r => RatingResponse.Create(r.Identifier, r.Rating)).ToList(),
                 t.TrailImages!.Select(ti => TrailImageResponse.Create(_userResponseFactory.PresentableBaseUrl, ti.Identifier, ti.ImageUrl)).Take(1).ToList()
             ), ctoken);
@@ -212,7 +224,11 @@ public class UserService : IUserService
                  t.Identifier,
                  t.Name ?? string.Empty,
                  t.TrailLength,
-                 t.Description ?? string.Empty,
+                 t.City,
+                 t.Classification,
+                 t.Accessibility,
+                 (decimal?)t.GeoPath!.StartPoint.Coordinate.Y,
+                 (decimal?)t.GeoPath.StartPoint.Coordinate.X,
                  t.Reviews!.Select(r => RatingResponse.Create(r.Identifier, r.Rating)).ToList(),
                  t.TrailImages!.Select(ti => TrailImageResponse.Create(_userResponseFactory.PresentableBaseUrl, ti.Identifier, ti.ImageUrl)).Take(1).ToList()
             ), ctoken);

@@ -5,7 +5,11 @@ export interface UserFavoritesTrail {
   identifier: string;
   name: string;
   trailLength: number;
-  description: string;
+  city: string;
+  classification: number;
+  accessibility: boolean;
+  startLatitude?: number;
+  startLongitude?: number;
   ratingResponse?: RatingResponse[];
   trailImages?: TrailImage[];
 }
@@ -14,7 +18,11 @@ export interface UserWishlistTrail {
   identifier: string;
   name: string;
   trailLength: number;
-  description: string;
+  city: string;
+  classification: number;
+  accessibility: boolean;
+  startLatitude?: number;
+  startLongitude?: number;
   ratingResponse?: RatingResponse[];
   trailImages?: TrailImage[];
 }

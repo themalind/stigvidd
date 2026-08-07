@@ -27,7 +27,14 @@ public class UserResponseFactory
                     wish.Identifier,
                     wish.Name,
                     wish.TrailLength,
-                    wish.Description,
+                    wish.City,
+                    wish.Classification,
+                    wish.Accessibility,
+                    // Runs in memory over materialised entities, so GeoPath must be
+                    // null-checked for real. The '!' used in UserService is safe there
+                    // only because those lambdas are expression trees translated to SQL.
+                    (decimal?)wish.GeoPath?.StartPoint.Coordinate.Y,
+                    (decimal?)wish.GeoPath?.StartPoint.Coordinate.X,
                     wish.Reviews?.Select(r =>
                         RatingResponse.Create(
                             r.Identifier,
@@ -46,7 +53,11 @@ public class UserResponseFactory
                     favorite.Identifier,
                     favorite.Name,
                     favorite.TrailLength,
-                    favorite.Description,
+                    favorite.City,
+                    favorite.Classification,
+                    favorite.Accessibility,
+                    (decimal?)favorite.GeoPath?.StartPoint.Coordinate.Y,
+                    (decimal?)favorite.GeoPath?.StartPoint.Coordinate.X,
                     favorite.Reviews?.Select(review =>
                         RatingResponse.Create(
                             review.Identifier,
