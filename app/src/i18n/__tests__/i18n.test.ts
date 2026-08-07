@@ -37,6 +37,22 @@ describe("loadStoredLanguage", () => {
   });
 });
 
+describe("map preview labels", () => {
+  // Two deliberately different labels: trails say "Se på karta", hikes say "Visa
+  // kartvy". They are easy to "helpfully" unify during a refactor, so pin both.
+  it("uses the trail wording for showOnMap", async () => {
+    expect(i18n.t("map.showOnMap")).toBe("Se på karta");
+    await i18n.changeLanguage("en");
+    expect(i18n.t("map.showOnMap")).toBe("Show on map");
+  });
+
+  it("uses the hike wording for showMapView", async () => {
+    expect(i18n.t("map.showMapView")).toBe("Visa kartvy");
+    await i18n.changeLanguage("en");
+    expect(i18n.t("map.showMapView")).toBe("Show map view");
+  });
+});
+
 describe("plural forms", () => {
   beforeEach(async () => {
     await i18n.changeLanguage("sv");

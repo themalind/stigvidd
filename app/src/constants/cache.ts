@@ -14,6 +14,7 @@ export const ISSUE_TYPES_STALE_TIME = 24 * 60 * 60 * 1000; // obstacle issue-typ
 export const TRAIL_COORDINATES_STALE_TIME = 24 * 60 * 60 * 1000; // trail geometry is immutable
 export const TRAIL_LIST_STALE_TIME = 24 * 60 * 60 * 1000; // full trail list (also used as gcTime)
 export const CITY_AREAS_STALE_TIME = 24 * 60 * 60 * 1000; // city area list rarely changes
+export const HIKE_GEOMETRY_STALE_TIME = 24 * 60 * 60 * 1000; // a recorded hike's route is immutable
 
 // --- Per-trail detail content ---
 export const TRAIL_DETAIL_STALE_TIME = 5 * 60 * 1000; // trail info, obstacles, coordinates on the detail screen

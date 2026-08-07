@@ -1,4 +1,5 @@
 import { ApiError } from "@/api/api-error";
+import { hikeRouteQueryKey } from "@/api/hikes";
 import { removeSharedHike, reshareHike } from "@/api/shared-hikes";
 import { showErrorAtom, showSuccessAtom } from "@/atoms/snackbar-atoms";
 import { stigviddUserAtom } from "@/atoms/user-atoms";
@@ -9,21 +10,17 @@ import { ReshareSharedHikeRequest, SharedHike } from "@/data/types";
 import CoordinateParser from "@/utils/coordinate-parser";
 import { formatDate } from "@/utils/format-date";
 import FormattedTime from "@/utils/format-time-from-ms";
-import { lineStringFromPositions } from "@/utils/geojson";
-import getBoundsFromTrail from "@/utils/get-bounds-from-trail";
-import { openDirectionsToStart } from "@/utils/open-directions";
+import { guardedNavigate } from "@/utils/navigation";
 import { Fontisto } from "@expo/vector-icons";
-import { Camera, type CameraRef, GeoJSONSource, Layer } from "@maplibre/maplibre-react-native";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { BlurView } from "expo-blur";
+import { useRouter } from "expo-router";
 import { useAtomValue, useSetAtom } from "jotai";
-import { useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ActivityIndicator, Dimensions, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { Button, Divider, Icon, Modal, Portal, Text, useTheme } from "react-native-paper";
-import Map from "./../map/map";
-import { ROUTE_LINE_COLOR } from "../map/marker-styles";
-import StartMarker from "../map/start-marker";
+import RoutePreviewMap from "../map/route-preview-map";
 
 interface Props {
   visible: boolean;
@@ -53,20 +50,41 @@ export default function SharedHikeDetails({
   const [showOnDeleteDialog, setOnDeleteDialog] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
 
-  const cameraRef = useRef<CameraRef>(null);
   const theme = useTheme();
   const { t } = useTranslation();
+  const router = useRouter();
   const user = useAtomValue(stigviddUserAtom);
   const queryClient = useQueryClient();
-  const coordinates = sharedHike
-    ? CoordinateParser({ data: sharedHike.coordinates ?? "", identifier: sharedHike.hikeIdentifier })
-    : [];
-  const routeShape = lineStringFromPositions(coordinates);
+  const coordinates = useMemo(
+    () =>
+      sharedHike
+        ? CoordinateParser({ data: sharedHike.coordinates ?? "", identifier: sharedHike.hikeIdentifier })
+        : [],
+    [sharedHike],
+  );
 
-  const handleMapReady = () => {
-    const bounds = getBoundsFromTrail(coordinates);
-    if (!bounds) return;
-    cameraRef.current?.fitBounds(bounds, { padding: { top: 20, right: 20, bottom: 20, left: 20 }, duration: 0 });
+  // Accept/reject handlers are only supplied for a share still awaiting a decision —
+  // the same discriminator the button group below uses. You can only walk a hike you've
+  // actually accepted.
+  const canFollow = !onAccept && !onReject;
+
+  const openFollowMap = () => {
+    if (!sharedHike) return;
+    // We already hold the geometry, so seed the key the follow screen reads: it paints
+    // immediately with no spinner and no second request.
+    queryClient.setQueryData(hikeRouteQueryKey(sharedHike.hikeIdentifier), sharedHike.coordinates ?? "");
+    onDismiss();
+    // Let the Portal (and its MapView) unmount before the follow screen creates a
+    // second one — tearing down and setting up MapLibre in the same frame is the
+    // fragile path.
+    requestAnimationFrame(() =>
+      guardedNavigate(() =>
+        router.navigate({
+          pathname: "/(tabs)/(profile-stack)/hike-follow/[identifier]",
+          params: { identifier: sharedHike.hikeIdentifier, name: sharedHike.hikeName },
+        }),
+      ),
+    );
   };
 
   const deleteMutation = useMutation({
@@ -133,29 +151,14 @@ export default function SharedHikeDetails({
               <View style={s.closeButtonSpacer} />
             </View>
 
-            <View style={s.mapContainer}>
-              {coordinates.length > 0 && (
-                <Map style={s.map} showsUserLocation={false} onDidFinishLoadingMap={handleMapReady}>
-                  <Camera ref={cameraRef} />
-                  {coordinates.length > 1 && (
-                    <GeoJSONSource id="shared-hike-route" data={routeShape}>
-                      <Layer
-                        type="line"
-                        id="shared-hike-route-line"
-                        layout={{ "line-join": "round", "line-cap": "round" }}
-                        paint={{ "line-color": ROUTE_LINE_COLOR, "line-width": 3 }}
-                      />
-                    </GeoJSONSource>
-                  )}
-                  <StartMarker
-                    id="shared-hike-start"
-                    position={coordinates[0]}
-                    label={t("map.start")}
-                    onPress={() => openDirectionsToStart(coordinates[0], t)}
-                  />
-                </Map>
-              )}
-            </View>
+            <RoutePreviewMap
+              // The two SharedHikeDetails instances on the shared-hikes screen are both
+              // mounted at once, so keep their map ids apart.
+              idPrefix={canFollow ? "shared-hike" : "incoming-hike-share"}
+              path={coordinates}
+              onOpen={canFollow ? openFollowMap : undefined}
+              style={s.mapContainer}
+            />
             <View style={[s.statsCard, { backgroundColor: theme.colors.outlineVariant }]}>
               <View style={s.statItem}>
                 <Text style={s.statLabel}>{t("hike.length")}</Text>
@@ -345,9 +348,6 @@ const s = StyleSheet.create({
     flexShrink: 0,
     borderRadius: SURFACE_BORDER_RADIUS,
     overflow: "hidden",
-  },
-  map: {
-    flex: 1,
   },
   scrollArea: {
     flexShrink: 1,

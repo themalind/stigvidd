@@ -57,6 +57,42 @@ export async function updateHike(request: UpdateHikeRequest): Promise<Hike> {
   }
 }
 
+// Keyed on the hike alone. Only the raw coordinate JSON is cached under this key, and a
+// recorded walk's geometry never changes — unlike its gettingThere / parkingInfo /
+// description, which updateHike can rewrite. Keeping them on separate keys is what lets
+// the geometry hold a 24 h staleTime safely.
+export const hikeRouteQueryKey = (hikeIdentifier: string) => ["hike-route", hikeIdentifier] as const;
+
+// Readable by the hike's creator *and* by anyone it has been shared with — the API
+// authorises both (HikeService.GetHikeByIdentifierAsync), so the follow screen needs
+// only this one call whether you own the hike or a friend sent it to you.
+export async function getHikeByIdentifier(hikeIdentifier: string): Promise<Hike> {
+  const token = await getUserToken();
+
+  if (!token) {
+    throw new Error("User not authenticated");
+  }
+
+  try {
+    const response = await fetch(`${BASE_URL}/hikes/${hikeIdentifier}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new ApiError(`HTTP error: getHikeByIdentifier: ${response.status}`, response.status);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+}
+
 export async function getAllHikesByUserId(userIdentifier: string): Promise<Hike[]> {
   const token = await getUserToken();
 

@@ -32,10 +32,22 @@ async function refinePreciseLocation(queryClient: QueryClient): Promise<void> {
   }
 }
 
-async function fetchUserLocation(queryClient: QueryClient): Promise<UserLocation> {
-  const { status } = await Location.requestForegroundPermissionsAsync();
+// This query is refetched on every foreground return (useAppState wires AppState into
+// React Query's focusManager). Requesting the permission launches Android's
+// GrantPermissionsActivity, which itself backgrounds the app — so an unconditional
+// request here can re-trigger the very focus event that refetches it. We therefore
+// query the status and only prompt when it can actually change something; the app
+// already asks once at startup in useInitLocation.
+async function ensureLocationPermission(): Promise<boolean> {
+  const current = await Location.getForegroundPermissionsAsync();
+  if (current.granted) return true;
+  if (!current.canAskAgain) return false;
+  const requested = await Location.requestForegroundPermissionsAsync();
+  return requested.granted;
+}
 
-  if (status !== "granted") return BORAS_FALLBACK;
+async function fetchUserLocation(queryClient: QueryClient): Promise<UserLocation> {
+  if (!(await ensureLocationPermission())) return BORAS_FALLBACK;
 
   // A cached fix returns almost instantly, so the camera glide and locate button
   // respond right away; we then refine to a fresh, precise fix in the background.

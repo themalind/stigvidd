@@ -14,11 +14,19 @@ export interface LiveUserLocation {
 }
 
 // Only trust the course-over-ground heading once the user is actually walking.
-// Below this (metres/second) the reported course is noise: iOS returns -1 when
-// stationary while Android can report a bogus 0 (due north), so gating on speed
-// — not on the presence of a heading value — makes both platforms behave the same
-// and stops the arrow spinning while you stand still. ~0.6 m/s is a slow amble.
-const HEADING_MIN_SPEED = 0.6;
+// Below this the reported course is noise: iOS returns -1 when stationary while
+// Android can report a bogus 0 (due north), so gating on speed — not on the presence
+// of a heading value — makes both platforms behave the same and stops the arrow
+// spinning while you stand still.
+//
+// Two thresholds, not one (metres/second): the arrow turns on above HEADING_ON_SPEED
+// and only off again below HEADING_OFF_SPEED, with a dead band between. A single
+// threshold sat right in the middle of ordinary GPS speed noise at walking pace, so
+// the arrow flickered on and off several times a second — and each flip was a style
+// change on the map, not just a repaint. ~0.8 m/s is a deliberate walk; ~0.4 m/s is
+// slow enough to count as stopped.
+const HEADING_ON_SPEED = 0.8;
+const HEADING_OFF_SPEED = 0.4;
 
 // Drives the follow-screen user puck from the app's own expo-location watcher
 // instead of MapLibre's built-in <UserLocation> engine. That engine proved
@@ -49,11 +57,40 @@ export function useLiveUserLocation(enabled = true): LiveUserLocation | null {
     // stale fix. Without it, overlapping arms leak native watchers that cleanup
     // never removes and let an old fix clobber a newer one.
     let generation = 0;
+    // Whether this mount has already put the permission dialog up. See ensurePermission.
+    let permissionAsked = false;
+
+    // Only ever *queries* the permission on a re-arm. Requesting launches Android's
+    // GrantPermissionsActivity, which pauses our activity — and the AppState listener
+    // below re-arms as soon as it resumes, so an unconditional request here feeds
+    // itself: dialog -> pause -> resume -> dialog. That livelocked the app on a real
+    // device (203 GrantPermissionsActivity launches in 30 s, the screen flickering the
+    // whole time) whenever the grant wasn't already permanent — e.g. Android's
+    // "Ask every time" / one-time location access, which re-prompts on every request.
+    // The app already asks once at startup in useInitLocation; asking here is only a
+    // fallback for a one-time grant that expired, so once per mount is enough.
+    const ensurePermission = async (): Promise<boolean> => {
+      const current = await Location.getForegroundPermissionsAsync();
+      if (current.granted) return true;
+      // Nothing to gain from prompting: either we already did this mount, or the user
+      // has denied it permanently and only Settings can change it.
+      if (permissionAsked || !current.canAskAgain) return false;
+      permissionAsked = true;
+      const requested = await Location.requestForegroundPermissionsAsync();
+      return requested.granted;
+    };
+
+    // Which side of the hysteresis band we're currently on. Lives across fixes for the
+    // whole mount — deliberately not reset by a foreground re-arm, so pocketing the
+    // phone mid-walk doesn't drop the arrow.
+    let movingNow = false;
 
     const apply = ({ coords }: Location.LocationObject) => {
       if (!active) return;
-      const moving = coords.speed != null && coords.speed >= HEADING_MIN_SPEED;
-      const heading = moving && coords.heading != null && coords.heading >= 0 ? coords.heading : null;
+      // A missing speed reads as stopped, which is the safe direction: no arrow.
+      const speed = coords.speed ?? -1;
+      movingNow = movingNow ? speed >= HEADING_OFF_SPEED : speed >= HEADING_ON_SPEED;
+      const heading = movingNow && coords.heading != null && coords.heading >= 0 ? coords.heading : null;
       setLocation({ position: [coords.longitude, coords.latitude], accuracy: coords.accuracy, heading });
     };
 
@@ -64,8 +101,8 @@ export function useLiveUserLocation(enabled = true): LiveUserLocation | null {
       subscriptionRef.current?.remove();
       subscriptionRef.current = null;
       try {
-        const { status } = await Location.requestForegroundPermissionsAsync();
-        if (status !== "granted" || !active || myGeneration !== generation) return;
+        const granted = await ensurePermission();
+        if (!granted || !active || myGeneration !== generation) return;
 
         // Seed instantly from the last known fix so the puck appears without
         // waiting for a live update. This is a *cached* position with no maxAge,

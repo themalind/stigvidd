@@ -28,6 +28,7 @@ public class HikeShareRecipientRepository : IHikeShareRecipientRepository
             var hikes = await context.HikeShares
                 .Include(hs => hs.Hike)
                 .Where(hs => hs.SharedWith!.Identifier == identifier && hs.Status == HikeShareStatus.Accepted)
+                .OrderBy(hs => hs.Hike!.Name)
                 .Select(selector)
                 .ToListAsync(ctoken);
 

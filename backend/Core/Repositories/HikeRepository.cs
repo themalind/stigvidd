@@ -89,6 +89,7 @@ public class HikeRepository : IHikeRepository
                 query = query.Where(h => h.UserId == userId);
 
             var hikes = await query
+                .OrderBy(h => h.Name)
                 .Select(selector)
                 .ToListAsync(ctoken);
 

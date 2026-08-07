@@ -1,14 +1,13 @@
 import { SURFACE_BORDER_RADIUS } from "@/constants/constants";
 import { lineStringFromPositions } from "@/utils/geojson";
 import getBoundsFromTrail from "@/utils/get-bounds-from-trail";
-import { openDirectionsToStart } from "@/utils/open-directions";
-import { MaterialIcons } from "@expo/vector-icons";
 import { Camera, type CameraRef, GeoJSONSource, Layer } from "@maplibre/maplibre-react-native";
 import { useCallback, useMemo, useRef } from "react";
-import { Dimensions, Pressable, StyleSheet, View } from "react-native";
+import { Dimensions, StyleSheet, View } from "react-native";
 import { useTranslation } from "react-i18next";
-import { Surface, Text, useTheme } from "react-native-paper";
+import { Surface } from "react-native-paper";
 import Map from "../map/map";
+import MapPreviewOverlay from "../map/map-preview-overlay";
 import { ROUTE_LINE_COLOR } from "../map/marker-styles";
 import StartMarker from "../map/start-marker";
 
@@ -18,16 +17,12 @@ interface TrailMapProps {
 }
 
 const HEIGHT = Dimensions.get("screen").height;
-// On narrow phones the two corner pills would crowd each other, so the directions
-// pill drops its label and shows just the icon below this width (app is portrait-locked).
-const COMPACT_DIRECTIONS = Dimensions.get("window").width < 380;
 
 // Static map preview on the trail detail screen: shows the route and the user's
 // position, but is not pannable — the whole surface is a button that opens the
 // fullscreen follow view (the map itself is the entry point).
 export default function TrailMap({ trail, onPress }: TrailMapProps) {
   const cameraRef = useRef<CameraRef>(null);
-  const theme = useTheme();
   const { t } = useTranslation();
 
   const bounds = useMemo(() => getBoundsFromTrail(trail), [trail]);
@@ -70,27 +65,11 @@ export default function TrailMap({ trail, onPress }: TrailMapProps) {
             {trail.length > 0 && <StartMarker id="trail-start" position={trail[0]} label={t("map.start")} />}
           </Map>
         )}
-        <Pressable style={s.overlay} onPress={onPress}>
-          <View style={[s.badge, { backgroundColor: theme.colors.surface }]}>
-            <MaterialIcons name="open-in-full" size={16} color={theme.colors.onSurface} />
-            <Text style={[s.badgeText, { color: theme.colors.onSurface }]}>{t("map.showOnMap")}</Text>
-          </View>
-        </Pressable>
-        {/* Sits on top of the overlay so its tap opens directions instead of the
-            follow view; rendered last to win the touch in its corner. */}
-        {trail.length > 0 && (
-          <Pressable
-            style={[s.directions, { backgroundColor: theme.colors.surface }]}
-            onPress={() => openDirectionsToStart(trail[0], t)}
-            hitSlop={6}
-            accessibilityLabel={t("map.directions")}
-          >
-            <MaterialIcons name="directions" size={16} color={theme.colors.onSurface} />
-            {!COMPACT_DIRECTIONS && (
-              <Text style={[s.badgeText, { color: theme.colors.onSurface }]}>{t("map.directions")}</Text>
-            )}
-          </Pressable>
-        )}
+        <MapPreviewOverlay
+          label={t("map.showOnMap")}
+          onPress={onPress}
+          startPosition={trail.length > 0 ? trail[0] : undefined}
+        />
       </View>
     </Surface>
   );
@@ -108,36 +87,5 @@ const s = StyleSheet.create({
   },
   map: {
     flex: 1,
-  },
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-    alignItems: "flex-end",
-    justifyContent: "flex-end",
-    padding: 10,
-  },
-  badge: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 20,
-    opacity: 0.95,
-  },
-  directions: {
-    position: "absolute",
-    left: 10,
-    bottom: 10,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 20,
-    opacity: 0.95,
-  },
-  badgeText: {
-    fontSize: 13,
-    fontFamily: "Inter_600SemiBold",
   },
 });
