@@ -93,11 +93,7 @@ describe("useHikeFilters", () => {
       const { result } = renderHook(() => useHikeFilters(HIKES, hikeAccessors));
 
       expect(result.current.sortBy).toBe("name-asc");
-      expect(hikeNames(result.current.filteredHikes)).toEqual([
-        "Bokskogsrundan",
-        "Kvällsrundan",
-        "Ängspromenaden",
-      ]);
+      expect(hikeNames(result.current.filteredHikes)).toEqual(["Bokskogsrundan", "Kvällsrundan", "Ängspromenaden"]);
     });
 
     it("returns an empty list rather than throwing when hikes are undefined", () => {
@@ -277,11 +273,7 @@ describe("useHikeFilters", () => {
 
       act(() => result.current.setSortBy("name-desc"));
 
-      expect(hikeNames(result.current.filteredHikes)).toEqual([
-        "Ängspromenaden",
-        "Kvällsrundan",
-        "Bokskogsrundan",
-      ]);
+      expect(hikeNames(result.current.filteredHikes)).toEqual(["Ängspromenaden", "Kvällsrundan", "Bokskogsrundan"]);
     });
 
     it("orders å, ä and ö last, as Swedish collation requires", () => {
@@ -295,18 +287,10 @@ describe("useHikeFilters", () => {
       const { result } = renderHook(() => useHikeFilters(HIKES, hikeAccessors));
 
       act(() => result.current.setSortBy("date-desc"));
-      expect(hikeNames(result.current.filteredHikes)).toEqual([
-        "Ängspromenaden",
-        "Kvällsrundan",
-        "Bokskogsrundan",
-      ]);
+      expect(hikeNames(result.current.filteredHikes)).toEqual(["Ängspromenaden", "Kvällsrundan", "Bokskogsrundan"]);
 
       act(() => result.current.setSortBy("date-asc"));
-      expect(hikeNames(result.current.filteredHikes)).toEqual([
-        "Bokskogsrundan",
-        "Kvällsrundan",
-        "Ängspromenaden",
-      ]);
+      expect(hikeNames(result.current.filteredHikes)).toEqual(["Bokskogsrundan", "Kvällsrundan", "Ängspromenaden"]);
     });
 
     it("sorts shared hikes by the date they were shared", () => {

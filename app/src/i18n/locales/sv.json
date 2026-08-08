@@ -114,7 +114,7 @@
     "fieldShared": "Delad",
     "fieldLength": "Längd",
     "fieldDuration": "Tid",
-    "fieldDistance": "Avstånd",  
+    "fieldDistance": "Avstånd",
     "hikeLength": "Längd: {{min}} - {{max}} km",
     "duration": "Varaktighet",
     "durationRange": "Tid: {{min}} - {{max}} min",

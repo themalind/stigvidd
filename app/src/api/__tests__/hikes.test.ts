@@ -92,10 +92,7 @@ describe("getHikeByIdentifier", () => {
   it("makes a GET to /hikes/{identifier}", async () => {
     mockFetch(true, hike);
     await getHikeByIdentifier("abc-123");
-    expect(fetch).toHaveBeenCalledWith(
-      "http://test/api/v1/hikes/abc-123",
-      expect.objectContaining({ method: "GET" }),
-    );
+    expect(fetch).toHaveBeenCalledWith("http://test/api/v1/hikes/abc-123", expect.objectContaining({ method: "GET" }));
   });
 
   it("sends the bearer token", async () => {

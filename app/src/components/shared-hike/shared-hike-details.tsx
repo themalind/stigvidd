@@ -57,9 +57,7 @@ export default function SharedHikeDetails({
   const queryClient = useQueryClient();
   const coordinates = useMemo(
     () =>
-      sharedHike
-        ? CoordinateParser({ data: sharedHike.coordinates ?? "", identifier: sharedHike.hikeIdentifier })
-        : [],
+      sharedHike ? CoordinateParser({ data: sharedHike.coordinates ?? "", identifier: sharedHike.hikeIdentifier }) : [],
     [sharedHike],
   );
 

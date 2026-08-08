@@ -48,7 +48,8 @@ export default function RoutePreviewMap({ idPrefix, path, onOpen, style }: Props
     // A single point has a zero-area bounding box, which fitBounds resolves to maximum
     // zoom; centre on it at a sane level instead.
     if (path.length === 1) cameraRef.current?.jumpTo({ center: path[0] as [number, number], zoom: SINGLE_POINT_ZOOM });
-    else if (bounds) cameraRef.current?.fitBounds(bounds, { padding: { top: 20, right: 20, bottom: 20, left: 20 }, duration: 0 });
+    else if (bounds)
+      cameraRef.current?.fitBounds(bounds, { padding: { top: 20, right: 20, bottom: 20, left: 20 }, duration: 0 });
   }, [bounds, path]);
 
   return (
