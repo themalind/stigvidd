@@ -36,7 +36,12 @@ export default function HeroBanner({ lat, lon }: Props) {
   const theme = useTheme();
   const { t } = useTranslation();
   const { data: weather } = useWeather(lat, lon);
-  const { data: cityName } = useCityName({ latitude: lat ? lat : 0, longitude: lon ? lon : 0 });
+  const { data: cityName, isPending: cityPending } = useCityName(lat, lon);
+  const hasLocation = lat != null && lon != null;
+  // null hides the whole row while the geocoder works, so the pin never sits there
+  // captionless. Once it settles — or when there was no position to geocode — the row
+  // says the location is unknown, which also explains the missing weather beside it.
+  const locationLabel = hasLocation && cityPending ? null : (cityName ?? t("home.locationUnknown"));
   const { tint, accent } = weather
     ? getWeatherStyle(weather.symbolCode, theme)
     : { tint: theme.colors.surfaceVariant, accent: theme.colors.onSurfaceVariant };
@@ -62,10 +67,12 @@ export default function HeroBanner({ lat, lon }: Props) {
             <Text style={[s.temp, { color: theme.colors.onSurface }]}>{weather.temperature}°</Text>
           </View>
         )}
-        <View style={s.location}>
-          <MaterialIcons name="location-pin" size={15} color={accent} />
-          <Text style={{ color: theme.colors.onSurface }}>{cityName}</Text>
-        </View>
+        {locationLabel && (
+          <View style={s.location}>
+            <MaterialIcons name="location-pin" size={15} color={accent} />
+            <Text style={{ color: theme.colors.onSurface }}>{locationLabel}</Text>
+          </View>
+        )}
       </View>
     </View>
   );

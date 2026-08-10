@@ -4,7 +4,6 @@ import { initMapCache } from "@/utils/map-cache";
 import { loadUserTheme, userThemeAtom } from "@/atoms/user-theme-atom";
 import { GlobalSnackbar } from "@/components/global-snackbar";
 import { useAppState } from "@/hooks/useAppState";
-import { useInitLocation } from "@/hooks/useInitLocation";
 import { useUserTheme } from "@/hooks/useUserTheme";
 import { loadStoredLanguage } from "@/i18n";
 import "@/services/location-task";
@@ -85,9 +84,6 @@ export default function RootLayout() {
   useEffect(() => {
     setQueryClient(queryClient);
   }, [queryClient, setQueryClient]);
-
-  // Fetch location on mount
-  useInitLocation();
 
   // Wires AppState changes to React Query's focusManager, so queries refetch
   // when the app returns to the foreground — regardless of how it was opened

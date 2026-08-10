@@ -67,8 +67,9 @@ export function useLiveUserLocation(enabled = true): LiveUserLocation | null {
     // device (203 GrantPermissionsActivity launches in 30 s, the screen flickering the
     // whole time) whenever the grant wasn't already permanent — e.g. Android's
     // "Ask every time" / one-time location access, which re-prompts on every request.
-    // The app already asks once at startup in useInitLocation; asking here is only a
-    // fallback for a one-time grant that expired, so once per mount is enough.
+    // useUserLocation already asks once per launch on the first screen that needs a
+    // position; asking here is only a fallback for a one-time grant that expired, so
+    // once per mount is enough.
     const ensurePermission = async (): Promise<boolean> => {
       const current = await Location.getForegroundPermissionsAsync();
       if (current.granted) return true;

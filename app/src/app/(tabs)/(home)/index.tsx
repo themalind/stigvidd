@@ -1,5 +1,4 @@
 import { getPopularTrails } from "@/api/trails";
-import { locationResolvedAtom, userLocationAtom } from "@/atoms/location-atoms";
 import HeroBanner from "@/components/home/hero-banner";
 import MockNews from "@/components/mockNews";
 import PagerCarouselSkeleton from "@/components/skeletons/pager-carousel-skeleton";
@@ -7,10 +6,10 @@ import PagerCarousel from "@/components/trail/pager-carousel";
 import { SCREEN_PADDING, SURFACE_BORDER_RADIUS } from "@/constants/constants";
 import { guardedNavigate } from "@/utils/navigation";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import { useUserLocation } from "@/hooks/useUserLocation";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { Image } from "expo-image";
 import { router, useFocusEffect } from "expo-router";
-import { useAtomValue } from "jotai";
 import React, { useRef } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useTheme } from "react-native-paper";
@@ -20,12 +19,16 @@ export default function HomeScreen() {
   const scrollViewRef = useRef<ScrollView>(null);
   const theme = useTheme();
   const { t } = useTranslation();
-  const userLocation = useAtomValue(userLocationAtom);
-  const locationResolved = useAtomValue(locationResolvedAtom);
+  // The Borås fallback isn't the user, so it must not reach the API. Without a real fix
+  // we ask for popular trails outright and title the section accordingly.
+  const { data: location, isPending: locationPending } = useUserLocation();
+  const userLocation = location?.isFallback ? undefined : location;
   const query = useQuery({
     queryKey: ["trails", "popular", userLocation?.latitude, userLocation?.longitude],
     queryFn: () => getPopularTrails(userLocation?.latitude, userLocation?.longitude),
-    enabled: locationResolved,
+    // Waiting for the fix to resolve keeps this from firing once without coordinates
+    // and immediately again with them.
+    enabled: !locationPending,
     placeholderData: keepPreviousData,
   });
 
@@ -41,7 +44,9 @@ export default function HomeScreen() {
       <HeroBanner lat={userLocation?.latitude} lon={userLocation?.longitude} />
       <View style={[s.section, { backgroundColor: theme.colors.background }]}>
         <View style={s.sectionHeader}>
-          <Text style={[s.sectionTitle, { color: theme.colors.onBackground }]}>{t("home.popularNearYou")}</Text>
+          <Text style={[s.sectionTitle, { color: theme.colors.onBackground }]}>
+            {userLocation ? t("home.popularNearYou") : t("home.popular")}
+          </Text>
         </View>
         {query.data ? <PagerCarousel data={query.data} /> : <PagerCarouselSkeleton />}
       </View>

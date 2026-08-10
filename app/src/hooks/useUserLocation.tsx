@@ -32,16 +32,20 @@ async function refinePreciseLocation(queryClient: QueryClient): Promise<void> {
   }
 }
 
-// This query is refetched on every foreground return (useAppState wires AppState into
-// React Query's focusManager). Requesting the permission launches Android's
-// GrantPermissionsActivity, which itself backgrounds the app — so an unconditional
-// request here can re-trigger the very focus event that refetches it. We therefore
-// query the status and only prompt when it can actually change something; the app
-// already asks once at startup in useInitLocation.
+// Whether we've already put the system dialog in front of the user this launch.
+// Module-level, so it survives the query being refetched or the hook remounting.
+let permissionAsked = false;
+
+// This query refetches on every foreground return (useAppState wires AppState into React
+// Query's focusManager), and requesting the permission backgrounds the app on Android —
+// so an unconditional request here re-triggers the very focus event that refetches it.
+// Hence: check the status every time, but prompt at most once per launch. A permission
+// granted in Settings later is picked up by the status check, not by asking again.
 async function ensureLocationPermission(): Promise<boolean> {
   const current = await Location.getForegroundPermissionsAsync();
   if (current.granted) return true;
-  if (!current.canAskAgain) return false;
+  if (permissionAsked || !current.canAskAgain) return false;
+  permissionAsked = true;
   const requested = await Location.requestForegroundPermissionsAsync();
   return requested.granted;
 }
@@ -66,12 +70,30 @@ async function fetchUserLocation(queryClient: QueryClient): Promise<UserLocation
   }
 }
 
+const FRESH_FIX_MS = 1000 * 60 * 10;
+
+// The app's single source of truth for "where is the user". Screens that need a
+// coordinate no matter what (the map, which must point its camera somewhere) read
+// this directly and check isFallback; screens that show a distance or a place name
+// want useRealUserLocation below instead.
 export function useUserLocation() {
   const queryClient = useQueryClient();
   return useQuery<UserLocation>({
     queryKey: USER_LOCATION_KEY,
     queryFn: () => fetchUserLocation(queryClient),
-    staleTime: 1000 * 60 * 10,
+    // A real fix keeps for ten minutes. The Borås fallback never does: it only records
+    // that we couldn't ask, so it must be retried on the next foreground return — that
+    // is how the app notices a permission granted in Settings while it was away.
+    staleTime: (query) => (query.state.data?.isFallback ? 0 : FRESH_FIX_MS),
     retry: false,
   });
+}
+
+// The user's actual position, or null when we don't have one (permission denied, or
+// no fix yet). Anything that would otherwise present Borås as "you" — distances in a
+// card, "near me" filters, the hero's place name — must use this, so that "we don't
+// know" renders as absence rather than as a plausible-looking wrong answer.
+export function useRealUserLocation(): UserLocation | null {
+  const { data } = useUserLocation();
+  return data && !data.isFallback ? data : null;
 }

@@ -1,4 +1,3 @@
-import { userLocationAtom } from "@/atoms/location-atoms";
 import { userThemeAtom } from "@/atoms/user-theme-atom";
 import ErrorView from "@/components/error-view";
 import LoadingIndicator from "@/components/loading-indicator";
@@ -8,11 +7,12 @@ import { BORDER_RADIUS } from "@/constants/constants";
 import { TrailShortInfoResponse } from "@/data/types";
 import { useTrailFilters } from "@/hooks/trail/useTrailFilters";
 import { useTrails } from "@/hooks/trail/useTrails";
+import { useRealUserLocation } from "@/hooks/useUserLocation";
 import { guardedNavigate } from "@/utils/navigation";
 import { MaterialIcons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { router } from "expo-router";
-import { useAtom, useAtomValue } from "jotai";
+import { useAtom } from "jotai";
 import React, { useCallback, useRef, useState } from "react";
 import { Appearance, FlatList, Pressable, RefreshControl, StyleSheet, View } from "react-native";
 import { Text, TextInput, useTheme } from "react-native-paper";
@@ -23,7 +23,8 @@ export default function TrailsScreen() {
   const { t } = useTranslation();
   const listRef = useRef<FlatList>(null);
   const [userTheme] = useAtom(userThemeAtom);
-  const userLocation = useAtomValue(userLocationAtom);
+  // Null without a real fix, which hides the distance sort and the "near me" filter.
+  const userLocation = useRealUserLocation();
   const colorScheme = Appearance.getColorScheme();
   const finalTheme = userTheme === "auto" ? (colorScheme ?? "light") : userTheme;
 
