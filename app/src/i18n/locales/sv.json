@@ -111,7 +111,7 @@
     "moreFilters": "Fler filter…",
     "fieldName": "Namn",
     "fieldDate": "Datum",
-    "fieldShared": "Delad",
+    "fieldShared": "Delningsdatum",
     "fieldLength": "Längd",
     "fieldDuration": "Tid",
     "fieldDistance": "Avstånd",
@@ -488,6 +488,8 @@
   },
   "home": {
     "popularNearYou": "Populära promenader nära dig",
+    "popular": "Populära promenader",
+    "locationUnknown": "Plats okänd",
     "guide": "Naturguide",
     "guideSubtitle": "Allemansrätt · Svårighetsgrader",
     "explore": "Utforska Borås",

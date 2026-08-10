@@ -111,7 +111,7 @@
     "moreFilters": "More filters…",
     "fieldName": "Name",
     "fieldDate": "Date",
-    "fieldShared": "Shared",
+    "fieldShared": "Date shared",
     "fieldLength": "Length",
     "fieldDuration": "Duration",
     "fieldDistance": "Distance",
@@ -488,6 +488,8 @@
   },
   "home": {
     "popularNearYou": "Popular walks near you",
+    "popular": "Popular walks",
+    "locationUnknown": "Location unknown",
     "guide": "Nature guide",
     "guideSubtitle": "Right of access · Difficulty levels",
     "explore": "Explore Borås",

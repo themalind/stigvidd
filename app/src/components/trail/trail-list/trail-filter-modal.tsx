@@ -5,7 +5,7 @@ import { SortOption } from "@/hooks/trail/useTrailFilters";
 import { classificationParser } from "@/utils/classification-parser";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Slider as RangeSlider } from "@miblanchard/react-native-slider";
-import React from "react";
+import React, { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Modal, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { Divider, Text, useTheme } from "react-native-paper";
@@ -42,6 +42,41 @@ export const TrailFilterModal: React.FC<TrailFilterModalProps> = ({
 }) => {
   const { t } = useTranslation();
   const theme = useTheme();
+
+  // A slider's value lives here while it is being dragged; only the released value is
+  // committed upwards. Dragging fires onValueChange every frame, so committing from there
+  // re-filters and re-sorts the whole trail list at ~60 Hz. null means "not dragging".
+  const [lengthDraft, setLengthDraft] = useState<[number, number] | null>(null);
+  const [distanceDraft, setDistanceDraft] = useState<number | null>(null);
+
+  const [minLength, maxLength] = lengthDraft ?? [filters.minLength ?? 0, filters.maxLength ?? 150];
+  const maxDistance = distanceDraft ?? filters.maxDistance ?? 50;
+
+  // Stable identities: a fresh array here rebuilds every option row on each render.
+  const cityOptions = useMemo(
+    () => [{ label: t("filter.allCities"), value: "" }, ...cities.map((city) => ({ label: city, value: city }))],
+    [cities, t],
+  );
+
+  const classificationOptions = useMemo(
+    () => [
+      { label: t("filter.allDifficulties"), value: "" },
+      ...classifications.map((c) => ({ label: classificationParser(c), value: String(c) })),
+    ],
+    [classifications, t],
+  );
+
+  const sortOptions = useMemo(
+    () => [
+      { label: t("filter.sortNameAsc"), value: "name-asc" },
+      { label: t("filter.sortNameDesc"), value: "name-desc" },
+      { label: t("filter.sortLengthAsc"), value: "length-asc" },
+      { label: t("filter.sortLengthDesc"), value: "length-desc" },
+      ...(hasLocation ? [{ label: t("filter.sortNearest"), value: "distance-asc" }] : []),
+    ],
+    [hasLocation, t],
+  );
+
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
       <SafeAreaView style={[s.modalContainer, { backgroundColor: theme.colors.background }]}>
@@ -64,10 +99,7 @@ export const TrailFilterModal: React.FC<TrailFilterModalProps> = ({
             <SelectInput
               selectedValue={filters.city || ""}
               onValueChange={(value) => onUpdateFilter("city", value === "" ? undefined : value)}
-              options={[
-                { label: t("filter.allCities"), value: "" },
-                ...cities.map((city) => ({ label: city, value: city })),
-              ]}
+              options={cityOptions}
             />
           </View>
           <Divider />
@@ -172,15 +204,17 @@ export const TrailFilterModal: React.FC<TrailFilterModalProps> = ({
               </View>
               {filters.nearMe && (
                 <>
-                  <Text style={[s.label, { marginTop: 15 }]}>
-                    {t("filter.maxDistance", { distance: filters.maxDistance || 50 })}
-                  </Text>
+                  <Text style={[s.label, { marginTop: 15 }]}>{t("filter.maxDistance", { distance: maxDistance })}</Text>
                   <RangeSlider
-                    value={[filters.maxDistance || 50]}
+                    value={[maxDistance]}
                     minimumValue={5}
                     maximumValue={200}
                     step={5}
-                    onValueChange={(values: number[]) => onUpdateFilter("maxDistance", values[0])}
+                    onValueChange={(values: number[]) => setDistanceDraft(values[0])}
+                    onSlidingComplete={(values: number[]) => {
+                      setDistanceDraft(null);
+                      onUpdateFilter("maxDistance", values[0]);
+                    }}
                     minimumTrackTintColor={theme.colors.secondary}
                     maximumTrackTintColor={theme.colors.outlineVariant}
                     thumbTintColor={theme.colors.primary}
@@ -197,24 +231,23 @@ export const TrailFilterModal: React.FC<TrailFilterModalProps> = ({
             <SelectInput
               selectedValue={filters.classification !== undefined ? String(filters.classification) : ""}
               onValueChange={(value) => onUpdateFilter("classification", value === "" ? undefined : Number(value))}
-              options={[
-                { label: t("filter.allDifficulties"), value: "" },
-                ...classifications.map((c) => ({ label: classificationParser(c), value: String(c) })),
-              ]}
+              options={classificationOptions}
             />
           </View>
           <Divider />
 
           <View style={s.section}>
-            <Text style={s.sectionTitle}>
-              {t("filter.trailLength", { min: filters.minLength || 0, max: filters.maxLength || 150 })}
-            </Text>
+            <Text style={s.sectionTitle}>{t("filter.trailLength", { min: minLength, max: maxLength })}</Text>
             <RangeSlider
-              value={[filters.minLength || 0, filters.maxLength || 150]}
+              value={[minLength, maxLength]}
               minimumValue={0}
               maximumValue={150}
               step={1}
-              onValueChange={(values: number[]) => onUpdateLengthFilter(values[0], values[1])}
+              onValueChange={(values: number[]) => setLengthDraft([values[0], values[1]])}
+              onSlidingComplete={(values: number[]) => {
+                setLengthDraft(null);
+                onUpdateLengthFilter(values[0], values[1]);
+              }}
               minimumTrackTintColor={theme.colors.secondary}
               maximumTrackTintColor={theme.colors.outlineVariant}
               thumbTintColor={theme.colors.primary}
@@ -231,13 +264,7 @@ export const TrailFilterModal: React.FC<TrailFilterModalProps> = ({
                 <SelectInput
                   selectedValue={sortBy}
                   onValueChange={(v) => onUpdateSort(v as SortOption)}
-                  options={[
-                    { label: t("filter.sortNameAsc"), value: "name-asc" },
-                    { label: t("filter.sortNameDesc"), value: "name-desc" },
-                    { label: t("filter.sortLengthAsc"), value: "length-asc" },
-                    { label: t("filter.sortLengthDesc"), value: "length-desc" },
-                    ...(hasLocation ? [{ label: t("filter.sortNearest"), value: "distance-asc" }] : []),
-                  ]}
+                  options={sortOptions}
                 />
               </View>
               <Divider />

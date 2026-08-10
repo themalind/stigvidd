@@ -1,8 +1,8 @@
-import { userLocationAtom } from "@/atoms/location-atoms";
 import ExampleImageOverlay from "@/components/example-image-overlay";
 import { BORDER_RADIUS, SCREEN_PADDING } from "@/constants/constants";
 import { UserFavoritesTrail, UserWishlistTrail } from "@/data/types";
 import { SortOption, useTrailFilters } from "@/hooks/trail/useTrailFilters";
+import { useRealUserLocation } from "@/hooks/useUserLocation";
 import { classificationParser } from "@/utils/classification-parser";
 import { formatDistanceKm } from "@/utils/format-distance";
 import { getDifficultyIcon } from "@/utils/getDifficultyIcon";
@@ -10,7 +10,6 @@ import { guardedNavigate } from "@/utils/navigation";
 import { Entypo } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { router } from "expo-router";
-import { useAtomValue } from "jotai";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
@@ -37,7 +36,9 @@ export default function UserTrailCollection({
 }: UserTrailCollectionProps) {
   const theme = useTheme();
   const { t } = useTranslation();
-  const userLocation = useAtomValue(userLocationAtom);
+  // Null without a real fix, which drops the distance line from each card and the
+  // distance sort and "near me" filter from the controls.
+  const userLocation = useRealUserLocation();
 
   const {
     filteredTrails,

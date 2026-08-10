@@ -1,10 +1,10 @@
 import { SCREEN_PADDING, SURFACE_BORDER_RADIUS } from "@/constants/constants";
 import { asTranslationKey } from "@/i18n";
 import { MaterialIcons } from "@expo/vector-icons";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Platform, Pressable, StyleSheet, View } from "react-native";
-import { Divider, Text, TextInput, useTheme } from "react-native-paper";
+import { Dimensions, Keyboard, Platform, Pressable, StyleSheet, View } from "react-native";
+import { Divider, Portal, Text, TextInput, useTheme } from "react-native-paper";
 import Animated, { FadeInUp, FadeOutUp } from "react-native-reanimated";
 
 export interface SortField {
@@ -47,6 +47,31 @@ export default function ListHeaderAction({
   const [searchOpen, setSearchOpen] = useState(false);
   const [sortOpen, setSortOpen] = useState(false);
 
+  const anchorRef = useRef<View>(null);
+  // Window coordinates of the sort menu, measured off the icon each time it opens.
+  const [menuPos, setMenuPos] = useState<{ top: number; right: number } | null>(null);
+
+  // The two panels occupy the same slot under the header, so only one may be open.
+  const toggleSearch = () => {
+    setSortOpen(false);
+    setSearchOpen((v) => !v);
+  };
+
+  const toggleSort = () => {
+    if (sortOpen) {
+      setSortOpen(false);
+      return;
+    }
+    // Dismissing the keyboard blurs the search field, which collapses it.
+    Keyboard.dismiss();
+    setSearchOpen(false);
+    anchorRef.current?.measureInWindow((x, y, width, height) => {
+      // Both values in one callback, so the menu never renders at a stale position.
+      setMenuPos({ top: y + height + 8, right: Dimensions.get("window").width - (x + width) });
+      setSortOpen(true);
+    });
+  };
+
   // Split on the last dash so field keys containing one survive.
   const splitAt = sortBy.lastIndexOf("-");
   const activeField = sortBy.slice(0, splitAt);
@@ -71,17 +96,27 @@ export default function ListHeaderAction({
         {children}
         <View style={s.actions}>
           {/* hitSlop, not padding: 24px icons are below the 44px minimum touch target. */}
-          <Pressable onPress={() => setSearchOpen((v) => !v)} hitSlop={16}>
-            <MaterialIcons name="search" size={24} color={theme.colors.onBackground} />
+          <Pressable onPress={toggleSearch} hitSlop={16}>
+            {/* Tinted while a query is active, since the collapsed field hides it. */}
+            <MaterialIcons
+              name="search"
+              size={24}
+              color={searchQuery ? theme.colors.primary : theme.colors.onBackground}
+            />
           </Pressable>
-          <Pressable onPress={() => setSortOpen((v) => !v)} hitSlop={8}>
-            <MaterialIcons name="filter-list" size={24} color={theme.colors.onBackground} />
-            {activeFilterCount > 0 && (
-              <View style={[s.badge, { backgroundColor: theme.colors.primary }]}>
-                <Text style={[s.badgeText, { color: theme.colors.onPrimary }]}>{activeFilterCount}</Text>
-              </View>
-            )}
-          </Pressable>
+
+          {/* collapsable={false}: Android may drop a plain wrapper View from the
+              native tree, and measureInWindow needs it to exist. */}
+          <View ref={anchorRef} collapsable={false}>
+            <Pressable onPress={toggleSort} hitSlop={8}>
+              <MaterialIcons name="filter-list" size={24} color={theme.colors.onBackground} />
+              {activeFilterCount > 0 && (
+                <View style={[s.badge, { backgroundColor: theme.colors.primary }]}>
+                  <Text style={[s.badgeText, { color: theme.colors.onPrimary }]}>{activeFilterCount}</Text>
+                </View>
+              )}
+            </Pressable>
+          </View>
         </View>
       </View>
 
@@ -95,10 +130,10 @@ export default function ListHeaderAction({
             placeholder={searchPlaceholder}
             value={searchQuery}
             onChangeText={onSearchChange}
-            // Collapse on blur, not on every deleted character.
-            onBlur={() => {
-              if (!searchQuery) setSearchOpen(false);
-            }}
+            // Collapse on blur, not on every deleted character. A press anywhere
+            // outside blurs the field, which is what closes it; the query survives
+            // and the tinted search icon plus the counter row keep it visible.
+            onBlur={() => setSearchOpen(false)}
             left={<TextInput.Icon icon="magnify" />}
             right={
               <TextInput.Icon
@@ -115,47 +150,60 @@ export default function ListHeaderAction({
         </Animated.View>
       )}
 
-      {/* Sort menu, following map-filter-menu's pattern. Absolutely positioned so
-          opening it does not push the list down. */}
-      {sortOpen && (
-        <Animated.View
-          entering={FadeInUp.duration(150)}
-          exiting={FadeOutUp.duration(120)}
-          style={[
-            s.popover,
-            { backgroundColor: theme.colors.elevation.level3, borderColor: theme.colors.outlineVariant },
-          ]}
-        >
-          {sortFields.map((field) => {
-            const active = field.key === activeField;
-            return (
-              <Pressable key={field.key} onPress={() => handleSortPress(field)} style={s.popoverRow}>
-                {/* asTranslationKey: labelKey is a variable, so t() cannot verify it. */}
-                <Text style={{ color: active ? theme.colors.onSurface : theme.colors.onSurfaceVariant }}>
-                  {t(asTranslationKey(field.labelKey))}
-                </Text>
-                {active && (
-                  <MaterialIcons
-                    name={activeDirection === "asc" ? "arrow-upward" : "arrow-downward"}
-                    size={16}
-                    color={theme.colors.primary}
-                  />
-                )}
-              </Pressable>
-            );
-          })}
-          <Divider />
+      {/* Portalled, not absolutely positioned inside the header: only a full-screen
+          layer can catch presses outside the panel, and on Android touches never
+          reach a child drawn outside its parent's bounds. Both the catcher and the
+          panel are tied to one boolean, so they cannot end up out of step. */}
+      {sortOpen && menuPos && (
+        <Portal>
           <Pressable
-            onPress={() => {
-              setSortOpen(false);
-              onOpenFilters();
-            }}
-            style={s.popoverRow}
+            style={StyleSheet.absoluteFill}
+            accessibilityLabel={t("common.close")}
+            onPress={() => setSortOpen(false)}
+          />
+          <Animated.View
+            entering={FadeInUp.duration(150)}
+            style={[
+              s.popover,
+              {
+                top: menuPos.top,
+                right: menuPos.right,
+                backgroundColor: theme.colors.elevation.level3,
+                borderColor: theme.colors.outlineVariant,
+              },
+            ]}
           >
-            <Text style={{ color: theme.colors.onSurface }}>{t("filter.moreFilters")}</Text>
-            <MaterialIcons name="chevron-right" size={18} color={theme.colors.onSurfaceVariant} />
-          </Pressable>
-        </Animated.View>
+            {sortFields.map((field) => {
+              const active = field.key === activeField;
+              return (
+                <Pressable key={field.key} onPress={() => handleSortPress(field)} style={s.popoverRow}>
+                  {/* asTranslationKey: labelKey is a variable, so t() cannot verify it. */}
+                  <Text style={{ color: active ? theme.colors.onSurface : theme.colors.onSurfaceVariant }}>
+                    {t(asTranslationKey(field.labelKey))}
+                  </Text>
+                  {active && (
+                    <MaterialIcons
+                      name={activeDirection === "asc" ? "arrow-upward" : "arrow-downward"}
+                      size={16}
+                      color={theme.colors.primary}
+                    />
+                  )}
+                </Pressable>
+              );
+            })}
+            <Divider />
+            <Pressable
+              onPress={() => {
+                setSortOpen(false);
+                onOpenFilters();
+              }}
+              style={s.popoverRow}
+            >
+              <Text style={{ color: theme.colors.onSurface }}>{t("filter.moreFilters")}</Text>
+              <MaterialIcons name="chevron-right" size={18} color={theme.colors.onSurfaceVariant} />
+            </Pressable>
+          </Animated.View>
+        </Portal>
       )}
 
       {/* Only rendered while filtering, so an untouched page keeps its current height. */}
@@ -210,10 +258,8 @@ const s = StyleSheet.create({
     marginTop: 8,
   },
   popover: {
+    // Positioned in window coordinates inside the Portal; top/right come from the anchor.
     position: "absolute",
-    top: 40,
-    right: SCREEN_PADDING,
-    zIndex: 10,
     borderRadius: SURFACE_BORDER_RADIUS,
     paddingVertical: 4,
     minWidth: 180,
@@ -225,7 +271,7 @@ const s = StyleSheet.create({
     shadowOpacity: 0.18,
     shadowRadius: 12,
     shadowOffset: { width: 0, height: 4 },
-    // …and Android's, which also fixes stacking (it ignores zIndex).
+    // …and Android's, which draws it above the press catcher (it ignores zIndex).
     elevation: 6,
   },
   popoverRow: {
