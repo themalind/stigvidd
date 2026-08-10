@@ -65,7 +65,7 @@ public class Program
         // Flatten Keycloak realm roles into Role claims, then gate admin-only
         // endpoints (export/import) on a configurable realm role.
         builder.Services.AddSingleton<IClaimsTransformation, StigviddAPI.Authorization.KeycloakRealmRolesTransformation>();
-        var adminRole = builder.Configuration["Authorization:AdminRole"] ?? "admin";
+        var adminRole = builder.Configuration["Authorization:AdminRole"] ?? "stigvidd-admin";
         builder.Services.AddAuthorization(options =>
         {
             options.AddPolicy("Admin", policy => policy.RequireRole(adminRole));
