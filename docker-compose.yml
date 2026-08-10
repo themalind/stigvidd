@@ -8,7 +8,7 @@ name: stigvidd
 services:
   db:
     # PostGIS is required — the EF migrations create the `postgis` extension.
-    image: postgis/postgis:16-3.4
+    image: postgis/postgis:17-3.5
     restart: unless-stopped
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-stigvidd}
