@@ -26,7 +26,7 @@ Six services on two networks. Only the proxy is exposed to the internet.
 | `api`      | `stigvidd-api` (.NET 10)  | Backend API. Runs EF migrations on startup.     |
 | `media`    | `stigvidd-media` (nginx)  | WebDAV media server (authed writes, public reads). |
 | `keycloak` | `stigvidd-keycloak`       | Identity provider.                              |
-| `db`       | `postgis/postgis:16-3.4`  | PostgreSQL + PostGIS. Holds **both** the app database and Keycloak's. |
+| `db`       | `postgis/postgis:17-3.5`  | PostgreSQL + PostGIS. Holds **both** the app database and Keycloak's. |
 
 **What is stateful** (i.e. what must be migrated):
 
@@ -133,7 +133,7 @@ Copy [.env.example](.env.example) to `.env` and set:
 
 | Variable | What |
 |----------|------|
-| `REGISTRY` / `IMAGE_TAG` | Image source. `inkaben.se` and the tag to run (CI sets these; default `latest`). |
+| `REGISTRY` / `IMAGE_TAG` | Image source. `inkaben.se` and the tag to run. `latest` (the default) tracks the current `main`; a 12-char commit sha pins one exact build. CI injects the sha at deploy time, overriding this. |
 | `WEB_DOMAIN` / `API_DOMAIN` / `MEDIA_DOMAIN` / `AUTH_DOMAIN` | The four public hostnames. |
 | `ACME_EMAIL` | Let's Encrypt contact address. |
 | `ACME_CA` | Leave at production; switch to LE staging while testing. |
@@ -160,7 +160,21 @@ images (`api web media proxy keycloak`) to `inkaben.se`, then deploys over SSH:
 `docker compose pull && up -d` on the target. See the header of the Jenkinsfile
 for the full setup (credentials, plugins, deploy-host prep).
 
-For a **manual** deploy of a specific build, set `IMAGE_TAG` in the host `.env`
+### Image tags
+
+Every `main` build publishes each custom image under **two** tags:
+
+- **`<12-char commit sha>`** — immutable. What the pipeline's own deploy step
+  injects, so a deploy is always traceable to one commit and rollback is just
+  re-running with the older sha.
+- **`latest`** — moves to whatever `main` last built.
+
+So a deploy host can leave `IMAGE_TAG=latest` in `.env` permanently and
+`docker compose pull && docker compose up -d` will fetch the current `main`.
+Note that a Jenkins deploy overrides the host `.env` with the commit sha for
+that run, which is what the containers keep running until the next manual pull.
+
+To pin a specific build by hand, set `IMAGE_TAG` to its sha in the host `.env`
 (or inline) and run `docker compose pull && docker compose up -d`.
 
 ---
