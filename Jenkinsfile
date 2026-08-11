@@ -78,7 +78,7 @@ pipeline {
     // so `inkaben.se` is both login host and namespace ->
     // images: inkaben.se/stigvidd-{api,web}:<tag>.
     REGISTRY       = 'inkaben.se'                       // registry host
-    DEPLOY_HOST    = 'deploy@app-server.example.com'    // ssh target
+    DEPLOY_HOST    = 'stigvidd@stigvidd.se'    // ssh target
     DEPLOY_PATH    = '/opt/stigvidd'                    // compose dir on host
 
     // Uncomment and adjust if the toolchains are not on the agent's default PATH.
