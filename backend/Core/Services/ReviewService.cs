@@ -4,6 +4,7 @@ using Core.Interfaces.Services;
 using Infrastructure.Data.Entities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
+using System.Runtime.CompilerServices;
 using WebDataContracts.ResponseModels.Review;
 
 namespace Core.Services;
@@ -12,7 +13,10 @@ public class ReviewService : IReviewService
 {
     private readonly IReviewRepository _reviewRepository;
     private readonly IWebDavService _webDavService;
-    private readonly IUserService _userService;
+    // The user lookup goes to the repository, not IUserService: UserService depends on this
+    // service to clean up a deleted user's reviews, and taking IUserService here would make
+    // the two services a resolve-time cycle.
+    private readonly IUserRepository _userRepository;
     private readonly ITrailService _trailService;
     private readonly ReviewResponseFactory _reviewResponseFactory;
     private readonly ILogger<ReviewService> _logger;
@@ -20,14 +24,14 @@ public class ReviewService : IReviewService
     public ReviewService(
         IReviewRepository reviewRepository,
         IWebDavService webDavService,
-        IUserService userService,
+        IUserRepository userRepository,
         ITrailService trailService,
         ReviewResponseFactory reviewResponseFactory,
         ILogger<ReviewService> logger)
     {
         _reviewRepository = reviewRepository;
         _webDavService = webDavService;
-        _userService = userService;
+        _userRepository = userRepository;
         _trailService = trailService;
         _reviewResponseFactory = reviewResponseFactory;
         _logger = logger;
@@ -95,9 +99,9 @@ public class ReviewService : IReviewService
                 }
             }
 
-            var userResult = await _userService.GetUserIdByIdentifierAsync(userIdentifier, ctoken);
+            var userResult = await _userRepository.GetUserIdByIdentifierAsync(userIdentifier, ctoken);
 
-            if (!userResult.Success)
+            if (!userResult.IsSuccess)
                 return Result.Fail<ReviewResponse?>(new Message(404, "User not found."));
 
             var trailResult = await _trailService.GetTrailIdByIdentifierAsync(trailIdentifier, ctoken);
@@ -132,23 +136,36 @@ public class ReviewService : IReviewService
             _logger.LogError(ex, "Error adding review for User: {UserIdentifier}, Trail: {TrailIdentifier}", userIdentifier, trailIdentifier);
 
             if (uploadedUrls.Any())
-                await CleanupUploadedImagesAsync(uploadedUrls);
+                await DeleteImageFilesAsync(uploadedUrls, $"Rollback of a failed review upload. UserIdentifier: {userIdentifier}, TrailIdentifier: {trailIdentifier}");
 
             return Result.Fail<ReviewResponse?>(new Message(500, "An error occurred while adding the review."));
         }
     }
 
-    private async Task CleanupUploadedImagesAsync(List<string> urls)
+    // Best-effort file removal: a leftover file is recoverable, so a WebDAV failure is logged
+    // rather than surfaced. Used both to roll back a half-finished upload and to clean up
+    // after rows that are already gone.
+    //
+    // A leftover file is only findable again through the log line, so the caller passes the
+    // identifiers that make it traceable; the calling method's name comes along on its own.
+    private async Task DeleteImageFilesAsync(
+        IEnumerable<string> urls,
+        string context,
+        [CallerMemberName] string operation = "")
     {
         foreach (var url in urls)
         {
             try
             {
-                await _webDavService.DeleteFileAsync(url);
+                var result = await _webDavService.DeleteFileAsync(url);
+
+                // WebDAV answered, but refused: no exception to catch, so it is reported here
+                if (result.IsFailure)
+                    _logger.LogError("{Operation}: WebDAV refused to delete image {Url}. {Context}", operation, url, context);
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "Failed to cleanup uploaded image: {Url}", url);
+                _logger.LogWarning(ex, "{Operation}: Failed to delete image {Url}. {Context}", operation, url, context);
             }
         }
     }
@@ -163,27 +180,34 @@ public class ReviewService : IReviewService
         if (!reviewResult.IsSuccess)
             return Result.Fail(new Message(404, $"RemoveReviewAsync: Could not find review with identifier: {reviewIdentifier} and user identifier: {userIdentifer}"));
 
-        var review = reviewResult.Value;
+        var reviewImages = reviewResult.Value.ReviewImages?.Select(img => img.ImageUrl).ToList() ?? new List<string>();
 
-        if (review.ReviewImages != null && review.ReviewImages.Any())
-        {
-            foreach (var image in review.ReviewImages)
-            {
-                try
-                {
-                    var result = await _webDavService.DeleteFileAsync(image.ImageUrl);
+        var result = await _reviewRepository.DeleteReviewAsync(reviewResult.Value, ctoken);
 
-                    if (result.IsFailure)
-                        return Result.Fail(new Message(500, "Could not remove file. Try again later."));
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning(ex, "RemoveReviewAsync: Failed to remove image {ImageUrl}. UserIdentifier: {userIdentifer}, ReviewIdentifer: {reviewIdentifier}", image.ImageUrl, userIdentifer, reviewIdentifier);
-                }
-            }
-        }
+        if (!result.IsSuccess)
+            return Result.Fail(new Message(500, "An error occurred while deleting the review."));
 
-        await _reviewRepository.DeleteReviewAsync(review, ctoken);
+        await DeleteImageFilesAsync(reviewImages, $"ReviewIdentifier: {reviewIdentifier}, UserIdentifier: {userIdentifer}");
+
+        return Result.Ok();
+    }
+
+    public async Task<Result> DeleteUserReviewsOnUserDeleteAsync(int userId, CancellationToken ctoken)
+    {
+        // Read the URLs while the rows are still there. Deleting the user row would cascade the
+        // reviews away on its own, but the WebDAV files are outside the database and would be
+        // left orphaned, so the reviews are removed here instead and the files follow.
+        var imageUrlsResult = await _reviewRepository.GetReviewImageUrlsByUserIdAsync(userId, ctoken);
+
+        if (!imageUrlsResult.IsSuccess)
+            return Result.Fail(new Message(500, "An error occurred while fetching the review image URLs."));
+
+        var result = await _reviewRepository.DeleteReviewsByUserIdAsync(userId, ctoken);
+
+        if (!result.IsSuccess)
+            return Result.Fail(new Message(500, "An error occurred while deleting the user's reviews."));
+
+        await DeleteImageFilesAsync(imageUrlsResult.Value, $"Account deletion. UserId: {userId}");
 
         return Result.Ok();
     }

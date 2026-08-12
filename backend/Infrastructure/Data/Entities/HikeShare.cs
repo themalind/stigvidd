@@ -10,6 +10,9 @@ public class HikeShare
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public HikeShareStatus Status { get; set; } = HikeShareStatus.Pending;
 
+    // Set by the owner per recipient when sharing. 
+    public bool AllowResharing { get; set; }
+
     public Hike? Hike { get; set; }
     public User? SharedWith { get; set; }
     public User? SharedBy { get; set; }

@@ -2,7 +2,9 @@ using Core.Factories;
 using Core.Interfaces.Repositories;
 using Core.Interfaces.Services;
 using Infrastructure.Data.Entities;
+using Microsoft.Extensions.Logging;
 using NetTopologySuite.Geometries;
+using System.Runtime.CompilerServices;
 using WebDataContracts.RequestModels.Hike;
 using WebDataContracts.ResponseModels.Hike;
 
@@ -19,25 +21,31 @@ public class HikeService : IHikeService
     private readonly IUserRepository _userRepository;
     private readonly IHikeRepository _hikeRepository;
     private readonly IHikeShareRecipientRepository _hikeShareRecipientRepository;
+    private readonly IWebDavService _webDavService;
+    private readonly ILogger<HikeService> _logger;
 
     public HikeService(IHikeRepository hikeRepository,
         HikeResponseFactory hikeResponseFactory,
         IUserRepository userRepository,
-        IHikeShareRecipientRepository hikeShareRecipientRepository)
+        IHikeShareRecipientRepository hikeShareRecipientRepository,
+        IWebDavService webDavService,
+        ILogger<HikeService> logger)
     {
         _hikeRepository = hikeRepository;
         _hikeResponseFactory = hikeResponseFactory;
         _userRepository = userRepository;
         _hikeShareRecipientRepository = hikeShareRecipientRepository;
+        _webDavService = webDavService;
+        _logger = logger;
     }
 
     public async Task<Result<HikeResponse>> CreateHikeAsync(CreateHikeRequest request, string userIdentifier, CancellationToken ctoken)
     {
-        var userIdResult = await _userRepository.GetUserIdByIdentifierAsync(userIdentifier, ctoken);
+        var userResult = await _userRepository.GetUserByIdentifierAsync(userIdentifier, u => new UserProjection(u.Id, u.NickName), ctoken);
 
-        if (!userIdResult.IsSuccess)
+        if (!userResult.IsSuccess)
         {
-            if (userIdResult.Status == RepositoryResultStatus.Error)
+            if (userResult.Status == RepositoryResultStatus.Error)
                 return Result.Fail<HikeResponse>(new Message(500, "An error occurred while fetching the user."));
 
             return Result.Fail<HikeResponse>(new Message(404, "User not found"));
@@ -84,10 +92,11 @@ public class HikeService : IHikeService
             Duration = request.Duration,
             GeoPath = coords,
             CreatedBy = userIdentifier,
-            UserId = userIdResult.Value,
+            UserId = userResult.Value.Id,
             ParkingInfo = request?.ParkingInfo,
             GettingThere = request?.GettingThere,
-            Description = request?.Description
+            Description = request?.Description,
+            CreatedByNickName = userResult.Value.NickName
         };
 
         var result = await _hikeRepository.CreateHikeAsync(hike, ctoken);
@@ -154,7 +163,7 @@ public class HikeService : IHikeService
                 h.HikeLength,
                 h.Duration,
                 GeoPathSerializer.ToCoordinateJson(h.GeoPath),
-                h.CreatedBy,
+                h.CreatedBy ?? string.Empty,
                 h.GettingThere,
                 h.ParkingInfo,
                 h.Description,
@@ -173,7 +182,8 @@ public class HikeService : IHikeService
         string? name,
         string? description,
         string? gettingThere,
-        string? parkingInfo, CancellationToken ctoken)
+        string? parkingInfo,
+        CancellationToken ctoken)
     {
         var userIdResult = await _userRepository.GetUserByIdentifierAsync(userIdentifier, u => u.Id, ctoken);
 
@@ -220,7 +230,7 @@ public class HikeService : IHikeService
         return Result.Ok(_hikeResponseFactory.Create(hikeResult.Value));
     }
 
-    public async Task<Result> SoftDeleteHikeAsync(string hikeIdentifier, string userIdentifier, CancellationToken ctoken)
+    public async Task<Result> DeleteHikeAsync(string hikeIdentifier, string userIdentifier, CancellationToken ctoken)
     {
         var userResult = await _userRepository.GetUserByIdentifierAsync(userIdentifier, u => u, ctoken);
 
@@ -238,7 +248,31 @@ public class HikeService : IHikeService
         if (result.Value.UserId != userResult.Value.Id)
             return Result.Fail(new Message(403, $"Hike {hikeIdentifier} does not belong to {userResult.Value.Id}"));
 
-        await _hikeRepository.SoftDeleteHikeAsync(result.Value, ctoken);
+        var isSharedResult = await _hikeRepository.HikeHasSharesAsync(result.Value.Id, ctoken);
+
+        if (!isSharedResult.IsSuccess)
+            return Result.Fail(new Message(500, "An error occurred while deleting the hike."));
+
+        // A shared hike is not removed, only detached from its owner: it stays with the
+        // recipients, images and all, so there is nothing to collect and nothing to delete.
+        IEnumerable<string> imageUrls = [];
+
+        if (!isSharedResult.Value)
+        {
+            var imageUrlsResult = await _hikeRepository.GetHikeImageUrlsByHikeIdAsync(result.Value.Id, ctoken);
+
+            if (!imageUrlsResult.IsSuccess)
+                return Result.Fail(new Message(500, "An error occurred while fetching the hike image URLs."));
+
+            imageUrls = imageUrlsResult.Value;
+        }
+
+        var deleteResult = await _hikeRepository.DeleteHikeAsync(result.Value, ctoken);
+
+        if (!deleteResult.IsSuccess)
+            return Result.Fail(new Message(500, "An error occurred while deleting the hike."));
+
+        await DeleteImageFilesAsync(imageUrls, $"HikeIdentifier: {hikeIdentifier}, UserIdentifier: {userIdentifier}");
 
         return Result.Ok();
     }
@@ -250,31 +284,92 @@ public class HikeService : IHikeService
         if (!result.IsSuccess)
             return Result.Fail(new Message(500, "An error occurred while deleting the hike shares."));
 
+        await CleanUpOrphanedHikesAsync(ctoken);
+
         return Result.Ok();
     }
 
-    public async Task<Result> DeleteHikesByUserIdentifierAsync(string userIdentifier, CancellationToken ctoken)
+    // Call after any path that removes HikeShare rows. A hike that has lost both its owner and
+    // its last recipient is kept for nobody, so it is removed here together with its image files.
+    //
+    // Housekeeping, not part of what the caller asked for: the share is already gone and their
+    // request succeeded, so a failed sweep is logged and leaves a row behind for the next sweep
+    // to catch rather than reporting an error for something the caller neither did nor can fix.
+    public async Task CleanUpOrphanedHikesAsync(CancellationToken ctoken)
     {
-        var userResult = await _userRepository.GetUserByIdentifierAsync(userIdentifier, u => u, ctoken);
+        var imageUrlsResult = await _hikeRepository.GetOrphanedHikeImageUrlsAsync(ctoken);
 
-        if (!userResult.IsSuccess || userResult.Value is null)
-            return Result.Fail<HikeResponse>(new Message(404, "User not found"));
+        if (!imageUrlsResult.IsSuccess)
+        {
+            _logger.LogWarning("HikeService: CleanUpOrphanedHikesAsync -> Could not read the image URLs of orphaned hikes; leaving them for the next sweep.");
+            return;
+        }
 
-        var result = await _hikeRepository.DeleteHikesByUserIdentifierAsync(userResult.Value.Identifier, ctoken);
+        var result = await _hikeRepository.DeleteOrphanedHikesAsync(ctoken);
 
         if (!result.IsSuccess)
-            return Result.Fail(new Message(500, "An error occurred while deleting the hikes."));
+        {
+            _logger.LogWarning("HikeService: CleanUpOrphanedHikesAsync -> Could not delete orphaned hikes; leaving them for the next sweep.");
+            return;
+        }
 
-        return Result.Ok();
+        await DeleteImageFilesAsync(imageUrlsResult.Value, "Orphaned hike cleanup: no owner and no shares left.");
     }
 
     public async Task<Result> HandleUserHikesOnUserDeleteAsync(int userId, CancellationToken ctoken)
     {
+        // Read the URLs first: only the hikes that are actually removed (the ones without
+        // shares) should lose their files, and once the rows are gone so are the URLs.
+        var imageUrlsResult = await _hikeRepository.GetDeletableHikeImageUrlsByUserIdAsync(userId, ctoken);
+
+        if (!imageUrlsResult.IsSuccess)
+            return Result.Fail(new Message(500, "An error occurred while fetching the hike image URLs."));
+
+        // Delete Hikes with no shares
         var result = await _hikeRepository.HandleUserHikesOnUserDeleteAsync(userId, ctoken);
 
         if (!result.IsSuccess)
             return Result.Fail(new Message(500, "An error occurred while handling user hikes on user delete."));
 
+        // Whatever is still owned by this user is a shared hike, kept for its recipients.
+        // It survives the account, but the creator's identifiers must not survive with it.
+        var anonymizeResult = await _hikeRepository.AnonymizeSharedHikesOnUserDeleteAsync(userId, ctoken);
+
+        if (!anonymizeResult.IsSuccess)
+            return Result.Fail(new Message(500, "An error occurred while anonymizing the shared hikes."));
+
+        // Files go after the rows: an orphaned file can be cleaned up later, a row pointing at
+        // a missing file cannot be undone. A WebDAV failure must not fail the account deletion.
+        await DeleteImageFilesAsync(imageUrlsResult.Value, $"Account deletion. UserId: {userId}");
+
         return Result.Ok();
     }
+
+    // Best-effort file removal: a leftover file is recoverable, so a WebDAV failure is logged
+    // rather than surfaced. A leftover file is only findable again through the log line, so the
+    // caller passes the identifiers that make it traceable; the calling method's name comes along
+    // on its own.
+    private async Task DeleteImageFilesAsync(
+        IEnumerable<string> urls,
+        string context,
+        [CallerMemberName] string operation = "")
+    {
+        foreach (var url in urls)
+        {
+            try
+            {
+                var result = await _webDavService.DeleteFileAsync(url);
+
+                // WebDAV answered, but refused: no exception to catch, so it is reported here
+                if (result.IsFailure)
+                    _logger.LogError("{Operation}: WebDAV refused to delete hike image {Url}. {Context}", operation, url, context);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "{Operation}: Failed to delete hike image {Url}. {Context}", operation, url, context);
+            }
+        }
+    }
 }
+
+internal record UserProjection(int Id, string NickName);

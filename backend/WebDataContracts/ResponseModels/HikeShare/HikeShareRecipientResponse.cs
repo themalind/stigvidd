@@ -14,6 +14,7 @@ public class HikeShareRecipientResponse
     public string? GettingThere { get; set; }
     public string? ParkingInfo { get; set; }
     public string? Description { get; set; }
+    public bool AllowResharing { get; set; }
 
     public static HikeShareRecipientResponse Create(
         string hikeIdentifier,
@@ -27,7 +28,8 @@ public class HikeShareRecipientResponse
         DateTime sharedAt,
         string? gettingThere,
         string? parkingInfo,
-        string? description)
+        string? description,
+        bool allowResharing)
     {
         return new HikeShareRecipientResponse
         {
@@ -42,7 +44,8 @@ public class HikeShareRecipientResponse
             SharedAt = sharedAt,
             GettingThere = gettingThere,
             ParkingInfo = parkingInfo,
-            Description = description
+            Description = description,
+            AllowResharing = allowResharing
         };
     }
 }

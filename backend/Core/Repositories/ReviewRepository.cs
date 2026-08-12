@@ -39,6 +39,55 @@ public class ReviewRepository : IReviewRepository
         }
     }
 
+    // A user's reviews, ignoring the IsDeleted query filter: this is cleanup, and a soft-deleted
+    // review's image files are just as orphaned as a live one's. Shared by the two methods below
+    // so the URLs collected are exactly the ones whose rows are about to go.
+    private static IQueryable<Review> UserReviews(StigViddDbContext context, int userId) =>
+        context.Reviews.IgnoreQueryFilters().Where(r => r.UserId == userId);
+
+    public async Task<RepositoryResult<IEnumerable<string>>> GetReviewImageUrlsByUserIdAsync(int userId, CancellationToken ctoken)
+    {
+        try
+        {
+            using var context = await _context.CreateDbContextAsync(ctoken);
+
+            var userReviewIds = UserReviews(context, userId).Select(r => r.Id);
+
+            var imageUrls = await context.ReviewImages
+                .Where(ri => userReviewIds.Contains(ri.ReviewId))
+                .Select(ri => ri.ImageUrl)
+                .ToListAsync(ctoken);
+
+            return RepositoryResult<IEnumerable<string>>.Success(imageUrls);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "ReviewRepository: GetReviewImageUrlsByUserIdAsync -> Something went wrong when fetching review image URLs for user with ID {userId}.", userId);
+            return RepositoryResult<IEnumerable<string>>.Error();
+        }
+    }
+
+    public async Task<RepositoryResult> DeleteReviewsByUserIdAsync(int userId, CancellationToken ctoken)
+    {
+        try
+        {
+            using var context = await _context.CreateDbContextAsync(ctoken);
+
+            var reviews = await UserReviews(context, userId).ToListAsync(ctoken);
+
+            context.Reviews.RemoveRange(reviews); // ReviewImage rows follow by cascade
+
+            await context.SaveChangesAsync(ctoken);
+
+            return RepositoryResult.Success();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "ReviewRepository: DeleteReviewsByUserIdAsync -> Something went wrong when deleting reviews for user with ID {userId}.", userId);
+            return RepositoryResult.Error();
+        }
+    }
+
     public async Task<RepositoryResult> DeleteReviewAsync(Review review, CancellationToken ctoken)
     {
         try

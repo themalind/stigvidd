@@ -4,4 +4,5 @@ public class HikeShareRequest
 {
     public required string HikeIdentifier { get; set; }
     public required string SharedWithName { get; set; }
+    public bool AllowResharing { get; set; }
 }

@@ -60,6 +60,27 @@ public class HikeShareRecipientRepository : IHikeShareRecipientRepository
         }
     }
 
+    public async Task<RepositoryResult<bool>> IsAllowedToReshareHikeAsync(int userId, int hikeId, CancellationToken ctoken)
+    {
+        try
+        {
+            using var context = await _dbContext.CreateDbContextAsync(ctoken);
+
+            var isAllowed = await context.HikeShares
+                .Where(hs => hs.SharedWithId == userId && hs.HikeId == hikeId && hs.Status == HikeShareStatus.Accepted)
+                .Select(hs => hs.AllowResharing)
+                .FirstOrDefaultAsync(ctoken);
+
+            return RepositoryResult<bool>.Success(isAllowed);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "HikeShareRecipientRepository: IsAllowedToReshareHikeAsync -> Something went wrong when checking if user with ID {userId} is allowed to reshare hike with ID {hikeId}.", userId, hikeId);
+            return RepositoryResult<bool>.Error();
+        }
+    }
+
     public async Task<RepositoryResult> ReshareSharedHikeAsync(HikeShare hikeShare, CancellationToken ctoken)
     {
         try

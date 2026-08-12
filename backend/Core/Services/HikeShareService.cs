@@ -40,7 +40,7 @@ public class HikeShareService : IHikeShareService
         return Result.Ok<int>(result.Value);
     }
 
-    public async Task<Result> ShareHikeAsync(string identifier, string hikeIdentifier, string sharedWithName, CancellationToken ctoken)
+    public async Task<Result> ShareHikeAsync(string identifier, string hikeIdentifier, string sharedWithName, bool allowResharing, CancellationToken ctoken)
     {
         try
         {
@@ -62,6 +62,7 @@ public class HikeShareService : IHikeShareService
                 return Result.Fail(new Message(500, "Something went wrong when fetching user ID."));
             }
 
+            // Check if the sender and recipient are friends
             var areFriendsResult = await _friendRepository.FriendshipExistsAsync(senderResult.Value.Id, recipientResult.Value.Id, ctoken);
             if (!areFriendsResult.IsSuccess)
                 return Result.Fail(new Message(500, "Something went wrong when checking friendship status."));
@@ -69,6 +70,7 @@ public class HikeShareService : IHikeShareService
             if (!areFriendsResult.Value)
                 return Result.Fail(new Message(403, "You can only share a hike with a friend."));
 
+            // Check if the sender and recipient are the same user
             if (senderResult.Value.Id == recipientResult.Value.Id)
                 return Result.Fail(new Message(400, "You cannot share a hike with yourself."));
 
@@ -81,9 +83,11 @@ public class HikeShareService : IHikeShareService
                 return Result.Fail(new Message(500, "Something went wrong when fetching hike."));
             }
 
+            // Check if the sender is the creator of the hike
             if (hikeResult.Value.CreatedBy != identifier)
                 return Result.Fail(new Message(403, "You do not have permission to share this hike."));
 
+            // Check if the hike has already been shared with the recipient
             var alreadySharedResult = await _hikeShareRepository.IsAlreadySharedAsync(hikeResult.Value.Id, recipientResult.Value.Id, ctoken);
             if (!alreadySharedResult.IsSuccess)
                 return Result.Fail(new Message(500, "Something went wrong when checking if hike is already shared."));
@@ -96,6 +100,7 @@ public class HikeShareService : IHikeShareService
                 SharedById = senderResult.Value.Id,
                 HikeId = hikeResult.Value.Id,
                 SharedWithId = recipientResult.Value.Id,
+                AllowResharing = allowResharing
             };
 
             var result = await _hikeShareRepository.ShareHikeAsync(hikeShare, ctoken);

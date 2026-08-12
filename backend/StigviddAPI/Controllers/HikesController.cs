@@ -139,7 +139,7 @@ public class HikesController : StigViddController
             return Unauthorized("User not found");
         }
 
-        var result = await _hikeService.SoftDeleteHikeAsync(hikeIdentifier, userResponse.Identifier, ctoken);
+        var result = await _hikeService.DeleteHikeAsync(hikeIdentifier, userResponse.Identifier, ctoken);
 
         if (!result.Success && result.Message != null)
         {

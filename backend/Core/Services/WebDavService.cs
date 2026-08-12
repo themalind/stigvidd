@@ -35,18 +35,22 @@ public class WebDavService : IWebDavService
         // (the incoming stream is forward-only and would be drained after attempt 1).
         using var buffer = new MemoryStream();
         await stream.CopyToAsync(buffer);
+        var content = buffer.ToArray();
 
         Exception? lastError = null;
 
         for (var attempt = 1; attempt <= MaxUploadAttempts; attempt++)
         {
-            buffer.Position = 0;
+            // Each attempt needs its own stream: HttpClient disposes the request
+            // content (and the stream behind it) when the request completes, so a
+            // shared buffer would be closed by the time attempt 2 rewinds it.
+            using var payload = new MemoryStream(content, writable: false);
 
             try
             {
                 using var client = _clientFactory();
 
-                var result = await client.PutFile(remotePath, buffer);
+                var result = await client.PutFile(remotePath, payload);
 
                 if (result.IsSuccessful)
                     return Result.Ok<string?>($"{remotePath}");

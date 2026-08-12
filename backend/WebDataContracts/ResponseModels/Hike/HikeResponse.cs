@@ -12,6 +12,9 @@ public class HikeResponse
     public string? ParkingInfo { get; set; }
     public string? Description { get; set; }
     public DateTime CreatedAt { get; set; }
+    // Null once the creator has deleted their account; the hike survives for anyone it
+    // was shared with, so the client falls back to a "removed user" label.
+    public string? CreatedByNickName { get; set; }
 
     public static HikeResponse Create(
         string identifier,
@@ -23,7 +26,8 @@ public class HikeResponse
         string? gettingThere,
         string? parkingInfo,
         string? description,
-        DateTime createdAt)
+        DateTime createdAt,
+        string? createdByNickName)
     {
         return new HikeResponse
         {
@@ -36,7 +40,8 @@ public class HikeResponse
             GettingThere = gettingThere,
             ParkingInfo = parkingInfo,
             Description = description,
-            CreatedAt = createdAt
+            CreatedAt = createdAt,
+            CreatedByNickName = createdByNickName
         };
     }
 }
