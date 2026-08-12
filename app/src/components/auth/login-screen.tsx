@@ -101,6 +101,7 @@ export default function LoginScreen({ showBackButton = false }: { showBackButton
                 render={({ field: { onChange, onBlur, value } }) => (
                   <TextInput
                     error={!!errors.email}
+                    dense
                     style={s.textInput}
                     onBlur={onBlur}
                     onChangeText={onChange}
@@ -139,6 +140,7 @@ export default function LoginScreen({ showBackButton = false }: { showBackButton
                     onBlur={onBlur}
                     label={t("auth.password")}
                     onSubmitEditing={handleSubmit(onSubmit)}
+                    dense
                   />
                 )}
                 name="password"
@@ -236,8 +238,8 @@ const s = StyleSheet.create({
     alignItems: "center",
   },
   surface: {
-    gap: 15,
-    padding: 30,
+    gap: 10,
+    padding: 22,
     borderRadius: SURFACE_BORDER_RADIUS,
     alignItems: "center",
     width: WIDTH * 0.8,
@@ -248,13 +250,13 @@ const s = StyleSheet.create({
   },
   text: {
     fontWeight: 400,
-    paddingBottom: 15,
-    paddingTop: 15,
-    fontSize: 25,
+    paddingBottom: 8,
+    paddingTop: 8,
+    fontSize: 22,
     alignSelf: "center",
   },
   actionContainer: {
-    gap: 15,
+    gap: 12,
     alignItems: "center",
   },
   button: {
@@ -262,7 +264,11 @@ const s = StyleSheet.create({
     borderRadius: BORDER_RADIUS,
   },
   errorContainer: {
-    height: 30,
+    // Doubles as the gap between fields, so it can't collapse to nothing — but a fixed
+    // height reserved 30px per field for a message that is usually absent. minHeight
+    // keeps the spacing and lets the row grow only when there is something to show.
+    minHeight: 12,
+    justifyContent: "center",
   },
   errorText: {
     fontSize: 15,

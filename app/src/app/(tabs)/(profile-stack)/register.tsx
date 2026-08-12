@@ -4,7 +4,7 @@ import { showSuccessAtom } from "@/atoms/snackbar-atoms";
 import { userThemeAtom } from "@/atoms/user-theme-atom";
 import PasswordInputField from "@/components/auth/password-input-field";
 import BackButton from "@/components/back-button";
-import { BORDER_RADIUS, SURFACE_BORDER_RADIUS } from "@/constants/constants";
+import { BORDER_RADIUS, PRIVACY_POLICY_URL, SURFACE_BORDER_RADIUS } from "@/constants/constants";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Image } from "expo-image";
 import { Link, router } from "expo-router";
@@ -12,7 +12,7 @@ import { useAtom, useSetAtom } from "jotai";
 import React, { useState } from "react";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { Appearance, Dimensions, ImageBackground, StyleSheet, Text, View } from "react-native";
+import { Appearance, Dimensions, ImageBackground, Linking, StyleSheet, Text, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { Button, TextInput, useTheme } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -123,6 +123,7 @@ export default function RegisterScreen() {
                 render={({ field: { onChange, onBlur, value } }) => (
                   <TextInput
                     error={!!errors.nickName}
+                    dense
                     style={s.textInput}
                     onBlur={onBlur}
                     onChangeText={onChange}
@@ -156,6 +157,7 @@ export default function RegisterScreen() {
                 render={({ field: { onChange, onBlur, value } }) => (
                   <TextInput
                     error={!!errors.email}
+                    dense
                     style={s.textInput}
                     onBlur={onBlur}
                     onChangeText={onChange}
@@ -193,6 +195,7 @@ export default function RegisterScreen() {
                     error={!!errors.password}
                     onBlur={onBlur}
                     label={t("auth.password")}
+                    dense
                   />
                 )}
                 name="password"
@@ -219,6 +222,7 @@ export default function RegisterScreen() {
                     onBlur={onBlur}
                     label={t("auth.repeatPassword")}
                     onSubmitEditing={handleSubmit(onSubmit)}
+                    dense
                   />
                 )}
                 name="confirmPassword"
@@ -240,6 +244,16 @@ export default function RegisterScreen() {
                 <Button mode="contained" style={s.button} onPress={handleSubmit(onSubmit)} disabled={isSubmitting}>
                   {isSubmitting ? t("auth.registering") : t("auth.register")}
                 </Button>
+                <Text style={[s.consentText, { color: theme.colors.onSurfaceVariant }]}>
+                  {t("auth.consentBefore")}{" "}
+                  <Text
+                    style={{ color: theme.colors.tertiary, fontWeight: "600" }}
+                    onPress={() => Linking.openURL(PRIVACY_POLICY_URL).catch(() => undefined)}
+                  >
+                    {t("auth.privacyPolicy")}
+                  </Text>
+                  .
+                </Text>
                 {registerError && <Text style={[s.errorText, { color: theme.colors.error }]}>{registerError}</Text>}
                 <Link style={[s.linkText, { color: theme.colors.onSurface }]} replace href="./login">
                   <Text>{t("auth.alreadyMember")} </Text>
@@ -265,9 +279,14 @@ const s = StyleSheet.create({
     flexGrow: 1,
   },
   backgroundImage: {
-    flex: 1,
+    // flexGrow (not flex: 1) so the basis stays "auto": a surface taller than the screen
+    // makes this taller than the viewport and the ScrollView actually scrolls. With
+    // flex: 1 the basis is 0, the content never exceeds one screen, and anything too tall
+    // is clipped equally at top and bottom with no way to reach it.
+    flexGrow: 1,
     alignItems: "center",
     justifyContent: "center",
+    paddingVertical: 24,
   },
   backButtonContainer: {
     position: "absolute",
@@ -289,9 +308,9 @@ const s = StyleSheet.create({
   },
   text: {
     fontWeight: 400,
-    paddingBottom: 15,
-    paddingTop: 15,
-    fontSize: 25,
+    paddingBottom: 8,
+    paddingTop: 8,
+    fontSize: 22,
     alignSelf: "center",
   },
   textInputContainer: {
@@ -301,16 +320,16 @@ const s = StyleSheet.create({
     width: WIDTH * 0.65,
   },
   surface: {
-    gap: 15,
-    padding: 30,
+    gap: 10,
+    padding: 22,
     borderRadius: SURFACE_BORDER_RADIUS,
     alignItems: "center",
     backgroundColor: "#ffffff90",
     width: WIDTH * 0.8,
   },
   actionContainer: {
-    paddingTop: 20,
-    gap: 15,
+    paddingTop: 12,
+    gap: 12,
     alignItems: "center",
   },
   button: {
@@ -321,8 +340,18 @@ const s = StyleSheet.create({
     fontWeight: 600,
     fontSize: 15,
   },
+  consentText: {
+    width: WIDTH * 0.65,
+    textAlign: "center",
+    fontSize: 12,
+    lineHeight: 17,
+  },
   errorContainer: {
-    height: 30,
+    // Doubles as the gap between fields, so it can't collapse to nothing — but a fixed
+    // height reserved 30px per field for a message that is usually absent. minHeight
+    // keeps the spacing and lets the row grow only when there is something to show.
+    minHeight: 12,
+    justifyContent: "center",
   },
   errorText: {
     fontSize: 15,
