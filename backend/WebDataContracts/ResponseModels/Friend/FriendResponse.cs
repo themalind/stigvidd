@@ -4,15 +4,13 @@ public class FriendResponse
 {
     public required string Identifier { get; set; }
     public required string NickName { get; set; }
-    public required string Email { get; set; }
 
-    public static FriendResponse Create(string identifier, string nickName, string email)
+    public static FriendResponse Create(string identifier, string nickName)
     {
         return new FriendResponse
         {
             Identifier = identifier,
-            NickName = nickName,
-            Email = email
+            NickName = nickName
         };
     }
 }

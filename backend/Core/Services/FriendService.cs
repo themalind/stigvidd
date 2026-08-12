@@ -76,7 +76,7 @@ public class FriendService : IFriendService
 
         var result = await _friendRepository.GetFriendsAsync(
             userIdResult.Value,
-            u => FriendResponse.Create(u.Identifier, u.NickName, u.Email),
+            u => FriendResponse.Create(u.Identifier, u.NickName),
             ctoken);
 
         if (!result.IsSuccess)
