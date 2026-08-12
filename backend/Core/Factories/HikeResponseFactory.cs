@@ -13,11 +13,12 @@ public class HikeResponseFactory
             hike.HikeLength,
             hike.Duration,
             GeoPathSerializer.ToCoordinateJson(hike.GeoPath),
-            hike.CreatedBy,
+            hike.CreatedBy ?? string.Empty,
             hike.GettingThere,
             hike.ParkingInfo,
             hike.Description,
-            hike.CreatedAt
+            hike.CreatedAt,
+            hike.CreatedByNickName
         );
     }
 }
