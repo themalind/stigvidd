@@ -47,7 +47,11 @@ public class TrailResponseFactory
         trail.Accessibility,
         trail.AccessibilityInfo ?? string.Empty,
         trail.TrailSymbol ?? string.Empty,
-        trail.TrailSymbolImage ?? string.Empty,
+        // Stored as a path like every other image column; empty stays empty so a
+        // symbol-less trail doesn't come back as a bare base URL.
+        string.IsNullOrEmpty(trail.TrailSymbolImage)
+            ? string.Empty
+            : PresentableBaseUrl + trail.TrailSymbolImage,
         trail.Description ?? string.Empty,
         trail.FullDescription ?? string.Empty,
         GeoPathSerializer.ToCoordinateJson(trail.GeoPath),
