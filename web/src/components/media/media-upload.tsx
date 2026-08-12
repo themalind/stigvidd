@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
-import { X } from "lucide-react";
+import { Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,15 +14,40 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import ImageCrop, { type CropRect } from "./image-crop";
-import { getAllTrails, addTrailImages, setTrailSymbol } from "@/api/trail";
-import { getAllFacilities, uploadFacilityImages } from "@/api/facility";
-import type {
-  FacilityResponse,
-  ImageProcessingOptions,
-  TrailShortInfoResponse,
+import {
+  getAllTrails,
+  addTrailImages,
+  deleteTrailImage,
+  setTrailSymbol,
+} from "@/api/trail";
+import {
+  getAllFacilities,
+  uploadFacilityImages,
+  deleteFacilityImage,
+} from "@/api/facility";
+import { getAllMedia } from "@/api/media";
+import {
+  loadStagedFiles,
+  loadStagedTarget,
+  saveStagedFiles,
+  saveStagedTarget,
+} from "@/lib/staged-media";
+import {
+  CLASSIFICATION,
+  type FacilityResponse,
+  type ImageProcessingOptions,
+  type MediaItemResponse,
+  type TrailShortInfoResponse,
 } from "@/types/types";
 
 type TargetType = "trail-gallery" | "trail-symbol" | "facility";
+
+/** The `ownerType` the media library reports for each upload target. */
+const OWNER_TYPE: Record<TargetType, string> = {
+  "trail-gallery": "Trail",
+  "trail-symbol": "TrailSymbol",
+  facility: "Facility",
+};
 
 function formatBytes(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
@@ -30,15 +55,35 @@ function formatBytes(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-interface Props {
-  onUploaded: () => void;
+// Trails can share a name, so the option label carries length + city to tell
+// same-named trails apart; the panel under the select shows the full details.
+function trailLabel(trail: TrailShortInfoResponse): string {
+  const details = [`${trail.trailLength} km`];
+  if (trail.city) details.push(trail.city);
+  return `${trail.name} — ${details.join(" · ")}`;
 }
 
-export default function MediaUpload({ onUploaded }: Props) {
-  const [targetType, setTargetType] = useState<TargetType>("trail-gallery");
-  const [targetId, setTargetId] = useState<string>("");
+interface Props {
+  onMediaChanged: () => void;
+}
+
+export default function MediaUpload({ onMediaChanged }: Props) {
+  // Restored synchronously so the first render already has the previous target.
+  const [targetType, setTargetType] = useState<TargetType>(() => {
+    const stored = loadStagedTarget()?.targetType;
+    return stored && stored in OWNER_TYPE
+      ? (stored as TargetType)
+      : "trail-gallery";
+  });
+  const [targetId, setTargetId] = useState<string>(
+    () => loadStagedTarget()?.targetId ?? "",
+  );
   const [trails, setTrails] = useState<TrailShortInfoResponse[]>([]);
   const [facilities, setFacilities] = useState<FacilityResponse[]>([]);
+
+  const [media, setMedia] = useState<MediaItemResponse[]>([]);
+  const [mediaLoading, setMediaLoading] = useState(true);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const [files, setFiles] = useState<File[]>([]);
   const [crop, setCrop] = useState<CropRect | null>(null);
@@ -56,20 +101,100 @@ export default function MediaUpload({ onUploaded }: Props) {
   const isSymbol = targetType === "trail-symbol";
   const allowMultiple = !isSymbol;
 
+  async function loadMedia() {
+    setMediaLoading(true);
+    try {
+      setMedia(await getAllMedia());
+    } catch {
+      toast.error("Failed to load existing images.");
+    } finally {
+      setMediaLoading(false);
+    }
+  }
+
   useEffect(() => {
     getAllTrails()
-      .then((t) => setTrails(t.sort((a, b) => a.name.localeCompare(b.name))))
+      .then((t) =>
+        setTrails(
+          // Same-named trails end up next to each other, shortest first.
+          t.sort(
+            (a, b) =>
+              a.name.localeCompare(b.name) || a.trailLength - b.trailLength,
+          ),
+        ),
+      )
       .catch(() => toast.error("Failed to load trails."));
     getAllFacilities()
-      .then((f) => setFacilities(f.sort((a, b) => a.name.localeCompare(b.name))))
+      .then((f) =>
+        setFacilities(f.sort((a, b) => a.name.localeCompare(b.name))),
+      )
       .catch(() => toast.error("Failed to load facilities."));
+    loadMedia();
   }, []);
 
-  // Reset target + crop when switching what we attach to.
+  const selectedTrail = useMemo(
+    () => trails.find((t) => t.identifier === targetId),
+    [trails, targetId],
+  );
+
+  // Images already attached to the selected target, from the media library.
+  const existing = useMemo(
+    () =>
+      targetId
+        ? media.filter(
+            (m) =>
+              m.ownerIdentifier === targetId &&
+              m.ownerType === OWNER_TYPE[targetType],
+          )
+        : [],
+    [media, targetId, targetType],
+  );
+
+  // Reset target + crop when switching what we attach to — but not on mount,
+  // where the target comes back from the previous session.
+  const targetTypeMounted = useRef(false);
   useEffect(() => {
+    if (!targetTypeMounted.current) {
+      targetTypeMounted.current = true;
+      return;
+    }
     setTargetId("");
     setCrop(null);
   }, [targetType]);
+
+  useEffect(() => {
+    saveStagedTarget({ targetType, targetId });
+  }, [targetType, targetId]);
+
+  // Drop a restored target that no longer exists (deleted between sessions).
+  useEffect(() => {
+    if (!targetId) return;
+    const list = targetType === "facility" ? facilities : trails;
+    if (list.length === 0) return;
+    if (!list.some((o) => o.identifier === targetId)) setTargetId("");
+  }, [targetId, targetType, trails, facilities]);
+
+  // Bring back files staged before a refresh, then keep the store in sync.
+  // Persisting only starts once the read has finished, so the empty initial
+  // state cannot wipe what is stored.
+  const [filesRestored, setFilesRestored] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    loadStagedFiles().then((staged) => {
+      if (cancelled) return;
+      // Anything picked while the read was in flight wins over the stored set.
+      if (staged.length > 0) setFiles((prev) => (prev.length ? prev : staged));
+      setFilesRestored(true);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!filesRestored) return;
+    saveStagedFiles(files);
+  }, [files, filesRestored]);
 
   // Symbol takes a single file; drop extras when switching into symbol mode.
   useEffect(() => {
@@ -90,7 +215,9 @@ export default function MediaUpload({ onUploaded }: Props) {
   }, [canCrop, crop]);
 
   function addFiles(incoming: FileList | File[]) {
-    const imgs = Array.from(incoming).filter((f) => f.type.startsWith("image/"));
+    const imgs = Array.from(incoming).filter((f) =>
+      f.type.startsWith("image/"),
+    );
     if (imgs.length === 0) return;
     setFiles((prev) => (allowMultiple ? [...prev, ...imgs] : [imgs[0]]));
   }
@@ -143,11 +270,30 @@ export default function MediaUpload({ onUploaded }: Props) {
       }
       setFiles([]);
       setCrop(null);
-      onUploaded();
+      await loadMedia();
+      onMediaChanged();
     } catch {
       toast.error("Upload failed.");
     } finally {
       setUploading(false);
+    }
+  }
+
+  async function handleDeleteExisting(item: MediaItemResponse) {
+    // The symbol has no delete endpoint — it is replaced by uploading a new one.
+    if (item.ownerType === "TrailSymbol") return;
+    if (!confirm("Delete this image?")) return;
+    setDeletingId(item.identifier);
+    try {
+      if (item.ownerType === "Trail") await deleteTrailImage(item.identifier);
+      else await deleteFacilityImage(item.identifier);
+      setMedia((prev) => prev.filter((m) => m.identifier !== item.identifier));
+      toast.success("Image deleted.");
+      onMediaChanged();
+    } catch {
+      toast.error("Failed to delete image.");
+    } finally {
+      setDeletingId(null);
     }
   }
 
@@ -179,15 +325,107 @@ export default function MediaUpload({ onUploaded }: Props) {
                 <SelectValue placeholder="Select…" />
               </SelectTrigger>
               <SelectContent>
-                {(targetType === "facility" ? facilities : trails).map((o) => (
-                  <SelectItem key={o.identifier} value={o.identifier}>
-                    {o.name}
-                  </SelectItem>
-                ))}
+                {targetType === "facility"
+                  ? facilities.map((f) => (
+                      <SelectItem key={f.identifier} value={f.identifier}>
+                        {f.name}
+                      </SelectItem>
+                    ))
+                  : trails.map((t) => (
+                      <SelectItem key={t.identifier} value={t.identifier}>
+                        {trailLabel(t)}
+                      </SelectItem>
+                    ))}
               </SelectContent>
             </Select>
           </div>
         </div>
+
+        {/* Details of the chosen trail — the last resort for telling apart
+            trails that share a name, length and city. */}
+        {selectedTrail && targetType !== "facility" && (
+          <div className="bg-muted/40 space-y-1 rounded-xs border p-3 text-xs">
+            <p className="text-sm font-medium">{selectedTrail.name}</p>
+            <p className="text-muted-foreground">
+              {selectedTrail.trailLength} km
+              {selectedTrail.city ? ` · ${selectedTrail.city}` : ""} ·{" "}
+              {CLASSIFICATION[selectedTrail.classification] ?? "Unknown"} ·{" "}
+              {selectedTrail.accessibility ? "Accessible" : "Not accessible"}
+            </p>
+            <p className="text-muted-foreground font-mono text-[10px] break-all">
+              {selectedTrail.identifier}
+            </p>
+          </div>
+        )}
+
+        {/* Images already attached to the chosen target */}
+        {targetId && (
+          <div className="space-y-2">
+            <Label>
+              {isSymbol ? "Current symbol" : "Existing images"}
+              {!mediaLoading && existing.length > 0 && (
+                <span className="text-muted-foreground font-normal">
+                  &nbsp;({existing.length})
+                </span>
+              )}
+            </Label>
+            {mediaLoading ? (
+              <p className="text-muted-foreground text-xs">Loading…</p>
+            ) : existing.length === 0 ? (
+              <p className="text-muted-foreground text-xs">
+                {isSymbol
+                  ? "No symbol set yet."
+                  : "No images attached yet — the ones you upload will show up here."}
+              </p>
+            ) : (
+              <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
+                {existing.map((item) => (
+                  <div
+                    key={`${item.ownerType}-${item.identifier}`}
+                    className="group relative aspect-square overflow-hidden rounded-xs border"
+                  >
+                    <img
+                      src={item.imageUrl}
+                      alt={item.altText ?? ""}
+                      className={cn(
+                        "h-full w-full",
+                        isSymbol
+                          ? "bg-muted object-contain p-2"
+                          : "object-cover",
+                      )}
+                    />
+                    {!isSymbol && (
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteExisting(item)}
+                        disabled={deletingId === item.identifier}
+                        title="Delete image"
+                        className={cn(
+                          "bg-background/80 hover:bg-background absolute top-1 right-1 rounded-xs p-1 opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100",
+                          deletingId === item.identifier &&
+                            "cursor-not-allowed opacity-50",
+                        )}
+                      >
+                        <Trash2 className="size-3.5" />
+                      </button>
+                    )}
+                    {item.width > 0 && item.height > 0 && (
+                      <span className="bg-background/80 absolute right-0 bottom-0 left-0 truncate px-1 py-0.5 text-[10px]">
+                        {item.width}×{item.height} ·{" "}
+                        {formatBytes(item.sizeBytes)}
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+            {isSymbol && existing.length > 0 && (
+              <p className="text-muted-foreground text-xs">
+                Uploading a new symbol replaces the current one.
+              </p>
+            )}
+          </div>
+        )}
 
         {/* Dropzone */}
         <div
@@ -228,7 +466,20 @@ export default function MediaUpload({ onUploaded }: Props) {
           />
         </div>
 
-        {/* Staged files */}
+        {/* Staged files — kept across a refresh, hence the explicit clear. */}
+        {previews.length > 0 && (
+          <div className="flex items-center justify-between">
+            <Label>
+              Staged for upload
+              <span className="text-muted-foreground font-normal">
+                &nbsp;({previews.length})
+              </span>
+            </Label>
+            <Button variant="ghost" size="sm" onClick={() => setFiles([])}>
+              Clear
+            </Button>
+          </div>
+        )}
         {previews.length > 0 && (
           <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
             {previews.map((p, i) => (
@@ -340,11 +591,7 @@ export default function MediaUpload({ onUploaded }: Props) {
           </Select>
         </div>
 
-        <Button
-          className="w-full"
-          disabled={uploading}
-          onClick={handleUpload}
-        >
+        <Button className="w-full" disabled={uploading} onClick={handleUpload}>
           {uploading ? "Uploading…" : "Process & upload"}
         </Button>
       </div>

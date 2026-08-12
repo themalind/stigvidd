@@ -7,9 +7,10 @@ export default function MediaPage() {
   const [tab, setTab] = useState("upload");
   const [refreshKey, setRefreshKey] = useState(0);
 
-  function handleUploaded() {
+  // Keep Browse in sync, but stay on Upload — that tab now shows the target's
+  // images itself, so jumping away would hide the result of the change.
+  function handleMediaChanged() {
     setRefreshKey((k) => k + 1);
-    setTab("browse");
   }
 
   return (
@@ -21,7 +22,7 @@ export default function MediaPage() {
             <TabsTrigger value="browse">Browse</TabsTrigger>
           </TabsList>
           <TabsContent value="upload">
-            <MediaUpload onUploaded={handleUploaded} />
+            <MediaUpload onMediaChanged={handleMediaChanged} />
           </TabsContent>
           <TabsContent value="browse">
             <MediaBrowse refreshKey={refreshKey} />
