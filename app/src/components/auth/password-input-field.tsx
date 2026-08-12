@@ -9,6 +9,8 @@ interface FieldProps {
   label: string;
   onSubmitEditing?: () => void;
   returnKeyType?: ReturnKeyTypeOptions;
+  /** Shorter field. Used on register, where four fields have to fit without scrolling. */
+  dense?: boolean;
 }
 const WIDTH = Dimensions.get("screen").width;
 
@@ -19,6 +21,7 @@ export default function PasswordInputField({
   label,
   onSubmitEditing,
   returnKeyType,
+  dense,
 }: FieldProps) {
   const [password, setPassword] = useState("");
   const theme = useTheme();
@@ -38,6 +41,7 @@ export default function PasswordInputField({
   return (
     <TextInput
       error={error}
+      dense={dense}
       secureTextEntry={!showPassword}
       value={password}
       onBlur={onBlur}

@@ -111,6 +111,8 @@ export default function SharedHikeDetails({
         setErrorMsg(t("hike.sharedHikeAlreadyHas"));
       } else if (error instanceof ApiError && error.status === 400) {
         setErrorMsg(t("hike.cannotShareWithCreator"));
+      } else if (error instanceof ApiError && error.status === 403) {
+        setErrorMsg(t("hike.reshareNotAllowed"));
       } else {
         setErrorMsg(t("hike.genericError"));
       }
@@ -228,20 +230,33 @@ export default function SharedHikeDetails({
                 </Button>
               </View>
             ) : (
-              <View style={s.buttonGroup}>
-                <Button style={s.button} mode="contained" onPress={() => setShowShareModal(true)}>
-                  <View style={s.buttonContent}>
-                    <Icon color={theme.colors.onPrimary} size={20} source="share" />
-                    <Text style={{ color: theme.colors.onPrimary }}>{t("common.share")}</Text>
-                  </View>
-                </Button>
-                <Button style={s.button} mode="outlined" onPress={handeleDelete}>
-                  <View style={s.buttonContent}>
-                    <Icon size={20} source="delete" />
-                    <Text>{t("common.delete")}</Text>
-                  </View>
-                </Button>
-              </View>
+              <>
+                {!sharedHike.allowResharing && (
+                  <Text style={[s.resharingNote, { color: theme.colors.onSurfaceVariant }]}>
+                    {t("hike.resharingDisabledNote")}
+                  </Text>
+                )}
+                <View style={s.buttonGroup}>
+                  {sharedHike.allowResharing && (
+                    <Button style={s.button} mode="contained" onPress={() => setShowShareModal(true)}>
+                      <View style={s.buttonContent}>
+                        <Icon color={theme.colors.onPrimary} size={20} source="share" />
+                        <Text style={{ color: theme.colors.onPrimary }}>{t("common.share")}</Text>
+                      </View>
+                    </Button>
+                  )}
+                  <Button
+                    style={sharedHike.allowResharing ? s.button : s.singleButton}
+                    mode="outlined"
+                    onPress={handeleDelete}
+                  >
+                    <View style={s.buttonContent}>
+                      <Icon size={20} source="delete" />
+                      <Text>{t("common.delete")}</Text>
+                    </View>
+                  </Button>
+                </View>
+              </>
             )}
           </>
         )}
@@ -374,7 +389,17 @@ const s = StyleSheet.create({
   },
   buttonGroup: {
     flexDirection: "row",
+    justifyContent: "center",
     gap: 20,
+    paddingTop: 10,
+  },
+  singleButton: {
+    minWidth: 160,
+    borderRadius: BORDER_RADIUS,
+  },
+  resharingNote: {
+    fontSize: 12,
+    textAlign: "center",
     paddingTop: 10,
   },
   button: {

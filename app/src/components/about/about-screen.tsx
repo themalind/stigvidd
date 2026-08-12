@@ -1,5 +1,5 @@
 import BackButton from "@/components/back-button";
-import { SCREEN_PADDING } from "@/constants/constants";
+import { PRIVACY_POLICY_URL, SCREEN_PADDING } from "@/constants/constants";
 import Constants from "expo-constants";
 import { Linking, Platform, ScrollView, StyleSheet, View } from "react-native";
 import { Text, useTheme } from "react-native-paper";
@@ -55,6 +55,22 @@ export default function AboutScreen() {
               onPress={() => Linking.openURL(`mailto:${email}`)}
             >
               {email}
+            </Text>
+          </View>
+
+          <View style={[s.section, { backgroundColor: theme.colors.secondaryContainer }]}>
+            <Text variant="titleSmall" style={[s.sectionTitle, { color: theme.colors.onSecondaryContainer }]}>
+              {t("about.privacyTitle")}
+            </Text>
+            <Text variant="bodyMedium" style={[s.featureText, { color: theme.colors.onSecondaryContainer }]}>
+              {t("about.privacyText")}
+            </Text>
+            <Text
+              variant="bodyMedium"
+              style={[s.link, { color: theme.colors.primary }]}
+              onPress={() => Linking.openURL(PRIVACY_POLICY_URL).catch(() => undefined)}
+            >
+              {t("about.privacyLink")}
             </Text>
           </View>
 

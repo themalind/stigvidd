@@ -217,7 +217,11 @@ export default function HikeDetails({ visible, hike, onDismiss }: Props) {
               gettingThere: formData.gettingThere || null,
               description: formData.description || null,
             });
-            shareMutation.mutate({ hikeIdentifier: hike.identifier, sharedWithName: friendNickName });
+            shareMutation.mutate({
+              hikeIdentifier: hike.identifier,
+              sharedWithName: friendNickName,
+              allowResharing: formData.allowResharing || false,
+            });
           }}
           isPending={shareMutation.isPending || updateHikeMutation.isPending}
         />

@@ -11,7 +11,7 @@ import { Control, Controller, FieldError, SubmitHandler, useForm } from "react-h
 import { useTranslation } from "react-i18next";
 import { ActivityIndicator, Dimensions, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
-import { Button, Divider, Icon, Modal, Portal, Text, TextInput, useTheme } from "react-native-paper";
+import { Button, Checkbox, Divider, Icon, Modal, Portal, Text, TextInput, useTheme } from "react-native-paper";
 import { z } from "zod";
 
 const HEIGHT = Dimensions.get("screen").height;
@@ -20,12 +20,13 @@ const additionalHikeFields = z.object({
   gettingThere: z.string().max(200, "Max 500 tecken").optional(),
   parkingInfo: z.string().max(200, "Max 500 tecken").optional(),
   description: z.string().max(500, "Max 500 tecken").optional(),
+  allowResharing: z.boolean().optional(),
 });
 
 export type ShareHikeFormFields = z.infer<typeof additionalHikeFields>;
 
 interface FormFieldProps {
-  name: keyof ShareHikeFormFields;
+  name: "gettingThere" | "parkingInfo" | "description";
   label: string;
   control: Control<ShareHikeFormFields>;
   error?: FieldError;
@@ -34,7 +35,7 @@ interface FormFieldProps {
 function FormField({ name, label, control, error }: FormFieldProps) {
   const theme = useTheme();
   return (
-    <>
+    <View style={s.field}>
       <Controller
         control={control}
         name={name}
@@ -43,8 +44,8 @@ function FormField({ name, label, control, error }: FormFieldProps) {
             error={!!error}
             style={[s.textInput, { backgroundColor: theme.colors.surfaceVariant }]}
             onBlur={onBlur}
-            onChangeText={(text) => onChange(text || undefined)}
-            value={value}
+            onChangeText={(text) => onChange(text || "")}
+            value={value ?? ""}
             label={label}
             autoCapitalize="sentences"
             keyboardType="default"
@@ -54,19 +55,14 @@ function FormField({ name, label, control, error }: FormFieldProps) {
           />
         )}
       />
-      <View style={s.errorContainer}>
-        {error && (
-          <Text
-            style={[
-              s.errorText,
-              { color: theme.colors.onErrorContainer, backgroundColor: theme.colors.errorContainer },
-            ]}
-          >
-            {error.message}
-          </Text>
-        )}
-      </View>
-    </>
+      {error && (
+        <Text
+          style={[s.errorText, { color: theme.colors.onErrorContainer, backgroundColor: theme.colors.errorContainer }]}
+        >
+          {error.message}
+        </Text>
+      )}
+    </View>
   );
 }
 
@@ -142,6 +138,29 @@ export default function ShareHikeModal({
                 keyboardShouldPersistTaps="handled"
                 enableOnAndroid
               >
+                <View style={{ paddingBottom: 15, gap: 10 }}>
+                  <Text variant="titleSmall" style={{ color: theme.colors.secondary }}>
+                    {t("hike.shareWarningHeading")}
+                  </Text>
+                  <Text style={s.infoBody}>{t("hike.shareWarningBody")}</Text>
+                  <Text style={s.infoBody}>{t("hike.allowResharingHelp")}</Text>
+                  <Controller
+                    control={control}
+                    name="allowResharing"
+                    defaultValue={false}
+                    render={({ field: { value, onChange } }) => (
+                      <Pressable style={s.checkboxRow} onPress={() => onChange(!value)}>
+                        <Checkbox.Android
+                          status={value ? "checked" : "unchecked"}
+                          color={theme.colors.primary}
+                          uncheckedColor={theme.colors.onSurfaceVariant}
+                        />
+                        <Text style={s.checkboxLabel}>{t("hike.allowResharingLabel")}</Text>
+                      </Pressable>
+                    )}
+                  />
+                  <Divider />
+                </View>
                 <Text style={s.infoLabel}>{t("hike.gettingThereHeading")}</Text>
                 <Text style={s.infoBody}>{t("hike.gettingThereHelp")}</Text>
                 <FormField
@@ -222,13 +241,13 @@ export default function ShareHikeModal({
 
 const s = StyleSheet.create({
   container: {
-    marginHorizontal: 20,
+    marginHorizontal: 10,
     borderRadius: BORDER_RADIUS,
   },
   inner: {
     borderRadius: BORDER_RADIUS,
     overflow: "hidden",
-    height: HEIGHT * 0.75,
+    height: HEIGHT * 0.85,
   },
   header: {
     flexDirection: "row",
@@ -275,8 +294,9 @@ const s = StyleSheet.create({
   textInput: {
     width: "100%",
   },
-  errorContainer: {
-    height: 30,
+  field: {
+    gap: 4,
+    marginBottom: 14,
   },
   errorText: {
     fontWeight: "600",
@@ -290,5 +310,14 @@ const s = StyleSheet.create({
   infoBody: {
     fontSize: 13,
     lineHeight: 20,
+  },
+  checkboxRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    marginTop: 8,
+  },
+  checkboxLabel: {
+    flex: 1,
   },
 });
