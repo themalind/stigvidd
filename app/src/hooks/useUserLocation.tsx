@@ -8,7 +8,10 @@ export interface UserLocation {
   isFallback: boolean;
 }
 
-const USER_LOCATION_KEY = ["userLocation"] as const;
+// Exported so that code which grants the permission *inside* the app can invalidate it.
+// Neither of the query's own refresh triggers fires in that case: the app never
+// backgrounds (no focus event) and tab screens stay mounted (no remount).
+export const USER_LOCATION_KEY = ["userLocation"] as const;
 
 const BORAS_FALLBACK: UserLocation = {
   latitude: START_COORDINATE_BORAS.latitude,
