@@ -15,6 +15,7 @@ public class ReviewRepositoryTests : TestBase
     private const string Review1Identifier = "r1a1b2c3-d4e5-4f6a-7b8c-9d0e1f2a3b4c"; // VandrarVennen, Tiveden, with images
     private const string Review5Identifier = "r5e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a"; // Kattleten, no images
     private const string VandrarVennenIdentifier = "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e";
+    private const int VandrarVennenId = 2;
     private const string KattletenIdentifier = "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5a33";
 
     private static Expression<Func<Review, ReviewResponse>> ReviewSelector =>
@@ -196,5 +197,52 @@ public class ReviewRepositoryTests : TestBase
 
         var verify = await repo.GetReviewByIdentifierAsync(Review5Identifier, KattletenIdentifier, CancellationToken.None);
         verify.IsSuccess.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task GetReviewImageUrlsByUserId_ReturnsUrlsFromAllTheirReviews()
+    {
+        // Arrange — user 2 (VandrarVennen) wrote review 1, the only seeded review with images
+        var repo = new ReviewRepository(CreateSeededFactory(), NullLogger<ReviewRepository>.Instance);
+
+        // Act
+        var result = await repo.GetReviewImageUrlsByUserIdAsync(VandrarVennenId, CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().BeEquivalentTo([
+            "https://inkaben.se/stigvidd/mock/review-tiveden-1.jpg",
+            "https://inkaben.se/stigvidd/mock/review-tiveden-2.jpg"]);
+    }
+
+    [Fact]
+    public async Task GetReviewImageUrlsByUserId_WhenReviewsHaveNoImages_ReturnsEmpty()
+    {
+        // Arrange — user 1 has reviews, none of them with images
+        var repo = new ReviewRepository(CreateSeededFactory(), NullLogger<ReviewRepository>.Instance);
+
+        // Act
+        var result = await repo.GetReviewImageUrlsByUserIdAsync(1, CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task DeleteReviewsByUserId_RemovesOnlyThatUsersReviews()
+    {
+        // Arrange
+        var repo = new ReviewRepository(CreateSeededFactory(), NullLogger<ReviewRepository>.Instance);
+
+        // Act
+        var result = await repo.DeleteReviewsByUserIdAsync(VandrarVennenId, CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        var deleted = await repo.GetReviewByIdentifierAsync(Review1Identifier, VandrarVennenIdentifier, CancellationToken.None);
+        deleted.IsSuccess.Should().BeFalse();
+        var kept = await repo.GetReviewByIdentifierAsync(Review5Identifier, KattletenIdentifier, CancellationToken.None);
+        kept.IsSuccess.Should().BeTrue();
     }
 }

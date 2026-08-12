@@ -1,4 +1,7 @@
 using FluentAssertions;
+using Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using StigviddAPI;
 using System.Net;
 using System.Net.Http.Headers;
@@ -778,5 +781,42 @@ public class UsersControllerIntegrationTests : IClassFixture<StigViddWebApplicat
         getResponse.StatusCode.Should().Be(HttpStatusCode.OK);
         hike3.SharedByName.Should().BeNull();
         hike3.SharedByIdentifier.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task DeleteUser_AfterOwnerDeletion_SharedHikeKeepsNoCreatorIdentifiers()
+    {
+        // Arrange — Hike 3 is shared, so it survives VandrarVennen's account deletion for
+        // NaturElskaren. UserId is nulled by EF SetNull, but CreatedBy and CreatedByNickName
+        // are denormalised copies that must be cleared explicitly or the route stays tied
+        // to someone who asked to be deleted.
+        var client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", UserWithFavorites);
+
+        // Act
+        var deleteRequest = new HttpRequestMessage(HttpMethod.Delete, "/api/v1/users/delete");
+        var deleteResponse = await client.SendAsync(deleteRequest, TestContext.Current.CancellationToken);
+
+        // Assert
+        deleteResponse.StatusCode.Should().Be(HttpStatusCode.NoContent);
+
+        using var scope = _factory.Services.CreateScope();
+        var contextFactory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<StigViddDbContext>>();
+        using var context = contextFactory.CreateDbContext();
+
+        var sharedHike = await context.Hikes
+            .SingleOrDefaultAsync(h => h.Identifier == SharedHikeIdentifier, TestContext.Current.CancellationToken);
+
+        sharedHike.Should().NotBeNull();
+        sharedHike.UserId.Should().BeNull();
+        sharedHike.CreatedBy.Should().BeNull();
+        sharedHike.CreatedByNickName.Should().BeNull();
+
+        // The unshared hike is gone entirely, identifiers and all
+        var unsharedHike = await context.Hikes
+            .SingleOrDefaultAsync(h => h.Identifier == UnsharedHikeIdentifier, TestContext.Current.CancellationToken);
+
+        unsharedHike.Should().BeNull();
     }
 }

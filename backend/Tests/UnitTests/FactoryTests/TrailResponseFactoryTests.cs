@@ -32,6 +32,36 @@ public class TrailResponseFactoryTests
     };
 
     [Fact]
+    public void Create_WhenTrailHasASymbol_PrependsTheBaseUrlToTheStoredPath()
+    {
+        // Arrange
+        var factory = BuildFactory();
+        var trail = BaseTrail();
+        trail.TrailSymbolImage = "symbols/symbol.jpg";
+
+        // Act
+        var result = factory.Create(trail);
+
+        // Assert
+        result.TrailSymbolImage.Should().Be("http://stigvidd.se/testing/symbols/symbol.jpg");
+    }
+
+    [Fact]
+    public void Create_WhenTrailHasNoSymbol_ReturnsEmptyRatherThanABareBaseUrl()
+    {
+        // Arrange
+        var factory = BuildFactory();
+        var trail = BaseTrail();
+        trail.TrailSymbolImage = string.Empty;
+
+        // Act
+        var result = factory.Create(trail);
+
+        // Assert
+        result.TrailSymbolImage.Should().BeEmpty();
+    }
+
+    [Fact]
     public void Create_WhenTrailHasVisitorInformation_MapsAllFields()
     {
         // Arrange

@@ -184,7 +184,7 @@ public class HikesControllerIntegrationTests : IClassFixture<StigViddWebApplicat
             Name = "TestHike1",
             HikeLength = 1000,
             Duration = 60000,
-            Coordinates = "[{\"latitude\":57.62,\"longitude\":12.81},{\"latitude\":57.64,\"longitude\":12.83}]"
+            Coordinates = "[{\"latitude\":57.62,\"longitude\":12.81},{\"latitude\":57.64,\"longitude\":12.83}]",
         };
 
         // Act
@@ -216,7 +216,7 @@ public class HikesControllerIntegrationTests : IClassFixture<StigViddWebApplicat
             Name = hikeName,
             HikeLength = hikeLength,
             Duration = duration,
-            Coordinates = "[]"
+            Coordinates = "[]",
         };
 
         // Act
@@ -261,7 +261,7 @@ public class HikesControllerIntegrationTests : IClassFixture<StigViddWebApplicat
             Name = "TestHike1",
             HikeLength = 1000,
             Duration = 60000,
-            Coordinates = "[]"
+            Coordinates = "[]",
         };
 
         // Act

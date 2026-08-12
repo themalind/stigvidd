@@ -5,6 +5,7 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using WebDataContracts.RequestModels.Friend;
 using WebDataContracts.RequestModels.HikeShare;
+using WebDataContracts.ResponseModels.HikeShare;
 
 namespace IntegrationTests.HikeSharesController;
 
@@ -14,6 +15,7 @@ public class HikeSharesControllerTests : IClassFixture<StigViddWebApplicationFac
 
     private const string BASE_URL = "/api/v1/hikeshares";
     private const string FRIENDS_URL = "/api/v1/friends";
+    private const string RECIPIENT_URL = "/api/v1/hikesharerecipient";
 
     // Users
     private const string NaturElskarenUid = "firebase-uid-12345";  // User1, owns Hike1 & Hike2
@@ -207,6 +209,35 @@ public class HikeSharesControllerTests : IClassFixture<StigViddWebApplicationFac
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task ShareHike_StoresTheOwnersResharingChoicePerRecipient(bool allowResharing)
+    {
+        // Arrange — NaturElskaren sends request, VandrarVennen accepts
+        var client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", NaturElskarenUid);
+        await client.PostAsJsonAsync($"{FRIENDS_URL}/requests",
+            new SendFriendRequestRequest { ReceiverNickName = VandrarVennenNickName },
+            TestContext.Current.CancellationToken);
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", VandrarVennenUid);
+        await client.PutAsync($"{FRIENDS_URL}/requests/accept/{NaturElskarenIdentifier}", null, TestContext.Current.CancellationToken);
+
+        // Act — NaturElskaren shares Hike1, and VandrarVennen reads the pending invitation
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", NaturElskarenUid);
+        var request = new HikeShareRequest { HikeIdentifier = Hike1Identifier, SharedWithName = VandrarVennenNickName, AllowResharing = allowResharing };
+        var response = await client.PostAsJsonAsync($"{BASE_URL}/share", request, TestContext.Current.CancellationToken);
+
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", VandrarVennenUid);
+        var pending = await (await client.GetAsync($"{RECIPIENT_URL}/incoming/{Hike1Identifier}", TestContext.Current.CancellationToken))
+            .Content.ReadFromJsonAsync<HikeShareRecipientResponse>(TestContext.Current.CancellationToken);
+
+        // Assert — the choice belongs to this one share and reaches the recipient unchanged
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        pending.Should().NotBeNull();
+        pending!.AllowResharing.Should().Be(allowResharing);
     }
 
     #endregion

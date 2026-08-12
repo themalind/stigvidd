@@ -17,7 +17,8 @@ public class HikeShareRecipientServiceTests
         Mock<IUserRepository>? userRepositoryMock = null,
         Mock<IHikeRepository>? hikeRepositoryMock = null,
         Mock<IFriendRepository>? friendRepositoryMock = null,
-        Mock<IPushNotificationService>? pushNotificationServiceMock = null)
+        Mock<IPushNotificationService>? pushNotificationServiceMock = null,
+        Mock<IHikeService>? hikeServiceMock = null)
     {
         var defaultPushMock = new Mock<IPushNotificationService>();
         defaultPushMock.Setup(p => p.SendToUserAsync(
@@ -25,12 +26,18 @@ public class HikeShareRecipientServiceTests
                 It.IsAny<IReadOnlyDictionary<string, object>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Ok());
 
+        // Dropping a share always ends with the orphan sweep; tests that care pass their own
+        var defaultHikeServiceMock = new Mock<IHikeService>();
+        defaultHikeServiceMock.Setup(h => h.CleanUpOrphanedHikesAsync(It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
         return new HikeShareRecipientService(
             hikeShareRecipientRepositoryMock?.Object ?? new Mock<IHikeShareRecipientRepository>().Object,
             userRepositoryMock?.Object ?? new Mock<IUserRepository>().Object,
             hikeRepositoryMock?.Object ?? new Mock<IHikeRepository>().Object,
             friendRepositoryMock?.Object ?? new Mock<IFriendRepository>().Object,
-            pushNotificationServiceMock?.Object ?? defaultPushMock.Object
+            pushNotificationServiceMock?.Object ?? defaultPushMock.Object,
+            hikeServiceMock?.Object ?? defaultHikeServiceMock.Object
         );
     }
 
@@ -46,8 +53,18 @@ public class HikeShareRecipientServiceTests
         UserId = 99,
         GeoPath = UnitTests.Utilities.GeoPath(),
         HikeLength = 10,
-        Duration = 3600
+        Duration = 3600,
+        CreatedByNickName = "owner-nickname",
     };
+
+    // The whole reshare gate is one question: does this sender hold an accepted share of
+    // this hike that the owner marked as resharable? HikeShare is keyed on
+    // (HikeId, SharedWithId), so at most one row can answer it. Every test that reaches past
+    // the gate has to answer it; HasHikeSharedWithUserAsync is only the later duplicate
+    // check against the *target*, and most tests return before reaching it.
+    private static void AllowReshare(Mock<IHikeShareRecipientRepository> repoMock, bool allowed = true) =>
+        repoMock.Setup(r => r.IsAllowedToReshareHikeAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<bool>.Success(allowed));
 
     [Fact]
     public async Task GetAllHikesSharedWithUserAsync_WhenRepositoryError_ReturnsServerError()
@@ -137,6 +154,53 @@ public class HikeShareRecipientServiceTests
         hike.Description.Should().Be("Lovely forest hike");
     }
 
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task GetAllHikesSharedWithUserAsync_ProjectsTheResharingFlagFromTheShare(bool allowResharing)
+    {
+        // Arrange — the other tests hand the repository a canned list, so nothing exercises
+        // the projection itself. Capture it and run it: this is the only value that tells
+        // the app whether to offer a reshare button, and a share row that loses it on the
+        // way out means the user is offered a button that answers 403.
+        Expression<Func<HikeShare, HikeShareRecipientResponse>>? projection = null;
+        var repoMock = new Mock<IHikeShareRecipientRepository>();
+        repoMock.Setup(r => r.GetAllHikesSharedWithUserAsync(
+                It.IsAny<string>(),
+                It.IsAny<Expression<Func<HikeShare, HikeShareRecipientResponse>>>(),
+                It.IsAny<CancellationToken>()))
+            .Callback<string, Expression<Func<HikeShare, HikeShareRecipientResponse>>, CancellationToken>((_, selector, _) => projection = selector)
+            .ReturnsAsync(RepositoryResult<IReadOnlyCollection<HikeShareRecipientResponse>>.Success([]));
+
+        var service = Build(hikeShareRecipientRepositoryMock: repoMock);
+
+        // Act
+        await service.GetAllHikesSharedWithUserAsync("user-identifier", CancellationToken.None);
+
+        // Assert
+        projection.Should().NotBeNull();
+        var response = projection!.Compile().Invoke(SharedHikeRow(allowResharing));
+        response.AllowResharing.Should().Be(allowResharing);
+    }
+
+    // A HikeShare carrying every navigation property the recipient projection walks.
+    private static HikeShare SharedHikeRow(bool allowResharing)
+    {
+        var hike = HikeOwnedByOther();
+        hike.User = new User { Id = 99, Identifier = "owner-identifier", NickName = "owner-nickname", Email = "owner@example.com", SubjectId = "firebase-uid-owner" };
+
+        return new HikeShare
+        {
+            HikeId = hike.Id,
+            SharedById = 3,
+            SharedWithId = 1,
+            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+            AllowResharing = allowResharing,
+            Hike = hike,
+            SharedBy = new User { Id = 3, Identifier = "sharer-identifier", NickName = "Sharer", Email = "sharer@example.com", SubjectId = "firebase-uid-sharer" },
+        };
+    }
+
     [Fact]
     public async Task ReshareSharedHikeAsync_WhenCurrentUserNotFound_ReturnsNotFound()
     {
@@ -224,7 +288,45 @@ public class HikeShareRecipientServiceTests
     }
 
     [Fact]
-    public async Task ReshareSharedHikeAsync_WhenHasPermissionCheckFails_ReturnsServerError()
+    public async Task ReshareSharedHikeAsync_WhenNotAllowedToReshare_ReturnsForbidden()
+    {
+        // Arrange — the repository answers false for both causes: the hike was never shared
+        // with this user, or it was but the owner did not opt in to letting it travel
+        // further. They are indistinguishable here by design — the two causes are separated
+        // in IsAllowedToReshareHikeAsync_WhenNoShareExists_ReturnsFalse and
+        // IsAllowedToReshareHikeAsync_WhenOwnerDidNotAllowIt_ReturnsFalse. This is the GDPR
+        // gate: without it a hike walks A → B → C → D unbounded, carrying the owner's home
+        // coordinates to strangers.
+        var userRepoMock = new Mock<IUserRepository>();
+        userRepoMock.Setup(r => r.GetUserByIdentifierAsync(It.IsAny<string>(), It.IsAny<Expression<Func<User, SenderProjection>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<SenderProjection>.Success(Sender(1)));
+
+        var hikeRepoMock = new Mock<IHikeRepository>();
+        hikeRepoMock.Setup(r => r.GetHikeByIdentifierAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<Hike>.Success(HikeOwnedByOther()));
+
+        var repoMock = new Mock<IHikeShareRecipientRepository>();
+        AllowReshare(repoMock, allowed: false);
+
+        var friendRepoMock = new Mock<IFriendRepository>();
+        friendRepoMock.Setup(r => r.FriendshipExistsAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<bool>.Success(true));
+
+        var service = Build(hikeShareRecipientRepositoryMock: repoMock, userRepositoryMock: userRepoMock, hikeRepositoryMock: hikeRepoMock, friendRepositoryMock: friendRepoMock);
+
+        // Act
+        var result = await service.ReshareSharedHikeAsync("hike-identifier", "user-identifier", "reshareToName", CancellationToken.None);
+
+        // Assert — and nothing was written
+        result.Success.Should().BeFalse();
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(403);
+        result.Message.ResultMessage.Should().Be("You do not have permission to reshare this hike.");
+        repoMock.Verify(r => r.ReshareSharedHikeAsync(It.IsAny<HikeShare>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task ReshareSharedHikeAsync_WhenResharePermissionCheckFails_ReturnsServerError()
     {
         // Arrange
         var userRepoMock = new Mock<IUserRepository>();
@@ -236,7 +338,7 @@ public class HikeShareRecipientServiceTests
             .ReturnsAsync(RepositoryResult<Hike>.Success(HikeOwnedByOther()));
 
         var repoMock = new Mock<IHikeShareRecipientRepository>();
-        repoMock.Setup(r => r.HasHikeSharedWithUserAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+        repoMock.Setup(r => r.IsAllowedToReshareHikeAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<bool>.Error());
 
         var service = Build(hikeShareRecipientRepositoryMock: repoMock, userRepositoryMock: userRepoMock, hikeRepositoryMock: hikeRepoMock);
@@ -244,38 +346,11 @@ public class HikeShareRecipientServiceTests
         // Act
         var result = await service.ReshareSharedHikeAsync("hike-identifier", "user-identifier", "reshareToName", CancellationToken.None);
 
-        // Assert
+        // Assert — a failed lookup must not be read as "allowed"
         result.Success.Should().BeFalse();
         result.Message.Should().NotBeNull();
         result.Message.StatusCode.Should().Be(500);
-    }
-
-    [Fact]
-    public async Task ReshareSharedHikeAsync_WhenUserLacksPermission_ReturnsForbidden()
-    {
-        // Arrange
-        var userRepoMock = new Mock<IUserRepository>();
-        userRepoMock.Setup(r => r.GetUserByIdentifierAsync(It.IsAny<string>(), It.IsAny<Expression<Func<User, SenderProjection>>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(RepositoryResult<SenderProjection>.Success(Sender(1)));
-
-        var hikeRepoMock = new Mock<IHikeRepository>();
-        hikeRepoMock.Setup(r => r.GetHikeByIdentifierAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(RepositoryResult<Hike>.Success(HikeOwnedByOther()));
-
-        var repoMock = new Mock<IHikeShareRecipientRepository>();
-        repoMock.Setup(r => r.HasHikeSharedWithUserAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(RepositoryResult<bool>.Success(false));
-
-        var service = Build(hikeShareRecipientRepositoryMock: repoMock, userRepositoryMock: userRepoMock, hikeRepositoryMock: hikeRepoMock);
-
-        // Act
-        var result = await service.ReshareSharedHikeAsync("hike-identifier", "user-identifier", "reshareToName", CancellationToken.None);
-
-        // Assert
-        result.Success.Should().BeFalse();
-        result.Message.Should().NotBeNull();
-        result.Message.StatusCode.Should().Be(403);
-        result.Message.ResultMessage.Should().Be("You do not have permission to reshare this hike.");
+        result.Message.ResultMessage.Should().Be("Something went wrong when checking reshare permissions.");
     }
 
     [Fact]
@@ -293,8 +368,7 @@ public class HikeShareRecipientServiceTests
             .ReturnsAsync(RepositoryResult<Hike>.Success(HikeOwnedByOther()));
 
         var repoMock = new Mock<IHikeShareRecipientRepository>();
-        repoMock.Setup(r => r.HasHikeSharedWithUserAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(RepositoryResult<bool>.Success(true));
+        AllowReshare(repoMock);
 
         var service = Build(hikeShareRecipientRepositoryMock: repoMock, userRepositoryMock: userRepoMock, hikeRepositoryMock: hikeRepoMock);
 
@@ -323,8 +397,7 @@ public class HikeShareRecipientServiceTests
             .ReturnsAsync(RepositoryResult<Hike>.Success(HikeOwnedByOther()));
 
         var repoMock = new Mock<IHikeShareRecipientRepository>();
-        repoMock.Setup(r => r.HasHikeSharedWithUserAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(RepositoryResult<bool>.Success(true));
+        AllowReshare(repoMock);
 
         var service = Build(hikeShareRecipientRepositoryMock: repoMock, userRepositoryMock: userRepoMock, hikeRepositoryMock: hikeRepoMock);
 
@@ -352,8 +425,7 @@ public class HikeShareRecipientServiceTests
             .ReturnsAsync(RepositoryResult<Hike>.Success(HikeOwnedByOther()));
 
         var repoMock = new Mock<IHikeShareRecipientRepository>();
-        repoMock.Setup(r => r.HasHikeSharedWithUserAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(RepositoryResult<bool>.Success(true));
+        AllowReshare(repoMock);
 
         var friendRepoMock = new Mock<IFriendRepository>();
         friendRepoMock.Setup(r => r.FriendshipExistsAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
@@ -386,8 +458,7 @@ public class HikeShareRecipientServiceTests
             .ReturnsAsync(RepositoryResult<Hike>.Success(HikeOwnedByOther()));
 
         var repoMock = new Mock<IHikeShareRecipientRepository>();
-        repoMock.Setup(r => r.HasHikeSharedWithUserAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(RepositoryResult<bool>.Success(true));
+        AllowReshare(repoMock);
 
         var friendRepoMock = new Mock<IFriendRepository>();
         friendRepoMock.Setup(r => r.FriendshipExistsAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
@@ -420,8 +491,7 @@ public class HikeShareRecipientServiceTests
             .ReturnsAsync(RepositoryResult<Hike>.Success(HikeOwnedByOther()));
 
         var repoMock = new Mock<IHikeShareRecipientRepository>();
-        repoMock.Setup(r => r.HasHikeSharedWithUserAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(RepositoryResult<bool>.Success(true));
+        AllowReshare(repoMock);
 
         var friendRepoMock = new Mock<IFriendRepository>();
         friendRepoMock.Setup(r => r.FriendshipExistsAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
@@ -454,10 +524,10 @@ public class HikeShareRecipientServiceTests
             .ReturnsAsync(RepositoryResult<Hike>.Success(HikeOwnedByOther()));
 
         var repoMock = new Mock<IHikeShareRecipientRepository>();
-        repoMock.Setup(r => r.HasHikeSharedWithUserAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(RepositoryResult<bool>.Success(true));
+        // The duplicate check fails
         repoMock.Setup(r => r.HasHikeSharedWithUserAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<bool>.Error());
+        AllowReshare(repoMock);
 
         var friendRepoMock = new Mock<IFriendRepository>();
         friendRepoMock.Setup(r => r.FriendshipExistsAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
@@ -489,10 +559,10 @@ public class HikeShareRecipientServiceTests
             .ReturnsAsync(RepositoryResult<Hike>.Success(HikeOwnedByOther()));
 
         var repoMock = new Mock<IHikeShareRecipientRepository>();
+        // The duplicate check: the target already has this hike
         repoMock.Setup(r => r.HasHikeSharedWithUserAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<bool>.Success(true));
-        repoMock.Setup(r => r.HasHikeSharedWithUserAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(RepositoryResult<bool>.Success(true));
+        AllowReshare(repoMock);
 
         var friendRepoMock = new Mock<IFriendRepository>();
         friendRepoMock.Setup(r => r.FriendshipExistsAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
@@ -526,10 +596,11 @@ public class HikeShareRecipientServiceTests
             .ReturnsAsync(RepositoryResult<Hike>.Success(HikeOwnedByOther()));
 
         var repoMock = new Mock<IHikeShareRecipientRepository>();
-        repoMock.Setup(r => r.HasHikeSharedWithUserAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(RepositoryResult<bool>.Success(true));
+        // The duplicate check counts pending shares too — see the repository test
+        // HasHikeSharedWithUserAsync_WhenShareIsPending_ReturnsTrue
         repoMock.Setup(r => r.HasHikeSharedWithUserAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<bool>.Success(true)); // pending share exists
+        AllowReshare(repoMock);
 
         var friendRepoMock = new Mock<IFriendRepository>();
         friendRepoMock.Setup(r => r.FriendshipExistsAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
@@ -562,10 +633,10 @@ public class HikeShareRecipientServiceTests
             .ReturnsAsync(RepositoryResult<Hike>.Success(HikeOwnedByOther()));
 
         var repoMock = new Mock<IHikeShareRecipientRepository>();
-        // SetupSequence: first call (permission check) → true, second call (duplicate check) → false
-        repoMock.SetupSequence(r => r.HasHikeSharedWithUserAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(RepositoryResult<bool>.Success(true))
+        // The only remaining call is the duplicate check: the target does not have it yet
+        repoMock.Setup(r => r.HasHikeSharedWithUserAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<bool>.Success(false));
+        AllowReshare(repoMock);
         repoMock.Setup(r => r.ReshareSharedHikeAsync(It.IsAny<HikeShare>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult.Error());
 
@@ -599,10 +670,10 @@ public class HikeShareRecipientServiceTests
             .ReturnsAsync(RepositoryResult<Hike>.Success(HikeOwnedByOther()));
 
         var repoMock = new Mock<IHikeShareRecipientRepository>();
-        // SetupSequence: first call (permission check) → true, second call (duplicate check) → false
-        repoMock.SetupSequence(r => r.HasHikeSharedWithUserAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(RepositoryResult<bool>.Success(true))
+        // The only remaining call is the duplicate check: the target does not have it yet
+        repoMock.Setup(r => r.HasHikeSharedWithUserAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<bool>.Success(false));
+        AllowReshare(repoMock);
         repoMock.Setup(r => r.ReshareSharedHikeAsync(It.IsAny<HikeShare>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult.Success());
 
@@ -618,6 +689,46 @@ public class HikeShareRecipientServiceTests
         // Assert
         result.Success.Should().BeTrue();
         result.Message.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task ReshareSharedHikeAsync_WhenSuccessful_CutsTheChainOnTheNewShare()
+    {
+        // Arrange — the sender was allowed to reshare, so the reshare succeeds
+        var userRepoMock = new Mock<IUserRepository>();
+        userRepoMock.Setup(r => r.GetUserByIdentifierAsync(It.IsAny<string>(), It.IsAny<Expression<Func<User, SenderProjection>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<SenderProjection>.Success(Sender(1)));
+        userRepoMock.Setup(r => r.GetUserByNickNameAsync(It.IsAny<string>(), It.IsAny<Expression<Func<User, ReceiverProjection>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<ReceiverProjection>.Success(Receiver(2)));
+
+        var hikeRepoMock = new Mock<IHikeRepository>();
+        hikeRepoMock.Setup(r => r.GetHikeByIdentifierAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<Hike>.Success(HikeOwnedByOther()));
+
+        HikeShare? saved = null;
+        var repoMock = new Mock<IHikeShareRecipientRepository>();
+        // The only remaining call is the duplicate check: the target does not have it yet
+        repoMock.Setup(r => r.HasHikeSharedWithUserAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<bool>.Success(false));
+        AllowReshare(repoMock);
+        repoMock.Setup(r => r.ReshareSharedHikeAsync(It.IsAny<HikeShare>(), It.IsAny<CancellationToken>()))
+            .Callback<HikeShare, CancellationToken>((hs, _) => saved = hs)
+            .ReturnsAsync(RepositoryResult.Success());
+
+        var friendRepoMock = new Mock<IFriendRepository>();
+        friendRepoMock.Setup(r => r.FriendshipExistsAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<bool>.Success(true));
+
+        var service = Build(hikeShareRecipientRepositoryMock: repoMock, userRepositoryMock: userRepoMock, hikeRepositoryMock: hikeRepoMock, friendRepositoryMock: friendRepoMock);
+
+        // Act
+        var result = await service.ReshareSharedHikeAsync("hike-identifier", "user-identifier", "reshareToName", CancellationToken.None);
+
+        // Assert — a hike moves at most one hop past its owner: whoever receives it this
+        // way cannot pass it on, because only the owner may grant that permission
+        result.Success.Should().BeTrue();
+        saved.Should().NotBeNull();
+        saved!.AllowResharing.Should().BeFalse();
     }
 
     [Fact]
@@ -711,10 +822,10 @@ public class HikeShareRecipientServiceTests
             .ReturnsAsync(RepositoryResult<Hike>.Success(HikeOwnedByOther()));
 
         repoMock = new Mock<IHikeShareRecipientRepository>();
-        // SetupSequence: first call (permission check) → true, second call (duplicate check) → false
-        repoMock.SetupSequence(r => r.HasHikeSharedWithUserAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(RepositoryResult<bool>.Success(true))
+        // The only remaining call is the duplicate check: the target does not have it yet
+        repoMock.Setup(r => r.HasHikeSharedWithUserAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<bool>.Success(false));
+        AllowReshare(repoMock);
         repoMock.Setup(r => r.ReshareSharedHikeAsync(It.IsAny<HikeShare>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult.Success());
 
@@ -868,6 +979,97 @@ public class HikeShareRecipientServiceTests
         // Assert
         result.Success.Should().BeTrue();
         result.Message.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task RemoveSharedHikeAsync_WhenSuccessful_SweepsOrphanedHikes()
+    {
+        // Arrange — this may have been the last recipient of a hike whose owner is already gone
+        var userRepoMock = new Mock<IUserRepository>();
+        userRepoMock.Setup(r => r.GetUserIdByIdentifierAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<int>.Success(1));
+
+        var hikeRepoMock = new Mock<IHikeRepository>();
+        hikeRepoMock.Setup(r => r.GetHikeIdByIdentifierAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<int>.Success(10));
+
+        var repoMock = new Mock<IHikeShareRecipientRepository>();
+        repoMock.Setup(r => r.DeleteHikeShareAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult.Success());
+
+        var hikeServiceMock = new Mock<IHikeService>();
+        hikeServiceMock.Setup(h => h.CleanUpOrphanedHikesAsync(It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        var service = Build(hikeShareRecipientRepositoryMock: repoMock, userRepositoryMock: userRepoMock,
+            hikeRepositoryMock: hikeRepoMock, hikeServiceMock: hikeServiceMock);
+
+        // Act
+        var result = await service.RemoveSharedHikeAsync("hike-identifier", "user-identifier", CancellationToken.None);
+
+        // Assert
+        result.Success.Should().BeTrue();
+        hikeServiceMock.Verify(h => h.CleanUpOrphanedHikesAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task RemoveSharedHikeAsync_WhenDeleteFails_DoesNotSweep()
+    {
+        // Arrange
+        var userRepoMock = new Mock<IUserRepository>();
+        userRepoMock.Setup(r => r.GetUserIdByIdentifierAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<int>.Success(1));
+
+        var hikeRepoMock = new Mock<IHikeRepository>();
+        hikeRepoMock.Setup(r => r.GetHikeIdByIdentifierAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<int>.Success(10));
+
+        var repoMock = new Mock<IHikeShareRecipientRepository>();
+        repoMock.Setup(r => r.DeleteHikeShareAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult.Error());
+
+        var hikeServiceMock = new Mock<IHikeService>();
+
+        var service = Build(hikeShareRecipientRepositoryMock: repoMock, userRepositoryMock: userRepoMock,
+            hikeRepositoryMock: hikeRepoMock, hikeServiceMock: hikeServiceMock);
+
+        // Act
+        var result = await service.RemoveSharedHikeAsync("hike-identifier", "user-identifier", CancellationToken.None);
+
+        // Assert — nothing was removed, so nothing can have been orphaned
+        result.Success.Should().BeFalse();
+        hikeServiceMock.Verify(h => h.CleanUpOrphanedHikesAsync(It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task RejectHikeShareAsync_WhenSuccessful_SweepsOrphanedHikes()
+    {
+        // Arrange — a rejected share can have been the last one holding an ownerless hike alive
+        var userRepoMock = new Mock<IUserRepository>();
+        userRepoMock.Setup(r => r.GetUserIdByIdentifierAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<int>.Success(1));
+
+        var hikeRepoMock = new Mock<IHikeRepository>();
+        hikeRepoMock.Setup(r => r.GetHikeIdByIdentifierAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<int>.Success(10));
+
+        var repoMock = new Mock<IHikeShareRecipientRepository>();
+        repoMock.Setup(r => r.RejectHikeShareAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult.Success());
+
+        var hikeServiceMock = new Mock<IHikeService>();
+        hikeServiceMock.Setup(h => h.CleanUpOrphanedHikesAsync(It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        var service = Build(hikeShareRecipientRepositoryMock: repoMock, userRepositoryMock: userRepoMock,
+            hikeRepositoryMock: hikeRepoMock, hikeServiceMock: hikeServiceMock);
+
+        // Act
+        var result = await service.RejectHikeShareAsync("user-identifier", "hike-identifier", CancellationToken.None);
+
+        // Assert
+        result.Success.Should().BeTrue();
+        hikeServiceMock.Verify(h => h.CleanUpOrphanedHikesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
     // GetIncomingPendingSharesAsync
@@ -1069,7 +1271,7 @@ public class HikeShareRecipientServiceTests
         // Arrange
         var share = HikeShareRecipientResponse.Create(
             "hike-1", "TestHike1", 10, 3600, "[]", "Creator", "Sender", "sender-id",
-            DateTime.UtcNow, null, null, "A lovely hike");
+            DateTime.UtcNow, null, null, "A lovely hike", allowResharing: true);
 
         var userRepoMock = new Mock<IUserRepository>();
         userRepoMock.Setup(r => r.GetUserIdByIdentifierAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
@@ -1092,6 +1294,7 @@ public class HikeShareRecipientServiceTests
         result.Message.Should().BeNull();
         result.Value!.HikeIdentifier.Should().Be("hike-1");
         result.Value.Description.Should().Be("A lovely hike");
+        result.Value.AllowResharing.Should().BeTrue();
     }
 
     // AcceptHikeShareAsync

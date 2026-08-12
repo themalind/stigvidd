@@ -1,8 +1,10 @@
 using Core.Factories;
 using Core.Interfaces.Repositories;
+using Core.Interfaces.Services;
 using Core.Services;
 using FluentAssertions;
 using Infrastructure.Data.Entities;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using System.Linq.Expressions;
 using WebDataContracts.RequestModels.Hike;
@@ -15,12 +17,15 @@ public class HikeServiceTests
     private HikeService Build(
         Mock<IHikeRepository>? hikeRepo = null,
         Mock<IUserRepository>? userRepo = null,
-        Mock<IHikeShareRecipientRepository>? shareRepo = null) =>
+        Mock<IHikeShareRecipientRepository>? shareRepo = null,
+        Mock<IWebDavService>? webDav = null) =>
         new(
             (hikeRepo ?? new Mock<IHikeRepository>()).Object,
             new HikeResponseFactory(),
             (userRepo ?? new Mock<IUserRepository>()).Object,
-            (shareRepo ?? new Mock<IHikeShareRecipientRepository>()).Object);
+            (shareRepo ?? new Mock<IHikeShareRecipientRepository>()).Object,
+            (webDav ?? Utilities.MockFactory.WebDavService()).Object,
+            NullLogger<HikeService>.Instance);
 
     private static CreateHikeRequest ValidRequest() => new()
     {
@@ -30,26 +35,31 @@ public class HikeServiceTests
         Coordinates = "[{\"latitude\":57.62,\"longitude\":12.81},{\"latitude\":57.64,\"longitude\":12.83}]",
         Description = "Description",
         GettingThere = "Getting there",
-        ParkingInfo = "Parking info",
+        ParkingInfo = "Parking info"
     };
 
     [Fact]
     public async Task CreateHike_WhenUserExists_ReturnsSuccess()
     {
         // Arrange
-        var userRepo = new Mock<IUserRepository>();
-        userRepo.Setup(r => r.GetUserIdByIdentifierAsync(Utilities.Identifiers.User, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(RepositoryResult<int>.Success(1));
+        Hike? saved = null;
         var hikeRepo = new Mock<IHikeRepository>();
         hikeRepo.Setup(r => r.CreateHikeAsync(It.IsAny<Hike>(), It.IsAny<CancellationToken>()))
+            .Callback<Hike, CancellationToken>((h, _) => saved = h)
             .ReturnsAsync(RepositoryResult<Hike>.Success(Utilities.Stubs.Hike()));
 
         // Act
-        var result = await Build(hikeRepo, userRepo).CreateHikeAsync(ValidRequest(), Utilities.Identifiers.User, CancellationToken.None);
+        var result = await Build(hikeRepo, UserExistsRepo()).CreateHikeAsync(ValidRequest(), Utilities.Identifiers.User, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeTrue();
         result.Value.Should().NotBeNull();
+
+        // The creator's nickname is copied onto the hike at creation so the recipient view
+        // can still name the author after the owner's user row is gone.
+        saved.Should().NotBeNull();
+        saved!.CreatedBy.Should().Be(Utilities.Identifiers.User);
+        saved.CreatedByNickName.Should().Be("TestUser");
     }
 
     [Fact]
@@ -57,8 +67,11 @@ public class HikeServiceTests
     {
         // Arrange
         var userRepo = new Mock<IUserRepository>();
-        userRepo.Setup(r => r.GetUserIdByIdentifierAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(RepositoryResult<int>.NotFound());
+        userRepo.Setup(r => r.GetUserByIdentifierAsync(
+                It.IsAny<string>(),
+                It.IsAny<Expression<Func<User, UserProjection>>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<UserProjection>.NotFound());
 
         var hikeRepo = new Mock<IHikeRepository>();
         hikeRepo.Setup(r => r.CreateHikeAsync(It.IsAny<Hike>(), It.IsAny<CancellationToken>()))
@@ -82,8 +95,11 @@ public class HikeServiceTests
     private static Mock<IUserRepository> UserExistsRepo()
     {
         var userRepo = new Mock<IUserRepository>();
-        userRepo.Setup(r => r.GetUserIdByIdentifierAsync(Utilities.Identifiers.User, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(RepositoryResult<int>.Success(1));
+        userRepo.Setup(r => r.GetUserByIdentifierAsync(
+                Utilities.Identifiers.User,
+                It.IsAny<Expression<Func<User, UserProjection>>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<UserProjection>.Success(new UserProjection(1, "TestUser")));
         return userRepo;
     }
 
@@ -127,7 +143,7 @@ public class HikeServiceTests
             Name = "Hike",
             HikeLength = 5000,
             Duration = 1800000,
-            Coordinates = "[" + string.Join(",", points) + "]",
+            Coordinates = "[" + string.Join(",", points) + "]"
         };
 
         // Act
@@ -167,12 +183,8 @@ public class HikeServiceTests
         hikeRepo.Setup(r => r.CreateHikeAsync(It.IsAny<Hike>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<Hike>.Error());
 
-        var userRepo = new Mock<IUserRepository>();
-        userRepo.Setup(r => r.GetUserIdByIdentifierAsync(Utilities.Identifiers.User, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(RepositoryResult<int>.Success(1));
-
         // Act
-        var result = await Build(userRepo: userRepo, hikeRepo: hikeRepo).CreateHikeAsync(ValidRequest(), Utilities.Identifiers.User, CancellationToken.None);
+        var result = await Build(userRepo: UserExistsRepo(), hikeRepo: hikeRepo).CreateHikeAsync(ValidRequest(), Utilities.Identifiers.User, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -263,7 +275,8 @@ public class HikeServiceTests
             UserId = 1,
             GettingThere = "Take bus 42",
             ParkingInfo = "Parking at the church",
-            Description = "Scenic route through the forest"
+            Description = "Scenic route through the forest",
+            CreatedByNickName = "HikerJoe",
         };
 
         var hikeRepo = new Mock<IHikeRepository>();
@@ -453,11 +466,15 @@ public class HikeServiceTests
         var hikeRepo = new Mock<IHikeRepository>();
         hikeRepo.Setup(r => r.GetHikeByIdentifierAsync(Utilities.Identifiers.Hike1, It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<Hike>.Success(hike));
-        hikeRepo.Setup(r => r.SoftDeleteHikeAsync(hike, It.IsAny<CancellationToken>()))
+        hikeRepo.Setup(r => r.DeleteHikeAsync(hike, It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult.Success());
+        hikeRepo.Setup(r => r.HikeHasSharesAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<bool>.Success(false));
+        hikeRepo.Setup(r => r.GetHikeImageUrlsByHikeIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<IEnumerable<string>>.Success([]));
 
         // Act
-        var result = await Build(hikeRepo, Utilities.MockFactory.UserRepositoryFoundByIdentifier()).SoftDeleteHikeAsync(Utilities.Identifiers.Hike1, Utilities.Identifiers.User, CancellationToken.None);
+        var result = await Build(hikeRepo, Utilities.MockFactory.UserRepositoryFoundByIdentifier()).DeleteHikeAsync(Utilities.Identifiers.Hike1, Utilities.Identifiers.User, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -472,7 +489,7 @@ public class HikeServiceTests
             .ReturnsAsync(RepositoryResult<Hike>.NotFound());
 
         // Act
-        var result = await Build(hikeRepo, Utilities.MockFactory.UserRepositoryFoundByIdentifier()).SoftDeleteHikeAsync("no-such", Utilities.Identifiers.User, CancellationToken.None);
+        var result = await Build(hikeRepo, Utilities.MockFactory.UserRepositoryFoundByIdentifier()).DeleteHikeAsync("no-such", Utilities.Identifiers.User, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -495,11 +512,269 @@ public class HikeServiceTests
             .ReturnsAsync(RepositoryResult<User>.Success(otherUser));
 
         // Act
-        var result = await Build(hikeRepo, userRepo).SoftDeleteHikeAsync(Utilities.Identifiers.Hike1, "other-user", CancellationToken.None);
+        var result = await Build(hikeRepo, userRepo).DeleteHikeAsync(Utilities.Identifiers.Hike1, "other-user", CancellationToken.None);
 
         // Assert
         result.Success.Should().BeFalse();
         result.Message.Should().NotBeNull();
         result.Message.StatusCode.Should().Be(403);
+    }
+
+    [Fact]
+    public async Task DeleteHike_WhenHikeIsShared_LeavesTheImageFilesAlone()
+    {
+        // Arrange — a shared hike is kept for its recipients, so its files must survive with it
+        var hike = Utilities.Stubs.Hike();
+        var hikeRepo = new Mock<IHikeRepository>();
+        hikeRepo.Setup(r => r.GetHikeByIdentifierAsync(Utilities.Identifiers.Hike1, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<Hike>.Success(hike));
+        hikeRepo.Setup(r => r.HikeHasSharesAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<bool>.Success(true));
+        hikeRepo.Setup(r => r.DeleteHikeAsync(hike, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult.Success());
+
+        var webDav = Utilities.MockFactory.WebDavService();
+
+        // Act
+        var result = await Build(hikeRepo, Utilities.MockFactory.UserRepositoryFoundByIdentifier(), webDav: webDav)
+            .DeleteHikeAsync(Utilities.Identifiers.Hike1, Utilities.Identifiers.User, CancellationToken.None);
+
+        // Assert — the URLs are never even fetched for a hike that is not going away
+        result.Success.Should().BeTrue();
+        hikeRepo.Verify(r => r.GetHikeImageUrlsByHikeIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Never);
+        webDav.Verify(w => w.DeleteFileAsync(It.IsAny<string>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task DeleteHike_WhenRowDeleteFails_ReturnsInternalServerErrorAndKeepsTheFiles()
+    {
+        // Arrange
+        var hike = Utilities.Stubs.Hike();
+        var hikeRepo = new Mock<IHikeRepository>();
+        hikeRepo.Setup(r => r.GetHikeByIdentifierAsync(Utilities.Identifiers.Hike1, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<Hike>.Success(hike));
+        hikeRepo.Setup(r => r.HikeHasSharesAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<bool>.Success(false));
+        hikeRepo.Setup(r => r.GetHikeImageUrlsByHikeIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<IEnumerable<string>>.Success(["hikes/a.jpeg"]));
+        hikeRepo.Setup(r => r.DeleteHikeAsync(hike, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult.Error());
+
+        var webDav = Utilities.MockFactory.WebDavService();
+
+        // Act
+        var result = await Build(hikeRepo, Utilities.MockFactory.UserRepositoryFoundByIdentifier(), webDav: webDav)
+            .DeleteHikeAsync(Utilities.Identifiers.Hike1, Utilities.Identifiers.User, CancellationToken.None);
+
+        // Assert
+        result.Success.Should().BeFalse();
+        result.Message!.StatusCode.Should().Be(500);
+        webDav.Verify(w => w.DeleteFileAsync(It.IsAny<string>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task DeleteHike_WhenWebDavThrows_StillSucceeds()
+    {
+        // Arrange — the row is already gone, so a failed file delete must not be reported as failure
+        var hike = Utilities.Stubs.Hike();
+        var hikeRepo = new Mock<IHikeRepository>();
+        hikeRepo.Setup(r => r.GetHikeByIdentifierAsync(Utilities.Identifiers.Hike1, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<Hike>.Success(hike));
+        hikeRepo.Setup(r => r.HikeHasSharesAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<bool>.Success(false));
+        hikeRepo.Setup(r => r.GetHikeImageUrlsByHikeIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<IEnumerable<string>>.Success(["hikes/a.jpeg", "hikes/b.jpeg"]));
+        hikeRepo.Setup(r => r.DeleteHikeAsync(hike, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult.Success());
+
+        var webDav = new Mock<IWebDavService>();
+        webDav.Setup(w => w.DeleteFileAsync(It.IsAny<string>()))
+            .ThrowsAsync(new Exception("webdav down"));
+
+        // Act
+        var result = await Build(hikeRepo, Utilities.MockFactory.UserRepositoryFoundByIdentifier(), webDav: webDav)
+            .DeleteHikeAsync(Utilities.Identifiers.Hike1, Utilities.Identifiers.User, CancellationToken.None);
+
+        // Assert — the first failure did not stop the second file from being attempted
+        result.Success.Should().BeTrue();
+        webDav.Verify(w => w.DeleteFileAsync(It.IsAny<string>()), Times.Exactly(2));
+    }
+
+    [Fact]
+    public async Task CleanUpOrphanedHikes_DeletesTheImageFilesAfterTheRows()
+    {
+        // Arrange
+        var callOrder = new List<string>();
+        var hikeRepo = new Mock<IHikeRepository>();
+        hikeRepo.Setup(r => r.GetOrphanedHikeImageUrlsAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<IEnumerable<string>>.Success(["hikes/a.jpeg"]));
+        hikeRepo.Setup(r => r.DeleteOrphanedHikesAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult.Success())
+            .Callback(() => callOrder.Add("rows"));
+
+        var webDav = Utilities.MockFactory.WebDavService();
+        webDav.Setup(w => w.DeleteFileAsync(It.IsAny<string>()))
+            .ReturnsAsync(Result.Ok(true))
+            .Callback<string>(url => callOrder.Add(url));
+
+        // Act
+        await Build(hikeRepo, webDav: webDav).CleanUpOrphanedHikesAsync(CancellationToken.None);
+
+        // Assert
+        callOrder.Should().Equal("rows", "hikes/a.jpeg");
+    }
+
+    [Fact]
+    public async Task CleanUpOrphanedHikes_WhenRowDeleteFails_DoesNotTouchWebDav()
+    {
+        // Arrange — the rows are still there, so their files must stay too
+        var hikeRepo = new Mock<IHikeRepository>();
+        hikeRepo.Setup(r => r.GetOrphanedHikeImageUrlsAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<IEnumerable<string>>.Success(["hikes/a.jpeg"]));
+        hikeRepo.Setup(r => r.DeleteOrphanedHikesAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult.Error());
+
+        var webDav = Utilities.MockFactory.WebDavService();
+
+        // Act
+        await Build(hikeRepo, webDav: webDav).CleanUpOrphanedHikesAsync(CancellationToken.None);
+
+        // Assert
+        webDav.Verify(w => w.DeleteFileAsync(It.IsAny<string>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task DeleteHikeSharesByUserId_SweepsOrphanedHikes()
+    {
+        // Arrange — a recipient deleting their account can leave the last ownerless hike behind
+        var hikeRepo = new Mock<IHikeRepository>();
+        hikeRepo.Setup(r => r.DeleteHikeSharesByUserIdAsync(1, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult.Success());
+        hikeRepo.Setup(r => r.GetOrphanedHikeImageUrlsAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<IEnumerable<string>>.Success([]));
+        hikeRepo.Setup(r => r.DeleteOrphanedHikesAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult.Success());
+
+        // Act
+        var result = await Build(hikeRepo).DeleteHikeSharesByUserIdAsync(1, CancellationToken.None);
+
+        // Assert
+        result.Success.Should().BeTrue();
+        hikeRepo.Verify(r => r.DeleteOrphanedHikesAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task DeleteHikeSharesByUserId_WhenSweepFails_StillSucceeds()
+    {
+        // Arrange — the shares are gone, so the caller's request succeeded; a leftover row is
+        // housekeeping the next sweep will pick up
+        var hikeRepo = new Mock<IHikeRepository>();
+        hikeRepo.Setup(r => r.DeleteHikeSharesByUserIdAsync(1, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult.Success());
+        hikeRepo.Setup(r => r.GetOrphanedHikeImageUrlsAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<IEnumerable<string>>.Error());
+
+        // Act
+        var result = await Build(hikeRepo).DeleteHikeSharesByUserIdAsync(1, CancellationToken.None);
+
+        // Assert
+        result.Success.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task HandleUserHikesOnUserDelete_DeletesTheImageFilesAfterTheRows()
+    {
+        // Arrange
+        var callOrder = new List<string>();
+        var hikeRepo = new Mock<IHikeRepository>();
+        hikeRepo.Setup(r => r.GetDeletableHikeImageUrlsByUserIdAsync(1, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<IEnumerable<string>>.Success(["hikes/a.jpeg", "hikes/b.jpeg"]));
+        hikeRepo.Setup(r => r.HandleUserHikesOnUserDeleteAsync(1, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult.Success())
+            .Callback(() => callOrder.Add("rows"));
+        hikeRepo.Setup(r => r.AnonymizeSharedHikesOnUserDeleteAsync(1, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult.Success())
+            .Callback(() => callOrder.Add("anonymize"));
+
+        var webDav = Utilities.MockFactory.WebDavService();
+        webDav.Setup(w => w.DeleteFileAsync(It.IsAny<string>()))
+            .ReturnsAsync(Result.Ok(true))
+            .Callback<string>(url => callOrder.Add(url));
+
+        // Act
+        var result = await Build(hikeRepo, webDav: webDav).HandleUserHikesOnUserDeleteAsync(1, CancellationToken.None);
+
+        // Assert — the anonymisation runs on what the delete left behind, and files come last
+        result.Success.Should().BeTrue();
+        callOrder.Should().Equal("rows", "anonymize", "hikes/a.jpeg", "hikes/b.jpeg");
+    }
+
+    [Fact]
+    public async Task HandleUserHikesOnUserDelete_WhenAnonymizeFails_ReturnsInternalServerError()
+    {
+        // Arrange — the creator's identifiers would survive on the shared hikes, so this
+        // must not pass silently
+        var hikeRepo = new Mock<IHikeRepository>();
+        hikeRepo.Setup(r => r.GetDeletableHikeImageUrlsByUserIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<IEnumerable<string>>.Success(["hikes/a.jpeg"]));
+        hikeRepo.Setup(r => r.HandleUserHikesOnUserDeleteAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult.Success());
+        hikeRepo.Setup(r => r.AnonymizeSharedHikesOnUserDeleteAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult.Error());
+
+        var webDav = Utilities.MockFactory.WebDavService();
+
+        // Act
+        var result = await Build(hikeRepo, webDav: webDav).HandleUserHikesOnUserDeleteAsync(1, CancellationToken.None);
+
+        // Assert
+        result.Success.Should().BeFalse();
+        result.Message!.StatusCode.Should().Be(500);
+        webDav.Verify(w => w.DeleteFileAsync(It.IsAny<string>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task HandleUserHikesOnUserDelete_WhenWebDavThrows_StillSucceeds()
+    {
+        // Arrange — a failed file delete leaves an orphan, but must not block the account deletion
+        var hikeRepo = new Mock<IHikeRepository>();
+        hikeRepo.Setup(r => r.GetDeletableHikeImageUrlsByUserIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<IEnumerable<string>>.Success(["hikes/a.jpeg"]));
+        hikeRepo.Setup(r => r.HandleUserHikesOnUserDeleteAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult.Success());
+        hikeRepo.Setup(r => r.AnonymizeSharedHikesOnUserDeleteAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult.Success());
+
+        var webDav = Utilities.MockFactory.WebDavService();
+        webDav.Setup(w => w.DeleteFileAsync(It.IsAny<string>()))
+            .ThrowsAsync(new Exception("webdav down"));
+
+        // Act
+        var result = await Build(hikeRepo, webDav: webDav).HandleUserHikesOnUserDeleteAsync(1, CancellationToken.None);
+
+        // Assert
+        result.Success.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task HandleUserHikesOnUserDelete_WhenRowDeleteFails_DoesNotTouchWebDav()
+    {
+        // Arrange
+        var hikeRepo = new Mock<IHikeRepository>();
+        hikeRepo.Setup(r => r.GetDeletableHikeImageUrlsByUserIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<IEnumerable<string>>.Success(["hikes/a.jpeg"]));
+        hikeRepo.Setup(r => r.HandleUserHikesOnUserDeleteAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult.Error());
+
+        var webDav = Utilities.MockFactory.WebDavService();
+
+        // Act
+        var result = await Build(hikeRepo, webDav: webDav).HandleUserHikesOnUserDeleteAsync(1, CancellationToken.None);
+
+        // Assert — a failed delete stops the flow before anything else is touched
+        result.Success.Should().BeFalse();
+        result.Message!.StatusCode.Should().Be(500);
+        hikeRepo.Verify(r => r.AnonymizeSharedHikesOnUserDeleteAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Never);
+        webDav.Verify(w => w.DeleteFileAsync(It.IsAny<string>()), Times.Never);
     }
 }

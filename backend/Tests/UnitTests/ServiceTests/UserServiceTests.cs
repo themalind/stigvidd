@@ -1,5 +1,6 @@
 using Core.Factories;
 using Core.Interfaces.Repositories;
+using Core.Interfaces.Services;
 using Core.Services;
 using FluentAssertions;
 using Infrastructure.Data.Entities;
@@ -15,9 +16,10 @@ public class UserServiceTests
 {
     private UserService Build(
         Mock<IUserRepository>? repo = null,
-        Mock<IHikeRepository>? hikeRepo = null,
+        Mock<IHikeService>? hikeService = null,
         Mock<ITrailObstacleRepository>? trailobstacleRepo = null,
-        Mock<IFriendRepository>? friendRepo = null)
+        Mock<IFriendRepository>? friendRepo = null,
+        Mock<IReviewService>? reviewService = null)
     {
         var cfg = new Mock<IConfiguration>();
         cfg.Setup(c => c["PresentableBaseUrl"]).Returns("http://stigvidd.se/testing/");
@@ -25,9 +27,16 @@ public class UserServiceTests
         friendRepo ??= new Mock<IFriendRepository>();
         var userResponseFactory = new UserResponseFactory(cfg.Object);
         trailobstacleRepo ??= new Mock<ITrailObstacleRepository>();
-        hikeRepo ??= new Mock<IHikeRepository>();
+        hikeService ??= new Mock<IHikeService>();
+        if (reviewService is null)
+        {
+            // Reviews are cleaned up on the way to every user deletion; tests that care pass their own
+            reviewService = new Mock<IReviewService>();
+            reviewService.Setup(s => s.DeleteUserReviewsOnUserDeleteAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(Result.Ok());
+        }
 
-        return new UserService(repo.Object, trailobstacleRepo.Object, userResponseFactory, hikeRepo.Object, friendRepo.Object);
+        return new UserService(repo.Object, trailobstacleRepo.Object, userResponseFactory, hikeService.Object, reviewService.Object, friendRepo.Object);
     }
 
     [Fact]
@@ -438,11 +447,11 @@ public class UserServiceTests
             .ReturnsAsync(RepositoryResult<int>.Success(1));
         repo.Setup(r => r.DeleteUserAsync(Utilities.Identifiers.User, It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult.Success());
-        var hikeRepo = new Mock<IHikeRepository>();
-        hikeRepo.Setup(r => r.HandleUserHikesOnUserDeleteAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(RepositoryResult.Success());
-        hikeRepo.Setup(hr => hr.DeleteHikeSharesByUserIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(RepositoryResult.Success());
+        var hikeService = new Mock<IHikeService>();
+        hikeService.Setup(s => s.HandleUserHikesOnUserDeleteAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Ok());
+        hikeService.Setup(hs => hs.DeleteHikeSharesByUserIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Ok());
         var trailObstacleRepo = new Mock<ITrailObstacleRepository>();
         trailObstacleRepo.Setup(r => r.DeleteAllObstaclesByUserIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult.Success());
@@ -451,7 +460,7 @@ public class UserServiceTests
             .ReturnsAsync(RepositoryResult.Success());
 
         // Act
-        var result = await Build(repo, hikeRepo, trailObstacleRepo, friendRepo).DeleteUserAsync(Utilities.Identifiers.User, CancellationToken.None);
+        var result = await Build(repo, hikeService, trailObstacleRepo, friendRepo).DeleteUserAsync(Utilities.Identifiers.User, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -464,11 +473,11 @@ public class UserServiceTests
         var repo = new Mock<IUserRepository>();
         repo.Setup(r => r.GetUserIdByIdentifierAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<int>.NotFound());
-        var hikeRepo = new Mock<IHikeRepository>();
+        var hikeService = new Mock<IHikeService>();
         var trailObstacleRepo = new Mock<ITrailObstacleRepository>();
 
         // Act
-        var result = await Build(repo, hikeRepo, trailObstacleRepo).DeleteUserAsync("nobody", CancellationToken.None);
+        var result = await Build(repo, hikeService, trailObstacleRepo).DeleteUserAsync("nobody", CancellationToken.None);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -483,11 +492,11 @@ public class UserServiceTests
         var repo = new Mock<IUserRepository>();
         repo.Setup(r => r.GetUserIdByIdentifierAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<int>.Error());
-        var hikeRepo = new Mock<IHikeRepository>();
+        var hikeService = new Mock<IHikeService>();
         var trailObstacleRepo = new Mock<ITrailObstacleRepository>();
 
         // Act
-        var result = await Build(repo, hikeRepo, trailObstacleRepo).DeleteUserAsync(Utilities.Identifiers.User, CancellationToken.None);
+        var result = await Build(repo, hikeService, trailObstacleRepo).DeleteUserAsync(Utilities.Identifiers.User, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -502,13 +511,39 @@ public class UserServiceTests
         var repo = new Mock<IUserRepository>();
         repo.Setup(r => r.GetUserIdByIdentifierAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<int>.Success(1));
-        var hikeRepo = new Mock<IHikeRepository>();
-        hikeRepo.Setup(r => r.HandleUserHikesOnUserDeleteAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(RepositoryResult.Error());
+        var hikeService = new Mock<IHikeService>();
+        hikeService.Setup(s => s.HandleUserHikesOnUserDeleteAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Fail(new Message(500, "hike cleanup failed")));
         var trailObstacleRepo = new Mock<ITrailObstacleRepository>();
 
         // Act
-        var result = await Build(repo, hikeRepo, trailObstacleRepo).DeleteUserAsync(Utilities.Identifiers.User, CancellationToken.None);
+        var result = await Build(repo, hikeService, trailObstacleRepo).DeleteUserAsync(Utilities.Identifiers.User, CancellationToken.None);
+
+        // Assert
+        result.Success.Should().BeFalse();
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(500);
+    }
+
+    [Fact]
+    public async Task DeleteUser_WhenDeleteUserReviewsFails_ReturnsInternalServerError()
+    {
+        // Arrange
+        var repo = new Mock<IUserRepository>();
+        repo.Setup(r => r.GetUserIdByIdentifierAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<int>.Success(1));
+        var hikeService = new Mock<IHikeService>();
+        hikeService.Setup(s => s.HandleUserHikesOnUserDeleteAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Ok());
+        hikeService.Setup(s => s.DeleteHikeSharesByUserIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Ok());
+        var reviewService = new Mock<IReviewService>();
+        reviewService.Setup(s => s.DeleteUserReviewsOnUserDeleteAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Fail(new Message(500, "review cleanup failed")));
+        var trailObstacleRepo = new Mock<ITrailObstacleRepository>();
+
+        // Act
+        var result = await Build(repo, hikeService, trailObstacleRepo, reviewService: reviewService).DeleteUserAsync(Utilities.Identifiers.User, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -523,15 +558,15 @@ public class UserServiceTests
         var repo = new Mock<IUserRepository>();
         repo.Setup(r => r.GetUserIdByIdentifierAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<int>.Success(1));
-        var hikeRepo = new Mock<IHikeRepository>();
-        hikeRepo.Setup(r => r.HandleUserHikesOnUserDeleteAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(RepositoryResult.Success());
-        hikeRepo.Setup(r => r.DeleteHikeSharesByUserIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(RepositoryResult.Error());
+        var hikeService = new Mock<IHikeService>();
+        hikeService.Setup(s => s.HandleUserHikesOnUserDeleteAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Ok());
+        hikeService.Setup(s => s.DeleteHikeSharesByUserIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Fail(new Message(500, "hike share cleanup failed")));
         var trailObstacleRepo = new Mock<ITrailObstacleRepository>();
 
         // Act
-        var result = await Build(repo, hikeRepo, trailObstacleRepo).DeleteUserAsync(Utilities.Identifiers.User, CancellationToken.None);
+        var result = await Build(repo, hikeService, trailObstacleRepo).DeleteUserAsync(Utilities.Identifiers.User, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -546,17 +581,17 @@ public class UserServiceTests
         var repo = new Mock<IUserRepository>();
         repo.Setup(r => r.GetUserIdByIdentifierAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<int>.Success(1));
-        var hikeRepo = new Mock<IHikeRepository>();
-        hikeRepo.Setup(r => r.HandleUserHikesOnUserDeleteAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(RepositoryResult.Success());
-        hikeRepo.Setup(r => r.DeleteHikeSharesByUserIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(RepositoryResult.Success());
+        var hikeService = new Mock<IHikeService>();
+        hikeService.Setup(s => s.HandleUserHikesOnUserDeleteAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Ok());
+        hikeService.Setup(s => s.DeleteHikeSharesByUserIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Ok());
         var trailObstacleRepo = new Mock<ITrailObstacleRepository>();
         trailObstacleRepo.Setup(r => r.DeleteAllObstaclesByUserIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult.Error());
 
         // Act
-        var result = await Build(repo, hikeRepo, trailObstacleRepo).DeleteUserAsync(Utilities.Identifiers.User, CancellationToken.None);
+        var result = await Build(repo, hikeService, trailObstacleRepo).DeleteUserAsync(Utilities.Identifiers.User, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -571,11 +606,11 @@ public class UserServiceTests
         var repo = new Mock<IUserRepository>();
         repo.Setup(r => r.GetUserIdByIdentifierAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<int>.Success(1));
-        var hikeRepo = new Mock<IHikeRepository>();
-        hikeRepo.Setup(r => r.HandleUserHikesOnUserDeleteAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(RepositoryResult.Success());
-        hikeRepo.Setup(r => r.DeleteHikeSharesByUserIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(RepositoryResult.Success());
+        var hikeService = new Mock<IHikeService>();
+        hikeService.Setup(s => s.HandleUserHikesOnUserDeleteAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Ok());
+        hikeService.Setup(s => s.DeleteHikeSharesByUserIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Ok());
         var trailObstacleRepo = new Mock<ITrailObstacleRepository>();
         trailObstacleRepo.Setup(r => r.DeleteAllObstaclesByUserIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult.Success());
@@ -584,7 +619,7 @@ public class UserServiceTests
             .ReturnsAsync(RepositoryResult.Error());
 
         // Act
-        var result = await Build(repo, hikeRepo, trailObstacleRepo, friendRepo).DeleteUserAsync(Utilities.Identifiers.User, CancellationToken.None);
+        var result = await Build(repo, hikeService, trailObstacleRepo, friendRepo).DeleteUserAsync(Utilities.Identifiers.User, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -601,11 +636,11 @@ public class UserServiceTests
             .ReturnsAsync(RepositoryResult<int>.Success(1));
         repo.Setup(r => r.DeleteUserAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult.Error());
-        var hikeRepo = new Mock<IHikeRepository>();
-        hikeRepo.Setup(r => r.HandleUserHikesOnUserDeleteAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(RepositoryResult.Success());
-        hikeRepo.Setup(r => r.DeleteHikeSharesByUserIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(RepositoryResult.Success());
+        var hikeService = new Mock<IHikeService>();
+        hikeService.Setup(s => s.HandleUserHikesOnUserDeleteAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Ok());
+        hikeService.Setup(s => s.DeleteHikeSharesByUserIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Ok());
         var trailObstacleRepo = new Mock<ITrailObstacleRepository>();
         trailObstacleRepo.Setup(r => r.DeleteAllObstaclesByUserIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult.Success());
@@ -614,7 +649,7 @@ public class UserServiceTests
             .ReturnsAsync(RepositoryResult.Success());
 
         // Act
-        var result = await Build(repo, hikeRepo, trailObstacleRepo, friendRepo).DeleteUserAsync(Utilities.Identifiers.User, CancellationToken.None);
+        var result = await Build(repo, hikeService, trailObstacleRepo, friendRepo).DeleteUserAsync(Utilities.Identifiers.User, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeFalse();

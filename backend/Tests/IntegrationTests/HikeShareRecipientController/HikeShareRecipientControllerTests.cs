@@ -24,17 +24,19 @@ public class HikeShareRecipientControllerTests : IClassFixture<StigViddWebApplic
     private const string UnknownUserUid = "not-a-valid-uid";
 
     private const string NaturElskarenIdentifier = "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d";
+    private const string VandrarVennenIdentifier = "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e";
     private const string NaturElskarenNickName = "NaturElskaren";
     private const string VandrarVennenNickName = "VandrarVennen";
     private const string SkogsGrevNickName = "SkogsGreven";
 
     // Seed state:
-    //   Hike3 (91e4c2d7-...) → NaturElskaren: Accepted  (VandrarVennen is sharer)
-    //   Hike5 (7a1e9c3d-...) → VandrarVennen: Accepted  (SkogsGreven is sharer)
+    //   Hike3 (91e4c2d7-...) → NaturElskaren: Accepted, AllowResharing = true   (VandrarVennen is sharer)
+    //   Hike5 (7a1e9c3d-...) → VandrarVennen: Accepted, AllowResharing = false  (SkogsGreven is sharer)
     // Pending shares are created on-demand via CreatePendingHike4ShareAsync.
     private const string Hike1Identifier = "3f9c1b7e-8a42-4e6d-9c5f-2a7b1d8e4f90"; // NaturElskaren's hike
-    private const string Hike3Identifier = "91e4c2d7-3b8f-4f6a-9d1c-7a2e5b0c8f13"; // Accepted for NaturElskaren
+    private const string Hike3Identifier = "91e4c2d7-3b8f-4f6a-9d1c-7a2e5b0c8f13"; // Accepted for NaturElskaren, resharing allowed
     private const string Hike4Identifier = "c4d8a1b9-6f3e-4c72-8a5d-1e9b2f7c0a46"; // VandrarVennen's, used for Pending
+    private const string Hike5Identifier = "7a1e9c3d-2b4f-4d68-8c0a-5f2b7e1d9c32"; // Accepted for VandrarVennen, resharing NOT allowed
 
     public HikeShareRecipientControllerTests(StigViddWebApplicationFactory<Program> factory)
     {
@@ -50,15 +52,19 @@ public class HikeShareRecipientControllerTests : IClassFixture<StigViddWebApplic
     }
 
     // NaturElskaren sends a friend request to the target user, who then accepts it.
-    private async Task EstablishFriendshipWithNaturElskaren(string targetUid, string targetNickName)
+    private Task EstablishFriendshipWithNaturElskaren(string targetUid, string targetNickName) =>
+        EstablishFriendship(NaturElskarenUid, NaturElskarenIdentifier, targetUid, targetNickName);
+
+    // The requester sends a friend request to the target user, who then accepts it.
+    private async Task EstablishFriendship(string requesterUid, string requesterIdentifier, string targetUid, string targetNickName)
     {
         var client = _factory.CreateClient();
-        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", NaturElskarenUid);
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", requesterUid);
         await client.PostAsJsonAsync($"{FRIENDS_URL}/requests",
             new SendFriendRequestRequest { ReceiverNickName = targetNickName },
             TestContext.Current.CancellationToken);
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", targetUid);
-        await client.PutAsync($"{FRIENDS_URL}/requests/accept/{NaturElskarenIdentifier}", null, TestContext.Current.CancellationToken);
+        await client.PutAsync($"{FRIENDS_URL}/requests/accept/{requesterIdentifier}", null, TestContext.Current.CancellationToken);
     }
 
     // Creates a Pending share of Hike4 (owned by VandrarVennen) for NaturElskaren via the share API.
@@ -128,6 +134,27 @@ public class HikeShareRecipientControllerTests : IClassFixture<StigViddWebApplic
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         shares.Should().Contain(h => h.HikeIdentifier == Hike3Identifier);
+    }
+
+    [Fact]
+    public async Task GetSharedHikes_ReportsWhetherTheOwnerAllowedResharing()
+    {
+        // Arrange — Hike3 is seeded with resharing allowed, Hike5 without it. The app hides
+        // the reshare button on this flag, so it has to survive the trip to the client.
+        var naturElskaren = CreateAuthenticatedClient(NaturElskarenUid);
+        var vandrarVennen = CreateAuthenticatedClient(VandrarVennenUid);
+
+        // Act
+        var allowed = await (await naturElskaren.GetAsync(BASE_URL, TestContext.Current.CancellationToken))
+            .Content.ReadFromJsonAsync<List<HikeShareRecipientResponse>>(TestContext.Current.CancellationToken);
+        var notAllowed = await (await vandrarVennen.GetAsync(BASE_URL, TestContext.Current.CancellationToken))
+            .Content.ReadFromJsonAsync<List<HikeShareRecipientResponse>>(TestContext.Current.CancellationToken);
+
+        // Assert
+        allowed.Should().ContainSingle(h => h.HikeIdentifier == Hike3Identifier)
+            .Which.AllowResharing.Should().BeTrue();
+        notAllowed.Should().ContainSingle(h => h.HikeIdentifier == Hike5Identifier)
+            .Which.AllowResharing.Should().BeFalse();
     }
 
     #endregion
@@ -461,7 +488,8 @@ public class HikeShareRecipientControllerTests : IClassFixture<StigViddWebApplic
     [Fact]
     public async Task ReshareSharedHike_WithAcceptedShareAndFriend_ReturnsOk()
     {
-        // Arrange — NaturElskaren already has Hike3 as Accepted in seed
+        // Arrange — NaturElskaren already has Hike3 as Accepted in seed, with the owner's
+        // permission to reshare it
         await EstablishFriendshipWithNaturElskaren(SkogsGrevUid, SkogsGrevNickName);
         var client = CreateAuthenticatedClient(NaturElskarenUid);
         var request = new ReshareSharedHikeRequest { HikeIdentifier = Hike3Identifier, ReShareToName = SkogsGrevNickName };
@@ -471,6 +499,97 @@ public class HikeShareRecipientControllerTests : IClassFixture<StigViddWebApplic
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
+    }
+
+    [Fact]
+    public async Task ReshareSharedHike_WhenOwnerDidNotAllowResharing_ReturnsForbidden()
+    {
+        // Arrange — VandrarVennen has Hike5 as Accepted, but SkogsGreven (the owner) never
+        // opted in. The friendship is established so the 403 can only come from the flag.
+        await EstablishFriendshipWithNaturElskaren(VandrarVennenUid, VandrarVennenNickName);
+        var client = CreateAuthenticatedClient(VandrarVennenUid);
+        var request = new ReshareSharedHikeRequest { HikeIdentifier = Hike5Identifier, ReShareToName = NaturElskarenNickName };
+
+        // Act
+        var response = await client.PostAsJsonAsync($"{BASE_URL}/re-share", request, TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+    }
+
+    [Fact]
+    public async Task ReshareSharedHike_WhenReshared_TheNewRecipientCannotReshareAgain()
+    {
+        // Arrange — the chain has to end one hop past the owner. NaturElskaren reshares
+        // Hike3 to SkogsGreven, who accepts it and then tries to pass it back to
+        // NaturElskaren. The two are friends and NaturElskaren already holds the hike, so
+        // without the flag check this would answer 409 — the 403 can only be the flag.
+        await EstablishFriendshipWithNaturElskaren(SkogsGrevUid, SkogsGrevNickName);
+        var naturElskaren = CreateAuthenticatedClient(NaturElskarenUid);
+        await naturElskaren.PostAsJsonAsync($"{BASE_URL}/re-share",
+            new ReshareSharedHikeRequest { HikeIdentifier = Hike3Identifier, ReShareToName = SkogsGrevNickName },
+            TestContext.Current.CancellationToken);
+
+        var skogsGreven = CreateAuthenticatedClient(SkogsGrevUid);
+        await skogsGreven.PutAsync($"{BASE_URL}/accept/{Hike3Identifier}", null, TestContext.Current.CancellationToken);
+
+        // Act — the reshare attempt, and what the app is told about the button
+        var response = await skogsGreven.PostAsJsonAsync($"{BASE_URL}/re-share",
+            new ReshareSharedHikeRequest { HikeIdentifier = Hike3Identifier, ReShareToName = NaturElskarenNickName },
+            TestContext.Current.CancellationToken);
+
+        var shares = await (await skogsGreven.GetAsync(BASE_URL, TestContext.Current.CancellationToken))
+            .Content.ReadFromJsonAsync<List<HikeShareRecipientResponse>>(TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        shares.Should().ContainSingle(h => h.HikeIdentifier == Hike3Identifier)
+            .Which.AllowResharing.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task ReshareSharedHike_WhenTargetHasAnUnansweredShareFromTheOwner_ReturnsConflict()
+    {
+        // Arrange — the owner VandrarVennen shared Hike3 with both NaturElskaren (accepted
+        // in seed, resharing allowed) and SkogsGreven, who has not answered yet. The row
+        // (Hike3, SkogsGreven) therefore already exists as Pending, owned by the owner's
+        // own decision about resharing.
+        await EstablishFriendship(VandrarVennenUid, VandrarVennenIdentifier, SkogsGrevUid, SkogsGrevNickName);
+        var owner = CreateAuthenticatedClient(VandrarVennenUid);
+        await owner.PostAsJsonAsync($"{HIKESHARES_URL}/share",
+            new HikeShareRequest { HikeIdentifier = Hike3Identifier, SharedWithName = SkogsGrevNickName, AllowResharing = true },
+            TestContext.Current.CancellationToken);
+
+        await EstablishFriendshipWithNaturElskaren(SkogsGrevUid, SkogsGrevNickName);
+        var naturElskaren = CreateAuthenticatedClient(NaturElskarenUid);
+
+        // Act — NaturElskaren, who may reshare, offers it to SkogsGreven as well
+        var response = await naturElskaren.PostAsJsonAsync($"{BASE_URL}/re-share",
+            new ReshareSharedHikeRequest { HikeIdentifier = Hike3Identifier, ReShareToName = SkogsGrevNickName },
+            TestContext.Current.CancellationToken);
+
+        // Assert — HikeShare is keyed on (HikeId, SharedWithId), so a pending share has to
+        // count as "already shared". Narrow the duplicate check to Accepted and the reshare
+        // collides with the primary key: a 500 instead of a conflict, and had it succeeded
+        // it would have replaced the owner's own terms with the resharer's.
+        response.StatusCode.Should().Be(HttpStatusCode.Conflict);
+    }
+
+    [Fact]
+    public async Task ReshareSharedHike_WhenTargetHasAnUnansweredReshare_ReturnsConflict()
+    {
+        // Arrange — same collision from the other direction: the pending row was created by
+        // a reshare rather than by the owner
+        await EstablishFriendshipWithNaturElskaren(SkogsGrevUid, SkogsGrevNickName);
+        var client = CreateAuthenticatedClient(NaturElskarenUid);
+        var request = new ReshareSharedHikeRequest { HikeIdentifier = Hike3Identifier, ReShareToName = SkogsGrevNickName };
+        await client.PostAsJsonAsync($"{BASE_URL}/re-share", request, TestContext.Current.CancellationToken);
+
+        // Act — offering it again must not try to insert a second row
+        var response = await client.PostAsJsonAsync($"{BASE_URL}/re-share", request, TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.Conflict);
     }
 
     [Fact]

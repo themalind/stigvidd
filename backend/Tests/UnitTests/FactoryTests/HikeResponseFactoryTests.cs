@@ -23,7 +23,8 @@ public class HikeResponseFactoryTests
             CreatedBy = "user-id",
             GettingThere = "Take the E20 west",
             ParkingInfo = "Free parking at trailhead",
-            Description = "A great hike"
+            Description = "A great hike",
+            CreatedByNickName = "FrodoBaggins",
         };
 
         // Act
@@ -56,7 +57,8 @@ public class HikeResponseFactoryTests
             CreatedBy = "user-id",
             GettingThere = null,
             ParkingInfo = null,
-            Description = null
+            Description = null,
+            CreatedByNickName = "FrodoBaggins",
         };
 
         // Act

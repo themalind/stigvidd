@@ -108,6 +108,71 @@ public class HikeShareRecipientRepositoryTests : TestBase
         result.Value.Should().BeTrue();
     }
 
+    // IsAllowedToReshareHikeAsync
+
+    [Fact]
+    public async Task IsAllowedToReshareHikeAsync_WhenOwnerAllowedIt_ReturnsTrue()
+    {
+        // Arrange — the seeded Hike1 → User2 share, opted in by the owner
+        var factory = CreateSeededFactory(ctx =>
+        {
+            var share = ctx.HikeShares.Single(hs => hs.HikeId == Hike1Id && hs.SharedWithId == User2Id);
+            share.AllowResharing = true;
+        });
+        var repo = new HikeShareRecipientRepository(factory, NullLogger<HikeShareRecipientRepository>.Instance);
+
+        // Act
+        var result = await repo.IsAllowedToReshareHikeAsync(User2Id, Hike1Id, CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task IsAllowedToReshareHikeAsync_WhenOwnerDidNotAllowIt_ReturnsFalse()
+    {
+        // Arrange — seeded shares carry the default, which is opt-out
+        var repo = new HikeShareRecipientRepository(CreateSeededFactory(), NullLogger<HikeShareRecipientRepository>.Instance);
+
+        // Act
+        var result = await repo.IsAllowedToReshareHikeAsync(User2Id, Hike1Id, CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task IsAllowedToReshareHikeAsync_WhenNoShareExists_ReturnsFalse()
+    {
+        // Arrange — Hike1 is not shared with User6 at all
+        var repo = new HikeShareRecipientRepository(CreateSeededFactory(), NullLogger<HikeShareRecipientRepository>.Instance);
+
+        // Act
+        var result = await repo.IsAllowedToReshareHikeAsync(User6Id, Hike1Id, CancellationToken.None);
+
+        // Assert — "no row" and "row that says no" are both a no
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task IsAllowedToReshareHikeAsync_WhenShareIsStillPending_ReturnsFalse()
+    {
+        // Arrange — Hike2 is offered to User1 with resharing allowed, but not yet accepted
+        var factory = CreateSeededFactory(ctx =>
+            ctx.HikeShares.Add(new HikeShare { HikeId = Hike2Id, SharedWithId = User1Id, SharedById = User2Id, Status = HikeShareStatus.Pending, AllowResharing = true }));
+        var repo = new HikeShareRecipientRepository(factory, NullLogger<HikeShareRecipientRepository>.Instance);
+
+        // Act
+        var result = await repo.IsAllowedToReshareHikeAsync(User1Id, Hike2Id, CancellationToken.None);
+
+        // Assert — you cannot pass on a hike you have not accepted yourself
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().BeFalse();
+    }
+
     [Fact]
     public async Task DeleteHikeShareAsync_WhenExists_ReturnsSuccess()
     {

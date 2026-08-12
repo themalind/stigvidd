@@ -639,7 +639,8 @@ public static class Utilities
                 Duration = 3600000,
                 GeoPath = GeoPath(),
                 CreatedBy = users[0].Identifier,
-                UserId = users[0].Id
+                UserId = users[0].Id,
+                CreatedByNickName = users[0].NickName,
             },
             new Hike
             {
@@ -650,7 +651,8 @@ public static class Utilities
                 Duration = 7200000,
                 GeoPath = GeoPath(),
                 CreatedBy = users[0].Identifier,
-                UserId = users[0].Id
+                UserId = users[0].Id,
+                CreatedByNickName = users[0].NickName,
             },
             new Hike
             {
@@ -661,7 +663,8 @@ public static class Utilities
                 Duration = 10800000,
                 GeoPath = GeoPath(),
                 CreatedBy = users[1].Identifier,
-                UserId = users[1].Id
+                UserId = users[1].Id,
+                CreatedByNickName = users[1].NickName,
             },
             new Hike
             {
@@ -672,7 +675,8 @@ public static class Utilities
                 Duration = 14400000,
                 GeoPath = GeoPath(),
                 CreatedBy = users[1].Identifier,
-                UserId = users[1].Id
+                UserId = users[1].Id,
+                CreatedByNickName = users[1].NickName,
             },
             new Hike
             {
@@ -683,7 +687,8 @@ public static class Utilities
                 Duration = 18000000,
                 GeoPath = GeoPath(),
                 CreatedBy = users[2].Identifier,
-                UserId = users[2].Id
+                UserId = users[2].Id,
+                CreatedByNickName = users[2].NickName,
             }
         ];
     }
@@ -795,14 +800,17 @@ public static class Utilities
     /// VandrarVennen has shared one of their own hikes (so it is preserved on deletion),
     /// and VandrarVennen is a recipient of a hike shared by another user (so their recipient
     /// record is cleaned up on deletion).
+    /// The two rows also differ in AllowResharing, which gives the reshare tests both an
+    /// allowed and a forbidden accepted share to work from.
     /// </summary>
     public static List<HikeShare> GetSeedingHikeShares(List<Hike> hikes, List<User> users)
     {
         return
         [
-            // VandrarVennen (User 2) shares Hike 3 with NaturElskaren (User 1) — Accepted.
-            // When VandrarVennen deletes, Hike 3 is preserved (not soft-deleted) because
-            // a HikeShare record exists for it; the DB cascade nulls SharedById.
+            // VandrarVennen (User 2) shares Hike 3 with NaturElskaren (User 1) — Accepted,
+            // resharing allowed. When VandrarVennen deletes, Hike 3 is preserved (not
+            // soft-deleted) because a HikeShare record exists for it; the DB cascade nulls
+            // SharedById.
             new HikeShare
             {
                 HikeId = 3,
@@ -810,8 +818,10 @@ public static class Utilities
                 SharedWithId = 1, // NaturElskaren
                 CreatedAt = SeedDates.Created,
                 Status = HikeShareStatus.Accepted,
+                AllowResharing = true,
             },
-            // SkogsGreven (User 3) shares Hike 5 with VandrarVennen (User 2) — Accepted.
+            // SkogsGreven (User 3) shares Hike 5 with VandrarVennen (User 2) — Accepted,
+            // resharing NOT allowed (the default every share gets unless the owner opts in).
             // When VandrarVennen deletes, this recipient record is removed by
             // DeleteHikeSharesByUserIdAsync (SharedWithId == VandrarVennen's Id).
             new HikeShare
@@ -821,6 +831,7 @@ public static class Utilities
                 SharedWithId = 2, // VandrarVennen
                 CreatedAt = SeedDates.Created,
                 Status = HikeShareStatus.Accepted,
+                AllowResharing = false,
             },
         ];
     }

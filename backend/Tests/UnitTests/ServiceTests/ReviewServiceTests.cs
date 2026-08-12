@@ -17,7 +17,7 @@ public class ReviewServiceTests
     private ReviewService Build(
         Mock<IReviewRepository>? reviewRepo = null,
         Mock<IWebDavService>? webDav = null,
-        Mock<IUserService>? userService = null,
+        Mock<IUserRepository>? userRepo = null,
         Mock<ITrailService>? trailService = null)
     {
         var cfg = new Mock<IConfiguration>();
@@ -26,7 +26,7 @@ public class ReviewServiceTests
         return new ReviewService(
             (reviewRepo ?? new Mock<IReviewRepository>()).Object,
             (webDav ?? Utilities.MockFactory.WebDavService()).Object,
-            (userService ?? Utilities.MockFactory.UserServiceFoundById()).Object,
+            (userRepo ?? Utilities.MockFactory.UserRepositoryFoundById()).Object,
             (trailService ?? Utilities.MockFactory.TrailServiceFound()).Object,
             new ReviewResponseFactory(cfg.Object),
             new Mock<ILogger<ReviewService>>().Object);
@@ -152,7 +152,7 @@ public class ReviewServiceTests
     public async Task AddReview_WhenUserNotFound_ReturnsNotFound()
     {
         // Arrange
-        var service = Build(userService: Utilities.MockFactory.UserServiceNotFoundById());
+        var service = Build(userRepo: Utilities.MockFactory.UserRepositoryNotFoundById());
 
         // Act
         var result = await service.AddReviewAsync("invalid", Utilities.Identifiers.Trail7, "text", 4.0M, null, CancellationToken.None);
@@ -318,23 +318,28 @@ public class ReviewServiceTests
     }
 
     [Fact]
-    public async Task DeleteReview_WhenWebDavDeleteFails_ReturnsInternalServerError()
+    public async Task DeleteReview_WhenWebDavDeleteFails_ReturnsSuccess()
     {
+        // The row is already gone when the files are removed, so a failed file delete is logged
+        // and the remaining images are still attempted — the caller is not told the delete failed
         // Arrange
         var webDav = new Mock<IWebDavService>();
         webDav.Setup(w => w.DeleteFileAsync(It.IsAny<string>()))
             .ReturnsAsync(Result.Fail<bool>(new Message(500, "Delete failed")));
+        var review = Utilities.Stubs.Review(withImages: true);
+        review.ReviewImages = [.. review.ReviewImages!, new ReviewImage { Id = 2, Identifier = "img-2", ImageUrl = "reviews/img2.jpg" }];
         var repo = new Mock<IReviewRepository>();
         repo.Setup(r => r.GetReviewByIdentifierAsync(Utilities.Identifiers.Review5, Utilities.Identifiers.User, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(RepositoryResult<Review>.Success(Utilities.Stubs.Review(withImages: true)));
+            .ReturnsAsync(RepositoryResult<Review>.Success(review));
+        repo.Setup(r => r.DeleteReviewAsync(It.IsAny<Review>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult.Success());
 
         // Act
         var result = await Build(repo, webDav).DeleteReviewAsync(Utilities.Identifiers.Review5, Utilities.Identifiers.User, CancellationToken.None);
 
-        // Assert
-        result.Success.Should().BeFalse();
-        result.Message.Should().NotBeNull();
-        result.Message.StatusCode.Should().Be(500);
+        // Assert — the first failure did not stop the second file from being attempted
+        result.Success.Should().BeTrue();
+        webDav.Verify(w => w.DeleteFileAsync(It.IsAny<string>()), Times.Exactly(2));
     }
 
     [Fact]
@@ -356,5 +361,72 @@ public class ReviewServiceTests
 
         // Assert
         result.Success.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task DeleteUserReviewsOnUserDelete_DeletesTheImageFilesAfterTheRows()
+    {
+        // Arrange
+        var callOrder = new List<string>();
+        var repo = new Mock<IReviewRepository>();
+        repo.Setup(r => r.GetReviewImageUrlsByUserIdAsync(1, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<IEnumerable<string>>.Success(["reviews/a.jpeg", "reviews/b.jpeg"]));
+        repo.Setup(r => r.DeleteReviewsByUserIdAsync(1, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult.Success())
+            .Callback(() => callOrder.Add("rows"));
+
+        var webDav = Utilities.MockFactory.WebDavService();
+        webDav.Setup(w => w.DeleteFileAsync(It.IsAny<string>()))
+            .ReturnsAsync(Result.Ok(true))
+            .Callback<string>(url => callOrder.Add(url));
+
+        // Act
+        var result = await Build(repo, webDav).DeleteUserReviewsOnUserDeleteAsync(1, CancellationToken.None);
+
+        // Assert
+        result.Success.Should().BeTrue();
+        callOrder.Should().Equal("rows", "reviews/a.jpeg", "reviews/b.jpeg");
+    }
+
+    [Fact]
+    public async Task DeleteUserReviewsOnUserDelete_WhenWebDavThrows_StillSucceeds()
+    {
+        // Arrange — a failed file delete leaves an orphan, but must not block the account deletion
+        var repo = new Mock<IReviewRepository>();
+        repo.Setup(r => r.GetReviewImageUrlsByUserIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<IEnumerable<string>>.Success(["reviews/a.jpeg"]));
+        repo.Setup(r => r.DeleteReviewsByUserIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult.Success());
+
+        var webDav = new Mock<IWebDavService>();
+        webDav.Setup(w => w.DeleteFileAsync(It.IsAny<string>()))
+            .ThrowsAsync(new Exception("webdav down"));
+
+        // Act
+        var result = await Build(repo, webDav).DeleteUserReviewsOnUserDeleteAsync(1, CancellationToken.None);
+
+        // Assert
+        result.Success.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task DeleteUserReviewsOnUserDelete_WhenRowDeleteFails_DoesNotTouchWebDav()
+    {
+        // Arrange
+        var repo = new Mock<IReviewRepository>();
+        repo.Setup(r => r.GetReviewImageUrlsByUserIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<IEnumerable<string>>.Success(["reviews/a.jpeg"]));
+        repo.Setup(r => r.DeleteReviewsByUserIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult.Error());
+
+        var webDav = Utilities.MockFactory.WebDavService();
+
+        // Act
+        var result = await Build(repo, webDav).DeleteUserReviewsOnUserDeleteAsync(1, CancellationToken.None);
+
+        // Assert
+        result.Success.Should().BeFalse();
+        result.Message!.StatusCode.Should().Be(500);
+        webDav.Verify(w => w.DeleteFileAsync(It.IsAny<string>()), Times.Never);
     }
 }

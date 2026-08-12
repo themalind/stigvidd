@@ -154,8 +154,8 @@ public class FriendServiceTests
         // Arrange
         var friends = new List<FriendResponse>
         {
-               new FriendResponse { Identifier = "Hobbit-identifier-1", NickName = "Frodo", Email = "frodo@hobbiton.com" },
-               new FriendResponse { Identifier = "Hobbit-identifier-2", NickName = "Sam", Email = "sam@hobbiton.com" }
+               new FriendResponse { Identifier = "Hobbit-identifier-1", NickName = "Frodo" },
+               new FriendResponse { Identifier = "Hobbit-identifier-2", NickName = "Sam" }
         };
 
         var userRepoMock = new Mock<IUserRepository>();
