@@ -315,16 +315,6 @@ export default function FriendsScreen() {
                             <Text style={s.rowName} variant="bodyLarge" numberOfLines={1}>
                               {friend.nickName}
                             </Text>
-                            {friend.email ? (
-                              <Text
-                                style={[s.rowSubtitle, { color: theme.colors.onSurfaceVariant }]}
-                                variant="bodySmall"
-                                numberOfLines={1}
-                                ellipsizeMode="middle"
-                              >
-                                {friend.email}
-                              </Text>
-                            ) : null}
                           </View>
                           <IconButton
                             hitSlop={16}
@@ -459,9 +449,6 @@ const s = StyleSheet.create({
   rowName: {
     flex: 1,
     fontWeight: "500",
-  },
-  rowSubtitle: {
-    opacity: 0.75,
   },
   rowActions: {
     flexDirection: "row",
