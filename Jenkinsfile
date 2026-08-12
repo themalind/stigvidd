@@ -78,7 +78,7 @@ pipeline {
     // so `inkaben.se` is both login host and namespace ->
     // images: inkaben.se/stigvidd-{api,web}:<tag>.
     REGISTRY       = 'inkaben.se'                       // registry host
-    DEPLOY_HOST    = 'deploy@app-server.example.com'    // ssh target
+    DEPLOY_HOST    = 'stigvidd@stigvidd.se'    // ssh target
     DEPLOY_PATH    = '/opt/stigvidd'                    // compose dir on host
 
     // Uncomment and adjust if the toolchains are not on the agent's default PATH.
@@ -216,6 +216,17 @@ pipeline {
 
             docker compose --env-file ci/build.env build api web media proxy keycloak
             docker compose --env-file ci/build.env push api web media proxy keycloak
+
+            # Also publish a moving `latest` so a deploy host can pin
+            # IMAGE_TAG=latest once instead of editing .env for every commit.
+            # This stage only runs on main, so `latest` always means current main.
+            # The per-commit tags stay immutable, for pinning and rollback.
+            # Assumes the compose image names stay ${REGISTRY}/stigvidd-<service>,
+            # which is how all five are declared in docker-compose.yml.
+            for svc in api web media proxy keycloak; do
+              docker tag  "${REGISTRY}/stigvidd-${svc}:${IMAGE_TAG}" "${REGISTRY}/stigvidd-${svc}:latest"
+              docker push "${REGISTRY}/stigvidd-${svc}:latest"
+            done
           '''
         }
       }

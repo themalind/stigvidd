@@ -9,7 +9,7 @@ namespace StigviddAPI.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/v1/admin")]
-[Authorize(Policy = "Admin")]
+[Authorize]
 public class AdminController(IDataTransferService dataTransfer, ILogger<AdminController> logger) : ControllerBase
 {
     private readonly IDataTransferService _dataTransfer = dataTransfer;
