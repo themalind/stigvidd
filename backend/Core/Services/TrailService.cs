@@ -102,7 +102,9 @@ public class TrailService : ITrailService
                 t.Accessibility,
                 t.AccessibilityInfo,
                 t.TrailSymbol,
-                t.TrailSymbolImage,
+                t.TrailSymbolImage == ""
+                    ? ""
+                    : _trailResponseFactory.PresentableBaseUrl + t.TrailSymbolImage,
                 t.Description,
                 t.FullDescription,
                 t.Tags,
