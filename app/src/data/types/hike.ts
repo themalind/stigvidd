@@ -45,6 +45,7 @@ export interface SharedHike {
   gettingThere?: string;
   parkingInfo?: string;
   description?: string;
+  allowResharing: boolean;
 }
 
 export interface ReshareSharedHikeRequest {
@@ -55,6 +56,7 @@ export interface ReshareSharedHikeRequest {
 export interface ShareHikeRequest {
   hikeIdentifier: string;
   sharedWithName: string;
+  allowResharing: boolean;
 }
 
 export interface IncomingSharedHike {

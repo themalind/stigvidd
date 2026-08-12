@@ -6,7 +6,6 @@ export interface SearchFriendResult {
 export interface FriendResponse {
   identifier: string;
   nickName: string;
-  email: string;
 }
 
 export interface FriendRequest {
