@@ -29,6 +29,13 @@ public class StigViddWebApplicationFactory<TProgram>
     /// provisioning failures that trigger rollback, password-reset outcomes).
     /// </summary>
     public Mock<IKeycloakAdminRepository> KeycloakAdminMock { get; } = new();
+
+    /// <summary>
+    /// The bytes handed to WebDAV by every upload, in order. Lives as long as the factory,
+    /// so tests that read it clear it first.
+    /// </summary>
+    public List<byte[]> UploadedFileBytes { get; } = [];
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.ConfigureServices(services =>
@@ -77,7 +84,14 @@ public class StigViddWebApplicationFactory<TProgram>
             var mockWebDavService = new Mock<IWebDavService>();
             mockWebDavService
                 .Setup(x => x.UploadFileAsync(It.IsAny<Stream>(), It.IsAny<string>(), It.IsAny<string>()))
-                .ReturnsAsync(Result.Ok<string?>("mock/uploaded-file.jpg"));
+                .ReturnsAsync((Stream stream, string? _, string _) =>
+                {
+                    using var buffer = new MemoryStream();
+                    stream.CopyTo(buffer);
+                    UploadedFileBytes.Add(buffer.ToArray());
+
+                    return Result.Ok<string?>("mock/uploaded-file.jpg");
+                });
             mockWebDavService
                 .Setup(x => x.DeleteFileAsync(It.IsAny<string>()))
                 .ReturnsAsync(Result.Ok(true));

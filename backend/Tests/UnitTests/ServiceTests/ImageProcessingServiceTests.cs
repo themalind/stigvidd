@@ -18,6 +18,35 @@ public class ImageProcessingServiceTests
     }
 
     [Fact]
+    public void Process_WhenSourceCarriesExifGps_StripsItFromTheOutput()
+    {
+        var service = new ImageProcessingService();
+
+        using var source = new MemoryStream();
+        using (var image = new MagickImage(new MagickColor("#3366cc"), 400, 300))
+        {
+            var exif = new ExifProfile();
+            exif.SetValue(ExifTag.Make, "TestPhone");
+            exif.SetValue(ExifTag.GPSLatitudeRef, "N");
+            exif.SetValue(ExifTag.GPSLatitude, [new Rational(57), new Rational(37), new Rational(0)]);
+            image.SetProfile(exif);
+            image.Format = MagickFormat.Jpeg;
+            image.Write(source);
+        }
+        source.Position = 0;
+
+        // Guard: without EXIF in the source the assertion below passes for free.
+        using (var unprocessed = new MagickImage(source))
+            unprocessed.GetExifProfile().Should().NotBeNull();
+        source.Position = 0;
+
+        using var result = service.Process(source, ImageProcessingOptions.StripMetadataOnly);
+
+        using var processed = new MagickImage(result.Stream);
+        processed.GetExifProfile().Should().BeNull();
+    }
+
+    [Fact]
     public void Process_WhenLargerThanMax_DownscalesKeepingAspectRatio()
     {
         var service = new ImageProcessingService();

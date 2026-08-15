@@ -1,4 +1,12 @@
+using Core.Common;
+using Core.Interfaces.Services;
 using FluentAssertions;
+using Infrastructure.Data;
+using Microsoft.AspNetCore.TestHost;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Moq;
 using StigviddAPI;
 using System.Net;
 using System.Net.Http.Headers;
@@ -397,5 +405,45 @@ public class HikesControllerIntegrationTests : IClassFixture<StigViddWebApplicat
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task GetHikesAsync_ShouldReturnInternalServerError_WhenServiceFails()
+    {
+        // Arrange — the service reports a failure the caller has to hear about: a listing
+        // that silently answers "no hikes" during an outage is indistinguishable from an
+        // empty account.
+        var hikeService = new Mock<IHikeService>();
+        hikeService
+            .Setup(s => s.GetHikesAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Fail<IReadOnlyCollection<HikeOverviewResponse>>(new Message(500, "boom")));
+
+        using var factory = _factory.WithWebHostBuilder(builder =>
+            builder.ConfigureTestServices(services =>
+            {
+                services.RemoveAll<IHikeService>();
+                services.AddScoped(_ => hikeService.Object);
+            }));
+
+        // The derived host gets its own in-memory database, so it needs its own seed for
+        // the authentication lookup to find the caller.
+        using (var scope = factory.Services.CreateScope())
+        {
+            var contextFactory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<StigViddDbContext>>();
+            using var context = contextFactory.CreateDbContext();
+            context.Database.EnsureDeleted();
+            context.Database.EnsureCreated();
+            Utilities.InitializeDbForTests(context);
+        }
+
+        var client = factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", AUTHENTICATED_USER);
+
+        // Act
+        var response = await client.GetAsync(BASE_URL, TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
     }
 }

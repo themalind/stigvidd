@@ -18,7 +18,8 @@ public class ReviewServiceTests
         Mock<IReviewRepository>? reviewRepo = null,
         Mock<IWebDavService>? webDav = null,
         Mock<IUserRepository>? userRepo = null,
-        Mock<ITrailService>? trailService = null)
+        Mock<ITrailService>? trailService = null,
+        Mock<IMediaUploadService>? mediaUpload = null)
     {
         var cfg = new Mock<IConfiguration>();
         cfg.Setup(c => c["PresentableBaseUrl"]).Returns("http://stigvidd.se/testing/");
@@ -26,6 +27,7 @@ public class ReviewServiceTests
         return new ReviewService(
             (reviewRepo ?? new Mock<IReviewRepository>()).Object,
             (webDav ?? Utilities.MockFactory.WebDavService()).Object,
+            (mediaUpload ?? Utilities.MockFactory.MediaUploadService()).Object,
             (userRepo ?? Utilities.MockFactory.UserRepositoryFoundById()).Object,
             (trailService ?? Utilities.MockFactory.TrailServiceFound()).Object,
             new ReviewResponseFactory(cfg.Object),
@@ -179,15 +181,88 @@ public class ReviewServiceTests
     }
 
     [Fact]
+    public async Task AddReview_WhenUserNotFound_UploadsNothing()
+    {
+        // Arrange
+        var mediaUpload = Utilities.MockFactory.MediaUploadService();
+        var service = Build(userRepo: Utilities.MockFactory.UserRepositoryNotFoundById(), mediaUpload: mediaUpload);
+
+        // Act
+        var result = await service.AddReviewAsync("invalid", Utilities.Identifiers.Trail7, "text", 4.0M, Utilities.Stubs.TwoImages(), CancellationToken.None);
+
+        // Assert
+        result.Message!.StatusCode.Should().Be(404);
+        mediaUpload.Verify(m => m.ProcessAndUploadAsync(It.IsAny<Stream>(), It.IsAny<string>(), It.IsAny<ImageProcessingOptions>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task AddReview_WhenTrailNotFound_UploadsNothing()
+    {
+        // Arrange
+        var mediaUpload = Utilities.MockFactory.MediaUploadService();
+        var service = Build(trailService: Utilities.MockFactory.TrailServiceNotFound(), mediaUpload: mediaUpload);
+
+        // Act
+        var result = await service.AddReviewAsync(Utilities.Identifiers.User, "invalid", "text", 4.0M, Utilities.Stubs.TwoImages(), CancellationToken.None);
+
+        // Assert
+        result.Message!.StatusCode.Should().Be(404);
+        mediaUpload.Verify(m => m.ProcessAndUploadAsync(It.IsAny<Stream>(), It.IsAny<string>(), It.IsAny<ImageProcessingOptions>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task AddReview_UploadsThroughMediaUploadService_SoMetadataIsStripped()
+    {
+        // Arrange
+        var repo = new Mock<IReviewRepository>();
+        repo.Setup(r => r.AddReviewAsync(It.IsAny<Review>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Review r, CancellationToken _) => RepositoryResult<Review>.Success(r));
+
+        var webDav = Utilities.MockFactory.WebDavService();
+        var mediaUpload = Utilities.MockFactory.MediaUploadService();
+
+        // Act
+        var result = await Build(repo, webDav, mediaUpload: mediaUpload).AddReviewAsync(Utilities.Identifiers.User, Utilities.Identifiers.Trail7, "text", 4.0M, Utilities.Stubs.TwoImages(), CancellationToken.None);
+
+        // Assert
+        result.Success.Should().BeTrue();
+        mediaUpload.Verify(m => m.ProcessAndUploadAsync(It.IsAny<Stream>(), "reviews", It.IsAny<ImageProcessingOptions>()), Times.Exactly(2));
+        webDav.Verify(w => w.UploadFileAsync(It.IsAny<Stream>(), It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task AddReview_WhenRepositoryFails_CleansUpUploadedImages()
+    {
+        // Arrange
+        var repo = new Mock<IReviewRepository>();
+        repo.Setup(r => r.AddReviewAsync(It.IsAny<Review>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<Review>.Error());
+
+        var webDav = Utilities.MockFactory.WebDavService();
+        var mediaUpload = new Mock<IMediaUploadService>();
+        mediaUpload.SetupSequence(m => m.ProcessAndUploadAsync(It.IsAny<Stream>(), It.IsAny<string>(), It.IsAny<ImageProcessingOptions>()))
+            .ReturnsAsync(Result.Ok(new UploadedMedia("reviews/img1.jpg", 800, 600, 1234)))
+            .ReturnsAsync(Result.Ok(new UploadedMedia("reviews/img2.jpg", 800, 600, 2345)));
+
+        // Act
+        var result = await Build(repo, webDav, mediaUpload: mediaUpload).AddReviewAsync(Utilities.Identifiers.User, Utilities.Identifiers.Trail7, "text", 4.0M, Utilities.Stubs.TwoImages(), CancellationToken.None);
+
+        // Assert
+        result.Message!.StatusCode.Should().Be(500);
+        webDav.Verify(w => w.DeleteFileAsync("reviews/img1.jpg"), Times.Once);
+        webDav.Verify(w => w.DeleteFileAsync("reviews/img2.jpg"), Times.Once);
+    }
+
+    [Fact]
     public async Task AddReview_WhenUploadFails_ReturnsInternalServerError()
     {
         // Arrange
-        var webDav = new Mock<IWebDavService>();
-        webDav.Setup(w => w.UploadFileAsync(It.IsAny<Stream>(), It.IsAny<string>(), It.IsAny<string>()))
-            .ReturnsAsync(Result.Fail<string?>(new Message(500, "Upload failed")));
+        var mediaUpload = new Mock<IMediaUploadService>();
+        mediaUpload.Setup(m => m.ProcessAndUploadAsync(It.IsAny<Stream>(), It.IsAny<string>(), It.IsAny<ImageProcessingOptions>()))
+            .ReturnsAsync(Result.Fail<UploadedMedia>(new Message(500, "Upload failed")));
 
         // Act
-        var result = await Build(webDav: webDav).AddReviewAsync(Utilities.Identifiers.User, Utilities.Identifiers.Trail7, "text", 4.0M, Utilities.Stubs.TwoImages(), CancellationToken.None);
+        var result = await Build(mediaUpload: mediaUpload).AddReviewAsync(Utilities.Identifiers.User, Utilities.Identifiers.Trail7, "text", 4.0M, Utilities.Stubs.TwoImages(), CancellationToken.None);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -196,15 +271,34 @@ public class ReviewServiceTests
     }
 
     [Fact]
+    public async Task AddReview_WhenSecondUploadFails_RollsBackTheFirstImage()
+    {
+        // Arrange
+        var webDav = Utilities.MockFactory.WebDavService();
+        var mediaUpload = new Mock<IMediaUploadService>();
+        mediaUpload.SetupSequence(m => m.ProcessAndUploadAsync(It.IsAny<Stream>(), It.IsAny<string>(), It.IsAny<ImageProcessingOptions>()))
+            .ReturnsAsync(Result.Ok(new UploadedMedia("reviews/img1.jpg", 800, 600, 1234)))
+            .ReturnsAsync(Result.Fail<UploadedMedia>(new Message(500, "Upload failed")));
+
+        // Act
+        var result = await Build(webDav: webDav, mediaUpload: mediaUpload).AddReviewAsync(Utilities.Identifiers.User, Utilities.Identifiers.Trail7, "text", 4.0M, Utilities.Stubs.TwoImages(), CancellationToken.None);
+
+        // Assert
+        result.Success.Should().BeFalse();
+        result.Message!.StatusCode.Should().Be(500);
+        webDav.Verify(w => w.DeleteFileAsync("reviews/img1.jpg"), Times.Once);
+    }
+
+    [Fact]
     public async Task AddReview_WhenUploadThrowsException_ReturnsInternalServerError()
     {
         // Arrange
-        var webDav = new Mock<IWebDavService>();
-        webDav.Setup(w => w.UploadFileAsync(It.IsAny<Stream>(), It.IsAny<string>(), It.IsAny<string>()))
+        var mediaUpload = new Mock<IMediaUploadService>();
+        mediaUpload.Setup(m => m.ProcessAndUploadAsync(It.IsAny<Stream>(), It.IsAny<string>(), It.IsAny<ImageProcessingOptions>()))
             .ThrowsAsync(new Exception("network error"));
 
         // Act
-        var result = await Build(webDav: webDav).AddReviewAsync(Utilities.Identifiers.User, Utilities.Identifiers.Trail7, "text", 4.0M, Utilities.Stubs.TwoImages(), CancellationToken.None);
+        var result = await Build(mediaUpload: mediaUpload).AddReviewAsync(Utilities.Identifiers.User, Utilities.Identifiers.Trail7, "text", 4.0M, Utilities.Stubs.TwoImages(), CancellationToken.None);
 
         // Assert
         result.Success.Should().BeFalse();

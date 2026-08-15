@@ -236,6 +236,73 @@ public class HikeServiceTests
     }
 
     [Fact]
+    public async Task GetHikeByIdentifier_WhenUserRepositoryErrors_ReturnsInternalServerError()
+    {
+        // Arrange — the access check cannot run, so the answer must not sound like one
+        var hikeRepo = new Mock<IHikeRepository>();
+        hikeRepo.Setup(r => r.GetHikeByIdentifierAsync(Utilities.Identifiers.Hike1, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<Hike>.Success(Utilities.Stubs.Hike()));
+
+        var userRepo = new Mock<IUserRepository>();
+        userRepo.Setup(r => r.GetUserIdByIdentifierAsync("some-other-user", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<int>.Error());
+
+        // Act
+        var result = await Build(hikeRepo, userRepo).GetHikeByIdentifierAsync(Utilities.Identifiers.Hike1, "some-other-user", CancellationToken.None);
+
+        // Assert
+        result.Success.Should().BeFalse();
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(500);
+    }
+
+    [Fact]
+    public async Task GetHikeByIdentifier_WhenShareRepositoryErrors_ReturnsInternalServerError()
+    {
+        // Arrange — the user is known, but the share lookup fails
+        var hikeRepo = new Mock<IHikeRepository>();
+        hikeRepo.Setup(r => r.GetHikeByIdentifierAsync(Utilities.Identifiers.Hike1, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<Hike>.Success(Utilities.Stubs.Hike()));
+
+        var userRepo = new Mock<IUserRepository>();
+        userRepo.Setup(r => r.GetUserIdByIdentifierAsync("recipient", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<int>.Success(99));
+
+        var shareRepo = new Mock<IHikeShareRecipientRepository>();
+        shareRepo.Setup(r => r.HasHikeSharedWithUserAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<bool>.Error());
+
+        // Act
+        var result = await Build(hikeRepo, userRepo, shareRepo).GetHikeByIdentifierAsync(Utilities.Identifiers.Hike1, "recipient", CancellationToken.None);
+
+        // Assert
+        result.Success.Should().BeFalse();
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(500);
+    }
+
+    [Fact]
+    public async Task GetHikeByIdentifier_WhenRequesterHasNoUserRow_ReturnsForbidden()
+    {
+        // Arrange — authenticated but unknown here: no share can point at them, so 403 stands
+        var hikeRepo = new Mock<IHikeRepository>();
+        hikeRepo.Setup(r => r.GetHikeByIdentifierAsync(Utilities.Identifiers.Hike1, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<Hike>.Success(Utilities.Stubs.Hike()));
+
+        var userRepo = new Mock<IUserRepository>();
+        userRepo.Setup(r => r.GetUserIdByIdentifierAsync("stranger", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<int>.NotFound());
+
+        // Act
+        var result = await Build(hikeRepo, userRepo).GetHikeByIdentifierAsync(Utilities.Identifiers.Hike1, "stranger", CancellationToken.None);
+
+        // Assert
+        result.Success.Should().BeFalse();
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(403);
+    }
+
+    [Fact]
     public async Task GetHikeByIdentifier_WhenSharedWithUser_ReturnsSuccess()
     {
         // Arrange
@@ -312,7 +379,7 @@ public class HikeServiceTests
     }
 
     [Fact]
-    public async Task GetHikes_WithoutFilter_ReturnsAll()
+    public async Task GetHikes_WhenCreatorExists_ReturnsTheirHikes()
     {
         // Arrange
         var createdAtDate = DateTime.UtcNow;
@@ -326,11 +393,63 @@ public class HikeServiceTests
             .ReturnsAsync(RepositoryResult<IReadOnlyCollection<HikeOverviewResponse>>.Success(list));
 
         // Act
-        var result = await Build(hikeRepo).GetHikesAsync(null, CancellationToken.None);
+        var result = await Build(hikeRepo, Utilities.MockFactory.UserRepositoryFoundById(7)).GetHikesAsync(Utilities.Identifiers.User, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeTrue();
         result.Value.Should().HaveCount(2);
+    }
+
+    [Fact]
+    public async Task GetHikes_AlwaysScopesTheQueryToTheCreator()
+    {
+        // Arrange — the repository reads every hike in the database when userId is null,
+        // so the resolved id must reach it. Hikes are private; there is no "list them all".
+        int? passedUserId = null;
+        var hikeRepo = new Mock<IHikeRepository>();
+        hikeRepo.Setup(r => r.GetHikesAsync(It.IsAny<int?>(), It.IsAny<Expression<Func<Hike, HikeOverviewResponse>>>(), It.IsAny<CancellationToken>()))
+            .Callback<int?, Expression<Func<Hike, HikeOverviewResponse>>, CancellationToken>((id, _, _) => passedUserId = id)
+            .ReturnsAsync(RepositoryResult<IReadOnlyCollection<HikeOverviewResponse>>.Success([]));
+
+        // Act
+        var result = await Build(hikeRepo, Utilities.MockFactory.UserRepositoryFoundById(7)).GetHikesAsync(Utilities.Identifiers.User, CancellationToken.None);
+
+        // Assert
+        result.Success.Should().BeTrue();
+        passedUserId.Should().Be(7);
+    }
+
+    [Fact]
+    public async Task GetHikes_WhenCreatorNotFound_ReturnsNotFound()
+    {
+        // Arrange — an empty list would claim the account exists and owns nothing
+        var hikeRepo = new Mock<IHikeRepository>();
+
+        // Act
+        var result = await Build(hikeRepo, Utilities.MockFactory.UserRepositoryNotFoundById()).GetHikesAsync("gone-user", CancellationToken.None);
+
+        // Assert
+        result.Success.Should().BeFalse();
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(404);
+        hikeRepo.Verify(r => r.GetHikesAsync(It.IsAny<int?>(), It.IsAny<Expression<Func<Hike, HikeOverviewResponse>>>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task GetHikes_WhenUserRepositoryErrors_ReturnsInternalServerError()
+    {
+        // Arrange
+        var userRepo = new Mock<IUserRepository>();
+        userRepo.Setup(r => r.GetUserIdByIdentifierAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<int>.Error());
+
+        // Act
+        var result = await Build(userRepo: userRepo).GetHikesAsync(Utilities.Identifiers.User, CancellationToken.None);
+
+        // Assert
+        result.Success.Should().BeFalse();
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(500);
     }
 
     [Fact]
@@ -342,7 +461,7 @@ public class HikeServiceTests
             .ReturnsAsync(RepositoryResult<IReadOnlyCollection<HikeOverviewResponse>>.Error());
 
         // Act
-        var result = await Build(hikeRepo).GetHikesAsync(null, CancellationToken.None);
+        var result = await Build(hikeRepo, Utilities.MockFactory.UserRepositoryFoundById()).GetHikesAsync(Utilities.Identifiers.User, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -391,6 +510,24 @@ public class HikeServiceTests
         // Assert
         result.Success.Should().BeFalse();
         result.Message!.StatusCode.Should().Be(404);
+    }
+
+    [Fact]
+    public async Task UpdateHike_WhenUserRepositoryErrors_ReturnsInternalServerError()
+    {
+        // Arrange — a failed lookup must not be reported as a missing user
+        var userRepo = new Mock<IUserRepository>();
+        userRepo.Setup(r => r.GetUserByIdentifierAsync(It.IsAny<string>(), It.IsAny<Expression<Func<User, int>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<int>.Error());
+
+        // Act
+        var result = await Build(userRepo: userRepo).UpdateHikeAsync(
+            Utilities.Identifiers.Hike1, Utilities.Identifiers.User,
+            "NewName", null, null, null, CancellationToken.None);
+
+        // Assert
+        result.Success.Should().BeFalse();
+        result.Message!.StatusCode.Should().Be(500);
     }
 
     [Fact]
@@ -478,6 +615,23 @@ public class HikeServiceTests
 
         // Assert
         result.Success.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task DeleteHike_WhenUserRepositoryErrors_ReturnsInternalServerError()
+    {
+        // Arrange — a failed lookup must not be reported as a missing user
+        var userRepo = new Mock<IUserRepository>();
+        userRepo.Setup(r => r.GetUserByIdentifierAsync(It.IsAny<string>(), It.IsAny<Expression<Func<User, User>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<User>.Error());
+
+        // Act
+        var result = await Build(userRepo: userRepo).DeleteHikeAsync(Utilities.Identifiers.Hike1, Utilities.Identifiers.User, CancellationToken.None);
+
+        // Assert
+        result.Success.Should().BeFalse();
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(500);
     }
 
     [Fact]

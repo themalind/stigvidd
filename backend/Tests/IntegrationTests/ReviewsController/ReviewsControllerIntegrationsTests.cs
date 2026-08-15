@@ -416,7 +416,7 @@ public class ReviewsControllerIntegrationsTests : IClassFixture<StigViddWebAppli
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", AuthenticatedUser);
 
-        var fakeImageBytes = new byte[] { 0xFF, 0xD8, 0xFF, 0xE0 }; // minimal JPEG header
+        var fakeImageBytes = TestImages.Jpeg();
 
         var imageContent1 = new ByteArrayContent(fakeImageBytes);
         imageContent1.Headers.ContentType = new MediaTypeHeaderValue("image/jpeg");
@@ -438,6 +438,39 @@ public class ReviewsControllerIntegrationsTests : IClassFixture<StigViddWebAppli
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Created);
+    }
+
+    [Fact]
+    public async Task AddReview_WithGpsTaggedImages_StoresThemWithoutExif()
+    {
+        // Arrange
+        var client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", AuthenticatedUser);
+
+        var taggedBytes = TestImages.JpegWithGps();
+        TestImages.HasExif(taggedBytes).Should().BeTrue("the source must carry EXIF");
+
+        var imageContent = new ByteArrayContent(taggedBytes);
+        imageContent.Headers.ContentType = new MediaTypeHeaderValue("image/jpeg");
+
+        var formData = new MultipartFormDataContent
+        {
+            { new StringContent(NassehultIdentifier), "TrailIdentifier" },
+            { new StringContent("Tagged photo"), "TrailReview" },
+            { new StringContent("4.5"), "Rating" },
+            { imageContent, "images", "review-image-1.jpg" }
+        };
+
+        _factory.UploadedFileBytes.Clear();
+
+        // Act
+        var response = await client.PostAsync("/api/v1/reviews/create", formData, TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.Created);
+        _factory.UploadedFileBytes.Should().ContainSingle();
+        TestImages.HasExif(_factory.UploadedFileBytes[0]).Should().BeFalse();
     }
 
     [Fact]

@@ -71,7 +71,7 @@ public class TrailsControllerIntegrationTests : IClassFixture<StigViddWebApplica
         var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", AuthenticatedUser);
 
-        var fakeImageBytes = new byte[] { 0xFF, 0xD8, 0xFF, 0xE0 }; // minimal JPEG header
+        var fakeImageBytes = TestImages.Jpeg();
 
         var trailSymbolImageContent = new ByteArrayContent(fakeImageBytes);
         trailSymbolImageContent.Headers.ContentType = new MediaTypeHeaderValue("image/jpeg");
@@ -105,13 +105,58 @@ public class TrailsControllerIntegrationTests : IClassFixture<StigViddWebApplica
     }
 
     [Fact]
+    public async Task AddTrail_WithGpsTaggedPhotos_StoresThemWithoutExif()
+    {
+        // Arrange
+        var client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", AuthenticatedUser);
+
+        var taggedBytes = TestImages.JpegWithGps();
+        TestImages.HasExif(taggedBytes).Should().BeTrue("the source must carry EXIF");
+
+        var symbolContent = new ByteArrayContent(taggedBytes);
+        symbolContent.Headers.ContentType = new MediaTypeHeaderValue("image/jpeg");
+
+        var imageContent = new ByteArrayContent(taggedBytes);
+        imageContent.Headers.ContentType = new MediaTypeHeaderValue("image/jpeg");
+
+        var requestContent = new MultipartFormDataContent
+        {
+            { new StringContent("Trail With Tagged Photos"), "Name" },
+            { new StringContent("5"), "TrailLength" },
+            { new StringContent("1"), "Classification" },
+            { new StringContent("false"), "Accessibility" },
+            { new StringContent("Testinfo"), "AccessibilityInfo" },
+            { new StringContent("test-trail-symbol"), "TrailSymbol" },
+            { new StringContent("Test description"), "Description" },
+            { new StringContent("Test full description"), "FullDescription" },
+            { new StringContent("[\"skog\"]"), "Tags" },
+            { symbolContent, "trailSymbolImage", "trailSymbol.jpg" },
+            { imageContent, "images", "trail-image-1.jpg" },
+            { new StringContent("[{\"latitude\": 57.62141010663575, \"longitude\": 12.805517126805371}, {\"latitude\": 58.62141010663575, \"longitude\": 13.805517126805371}]"), "Coordinates" },
+            { new StringContent("false"), "IsVerified" },
+            { new StringContent("Test City"), "City" }
+        };
+
+        _factory.UploadedFileBytes.Clear();
+
+        // Act
+        var response = await client.PostAsync("/api/v1/trails/create", requestContent, TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.Created);
+        _factory.UploadedFileBytes.Should().HaveCount(2);
+        _factory.UploadedFileBytes.Should().AllSatisfy(bytes => TestImages.HasExif(bytes).Should().BeFalse());
+    }
+
+    [Fact]
     public async Task AddTrail_ShouldReturnBadRequest_WhenRequestIsInvalid()
     {
         // Arrange
         var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", AuthenticatedUser);
 
-        var fakeImageBytes = new byte[] { 0xFF, 0xD8, 0xFF, 0xE0 };
+        var fakeImageBytes = TestImages.Jpeg();
 
         var trailSymbolImageContent = new ByteArrayContent(fakeImageBytes);
         trailSymbolImageContent.Headers.ContentType = new MediaTypeHeaderValue("image/jpeg");
@@ -169,7 +214,7 @@ public class TrailsControllerIntegrationTests : IClassFixture<StigViddWebApplica
         var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", AuthenticatedUser);
 
-        var fakeImageBytes = new byte[] { 0xFF, 0xD8, 0xFF, 0xE0 };
+        var fakeImageBytes = TestImages.Jpeg();
 
         var trailSymbolImageContent = new ByteArrayContent(fakeImageBytes);
         trailSymbolImageContent.Headers.ContentType = new MediaTypeHeaderValue("image/jpeg");
@@ -258,7 +303,7 @@ public class TrailsControllerIntegrationTests : IClassFixture<StigViddWebApplica
         var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", AuthenticatedUser);
 
-        var fakeImageBytes = new byte[] { 0xFF, 0xD8, 0xFF, 0xE0 };
+        var fakeImageBytes = TestImages.Jpeg();
         var symbolImageContent = new ByteArrayContent(fakeImageBytes);
         symbolImageContent.Headers.ContentType = new MediaTypeHeaderValue("image/jpeg");
 
@@ -293,7 +338,7 @@ public class TrailsControllerIntegrationTests : IClassFixture<StigViddWebApplica
         // Arrange
         var client = _factory.CreateClient();
 
-        var fakeImageBytes = new byte[] { 0xFF, 0xD8, 0xFF, 0xE0 };
+        var fakeImageBytes = TestImages.Jpeg();
 
         var trailSymbolImageContent = new ByteArrayContent(fakeImageBytes);
         trailSymbolImageContent.Headers.ContentType = new MediaTypeHeaderValue("image/jpeg");
