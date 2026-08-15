@@ -11,13 +11,11 @@ import { type CameraRef, type InitialViewState, type ViewStateChangeEvent } from
 import { useFocusEffect, useRouter } from "expo-router";
 import { startTransition, useCallback, useEffect, useRef, useState } from "react";
 import { NativeSyntheticEvent, StyleSheet, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "react-native-paper";
 
 export default function MapScreen() {
   const theme = useTheme();
   const router = useRouter();
-  const insets = useSafeAreaInsets();
 
   const cameraRef = useRef<CameraRef>(null);
   // Remembers the camera between mounts: the map unmounts on blur (and so loses its
@@ -45,6 +43,10 @@ export default function MapScreen() {
     accessibility: false,
   });
   const [carouselIds, setCarouselIds] = useState<string[] | null>(null);
+  // How much of the screen bottom the open carousel covers, so the attribution
+  // button can sit above it instead of behind it. Measured, since card height
+  // varies with content.
+  const [carouselHeight, setCarouselHeight] = useState(0);
   const [highlight, setHighlight] = useState<MapHighlight | null>(null);
 
   const handleMapReady = useCallback(() => setIsMapReady(true), []);
@@ -146,6 +148,10 @@ export default function MapScreen() {
           cameraRef={cameraRef}
           highlight={highlight}
           initialViewState={seededViewState}
+          attributionPosition={{
+            bottom: carouselIds ? carouselHeight + SCREEN_PADDING : SCREEN_PADDING,
+            left: SCREEN_PADDING,
+          }}
           onRegionDidChange={handleRegionDidChange}
           onClusterOpen={openCarousel}
           onMapPress={closeCarousel}
@@ -156,7 +162,9 @@ export default function MapScreen() {
         <View style={[StyleSheet.absoluteFill, { backgroundColor: theme.colors.background }]} />
       )}
 
-      <View style={[s.topBar, { top: insets.top + 8 }]}>
+      {/* No safe-area offset: the app header sits above the tab navigator and already
+          clears it, so the map's top edge starts below the status bar. */}
+      <View style={s.topBar}>
         <MapFilterMenu filter={filters} onChange={setFilters} />
       </View>
 
@@ -165,6 +173,7 @@ export default function MapScreen() {
       {carouselIds && (
         <TrailCardCarousel
           identifiers={carouselIds}
+          onMeasure={setCarouselHeight}
           onClose={closeCarousel}
           onReadMore={readMore}
           onShowOnMap={showOnMap}
@@ -180,6 +189,7 @@ const s = StyleSheet.create({
   },
   topBar: {
     position: "absolute",
+    top: SCREEN_PADDING,
     right: SCREEN_PADDING,
   },
 });
