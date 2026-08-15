@@ -36,7 +36,9 @@
     "notMember": "Not a member?",
     "createAccountHere": "Create an account here.",
     "alreadyMember": "Already a member?",
-    "consentBefore": "By creating an account you agree that we process your data in accordance with our",
+    "consentBefore": "By creating an account you agree to our",
+    "termsOfUse": "terms of use",
+    "consentMiddle": "and that we process your data in accordance with our",
     "privacyPolicy": "privacy policy",
     "loginHere": "Log in here.",
     "nickname": "Nickname",
@@ -49,7 +51,7 @@
     "checkSpam": "Didn't receive an email? Check your spam folder!",
     "enterYourPassword": "Enter your password",
     "confirmDeleteAccount": "Are you sure you want to delete your account?",
-    "deleteAccountWarning": "ALL your data will be permanently deleted!",
+    "deleteAccountWarning": "Your account and your walks are deleted permanently. Walks you have shared stay with the people you shared them with.",
     "nicknameTakenMsg": "Nickname already taken",
     "unknownError": "An unexpected error occurred",
     "couldNotLogout": "Could not log out.",
@@ -287,6 +289,9 @@
     "delete": "Delete",
     "deleteTitle": "Delete walk",
     "deleteConfirm": "Do you want to delete the walk?",
+    "deleteSharedNote": "If you have shared the walk with anyone, they keep their copy.",
+    "removeSharedConfirm": "Do you want to remove the walk from your list?",
+    "removeSharedNote": "You will not get it back unless someone shares it with you again.",
     "deleted": "Your walk has been deleted!",
     "shared": "The walk has been shared!",
     "alreadyHas": "The recipient already has this walk.",
@@ -330,7 +335,20 @@
     "accept": "Accept",
     "reject": "Decline",
     "receivedHikes": "Received hikes",
-    "tapForDetails": "Tap a hike to see details",
+    "tapBeforeDeciding": "Tap to see details before you respond",
+    "statsCount_one": "walk",
+    "statsCount_other": "walks",
+    "statsTotalWalked": "Total distance",
+    "statsTime": "outdoors",
+    "statsToDiscover": "To discover",
+    "statsSenders_one": "friend",
+    "statsSenders_other": "friends",
+    "statsMostFrom": "most from",
+    "statsLatestFrom": "latest from",
+    "today": "today",
+    "yesterday": "yesterday",
+    "daysAgo_one": "{{count}} day ago",
+    "daysAgo_other": "{{count}} days ago",
     "showing_one": "Showing {{shown}} of {{count}} walk",
     "showing_other": "Showing {{shown}} of {{count}} walks",
     "searchPlaceholder": "Search walks...",
@@ -502,7 +520,14 @@
     "guideSubtitle": "Right of access · Difficulty levels",
     "explore": "Explore Borås",
     "exploreSubtitle": "Rya åsar · Kype · and more",
-    "news": "News",
+    "latestHike": "Your latest walk",
+    "showHike": "Show walk",
+    "getStartedSignedOutTitle": "Your next walk starts here",
+    "getStartedSignedOutBody": "Log in to record your walks with GPS, see the route on the map and save the ones you want to walk again.",
+    "getStartedSignedOutAction": "Log in",
+    "getStartedNoHikesTitle": "Ready for your first walk?",
+    "getStartedNoHikesBody": "Start recording as you set off – Stigvidd traces your path on the map, counts the distance and saves the walk for you.",
+    "getStartedNoHikesAction": "Record a walk",
     "readyForWalk": "Ready for a walk?",
     "greetingMorning": "Good morning",
     "greetingDay": "Hello",
@@ -524,6 +549,7 @@
     "privacyTitle": "Privacy",
     "privacyText": "We use no ads, analytics or tracking. Your location is only recorded while you record a walk, and your walks stay private until you share them yourself.",
     "privacyLink": "Read the privacy policy",
+    "termsLink": "Read the terms of use",
     "contactTitle": "Get in touch",
     "contactText": "Have feedback, found a bug or want to suggest a trail? We'd love to hear from you.",
     "contactEmail": "info@lingonberg.se",
@@ -659,30 +685,6 @@
     "title": "Permission required",
     "message": "Permission to access the media library is required.",
     "jpgOnly": "Only JPG images are allowed"
-  },
-  "news": {
-    "items": [
-      {
-        "title": "Spring is here and it's time to get moving! 🥾",
-        "date": "5 Apr 2026"
-      },
-      {
-        "title": "It's now easier than ever to find the right trail in Borås! 🌲🥾",
-        "date": "18 Feb 2026"
-      },
-      {
-        "title": "Coming soon to the app: achievements! 🎉",
-        "date": "28 Jan 2026"
-      },
-      {
-        "title": "Picke wins again! Stigvidd's most walked trail of 2025!",
-        "date": "14 Jan 2026"
-      },
-      {
-        "title": "Snow chaos! ❄️ Walks you can do despite the snow",
-        "date": "10 Jan 2026"
-      }
-    ]
   },
   "trailList": {
     "title": "Hiking trails",

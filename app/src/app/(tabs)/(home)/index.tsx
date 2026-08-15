@@ -1,11 +1,12 @@
 import { getPopularTrails } from "@/api/trails";
+import GetStartedCard from "@/components/home/get-started-card";
 import HeroBanner from "@/components/home/hero-banner";
-import MockNews from "@/components/mockNews";
+import LatestHikeCard from "@/components/home/latest-hike-card";
 import PagerCarouselSkeleton from "@/components/skeletons/pager-carousel-skeleton";
 import PagerCarousel from "@/components/trail/pager-carousel";
 import { SCREEN_PADDING, SURFACE_BORDER_RADIUS } from "@/constants/constants";
 import { guardedNavigate } from "@/utils/navigation";
-import Ionicons from "@expo/vector-icons/Ionicons";
+import { useLatestHike } from "@/hooks/hike/useLatestHike";
 import { useUserLocation } from "@/hooks/useUserLocation";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { Image } from "expo-image";
@@ -19,15 +20,16 @@ export default function HomeScreen() {
   const scrollViewRef = useRef<ScrollView>(null);
   const theme = useTheme();
   const { t } = useTranslation();
-  // The Borås fallback isn't the user, so it must not reach the API. Without a real fix
-  // we ask for popular trails outright and title the section accordingly.
+  // The Borås fallback isn't the user's position, so it must not reach the API — without
+  // coordinates the section asks for popular trails outright and is titled accordingly.
   const { data: location, isPending: locationPending } = useUserLocation();
   const userLocation = location?.isFallback ? undefined : location;
+  // Decides which personal card renders, and with it which slot is filled.
+  const latest = useLatestHike();
   const query = useQuery({
     queryKey: ["trails", "popular", userLocation?.latitude, userLocation?.longitude],
     queryFn: () => getPopularTrails(userLocation?.latitude, userLocation?.longitude),
-    // Waiting for the fix to resolve keeps this from firing once without coordinates
-    // and immediately again with them.
+    // Waits for the position, so this fires once rather than again with coordinates.
     enabled: !locationPending,
     placeholderData: keepPreviousData,
   });
@@ -42,6 +44,9 @@ export default function HomeScreen() {
   return (
     <ScrollView ref={scrollViewRef} contentContainerStyle={[s.container, { backgroundColor: theme.colors.background }]}>
       <HeroBanner lat={userLocation?.latitude} lon={userLocation?.longitude} />
+      {(latest.kind === "signedOut" || latest.kind === "empty") && (
+        <GetStartedCard signedIn={latest.kind === "empty"} />
+      )}
       <View style={[s.section, { backgroundColor: theme.colors.background }]}>
         <View style={s.sectionHeader}>
           <Text style={[s.sectionTitle, { color: theme.colors.onBackground }]}>
@@ -50,6 +55,8 @@ export default function HomeScreen() {
         </View>
         {query.data ? <PagerCarousel data={query.data} /> : <PagerCarouselSkeleton />}
       </View>
+
+      {latest.kind === "hike" && <LatestHikeCard hike={latest.hike} />}
 
       <View style={s.cardRow}>
         <Pressable
@@ -101,14 +108,6 @@ export default function HomeScreen() {
           </View>
         </Pressable>
       </View>
-
-      <View style={[s.section, s.newsSection, { backgroundColor: theme.colors.surface }]}>
-        <View style={s.sectionHeader}>
-          <Ionicons name="newspaper-outline" size={20} color={theme.colors.onSurface} />
-          <Text style={[s.sectionTitle, { color: theme.colors.onSurface }]}>{t("home.news")}</Text>
-        </View>
-        <MockNews />
-      </View>
     </ScrollView>
   );
 }
@@ -149,10 +148,6 @@ const s = StyleSheet.create({
   cardText: {
     padding: 8,
     gap: 2,
-  },
-  newsSection: {
-    marginHorizontal: SCREEN_PADDING,
-    borderRadius: SURFACE_BORDER_RADIUS,
   },
   guideCard: {},
   areasCard: {},

@@ -195,7 +195,7 @@ export default function HikeDetails({ visible, hike, onDismiss }: Props) {
           visible={showOnDeleteDialog}
           onDismiss={() => setOnDeleteDialog(false)}
           title={t("hike.deleteTitle")}
-          infoText={[t("hike.deleteConfirm")]}
+          infoText={[t("hike.deleteConfirm"), t("hike.deleteSharedNote")]}
           textColor={theme.colors.onSurface}
           confirmText={t("hike.delete")}
           cancelText={t("common.cancel")}
@@ -295,7 +295,7 @@ const s = StyleSheet.create({
     marginVertical: 4,
   },
   mapContainer: {
-    height: HEIGHT * 0.4,
+    height: HEIGHT * 0.3,
     flexShrink: 0,
     borderRadius: SURFACE_BORDER_RADIUS,
     overflow: "hidden",

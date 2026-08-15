@@ -38,7 +38,7 @@ export interface SharedHike {
   hikeLength: number;
   duration: number;
   coordinates: string;
-  createdByName: string;
+  createdByName: string | null;
   sharedByName: string;
   sharedByIdentifier: string;
   sharedAt: string;
@@ -66,6 +66,6 @@ export interface IncomingSharedHike {
   duration: number;
   sharedByName: string;
   sharedByIdentifier: string;
-  createdByName: string;
+  createdByName: string | null;
   sharedAt: string;
 }

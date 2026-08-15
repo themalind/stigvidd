@@ -1,4 +1,4 @@
-import { SURFACE_BORDER_RADIUS } from "@/constants/constants";
+import { SCREEN_PADDING, SURFACE_BORDER_RADIUS } from "@/constants/constants";
 import { lineStringFromPositions } from "@/utils/geojson";
 import getBoundsFromTrail from "@/utils/get-bounds-from-trail";
 import { Camera, type CameraRef, GeoJSONSource, Layer } from "@maplibre/maplibre-react-native";
@@ -44,6 +44,9 @@ export default function TrailMap({ trail, onPress }: TrailMapProps) {
           <Map
             style={s.map}
             showsUserLocation
+            // Top-left instead of the fullscreen default: the bottom corners hold the
+            // overlay's two pills, and the safe-area inset has nothing to clear here.
+            attributionPosition={{ top: SCREEN_PADDING, left: SCREEN_PADDING }}
             dragPan={false}
             touchZoom={false}
             touchRotate={false}

@@ -36,7 +36,9 @@
     "notMember": "Inte medlem?",
     "createAccountHere": "Skapa konto här.",
     "alreadyMember": "Redan medlem?",
-    "consentBefore": "Genom att skapa ett konto godkänner du att vi behandlar dina uppgifter enligt",
+    "consentBefore": "Genom att skapa ett konto godkänner du våra",
+    "termsOfUse": "användarvillkor",
+    "consentMiddle": "och att vi behandlar dina uppgifter enligt",
     "privacyPolicy": "integritetspolicyn",
     "loginHere": "Logga in här.",
     "nickname": "Smeknamn",
@@ -49,7 +51,7 @@
     "checkSpam": "Får du inget mail? Kika i din skräppost!",
     "enterYourPassword": "Skriv in ditt lösenord",
     "confirmDeleteAccount": "Är du säker på att du vill avsluta ditt konto?",
-    "deleteAccountWarning": "ALL din data kommer raderas för alltid!",
+    "deleteAccountWarning": "Ditt konto och dina promenader raderas för alltid. Promenader du delat med någon finns kvar hos mottagarna.",
     "nicknameTakenMsg": "Smeknamnet upptaget",
     "unknownError": "Ett oväntat fel inträffade",
     "couldNotLogout": "Kunde inte logga ut.",
@@ -287,6 +289,9 @@
     "delete": "Ta bort",
     "deleteTitle": "Ta bort promenad",
     "deleteConfirm": "Vill du ta bort promenaden?",
+    "deleteSharedNote": "Har du delat promenaden med någon finns den kvar hos dem.",
+    "removeSharedConfirm": "Vill du ta bort promenaden ur din lista?",
+    "removeSharedNote": "Du får inte tillbaka den om du inte blir tilldelad den på nytt.",
     "deleted": "Din promenad har tagits bort!",
     "shared": "Promenaden har delats!",
     "alreadyHas": "Mottagaren har redan promenaden.",
@@ -330,7 +335,20 @@
     "accept": "Acceptera",
     "reject": "Avvisa",
     "receivedHikes": "Mottagna promenader",
-    "tapForDetails": "Tryck på en promenad för att se detaljer",
+    "tapBeforeDeciding": "Tryck för att se detaljer innan du svarar",
+    "statsCount_one": "promenad",
+    "statsCount_other": "promenader",
+    "statsTotalWalked": "Vandrat totalt",
+    "statsTime": "ute",
+    "statsToDiscover": "Att upptäcka",
+    "statsSenders_one": "vän",
+    "statsSenders_other": "vänner",
+    "statsMostFrom": "flest från",
+    "statsLatestFrom": "senast från",
+    "today": "idag",
+    "yesterday": "igår",
+    "daysAgo_one": "för {{count}} dag sedan",
+    "daysAgo_other": "för {{count}} dagar sedan",
     "showing_one": "Visar {{shown}} av {{count}} promenad",
     "showing_other": "Visar {{shown}} av {{count}} promenader",
     "searchPlaceholder": "Sök bland promenader...",
@@ -502,7 +520,14 @@
     "guideSubtitle": "Allemansrätt · Svårighetsgrader",
     "explore": "Utforska Borås",
     "exploreSubtitle": "Rya åsar · Kype · m.fl.",
-    "news": "Nyheter",
+    "latestHike": "Din senaste promenad",
+    "showHike": "Visa promenad",
+    "getStartedSignedOutTitle": "Din nästa promenad börjar här",
+    "getStartedSignedOutBody": "Logga in för att spela in dina turer med GPS, se rutten på kartan och spara dem du vill gå om.",
+    "getStartedSignedOutAction": "Logga in",
+    "getStartedNoHikesTitle": "Redo för din första promenad?",
+    "getStartedNoHikesBody": "Starta inspelningen när du går – Stigvidd ritar din väg på kartan, räknar sträckan och sparar turen åt dig.",
+    "getStartedNoHikesAction": "Spela in en promenad",
     "readyForWalk": "Dags för en promenad?",
     "greetingMorning": "God morgon",
     "greetingDay": "Hej",
@@ -524,6 +549,7 @@
     "privacyTitle": "Integritet",
     "privacyText": "Vi använder inga annonser, analysverktyg eller spårning. Din position spelas bara in medan du registrerar en promenad, och dina promenader är privata tills du själv delar dem.",
     "privacyLink": "Läs integritetspolicyn",
+    "termsLink": "Läs användarvillkoren",
     "contactTitle": "Hör av dig",
     "contactText": "Har du synpunkter, hittat ett fel eller vill tipsa om en led? Vi vill gärna höra från dig.",
     "contactEmail": "info@lingonberg.se",
@@ -659,30 +685,6 @@
     "title": "Tillgång krävs",
     "message": "Tillgång till mediabiblioteket krävs.",
     "jpgOnly": "Endast JPG-bilder är tillåtna"
-  },
-  "news": {
-    "items": [
-      {
-        "title": "Våren är här och det är dags att röra på sig! 🥾",
-        "date": "5 apr 2026"
-      },
-      {
-        "title": "Nu blir det enklare än någonsin att hitta rätt led i Borås! 🌲🥾",
-        "date": "18 feb 2026"
-      },
-      {
-        "title": "Snart i appen: achievements! 🎉",
-        "date": "28 jan 2026"
-      },
-      {
-        "title": "Picke vann igen! Stigvidds mest promenerade promenad 2025!",
-        "date": "14 jan 2026"
-      },
-      {
-        "title": "Snökaos! ❄️ Promenader du kan gå trots snön",
-        "date": "10 jan 2026"
-      }
-    ]
   },
   "trailList": {
     "title": "Vandringsleder",
