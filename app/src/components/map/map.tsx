@@ -1,7 +1,6 @@
 import { Map as MapLibreMap, type MapProps, type MapRef, UserLocation } from "@maplibre/maplibre-react-native";
 import React, { forwardRef } from "react";
 import { StyleProp, ViewStyle } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { SCREEN_PADDING } from "@/constants/constants";
 import { getMapStyle } from "./map-style";
 
@@ -18,10 +17,11 @@ type Props = Partial<Omit<MapProps, "mapStyle" | "ref" | "style">> & {
 // kept on: MapTiler + OpenStreetMap attribution is required by the data licence
 // on every screen, so it defaults on here rather than being opt-in per screen.
 // It sits bottom-left (the one corner no custom control uses — the recenter
-// button is bottom-right, the filter menu top-right, the back button top-left)
-// and clears the safe area / tab bar. Callers can still override via props.
+// button is bottom-right, the filter menu top-right, the back button top-left).
+// No safe-area offset: fullscreen maps live inside the tab navigator, whose tab
+// bar already clears the home indicator. Callers can still override via props —
+// the embedded previews move it to the top, where their pills aren't.
 export default forwardRef<MapRef, Props>(function Map({ style, showsUserLocation = true, children, ...rest }, ref) {
-  const insets = useSafeAreaInsets();
   return (
     <MapLibreMap
       ref={ref}
@@ -29,7 +29,7 @@ export default forwardRef<MapRef, Props>(function Map({ style, showsUserLocation
       mapStyle={getMapStyle()}
       logo={false}
       attribution
-      attributionPosition={{ bottom: insets.bottom - 6, left: SCREEN_PADDING }}
+      attributionPosition={{ bottom: SCREEN_PADDING, left: SCREEN_PADDING }}
       compass={false}
       {...rest}
     >

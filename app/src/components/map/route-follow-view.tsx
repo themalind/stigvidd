@@ -3,7 +3,7 @@ import Map from "@/components/map/map";
 import { ROUTE_LINE_COLOR } from "@/components/map/marker-styles";
 import StartMarker from "@/components/map/start-marker";
 import UserLocationMarker from "@/components/map/user-location-marker";
-import { SURFACE_BORDER_RADIUS } from "@/constants/constants";
+import { SCREEN_PADDING, SURFACE_BORDER_RADIUS } from "@/constants/constants";
 import { useLiveUserLocation } from "@/hooks/useLiveUserLocation";
 import { lineStringFromPositions } from "@/utils/geojson";
 import getBoundsFromTrail from "@/utils/get-bounds-from-trail";
@@ -13,7 +13,6 @@ import { Camera, type CameraRef, GeoJSONSource, Layer } from "@maplibre/maplibre
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 import { ActivityIndicator, Text, useTheme } from "react-native-paper";
 
@@ -40,7 +39,6 @@ interface Props {
 export default function RouteFollowView({ idPrefix, path, title, isLoading, errorMessage }: Props) {
   const theme = useTheme();
   const router = useRouter();
-  const insets = useSafeAreaInsets();
   const { t } = useTranslation();
 
   const cameraRef = useRef<CameraRef>(null);
@@ -122,22 +120,23 @@ export default function RouteFollowView({ idPrefix, path, title, isLoading, erro
         )}
       </Map>
 
-      <View style={[s.topRow, { top: insets.top + 8 }]}>
-        <Pressable
-          onPress={() => router.back()}
-          hitSlop={8}
-          style={[s.iconButton, { backgroundColor: theme.colors.surface }]}
-        >
-          <MaterialIcons name="arrow-back" size={24} color={theme.colors.onSurface} />
-        </Pressable>
+      {/* Back arrow and route name share one pill that hugs its text, so the map keeps
+          as much of its top edge as possible. The whole chip goes back. No safe-area
+          offset: the app header sits above the tab navigator and already clears it. */}
+      <Pressable
+        onPress={() => router.back()}
+        hitSlop={8}
+        accessibilityRole="button"
+        accessibilityLabel={t("common.back")}
+        style={[title ? s.backChip : s.iconButton, { backgroundColor: theme.colors.surface }]}
+      >
+        <MaterialIcons name="arrow-back" size={24} color={theme.colors.onSurface} />
         {title && (
-          <View style={[s.titlePill, { backgroundColor: theme.colors.surface }]}>
-            <Text style={[s.title, { color: theme.colors.onSurface }]} numberOfLines={1}>
-              {title}
-            </Text>
-          </View>
+          <Text style={[s.title, { color: theme.colors.onSurface }]} numberOfLines={1}>
+            {title}
+          </Text>
         )}
-      </View>
+      </Pressable>
 
       {isLoading && (
         <View style={s.centreOverlay} pointerEvents="none">
@@ -162,28 +161,32 @@ const s = StyleSheet.create({
   container: {
     flex: 1,
   },
-  topRow: {
+  backChip: {
     position: "absolute",
+    top: SCREEN_PADDING,
     left: SURFACE_BORDER_RADIUS,
-    right: SURFACE_BORDER_RADIUS,
+    // Long names truncate rather than push the chip across the map.
+    maxWidth: "70%",
+    height: 40,
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
+    paddingLeft: 8,
+    paddingRight: 16,
+    borderRadius: 20,
   },
   iconButton: {
+    position: "absolute",
+    top: SCREEN_PADDING,
+    left: SURFACE_BORDER_RADIUS,
     width: 40,
     height: 40,
     borderRadius: 20,
     alignItems: "center",
     justifyContent: "center",
   },
-  titlePill: {
-    flex: 1,
-    paddingHorizontal: 14,
-    paddingVertical: 9,
-    borderRadius: 20,
-  },
   title: {
+    flexShrink: 1,
     fontSize: 14,
     fontFamily: "Inter_600SemiBold",
   },

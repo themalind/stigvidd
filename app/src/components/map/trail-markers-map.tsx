@@ -17,6 +17,7 @@ import {
   type GeoJSONSourceRef,
   type InitialViewState,
   Layer,
+  type MapProps,
   Marker,
   type PressEventWithFeatures,
   useCurrentPosition,
@@ -51,6 +52,9 @@ interface Props {
   // Seeds the camera on mount. The screen remembers the last view here so the map
   // reopens where the user left it (instead of resetting) after navigating away.
   initialViewState?: InitialViewState;
+  // Overrides where the attribution button sits, so the screen can lift it above
+  // whatever it has floating over the map. Omit for the map's own default corner.
+  attributionPosition?: MapProps["attributionPosition"];
   // expansionZoom is the level at which this cluster breaks apart, so the screen can
   // dismiss the carousel once a zoom moves out of the range where the cluster holds
   // together. Omitted for a single trail, which never splits or merges.
@@ -184,6 +188,7 @@ export default function TrailMarkersMap({
   cameraRef,
   highlight,
   initialViewState,
+  attributionPosition,
   onClusterOpen,
   onRegionDidChange,
   onMapPress,
@@ -352,6 +357,9 @@ export default function TrailMarkersMap({
       <Map
         style={StyleSheet.absoluteFill}
         showsUserLocation
+        // Spread conditionally: passing the key as undefined would override the
+        // map's own default rather than fall back to it.
+        {...(attributionPosition ? { attributionPosition } : {})}
         onPress={handleMapPress}
         onDidFinishLoadingMap={onMapReady}
         onRegionDidChange={onRegionDidChange}

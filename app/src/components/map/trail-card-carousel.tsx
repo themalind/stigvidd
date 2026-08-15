@@ -9,7 +9,6 @@ import { Image } from "expo-image";
 import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Dimensions, FlatList, Pressable, StyleSheet, View } from "react-native";
 import type { NativeScrollEvent, NativeSyntheticEvent } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 import { Text, useTheme } from "react-native-paper";
 import { Rating } from "../review/rating";
@@ -19,6 +18,9 @@ interface Props {
   onClose: () => void;
   onReadMore: (identifier: string) => void;
   onShowOnMap: (identifier: string) => void;
+  // How much of the screen bottom this carousel covers, reported on layout so the
+  // map can lift its attribution button clear of it. Card height varies with content.
+  onMeasure?: (coveredHeight: number) => void;
 }
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
@@ -29,10 +31,11 @@ const SNAP_INTERVAL = CARD_WIDTH + SCREEN_PADDING;
 // A lone card has no next card to peek at, so it fills the width (minus padding)
 // and reads as centered instead of left-aligned with an empty gap.
 const SINGLE_CARD_WIDTH = SCREEN_WIDTH - SCREEN_PADDING * 2;
+// Gap between the carousel and the screen bottom.
+const BOTTOM_OFFSET = 16;
 
-export default function TrailCardCarousel({ identifiers, onClose, onReadMore, onShowOnMap }: Props) {
+export default function TrailCardCarousel({ identifiers, onClose, onReadMore, onShowOnMap, onMeasure }: Props) {
   const theme = useTheme();
-  const insets = useSafeAreaInsets();
   const [activeIndex, setActiveIndex] = useState(0);
   const listRef = useRef<FlatList<string>>(null);
   const multiple = identifiers.length > 1;
@@ -84,7 +87,7 @@ export default function TrailCardCarousel({ identifiers, onClose, onReadMore, on
   );
 
   return (
-    <View style={[s.wrapper, { bottom: insets.bottom + 16 }]}>
+    <View style={s.wrapper} onLayout={(e) => onMeasure?.(e.nativeEvent.layout.height + BOTTOM_OFFSET)}>
       <Pressable
         onPress={onClose}
         hitSlop={10}
@@ -253,6 +256,9 @@ const CarouselCard = memo(function CarouselCard({
 const s = StyleSheet.create({
   wrapper: {
     position: "absolute",
+    // No safe-area offset: the map tab sits inside the tab navigator, whose tab bar
+    // already clears the home indicator.
+    bottom: BOTTOM_OFFSET,
     left: 0,
     right: 0,
   },

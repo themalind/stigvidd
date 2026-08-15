@@ -4,7 +4,6 @@ import { Ionicons } from "@expo/vector-icons";
 import { type CameraRef } from "@maplibre/maplibre-react-native";
 import { RefObject } from "react";
 import { Pressable, StyleSheet } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 interface Props {
   cameraRef: RefObject<CameraRef | null>;
@@ -22,7 +21,6 @@ interface Props {
 const CONTROL_COLORS = AppDefaultTheme.colors;
 
 export default function CenterOnUserButton({ cameraRef, onPress, position }: Props) {
-  const insets = useSafeAreaInsets();
   const { data: fetched } = useUserLocation();
 
   // Prefer a live position passed by the caller; otherwise fall back to this
@@ -40,10 +38,7 @@ export default function CenterOnUserButton({ cameraRef, onPress, position }: Pro
 
   return (
     <Pressable
-      style={[
-        s.center,
-        { bottom: insets.bottom + 18, backgroundColor: CONTROL_COLORS.primary, borderColor: CONTROL_COLORS.onPrimary },
-      ]}
+      style={[s.center, { backgroundColor: CONTROL_COLORS.primary, borderColor: CONTROL_COLORS.onPrimary }]}
       onPress={centerOnUser}
     >
       <Ionicons name="locate" size={24} color={CONTROL_COLORS.onPrimary} />
@@ -54,6 +49,9 @@ export default function CenterOnUserButton({ cameraRef, onPress, position }: Pro
 const s = StyleSheet.create({
   center: {
     position: "absolute",
+    // No safe-area offset: every map that mounts this sits inside the tab navigator,
+    // and the tab bar below already clears the home indicator.
+    bottom: 18,
     right: 15,
     padding: 12,
     borderWidth: 2,
