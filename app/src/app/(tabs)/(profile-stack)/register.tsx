@@ -4,7 +4,7 @@ import { showSuccessAtom } from "@/atoms/snackbar-atoms";
 import { userThemeAtom } from "@/atoms/user-theme-atom";
 import PasswordInputField from "@/components/auth/password-input-field";
 import BackButton from "@/components/back-button";
-import { BORDER_RADIUS, PRIVACY_POLICY_URL, SURFACE_BORDER_RADIUS } from "@/constants/constants";
+import { BORDER_RADIUS, PRIVACY_POLICY_URL, SURFACE_BORDER_RADIUS, TERMS_OF_USE_URL } from "@/constants/constants";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Image } from "expo-image";
 import { Link, router } from "expo-router";
@@ -246,6 +246,13 @@ export default function RegisterScreen() {
                 </Button>
                 <Text style={[s.consentText, { color: theme.colors.onSurfaceVariant }]}>
                   {t("auth.consentBefore")}{" "}
+                  <Text
+                    style={{ color: theme.colors.tertiary, fontWeight: "600" }}
+                    onPress={() => Linking.openURL(TERMS_OF_USE_URL).catch(() => undefined)}
+                  >
+                    {t("auth.termsOfUse")}
+                  </Text>{" "}
+                  {t("auth.consentMiddle")}{" "}
                   <Text
                     style={{ color: theme.colors.tertiary, fontWeight: "600" }}
                     onPress={() => Linking.openURL(PRIVACY_POLICY_URL).catch(() => undefined)}
