@@ -30,9 +30,6 @@ export default function Header() {
           <Text style={[s.text, { color: theme.colors.onSurfaceVariant }]}>Stigvidd</Text>
         </View>
         <View style={s.iconContainer}>
-          <Pressable hitSlop={12}>
-            <MaterialIcons name="search" size={24} color={theme.colors.onSurfaceVariant} />
-          </Pressable>
           <Pressable hitSlop={12} onPress={() => setVisible(true)}>
             <MaterialIcons name="settings" size={24} color={theme.colors.onSurfaceVariant} />
           </Pressable>
