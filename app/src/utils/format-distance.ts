@@ -1,7 +1,5 @@
-// Formats a distance for display next to a trail or hike. GPS-derived distances
-// carry far more precision than is meaningful, so metres round to the nearest 10
-// and kilometres drop their decimal once the number is large enough that it stops
-// telling the reader anything.
+// Formats a distance for display next to a trail or hike: metres round to the nearest
+// 10, kilometres drop their decimal from 10 km up.
 
 export function formatDistanceKm(km: number): string {
   const meters = Math.round((km * 1000) / 10) * 10;
