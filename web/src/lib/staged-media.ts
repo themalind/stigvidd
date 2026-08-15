@@ -1,7 +1,7 @@
-// Staged uploads survive a page refresh: the picked files live in IndexedDB
-// (it structured-clones `File`, which localStorage cannot) and the chosen
-// upload target in localStorage. Everything here is best-effort — a failing
-// store must never block uploading, so errors resolve to "nothing staged".
+// Staged uploads survive a page refresh: the picked image data lives in
+// IndexedDB (it stores binary, which localStorage cannot) and the chosen upload
+// target in localStorage. Everything here is best-effort — a failing store must
+// never block uploading, so errors resolve to "nothing staged".
 
 const DB_NAME = "stigvidd-media";
 const STORE = "staged";
@@ -34,25 +34,61 @@ async function withStore<T>(
   }
 }
 
+// Stored as bytes rather than as the picked `File`: a `File` is only a reference
+// to the file on disk, and the document that comes back after a refresh can no
+// longer read it — the upload then stalls instead of failing, because the request
+// still advertises the snapshot size. A `Blob` built here holds an owned copy.
+interface StagedFile {
+  name: string;
+  type: string;
+  lastModified: number;
+  blob: Blob;
+}
+
+function isStagedFile(value: unknown): value is StagedFile {
+  const file = value as StagedFile | null;
+  return !!file && typeof file.name === "string" && file.blob instanceof Blob;
+}
+
 export async function loadStagedFiles(): Promise<File[]> {
   try {
     const stored = await withStore<unknown>("readonly", (s) =>
       s.get(FILES_KEY),
     );
     if (!Array.isArray(stored)) return [];
-    return stored.filter((f): f is File => f instanceof File);
+    return stored.filter(isStagedFile).map(
+      (f) =>
+        new File([f.blob], f.name, {
+          type: f.type,
+          lastModified: f.lastModified,
+        }),
+    );
   } catch {
     return [];
   }
 }
 
+// Reading the bytes is async, so saves can finish out of order; only the newest
+// one is allowed to write.
+let saveSequence = 0;
+
 export async function saveStagedFiles(files: File[]): Promise<void> {
+  const sequence = ++saveSequence;
   try {
     if (files.length === 0) {
       await withStore<undefined>("readwrite", (s) => s.delete(FILES_KEY));
       return;
     }
-    await withStore<IDBValidKey>("readwrite", (s) => s.put(files, FILES_KEY));
+    const staged: StagedFile[] = await Promise.all(
+      files.map(async (file) => ({
+        name: file.name,
+        type: file.type,
+        lastModified: file.lastModified,
+        blob: new Blob([await file.arrayBuffer()], { type: file.type }),
+      })),
+    );
+    if (sequence !== saveSequence) return;
+    await withStore<IDBValidKey>("readwrite", (s) => s.put(staged, FILES_KEY));
   } catch {
     // Ignore: staging is a convenience, not part of the upload path.
   }

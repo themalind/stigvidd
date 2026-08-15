@@ -150,17 +150,13 @@ export default function MediaUpload({ onMediaChanged }: Props) {
     [media, targetId, targetType],
   );
 
-  // Reset target + crop when switching what we attach to — but not on mount,
-  // where the target comes back from the previous session.
-  const targetTypeMounted = useRef(false);
-  useEffect(() => {
-    if (!targetTypeMounted.current) {
-      targetTypeMounted.current = true;
-      return;
-    }
+  // Reset target + crop when switching what we attach to. Driven by the picker
+  // rather than an effect, so the target restored on mount survives.
+  function changeTargetType(next: TargetType) {
+    setTargetType(next);
     setTargetId("");
     setCrop(null);
-  }, [targetType]);
+  }
 
   useEffect(() => {
     saveStagedTarget({ targetType, targetId });
@@ -306,7 +302,7 @@ export default function MediaUpload({ onMediaChanged }: Props) {
             <Label>Attach to</Label>
             <Select
               value={targetType}
-              onValueChange={(v) => setTargetType(v as TargetType)}
+              onValueChange={(v) => changeTargetType(v as TargetType)}
             >
               <SelectTrigger className="w-full">
                 <SelectValue />
