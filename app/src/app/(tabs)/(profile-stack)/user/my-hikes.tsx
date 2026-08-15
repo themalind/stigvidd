@@ -7,6 +7,7 @@ import { HikeFilterModal } from "@/components/hike/hike-filter-modal";
 import ListHeaderActions, { SortField } from "@/components/list-header-actions";
 import LoadingIndicator from "@/components/loading-indicator";
 import HikeDetails from "@/components/trail/trail-creator/hike-details";
+import HikeStatsBanner from "@/components/user/hike-stats-banner";
 import { HIKES_STALE_TIME } from "@/constants/cache";
 import { BORDER_RADIUS, SCREEN_PADDING } from "@/constants/constants";
 import { Hike } from "@/data/types";
@@ -19,10 +20,9 @@ import { useAtomValue } from "jotai";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
-import { Divider, Icon, Text, useTheme } from "react-native-paper";
+import { Icon, Text, useTheme } from "react-native-paper";
 
-// Declared at module level on purpose: a fresh object literal on every render would be a
-// new dependency for the hook's memos, and they would recompute on every pass.
+// Module level: a fresh object literal each render would recompute the hook's memos.
 const ACCESSORS: HikeAccessors<Hike> = {
   name: (h) => h.name,
   length: (h) => h.hikeLength,
@@ -32,7 +32,7 @@ const ACCESSORS: HikeAccessors<Hike> = {
 
 const SORT_FIELDS: SortField[] = [
   { key: "name", labelKey: "filter.fieldName" },
-  // Newest first is what you want from a date the first time you tap it.
+  // Dates sort newest first on the first tap.
   { key: "date", labelKey: "filter.fieldDate", defaultDirection: "desc" },
   { key: "length", labelKey: "filter.fieldLength" },
   { key: "duration", labelKey: "filter.fieldDuration" },
@@ -71,6 +71,7 @@ export default function MyHikesScreen() {
     filteredCount,
     searchQuery,
     setSearchQuery,
+    ranges,
   } = useHikeFilters(hikes, ACCESSORS);
 
   // Each range is one choice to the user even though it is stored as two keys.
@@ -93,8 +94,6 @@ export default function MyHikesScreen() {
 
   return (
     <View style={[s.screen, { backgroundColor: theme.colors.background }]}>
-      {/* Outside the ScrollView so the sort popover stays anchored to the screen
-          rather than scrolling away with the list. */}
       <View style={s.stickyHeader}>
         <ListHeaderActions
           searchQuery={searchQuery}
@@ -115,14 +114,7 @@ export default function MyHikesScreen() {
       </View>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={s.scrollContent}>
         <View style={s.content}>
-          <Divider bold={true} />
-
-          {/* Gives up its slot to the header's counter, which matters more while filtering. */}
-          {totalCount > 0 && activeFilterCount === 0 && !searchQuery && (
-            <Text variant="bodySmall" style={s.sectionSubtitle}>
-              {t("hike.tapForDetails")}
-            </Text>
-          )}
+          {hikes && totalCount > 0 && <HikeStatsBanner hikes={hikes} />}
 
           {totalCount === 0 ? (
             <Text style={s.emptyText}>{t("hike.noHikes")}</Text>
@@ -137,8 +129,7 @@ export default function MyHikesScreen() {
             filteredHikes.map((hike) => (
               <Pressable
                 style={[s.hikePressable, { backgroundColor: theme.colors.surface }]}
-                // Identifier, not index: sorting reorders the list, and index keys would
-                // make React reuse the wrong row.
+                // Identifier, not index: sorting reorders the list.
                 key={hike.identifier}
                 onPress={() => {
                   setSelectedhike(hike);
@@ -156,8 +147,7 @@ export default function MyHikesScreen() {
                     <View style={s.info}>
                       <Text>{hike.hikeLength} km</Text>
                       <Text>{FormattedTime(hike.duration)}</Text>
-                      {/* Sorting by date is meaningless if the date is only on the
-                          details page — the list has to show what it is ordered by. */}
+                      {/* The list shows the date it can be sorted by. */}
                       <Text style={s.date}>{formatDate(hike.createdAt)}</Text>
                     </View>
                   </View>
@@ -183,6 +173,7 @@ export default function MyHikesScreen() {
         onClose={() => setFilterModalVisible(false)}
         filters={filters}
         sharedByNames={[]}
+        ranges={ranges}
         onUpdateFilter={updateFilter}
         onUpdateRangeFilter={updateRangeFilter}
         onClearFilters={clearFilters}
@@ -226,7 +217,7 @@ const s = StyleSheet.create({
     gap: 12,
     marginTop: 2,
   },
-  // Pushed to the trailing edge so the date column lines up down the list.
+  // Trailing edge, so the date column lines up down the list.
   date: {
     marginLeft: "auto",
     opacity: 0.6,
@@ -244,7 +235,6 @@ const s = StyleSheet.create({
   },
   stickyHeader: {
     paddingTop: 8,
-    // Replaces the gap the header used to get from scrollContent.
     paddingBottom: 16,
   },
   scrollContent: {

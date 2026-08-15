@@ -1,5 +1,5 @@
 import { BORDER_RADIUS } from "@/constants/constants";
-import { HikeFilterOptions } from "@/hooks/hike/useHikeFilters";
+import { HikeFilterOptions, HikeFilterRanges } from "@/hooks/hike/useHikeFilters";
 import { Slider as RangeSlider } from "@miblanchard/react-native-slider";
 import React from "react";
 import { useTranslation } from "react-i18next";
@@ -13,19 +13,18 @@ interface HikeFilterModalProps {
   onClose: () => void;
   filters: HikeFilterOptions;
   sharedByNames: string[];
+  ranges: HikeFilterRanges;
   onUpdateFilter: (key: keyof HikeFilterOptions, value: any) => void;
   onUpdateRangeFilter: (key: "length" | "duration", min: number, max: number) => void;
   onClearFilters: () => void;
 }
-
-const LENGTH_MAX = 50;
-const DURATION_MAX = 600;
 
 export const HikeFilterModal: React.FC<HikeFilterModalProps> = ({
   visible,
   onClose,
   filters,
   sharedByNames,
+  ranges,
   onUpdateFilter,
   onUpdateRangeFilter,
   onClearFilters,
@@ -69,13 +68,13 @@ export const HikeFilterModal: React.FC<HikeFilterModalProps> = ({
 
           <View style={s.section}>
             <Text style={s.sectionTitle}>
-              {t("filter.hikeLength", { min: filters.minLength ?? 0, max: filters.maxLength ?? LENGTH_MAX })}
+              {t("filter.hikeLength", { min: filters.minLength ?? 0, max: filters.maxLength ?? ranges.lengthMax })}
             </Text>
             <RangeSlider
-              value={[filters.minLength ?? 0, filters.maxLength ?? LENGTH_MAX]}
+              value={[filters.minLength ?? 0, filters.maxLength ?? ranges.lengthMax]}
               minimumValue={0}
-              maximumValue={LENGTH_MAX}
-              step={1}
+              maximumValue={ranges.lengthMax}
+              step={ranges.lengthStep}
               onValueChange={(values: number[]) => onUpdateRangeFilter("length", values[0], values[1])}
               minimumTrackTintColor={theme.colors.secondary}
               maximumTrackTintColor={theme.colors.outlineVariant}
@@ -87,15 +86,16 @@ export const HikeFilterModal: React.FC<HikeFilterModalProps> = ({
 
           <View style={s.section}>
             <Text style={s.sectionTitle}>
-              {t("filter.durationRange", { min: filters.minDuration ?? 0, max: filters.maxDuration ?? DURATION_MAX })}
+              {t("filter.durationRange", {
+                min: filters.minDuration ?? 0,
+                max: filters.maxDuration ?? ranges.durationMax,
+              })}
             </Text>
             <RangeSlider
-              // Quarter-hour steps: 600 single-minute stops would be sub-pixel on a
-              // thumb-width slider, and quarters are how hiking time is thought about.
-              value={[filters.minDuration ?? 0, filters.maxDuration ?? DURATION_MAX]}
+              value={[filters.minDuration ?? 0, filters.maxDuration ?? ranges.durationMax]}
               minimumValue={0}
-              maximumValue={DURATION_MAX}
-              step={15}
+              maximumValue={ranges.durationMax}
+              step={ranges.durationStep}
               onValueChange={(values: number[]) => onUpdateRangeFilter("duration", values[0], values[1])}
               minimumTrackTintColor={theme.colors.secondary}
               maximumTrackTintColor={theme.colors.outlineVariant}

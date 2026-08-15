@@ -267,7 +267,7 @@ export default function SharedHikeDetails({
               visible={showOnDeleteDialog}
               onDismiss={() => setOnDeleteDialog(false)}
               title={t("hike.deleteTitle")}
-              infoText={[t("hike.deleteConfirm")]}
+              infoText={[t("hike.removeSharedConfirm"), t("hike.removeSharedNote")]}
               textColor={theme.colors.onSurface}
               confirmText={t("common.delete")}
               cancelText={t("common.cancel")}
@@ -357,7 +357,7 @@ const s = StyleSheet.create({
   mapContainer: {
     borderWidth: 0.3,
     borderColor: "black",
-    height: HEIGHT * 0.4,
+    height: HEIGHT * 0.3,
     flexShrink: 0,
     borderRadius: SURFACE_BORDER_RADIUS,
     overflow: "hidden",

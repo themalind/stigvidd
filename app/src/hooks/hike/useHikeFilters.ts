@@ -26,6 +26,16 @@ export interface HikeAccessors<T> {
   sharedBy?: (h: T) => string;
 }
 
+/** Upper bounds and step sizes for the range sliders. Duration is in minutes. */
+export interface HikeFilterRanges {
+  lengthMax: number;
+  lengthStep: number;
+  durationMax: number;
+  durationStep: number;
+}
+
+const roundUpTo = (value: number, step: number) => Math.ceil(value / step) * step;
+
 export const useHikeFilters = <T>(hikes: T[] | undefined, accessors: HikeAccessors<T>) => {
   const [filters, setFilters] = useState<HikeFilterOptions>({});
   const [sortBy, setSortBy] = useState<HikeSortOption>("name-asc");
@@ -36,6 +46,30 @@ export const useHikeFilters = <T>(hikes: T[] | undefined, accessors: HikeAccesso
     const read = accessors.sharedBy;
     if (!hikes || !read) return [];
     return [...new Set(hikes.map(read))].sort((a, b) => a.localeCompare(b, "sv"));
+  }, [hikes, accessors]);
+
+  // Slider bounds follow the collection, so the thumbs spread across the whole track
+  // instead of bunching in the first few pixels. Read from the unfiltered hikes, so the
+  // scale holds still while you drag. Steps get finer for short collections.
+  const ranges: HikeFilterRanges = useMemo(() => {
+    let longestKm = 0;
+    let longestMinutes = 0;
+    for (const hike of hikes ?? []) {
+      const km = accessors.length(hike);
+      if (Number.isFinite(km)) longestKm = Math.max(longestKm, km);
+      const minutes = accessors.duration(hike) / 60000;
+      if (Number.isFinite(minutes)) longestMinutes = Math.max(longestMinutes, minutes);
+    }
+
+    const lengthStep = longestKm <= 10 ? 0.5 : 1;
+    const durationStep = longestMinutes <= 120 ? 5 : 15;
+    return {
+      // Floors keep a single two-minute walk from collapsing the track to one stop.
+      lengthMax: Math.max(roundUpTo(longestKm, lengthStep), 1),
+      lengthStep,
+      durationMax: Math.max(roundUpTo(longestMinutes, durationStep), 30),
+      durationStep,
+    };
   }, [hikes, accessors]);
 
   const filteredHikes = useMemo(() => {
@@ -116,6 +150,7 @@ export const useHikeFilters = <T>(hikes: T[] | undefined, accessors: HikeAccesso
     setSortBy,
     filteredHikes,
     sharedByNames,
+    ranges,
     totalCount: hikes?.length ?? 0,
     filteredCount: filteredHikes.length,
     searchQuery,
