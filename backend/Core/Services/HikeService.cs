@@ -122,36 +122,38 @@ public class HikeService : IHikeService
         if (result.Value.CreatedBy != userIdentifier)
         {
             var userIdResult = await _userRepository.GetUserIdByIdentifierAsync(userIdentifier, ctoken);
+
+            if (userIdResult.Status == RepositoryResultStatus.Error)
+                return Result.Fail<HikeResponse>(new Message(500, "An error occurred while fetching the hike."));
+
+            // No user row: authenticated, but unknown here, so no share can point at them.
             if (!userIdResult.IsSuccess)
                 return Result.Fail<HikeResponse>(new Message(403, "Hike does not belong to the user"));
 
             var shareResult = await _hikeShareRecipientRepository.HasHikeSharedWithUserAsync(userIdResult.Value, result.Value.Id, ctoken);
-            if (!shareResult.IsSuccess || !shareResult.Value)
+
+            // Success or Error only — this one never reports NotFound.
+            if (!shareResult.IsSuccess)
+                return Result.Fail<HikeResponse>(new Message(500, "An error occurred while fetching the hike."));
+
+            if (!shareResult.Value)
                 return Result.Fail<HikeResponse>(new Message(403, "Hike does not belong to the user"));
         }
 
         return Result.Ok(_hikeResponseFactory.Create(result.Value));
     }
 
-    public async Task<Result<IReadOnlyCollection<HikeOverviewResponse>>> GetHikesAsync(string? createdBy, CancellationToken ctoken)
+    public async Task<Result<IReadOnlyCollection<HikeOverviewResponse>>> GetHikesAsync(string createdBy, CancellationToken ctoken)
     {
-        int? userId = null;
+        var userIdResult = await _userRepository.GetUserIdByIdentifierAsync(createdBy, ctoken);
 
-        if (createdBy is not null)
-        {
-            var userIdResult = await _userRepository.GetUserIdByIdentifierAsync(createdBy, ctoken);
+        if (userIdResult.Status == RepositoryResultStatus.Error)
+            return Result.Fail<IReadOnlyCollection<HikeOverviewResponse>>(new Message(500, "An error occurred while fetching the user."));
 
-            if (!userIdResult.IsSuccess)
-            {
-                if (userIdResult.Status == RepositoryResultStatus.NotFound)
-                {
-                    return Result.Ok<IReadOnlyCollection<HikeOverviewResponse>>([]);
-                }
-                return Result.Fail<IReadOnlyCollection<HikeOverviewResponse>>(new Message(500, "An error occurred while fetching the user."));
-            }
+        if (!userIdResult.IsSuccess)
+            return Result.Fail<IReadOnlyCollection<HikeOverviewResponse>>(new Message(404, "User not found"));
 
-            userId = userIdResult.Value;
-        }
+        int userId = userIdResult.Value;
 
         // GeoPathSerializer runs in the top-level projection, which EF Core evaluates
         // client-side after materializing the geometry column.
@@ -187,19 +189,20 @@ public class HikeService : IHikeService
     {
         var userIdResult = await _userRepository.GetUserByIdentifierAsync(userIdentifier, u => u.Id, ctoken);
 
+        if (userIdResult.Status == RepositoryResultStatus.Error)
+            return Result.Fail<HikeResponse>(new Message(500, "An error occurred while fetching the user."));
+
         if (!userIdResult.IsSuccess)
             return Result.Fail<HikeResponse>(new Message(404, "User not found"));
 
         var hikeResult = await _hikeRepository.GetHikeByIdentifierAsync(hikeIdentifier, ctoken);
 
-        if (!hikeResult.IsSuccess)
-        {
-            if (hikeResult.Status == RepositoryResultStatus.Error)
-                return Result.Fail<HikeResponse>(new Message(500, "An error occurred while fetching the hike."));
+        if (hikeResult.Status == RepositoryResultStatus.Error)
+            return Result.Fail<HikeResponse>(new Message(500, "An error occurred while fetching the hike."));
 
-            if (hikeResult.Status == RepositoryResultStatus.NotFound || hikeResult.Value is null)
-                return Result.Fail<HikeResponse>(new Message(404, "Hike not found"));
-        }
+        // Any other unsuccessful status ends here too: falling through would dereference Value.
+        if (!hikeResult.IsSuccess || hikeResult.Value is null)
+            return Result.Fail<HikeResponse>(new Message(404, "Hike not found"));
 
         if (hikeResult.Value.UserId != userIdResult.Value)
             return Result.Fail<HikeResponse>(new Message(403, "Hike does not belong to the user"));
@@ -233,6 +236,9 @@ public class HikeService : IHikeService
     public async Task<Result> DeleteHikeAsync(string hikeIdentifier, string userIdentifier, CancellationToken ctoken)
     {
         var userResult = await _userRepository.GetUserByIdentifierAsync(userIdentifier, u => u, ctoken);
+
+        if (userResult.Status == RepositoryResultStatus.Error)
+            return Result.Fail(new Message(500, "An error occurred while deleting the hike."));
 
         if (!userResult.IsSuccess || userResult.Value is null)
             return Result.Fail<HikeResponse>(new Message(404, "User not found"));

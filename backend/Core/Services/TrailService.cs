@@ -251,44 +251,48 @@ public class TrailService : ITrailService
 
         try
         {
-            if (trailSymbolImageUrl != null)
-            {
-                var result = await _webDavService.UploadFileAsync(trailSymbolImageUrl.OpenReadStream(), "symbols");
-
-                if (result.IsFailure)
-                    return Result.Fail<TrailResponse?>(new Message(500, "Something went wrong, could not create trail. Try again later."));
-
-                if (result.Value != null)
-                {
-                    trailSymbolUrl = result.Value;
-                    uploadedUrls.Add(result.Value);
-                }
-            }
-
-            if (trailImageUrls != null)
-            {
-                foreach (var image in trailImageUrls)
-                {
-                    var result = await _webDavService.UploadFileAsync(image.OpenReadStream(), "trails");
-
-                    if (result.IsFailure)
-                        return Result.Fail<TrailResponse?>(new Message(500, "Something went wrong, could not create Trail. Try again Later."));
-
-                    if (result.Value != null)
-                    {
-                        uploadedUrls.Add(result.Value);
-                        trailImagePaths.Add(result.Value);
-                    }
-                }
-            }
-
-            //parse json coordinates to NetTopologySuite.Geometries.Coordinate array
+            // Coordinates are validated before anything is uploaded, so a rejected trail
+            // leaves no files behind.
             var parsedCoordinates = Newtonsoft.Json.JsonConvert.DeserializeObject<WebDataContracts.Coordinate[]>(request.Coordinates);
             if (parsedCoordinates is null || parsedCoordinates.Length < 2)
             {
                 return Result.Fail<TrailResponse?>(new Message(400, "Hike coordinates are invalid."));
             }
             var coords = new LineString([.. parsedCoordinates.Select(c => new NetTopologySuite.Geometries.Coordinate(c.Longitude, c.Latitude))]);
+
+            // Uploaded via the media upload service, which strips EXIF/GPS.
+            if (trailSymbolImageUrl != null)
+            {
+                var result = await _mediaUploadService.ProcessAndUploadAsync(
+                    trailSymbolImageUrl.OpenReadStream(), "symbols", ImageProcessingOptions.StripMetadataOnly);
+
+                if (result.IsFailure || result.Value == null)
+                {
+                    await CleanupUploadedImagesAsync(uploadedUrls);
+                    return Result.Fail<TrailResponse?>(new Message(500, "Something went wrong, could not create trail. Try again later."));
+                }
+
+                trailSymbolUrl = result.Value.Path;
+                uploadedUrls.Add(result.Value.Path);
+            }
+
+            if (trailImageUrls != null)
+            {
+                foreach (var image in trailImageUrls)
+                {
+                    var result = await _mediaUploadService.ProcessAndUploadAsync(
+                        image.OpenReadStream(), "trails", ImageProcessingOptions.StripMetadataOnly);
+
+                    if (result.IsFailure || result.Value == null)
+                    {
+                        await CleanupUploadedImagesAsync(uploadedUrls);
+                        return Result.Fail<TrailResponse?>(new Message(500, "Something went wrong, could not create Trail. Try again Later."));
+                    }
+
+                    uploadedUrls.Add(result.Value.Path);
+                    trailImagePaths.Add(result.Value.Path);
+                }
+            }
 
             var trail = new Trail
             {
@@ -318,7 +322,10 @@ public class TrailService : ITrailService
             var addResult = await _trailRepository.AddTrailAsync(trail, ctoken);
 
             if (!addResult.IsSuccess)
+            {
+                await CleanupUploadedImagesAsync(uploadedUrls);
                 return Result.Fail<TrailResponse?>(new Message(500, "An error occurred while adding the trail."));
+            }
 
             return Result.Ok<TrailResponse?>(_trailResponseFactory.Create(addResult.Value));
         }

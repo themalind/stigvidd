@@ -66,6 +66,11 @@ public class HikesController : StigViddController
 
         var result = await _hikeService.GetHikesAsync(userResponse.Identifier, ctoken);
 
+        if (!result.Success && result.Message != null)
+        {
+            return ToActionResult(result.Message);
+        }
+
         return Ok(result.Value);
     }
 

@@ -13,6 +13,7 @@ public class ReviewService : IReviewService
 {
     private readonly IReviewRepository _reviewRepository;
     private readonly IWebDavService _webDavService;
+    private readonly IMediaUploadService _mediaUploadService;
     // The user lookup goes to the repository, not IUserService: UserService depends on this
     // service to clean up a deleted user's reviews, and taking IUserService here would make
     // the two services a resolve-time cycle.
@@ -24,6 +25,7 @@ public class ReviewService : IReviewService
     public ReviewService(
         IReviewRepository reviewRepository,
         IWebDavService webDavService,
+        IMediaUploadService mediaUploadService,
         IUserRepository userRepository,
         ITrailService trailService,
         ReviewResponseFactory reviewResponseFactory,
@@ -31,6 +33,7 @@ public class ReviewService : IReviewService
     {
         _reviewRepository = reviewRepository;
         _webDavService = webDavService;
+        _mediaUploadService = mediaUploadService;
         _userRepository = userRepository;
         _trailService = trailService;
         _reviewResponseFactory = reviewResponseFactory;
@@ -85,20 +88,8 @@ public class ReviewService : IReviewService
             if (rating < 1M || rating > 5M)
                 return Result.Fail<ReviewResponse?>(new Message(400, "Rating must be between 0 and 5."));
 
-            if (imageUrls != null)
-            {
-                foreach (var image in imageUrls)
-                {
-                    var result = await _webDavService.UploadFileAsync(image.OpenReadStream(), "reviews");
-
-                    if (result.IsFailure)
-                        return Result.Fail<ReviewResponse?>(new Message(500, "Something went wrong, could not create review. Try again later."));
-
-                    if (result.Value != null)
-                        uploadedUrls.Add(result.Value);
-                }
-            }
-
+            // User and trail are resolved before anything is uploaded, so a rejected review
+            // leaves no files behind.
             var userResult = await _userRepository.GetUserIdByIdentifierAsync(userIdentifier, ctoken);
 
             if (!userResult.IsSuccess)
@@ -108,6 +99,24 @@ public class ReviewService : IReviewService
 
             if (!trailResult.Success)
                 return Result.Fail<ReviewResponse?>(new Message(404, "Trail not found."));
+
+            if (imageUrls != null)
+            {
+                // Uploaded via the media upload service, which strips EXIF/GPS.
+                foreach (var image in imageUrls)
+                {
+                    var result = await _mediaUploadService.ProcessAndUploadAsync(
+                        image.OpenReadStream(), "reviews", ImageProcessingOptions.StripMetadataOnly);
+
+                    if (result.IsFailure || result.Value == null)
+                    {
+                        await DeleteImageFilesAsync(uploadedUrls, $"Rollback of a failed review upload. UserIdentifier: {userIdentifier}, TrailIdentifier: {trailIdentifier}");
+                        return Result.Fail<ReviewResponse?>(new Message(500, "Something went wrong, could not create review. Try again later."));
+                    }
+
+                    uploadedUrls.Add(result.Value.Path);
+                }
+            }
 
             var review = new Review
             {
@@ -127,7 +136,10 @@ public class ReviewService : IReviewService
             var addResult = await _reviewRepository.AddReviewAsync(review, ctoken);
 
             if (!addResult.IsSuccess)
+            {
+                await DeleteImageFilesAsync(uploadedUrls, $"Rollback of a review that could not be saved. UserIdentifier: {userIdentifier}, TrailIdentifier: {trailIdentifier}");
                 return Result.Fail<ReviewResponse?>(new Message(500, "An error occurred while adding the review."));
+            }
 
             return Result.Ok<ReviewResponse?>(_reviewResponseFactory.Create(addResult.Value));
         }

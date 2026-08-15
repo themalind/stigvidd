@@ -4,7 +4,8 @@ public interface IImageProcessingService
 {
     /// <summary>
     /// Applies crop, resize (down-only, aspect preserved), quality and format conversion to the
-    /// source image. The returned <see cref="ProcessedImage"/> owns a rewound stream ready to upload.
+    /// source image, and always strips EXIF/GPS metadata. The returned <see cref="ProcessedImage"/>
+    /// owns a rewound stream ready to upload.
     /// </summary>
     ProcessedImage Process(Stream input, ImageProcessingOptions options);
 }
@@ -21,6 +22,11 @@ public record CropRectangle(int X, int Y, int Width, int Height);
 
 public record ImageProcessingOptions
 {
+    /// <summary>
+    /// Leaves the image untouched apart from the EXIF/GPS strip.
+    /// </summary>
+    public static ImageProcessingOptions StripMetadataOnly { get; } = new();
+
     public int? MaxWidth { get; init; }
     public int? MaxHeight { get; init; }
     public int? Quality { get; init; }
