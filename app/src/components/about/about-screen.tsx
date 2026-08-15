@@ -1,5 +1,5 @@
 import BackButton from "@/components/back-button";
-import { PRIVACY_POLICY_URL, SCREEN_PADDING } from "@/constants/constants";
+import { PRIVACY_POLICY_URL, SCREEN_PADDING, TERMS_OF_USE_URL } from "@/constants/constants";
 import Constants from "expo-constants";
 import { Linking, Platform, ScrollView, StyleSheet, View } from "react-native";
 import { Text, useTheme } from "react-native-paper";
@@ -71,6 +71,13 @@ export default function AboutScreen() {
               onPress={() => Linking.openURL(PRIVACY_POLICY_URL).catch(() => undefined)}
             >
               {t("about.privacyLink")}
+            </Text>
+            <Text
+              variant="bodyMedium"
+              style={[s.link, { color: theme.colors.primary }]}
+              onPress={() => Linking.openURL(TERMS_OF_USE_URL).catch(() => undefined)}
+            >
+              {t("about.termsLink")}
             </Text>
           </View>
 
