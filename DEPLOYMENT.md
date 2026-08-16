@@ -157,8 +157,49 @@ Keep `.env` secret and out of git (it already is).
 
 The pipeline ([Jenkinsfile](Jenkinsfile)) tests, builds & pushes all custom
 images (`api web media proxy keycloak`) to `inkaben.se`, then deploys over SSH:
-`docker compose pull && up -d` on the target. See the header of the Jenkinsfile
-for the full setup (credentials, plugins, deploy-host prep).
+`docker compose pull && up -d --no-deps` for those five services on the target.
+See the header of the Jenkinsfile for the full setup (credentials, plugins,
+deploy-host prep).
+
+### What a CI deploy touches
+
+**Application code only.** The deploy step pulls and recreates exactly the five
+images it builds — `api web media proxy keycloak` — and passes `--no-deps` so
+compose never acts on `db`.
+
+Left alone: the `db` service, and every named volume (`pgdata`, `media`,
+`caddy_data`, `caddy_config`). Recreating the five app containers does not
+disturb uploads or issued certificates, and Keycloak's realm survives because it
+lives in the untouched database.
+
+The tradeoff is deliberate: **a `postgis` version bump in `docker-compose.yml`
+is not applied by CI.** Database changes are a manual operation — deploy the
+compose change, then on the host:
+
+```bash
+cd /opt/stigvidd && docker compose up -d db
+```
+
+### Jenkins agent SSH prep
+
+The agent trusts the deploy host via the **jenkins user's** `~/.ssh/known_hosts`.
+If that entry is missing or stale — after a rebuilt agent, or a DNS change that
+repoints the deploy domain at a different machine — the Deploy stage fails at its
+first `ssh` with `Host key verification failed` and exit code 255, before it ever
+authenticates. A wrong entry looks identical to a missing one.
+
+Re-seed on the Jenkins host, removing first so no stale line is left to match:
+
+```bash
+sudo -u jenkins ssh-keygen -R stigvidd.se -f /var/lib/jenkins/.ssh/known_hosts
+sudo -u jenkins sh -c 'ssh-keyscan -H stigvidd.se >> /var/lib/jenkins/.ssh/known_hosts'
+sudo -u jenkins ssh-keygen -lf /var/lib/jenkins/.ssh/known_hosts -F stigvidd.se
+```
+
+Check that last fingerprint against the deploy host itself
+(`ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub`) before trusting it —
+`ssh-keyscan` records whatever answers on port 22. Keep the file owned by
+`jenkins`; a root-owned `known_hosts` cannot be updated by ssh itself.
 
 ### Image tags
 

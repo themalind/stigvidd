@@ -24,7 +24,10 @@
 //       - libsqlite3-mod-spatialite        (see note below)
 //       - docker + `docker compose` v2, with the Jenkins user in the `docker`
 //         group: `usermod -aG docker jenkins`, then restart the agent
-//       - ssh + scp
+//       - ssh + scp, with the deploy host in the jenkins user's
+//         ~/.ssh/known_hosts. An unseeded or stale entry fails the Deploy
+//         stage at exit 255 ("Host key verification failed") before it
+//         authenticates — re-seed per the comment in that stage.
 //
 //     SpatiaLite: IntegrationTests.csproj references Sqlite.Core +
 //     SQLitePCLRaw.provider.sqlite3 on Unix (rather than the bundled provider)
@@ -257,11 +260,20 @@ pipeline {
           sshagent(credentials: ['deploy-ssh-key']) {
             sh '''
               set -e
-              # StrictHostKeyChecking left to the agent's known_hosts; pre-seed it
-              # once with: ssh-keyscan app-server.example.com >> ~/.ssh/known_hosts
+              # Host-key trust is the agent's known_hosts. If the deploy host is
+              # missing or stale there, this stage dies on the first ssh with
+              # "Host key verification failed" (exit 255) before authentication is
+              # even attempted. Re-seed it, as the jenkins user, and check the
+              # fingerprint against the deploy host before trusting it:
+              #   sudo -u jenkins ssh-keygen -R stigvidd.se -f /var/lib/jenkins/.ssh/known_hosts
+              #   sudo -u jenkins sh -c 'ssh-keyscan -H stigvidd.se >> /var/lib/jenkins/.ssh/known_hosts'
               ssh -o BatchMode=yes "${DEPLOY_HOST}" "mkdir -p ${DEPLOY_PATH}/db/init"
               scp docker-compose.yml "${DEPLOY_HOST}:${DEPLOY_PATH}/docker-compose.yml"
-              scp db/init/01-postgis.sql "${DEPLOY_HOST}:${DEPLOY_PATH}/db/init/01-postgis.sql"
+              # Every NN-*.sql, not just postgis — 02-keycloak-db.sql creates the
+              # keycloak database and was previously never copied. These only run
+              # against an EMPTY pgdata, so this is inert on a live host; it keeps
+              # a future rebuild from coming up without Keycloak's database.
+              scp db/init/*.sql "${DEPLOY_HOST}:${DEPLOY_PATH}/db/init/"
 
               # Authenticate the deploy host to the private registry so it can
               # pull. Password is piped over ssh stdin (never in argv/logs).
@@ -270,9 +282,21 @@ pipeline {
 
               # REGISTRY/IMAGE_TAG override the host .env; POSTGRES_PASSWORD etc.
               # come from the persistent .env already on the host.
+              #
+              # Scoped to the five images this pipeline builds, deliberately NOT
+              # `db`. An unscoped `pull` would re-pull postgis/postgis:17-3.5 and
+              # `up -d` would then recreate the live database container whenever
+              # upstream moves that tag. --no-deps stops compose from touching db
+              # as a dependency of api/keycloak. Consequence: a postgis bump in
+              # docker-compose.yml is NOT applied by CI — that stays a manual
+              # operation, on purpose (see DEPLOYMENT.md Part 3).
+              #
+              # No --remove-orphans: paired with a scoped `up` it can remove
+              # containers outside the named set. Recreating these five keeps all
+              # named volumes (pgdata, media, caddy_data, caddy_config) intact.
               ssh -o BatchMode=yes "${DEPLOY_HOST}" "cd ${DEPLOY_PATH} && \
-                REGISTRY=${REGISTRY} IMAGE_TAG=${IMAGE_TAG} docker compose pull && \
-                REGISTRY=${REGISTRY} IMAGE_TAG=${IMAGE_TAG} docker compose up -d --remove-orphans && \
+                REGISTRY=${REGISTRY} IMAGE_TAG=${IMAGE_TAG} docker compose pull api web media proxy keycloak && \
+                REGISTRY=${REGISTRY} IMAGE_TAG=${IMAGE_TAG} docker compose up -d --no-deps api web media proxy keycloak && \
                 docker image prune -f"
             '''
           }
