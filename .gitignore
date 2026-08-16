@@ -4,6 +4,10 @@ ipconfig.ts
 TestResults/
 .env
 
+# Mail server config: accounts (hashed passwords), aliases and DKIM private
+# keys. Lives only on the deploy host; carried by hand like .env.
+mail-config/
+
 # dependencies
 node_modules/
 
