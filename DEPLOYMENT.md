@@ -70,6 +70,15 @@ On the **target host**:
   mail server image).
 - **DNS**: all five subdomains resolve to this host's public IP, with **ports 80
   and 443 reachable** (required for Let's Encrypt to issue certificates).
+- **No system MTA on the host.** Most VPS images ship Postfix or Exim enabled,
+  which holds port 25 and stops the mail container binding it. Remove it before
+  the first start:
+
+  ```bash
+  sudo ss -lptn 'sport = :25'            # expect no output
+  sudo systemctl disable --now postfix   # or exim4, if present
+  ```
+
 - **Mail ports**: inbound **25, 465, 587, 993** reachable, and outbound **587**
   to `relay.hostup.se` permitted. Hostup blocks outbound 25 by default — that is
   expected and is exactly why mail relays through their smarthost. Confirm
@@ -509,9 +518,16 @@ curl -I https://media.stigvidd.se/<some/known/image/path>   # 200
 # Mail: TLS presents the right cert, and outbound reaches the relay.
 openssl s_client -connect mail.stigvidd.se:587 -starttls smtp \
   -servername mail.stigvidd.se </dev/null 2>&1 | grep -E 'subject=|Verify return'
-docker compose exec mailserver swaks \
-  --to <your-external-address> --from no-reply@stigvidd.se --server localhost
-docker compose logs mailserver | grep relay.hostup.se       # expect status=sent
+
+# Send as Keycloak does: authenticated, on 587. Port 25 will NOT work for this —
+# PERMIT_DOCKER=none leaves `mynetworks` empty, so unauthenticated relay to an
+# external domain is refused with "554 5.7.1 Relay access denied". That is the
+# intended posture, not a misconfiguration. Omit --auth-password to be prompted
+# rather than putting the secret in shell history.
+docker compose exec -it mailserver swaks \
+  --to <your-external-address> --from no-reply@stigvidd.se \
+  --server mail.stigvidd.se:587 --auth-user no-reply@stigvidd.se --tls
+docker compose logs mailserver | grep -E 'relay=|status='   # expect status=sent
 ```
 
 Then send a mail *to* `info@stigvidd.se` from an outside account and check
@@ -554,6 +570,31 @@ and active queries can hold locks. Restart api + keycloak afterwards.
 
 ### Mail
 
+**`failed to bind host port 0.0.0.0:25/tcp: address already in use`.**
+Most VPS images ship a system MTA (Postfix or Exim) enabled, and it holds port
+25 — even when it only listens on loopback, because the container asks for
+`0.0.0.0:25`, which includes `127.0.0.1`. Identify and remove it:
+
+```bash
+sudo ss -lptn 'sport = :25'        # or: sudo lsof -i :25
+sudo systemctl disable --now postfix   # or exim4
+docker compose up -d --no-deps mailserver
+```
+
+Use `disable`, not just `stop` — otherwise it returns at the next reboot and the
+mail server fails to start then instead. If the host MTA is genuinely needed,
+bind the container to the public IP only (`"<host-ip>:25:25"`) instead, at the
+cost of hardcoding the IP and running two MTAs.
+
+**Restarting `mailserver` restarts half the stack.**
+`mailserver` depends on `proxy`, which depends on `web`/`api`/`media`/`keycloak`,
+which depend on `db` — so a bare `docker compose up -d mailserver` walks the
+whole chain. Pass `--no-deps` for mail-only work:
+
+```bash
+docker compose up -d --no-deps mailserver
+```
+
 **`mailserver` restart-loops.**
 Two causes; the logs distinguish them. If it reports `You need at least one mail
 account to start Dovecot`, it is exiting after 120 seconds because no mailbox
@@ -567,6 +608,14 @@ have issued `mail.stigvidd.se` first (Part 1 step 3). Confirm with
 *production* issuer directory (`acme-v02.api.letsencrypt.org-directory`). LE
 staging writes to `acme-staging-v02.api.letsencrypt.org-directory` instead.
 Either keep production `ACME_CA`, or change both paths to match.
+
+**`554 5.7.1 <addr>: Relay access denied` when testing.**
+Working as designed, not a fault: `PERMIT_DOCKER=none` leaves Postfix's
+`mynetworks` empty, so nothing may relay to an external domain without
+authenticating — not even a connection from inside the container. Port 25
+accepts mail only *for* our own domains; sending *through* the server requires
+TLS + auth on 587 or 465, which is exactly what Keycloak does. Test that path
+instead (see the Part 5 verification block), not `swaks --server localhost`.
 
 **Outbound mail sits in the queue / is rejected by the relay.**
 Check `docker compose exec mailserver setup debug show-mail-logs`, then in order:
