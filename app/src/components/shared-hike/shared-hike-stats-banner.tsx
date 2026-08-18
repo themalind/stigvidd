@@ -33,10 +33,6 @@ export default function SharedHikeStatsBanner({ hikes }: Props) {
   }
 
   return (
-    <StatsHero
-      figure={formatDistanceKm(stats.totalKm)}
-      label={t("hike.statsToDiscover")}
-      satellites={satellites}
-    />
+    <StatsHero figure={formatDistanceKm(stats.totalKm)} label={t("hike.statsToDiscover")} satellites={satellites} />
   );
 }

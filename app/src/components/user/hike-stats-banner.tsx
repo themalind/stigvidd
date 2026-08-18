@@ -21,10 +21,6 @@ export default function HikeStatsBanner({ hikes }: Props) {
   ];
 
   return (
-    <StatsHero
-      figure={formatDistanceKm(stats.totalKm)}
-      label={t("hike.statsTotalWalked")}
-      satellites={satellites}
-    />
+    <StatsHero figure={formatDistanceKm(stats.totalKm)} label={t("hike.statsTotalWalked")} satellites={satellites} />
   );
 }
