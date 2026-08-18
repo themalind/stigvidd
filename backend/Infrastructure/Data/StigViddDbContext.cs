@@ -116,18 +116,19 @@ public class StigViddDbContext(DbContextOptions<StigViddDbContext> options) : Db
             .HasForeignKey(solvedVote => solvedVote.UserId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        // Global query filters for soft delete
-        modelBuilder.Entity<Hike>().HasQueryFilter(h => !h.IsDeleted);
-        modelBuilder.Entity<Review>().HasQueryFilter(r => !r.IsDeleted);
-        modelBuilder.Entity<TrailObstacle>().HasQueryFilter(to => !to.IsDeleted);
-        modelBuilder.Entity<User>().HasQueryFilter(u => !u.IsDeleted);
+        // TrailObstacle → User (SetNull on user delete)
+        modelBuilder.Entity<TrailObstacle>()
+            .HasOne(to => to.User)
+            .WithMany()
+            .HasForeignKey(to => to.UserId)
+            .OnDelete(DeleteBehavior.SetNull);
 
-        // Deleting a user cascades to their reviews (and review images via Review cascade)
+        // Review → User (SetNull on user delete)
         modelBuilder.Entity<Review>()
             .HasOne(r => r.User)
             .WithMany()
             .HasForeignKey(r => r.UserId)
-            .OnDelete(DeleteBehavior.Cascade);
+            .OnDelete(DeleteBehavior.SetNull);
 
         // Hike → User (SetNull on user delete)
         modelBuilder.Entity<Hike>()
