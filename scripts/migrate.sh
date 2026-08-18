@@ -2,15 +2,18 @@
 #
 # Migrate a Stigvidd docker-compose environment between hosts.
 #
-# Stateful data in the stack lives in two named volumes:
-#   - <project>_pgdata : the Postgres/PostGIS database
-#   - <project>_media  : uploaded images (served by the WebDAV media service)
-# This script backs both up into a single tarball and restores them on the
+# Stateful data in the stack lives in four named volumes:
+#   - <project>_pgdata    : the Postgres/PostGIS database
+#   - <project>_media     : uploaded images (served by the WebDAV media service)
+#   - <project>_maildata  : mailboxes
+#   - <project>_mailstate : Rspamd/Redis/fail2ban state (bayes training etc.)
+# This script backs them all up into a single tarball and restores them on the
 # target. Both hosts run the same images, so it's a byte-for-byte copy — no
-# logical dump/restore needed.
+# logical dump/restore needed. (<project>_maillogs is deliberately excluded.)
 #
-# (Config that is NOT data — docker-compose.yml, db/, and especially .env with
-#  its secrets — must be copied to the target separately; see the flow below.)
+# (Config that is NOT data — docker-compose.yml, db/, and especially .env and
+#  mail-config/ with their secrets — must be copied to the target separately;
+#  see the flow below.)
 #
 # Usage:
 #   ./scripts/migrate.sh backup  [outfile.tar.gz]      # on the SOURCE host
@@ -20,7 +23,7 @@
 #   # source host, in the compose dir:
 #   ./scripts/migrate.sh backup stigvidd-data.tar.gz
 #   scp stigvidd-data.tar.gz .env docker-compose.yml  target:/opt/stigvidd/
-#   scp -r db                                          target:/opt/stigvidd/
+#   scp -r db mail-config                              target:/opt/stigvidd/
 #   # target host, in /opt/stigvidd:
 #   docker login inkaben.se
 #   ./scripts/migrate.sh restore stigvidd-data.tar.gz
@@ -30,7 +33,9 @@ set -euo pipefail
 
 # Compose project name (see `name:` in docker-compose.yml) -> volume prefix.
 PROJECT="${COMPOSE_PROJECT_NAME:-stigvidd}"
-VOLUMES=(pgdata media)
+# mail* are skipped automatically (with a warning) on hosts that predate the
+# mailserver service — see mount_args().
+VOLUMES=(pgdata media maildata mailstate)
 
 log()  { printf '\033[1;34m==>\033[0m %s\n' "$*"; }
 warn() { printf '\033[1;33mwarn:\033[0m %s\n' "$*" >&2; }

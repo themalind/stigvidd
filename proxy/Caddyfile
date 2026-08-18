@@ -36,3 +36,12 @@
 	encode zstd gzip
 	reverse_proxy media:80
 }
+
+# Mail server hostname. Nothing is proxied here — SMTP and IMAP are served
+# directly by the `mailserver` container on ports 25/465/587/993. This block
+# exists solely so Caddy obtains and auto-renews the certificate for this name,
+# which the mail server reads out of the shared caddy_data volume for its own
+# TLS. Removing it silently breaks mail TLS at the next renewal.
+{$MAIL_DOMAIN} {
+	respond "Stigvidd mail server" 200
+}

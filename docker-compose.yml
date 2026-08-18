@@ -58,6 +58,15 @@ services:
       KeycloakAdminClient__auth-server-url: ${KEYCLOAK_URL}
       # Name of Keycloak's database (same Postgres) — used by admin export/import.
       KEYCLOAK_DB: ${KEYCLOAK_DB:-keycloak}
+      # Outbound mail via the `mailserver` service. Nothing in the API sends mail
+      # yet (the only email path is Keycloak's password-reset action email), but
+      # wiring it here means the sending code needs no compose change. Host is
+      # the mail server's network alias, so STARTTLS matches its certificate.
+      Smtp__Host: ${MAIL_DOMAIN:?MAIL_DOMAIN must be set}
+      Smtp__Port: "587"
+      Smtp__User: ${SMTP_NOREPLY_USER:-no-reply@stigvidd.se}
+      Smtp__Password: ${SMTP_NOREPLY_PASSWORD:-}
+      Smtp__From: ${SMTP_NOREPLY_USER:-no-reply@stigvidd.se}
     # No host ports — the proxy is the only ingress. Reachable as `api:8080`
     # on the `public` network.
     networks:
@@ -153,8 +162,13 @@ services:
       API_DOMAIN: ${API_DOMAIN:?API_DOMAIN must be set}
       MEDIA_DOMAIN: ${MEDIA_DOMAIN:?MEDIA_DOMAIN must be set}
       AUTH_DOMAIN: ${AUTH_DOMAIN:?AUTH_DOMAIN must be set}
+      # Nothing is proxied for MAIL_DOMAIN — the site block exists purely so
+      # Caddy issues and renews that certificate for the mailserver to read.
+      MAIL_DOMAIN: ${MAIL_DOMAIN:?MAIL_DOMAIN must be set}
       ACME_EMAIL: ${ACME_EMAIL:?ACME_EMAIL must be set}
       # Optional: point at LE staging while testing to dodge rate limits.
+      # NOTE: the mailserver's SSL_CERT_PATH hard-codes the *production* issuer
+      # directory name. Change this and that path must change to match.
       ACME_CA: ${ACME_CA:-https://acme-v02.api.letsencrypt.org/directory}
     ports:
       - "80:80"
@@ -173,6 +187,98 @@ services:
           - ${API_DOMAIN}
           - ${MEDIA_DOMAIN}
           - ${AUTH_DOMAIN}
+          # NOT ${MAIL_DOMAIN} — SMTP/IMAP are not proxied by Caddy. That alias
+          # belongs to the `mailserver` service below.
+
+  mailserver:
+    # Full mail server (Postfix + Dovecot + Rspamd + Fail2ban) for the domain.
+    # Upstream image — unlike the other services there is nothing to build, so
+    # it is NOT in the Jenkins pull/up set (same treatment as `db`): bumping the
+    # tag below is a manual `docker compose up -d mailserver` on the host.
+    image: ghcr.io/docker-mailserver/docker-mailserver:15.1.0
+    # Postfix derives myhostname/HELO from this — must be the public mail name.
+    hostname: ${MAIL_DOMAIN:?MAIL_DOMAIN must be set}
+    restart: unless-stopped
+    depends_on:
+      # SSL_TYPE=manual refuses to start without the cert files, and Caddy is
+      # what issues them. This orders startup only — on a first deploy, give the
+      # proxy time to actually obtain the cert (see DEPLOYMENT.md Part 1 step 3).
+      - proxy
+    environment:
+      # ---- Outbound: Hostup smarthost -------------------------------------
+      # Hostup blocks outbound port 25, so everything leaves via their relay,
+      # which authorises by SOURCE IP (the _hostup.<domain> TXT record), not by
+      # credentials. Deliberately no RELAY_USER/RELAY_PASSWORD: setting either
+      # switches Postfix into "credentials mandatory" mode and breaks the relay.
+      # DEFAULT_RELAY_HOST writes Postfix's `relayhost` directly; the legacy
+      # RELAY_HOST goes via sender_dependent_relayhost_maps and is not wanted.
+      DEFAULT_RELAY_HOST: "[${MAIL_RELAY_HOST:-relay.hostup.se}]:${MAIL_RELAY_PORT:-587}"
+      # ---- TLS: certificates issued and renewed by the proxy (Caddy) ------
+      # The whole caddy_data volume is mounted (read-only) rather than the two
+      # cert files: a file bind-mount pins an inode, so after renewal the
+      # container would go on serving the old certificate. DMS polls these paths
+      # and reloads Postfix/Dovecot when they change.
+      SSL_TYPE: manual
+      SSL_CERT_PATH: /tmp/dms/custom-certs/caddy/certificates/acme-v02.api.letsencrypt.org-directory/${MAIL_DOMAIN}/${MAIL_DOMAIN}.crt
+      SSL_KEY_PATH: /tmp/dms/custom-certs/caddy/certificates/acme-v02.api.letsencrypt.org-directory/${MAIL_DOMAIN}/${MAIL_DOMAIN}.key
+      # ---- Spam filtering + DKIM ------------------------------------------
+      # Rspamd replaces the OpenDKIM/OpenDMARC/Amavis trio and signs outbound
+      # DKIM itself. Its Redis starts automatically (ENABLE_RSPAMD_REDIS
+      # defaults to ENABLE_RSPAMD) — no separate service needed.
+      # Measured idle footprint is ~160MB PSS. Note `docker stats` and a naive
+      # RSS sum both read ~1GB here: rspamd runs five workers that share large
+      # mmap'd map files, and the sum double-counts them. See DEPLOYMENT.md for
+      # a lighter (non-Rspamd) configuration if the host is genuinely tight.
+      ENABLE_RSPAMD: "1"
+      RSPAMD_LEARN: "1"                # learn from mail moved into/out of Junk
+      RSPAMD_GREYLISTING: "1"          # off by default upstream
+      RSPAMD_CHECK_AUTHENTICATED: "0"  # don't rescan our own submitted mail
+      ENABLE_OPENDKIM: "0"             # upstream default is 1 — Rspamd signs
+      ENABLE_OPENDMARC: "0"            # upstream default is 1 — Rspamd validates
+      ENABLE_AMAVIS: "0"               # upstream default is 1 — Perl, redundant here
+      ENABLE_POLICYD_SPF: "0"          # upstream default is 1 — Rspamd checks SPF
+      ENABLE_SPAMASSASSIN: "0"
+      ENABLE_CLAMAV: "0"               # signature DB alone is ~850MB and growing
+      # Postscreen blocklists: rejects known botnet senders at connect time,
+      # before the message body is accepted. Near-zero cost.
+      ENABLE_DNSBL: "1"
+      POSTSCREEN_ACTION: enforce
+      ENABLE_FAIL2BAN: "1"             # port 25 is internet-facing
+      ENABLE_IMAP: "1"
+      ENABLE_POP3: "0"
+      # ---- Submission policy ----------------------------------------------
+      PERMIT_DOCKER: none              # no unauthenticated relay from the docker net
+      SPOOF_PROTECTION: "1"            # an account may only send as its own address
+      POSTMASTER_ADDRESS: ${POSTMASTER_ADDRESS:-postmaster@stigvidd.se}
+      ENABLE_UPDATE_CHECK: "0"
+      TZ: ${TZ:-Europe/Stockholm}
+    ports:
+      - "25:25"     # inbound SMTP from the internet (MX target)
+      - "465:465"   # submission, implicit TLS
+      - "587:587"   # submission, STARTTLS — what Keycloak and the API use
+      - "993:993"   # IMAPS
+    volumes:
+      # Accounts (hashed passwords), aliases and DKIM keys. A bind mount, not a
+      # volume, so it can be edited and copied by hand like .env — it is
+      # git-ignored and must be carried across a host move.
+      - ./mail-config/:/tmp/docker-mailserver/
+      - maildata:/var/mail
+      - mailstate:/var/mail-state
+      - maillogs:/var/log/mail
+      # Read-only: the mail server only ever reads certs out of here. Note this
+      # also exposes Caddy's ACME account key to this container — an accepted
+      # trade, both being our own containers on the same host.
+      - caddy_data:/tmp/dms/custom-certs:ro
+      - /etc/localtime:/etc/localtime:ro
+    cap_add:
+      - NET_ADMIN   # fail2ban manipulates iptables
+    networks:
+      public:
+        # Same trick as the proxy above: Keycloak connects to
+        # mail.<domain>:587 and gets a name that matches the certificate,
+        # without hairpinning out to the public IP.
+        aliases:
+          - ${MAIL_DOMAIN}
 
 networks:
   # DB <-> API traffic only; no route to the outside world.
@@ -186,3 +292,6 @@ volumes:
   media:
   caddy_data:
   caddy_config:
+  maildata:     # mailboxes — stateful, part of the migration path
+  mailstate:    # Rspamd/Redis/fail2ban state that should survive a restart
+  maillogs:     # not migrated
