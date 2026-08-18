@@ -2,6 +2,7 @@ import { incomingRequestsAtom, incomingSharedHikesAtom } from "@/atoms/friends-a
 import { showErrorAtom } from "@/atoms/snackbar-atoms";
 import { stigviddUserAtom } from "@/atoms/user-atoms";
 import { userThemeAtom } from "@/atoms/user-theme-atom";
+import { useAuth } from "@/components/auth/auth-provider";
 import DeleteAccountModal from "@/components/auth/delete-account-modal";
 import ErrorView from "@/components/error-view";
 import LoadingIndicator from "@/components/loading-indicator";
@@ -14,7 +15,6 @@ import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import React, { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
-import { useAuth } from "@/components/auth/auth-provider";
 import { Text, useTheme } from "react-native-paper";
 
 export default function ProfilePageScreen() {
@@ -108,16 +108,6 @@ export default function ProfilePageScreen() {
           route="/(tabs)/(profile-stack)/user/shared-hikes"
           icon={<Fontisto name="map" size={26} color={theme.colors.onSurfaceVariant} />}
           badge={incomingSharedHikeRequestCount}
-        />
-        <ProfileMenuItem
-          text={t("profile.achievements")}
-          route="/(tabs)/(profile-stack)/profile-page"
-          icon={<MaterialIcons name="emoji-events" size={30} color={theme.colors.onSurfaceVariant} />}
-        />
-        <ProfileMenuItem
-          text={t("profile.statistics")}
-          route="/(tabs)/(profile-stack)/profile-page"
-          icon={<MaterialIcons name="bar-chart" size={30} color={theme.colors.onSurfaceVariant} />}
         />
         <ProfileMenuItem
           text={t("profile.about")}
