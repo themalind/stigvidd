@@ -64,7 +64,7 @@ export default function AddReviewImages({ setReviewImages }: ReviewImageProp) {
         setImages(newImages);
         OnImagesChange(newImages);
       }
-    } catch (error) {
+    } catch {
       setError(t("review.addImageError"));
     }
   };

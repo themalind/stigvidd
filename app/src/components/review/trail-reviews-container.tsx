@@ -14,6 +14,7 @@ import LoadingIndicator from "../loading-indicator";
 import AddReview from "./add/add-review-modal";
 import ReviewSection from "./review-section";
 import { useAuth } from "@/components/auth/auth-provider";
+import { useHasReviewedTrail } from "@/hooks/review/useHasReviewedTrail";
 
 interface ReviewWrapperProps {
   trail: Trail;
@@ -27,6 +28,7 @@ export default function TrailReviewsContainer({ trail, surfaceToScrollToRef, onR
   const [isAuthDialogVisible, setIsAuthDialogVisible] = useState(false);
   const theme = useTheme();
   const { t } = useTranslation();
+  const { data: hasReviewed } = useHasReviewedTrail(trail.identifier);
 
   const {
     data: reviewResponse,
@@ -85,16 +87,18 @@ export default function TrailReviewsContainer({ trail, surfaceToScrollToRef, onR
             <Text style={[s.ratingNumber, { color: theme.colors.onSurfaceVariant }]}>{`(${totalReviewsCount})`}</Text>
           </View>
           <View style={s.iconSection}>
-            <Pressable onPress={handleAddReviewPress}>
-              <Ionicons name="create-outline" size={30} color={theme.colors.onBackground} />
-              <AddReview
-                trailIdentifier={trail.identifier}
-                trailName={trail.name}
-                trailLength={trail.trailLength}
-                visible={isReviewModalVisible}
-                onDismiss={handleReviewAdded}
-              />
-            </Pressable>
+            {!hasReviewed && (
+              <Pressable onPress={handleAddReviewPress}>
+                <Ionicons name="create-outline" size={30} color={theme.colors.onBackground} />
+                <AddReview
+                  trailIdentifier={trail.identifier}
+                  trailName={trail.name}
+                  trailLength={trail.trailLength}
+                  visible={isReviewModalVisible}
+                  onDismiss={handleReviewAdded}
+                />
+              </Pressable>
+            )}
           </View>
         </View>
         {reviews.length === 0 ? (

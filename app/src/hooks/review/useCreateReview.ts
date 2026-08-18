@@ -37,6 +37,9 @@ export function useCreateReview(onSuccess: () => void) {
         queryClient.invalidateQueries({
           queryKey: ["reviews", variables.trailIdentifier],
         });
+        queryClient.invalidateQueries({
+          queryKey: ["review-exists", variables.trailIdentifier],
+        });
         setSuccess(t("review.added"));
         onSuccess();
       } else {

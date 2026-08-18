@@ -2,9 +2,10 @@ export interface Review {
   identifier: string;
   trailReview?: string;
   rating: number;
-  userName: string;
+  // Both null once the author has deleted their account.
+  userName: string | null;
   createdAt: string;
-  userIdentifier: string;
+  userIdentifier: string | null;
   trailIdentifier: string;
   reviewImages?: ReviewImage[];
 }

@@ -63,7 +63,7 @@ export default function ReviewSection({ reviews }: ReviewProps) {
                 icon={props.isExpanded ? "chevron-up" : "chevron-down"}
               />
             )}
-            title={review.userName}
+            title={review.userName ?? t("review.deletedUser")}
             description={
               <View
                 style={{
@@ -81,12 +81,12 @@ export default function ReviewSection({ reviews }: ReviewProps) {
             <View style={[s.bottomContainer, { backgroundColor: theme.colors.surface }]}>
               <Text>{formatDate(review.createdAt)}</Text>
               <View style={s.actionContainer}>
-                {user?.identifier !== review.userIdentifier && (
+                {!!review.userIdentifier && user?.identifier !== review.userIdentifier && (
                   <Pressable onPress={handleReportReview}>
                     <List.Icon color={theme.colors.outline} icon="alert-circle" />
                   </Pressable>
                 )}
-                {user?.identifier === review.userIdentifier && (
+                {!!review.userIdentifier && user?.identifier === review.userIdentifier && (
                   <Pressable
                     disabled={deleteMutation.isPending}
                     onPress={() => handleDelete(review.identifier, review.trailIdentifier)}
