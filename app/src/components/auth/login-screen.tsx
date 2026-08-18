@@ -233,10 +233,6 @@ const s = StyleSheet.create({
     flex: 1,
     width: WIDTH * 0.65,
   },
-  container: {
-    justifyContent: "center",
-    alignItems: "center",
-  },
   surface: {
     gap: 10,
     padding: 22,

@@ -113,9 +113,6 @@ export default function ResetPasswordModal({ visible, onDismiss }: Props) {
 }
 
 const s = StyleSheet.create({
-  backdrop: {
-    ...StyleSheet.absoluteFillObject,
-  },
   modalContainerStyle: {
     width: width * 0.8,
     borderRadius: BORDER_RADIUS,
