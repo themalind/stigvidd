@@ -13,7 +13,8 @@ import { useTranslation } from "react-i18next";
 import { Pressable, StyleSheet, View } from "react-native";
 import { Icon, Text, useTheme } from "react-native-paper";
 
-const CARD_HEIGHT = 210;
+// Exported so the skeleton reserves exactly this, and the card drops in without a shift.
+export const CARD_HEIGHT = 210;
 
 interface Props {
   hike: Hike;

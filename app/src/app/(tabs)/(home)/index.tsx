@@ -2,6 +2,7 @@ import { getPopularTrails } from "@/api/trails";
 import GetStartedCard from "@/components/home/get-started-card";
 import HeroBanner from "@/components/home/hero-banner";
 import LatestHikeCard from "@/components/home/latest-hike-card";
+import LatestHikeSkeleton from "@/components/skeletons/latest-hike-skeleton";
 import PagerCarouselSkeleton from "@/components/skeletons/pager-carousel-skeleton";
 import PagerCarousel from "@/components/trail/pager-carousel";
 import { SCREEN_PADDING, SURFACE_BORDER_RADIUS } from "@/constants/constants";
@@ -56,6 +57,9 @@ export default function HomeScreen() {
         {query.data ? <PagerCarousel data={query.data} /> : <PagerCarouselSkeleton />}
       </View>
 
+      {/* Held for the returning user, who is the one this slot is usually for: a first-time
+          user resolves to "empty" and gets the get-started card above the carousel. */}
+      {latest.kind === "loading" && <LatestHikeSkeleton />}
       {latest.kind === "hike" && <LatestHikeCard hike={latest.hike} />}
 
       <View style={s.cardRow}>
