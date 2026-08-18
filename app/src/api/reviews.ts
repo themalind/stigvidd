@@ -28,6 +28,33 @@ export async function getReviewsByTrailIdentifier(
   }
 }
 
+export async function hasReviewedTrail(trailIdentifier: string): Promise<boolean> {
+  const token = await getUserToken();
+
+  if (!token) {
+    throw new Error("User not authenticated");
+  }
+
+  try {
+    const response = await fetch(`${BASE_URL}/reviews/trail/${trailIdentifier}/mine`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new ApiError(`HTTP error: hasReviewedTrail: ${response.status}`, response.status);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+}
+
 export async function createReview(request: CreateReviewRequest): Promise<{ success: boolean }> {
   const token = await getUserToken();
 
