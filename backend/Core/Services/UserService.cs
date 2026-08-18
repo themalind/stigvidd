@@ -300,15 +300,14 @@ public class UserService : IUserService
         if (!sharedHikesResult.Success)
             return Result.Fail(new Message(500, $"Error deleting user with identifier {identifier}"));
 
-        // Reviews would cascade at the DB level when the user row goes, but that leaves their image
-        // files behind in WebDAV, so they are removed explicitly here and the files go with them.
-        var reviewResult = await _reviewService.DeleteUserReviewsOnUserDeleteAsync(userResult.Value, ctoken);
+        // Must run before the user row goes, while the reviews can still be found by UserId.
+        var reviewResult = await _reviewService.AnonymizeUserReviewsOnUserDeleteAsync(userResult.Value, ctoken);
 
         if (!reviewResult.Success)
             return Result.Fail(new Message(500, $"Error deleting user with identifier {identifier}"));
 
-        // TrailObstacles use NoAction to avoid multiple cascade paths, so they must be removed explicitly before the user is deleted.
-        var obstacleResult = await _trailObstacleRepository.DeleteAllObstaclesByUserIdAsync(userResult.Value, ctoken);
+        // Must run before the user row goes, while the obstacles can still be found by UserId.
+        var obstacleResult = await _trailObstacleRepository.AnonymizeObstaclesByUserIdAsync(userResult.Value, ctoken);
 
         if (obstacleResult.Status == RepositoryResultStatus.Error)
             return Result.Fail(new Message(500, $"Error deleting user with identifier {identifier}"));

@@ -38,6 +38,30 @@ public class ReviewsController : StigViddController
     }
 
     [Authorize]
+    [HttpGet]
+    [Route("trail/{trailIdentifier}/mine")]
+    public async Task<ActionResult<bool>> HasReviewedTrail(
+        [FromRoute] string trailIdentifier,
+        CancellationToken ctoken)
+    {
+        var userResponse = await GetAuthenticatedUserAsync(_userService, ctoken);
+
+        if (userResponse == null)
+        {
+            return Unauthorized("User not found");
+        }
+
+        var result = await _reviewService.HasUserReviewedTrailAsync(userResponse.Identifier, trailIdentifier, ctoken);
+
+        if (!result.Success && result.Message != null)
+        {
+            return ToActionResult(result.Message);
+        }
+
+        return Ok(result.Value);
+    }
+
+    [Authorize]
     [HttpPost]
     [Route("create")]
     public async Task<ActionResult> CreateReview(

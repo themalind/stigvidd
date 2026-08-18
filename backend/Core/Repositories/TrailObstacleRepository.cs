@@ -1,7 +1,9 @@
 using Core.Interfaces.Repositories;
 using Infrastructure.Data;
 using Infrastructure.Data.Entities;
+using Infrastructure.Enums;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System.Linq.Expressions;
 
@@ -9,32 +11,46 @@ namespace Core.Repositories;
 
 public class TrailObstacleRepository : ITrailObstacleRepository
 {
+    private const int DefaultRetentionDays = 30;
+    private const int DefaultSolvedVotesToHide = 3;
+
     private readonly IDbContextFactory<StigViddDbContext> _context;
     private readonly ILogger<TrailObstacleRepository> _logger;
+    private readonly int _retentionDays;
+    private readonly int _solvedVotesToHide;
 
-    public TrailObstacleRepository(IDbContextFactory<StigViddDbContext> context, ILogger<TrailObstacleRepository> logger)
+    public TrailObstacleRepository(IDbContextFactory<StigViddDbContext> context, ILogger<TrailObstacleRepository> logger, IConfiguration configuration)
     {
         _context = context;
         _logger = logger;
+        _retentionDays = int.TryParse(configuration["ObstacleRetention:Days"], out var days) ? days : DefaultRetentionDays;
+        _solvedVotesToHide = int.TryParse(configuration["ObstacleRetention:SolvedVotesToHide"], out var votes) ? votes : DefaultSolvedVotesToHide;
     }
+
+    // Reports young enough and with too few solved votes to be resolved. Must stay the exact
+    // opposite of ExpiredObstacles: what is shown is what is not deleted.
+    private IQueryable<TrailObstacle> ActiveObstacles(StigViddDbContext context) =>
+        context.TrailObstacles.Where(to =>
+            to.CreatedAt > DateTime.UtcNow.AddDays(-_retentionDays) &&
+            to.SolvedVotes.Count < _solvedVotesToHide);
+
+    private IQueryable<TrailObstacle> ExpiredObstacles(StigViddDbContext context) =>
+        context.TrailObstacles.Where(to =>
+            to.CreatedAt <= DateTime.UtcNow.AddDays(-_retentionDays) ||
+            to.SolvedVotes.Count >= _solvedVotesToHide);
 
     public async Task<RepositoryResult<IReadOnlyCollection<T>>> GetTrailObstaclesByTrailIdentifierAsync<T>(string identifier, Expression<Func<TrailObstacle, T>> selector, CancellationToken ctoken)
     {
         try
         {
-            var activeThreshold = DateTime.UtcNow.AddDays(-30);
-
             using var context = await _context.CreateDbContextAsync(ctoken);
 
-            var obstacles = await context.TrailObstacles
+            var obstacles = await ActiveObstacles(context)
                 .AsNoTracking()
                 .Include(to => to.User)
                 .Include(to => to.SolvedVotes)
                     .ThenInclude(sv => sv.User)
-                .Where(to =>
-                    to.Trail != null && to.Trail.Identifier == identifier &&
-                    to.CreatedAt > activeThreshold &&
-                    to.SolvedVotes.Count < 3)
+                .Where(to => to.Trail != null && to.Trail.Identifier == identifier)
                 .Select(selector)
                 .ToListAsync(ctoken);
 
@@ -208,39 +224,57 @@ public class TrailObstacleRepository : ITrailObstacleRepository
         }
     }
 
-    public async Task<RepositoryResult> DeleteAllObstaclesByUserIdAsync(int userId, CancellationToken ctoken)
+    // Deletes every expired report and returns how many rows went.
+    public async Task<RepositoryResult<int>> DeleteExpiredObstaclesAsync(CancellationToken ctoken)
     {
         try
         {
             using var context = await _context.CreateDbContextAsync(ctoken);
 
-            // IgnoreQueryFilters ensures soft-deleted obstacles are included — all of the user's data should be removed.
-            var obstacleIds = await context.TrailObstacles
-                .IgnoreQueryFilters()
-                .Where(to => to.UserId == userId)
-                .Select(to => to.Id)
+            var expired = await ExpiredObstacles(context)
+                .Include(to => to.SolvedVotes)
                 .ToListAsync(ctoken);
 
-            if (obstacleIds.Count == 0)
-                return RepositoryResult.Success();
+            if (expired.Count == 0)
+                return RepositoryResult<int>.Success(0);
 
-            // SolvedVotes use NoAction on the obstacle FK, so votes must be deleted before the obstacles.
-            // ExecuteDeleteAsync issues a single SQL DELETE without loading entities into memory,
-            // which is preferred here since we are bulk-deleting and do not need the entities themselves.
-            await context.TrailObstacleSolvedVotes
-                .Where(sv => obstacleIds.Contains(sv.TrailObstacleId))
-                .ExecuteDeleteAsync(ctoken);
+            // The obstacle FK is NoAction, so votes go first.
+            context.TrailObstacleSolvedVotes.RemoveRange(expired.SelectMany(to => to.SolvedVotes));
+            context.TrailObstacles.RemoveRange(expired);
 
-            await context.TrailObstacles
-                .IgnoreQueryFilters()
-                .Where(to => obstacleIds.Contains(to.Id))
-                .ExecuteDeleteAsync(ctoken);
+            await context.SaveChangesAsync(ctoken);
+
+            return RepositoryResult<int>.Success(expired.Count);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "TrailObstacleRepository: DeleteExpiredObstaclesAsync -> Something went wrong when deleting expired obstacles.");
+            return RepositoryResult<int>.Error();
+        }
+    }
+
+    // Clears the description on the user's reports, keeping the text on Other where the category
+    // says nothing on its own. UserId is nulled by SetNull when the user row goes.
+    public async Task<RepositoryResult> AnonymizeObstaclesByUserIdAsync(int userId, CancellationToken ctoken)
+    {
+        try
+        {
+            using var context = await _context.CreateDbContextAsync(ctoken);
+
+            var obstacles = await context.TrailObstacles
+                .Where(to => to.UserId == userId && to.IssueType != TrailIssueType.Other)
+                .ToListAsync(ctoken);
+
+            foreach (var obstacle in obstacles)
+                obstacle.Description = string.Empty;
+
+            await context.SaveChangesAsync(ctoken);
 
             return RepositoryResult.Success();
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "TrailObstacleRepository: DeleteAllObstaclesByUserIdAsync -> Something went wrong when deleting obstacles for user {userId}.", userId);
+            _logger.LogError(ex, "TrailObstacleRepository: AnonymizeObstaclesByUserIdAsync -> Something went wrong when anonymizing obstacles for user {userId}.", userId);
             return RepositoryResult.Error();
         }
     }

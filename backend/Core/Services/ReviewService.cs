@@ -54,10 +54,10 @@ public class ReviewService : IReviewService
                 r.Identifier,
                 r.TrailReview,
                 r.Rating,
-                r.User != null ? r.User.NickName : string.Empty,
+                r.User != null ? r.User.NickName : null,
                 r.CreatedAt,
                 r.Trail != null ? r.Trail.Identifier : string.Empty,
-                r.User != null ? r.User.Identifier : string.Empty,
+                r.User != null ? r.User.Identifier : null,
                 r.ReviewImages!.Select(img => ReviewImageResponse.Create(baseUrl, img.Identifier, img.ImageUrl)).ToList()),
             ctoken);
 
@@ -99,6 +99,15 @@ public class ReviewService : IReviewService
 
             if (!trailResult.Success)
                 return Result.Fail<ReviewResponse?>(new Message(404, "Trail not found."));
+
+            // One review per user and trail, checked before the upload so nothing is left behind.
+            var existingResult = await _reviewRepository.HasUserReviewedTrailAsync(trailResult.Value, userResult.Value, ctoken);
+
+            if (!existingResult.IsSuccess)
+                return Result.Fail<ReviewResponse?>(new Message(500, "An error occurred while adding the review."));
+
+            if (existingResult.Value)
+                return Result.Fail<ReviewResponse?>(new Message(409, "User has already reviewed this trail."));
 
             if (imageUrls != null)
             {
@@ -204,20 +213,38 @@ public class ReviewService : IReviewService
         return Result.Ok();
     }
 
-    public async Task<Result> DeleteUserReviewsOnUserDeleteAsync(int userId, CancellationToken ctoken)
+    public async Task<Result<bool>> HasUserReviewedTrailAsync(string userIdentifier, string trailIdentifier, CancellationToken ctoken)
     {
-        // Read the URLs while the rows are still there. Deleting the user row would cascade the
-        // reviews away on its own, but the WebDAV files are outside the database and would be
-        // left orphaned, so the reviews are removed here instead and the files follow.
+        var userResult = await _userRepository.GetUserIdByIdentifierAsync(userIdentifier, ctoken);
+
+        if (!userResult.IsSuccess)
+            return Result.Fail<bool>(new Message(404, "User not found."));
+
+        var trailResult = await _trailService.GetTrailIdByIdentifierAsync(trailIdentifier, ctoken);
+
+        if (!trailResult.Success)
+            return Result.Fail<bool>(new Message(404, "Trail not found."));
+
+        var result = await _reviewRepository.HasUserReviewedTrailAsync(trailResult.Value, userResult.Value, ctoken);
+
+        if (!result.IsSuccess)
+            return Result.Fail<bool>(new Message(500, "An error occurred while checking for an existing review."));
+
+        return Result.Ok(result.Value);
+    }
+
+    public async Task<Result> AnonymizeUserReviewsOnUserDeleteAsync(int userId, CancellationToken ctoken)
+    {
+        // Read the URLs while the rows still point at the user; the files go last, best-effort.
         var imageUrlsResult = await _reviewRepository.GetReviewImageUrlsByUserIdAsync(userId, ctoken);
 
         if (!imageUrlsResult.IsSuccess)
             return Result.Fail(new Message(500, "An error occurred while fetching the review image URLs."));
 
-        var result = await _reviewRepository.DeleteReviewsByUserIdAsync(userId, ctoken);
+        var result = await _reviewRepository.AnonymizeReviewsByUserIdAsync(userId, ctoken);
 
         if (!result.IsSuccess)
-            return Result.Fail(new Message(500, "An error occurred while deleting the user's reviews."));
+            return Result.Fail(new Message(500, "An error occurred while anonymizing the user's reviews."));
 
         await DeleteImageFilesAsync(imageUrlsResult.Value, $"Account deletion. UserId: {userId}");
 

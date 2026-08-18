@@ -39,11 +39,26 @@ public class ReviewRepository : IReviewRepository
         }
     }
 
-    // A user's reviews, ignoring the IsDeleted query filter: this is cleanup, and a soft-deleted
-    // review's image files are just as orphaned as a live one's. Shared by the two methods below
-    // so the URLs collected are exactly the ones whose rows are about to go.
+    public async Task<RepositoryResult<bool>> HasUserReviewedTrailAsync(int trailId, int userId, CancellationToken ctoken)
+    {
+        try
+        {
+            using var context = await _context.CreateDbContextAsync(ctoken);
+
+            var exists = await context.Reviews.AnyAsync(r => r.TrailId == trailId && r.UserId == userId, ctoken);
+
+            return RepositoryResult<bool>.Success(exists);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "ReviewRepository: HasUserReviewedTrailAsync -> Something went wrong when checking for an existing review on trail {trailId} for user {userId}.", trailId, userId);
+            return RepositoryResult<bool>.Error();
+        }
+    }
+
+    // Shared so the collected image URLs match the rows that change.
     private static IQueryable<Review> UserReviews(StigViddDbContext context, int userId) =>
-        context.Reviews.IgnoreQueryFilters().Where(r => r.UserId == userId);
+        context.Reviews.Where(r => r.UserId == userId);
 
     public async Task<RepositoryResult<IEnumerable<string>>> GetReviewImageUrlsByUserIdAsync(int userId, CancellationToken ctoken)
     {
@@ -67,15 +82,22 @@ public class ReviewRepository : IReviewRepository
         }
     }
 
-    public async Task<RepositoryResult> DeleteReviewsByUserIdAsync(int userId, CancellationToken ctoken)
+    // Clears the text and deletes the images on the user's reviews, keeping the rating.
+    // UserId is nulled by SetNull when the user row goes.
+    public async Task<RepositoryResult> AnonymizeReviewsByUserIdAsync(int userId, CancellationToken ctoken)
     {
         try
         {
             using var context = await _context.CreateDbContextAsync(ctoken);
 
-            var reviews = await UserReviews(context, userId).ToListAsync(ctoken);
+            var reviews = await UserReviews(context, userId)
+                .Include(r => r.ReviewImages)
+                .ToListAsync(ctoken);
 
-            context.Reviews.RemoveRange(reviews); // ReviewImage rows follow by cascade
+            foreach (var review in reviews)
+                review.TrailReview = null;
+
+            context.ReviewImages.RemoveRange(reviews.SelectMany(r => r.ReviewImages ?? []));
 
             await context.SaveChangesAsync(ctoken);
 
@@ -83,7 +105,7 @@ public class ReviewRepository : IReviewRepository
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "ReviewRepository: DeleteReviewsByUserIdAsync -> Something went wrong when deleting reviews for user with ID {userId}.", userId);
+            _logger.LogError(ex, "ReviewRepository: AnonymizeReviewsByUserIdAsync -> Something went wrong when anonymizing reviews for user with ID {userId}.", userId);
             return RepositoryResult.Error();
         }
     }
