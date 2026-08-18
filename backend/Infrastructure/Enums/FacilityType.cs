@@ -8,3 +8,5 @@ public enum FacilityType
     SwimmingArea = 8,
     NatureReserve = 16,
 }
+
+// Do not change the values of the enum as they are used in the database and changing them would break existing data.
