@@ -182,10 +182,21 @@ pipeline {
               // `npm run build` is `tsc -b && vite build` — it is the type
               // check, and it fails fast on PRs that never reach the image
               // build below.
+              //
+              // generate:api reads the committed web/openapi.json, so no backend
+              // has to run here. OpenApiContractTests in the backend stage is
+              // what keeps that file honest; this step only catches a contract
+              // change that was never regenerated into the client.
               sh '''
                 set -e
                 npm ci
                 npm run lint
+                npm run generate:api
+                if ! git diff --exit-code -- src/api/generated; then
+                  echo "ERROR: the generated API client is stale." >&2
+                  echo "       Run 'npm run generate:api' in web/ and commit the result." >&2
+                  exit 1
+                fi
                 npm run build
               '''
             }
