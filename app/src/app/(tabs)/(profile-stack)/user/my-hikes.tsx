@@ -4,6 +4,7 @@ import { useAuth } from "@/components/auth/auth-provider";
 import BackButton from "@/components/back-button";
 import ErrorView from "@/components/error-view";
 import { HikeFilterModal } from "@/components/hike/hike-filter-modal";
+import RouteThumbnail from "@/components/hike/route-thumbnail";
 import ListHeaderActions, { SortField } from "@/components/list-header-actions";
 import LoadingIndicator from "@/components/loading-indicator";
 import HikeDetails from "@/components/trail/trail-creator/hike-details";
@@ -14,12 +15,11 @@ import { Hike } from "@/data/types";
 import { HikeAccessors, HikeSortOption, useHikeFilters } from "@/hooks/hike/useHikeFilters";
 import { formatDate } from "@/utils/format-date";
 import FormattedTime from "@/utils/format-time-from-ms";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
-import { useMemo, useState } from "react";
+import { memo, useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { FlatList, Pressable, StyleSheet, View } from "react-native";
 import { Icon, Text, useTheme } from "react-native-paper";
 
 // Module level: a fresh object literal each render would recompute the hook's memos.
@@ -37,6 +37,36 @@ const SORT_FIELDS: SortField[] = [
   { key: "length", labelKey: "filter.fieldLength" },
   { key: "duration", labelKey: "filter.fieldDuration" },
 ];
+
+interface HikeRowProps {
+  hike: Hike;
+  onPress: (hike: Hike) => void;
+}
+
+// Memoized so a row keeps its parsed thumbnail while the screen re-renders around it.
+const HikeRow = memo(function HikeRow({ hike, onPress }: HikeRowProps) {
+  const theme = useTheme();
+
+  return (
+    <Pressable style={[s.hikePressable, { backgroundColor: theme.colors.surface }]} onPress={() => onPress(hike)}>
+      <View style={s.hikeItem}>
+        <RouteThumbnail coordinates={hike.coordinates} identifier={hike.identifier} />
+        <View style={s.flex}>
+          <Text style={s.name} numberOfLines={1}>
+            {hike.name}
+          </Text>
+          <View style={s.info}>
+            <Text>{hike.hikeLength} km</Text>
+            <Text>{FormattedTime(hike.duration)}</Text>
+            {/* The list shows the date it can be sorted by. */}
+            <Text style={s.date}>{formatDate(hike.createdAt)}</Text>
+          </View>
+        </View>
+        <Icon source="chevron-right" size={20} />
+      </View>
+    </Pressable>
+  );
+});
 
 export default function MyHikesScreen() {
   const theme = useTheme();
@@ -84,6 +114,13 @@ export default function MyHikesScreen() {
     );
   }, [filters]);
 
+  const openHike = useCallback((selected: Hike) => {
+    setSelectedhike(selected);
+    setVisible(true);
+  }, []);
+
+  const renderHike = useCallback(({ item }: { item: Hike }) => <HikeRow hike={item} onPress={openHike} />, [openHike]);
+
   if (isLoading) {
     return <LoadingIndicator />;
   }
@@ -112,52 +149,34 @@ export default function MyHikesScreen() {
           <Text style={s.titleTextBold}>{t("hike.myHikesTitle")}</Text>
         </ListHeaderActions>
       </View>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={s.scrollContent}>
-        <View style={s.content}>
-          {hikes && totalCount > 0 && <HikeStatsBanner hikes={hikes} />}
-
-          {totalCount === 0 ? (
+      <FlatList
+        data={filteredHikes}
+        renderItem={renderHike}
+        // Identifier, not index: sorting reorders the list.
+        keyExtractor={(item) => item.identifier}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={s.listContent}
+        // Each row parses its own coordinate payload, so windowing is what keeps a long
+        // collection off the first paint.
+        initialNumToRender={8}
+        maxToRenderPerBatch={8}
+        windowSize={5}
+        updateCellsBatchingPeriod={50}
+        removeClippedSubviews
+        ListHeaderComponent={hikes && totalCount > 0 ? <HikeStatsBanner hikes={hikes} /> : null}
+        ListEmptyComponent={
+          totalCount === 0 ? (
             <Text style={s.emptyText}>{t("hike.noHikes")}</Text>
-          ) : filteredHikes.length === 0 ? (
+          ) : (
             <View style={s.noResults}>
               <Text style={s.emptyText}>{t("hike.noResults")}</Text>
               <Text variant="bodySmall" style={s.sectionSubtitle}>
                 {t("trailList.noResultsHint")}
               </Text>
             </View>
-          ) : (
-            filteredHikes.map((hike) => (
-              <Pressable
-                style={[s.hikePressable, { backgroundColor: theme.colors.surface }]}
-                // Identifier, not index: sorting reorders the list.
-                key={hike.identifier}
-                onPress={() => {
-                  setSelectedhike(hike);
-                  setVisible(true);
-                }}
-              >
-                <View style={s.hikeItem}>
-                  <View style={[s.iconCircle, { backgroundColor: theme.colors.secondaryContainer }]}>
-                    <MaterialCommunityIcons name="map-legend" size={24} color={theme.colors.secondary} />
-                  </View>
-                  <View style={s.flex}>
-                    <Text style={s.name} numberOfLines={1}>
-                      {hike.name}
-                    </Text>
-                    <View style={s.info}>
-                      <Text>{hike.hikeLength} km</Text>
-                      <Text>{FormattedTime(hike.duration)}</Text>
-                      {/* The list shows the date it can be sorted by. */}
-                      <Text style={s.date}>{formatDate(hike.createdAt)}</Text>
-                    </View>
-                  </View>
-                  <Icon source="chevron-right" size={20} />
-                </View>
-              </Pressable>
-            ))
-          )}
-        </View>
-      </ScrollView>
+          )
+        }
+      />
       {hike && (
         <HikeDetails
           visible={visible}
@@ -190,13 +209,6 @@ const s = StyleSheet.create({
     fontFamily: "Inter_600SemiBold",
     fontSize: 16,
   },
-  iconCircle: {
-    width: 42,
-    height: 42,
-    borderRadius: BORDER_RADIUS,
-    justifyContent: "center",
-    alignItems: "center",
-  },
   hikePressable: {
     padding: 10,
     borderRadius: BORDER_RADIUS,
@@ -222,24 +234,15 @@ const s = StyleSheet.create({
     marginLeft: "auto",
     opacity: 0.6,
   },
-  infoBox: {
-    borderRadius: BORDER_RADIUS,
-    padding: 12,
-    gap: 6,
-  },
-  infoLabel: {
-    fontSize: 11,
-    fontWeight: "600",
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-  },
   stickyHeader: {
     paddingTop: 8,
     paddingBottom: 16,
   },
-  scrollContent: {
+  // Holds the stats banner too, which needs the padding to break back out of.
+  listContent: {
+    paddingHorizontal: SCREEN_PADDING,
     paddingBottom: 20,
-    gap: 16,
+    gap: 10,
   },
   emptyText: {
     textAlign: "center",
@@ -249,10 +252,6 @@ const s = StyleSheet.create({
   noResults: {
     alignItems: "center",
     gap: 4,
-  },
-  content: {
-    paddingHorizontal: SCREEN_PADDING,
-    gap: 10,
   },
   sectionSubtitle: {
     opacity: 0.6,

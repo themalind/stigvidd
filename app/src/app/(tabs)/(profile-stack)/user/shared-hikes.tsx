@@ -5,6 +5,7 @@ import { useAuth } from "@/components/auth/auth-provider";
 import BackButton from "@/components/back-button";
 import ErrorView from "@/components/error-view";
 import { HikeFilterModal } from "@/components/hike/hike-filter-modal";
+import RouteThumbnail from "@/components/hike/route-thumbnail";
 import ListHeaderActions, { SortField } from "@/components/list-header-actions";
 import LoadingIndicator from "@/components/loading-indicator";
 import SharedHikeDetails from "@/components/shared-hike/shared-hike-details";
@@ -249,9 +250,14 @@ export default function SharedHikesScreen() {
                           setVisible(true);
                         }}
                       >
-                        <View style={[s.iconCircle, { backgroundColor: theme.colors.surfaceVariant }]}>
-                          <Fontisto name="map" size={15} color={theme.colors.onSurfaceVariant} />
-                        </View>
+                        {/* Neutral tint: the accent stays with the incoming rows above,
+                            which are the ones asking for a decision. */}
+                        <RouteThumbnail
+                          coordinates={hike.coordinates}
+                          identifier={hike.hikeIdentifier}
+                          background={theme.colors.surfaceVariant}
+                          stroke={theme.colors.onSurfaceVariant}
+                        />
                         <View style={s.rowLeft}>
                           <Text style={s.rowName} numberOfLines={1}>
                             {hike.hikeName}
@@ -387,11 +393,6 @@ const s = StyleSheet.create({
     borderRadius: BORDER_RADIUS,
     justifyContent: "center",
     alignItems: "center",
-  },
-  infoBox: {
-    borderRadius: BORDER_RADIUS,
-    padding: 12,
-    gap: 6,
   },
   scrollContent: {
     paddingTop: 8,
