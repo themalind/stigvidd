@@ -112,6 +112,9 @@ public class Program
 
         builder.Services.AddStigVidd(connectionString);
 
+        // Deletes obstacle reports once they are past their retention period
+        builder.Services.AddHostedService<StigviddAPI.BackgroundServices.ExpiredObstacleCleanupService>();
+
         // Swagger auth
         builder.Services.AddOpenApiDocument(config =>
         {
