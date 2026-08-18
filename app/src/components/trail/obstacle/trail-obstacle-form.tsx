@@ -230,6 +230,9 @@ export default function TrailObstacleForm({ trailIdentifier, visible, onDismiss 
                     />
                   )}
                 />
+                <Text style={[s.privacyInfo, { color: theme.colors.onSurfaceVariant }]}>
+                  {t("obstacle.descriptionPrivacyInfo")}
+                </Text>
                 {errors.description && (
                   <Text style={[s.bold, { color: theme.colors.error }]}>
                     {t(asTranslationKey(errors.description.message as string))}
@@ -344,6 +347,10 @@ const s = StyleSheet.create({
   },
   fieldGroup: {
     gap: 5,
+  },
+  privacyInfo: {
+    fontSize: 12,
+    lineHeight: 18,
   },
   locationRow: {
     flexDirection: "row",

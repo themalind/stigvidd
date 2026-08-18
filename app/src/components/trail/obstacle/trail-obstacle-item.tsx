@@ -34,7 +34,7 @@ export default function TrailObstacleItem({ obstacle, trailIdentifier, onCloseMo
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const queryClient = useQueryClient();
   const hasVoted = obstacle.solvedVotes?.some((v) => v.userIdentifier === stigviddUser?.identifier);
-  const isOwner = stigviddUser?.identifier === obstacle.userIdentifier;
+  const isOwner = !!obstacle.userIdentifier && stigviddUser?.identifier === obstacle.userIdentifier;
 
   const { mutate, isPending } = useMutation({
     mutationFn: () => addSolvedVote(obstacle.identifier),
@@ -114,7 +114,9 @@ export default function TrailObstacleItem({ obstacle, trailIdentifier, onCloseMo
       <Divider />
       <View style={s.field}>
         <Text style={[s.label, { color: theme.colors.onSurfaceVariant }]}>{t("obstacle.description")}</Text>
-        <Text style={[s.description, { color: theme.colors.onSurface }]}>{obstacle.description}</Text>
+        <Text style={[s.description, { color: theme.colors.onSurface }]}>
+          {obstacle.description || t("obstacle.removedDescription")}
+        </Text>
       </View>
       <View style={s.footer}>
         <View style={s.field}>
