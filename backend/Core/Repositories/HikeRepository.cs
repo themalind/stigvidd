@@ -1,9 +1,9 @@
+using System.Linq.Expressions;
 using Core.Interfaces.Repositories;
 using Infrastructure.Data;
 using Infrastructure.Data.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using System.Linq.Expressions;
 
 namespace Core.Repositories;
 
@@ -327,11 +327,14 @@ public class HikeRepository : IHikeRepository
         {
             using var context = await _context.CreateDbContextAsync(ctoken);
 
-            await context.Hikes
-                .Where(h => h.UserId == userId)
-                .ExecuteUpdateAsync(s => s
-                    .SetProperty(h => h.CreatedBy, (string?)null)
-                    .SetProperty(h => h.CreatedByNickName, (string?)null), ctoken);
+            foreach (var hike in await context.Hikes.Where(h => h.UserId == userId).ToListAsync(ctoken))
+            {
+                hike.CreatedBy = null;
+                hike.CreatedByNickName = null;
+                hike.UserId = null;
+            }
+
+            await context.SaveChangesAsync(ctoken);
 
             return RepositoryResult.Success();
         }

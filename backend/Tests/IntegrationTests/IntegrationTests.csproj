@@ -18,9 +18,8 @@
     <PackageReference Include="FluentAssertions" Version="8.10.0" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.9" />
     <PackageReference Condition=" '$(OS)' == 'Windows_NT' " Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.9" />
-    <PackageReference Condition=" '$(OS)' != 'Windows_NT' " Include="Microsoft.EntityFrameworkCore.Sqlite.Core" Version="10.0.9" />
-    <!-- non-Windows loads the system mod_spatialite, which links the system libsqlite3 -->
-    <PackageReference Condition=" '$(OS)' != 'Windows_NT' " Include="SQLitePCLRaw.provider.sqlite3" Version="2.1.13" />
+    <PackageReference Condition=" '$(OS)' == 'UNIX' " Include="Microsoft.EntityFrameworkCore.Sqlite.Core" Version="10.0.9" />
+    <PackageReference Condition=" '$(OS)' == 'UNIX' " Include="SQLitePCLRaw.provider.sqlite3" Version="2.1.13" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite.NetTopologySuite" Version="10.0.9" />
      <!-- Windows only: the bundled e_sqlite3 would shadow the libsqlite3 mod_spatialite is linked against -->
     <PackageReference Condition=" '$(OS)' == 'Windows_NT' " Include="SQLitePCLRaw.bundle_e_sqlite3" Version="2.1.13" />
