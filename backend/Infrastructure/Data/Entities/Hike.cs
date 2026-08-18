@@ -2,7 +2,7 @@ using NetTopologySuite.Geometries;
 
 namespace Infrastructure.Data.Entities;
 
-public class Hike : SoftDeletableEntity
+public class Hike : BaseEntity
 {
     public required string Name { get; set; }
     public decimal HikeLength { get; set; }
