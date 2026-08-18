@@ -17,18 +17,18 @@ public class ReviewResponseFactory
     {
         var images = review.ReviewImages?.Select(reviewImage =>
             ReviewImageResponse.Create(
-                PresentableBaseUrl, // "https://stigvidd.se/files/"
+                PresentableBaseUrl, // "https://media.stigvidd.se/"
                 reviewImage.Identifier,
                 reviewImage.ImageUrl)); // reviews/guid.jpeg
 
         return ReviewResponse.Create(
             review.Identifier,
-            review.TrailReview ?? string.Empty,
+            review.TrailReview,
             review.Rating,
-            review.User?.NickName ?? string.Empty,
+            review.User?.NickName,
             review.CreatedAt,
             review.Trail?.Identifier ?? string.Empty,
-            review.User?.Identifier ?? string.Empty,
+            review.User?.Identifier,
             images);
     }
 

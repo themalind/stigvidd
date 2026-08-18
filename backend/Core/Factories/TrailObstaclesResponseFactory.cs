@@ -9,7 +9,7 @@ public class TrailObstaclesResponseFactory
     {
         return trailObstacles.Select(trailObstacle => TrailObstacleResponse.Create(
              trailObstacle.Identifier,
-             trailObstacle.User?.Identifier ?? throw new InvalidOperationException("TrailObstaclesResponseFactory: UserIdentifier can not be null"),
+             trailObstacle.User?.Identifier,
              trailObstacle.Description,
              trailObstacle.IssueType.ToString(),
              trailObstacle.IncidentLongitude,
@@ -26,7 +26,7 @@ public class TrailObstaclesResponseFactory
     {
         return TrailObstacleResponse.Create(
             trailObstacle.Identifier,
-            trailObstacle.User?.Identifier ?? throw new InvalidOperationException("TrailObstaclesResponseFactory: UserIdentifier can not be null"),
+            trailObstacle.User?.Identifier,
             trailObstacle.Description,
             trailObstacle.IssueType.ToString(),
             trailObstacle.IncidentLongitude,
