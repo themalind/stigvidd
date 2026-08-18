@@ -10,6 +10,14 @@ export interface FacilityResponse {
   name?: string;
   facilityType: number;
   isAccessible?: boolean;
-  latitude?: number;
-  longitude?: number;
+  /** @nullable */
+  latitude?: number | null;
+  /** @nullable */
+  longitude?: number | null;
+  /** @nullable */
+  location?: string | null;
+  /** @nullable */
+  description?: string | null;
+  /** @nullable */
+  url?: string | null;
 }

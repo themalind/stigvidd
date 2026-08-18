@@ -124,6 +124,70 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       > => {
       return useMutation(getReviewsGetReviewsByTrailIdentifierMutationOptions(options), queryClient);
     }
+    export const getReviewsHasReviewedTrailUrl = (trailIdentifier: string,) => {
+
+
+
+
+  return `/api/v1/Reviews/trail/${trailIdentifier}/mine`
+}
+
+export const reviewsHasReviewedTrail = async (trailIdentifier: string, options?: RequestInit): Promise<boolean> => {
+
+  return customFetch<boolean>(getReviewsHasReviewedTrailUrl(trailIdentifier),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getReviewsHasReviewedTrailMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reviewsHasReviewedTrail>>, TError,{trailIdentifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof reviewsHasReviewedTrail>>, TError,{trailIdentifier: string}, TContext> => {
+
+const mutationKey = ['reviewsHasReviewedTrail'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof reviewsHasReviewedTrail>>, {trailIdentifier: string}> = (props) => {
+          const {trailIdentifier} = props ?? {};
+
+          return  reviewsHasReviewedTrail(trailIdentifier,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ReviewsHasReviewedTrailMutationResult = NonNullable<Awaited<ReturnType<typeof reviewsHasReviewedTrail>>>
+
+    export type ReviewsHasReviewedTrailMutationError = unknown
+
+    export const useReviewsHasReviewedTrail = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reviewsHasReviewedTrail>>, TError,{trailIdentifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof reviewsHasReviewedTrail>>,
+        TError,
+        {trailIdentifier: string},
+        TContext
+      > => {
+      return useMutation(getReviewsHasReviewedTrailMutationOptions(options), queryClient);
+    }
     export const getReviewsCreateReviewUrl = () => {
 
 

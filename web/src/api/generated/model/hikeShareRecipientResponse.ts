@@ -24,4 +24,5 @@ export interface HikeShareRecipientResponse {
   parkingInfo?: string | null;
   /** @nullable */
   description?: string | null;
+  allowResharing?: boolean;
 }

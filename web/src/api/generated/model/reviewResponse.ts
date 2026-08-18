@@ -11,9 +11,11 @@ export interface ReviewResponse {
   /** @nullable */
   trailReview?: string | null;
   rating?: number;
-  userName: string;
+  /** @nullable */
+  userName?: string | null;
   createdAt?: string;
-  userIdentifier: string;
+  /** @nullable */
+  userIdentifier?: string | null;
   trailIdentifier: string;
   /** @nullable */
   reviewImages?: ReviewImageResponse[] | null;

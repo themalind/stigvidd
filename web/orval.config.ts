@@ -44,16 +44,14 @@ function fixMultipartSchemas(spec: OpenApiDocument): OpenApiDocument {
  * Generates the typed API client (react-query hooks + types) from the backend's
  * OpenAPI document. Run with `npm run generate:api`.
  *
- * The spec is served by NSwag in Development only, so the backend must be
- * running when generating. The target defaults to the local dev backend and is
- * overridable via `ORVAL_API_URL` for other machines / CI.
+ * Reads ./openapi.json, which OpenApiContractTests keeps in step with the API and
+ * fails the backend test run when it drifts. Point `ORVAL_API_URL` at a running
+ * backend (`http://localhost:5265/swagger/v1/swagger.json`) to bypass the file.
  */
 export default defineConfig({
   stigvidd: {
     input: {
-      target:
-        process.env.ORVAL_API_URL ??
-        "http://localhost:5265/swagger/v1/swagger.json",
+      target: process.env.ORVAL_API_URL ?? "./openapi.json",
       // NSwag emits the JWT `Bearer` scheme as `type: http` while also setting
       // `name`/`in` (only valid for `apiKey`), which trips strict validation.
       // Auth is handled in the mutator regardless, so skip validation.

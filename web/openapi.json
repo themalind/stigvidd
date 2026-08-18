@@ -1,0 +1,4240 @@
+{
+  "x-generator": "NSwag v14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))",
+  "openapi": "3.0.0",
+  "info": {
+    "title": "StigVidd",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost"
+    }
+  ],
+  "paths": {
+    "/api/v1/Account/register": {
+      "post": {
+        "tags": [
+          "Account"
+        ],
+        "operationId": "Account_Register",
+        "requestBody": {
+          "x-name": "request",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/Account/forgot-password": {
+      "post": {
+        "tags": [
+          "Account"
+        ],
+        "operationId": "Account_ForgotPassword",
+        "requestBody": {
+          "x-name": "request",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ForgotPasswordRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/admin/export": {
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "operationId": "Admin_Export",
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/admin/import": {
+      "post": {
+        "tags": [
+          "Admin"
+        ],
+        "operationId": "Admin_Import",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/CityAreas": {
+      "get": {
+        "tags": [
+          "CityAreas"
+        ],
+        "operationId": "CityAreas_GetAll",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/CityAreas/{identifier}": {
+      "get": {
+        "tags": [
+          "CityAreas"
+        ],
+        "operationId": "CityAreas_GetByIdentifier",
+        "parameters": [
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/Facilities": {
+      "get": {
+        "tags": [
+          "Facilities"
+        ],
+        "operationId": "Facilities_GetAll",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Facilities"
+        ],
+        "operationId": "Facilities_Create",
+        "requestBody": {
+          "x-name": "request",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateFacilityRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FacilityResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/Facilities/{identifier}": {
+      "get": {
+        "tags": [
+          "Facilities"
+        ],
+        "operationId": "Facilities_GetByIdentifier",
+        "parameters": [
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Facilities"
+        ],
+        "operationId": "Facilities_Delete",
+        "parameters": [
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/Facilities/update/{identifier}": {
+      "put": {
+        "tags": [
+          "Facilities"
+        ],
+        "operationId": "Facilities_Update",
+        "parameters": [
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "request",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateFacilityRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FacilityResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/Facilities/{identifier}/images": {
+      "post": {
+        "tags": [
+          "Facilities"
+        ],
+        "operationId": "Facilities_AddFacilityImages",
+        "parameters": [
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "images": {
+                    "type": "array",
+                    "nullable": true,
+                    "items": {}
+                  },
+                  "MaxWidth": {
+                    "type": "integer",
+                    "format": "int32",
+                    "nullable": true
+                  },
+                  "MaxHeight": {
+                    "type": "integer",
+                    "format": "int32",
+                    "nullable": true
+                  },
+                  "Quality": {
+                    "type": "integer",
+                    "format": "int32",
+                    "nullable": true
+                  },
+                  "Format": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "CropX": {
+                    "type": "integer",
+                    "format": "int32",
+                    "nullable": true
+                  },
+                  "CropY": {
+                    "type": "integer",
+                    "format": "int32",
+                    "nullable": true
+                  },
+                  "CropWidth": {
+                    "type": "integer",
+                    "format": "int32",
+                    "nullable": true
+                  },
+                  "CropHeight": {
+                    "type": "integer",
+                    "format": "int32",
+                    "nullable": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/FacilityImageResponse"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/Facilities/images/{imageIdentifier}": {
+      "delete": {
+        "tags": [
+          "Facilities"
+        ],
+        "operationId": "Facilities_DeleteFacilityImage",
+        "parameters": [
+          {
+            "name": "imageIdentifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/Friends": {
+      "get": {
+        "tags": [
+          "Friends"
+        ],
+        "operationId": "Friends_GetFriends",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/Friends/requests/incoming": {
+      "get": {
+        "tags": [
+          "Friends"
+        ],
+        "operationId": "Friends_GetIncomingFriendRequests",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/Friends/requests/outgoing": {
+      "get": {
+        "tags": [
+          "Friends"
+        ],
+        "operationId": "Friends_GetOutgoingFriendRequests",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/OutgoingFriendRequestResponse"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/Friends/requests": {
+      "post": {
+        "tags": [
+          "Friends"
+        ],
+        "operationId": "Friends_SendFriendRequest",
+        "requestBody": {
+          "x-name": "request",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendFriendRequestRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/Friends/requests/accept/{requesterIdentifier}": {
+      "put": {
+        "tags": [
+          "Friends"
+        ],
+        "operationId": "Friends_AcceptFriendRequest",
+        "parameters": [
+          {
+            "name": "requesterIdentifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/Friends/reject/{otherIdentifier}": {
+      "delete": {
+        "tags": [
+          "Friends"
+        ],
+        "operationId": "Friends_RemoveConnection",
+        "parameters": [
+          {
+            "name": "otherIdentifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/Friends/{friendIdentifier}": {
+      "delete": {
+        "tags": [
+          "Friends"
+        ],
+        "operationId": "Friends_RemoveFriend",
+        "parameters": [
+          {
+            "name": "friendIdentifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/Hikes/{hikeIdentifier}": {
+      "get": {
+        "tags": [
+          "Hikes"
+        ],
+        "operationId": "Hikes_GetHikeByIdentifier",
+        "parameters": [
+          {
+            "name": "hikeIdentifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HikeResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Hikes"
+        ],
+        "operationId": "Hikes_UpdateHike",
+        "parameters": [
+          {
+            "name": "hikeIdentifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "request",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateHikeRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HikeResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Hikes"
+        ],
+        "operationId": "Hikes_DeleteHike",
+        "parameters": [
+          {
+            "name": "hikeIdentifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/Hikes": {
+      "get": {
+        "tags": [
+          "Hikes"
+        ],
+        "operationId": "Hikes_GetHikes",
+        "parameters": [
+          {
+            "name": "createdBy",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/HikeResponse"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Hikes"
+        ],
+        "operationId": "Hikes_CreateHike",
+        "requestBody": {
+          "x-name": "request",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateHikeRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HikeResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/HikeShareRecipient": {
+      "get": {
+        "tags": [
+          "HikeShareRecipient"
+        ],
+        "operationId": "HikeShareRecipient_GetHikesSharedWithUser",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/HikeShareRecipientResponse"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/HikeShareRecipient/incoming/{hikeIdentifier}": {
+      "get": {
+        "tags": [
+          "HikeShareRecipient"
+        ],
+        "operationId": "HikeShareRecipient_GetIncomingPendingShare",
+        "parameters": [
+          {
+            "name": "hikeIdentifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HikeShareRecipientResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/HikeShareRecipient/incoming": {
+      "get": {
+        "tags": [
+          "HikeShareRecipient"
+        ],
+        "operationId": "HikeShareRecipient_GetPendingShares",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/HikeShareRecipientResponse"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/HikeShareRecipient/accept/{hikeIdentifier}": {
+      "put": {
+        "tags": [
+          "HikeShareRecipient"
+        ],
+        "operationId": "HikeShareRecipient_AcceptSharedHike",
+        "parameters": [
+          {
+            "name": "hikeIdentifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/HikeShareRecipient/re-share": {
+      "post": {
+        "tags": [
+          "HikeShareRecipient"
+        ],
+        "operationId": "HikeShareRecipient_ReshareSharedHike",
+        "requestBody": {
+          "x-name": "request",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReshareSharedHikeRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/HikeShareRecipient/reject/{hikeIdentifier}": {
+      "delete": {
+        "tags": [
+          "HikeShareRecipient"
+        ],
+        "operationId": "HikeShareRecipient_RejectSharedHike",
+        "parameters": [
+          {
+            "name": "hikeIdentifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/HikeShareRecipient/{hikeIdentifier}": {
+      "delete": {
+        "tags": [
+          "HikeShareRecipient"
+        ],
+        "operationId": "HikeShareRecipient_RemoveSharedHike",
+        "parameters": [
+          {
+            "name": "hikeIdentifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/HikeShares/{hikeIdentifier}": {
+      "get": {
+        "tags": [
+          "HikeShares"
+        ],
+        "operationId": "HikeShares_GetHikeSharedByUserCount",
+        "parameters": [
+          {
+            "name": "hikeIdentifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "integer",
+                  "format": "int32"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/HikeShares/share": {
+      "post": {
+        "tags": [
+          "HikeShares"
+        ],
+        "operationId": "HikeShares_ShareHike",
+        "requestBody": {
+          "x-name": "hikeShareRequest",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HikeShareRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/Media": {
+      "get": {
+        "tags": [
+          "Media"
+        ],
+        "operationId": "Media_GetAll",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MediaItemResponse"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/Media/{imageIdentifier}": {
+      "patch": {
+        "tags": [
+          "Media"
+        ],
+        "operationId": "Media_UpdateMetadata",
+        "parameters": [
+          {
+            "name": "imageIdentifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "request",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateImageMetadataRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/Notifications/tokens": {
+      "post": {
+        "tags": [
+          "Notifications"
+        ],
+        "operationId": "Notifications_RegisterToken",
+        "requestBody": {
+          "x-name": "request",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterPushTokenRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/Notifications/tokens/{expoToken}": {
+      "delete": {
+        "tags": [
+          "Notifications"
+        ],
+        "operationId": "Notifications_DeleteToken",
+        "parameters": [
+          {
+            "name": "expoToken",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/Reviews/trail/{trailIdentifier}": {
+      "get": {
+        "tags": [
+          "Reviews"
+        ],
+        "operationId": "Reviews_GetReviewsByTrailIdentifier",
+        "parameters": [
+          {
+            "name": "trailIdentifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "x-position": 2
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "x-position": 3
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedReviewResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/Reviews/trail/{trailIdentifier}/mine": {
+      "get": {
+        "tags": [
+          "Reviews"
+        ],
+        "operationId": "Reviews_HasReviewedTrail",
+        "parameters": [
+          {
+            "name": "trailIdentifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/Reviews/create": {
+      "post": {
+        "tags": [
+          "Reviews"
+        ],
+        "operationId": "Reviews_CreateReview",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "Rating": {
+                    "type": "number",
+                    "format": "decimal"
+                  },
+                  "TrailReview": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "TrailIdentifier": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "images": {
+                    "type": "array",
+                    "nullable": true,
+                    "items": {}
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/Reviews/{reviewIdentifier}": {
+      "delete": {
+        "tags": [
+          "Reviews"
+        ],
+        "operationId": "Reviews_DeleteReview",
+        "parameters": [
+          {
+            "name": "reviewIdentifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/TrailObstacles/trail/{trailIdentifier}": {
+      "get": {
+        "tags": [
+          "TrailObstacles"
+        ],
+        "operationId": "TrailObstacles_GetTrailObstacles",
+        "parameters": [
+          {
+            "name": "trailIdentifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TrailObstacleResponse"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/TrailObstacles/issue-types": {
+      "get": {
+        "tags": [
+          "TrailObstacles"
+        ],
+        "operationId": "TrailObstacles_GetTrailObstacleIssueTypes",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/TrailObstacles": {
+      "post": {
+        "tags": [
+          "TrailObstacles"
+        ],
+        "operationId": "TrailObstacles_CreateTrailObstacle",
+        "requestBody": {
+          "x-name": "obstacleRequest",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TrailObstacleRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/TrailObstacles/solve/{trailObstacleIdentifier}": {
+      "post": {
+        "tags": [
+          "TrailObstacles"
+        ],
+        "operationId": "TrailObstacles_AddSolvedVote",
+        "parameters": [
+          {
+            "name": "trailObstacleIdentifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "TrailObstacles"
+        ],
+        "operationId": "TrailObstacles_DeleteSolvedVoteByUserIdentifier",
+        "parameters": [
+          {
+            "name": "trailObstacleIdentifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/TrailObstacles/{trailObstacleIdentifier}": {
+      "put": {
+        "tags": [
+          "TrailObstacles"
+        ],
+        "operationId": "TrailObstacles_UpdateTrailObstacle",
+        "parameters": [
+          {
+            "name": "trailObstacleIdentifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "updateRequest",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TrailObstacleUpdateRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "TrailObstacles"
+        ],
+        "operationId": "TrailObstacles_DeleteTrailObstacle",
+        "parameters": [
+          {
+            "name": "trailObstacleIdentifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/Trails/{identifier}": {
+      "get": {
+        "tags": [
+          "Trails"
+        ],
+        "operationId": "Trails_GetTrailByIdentifier",
+        "parameters": [
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrailResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Trails"
+        ],
+        "operationId": "Trails_UpdateTrail",
+        "parameters": [
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "request",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTrailRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrailResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/Trails/popular": {
+      "get": {
+        "tags": [
+          "Trails"
+        ],
+        "operationId": "Trails_GetPopularTrails",
+        "parameters": [
+          {
+            "name": "latitude",
+            "in": "query",
+            "schema": {
+              "type": "number",
+              "format": "double",
+              "nullable": true
+            },
+            "x-position": 1
+          },
+          {
+            "name": "longitude",
+            "in": "query",
+            "schema": {
+              "type": "number",
+              "format": "double",
+              "nullable": true
+            },
+            "x-position": 2
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TrailOverviewResponse"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/Trails": {
+      "get": {
+        "tags": [
+          "Trails"
+        ],
+        "operationId": "Trails_GetAllTrails",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TrailShortInfoResponse"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/Trails/{identifier}/coordinates": {
+      "get": {
+        "tags": [
+          "Trails"
+        ],
+        "operationId": "Trails_GetCoordinatesByTrailIdentifier",
+        "parameters": [
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CoordinatesResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/Trails/{identifier}/card": {
+      "get": {
+        "tags": [
+          "Trails"
+        ],
+        "operationId": "Trails_GetTrailCard",
+        "parameters": [
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrailCardResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/Trails/cards": {
+      "post": {
+        "tags": [
+          "Trails"
+        ],
+        "operationId": "Trails_GetTrailCards",
+        "requestBody": {
+          "x-name": "request",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GetTrailCardsRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TrailCardResponse"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/Trails/markers": {
+      "get": {
+        "tags": [
+          "Trails"
+        ],
+        "operationId": "Trails_GetTrailMarkers",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TrailMarkerResponse"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/Trails/images/{imageIdentifier}": {
+      "delete": {
+        "tags": [
+          "Trails"
+        ],
+        "operationId": "Trails_DeleteTrailImage",
+        "parameters": [
+          {
+            "name": "imageIdentifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/Trails/{identifier}/images": {
+      "post": {
+        "tags": [
+          "Trails"
+        ],
+        "operationId": "Trails_AddTrailImages",
+        "parameters": [
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "images": {
+                    "type": "array",
+                    "nullable": true,
+                    "items": {}
+                  },
+                  "MaxWidth": {
+                    "type": "integer",
+                    "format": "int32",
+                    "nullable": true
+                  },
+                  "MaxHeight": {
+                    "type": "integer",
+                    "format": "int32",
+                    "nullable": true
+                  },
+                  "Quality": {
+                    "type": "integer",
+                    "format": "int32",
+                    "nullable": true
+                  },
+                  "Format": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "CropX": {
+                    "type": "integer",
+                    "format": "int32",
+                    "nullable": true
+                  },
+                  "CropY": {
+                    "type": "integer",
+                    "format": "int32",
+                    "nullable": true
+                  },
+                  "CropWidth": {
+                    "type": "integer",
+                    "format": "int32",
+                    "nullable": true
+                  },
+                  "CropHeight": {
+                    "type": "integer",
+                    "format": "int32",
+                    "nullable": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TrailImageResponse"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/Trails/{identifier}/symbol": {
+      "post": {
+        "tags": [
+          "Trails"
+        ],
+        "operationId": "Trails_SetTrailSymbol",
+        "parameters": [
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "ContentType": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "ContentDisposition": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "Headers": {
+                    "type": "array",
+                    "nullable": true,
+                    "items": {}
+                  },
+                  "Length": {
+                    "type": "integer",
+                    "format": "int64"
+                  },
+                  "Name": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "FileName": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "MaxWidth": {
+                    "type": "integer",
+                    "format": "int32",
+                    "nullable": true
+                  },
+                  "MaxHeight": {
+                    "type": "integer",
+                    "format": "int32",
+                    "nullable": true
+                  },
+                  "Quality": {
+                    "type": "integer",
+                    "format": "int32",
+                    "nullable": true
+                  },
+                  "Format": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "CropX": {
+                    "type": "integer",
+                    "format": "int32",
+                    "nullable": true
+                  },
+                  "CropY": {
+                    "type": "integer",
+                    "format": "int32",
+                    "nullable": true
+                  },
+                  "CropWidth": {
+                    "type": "integer",
+                    "format": "int32",
+                    "nullable": true
+                  },
+                  "CropHeight": {
+                    "type": "integer",
+                    "format": "int32",
+                    "nullable": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/Trails/create": {
+      "post": {
+        "tags": [
+          "Trails"
+        ],
+        "operationId": "Trails_AddTrail",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "Name": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "TrailLength": {
+                    "type": "number",
+                    "format": "decimal"
+                  },
+                  "Classification": {
+                    "type": "integer",
+                    "format": "int32",
+                    "nullable": true
+                  },
+                  "Accessibility": {
+                    "type": "boolean",
+                    "nullable": true
+                  },
+                  "AccessibilityInfo": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "TrailSymbol": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "TrailSymbolImage": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "Description": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "FullDescription": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "Coordinates": {
+                    "type": "string"
+                  },
+                  "Tags": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "IsVerified": {
+                    "type": "boolean",
+                    "nullable": true
+                  },
+                  "City": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "ContentType": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "ContentDisposition": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "Headers": {
+                    "type": "array",
+                    "nullable": true,
+                    "items": {}
+                  },
+                  "Length": {
+                    "type": "integer",
+                    "format": "int64"
+                  },
+                  "FileName": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "images": {
+                    "type": "array",
+                    "nullable": true,
+                    "items": {}
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/Users/create": {
+      "post": {
+        "tags": [
+          "Users"
+        ],
+        "operationId": "Users_CreateUser",
+        "requestBody": {
+          "x-name": "createUserRequest",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUserRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/Users": {
+      "get": {
+        "tags": [
+          "Users"
+        ],
+        "operationId": "Users_GetStigViddUser",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/Users/favorites": {
+      "get": {
+        "tags": [
+          "Users"
+        ],
+        "operationId": "Users_GetAuthenticatedUsersFavorites",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/UserFavoritesTrailResponse"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Users"
+        ],
+        "operationId": "Users_AddTrailToUserFavoritesList",
+        "requestBody": {
+          "x-name": "favoriteRequest",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddToUserFavoritesRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserFavoritesTrailResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/Users/wishlist": {
+      "get": {
+        "tags": [
+          "Users"
+        ],
+        "operationId": "Users_GetAuthenticatedUsersWishList",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/UserWishlistTrailResponse"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Users"
+        ],
+        "operationId": "Users_AddTrailToUserWishList",
+        "requestBody": {
+          "x-name": "addToUserWishlistRequest",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddToUserWishlistRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserWishlistTrailResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/Users/check-username": {
+      "get": {
+        "tags": [
+          "Users"
+        ],
+        "operationId": "Users_CheckUsername",
+        "parameters": [
+          {
+            "name": "Username",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserNameResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/Users/search": {
+      "get": {
+        "tags": [
+          "Users"
+        ],
+        "operationId": "Users_SearchForUserByUsername",
+        "parameters": [
+          {
+            "name": "Username",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SearchFriendResultResponse"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/Users/favorites/{trailIdentifier}": {
+      "delete": {
+        "tags": [
+          "Users"
+        ],
+        "operationId": "Users_RemoveTrailFromUserFavoritesList",
+        "parameters": [
+          {
+            "name": "TrailIdentifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/Users/wishlist/{trailIdentifier}": {
+      "delete": {
+        "tags": [
+          "Users"
+        ],
+        "operationId": "Users_RemoveTrailFromUserWishList",
+        "parameters": [
+          {
+            "name": "TrailIdentifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/Users/delete": {
+      "delete": {
+        "tags": [
+          "Users"
+        ],
+        "operationId": "Users_DeleteUser",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "UserResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "identifier",
+          "nickName",
+          "email"
+        ],
+        "properties": {
+          "identifier": {
+            "type": "string"
+          },
+          "nickName": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "myWishList": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/UserWishlistTrailResponse"
+            }
+          },
+          "myFavorites": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/UserFavoritesTrailResponse"
+            }
+          }
+        }
+      },
+      "UserWishlistTrailResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "identifier",
+          "city"
+        ],
+        "properties": {
+          "identifier": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "trailLength": {
+            "type": "number",
+            "format": "decimal"
+          },
+          "city": {
+            "type": "string"
+          },
+          "classification": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "accessibility": {
+            "type": "boolean"
+          },
+          "startLatitude": {
+            "type": "number",
+            "format": "decimal",
+            "nullable": true
+          },
+          "startLongitude": {
+            "type": "number",
+            "format": "decimal",
+            "nullable": true
+          },
+          "ratingResponse": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/RatingResponse"
+            }
+          },
+          "trailImages": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/TrailImageResponse"
+            }
+          }
+        }
+      },
+      "RatingResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "identifier"
+        ],
+        "properties": {
+          "identifier": {
+            "type": "string"
+          },
+          "rating": {
+            "type": "number",
+            "format": "decimal"
+          }
+        }
+      },
+      "TrailImageResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "identifier",
+          "imageUrl"
+        ],
+        "properties": {
+          "identifier": {
+            "type": "string"
+          },
+          "imageUrl": {
+            "type": "string"
+          },
+          "altText": {
+            "type": "string",
+            "nullable": true
+          },
+          "caption": {
+            "type": "string",
+            "nullable": true
+          },
+          "width": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "height": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "sizeBytes": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "UserFavoritesTrailResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "identifier",
+          "city"
+        ],
+        "properties": {
+          "identifier": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "trailLength": {
+            "type": "number",
+            "format": "decimal"
+          },
+          "city": {
+            "type": "string"
+          },
+          "classification": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "accessibility": {
+            "type": "boolean"
+          },
+          "startLatitude": {
+            "type": "number",
+            "format": "decimal",
+            "nullable": true
+          },
+          "startLongitude": {
+            "type": "number",
+            "format": "decimal",
+            "nullable": true
+          },
+          "ratingResponse": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/RatingResponse"
+            }
+          },
+          "trailImages": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/TrailImageResponse"
+            }
+          }
+        }
+      },
+      "RegisterRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "email",
+          "nickName",
+          "password"
+        ],
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "nickName": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          }
+        }
+      },
+      "ForgotPasswordRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "email"
+        ],
+        "properties": {
+          "email": {
+            "type": "string"
+          }
+        }
+      },
+      "FacilityResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "identifier",
+          "facilityType"
+        ],
+        "properties": {
+          "identifier": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "facilityType": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "isAccessible": {
+            "type": "boolean"
+          },
+          "latitude": {
+            "type": "number",
+            "format": "decimal",
+            "nullable": true
+          },
+          "longitude": {
+            "type": "number",
+            "format": "decimal",
+            "nullable": true
+          },
+          "location": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "url": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "CreateFacilityRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "facilityType",
+          "isAccessible",
+          "latitude",
+          "longitude"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "facilityType": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "isAccessible": {
+            "type": "boolean"
+          },
+          "latitude": {
+            "type": "number",
+            "format": "decimal",
+            "nullable": true
+          },
+          "longitude": {
+            "type": "number",
+            "format": "decimal",
+            "nullable": true
+          },
+          "location": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "url": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "UpdateFacilityRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "facilityType": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "isAccessible": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "latitude": {
+            "type": "number",
+            "format": "decimal",
+            "nullable": true
+          },
+          "longitude": {
+            "type": "number",
+            "format": "decimal",
+            "nullable": true
+          },
+          "location": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "url": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "FacilityImageResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "identifier",
+          "imageUrl"
+        ],
+        "properties": {
+          "identifier": {
+            "type": "string"
+          },
+          "imageUrl": {
+            "type": "string"
+          },
+          "altText": {
+            "type": "string",
+            "nullable": true
+          },
+          "caption": {
+            "type": "string",
+            "nullable": true
+          },
+          "width": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "height": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "sizeBytes": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "OutgoingFriendRequestResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "receiverIdentifier",
+          "receiverNickName"
+        ],
+        "properties": {
+          "receiverIdentifier": {
+            "type": "string"
+          },
+          "receiverNickName": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "SendFriendRequestRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "receiverNickName"
+        ],
+        "properties": {
+          "receiverNickName": {
+            "type": "string"
+          }
+        }
+      },
+      "HikeResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "identifier"
+        ],
+        "properties": {
+          "identifier": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "hikeLength": {
+            "type": "number",
+            "format": "decimal"
+          },
+          "duration": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "coordinates": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdBy": {
+            "type": "string",
+            "nullable": true
+          },
+          "gettingThere": {
+            "type": "string",
+            "nullable": true
+          },
+          "parkingInfo": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "createdByNickName": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "CreateHikeRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "coordinates"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "hikeLength": {
+            "type": "number",
+            "format": "decimal"
+          },
+          "duration": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "coordinates": {
+            "type": "string"
+          },
+          "parkingInfo": {
+            "type": "string",
+            "nullable": true
+          },
+          "gettingThere": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "UpdateHikeRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "parkingInfo": {
+            "type": "string",
+            "nullable": true
+          },
+          "gettingThere": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "HikeShareRecipientResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "hikeIdentifier",
+          "hikeName",
+          "coordinates"
+        ],
+        "properties": {
+          "hikeIdentifier": {
+            "type": "string"
+          },
+          "hikeName": {
+            "type": "string"
+          },
+          "hikeLength": {
+            "type": "number",
+            "format": "decimal"
+          },
+          "duration": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "coordinates": {
+            "type": "string"
+          },
+          "createdByName": {
+            "type": "string",
+            "nullable": true
+          },
+          "sharedByName": {
+            "type": "string",
+            "nullable": true
+          },
+          "sharedByIdentifier": {
+            "type": "string",
+            "nullable": true
+          },
+          "sharedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "gettingThere": {
+            "type": "string",
+            "nullable": true
+          },
+          "parkingInfo": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "allowResharing": {
+            "type": "boolean"
+          }
+        }
+      },
+      "ReshareSharedHikeRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "hikeIdentifier",
+          "reShareToName"
+        ],
+        "properties": {
+          "hikeIdentifier": {
+            "type": "string"
+          },
+          "reShareToName": {
+            "type": "string"
+          }
+        }
+      },
+      "HikeShareRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "hikeIdentifier",
+          "sharedWithName"
+        ],
+        "properties": {
+          "hikeIdentifier": {
+            "type": "string"
+          },
+          "sharedWithName": {
+            "type": "string"
+          },
+          "allowResharing": {
+            "type": "boolean"
+          }
+        }
+      },
+      "MediaItemResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "identifier",
+          "imageUrl",
+          "ownerType"
+        ],
+        "properties": {
+          "identifier": {
+            "type": "string"
+          },
+          "imageUrl": {
+            "type": "string"
+          },
+          "altText": {
+            "type": "string",
+            "nullable": true
+          },
+          "caption": {
+            "type": "string",
+            "nullable": true
+          },
+          "width": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "height": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "sizeBytes": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "ownerType": {
+            "type": "string"
+          },
+          "ownerIdentifier": {
+            "type": "string",
+            "nullable": true
+          },
+          "ownerName": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "UpdateImageMetadataRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "altText": {
+            "type": "string",
+            "nullable": true
+          },
+          "caption": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "RegisterPushTokenRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "expoToken",
+          "platform"
+        ],
+        "properties": {
+          "expoToken": {
+            "type": "string"
+          },
+          "platform": {
+            "type": "string"
+          }
+        }
+      },
+      "PagedReviewResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "reviews"
+        ],
+        "properties": {
+          "reviews": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReviewResponse"
+            }
+          },
+          "hasMore": {
+            "type": "boolean"
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "total": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          }
+        }
+      },
+      "ReviewResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "identifier",
+          "trailIdentifier"
+        ],
+        "properties": {
+          "identifier": {
+            "type": "string"
+          },
+          "trailReview": {
+            "type": "string",
+            "nullable": true
+          },
+          "rating": {
+            "type": "number",
+            "format": "decimal"
+          },
+          "userName": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "userIdentifier": {
+            "type": "string",
+            "nullable": true
+          },
+          "trailIdentifier": {
+            "type": "string"
+          },
+          "reviewImages": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/ReviewImageResponse"
+            }
+          }
+        }
+      },
+      "ReviewImageResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "identifier",
+          "imageUrl"
+        ],
+        "properties": {
+          "identifier": {
+            "type": "string"
+          },
+          "imageUrl": {
+            "type": "string"
+          }
+        }
+      },
+      "TrailObstacleResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "identifier",
+          "description",
+          "issueType"
+        ],
+        "properties": {
+          "identifier": {
+            "type": "string"
+          },
+          "userIdentifier": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string"
+          },
+          "issueType": {
+            "type": "string"
+          },
+          "incidentLongitude": {
+            "type": "number",
+            "format": "decimal",
+            "nullable": true
+          },
+          "incidentLatitude": {
+            "type": "number",
+            "format": "decimal",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "solvedVotes": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/TrailObstacleSolvedVoteResponse"
+            }
+          }
+        }
+      },
+      "TrailObstacleSolvedVoteResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "userIdentifier",
+          "trailObstacleIdentifier"
+        ],
+        "properties": {
+          "userIdentifier": {
+            "type": "string"
+          },
+          "trailObstacleIdentifier": {
+            "type": "string"
+          }
+        }
+      },
+      "TrailObstacleRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "trailIdentifier",
+          "description",
+          "issueType"
+        ],
+        "properties": {
+          "trailIdentifier": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "issueType": {
+            "type": "string"
+          },
+          "incidentLongitude": {
+            "type": "number",
+            "format": "decimal",
+            "nullable": true
+          },
+          "incidentLatitude": {
+            "type": "number",
+            "format": "decimal",
+            "nullable": true
+          }
+        }
+      },
+      "TrailObstacleUpdateRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "issueType": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "TrailResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "identifier"
+        ],
+        "properties": {
+          "identifier": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "trailLength": {
+            "type": "number",
+            "format": "decimal",
+            "nullable": true
+          },
+          "classification": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "accessibility": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "accessibilityInfo": {
+            "type": "string",
+            "nullable": true
+          },
+          "trailSymbol": {
+            "type": "string",
+            "nullable": true
+          },
+          "trailSymbolImage": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "fullDescription": {
+            "type": "string",
+            "nullable": true
+          },
+          "coordinates": {
+            "type": "string",
+            "nullable": true
+          },
+          "tags": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdBy": {
+            "type": "string",
+            "nullable": true
+          },
+          "isVerified": {
+            "type": "boolean"
+          },
+          "city": {
+            "type": "string",
+            "nullable": true
+          },
+          "visitorInformation": {
+            "nullable": true,
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/VisitorInformationResponse"
+              }
+            ]
+          },
+          "trailImagesResponse": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/TrailImageResponse"
+            }
+          },
+          "trailLinksResponse": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/TrailLinkResponse"
+            }
+          }
+        }
+      },
+      "VisitorInformationResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "identifier"
+        ],
+        "properties": {
+          "identifier": {
+            "type": "string"
+          },
+          "gettingThere": {
+            "type": "string"
+          },
+          "publicTransport": {
+            "type": "string"
+          },
+          "parking": {
+            "type": "string"
+          },
+          "illumination": {
+            "type": "boolean"
+          },
+          "illuminationText": {
+            "type": "string"
+          },
+          "maintainedBy": {
+            "type": "string"
+          },
+          "winterMaintenance": {
+            "type": "boolean"
+          }
+        }
+      },
+      "TrailLinkResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "identifier",
+          "link",
+          "title"
+        ],
+        "properties": {
+          "identifier": {
+            "type": "string"
+          },
+          "link": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          }
+        }
+      },
+      "TrailOverviewResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "identifier"
+        ],
+        "properties": {
+          "identifier": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "trailLength": {
+            "type": "number",
+            "format": "decimal"
+          },
+          "averageRating": {
+            "type": "number",
+            "format": "decimal"
+          },
+          "trailImagesResponse": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/TrailImageResponse"
+            }
+          }
+        }
+      },
+      "TrailShortInfoResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "identifier",
+          "name",
+          "trailLength",
+          "city"
+        ],
+        "properties": {
+          "identifier": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "trailLength": {
+            "type": "number",
+            "format": "decimal"
+          },
+          "accessibility": {
+            "type": "boolean"
+          },
+          "classification": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "city": {
+            "type": "string"
+          },
+          "startLatitude": {
+            "type": "number",
+            "format": "decimal",
+            "nullable": true
+          },
+          "startLongitude": {
+            "type": "number",
+            "format": "decimal",
+            "nullable": true
+          }
+        }
+      },
+      "CoordinatesResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "coordinates"
+        ],
+        "properties": {
+          "coordinates": {
+            "type": "string"
+          }
+        }
+      },
+      "TrailCardResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "identifier",
+          "name"
+        ],
+        "properties": {
+          "identifier": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "trailLength": {
+            "type": "number",
+            "format": "decimal"
+          },
+          "classification": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "isAccessible": {
+            "type": "boolean"
+          },
+          "averageRating": {
+            "type": "number",
+            "format": "decimal"
+          },
+          "image": {
+            "nullable": true,
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/TrailImageResponse"
+              }
+            ]
+          }
+        }
+      },
+      "GetTrailCardsRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "identifiers"
+        ],
+        "properties": {
+          "identifiers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "TrailMarkerResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "identifier",
+          "name"
+        ],
+        "properties": {
+          "identifier": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "isAccessible": {
+            "type": "boolean"
+          },
+          "startLatitude": {
+            "type": "number",
+            "format": "decimal",
+            "nullable": true
+          },
+          "startLongitude": {
+            "type": "number",
+            "format": "decimal",
+            "nullable": true
+          }
+        }
+      },
+      "UpdateTrailRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "trailLength"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "trailLength": {
+            "type": "number",
+            "format": "decimal"
+          },
+          "classification": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "accessibility": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "accessibilityInfo": {
+            "type": "string",
+            "nullable": true
+          },
+          "trailSymbol": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "fullDescription": {
+            "type": "string",
+            "nullable": true
+          },
+          "tags": {
+            "type": "string",
+            "nullable": true
+          },
+          "city": {
+            "type": "string",
+            "nullable": true
+          },
+          "visitorInformation": {
+            "nullable": true,
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/UpdateVisitorInformationRequest"
+              }
+            ]
+          }
+        }
+      },
+      "UpdateVisitorInformationRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "gettingThere": {
+            "type": "string",
+            "nullable": true
+          },
+          "publicTransport": {
+            "type": "string",
+            "nullable": true
+          },
+          "parking": {
+            "type": "string",
+            "nullable": true
+          },
+          "illumination": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "illuminationText": {
+            "type": "string",
+            "nullable": true
+          },
+          "maintainedBy": {
+            "type": "string",
+            "nullable": true
+          },
+          "winterMaintenance": {
+            "type": "boolean",
+            "nullable": true
+          }
+        }
+      },
+      "CreateUserRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "email",
+          "nickName"
+        ],
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "nickName": {
+            "type": "string"
+          }
+        }
+      },
+      "UserNameResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "nickname": {
+            "type": "string",
+            "nullable": true
+          },
+          "exists": {
+            "type": "boolean"
+          }
+        }
+      },
+      "AddToUserFavoritesRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "trailIdentifier"
+        ],
+        "properties": {
+          "trailIdentifier": {
+            "type": "string"
+          }
+        }
+      },
+      "AddToUserWishlistRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "trailIdentifier"
+        ],
+        "properties": {
+          "trailIdentifier": {
+            "type": "string"
+          }
+        }
+      },
+      "SearchFriendResultResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "identifier",
+          "nickName"
+        ],
+        "properties": {
+          "identifier": {
+            "type": "string"
+          },
+          "nickName": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "Bearer": {
+        "type": "http",
+        "description": "Skriv: Bearer {din Keycloak access token}",
+        "name": "Authorization",
+        "in": "header",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  }
+}

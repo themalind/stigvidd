@@ -8,7 +8,8 @@ import type { TrailObstacleSolvedVoteResponse } from './trailObstacleSolvedVoteR
 
 export interface TrailObstacleResponse {
   identifier: string;
-  userIdentifier: string;
+  /** @nullable */
+  userIdentifier?: string | null;
   description: string;
   issueType: string;
   /** @nullable */

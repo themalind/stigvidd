@@ -16,4 +16,10 @@ export interface UpdateFacilityRequest {
   latitude?: number | null;
   /** @nullable */
   longitude?: number | null;
+  /** @nullable */
+  location?: string | null;
+  /** @nullable */
+  description?: string | null;
+  /** @nullable */
+  url?: string | null;
 }

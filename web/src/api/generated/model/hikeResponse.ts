@@ -22,4 +22,6 @@ export interface HikeResponse {
   /** @nullable */
   description?: string | null;
   createdAt?: string;
+  /** @nullable */
+  createdByNickName?: string | null;
 }

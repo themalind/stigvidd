@@ -11,7 +11,14 @@ export interface UserWishlistTrailResponse {
   identifier: string;
   name?: string;
   trailLength?: number;
-  description?: string;
+  city: string;
+  /** @nullable */
+  classification?: number | null;
+  accessibility?: boolean;
+  /** @nullable */
+  startLatitude?: number | null;
+  /** @nullable */
+  startLongitude?: number | null;
   /** @nullable */
   ratingResponse?: RatingResponse[] | null;
   /** @nullable */
