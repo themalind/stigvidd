@@ -21,6 +21,8 @@
     <PackageReference Condition=" '$(OS)' == 'UNIX' " Include="Microsoft.EntityFrameworkCore.Sqlite.Core" Version="10.0.9" />
     <PackageReference Condition=" '$(OS)' == 'UNIX' " Include="SQLitePCLRaw.provider.sqlite3" Version="2.1.10" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite.NetTopologySuite" Version="10.0.9" />
+    <!-- pinned above the 2.1.11 that EF Core resolves: GHSA-2m69-gcr7-jv3q -->
+    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="2.1.13" />
     <PackageReference Include="NetTopologySuite" Version="2.6.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.7.0" />
     <PackageReference Include="Moq" Version="4.20.72" />

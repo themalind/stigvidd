@@ -30,9 +30,9 @@ public class UserServiceTests
         hikeService ??= new Mock<IHikeService>();
         if (reviewService is null)
         {
-            // Reviews are cleaned up on the way to every user deletion; tests that care pass their own
+            // Reviews are anonymized on the way to every user deletion; tests that care pass their own
             reviewService = new Mock<IReviewService>();
-            reviewService.Setup(s => s.DeleteUserReviewsOnUserDeleteAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            reviewService.Setup(s => s.AnonymizeUserReviewsOnUserDeleteAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(Result.Ok());
         }
 
@@ -453,7 +453,7 @@ public class UserServiceTests
         hikeService.Setup(hs => hs.DeleteHikeSharesByUserIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Ok());
         var trailObstacleRepo = new Mock<ITrailObstacleRepository>();
-        trailObstacleRepo.Setup(r => r.DeleteAllObstaclesByUserIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+        trailObstacleRepo.Setup(r => r.AnonymizeObstaclesByUserIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult.Success());
         var friendRepo = new Mock<IFriendRepository>();
         friendRepo.Setup(r => r.DeleteAllFriendRequestsByUserIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
@@ -526,7 +526,7 @@ public class UserServiceTests
     }
 
     [Fact]
-    public async Task DeleteUser_WhenDeleteUserReviewsFails_ReturnsInternalServerError()
+    public async Task DeleteUser_WhenAnonymizeUserReviewsFails_ReturnsInternalServerError()
     {
         // Arrange
         var repo = new Mock<IUserRepository>();
@@ -538,7 +538,7 @@ public class UserServiceTests
         hikeService.Setup(s => s.DeleteHikeSharesByUserIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Ok());
         var reviewService = new Mock<IReviewService>();
-        reviewService.Setup(s => s.DeleteUserReviewsOnUserDeleteAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+        reviewService.Setup(s => s.AnonymizeUserReviewsOnUserDeleteAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Fail(new Message(500, "review cleanup failed")));
         var trailObstacleRepo = new Mock<ITrailObstacleRepository>();
 
@@ -575,7 +575,7 @@ public class UserServiceTests
     }
 
     [Fact]
-    public async Task DeleteUser_WhenDeleteObstaclesFails_ReturnsInternalServerError()
+    public async Task DeleteUser_WhenAnonymizeObstaclesFails_ReturnsInternalServerError()
     {
         // Arrange
         var repo = new Mock<IUserRepository>();
@@ -587,7 +587,7 @@ public class UserServiceTests
         hikeService.Setup(s => s.DeleteHikeSharesByUserIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Ok());
         var trailObstacleRepo = new Mock<ITrailObstacleRepository>();
-        trailObstacleRepo.Setup(r => r.DeleteAllObstaclesByUserIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+        trailObstacleRepo.Setup(r => r.AnonymizeObstaclesByUserIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult.Error());
 
         // Act
@@ -612,7 +612,7 @@ public class UserServiceTests
         hikeService.Setup(s => s.DeleteHikeSharesByUserIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Ok());
         var trailObstacleRepo = new Mock<ITrailObstacleRepository>();
-        trailObstacleRepo.Setup(r => r.DeleteAllObstaclesByUserIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+        trailObstacleRepo.Setup(r => r.AnonymizeObstaclesByUserIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult.Success());
         var friendRepo = new Mock<IFriendRepository>();
         friendRepo.Setup(r => r.DeleteAllFriendRequestsByUserIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
@@ -642,7 +642,7 @@ public class UserServiceTests
         hikeService.Setup(s => s.DeleteHikeSharesByUserIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Ok());
         var trailObstacleRepo = new Mock<ITrailObstacleRepository>();
-        trailObstacleRepo.Setup(r => r.DeleteAllObstaclesByUserIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+        trailObstacleRepo.Setup(r => r.AnonymizeObstaclesByUserIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult.Success());
         var friendRepo = new Mock<IFriendRepository>();
         friendRepo.Setup(r => r.DeleteAllFriendRequestsByUserIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))

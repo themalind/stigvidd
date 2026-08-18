@@ -527,11 +527,11 @@ public class UsersControllerIntegrationTests : IClassFixture<StigViddWebApplicat
 
     // VandrarVennen (firebase-uid-12346) is used as the deletion candidate because they own
     // the full set of user-generated data at seed time:
-    //   - Review 1 (with review images) — removed by DB cascade on user delete
-    //   - Trail obstacle 2 (Flooding) — removed explicitly before user delete
+    //   - Review 1 (with review images) — anonymized: rating kept, text and images removed
+    //   - Trail obstacle 2 (Flooding) — anonymized: description cleared, category kept
     //   - Solved vote 3 on obstacle 3 — removed by DB cascade on user delete
     //   - Hike 3 (shared with NaturElskaren) — preserved; only UserId is nulled by EF SetNull
-    //   - Hike 4 (not shared) — soft-deleted during deletion flow
+    //   - Hike 4 (not shared) — deleted during deletion flow
     //   - HikeShare recipient record for Hike 5 — removed by DeleteHikeSharesByUserIdAsync
 
     [Fact]
@@ -571,7 +571,7 @@ public class UsersControllerIntegrationTests : IClassFixture<StigViddWebApplicat
     public async Task DeleteUser_AfterDeletion_SharedHikeIsStillAccessible()
     {
         // Arrange — VandrarVennen shared Hike 3 with NaturElskaren before deleting.
-        // Hike 3 should remain in the database (not soft-deleted) so other users can still read it.
+        // Hike 3 should remain in the database so other users can still read it.
         var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", UserWithFavorites);
@@ -595,7 +595,7 @@ public class UsersControllerIntegrationTests : IClassFixture<StigViddWebApplicat
     public async Task DeleteUser_AfterDeletion_UnsharedHikeIsNotAccessible()
     {
         // Arrange — Hike 4 belongs only to VandrarVennen with no shares.
-        // It should be soft-deleted during the deletion flow and no longer accessible.
+        // With no recipient to keep it, the row goes during the deletion flow.
         var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", UserWithFavorites);
@@ -611,7 +611,7 @@ public class UsersControllerIntegrationTests : IClassFixture<StigViddWebApplicat
             $"/api/v1/hikes/{UnsharedHikeIdentifier}",
             TestContext.Current.CancellationToken);
 
-        // Assert — soft-delete global query filter makes it invisible
+        // Assert — the row is gone, not hidden
         getResponse.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
 
@@ -702,20 +702,26 @@ public class UsersControllerIntegrationTests : IClassFixture<StigViddWebApplicat
     }
 
     [Fact]
-    public async Task DeleteUser_AfterDeletion_OwnedReviewIsCascadeRemoved()
+    public async Task DeleteUser_AfterDeletion_OwnedReviewKeepsItsRatingWithoutTheAuthor()
     {
-        // Arrange — VandrarVennen owns Review 1 on Tiveden. Reviews cascade at DB level,
-        // so Review 1 should disappear when VandrarVennen's user row is deleted.
+        // Arrange — VandrarVennen owns Review 1 on Tiveden
         var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", UserWithFavorites);
 
+        var beforeResponse = await client.GetAsync(
+            $"/api/v1/reviews/trail/{TivedensTrailIdentifier}?page=0&limit=20",
+            TestContext.Current.CancellationToken);
+        var before = await beforeResponse.Content
+            .ReadFromJsonAsync<PagedReviewResponse>(TestContext.Current.CancellationToken);
+        var ratingBefore = before!.Reviews.Single(r => r.Identifier == Review1Identifier).Rating;
+
         var deleteRequest = new HttpRequestMessage(HttpMethod.Delete, "/api/v1/users/delete");
         await client.SendAsync(deleteRequest, TestContext.Current.CancellationToken);
 
-        // Act — fetch reviews for Tiveden (Review 8 by SkogsGreven should remain)
+        // Act — page is zero-based
         var getResponse = await client.GetAsync(
-            $"/api/v1/reviews/trail/{TivedensTrailIdentifier}?page=1&limit=20",
+            $"/api/v1/reviews/trail/{TivedensTrailIdentifier}?page=0&limit=20",
             TestContext.Current.CancellationToken);
 
         var paged = await getResponse.Content
@@ -723,14 +729,17 @@ public class UsersControllerIntegrationTests : IClassFixture<StigViddWebApplicat
 
         // Assert
         getResponse.StatusCode.Should().Be(HttpStatusCode.OK);
-        paged!.Reviews.Should().NotContain(r => r.Identifier == Review1Identifier);
+        var review = paged!.Reviews.Single(r => r.Identifier == Review1Identifier);
+        review.Rating.Should().Be(ratingBefore);
+        review.TrailReview.Should().BeNull();
+        review.ReviewImages.Should().BeNullOrEmpty();
+        review.UserIdentifier.Should().BeNullOrEmpty();
     }
 
     [Fact]
-    public async Task DeleteUser_AfterDeletion_OwnedObstacleIsExplicitlyRemoved()
+    public async Task DeleteUser_AfterDeletion_OwnedObstacleKeepsItsCategoryWithoutTheText()
     {
-        // Arrange — VandrarVennen owns Obstacle 2 (Flooding) on Storsjöleden.
-        // TrailObstacles use NoAction FK so they must be removed explicitly before user deletion.
+        // Arrange — VandrarVennen owns Obstacle 2 (Flooding) on Storsjöleden
         var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", UserWithFavorites);
@@ -746,9 +755,12 @@ public class UsersControllerIntegrationTests : IClassFixture<StigViddWebApplicat
         var obstacles = await getResponse.Content
             .ReadFromJsonAsync<List<TrailObstacleResponse>>(TestContext.Current.CancellationToken);
 
-        // Assert
+        // Assert — 200, not 500: the list tolerates a report without a user
         getResponse.StatusCode.Should().Be(HttpStatusCode.OK);
-        obstacles.Should().NotContain(o => o.Identifier == Obstacle2Identifier);
+        var obstacle = obstacles!.Single(o => o.Identifier == Obstacle2Identifier);
+        obstacle.IssueType.Should().Be(Infrastructure.Enums.TrailIssueType.Flooding.ToString());
+        obstacle.Description.Should().BeEmpty();
+        obstacle.UserIdentifier.Should().BeNull();
     }
 
     [Fact]

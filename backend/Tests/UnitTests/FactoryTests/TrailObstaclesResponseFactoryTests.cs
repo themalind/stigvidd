@@ -42,18 +42,19 @@ public class TrailObstaclesResponseFactoryTests
     }
 
     [Fact]
-    public void Create_Single_WhenUserIsNull_ThrowsInvalidOperationException()
+    public void Create_Single_WhenUserIsNull_ReturnsNullUserIdentifier()
     {
-        // Arrange
+        // Arrange — a report whose reporter is gone
         var factory = BuildFactory();
         var obstacle = Utilities.Stubs.Obstacle();
         obstacle.User = null;
 
         // Act
-        var act = () => factory.Create(obstacle);
+        var result = factory.Create(obstacle);
 
         // Assert
-        act.Should().Throw<InvalidOperationException>();
+        result.UserIdentifier.Should().BeNull();
+        result.Description.Should().Be(obstacle.Description);
     }
 
     [Fact]
@@ -75,18 +76,20 @@ public class TrailObstaclesResponseFactoryTests
     }
 
     [Fact]
-    public void Create_Collection_WhenUserIsNull_ThrowsInvalidOperationException()
+    public void Create_Collection_WhenUserIsNull_ReturnsNullUserIdentifier()
     {
-        // Arrange
+        // Arrange — one report without a reporter, one with
         var factory = BuildFactory();
         var obstacle = Utilities.Stubs.Obstacle();
         obstacle.User = null;
-        IReadOnlyCollection<TrailObstacle> obstacles = [obstacle];
+        IReadOnlyCollection<TrailObstacle> obstacles = [obstacle, Utilities.Stubs.Obstacle()];
 
         // Act
-        var act = () => factory.Create(obstacles);
+        var result = factory.Create(obstacles);
 
         // Assert
-        act.Should().Throw<InvalidOperationException>();
+        result.Should().HaveCount(2);
+        result.First().UserIdentifier.Should().BeNull();
+        result.Last().UserIdentifier.Should().Be(Utilities.Identifiers.User);
     }
 }

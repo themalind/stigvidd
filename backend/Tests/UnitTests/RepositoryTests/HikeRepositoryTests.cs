@@ -2,9 +2,7 @@ using Core.Repositories;
 using FluentAssertions;
 using Infrastructure.Data;
 using Infrastructure.Data.Entities;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
-using Moq;
 
 namespace UnitTests.RepositoryTests;
 
@@ -152,7 +150,7 @@ public class HikeRepositoryTests : TestBase
     }
 
     [Fact]
-    public async Task SoftDeleteHike_WhenHasShares_SetsUserIdNull()
+    public async Task DeleteHike_WhenHasShares_SetsUserIdNull()
     {
         // Arrange — seed already contains HikeShare { HikeId=1, SharedWithId=2 } for Hike 1
         var repo = new HikeRepository(CreateSeededFactory(), NullLogger<HikeRepository>.Instance);
@@ -162,12 +160,12 @@ public class HikeRepositoryTests : TestBase
         // Act
         var deleteResult = await repo.DeleteHikeAsync(found.Value!, CancellationToken.None);
 
-        // Assert — hike still visible (not soft-deleted) but owner is cleared
+        // Assert — the hike stays for the recipients, but the owner is cleared
         deleteResult.IsSuccess.Should().BeTrue();
         var verify = await repo.GetHikeByIdentifierAsync(HikeIdentifier, CancellationToken.None);
         verify.IsSuccess.Should().BeTrue();
-        verify.Value!.UserId.Should().BeNull();
-        verify.Value.IsDeleted.Should().BeFalse();
+        verify.Value.Should().NotBeNull();
+        verify.Value.UserId.Should().BeNull();
     }
 
     [Fact]
@@ -309,8 +307,7 @@ public class HikeRepositoryTests : TestBase
     [Fact]
     public async Task DeleteHike_ShouldRemoveFromDatabase()
     {
-        // Arrange — Hike 6 has no HikeShares so SoftDelete sets IsDeleted=true,
-        // which the global query filter then hides from GetHikeByIdentifierAsync.
+        // Arrange — Hike 6 has no HikeShares
         var repo = new HikeRepository(CreateSeededFactory(), NullLogger<HikeRepository>.Instance);
         var found = await repo.GetHikeByIdentifierAsync(HikeIdentifierNoShares, CancellationToken.None);
         found.IsSuccess.Should().BeTrue();
@@ -319,7 +316,7 @@ public class HikeRepositoryTests : TestBase
         found.Value.Should().NotBeNull();
         var deleteResult = await repo.DeleteHikeAsync(found.Value, CancellationToken.None);
 
-        // Assert — global IsDeleted query filter hides the hike
+        // Assert — the row is gone, not hidden
         deleteResult.IsSuccess.Should().BeTrue();
         var verify = await repo.GetHikeByIdentifierAsync(HikeIdentifierNoShares, CancellationToken.None);
         verify.IsSuccess.Should().BeFalse();

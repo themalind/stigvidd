@@ -24,8 +24,14 @@ public class ReviewServiceTests
         var cfg = new Mock<IConfiguration>();
         cfg.Setup(c => c["PresentableBaseUrl"]).Returns("http://stigvidd.se/testing/");
 
+        reviewRepo ??= new Mock<IReviewRepository>();
+
+        // Every AddReview passes the one-review-per-trail guard; tests that care set their own
+        reviewRepo.Setup(r => r.HasUserReviewedTrailAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<bool>.Success(false));
+
         return new ReviewService(
-            (reviewRepo ?? new Mock<IReviewRepository>()).Object,
+            reviewRepo.Object,
             (webDav ?? Utilities.MockFactory.WebDavService()).Object,
             (mediaUpload ?? Utilities.MockFactory.MediaUploadService()).Object,
             (userRepo ?? Utilities.MockFactory.UserRepositoryFoundById()).Object,
@@ -458,14 +464,68 @@ public class ReviewServiceTests
     }
 
     [Fact]
-    public async Task DeleteUserReviewsOnUserDelete_DeletesTheImageFilesAfterTheRows()
+    public async Task AddReview_WhenUserAlreadyReviewedTrail_ReturnsConflictWithoutUploading()
+    {
+        // Arrange — stubbed after Build, which installs the permissive default
+        var repo = new Mock<IReviewRepository>();
+        var webDav = Utilities.MockFactory.WebDavService();
+        var mediaUpload = new Mock<IMediaUploadService>();
+        var service = Build(repo, webDav, mediaUpload: mediaUpload);
+        repo.Setup(r => r.HasUserReviewedTrailAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<bool>.Success(true));
+
+        // Act
+        var result = await service.AddReviewAsync(Utilities.Identifiers.User, Utilities.Identifiers.Trail7, "text", 4.0M, Utilities.Stubs.TwoImages(), CancellationToken.None);
+
+        // Assert
+        result.Success.Should().BeFalse();
+        result.Message!.StatusCode.Should().Be(409);
+
+        // Nothing was uploaded before the rejection
+        mediaUpload.Verify(m => m.ProcessAndUploadAsync(It.IsAny<Stream>(), It.IsAny<string>(), It.IsAny<ImageProcessingOptions>()), Times.Never);
+        repo.Verify(r => r.AddReviewAsync(It.IsAny<Review>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task HasUserReviewedTrail_WhenTheUserHasOne_ReturnsTrue()
+    {
+        // Arrange
+        var repo = new Mock<IReviewRepository>();
+        var service = Build(repo);
+        repo.Setup(r => r.HasUserReviewedTrailAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<bool>.Success(true));
+
+        // Act
+        var result = await service.HasUserReviewedTrailAsync(Utilities.Identifiers.User, Utilities.Identifiers.Trail7, CancellationToken.None);
+
+        // Assert
+        result.Success.Should().BeTrue();
+        result.Value.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task HasUserReviewedTrail_WhenTheUserHasNone_ReturnsFalse()
+    {
+        // Arrange
+        var repo = new Mock<IReviewRepository>();
+
+        // Act
+        var result = await Build(repo).HasUserReviewedTrailAsync(Utilities.Identifiers.User, Utilities.Identifiers.Trail7, CancellationToken.None);
+
+        // Assert
+        result.Success.Should().BeTrue();
+        result.Value.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task AnonymizeUserReviewsOnUserDelete_DeletesTheImageFilesAfterTheRows()
     {
         // Arrange
         var callOrder = new List<string>();
         var repo = new Mock<IReviewRepository>();
         repo.Setup(r => r.GetReviewImageUrlsByUserIdAsync(1, It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<IEnumerable<string>>.Success(["reviews/a.jpeg", "reviews/b.jpeg"]));
-        repo.Setup(r => r.DeleteReviewsByUserIdAsync(1, It.IsAny<CancellationToken>()))
+        repo.Setup(r => r.AnonymizeReviewsByUserIdAsync(1, It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult.Success())
             .Callback(() => callOrder.Add("rows"));
 
@@ -475,7 +535,7 @@ public class ReviewServiceTests
             .Callback<string>(url => callOrder.Add(url));
 
         // Act
-        var result = await Build(repo, webDav).DeleteUserReviewsOnUserDeleteAsync(1, CancellationToken.None);
+        var result = await Build(repo, webDav).AnonymizeUserReviewsOnUserDeleteAsync(1, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -483,13 +543,13 @@ public class ReviewServiceTests
     }
 
     [Fact]
-    public async Task DeleteUserReviewsOnUserDelete_WhenWebDavThrows_StillSucceeds()
+    public async Task AnonymizeUserReviewsOnUserDelete_WhenWebDavThrows_StillSucceeds()
     {
         // Arrange — a failed file delete leaves an orphan, but must not block the account deletion
         var repo = new Mock<IReviewRepository>();
         repo.Setup(r => r.GetReviewImageUrlsByUserIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<IEnumerable<string>>.Success(["reviews/a.jpeg"]));
-        repo.Setup(r => r.DeleteReviewsByUserIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+        repo.Setup(r => r.AnonymizeReviewsByUserIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult.Success());
 
         var webDav = new Mock<IWebDavService>();
@@ -497,26 +557,26 @@ public class ReviewServiceTests
             .ThrowsAsync(new Exception("webdav down"));
 
         // Act
-        var result = await Build(repo, webDav).DeleteUserReviewsOnUserDeleteAsync(1, CancellationToken.None);
+        var result = await Build(repo, webDav).AnonymizeUserReviewsOnUserDeleteAsync(1, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeTrue();
     }
 
     [Fact]
-    public async Task DeleteUserReviewsOnUserDelete_WhenRowDeleteFails_DoesNotTouchWebDav()
+    public async Task AnonymizeUserReviewsOnUserDelete_WhenRowUpdateFails_DoesNotTouchWebDav()
     {
         // Arrange
         var repo = new Mock<IReviewRepository>();
         repo.Setup(r => r.GetReviewImageUrlsByUserIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<IEnumerable<string>>.Success(["reviews/a.jpeg"]));
-        repo.Setup(r => r.DeleteReviewsByUserIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+        repo.Setup(r => r.AnonymizeReviewsByUserIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult.Error());
 
         var webDav = Utilities.MockFactory.WebDavService();
 
         // Act
-        var result = await Build(repo, webDav).DeleteUserReviewsOnUserDeleteAsync(1, CancellationToken.None);
+        var result = await Build(repo, webDav).AnonymizeUserReviewsOnUserDeleteAsync(1, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeFalse();

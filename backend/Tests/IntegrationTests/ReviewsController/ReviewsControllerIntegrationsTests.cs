@@ -115,6 +115,96 @@ public class ReviewsControllerIntegrationsTests : IClassFixture<StigViddWebAppli
     }
 
     [Fact]
+    public async Task AddReview_WhenUserAlreadyReviewedTheTrail_ShouldReturnConflict()
+    {
+        // Arrange — VandrarVennen already owns Review 1 on Tiveden
+        var client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", AuthenticatedUser);
+
+        var formData = new MultipartFormDataContent
+        {
+            { new StringContent(TivedenIdentifier), "TrailIdentifier" },
+            { new StringContent("Trying to review the same trail twice."), "TrailReview" },
+            { new StringContent("4.5"), "Rating" }
+        };
+
+        // Act
+        var response = await client.PostAsync("/api/v1/reviews/create", formData, TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.Conflict);
+
+        // The first review is untouched
+        var getResponse = await client.GetAsync($"/api/v1/reviews/trail/{TivedenIdentifier}?page=0&limit=20", TestContext.Current.CancellationToken);
+        var paged = await getResponse.Content.ReadFromJsonAsync<PagedReviewResponse>(TestContext.Current.CancellationToken);
+        paged!.Reviews.Should().ContainSingle(r => r.Identifier == Review1Identifier);
+    }
+
+    [Fact]
+    public async Task HasReviewedTrail_WhenTheUserHasReviewedIt_ShouldReturnTrue()
+    {
+        // Arrange — VandrarVennen owns Review 1 on Tiveden
+        var client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", AuthenticatedUser);
+
+        // Act
+        var response = await client.GetAsync($"/api/v1/reviews/trail/{TivedenIdentifier}/mine", TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        (await response.Content.ReadFromJsonAsync<bool>(TestContext.Current.CancellationToken)).Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task HasReviewedTrail_WhenTheUserHasNot_ShouldReturnFalse()
+    {
+        // Arrange — Hultafors has no seeded reviews at all
+        var client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", AuthenticatedUser);
+
+        // Act
+        var response = await client.GetAsync($"/api/v1/reviews/trail/{HultaforsIdentifier}/mine", TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        (await response.Content.ReadFromJsonAsync<bool>(TestContext.Current.CancellationToken)).Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task HasReviewedTrail_WithoutAuthentication_ShouldReturnUnauthorized()
+    {
+        // Arrange
+        var client = _factory.CreateClient();
+
+        // Act
+        var response = await client.GetAsync($"/api/v1/reviews/trail/{TivedenIdentifier}/mine", TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task HasReviewedTrail_AfterDeletingTheOwnReview_ShouldReturnFalseAgain()
+    {
+        // Arrange — VandrarVennen deletes their only review on Tiveden
+        var client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", AuthenticatedUser);
+
+        await client.DeleteAsync($"/api/v1/reviews/{Review1Identifier}", TestContext.Current.CancellationToken);
+
+        // Act
+        var response = await client.GetAsync($"/api/v1/reviews/trail/{TivedenIdentifier}/mine", TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        (await response.Content.ReadFromJsonAsync<bool>(TestContext.Current.CancellationToken)).Should().BeFalse();
+    }
+
+    [Fact]
     public async Task AddReview_WithoutAuthentication_ShouldReturnUnauthorized()
     {
         // Arrange

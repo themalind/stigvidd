@@ -12,7 +12,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Hosting;
 using Moq;
+using StigviddAPI.BackgroundServices;
 using System.Data.Common;
 using System.Net.Http.Headers;
 
@@ -106,6 +108,14 @@ public class StigViddWebApplicationFactory<TProgram>
             services.AddSingleton(KeycloakAdminMock.Object);
 
             services.RemoveAll<IDbMigrationRunner>();
+
+            // Its startup run races SeedDatabase on the shared in-memory connection.
+            var cleanupService = services.SingleOrDefault(d =>
+                d.ServiceType == typeof(IHostedService) &&
+                d.ImplementationType == typeof(ExpiredObstacleCleanupService));
+
+            if (cleanupService != null)
+                services.Remove(cleanupService);
         });
 
         builder.UseEnvironment("Development");

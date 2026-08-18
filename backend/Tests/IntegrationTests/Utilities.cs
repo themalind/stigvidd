@@ -808,9 +808,8 @@ public static class Utilities
         return
         [
             // VandrarVennen (User 2) shares Hike 3 with NaturElskaren (User 1) — Accepted,
-            // resharing allowed. When VandrarVennen deletes, Hike 3 is preserved (not
-            // soft-deleted) because a HikeShare record exists for it; the DB cascade nulls
-            // SharedById.
+            // resharing allowed. When VandrarVennen deletes, Hike 3 is preserved because a
+            // HikeShare record exists for it; the DB cascade nulls SharedById.
             new HikeShare
             {
                 HikeId = 3,
