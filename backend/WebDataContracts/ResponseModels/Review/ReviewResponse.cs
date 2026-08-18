@@ -5,9 +5,10 @@ public class ReviewResponse
     public required string Identifier { get; set; }
     public string? TrailReview { get; set; }
     public decimal Rating { get; set; }
-    public required string UserName { get; set; }
+    // Both null once the author has deleted their account.
+    public string? UserName { get; set; }
     public DateTime CreatedAt { get; set; }
-    public required string UserIdentifier { get; set; }
+    public string? UserIdentifier { get; set; }
     public required string TrailIdentifier { get; set; }
     public IReadOnlyCollection<ReviewImageResponse>? ReviewImages { get; set; }
 
@@ -15,10 +16,10 @@ public class ReviewResponse
         string identifier,
         string? trailReview,
         decimal rating,
-        string username,
+        string? username,
         DateTime createdAt,
         string trailIdentifier,
-        string userIdentifier,
+        string? userIdentifier,
         IEnumerable<ReviewImageResponse>? reviewImages)
     {
         return new ReviewResponse

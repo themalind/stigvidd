@@ -3,7 +3,8 @@
 public class TrailObstacleResponse
 {
     public required string Identifier { get; set; }
-    public required string UserIdentifier { get; set; }
+    // Null once the reporter has deleted their account.
+    public string? UserIdentifier { get; set; }
     public required string Description { get; set; }
     public required string IssueType { get; set; }
     public decimal? IncidentLongitude { get; set; }
@@ -13,7 +14,7 @@ public class TrailObstacleResponse
 
     public static TrailObstacleResponse Create(
         string identifier,
-        string userIdentifier,
+        string? userIdentifier,
         string description,
         string issueType,
         decimal? incidentLongitude,
