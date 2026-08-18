@@ -168,7 +168,10 @@
     "loadingMore": "Loading more...",
     "title": "Reviews",
     "rate": "Rate",
-    "addImageError": "Could not save images"
+    "rated": "Rated",
+    "alreadyReviewed": "You have already rated this trail.",
+    "addImageError": "Could not save images",
+    "deletedUser": "Deleted user"
   },
   "trail": {
     "classification": {
@@ -233,8 +236,10 @@
     "notAuthMessage": "You need to be logged in to report an incident.",
     "formInfo1": "Have you noticed something that affects accessibility or safety on the trail?",
     "formInfo2": "Use the form to describe obstacles, damage, or other incidents along the trail that others should know about.",
+    "descriptionPrivacyInfo": "Do not include names, addresses or anything else that identifies a person – neither yourself nor anyone else.",
     "selectCategory": "Select a category",
     "description": "Description",
+    "removedDescription": "Description removed",
     "descriptionLabel": "Add a description, max 500 characters",
     "shareLocation": "Share your location (optional)",
     "locationAttached": "📍 Location will be attached",

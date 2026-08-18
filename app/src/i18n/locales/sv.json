@@ -168,7 +168,10 @@
     "loadingMore": "Laddar fler...",
     "title": "Recensioner",
     "rate": "Betygsätt",
-    "addImageError": "Kunde inte spara bilder"
+    "rated": "Betygsatt",
+    "alreadyReviewed": "Du har redan betygsatt den här leden.",
+    "addImageError": "Kunde inte spara bilder",
+    "deletedUser": "Borttagen användare"
   },
   "trail": {
     "classification": {
@@ -233,8 +236,10 @@
     "notAuthMessage": "Du behöver vara inloggad för att rapportera en händelse.",
     "formInfo1": "Upptäcker du något som påverkar framkomligheten eller säkerheten på leden?",
     "formInfo2": "Använd formuläret för att berätta om hinder, skador eller andra händelser längs promenaden som kan vara bra för andra att känna till.",
+    "descriptionPrivacyInfo": "Skriv inte namn, adress eller annat som pekar ut en enskild person – varken dig själv eller någon annan.",
     "selectCategory": "Välj en kategori",
     "description": "Beskrivning",
+    "removedDescription": "Beskrivningen är borttagen",
     "descriptionLabel": "Lägg till en beskrivning max 500 tecken",
     "shareLocation": "Dela din plats (valfritt)",
     "locationAttached": "📍 Plats kommer att bifogas",
