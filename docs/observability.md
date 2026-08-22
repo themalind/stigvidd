@@ -117,6 +117,86 @@ decimals is ~1.1km and a start-of-trace point is plausibly someone's home. Free-
 strings are scrubbed too, since that is where identifiers usually hide — an
 upstream error message that embedded the request it failed on.
 
+## Mobile RUM — designed, and deliberately not enabled yet
+
+Sessions, views, taps, native crashes and network resources via
+`@openobserve/mobile-react-native`. **Not installed**, blocked on one privacy
+question and one verification gap. Both are recorded here so the next person does
+not rediscover them the hard way.
+
+### Blocker: resource tracking would leak GPS coordinates
+
+`trackResources: true` is what makes RUM worth having — it captures network calls
+*and* injects the W3C `traceparent` that links a mobile resource to the server
+span it triggered. But it reports the **full request URL**, and this app sends
+positions as query parameters:
+
+```
+GET /api/v1/trails/popular?latitude=57.72&longitude=12.94
+```
+
+This cannot be scrubbed in the SDK. Verified by reading the shipped code: the URL
+is handed to the native layer at `startResource(key, method, url, ...)`, while the
+`resourceEventMapper` runs later at stop time and its `RawResource` type has no
+`url` field to rewrite — only `context` is mutable.
+
+So enabling it would reintroduce, on the client, exactly the data the backend
+takes deliberate care to strip: ASP.NET Core instrumentation records that same
+request as `url_query = "?latitude=Redacted&longitude=Redacted"`. It also breaks
+the absolute rule above — never log a position — and a *current* location is if
+anything more sensitive than a trace point.
+
+Three ways forward, in the order I would consider them:
+
+1. **Move coordinates out of the query string** — a header or a POST body — then
+   enable resource tracking fully. Costs an API change coordinated across backend
+   and app, but it is the only option that keeps both trace correlation and the
+   privacy rule intact.
+2. **Ship RUM with `trackResources: false`.** Sessions, views, taps and native
+   crashes still work, and there is no leak — but there is no `traceparent`
+   injection either, since that lives in the same XHR proxy. End-to-end
+   mobile-to-server correlation is lost, which was a headline reason for RUM.
+3. **Accept the coordinates in a 7-day stream.** Defensible on paper — it is
+   short-retention, pseudonymous data — but it contradicts the rule this document
+   sets, and it would make the client's privacy posture weaker than the server's.
+   Not recommended without an explicit decision recorded.
+
+### Verification gap
+
+The package is a **native module** (TurboModules codegen, a CocoaPods spec on
+`OpenObserveCore`, Maven Central `ai.openobserve:o2-sdk-android-*`), at version
+**0.1.1, published 2026-08-06**. It cannot run in Expo Go — not a regression, since
+MapLibre and `modules/expo-live-location` already force a custom dev client, but
+it does mean **everyone needs a fresh dev-client build**, and an OTA update cannot
+ship it.
+
+Whoever picks this up must build **both** platforms before merging, and pin the
+exact version (no caret) given how new those native SDKs are.
+
+### Notes for whoever implements it
+
+Verified against the published typings, since the README is stale Datadog copy in
+several places (it still links `app.datadoghq.com`, and its `startView` example has
+the arguments in the wrong order):
+
+- `firstPartyHosts` is `Array<{ match, propagatorTypes }>`, **not** the `string[]`
+  the README shows. `match` is a hostname, and `EXPO_PUBLIC_API_HOST` is
+  `host:port` — strip the port or matching silently fails, which is the most
+  common cause of "correlation isn't working".
+- `customEndpoint` is **per feature** (`rumConfiguration`, `logsConfiguration`,
+  `traceConfiguration`); there is no top-level one.
+- `sessionSampleRate` and `resourceTraceSampleRate` both default to **100** in
+  this fork, despite Datadog's docs saying 20 for the latter.
+- Use the imperative `O2SdkReactNative.initialize(...)`, not the
+  `<OpenObserveProvider>` component: `app/_layout.tsx` returns `null` until fonts
+  and the session resolve, so the provider would mount too late.
+- Initialise with **`TrackingConsent.PENDING`** and drive it from
+  `services/consent.ts`, which already exists for this purpose. The SDK's own
+  examples all pass `GRANTED`, which would collect before asking.
+- Its `postinstall` rewrites a `react/jsx-runtime` require for React <16.14. At
+  React 19 it is a no-op, so this repo's blocked-install-scripts policy is
+  harmless here — but check that assumption if React is ever downgraded.
+
 ## Retention: 7 days for logs, 2 years for metrics
 
 OpenObserve has **exactly one global retention default** and no per-stream-*type*
