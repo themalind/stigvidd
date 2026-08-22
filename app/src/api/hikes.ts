@@ -2,6 +2,7 @@ import { CreateHikeRequest, Hike, ShareHikeRequest, UpdateHikeRequest } from "@/
 import { BASE_URL } from "./api-config";
 import { getUserToken } from "./users";
 import { ApiError } from "./api-error";
+import { logger } from "@/services/logger";
 
 export async function createHike(request: CreateHikeRequest): Promise<{ success: boolean }> {
   const token = await getUserToken();
@@ -52,7 +53,10 @@ export async function updateHike(request: UpdateHikeRequest): Promise<Hike> {
 
     return await response.json();
   } catch (error) {
-    console.log(error);
+    logger.error("Update hike failed", {
+      endpoint: "PUT /hikes/{param}",
+      errorMessage: String(error),
+    });
     throw error;
   }
 }
@@ -88,7 +92,10 @@ export async function getHikeByIdentifier(hikeIdentifier: string): Promise<Hike>
 
     return await response.json();
   } catch (error) {
-    console.log(error);
+    logger.error("Get hike by identifier failed", {
+      endpoint: "GET /hikes/{param}",
+      errorMessage: String(error),
+    });
     throw error;
   }
 }
@@ -114,7 +121,10 @@ export async function getAllHikesByUserId(userIdentifier: string): Promise<Hike[
 
     return await response.json();
   } catch (error) {
-    console.log(error);
+    logger.error("Get all hikes by user id failed", {
+      endpoint: "GET /hikes",
+      errorMessage: String(error),
+    });
     throw error;
   }
 }
@@ -142,7 +152,10 @@ export async function shareHike(request: ShareHikeRequest): Promise<{ success: b
 
     return { success: true };
   } catch (error) {
-    console.log("shareHike -> Error while sharing hike:", error);
+    logger.error("Share hike failed", {
+      endpoint: "POST /hikeshares/share",
+      errorMessage: String(error),
+    });
     throw error;
   }
 }
@@ -169,7 +182,10 @@ export async function deleteHike(hikeIdentifier: string): Promise<{ success: boo
 
     return { success: true };
   } catch (error) {
-    console.log(error);
+    logger.error("Delete hike failed", {
+      endpoint: "DELETE /hikes/{param}",
+      errorMessage: String(error),
+    });
     throw error;
   }
 }

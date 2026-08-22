@@ -4,6 +4,7 @@ import * as Location from "expo-location";
 import * as TaskManager from "expo-task-manager";
 import { getDistance } from "geolib";
 import { Platform } from "react-native";
+import { logger } from "./logger";
 
 export const LOCATION_TASK_NAME = "stigvidd-background-location";
 export const HIKE_STORAGE_KEY = "@stigvidd_active_hike";
@@ -304,7 +305,9 @@ TaskManager.defineTask(
   LOCATION_TASK_NAME,
   async ({ data, error }: TaskManager.TaskManagerTaskBody<LocationTaskData>) => {
     if (error) {
-      console.error("[LocationTask] Error:", error.message);
+      // Background GPS failures happen while nobody is looking at the screen, which is
+      // exactly why they need to leave the device. Never log positions — only shape.
+      logger.error("Background location task error", { errorMessage: error.message });
       return;
     }
 
@@ -328,7 +331,7 @@ TaskManager.defineTask(
         if (isRunning) await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
       }
     } catch (e) {
-      console.error("[LocationTask] Processing error:", e);
+      logger.error("Background location processing error", { errorMessage: String(e) });
     }
   },
 );

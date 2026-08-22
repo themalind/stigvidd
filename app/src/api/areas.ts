@@ -1,6 +1,7 @@
 import { CityArea } from "@/data/types";
 import { BASE_URL } from "./api-config";
 import { ApiError } from "./api-error";
+import { logger } from "@/services/logger";
 
 export async function getAreas(): Promise<CityArea[]> {
   try {
@@ -17,7 +18,10 @@ export async function getAreas(): Promise<CityArea[]> {
 
     return await response.json();
   } catch (error) {
-    console.log(error);
+    logger.error("Get areas failed", {
+      endpoint: "GET /cityareas",
+      errorMessage: String(error),
+    });
     throw error;
   }
 }
@@ -37,7 +41,10 @@ export async function getAreaByIdentifier(areaIdentifier: string): Promise<CityA
 
     return await response.json();
   } catch (error) {
-    console.log(error);
+    logger.error("Get area by identifier failed", {
+      endpoint: "GET /cityareas/{param}",
+      errorMessage: String(error),
+    });
     throw error;
   }
 }

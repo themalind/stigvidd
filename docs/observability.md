@@ -84,6 +84,39 @@ Stopping Postgres correctly yields `readyz` 503 while `healthz` stays 200 —
 liveness is not readiness, and conflating them would make Docker restart a
 perfectly healthy API whenever the database blipped.
 
+## What the mobile app emits
+
+`app/src/services/logger.ts` replaces the ~70 scattered `console.*` calls in error
+paths. **Console output is unconditional and unchanged**, so a migrated call site
+behaves identically in Metro — which is what makes converting the remaining ones
+risk-free and incremental.
+
+With no sink registered (the default, and the case in Jest and CI) it is a thin
+wrapper around console: nothing buffered, nothing scheduled, nothing sent. That is
+deliberate and load-bearing: the API tests replace `global.fetch` wholesale and
+assert exact call counts, which only works because the logger never calls it.
+
+Batching is 20 records or 10s, capped at 200 buffered so a device offline on a
+long hike cannot grow it without bound. It flushes on `AppState` background — the
+last reliable moment before the OS may kill the app — and persists whatever did
+not make it to AsyncStorage, replaying on next launch. A crash and the last few
+log lines before it are usually the same incident.
+
+Global `ErrorUtils` and promise-rejection handlers **chain** rather than replace,
+so React Native's red box and (later) the RUM SDK's crash reporting still run.
+
+### Redaction is not optional
+
+Everything passes through `redact()` before it enters the buffer. The rules are
+asserted in `app/src/services/__tests__/logger.test.ts` — treat those tests as the
+GDPR guarantee in executable form, not as unit-test housekeeping.
+
+Credential-bearing keys are **dropped entirely, never truncated**: a token prefix
+is still a fingerprint. Coordinates are dropped rather than rounded, because two
+decimals is ~1.1km and a start-of-trace point is plausibly someone's home. Free-form
+strings are scrubbed too, since that is where identifiers usually hide — an
+upstream error message that embedded the request it failed on.
+
 ## Retention: 7 days for logs, 2 years for metrics
 
 OpenObserve has **exactly one global retention default** and no per-stream-*type*

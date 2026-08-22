@@ -2,6 +2,7 @@ import { IncomingSharedHike, ReshareSharedHikeRequest, SharedHike } from "@/data
 import { BASE_URL } from "./api-config";
 import { getUserToken } from "./users";
 import { ApiError } from "./api-error";
+import { logger } from "@/services/logger";
 
 export async function getSharedHikes(): Promise<SharedHike[]> {
   try {
@@ -25,7 +26,10 @@ export async function getSharedHikes(): Promise<SharedHike[]> {
 
     return response.json();
   } catch (error) {
-    console.log("Error while fetching shared hikes:", error);
+    logger.error("Get shared hikes failed", {
+      endpoint: "GET /hikesharerecipient",
+      errorMessage: String(error),
+    });
     throw error;
   }
 }
@@ -53,7 +57,10 @@ export async function reshareHike(request: ReshareSharedHikeRequest): Promise<{ 
 
     return { success: true };
   } catch (error) {
-    console.log("reshareHike -> Error while resharing hike:", error);
+    logger.error("Reshare hike failed", {
+      endpoint: "POST /hikesharerecipient/re-share",
+      errorMessage: String(error),
+    });
     throw error;
   }
 }
@@ -80,7 +87,10 @@ export async function removeSharedHike(hikeIdentifier: string): Promise<{ succes
 
     return { success: true };
   } catch (error) {
-    console.log("removeSharedHike -> Error while removing shared hike:", error);
+    logger.error("Remove shared hike failed", {
+      endpoint: "DELETE /hikesharerecipient/{param}",
+      errorMessage: String(error),
+    });
     throw error;
   }
 }
@@ -106,7 +116,10 @@ export async function getIncomingSharedHike(hikeIdentifier: string): Promise<Sha
     }
     return await response.json();
   } catch (error) {
-    console.log("getIncomingSharedHike -> Error while fetching incoming shared hike", error);
+    logger.error("Get incoming shared hike failed", {
+      endpoint: "GET /hikesharerecipient/incoming/{param}",
+      errorMessage: String(error),
+    });
     throw error;
   }
 }
@@ -132,7 +145,10 @@ export async function getIncomingSharedHikes(): Promise<IncomingSharedHike[]> {
     }
     return await response.json();
   } catch (error) {
-    console.log("getIncomingSharedHikes -> ErrorWhile retrieving incoming hike shares", error);
+    logger.error("Get incoming shared hikes failed", {
+      endpoint: "GET /hikesharerecipient/incoming",
+      errorMessage: String(error),
+    });
     throw error;
   }
 }
@@ -158,7 +174,10 @@ export async function acceptSharedHike(hikeIdentifier: string): Promise<{ succes
     }
     return { success: true };
   } catch (error) {
-    console.log("acceptSharedHike -> Something went wrong while accepting shared hike", error);
+    logger.error("Accept shared hike failed", {
+      endpoint: "PUT /hikesharerecipient/accept/{param}",
+      errorMessage: String(error),
+    });
     throw error;
   }
 }
@@ -184,7 +203,10 @@ export async function rejectSharedHike(hikeIdentifier: string): Promise<{ succes
     }
     return { success: true };
   } catch (error) {
-    console.log("rejectSharedHike -> Something went wrong when rejecting hike", error);
+    logger.error("Reject shared hike failed", {
+      endpoint: "DELETE /hikesharerecipient/reject/{param}",
+      errorMessage: String(error),
+    });
     throw error;
   }
 }

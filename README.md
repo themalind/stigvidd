@@ -273,6 +273,14 @@ style preferences.
    EXPO_PUBLIC_CLIENT_ID=...
    EXPO_PUBLIC_MAPTILER_API_KEY=...
    EXPO_PUBLIC_MAPTILER_STYLE_ID=...
+
+   # Telemetry (optional — omit and the app collects and sends nothing).
+   # Ingest-only credentials from OpenObserve; see the Telemetry section above.
+   # These ship inside the installed binary and are therefore PUBLIC: scope them
+   # to a single stream, and never use the root account.
+   EXPO_PUBLIC_OO_LOGS_URL=https://observatory.stigvidd.se/api/default/stigvidd_app_logs/_json
+   EXPO_PUBLIC_OO_LOGS_TOKEN=...      # base64 of "<ingest-user>:<password>"
+   EXPO_PUBLIC_LOG_LEVEL=debug
    ```
 
 4. Start the development server:

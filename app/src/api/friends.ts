@@ -2,6 +2,7 @@ import { FriendRequest, FriendResponse, OutgoingFriendRequest, SearchFriendResul
 import { BASE_URL } from "./api-config";
 import { ApiError } from "./api-error";
 import { getUserToken } from "./users";
+import { logger } from "@/services/logger";
 
 export async function sendFriendRequest(receiverNickName: string): Promise<{ success: boolean }> {
   try {
@@ -26,7 +27,10 @@ export async function sendFriendRequest(receiverNickName: string): Promise<{ suc
 
     return { success: true };
   } catch (error) {
-    console.log("sendFirendRequest -> Error while sending friend request:", error);
+    logger.error("Send friend request failed", {
+      endpoint: "POST /friends/requests",
+      errorMessage: String(error),
+    });
     throw error;
   }
 }
@@ -53,7 +57,10 @@ export async function acceptFriendRequest(requesterIdentifier: string): Promise<
 
     return { success: true };
   } catch (error) {
-    console.log("acceptFriendRequest -> Error while sending accept friend request:", error);
+    logger.error("Accept friend request failed", {
+      endpoint: "PUT /friends/requests/accept/{param}",
+      errorMessage: String(error),
+    });
     throw error;
   }
 }
@@ -80,7 +87,10 @@ export async function rejectFriendRequest(otherIdentifier: string): Promise<{ su
 
     return { success: true };
   } catch (error) {
-    console.log("rejectFriendRequest -> Error while sending reject friend request:", error);
+    logger.error("Reject friend request failed", {
+      endpoint: "DELETE /friends/reject/{param}",
+      errorMessage: String(error),
+    });
     throw error;
   }
 }
@@ -107,7 +117,10 @@ export async function getFriends(): Promise<FriendResponse[]> {
 
     return response.json();
   } catch (error) {
-    console.log("getFriends -> Error while fetching friends:", error);
+    logger.error("Get friends failed", {
+      endpoint: "GET /friends",
+      errorMessage: String(error),
+    });
     throw error;
   }
 }
@@ -134,7 +147,10 @@ export async function getIncomingRequests(): Promise<FriendRequest[]> {
 
     return response.json();
   } catch (error) {
-    console.log("getIncomingRequests -> Error while fetching incoming friend requests:", error);
+    logger.error("Get incoming requests failed", {
+      endpoint: "GET /friends/requests/incoming",
+      errorMessage: String(error),
+    });
     throw error;
   }
 }
@@ -161,7 +177,10 @@ export async function getOutgoingRequests(): Promise<OutgoingFriendRequest[]> {
 
     return response.json();
   } catch (error) {
-    console.log("getOutgoingRequests -> Error while fetching outgoing friend requests:", error);
+    logger.error("Get outgoing requests failed", {
+      endpoint: "GET /friends/requests/outgoing",
+      errorMessage: String(error),
+    });
     throw error;
   }
 }
@@ -188,7 +207,10 @@ export async function removeFriend(friendIdentifier: string): Promise<{ success:
 
     return { success: true };
   } catch (error) {
-    console.log("removeFriend -> Error while removing friend:", error);
+    logger.error("Remove friend failed", {
+      endpoint: "DELETE /friends/{param}",
+      errorMessage: String(error),
+    });
     throw error;
   }
 }
@@ -218,7 +240,10 @@ export async function searchUsers(query: string): Promise<SearchFriendResult[]> 
     const result: SearchFriendResult[] = await response.json();
     return result;
   } catch (error) {
-    console.log("searchUsers -> Error while searching users:", error);
+    logger.error("Search users failed", {
+      endpoint: "GET /users/search",
+      errorMessage: String(error),
+    });
     throw error;
   }
 }

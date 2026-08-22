@@ -3,6 +3,7 @@ import uuid from "react-native-uuid";
 import { BASE_URL } from "./api-config";
 import { getUserToken } from "./users";
 import { ApiError } from "./api-error";
+import { logger } from "@/services/logger";
 
 export async function getReviewsByTrailIdentifier(
   trailIdentifier: string,
@@ -23,7 +24,10 @@ export async function getReviewsByTrailIdentifier(
 
     return await response.json();
   } catch (error) {
-    console.log(error);
+    logger.error("Get reviews by trail identifier failed", {
+      endpoint: "GET /reviews/trail/{param}",
+      errorMessage: String(error),
+    });
     throw error;
   }
 }
@@ -50,7 +54,10 @@ export async function hasReviewedTrail(trailIdentifier: string): Promise<boolean
 
     return await response.json();
   } catch (error) {
-    console.log(error);
+    logger.error("Has reviewed trail failed", {
+      endpoint: "GET /reviews/trail/{param}/mine",
+      errorMessage: String(error),
+    });
     throw error;
   }
 }
@@ -93,7 +100,10 @@ export async function createReview(request: CreateReviewRequest): Promise<{ succ
 
     return { success: true };
   } catch (error) {
-    console.error("Fel vid uppladdning:", error);
+    logger.error("Create review failed", {
+      endpoint: "POST /reviews/create",
+      errorMessage: String(error),
+    });
     throw error;
   }
 }
@@ -120,7 +130,10 @@ export async function deleteReview(reviewIdentifier: string): Promise<{ success:
 
     return { success: true };
   } catch (error) {
-    console.log(error);
+    logger.error("Delete review failed", {
+      endpoint: "DELETE /reviews/{param}",
+      errorMessage: String(error),
+    });
     throw error;
   }
 }

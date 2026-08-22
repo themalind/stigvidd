@@ -2,6 +2,7 @@ import { registerPushToken, unregisterPushToken } from "@/api/notifications";
 import * as Device from "expo-device";
 import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
+import { logger } from "./logger";
 
 // Show banners while the app is open in the foreground.
 Notifications.setNotificationHandler({
@@ -48,7 +49,7 @@ export async function registerForPushNotificationsAsync(): Promise<void> {
   // Expo push tokens are only issued for physical devices; simulators/emulators
   // have no APNs/FCM identity and will throw if we proceed past this guard.
   if (!Device.isDevice) {
-    console.log("registerForPushNotificationsAsync: skipped — not a physical device");
+    logger.debug("Push registration skipped — not a physical device");
     return;
   }
 
@@ -63,7 +64,8 @@ export async function registerForPushNotificationsAsync(): Promise<void> {
   }
 
   if (finalStatus !== "granted") {
-    console.log("registerForPushNotificationsAsync: permission denied");
+    // A real product signal, not noise: how many users decline push?
+    logger.info("Push registration declined by user");
     return;
   }
 
@@ -79,7 +81,7 @@ export async function registerForPushNotificationsAsync(): Promise<void> {
     const { data } = await Notifications.getExpoPushTokenAsync({ projectId });
     expoToken = data;
   } catch (error) {
-    console.warn("registerForPushNotificationsAsync: could not fetch Expo push token:", error);
+    logger.warn("Could not fetch Expo push token", { errorMessage: String(error) });
     return;
   }
   _currentExpoToken = expoToken;

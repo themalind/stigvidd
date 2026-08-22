@@ -2,6 +2,7 @@ import { CreateTrailObstacleRequest, TrailObstacle, UpdateTrailObstacleRequest }
 import { BASE_URL } from "./api-config";
 import { getUserToken } from "./users";
 import { ApiError } from "./api-error";
+import { logger } from "@/services/logger";
 
 export async function getTrailObstaclesByTrailIdentifier(trailIdentifier: string): Promise<TrailObstacle[]> {
   try {
@@ -18,7 +19,10 @@ export async function getTrailObstaclesByTrailIdentifier(trailIdentifier: string
 
     return await response.json();
   } catch (error) {
-    console.log("getTrailObstaclesByTrailIdentifier: ", error);
+    logger.error("Get trail obstacles by trail identifier failed", {
+      endpoint: "GET /trailobstacles/trail/{param}",
+      errorMessage: String(error),
+    });
     throw error;
   }
 }
@@ -41,7 +45,10 @@ export async function addSolvedVote(obstacleIdentifier: string): Promise<{ succe
 
     return { success: true };
   } catch (error) {
-    console.log("addSolvedVote: ", error);
+    logger.error("Add solved vote failed", {
+      endpoint: "POST /trailobstacles/solve/{param}",
+      errorMessage: String(error),
+    });
     throw error;
   }
 }
@@ -64,7 +71,10 @@ export async function deleteSolvedVote(obstacleIdentifier: string): Promise<{ su
 
     return { success: true };
   } catch (error) {
-    console.log("deleteSolvedVote", error);
+    logger.error("Delete solved vote failed", {
+      endpoint: "DELETE /trailobstacles/solve/{param}",
+      errorMessage: String(error),
+    });
     throw error;
   }
 }
@@ -92,7 +102,10 @@ export async function createTrailObstacle(request: CreateTrailObstacleRequest): 
 
     return { success: true };
   } catch (error) {
-    console.log("createTrailObstacle: ", error);
+    logger.error("Create trail obstacle failed", {
+      endpoint: "POST /trailobstacles",
+      errorMessage: String(error),
+    });
     throw error;
   }
 }
@@ -123,7 +136,10 @@ export async function updateTrailObstacle(
 
     return { success: true };
   } catch (error) {
-    console.log("updateTrailObstacle: ", error);
+    logger.error("Update trail obstacle failed", {
+      endpoint: "PUT /trailobstacles/{param}",
+      errorMessage: String(error),
+    });
     throw error;
   }
 }
@@ -143,7 +159,10 @@ export async function getObstacleIssueTypes(): Promise<string[]> {
 
     return await response.json();
   } catch (error) {
-    console.log("getObstacleIssueTypes: ", error);
+    logger.error("Get obstacle issue types failed", {
+      endpoint: "GET /trailobstacles/issue-types",
+      errorMessage: String(error),
+    });
     throw error;
   }
 }
@@ -169,7 +188,10 @@ export async function deleteTrailObstacle(trailObstacleIdentifier: string): Prom
 
     return { success: true };
   } catch (error) {
-    console.log("deleteTrailObstacle: ", error);
+    logger.error("Delete trail obstacle failed", {
+      endpoint: "DELETE /trailobstacles/{param}",
+      errorMessage: String(error),
+    });
     throw error;
   }
 }

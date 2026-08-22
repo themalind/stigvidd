@@ -3,6 +3,7 @@ import uuid from "react-native-uuid";
 import { ApiError } from "./api-error";
 import { BASE_URL } from "./api-config";
 import { getUserToken } from "./users";
+import { logger } from "@/services/logger";
 
 export async function getPopularTrails(latitude?: number, longitude?: number): Promise<TrailOverview[]> {
   try {
@@ -24,8 +25,10 @@ export async function getPopularTrails(latitude?: number, longitude?: number): P
 
     return response.json();
   } catch (error) {
-    const message = error instanceof Error ? String(error.cause ?? error.message) : String(error);
-    console.log(`Error fetching popular trails: ${message}`);
+    logger.error("Failed to fetch popular trails", {
+      endpoint: "GET /trails/popular",
+      errorMessage: error instanceof Error ? String(error.cause ?? error.message) : String(error),
+    });
     throw error;
   }
 }
@@ -39,8 +42,10 @@ export async function getAllTrails(): Promise<TrailShortInfoResponse[]> {
 
     return response.json();
   } catch (error) {
-    const message = error instanceof Error ? String(error.cause ?? error.message) : String(error);
-    console.log(`Error fetching all trails: ${message}`);
+    logger.error("Failed to fetch all trails", {
+      endpoint: "GET /trails",
+      errorMessage: error instanceof Error ? String(error.cause ?? error.message) : String(error),
+    });
     throw error;
   }
 }
@@ -56,7 +61,10 @@ export async function getTrailByIdentifier(identifier: string): Promise<Trail> {
 
     return json;
   } catch (error) {
-    console.log("Error fetching trail by identifier:", error);
+    logger.error("Failed to fetch trail by identifier", {
+      endpoint: "GET /trails/{identifier}",
+      errorMessage: String(error),
+    });
     throw error;
   }
 }
@@ -71,7 +79,10 @@ export async function getTrailCard(identifier: string): Promise<TrailCard> {
 
     return response.json();
   } catch (error) {
-    console.log("Error fetching trail card:", error);
+    logger.error("Failed to fetch trail card", {
+      endpoint: "GET /trails/{identifier}/card",
+      errorMessage: String(error),
+    });
     throw error;
   }
 }
@@ -90,7 +101,7 @@ export async function getTrailCards(identifiers: string[]): Promise<TrailCard[]>
 
     return response.json();
   } catch (error) {
-    console.log("Error fetching trail cards:", error);
+    logger.error("Failed to fetch trail cards", { endpoint: "GET /trails/cards", errorMessage: String(error) });
     throw error;
   }
 }
@@ -106,7 +117,10 @@ export async function getCoordinatesByTrailIdentifier(identifier: string): Promi
 
     return json;
   } catch (error) {
-    console.log(error);
+    logger.error("Failed to fetch trail coordinates", {
+      endpoint: "GET /trails/{identifier}/coordinates",
+      errorMessage: String(error),
+    });
     throw error;
   }
 }
@@ -162,7 +176,7 @@ export async function addTrail(request: CreateTrailRequest): Promise<{ success: 
 
     return { success: true };
   } catch (error) {
-    console.error("Trail creation failed.", error);
+    logger.error("Trail creation failed", { endpoint: "POST /trails", errorMessage: String(error) });
     throw error;
   }
 }

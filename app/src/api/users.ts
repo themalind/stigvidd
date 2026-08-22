@@ -2,6 +2,7 @@ import { CreateStigViddUserCredentials, User, UserFavoritesTrail, UserWishlistTr
 import { getValidAccessToken } from "@/services/keycloak-auth";
 import { BASE_URL } from "./api-config";
 import { ApiError } from "./api-error";
+import { logger } from "@/services/logger";
 
 export async function getUserToken(): Promise<string | null> {
   return getValidAccessToken();
@@ -37,7 +38,10 @@ export async function createStigViddUser({ email, nickname }: CreateStigViddUser
 
     return await response.json();
   } catch (error) {
-    console.log(`createStigViddUser: ${error}`);
+    logger.error("Create stig vidd user failed", {
+      endpoint: "POST /users/create",
+      errorMessage: String(error),
+    });
     throw error;
   }
 }
@@ -64,7 +68,10 @@ export async function getStigViddUser(): Promise<User> {
 
     return await response.json();
   } catch (error) {
-    console.log(`getStigViddUser: ${error}`);
+    logger.error("Get stig vidd user failed", {
+      endpoint: "GET /users",
+      errorMessage: String(error),
+    });
     throw error;
   }
 }
@@ -91,7 +98,10 @@ export async function getUserFavorites(): Promise<UserFavoritesTrail[]> {
 
     return await response.json();
   } catch (error) {
-    console.log(error);
+    logger.error("Get user favorites failed", {
+      endpoint: "GET /users/favorites",
+      errorMessage: String(error),
+    });
     throw error;
   }
 }
@@ -118,7 +128,10 @@ export async function getUserWishlist(): Promise<UserWishlistTrail[]> {
 
     return await response.json();
   } catch (error) {
-    console.log(error);
+    logger.error("Get user wishlist failed", {
+      endpoint: "GET /users/wishlist",
+      errorMessage: String(error),
+    });
     throw error;
   }
 }
@@ -149,7 +162,10 @@ export async function addToUserFavorite(trailIdentifier: string): Promise<UserFa
 
     return await response.json();
   } catch (error) {
-    console.log(error);
+    logger.error("Add to user favorite failed", {
+      endpoint: "POST /users/favorites",
+      errorMessage: String(error),
+    });
     throw error;
   }
 }
@@ -179,7 +195,10 @@ export async function addToUserWishlist(trailIdentifier: string): Promise<UserFa
 
     return await response.json();
   } catch (error) {
-    console.log(error);
+    logger.error("Add to user wishlist failed", {
+      endpoint: "POST /users/wishlist",
+      errorMessage: String(error),
+    });
     throw error;
   }
 }
@@ -204,7 +223,10 @@ export async function removeUserFavorite(trailIdentifier: string): Promise<void>
       throw new ApiError(`HTTP error ${response.status}`, response.status);
     }
   } catch (error) {
-    console.log(error);
+    logger.error("Remove user favorite failed", {
+      endpoint: "DELETE /users/favorites/{param}",
+      errorMessage: String(error),
+    });
     throw error;
   }
 }
@@ -248,7 +270,10 @@ export async function removeUserWishlist(trailIdentifier: string): Promise<void>
       throw new ApiError(`HTTP error ${response.status}`, response.status);
     }
   } catch (error) {
-    console.log(error);
+    logger.error("Remove user wishlist failed", {
+      endpoint: "DELETE /users/wishlist/{param}",
+      errorMessage: String(error),
+    });
     throw error;
   }
 }

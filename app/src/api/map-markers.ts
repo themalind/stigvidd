@@ -1,5 +1,6 @@
 import { Facility, TrailMarkerResponse } from "@/data/types";
 import { BASE_URL } from "./api-config";
+import { logger } from "@/services/logger";
 
 export async function getTrailMarkers(): Promise<TrailMarkerResponse[]> {
   try {
@@ -12,7 +13,10 @@ export async function getTrailMarkers(): Promise<TrailMarkerResponse[]> {
 
     return json;
   } catch (error) {
-    console.log(error);
+    logger.error("Get trail markers failed", {
+      endpoint: "GET /trails/markers",
+      errorMessage: String(error),
+    });
     throw error;
   }
 }
@@ -28,7 +32,10 @@ export async function getFacilityMarkers(): Promise<Facility[]> {
 
     return json;
   } catch (error) {
-    console.log(error);
+    logger.error("Get facility markers failed", {
+      endpoint: "GET /facilities",
+      errorMessage: String(error),
+    });
     throw error;
   }
 }

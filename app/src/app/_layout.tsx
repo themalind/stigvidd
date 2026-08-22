@@ -7,6 +7,8 @@ import { useAppState } from "@/hooks/useAppState";
 import { useUserTheme } from "@/hooks/useUserTheme";
 import { loadStoredLanguage } from "@/i18n";
 import "@/services/location-task";
+import { initTelemetry } from "@/services/telemetry";
+import { logger } from "@/services/logger";
 import {
   NOTIFICATION_QUERY_KEYS,
   NOTIFICATION_ROUTES,
@@ -27,6 +29,11 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { PaperProvider } from "react-native-paper";
 import "react-native-reanimated";
 import { useAuth, useInitAuth } from "@/components/auth/auth-provider";
+
+// Runs once at bundle evaluation, before any component mounts, so startup crashes and the
+// first API calls are inside the window. RootLayout returns null until fonts and the session
+// resolve, so an effect would miss exactly those. No-ops without the telemetry env vars.
+initTelemetry();
 
 function NotificationHandler() {
   const router = useRouter();
@@ -105,7 +112,9 @@ export default function RootLayout() {
   // Register for push notifications once the user is signed in.
   useEffect(() => {
     if (!user) return;
-    registerForPushNotificationsAsync().catch(console.error);
+    registerForPushNotificationsAsync().catch((error) =>
+      logger.error("Push notification registration failed", { errorMessage: String(error) }),
+    );
   }, [user]);
 
   useEffect(() => {
