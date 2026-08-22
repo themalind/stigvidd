@@ -40,6 +40,13 @@ DRY_RUN=0
 [ "${1:-}" = "--dry-run" ] && DRY_RUN=1
 
 command -v curl >/dev/null || die "curl not found on PATH"
+# Guarded explicitly, because `set -e` cannot catch this one: both JSON parses below run
+# inside command/process substitution, whose exit status is never checked. Without this a
+# missing python3 leaves the stream list empty and the script exits 0 reporting "nothing to
+# do" — silently leaving every metrics stream on the short global retention AND skipping the
+# personal-data check at the end. Both are compliance controls (docs/observability.md), so a
+# false success here is worse than a hard failure.
+command -v python3 >/dev/null || die "python3 not found on PATH"
 
 # Read the deploy host's .env the same way compose does. Values may contain '=',
 # so split on the first one only, and skip comments/blanks.
@@ -48,7 +55,15 @@ if [ -f "$ENV_FILE" ]; then
   while IFS= read -r line; do
     case "$line" in ''|\#*) continue;; *=*) ;; *) continue;; esac
     key=${line%%=*}
-    case "$key" in OBSERVATORY_*) export "$key=${line#*=}";; esac
+    value=${line#*=}
+    # compose strips one layer of surrounding quotes; do the same. Otherwise a perfectly
+    # valid OBSERVATORY_ROOT_PASSWORD="pa55!#" authenticates with the quotes included and
+    # comes back as a 401 that looks exactly like a wrong password.
+    case "$value" in
+      \"*\") value=${value#\"}; value=${value%\"} ;;
+      \'*\') value=${value#\'}; value=${value%\'} ;;
+    esac
+    case "$key" in OBSERVATORY_*) export "$key=$value";; esac
   done < "$ENV_FILE"
 else
   warn "$ENV_FILE not found — relying on the environment"
@@ -87,7 +102,7 @@ for s in json.load(sys.stdin).get("list", []):
 
 [ "${#streams[@]}" -gt 0 ] || { log "No metrics streams exist yet — nothing to do."; exit 0; }
 
-changed=0; skipped=0
+changed=0; skipped=0; pending=0
 for name in "${streams[@]}"; do
   [ -n "$name" ] || continue
   current=$(printf '%s' "$streams_json" | python3 -c '
@@ -109,17 +124,24 @@ for s in json.load(sys.stdin).get("list", []):
 
   if [ "$DRY_RUN" -eq 1 ]; then
     log "would set ${name}: ${current:-<global>} -> ${DAYS} days"
-  else
-    api PUT "/streams/${name}/settings?type=metrics" \
-      -H 'Content-Type: application/json' \
-      -d "{\"data_retention\": ${DAYS}}" >/dev/null \
-      || { warn "failed to update '${name}'"; continue; }
-    log "${name}: ${current:-<global>} -> ${DAYS} days"
+    pending=$((pending+1))
+    continue
   fi
+
+  api PUT "/streams/${name}/settings?type=metrics" \
+    -H 'Content-Type: application/json' \
+    -d "{\"data_retention\": ${DAYS}}" >/dev/null \
+    || { warn "failed to update '${name}'"; continue; }
+  log "${name}: ${current:-<global>} -> ${DAYS} days"
   changed=$((changed+1))
 done
 
-log "Done. ${changed} changed, ${skipped} already at ${DAYS} days."
+# Counted separately: reporting "N changed" after a --dry-run reads as work done.
+if [ "$DRY_RUN" -eq 1 ]; then
+  log "Dry run. ${pending} would change, ${skipped} already at ${DAYS} days."
+else
+  log "Done. ${changed} changed, ${skipped} already at ${DAYS} days."
+fi
 
 # GDPR guard: metrics are kept for two years, which is only lawful while they
 # hold no personal data. Flag identifier-shaped fields rather than silently

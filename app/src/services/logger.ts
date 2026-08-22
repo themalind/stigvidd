@@ -33,7 +33,18 @@ export type LogSink = (records: LogRecord[]) => void | Promise<void>;
 
 const LEVEL_ORDER: Record<LogLevel, number> = { debug: 10, info: 20, warn: 30, error: 40 };
 
-const MIN_LEVEL = (process.env.EXPO_PUBLIC_LOG_LEVEL as LogLevel | undefined) ?? (__DEV__ ? "debug" : "info");
+function resolveMinLevel(): LogLevel {
+  const configured = process.env.EXPO_PUBLIC_LOG_LEVEL;
+
+  // Validated rather than cast. An unrecognised value would make every LEVEL_ORDER lookup
+  // below compare against `undefined` — always false — silently promoting a production build
+  // to debug logging, which is the opposite of what a typo here should do.
+  if (configured && configured in LEVEL_ORDER) return configured as LogLevel;
+
+  return __DEV__ ? "debug" : "info";
+}
+
+const MIN_LEVEL = resolveMinLevel();
 
 // Small enough that a crash loses little, large enough that a chatty screen does not become
 // one request per line on a mobile connection.
@@ -42,6 +53,13 @@ const FLUSH_INTERVAL_MS = 10_000;
 // Hard ceiling so a device offline on a long hike cannot grow the buffer without bound.
 const MAX_BUFFERED = 200;
 const PENDING_STORAGE_KEY = "@stigvidd_pending_logs";
+// A sink is arbitrary caller-supplied code, and the HTTP one wraps fetch, which on React
+// Native is XHR-backed and has NO default timeout. If a sink never settles, `flushing` never
+// clears and every later flush — timer, batch and background alike — returns at the guard in
+// flush(), so log shipping stops silently for the rest of the process lifetime. Bounding it
+// here turns a stall into an ordinary failure, which the retry and backoff path already
+// handles. Exported so the test can advance to it rather than wait it out.
+export const SINK_TIMEOUT_MS = 30_000;
 
 // ---- Redaction (GDPR) -------------------------------------------------------------------
 
@@ -112,6 +130,12 @@ let sink: LogSink | null = null;
 let buffer: LogRecord[] = [];
 let flushTimer: ReturnType<typeof setTimeout> | null = null;
 let appStateSubscribed = false;
+let flushing = false;
+// Consecutive sink failures back the retry interval off. Without this a device with no
+// connectivity, or an OpenObserve outage, costs one HTTP attempt per log line: a restored
+// batch keeps the buffer at or above BATCH_SIZE, so every subsequent emit() would flush.
+let failureStreak = 0;
+const MAX_BACKOFF_MULTIPLIER = 16;
 
 /** Registers the transport that receives batched records. Called once by initTelemetry(). */
 export function setLogSink(next: LogSink): void {
@@ -122,6 +146,8 @@ export function setLogSink(next: LogSink): void {
 export function resetLogger(): void {
   sink = null;
   buffer = [];
+  flushing = false;
+  failureStreak = 0;
 
   if (flushTimer) {
     clearTimeout(flushTimer);
@@ -129,27 +155,59 @@ export function resetLogger(): void {
   }
 }
 
-function scheduleFlush(): void {
+function scheduleFlush(delayMs: number = FLUSH_INTERVAL_MS): void {
   if (flushTimer) return;
 
   flushTimer = setTimeout(() => {
     flushTimer = null;
     void flush();
-  }, FLUSH_INTERVAL_MS);
+  }, delayMs);
+}
+
+function retryDelayMs(): number {
+  return FLUSH_INTERVAL_MS * Math.min(2 ** failureStreak, MAX_BACKOFF_MULTIPLIER);
+}
+
+/** Resolves with the sink, or rejects once SINK_TIMEOUT_MS passes, so `flushing` always clears. */
+function settleWithin(result: void | Promise<void>, timeoutMs: number): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error("log sink timed out")), timeoutMs);
+
+    void Promise.resolve(result).then(
+      () => {
+        clearTimeout(timer);
+        resolve();
+      },
+      (error: unknown) => {
+        clearTimeout(timer);
+        reject(error instanceof Error ? error : new Error(String(error)));
+      },
+    );
+  });
 }
 
 export async function flush(): Promise<void> {
-  if (!sink || buffer.length === 0) return;
+  // Overlapping flushes would let a failed batch be prepended to a buffer a concurrent flush
+  // has already taken, reordering records for no gain.
+  if (flushing || !sink || buffer.length === 0) return;
 
   const batch = buffer;
   buffer = [];
+  flushing = true;
 
   try {
-    await sink(batch);
+    await settleWithin(sink(batch), SINK_TIMEOUT_MS);
+    failureStreak = 0;
   } catch {
     // Telemetry failure must never surface to the user or to the caller. Put the batch back
     // at the front so the next flush retries it, then let MAX_BUFFERED trim the oldest.
     buffer = [...batch, ...buffer].slice(-MAX_BUFFERED);
+    failureStreak += 1;
+    // Nothing else re-arms the timer: emit() only schedules when the buffer is under
+    // BATCH_SIZE, and a restored batch is usually over it.
+    scheduleFlush(retryDelayMs());
+  } finally {
+    flushing = false;
   }
 }
 
@@ -175,8 +233,10 @@ function emit(level: LogLevel, message: string, context?: LogContext): void {
 
   if (buffer.length > MAX_BUFFERED) buffer = buffer.slice(-MAX_BUFFERED);
 
-  if (buffer.length >= BATCH_SIZE) void flush();
-  else scheduleFlush();
+  // While the sink is failing, the backoff timer owns retries — flushing straight from here
+  // would be one HTTP attempt per log line against a known-broken endpoint.
+  if (failureStreak === 0 && buffer.length >= BATCH_SIZE) void flush();
+  else scheduleFlush(failureStreak > 0 ? retryDelayMs() : FLUSH_INTERVAL_MS);
 }
 
 export const logger = {
@@ -196,15 +256,21 @@ export const logger = {
 function handleAppStateChange(next: AppStateStatus): void {
   if (next === "active") return;
 
-  const pending = [...buffer];
-
   void flush().finally(() => {
-    if (pending.length === 0) return;
-
-    void AsyncStorage.setItem(PENDING_STORAGE_KEY, JSON.stringify(pending.slice(-MAX_BUFFERED))).catch(() => {
-      // Nothing useful to do if the device cannot even persist a log batch.
-    });
+    // Whatever the flush did NOT deliver — nothing at all after a success. Persisting a
+    // snapshot taken before the flush instead would replay already-shipped records on the
+    // next launch, duplicating them on every single background/foreground cycle.
+    void persistPending(buffer.slice(-MAX_BUFFERED));
   });
+}
+
+async function persistPending(records: LogRecord[]): Promise<void> {
+  try {
+    if (records.length === 0) await AsyncStorage.removeItem(PENDING_STORAGE_KEY);
+    else await AsyncStorage.setItem(PENDING_STORAGE_KEY, JSON.stringify(records));
+  } catch {
+    // Nothing useful to do if the device cannot even persist a log batch.
+  }
 }
 
 async function replayPersistedLogs(): Promise<void> {

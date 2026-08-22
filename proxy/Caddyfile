@@ -58,7 +58,16 @@
 	# is pure CPU. The UI bundle is megabytes and very much worth compressing, so
 	# `encode` is scoped to everything that is NOT ingest. (Note `encode` only ever
 	# compresses RESPONSES, so this is an efficiency split, not a correctness one.)
-	@ingest path /api/*/v1/* /api/*/_json /api/*/_bulk /rum/*
+	# Caddy path matching uses Go's path.Match, where `*` does not cross `/`. So the
+	# per-stream ingest endpoint /api/<org>/<stream>/_json needs its own two-segment
+	# pattern; /api/*/_bulk is org-level and correct with one.
+	#
+	# /rum/* crosses slashes, but only because Caddy fast-paths a pattern whose ONLY
+	# wildcard is a trailing `*` into a plain prefix match. That shortcut does not
+	# apply to /api/*/v1/*, where the interior `*` forces real path.Match — so its
+	# trailing `*` matches exactly one segment. Fine for /api/<org>/v1/logs, but a
+	# deeper ingest path would need its own pattern. Verified against caddy:2-alpine.
+	@ingest path /api/*/v1/* /api/*/_json /api/*/*/_json /api/*/_bulk /rum/*
 	handle @ingest {
 		reverse_proxy openobserve:5080
 	}

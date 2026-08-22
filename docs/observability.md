@@ -76,9 +76,16 @@ sampled mobile request gets dropped server-side.
 ## Health endpoints
 
 `/healthz` (liveness) and `/readyz` (readiness, checks the database) are
-unauthenticated and mapped **before** `UseHttpsRedirection`: the container serves
-plain HTTP on 8080 behind Caddy and a Docker healthcheck probes `127.0.0.1`
-directly, so a redirect would turn every probe into a 307.
+unauthenticated, and `UseHttpsRedirection` is wrapped in a `UseWhen` that skips
+them: the container serves plain HTTP on 8080 behind Caddy and the Docker
+healthcheck on `api` probes `127.0.0.1:8080` directly, so a redirect would turn
+every probe into a 307.
+
+Note that *mapping order does not do this* — with no explicit `UseRouting()`,
+`WebApplication` puts routing at the head of the pipeline and endpoint execution
+at the tail, so `UseHttpsRedirection` runs first no matter where the health
+endpoints are mapped. It is inert today only because the image configures no
+HTTPS port; the `UseWhen` is what keeps the probes working if one is ever added.
 
 Stopping Postgres correctly yields `readyz` 503 while `healthz` stays 200 —
 liveness is not readiness, and conflating them would make Docker restart a

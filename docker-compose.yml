@@ -71,8 +71,12 @@ services:
       # OPT-IN. Leave OTLP_ENDPOINT unset and the API registers no OpenTelemetry
       # providers at all — identical behaviour to before this block existed. The
       # `:-` (empty default, not `:?`) form is what makes that possible, and
-      # matches how VITE_* is handled for `web`: the API must never fail to start
-      # because observability is unconfigured, or down.
+      # matches how VITE_* is handled for `web`: an observability outage, or no
+      # observability at all, must never stop the API from starting.
+      #
+      # Set them as a SET, though. OTLP_ENDPOINT with empty credentials is a
+      # misconfiguration rather than "telemetry off", and the API fails fast on it
+      # instead of exporting into a 401 forever — see .env.example.
       #
       # In-stack plaintext over the `public` docker network: no proxy hop, no
       # certificate, no hairpin, no TLS cost on a per-span path. No signal path
@@ -90,6 +94,17 @@ services:
       # git-derived tag Jenkins builds and deploys with, so a span points at an
       # exact commit with no Dockerfile or build-arg plumbing.
       Otlp__ServiceVersion: ${IMAGE_TAG:-latest}
+    # Liveness, not readiness: /readyz would flip to unhealthy on a database blip, and
+    # nothing acts on `unhealthy` here anyway (compose does not restart on it, and no
+    # service depends_on api). curl is already in the runtime image — the Dockerfile
+    # installs it for the PGDG repo setup and does not purge it. start_period covers the
+    # EF migrations the API runs before it starts serving.
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8080/healthz"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 40s
     # No host ports — the proxy is the only ingress. Reachable as `api:8080`
     # on the `public` network.
     networks:

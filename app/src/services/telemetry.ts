@@ -14,6 +14,11 @@ import { logger, setLogSink, startLogLifecycle, LogRecord } from "./logger";
 const LOGS_URL = process.env.EXPO_PUBLIC_OO_LOGS_URL;
 const LOGS_TOKEN = process.env.EXPO_PUBLIC_OO_LOGS_TOKEN;
 
+// Deliberately shorter than the logger's SINK_TIMEOUT_MS watchdog, so a stalled request is
+// normally cancelled here — where the socket can actually be released — and the watchdog stays
+// a backstop for a sink that misbehaves in some other way.
+const REQUEST_TIMEOUT_MS = 15_000;
+
 let initialised = false;
 
 /**
@@ -28,24 +33,38 @@ let initialised = false;
  */
 function createHttpSink(url: string, token: string) {
   return async (records: LogRecord[]) => {
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Basic ${token}`,
-      },
-      body: JSON.stringify(
-        records.map((record) => ({
-          _timestamp: new Date(record.timestamp).getTime() * 1000, // OpenObserve wants microseconds
-          level: record.level,
-          message: record.message,
-          ...record.context,
-        })),
-      ),
-    });
+    // React Native's fetch has no default timeout, so a stalled connection — a captive portal,
+    // or dead-air TCP on a patchy mobile network — would otherwise hold this request open
+    // indefinitely and, through the logger's `flushing` guard, stop log shipping for good.
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
-    if (!response.ok) {
-      throw new Error(`log shipping failed: HTTP ${response.status}`);
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        signal: controller.signal,
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Basic ${token}`,
+        },
+        body: JSON.stringify(
+          // Context is spread FIRST so a context key named `level`, `message` or `_timestamp`
+          // cannot shadow the record's own fields. Call sites use `errorMessage` for exactly
+          // this reason, but nothing enforces that at the type level.
+          records.map((record) => ({
+            ...record.context,
+            _timestamp: new Date(record.timestamp).getTime() * 1000, // OpenObserve wants microseconds
+            level: record.level,
+            message: record.message,
+          })),
+        ),
+      });
+
+      if (!response.ok) {
+        throw new Error(`log shipping failed: HTTP ${response.status}`);
+      }
+    } finally {
+      clearTimeout(timeout);
     }
   };
 }

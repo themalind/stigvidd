@@ -191,14 +191,23 @@ public class Program
             app.MapOpenApi();
         }
 
-        // Mapped before UseHttpsRedirection: the container serves plain HTTP on 8080 behind
-        // Caddy, and a Docker healthcheck probes 127.0.0.1 directly — a redirect would turn
-        // every probe into a 307. Unauthenticated by design, and both paths are excluded from
+        // Liveness and readiness. Unauthenticated by design, and both paths are excluded from
         // tracing (see TelemetryExtensions.IsWorthTracing) so they cannot flood the pipe.
         app.MapHealthChecks("/healthz", new HealthCheckOptions { Predicate = _ => false }).AllowAnonymous();
         app.MapHealthChecks("/readyz", new HealthCheckOptions { Predicate = check => check.Tags.Contains("ready") }).AllowAnonymous();
 
-        app.UseHttpsRedirection();
+        // The probes must skip the HTTPS redirect: the container serves plain HTTP on 8080
+        // behind Caddy and the Docker healthcheck hits 127.0.0.1:8080 directly, so a redirect
+        // would turn every probe into a 307.
+        //
+        // Where the Map calls above sit relative to this does NOT achieve that. With no
+        // explicit UseRouting(), WebApplication inserts routing at the head of the pipeline and
+        // endpoint execution at the tail, so UseHttpsRedirection always runs first regardless.
+        // It is inert today only because no HTTPS port is configured (the image sets
+        // ASPNETCORE_HTTP_PORTS=8080 and nothing else), which makes the middleware log
+        // "Failed to determine the https port for redirect" and pass through. This UseWhen is
+        // what keeps the probes answering 200 if an HTTPS port is ever added.
+        app.UseWhen(context => !IsProbePath(context.Request.Path), branch => branch.UseHttpsRedirection());
 
         app.UseAuthentication();
         app.UseAuthorization();
@@ -207,4 +216,7 @@ public class Program
 
         app.Run();
     }
+
+    private static bool IsProbePath(PathString path) =>
+        path.StartsWithSegments("/healthz") || path.StartsWithSegments("/readyz");
 }

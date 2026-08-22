@@ -453,8 +453,8 @@ Copy [.env.example](.env.example) to `.env` and set:
 | `OBSERVATORY_ORG` | Organisation telemetry is written into (`default`). Part of the OTLP URL path. |
 | `OBSERVATORY_RETENTION_DAYS` | **Logs and traces** retention (default 7). This is the *global* default and the only one OpenObserve has; upstream's own default is 3650, so do not remove it. Minimum 3. |
 | `OBSERVATORY_METRICS_RETENTION_DAYS` | **Metrics** retention (default 730), applied as a per-stream override by `scripts/observatory-retention.sh`. Lawful only while metrics carry no personal data — see [docs/observability.md](docs/observability.md). |
-| `OTLP_ENDPOINT` | **Optional.** In-stack OTLP target for the API, `http://openobserve:5080/api/default`. Unset = the API registers no telemetry providers at all and behaves exactly as before. |
-| `OTLP_USER` / `OTLP_PASSWORD` | **Optional; the password is secret.** The dedicated ingest account from Part 1 step 8 — never the root account. |
+| `OTLP_ENDPOINT` | **The telemetry on/off switch.** Unset (the default in `.env.example`) = the API registers no telemetry providers at all and behaves exactly as before. In-stack OTLP target when set: `http://openobserve:5080/api/default`. |
+| `OTLP_USER` / `OTLP_PASSWORD` | **Required once `OTLP_ENDPOINT` is set; the password is secret.** The dedicated ingest account from Part 1 step 8 — never the root account. Setting the endpoint without these is a configuration error and the API **refuses to start**, rather than running an exporter that would 401 every batch silently. Set all three together, or none. |
 | `OTLP_LOG_STREAM` | Stream the API's logs land in (default `stigvidd_api_logs`). |
 
 > **`VITE_*` are build-time.** They are compiled into the web image by CI. With
