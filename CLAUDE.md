@@ -130,14 +130,25 @@ MapData/                       one-off importers (trails, facilities, city areas
 
 ## Spatial data
 
-Every geometry column is **SRID 4326** (WGS84). Geometry built in C# is **SRID 0** unless
-you say `Geometry.DefaultFactory.WithSRID(4326)`, and nothing in the type system objects;
-PostGIS then refuses or mis-measures the operation while SpatiaLite rejects the insert, so
-the same omission can be green on one path and red on the other. `new Coordinate(x, y)` is
-**(longitude, latitude)** while the wire format is `{ latitude, longitude }`.
+Every geometry column is **SRID 4326** (WGS84), and
+[`Core/Common/GeoPointFactory.cs`](backend/Core/Common/GeoPointFactory.cs) is the only place
+that knows it — along with the `(X = longitude, Y = latitude)` order. **Build points through
+it**, never a raw NTS factory:
 
-[docs/spatial-data.md](docs/spatial-data.md) is the reference for that boundary;
-[docs/notes/srid-4326.md](docs/notes/srid-4326.md) is the trap.
+```csharp
+GeoPointFactory.FromLonLat(longitude, latitude)   // Point, SRID 4326
+GeoPointFactory.ToLatitude(point) / ToLongitude(point)
+```
+
+`Geometry.DefaultFactory.WithSRID(...)` appears exactly **once** in the backend, inside that
+file; a second occurrence in a diff is a bug. A raw factory yields SRID **0** with nothing in
+the type system objecting, and PostGIS then refuses or mis-measures the operation while
+SpatiaLite rejects the insert — so the same omission can be green on one path and red on the
+other. Lat/long also travel as a **pair**: `Facility.Coordinates` and
+`TrailObstacle.IncidentLocation` are nullable points, and the validators reject a half pair.
+
+[docs/spatial-data.md](docs/spatial-data.md) is the reference for the storage model and the
+wire boundary; [docs/notes/srid-4326.md](docs/notes/srid-4326.md) is the trap.
 
 ## EF migrations
 

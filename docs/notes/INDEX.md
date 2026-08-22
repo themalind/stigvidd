@@ -44,13 +44,22 @@ you get approved.
   one mod_spatialite is linked against. So a Linux box needs the distro package —
   `libsqlite3-mod-spatialite` on Debian 13, `dev-db/spatialite` on Gentoo — or the geometry
   tests fail on extension load rather than on anything you changed.
-- [Geometry built in C# is SRID 0 unless you say otherwise, and the columns are 4326](srid-4326.md) —
-  every geometry column is SRID 4326 and the migrations set it, but NetTopologySuite's
+- [Build every point through GeoPointFactory — a raw NTS factory gives you SRID 0](srid-4326.md) —
+  `Core/Common/GeoPointFactory.cs` is the only place the SRID and the (X = longitude,
+  Y = latitude) order live, and `Geometry.DefaultFactory.WithSRID(...)` appears exactly once
+  in the backend, inside it; a second occurrence in a diff is the finding. NetTopologySuite's
   default factory yields SRID 0 and nothing in the type system objects. PostGIS refuses or
-  mis-measures a mixed-SRID operation while SpatiaLite enforces the column's SRID on
-  insert, so the same omission can be green on one path and red on the other. Also
-  `new Coordinate(x, y)` is (longitude, latitude) while the wire format is
-  `{ latitude, longitude }`.
+  mis-measures a mixed-SRID operation while SpatiaLite enforces the column's SRID on insert,
+  so the same omission can be green on one path and red on the other. `Facility.Coordinates`
+  and `TrailObstacle.IncidentLocation` are nullable points and lat/long travel as a pair —
+  the validators reject a half pair.
+- [scripts/migrate.sh does not carry the trail_imports volume](trail-import-storage-not-migrated.md) —
+  `docker-compose.yml` puts uploaded trail-import source files on a `trail_imports` volume
+  because a session is re-analysed from its file days later, but `migrate.sh`'s
+  `VOLUMES=(pgdata media maildata mailstate)` omits it, so a host migration silently leaves
+  them behind and reports success — `mount_args()` only warns about volumes that are listed
+  and missing. A new named volume in docker-compose.yml is a change to migrate.sh too, and
+  nothing enforces the pair; no CI runs that script at all.
 - [In backend/, a nullable warning is a build ERROR](nullable-warnings-are-errors.md) —
   `Directory.Build.props` sets `WarningsAsErrors=nullable`, so CS8602/CS8618 and friends
   fail the build rather than warning. The feedback loop is otherwise the next `dotnet test`
@@ -62,6 +71,21 @@ you get approved.
   src/api/generated` then fails with "the generated API client is stale" for reasons that
   have nothing to do with the API. Four migration files were committed CRLF+BOM. Fixed with
   `* text=auto eol=lf`; keep content comparisons newline-agnostic regardless.
+- [`npx tsc --noEmit` in app/ has 19 pre-existing errors, and no CI job runs it](app-typecheck-baseline.md) —
+  nothing type-checks app/: CI runs prettier, expo lint and jest, and jest-expo transpiles
+  via Babel without type-checking, so a type error in app production code is caught by
+  nothing. The 19 errors are all in `src/**/__tests__/*.ts`; 16 are
+  `TS2304: Cannot find name 'global'` because `tsconfig.json`'s `"types": ["jest","geojson"]`
+  replaces the default type roots and drops `@types/node`, and 3 are a real signature
+  mismatch in `logger.test.ts`. Use 19 as the baseline before blaming your own change.
+- [Known failing: TrailImport DeleteSessionAsync's cascade does not fire under SQLite](known-failing-trail-import-delete.md) —
+  `TrailImportReviewIntegrationTests.DeleteSessionAsync_ShouldTakeTheProposalsWithItAndLeaveTheTrailsAlone`
+  expects 0 proposals and finds 2. **Pre-existing on develop** (measured at 0e1a99e: 1358
+  tests, 2 failures), so do not attribute it to your change. `DeleteSessionAsync` uses
+  `ExecuteDeleteAsync`, which bypasses EF's change tracker, so the `OnDelete(Cascade)` in
+  StigViddDbContext must be enforced by the database — PostgreSQL does, the SQLite test
+  provider does not. Possibly platform-dependent, since Linux binds the system libsqlite3
+  and Windows the bundled e_sqlite3.
 - [The rules that keep a hook working on Windows, Gentoo and Debian at once](agent-harness-hooks.md) —
   hooks are Node `.mjs` because `python3` does not exist on Windows; registered in **exec
   form** because Claude Code expands `${CLAUDE_PROJECT_DIR}` itself and Windows may fall

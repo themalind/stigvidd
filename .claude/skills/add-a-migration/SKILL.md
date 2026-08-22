@@ -66,6 +66,13 @@ This is the single most common way a migration reaches a deploy unexercised.
 
 ## Geometry columns
 
-SRID 4326, always. Read [srid-4326](../../../docs/notes/srid-4326.md) and
-[docs/spatial-data.md](../../../docs/spatial-data.md) before adding one — including the
-`(longitude, latitude)` coordinate order, which is silent when reversed.
+SRID 4326, always — `geometry(Point, 4326)` / `geometry(LineString, 4326)`, with the typmod
+and SRID configured in `StigViddDbContext`. Anything that *builds* a point in C# goes through
+`Core/Common/GeoPointFactory.cs`, which is the only place the SRID and the
+`(X = longitude, Y = latitude)` order live. Read
+[srid-4326](../../../docs/notes/srid-4326.md) and
+[docs/spatial-data.md](../../../docs/spatial-data.md) before adding a geometry column.
+
+A migration that backfills geometry from existing columns is the `*PostGIS*` and facility/
+obstacle-point shape: hand-written `ST_SetSRID(ST_MakePoint(lon, lat), 4326)` in `Up`. Note
+the argument order there is also longitude first.

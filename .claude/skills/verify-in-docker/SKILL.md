@@ -68,6 +68,12 @@ docker compose down                       # keeps volumes
 ```
 
 **Do not** `docker compose down -v` casually, and do not `docker volume rm` on a machine
-that might be a real host: `pgdata`, `media`, `maildata` and `mailstate` are the stateful
-volumes, and [scripts/migrate.sh](../../../scripts/migrate.sh) exists because they are what
-a host migration has to carry. `DEPLOYMENT.md` is the runbook.
+that might be a real host. The stateful volumes are `pgdata`, `media`, `maildata`,
+`mailstate` and **`trail_imports`** (uploaded import sources, re-read days after the
+upload), and [scripts/migrate.sh](../../../scripts/migrate.sh) exists because they are what a
+host migration has to carry. `DEPLOYMENT.md` is the runbook.
+
+Note that `migrate.sh` currently lists only the first four —
+[trail-import-storage-not-migrated](../../../docs/notes/trail-import-storage-not-migrated.md).
+**A new named volume in `docker-compose.yml` is a change to `migrate.sh` as well**, and
+nothing enforces the pair; no CI runs that script at all.
