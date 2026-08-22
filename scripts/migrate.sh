@@ -2,14 +2,24 @@
 #
 # Migrate a Stigvidd docker-compose environment between hosts.
 #
-# Stateful data in the stack lives in four named volumes:
-#   - <project>_pgdata    : the Postgres/PostGIS database
-#   - <project>_media     : uploaded images (served by the WebDAV media service)
-#   - <project>_maildata  : mailboxes
-#   - <project>_mailstate : Rspamd/Redis/fail2ban state (bayes training etc.)
+# Stateful data in the stack lives in five named volumes:
+#   - <project>_pgdata        : the Postgres/PostGIS database
+#   - <project>_media         : uploaded images (served by the WebDAV media service)
+#   - <project>_maildata      : mailboxes
+#   - <project>_mailstate     : Rspamd/Redis/fail2ban state (bayes training etc.)
+#   - <project>_trail_imports : uploaded trail-import source files. Stateful because a
+#                               review session is re-analysed from the file it was created
+#                               from, days after the upload — see TrailImport__StoragePath
+#                               in docker-compose.yml.
 # This script backs them all up into a single tarball and restores them on the
 # target. Both hosts run the same images, so it's a byte-for-byte copy — no
 # logical dump/restore needed. (<project>_maillogs is deliberately excluded.)
+#
+# KEEP THIS LIST IN STEP WITH docker-compose.yml. A named volume that is missing here is
+# not an error and produces no output: mount_args() only warns about volumes it was told
+# to look for, so an omitted one is copied nowhere and the migration still reports
+# success. The loss surfaces later, on the target, when something reads data that was
+# never carried over.
 #
 # (Config that is NOT data — docker-compose.yml, db/, and especially .env and
 #  mail-config/ with their secrets — must be copied to the target separately;
@@ -33,9 +43,11 @@ set -euo pipefail
 
 # Compose project name (see `name:` in docker-compose.yml) -> volume prefix.
 PROJECT="${COMPOSE_PROJECT_NAME:-stigvidd}"
-# mail* are skipped automatically (with a warning) on hosts that predate the
-# mailserver service — see mount_args().
-VOLUMES=(pgdata media maildata mailstate)
+# A volume this host does not have yet is skipped automatically, with a warning — see
+# mount_args(). That covers hosts predating the mailserver service (mail*) and hosts
+# predating trail import (trail_imports), so listing a volume here is safe on older hosts
+# and omitting one is not.
+VOLUMES=(pgdata media maildata mailstate trail_imports)
 
 log()  { printf '\033[1;34m==>\033[0m %s\n' "$*"; }
 warn() { printf '\033[1;33mwarn:\033[0m %s\n' "$*" >&2; }

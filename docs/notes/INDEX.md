@@ -53,13 +53,15 @@ you get approved.
   so the same omission can be green on one path and red on the other. `Facility.Coordinates`
   and `TrailObstacle.IncidentLocation` are nullable points and lat/long travel as a pair —
   the validators reject a half pair.
-- [scripts/migrate.sh does not carry the trail_imports volume](trail-import-storage-not-migrated.md) —
-  `docker-compose.yml` puts uploaded trail-import source files on a `trail_imports` volume
-  because a session is re-analysed from its file days later, but `migrate.sh`'s
-  `VOLUMES=(pgdata media maildata mailstate)` omits it, so a host migration silently leaves
-  them behind and reports success — `mount_args()` only warns about volumes that are listed
-  and missing. A new named volume in docker-compose.yml is a change to migrate.sh too, and
-  nothing enforces the pair; no CI runs that script at all.
+- [A new named volume in docker-compose.yml is a change to scripts/migrate.sh as well](compose-volume-needs-migrate-sh.md) —
+  `migrate.sh`'s `VOLUMES=(...)` is hand-maintained and nothing enforces that it matches
+  compose. An **omitted** volume produces no output at all, because `mount_args()` only warns
+  about volumes it was told to look for: the backup succeeds, the migration reports success,
+  and the loss surfaces on the target. `trail_imports` was missed this way and is the worked
+  example — measured, 0 entries in the tarball with the old list. Extending the list is
+  backward-compatible both ways (a volume a host lacks is skipped with a warning; an older
+  tarball restores fine), so the only way to get it wrong is to forget it. No CI runs this
+  script.
 - [In backend/, a nullable warning is a build ERROR](nullable-warnings-are-errors.md) —
   `Directory.Build.props` sets `WarningsAsErrors=nullable`, so CS8602/CS8618 and friends
   fail the build rather than warning. The feedback loop is otherwise the next `dotnet test`

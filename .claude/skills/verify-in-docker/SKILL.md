@@ -73,7 +73,8 @@ that might be a real host. The stateful volumes are `pgdata`, `media`, `maildata
 upload), and [scripts/migrate.sh](../../../scripts/migrate.sh) exists because they are what a
 host migration has to carry. `DEPLOYMENT.md` is the runbook.
 
-Note that `migrate.sh` currently lists only the first four —
-[trail-import-storage-not-migrated](../../../docs/notes/trail-import-storage-not-migrated.md).
-**A new named volume in `docker-compose.yml` is a change to `migrate.sh` as well**, and
-nothing enforces the pair; no CI runs that script at all.
+**A new named volume in `docker-compose.yml` is a change to `migrate.sh` as well** — its
+`VOLUMES=(...)` is hand-maintained, an omitted volume is silently carried nowhere, and no CI
+runs that script at all. See
+[compose-volume-needs-migrate-sh](../../../docs/notes/compose-volume-needs-migrate-sh.md),
+including how to test a change to it without touching a real stack.
