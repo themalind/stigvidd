@@ -9,8 +9,8 @@ namespace StigviddAPI.Authorization;
 
 /// <summary>
 /// Keycloak puts realm roles in a JSON "realm_access" claim
-/// (<c>{"roles":["admin",...]}</c>). This flattens them into role claims so
-/// <c>[Authorize(Roles = "...")]</c> / policies can use them.
+/// (<c>{"roles":["stigvidd-admin",...]}</c>). This flattens them into role claims
+/// so <c>[Authorize(Roles = "...")]</c> / policies can use them.
 /// </summary>
 public class KeycloakRealmRolesTransformation : IClaimsTransformation
 {

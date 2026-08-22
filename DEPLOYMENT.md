@@ -358,8 +358,12 @@ A fresh Keycloak is empty. The app expects realm `stigvidd` with clients
   `https://auth.stigvidd.se/admin` (log in with `KC_ADMIN_USER` /
   `KC_ADMIN_PASSWORD`).
 
-Grant your admin user the **`admin` realm role** — the web Migration page and
-its API endpoints require it.
+Grant your admin user the **`stigvidd-admin` realm role** (same string as the
+public client id, confusingly) — the whole admin dashboard requires it: signing
+in is gated on it client-side, and every endpoint under `/api/v1/admin/*` —
+trail and facility editing, the media library, migration export/import — is
+gated on it server-side by the `AdminOnly` policy. Override the expected role
+name with `Authorization__AdminRole` if your realm uses a different one.
 
 Either way, copy `stigvidd-admin-api`'s secret from its **Credentials** tab into
 `KEYCLOAK_ADMIN_CLIENT_SECRET` in `.env`. The client secrets used to live in
@@ -975,8 +979,8 @@ browser, without SSH.
    ```
 
 > Import is **destructive** — it replaces all data on the target. Run it on a
-> freshly deployed, idle target (before it serves traffic). Requires the `admin`
-> realm role.
+> freshly deployed, idle target (before it serves traffic). Requires the
+> `stigvidd-admin` realm role.
 
 ### Method B — Volume copy (shell) — exact byte-for-byte clone
 

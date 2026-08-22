@@ -6,11 +6,12 @@ import type {
   ImageProcessingOptions,
   TrailImageResponse,
 } from "@/types/types";
+import { getFacilitiesGetAllUrl } from "./generated/facilities/facilities";
+// Facility image management is admin-only and lives under api/v1/admin/facilities.
 import {
-  getFacilitiesAddFacilityImagesUrl,
-  getFacilitiesDeleteFacilityImageUrl,
-  getFacilitiesGetAllUrl,
-} from "./generated/facilities/facilities";
+  getAdminFacilitiesAddFacilityImagesUrl,
+  getAdminFacilitiesDeleteFacilityImageUrl,
+} from "./generated/admin-facilities/admin-facilities";
 import { customFetch } from "./mutator";
 import { appendProcessingOptions } from "./image-options";
 
@@ -33,7 +34,7 @@ export async function uploadFacilityImages(
   images.forEach((file) => formData.append("images", file));
   appendProcessingOptions(formData, options);
   return customFetch<TrailImageResponse[]>(
-    getFacilitiesAddFacilityImagesUrl(identifier),
+    getAdminFacilitiesAddFacilityImagesUrl(identifier),
     { method: "POST", body: formData },
   );
 }
@@ -41,7 +42,7 @@ export async function uploadFacilityImages(
 export async function deleteFacilityImage(
   imageIdentifier: string,
 ): Promise<void> {
-  await customFetch<void>(getFacilitiesDeleteFacilityImageUrl(imageIdentifier), {
+  await customFetch<void>(getAdminFacilitiesDeleteFacilityImageUrl(imageIdentifier), {
     method: "DELETE",
   });
 }

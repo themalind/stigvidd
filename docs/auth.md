@@ -18,7 +18,8 @@ failure mode of getting it subtly wrong is "every user gets silently logged out.
 | The gate itself: create disabled, enable on verify     | `backend/Core/Repositories/KeycloakAdminRepository.cs`                  |
 | Access-token accessor for the API layer                | `app/src/api/users.ts` → `getUserToken`                                 |
 | API base URL                                           | `app/src/api/api-config.ts`                                             |
-| Realm-role → `[Authorize(Roles=…)]` mapping (backend)  | `backend/StigviddAPI/Authorization/KeycloakRealmRolesTransformation.cs` |
+| Realm-role → role-claim mapping (backend)               | `backend/StigviddAPI/Authorization/KeycloakRealmRolesTransformation.cs` |
+| `AdminOnly` policy + admin-only controllers (backend) | `backend/StigviddAPI/Program.cs`, `backend/StigviddAPI/Controllers/Admin/` |
 
 ## Why Direct Access Grant (password flow)
 
@@ -185,9 +186,48 @@ email exists).
 
 The API validates the Keycloak JWT as a bearer token (JWT bearer auth in
 `Program.cs`). `KeycloakRealmRolesTransformation` (an `IClaimsTransformation`) then
-flattens Keycloak's `realm_access` claim (`{"roles":["admin",…]}`) into standard
-`ClaimTypes.Role` claims, so `[Authorize(Roles = "admin")]` and role policies work.
+flattens Keycloak's `realm_access` claim (`{"roles":["stigvidd-admin",…]}`) into role
+claims, so `[Authorize(Roles = …)]` and role policies work. The claims go under the
+identity's own `RoleClaimType` — which the Keycloak handler sets to `"role"`, not
+`ClaimTypes.Role` — because that is what `IsInRole`, and therefore `RequireRole`, reads.
 A malformed claim leaves the principal unchanged rather than throwing.
+
+### The `AdminOnly` policy
+
+`[Authorize]` on its own only proves the caller is a signed-in user — which for this
+API means any mobile app user. Everything that manages content or moves data
+therefore lives under `Controllers/Admin/` and carries
+`[Authorize(Policy = "AdminOnly")]`:
+
+| Controller                  | Routes                            | What it does                          |
+| --------------------------- | --------------------------------- | ------------------------------------- |
+| `AdminController`           | `api/v1/admin/{export,import}`    | Whole-environment migration archive   |
+| `AdminTrailsController`     | `api/v1/admin/trails/…`           | Trail edits, images, symbol           |
+| `AdminFacilitiesController` | `api/v1/admin/facilities/…`       | Facility CRUD + images                |
+| `AdminMediaController`      | `api/v1/admin/media/…`            | Media library + image metadata        |
+
+The policy requires one realm role, `stigvidd-admin` by default — configurable via
+`Authorization:AdminRole` (env `Authorization__AdminRole`). The same role gates
+sign-in to the admin web client (`web/src/services/keycloak-auth.ts`), so a user
+missing it never reaches the dashboard *and* would be refused by the API anyway.
+
+No admin route needs the caller to have a StigVidd user row — the realm role alone
+is sufficient. That matters because the dashboard never provisions one (nothing in
+`web/src` calls `GET api/v1/users`), so an admin who exists only in Keycloak would
+otherwise be refused. `AdminTrailsControllerIntegrationTests` pins this.
+
+The public controllers (`TrailsController`, `FacilitiesController`) keep the anonymous
+reads plus `POST api/v1/trails/create`, which stayed put but is admin-gated all the
+same — it is the one admin route that *does* need a StigVidd user row, since the
+service records the trail's `CreatedBy`. The mobile app still calls it
+(`app/src/api/trails.ts`), so user-submitted trails are refused until either that
+flow moves behind an admin review step or the endpoint is reopened to the `User`
+policy; `AddTrail_WithoutAdminRole_ShouldReturnForbidden` pins the current behaviour.
+
+Two test seams back this up: `TestAuthHandler` accepts an `X-Test-Roles` header so
+integration tests can assert 403 without the role (`AdminAuthorizationIntegrationTests`
+covers one route per admin controller), and `KeycloakRealmRolesTransformationTests`
+covers the `realm_access` parsing that the header deliberately bypasses.
 
 ## Edge cases — quick reference
 

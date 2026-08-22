@@ -7,30 +7,27 @@ using Microsoft.AspNetCore.Mvc;
 using WebDataContracts.RequestModels.Media;
 using WebDataContracts.ResponseModels.Media;
 
-namespace StigviddAPI.Controllers;
+namespace StigviddAPI.Controllers.Admin;
 
+/// <summary>
+/// The media library behind the admin dashboard's Media page. Admin-only;
+/// no other client reads or edits image metadata.
+/// </summary>
 [ApiController]
-[Route("api/v1/[controller]")]
-public class MediaController : StigViddController
+[Route("api/v1/admin/media")]
+[Authorize(Policy = "AdminOnly")]
+public class AdminMediaController : StigViddController
 {
     private readonly IMediaService _mediaService;
-    private readonly IUserService _userService;
 
-    public MediaController(IMediaService mediaService, IUserService userService)
+    public AdminMediaController(IMediaService mediaService)
     {
         _mediaService = mediaService;
-        _userService = userService;
     }
 
-    [Authorize(Policy = "Admin")]
     [HttpGet]
     public async Task<ActionResult<IReadOnlyCollection<MediaItemResponse>>> GetAll(CancellationToken ctoken)
     {
-        var userResponse = await GetAuthenticatedUserAsync(_userService, ctoken);
-
-        if (userResponse == null)
-            return Unauthorized("User not found");
-
         var result = await _mediaService.GetAllMediaAsync(ctoken);
 
         if (!result.Success && result.Message != null)
@@ -39,18 +36,12 @@ public class MediaController : StigViddController
         return Ok(result.Value);
     }
 
-    [Authorize(Policy = "Admin")]
     [HttpPatch("{imageIdentifier}")]
     public async Task<ActionResult> UpdateMetadata(
         string imageIdentifier,
         [FromBody] UpdateImageMetadataRequest request,
         CancellationToken ctoken)
     {
-        var userResponse = await GetAuthenticatedUserAsync(_userService, ctoken);
-
-        if (userResponse == null)
-            return Unauthorized("User not found");
-
         var result = await _mediaService.UpdateImageMetadataAsync(imageIdentifier, request.AltText, request.Caption, ctoken);
 
         if (!result.Success && result.Message != null)

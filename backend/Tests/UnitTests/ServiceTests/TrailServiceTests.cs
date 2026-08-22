@@ -783,7 +783,7 @@ public class TrailServiceTests
             .ReturnsAsync(RepositoryResult<Trail>.Success(updatedTrail));
 
         // Act
-        var result = await Build(repo).UpdateTrailAsync(ValidUpdateRequest(), Utilities.Identifiers.Trail4, "user-id", CancellationToken.None);
+        var result = await Build(repo).UpdateTrailAsync(ValidUpdateRequest(), Utilities.Identifiers.Trail4, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -800,7 +800,7 @@ public class TrailServiceTests
             .ReturnsAsync(RepositoryResult<Trail>.NotFound());
 
         // Act
-        var result = await Build(repo).UpdateTrailAsync(ValidUpdateRequest(), "no-trail", "user-id", CancellationToken.None);
+        var result = await Build(repo).UpdateTrailAsync(ValidUpdateRequest(), "no-trail", CancellationToken.None);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -817,7 +817,7 @@ public class TrailServiceTests
             .ReturnsAsync(RepositoryResult<Trail>.Error());
 
         // Act
-        var result = await Build(repo).UpdateTrailAsync(ValidUpdateRequest(), Utilities.Identifiers.Trail4, "user-id", CancellationToken.None);
+        var result = await Build(repo).UpdateTrailAsync(ValidUpdateRequest(), Utilities.Identifiers.Trail4, CancellationToken.None);
 
         // Assert
         result.Success.Should().BeFalse();

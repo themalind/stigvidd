@@ -16,6 +16,17 @@ namespace IntegrationTests;
 /// </summary>
 public class TestAuthHandler : AuthenticationHandler<AuthenticationSchemeOptions>
 {
+    /// <summary>
+    /// Comma-separated realm roles to put on the test principal. Opt-in, so a request
+    /// without it authenticates with no roles and fails role-based policies — which is
+    /// what lets tests assert 403 on the admin endpoints.
+    /// In production the equivalent claims come from <c>KeycloakRealmRolesTransformation</c>.
+    /// </summary>
+    public const string RolesHeader = "X-Test-Roles";
+
+    /// <summary>The role behind the "AdminOnly" policy. Mirrors the Program.cs fallback.</summary>
+    public const string AdminRole = "stigvidd-admin";
+
     public TestAuthHandler(
       IOptionsMonitor<AuthenticationSchemeOptions> options,
       ILoggerFactory logger,
@@ -61,15 +72,11 @@ public class TestAuthHandler : AuthenticationHandler<AuthenticationSchemeOptions
             new(ClaimTypes.NameIdentifier, subjectId)
         };
 
-        // Realm roles come from an "X-Test-Roles" header (comma-separated), standing in
-        // for what KeycloakRealmRolesTransformation flattens out of the real token.
-        var roles = Request.Headers["X-Test-Roles"].ToString();
-        if (!string.IsNullOrWhiteSpace(roles))
-        {
-            claims.AddRange(roles
-                .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-                .Select(role => new Claim(ClaimTypes.Role, role)));
-        }
+        claims.AddRange(Request.Headers[RolesHeader]
+            .SelectMany(value => (value ?? string.Empty).Split(','))
+            .Select(role => role.Trim())
+            .Where(role => role.Length > 0)
+            .Select(role => new Claim(ClaimTypes.Role, role)));
 
         var identity = new ClaimsIdentity(claims, "Test");
         var principal = new ClaimsPrincipal(identity);

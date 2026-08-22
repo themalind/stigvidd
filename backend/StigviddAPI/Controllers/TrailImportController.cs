@@ -17,7 +17,7 @@ namespace StigviddAPI.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/v1/admin/trail-import")]
-[Authorize(Policy = "Admin")]
+[Authorize(Policy = "AdminOnly")]
 public class TrailImportController : StigViddController
 {
     private readonly ITrailImportService _trailImport;

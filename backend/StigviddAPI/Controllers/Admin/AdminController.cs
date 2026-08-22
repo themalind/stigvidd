@@ -5,14 +5,14 @@ using Core.Interfaces.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace StigviddAPI.Controllers;
+namespace StigviddAPI.Controllers.Admin;
 
 /// <summary>
 /// Whole-environment export/import for migrating between hosts. Admin-only.
 /// </summary>
 [ApiController]
 [Route("api/v1/admin")]
-[Authorize(Policy = "Admin")]
+[Authorize(Policy = "AdminOnly")]
 public class AdminController(IDataTransferService dataTransfer, ILogger<AdminController> logger) : ControllerBase
 {
     private readonly IDataTransferService _dataTransfer = dataTransfer;

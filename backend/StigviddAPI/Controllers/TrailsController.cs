@@ -1,11 +1,10 @@
-﻿// SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
+// SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 using Core.Interfaces.Services;
 using Core.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using WebDataContracts.RequestModels.Media;
 using WebDataContracts.RequestModels.Trail;
 using WebDataContracts.ResponseModels.Trail;
 
@@ -153,108 +152,7 @@ public class TrailsController : StigViddController
         return Ok(result.Value);
     }
 
-    [Authorize(Policy = "Admin")]
-    [HttpPut("{identifier}")]
-    public async Task<ActionResult<TrailResponse?>> UpdateTrail(
-        string identifier,
-        [FromBody] UpdateTrailRequest request,
-        CancellationToken ctoken)
-    {
-        var userResponse = await GetAuthenticatedUserAsync(_userService, ctoken);
-
-        if (userResponse == null)
-            return Unauthorized("User not found");
-
-        var result = await _trailService.UpdateTrailAsync(request, identifier, userResponse.Identifier, ctoken);
-
-        if (!result.Success && result.Message != null)
-        {
-            _logger.LogInformation(
-                "UpdateTrail: Failed to update trail with identifier: {identifier}.", identifier);
-
-            return ToActionResult(result.Message);
-        }
-
-        return Ok(result.Value);
-    }
-
-    [Authorize(Policy = "Admin")]
-    [HttpDelete("images/{imageIdentifier}")]
-    public async Task<ActionResult> DeleteTrailImage(
-        string imageIdentifier,
-        CancellationToken ctoken)
-    {
-        var userResponse = await GetAuthenticatedUserAsync(_userService, ctoken);
-
-        if (userResponse == null)
-            return Unauthorized("User not found");
-
-        var result = await _trailService.DeleteTrailImageAsync(imageIdentifier, ctoken);
-
-        if (!result.Success && result.Message != null)
-        {
-            _logger.LogInformation(
-                "DeleteTrailImage: Failed to delete image with identifier: {imageIdentifier}.", imageIdentifier);
-
-            return ToActionResult(result.Message);
-        }
-
-        return NoContent();
-    }
-
-    [Authorize(Policy = "Admin")]
-    [HttpPost("{identifier}/images")]
-    public async Task<ActionResult<IReadOnlyCollection<TrailImageResponse>>> AddTrailImages(
-        string identifier,
-        [FromForm] IFormFileCollection images,
-        [FromForm] ImageProcessingOptionsRequest options,
-        CancellationToken ctoken)
-    {
-        var userResponse = await GetAuthenticatedUserAsync(_userService, ctoken);
-
-        if (userResponse == null)
-            return Unauthorized("User not found");
-
-        var result = await _trailService.AddTrailImagesAsync(identifier, images, options.ToOptions(), ctoken);
-
-        if (!result.Success && result.Message != null)
-        {
-            _logger.LogInformation(
-                "AddTrailImages: Failed to add images to trail with identifier: {identifier}.", identifier);
-
-            return ToActionResult(result.Message);
-        }
-
-        return Ok(result.Value);
-    }
-
-    [Authorize(Policy = "Admin")]
-    [HttpPost("{identifier}/symbol")]
-    public async Task<ActionResult<string>> SetTrailSymbol(
-        string identifier,
-        [FromForm] IFormFile symbol,
-        [FromForm] ImageProcessingOptionsRequest options,
-        CancellationToken ctoken)
-    {
-        var userResponse = await GetAuthenticatedUserAsync(_userService, ctoken);
-
-        if (userResponse == null)
-            return Unauthorized("User not found");
-
-        var result = await _trailService.SetTrailSymbolAsync(identifier, symbol, options.ToOptions(), ctoken);
-
-        if (!result.Success && result.Message != null)
-        {
-            _logger.LogInformation(
-                "SetTrailSymbol: Failed to set symbol for trail with identifier: {identifier}.", identifier);
-
-            return ToActionResult(result.Message);
-        }
-
-        return Ok(new { symbolUrl = result.Value });
-    }
-
-    [Authorize(Policy = "Admin")]
+    [Authorize(Policy = "AdminOnly")]
     [HttpPost]
     [Route("create")]
     public async Task<ActionResult> AddTrail(

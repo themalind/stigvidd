@@ -9,13 +9,16 @@ import type {
   UpdateTrailRequest,
 } from "@/types/types";
 import {
-  getTrailsAddTrailImagesUrl,
-  getTrailsDeleteTrailImageUrl,
-  getTrailsSetTrailSymbolUrl,
   trailsGetAllTrails,
   trailsGetTrailByIdentifier,
-  trailsUpdateTrail,
 } from "./generated/trails/trails";
+// Editing a trail is admin-only and lives under api/v1/admin/trails.
+import {
+  adminTrailsUpdateTrail,
+  getAdminTrailsAddTrailImagesUrl,
+  getAdminTrailsDeleteTrailImageUrl,
+  getAdminTrailsSetTrailSymbolUrl,
+} from "./generated/admin-trails/admin-trails";
 import { customFetch } from "./mutator";
 import { appendProcessingOptions } from "./image-options";
 
@@ -41,9 +44,9 @@ export async function updateTrail(
   identifier: string,
   request: UpdateTrailRequest,
 ): Promise<TrailResponse> {
-  const result = await trailsUpdateTrail(
+  const result = await adminTrailsUpdateTrail(
     identifier,
-    request as Parameters<typeof trailsUpdateTrail>[1],
+    request as Parameters<typeof adminTrailsUpdateTrail>[1],
   );
   return result as TrailResponse;
 }
@@ -59,7 +62,7 @@ export async function addTrailImages(
   images.forEach((file) => formData.append("images", file));
   appendProcessingOptions(formData, options);
   return customFetch<TrailImageResponse[]>(
-    getTrailsAddTrailImagesUrl(identifier),
+    getAdminTrailsAddTrailImagesUrl(identifier),
     { method: "POST", body: formData },
   );
 }
@@ -73,13 +76,13 @@ export async function setTrailSymbol(
   formData.append("symbol", symbol);
   appendProcessingOptions(formData, options);
   return customFetch<{ symbolUrl: string }>(
-    getTrailsSetTrailSymbolUrl(identifier),
+    getAdminTrailsSetTrailSymbolUrl(identifier),
     { method: "POST", body: formData },
   );
 }
 
 export async function deleteTrailImage(imageIdentifier: string): Promise<void> {
-  await customFetch<void>(getTrailsDeleteTrailImageUrl(imageIdentifier), {
+  await customFetch<void>(getAdminTrailsDeleteTrailImageUrl(imageIdentifier), {
     method: "DELETE",
   });
 }

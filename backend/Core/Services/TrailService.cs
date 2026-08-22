@@ -360,7 +360,7 @@ public class TrailService : ITrailService
         }
     }
 
-    public async Task<Result<TrailResponse?>> UpdateTrailAsync(UpdateTrailRequest request, string trailIdentifier, string userIdentifier, CancellationToken ctoken)
+    public async Task<Result<TrailResponse?>> UpdateTrailAsync(UpdateTrailRequest request, string trailIdentifier, CancellationToken ctoken)
     {
         var trail = new Trail
         {

@@ -1,4 +1,4 @@
-﻿// SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
+// SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 using Microsoft.AspNetCore.Http;
@@ -17,7 +17,7 @@ public interface ITrailService
     Task<Result<TrailCardResponse?>> GetTrailCardByIdentifierAsync(string identifier, CancellationToken ctoken);
     Task<Result<IReadOnlyCollection<TrailCardResponse>>> GetTrailCardsByIdentifiersAsync(IReadOnlyCollection<string> identifiers, CancellationToken ctoken);
     Task<Result<TrailResponse?>> AddTrailAsync(CreateTrailRequest request, IFormFile trailSymbolImage, IFormFileCollection TrailImageUrls, string userIdentifier, CancellationToken ctoken);
-    Task<Result<TrailResponse?>> UpdateTrailAsync(UpdateTrailRequest request, string trailIdentifier, string userIdentifier, CancellationToken ctoken);
+    Task<Result<TrailResponse?>> UpdateTrailAsync(UpdateTrailRequest request, string trailIdentifier, CancellationToken ctoken);
     Task<Result<IReadOnlyCollection<TrailShortInfoResponse>>> GetAllTrailsWithBasicInfoAsync(CancellationToken ctoken);
     Task<Result<IReadOnlyCollection<TrailImageResponse>>> AddTrailImagesAsync(string trailIdentifier, IFormFileCollection images, ImageProcessingOptions options, CancellationToken ctoken);
     Task<Result<string>> SetTrailSymbolAsync(string trailIdentifier, IFormFile symbol, ImageProcessingOptions options, CancellationToken ctoken);

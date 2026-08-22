@@ -6,7 +6,7 @@
  * OpenAPI spec version: 1.0.0
  */
 
-export type TrailsAddTrailImagesBody = {
+export type AdminFacilitiesAddFacilityImagesBody = {
   /** @nullable */
   images?: Blob[] | null;
   /** @nullable */

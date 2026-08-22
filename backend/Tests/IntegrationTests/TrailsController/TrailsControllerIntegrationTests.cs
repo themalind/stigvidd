@@ -547,7 +547,7 @@ public class TrailsControllerIntegrationTests : IClassFixture<StigViddWebApplica
 
         // Act
         var response = await client.PutAsync(
-            $"/api/v1/trails/{StorsjoledenIdentifier}", requestContent, TestContext.Current.CancellationToken);
+            $"/api/v1/admin/trails/{StorsjoledenIdentifier}", requestContent, TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Forbidden);

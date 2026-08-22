@@ -6,18 +6,9 @@
  * OpenAPI spec version: 1.0.0
  */
 
-export type TrailsSetTrailSymbolBody = {
+export type AdminTrailsAddTrailImagesBody = {
   /** @nullable */
-  ContentType?: string | null;
-  /** @nullable */
-  ContentDisposition?: string | null;
-  /** @nullable */
-  Headers?: Blob[] | null;
-  Length?: number;
-  /** @nullable */
-  Name?: string | null;
-  /** @nullable */
-  FileName?: string | null;
+  images?: Blob[] | null;
   /** @nullable */
   MaxWidth?: number | null;
   /** @nullable */

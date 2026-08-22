@@ -87,6 +87,50 @@
         ]
       }
     },
+    "/api/v1/admin/export": {
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "operationId": "Admin_Export",
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/admin/import": {
+      "post": {
+        "tags": [
+          "Admin"
+        ],
+        "operationId": "Admin_Import",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
     "/api/v1/Account/verify-email": {
       "get": {
         "tags": [
@@ -761,41 +805,6 @@
             "Bearer": []
           }
         ]
-      },
-      "post": {
-        "tags": [
-          "Facilities"
-        ],
-        "operationId": "Facilities_Create",
-        "requestBody": {
-          "x-name": "request",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateFacilityRequest"
-              }
-            }
-          },
-          "required": true,
-          "x-position": 1
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/FacilityResponse"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "Bearer": []
-          }
-        ]
       }
     },
     "/api/v1/Facilities/{identifier}": {
@@ -807,219 +816,6 @@
         "parameters": [
           {
             "name": "identifier",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "x-position": 1
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/octet-stream": {
-                "schema": {
-                  "type": "string",
-                  "format": "binary"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "Bearer": []
-          }
-        ]
-      },
-      "delete": {
-        "tags": [
-          "Facilities"
-        ],
-        "operationId": "Facilities_Delete",
-        "parameters": [
-          {
-            "name": "identifier",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "x-position": 1
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/octet-stream": {
-                "schema": {
-                  "type": "string",
-                  "format": "binary"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "Bearer": []
-          }
-        ]
-      }
-    },
-    "/api/v1/Facilities/update/{identifier}": {
-      "put": {
-        "tags": [
-          "Facilities"
-        ],
-        "operationId": "Facilities_Update",
-        "parameters": [
-          {
-            "name": "identifier",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "x-position": 1
-          }
-        ],
-        "requestBody": {
-          "x-name": "request",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateFacilityRequest"
-              }
-            }
-          },
-          "required": true,
-          "x-position": 2
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/FacilityResponse"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "Bearer": []
-          }
-        ]
-      }
-    },
-    "/api/v1/Facilities/{identifier}/images": {
-      "post": {
-        "tags": [
-          "Facilities"
-        ],
-        "operationId": "Facilities_AddFacilityImages",
-        "parameters": [
-          {
-            "name": "identifier",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "x-position": 1
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "multipart/form-data": {
-              "schema": {
-                "properties": {
-                  "images": {
-                    "type": "array",
-                    "nullable": true,
-                    "items": {}
-                  },
-                  "MaxWidth": {
-                    "type": "integer",
-                    "format": "int32",
-                    "nullable": true
-                  },
-                  "MaxHeight": {
-                    "type": "integer",
-                    "format": "int32",
-                    "nullable": true
-                  },
-                  "Quality": {
-                    "type": "integer",
-                    "format": "int32",
-                    "nullable": true
-                  },
-                  "Format": {
-                    "type": "string",
-                    "nullable": true
-                  },
-                  "CropX": {
-                    "type": "integer",
-                    "format": "int32",
-                    "nullable": true
-                  },
-                  "CropY": {
-                    "type": "integer",
-                    "format": "int32",
-                    "nullable": true
-                  },
-                  "CropWidth": {
-                    "type": "integer",
-                    "format": "int32",
-                    "nullable": true
-                  },
-                  "CropHeight": {
-                    "type": "integer",
-                    "format": "int32",
-                    "nullable": true
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/FacilityImageResponse"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "Bearer": []
-          }
-        ]
-      }
-    },
-    "/api/v1/Facilities/images/{imageIdentifier}": {
-      "delete": {
-        "tags": [
-          "Facilities"
-        ],
-        "operationId": "Facilities_DeleteFacilityImage",
-        "parameters": [
-          {
-            "name": "imageIdentifier",
             "in": "path",
             "required": true,
             "schema": {
@@ -1763,6 +1559,83 @@
           },
           "required": true,
           "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/Media": {
+      "get": {
+        "tags": [
+          "Media"
+        ],
+        "operationId": "Media_GetAll",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MediaItemResponse"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/Media/{imageIdentifier}": {
+      "patch": {
+        "tags": [
+          "Media"
+        ],
+        "operationId": "Media_UpdateMetadata",
+        "parameters": [
+          {
+            "name": "imageIdentifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "request",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateImageMetadataRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
         },
         "responses": {
           "200": {
@@ -3108,52 +2981,6 @@
             "Bearer": []
           }
         ]
-      },
-      "put": {
-        "tags": [
-          "Trails"
-        ],
-        "operationId": "Trails_UpdateTrail",
-        "parameters": [
-          {
-            "name": "identifier",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "x-position": 1
-          }
-        ],
-        "requestBody": {
-          "x-name": "request",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateTrailRequest"
-              }
-            }
-          },
-          "required": true,
-          "x-position": 2
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TrailResponse"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "Bearer": []
-          }
-        ]
       }
     },
     "/api/v1/Trails/popular": {
@@ -3362,246 +3189,6 @@
                   "items": {
                     "$ref": "#/components/schemas/TrailMarkerResponse"
                   }
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "Bearer": []
-          }
-        ]
-      }
-    },
-    "/api/v1/Trails/images/{imageIdentifier}": {
-      "delete": {
-        "tags": [
-          "Trails"
-        ],
-        "operationId": "Trails_DeleteTrailImage",
-        "parameters": [
-          {
-            "name": "imageIdentifier",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "x-position": 1
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/octet-stream": {
-                "schema": {
-                  "type": "string",
-                  "format": "binary"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "Bearer": []
-          }
-        ]
-      }
-    },
-    "/api/v1/Trails/{identifier}/images": {
-      "post": {
-        "tags": [
-          "Trails"
-        ],
-        "operationId": "Trails_AddTrailImages",
-        "parameters": [
-          {
-            "name": "identifier",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "x-position": 1
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "multipart/form-data": {
-              "schema": {
-                "properties": {
-                  "images": {
-                    "type": "array",
-                    "nullable": true,
-                    "items": {}
-                  },
-                  "MaxWidth": {
-                    "type": "integer",
-                    "format": "int32",
-                    "nullable": true
-                  },
-                  "MaxHeight": {
-                    "type": "integer",
-                    "format": "int32",
-                    "nullable": true
-                  },
-                  "Quality": {
-                    "type": "integer",
-                    "format": "int32",
-                    "nullable": true
-                  },
-                  "Format": {
-                    "type": "string",
-                    "nullable": true
-                  },
-                  "CropX": {
-                    "type": "integer",
-                    "format": "int32",
-                    "nullable": true
-                  },
-                  "CropY": {
-                    "type": "integer",
-                    "format": "int32",
-                    "nullable": true
-                  },
-                  "CropWidth": {
-                    "type": "integer",
-                    "format": "int32",
-                    "nullable": true
-                  },
-                  "CropHeight": {
-                    "type": "integer",
-                    "format": "int32",
-                    "nullable": true
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/TrailImageResponse"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "Bearer": []
-          }
-        ]
-      }
-    },
-    "/api/v1/Trails/{identifier}/symbol": {
-      "post": {
-        "tags": [
-          "Trails"
-        ],
-        "operationId": "Trails_SetTrailSymbol",
-        "parameters": [
-          {
-            "name": "identifier",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "x-position": 1
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "multipart/form-data": {
-              "schema": {
-                "properties": {
-                  "ContentType": {
-                    "type": "string",
-                    "nullable": true
-                  },
-                  "ContentDisposition": {
-                    "type": "string",
-                    "nullable": true
-                  },
-                  "Headers": {
-                    "type": "array",
-                    "nullable": true,
-                    "items": {}
-                  },
-                  "Length": {
-                    "type": "integer",
-                    "format": "int64"
-                  },
-                  "Name": {
-                    "type": "string",
-                    "nullable": true
-                  },
-                  "FileName": {
-                    "type": "string",
-                    "nullable": true
-                  },
-                  "MaxWidth": {
-                    "type": "integer",
-                    "format": "int32",
-                    "nullable": true
-                  },
-                  "MaxHeight": {
-                    "type": "integer",
-                    "format": "int32",
-                    "nullable": true
-                  },
-                  "Quality": {
-                    "type": "integer",
-                    "format": "int32",
-                    "nullable": true
-                  },
-                  "Format": {
-                    "type": "string",
-                    "nullable": true
-                  },
-                  "CropX": {
-                    "type": "integer",
-                    "format": "int32",
-                    "nullable": true
-                  },
-                  "CropY": {
-                    "type": "integer",
-                    "format": "int32",
-                    "nullable": true
-                  },
-                  "CropWidth": {
-                    "type": "integer",
-                    "format": "int32",
-                    "nullable": true
-                  },
-                  "CropHeight": {
-                    "type": "integer",
-                    "format": "int32",
-                    "nullable": true
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "string"
                 }
               }
             }
@@ -4088,6 +3675,665 @@
           }
         ]
       }
+    },
+    "/api/v1/admin/export": {
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "operationId": "Admin_Export",
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/admin/import": {
+      "post": {
+        "tags": [
+          "Admin"
+        ],
+        "operationId": "Admin_Import",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/admin/facilities": {
+      "post": {
+        "tags": [
+          "AdminFacilities"
+        ],
+        "operationId": "AdminFacilities_Create",
+        "requestBody": {
+          "x-name": "request",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateFacilityRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FacilityResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/admin/facilities/{identifier}": {
+      "put": {
+        "tags": [
+          "AdminFacilities"
+        ],
+        "operationId": "AdminFacilities_Update",
+        "parameters": [
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "request",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateFacilityRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FacilityResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "AdminFacilities"
+        ],
+        "operationId": "AdminFacilities_Delete",
+        "parameters": [
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/admin/facilities/{identifier}/images": {
+      "post": {
+        "tags": [
+          "AdminFacilities"
+        ],
+        "operationId": "AdminFacilities_AddFacilityImages",
+        "parameters": [
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "images": {
+                    "type": "array",
+                    "nullable": true,
+                    "items": {}
+                  },
+                  "MaxWidth": {
+                    "type": "integer",
+                    "format": "int32",
+                    "nullable": true
+                  },
+                  "MaxHeight": {
+                    "type": "integer",
+                    "format": "int32",
+                    "nullable": true
+                  },
+                  "Quality": {
+                    "type": "integer",
+                    "format": "int32",
+                    "nullable": true
+                  },
+                  "Format": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "CropX": {
+                    "type": "integer",
+                    "format": "int32",
+                    "nullable": true
+                  },
+                  "CropY": {
+                    "type": "integer",
+                    "format": "int32",
+                    "nullable": true
+                  },
+                  "CropWidth": {
+                    "type": "integer",
+                    "format": "int32",
+                    "nullable": true
+                  },
+                  "CropHeight": {
+                    "type": "integer",
+                    "format": "int32",
+                    "nullable": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/FacilityImageResponse"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/admin/facilities/images/{imageIdentifier}": {
+      "delete": {
+        "tags": [
+          "AdminFacilities"
+        ],
+        "operationId": "AdminFacilities_DeleteFacilityImage",
+        "parameters": [
+          {
+            "name": "imageIdentifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/admin/media": {
+      "get": {
+        "tags": [
+          "AdminMedia"
+        ],
+        "operationId": "AdminMedia_GetAll",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MediaItemResponse"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/admin/media/{imageIdentifier}": {
+      "patch": {
+        "tags": [
+          "AdminMedia"
+        ],
+        "operationId": "AdminMedia_UpdateMetadata",
+        "parameters": [
+          {
+            "name": "imageIdentifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "request",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateImageMetadataRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/admin/trails/{identifier}": {
+      "put": {
+        "tags": [
+          "AdminTrails"
+        ],
+        "operationId": "AdminTrails_UpdateTrail",
+        "parameters": [
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "request",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTrailRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrailResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/admin/trails/images/{imageIdentifier}": {
+      "delete": {
+        "tags": [
+          "AdminTrails"
+        ],
+        "operationId": "AdminTrails_DeleteTrailImage",
+        "parameters": [
+          {
+            "name": "imageIdentifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/admin/trails/{identifier}/images": {
+      "post": {
+        "tags": [
+          "AdminTrails"
+        ],
+        "operationId": "AdminTrails_AddTrailImages",
+        "parameters": [
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "images": {
+                    "type": "array",
+                    "nullable": true,
+                    "items": {}
+                  },
+                  "MaxWidth": {
+                    "type": "integer",
+                    "format": "int32",
+                    "nullable": true
+                  },
+                  "MaxHeight": {
+                    "type": "integer",
+                    "format": "int32",
+                    "nullable": true
+                  },
+                  "Quality": {
+                    "type": "integer",
+                    "format": "int32",
+                    "nullable": true
+                  },
+                  "Format": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "CropX": {
+                    "type": "integer",
+                    "format": "int32",
+                    "nullable": true
+                  },
+                  "CropY": {
+                    "type": "integer",
+                    "format": "int32",
+                    "nullable": true
+                  },
+                  "CropWidth": {
+                    "type": "integer",
+                    "format": "int32",
+                    "nullable": true
+                  },
+                  "CropHeight": {
+                    "type": "integer",
+                    "format": "int32",
+                    "nullable": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TrailImageResponse"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/admin/trails/{identifier}/symbol": {
+      "post": {
+        "tags": [
+          "AdminTrails"
+        ],
+        "operationId": "AdminTrails_SetTrailSymbol",
+        "parameters": [
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "ContentType": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "ContentDisposition": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "Headers": {
+                    "type": "array",
+                    "nullable": true,
+                    "items": {}
+                  },
+                  "Length": {
+                    "type": "integer",
+                    "format": "int64"
+                  },
+                  "Name": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "FileName": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "MaxWidth": {
+                    "type": "integer",
+                    "format": "int32",
+                    "nullable": true
+                  },
+                  "MaxHeight": {
+                    "type": "integer",
+                    "format": "int32",
+                    "nullable": true
+                  },
+                  "Quality": {
+                    "type": "integer",
+                    "format": "int32",
+                    "nullable": true
+                  },
+                  "Format": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "CropX": {
+                    "type": "integer",
+                    "format": "int32",
+                    "nullable": true
+                  },
+                  "CropY": {
+                    "type": "integer",
+                    "format": "int32",
+                    "nullable": true
+                  },
+                  "CropWidth": {
+                    "type": "integer",
+                    "format": "int32",
+                    "nullable": true
+                  },
+                  "CropHeight": {
+                    "type": "integer",
+                    "format": "int32",
+                    "nullable": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
     }
   },
   "components": {
@@ -4317,6 +4563,173 @@
         "properties": {
           "email": {
             "type": "string"
+          }
+        }
+      },
+      "FacilityResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "identifier",
+          "facilityType"
+        ],
+        "properties": {
+          "identifier": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "facilityType": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "isAccessible": {
+            "type": "boolean"
+          },
+          "latitude": {
+            "type": "number",
+            "format": "decimal",
+            "nullable": true
+          },
+          "longitude": {
+            "type": "number",
+            "format": "decimal",
+            "nullable": true
+          },
+          "location": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "url": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "CreateFacilityRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "facilityType",
+          "isAccessible",
+          "latitude",
+          "longitude"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "facilityType": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "isAccessible": {
+            "type": "boolean"
+          },
+          "latitude": {
+            "type": "number",
+            "format": "decimal",
+            "nullable": true
+          },
+          "longitude": {
+            "type": "number",
+            "format": "decimal",
+            "nullable": true
+          },
+          "location": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "url": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "UpdateFacilityRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "facilityType": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "isAccessible": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "latitude": {
+            "type": "number",
+            "format": "decimal",
+            "nullable": true
+          },
+          "longitude": {
+            "type": "number",
+            "format": "decimal",
+            "nullable": true
+          },
+          "location": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "url": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "FacilityImageResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "identifier",
+          "imageUrl"
+        ],
+        "properties": {
+          "identifier": {
+            "type": "string"
+          },
+          "imageUrl": {
+            "type": "string"
+          },
+          "altText": {
+            "type": "string",
+            "nullable": true
+          },
+          "caption": {
+            "type": "string",
+            "nullable": true
+          },
+          "width": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "height": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "sizeBytes": {
+            "type": "integer",
+            "format": "int64"
           }
         }
       },
@@ -5099,6 +5512,68 @@
           },
           "allowResharing": {
             "type": "boolean"
+          }
+        }
+      },
+      "MediaItemResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "identifier",
+          "imageUrl",
+          "ownerType"
+        ],
+        "properties": {
+          "identifier": {
+            "type": "string"
+          },
+          "imageUrl": {
+            "type": "string"
+          },
+          "altText": {
+            "type": "string",
+            "nullable": true
+          },
+          "caption": {
+            "type": "string",
+            "nullable": true
+          },
+          "width": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "height": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "sizeBytes": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "ownerType": {
+            "type": "string"
+          },
+          "ownerIdentifier": {
+            "type": "string",
+            "nullable": true
+          },
+          "ownerName": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "UpdateImageMetadataRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "altText": {
+            "type": "string",
+            "nullable": true
+          },
+          "caption": {
+            "type": "string",
+            "nullable": true
           }
         }
       },
@@ -6562,6 +7037,304 @@
           }
         }
       },
+      "CreateUserRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "email",
+          "nickName"
+        ],
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "nickName": {
+            "type": "string"
+          }
+        }
+      },
+      "UserNameResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "nickname": {
+            "type": "string",
+            "nullable": true
+          },
+          "exists": {
+            "type": "boolean"
+          }
+        }
+      },
+      "AddToUserFavoritesRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "trailIdentifier"
+        ],
+        "properties": {
+          "trailIdentifier": {
+            "type": "string"
+          }
+        }
+      },
+      "AddToUserWishlistRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "trailIdentifier"
+        ],
+        "properties": {
+          "trailIdentifier": {
+            "type": "string"
+          }
+        }
+      },
+      "SearchFriendResultResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "identifier",
+          "nickName"
+        ],
+        "properties": {
+          "identifier": {
+            "type": "string"
+          },
+          "nickName": {
+            "type": "string"
+          }
+        }
+      },
+      "FacilityResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "identifier",
+          "facilityType"
+        ],
+        "properties": {
+          "identifier": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "facilityType": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "isAccessible": {
+            "type": "boolean"
+          },
+          "latitude": {
+            "type": "number",
+            "format": "decimal",
+            "nullable": true
+          },
+          "longitude": {
+            "type": "number",
+            "format": "decimal",
+            "nullable": true
+          },
+          "location": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "url": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "CreateFacilityRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "facilityType",
+          "isAccessible",
+          "latitude",
+          "longitude"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "facilityType": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "isAccessible": {
+            "type": "boolean"
+          },
+          "latitude": {
+            "type": "number",
+            "format": "decimal",
+            "nullable": true
+          },
+          "longitude": {
+            "type": "number",
+            "format": "decimal",
+            "nullable": true
+          },
+          "location": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "url": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "UpdateFacilityRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "facilityType": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "isAccessible": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "latitude": {
+            "type": "number",
+            "format": "decimal",
+            "nullable": true
+          },
+          "longitude": {
+            "type": "number",
+            "format": "decimal",
+            "nullable": true
+          },
+          "location": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "url": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "FacilityImageResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "identifier",
+          "imageUrl"
+        ],
+        "properties": {
+          "identifier": {
+            "type": "string"
+          },
+          "imageUrl": {
+            "type": "string"
+          },
+          "altText": {
+            "type": "string",
+            "nullable": true
+          },
+          "caption": {
+            "type": "string",
+            "nullable": true
+          },
+          "width": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "height": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "sizeBytes": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "MediaItemResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "identifier",
+          "imageUrl",
+          "ownerType"
+        ],
+        "properties": {
+          "identifier": {
+            "type": "string"
+          },
+          "imageUrl": {
+            "type": "string"
+          },
+          "altText": {
+            "type": "string",
+            "nullable": true
+          },
+          "caption": {
+            "type": "string",
+            "nullable": true
+          },
+          "width": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "height": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "sizeBytes": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "ownerType": {
+            "type": "string"
+          },
+          "ownerIdentifier": {
+            "type": "string",
+            "nullable": true
+          },
+          "ownerName": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "UpdateImageMetadataRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "altText": {
+            "type": "string",
+            "nullable": true
+          },
+          "caption": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
       "UpdateTrailRequest": {
         "type": "object",
         "additionalProperties": false,
@@ -6651,75 +7424,6 @@
           "winterMaintenance": {
             "type": "boolean",
             "nullable": true
-          }
-        }
-      },
-      "CreateUserRequest": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "email",
-          "nickName"
-        ],
-        "properties": {
-          "email": {
-            "type": "string"
-          },
-          "nickName": {
-            "type": "string"
-          }
-        }
-      },
-      "UserNameResponse": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "nickname": {
-            "type": "string",
-            "nullable": true
-          },
-          "exists": {
-            "type": "boolean"
-          }
-        }
-      },
-      "AddToUserFavoritesRequest": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "trailIdentifier"
-        ],
-        "properties": {
-          "trailIdentifier": {
-            "type": "string"
-          }
-        }
-      },
-      "AddToUserWishlistRequest": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "trailIdentifier"
-        ],
-        "properties": {
-          "trailIdentifier": {
-            "type": "string"
-          }
-        }
-      },
-      "SearchFriendResultResponse": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "identifier",
-          "nickName"
-        ],
-        "properties": {
-          "identifier": {
-            "type": "string"
-          },
-          "nickName": {
-            "type": "string"
           }
         }
       }
