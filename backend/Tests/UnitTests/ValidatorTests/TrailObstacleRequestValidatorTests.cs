@@ -1,4 +1,4 @@
-using Core.Validators.TrailObstacle;
+﻿using Core.Validators.TrailObstacle;
 using FluentAssertions;
 using WebDataContracts.RequestModels.TrailObstacle;
 
@@ -147,6 +147,7 @@ public class TrailObstacleRequestValidatorTests
         // Arrange
         var request = ValidRequest();
         request.IncidentLongitude = 180m;
+        request.IncidentLatitude = 57.7291353665m;   // coordinates travel as a pair
 
         // Act
         var result = _validator.Validate(request);
@@ -175,6 +176,7 @@ public class TrailObstacleRequestValidatorTests
         // Arrange
         var request = ValidRequest();
         request.IncidentLongitude = -180m;
+        request.IncidentLatitude = 57.7291353665m;   // coordinates travel as a pair
 
         // Act
         var result = _validator.Validate(request);
@@ -203,6 +205,7 @@ public class TrailObstacleRequestValidatorTests
         // Arrange
         var request = ValidRequest();
         request.IncidentLatitude = 90m;
+        request.IncidentLongitude = 12.8382551042m;  // coordinates travel as a pair
 
         // Act
         var result = _validator.Validate(request);
@@ -231,6 +234,7 @@ public class TrailObstacleRequestValidatorTests
         // Arrange
         var request = ValidRequest();
         request.IncidentLatitude = -90m;
+        request.IncidentLongitude = 12.8382551042m;  // coordinates travel as a pair
 
         // Act
         var result = _validator.Validate(request);
@@ -266,5 +270,35 @@ public class TrailObstacleRequestValidatorTests
 
         // Assert
         result.IsValid.Should().BeTrue();
+    }
+
+    // --- Coordinates travel as a pair (they are stored as a single Point) ---
+
+    [Fact]
+    public void Validate_WithLatitudeButNoLongitude_ShouldFail()
+    {
+        // Arrange
+        var request = ValidRequest();
+        request.IncidentLatitude = 57.7291353665m;
+
+        // Act
+        var result = _validator.Validate(request);
+
+        // Assert
+        result.IsValid.Should().BeFalse();
+    }
+
+    [Fact]
+    public void Validate_WithLongitudeButNoLatitude_ShouldFail()
+    {
+        // Arrange
+        var request = ValidRequest();
+        request.IncidentLongitude = 12.8382551042m;
+
+        // Act
+        var result = _validator.Validate(request);
+
+        // Assert
+        result.IsValid.Should().BeFalse();
     }
 }

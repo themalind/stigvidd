@@ -1,3 +1,4 @@
+﻿using Core.Common;
 using FluentAssertions;
 using Infrastructure.Data;
 using Infrastructure.Data.Entities;
@@ -70,8 +71,7 @@ public class CityAreaImporterTests
         facility.FacilityType.Should().Be(FacilityType.FishingArea);
         facility.Location.Should().Be("Vid vattnet");
         // Owned facilities are coordinate-less; they surface via the area, not the map endpoint.
-        facility.Latitude.Should().BeNull();
-        facility.Longitude.Should().BeNull();
+        facility.Coordinates.Should().BeNull();
     }
 
     [Fact]
@@ -160,8 +160,7 @@ public class CityAreaImporterTests
                 Identifier = Guid.NewGuid().ToString(),
                 Name = "Grillplatsen",
                 FacilityType = FacilityType.FirePit,
-                Latitude = 57.7M,
-                Longitude = 12.9M,
+                Coordinates = GeoPointFactory.FromLonLat(12.9, 57.7),
                 CreatedAt = DateTime.UtcNow,
                 LastUpdatedAt = DateTime.UtcNow
             });
@@ -191,7 +190,7 @@ public class CityAreaImporterTests
         // The original firepit row must remain exactly a firepit — never merged into.
         var firePit = await verify.Facilities.SingleAsync(f => f.FacilityType == FacilityType.FirePit, CancellationToken.None);
         firePit.Name.Should().Be("Grillplatsen");
-        firePit.Latitude.Should().Be(57.7M);
+        firePit.Coordinates!.Y.Should().Be(57.7);
     }
 
     [Fact]

@@ -1,3 +1,4 @@
+using Core.Common;
 using Core.Factories;
 using Core.Interfaces.Repositories;
 using Core.Interfaces.Services;
@@ -48,8 +49,7 @@ public class FacilityService : IFacilityService
             Name = name,
             FacilityType = MapToFacilityType(facilityType),
             IsAccessible = IsAccessible,
-            Longitude = longitude,
-            Latitude = latitude
+            Coordinates = GeoPointFactory.FromLonLat(longitude, latitude)
         };
 
         var result = await _facilityRepository.CreateFacilityAsync(facility, ctoken);
@@ -98,8 +98,11 @@ public class FacilityService : IFacilityService
         existingFacility.Name = name ?? existingFacility.Name;
         existingFacility.FacilityType = facilityType.HasValue ? MapToFacilityType(facilityType.Value) : existingFacility.FacilityType;
         existingFacility.IsAccessible = isAccessible ?? existingFacility.IsAccessible;
-        existingFacility.Longitude = longitude ?? existingFacility.Longitude;
-        existingFacility.Latitude = latitude ?? existingFacility.Latitude;
+
+        // A Point cannot be half-updated, so coordinates move together or not at all.
+        // The validator rejects a request carrying only one ordinate.
+        if (longitude.HasValue && latitude.HasValue)
+            existingFacility.Coordinates = GeoPointFactory.FromLonLat(longitude, latitude);
 
         var updateResult = await _facilityRepository.UpdateAsync(existingFacility, ctoken);
 

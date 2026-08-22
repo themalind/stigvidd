@@ -139,6 +139,10 @@ public class FacilitiesControllerIntegrationTests : IClassFixture<StigViddWebApp
         facility.Should().NotBeNull();
         facility!.Name.Should().Be("Ny grillplats");
         facility.FacilityType.Should().Be(1);
+        // The whole point of the geometry column: what went in comes back out, unswapped.
+        // Covers request -> Point (X = lon, Y = lat) -> SpatiaLite -> read -> response.
+        facility.Latitude.Should().Be(57.7m);
+        facility.Longitude.Should().Be(12.8m);
     }
 
     [Fact]

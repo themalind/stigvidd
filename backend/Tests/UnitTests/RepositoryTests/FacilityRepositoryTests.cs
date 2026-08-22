@@ -1,3 +1,4 @@
+﻿using Core.Common;
 using Core.Repositories;
 using FluentAssertions;
 using Infrastructure.Data.Entities;
@@ -20,8 +21,7 @@ public class FacilityRepositoryTests : TestBase
             Name = "Ny Grillplats",
             FacilityType = FacilityType.FirePit,
             IsAccessible = true,
-            Latitude = 57.5M,
-            Longitude = 13.2M,
+            Coordinates = GeoPointFactory.FromLonLat(13.2, 57.5),
             CreatedAt = DateTime.UtcNow,
             LastUpdatedAt = DateTime.UtcNow
         };
@@ -48,8 +48,7 @@ public class FacilityRepositoryTests : TestBase
             Name = "Ny Grillplats",
             FacilityType = FacilityType.FirePit,
             IsAccessible = true,
-            Latitude = 57.5M,
-            Longitude = 13.2M,
+            Coordinates = GeoPointFactory.FromLonLat(13.2, 57.5),
             CreatedAt = DateTime.UtcNow,
             LastUpdatedAt = DateTime.UtcNow
         };

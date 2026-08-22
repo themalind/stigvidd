@@ -1,4 +1,6 @@
-﻿namespace Infrastructure.Data.Entities;
+using NetTopologySuite.Geometries;
+
+namespace Infrastructure.Data.Entities;
 
 public class Facility : BaseEntity
 {
@@ -6,8 +8,13 @@ public class Facility : BaseEntity
     public FacilityType FacilityType { get; set; } = FacilityType.None;
     public bool IsAccessible { get; set; }
     public ICollection<FacilityImage>? Images { get; set; }
-    public decimal? Latitude { get; set; }
-    public decimal? Longitude { get; set; }
+
+    /// <summary>
+    /// WGS84 (SRID 4326) location, or null for a facility that has no coordinates
+    /// (fishing/swimming/nature areas, which are reached via <see cref="CityAreas"/>).
+    /// Geometry order is (X = longitude, Y = latitude).
+    /// </summary>
+    public Point? Coordinates { get; set; }
     public string? Location { get; set; }
     public string? Description { get; set; }
     public string? Url { get; set; }

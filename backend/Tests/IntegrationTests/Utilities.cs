@@ -2,6 +2,7 @@
 using Infrastructure.Data.Entities;
 using Infrastructure.Enums;
 using NetTopologySuite.Geometries;
+using Core.Common;
 
 namespace IntegrationTests;
 
@@ -59,8 +60,7 @@ public static class Utilities
                 Name = "Grillplats Tiveden",
                 FacilityType = FacilityType.FirePit,
                 IsAccessible = true,
-                Latitude = 58.9M,
-                Longitude = 14.5M,
+                Coordinates = GeoPointFactory.FromLonLat(14.5, 58.9),
                 CreatedAt = SeedDates.Created,
                 LastUpdatedAt = SeedDates.Updated
             },
@@ -71,8 +71,7 @@ public static class Utilities
                 Name = "Vindskydd Gesebol",
                 FacilityType = FacilityType.Shelter,
                 IsAccessible = false,
-                Latitude = 57.6M,
-                Longitude = 12.8M,
+                Coordinates = GeoPointFactory.FromLonLat(12.8, 57.6),
                 CreatedAt = SeedDates.Created,
                 LastUpdatedAt = SeedDates.Updated
             }
@@ -111,8 +110,7 @@ public static class Utilities
                         Name = "Ankedammen",
                         FacilityType = FacilityType.FishingArea,
                         IsAccessible = false,
-                        Latitude = null,
-                        Longitude = null,
+                        Coordinates = null,
                         Location = "Dalsjöfors",
                         Description = "Fiskevatten i Dalsjöfors.",
                         CreatedAt = SeedDates.Created,
@@ -154,8 +152,11 @@ public static class Utilities
     {
         // A real LineString so trails satisfy the `GeoPath != null` filters and their start
         // point can be projected. SRID is left at the factory default (0) to match the SRID
-        // the SQLite/SpatiaLite test schema creates the geometry column with. Coordinate order
-        // is (X = longitude, Y = latitude).
+        // the SQLite/SpatiaLite test schema creates the GeoPath column with — EF's SQLite
+        // provider registers geometry columns via AddGeometryColumn at SRID 0 unless told
+        // otherwise, and SpatiaLite enforces it on insert. The facility/obstacle Point columns
+        // differ: they pin Sqlite:Srid to 4326 in StigViddDbContext, so their seeds use
+        // GeoPointFactory (SRID 4326). Coordinate order is (X = longitude, Y = latitude).
         var geoPath = Geometry.DefaultFactory.CreateLineString(
         [
             new Coordinate(12.805517126805371, 57.62141010663575),
@@ -706,8 +707,7 @@ public static class Utilities
                 IssueType = TrailIssueType.FallenTree,
                 TrailId = 1, // Tiveden
                 UserId = 1,  // NaturElskaren
-                IncidentLongitude = 14.5M,
-                IncidentLatitude = 58.9M,
+                IncidentLocation = GeoPointFactory.FromLonLat(14.5, 58.9),
                 CreatedAt = DateTime.UtcNow.AddDays(-5),
                 LastUpdatedAt = DateTime.UtcNow.AddDays(-5),
             },

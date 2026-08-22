@@ -1,4 +1,4 @@
-using Core.Validators.Facility;
+﻿using Core.Validators.Facility;
 using FluentAssertions;
 using WebDataContracts.RequestModels.Facility;
 
@@ -220,5 +220,53 @@ public class CreateFacilityRequestValidatorTests
         });
 
         result.IsValid.Should().BeFalse();
+    }
+
+    // --- Coordinates travel as a pair (they are stored as a single Point) ---
+
+    [Fact]
+    public void Validate_WithLatitudeButNoLongitude_ShouldFail()
+    {
+        var result = _validator.Validate(new CreateFacilityRequest
+        {
+            Name = "Grillplats Tiveden",
+            FacilityType = 1,
+            IsAccessible = true,
+            Latitude = 58.9m,
+            Longitude = null
+        });
+
+        result.IsValid.Should().BeFalse();
+    }
+
+    [Fact]
+    public void Validate_WithLongitudeButNoLatitude_ShouldFail()
+    {
+        var result = _validator.Validate(new CreateFacilityRequest
+        {
+            Name = "Grillplats Tiveden",
+            FacilityType = 1,
+            IsAccessible = true,
+            Latitude = null,
+            Longitude = 14.5m
+        });
+
+        result.IsValid.Should().BeFalse();
+    }
+
+    [Fact]
+    public void Validate_WithNeitherCoordinate_ShouldPass()
+    {
+        // Coordinate-less facilities (fishing/swimming/nature areas) are legitimate.
+        var result = _validator.Validate(new CreateFacilityRequest
+        {
+            Name = "Ankedammen",
+            FacilityType = 4,
+            IsAccessible = false,
+            Latitude = null,
+            Longitude = null
+        });
+
+        result.IsValid.Should().BeTrue();
     }
 }

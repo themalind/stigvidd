@@ -205,6 +205,15 @@ public class TrailObstaclesControllerIntegrationTests : IClassFixture<StigViddWe
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Created);
+
+        // The POST has no body, so read the obstacle back: this is the only assertion that
+        // covers request -> Point (X = lon, Y = lat) -> SpatiaLite -> read -> response by value.
+        var obstacles = await client.GetFromJsonAsync<List<TrailObstacleResponse>>(
+            $"/api/v1/trailobstacles/trail/{TivedenIdentifier}", TestContext.Current.CancellationToken);
+
+        var created = obstacles!.Single(o => o.Description == obstacle.Description);
+        created.IncidentLatitude.Should().Be(57.7291353665m);
+        created.IncidentLongitude.Should().Be(12.8382551042m);
     }
 
     [Fact]

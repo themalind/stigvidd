@@ -1,4 +1,4 @@
-using Core.Validators.Facility;
+﻿using Core.Validators.Facility;
 using FluentAssertions;
 using WebDataContracts.RequestModels.Facility;
 
@@ -125,6 +125,7 @@ public class UpdateFacilityRequestValidatorTests
     {
         var request = EmptyRequest();
         request.Latitude = 90;
+        request.Longitude = 12.8m;   // coordinates travel as a pair
 
         var result = _validator.Validate(request);
 
@@ -147,6 +148,7 @@ public class UpdateFacilityRequestValidatorTests
     {
         var request = EmptyRequest();
         request.Latitude = -90;
+        request.Longitude = 12.8m;   // coordinates travel as a pair
 
         var result = _validator.Validate(request);
 
@@ -182,6 +184,7 @@ public class UpdateFacilityRequestValidatorTests
     {
         var request = EmptyRequest();
         request.Longitude = 180;
+        request.Latitude = 57.7m;    // coordinates travel as a pair
 
         var result = _validator.Validate(request);
 
@@ -204,6 +207,7 @@ public class UpdateFacilityRequestValidatorTests
     {
         var request = EmptyRequest();
         request.Longitude = -180;
+        request.Latitude = 57.7m;    // coordinates travel as a pair
 
         var result = _validator.Validate(request);
 
@@ -226,6 +230,42 @@ public class UpdateFacilityRequestValidatorTests
     {
         var request = EmptyRequest();
         request.Longitude = null;
+
+        var result = _validator.Validate(request);
+
+        result.IsValid.Should().BeTrue();
+    }
+
+    // --- Coordinates travel as a pair (they are stored as a single Point) ---
+
+    [Fact]
+    public void Validate_WithLatitudeButNoLongitude_ShouldFail()
+    {
+        var request = EmptyRequest();
+        request.Latitude = 58.9m;
+
+        var result = _validator.Validate(request);
+
+        result.IsValid.Should().BeFalse();
+    }
+
+    [Fact]
+    public void Validate_WithLongitudeButNoLatitude_ShouldFail()
+    {
+        var request = EmptyRequest();
+        request.Longitude = 14.5m;
+
+        var result = _validator.Validate(request);
+
+        result.IsValid.Should().BeFalse();
+    }
+
+    [Fact]
+    public void Validate_WithBothCoordinates_ShouldPass()
+    {
+        var request = EmptyRequest();
+        request.Latitude = 58.9m;
+        request.Longitude = 14.5m;
 
         var result = _validator.Validate(request);
 

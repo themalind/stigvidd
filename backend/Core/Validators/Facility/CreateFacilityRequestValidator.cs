@@ -24,6 +24,11 @@ public class CreateFacilityRequestValidator : AbstractValidator<CreateFacilityRe
             .InclusiveBetween(-180, 180)
             .WithMessage("Longitude must be between -180 and 180.")
             .When(x => x.Longitude.HasValue);
+        // Latitude and longitude are stored as a single Point, so a half pair is not a
+        // location the entity can hold. Reject it rather than silently dropping the ordinate.
+        RuleFor(x => x.Latitude)
+            .Must((request, _) => request.Latitude.HasValue == request.Longitude.HasValue)
+            .WithMessage("Latitude and longitude must be supplied together.");
         RuleFor(x => x.Location)
             .MaximumLength(200)
             .WithMessage("Location must not exceed 200 characters.")

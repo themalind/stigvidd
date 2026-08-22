@@ -1,4 +1,4 @@
-﻿using Infrastructure.Data.Entities;
+using Infrastructure.Data.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Data;
@@ -259,20 +259,44 @@ public class StigViddDbContext(DbContextOptions<StigViddDbContext> options) : Db
         modelBuilder.Entity<Hike>()
             .Property(h => h.HikeLength).HasPrecision(18, 2);
 
-        modelBuilder.Entity<TrailObstacle>()
-          .Property(to => to.IncidentLatitude)
-          .HasPrecision(18, 10); ;
+        // Point geometry columns. Trail/Hike GeoPath is mapped by convention, but these two
+        // need provider-specific help:
+        //  - Npgsql gets the real typmod, so the column itself constrains type and SRID.
+        //  - EF's SQLite provider registers geometry columns via AddGeometryColumn at SRID 0
+        //    by default and SpatiaLite enforces that on insert, so the SRID the services
+        //    write (4326) has to be pinned for the SQLite test schema too.
+        if (Database.IsNpgsql())
+        {
+            modelBuilder.Entity<Facility>()
+                .Property(f => f.Coordinates)
+                .HasColumnType("geometry(Point, 4326)");
 
-        modelBuilder.Entity<TrailObstacle>()
-            .Property(to => to.IncidentLongitude)
-            .HasPrecision(18, 10);
+            modelBuilder.Entity<TrailObstacle>()
+                .Property(to => to.IncidentLocation)
+                .HasColumnType("geometry(Point, 4326)");
 
+            // Proximity queries are the reason these are geometry columns at all; without a
+            // GIST index they are sequential scans. Npgsql-only: "gist" is not an index
+            // method SQLite understands, and the test schema comes from EnsureCreated().
+            modelBuilder.Entity<Facility>()
+                .HasIndex(f => f.Coordinates)
+                .HasMethod("gist");
+
+            modelBuilder.Entity<TrailObstacle>()
+                .HasIndex(to => to.IncidentLocation)
+                .HasMethod("gist");
+        }
+
+        // Set as a raw annotation rather than the provider's .HasSrid(4326), and left
+        // unguarded rather than wrapped in Database.IsSqlite(): this project references no
+        // SQLite provider, so neither API exists here. The annotation is inert under Npgsql
+        // (it only travels into the model snapshot), so applying it unconditionally is safe.
         modelBuilder.Entity<Facility>()
-           .Property(f => f.Longitude)
-           .HasPrecision(18, 5);
+            .Property(f => f.Coordinates)
+            .HasAnnotation("Sqlite:Srid", 4326);
 
-        modelBuilder.Entity<Facility>()
-           .Property(f => f.Latitude)
-           .HasPrecision(18, 5);
+        modelBuilder.Entity<TrailObstacle>()
+            .Property(to => to.IncidentLocation)
+            .HasAnnotation("Sqlite:Srid", 4326);
     }
 }
