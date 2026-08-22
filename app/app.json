@@ -93,7 +93,7 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "The app accesses your photos to let you share them with your friends."
+          "photosPermission": "$(PRODUCT_NAME) behöver komma åt dina bilder så att du kan lägga till foton i dina recensioner."
         }
       ]
     ],

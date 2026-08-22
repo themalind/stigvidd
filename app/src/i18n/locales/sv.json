@@ -52,6 +52,7 @@
     "enterYourPassword": "Skriv in ditt lösenord",
     "confirmDeleteAccount": "Är du säker på att du vill avsluta ditt konto?",
     "deleteAccountWarning": "Ditt konto och dina promenader raderas för alltid. Promenader du delat med någon finns kvar hos mottagarna.",
+    "deleteAccountKeptData": "Dina recensionsbetyg och hinderrapporter står kvar utan koppling till dig – texten och bilderna raderas.",
     "nicknameTakenMsg": "Smeknamnet upptaget",
     "unknownError": "Ett oväntat fel inträffade",
     "couldNotLogout": "Kunde inte logga ut.",

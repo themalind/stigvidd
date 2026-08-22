@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using Infrastructure.Data;
 using MapData;
 using Microsoft.EntityFrameworkCore;
@@ -52,8 +52,10 @@ public class FacilityImporterTests
         var facility = await verify.Facilities.SingleAsync(CancellationToken.None);
         facility.Name.Should().Be("Grillplats Tiveden");
         facility.FacilityType.Should().Be(FacilityType.FirePit);
-        facility.Latitude.Should().Be(58.9M);
-        facility.Longitude.Should().Be(14.5M);
+        facility.Coordinates.Should().NotBeNull();
+        facility.Coordinates!.Y.Should().Be(58.9);   // latitude
+        facility.Coordinates.X.Should().Be(14.5);    // longitude
+        facility.Coordinates.SRID.Should().Be(4326);
         facility.IsAccessible.Should().BeFalse();
     }
 

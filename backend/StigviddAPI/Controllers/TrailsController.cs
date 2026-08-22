@@ -23,6 +23,7 @@ public class TrailsController : StigViddController
         _logger = logger;
     }
 
+    [AllowAnonymous]
     [HttpGet("{identifier}")]
     public async Task<ActionResult<TrailResponse?>> GetTrailByIdentifier(
         string identifier,
@@ -41,6 +42,7 @@ public class TrailsController : StigViddController
         return Ok(result.Value);
     }
 
+    [AllowAnonymous]
     [HttpGet("popular")]
     public async Task<ActionResult<IReadOnlyCollection<TrailOverviewResponse?>>> GetPopularTrails(
         [FromQuery] double? latitude,
@@ -60,6 +62,7 @@ public class TrailsController : StigViddController
         return Ok(result.Value);
     }
 
+    [AllowAnonymous]
     [HttpGet("")]
     public async Task<ActionResult<IReadOnlyCollection<TrailShortInfoResponse>>> GetAllTrails(CancellationToken ctoken)
     {
@@ -76,6 +79,7 @@ public class TrailsController : StigViddController
         return Ok(result.Value);
     }
 
+    [AllowAnonymous]
     [HttpGet("{identifier}/coordinates")]
     public async Task<ActionResult<CoordinatesResponse?>> GetCoordinatesByTrailIdentifier(
         string identifier,
@@ -94,6 +98,7 @@ public class TrailsController : StigViddController
         return Ok(result.Value);
     }
 
+    [AllowAnonymous]
     [HttpGet("{identifier}/card")]
     public async Task<ActionResult<TrailCardResponse?>> GetTrailCard(
         string identifier,
@@ -110,6 +115,7 @@ public class TrailsController : StigViddController
         return Ok(result.Value);
     }
 
+    [AllowAnonymous]
     [HttpPost("cards")]
     public async Task<ActionResult<IReadOnlyCollection<TrailCardResponse>>> GetTrailCards(
         [FromBody] GetTrailCardsRequest request,
@@ -126,6 +132,7 @@ public class TrailsController : StigViddController
         return Ok(result.Value);
     }
 
+    [AllowAnonymous]
     [HttpGet("markers")]
     public async Task<ActionResult<IReadOnlyCollection<TrailMarkerResponse>>> GetTrailMarkers(
                CancellationToken ctoken)
@@ -143,7 +150,7 @@ public class TrailsController : StigViddController
         return Ok(result.Value);
     }
 
-    [Authorize]
+    [Authorize(Policy = "Admin")]
     [HttpPut("{identifier}")]
     public async Task<ActionResult<TrailResponse?>> UpdateTrail(
         string identifier,
@@ -168,7 +175,7 @@ public class TrailsController : StigViddController
         return Ok(result.Value);
     }
 
-    [Authorize]
+    [Authorize(Policy = "Admin")]
     [HttpDelete("images/{imageIdentifier}")]
     public async Task<ActionResult> DeleteTrailImage(
         string imageIdentifier,
@@ -192,7 +199,7 @@ public class TrailsController : StigViddController
         return NoContent();
     }
 
-    [Authorize]
+    [Authorize(Policy = "Admin")]
     [HttpPost("{identifier}/images")]
     public async Task<ActionResult<IReadOnlyCollection<TrailImageResponse>>> AddTrailImages(
         string identifier,
@@ -218,7 +225,7 @@ public class TrailsController : StigViddController
         return Ok(result.Value);
     }
 
-    [Authorize]
+    [Authorize(Policy = "Admin")]
     [HttpPost("{identifier}/symbol")]
     public async Task<ActionResult<string>> SetTrailSymbol(
         string identifier,
@@ -244,7 +251,7 @@ public class TrailsController : StigViddController
         return Ok(new { symbolUrl = result.Value });
     }
 
-    [Authorize]
+    [Authorize(Policy = "Admin")]
     [HttpPost]
     [Route("create")]
     public async Task<ActionResult> AddTrail(

@@ -1,4 +1,5 @@
-﻿using Infrastructure.Enums;
+using Infrastructure.Enums;
+using NetTopologySuite.Geometries;
 
 namespace Infrastructure.Data.Entities;
 
@@ -6,8 +7,12 @@ public class TrailObstacle : BaseEntity
 {
     public required string Description { get; set; }
     public required TrailIssueType IssueType { get; set; }
-    public decimal? IncidentLongitude { get; set; }
-    public decimal? IncidentLatitude { get; set; }
+
+    /// <summary>
+    /// WGS84 (SRID 4326) location of the incident, or null when the reporter did not
+    /// pin it to a point. Geometry order is (X = longitude, Y = latitude).
+    /// </summary>
+    public Point? IncidentLocation { get; set; }
     public required int TrailId { get; set; }
     public required int? UserId { get; set; }
     public List<TrailObstacleSolvedVote> SolvedVotes { get; set; } = [];

@@ -23,6 +23,7 @@ public class TrailObstaclesController : StigViddController
         _logger = logger;
     }
 
+    [AllowAnonymous]
     [HttpGet]
     [Route("trail/{trailIdentifier}")]
     public async Task<ActionResult<IReadOnlyCollection<TrailObstacleResponse>>> GetTrailObstacles(
@@ -42,6 +43,7 @@ public class TrailObstaclesController : StigViddController
         return Ok(result.Value);
     }
 
+    [AllowAnonymous]
     [HttpGet]
     [Route("issue-types")]
     public ActionResult<IReadOnlyCollection<string>> GetTrailObstacleIssueTypes()
@@ -49,7 +51,7 @@ public class TrailObstaclesController : StigViddController
         return Ok(Enum.GetNames<TrailIssueType>());
     }
 
-    [Authorize]
+    [Authorize(Policy = "User")]
     [HttpPost]
     [Route("")]
     public async Task<ActionResult> CreateTrailObstacle(
@@ -81,7 +83,7 @@ public class TrailObstaclesController : StigViddController
         return Created();
     }
 
-    [Authorize]
+    [Authorize(Policy = "User")]
     [HttpPost]
     [Route("solve/{trailObstacleIdentifier}")]
     public async Task<ActionResult> AddSolvedVote([FromRoute] string trailObstacleIdentifier, CancellationToken ctoken)
@@ -105,7 +107,7 @@ public class TrailObstaclesController : StigViddController
         return Ok();
     }
 
-    [Authorize]
+    [Authorize(Policy = "User")]
     [HttpPut]
     [Route("{trailObstacleIdentifier}")]
     public async Task<ActionResult> UpdateTrailObstacle(
@@ -136,7 +138,7 @@ public class TrailObstaclesController : StigViddController
         return NoContent();
     }
 
-    [Authorize]
+    [Authorize(Policy = "User")]
     [HttpDelete]
     [Route("solve/{trailObstacleIdentifier}")]
     public async Task<ActionResult> DeleteSolvedVoteByUserIdentifier([FromRoute] string trailObstacleIdentifier, CancellationToken ctoken)
@@ -160,7 +162,7 @@ public class TrailObstaclesController : StigViddController
         return NoContent();
     }
 
-    [Authorize]
+    [Authorize(Policy = "User")]
     [HttpDelete]
     [Route("{trailObstacleIdentifier}")]
     public async Task<ActionResult> DeleteTrailObstacle([FromRoute] string trailObstacleIdentifier, CancellationToken ctoken)

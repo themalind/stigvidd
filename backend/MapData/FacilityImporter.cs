@@ -1,6 +1,7 @@
 ﻿using CsvHelper;
 using CsvHelper.Configuration;
 using CsvHelper.Configuration.Attributes;
+using Core.Common;
 using Infrastructure.Data;
 using Infrastructure.Data.Entities;
 using System.Globalization;
@@ -55,8 +56,7 @@ internal class FacilityImporter
                     "Tillgänglighetsanpassad" => true,
                     _ => false,
                 },
-                Latitude = row.Lat,
-                Longitude = row.Lng,
+                Coordinates = GeoPointFactory.FromLonLat((double)row.Lng, (double)row.Lat),
                 CreatedAt = DateTime.UtcNow,
                 LastUpdatedAt = DateTime.UtcNow,
             };

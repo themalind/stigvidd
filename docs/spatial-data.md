@@ -1,9 +1,11 @@
 # Spatial Data — Trails, Hikes & Map Markers
 
-How geographic routes are stored, queried, and shipped to the app. Trails and hikes
-keep their path as a **PostGIS geometry** (`LineString`) in PostgreSQL via
+How geographic routes and point locations are stored, queried, and shipped to the app.
+Trails and hikes keep their path as a **PostGIS geometry** (`LineString`) in PostgreSQL via
 NetTopologySuite, but talk to clients as a **JSON array of `{latitude, longitude}`**.
-This is a behavioral reference for that boundary and the spatial queries built on it.
+Facilities and trail obstacles keep a single **`Point`** and talk to clients as **lat/long
+decimals**. This is a behavioral reference for those boundaries and the spatial queries
+built on them.
 
 ## Key files
 
@@ -11,6 +13,10 @@ This is a behavioral reference for that boundary and the spatial queries built o
 | ---------------------------------------- | --------------------------------------------------------------------------------------- |
 | Trail entity (`GeoPath` geometry column) | `backend/Infrastructure/Data/Entities/Trail.cs`                                         |
 | Hike entity (`GeoPath` geometry column)  | `backend/Infrastructure/Data/Entities/Hike.cs`                                          |
+| Facility entity (`Coordinates` point)    | `backend/Infrastructure/Data/Entities/Facility.cs`                                      |
+| Obstacle entity (`IncidentLocation`)     | `backend/Infrastructure/Data/Entities/TrailObstacle.cs`                                 |
+| Point ⇄ lat/long decimals                | `backend/Core/Common/GeoPointFactory.cs`                                                |
+| Geometry column config (typmod + SRID)   | `backend/Infrastructure/Data/StigViddDbContext.cs`                                      |
 | Geometry → wire JSON                     | `backend/Core/Common/GeoPathSerializer.cs`                                              |
 | Trail read/write + spatial ranking       | `backend/Core/Services/TrailService.cs`, `backend/Core/Repositories/TrailRepository.cs` |
 | Hike write + validation                  | `backend/Core/Services/HikeService.cs`                                                  |
@@ -26,15 +32,47 @@ The route is a PostGIS **`geometry(LineString)`** column named `GeoPath`, in **S
 `o.UseNetTopologySuite()` on the Npgsql provider.
 
 ```
-Trail.GeoPath : LineString?   // nullable — a trail may exist before its path is imported
-Hike.GeoPath  : LineString    // required — a hike is its recorded track
+Trail.GeoPath              : LineString?   // nullable — a trail may exist before its path is imported
+Hike.GeoPath               : LineString    // required — a hike is its recorded track
+Facility.Coordinates       : Point?        // nullable — area facilities have no point
+TrailObstacle.IncidentLocation : Point?    // nullable — the reporter may not pin a point
 ```
+
+Facilities and obstacles used to store two `decimal?` columns each. They are now a single
+`geometry(Point, 4326)` column, so "facilities near me" and "obstacles close to this path"
+are PostGIS operators rather than hand-rolled haversine over a full table read. Because a
+point is one value, **lat and long travel as a pair**: the request validators reject a half
+pair, and `FacilityService.UpdateFacilityAsync` rebuilds the point only when both ordinates
+are supplied. Coordinate-less facilities are excluded from the marker endpoint by a single
+`Coordinates != null` filter (`FacilityRepository.GetAllAsync`).
 
 **Coordinate order gotcha:** GIS geometry is **(X, Y) = (longitude, latitude)**. So a
 `Coordinate` is always constructed `new Coordinate(c.Longitude, c.Latitude)`, and
 `StartPoint.Coordinate.X` is longitude, `.Y` is latitude. GeoJSON on the client is
 also `[longitude, latitude]` — but the **wire format between them is
 `{latitude, longitude}` objects**, so the mapping is explicit at both ends.
+
+### SRID, and the SQLite/SpatiaLite gotcha
+
+The `Point` columns are genuinely SRID 4326: `GeoPointFactory` is the only place that builds
+one, and it stamps the SRID there. Two provider-specific bits in `StigViddDbContext` keep
+that true on both sides:
+
+- **Npgsql** gets `HasColumnType("geometry(Point, 4326)")` (guarded by `Database.IsNpgsql()`),
+  so the column itself constrains type and SRID.
+- **SQLite** — used by the integration suite via SpatiaLite — gets
+  `HasAnnotation("Sqlite:Srid", 4326)`. EF's SQLite provider registers geometry columns with
+  `SELECT AddGeometryColumn(...)` at **SRID 0 unless told otherwise**, and SpatiaLite
+  *enforces* that SRID on insert. Without the annotation every 4326 point fails to insert in
+  tests with an SRID mismatch. This is the non-obvious part: the test schema comes from
+  `EnsureCreated()` on the model, so the model is the only place that can fix it.
+
+`Trail.GeoPath`/`Hike.GeoPath` are **not** configured this way — they are mapped by convention
+to an unconstrained `geometry` column, and the seeds pin their LineStrings to SRID 0 to match.
+Note the mismatch that follows from that: `TrailRepository.GetPopularTrailOverviewsAsync`
+builds its comparison point at 4326, so a `Distance` against an app-written (SRID 0) path is a
+mixed-SRID comparison. Backfilled paths are 4326; app-written ones are not. Normalising
+`GeoPath` is separate outstanding work.
 
 ### How PostGIS was introduced
 
@@ -43,6 +81,17 @@ and — in `PostGIS_Path` — **backfill** `GeoPath` from the legacy `Coordinate
 text column with a SQL `ST_MakeLine(ST_MakePoint(lon, lat))` grouped per trail, set to
 SRID 4326. New writes go straight to geometry; the old JSON column is no longer the
 source of truth.
+
+`FacilityAndObstaclePoints` did the same for the point columns: add the geometry column,
+backfill with `ST_SetSRID(ST_MakePoint("Longitude", "Latitude"), 4326)`, then drop the
+decimals. Rows that had only one ordinate stay null — a half pair was never a location.
+Note this is a one-way loss: reverting the migration cannot bring a half pair back.
+
+The same migration adds the GIST indexes the proximity queries need
+(`IX_Facilities_Coordinates`, `IX_TrailObstacles_IncidentLocation`), declared in the model
+inside the `Database.IsNpgsql()` guard — `gist` is not an index method SQLite understands,
+and the test schema is built from the model by `EnsureCreated()`. `Trail`/`Hike` `GeoPath`
+have no spatial index; that is part of the same outstanding normalisation work.
 
 ## The wire boundary
 
@@ -126,6 +175,9 @@ Marker: LineString.StartPoint  ──►  { startLatitude, startLongitude }  ─
 | Point outside WGS84 range / non-finite             | Rejected (`400`) at write time.                                             |
 | Corrupt/partial JSON reaching the client           | `CoordinateParser` drops bad points, returns `[]` on failure — never `NaN`. |
 | lon/lat vs lat/lon confusion                       | Constructed explicitly at each boundary; geometry is `(X=lng, Y=lat)`.      |
+| Facility without coordinates (`Coordinates == null`) | Excluded from `/facilities` markers, where the response reports lat/long as `0` (legacy shape). Reached through a city area instead, where `CityAreaResponseFactory` reports both as `null`. |
+| Request carrying only one of lat/long              | `400` — a point cannot be half-set.                                         |
+| Point written at the wrong SRID                    | Rejected by the Postgres typmod, and by SpatiaLite's trigger in tests.      |
 | C# serializer pushed into SQL projection           | Npgsql 500 — keep it in the outer client-side projection.                   |
 
 ## Related docs

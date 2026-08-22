@@ -126,7 +126,7 @@ export default function DeleteAccountModal({ visible, onDismiss }: Props) {
         backgroundColor={theme.colors.surface}
         onDismiss={() => setConfirmVisible(false)}
         title={t("auth.deleteAccount")}
-        infoText={[t("auth.confirmDeleteAccount"), t("auth.deleteAccountWarning")]}
+        infoText={[t("auth.confirmDeleteAccount"), t("auth.deleteAccountWarning"), t("auth.deleteAccountKeptData")]}
         confirmText={t("auth.deleteAccount")}
         onConfirm={handleConfirm}
         cancelText={t("common.cancel")}

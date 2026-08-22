@@ -1,4 +1,5 @@
-﻿using Infrastructure.Data.Entities;
+﻿using Core.Common;
+using Infrastructure.Data.Entities;
 using WebDataContracts.ResponseModels.TrailObstacle;
 
 namespace Core.Factories;
@@ -12,8 +13,8 @@ public class TrailObstaclesResponseFactory
              trailObstacle.User?.Identifier,
              trailObstacle.Description,
              trailObstacle.IssueType.ToString(),
-             trailObstacle.IncidentLongitude,
-             trailObstacle.IncidentLatitude,
+             GeoPointFactory.ToLongitude(trailObstacle.IncidentLocation),
+             GeoPointFactory.ToLatitude(trailObstacle.IncidentLocation),
              trailObstacle.CreatedAt,
              trailObstacle.SolvedVotes.Select(
                  solvedVote => TrailObstacleSolvedVoteResponse.Create(
@@ -29,8 +30,8 @@ public class TrailObstaclesResponseFactory
             trailObstacle.User?.Identifier,
             trailObstacle.Description,
             trailObstacle.IssueType.ToString(),
-            trailObstacle.IncidentLongitude,
-            trailObstacle.IncidentLatitude,
+            GeoPointFactory.ToLongitude(trailObstacle.IncidentLocation),
+            GeoPointFactory.ToLatitude(trailObstacle.IncidentLocation),
             trailObstacle.CreatedAt,
             trailObstacle.SolvedVotes.Select(
                 solvedVote => TrailObstacleSolvedVoteResponse.Create(

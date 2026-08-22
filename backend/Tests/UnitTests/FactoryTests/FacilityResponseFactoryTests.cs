@@ -1,3 +1,4 @@
+﻿using Core.Common;
 using Core.Factories;
 using FluentAssertions;
 using Infrastructure.Data.Entities;
@@ -14,8 +15,7 @@ public class FacilityResponseFactoryTests
         Name = "Test Firepit",
         FacilityType = FacilityType.FirePit,
         IsAccessible = true,
-        Latitude = 57.62M,
-        Longitude = 12.80M,
+        Coordinates = GeoPointFactory.FromLonLat(12.80, 57.62),
         Location = "Söder om Borås",
         Description = "En trevlig grillplats vid sjön.",
         Url = "https://boras.se/grillplats"
@@ -67,8 +67,7 @@ public class FacilityResponseFactoryTests
         // Arrange — coordinate-less facilities (fishing/swimming/nature) are projected via GetValueOrDefault().
         var factory = BuildFactory();
         var facility = BaseFacility();
-        facility.Latitude = null;
-        facility.Longitude = null;
+        facility.Coordinates = null;
 
         // Act
         var result = factory.Create(facility);
@@ -86,7 +85,7 @@ public class FacilityResponseFactoryTests
         var facilities = new List<Facility>
         {
             BaseFacility(),
-            new() { Identifier = "facility-2", Name = "Shelter", FacilityType = FacilityType.Shelter, IsAccessible = false, Latitude = 58.0M, Longitude = 13.0M }
+            new() { Identifier = "facility-2", Name = "Shelter", FacilityType = FacilityType.Shelter, IsAccessible = false, Coordinates = GeoPointFactory.FromLonLat(13.0, 58.0) }
         };
 
         // Act

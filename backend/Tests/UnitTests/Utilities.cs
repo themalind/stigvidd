@@ -1,4 +1,4 @@
-using Core.Interfaces.Repositories;
+﻿using Core.Interfaces.Repositories;
 using Core.Interfaces.Services;
 using Infrastructure.Data;
 using Infrastructure.Data.Entities;
@@ -9,6 +9,7 @@ using NetTopologySuite.Geometries;
 using System.Linq.Expressions;
 using System.Text;
 using UserResponseModel = WebDataContracts.ResponseModels.User.UserResponse;
+using Core.Common;
 
 namespace UnitTests;
 
@@ -535,8 +536,7 @@ public static class Utilities
                 IssueType = TrailIssueType.FallenTree,
                 TrailId = 1,
                 UserId = 1,
-                IncidentLongitude = 14.5M,
-                IncidentLatitude = 58.9M,
+                IncidentLocation = GeoPointFactory.FromLonLat(14.5, 58.9),
                 CreatedAt = DateTime.UtcNow.AddDays(-5),
                 LastUpdatedAt = DateTime.UtcNow.AddDays(-5),
             },
@@ -598,8 +598,7 @@ public static class Utilities
                 Name = "Grillplats Tiveden",
                 FacilityType = FacilityType.FirePit,
                 IsAccessible = true,
-                Latitude = 58.9M,
-                Longitude = 14.5M,
+                Coordinates = GeoPointFactory.FromLonLat(14.5, 58.9),
                 CreatedAt = SeedDates.Created,
                 LastUpdatedAt = SeedDates.Updated
             },
@@ -610,8 +609,7 @@ public static class Utilities
                 Name = "Vindskydd Gesebol",
                 FacilityType = FacilityType.Shelter,
                 IsAccessible = false,
-                Latitude = 58.1M,
-                Longitude = 13.9M,
+                Coordinates = GeoPointFactory.FromLonLat(13.9, 58.1),
                 CreatedAt = SeedDates.Created,
                 LastUpdatedAt = SeedDates.Updated
             },

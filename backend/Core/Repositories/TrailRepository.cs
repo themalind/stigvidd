@@ -1,9 +1,9 @@
+using Core.Common;
 using Core.Interfaces.Repositories;
 using Infrastructure.Data;
 using Infrastructure.Data.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using NetTopologySuite.Geometries;
 using System.Linq.Expressions;
 
 namespace Core.Repositories;
@@ -70,9 +70,7 @@ public class TrailRepository : ITrailRepository
         {
             using var context = await _context.CreateDbContextAsync(ctoken);
 
-            var userLocation = userLatitude.HasValue && userLongitude.HasValue
-                ? Geometry.DefaultFactory.WithSRID(4326).CreatePoint(new Coordinate(userLongitude.Value, userLatitude.Value))
-                : null;
+            var userLocation = GeoPointFactory.FromLonLat(userLongitude, userLatitude);
 
             // Score = average rating, boosted by proximity when the user's location is known.
             // Ordering/scoring is a data concern and stays here; the projection shape comes

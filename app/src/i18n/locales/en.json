@@ -52,6 +52,7 @@
     "enterYourPassword": "Enter your password",
     "confirmDeleteAccount": "Are you sure you want to delete your account?",
     "deleteAccountWarning": "Your account and your walks are deleted permanently. Walks you have shared stay with the people you shared them with.",
+    "deleteAccountKeptData": "Your review ratings and obstacle reports remain, with no link to you – the text and images are deleted.",
     "nicknameTakenMsg": "Nickname already taken",
     "unknownError": "An unexpected error occurred",
     "couldNotLogout": "Could not log out.",

@@ -10,6 +10,36 @@ import { getValidAccessToken } from "@/services/keycloak-auth";
  * The generated client is configured with `includeHttpResponseReturnType: false`,
  * so this returns the parsed response body directly as `T`.
  */
+/**
+ * The API answers a refused request with the reason — a bare JSON string from
+ * `ToActionResult`, or a ProblemDetails object when model binding rejected the body.
+ * Both are worth showing; the status code on its own tells the operator nothing.
+ */
+async function errorMessage(response: Response): Promise<string> {
+  const fallback = `HTTP error ${response.status}`;
+  const text = await response.text().catch(() => "");
+
+  if (!text) return fallback;
+
+  try {
+    const body: unknown = JSON.parse(text);
+
+    if (typeof body === "string") return body || fallback;
+
+    if (body && typeof body === "object") {
+      const { message, detail, title } = body as Record<string, unknown>;
+      const named = [message, detail, title].find(
+        (value) => typeof value === "string" && value.length > 0,
+      );
+      if (named) return named as string;
+    }
+  } catch {
+    // Not JSON — the raw body is the best there is.
+  }
+
+  return text.slice(0, 300) || fallback;
+}
+
 export const customFetch = async <T>(
   url: string,
   options: RequestInit,
@@ -26,7 +56,7 @@ export const customFetch = async <T>(
   });
 
   if (!response.ok) {
-    throw new Error(`HTTP error ${response.status}`);
+    throw new Error(await errorMessage(response));
   }
 
   // 204/205/304 carry no body; everything else is JSON from the API.

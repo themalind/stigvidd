@@ -1,3 +1,4 @@
+using Core.Common;
 using Core.Factories;
 using Core.Interfaces.Repositories;
 using Core.Interfaces.Services;
@@ -56,8 +57,7 @@ public class TrailObstaclesService : ITrailObstaclesService
             IssueType = isParsed ? issueTypeResult : TrailIssueType.Other,
             UserId = userIdResult.Value,
             TrailId = trailIdResult.Value,
-            IncidentLongitude = longitude,
-            IncidentLatitude = latitude,
+            IncidentLocation = GeoPointFactory.FromLonLat(longitude, latitude),
         };
 
         var result = await _obstacleRepository.AddTrailObstacleAsync(obstacle, ctoken);

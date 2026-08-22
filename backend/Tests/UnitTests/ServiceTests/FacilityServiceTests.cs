@@ -1,3 +1,4 @@
+﻿using Core.Common;
 using Core.Factories;
 using Core.Interfaces.Repositories;
 using Core.Interfaces.Services;
@@ -37,8 +38,7 @@ public class FacilityServiceTests
         Name = "Grillplats Tiveden",
         FacilityType = FacilityType.FirePit,
         IsAccessible = true,
-        Latitude = 58.9M,
-        Longitude = 14.5M
+        Coordinates = GeoPointFactory.FromLonLat(14.5, 58.9)
     };
 
     [Fact]
@@ -294,8 +294,7 @@ public class FacilityServiceTests
         captured.Name.Should().Be("New Name");
         captured.FacilityType.Should().Be(original.FacilityType);
         captured.IsAccessible.Should().Be(original.IsAccessible);
-        captured.Latitude.Should().Be(original.Latitude);
-        captured.Longitude.Should().Be(original.Longitude);
+        captured.Coordinates.Should().Be(original.Coordinates);
     }
 
     [Fact]
@@ -564,5 +563,51 @@ public class FacilityServiceTests
         result.Success.Should().BeFalse();
         result.Message.Should().NotBeNull();
         result.Message.StatusCode.Should().Be(500);
+    }
+
+    [Fact]
+    public async Task CreateFacilityAsync_BuildsPointWithLongitudeAsXAndLatitudeAsY()
+    {
+        // Arrange — the service takes (longitude, latitude); geometry is (X = lon, Y = lat),
+        // so a swap here would silently move every new facility across the globe.
+        Facility? captured = null;
+        var repo = new Mock<IFacilityRepository>();
+        repo.Setup(r => r.CreateFacilityAsync(It.IsAny<Facility>(), It.IsAny<CancellationToken>()))
+            .Callback<Facility, CancellationToken>((f, _) => captured = f)
+            .ReturnsAsync(RepositoryResult<Facility>.Success(MakeFacility()));
+
+        // Act
+        await Build(repo).CreateFacilityAsync("Grillplats", 1, true, 14.5M, 58.9M, CancellationToken.None);
+
+        // Assert
+        captured.Should().NotBeNull();
+        captured.Coordinates.Should().NotBeNull();
+        captured.Coordinates!.X.Should().Be(14.5);
+        captured.Coordinates.Y.Should().Be(58.9);
+        captured.Coordinates.SRID.Should().Be(4326);
+    }
+
+    [Fact]
+    public async Task UpdateFacilityAsync_WithOnlyOneOrdinate_LeavesCoordinatesUnchanged()
+    {
+        // Arrange — a Point cannot be half-updated. The validator rejects such a request
+        // before it reaches the service; this pins the service's own behaviour.
+        var original = MakeFacility();
+        var existingCoordinates = original.Coordinates;
+        Facility? captured = null;
+
+        var repo = new Mock<IFacilityRepository>();
+        repo.Setup(r => r.GetByIdentifierAsync(FacilityIdentifier, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<Facility>.Success(original));
+        repo.Setup(r => r.UpdateAsync(It.IsAny<Facility>(), It.IsAny<CancellationToken>()))
+            .Callback<Facility, CancellationToken>((f, _) => captured = f)
+            .ReturnsAsync(RepositoryResult<Facility>.Success(original));
+
+        // Act — longitude only
+        await Build(repo).UpdateFacilityAsync(FacilityIdentifier, null, null, null, 99.9M, null, CancellationToken.None);
+
+        // Assert
+        captured.Should().NotBeNull();
+        captured.Coordinates.Should().Be(existingCoordinates);
     }
 }

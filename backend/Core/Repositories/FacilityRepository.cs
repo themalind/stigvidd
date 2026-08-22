@@ -44,7 +44,7 @@ public class FacilityRepository : IFacilityRepository
             // This feeds the map-marker endpoint, so only return facilities that have coordinates.
             // Coordinate-less facilities (fishing/swimming/nature reserves) are consumed via CityAreas instead.
             var facilities = await dbContext.Facilities
-                .Where(f => f.Latitude != null && f.Longitude != null)
+                .Where(f => f.Coordinates != null)
                 .ToListAsync(ctoken);
 
             return RepositoryResult<IReadOnlyCollection<Facility>>.Success(facilities);

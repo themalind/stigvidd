@@ -98,12 +98,14 @@ export default function AreaCard({ area }: Props) {
 
       <View style={s.body}>
         <View style={s.statsRow}>
-          <View style={s.stat}>
-            <Icon source="hiking" size={16} color={theme.colors.primary} />
-            <Text style={[s.statText, { color: theme.colors.onSurface }]}>
-              {trailCount} {t("area.trailsShort")}
-            </Text>
-          </View>
+          {trailCount > 0 && (
+            <View style={s.stat}>
+              <Icon source="hiking" size={16} color={theme.colors.primary} />
+              <Text style={[s.statText, { color: theme.colors.onSurface }]}>
+                {trailCount} {t("area.trailsShort")}
+              </Text>
+            </View>
+          )}
           {totalKm > 0 && (
             <View style={s.stat}>
               <Icon source="map-marker-distance" size={16} color={theme.colors.primary} />

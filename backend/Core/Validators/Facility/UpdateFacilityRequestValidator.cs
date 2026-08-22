@@ -1,4 +1,4 @@
-using FluentValidation;
+﻿using FluentValidation;
 using WebDataContracts.RequestModels.Facility;
 
 namespace Core.Validators.Facility;
@@ -12,8 +12,8 @@ public class UpdateFacilityRequestValidator : AbstractValidator<UpdateFacilityRe
              .WithMessage("Name is required.")
              .When(x => x.Name != null);
         RuleFor(x => x.FacilityType)
-            .NotEmpty()
-            .WithMessage("FacilityType is required.")
+            .Must(value => FacilityTypes.IsKnown(value.GetValueOrDefault()))
+            .WithMessage("FacilityType must be a combination of the known facility types.")
             .When(x => x.FacilityType.HasValue);
         RuleFor(x => x.Latitude)
             .InclusiveBetween(-90, 90)
@@ -23,6 +23,11 @@ public class UpdateFacilityRequestValidator : AbstractValidator<UpdateFacilityRe
             .InclusiveBetween(-180, 180)
             .WithMessage("Longitude must be between -180 and 180.")
             .When(x => x.Longitude.HasValue);
+        // Latitude and longitude are stored as a single Point, so a half pair is not a
+        // location the entity can hold. Reject it rather than silently dropping the ordinate.
+        RuleFor(x => x.Latitude)
+            .Must((request, _) => request.Latitude.HasValue == request.Longitude.HasValue)
+            .WithMessage("Latitude and longitude must be supplied together.");
         RuleFor(x => x.Location)
             .MaximumLength(200)
             .WithMessage("Location must not exceed 200 characters.")

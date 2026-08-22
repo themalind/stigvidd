@@ -6,8 +6,8 @@ namespace StigviddAPI.Authorization;
 
 /// <summary>
 /// Keycloak puts realm roles in a JSON "realm_access" claim
-/// (<c>{"roles":["admin",...]}</c>). This flattens them into standard Role
-/// claims so <c>[Authorize(Roles = "...")]</c> / policies can use them.
+/// (<c>{"roles":["admin",...]}</c>). This flattens them into role claims so
+/// <c>[Authorize(Roles = "...")]</c> / policies can use them.
 /// </summary>
 public class KeycloakRealmRolesTransformation : IClaimsTransformation
 {
@@ -19,6 +19,13 @@ public class KeycloakRealmRolesTransformation : IClaimsTransformation
         if (identity is null || string.IsNullOrWhiteSpace(realmAccess))
             return Task.FromResult(principal);
 
+        // IsInRole reads the identity's own RoleClaimType, which the Keycloak handler sets
+        // to "role" — not ClaimTypes.Role. Writing the claim under any other type leaves
+        // RequireRole finding nothing.
+        var roleClaimType = string.IsNullOrEmpty(identity.RoleClaimType)
+            ? ClaimTypes.Role
+            : identity.RoleClaimType;
+
         try
         {
             using var doc = JsonDocument.Parse(realmAccess);
@@ -27,8 +34,8 @@ public class KeycloakRealmRolesTransformation : IClaimsTransformation
                 foreach (var role in roles.EnumerateArray())
                 {
                     var name = role.GetString();
-                    if (!string.IsNullOrWhiteSpace(name) && !identity.HasClaim(ClaimTypes.Role, name))
-                        identity.AddClaim(new Claim(ClaimTypes.Role, name));
+                    if (!string.IsNullOrWhiteSpace(name) && !identity.HasClaim(roleClaimType, name))
+                        identity.AddClaim(new Claim(roleClaimType, name));
                 }
             }
         }

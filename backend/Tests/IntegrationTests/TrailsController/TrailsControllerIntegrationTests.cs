@@ -14,6 +14,7 @@ public class TrailsControllerIntegrationTests : IClassFixture<StigViddWebApplica
 
     #region Seed identifiers
     private const string AuthenticatedUser = "firebase-uid-12346"; // User 2: VandrarVennen
+    private const string AdminRole = "stigvidd-admin";
 
     // Trails
     private const string StorsjoledenIdentifier = "22b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d"; // Trail 2
@@ -70,6 +71,7 @@ public class TrailsControllerIntegrationTests : IClassFixture<StigViddWebApplica
         // Arrange
         var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", AuthenticatedUser);
+        client.DefaultRequestHeaders.Add("X-Test-Roles", AdminRole);
 
         var fakeImageBytes = TestImages.Jpeg();
 
@@ -110,6 +112,7 @@ public class TrailsControllerIntegrationTests : IClassFixture<StigViddWebApplica
         // Arrange
         var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", AuthenticatedUser);
+        client.DefaultRequestHeaders.Add("X-Test-Roles", AdminRole);
 
         var taggedBytes = TestImages.JpegWithGps();
         TestImages.HasExif(taggedBytes).Should().BeTrue("the source must carry EXIF");
@@ -155,6 +158,7 @@ public class TrailsControllerIntegrationTests : IClassFixture<StigViddWebApplica
         // Arrange
         var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", AuthenticatedUser);
+        client.DefaultRequestHeaders.Add("X-Test-Roles", AdminRole);
 
         var fakeImageBytes = TestImages.Jpeg();
 
@@ -213,6 +217,7 @@ public class TrailsControllerIntegrationTests : IClassFixture<StigViddWebApplica
         // Arrange
         var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", AuthenticatedUser);
+        client.DefaultRequestHeaders.Add("X-Test-Roles", AdminRole);
 
         var fakeImageBytes = TestImages.Jpeg();
 
@@ -302,6 +307,7 @@ public class TrailsControllerIntegrationTests : IClassFixture<StigViddWebApplica
         // Arrange — symbol image is required by the controller, but trail images are optional
         var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", AuthenticatedUser);
+        client.DefaultRequestHeaders.Add("X-Test-Roles", AdminRole);
 
         var fakeImageBytes = TestImages.Jpeg();
         var symbolImageContent = new ByteArrayContent(fakeImageBytes);
@@ -481,5 +487,45 @@ public class TrailsControllerIntegrationTests : IClassFixture<StigViddWebApplica
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         var overviews = await response.Content.ReadFromJsonAsync<List<TrailOverviewResponse>>(TestContext.Current.CancellationToken);
         overviews.Should().NotBeNullOrEmpty();
+    }
+
+    [Fact]
+    public async Task AddTrail_WithoutAdminRole_ShouldReturnForbidden()
+    {
+        // Arrange — signed in as an ordinary app user, no realm role.
+        var client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", AuthenticatedUser);
+
+        var requestContent = new MultipartFormDataContent
+        {
+            { new StringContent("Test Trail"), "Name" },
+            { new StringContent("5"), "TrailLength" }
+        };
+
+        // Act
+        var response = await client.PostAsync("/api/v1/trails/create", requestContent, TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+    }
+
+    [Fact]
+    public async Task UpdateTrail_WithoutAdminRole_ShouldReturnForbidden()
+    {
+        // Arrange — the endpoint any signed-in user could reach before the policy was applied.
+        var client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", AuthenticatedUser);
+
+        var requestContent = new MultipartFormDataContent
+        {
+            { new StringContent("Overwritten"), "Name" }
+        };
+
+        // Act
+        var response = await client.PutAsync(
+            $"/api/v1/trails/{StorsjoledenIdentifier}", requestContent, TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
     }
 }

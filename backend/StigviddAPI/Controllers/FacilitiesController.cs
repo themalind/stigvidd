@@ -21,6 +21,7 @@ namespace StigviddAPI.Controllers
             _userService = userService;
         }
 
+        [AllowAnonymous]
         [HttpGet]
         public async Task<IActionResult> GetAll(CancellationToken ctoken)
         {
@@ -34,6 +35,7 @@ namespace StigviddAPI.Controllers
             return Ok(result.Value);
         }
 
+        [AllowAnonymous]
         [HttpGet]
         [Route("{identifier}")]
         public async Task<IActionResult> GetByIdentifier([FromRoute] string identifier, CancellationToken ctoken)
@@ -48,7 +50,7 @@ namespace StigviddAPI.Controllers
             return Ok(result.Value);
         }
 
-        [Authorize]
+        [Authorize(Policy = "Admin")]
         [HttpPost]
         public async Task<ActionResult<FacilityResponse>> Create([FromBody] CreateFacilityRequest request, CancellationToken ctoken)
         {
@@ -69,7 +71,7 @@ namespace StigviddAPI.Controllers
             return Ok(result.Value);
         }
 
-        [Authorize]
+        [Authorize(Policy = "Admin")]
         [HttpPut]
         [Route("update/{identifier}")]
         public async Task<ActionResult<FacilityResponse>> Update(
@@ -93,7 +95,7 @@ namespace StigviddAPI.Controllers
             return Ok(result.Value);
         }
 
-        [Authorize]
+        [Authorize(Policy = "Admin")]
         [HttpDelete("{identifier}")]
         public async Task<ActionResult> Delete(string identifier, CancellationToken ctoken)
         {
@@ -114,7 +116,7 @@ namespace StigviddAPI.Controllers
             return NoContent();
         }
 
-        [Authorize]
+        [Authorize(Policy = "Admin")]
         [HttpPost("{identifier}/images")]
         public async Task<ActionResult<IReadOnlyCollection<FacilityImageResponse>>> AddFacilityImages(
             string identifier,
@@ -139,7 +141,7 @@ namespace StigviddAPI.Controllers
             return Ok(result.Value);
         }
 
-        [Authorize]
+        [Authorize(Policy = "Admin")]
         [HttpDelete("images/{imageIdentifier}")]
         public async Task<ActionResult> DeleteFacilityImage(string imageIdentifier, CancellationToken ctoken)
         {

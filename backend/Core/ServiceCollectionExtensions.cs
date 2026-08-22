@@ -50,6 +50,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IUserPushTokenRepository, UserPushTokenRepository>();
         services.AddTransient<IMediaRepository, MediaRepository>();
         services.AddTransient<ICityAreaRepository, CityAreaRepository>();
+        services.AddTransient<ITrailImportRepository, TrailImportRepository>();
 
         // Services
         services.AddTransient<ITrailService, TrailService>();
@@ -67,6 +68,12 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IHikeShareRecipientService, HikeShareRecipientService>();
         services.AddTransient<IFriendService, FriendService>();
         services.AddTransient<ICityAreaService, CityAreaService>();
+        services.AddTransient<ITrailImportAnalysisService, TrailImportAnalysisService>();
+        services.AddTransient<ITrailImportService, TrailImportService>();
+        services.AddTransient<ITrailImportFileStore, TrailImportFileStore>();
+
+        // Singleton: the queue is the handover point between the upload request and the worker.
+        services.AddSingleton<ITrailImportAnalysisQueue, TrailImportAnalysisQueue>();
         services.AddHttpClient<IPushNotificationService, ExpoPushService>(c => c.BaseAddress = new Uri("https://exp.host"));
 
         services.AddTransient<Func<IWebDavClient>>(sp =>

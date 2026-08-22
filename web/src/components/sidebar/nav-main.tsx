@@ -1,4 +1,4 @@
-import { DatabaseBackup, Gauge, Images, Settings2, Users } from "lucide-react";
+import { DatabaseBackup, Gauge, Images, Route, Settings2, Users } from "lucide-react";
 import {
   SidebarGroup,
   SidebarGroupContent,
@@ -42,6 +42,14 @@ export default function NavMain() {
               <NavLink to={"/users"}>
                 <Users />
                 <span>Users</span>
+              </NavLink>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild>
+              <NavLink to={"/trail-import"}>
+                <Route />
+                <span>Trail Import</span>
               </NavLink>
             </SidebarMenuButton>
           </SidebarMenuItem>

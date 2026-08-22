@@ -1,0 +1,716 @@
+<!doctype html>
+<!--
+  PUBLICERAD INTEGRITETSPOLICY — stigvidd.se/privacy-policy/
+
+  URL:en är permanent: den skrivs in i Play Console, App Store Connect och i §9.
+  Byt aldrig sökväg eller filnamn. (Bytt från /integritetspolicy/ 2026-08-13, innan
+  sidan hunnit publiceras eller registreras någonstans — därefter ligger den fast.)
+
+  Sidan är tvåspråkig: svenska först, engelska under samma URL (#english). Ändras
+  ett avsnitt måste båda språken följas åt.
+
+  FÅR INTE DEPLOYAS FÖRRÄN:
+    1. Alla <span class="todo">-markeringar är ersatta med riktiga uppgifter.
+       De syns som röda markeringar på sidan, så en oavsiktlig deploy är svår att missa.
+       Kvar 2026-08-19: en enda, i §8 (Hostups teknikeråtkomst), i båda språken.
+    2. §5 om serverloggar kräver att en faktisk retention införs — i dag roterar
+       loggarna inte alls (ingen logging-sektion i docker-compose.yml).
+
+  Kodändringarna som texten vilade på har landat (se docs/gdpr-analys.md):
+    §3  vidaredelning kräver ägarens tillstånd  → AllowResharing per delning (steg 1-2)
+    §3  e-postadressen visas aldrig             → Email borttagen ur FriendResponse
+    §5  borttaget raderas på riktigt            → hard delete + filradering (steg 3-4)
+-->
+<html lang="sv">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Integritetspolicy – Stigvidd</title>
+    <meta
+      name="description"
+      content="Så behandlar Stigvidd dina personuppgifter: vilka uppgifter vi samlar in, varför, hur länge de sparas och vilka rättigheter du har."
+    />
+    <link rel="icon" href="/icon.png" />
+    <style>
+      :root {
+        --bg: #ffffff;
+        --surface: #f4f6f4;
+        --text: #1b1c1b;
+        --muted: #55605a;
+        --border: #dde2de;
+        --accent: #2f6d48;
+        --todo-bg: #ffe8e4;
+        --todo-text: #8a2113;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #121412;
+          --surface: #1c201d;
+          --text: #e8ebe8;
+          --muted: #a3ada7;
+          --border: #2d332f;
+          --accent: #7fc79a;
+          --todo-bg: #4a1a13;
+          --todo-text: #ffbdb1;
+        }
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        padding: 0 1.25rem 5rem;
+        background: var(--bg);
+        color: var(--text);
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        font-size: 17px;
+        line-height: 1.65;
+        -webkit-text-size-adjust: 100%;
+      }
+
+      main {
+        max-width: 44rem;
+        margin: 0 auto;
+      }
+
+      header {
+        padding: 3rem 0 1.5rem;
+        border-bottom: 1px solid var(--border);
+        margin-bottom: 2rem;
+      }
+
+      h1 {
+        font-size: 1.9rem;
+        line-height: 1.2;
+        margin: 0 0 0.5rem;
+        letter-spacing: -0.01em;
+      }
+
+      h2 {
+        font-size: 1.2rem;
+        line-height: 1.3;
+        margin: 2.75rem 0 0.75rem;
+        letter-spacing: -0.005em;
+      }
+
+      .updated {
+        color: var(--muted);
+        font-size: 0.9rem;
+        margin: 0;
+      }
+
+      p,
+      li {
+        margin: 0 0 0.9rem;
+      }
+
+      ul {
+        padding-left: 1.25rem;
+      }
+
+      a {
+        color: var(--accent);
+        text-decoration-thickness: 1px;
+        text-underline-offset: 2px;
+      }
+
+      strong {
+        font-weight: 600;
+      }
+
+      /* Wide tables scroll inside their own container rather than the page. */
+      .table-scroll {
+        overflow-x: auto;
+        margin: 0 0 1.25rem;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+      }
+
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        min-width: 34rem;
+        font-size: 0.94rem;
+      }
+
+      th,
+      td {
+        text-align: left;
+        vertical-align: top;
+        padding: 0.7rem 0.85rem;
+        border-bottom: 1px solid var(--border);
+      }
+
+      thead th {
+        background: var(--surface);
+        font-weight: 600;
+        white-space: nowrap;
+      }
+
+      tbody tr:last-child td {
+        border-bottom: none;
+      }
+
+      .callout {
+        background: var(--surface);
+        border-left: 3px solid var(--accent);
+        border-radius: 0 8px 8px 0;
+        padding: 1rem 1.1rem;
+        margin: 0 0 1.25rem;
+      }
+
+      .callout p:last-child {
+        margin-bottom: 0;
+      }
+
+      /* Unfilled placeholder. Deliberately loud: an accidental deploy should be obvious. */
+      .todo {
+        background: var(--todo-bg);
+        color: var(--todo-text);
+        padding: 0.05em 0.4em;
+        border-radius: 4px;
+        font-weight: 600;
+        font-size: 0.94em;
+        white-space: nowrap;
+      }
+
+      /* Language switch. Both languages live on one page so the URL stays single:
+         one link goes into Play Console, App Store Connect and the app. */
+      .lang-nav {
+        font-size: 0.9rem;
+        color: var(--muted);
+        margin: 0.75rem 0 0;
+      }
+
+      .lang-nav strong {
+        color: var(--text);
+      }
+
+      .lang-section {
+        margin-top: 4rem;
+        padding-top: 2rem;
+        border-top: 4px solid var(--border);
+      }
+
+      .lang-section h1 {
+        font-size: 1.6rem;
+      }
+
+      footer {
+        margin-top: 3.5rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid var(--border);
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+    </style>
+  </head>
+  <body>
+    <main id="top">
+      <header>
+        <h1>Integritetspolicy för Stigvidd</h1>
+        <p class="updated">Senast uppdaterad: 15 augusti 2026</p>
+        <p class="lang-nav"><strong>Svenska</strong> · <a href="#english">In English</a></p>
+      </header>
+
+      <p>
+        <strong>Stigvidd</strong> ("vi", "oss" eller "appen") värnar om din integritet. Den här
+        policyn beskriver vilka uppgifter vi behandlar, varför, hur länge de sparas och vilka
+        rättigheter du har. Reglerna för hur du får använda appen står i
+        <a href="https://stigvidd.se/terms-of-use/">användarvillkoren</a>.
+      </p>
+
+      <h2>1. Vem ansvarar för dina uppgifter</h2>
+      <p>
+        Personuppgiftsansvariga för behandlingen av personuppgifter i Stigvidd är
+        <strong>Therese Lindberg</strong> och <strong>Ralf Lindberg</strong>, privatpersoner,
+        Sverige. Stigvidd drivs av två personer och inte av ett företag – "vi" i den här texten står
+        för dem.
+      </p>
+      <p>
+        Vi är gemensamt personuppgiftsansvariga. Det betyder att du kan vända dig till vem som helst
+        av oss för att utöva dina rättigheter, och att du kan göra det gentemot oss båda.
+      </p>
+      <p>
+        Kontakt: <a href="mailto:info@lingonberg.se">info@lingonberg.se</a>, som når oss båda. Vill
+        du ha en postadress för att utöva dina rättigheter lämnar vi den på begäran.
+      </p>
+
+      <h2>2. Vilka uppgifter vi behandlar och varför</h2>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Uppgift</th>
+              <th scope="col">Vad det är</th>
+              <th scope="col">Varför</th>
+              <th scope="col">Rättslig grund</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Kontouppgifter</td>
+              <td>
+                Användarnamn, e-postadress, lösenord (lagras krypterat/hashat i vår
+                inloggningstjänst)
+              </td>
+              <td>Skapa och hantera ditt konto, logga in, återställa lösenord</td>
+              <td>Avtal (art. 6.1 b)</td>
+            </tr>
+            <tr>
+              <td>Positionsdata</td>
+              <td>
+                GPS-koordinater som spelas in medan du registrerar en vandring – även när skärmen
+                är släckt eller appen ligger i bakgrunden. Din nuvarande position när du visar
+                kartan eller filtrerar på ”nära mig”
+              </td>
+              <td>Rita din vandringsrutt, visa var du är på kartan, sortera leder efter avstånd</td>
+              <td>Avtal (art. 6.1 b)</td>
+            </tr>
+            <tr>
+              <td>Innehåll du skapar</td>
+              <td>
+                Inspelade vandringar (rutt, sträcka, tid, datum), bilder du laddar upp,
+                recensioner och betyg, rapporterade hinder, favoriter och önskelista
+              </td>
+              <td>Leverera appens funktioner</td>
+              <td>Avtal (art. 6.1 b)</td>
+            </tr>
+            <tr>
+              <td>Sociala uppgifter</td>
+              <td>Vänförfrågningar, vänlista, vilka vandringar du delat och med vem</td>
+              <td>Vän- och delningsfunktionen</td>
+              <td>Avtal (art. 6.1 b)</td>
+            </tr>
+            <tr>
+              <td>Push-token</td>
+              <td>En anonym enhetsidentifierare från Apple/Google om du tillåter notiser</td>
+              <td>Skicka notiser om vänförfrågningar och delade vandringar</td>
+              <td>Ditt samtycke (kan stängas av i telefonens inställningar)</td>
+            </tr>
+            <tr>
+              <td>Teknisk data</td>
+              <td>IP-adress, tidpunkt och felmeddelanden i serverloggar</td>
+              <td>Drift, felsökning och säkerhet</td>
+              <td>Berättigat intresse (art. 6.1 f)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout">
+        <p>
+          <strong
+            >Vi använder inte annonser, analysverktyg, spårning eller profilering. Vi säljer
+            aldrig dina uppgifter och delar dem inte för marknadsföring.</strong
+          >
+        </p>
+      </div>
+
+      <p>
+        Du styr själv om appen får använda din position, genom behörigheten i telefonens
+        inställningar. Innan vi frågar första gången förklarar vi i appen vad positionen används
+        till. Positionen spelas bara in medan du aktivt registrerar en vandring.
+      </p>
+      <p>
+        När du sparar en vandring kan du trimma bort början och slutet av rutten innan den lagras –
+        till exempel om du startade inspelningen hemma.
+      </p>
+      <p>
+        När du laddar upp en bild tar vi automatiskt bort dold metadata (EXIF), inklusive
+        eventuella GPS-koordinater, innan bilden sparas.
+      </p>
+
+      <h2>3. Vad andra användare kan se</h2>
+      <ul>
+        <li>
+          <strong>Ditt användarnamn</strong> visas för andra användare, till exempel vid
+          recensioner och vänförfrågningar. Hinderrapporter visas alltid utan namn.
+        </li>
+        <li><strong>Din e-postadress visas aldrig</strong> för andra användare.</li>
+        <li>
+          <strong>Dina inspelade vandringar är privata</strong> tills du själv väljer att dela dem
+          med någon. Den du delar med ser hela rutten, inklusive start- och slutpunkt.
+        </li>
+        <li>
+          <strong>Vidaredelning kräver ditt tillstånd.</strong> När du delar en vandring väljer du
+          samtidigt om mottagaren ska få dela den vidare. Valet gäller den mottagaren – delar du
+          samma vandring till flera personer bestämmer du för var och en. Utan ditt tillstånd kan
+          mottagaren inte dela vandringen vidare i appen.
+        </li>
+        <li>
+          <strong>Kedjan slutar efter ett steg.</strong> Den som får en vandring genom en
+          vidaredelning kan inte dela den vidare i sin tur.
+        </li>
+        <li>
+          <strong>Recensioner, betyg och hinderrapporter</strong> du skriver är synliga för alla
+          användare av appen.
+        </li>
+      </ul>
+      <p>
+        Den som har fått en vandring delad med sig behåller den. Vi kan styra vad appen lämnar
+        vidare, men inte vad en mottagare gör med en rutt hen redan har sett – tänk efter innan du
+        delar, särskilt om vandringen börjar hemma hos dig.
+      </p>
+
+      <h2>4. Vem mer behandlar uppgifterna</h2>
+      <ul>
+        <li>
+          <strong>Hostup</strong>, servrar i Sverige – drift av databas, API och bildlagring.
+        </li>
+        <li>
+          <strong>MapTiler</strong> – levererar kartbilder. Din IP-adress skickas till MapTiler när
+          kartan laddas.
+        </li>
+        <li>
+          <strong>Apple Push Notification service, Google Firebase Cloud Messaging och Expo</strong>
+          – levererar push-notiser till din enhet, om du har tillåtit notiser.
+        </li>
+      </ul>
+      <p>
+        Dina uppgifter lagras i Sverige. Två av mottagarna ovan ligger utanför Sverige: kartbilder
+        levereras av MapTiler, som är etablerat i Schweiz, ett land som EU-kommissionen har beslutat
+        har en adekvat skyddsnivå. Push-notiser går via Apple, Google och Expo, som behandlar
+        uppgifter i USA – för dem sker överföringen med stöd av EU-kommissionens beslut om adekvat
+        skyddsnivå (EU–US Data Privacy Framework) för de leverantörer som är anslutna till ramverket,
+        och i övriga fall med standardavtalsklausuler. Push-notiser skickas bara om du har tillåtit
+        dem.
+      </p>
+
+      <h2>5. Hur länge vi sparar uppgifterna</h2>
+      <ul>
+        <li>
+          <strong>Konto och innehåll:</strong> tills du raderar ditt konto. Du raderar kontot själv
+          i appen under <strong>Profil → Avsluta konto</strong>. Då raderas ditt konto och dina
+          uppgifter ur både appens databas och inloggningstjänsten.
+        </li>
+        <li>
+          <strong>Vandringar du tagit bort:</strong> raderas direkt, tillsammans med de bilder du
+          lagt till. En vandring du delat med någon finns kvar hos mottagarna även om du tar bort
+          den eller avslutar ditt konto – då lossas den från dig, och uppgifterna om vem som skapade
+          den tas bort. Den raderas slutgiltigt när den sista mottagaren tagit bort den.
+        </li>
+        <li>
+          <strong>Recensioner:</strong> raderar du din egen recension försvinner den helt,
+          tillsammans med betyget. Avslutar du kontot behålls betyget och datumet, men lossas från
+          dig – recensionstexten och bilderna raderas och namnet tas bort. Det som står kvar är ett
+          betyg på en led, utan koppling till någon person.
+        </li>
+        <li>
+          <strong>Hinderrapporter:</strong> visas i högst 30 dagar, eller tills tre användare
+          markerat hindret som åtgärdat, och raderas därefter. Avslutar du kontot dessförinnan
+          lossas rapporten från dig och beskrivningen tas bort – kategorin, platsen och datumet
+          står kvar så att andra vet vad som rapporterats. Har du valt kategorin "Övrigt" behålls
+          beskrivningen, eftersom rapporten annars inte betyder något.
+        </li>
+        <li><strong>Serverloggar:</strong> 7 dagar.</li>
+        <li><strong>Säkerhetskopior:</strong> skrivs över inom 49 dagar efter radering.</li>
+      </ul>
+
+      <h2>6. Dina rättigheter</h2>
+      <p>Du har rätt att:</p>
+      <ul>
+        <li>få veta vilka uppgifter vi har om dig och få en kopia av dem (registerutdrag)</li>
+        <li>få felaktiga uppgifter rättade</li>
+        <li>
+          få dina uppgifter raderade – du raderar kontot själv i appen, och
+          <a href="https://stigvidd.se/delete-account/">på sidan om radering</a> står vad som tas bort
+          och vad som finns kvar
+        </li>
+        <li>begära begränsning av eller invända mot behandlingen</li>
+        <li>få ut dina uppgifter i ett maskinläsbart format (dataportabilitet)</li>
+        <li>
+          när som helst återkalla ditt samtycke till notiser – stäng av behörigheten i telefonens
+          inställningar. Det påverkar inte behandling som redan skett.
+        </li>
+      </ul>
+      <p>
+        Hör av dig till <a href="mailto:info@lingonberg.se">info@lingonberg.se</a> så svarar vi inom
+        en månad.
+      </p>
+      <p>
+        Om du tycker att vi behandlar dina uppgifter felaktigt har du rätt att klaga till
+        <strong>Integritetsskyddsmyndigheten (IMY)</strong>,
+        <a href="https://www.imy.se" rel="noopener">imy.se</a>.
+      </p>
+
+      <h2>7. Åldersgräns</h2>
+      <p>
+        Stigvidd riktar sig inte till barn under 13 år. Är du under 13 ska du inte skapa ett konto.
+      </p>
+
+      <h2>8. Säkerhet</h2>
+      <p>
+        All trafik mellan appen och våra servrar är krypterad med TLS. Lösenord lagras aldrig i
+        klartext. Endast vi som driver tjänsten har åtkomst till servrarna.
+        <span class="todo">[Komplettera om Hostups tekniker har åtkomst till servern]</span>
+      </p>
+
+      <h2>9. Ändringar</h2>
+      <p>
+        Vi kan komma att uppdatera den här policyn. Den senaste versionen finns alltid på
+        <a href="https://stigvidd.se/privacy-policy/">stigvidd.se/privacy-policy/</a> och i appen
+        under Inställningar → Om Stigvidd.
+      </p>
+
+      <section class="lang-section" id="english" lang="en">
+        <header>
+          <h1>Privacy Policy for Stigvidd</h1>
+          <p class="updated">Last updated: 15 August 2026</p>
+          <p class="lang-nav"><a href="#top">På svenska</a> · <strong>English</strong></p>
+        </header>
+
+        <p>
+          <strong>Stigvidd</strong> ("we", "us" or "the app") respects your privacy. This policy
+          describes what data we process, why, how long it is kept and what rights you have. The
+          rules for how you may use the app are set out in the
+          <a href="https://stigvidd.se/terms-of-use/">terms of use</a>.
+        </p>
+
+        <h2>1. Who is responsible for your data</h2>
+        <p>
+          The data controllers responsible for the processing of personal data in Stigvidd are
+          <strong>Therese Lindberg</strong> and <strong>Ralf Lindberg</strong>, private individuals,
+          Sweden. Stigvidd is run by two people, not a company – "we" in this text refers to them.
+        </p>
+        <p>
+          We are joint controllers. This means you may turn to either of us to exercise your rights,
+          and that you may exercise them against both of us.
+        </p>
+        <p>
+          Contact: <a href="mailto:info@lingonberg.se">info@lingonberg.se</a>, which reaches both of
+          us. If you need a postal address in order to exercise your rights, we will provide one on
+          request.
+        </p>
+
+        <h2>2. What data we process and why</h2>
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Data</th>
+                <th scope="col">What it is</th>
+                <th scope="col">Why</th>
+                <th scope="col">Legal basis</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Account data</td>
+                <td>Username, email address, password (stored hashed in our identity service)</td>
+                <td>Create and manage your account, sign in, reset your password</td>
+                <td>Contract (Art. 6(1)(b))</td>
+              </tr>
+              <tr>
+                <td>Location data</td>
+                <td>
+                  GPS coordinates recorded while you register a walk – including when the screen is
+                  off or the app is in the background. Your current position when you view the map
+                  or filter by “near me”
+                </td>
+                <td>Draw your route, show where you are on the map, sort trails by distance</td>
+                <td>Contract (Art. 6(1)(b))</td>
+              </tr>
+              <tr>
+                <td>Content you create</td>
+                <td>
+                  Recorded walks (route, distance, time, date), images you upload, reviews and
+                  ratings, reported obstacles, favourites and wish list
+                </td>
+                <td>Provide the features of the app</td>
+                <td>Contract (Art. 6(1)(b))</td>
+              </tr>
+              <tr>
+                <td>Social data</td>
+                <td>Friend requests, friend list, which walks you have shared and with whom</td>
+                <td>The friends and sharing features</td>
+                <td>Contract (Art. 6(1)(b))</td>
+              </tr>
+              <tr>
+                <td>Push token</td>
+                <td>An anonymous device identifier from Apple/Google if you allow notifications</td>
+                <td>Send notifications about friend requests and shared walks</td>
+                <td>Your consent (can be turned off in your phone settings)</td>
+              </tr>
+              <tr>
+                <td>Technical data</td>
+                <td>IP address, timestamp and error messages in server logs</td>
+                <td>Operation, troubleshooting and security</td>
+                <td>Legitimate interest (Art. 6(1)(f))</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="callout">
+          <p>
+            <strong
+              >We use no advertising, analytics, tracking or profiling. We never sell your data and
+              we do not share it for marketing purposes.</strong
+            >
+          </p>
+        </div>
+
+        <p>
+          You decide whether the app may use your location, through the permission in your phone
+          settings. Before we ask the first time, the app explains what the location is used for.
+          Your position is only recorded while you are actively registering a walk.
+        </p>
+        <p>
+          When you save a walk you can trim away the beginning and the end of the route before it is
+          stored – for example if you started recording at home.
+        </p>
+        <p>
+          When you upload an image we automatically remove hidden metadata (EXIF), including any GPS
+          coordinates, before the image is saved.
+        </p>
+
+        <h2>3. What other users can see</h2>
+        <ul>
+          <li>
+            <strong>Your username</strong> is shown to other users, for example on reviews and
+            friend requests. Obstacle reports are always shown without a name.
+          </li>
+          <li><strong>Your email address is never shown</strong> to other users.</li>
+          <li>
+            <strong>Your recorded walks are private</strong> until you choose to share them with
+            someone. The person you share with sees the whole route, including the start and end
+            points.
+          </li>
+          <li>
+            <strong>Resharing requires your permission.</strong> When you share a walk you also
+            decide whether the recipient may share it onwards. The choice applies to that recipient
+            – if you share the same walk with several people, you decide for each of them. Without
+            your permission the recipient cannot reshare the walk in the app.
+          </li>
+          <li>
+            <strong>The chain stops after one step.</strong> Someone who receives a walk through a
+            reshare cannot share it onwards in turn.
+          </li>
+          <li>
+            <strong>Reviews, ratings and obstacle reports</strong> you write are visible to all
+            users of the app.
+          </li>
+        </ul>
+        <p>
+          Whoever has received a shared walk keeps it. We can control what the app passes on, but
+          not what a recipient does with a route they have already seen – think it through before
+          you share, especially if the walk starts at your home.
+        </p>
+
+        <h2>4. Who else processes the data</h2>
+        <ul>
+          <li>
+            <strong>Hostup</strong>, servers in Sweden – hosting of the database, API and image
+            storage.
+          </li>
+          <li>
+            <strong>MapTiler</strong> – delivers map imagery. Your IP address is sent to MapTiler
+            when the map loads.
+          </li>
+          <li>
+            <strong>Apple Push Notification service, Google Firebase Cloud Messaging and Expo</strong>
+            – deliver push notifications to your device, if you have allowed notifications.
+          </li>
+        </ul>
+        <p>
+          Your data is stored in Sweden. Two of the recipients above are located elsewhere: map
+          imagery is delivered by MapTiler, established in Switzerland, a country the European
+          Commission has found to provide an adequate level of protection. Push notifications go via
+          Apple, Google and Expo, which process data in the United States – for them the transfer
+          relies on the European Commission's adequacy decision (EU–US Data Privacy Framework) for
+          those providers certified under the framework, and otherwise on standard contractual
+          clauses. Push notifications are only sent if you have allowed them.
+        </p>
+
+        <h2>5. How long we keep the data</h2>
+        <ul>
+          <li>
+            <strong>Account and content:</strong> until you delete your account. You delete the
+            account yourself in the app under <strong>Profile → Delete account</strong>. Your
+            account and your data are then removed from both the app database and the identity
+            service.
+          </li>
+          <li>
+            <strong>Walks you have deleted:</strong> removed immediately, together with the images
+            you added. A walk you have shared with someone remains with the recipients even if you
+            delete it or close your account – it is then detached from you, and the information
+            about who created it is removed. It is deleted for good when the last recipient has
+            removed it.
+          </li>
+          <li>
+            <strong>Reviews:</strong> if you delete your own review it disappears entirely, rating
+            and all. If you close your account the rating and the date are kept but detached from
+            you – the review text and images are deleted and the name is removed. What remains is a
+            rating on a trail, with no link to any person.
+          </li>
+          <li>
+            <strong>Obstacle reports:</strong> shown for at most 30 days, or until three users have
+            marked the obstacle as resolved, and deleted after that. If you close your account
+            before then, the report is detached from you and the description is removed – the
+            category, the location and the date remain so that others know what was reported. If
+            you chose the category "Other" the description is kept, since the report would otherwise
+            mean nothing.
+          </li>
+          <li><strong>Server logs:</strong> 7 days.</li>
+          <li><strong>Backups:</strong> overwritten within 49 days after deletion.</li>
+        </ul>
+
+        <h2>6. Your rights</h2>
+        <p>You have the right to:</p>
+        <ul>
+          <li>know what data we hold about you and receive a copy of it</li>
+          <li>have inaccurate data corrected</li>
+          <li>
+            have your data erased – you delete the account yourself in the app, and
+            <a href="https://stigvidd.se/delete-account/">the deletion page</a> explains what is
+            removed and what remains
+          </li>
+          <li>request restriction of, or object to, the processing</li>
+          <li>receive your data in a machine-readable format (data portability)</li>
+          <li>
+            withdraw your consent to notifications at any time – turn off the permission in your
+            phone settings. This does not affect processing that has already taken place.
+          </li>
+        </ul>
+        <p>
+          Contact <a href="mailto:info@lingonberg.se">info@lingonberg.se</a> and we will respond
+          within one month.
+        </p>
+        <p>
+          If you believe we process your data unlawfully, you have the right to lodge a complaint
+          with the Swedish Authority for Privacy Protection (IMY),
+          <a href="https://www.imy.se" rel="noopener">imy.se</a>.
+        </p>
+
+        <h2>7. Age limit</h2>
+        <p>
+          Stigvidd is not directed at children under 13. If you are under 13, you should not create
+          an account.
+        </p>
+
+        <h2>8. Security</h2>
+        <p>
+          All traffic between the app and our servers is encrypted with TLS. Passwords are never
+          stored in plain text. Only we who run the service have access to the servers.
+          <span class="todo">[Complete if Hostup's technicians have server access]</span>
+        </p>
+
+        <h2>9. Changes</h2>
+        <p>
+          We may update this policy. The latest version is always available at
+          <a href="https://stigvidd.se/privacy-policy/">stigvidd.se/privacy-policy/</a> and in the
+          app under Settings → About Stigvidd.
+        </p>
+      </section>
+
+      <footer>
+        <p>Stigvidd</p>
+      </footer>
+    </main>
+  </body>
+</html>

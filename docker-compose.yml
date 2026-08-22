@@ -94,6 +94,9 @@ services:
       # git-derived tag Jenkins builds and deploys with, so a span points at an
       # exact commit with no Dockerfile or build-arg plumbing.
       Otlp__ServiceVersion: ${IMAGE_TAG:-latest}
+      # Uploaded trail-import source files. On a volume because a session is
+      # re-analysed from the file it was created from, days after the upload.
+      TrailImport__StoragePath: /app/trail-imports
     # Liveness, not readiness: /readyz would flip to unhealthy on a database blip, and
     # nothing acts on `unhealthy` here anyway (compose does not restart on it, and no
     # service depends_on api). curl is already in the runtime image — the Dockerfile
@@ -105,6 +108,8 @@ services:
       timeout: 3s
       retries: 3
       start_period: 40s
+    volumes:
+      - trail_imports:/app/trail-imports
     # No host ports — the proxy is the only ingress. Reachable as `api:8080`
     # on the `public` network.
     networks:
@@ -419,6 +424,7 @@ networks:
 
 volumes:
   pgdata:
+  trail_imports:  # uploaded source exports awaiting review
   media:
   caddy_data:
   caddy_config:

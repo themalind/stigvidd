@@ -1,10 +1,12 @@
 using Core.Interfaces.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace StigviddAPI.Controllers
 {
     [ApiController]
     [Route("api/v1/[controller]")]
+    [AllowAnonymous]
     public class CityAreasController : StigViddController
     {
         private readonly ICityAreaService _cityAreaService;

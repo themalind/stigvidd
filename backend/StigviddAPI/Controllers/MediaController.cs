@@ -19,7 +19,7 @@ public class MediaController : StigViddController
         _userService = userService;
     }
 
-    [Authorize]
+    [Authorize(Policy = "Admin")]
     [HttpGet]
     public async Task<ActionResult<IReadOnlyCollection<MediaItemResponse>>> GetAll(CancellationToken ctoken)
     {
@@ -36,7 +36,7 @@ public class MediaController : StigViddController
         return Ok(result.Value);
     }
 
-    [Authorize]
+    [Authorize(Policy = "Admin")]
     [HttpPatch("{imageIdentifier}")]
     public async Task<ActionResult> UpdateMetadata(
         string imageIdentifier,

@@ -24,6 +24,10 @@ public class TrailObstacleRequestValidator : AbstractValidator<TrailObstacleRequ
         RuleFor(trailObstacleRequest => trailObstacleRequest.IncidentLatitude)
             .InclusiveBetween(-90, 90).WithMessage("Latitude must be between -90 and 90.")
             .When(x => x.IncidentLatitude.HasValue);
+        // Stored as a single Point, so a half pair is not a location the entity can hold.
+        RuleFor(trailObstacleRequest => trailObstacleRequest.IncidentLatitude)
+            .Must((request, _) => request.IncidentLatitude.HasValue == request.IncidentLongitude.HasValue)
+            .WithMessage("IncidentLatitude and IncidentLongitude must be supplied together.");
     }
 }
 
