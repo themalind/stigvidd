@@ -44,6 +44,11 @@ yarn-error.*
 # Claude Code local settings (machine-specific)
 .claude/settings.local.json
 
+# CodeGraph index: per-checkout, rebuilt from the source, and large. Leaving it untracked
+# but unignored put it in every `git status`, which degrades the dirty-file count the
+# SessionStart hook reports. See docs/notes/git-worktree-repo-root.md.
+.codegraph/
+
 # typescript
 *.tsbuildinfo
 

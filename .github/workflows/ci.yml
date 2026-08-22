@@ -9,6 +9,29 @@ on:
     branches: [ "main" ]
 
 jobs:
+  # The agent harness in .claude/. Node only, no dotnet and no npm install, so it is the
+  # cheapest job here and the one that runs on Windows too -- the hooks' own self-tests
+  # assert the Windows-shaped inputs (backslash paths, `$env:` and `set` command prefixes)
+  # that are the ones which fail OPEN when mishandled, and this is the repo's only
+  # automated Windows coverage.
+  harness:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup Node
+      uses: actions/setup-node@v4
+      with:
+        node-version: 24
+    # Runs every hook's --self-test, asserts each registration resolves to a file and each
+    # hook file is registered, requires exec-form registrations, and checks
+    # docs/notes/INDEX.md against the files. A note cannot fail a build; a gate can.
+    - name: Check hooks
+      run: node scripts/check-hooks.mjs
+
   backend:
     runs-on: ubuntu-latest
     defaults:

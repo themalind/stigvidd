@@ -1,0 +1,109 @@
+{
+  "$comment": [
+    "Every hook is registered in EXEC form (command + args), never shell form. Claude Code",
+    "expands ${CLAUDE_PROJECT_DIR} itself, into both fields, before any shell sees it — so",
+    "there is no shell and no quoting, and one entry is correct on Gentoo, Debian and",
+    "Windows alike. Shell form would need $VAR on bash and $env:/%VAR% on Windows, where",
+    "Claude Code falls back to PowerShell if Git Bash is absent. scripts/check-hooks.mjs",
+    "fails the build on a shell-form entry, on a registration pointing at a file that does",
+    "not exist, and on a hook file that no event registers.",
+    "",
+    "The codegraph `UserPromptSubmit` hook is deliberately NOT declared here: it already",
+    "lives in ~/.claude/settings.json, and project settings merge with user settings, so a",
+    "second declaration would inject the same context twice.",
+    "",
+    "Machine-specific overrides belong in .claude/settings.local.json, which .gitignore",
+    "already excludes."
+  ],
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": ["${CLAUDE_PROJECT_DIR}/.claude/hooks/session-start.mjs"],
+            "statusMessage": "Reading the tree, the contract chain and the notes",
+            "timeout": 20
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": ["${CLAUDE_PROJECT_DIR}/.claude/hooks/guard-generated-files.mjs"],
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": ["${CLAUDE_PROJECT_DIR}/.claude/hooks/guard-build-commands.mjs"],
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "node",
+            "args": ["${CLAUDE_PROJECT_DIR}/.claude/hooks/guard-long-running.mjs"],
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": ["${CLAUDE_PROJECT_DIR}/.claude/hooks/check-dotnet-build.mjs"],
+            "statusMessage": "Building the project you just edited",
+            "timeout": 60
+          },
+          {
+            "type": "command",
+            "command": "node",
+            "args": ["${CLAUDE_PROJECT_DIR}/.claude/hooks/check-lint.mjs"],
+            "statusMessage": "Linting the file you just edited",
+            "timeout": 60
+          }
+        ]
+      },
+      {
+        "matcher": "ExitPlanMode",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": ["${CLAUDE_PROJECT_DIR}/.claude/hooks/plan-eval.mjs", "--before"],
+            "statusMessage": "Recalling docs/notes for this plan",
+            "timeout": 20
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": ["${CLAUDE_PROJECT_DIR}/.claude/hooks/plan-eval.mjs", "--after"],
+            "statusMessage": "Evaluating what this plan taught",
+            "timeout": 20
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using StigviddAPI;
 using System.Net;
 
@@ -52,7 +52,13 @@ public class OpenApiContractTests : IClassFixture<StigViddWebApplicationFactory<
 
         while (directory != null)
         {
-            if (Directory.Exists(Path.Combine(directory.FullName, ".git")))
+            // A file OR a directory: in a linked git worktree `.git` is a FILE holding a
+            // `gitdir:` pointer, not a directory. Testing only for a directory walked
+            // straight past the worktree root and off the top of the filesystem, so this
+            // threw and made the whole integration suite unrunnable in a worktree - which
+            // is the checkout the work is normally done in.
+            var dotGit = Path.Combine(directory.FullName, ".git");
+            if (Directory.Exists(dotGit) || File.Exists(dotGit))
                 return directory.FullName;
 
             directory = directory.Parent;

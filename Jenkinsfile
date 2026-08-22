@@ -147,6 +147,12 @@ pipeline {
             exit 1
           fi
         '''
+        // The agent harness in .claude/: every hook's self-test, its registrations, and
+        // docs/notes/INDEX.md against the files. Node only, ~2 s, no install needed. Here
+        // rather than in a Test stage because a broken hook should stop the build before
+        // it spends minutes on dotnet and npm.
+        sh 'node scripts/check-hooks.mjs'
+
         // Immutable per-commit tag; keeps deploys traceable and rollbacks easy.
         // Resolved once here, after checkout, so every later stage agrees.
         script {
