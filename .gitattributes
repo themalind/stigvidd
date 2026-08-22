@@ -1,0 +1,59 @@
+# Normalise line endings in the repository to LF, and check every text file out as LF on
+# every platform.
+#
+# WHY THIS IS NOT COSMETIC.  Git for Windows defaults to core.autocrlf=true, so without
+# this file a Windows checkout gets CRLF in the working tree. Two checks in this repo then
+# fail for reasons that have nothing to do with the change under test:
+#
+#   * The Jenkinsfile web stage runs `npm run generate:api` and then
+#     `git diff --exit-code -- src/api/generated`. orval writes LF; the checkout expects
+#     CRLF; every generated file shows a diff and the build reports "the generated API
+#     client is stale", which is a true sentence about a false problem.
+#   * app/'s `prettier --check .` (CI's format:check step) has the same exposure.
+#
+# See docs/notes/line-endings-and-generated-files.md.
+* text=auto eol=lf
+
+# Explicitly text, so a stray heuristic cannot decide otherwise.
+*.cs      text eol=lf diff=csharp
+*.csproj  text eol=lf
+*.sln     text eol=lf
+*.props   text eol=lf
+*.json    text eol=lf
+*.ts      text eol=lf
+*.tsx     text eol=lf
+*.js      text eol=lf
+*.jsx     text eol=lf
+*.mjs     text eol=lf
+*.md      text eol=lf
+*.yml     text eol=lf
+*.yaml    text eol=lf
+*.sql     text eol=lf
+*.html    text eol=lf
+*.css     text eol=lf
+Dockerfile text eol=lf
+Jenkinsfile text eol=lf
+
+# Shell scripts must be LF even where a tool would guess otherwise: a CRLF shebang line
+# makes the kernel look for an interpreter with a trailing carriage return.
+*.sh      text eol=lf
+
+# Binary: never touched, never diffed as text.
+*.png     binary
+*.jpg     binary
+*.jpeg    binary
+*.gif     binary
+*.webp    binary
+*.ico     binary
+*.pdf     binary
+*.zip     binary
+*.gz      binary
+*.tar     binary
+*.jks     binary
+*.keystore binary
+*.p12     binary
+*.ttf     binary
+*.otf     binary
+*.woff    binary
+*.woff2   binary
+*.dump    binary
