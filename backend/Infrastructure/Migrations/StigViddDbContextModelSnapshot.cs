@@ -531,6 +531,166 @@ namespace Infrastructure.Migrations
                     b.ToTable("TrailImages", "dbo");
                 });
 
+            modelBuilder.Entity("Infrastructure.Data.Entities.TrailImportProposal", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("Confidence")
+                        .HasColumnType("integer");
+
+                    b.Property<double>("CoverageBackward")
+                        .HasColumnType("double precision");
+
+                    b.Property<double>("CoverageForward")
+                        .HasColumnType("double precision");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("CreatedTrailId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("DecidedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DecidedBy")
+                        .HasColumnType("text");
+
+                    b.Property<decimal?>("DecidedLengthKm")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<string>("DecidedName")
+                        .HasColumnType("text");
+
+                    b.Property<int>("DecidedRole")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("DecidedTrailId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Decision")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ExternalId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<LineString>("FeatureGeometry")
+                        .HasColumnType("geometry");
+
+                    b.Property<string>("FeatureName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("FeatureProperties")
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("GeometryFingerprint")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<double?>("HausdorffMeters")
+                        .HasColumnType("double precision");
+
+                    b.Property<string>("Identifier")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("LastUpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("MatchReason")
+                        .HasColumnType("text");
+
+                    b.Property<int?>("NearestTrailId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Note")
+                        .HasColumnType("text");
+
+                    b.Property<int>("SessionId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("SuggestedTrailId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SessionId");
+
+                    b.ToTable("TrailImportProposals", "dbo");
+                });
+
+            modelBuilder.Entity("Infrastructure.Data.Entities.TrailImportSession", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime?>("AnalyzedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("AppliedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ApplyReport")
+                        .HasColumnType("jsonb");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ErrorMessage")
+                        .HasColumnType("text");
+
+                    b.Property<int>("FeatureCount")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("FileHash")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<long>("FileSizeBytes")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Identifier")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("LastUpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("StoredPath")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("UploadedBy")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Source", "FileHash");
+
+                    b.ToTable("TrailImportSessions", "dbo");
+                });
+
             modelBuilder.Entity("Infrastructure.Data.Entities.TrailLink", b =>
                 {
                     b.Property<int>("Id")
@@ -647,6 +807,71 @@ namespace Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("TrailObstacleSolvedVotes", "dbo");
+                });
+
+            modelBuilder.Entity("Infrastructure.Data.Entities.TrailSourceLink", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("Confidence")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("ConfirmedByHuman")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("GeometryFingerprint")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Identifier")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("LastSeenAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("LastSeenExternalId")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("LastUpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("MissingImportCount")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("MissingSinceAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Role")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("SourceSnapshot")
+                        .HasColumnType("jsonb");
+
+                    b.Property<int?>("TrailId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TrailId");
+
+                    b.HasIndex("Source", "GeometryFingerprint")
+                        .IsUnique();
+
+                    b.HasIndex("Source", "LastSeenExternalId");
+
+                    b.ToTable("TrailSourceLinks", "dbo");
                 });
 
             modelBuilder.Entity("Infrastructure.Data.Entities.User", b =>
@@ -958,6 +1183,17 @@ namespace Infrastructure.Migrations
                     b.Navigation("Trail");
                 });
 
+            modelBuilder.Entity("Infrastructure.Data.Entities.TrailImportProposal", b =>
+                {
+                    b.HasOne("Infrastructure.Data.Entities.TrailImportSession", "Session")
+                        .WithMany("Proposals")
+                        .HasForeignKey("SessionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Session");
+                });
+
             modelBuilder.Entity("Infrastructure.Data.Entities.TrailLink", b =>
                 {
                     b.HasOne("Infrastructure.Data.Entities.Trail", "Trail")
@@ -1004,6 +1240,16 @@ namespace Infrastructure.Migrations
                     b.Navigation("TrailObstacle");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Infrastructure.Data.Entities.TrailSourceLink", b =>
+                {
+                    b.HasOne("Infrastructure.Data.Entities.Trail", "Trail")
+                        .WithMany("SourceLinks")
+                        .HasForeignKey("TrailId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Trail");
                 });
 
             modelBuilder.Entity("Infrastructure.Data.Entities.UserPushToken", b =>
@@ -1074,6 +1320,8 @@ namespace Infrastructure.Migrations
                 {
                     b.Navigation("Reviews");
 
+                    b.Navigation("SourceLinks");
+
                     b.Navigation("TrailImages");
 
                     b.Navigation("TrailLinks");
@@ -1081,6 +1329,11 @@ namespace Infrastructure.Migrations
                     b.Navigation("TrailObstacles");
 
                     b.Navigation("VisitorInformation");
+                });
+
+            modelBuilder.Entity("Infrastructure.Data.Entities.TrailImportSession", b =>
+                {
+                    b.Navigation("Proposals");
                 });
 
             modelBuilder.Entity("Infrastructure.Data.Entities.TrailObstacle", b =>

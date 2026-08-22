@@ -4,7 +4,7 @@
  * StigVidd
  * OpenAPI spec version: 1.0.0
  */
-import type { UpdateVisitorInformationRequest } from './updateVisitorInformationRequest';
+import type { UpdateVisitorInformationRequest } from "./updateVisitorInformationRequest";
 
 export interface UpdateTrailRequest {
   name: string;

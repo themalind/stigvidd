@@ -14,6 +14,7 @@ public class MediaControllerIntegrationTests : IClassFixture<StigViddWebApplicat
     private readonly StigViddWebApplicationFactory<Program> _factory;
 
     private const string AuthenticatedUser = "firebase-uid-12346"; // User 2: VandrarVennen
+    private const string AdminRole = "stigvidd-admin";
     private const string StorsjoledenIdentifier = "22b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d"; // Trail 2
 
     public MediaControllerIntegrationTests(StigViddWebApplicationFactory<Program> factory)
@@ -50,6 +51,7 @@ public class MediaControllerIntegrationTests : IClassFixture<StigViddWebApplicat
         // Arrange — a 200x150 source; processing should downscale to fit 100x100 => 100x75.
         var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", AuthenticatedUser);
+        client.DefaultRequestHeaders.Add("X-Test-Roles", AdminRole);
 
         var content = BuildImageUpload(MakePng(200, 150));
 
@@ -75,6 +77,7 @@ public class MediaControllerIntegrationTests : IClassFixture<StigViddWebApplicat
         // Arrange
         var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", AuthenticatedUser);
+        client.DefaultRequestHeaders.Add("X-Test-Roles", AdminRole);
 
         var upload = await client.PostAsync(
             $"/api/v1/trails/{StorsjoledenIdentifier}/images", BuildImageUpload(MakePng(300, 300)),
@@ -103,5 +106,19 @@ public class MediaControllerIntegrationTests : IClassFixture<StigViddWebApplicat
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task GetAllMedia_WithoutAdminRole_ReturnsForbidden()
+    {
+        // Arrange — signed in as an ordinary app user, no realm role.
+        var client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", AuthenticatedUser);
+
+        // Act
+        var response = await client.GetAsync("/api/v1/media", TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
     }
 }

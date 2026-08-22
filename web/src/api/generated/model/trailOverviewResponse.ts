@@ -4,7 +4,7 @@
  * StigVidd
  * OpenAPI spec version: 1.0.0
  */
-import type { TrailImageResponse } from './trailImageResponse';
+import type { TrailImageResponse } from "./trailImageResponse";
 
 export interface TrailOverviewResponse {
   identifier: string;

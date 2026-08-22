@@ -15,6 +15,7 @@ public class FacilitiesControllerIntegrationTests : IClassFixture<StigViddWebApp
     private const string UpdateRoute = "/api/v1/facilities/update";
 
     private const string AuthenticatedUser = "firebase-uid-12346"; // VandrarVennen
+    private const string AdminRole = "stigvidd-admin";
 
     private const string Facility1Identifier = "fac1a1b2-c3d4-4e5f-6a7b-8c9d0e1f2a3b"; // Grillplats Tiveden
     private const string Facility2Identifier = "fac2b2c3-d4e5-4f6a-7b8c-9d0e1f2a3b4c"; // Vindskydd Gesebol
@@ -118,6 +119,7 @@ public class FacilitiesControllerIntegrationTests : IClassFixture<StigViddWebApp
         var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", AuthenticatedUser);
+        client.DefaultRequestHeaders.Add("X-Test-Roles", AdminRole);
 
         var request = new CreateFacilityRequest
         {
@@ -169,6 +171,7 @@ public class FacilitiesControllerIntegrationTests : IClassFixture<StigViddWebApp
         var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", AuthenticatedUser);
+        client.DefaultRequestHeaders.Add("X-Test-Roles", AdminRole);
 
         var request = new CreateFacilityRequest
         {
@@ -193,6 +196,7 @@ public class FacilitiesControllerIntegrationTests : IClassFixture<StigViddWebApp
         var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", AuthenticatedUser);
+        client.DefaultRequestHeaders.Add("X-Test-Roles", AdminRole);
 
         var request = new CreateFacilityRequest
         {
@@ -217,6 +221,7 @@ public class FacilitiesControllerIntegrationTests : IClassFixture<StigViddWebApp
         var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", AuthenticatedUser);
+        client.DefaultRequestHeaders.Add("X-Test-Roles", AdminRole);
 
         var request = new CreateFacilityRequest
         {
@@ -241,6 +246,7 @@ public class FacilitiesControllerIntegrationTests : IClassFixture<StigViddWebApp
         var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", AuthenticatedUser);
+        client.DefaultRequestHeaders.Add("X-Test-Roles", AdminRole);
 
         var request = new UpdateFacilityRequest { Name = "Uppdaterat namn" };
 
@@ -277,6 +283,7 @@ public class FacilitiesControllerIntegrationTests : IClassFixture<StigViddWebApp
         var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", AuthenticatedUser);
+        client.DefaultRequestHeaders.Add("X-Test-Roles", AdminRole);
 
         var request = new UpdateFacilityRequest { Name = "Uppdaterat namn" };
 
@@ -294,6 +301,7 @@ public class FacilitiesControllerIntegrationTests : IClassFixture<StigViddWebApp
         var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", AuthenticatedUser);
+        client.DefaultRequestHeaders.Add("X-Test-Roles", AdminRole);
 
         var request = new UpdateFacilityRequest { Latitude = 91 };
 
@@ -311,6 +319,7 @@ public class FacilitiesControllerIntegrationTests : IClassFixture<StigViddWebApp
         var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", AuthenticatedUser);
+        client.DefaultRequestHeaders.Add("X-Test-Roles", AdminRole);
 
         // Act
         var response = await client.DeleteAsync($"/api/v1/facilities/{Facility1Identifier}", TestContext.Current.CancellationToken);
@@ -340,11 +349,36 @@ public class FacilitiesControllerIntegrationTests : IClassFixture<StigViddWebApp
         var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", AuthenticatedUser);
+        client.DefaultRequestHeaders.Add("X-Test-Roles", AdminRole);
 
         // Act
         var response = await client.DeleteAsync($"/api/v1/facilities/{NonExistentIdentifier}", TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task Create_WithoutAdminRole_ShouldReturnForbidden()
+    {
+        // Arrange — signed in as an ordinary app user, no realm role.
+        var client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", AuthenticatedUser);
+
+        var request = new CreateFacilityRequest
+        {
+            Name = "Ny grillplats",
+            FacilityType = 1,
+            IsAccessible = true,
+            Latitude = 57.7m,
+            Longitude = 12.8m
+        };
+
+        // Act
+        var response = await client.PostAsJsonAsync("/api/v1/facilities", request, TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
     }
 }

@@ -22,6 +22,9 @@ public class StigViddDbContext(DbContextOptions<StigViddDbContext> options) : Db
     public DbSet<FriendRequest> FriendRequests { get; set; }
     public DbSet<UserPushToken> UserPushTokens { get; set; }
     public DbSet<CityArea> CityAreas { get; set; }
+    public DbSet<TrailSourceLink> TrailSourceLinks { get; set; }
+    public DbSet<TrailImportSession> TrailImportSessions { get; set; }
+    public DbSet<TrailImportProposal> TrailImportProposals { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -201,9 +204,54 @@ public class StigViddDbContext(DbContextOptions<StigViddDbContext> options) : Db
             .HasIndex(upt => upt.ExpoToken)
             .IsUnique();
 
+        // TrailSourceLink → Trail (SetNull; the link outlives the trail, so a deleted
+        // trail is not silently recreated by the next sync)
+        modelBuilder.Entity<TrailSourceLink>()
+            .HasOne(l => l.Trail)
+            .WithMany(t => t.SourceLinks)
+            .HasForeignKey(l => l.TrailId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        // One link per feature per source; the fingerprint is what the sync matches on
+        modelBuilder.Entity<TrailSourceLink>()
+            .HasIndex(l => new { l.Source, l.GeometryFingerprint })
+            .IsUnique();
+
+        // Looking a feature up by the id it last carried, for troubleshooting. Not unique.
+        modelBuilder.Entity<TrailSourceLink>()
+            .HasIndex(l => new { l.Source, l.LastSeenExternalId });
+
+        // Stored as jsonb so a later sync can read single properties out of the snapshot
+        modelBuilder.Entity<TrailSourceLink>()
+            .Property(l => l.SourceSnapshot)
+            .HasColumnType("jsonb");
+
+        // TrailImportProposal → TrailImportSession (cascade; a proposal means nothing
+        // without the session it was analysed in)
+        modelBuilder.Entity<TrailImportProposal>()
+            .HasOne(p => p.Session)
+            .WithMany(s => s.Proposals)
+            .HasForeignKey(p => p.SessionId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Spotting that the same export file has been uploaded before. Not unique.
+        modelBuilder.Entity<TrailImportSession>()
+            .HasIndex(s => new { s.Source, s.FileHash });
+
+        modelBuilder.Entity<TrailImportSession>()
+            .Property(s => s.ApplyReport)
+            .HasColumnType("jsonb");
+
+        modelBuilder.Entity<TrailImportProposal>()
+            .Property(p => p.FeatureProperties)
+            .HasColumnType("jsonb");
+
         // Decimal precision for entity properties
         modelBuilder.Entity<Trail>()
             .Property(t => t.TrailLength).HasPrecision(18, 2);
+
+        modelBuilder.Entity<TrailImportProposal>()
+            .Property(p => p.DecidedLengthKm).HasPrecision(18, 2);
 
         modelBuilder.Entity<Review>()
             .Property(r => r.Rating).HasPrecision(3, 1);

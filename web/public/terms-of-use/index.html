@@ -1,0 +1,484 @@
+<!doctype html>
+<!--
+  PUBLICERADE ANVÄNDARVILLKOR — stigvidd.se/terms-of-use/
+
+  Tvåspråkig: svenska först, engelska under samma URL (#english). Ändras ett
+  avsnitt måste båda språken följas åt.
+
+  UTKAST. FÅR INTE DEPLOYAS FÖRRÄN:
+    1. Alla <span class="todo">-markeringar är ersatta. De syns som röda
+       markeringar på sidan, så en oavsiktlig deploy är svår att missa.
+    2. Villkoren är lästa i sin helhet av den som står som ansvarig. Det här är
+       ett utkast skrivet utifrån vad appen faktiskt gör — inte juridisk
+       rådgivning, och inte kontrollerat av jurist.
+    3. Registreringsskärmen hänvisar till villkoren. Klart 2026-08-19: länken
+       finns i register.tsx (auth.consentBefore + auth.termsOfUse).
+
+  §6 är det avsnitt som betyder mest för just den här appen: ledinformation och
+  hinderrapporter kommer från användare och öppna datakällor, inte från en
+  kontrollerad säkerhetsgranskning. Skriv aldrig om det avsnittet till något
+  som antyder att uppgifterna är garanterade.
+-->
+<html lang="sv">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Användarvillkor – Stigvidd</title>
+    <meta
+      name="description"
+      content="Villkoren för att använda Stigvidd: vem som får använda appen, vad du får och inte får göra, och vad som gäller för ledinformation."
+    />
+    <link rel="icon" href="/icon.png" />
+    <style>
+      :root {
+        --bg: #ffffff;
+        --surface: #f4f6f4;
+        --text: #1b1c1b;
+        --muted: #55605a;
+        --border: #dde2de;
+        --accent: #2f6d48;
+        --todo-bg: #ffe8e4;
+        --todo-text: #8a2113;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #121412;
+          --surface: #1c201d;
+          --text: #e8ebe8;
+          --muted: #a3ada7;
+          --border: #2d332f;
+          --accent: #7fc79a;
+          --todo-bg: #4a1a13;
+          --todo-text: #ffbdb1;
+        }
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        padding: 0 1.25rem 5rem;
+        background: var(--bg);
+        color: var(--text);
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        font-size: 17px;
+        line-height: 1.65;
+        -webkit-text-size-adjust: 100%;
+      }
+
+      main {
+        max-width: 44rem;
+        margin: 0 auto;
+      }
+
+      header {
+        padding: 3rem 0 1.5rem;
+        border-bottom: 1px solid var(--border);
+        margin-bottom: 2rem;
+      }
+
+      h1 {
+        font-size: 1.9rem;
+        line-height: 1.2;
+        margin: 0 0 0.5rem;
+        letter-spacing: -0.01em;
+      }
+
+      h2 {
+        font-size: 1.2rem;
+        line-height: 1.3;
+        margin: 2.75rem 0 0.75rem;
+        letter-spacing: -0.005em;
+      }
+
+      .updated {
+        color: var(--muted);
+        font-size: 0.9rem;
+        margin: 0;
+      }
+
+      p,
+      li {
+        margin: 0 0 0.9rem;
+      }
+
+      ul,
+      ol {
+        padding-left: 1.25rem;
+      }
+
+      a {
+        color: var(--accent);
+        text-decoration-thickness: 1px;
+        text-underline-offset: 2px;
+      }
+
+      strong {
+        font-weight: 600;
+      }
+
+      .callout {
+        background: var(--surface);
+        border-left: 3px solid var(--accent);
+        border-radius: 0 8px 8px 0;
+        padding: 1rem 1.1rem;
+        margin: 0 0 1.25rem;
+      }
+
+      .callout p:last-child {
+        margin-bottom: 0;
+      }
+
+      /* Unfilled placeholder. Deliberately loud: an accidental deploy should be obvious. */
+      .todo {
+        background: var(--todo-bg);
+        color: var(--todo-text);
+        padding: 0.05em 0.4em;
+        border-radius: 4px;
+        font-weight: 600;
+        font-size: 0.94em;
+        white-space: nowrap;
+      }
+
+      /* Language switch. Both languages live on one page so the URL stays single. */
+      .lang-nav {
+        font-size: 0.9rem;
+        color: var(--muted);
+        margin: 0.75rem 0 0;
+      }
+
+      .lang-nav strong {
+        color: var(--text);
+      }
+
+      .lang-section {
+        margin-top: 4rem;
+        padding-top: 2rem;
+        border-top: 4px solid var(--border);
+      }
+
+      .lang-section h1 {
+        font-size: 1.6rem;
+      }
+
+      footer {
+        margin-top: 3.5rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid var(--border);
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+    </style>
+  </head>
+  <body>
+    <main id="top">
+      <header>
+        <h1>Användarvillkor för Stigvidd</h1>
+        <p class="updated">Senast uppdaterad: 13 augusti 2026</p>
+        <p class="lang-nav"><strong>Svenska</strong> · <a href="#english">In English</a></p>
+      </header>
+
+      <h2>1. Vem du ingår avtal med</h2>
+      <p>
+        <strong>Stigvidd</strong> ("vi", "oss" eller "appen") tillhandahålls av
+        <strong>Therese Lindberg</strong> och <strong>Ralf Lindberg</strong>, privatpersoner,
+        Sverige. Genom att skapa ett konto och använda appen ingår du avtal med oss och godkänner de
+        här villkoren. Gör du inte det ska du inte använda Stigvidd.
+      </p>
+      <p>
+        Appen är gratis. Vi tar inte betalt för användningen och det finns inga köp i appen.
+        Kontakt: <a href="mailto:info@lingonberg.se">info@lingonberg.se</a>.
+      </p>
+
+      <h2>2. Vem som får använda Stigvidd</h2>
+      <p>
+        Du måste vara minst 13 år för att skapa ett konto. Är du under 18 bör du ha en vårdnadshavares
+        tillåtelse. Du får bara skapa ett konto åt dig själv, och du ansvarar för allt som sker
+        genom ditt konto. Håll ditt lösenord för dig själv.
+      </p>
+
+      <h2>3. Innehåll du skapar</h2>
+      <p>
+        Det du lägger in i Stigvidd är ditt: dina inspelade promenader, dina bilder, dina
+        recensioner och dina hinderrapporter. Du behåller alla rättigheter till det.
+      </p>
+      <p>
+        För att appen ska kunna fungera ger du oss rätt att lagra ditt innehåll och visa det på det
+        sätt appen är byggd för – recensioner och hinderrapporter för alla användare, och en
+        promenad för den du valt att dela den med. Rätten gäller bara det, och den upphör när du tar
+        bort innehållet, med ett undantag: en promenad du delat med någon finns kvar hos mottagarna.
+        Vad som händer vid radering står i
+        <a href="https://stigvidd.se/delete-account/">Radera konto och data</a>.
+      </p>
+      <p>
+        Du ansvarar för att du har rätt att lägga upp det du lägger upp. Ladda inte upp bilder på
+        andra personer utan deras vetskap, och dela inte en promenad vidare som någon annan spelat
+        in utan att ägaren tillåtit det.
+      </p>
+
+      <h2>4. Vad du inte får göra</h2>
+      <ul>
+        <li>ladda upp olagligt innehåll, hot, hat, trakasserier eller sexuellt material</li>
+        <li>lägga upp material som någon annan har upphovsrätt till, utan tillstånd</li>
+        <li>lämna medvetet falska hinderrapporter eller recensioner</li>
+        <li>skapa konton åt andra, utge dig för att vara någon annan eller skräpposta användare</li>
+        <li>försöka komma åt andras konton, data eller delar av tjänsten du inte har behörighet till</li>
+        <li>samla in uppgifter om andra användare automatiskt, till exempel genom skrapning</li>
+        <li>störa driften, kringgå säkerhetsfunktioner eller belasta tjänsten avsiktligt</li>
+      </ul>
+
+      <h2>5. Delning av promenader</h2>
+      <p>
+        En promenad är privat tills du delar den. När du delar väljer du om mottagaren får dela den
+        vidare, och den som fått en promenad genom en vidaredelning kan inte dela den vidare i sin
+        tur.
+      </p>
+      <p>
+        Tänk efter innan du delar. En inspelad rutt visar var du har gått – och startade du
+        inspelningen hemma visar den också var du bor. Vi kan styra vad appen lämnar vidare, men
+        inte vad en mottagare gör med en rutt hen redan sett.
+      </p>
+
+      <h2>6. Ledinformation, rutter och hinder</h2>
+      <div class="callout">
+        <p>
+          <strong
+            >Stigvidd är ett hjälpmedel för att hitta och dela promenader – inte en
+            säkerhetstjänst.</strong
+          >
+          Ledinformation kommer från öppna datakällor och från appens användare. Vi kontrollerar
+          inte att en led är framkomlig, att ett hinder fortfarande finns kvar eller att en
+          rapporterad omväg är säker.
+        </p>
+      </div>
+      <p>
+        Du ansvarar själv för din tur: för din planering, din utrustning, din bedömning av väder,
+        terräng och din egen förmåga. Lita inte på appen som enda underlag i okänd terräng, och
+        räkna med att mobiltäckning och batteri kan ta slut.
+      </p>
+      <p>
+        Följ allemansrätten och de regler som gäller där du går. Att en rutt finns i appen betyder
+        inte att den går på mark där du har rätt att vistas, eller att markägaren tillåter det.
+      </p>
+      <p>
+        Kartunderlag levereras av MapTiler. Delar av ledinformationen kommer från öppna data
+        <span class="todo">[fyll i källa och licens, t.ex. Borås Stads öppna data]</span>.
+      </p>
+
+      <h2>7. Tillgänglighet</h2>
+      <p>
+        Stigvidd drivs på fritiden och utan garanti för att tjänsten är tillgänglig eller felfri. Vi
+        kan ändra, pausa eller lägga ner funktioner, och tjänsten i sin helhet, utan att det ger dig
+        rätt till ersättning. Läggs tjänsten ner försöker vi meddela det i appen i förväg så att du
+        hinner hämta ut ditt innehåll.
+      </p>
+      <p>Ta egna kopior av sådant du inte vill förlora. Vi lovar ingen säkerhetskopiering åt dig.</p>
+
+      <h2>8. Om du bryter mot villkoren</h2>
+      <p>
+        Vi kan ta bort innehåll och stänga av eller radera ett konto som bryter mot villkoren. Vid
+        allvarliga fall, till exempel olagligt innehåll eller angrepp mot tjänsten, sker det utan
+        förvarning. I andra fall hör vi av oss först.
+      </p>
+      <p>
+        Du kan när som helst sluta använda Stigvidd och radera ditt konto i appen under
+        <strong>Profil → Avsluta konto</strong>.
+      </p>
+
+      <h2>9. Ansvarsbegränsning</h2>
+      <p>
+        Vi ansvarar inte för skador som uppstår genom din användning av appen, för förlorat innehåll
+        eller för att tjänsten varit otillgänglig, i den utsträckning ansvar går att begränsa enligt
+        lag.
+      </p>
+      <p>
+        <strong>Dina rättigheter som konsument påverkas inte.</strong> Tvingande konsumentskyddande
+        regler gäller före de här villkoren, och ingenting här begränsar ansvar för skada som
+        orsakats uppsåtligen eller genom grov vårdslöshet.
+      </p>
+
+      <h2>10. Personuppgifter</h2>
+      <p>
+        Hur vi behandlar dina personuppgifter beskrivs i
+        <a href="https://stigvidd.se/privacy-policy/">integritetspolicyn</a>, som är en del av
+        förhållandet mellan dig och oss men inte en del av det här avtalet.
+      </p>
+
+      <h2>11. Ändringar av villkoren</h2>
+      <p>
+        Vi kan uppdatera villkoren. Vid väsentliga ändringar meddelar vi det i appen innan de börjar
+        gälla. Fortsätter du använda Stigvidd efter det gäller de nya villkoren. Den senaste
+        versionen finns alltid på
+        <a href="https://stigvidd.se/terms-of-use/">stigvidd.se/terms-of-use/</a>.
+      </p>
+
+      <h2>12. Tillämplig lag och tvist</h2>
+      <p>
+        Svensk lag gäller. Tvist prövas av svensk domstol. Som konsument kan du också vända dig till
+        <strong>Allmänna reklamationsnämnden</strong>, <a href="https://www.arn.se" rel="noopener">arn.se</a>,
+        eller till EU-kommissionens plattform för tvistlösning online. Bor du i ett annat EU-land har
+        du rätt att åberopa tvingande konsumentskydd i ditt hemland.
+      </p>
+
+      <section class="lang-section" id="english" lang="en">
+        <header>
+          <h1>Terms of Use for Stigvidd</h1>
+          <p class="updated">Last updated: 13 August 2026</p>
+          <p class="lang-nav"><a href="#top">På svenska</a> · <strong>English</strong></p>
+        </header>
+
+        <h2>1. Who you are entering an agreement with</h2>
+        <p>
+          <strong>Stigvidd</strong> ("we", "us" or "the app") is provided by
+          <strong>Therese Lindberg</strong> and <strong>Ralf Lindberg</strong>, private individuals,
+          Sweden. By creating an account and using the app you enter into an agreement with us and
+          accept these terms. If you do not accept them, do not use Stigvidd.
+        </p>
+        <p>
+          The app is free. We charge nothing for using it and there are no in-app purchases.
+          Contact: <a href="mailto:info@lingonberg.se">info@lingonberg.se</a>.
+        </p>
+
+        <h2>2. Who may use Stigvidd</h2>
+        <p>
+          You must be at least 13 years old to create an account. If you are under 18 you should
+          have a guardian's permission. You may only create an account for yourself, and you are
+          responsible for everything that happens through your account. Keep your password to
+          yourself.
+        </p>
+
+        <h2>3. Content you create</h2>
+        <p>
+          What you put into Stigvidd is yours: your recorded walks, your images, your reviews and
+          your obstacle reports. You keep all rights to it.
+        </p>
+        <p>
+          So that the app can work, you give us the right to store your content and display it the
+          way the app is built to – reviews and obstacle reports to all users, and a walk to the
+          person you chose to share it with. That right covers nothing more, and it ends when you
+          delete the content, with one exception: a walk you have shared remains with the
+          recipients. What happens on deletion is described on
+          <a href="https://stigvidd.se/delete-account/">Delete account and data</a>.
+        </p>
+        <p>
+          You are responsible for having the right to upload what you upload. Do not upload images
+          of other people without their knowledge, and do not reshare a walk recorded by someone
+          else unless the owner has allowed it.
+        </p>
+
+        <h2>4. What you may not do</h2>
+        <ul>
+          <li>upload illegal content, threats, hate speech, harassment or sexual material</li>
+          <li>post material someone else holds the copyright to, without permission</li>
+          <li>file knowingly false obstacle reports or reviews</li>
+          <li>create accounts for others, impersonate someone else or spam users</li>
+          <li>attempt to access accounts, data or parts of the service you are not authorised for</li>
+          <li>collect data about other users automatically, for example by scraping</li>
+          <li>disrupt operations, circumvent security features or deliberately overload the service</li>
+        </ul>
+
+        <h2>5. Sharing walks</h2>
+        <p>
+          A walk is private until you share it. When you share, you decide whether the recipient may
+          reshare it, and someone who received a walk through a reshare cannot pass it on in turn.
+        </p>
+        <p>
+          Think before you share. A recorded route shows where you have walked – and if you started
+          recording at home, it also shows where you live. We can control what the app passes on,
+          but not what a recipient does with a route they have already seen.
+        </p>
+
+        <h2>6. Trail information, routes and obstacles</h2>
+        <div class="callout">
+          <p>
+            <strong>Stigvidd is a tool for finding and sharing walks – not a safety service.</strong>
+            Trail information comes from open data sources and from the app's users. We do not
+            verify that a trail is passable, that an obstacle is still there, or that a reported
+            detour is safe.
+          </p>
+        </div>
+        <p>
+          You are responsible for your own outing: your planning, your equipment, your assessment of
+          weather, terrain and your own ability. Do not rely on the app as your only source in
+          unfamiliar terrain, and expect mobile coverage and battery to run out.
+        </p>
+        <p>
+          Follow the Swedish right of public access (allemansrätten) and the rules that apply where
+          you walk. A route existing in the app does not mean it runs on land you have the right to
+          enter, or that the landowner permits it.
+        </p>
+        <p>
+          Map imagery is provided by MapTiler. Parts of the trail information come from open data
+          <span class="todo">[fill in source and licence]</span>.
+        </p>
+
+        <h2>7. Availability</h2>
+        <p>
+          Stigvidd is run in spare time and without any guarantee that the service is available or
+          free of errors. We may change, pause or discontinue features, and the service as a whole,
+          without this giving you a right to compensation. If the service is discontinued we will
+          try to announce it in the app in advance so you have time to retrieve your content.
+        </p>
+        <p>
+          Keep your own copies of anything you do not want to lose. We promise no backups on your
+          behalf.
+        </p>
+
+        <h2>8. If you break the terms</h2>
+        <p>
+          We may remove content and suspend or delete an account that breaks these terms. In serious
+          cases, such as illegal content or attacks on the service, this happens without warning. In
+          other cases we will contact you first.
+        </p>
+        <p>
+          You may stop using Stigvidd at any time and delete your account in the app under
+          <strong>Profile → Delete account</strong>.
+        </p>
+
+        <h2>9. Limitation of liability</h2>
+        <p>
+          We are not liable for damages arising from your use of the app, for lost content or for
+          the service being unavailable, to the extent liability can be limited under applicable
+          law.
+        </p>
+        <p>
+          <strong>Your rights as a consumer are not affected.</strong> Mandatory consumer protection
+          rules take precedence over these terms, and nothing here limits liability for damage
+          caused intentionally or through gross negligence.
+        </p>
+
+        <h2>10. Personal data</h2>
+        <p>
+          How we process your personal data is described in the
+          <a href="https://stigvidd.se/privacy-policy/">privacy policy</a>, which is part of the
+          relationship between you and us but not part of this agreement.
+        </p>
+
+        <h2>11. Changes to these terms</h2>
+        <p>
+          We may update these terms. For significant changes we will give notice in the app before
+          they take effect. If you continue using Stigvidd after that, the new terms apply. The
+          latest version is always available at
+          <a href="https://stigvidd.se/terms-of-use/">stigvidd.se/terms-of-use/</a>.
+        </p>
+
+        <h2>12. Governing law and disputes</h2>
+        <p>
+          Swedish law applies and disputes are settled by Swedish courts. As a consumer you may also
+          turn to the Swedish National Board for Consumer Disputes (ARN),
+          <a href="https://www.arn.se" rel="noopener">arn.se</a>, or to the European Commission's
+          online dispute resolution platform. If you live in another EU country you have the right to
+          rely on mandatory consumer protection in your home country.
+        </p>
+      </section>
+
+      <footer>
+        <p>Stigvidd</p>
+      </footer>
+    </main>
+  </body>
+</html>

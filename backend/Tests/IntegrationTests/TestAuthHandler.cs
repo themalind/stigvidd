@@ -52,11 +52,21 @@ public class TestAuthHandler : AuthenticationHandler<AuthenticationSchemeOptions
             return Task.FromResult(AuthenticateResult.Fail("Missing user identifier in token"));
         }
 
-        var claims = new[]
+        var claims = new List<Claim>
         {
-            new Claim(ClaimTypes.Name, "Test User"),
-            new Claim(ClaimTypes.NameIdentifier, subjectId)
+            new(ClaimTypes.Name, "Test User"),
+            new(ClaimTypes.NameIdentifier, subjectId)
         };
+
+        // Realm roles come from an "X-Test-Roles" header (comma-separated), standing in
+        // for what KeycloakRealmRolesTransformation flattens out of the real token.
+        var roles = Request.Headers["X-Test-Roles"].ToString();
+        if (!string.IsNullOrWhiteSpace(roles))
+        {
+            claims.AddRange(roles
+                .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .Select(role => new Claim(ClaimTypes.Role, role)));
+        }
 
         var identity = new ClaimsIdentity(claims, "Test");
         var principal = new ClaimsPrincipal(identity);

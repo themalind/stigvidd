@@ -4,8 +4,8 @@
  * StigVidd
  * OpenAPI spec version: 1.0.0
  */
-import type { UserFavoritesTrailResponse } from './userFavoritesTrailResponse';
-import type { UserWishlistTrailResponse } from './userWishlistTrailResponse';
+import type { UserFavoritesTrailResponse } from "./userFavoritesTrailResponse";
+import type { UserWishlistTrailResponse } from "./userWishlistTrailResponse";
 
 export interface UserResponse {
   identifier: string;

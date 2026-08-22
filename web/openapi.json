@@ -1572,6 +1572,464 @@
         ]
       }
     },
+    "/api/v1/admin/trail-import/sessions": {
+      "post": {
+        "tags": [
+          "TrailImport"
+        ],
+        "operationId": "TrailImport_CreateSession",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "ContentType": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "ContentDisposition": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "Headers": {
+                    "type": "array",
+                    "nullable": true,
+                    "items": {}
+                  },
+                  "Length": {
+                    "type": "integer",
+                    "format": "int64"
+                  },
+                  "Name": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "FileName": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "source": {
+                    "type": "string",
+                    "nullable": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrailImportSessionResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      },
+      "get": {
+        "tags": [
+          "TrailImport"
+        ],
+        "operationId": "TrailImport_GetSessions",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TrailImportSessionResponse"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/admin/trail-import/sessions/{id}/analyze": {
+      "post": {
+        "tags": [
+          "TrailImport"
+        ],
+        "operationId": "TrailImport_Analyze",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrailImportSessionResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/admin/trail-import/sessions/{id}": {
+      "get": {
+        "tags": [
+          "TrailImport"
+        ],
+        "operationId": "TrailImport_GetSession",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrailImportSessionResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "TrailImport"
+        ],
+        "operationId": "TrailImport_DeleteSession",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/admin/trail-import/sessions/{id}/proposals": {
+      "get": {
+        "tags": [
+          "TrailImport"
+        ],
+        "operationId": "TrailImport_GetProposals",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "x-position": 1
+          },
+          {
+            "name": "confidence",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 2
+          },
+          {
+            "name": "decision",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 3
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            },
+            "x-position": 4
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50
+            },
+            "x-position": 5
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResultOfTrailImportProposalResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/admin/trail-import/sessions/{id}/proposals/{proposalId}/preview": {
+      "get": {
+        "tags": [
+          "TrailImport"
+        ],
+        "operationId": "TrailImport_GetPreview",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "x-position": 1
+          },
+          {
+            "name": "proposalId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "x-position": 2
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrailImportPreviewResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/admin/trail-import/sessions/{id}/proposals/{proposalId}/decide": {
+      "post": {
+        "tags": [
+          "TrailImport"
+        ],
+        "operationId": "TrailImport_Decide",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "x-position": 1
+          },
+          {
+            "name": "proposalId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "x-position": 2
+          }
+        ],
+        "requestBody": {
+          "x-name": "request",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DecideProposalRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 3
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/admin/trail-import/sessions/{id}/decide-bulk": {
+      "post": {
+        "tags": [
+          "TrailImport"
+        ],
+        "operationId": "TrailImport_DecideBulk",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "request",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DecideProposalsBulkRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "integer",
+                  "format": "int32"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/admin/trail-import/vocabulary": {
+      "get": {
+        "tags": [
+          "TrailImport"
+        ],
+        "operationId": "TrailImport_GetVocabulary",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
     "/api/v1/TrailObstacles/trail/{trailIdentifier}": {
       "get": {
         "tags": [
@@ -3643,6 +4101,431 @@
           },
           "imageUrl": {
             "type": "string"
+          }
+        }
+      },
+      "TrailImportSessionResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "identifier",
+          "source",
+          "fileName",
+          "fileHash",
+          "status"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "identifier": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          },
+          "fileName": {
+            "type": "string"
+          },
+          "fileHash": {
+            "type": "string"
+          },
+          "fileSizeBytes": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "status": {
+            "type": "string"
+          },
+          "uploadedBy": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "analyzedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "appliedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "featureCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "errorMessage": {
+            "type": "string",
+            "nullable": true
+          },
+          "counts": {
+            "nullable": true,
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/TrailImportCountsResponse"
+              }
+            ]
+          },
+          "duplicateOf": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "TrailImportCountsResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "total": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "certain": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "high": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "medium": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "unmatched": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pending": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "accepted": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "relinked": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "createNew": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "excluded": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "skipped": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "PagedResultOfTrailImportProposalResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TrailImportProposalResponse"
+            }
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "hasMore": {
+            "type": "boolean"
+          },
+          "totalCount": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "TrailImportProposalResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "externalId",
+          "featureName",
+          "confidence",
+          "decision",
+          "decidedRole"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "externalId": {
+            "type": "string"
+          },
+          "featureName": {
+            "type": "string"
+          },
+          "confidence": {
+            "type": "string"
+          },
+          "coverageForward": {
+            "type": "number",
+            "format": "double"
+          },
+          "coverageBackward": {
+            "type": "number",
+            "format": "double"
+          },
+          "hausdorffMeters": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "matchReason": {
+            "type": "string",
+            "nullable": true
+          },
+          "decision": {
+            "type": "string"
+          },
+          "decidedRole": {
+            "type": "string"
+          },
+          "suggestedTrailId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "suggestedTrailName": {
+            "type": "string",
+            "nullable": true
+          },
+          "nearestTrailId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "nearestTrailName": {
+            "type": "string",
+            "nullable": true
+          },
+          "decidedTrailId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "decidedTrailName": {
+            "type": "string",
+            "nullable": true
+          },
+          "decidedBy": {
+            "type": "string",
+            "nullable": true
+          },
+          "decidedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "note": {
+            "type": "string",
+            "nullable": true
+          },
+          "decidedName": {
+            "type": "string",
+            "nullable": true
+          },
+          "decidedLengthKm": {
+            "type": "number",
+            "format": "decimal",
+            "nullable": true
+          }
+        }
+      },
+      "TrailImportPreviewResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "proposalId",
+          "featureName",
+          "confidence",
+          "featureCoordinates"
+        ],
+        "properties": {
+          "proposalId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "featureName": {
+            "type": "string"
+          },
+          "confidence": {
+            "type": "string"
+          },
+          "matchReason": {
+            "type": "string",
+            "nullable": true
+          },
+          "coverageForward": {
+            "type": "number",
+            "format": "double"
+          },
+          "coverageBackward": {
+            "type": "number",
+            "format": "double"
+          },
+          "hausdorffMeters": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "featureCoordinates": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "number",
+                "format": "double"
+              }
+            }
+          },
+          "featureLengthKm": {
+            "type": "number",
+            "format": "decimal"
+          },
+          "sourceStatedLengthKm": {
+            "type": "number",
+            "format": "decimal",
+            "nullable": true
+          },
+          "sourceLengthDisagrees": {
+            "type": "boolean"
+          },
+          "trailCoordinates": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "number",
+                "format": "double"
+              }
+            }
+          },
+          "trailId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "trailIdentifier": {
+            "type": "string",
+            "nullable": true
+          },
+          "trailName": {
+            "type": "string",
+            "nullable": true
+          },
+          "trailCuratedLengthKm": {
+            "type": "number",
+            "format": "decimal",
+            "nullable": true
+          },
+          "trailMeasuredLengthKm": {
+            "type": "number",
+            "format": "decimal",
+            "nullable": true
+          },
+          "trailIsVerified": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "trailIsNearestOnly": {
+            "type": "boolean"
+          },
+          "featureProperties": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "DecideProposalRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "decision"
+        ],
+        "properties": {
+          "decision": {
+            "type": "string",
+            "minLength": 1
+          },
+          "trailIdentifier": {
+            "type": "string",
+            "nullable": true
+          },
+          "role": {
+            "type": "string",
+            "nullable": true
+          },
+          "note": {
+            "type": "string",
+            "maxLength": 2000,
+            "nullable": true
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 200,
+            "nullable": true
+          },
+          "lengthKm": {
+            "type": "number",
+            "format": "decimal",
+            "maximum": 1000.0,
+            "minimum": 0.01,
+            "nullable": true
+          }
+        }
+      },
+      "DecideProposalsBulkRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "proposalIds",
+          "decision"
+        ],
+        "properties": {
+          "proposalIds": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          "decision": {
+            "type": "string",
+            "minLength": 1
+          },
+          "role": {
+            "type": "string",
+            "nullable": true
+          },
+          "note": {
+            "type": "string",
+            "maxLength": 2000,
+            "nullable": true
           }
         }
       },

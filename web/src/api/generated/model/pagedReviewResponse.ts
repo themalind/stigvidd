@@ -4,7 +4,7 @@
  * StigVidd
  * OpenAPI spec version: 1.0.0
  */
-import type { ReviewResponse } from './reviewResponse';
+import type { ReviewResponse } from "./reviewResponse";
 
 export interface PagedReviewResponse {
   reviews: ReviewResponse[];

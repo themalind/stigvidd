@@ -25,4 +25,5 @@ public class Trail : BaseEntity
     public ICollection<TrailLink>? TrailLinks { get; set; }
     public ICollection<TrailObstacle>? TrailObstacles { get; set; }
     public ICollection<CityArea>? CityAreas { get; set; }
+    public ICollection<TrailSourceLink>? SourceLinks { get; set; }
 }

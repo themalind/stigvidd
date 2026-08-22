@@ -7,7 +7,7 @@ namespace StigviddAPI.Controllers;
 
 [ApiController]
 [Route("api/v1/[controller]")]
-[Authorize]
+[Authorize(Policy = "User")]
 public class HikeSharesController : StigViddController
 {
     private readonly IHikeShareService _hikeShareService;

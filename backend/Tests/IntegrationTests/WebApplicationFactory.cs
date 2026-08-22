@@ -109,13 +109,15 @@ public class StigViddWebApplicationFactory<TProgram>
 
             services.RemoveAll<IDbMigrationRunner>();
 
-            // Its startup run races SeedDatabase on the shared in-memory connection.
-            var cleanupService = services.SingleOrDefault(d =>
+            // Their startup runs race SeedDatabase on the shared in-memory connection.
+            var startupServices = services.Where(d =>
                 d.ServiceType == typeof(IHostedService) &&
-                d.ImplementationType == typeof(ExpiredObstacleCleanupService));
+                (d.ImplementationType == typeof(ExpiredObstacleCleanupService) ||
+                 d.ImplementationType == typeof(TrailImportAnalysisWorker)))
+                .ToList();
 
-            if (cleanupService != null)
-                services.Remove(cleanupService);
+            foreach (var startupService in startupServices)
+                services.Remove(startupService);
         });
 
         builder.UseEnvironment("Development");

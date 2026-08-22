@@ -6,12 +6,12 @@
  */
 
 export type TrailsGetPopularTrailsParams = {
-/**
- * @nullable
- */
-latitude?: number | null;
-/**
- * @nullable
- */
-longitude?: number | null;
+  /**
+   * @nullable
+   */
+  latitude?: number | null;
+  /**
+   * @nullable
+   */
+  longitude?: number | null;
 };

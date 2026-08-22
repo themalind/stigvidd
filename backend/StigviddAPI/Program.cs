@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Text.Json;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
 using Core;
 using Core.Validators.User;
 using Duende.AccessTokenManagement;
@@ -65,13 +66,37 @@ public class Program
 
         builder.Services.AddKeycloakWebApiAuthentication(builder.Configuration);
 
-        // Flatten Keycloak realm roles into Role claims, then gate admin-only
-        // endpoints (export/import) on a configurable realm role.
+        // Flatten Keycloak realm roles into Role claims, then gate endpoints on
+        // configurable realm roles.
         builder.Services.AddSingleton<IClaimsTransformation, StigviddAPI.Authorization.KeycloakRealmRolesTransformation>();
         var adminRole = builder.Configuration["Authorization:AdminRole"] ?? "stigvidd-admin";
+
+        // The member realm role is not provisioned in Keycloak yet. While
+        // Authorization:UserRole is unset the "User" policy means "any authenticated
+        // caller"; setting it switches on role enforcement without a code change.
+        var userRole = builder.Configuration["Authorization:UserRole"];
+
         builder.Services.AddAuthorization(options =>
         {
             options.AddPolicy("Admin", policy => policy.RequireRole(adminRole));
+
+            options.AddPolicy("User", policy =>
+            {
+                policy.RequireAuthenticatedUser();
+
+                if (!string.IsNullOrWhiteSpace(userRole))
+                {
+                    // Admins are members too, so either role satisfies the policy.
+                    policy.RequireRole(userRole, adminRole);
+                }
+            });
+
+            // Endpoints without any authorization metadata require a signed-in caller,
+            // so a forgotten attribute fails closed. Public endpoints opt out with
+            // [AllowAnonymous].
+            options.FallbackPolicy = new AuthorizationPolicyBuilder()
+                .RequireAuthenticatedUser()
+                .Build();
         });
 
         var options = builder.Configuration.GetKeycloakOptions<KeycloakAdminClientOptions>(configSectionName: "KeycloakAdminClient")
@@ -124,6 +149,7 @@ public class Program
 
         // Deletes obstacle reports once they are past their retention period
         builder.Services.AddHostedService<StigviddAPI.BackgroundServices.ExpiredObstacleCleanupService>();
+        builder.Services.AddHostedService<StigviddAPI.BackgroundServices.TrailImportAnalysisWorker>();
 
         // Swagger auth
         builder.Services.AddOpenApiDocument(config =>
@@ -188,7 +214,7 @@ public class Program
         {
             app.UseOpenApi();
             app.UseSwaggerUi();
-            app.MapOpenApi();
+            app.MapOpenApi().AllowAnonymous();
         }
 
         // Liveness and readiness. Unauthenticated by design, and both paths are excluded from

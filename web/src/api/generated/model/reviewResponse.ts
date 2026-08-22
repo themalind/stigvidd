@@ -4,7 +4,7 @@
  * StigVidd
  * OpenAPI spec version: 1.0.0
  */
-import type { ReviewImageResponse } from './reviewImageResponse';
+import type { ReviewImageResponse } from "./reviewImageResponse";
 
 export interface ReviewResponse {
   identifier: string;
