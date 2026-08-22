@@ -19,6 +19,14 @@ const MetresPerDegree = 111_320;
 // the stride, so zooming in is what reveals detail rather than hiding it.
 const MaxPoints = 1500;
 
+// A transparent colour dims on a dark ground and pales on a light one, so each theme names
+// its own pair: warm line, cool band, both read against the ground they sit on.
+const FeatureStroke = "stroke-orange-600 dark:stroke-amber-400";
+const FeatureFill = "fill-orange-600 dark:fill-amber-400";
+const FeatureSwatch = "bg-orange-600 dark:bg-amber-400";
+const TrailStroke = "stroke-sky-500/40 dark:stroke-sky-500/60";
+const TrailSwatch = "bg-sky-500/40 dark:bg-sky-500/60";
+
 // How far out and in the view may go, relative to the fitted extent.
 const MaxZoomOut = 3;
 const MinSpanMetres = 25;
@@ -232,6 +240,10 @@ export function GeometryPreview({ feature, trail, className }: Props) {
   // while rendering rather than in an effect: an effect would draw the old view first.
   const [drawnFor, setDrawnFor] = useState(drawing);
 
+  // Which lines are drawn. Turning one off is how a stretch the other covers alone becomes
+  // plain, without having to trust that two colours are telling the truth.
+  const [shown, setShown] = useState({ feature: true, trail: true });
+
   if (drawing !== drawnFor) {
     setDrawnFor(drawing);
     setView(null);
@@ -439,45 +451,83 @@ export function GeometryPreview({ feature, trail, className }: Props) {
           aria-label="Source feature drawn against the trail it was matched to"
         >
           {/* The trail underneath, so the feature being reviewed reads on top of it. */}
-          {trailPath && (
+          {trailPath && shown.trail && (
             <path
               d={trailPath}
               fill="none"
-              stroke="currentColor"
-              strokeWidth={6}
+              strokeWidth={8}
               vectorEffect="non-scaling-stroke"
               strokeLinecap="round"
               strokeLinejoin="round"
-              className="text-muted-foreground/50"
+              className={TrailStroke}
             />
           )}
 
-          <path
-            d={featurePath}
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={2}
-            vectorEffect="non-scaling-stroke"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="text-primary"
-          />
+          {shown.feature && (
+            <path
+              d={featurePath}
+              fill="none"
+              strokeWidth={2.5}
+              vectorEffect="non-scaling-stroke"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className={FeatureStroke}
+            />
+          )}
 
           {/* Where the feature starts and stops — what tells a loop from an open line. */}
-          {drawing.featureEnds.map((point, index) => (
-            <circle
-              key={index}
-              cx={point.x}
-              cy={point.y}
-              r={markerRadius}
-              className={
-                index === 0 ? "fill-primary" : "fill-none stroke-primary"
-              }
-              strokeWidth={2}
-              vectorEffect="non-scaling-stroke"
-            />
-          ))}
+          {shown.feature &&
+            drawing.featureEnds.map((point, index) => (
+              <circle
+                key={index}
+                cx={point.x}
+                cy={point.y}
+                r={markerRadius}
+                className={`${FeatureStroke} ${index === 0 ? FeatureFill : "fill-none"}`}
+                strokeWidth={2}
+                vectorEffect="non-scaling-stroke"
+              />
+            ))}
         </svg>
+
+        {/* The key doubles as the switch: hiding one line is the surest way to see what the
+            other covers on its own. */}
+        <div className="absolute top-2 left-2 flex flex-col items-start gap-0.5 rounded-md border bg-background/80 p-1.5 text-xs backdrop-blur-sm">
+          <button
+            type="button"
+            aria-pressed={shown.feature}
+            title="Show or hide the source feature"
+            className={`flex cursor-pointer items-center gap-1.5 rounded px-1 py-0.5 hover:bg-accent ${shown.feature ? "" : "opacity-40"}`}
+            onClick={() =>
+              setShown((current) => ({ ...current, feature: !current.feature }))
+            }
+          >
+            <span className={`h-0.5 w-4 rounded ${FeatureSwatch}`} />
+            Source feature
+          </button>
+
+          {drawing.trailPoints && (
+            <button
+              type="button"
+              aria-pressed={shown.trail}
+              title="Show or hide the matched trail"
+              className={`flex cursor-pointer items-center gap-1.5 rounded px-1 py-0.5 hover:bg-accent ${shown.trail ? "" : "opacity-40"}`}
+              onClick={() =>
+                setShown((current) => ({ ...current, trail: !current.trail }))
+              }
+            >
+              <span className={`h-1.5 w-4 rounded ${TrailSwatch}`} />
+              Matched trail
+            </button>
+          )}
+
+          <span className="flex items-center gap-1.5 px-1 py-0.5 text-muted-foreground">
+            <span className={`size-2 rounded-full ${FeatureSwatch}`} />
+            Start
+            <span className="ml-1 size-2 rounded-full border border-orange-600 dark:border-amber-400" />
+            End
+          </span>
+        </div>
 
         <div className="absolute top-2 right-2 flex flex-col gap-1">
           <Button
@@ -536,27 +586,9 @@ export function GeometryPreview({ feature, trail, className }: Props) {
         )}
       </div>
 
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
-        <span className="flex items-center gap-1.5">
-          <span className="h-0.5 w-4 rounded bg-primary" />
-          Source feature
-        </span>
-        {trailPath && (
-          <span className="flex items-center gap-1.5">
-            <span className="h-1 w-4 rounded bg-muted-foreground/50" />
-            Matched trail
-          </span>
-        )}
-        <span className="flex items-center gap-1.5">
-          <span className="size-2 rounded-full bg-primary" />
-          Start
-          <span className="ml-2 size-2 rounded-full border border-primary" />
-          End
-        </span>
-        <span className="ml-auto">
-          {zoomedIn ? "Drag to pan · 0 to fit" : "Scroll to zoom · drag to pan"}
-        </span>
-      </div>
+      <p className="text-right text-xs text-muted-foreground">
+        {zoomedIn ? "Drag to pan · 0 to fit" : "Scroll to zoom · drag to pan"}
+      </p>
     </div>
   );
 }

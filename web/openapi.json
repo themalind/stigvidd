@@ -4457,6 +4457,37 @@
           "featureProperties": {
             "type": "string",
             "nullable": true
+          },
+          "sharingTheTrail": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TrailImportSiblingResponse"
+            }
+          }
+        }
+      },
+      "TrailImportSiblingResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "proposalId",
+          "featureName",
+          "decision",
+          "decidedRole"
+        ],
+        "properties": {
+          "proposalId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "featureName": {
+            "type": "string"
+          },
+          "decision": {
+            "type": "string"
+          },
+          "decidedRole": {
+            "type": "string"
           }
         }
       },

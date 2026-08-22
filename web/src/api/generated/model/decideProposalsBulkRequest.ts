@@ -13,8 +13,8 @@ export interface DecideProposalsBulkRequest {
   /** @nullable */
   role?: string | null;
   /**
-   * @maxLength 2000
-   * @nullable
-   */
+     * @maxLength 2000
+     * @nullable
+     */
   note?: string | null;
 }

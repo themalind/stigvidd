@@ -4,6 +4,7 @@
  * StigVidd
  * OpenAPI spec version: 1.0.0
  */
+import type { TrailImportSiblingResponse } from './trailImportSiblingResponse';
 
 export interface TrailImportPreviewResponse {
   proposalId: number;
@@ -37,4 +38,5 @@ export interface TrailImportPreviewResponse {
   trailIsNearestOnly?: boolean;
   /** @nullable */
   featureProperties?: string | null;
+  sharingTheTrail?: TrailImportSiblingResponse[];
 }

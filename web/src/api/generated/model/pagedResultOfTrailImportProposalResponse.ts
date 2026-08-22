@@ -4,7 +4,7 @@
  * StigVidd
  * OpenAPI spec version: 1.0.0
  */
-import type { TrailImportProposalResponse } from "./trailImportProposalResponse";
+import type { TrailImportProposalResponse } from './trailImportProposalResponse';
 
 export interface PagedResultOfTrailImportProposalResponse {
   items?: TrailImportProposalResponse[];

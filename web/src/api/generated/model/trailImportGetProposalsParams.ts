@@ -6,14 +6,14 @@
  */
 
 export type TrailImportGetProposalsParams = {
-  /**
-   * @nullable
-   */
-  confidence?: string | null;
-  /**
-   * @nullable
-   */
-  decision?: string | null;
-  page?: number;
-  pageSize?: number;
+/**
+ * @nullable
+ */
+confidence?: string | null;
+/**
+ * @nullable
+ */
+decision?: string | null;
+page?: number;
+pageSize?: number;
 };

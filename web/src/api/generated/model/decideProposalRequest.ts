@@ -13,19 +13,19 @@ export interface DecideProposalRequest {
   /** @nullable */
   role?: string | null;
   /**
-   * @maxLength 2000
-   * @nullable
-   */
+     * @maxLength 2000
+     * @nullable
+     */
   note?: string | null;
   /**
-   * @maxLength 200
-   * @nullable
-   */
+     * @maxLength 200
+     * @nullable
+     */
   name?: string | null;
   /**
-   * @minimum 0.01
-   * @maximum 1000
-   * @nullable
-   */
+     * @minimum 0.01
+     * @maximum 1000
+     * @nullable
+     */
   lengthKm?: number | null;
 }

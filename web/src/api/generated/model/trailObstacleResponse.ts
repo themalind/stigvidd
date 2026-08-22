@@ -4,7 +4,7 @@
  * StigVidd
  * OpenAPI spec version: 1.0.0
  */
-import type { TrailObstacleSolvedVoteResponse } from "./trailObstacleSolvedVoteResponse";
+import type { TrailObstacleSolvedVoteResponse } from './trailObstacleSolvedVoteResponse';
 
 export interface TrailObstacleResponse {
   identifier: string;

@@ -4,6 +4,7 @@ import {
   AlertTriangle,
   Ban,
   Check,
+  Copy,
   ExternalLink,
   Info,
   Link2,
@@ -247,7 +248,12 @@ export function ProposalDetail({
 
   async function decide(
     decision: Decision,
-    picked?: { trailIdentifier?: string; name?: string; lengthKm?: number },
+    picked?: {
+      trailIdentifier?: string;
+      name?: string;
+      lengthKm?: number;
+      role?: LinkRole;
+    },
   ) {
     setSaving(true);
     try {
@@ -255,7 +261,10 @@ export function ProposalDetail({
         decision,
         trailIdentifier: picked?.trailIdentifier,
         // Only these two link to a trail the reviewer picked; the rest have no role to set.
-        role: decision === "Accept" || decision === "Relink" ? role : undefined,
+        role:
+          decision === "Accept" || decision === "Relink"
+            ? (picked?.role ?? role)
+            : undefined,
         note: note.trim() || undefined,
         name: picked?.name,
         lengthKm: picked?.lengthKm,
@@ -301,6 +310,12 @@ export function ProposalDetail({
     if (pendingShortcut === "Pending" && proposal.decision === "Pending")
       return;
 
+    // Nor is there anything to save in deciding a row exactly as it already stands.
+    if (pendingShortcut === "Accept" && settledAsAccept) return;
+    if (pendingShortcut === "Exclude" && proposal.decision === "Exclude")
+      return;
+    if (pendingShortcut === "Skip" && proposal.decision === "Skip") return;
+
     void decide(pendingShortcut);
     // decide is re-created every render; the shortcut is the only trigger that matters.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -345,6 +360,26 @@ export function ProposalDetail({
   }, [preview]);
 
   const measuredTrailLength = lengthGap?.measured ?? null;
+
+  // Features that would link to the same trail as this one. Excluded and CreateNew rows
+  // aim at no trail, so the server leaves them out.
+  const sharing = preview?.sharingTheTrail ?? [];
+
+  // Which of them is carrying the trail's route. A trail whose features are all duplicates
+  // has nothing to build its line from and keeps the one it has, so the offer here is
+  // whichever role the trail is still missing.
+  // A decision already made, with nothing on the panel that would change it. Pressing it
+  // again would save the same row and step on, which reads as the screen flinching.
+  const settledAsAccept =
+    proposal.decision === "Accept" &&
+    proposal.decidedRole === role &&
+    !rewriteLength;
+
+  const carrier = sharing.find(
+    (other) =>
+      (other.decision === "Accept" || other.decision === "Relink") &&
+      other.decidedRole === "Segment",
+  );
 
   // A created trail is stored with the source's line, so its measured length is the one
   // that matches the geometry. The stated figure is only better when the line is broken.
@@ -501,6 +536,45 @@ export function ProposalDetail({
               </label>
             ))}
           </RadioGroup>
+        </div>
+      )}
+
+      {sharing.length > 0 && (
+        <div className="space-y-2 rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm text-amber-700 dark:text-amber-400">
+          <p className="flex items-start gap-2">
+            <AlertTriangle className="mt-0.5 size-4 shrink-0" />
+            <span>
+              {sharing.length === 1
+                ? "Another feature in this session points at the same trail:"
+                : `${sharing.length} other features in this session point at the same trail:`}{" "}
+              {sharing.map((other) => other.featureName).join(", ")}.{" "}
+              {carrier
+                ? `${carrier.featureName} is carrying the trail's route, so this one is a duplicate — linked to the trail, adding no geometry.`
+                : "None of them is carrying the trail's route yet. One has to, or the trail is left with the line it already has — right only where the geometry is curated on purpose."}
+            </span>
+          </p>
+          {canAccept &&
+            (carrier ? (
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={saving}
+                onClick={() => void decide("Accept", { role: "Duplicate" })}
+              >
+                <Copy />
+                Accept as duplicate
+              </Button>
+            ) : (
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={saving}
+                onClick={() => void decide("Accept", { role: "Segment" })}
+              >
+                <Check />
+                Accept as segment
+              </Button>
+            ))}
         </div>
       )}
 
@@ -671,12 +745,15 @@ export function ProposalDetail({
         <div className="flex flex-wrap items-center gap-2">
           <Hint
             text={
-              canAccept
-                ? "Links the feature to the suggested trail and keeps that match. The trail's own name and length stay as they are. (a)"
-                : "Nothing was suggested for this feature. Relink it to a trail you pick, or create a new one."
+              settledAsAccept
+                ? "Already accepted as it stands. Change the role or the length to save it again, or undo it (u)."
+                : canAccept
+                  ? "Links the feature to the suggested trail and keeps that match. The trail's own name and length stay as they are. (a)"
+                  : "Nothing was suggested for this feature. Relink it to a trail you pick, or create a new one."
             }
           >
             <Button
+              variant={settledAsAccept ? "secondary" : "default"}
               onClick={() =>
                 void decide("Accept", {
                   lengthKm: rewriteLength
@@ -684,10 +761,10 @@ export function ProposalDetail({
                     : undefined,
                 })
               }
-              disabled={saving || !canAccept}
+              disabled={saving || !canAccept || settledAsAccept}
             >
               {saving ? <Loader2 className="animate-spin" /> : <Check />}
-              Accept
+              {settledAsAccept ? "Accepted" : "Accept"}
             </Button>
           </Hint>
           <Hint text="Links it to a trail you pick instead of the suggested one, for when two trails run along each other. (r)">
@@ -710,24 +787,38 @@ export function ProposalDetail({
               New trail
             </Button>
           </Hint>
-          <Hint text="The feature never becomes a trail. Remembered by the shape of the line, so later imports keep it out. (x)">
+          <Hint
+            text={
+              proposal.decision === "Exclude"
+                ? "Already excluded. Undo it (u) to put it back in play."
+                : "The feature never becomes a trail. Remembered by the shape of the line, so later imports keep it out. (x)"
+            }
+          >
             <Button
-              variant="outline"
+              variant={
+                proposal.decision === "Exclude" ? "secondary" : "outline"
+              }
               onClick={() => void decide("Exclude")}
-              disabled={saving}
+              disabled={saving || proposal.decision === "Exclude"}
             >
               <Ban />
-              Exclude
+              {proposal.decision === "Exclude" ? "Excluded" : "Exclude"}
             </Button>
           </Hint>
-          <Hint text="No decision. Sets the row apart from the ones you have not looked at yet. (s)">
+          <Hint
+            text={
+              proposal.decision === "Skip"
+                ? "Already skipped. Pick a decision, or undo it (u)."
+                : "No decision. Sets the row apart from the ones you have not looked at yet. (s)"
+            }
+          >
             <Button
-              variant="ghost"
+              variant={proposal.decision === "Skip" ? "secondary" : "ghost"}
               onClick={() => void decide("Skip")}
-              disabled={saving}
+              disabled={saving || proposal.decision === "Skip"}
             >
               <SkipForward />
-              Skip
+              {proposal.decision === "Skip" ? "Skipped" : "Skip"}
             </Button>
           </Hint>
 

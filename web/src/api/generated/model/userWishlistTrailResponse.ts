@@ -4,8 +4,8 @@
  * StigVidd
  * OpenAPI spec version: 1.0.0
  */
-import type { RatingResponse } from "./ratingResponse";
-import type { TrailImageResponse } from "./trailImageResponse";
+import type { RatingResponse } from './ratingResponse';
+import type { TrailImageResponse } from './trailImageResponse';
 
 export interface UserWishlistTrailResponse {
   identifier: string;

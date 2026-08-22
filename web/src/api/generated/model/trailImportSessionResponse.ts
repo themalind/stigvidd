@@ -4,7 +4,7 @@
  * StigVidd
  * OpenAPI spec version: 1.0.0
  */
-import type { TrailImportCountsResponse } from "./trailImportCountsResponse";
+import type { TrailImportCountsResponse } from './trailImportCountsResponse';
 
 export interface TrailImportSessionResponse {
   id: number;
