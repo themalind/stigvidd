@@ -18,6 +18,16 @@
     <!-- pinned above the 2.0.0 that Microsoft.AspNetCore.OpenApi resolves: GHSA-v5pm-xwqc-g5wc -->
     <PackageReference Include="Microsoft.OpenApi" Version="2.12.0" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.2" />
+    <!-- Telemetry. Registered only when Otlp:Endpoint is configured; see
+         Extensions/TelemetryExtensions.cs. Npgsql 10 emits its own "Npgsql"
+         ActivitySource and Meter, so AddSource("Npgsql") covers the database and
+         no Npgsql.OpenTelemetry shim is needed. EntityFrameworkCore
+         instrumentation is deliberately absent: it ships prerelease only. -->
+    <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.18.0" />
+    <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.18.0" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.18.0" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.Http" Version="1.18.0" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.Runtime" Version="1.18.0" />
     <PackageReference Include="NSwag.AspNetCore" Version="14.7.1" />
     <PackageReference Include="NSwag.Core" Version="14.7.1" />
     <PackageReference Include="NSwag.Generation" Version="14.7.1" />

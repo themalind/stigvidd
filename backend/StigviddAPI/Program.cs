@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Globalization;
 using System.Text.Json;
 using Microsoft.AspNetCore.Authentication;
@@ -9,7 +10,9 @@ using Infrastructure;
 using Keycloak.AuthServices.Common;
 using Keycloak.AuthServices.Sdk;
 using Microsoft.AspNetCore.Http.Features;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using SharpGrip.FluentValidation.AutoValidation.Mvc.Extensions;
+using StigviddAPI.Extensions;
 
 namespace StigviddAPI;
 
@@ -112,6 +115,13 @@ public class Program
 
         builder.Services.AddStigVidd(connectionString);
 
+        // Logs, traces and metrics over OTLP. Registers nothing at all unless
+        // Otlp:Endpoint is configured — see Extensions/TelemetryExtensions.cs.
+        builder.AddStigViddTelemetry();
+
+        builder.Services.AddHealthChecks()
+            .AddCheck<DatabaseHealthCheck>("database", tags: ["ready"]);
+
         // Deletes obstacle reports once they are past their retention period
         builder.Services.AddHostedService<StigviddAPI.BackgroundServices.ExpiredObstacleCleanupService>();
 
@@ -149,7 +159,22 @@ public class Program
             {
                 var exception = context.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerFeature>()?.Error;
                 var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
-                logger.LogError(exception, "Unhandled exception");
+
+                // Activity.Current is still the ASP.NET Core request activity here, so this is
+                // the same trace id the span carries: paste it into OpenObserve and you land on
+                // the failing request. Falls back to TraceIdentifier when telemetry is off.
+                //
+                // OTLP log records carry TraceId as a field automatically; naming it in the
+                // template is what makes the plain CONSOLE output correlatable too, which is
+                // the only view available when telemetry is not configured.
+                //
+                // The response body is deliberately left empty, as before. Errors the service
+                // layer handles already come back as ProblemDetails carrying a traceId (MVC
+                // does that for [ApiController] error results), and inventing a different
+                // shape here would make the two 500 paths disagree.
+                var traceId = Activity.Current?.TraceId.ToString() ?? context.TraceIdentifier;
+
+                logger.LogError(exception, "Unhandled exception. TraceId: {TraceId}", traceId);
 
                 context.Response.StatusCode = StatusCodes.Status500InternalServerError;
                 await context.Response.CompleteAsync();
@@ -165,6 +190,13 @@ public class Program
             app.UseSwaggerUi();
             app.MapOpenApi();
         }
+
+        // Mapped before UseHttpsRedirection: the container serves plain HTTP on 8080 behind
+        // Caddy, and a Docker healthcheck probes 127.0.0.1 directly — a redirect would turn
+        // every probe into a 307. Unauthenticated by design, and both paths are excluded from
+        // tracing (see TelemetryExtensions.IsWorthTracing) so they cannot flood the pipe.
+        app.MapHealthChecks("/healthz", new HealthCheckOptions { Predicate = _ => false }).AllowAnonymous();
+        app.MapHealthChecks("/readyz", new HealthCheckOptions { Predicate = check => check.Tags.Contains("ready") }).AllowAnonymous();
 
         app.UseHttpsRedirection();
 

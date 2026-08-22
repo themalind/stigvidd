@@ -13,6 +13,8 @@ wrong is "we retained precise location data about identifiable users for two yea
 
 | Concern                                        | File                                     |
 | ---------------------------------------------- | ---------------------------------------- |
+| Backend OTel wiring (opt-in guard, filters)    | `backend/StigviddAPI/Extensions/TelemetryExtensions.cs` |
+| Readiness probe over the DB                    | `backend/StigviddAPI/Extensions/DatabaseHealthCheck.cs` |
 | Service definition, retention + memory caps    | `docker-compose.yml` → `openobserve`     |
 | Public routing, ingest/UI split, body cap      | `proxy/Caddyfile`                        |
 | Metrics retention override + PII guard         | `scripts/observatory-retention.sh`       |
@@ -24,6 +26,15 @@ wrong is "we retained precise location data about identifiable users for two yea
 - **Backend** exports logs, traces and metrics over **OTLP/HTTP**, in-stack and in
   plaintext to `http://openobserve:5080/api/default`. No proxy hop, no
   certificate, no hairpin, no TLS cost on a per-span path.
+
+  `Otlp:Endpoint` is the **org base, with no signal path** — `/v1/logs`,
+  `/v1/traces` and `/v1/metrics` are appended per signal in
+  `TelemetryExtensions.Configure`. That append is ours on purpose: the SDK only
+  does it for the `OTEL_EXPORTER_OTLP_ENDPOINT` *environment variable*, whereas
+  assigning `OtlpExporterOptions.Endpoint` in code means "this is the complete
+  URL". Get it wrong and every batch POSTs to the org root and OpenObserve
+  answers 404 — silently, because export failures never surface as app errors.
+  The symptom is simply no data, with a healthy-looking application.
 - **Mobile apps** post logs and RUM **straight from devices** over public HTTPS.
   This makes `observatory.<domain>` the first write endpoint in the stack that
   accepts effectively-unauthenticated traffic from the open internet — `media`
@@ -32,6 +43,46 @@ wrong is "we retained precise location data about identifiable users for two yea
 - Telemetry is **opt-in everywhere**: with the config absent, the backend
   registers no OpenTelemetry providers at all and the app initialises no SDK.
   Nothing breaks when observability is unconfigured, or down.
+
+## What the backend emits
+
+Registered only when `Otlp:Endpoint` is set. Verified against a live v0.92.2
+instance:
+
+- **Traces** — ASP.NET Core server spans plus `postgresql` child spans. The
+  database spans come from `AddSource("Npgsql")`: Npgsql 10 ships its own
+  `ActivitySource`, so no `Npgsql.OpenTelemetry` package is needed (that package
+  is a two-method shim over exactly this call).
+- **Logs** — into `Otlp:LogStream`, carrying `trace_id`/`span_id`, the request
+  scope (`requestpath`, `actionname`) and `_originalformat_`, so the existing
+  `"{FacilityId}"`-style templates stay queryable rather than collapsing to
+  rendered strings. A failing request ties its controller log, repository log and
+  EF Core error together under one trace id.
+- **Metrics** — ASP.NET Core, HttpClient, .NET runtime and Npgsql. Note this is
+  **~70 streams** from one service, since OpenObserve creates one per metric name
+  and histograms add `_bucket`/`_count`/`_sum`/`_min`/`_max` variants. That is why
+  the retention override is a script rather than a manual UI task.
+
+**Not** emitted, deliberately: spans for `/healthz`, `/readyz`, `/swagger`,
+`/openapi` and `OPTIONS` preflights. Health probes alone would otherwise be the
+single largest source of spans, forever.
+
+Sampling stays at 100% (`AlwaysOnSampler`). Volume is nowhere near needing
+probabilistic sampling, and sampling away spans would destroy the mobile-RUM-to-
+server correlation this exists to provide. Volume is controlled by *filtering*
+instead. If a head sampler is ever added, it must be `ParentBasedSampler`, or a
+sampled mobile request gets dropped server-side.
+
+## Health endpoints
+
+`/healthz` (liveness) and `/readyz` (readiness, checks the database) are
+unauthenticated and mapped **before** `UseHttpsRedirection`: the container serves
+plain HTTP on 8080 behind Caddy and a Docker healthcheck probes `127.0.0.1`
+directly, so a redirect would turn every probe into a 307.
+
+Stopping Postgres correctly yields `readyz` 503 while `healthz` stays 200 —
+liveness is not readiness, and conflating them would make Docker restart a
+perfectly healthy API whenever the database blipped.
 
 ## Retention: 7 days for logs, 2 years for metrics
 
