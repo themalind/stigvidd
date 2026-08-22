@@ -56,7 +56,7 @@ public class Program
                     else
                     {
                         policy
-                            .WithOrigins("https://stigvidd.se")
+                            .WithOrigins("https://stigvidd.se", "https://api.stigvidd.se")
                             .AllowAnyHeader()
                             .AllowAnyMethod();
                     }

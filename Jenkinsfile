@@ -89,7 +89,7 @@ pipeline {
 
     // Web build-time config (public values, baked into the SPA bundle).
     VITE_API_URL    = 'https://api.stigvidd.se'
-    VITE_OIDC_URL   = 'https://inkaben.se/auth'
+    VITE_OIDC_URL   = 'https://auth.stigvidd.se'
     VITE_OIDC_REALM = 'stigvidd'
     VITE_CLIENT_ID  = 'stigvidd-admin'
     // ========================================================================
