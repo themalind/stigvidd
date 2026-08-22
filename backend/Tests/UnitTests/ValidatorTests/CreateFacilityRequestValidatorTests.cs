@@ -61,6 +61,11 @@ public class CreateFacilityRequestValidatorTests
     [InlineData(1)]
     [InlineData(2)]
     [InlineData(3)]
+    [InlineData(4)]
+    [InlineData(8)]
+    [InlineData(16)]
+    [InlineData(12)]
+    [InlineData(31)]
     public void Validate_WithValidFacilityType_ShouldPass(int facilityType)
     {
         var result = _validator.Validate(new CreateFacilityRequest
@@ -73,6 +78,24 @@ public class CreateFacilityRequestValidatorTests
         });
 
         result.IsValid.Should().BeTrue();
+    }
+
+    [Theory]
+    [InlineData(32)]
+    [InlineData(99)]
+    [InlineData(-1)]
+    public void Validate_WithUnknownFacilityTypeBits_ShouldFail(int facilityType)
+    {
+        var result = _validator.Validate(new CreateFacilityRequest
+        {
+            Name = "Grillplats",
+            FacilityType = facilityType,
+            IsAccessible = true,
+            Latitude = 58.9m,
+            Longitude = 14.5m
+        });
+
+        result.IsValid.Should().BeFalse();
     }
 
     // --- Latitude ---

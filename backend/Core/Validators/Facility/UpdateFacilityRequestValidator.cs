@@ -12,8 +12,8 @@ public class UpdateFacilityRequestValidator : AbstractValidator<UpdateFacilityRe
              .WithMessage("Name is required.")
              .When(x => x.Name != null);
         RuleFor(x => x.FacilityType)
-            .NotEmpty()
-            .WithMessage("FacilityType is required.")
+            .Must(value => FacilityTypes.IsKnown(value.GetValueOrDefault()))
+            .WithMessage("FacilityType must be a combination of the known facility types.")
             .When(x => x.FacilityType.HasValue);
         RuleFor(x => x.Latitude)
             .InclusiveBetween(-90, 90)

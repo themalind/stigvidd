@@ -256,6 +256,22 @@ public class TrailImportService : ITrailImportService
             return Result.Ok(preview);
         }
 
+        // Only what the feature is actually aimed at can be shared; the nearest trail is
+        // drawn for orientation and nothing is linked to it.
+        if (!preview.TrailIsNearestOnly)
+        {
+            var siblings = await _repository.GetSiblingsOnTrailAsync(sessionId, proposalId, trailId.Value, ctoken);
+
+            if (siblings.IsSuccess)
+                preview.SharingTheTrail = [.. siblings.Value.Select(s => new TrailImportSiblingResponse
+                {
+                    ProposalId = s.ProposalId,
+                    FeatureName = s.FeatureName,
+                    Decision = s.Decision.ToString(),
+                    DecidedRole = s.DecidedRole.ToString(),
+                })];
+        }
+
         preview.TrailId = trail.Value.TrailId;
         preview.TrailIdentifier = trail.Value.Identifier;
         preview.TrailName = trail.Value.Name;

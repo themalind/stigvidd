@@ -435,6 +435,34 @@ public class TrailImportRepository : ITrailImportRepository
         }
     }
 
+    // CreateNew and Exclude aim at no trail at all, so they are not competing for this one.
+    public async Task<RepositoryResult<IReadOnlyList<ProposalSibling>>> GetSiblingsOnTrailAsync(
+        int sessionId, int proposalId, int trailId, CancellationToken ctoken)
+    {
+        try
+        {
+            using var context = await _dbContextFactory.CreateDbContextAsync(ctoken);
+
+            var siblings = await context.TrailImportProposals
+                .AsNoTracking()
+                .Where(p => p.SessionId == sessionId
+                    && p.Id != proposalId
+                    && (p.DecidedTrailId ?? p.SuggestedTrailId) == trailId
+                    && p.Decision != ProposalDecision.CreateNew
+                    && p.Decision != ProposalDecision.Exclude)
+                .OrderBy(p => p.Id)
+                .Select(p => new ProposalSibling(p.Id, p.FeatureName, p.Decision, p.DecidedRole))
+                .ToListAsync(ctoken);
+
+            return RepositoryResult<IReadOnlyList<ProposalSibling>>.Success(siblings);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "TrailImportRepository: GetSiblingsOnTrailAsync -> Something went wrong when reading the other proposals on trail {trailId}.", trailId);
+            return RepositoryResult<IReadOnlyList<ProposalSibling>>.Error();
+        }
+    }
+
     public async Task<RepositoryResult<TrailForReview>> GetTrailForReviewAsync(int trailId, CancellationToken ctoken)
     {
         try

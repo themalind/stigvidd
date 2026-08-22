@@ -42,6 +42,11 @@ public class EndpointAuthorizationTests : IClassFixture<StigViddWebApplicationFa
         "POST /api/v1/Account/forgot-password",
         "POST /api/v1/Account/register",
 
+        // Probes. Reached before anything is signed in and by design: healthz answers
+        // liveness only and readyz runs the checks tagged ready, neither returns data.
+        "* /healthz",
+        "* /readyz",
+
         // Mapped only in Development, which is the environment the test host runs in.
         "GET /openapi/{documentName}.json",
     ];

@@ -10,3 +10,13 @@ public enum FacilityType
 }
 
 // Do not change the values of the enum as they are used in the database and changing them would break existing data.
+
+public static class FacilityTypes
+{
+    public const FacilityType Known =
+      FacilityType.FirePit | FacilityType.Shelter | FacilityType.FishingArea
+      | FacilityType.SwimmingArea | FacilityType.NatureReserve;
+
+    // True for any non-empty combination of known flags.
+    public static bool IsKnown(int value) => value != 0 && ((FacilityType)value & ~Known) == 0;
+}

@@ -283,6 +283,101 @@ public class TrailImportReviewIntegrationTests : IClassFixture<StigViddWebApplic
     }
 
     [Fact]
+    public async Task GetSiblingsOnTrailAsync_ShouldFindTheOtherFeatureAimedAtTheSameTrail()
+    {
+        // Arrange — the source ships a trail twice, which is how one trail ends up with two
+        // features. Linking both as Segment would lay the same ground into it twice.
+        var (repository, context) = Resolve();
+        var sessionId = CreateSession(context);
+
+        var first = Add(context, sessionId, "Vildmarksleden", MatchConfidence.Certain, TivedenId);
+        var second = Add(context, sessionId, "Vildmarksspåret (gran)", MatchConfidence.High, TivedenId);
+        Add(context, sessionId, "Någon annan led", MatchConfidence.Certain, StorsjoledenId);
+
+        // Act
+        var result = await repository.GetSiblingsOnTrailAsync(
+            sessionId, first.Id, TivedenId, TestContext.Current.CancellationToken);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().ContainSingle();
+        result.Value[0].ProposalId.Should().Be(second.Id);
+        result.Value[0].FeatureName.Should().Be("Vildmarksspåret (gran)");
+        result.Value[0].Decision.Should().Be(ProposalDecision.Pending);
+    }
+
+    [Fact]
+    public async Task GetSiblingsOnTrailAsync_ShouldLeaveOutTheOnesAimedAtNoTrail()
+    {
+        // Arrange — a feature decided CreateNew or Exclude is not competing for this trail,
+        // whatever the analysis once suggested for it.
+        var (repository, context) = Resolve();
+        var sessionId = CreateSession(context);
+
+        var mine = Add(context, sessionId, "Vildmarksleden", MatchConfidence.Certain, TivedenId);
+        var creating = Add(context, sessionId, "Egen led", MatchConfidence.High, TivedenId);
+        var excluded = Add(context, sessionId, "Kanotled", MatchConfidence.High, TivedenId);
+
+        await repository.SetDecisionAsync(
+            sessionId, [creating.Id], ProposalDecision.CreateNew, null, TrailSourceLinkRole.Segment,
+            null, new ProposalOverrides("Egen led", null), "granskare", TestContext.Current.CancellationToken);
+
+        await repository.SetDecisionAsync(
+            sessionId, [excluded.Id], ProposalDecision.Exclude, null, TrailSourceLinkRole.Excluded,
+            null, overrides: null, "granskare", TestContext.Current.CancellationToken);
+
+        // Act
+        var result = await repository.GetSiblingsOnTrailAsync(
+            sessionId, mine.Id, TivedenId, TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Value.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task GetSiblingsOnTrailAsync_ShouldFollowTheTrailTheReviewerRelinkedTo()
+    {
+        // Arrange — a feature relinked onto this trail competes for it even though the
+        // analysis suggested another one.
+        var (repository, context) = Resolve();
+        var sessionId = CreateSession(context);
+
+        var mine = Add(context, sessionId, "Vildmarksleden", MatchConfidence.Certain, StorsjoledenId);
+        var moved = Add(context, sessionId, "Vildmarksspåret (gran)", MatchConfidence.Medium, TivedenId);
+
+        await repository.SetDecisionAsync(
+            sessionId, [moved.Id], ProposalDecision.Relink, StorsjoledenId, TrailSourceLinkRole.Segment,
+            null, overrides: null, "granskare", TestContext.Current.CancellationToken);
+
+        // Act
+        var result = await repository.GetSiblingsOnTrailAsync(
+            sessionId, mine.Id, StorsjoledenId, TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Value.Should().ContainSingle();
+        result.Value[0].ProposalId.Should().Be(moved.Id);
+    }
+
+    [Fact]
+    public async Task GetSiblingsOnTrailAsync_ShouldNotReachIntoAnotherSession()
+    {
+        // Arrange
+        var (repository, context) = Resolve();
+        var mineSession = CreateSession(context);
+        var otherSession = CreateSession(context);
+
+        var mine = Add(context, mineSession, "Vildmarksleden", MatchConfidence.Certain, TivedenId);
+        Add(context, otherSession, "Vildmarksleden", MatchConfidence.Certain, TivedenId);
+
+        // Act
+        var result = await repository.GetSiblingsOnTrailAsync(
+            mineSession, mine.Id, TivedenId, TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Value.Should().BeEmpty();
+    }
+
+    [Fact]
     public async Task SetDecisionAsync_ForCreateNew_ShouldKeepTheNameAndLengthTheReviewerPicked()
     {
         // Arrange — a new trail has nothing curated to protect, so the reviewer names it

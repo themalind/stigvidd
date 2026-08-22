@@ -12,7 +12,10 @@ public class CreateFacilityRequestValidator : AbstractValidator<CreateFacilityRe
             .WithMessage("Name is required.");
         RuleFor(x => x.FacilityType)
             .NotEmpty()
-            .WithMessage("FacilityType is required.");
+            .WithMessage("FacilityType is required.")
+            .Must(FacilityTypes.IsKnown)
+            .WithMessage("FacilityType must be a combination of the known facility types.")
+            .When(x => x.FacilityType != 0, ApplyConditionTo.CurrentValidator);
         RuleFor(x => x.Latitude)
             .InclusiveBetween(-90, 90)
             .WithMessage("Latitude must be between -90 and 90.")

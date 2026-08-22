@@ -35,4 +35,8 @@ public class TrailImportPreviewResponse
     // The feature's own properties as they stood in the file, so the reviewer can see
     // what the sync read without opening the export.
     public string? FeatureProperties { get; set; }
+
+    // Other features in this session aiming at the same trail. Empty for all but a handful:
+    // the source repeats a trail now and then, and only one copy may carry its geometry.
+    public IReadOnlyList<TrailImportSiblingResponse> SharingTheTrail { get; set; } = [];
 }

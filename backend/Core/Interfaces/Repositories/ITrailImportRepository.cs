@@ -24,6 +24,8 @@ public interface ITrailImportRepository
     Task<RepositoryResult<TrailImportProposal>> GetProposalAsync(int sessionId, int proposalId, CancellationToken ctoken);
 
     Task<RepositoryResult<TrailForReview>> GetTrailForReviewAsync(int trailId, CancellationToken ctoken);
+    Task<RepositoryResult<IReadOnlyList<ProposalSibling>>> GetSiblingsOnTrailAsync(
+        int sessionId, int proposalId, int trailId, CancellationToken ctoken);
     Task<RepositoryResult<int>> GetTrailIdByIdentifierAsync(string identifier, CancellationToken ctoken);
     Task<RepositoryResult<ProposalIdCheck>> CheckProposalsAsync(int sessionId, IReadOnlyCollection<int> proposalIds, CancellationToken ctoken);
     Task<RepositoryResult<int>> SetDecisionAsync(

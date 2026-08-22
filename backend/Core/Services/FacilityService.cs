@@ -204,14 +204,6 @@ public class FacilityService : IFacilityService
         return Result.Ok();
     }
 
-    private FacilityType MapToFacilityType(int facilityType)
-    {
-        return facilityType switch
-        {
-            1 => FacilityType.FirePit,
-            2 => FacilityType.Shelter,
-            3 => FacilityType.FirePit | FacilityType.Shelter,
-            _ => FacilityType.None,
-        };
-    }
+    private static FacilityType MapToFacilityType(int facilityType) =>
+        FacilityTypes.IsKnown(facilityType) ? (FacilityType)facilityType : FacilityType.None;
 }
