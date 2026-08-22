@@ -67,6 +67,29 @@ services:
       Smtp__User: ${SMTP_NOREPLY_USER:-no-reply@stigvidd.se}
       Smtp__Password: ${SMTP_NOREPLY_PASSWORD:-}
       Smtp__From: ${SMTP_NOREPLY_USER:-no-reply@stigvidd.se}
+      # ---- Telemetry (OpenObserve) ----------------------------------------
+      # OPT-IN. Leave OTLP_ENDPOINT unset and the API registers no OpenTelemetry
+      # providers at all — identical behaviour to before this block existed. The
+      # `:-` (empty default, not `:?`) form is what makes that possible, and
+      # matches how VITE_* is handled for `web`: the API must never fail to start
+      # because observability is unconfigured, or down.
+      #
+      # In-stack plaintext over the `public` docker network: no proxy hop, no
+      # certificate, no hairpin, no TLS cost on a per-span path. No signal path
+      # either — the exporter appends /v1/logs, /v1/traces and /v1/metrics itself.
+      Otlp__Endpoint: ${OTLP_ENDPOINT:-}
+      # Dedicated ingest user created in the OpenObserve UI — NEVER the root
+      # account. Kept as a readable password rather than a pre-encoded blob; the
+      # base64 is built in code (see TelemetryExtensions.cs), which also avoids
+      # the OTEL_EXPORTER_OTLP_HEADERS percent-encoding trap in the .NET SDK.
+      Otlp__Username: ${OTLP_USER:-}
+      Otlp__Password: ${OTLP_PASSWORD:-}
+      # Log stream inside the org. Traces and metrics have their own stores.
+      Otlp__LogStream: ${OTLP_LOG_STREAM:-stigvidd_api_logs}
+      # Reported as the resource attribute service.version. IMAGE_TAG is the
+      # git-derived tag Jenkins builds and deploys with, so a span points at an
+      # exact commit with no Dockerfile or build-arg plumbing.
+      Otlp__ServiceVersion: ${IMAGE_TAG:-latest}
     # No host ports — the proxy is the only ingress. Reachable as `api:8080`
     # on the `public` network.
     networks:
@@ -145,6 +168,92 @@ services:
       - internal   # reach the database
       - public     # be reachable from the proxy
 
+  openobserve:
+    # Telemetry store at observatory.<domain>: logs, traces and metrics from the
+    # API over OTLP, plus logs/errors and RUM posted straight from the mobile
+    # apps over the public internet. TLS is terminated at the proxy.
+    #
+    # Upstream image — unlike api/web/media/proxy/keycloak there is nothing to
+    # build, so it is NOT in the Jenkins build/push set, and (same reasoning as
+    # `db` and `mailserver`) not in its pull/up set either: it holds live data in
+    # a volume, so bumping the tag below is a deliberate, manual
+    # `docker compose up -d openobserve` on the host. See DEPLOYMENT.md Part 3.
+    image: public.ecr.aws/zinclabs/openobserve:v0.92.2
+    restart: unless-stopped
+    # No depends_on, in either direction. Telemetry must never gate the API's
+    # startup — an observability outage taking down the product is exactly the
+    # failure this avoids — and Caddy resolves upstreams lazily, so it 502s until
+    # this is up rather than failing to load its config.
+    #
+    # Note this does NOT use the app's Postgres: in single-node mode the metadata
+    # store (users, ingest tokens, stream settings) is a SQLite file inside
+    # ZO_DATA_DIR, so none of it rides along with the pgdata migration the way
+    # Keycloak's realm does.
+    environment:
+      # First-boot root account, created only while the data volume is empty.
+      # Changing these later does nothing — rotate in the UI instead.
+      ZO_ROOT_USER_EMAIL: ${OBSERVATORY_ROOT_EMAIL:?OBSERVATORY_ROOT_EMAIL must be set}
+      ZO_ROOT_USER_PASSWORD: ${OBSERVATORY_ROOT_PASSWORD:?OBSERVATORY_ROOT_PASSWORD must be set}
+      # Single node, everything on local disk in the `observatory` volume.
+      ZO_LOCAL_MODE: "true"
+      ZO_LOCAL_MODE_STORAGE: disk
+      ZO_DATA_DIR: /data
+      # Public base URL. Alert notifications and "share this view" links are built
+      # from it; leave it unset and they point at localhost:5080.
+      ZO_WEB_URL: https://${OBSERVATORY_DOMAIN:?OBSERVATORY_DOMAIN must be set}
+      # GLOBAL default retention, and the only one OpenObserve has — there is no
+      # per-stream-type setting. 7 days is the policy for logs and traces, the
+      # bulky, disposable signals. Metrics are kept for two years via per-stream
+      # overrides applied after first boot (scripts/observatory-retention.sh);
+      # the global stays low so anything NOT explicitly overridden fails safe —
+      # towards a small disk, not a full one. It is also what bounds how long
+      # personal data lives, so it is a GDPR control, not just a disk one.
+      # (Upstream default here is 3650 days. Minimum accepted value is 3.)
+      ZO_COMPACT_DATA_RETENTION_DAYS: ${OBSERVATORY_RETENTION_DAYS:-7}
+      # The /rum/* ingest endpoints are off by default — the mobile apps need them.
+      ZO_RUM_ENABLED: "true"
+      # Phones buffer telemetry while offline and flush when they next get a
+      # network. The 5-hour DEFAULT SILENTLY REJECTS anything older than that, so
+      # a handset that was off the air overnight loses its whole batch. 48h covers
+      # a weekend in a dead zone. ZO_INGEST_ALLOWED_IN_FUTURE stays at its 24h
+      # default — that is what absorbs handset clock skew.
+      ZO_INGEST_ALLOWED_UPTO: "48"
+      # Both of these default to "50% of total memory", read from the HOST when
+      # the container has no cgroup limit — i.e. this service would happily
+      # reserve half the box and push Postgres into swap. Capping via env rather
+      # than mem_limit is deliberate: hitting these makes OpenObserve spill to
+      # disk, whereas a cgroup limit OOM-kills it mid-flush.
+      ZO_MEM_TABLE_MAX_SIZE: "256"      # MB
+      ZO_MEMORY_CACHE_MAX_SIZE: "256"   # MB
+      ZO_HTTP_WORKER_NUM: "2"           # default is one worker per CPU core
+      # Don't spend our own disk budget storing our own metrics.
+      ZO_SELF_METRIC_CONSUMPTION_ENABLED: "false"
+      # The web admin is a browser caller and would otherwise be blocked by CORS.
+      # Native mobile does not enforce CORS, so this is only about `web`.
+      ZO_CORS_ALLOWED_ORIGINS: https://${WEB_DOMAIN}
+      # No anonymous phone-home to zinclabs (defaults to true). The rest of this
+      # stack is entirely self-hosted, and under GDPR that default would be an
+      # outbound transfer of data to a US processor — so this is not optional.
+      ZO_TELEMETRY: "false"
+      TZ: ${TZ:-Europe/Stockholm}
+    volumes:
+      - observatory:/data
+    # No host ports — the proxy is the only ingress, exactly as for api/web.
+    #
+    # Deliberately NO healthcheck: the published image is distroless (its final
+    # layer is just the `openobserve` binary and three .so files), so there is no
+    # shell, no curl and no wget for a `test:` command to invoke, and both CMD and
+    # CMD-SHELL forms would report the container permanently unhealthy. Nothing
+    # depends_on it either. Probe from outside instead:
+    #   curl -fsS https://observatory.<domain>/healthz   -> {"status":"ok"}
+    #
+    # `public` only. The proxy lives there and must reach it, and `api` is on BOTH
+    # networks so it already resolves this name — adding `internal` buys nothing.
+    # Internal-only would be actively wrong: `internal: true` means no egress,
+    # cutting off Caddy and any outbound alert delivery.
+    networks:
+      - public
+
   proxy:
     # Caddy: TLS termination + automatic Let's Encrypt certs, routing each
     # subdomain to its service. The ONLY service that publishes host ports.
@@ -162,6 +271,11 @@ services:
       API_DOMAIN: ${API_DOMAIN:?API_DOMAIN must be set}
       MEDIA_DOMAIN: ${MEDIA_DOMAIN:?MEDIA_DOMAIN must be set}
       AUTH_DOMAIN: ${AUTH_DOMAIN:?AUTH_DOMAIN must be set}
+      # Required (:?) rather than defaulted, deliberately: an unset
+      # {$OBSERVATORY_DOMAIN} in the Caddyfile produces an EMPTY site address,
+      # which makes Caddy refuse to load its whole config — taking every other
+      # domain down with it. Failing loudly at interpolation time is far better.
+      OBSERVATORY_DOMAIN: ${OBSERVATORY_DOMAIN:?OBSERVATORY_DOMAIN must be set}
       # Nothing is proxied for MAIL_DOMAIN — the site block exists purely so
       # Caddy issues and renews that certificate for the mailserver to read.
       MAIL_DOMAIN: ${MAIL_DOMAIN:?MAIL_DOMAIN must be set}
@@ -187,6 +301,7 @@ services:
           - ${API_DOMAIN}
           - ${MEDIA_DOMAIN}
           - ${AUTH_DOMAIN}
+          - ${OBSERVATORY_DOMAIN}
           # NOT ${MAIL_DOMAIN} — SMTP/IMAP are not proxied by Caddy. That alias
           # belongs to the `mailserver` service below.
 
@@ -292,6 +407,8 @@ volumes:
   media:
   caddy_data:
   caddy_config:
+  observatory:   # telemetry (parquet + WAL + OpenObserve's SQLite meta DB)
+                 # NOT migrated — same treatment as maillogs. See DEPLOYMENT.md.
   maildata:     # mailboxes — stateful, part of the migration path
   mailstate:    # Rspamd/Redis/fail2ban state that should survive a restart
   maillogs:     # not migrated

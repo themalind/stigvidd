@@ -17,7 +17,7 @@ and is designed to be picked up and moved at will.
 
 ## The stack
 
-Seven services on two networks. Only the proxy and the mail server are exposed
+Eight services on two networks. Only the proxy and the mail server are exposed
 to the internet.
 
 | Service      | Image                     | Role                                            |
@@ -27,6 +27,7 @@ to the internet.
 | `api`        | `stigvidd-api` (.NET 10)  | Backend API. Runs EF migrations on startup.     |
 | `media`      | `stigvidd-media` (nginx)  | WebDAV media server (authed writes, public reads). |
 | `keycloak`   | `stigvidd-keycloak`       | Identity provider. Sends the password-reset emails. |
+| `openobserve`| `openobserve` v0.92.2     | Telemetry at observatory.<domain>: logs, traces, metrics and mobile RUM. Ingests from the API (in-stack OTLP) and from the apps (public HTTPS). Upstream image — **not** built by CI. |
 | `mailserver` | `docker-mailserver` 15.1.0 | Mail for the domain: inbound on 25, submission on 465/587, IMAPS on 993. Upstream image — **not** built by CI. |
 | `db`         | `postgis/postgis:17-3.5`  | PostgreSQL + PostGIS. Holds **both** the app database and Keycloak's. |
 
@@ -35,6 +36,13 @@ to the internet.
 - **`pgdata` volume** — the app database *and* the `keycloak` database live here.
   Keycloak's SMTP settings are realm config, so they live here too.
 - **`media` volume** — uploaded images.
+- **`observatory` volume** — telemetry (parquet, WAL, and OpenObserve's own
+  SQLite metadata DB holding users, ingest credentials and stream settings).
+  *Not* migrated by `migrate.sh`: it is potentially the largest volume in the
+  stack and its contents are, by definition, disposable history. The cost of
+  skipping it is that the ingest user, the RUM application and the metrics
+  retention override must be recreated on the new host — step 8, about two
+  minutes.
 - **`maildata` volume** — mailboxes.
 - **`mailstate` volume** — Rspamd/Redis/fail2ban state (spam training, etc.).
 - **`caddy_data` volume** — issued TLS certs. *Not* migrated; Caddy re-issues on the new host.
@@ -54,6 +62,7 @@ Each subdomain needs a public DNS record pointing at the host:
 | `api.stigvidd.se`     | api        |
 | `media.stigvidd.se`   | media      |
 | `auth.stigvidd.se`    | keycloak   |
+| `observatory.stigvidd.se` | openobserve |
 | `mail.stigvidd.se`    | mailserver |
 
 Mail additionally needs MX, SPF, DKIM, DMARC and a Hostup authorisation record —
@@ -66,9 +75,9 @@ see [Mail DNS records](#mail-dns-records).
 On the **target host**:
 
 - Docker Engine + Docker Compose v2, and the user in the `docker` group.
-- Network access to the private registry `inkaben.se`, and to `ghcr.io` (the
-  mail server image).
-- **DNS**: all five subdomains resolve to this host's public IP, with **ports 80
+- Network access to the private registry `inkaben.se`, to `ghcr.io` (the mail
+  server image) and to `public.ecr.aws` (the OpenObserve image).
+- **DNS**: all six subdomains resolve to this host's public IP, with **ports 80
   and 443 reachable** (required for Let's Encrypt to issue certificates).
 - **No system MTA on the host.** Most VPS images ship Postfix or Exim enabled,
   which holds port 25 and stops the mail container binding it. Remove it before
@@ -94,6 +103,21 @@ On the **target host**:
   this container — Rspamd runs five workers sharing large mmap'd map files, and
   both `docker stats` and a naive RSS sum double-count them.
   [Troubleshooting → Mail](#mail) documents a lighter, non-Rspamd configuration.
+
+- **Disk (telemetry)**: OpenObserve stores compressed parquet, roughly 10–20×
+  smaller than the raw JSON ingested. With **logs and traces at 7 days** that
+  working set stays small — a few hundred MB plus WAL. **Metrics at 730 days**
+  become the dominant consumer within a few months; expect low single-digit GB at
+  two years for a service this size, driven by *series cardinality* rather than
+  the time window. Check the real number rather than trusting that estimate:
+
+  ```bash
+  docker system df -v | grep observatory
+  ```
+
+  Its resident memory is capped at ~512 MB by the `ZO_MEM_TABLE_MAX_SIZE` and
+  `ZO_MEMORY_CACHE_MAX_SIZE` settings in `docker-compose.yml`; left at their
+  upstream defaults **each** would claim 50% of the host's RAM.
 
 ### Mail DNS records
 
@@ -147,6 +171,41 @@ the authoritative relay details.
 >
 > Then follow steps 6 and 7 below to create the mailboxes and point Keycloak at
 > them. Steps 1–5 are for a genuinely new host.
+>
+> ### Observability does the same thing again
+>
+> `OBSERVATORY_DOMAIN`, `OBSERVATORY_ROOT_EMAIL` and `OBSERVATORY_ROOT_PASSWORD`
+> are `${…:?}`-guarded on `proxy` and `openobserve`, so the same trap applies —
+> until they exist in `/opt/stigvidd/.env`, *every* compose command on that host
+> fails. Add them **before** merging, and publish the `observatory.stigvidd.se`
+> A record at the same time:
+>
+> ```bash
+> cd /opt/stigvidd
+> cat >> .env <<'EOF'
+> OBSERVATORY_DOMAIN=observatory.stigvidd.se
+> OBSERVATORY_ROOT_EMAIL=admin@stigvidd.se
+> OBSERVATORY_ROOT_PASSWORD=<see the password policy note below>
+> OBSERVATORY_ORG=default
+> OBSERVATORY_RETENTION_DAYS=7
+> OBSERVATORY_METRICS_RETENTION_DAYS=730
+> EOF
+> ```
+>
+> **The root password must satisfy OpenObserve's policy** — 8–128 characters with
+> at least one lowercase, one uppercase, one digit and one special character. A
+> weaker value does not warn: the container panics with `backend job init failed`
+> and never binds a port.
+>
+> After the CI deploy lands the new compose file and proxy image,
+> `observatory.stigvidd.se` will answer **502** until you start the container —
+> that is expected, not a fault. CI does not start it (see Part 3):
+>
+> ```bash
+> docker compose up -d openobserve
+> ```
+>
+> Then do step 8 to create the ingest credentials.
 
 ### 1. Get the deploy files onto the host
 
@@ -195,7 +254,10 @@ On first start:
 - `db` creates the app database and the `keycloak` database (`db/init/`).
 - `api` runs its EF migrations (creates the PostGIS schema).
 - `keycloak` migrates its schema.
-- `proxy` obtains Let's Encrypt certificates for all five domains (seconds, once DNS is right).
+- `proxy` obtains Let's Encrypt certificates for all six domains (seconds, once DNS is right).
+- `openobserve` initialises its data directory and creates the root user from
+  `OBSERVATORY_ROOT_*` — **first boot only**; changing those values later does
+  nothing, and a password failing the complexity policy panics the container.
 - `mailserver` starts Postfix, Dovecot and Rspamd, reading its TLS certificate
   from the proxy's volume. It has **no mailboxes yet** — see step 6.
 
@@ -219,7 +281,13 @@ curl -I https://stigvidd.se       # web
 curl -I https://api.stigvidd.se   # api
 curl -I https://auth.stigvidd.se  # keycloak
 curl -I https://mail.stigvidd.se  # cert-only site block; 200 "Stigvidd mail server"
+curl -I https://observatory.stigvidd.se        # OpenObserve UI (login page)
+curl -s  https://observatory.stigvidd.se/healthz   # {"status":"ok"}
 ```
+
+`openobserve` shows as `Up` but never `healthy` — it has no healthcheck, on
+purpose. The image is distroless (no shell, no curl, no wget inside it), so there
+is nothing to probe with; the `/healthz` call above is the check.
 
 ### 5. Keycloak realm (first deploy only)
 
@@ -298,6 +366,64 @@ it reports TLS and auth failures immediately.
 Because this lives in the `keycloak` database it survives every CI deploy and
 travels with both migration methods in Part 4.
 
+### 8. OpenObserve (first deploy only)
+
+A fresh OpenObserve has the `default` organisation and the root user from
+`OBSERVATORY_ROOT_*`, and nothing else. Sign in at
+`https://observatory.stigvidd.se` and create three things.
+
+**a. A dedicated ingest user for the backend.** Do not hand the root credentials
+to the API — root can read all telemetry and mint credentials. *IAM → Users →
+Add*: `ingest@stigvidd.se`, role `Member`, with write access to the `default`
+org. Put its details in the host `.env`:
+
+```bash
+OTLP_ENDPOINT=http://openobserve:5080/api/default
+OTLP_USER=ingest@stigvidd.se
+OTLP_PASSWORD=<the ingest user's password>
+```
+
+Then restart the API so it picks them up. Until this is done it runs with **no
+exporter at all**, which is the intended fallback, not a failure:
+
+```bash
+docker compose up -d --no-deps api
+```
+
+**b. A RUM application for the mobile apps.** *Ingestion → RUM → New
+application*, named `stigvidd-app`. It produces an `applicationId` and a
+`clientToken`, which the app build needs.
+
+> **These two values ship inside the installed app and are therefore public.**
+> Anyone who extracts them from an APK or IPA can write telemetry into this
+> instance. That is the accepted trade for direct-from-device RUM; the mitigations
+> are the ingest-only scope of the token, the retention caps, and the 10MB
+> request-size limit in the Caddyfile. They must **never** be the same credentials
+> the backend uses. If a token is abused, revoke it here and ship a new app build.
+
+**c. The metrics retention override.** The global default gives logs and traces
+their 7 days. Metrics are kept for two years, which OpenObserve can only express
+as a per-stream override:
+
+```bash
+./scripts/observatory-retention.sh --dry-run   # preview
+./scripts/observatory-retention.sh             # apply
+```
+
+> **Re-run this after any change that adds new instrumentation.** A metrics stream
+> is created the first time that metric is *ingested*, so a stream that did not
+> exist when the script last ran is still on the 7-day global and will silently
+> lose history. The script is idempotent, so re-running it is always safe.
+>
+> It also warns about any metrics field that looks like personal data. **The
+> 730-day window is lawful only because metrics contain none** — see
+> [docs/observability.md](docs/observability.md). Treat a warning as a release
+> blocker, not a cleanup task.
+
+None of this lives in `.env` or in the database the other services share — it is
+stored in OpenObserve's own SQLite metadata DB inside the `observatory` volume,
+which `migrate.sh` does **not** carry. Redo this step after a host move.
+
 ---
 
 ## Part 2 — Configuration reference (`.env`)
@@ -322,10 +448,22 @@ Copy [.env.example](.env.example) to `.env` and set:
 | `SMTP_NOREPLY_USER` / `SMTP_NOREPLY_PASSWORD` | The mailbox Keycloak (and later the API) submits mail as. Must match the account created in Part 1 step 6 **and** Keycloak's realm email settings. |
 | `TZ` | Timezone for mail log timestamps (`Europe/Stockholm`). |
 | `VITE_API_URL` / `VITE_OIDC_URL` / `VITE_OIDC_REALM` / `VITE_CLIENT_ID` | Baked into the web bundle at **build** time. |
+| `OBSERVATORY_DOMAIN` | OpenObserve's public hostname, e.g. `observatory.stigvidd.se`. Also a proxy network alias. **Never leave blank** — an empty site address makes Caddy refuse its whole config, taking every domain down. |
+| `OBSERVATORY_ROOT_EMAIL` / `OBSERVATORY_ROOT_PASSWORD` | First-boot OpenObserve root account; created only while `observatory` is empty. Full admin over all telemetry and credentials — treat like `KC_ADMIN_PASSWORD`. The password **must** be 8–128 chars with lower, upper, digit and special, or the container panics on startup. |
+| `OBSERVATORY_ORG` | Organisation telemetry is written into (`default`). Part of the OTLP URL path. |
+| `OBSERVATORY_RETENTION_DAYS` | **Logs and traces** retention (default 7). This is the *global* default and the only one OpenObserve has; upstream's own default is 3650, so do not remove it. Minimum 3. |
+| `OBSERVATORY_METRICS_RETENTION_DAYS` | **Metrics** retention (default 730), applied as a per-stream override by `scripts/observatory-retention.sh`. Lawful only while metrics carry no personal data — see [docs/observability.md](docs/observability.md). |
+| `OTLP_ENDPOINT` | **Optional.** In-stack OTLP target for the API, `http://openobserve:5080/api/default`. Unset = the API registers no telemetry providers at all and behaves exactly as before. |
+| `OTLP_USER` / `OTLP_PASSWORD` | **Optional; the password is secret.** The dedicated ingest account from Part 1 step 8 — never the root account. |
+| `OTLP_LOG_STREAM` | Stream the API's logs land in (default `stigvidd_api_logs`). |
 
 > **`VITE_*` are build-time.** They are compiled into the web image by CI. With
 > stable public domains you rarely change them, but if you do, the web image must
 > be **rebuilt** (not just restarted).
+
+> **The apps' telemetry config is not here.** The RUM `applicationId` and
+> `clientToken` are compiled into the mobile binary by EAS, not by this compose
+> file. Changing them needs a new app build, and they are public once shipped.
 
 Keep `.env` secret and out of git (it already is).
 
@@ -343,25 +481,34 @@ deploy-host prep).
 
 **Application code only.** The deploy step pulls and recreates exactly the five
 images it builds — `api web media proxy keycloak` — and passes `--no-deps` so
-compose never acts on `db` or `mailserver`.
+compose never acts on `db`, `mailserver` or `openobserve`.
 
-Left alone: the `db` and `mailserver` services, and every named volume
-(`pgdata`, `media`, `maildata`, `mailstate`, `maillogs`, `caddy_data`,
-`caddy_config`). Recreating the five app containers does not disturb uploads,
+Left alone: the `db`, `mailserver` and `openobserve` services, and every named
+volume (`pgdata`, `media`, `observatory`, `maildata`, `mailstate`, `maillogs`,
+`caddy_data`, `caddy_config`). Recreating the five app containers does not disturb uploads,
 mailboxes or issued certificates, and Keycloak's realm — including its SMTP
 settings — survives because it lives in the untouched database.
 
-The tradeoff is deliberate: **`postgis` and `docker-mailserver` version bumps in
-`docker-compose.yml` are not applied by CI.** Both are upstream images holding
-live state, so they stay manual — deploy the compose change, then on the host:
+The tradeoff is deliberate: **`postgis`, `docker-mailserver` and `openobserve`
+version bumps in `docker-compose.yml` are not applied by CI.** All three are
+upstream images holding live state, so they stay manual — deploy the compose
+change, then on the host:
 
 ```bash
 cd /opt/stigvidd && docker compose up -d db
 cd /opt/stigvidd && docker compose up -d mailserver
+cd /opt/stigvidd && docker compose up -d openobserve
 ```
 
-Any change to the `mailserver` service block needs that second command too; a
-normal CI deploy will not pick it up.
+Any change to the `mailserver` or `openobserve` service blocks needs its command
+too; a normal CI deploy will not pick it up.
+
+Note the asymmetry for observability, which is genuinely non-obvious: the
+**Caddyfile is baked into the proxy image**, and `proxy` *is* in the deploy set —
+so a CI deploy *does* ship the `observatory.<domain>` site block and Caddy *will*
+obtain the certificate, but nothing is started behind it. On the deploy that
+introduces the service, expect 502s on that subdomain until you run the third
+command above.
 
 ### Jenkins agent SSH prep
 
@@ -498,13 +645,20 @@ For a near-zero-loss move to a new host:
 3. **Migrate data** (Method B for a full copy, or A).
 4. On the target: restore, `docker compose up -d`, and if you used Method A,
    `docker compose restart api keycloak`.
-5. **Verify** on the target (see below).
-6. **Switch DNS** — point all five subdomains at the new host. Caddy issues fresh
+5. **Recreate the observability config** on the target — the `observatory`
+   volume is not carried by `migrate.sh`, so the ingest user, RUM application and
+   metrics retention override need Part 1 step 8 again. The apps' RUM endpoint
+   follows the domain name, so no app rebuild is needed as long as
+   `observatory.stigvidd.se` moves with everything else. **Telemetry history does
+   not survive the move** — if any of it matters, query and export it from the
+   source before decommissioning.
+6. **Verify** on the target (see below).
+7. **Switch DNS** — point all six subdomains at the new host. Caddy issues fresh
    certs automatically within seconds (production `ACME_CA`). Also update the
    `_hostup.stigvidd.se` TXT record to the **new** host's IP, and ask Hostup to
    set rDNS for it — until both are done, outbound mail is refused by the relay.
    The MX record needs no change if `mail.stigvidd.se` moved with the rest.
-7. Decommission the old host once the new one is confirmed healthy.
+8. Decommission the old host once the new one is confirmed healthy.
 
 ### Post-migration verification
 
@@ -513,6 +667,7 @@ docker compose ps                                   # all Up
 docker compose exec db psql -U stigvidd -d stigvidd -c "SELECT count(*) FROM trails;"
 docker compose exec db psql -U stigvidd -d keycloak -tAc "SELECT count(*) FROM user_entity;"
 curl -I https://media.stigvidd.se/<some/known/image/path>   # 200
+curl -s https://observatory.stigvidd.se/healthz            # {"status":"ok"}
 # sign in to the web admin and confirm content + that login (Keycloak) works
 
 # Mail: TLS presents the right cert, and outbound reaches the relay.
@@ -567,6 +722,68 @@ if you expect orphaned files too, use Method B (whole `media` volume).
 **Import (admin web) fails or conflicts.**
 Run it on an idle target — `pg_restore --clean` needs to drop/recreate objects
 and active queries can hold locks. Restart api + keycloak afterwards.
+
+### Observability
+
+**`observatory.<domain>` returns 502.**
+Caddy has the certificate but nothing is listening behind it — almost always
+because CI shipped the proxy without the container being started (Part 3).
+`docker compose ps openobserve`, then `docker compose up -d openobserve`.
+
+**`openobserve` never reaches `healthy`.**
+It has no healthcheck, on purpose: the image is distroless, so there is no shell,
+curl or wget inside it to probe with, and a `CMD-SHELL` check would just report it
+permanently unhealthy. Probe from outside:
+`curl -fsS https://observatory.<domain>/healthz`.
+
+**The container exits immediately on first boot.**
+Check `docker compose logs openobserve` for `ZO_ROOT_USER_PASSWORD is too weak`.
+OpenObserve enforces 8-128 characters with at least one lowercase, one uppercase,
+one digit and one special character, and *panics* rather than warning. Fix
+`OBSERVATORY_ROOT_PASSWORD` in `.env`. Note the root account is only created while
+the data volume is empty — if the volume already exists, changing the variable
+does nothing and you must rotate in the UI instead.
+
+**401 on ingest.**
+The org in the URL path must exist (`default` unless you made another), and the
+credentials must be the dedicated *ingest* account from step 8 — not the root UI
+password, and not a stale one from before the volume was recreated.
+
+**Telemetry is accepted but does not appear where expected.**
+Logs are routed to a stream by the `stream-name` header; without it they land in
+`default`. Note the API's OTLP endpoint takes **no signal path** — the exporter
+appends `/v1/logs` itself.
+
+**Data from phones is silently dropped.**
+`ZO_INGEST_ALLOWED_UPTO` rejects events older than its window (48h here, upstream
+default 5h) and `ZO_INGEST_ALLOWED_IN_FUTURE` rejects events more than 24h ahead.
+A handset with a badly wrong clock, or one that buffered for longer than the
+window, hits one of these. `docker compose logs openobserve` names the rejected
+timestamps.
+
+**A metric only has 7 days of history.**
+Its stream was created after `scripts/observatory-retention.sh` last ran, so it
+inherited the 7-day global default instead of the 730-day metrics override. Re-run
+the script. The already-expired data is gone — this is the accepted failure
+direction, chosen so an unclassified stream errs towards a small disk rather than
+a full one.
+
+**The `observatory` volume is growing.**
+Check which signal first:
+
+```bash
+docker system df -v | grep observatory
+```
+
+If logs or traces, lower `OBSERVATORY_RETENTION_DAYS` and
+`docker compose up -d openobserve`. If metrics, the cause is almost always
+**series cardinality**, not the two-year window — find the metric carrying a
+high-cardinality attribute and drop or bucket it at the instrumentation site.
+Compaction reclaims space on its next cycle, not instantly.
+
+**Telemetry is missing after a host move.**
+Expected: `observatory` is not in `migrate.sh`'s volume list. Redo Part 1 step 8
+to recreate the ingest user, RUM application and retention override.
 
 ### Mail
 

@@ -101,6 +101,7 @@ stigvidd/
 - FluentValidation with auto-validation middleware
 - WebDAV for image file storage
 - NSwag / Swagger for API docs
+- OpenTelemetry → self-hosted OpenObserve (logs, traces, metrics, RUM)
 
 ---
 
@@ -194,6 +195,58 @@ To run an import, place the source file in the expected path and run the `MapDat
    ```
 
 The API will be available at `https://localhost:7xxx`. Swagger UI is available at `/swagger`.
+
+---
+
+### Telemetry (optional)
+
+The backend and the app both emit OpenTelemetry, but **only when it is
+configured** — with the variables below unset, no exporter is registered, no SDK
+is initialised, and nothing changes. To see your own traces and logs locally, run
+the same OpenObserve image production uses:
+
+```bash
+docker run -d --name stigvidd-observatory \
+  -p 5080:5080 -p 5081:5081 \
+  -v stigvidd-observatory-dev:/data \
+  -e ZO_DATA_DIR=/data \
+  -e ZO_ROOT_USER_EMAIL=dev@stigvidd.se \
+  -e 'ZO_ROOT_USER_PASSWORD=DevDev#123' \
+  -e ZO_RUM_ENABLED=true \
+  -e ZO_COMPACT_DATA_RETENTION_DAYS=3 \
+  -e ZO_TELEMETRY=false \
+  public.ecr.aws/zinclabs/openobserve:v0.92.2
+```
+
+UI at <http://localhost:5080>, same credentials. The password looks fussy because
+OpenObserve enforces one: 8–128 characters with at least one lowercase, one
+uppercase, one digit and one special character — a weaker value makes the
+container *panic on startup* rather than warn.
+
+Point the backend at it:
+
+```bash
+cd backend/StigviddAPI
+dotnet user-secrets set "Otlp:Endpoint" "http://localhost:5080/api/default"
+dotnet user-secrets set "Otlp:Username" "dev@stigvidd.se"
+dotnet user-secrets set "Otlp:Password" "DevDev#123"
+```
+
+The endpoint takes **no signal path** — the exporter appends `/v1/logs`,
+`/v1/traces` and `/v1/metrics` itself.
+
+For the app, add your machine's **LAN IP** (not `localhost` — a phone or emulator
+resolves that to itself) to `app/.env`, along with the RUM application id and
+client token from *Ingestion → RUM* in the UI. Plain HTTP is dev-only: Android
+blocks cleartext by default, and production is HTTPS through the proxy.
+
+Tear down with `docker rm -f stigvidd-observatory` (add
+`docker volume rm stigvidd-observatory-dev` to discard the data too).
+
+**Before adding any instrumentation**, read
+[docs/observability.md](docs/observability.md) — metrics must contain no personal
+data, and GPS positions must never be logged. Those are hard constraints, not
+style preferences.
 
 ---
 

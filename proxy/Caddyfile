@@ -37,6 +37,41 @@
 	reverse_proxy media:80
 }
 
+# Telemetry (OpenObserve): UI, OTLP ingest and RUM on one subdomain. The mobile
+# apps post here straight from the public internet, so unlike every other block
+# this one is a WRITE endpoint for untrusted clients — the RUM client token that
+# authorises them ships inside a mobile binary and is therefore public. The
+# mitigations are the ingest-only scope of that token, the retention caps, and
+# the request-size limit below. See DEPLOYMENT.md.
+#
+# Deliberately no `log` directive: ingest arrives at whatever rate the fleet
+# decides, and access-logging it would drown the proxy's stderr and, through
+# docker's json-file driver, the host disk.
+{$OBSERVATORY_DOMAIN} {
+	# Cap what a single request can push. OpenObserve itself accepts arbitrarily
+	# large OTLP batches. 10MB is far above any real batch.
+	request_body {
+		max_size 10MB
+	}
+
+	# Ingest replies are a few dozen bytes of JSON at high rate — compressing them
+	# is pure CPU. The UI bundle is megabytes and very much worth compressing, so
+	# `encode` is scoped to everything that is NOT ingest. (Note `encode` only ever
+	# compresses RESPONSES, so this is an efficiency split, not a correctness one.)
+	@ingest path /api/*/v1/* /api/*/_json /api/*/_bulk /rum/*
+	handle @ingest {
+		reverse_proxy openobserve:5080
+	}
+
+	# Everything else: the UI. reverse_proxy upgrades WebSockets transparently,
+	# which is what the live-tail/search stream needs, and Caddy has no default
+	# response timeout — do not add one, it would truncate live tail.
+	handle {
+		encode zstd gzip
+		reverse_proxy openobserve:5080
+	}
+}
+
 # Mail server hostname. Nothing is proxied here — SMTP and IMAP are served
 # directly by the `mailserver` container on ports 25/465/587/993. This block
 # exists solely so Caddy obtains and auto-renews the certificate for this name,
