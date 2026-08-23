@@ -112,14 +112,16 @@ you get approved.
   coordinate — the `VerifiedGeoTrail` default — hands all six the full 5.0 proximity boost, up
   to 9.75, and any `.First()` assertion is silently competing with trails it never mentions.
   Put the user location somewhere the seed cannot rank, and say so in the test.
-- [Known failing: TrailImport DeleteSessionAsync's cascade does not fire under SQLite](known-failing-trail-import-delete.md) —
-  `TrailImportReviewIntegrationTests.DeleteSessionAsync_ShouldTakeTheProposalsWithItAndLeaveTheTrailsAlone`
-  expects 0 proposals and finds 2. **Pre-existing on develop** (measured at 0e1a99e: 1358
-  tests, 2 failures), so do not attribute it to your change. `DeleteSessionAsync` uses
-  `ExecuteDeleteAsync`, which bypasses EF's change tracker, so the `OnDelete(Cascade)` in
-  StigViddDbContext must be enforced by the database — PostgreSQL does, the SQLite test
-  provider does not. Possibly platform-dependent, since Linux binds the system libsqlite3
-  and Windows the bundled e_sqlite3.
+- [SQLite enforces no foreign key unless the pragma is on, and Linux and Windows disagree](sqlite-foreign-keys-off-on-linux.md) —
+  SQLite ignores every `FOREIGN KEY` clause, `ON DELETE CASCADE` included, unless
+  per-connection `PRAGMA foreign_keys` is on. Windows' bundled `e_sqlite3` defaults it to 1,
+  the system libsqlite3 Linux binds defaults to 0, so a database-level cascade is inert on
+  Linux and fine on Windows. Bites any repository deleting a principal with
+  `ExecuteDelete`/`ExecuteUpdate`, which bypasses EF's change tracker and makes the cascade
+  the database's job — it is what made
+  `DeleteSessionAsync_ShouldTakeTheProposalsWithItAndLeaveTheTrailsAlone` a known failure.
+  Fixed by `Foreign Keys=True` in WebApplicationFactory's connection string; the pragma is a
+  silent no-op inside a transaction, so it has to go there.
 - [The rules that keep a hook working on Windows, Gentoo and Debian at once](agent-harness-hooks.md) —
   hooks are Node `.mjs` because `python3` does not exist on Windows; registered in **exec
   form** because Claude Code expands `${CLAUDE_PROJECT_DIR}` itself and Windows may fall

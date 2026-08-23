@@ -59,7 +59,18 @@ public class StigViddWebApplicationFactory<TProgram>
             SQLitePCL.raw.SetProvider(new SQLitePCL.SQLite3Provider_sqlite3());
 #endif
 
-            _connection = new SqliteConnection("DataSource=:memory:");
+            // `Foreign Keys=True` is load-bearing, and only on Linux. SQLite enforces no
+            // foreign key at all unless `PRAGMA foreign_keys` is on, and the two builds this
+            // suite binds disagree on the default: the bundled `e_sqlite3` Windows uses is
+            // compiled with SQLITE_DEFAULT_FOREIGN_KEYS=1, the system libsqlite3 Linux binds
+            // via SQLite3Provider_sqlite3 is not (see spatialite-per-os for why they differ).
+            // Measured on Gentoo, libsqlite3 3.53.3: the pragma read back 0, so every
+            // `ON DELETE CASCADE` EnsureCreated() emitted was inert. That silently defeats any
+            // repository deleting through the database rather than the change tracker —
+            // TrailImportRepository.DeleteSessionAsync uses ExecuteDeleteAsync, which bypasses
+            // EF's cascade fix-up and needs the database to do the cascading.
+            // Setting it explicitly makes the two platforms agree instead of leaving one green.
+            _connection = new SqliteConnection("DataSource=:memory:;Foreign Keys=True");
             _connection.Open();
 
             services.AddSingleton<DbConnection>(_connection);

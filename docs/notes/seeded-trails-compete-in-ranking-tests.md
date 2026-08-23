@@ -39,4 +39,4 @@ hikes and a set of facilities. Either score past it deliberately, or place your 
 its rows cannot rank — and say which in the test, because the next reader cannot see the seed
 from the test body.
 
-Related: [[srid-4326]], [[known-failing-trail-import-delete]].
+Related: [[srid-4326]], [[sqlite-foreign-keys-off-on-linux]].
