@@ -1,4 +1,5 @@
-﻿using FluentAssertions;
+﻿using Core.Common;
+using FluentAssertions;
 using System.Text;
 
 namespace UnitTests.CommonTests;
@@ -37,6 +38,9 @@ public class SourceFeatureReaderTests
         features[0].ExternalId.Should().Be("380");
         features[0].Name.Should().Be("Kanotcentralen - Bovik");
         features[0].Geometry.NumPoints.Should().Be(3);
+        // SRID 4326, not NetTopologySuite's default 0: this geometry is persisted verbatim as
+        // TrailImportProposal.FeatureGeometry, and SpatiaLite rejects a mismatched SRID on insert.
+        features[0].Geometry.SRID.Should().Be(GeoPointFactory.Wgs84Srid);
     }
 
     [Fact]

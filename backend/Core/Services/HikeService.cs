@@ -3,7 +3,6 @@ using Core.Interfaces.Repositories;
 using Core.Interfaces.Services;
 using Infrastructure.Data.Entities;
 using Microsoft.Extensions.Logging;
-using NetTopologySuite.Geometries;
 using System.Runtime.CompilerServices;
 using WebDataContracts.RequestModels.Hike;
 using WebDataContracts.ResponseModels.Hike;
@@ -83,7 +82,8 @@ public class HikeService : IHikeService
             return Result.Fail<HikeResponse>(new Message(400, "Hike coordinates are invalid."));
         }
 
-        var coords = new LineString([.. parsedCoordinates.Select(c => new NetTopologySuite.Geometries.Coordinate(c.Longitude, c.Latitude))]);
+        var coords = GeoPointFactory.FromLonLatPath(
+            parsedCoordinates.Select(c => new NetTopologySuite.Geometries.Coordinate(c.Longitude, c.Latitude)));
 
         var hike = new Hike
         {

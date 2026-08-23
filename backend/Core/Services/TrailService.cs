@@ -4,7 +4,6 @@ using Core.Interfaces.Services;
 using Infrastructure.Data.Entities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
-using NetTopologySuite.Geometries;
 using WebDataContracts.RequestModels.Trail;
 using WebDataContracts.ResponseModels.Trail;
 
@@ -258,7 +257,8 @@ public class TrailService : ITrailService
             {
                 return Result.Fail<TrailResponse?>(new Message(400, "Hike coordinates are invalid."));
             }
-            var coords = new LineString([.. parsedCoordinates.Select(c => new NetTopologySuite.Geometries.Coordinate(c.Longitude, c.Latitude))]);
+            var coords = GeoPointFactory.FromLonLatPath(
+                parsedCoordinates.Select(c => new NetTopologySuite.Geometries.Coordinate(c.Longitude, c.Latitude)));
 
             // Uploaded via the media upload service, which strips EXIF/GPS.
             if (trailSymbolImageUrl != null)

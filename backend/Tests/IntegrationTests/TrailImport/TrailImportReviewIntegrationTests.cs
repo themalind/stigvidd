@@ -29,7 +29,7 @@ public class TrailImportReviewIntegrationTests : IClassFixture<StigViddWebApplic
         _factory.SeedDatabase();
     }
 
-    private static readonly LineString Line = Geometry.DefaultFactory.CreateLineString(
+    private static readonly LineString Line = GeoPointFactory.FromLonLatPath(
     [
         new Coordinate(12.805, 57.621),
         new Coordinate(12.806, 57.622),

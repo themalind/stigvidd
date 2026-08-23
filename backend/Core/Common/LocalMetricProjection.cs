@@ -28,6 +28,24 @@ public sealed class LocalMetricProjection
             - 93.5 * Math.Cos(3 * radians);
     }
 
+    /// <summary>
+    /// Centred on a single point — the natural origin when distances are measured FROM
+    /// somewhere, such as a user location, rather than across a region.
+    /// </summary>
+    public static LocalMetricProjection CentredOn(Coordinate origin)
+    {
+        ArgumentNullException.ThrowIfNull(origin);
+
+        return new LocalMetricProjection(origin.X, origin.Y);
+    }
+
+    /// <summary>Metres per degree of latitude at the origin.</summary>
+    public double MetresPerDegreeLatitude => _metresPerDegreeLatitude;
+
+    /// <summary>Metres per degree of longitude at the origin. Barely half the latitude
+    /// figure at Swedish latitudes, which is why the two cannot share a scale.</summary>
+    public double MetresPerDegreeLongitude => _metresPerDegreeLongitude;
+
     public static LocalMetricProjection CentredOn(Envelope area)
     {
         ArgumentNullException.ThrowIfNull(area);
@@ -46,6 +64,9 @@ public sealed class LocalMetricProjection
     {
         ArgumentNullException.ThrowIfNull(line);
 
+        // Deliberately the raw NTS factory, not GeoPointFactory: these coordinates are
+        // METRES on a flat plane, not degrees. Nothing here is ever persisted, and stamping
+        // it 4326 would be a lie about its units.
         return new LineString([.. line.Coordinates.Select(Project)]);
     }
 }

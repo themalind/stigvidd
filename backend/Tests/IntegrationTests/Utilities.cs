@@ -14,10 +14,12 @@ namespace IntegrationTests;
 /// </summary>
 public static class Utilities
 {
-    // Builds a Hike.GeoPath LineString from (longitude, latitude) pairs.
-    // No arguments yields an empty LineString (a valid path with no points).
+    // Builds a Hike.GeoPath LineString from (longitude, latitude) pairs, at SRID 4326 like
+    // every other geometry in the schema. No arguments still yields an EMPTY LineString (a
+    // valid path with no points) — SpatiaLite takes one into a LINESTRING/4326 column,
+    // because the SRID lives in the blob header independently of the point count.
     public static LineString GeoPath(params (double Longitude, double Latitude)[] points) =>
-        new([.. points.Select(p => new Coordinate(p.Longitude, p.Latitude))]);
+        GeoPointFactory.FromLonLatPath(points.Select(p => new Coordinate(p.Longitude, p.Latitude)));
 
     /// <summary>
     /// Initializes the database with seed data for unit tests.
@@ -151,13 +153,12 @@ public static class Utilities
     public static List<Trail> GetSeedingTrails()
     {
         // A real LineString so trails satisfy the `GeoPath != null` filters and their start
-        // point can be projected. SRID is left at the factory default (0) to match the SRID
-        // the SQLite/SpatiaLite test schema creates the GeoPath column with — EF's SQLite
-        // provider registers geometry columns via AddGeometryColumn at SRID 0 unless told
-        // otherwise, and SpatiaLite enforces it on insert. The facility/obstacle Point columns
-        // differ: they pin Sqlite:Srid to 4326 in StigViddDbContext, so their seeds use
-        // GeoPointFactory (SRID 4326). Coordinate order is (X = longitude, Y = latitude).
-        var geoPath = Geometry.DefaultFactory.CreateLineString(
+        // point can be projected. Built through GeoPointFactory (SRID 4326) like every other
+        // geometry seed: StigViddDbContext pins Sqlite:Srid = 4326 on the GeoPath columns and
+        // on TrailImportProposal.FeatureGeometry, EF passes that to AddGeometryColumn, and
+        // SpatiaLite enforces it on insert in BOTH directions — an SRID-0 value here is
+        // rejected outright. Coordinate order is (X = longitude, Y = latitude).
+        var geoPath = GeoPointFactory.FromLonLatPath(
         [
             new Coordinate(12.805517126805371, 57.62141010663575),
             new Coordinate(12.806620, 57.622500),

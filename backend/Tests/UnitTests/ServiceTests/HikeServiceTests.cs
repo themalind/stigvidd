@@ -1,3 +1,4 @@
+using Core.Common;
 using Core.Factories;
 using Core.Interfaces.Repositories;
 using Core.Interfaces.Services;
@@ -60,6 +61,8 @@ public class HikeServiceTests
         saved.Should().NotBeNull();
         saved!.CreatedBy.Should().Be(Utilities.Identifiers.User);
         saved.CreatedByNickName.Should().Be("TestUser");
+        // The path is persisted, so it has to carry the schema's SRID, not the NTS default of 0.
+        saved.GeoPath.SRID.Should().Be(GeoPointFactory.Wgs84Srid);
     }
 
     [Fact]

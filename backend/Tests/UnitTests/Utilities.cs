@@ -17,10 +17,12 @@ namespace UnitTests;
 
 public static class Utilities
 {
-    // Builds a Hike.GeoPath LineString from (longitude, latitude) pairs.
-    // No arguments yields an empty LineString (a valid path with no points).
+    // Builds a Hike.GeoPath LineString from (longitude, latitude) pairs, at SRID 4326 like
+    // every other geometry in the schema. No arguments still yields an EMPTY LineString (a
+    // valid path with no points) — SpatiaLite takes one into a LINESTRING/4326 column,
+    // because the SRID lives in the blob header independently of the point count.
     public static LineString GeoPath(params (double Longitude, double Latitude)[] points) =>
-        new([.. points.Select(p => new Coordinate(p.Longitude, p.Latitude))]);
+        GeoPointFactory.FromLonLatPath(points.Select(p => new Coordinate(p.Longitude, p.Latitude)));
 
     public static void InitializeDbForTests(StigViddDbContext db)
     {
@@ -71,7 +73,7 @@ public static class Utilities
                 FullDescription = string.Empty,
                 TrailSymbol = "Röd markering",
                 TrailSymbolImage = "https://inkaben.se/stigvidd/mock/mock-trail-symbol.png",
-                GeoPath = Geometry.DefaultFactory.CreateLineString(
+                GeoPath = GeoPointFactory.FromLonLatPath(
                     [new Coordinate(12.80, 57.62), new Coordinate(12.81, 57.63)]),
                 Tags = tags,
                 City = "Tiveden",
@@ -115,7 +117,7 @@ public static class Utilities
                 FullDescription = string.Empty,
                 TrailSymbol = "Blå markering",
                 TrailSymbolImage = "https://inkaben.se/stigvidd/mock/mock-trail-symbol.png",
-                GeoPath = Geometry.DefaultFactory.CreateLineString(
+                GeoPath = GeoPointFactory.FromLonLatPath(
                     [new Coordinate(12.80, 57.62), new Coordinate(12.81, 57.63)]),
                 Tags = tags,
                 IsVerified = true,
@@ -153,7 +155,7 @@ public static class Utilities
                 FullDescription = string.Empty,
                 TrailSymbol = "Orange markering",
                 TrailSymbolImage = "https://inkaben.se/stigvidd/mock/mock-trail-symbol.png",
-                GeoPath = Geometry.DefaultFactory.CreateLineString(
+                GeoPath = GeoPointFactory.FromLonLatPath(
                     [new Coordinate(12.80, 57.62), new Coordinate(12.81, 57.63)]),
                 Tags = tags,
                 IsVerified = true,
@@ -174,7 +176,7 @@ public static class Utilities
                 FullDescription = string.Empty,
                 TrailSymbol = "Grön markering",
                 TrailSymbolImage = "https://inkaben.se/stigvidd/mock/mock-trail-symbol.png",
-                GeoPath = Geometry.DefaultFactory.CreateLineString(
+                GeoPath = GeoPointFactory.FromLonLatPath(
                     [new Coordinate(12.80, 57.62), new Coordinate(12.81, 57.63)]),
                 Tags = tags,
                 IsVerified = true,
@@ -212,7 +214,7 @@ public static class Utilities
                 FullDescription = string.Empty,
                 TrailSymbol = "Röd markering med en 6:a på",
                 TrailSymbolImage = "https://inkaben.se/stigvidd/mock/mock-trail-symbol.png",
-                GeoPath = Geometry.DefaultFactory.CreateLineString(
+                GeoPath = GeoPointFactory.FromLonLatPath(
                     [new Coordinate(12.80, 57.62), new Coordinate(12.81, 57.63)]),
                 Tags = tags,
                 IsVerified = true,
@@ -233,7 +235,7 @@ public static class Utilities
                 FullDescription = string.Empty,
                 TrailSymbol = "Blå markering",
                 TrailSymbolImage = "https://inkaben.se/stigvidd/mock/mock-trail-symbol.png",
-                GeoPath = Geometry.DefaultFactory.CreateLineString(
+                GeoPath = GeoPointFactory.FromLonLatPath(
                     [new Coordinate(12.80, 57.62), new Coordinate(12.81, 57.63)]),
                 Tags = tags,
                 IsVerified = true,
@@ -254,7 +256,7 @@ public static class Utilities
                 FullDescription = string.Empty,
                 TrailSymbol = "Nässla",
                 TrailSymbolImage = "https://inkaben.se/stigvidd/mock/nassla.png",
-                GeoPath = Geometry.DefaultFactory.CreateLineString(
+                GeoPath = GeoPointFactory.FromLonLatPath(
                     [new Coordinate(12.80, 57.62), new Coordinate(12.81, 57.63)]),
                 Tags = tags,
                 IsVerified= true,
@@ -657,7 +659,7 @@ public static class Utilities
             Accessibility = true,
             IsVerified = true,
             City = "Arås",
-            GeoPath = Geometry.DefaultFactory.CreateLineString(
+            GeoPath = GeoPointFactory.FromLonLatPath(
                 [new Coordinate(12.80, 57.62), new Coordinate(12.81, 57.63)]),
         };
 

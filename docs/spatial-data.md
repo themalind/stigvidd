@@ -67,12 +67,39 @@ that true on both sides:
   tests with an SRID mismatch. This is the non-obvious part: the test schema comes from
   `EnsureCreated()` on the model, so the model is the only place that can fix it.
 
-`Trail.GeoPath`/`Hike.GeoPath` are **not** configured this way — they are mapped by convention
-to an unconstrained `geometry` column, and the seeds pin their LineStrings to SRID 0 to match.
-Note the mismatch that follows from that: `TrailRepository.GetPopularTrailOverviewsAsync`
-builds its comparison point at 4326, so a `Distance` against an app-written (SRID 0) path is a
-mixed-SRID comparison. Backfilled paths are 4326; app-written ones are not. Normalising
-`GeoPath` is separate outstanding work.
+`Trail.GeoPath`, `Hike.GeoPath` and `TrailImportProposal.FeatureGeometry` are configured the
+same way — `geometry(LineString, 4326)` under Npgsql, `Sqlite:Srid = 4326` for the test schema
+— since `PathGeometrySrid4326`. Before it they were mapped by convention to an unconstrained
+`geometry` column while the *backfill* migrations had written 4326 into them, so a single
+column held both SRIDs and `TrailRepository.GetPopularTrailOverviewsAsync` — which built a
+comparison point at 4326 and called `ST_Distance` against the stored path — raised
+`Operation on mixed SRID geometries` against every app-written row. There is now exactly one
+way to build any of them, `GeoPointFactory`.
+
+That query no longer compares geometries at all. It scales each axis by its own
+metres-per-degree at the user (`LocalMetricProjection`) and does the arithmetic on
+`ST_StartPoint`'s ordinates, so it is SRID-agnostic *and* translates on all three providers —
+Npgsql, SpatiaLite and in-process NTS under EF InMemory. `ST_DistanceSphere` and a
+`::geography` cast would each be Npgsql-only. Note it is deliberately two queries: the
+proximity term is absent from the SQL entirely when no user location is supplied, because EF
+parameterises a captured `bool` rather than folding it away.
+
+Two PostGIS behaviours are worth knowing before touching these columns, both measured:
+
+- **SRID 0 is "unknown", and therefore assignable.** Writing an SRID-0 geometry into a 4326
+  column does not fail — PostGIS silently retags it. That is also why the typmod change in
+  `PathGeometrySrid4326` needed no data statement: the `ALTER` converted the existing SRID-0
+  rows on its own.
+- **A foreign SRID is refused.** `ERROR: Geometry SRID (3006) does not match column SRID
+  (4326)`, on write and on the `ALTER`. Do not "help" that along with an
+  `UPDATE ... ST_SetSRID(..., 4326)`: it would relabel projected SWEREF99 metres as degrees
+  without moving them, which is silent corruption where the error was a safety net.
+
+SpatiaLite is stricter than PostGIS in one direction and laxer in another, which is why the
+suites catch some of this and not the rest: it **rejects** a mismatched SRID on insert (so a
+missed write site fails the integration tests loudly), but it **computes `ST_Distance` across
+mismatched SRIDs without complaint** where PostGIS raises. The mixed-SRID query failure was
+therefore only ever reproducible against real PostGIS.
 
 ### How PostGIS was introduced
 
@@ -91,7 +118,11 @@ The same migration adds the GIST indexes the proximity queries need
 (`IX_Facilities_Coordinates`, `IX_TrailObstacles_IncidentLocation`), declared in the model
 inside the `Database.IsNpgsql()` guard — `gist` is not an index method SQLite understands,
 and the test schema is built from the model by `EnsureCreated()`. `Trail`/`Hike` `GeoPath`
-have no spatial index; that is part of the same outstanding normalisation work.
+have no spatial index, deliberately: the one query that measures against them
+(`GetPopularTrailOverviewsAsync`) has no spatial predicate to probe — it scores and orders
+every verified trail — and a GiST index on the column cannot serve `ST_StartPoint` of it
+anyway. An index there belongs with a decision to gate "popular" by radius, which would
+change what the endpoint returns.
 
 ## The wire boundary
 
@@ -177,7 +208,8 @@ Marker: LineString.StartPoint  ──►  { startLatitude, startLongitude }  ─
 | lon/lat vs lat/lon confusion                       | Constructed explicitly at each boundary; geometry is `(X=lng, Y=lat)`.      |
 | Facility without coordinates (`Coordinates == null`) | Excluded from `/facilities` markers, where the response reports lat/long as `0` (legacy shape). Reached through a city area instead, where `CityAreaResponseFactory` reports both as `null`. |
 | Request carrying only one of lat/long              | `400` — a point cannot be half-set.                                         |
-| Point written at the wrong SRID                    | Rejected by the Postgres typmod, and by SpatiaLite's trigger in tests.      |
+| Geometry written at SRID 0 (a raw NTS factory)      | Silently retagged 4326 by the Postgres typmod; **rejected** by SpatiaLite's trigger, so the integration tests are what catch it. |
+| Geometry written at a foreign SRID (e.g. 3006)      | Rejected by both — `Geometry SRID (3006) does not match column SRID (4326)`. |
 | C# serializer pushed into SQL projection           | Npgsql 500 — keep it in the outer client-side projection.                   |
 
 ## Related docs

@@ -1,4 +1,5 @@
-﻿using Infrastructure.Data;
+﻿using Core.Common;
+using Infrastructure.Data;
 using Infrastructure.Data.Entities;
 using System.Globalization;
 using System.Text.Json;
@@ -45,7 +46,16 @@ internal class TransmogrifyBorasData
                 coordinates.ValueKind == JsonValueKind.Array)
             {
                 var rawCoordinates = JsonSerializer.Deserialize<double[][]>(coordinates.ToString());
-                coordinatesLineString = new LineString([.. rawCoordinates?.Select(c => new NetTopologySuite.Geometries.Coordinate(c[0], c[1])) ?? []]);
+
+                // A one-coordinate feature is not a path, and NetTopologySuite throws on
+                // exactly one point — which would abort the whole import mid-loop, after
+                // earlier trails are already queued but before the single SaveChangesAsync.
+                // Trail.GeoPath is nullable, so the trail is worth keeping without geometry.
+                if (rawCoordinates is { Length: >= 2 })
+                {
+                    coordinatesLineString = GeoPointFactory.FromLonLatPath(
+                        rawCoordinates.Select(c => new NetTopologySuite.Geometries.Coordinate(c[0], c[1])));
+                }
             }
 
             // Hämta länk för TrailLink

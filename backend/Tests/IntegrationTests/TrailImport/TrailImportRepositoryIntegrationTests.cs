@@ -1,4 +1,5 @@
-﻿using Core.Interfaces.Repositories;
+﻿using Core.Common;
+using Core.Interfaces.Repositories;
 using FluentAssertions;
 using Infrastructure.Data;
 using Infrastructure.Data.Entities;
@@ -34,8 +35,9 @@ public class TrailImportRepositoryIntegrationTests : IClassFixture<StigViddWebAp
         ExternalId = index.ToString(),
         FeatureName = $"Feature {index}",
         GeometryFingerprint = index.ToString("x64"),
-        // SRID left at the factory default, like the seeded trails.
-        FeatureGeometry = Geometry.DefaultFactory.CreateLineString(
+        // SRID 4326 via GeoPointFactory, like the seeded trails — SpatiaLite enforces the
+        // column's SRID on insert, so an SRID-0 line here would be rejected.
+        FeatureGeometry = GeoPointFactory.FromLonLatPath(
         [
             new Coordinate(12.805, 57.621 + index / 1000.0),
             new Coordinate(12.806, 57.622 + index / 1000.0),

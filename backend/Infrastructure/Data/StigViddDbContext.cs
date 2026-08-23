@@ -259,12 +259,14 @@ public class StigViddDbContext(DbContextOptions<StigViddDbContext> options) : Db
         modelBuilder.Entity<Hike>()
             .Property(h => h.HikeLength).HasPrecision(18, 2);
 
-        // Point geometry columns. Trail/Hike GeoPath is mapped by convention, but these two
-        // need provider-specific help:
+        // Geometry columns. Every one of them is SRID 4326 (WGS84) — the Points and the
+        // LineStrings alike — and each needs the same two bits of provider-specific help:
         //  - Npgsql gets the real typmod, so the column itself constrains type and SRID.
         //  - EF's SQLite provider registers geometry columns via AddGeometryColumn at SRID 0
-        //    by default and SpatiaLite enforces that on insert, so the SRID the services
-        //    write (4326) has to be pinned for the SQLite test schema too.
+        //    by default, and SpatiaLite enforces that on insert in BOTH directions: a 4326
+        //    value into an SRID-0 column is rejected exactly as hard as the reverse. So the
+        //    SRID the writers produce (always 4326, via GeoPointFactory) has to be pinned for
+        //    the SQLite test schema too, or every geometry seed fails to insert.
         if (Database.IsNpgsql())
         {
             modelBuilder.Entity<Facility>()
@@ -274,6 +276,22 @@ public class StigViddDbContext(DbContextOptions<StigViddDbContext> options) : Db
             modelBuilder.Entity<TrailObstacle>()
                 .Property(to => to.IncidentLocation)
                 .HasColumnType("geometry(Point, 4326)");
+
+            // The paths. Pinned to the LineString subtype as well as the SRID: the CLR
+            // properties are LineString, so a stray Point row would throw an
+            // InvalidCastException on read anyway — better the database refuses it once, at
+            // migration time, than on a random request.
+            modelBuilder.Entity<Trail>()
+                .Property(t => t.GeoPath)
+                .HasColumnType("geometry(LineString, 4326)");
+
+            modelBuilder.Entity<Hike>()
+                .Property(h => h.GeoPath)
+                .HasColumnType("geometry(LineString, 4326)");
+
+            modelBuilder.Entity<TrailImportProposal>()
+                .Property(p => p.FeatureGeometry)
+                .HasColumnType("geometry(LineString, 4326)");
 
             // Proximity queries are the reason these are geometry columns at all; without a
             // GIST index they are sequential scans. Npgsql-only: "gist" is not an index
@@ -297,6 +315,18 @@ public class StigViddDbContext(DbContextOptions<StigViddDbContext> options) : Db
 
         modelBuilder.Entity<TrailObstacle>()
             .Property(to => to.IncidentLocation)
+            .HasAnnotation("Sqlite:Srid", 4326);
+
+        modelBuilder.Entity<Trail>()
+            .Property(t => t.GeoPath)
+            .HasAnnotation("Sqlite:Srid", 4326);
+
+        modelBuilder.Entity<Hike>()
+            .Property(h => h.GeoPath)
+            .HasAnnotation("Sqlite:Srid", 4326);
+
+        modelBuilder.Entity<TrailImportProposal>()
+            .Property(p => p.FeatureGeometry)
             .HasAnnotation("Sqlite:Srid", 4326);
     }
 }

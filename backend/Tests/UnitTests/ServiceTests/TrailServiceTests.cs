@@ -1,3 +1,4 @@
+using Core.Common;
 using Core.Factories;
 using Core.Interfaces.Repositories;
 using Core.Interfaces.Services;
@@ -376,6 +377,8 @@ public class TrailServiceTests
         capturedTrail.TrailImages.Should().NotBeNull();
         capturedTrail.TrailImages.Should().HaveCount(2);
         capturedTrail.TrailImages.Select(i => i.ImageUrl).Should().NotContain("symbols/symbol.jpg");
+        // The path is persisted, so it has to carry the schema's SRID, not the NTS default of 0.
+        capturedTrail.GeoPath!.SRID.Should().Be(GeoPointFactory.Wgs84Srid);
     }
 
     [Fact]

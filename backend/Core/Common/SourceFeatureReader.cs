@@ -68,7 +68,7 @@ public static class SourceFeatureReader
 
         // A single point cannot be matched against anything, and an empty one cannot be
         // fingerprinted at all.
-        return points.Count < 2 ? null : new LineString([.. points]);
+        return points.Count < 2 ? null : GeoPointFactory.FromLonLatPath(points);
     }
 
     // The source writes id as a number and namn as a string, and leaves either out.

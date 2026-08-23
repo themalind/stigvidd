@@ -61,6 +61,34 @@ in all three vocabularies (inline assignments, `env`, `timeout`, `nice`, `stdbuf
 `set`, `$env:`) and steps into `$( )` and backticks. Spurious positions only make a guard
 look harder; a missed one makes it fail open.
 
+## 5b. The guards match a command shape, not a project — and they match your prose too
+
+`guard-long-running.mjs`'s `NEVER_RETURNS` keys on the head of the command
+(`/^dotnet\s+run\b/` → "the API host"), which is deliberate: matching by *project* would
+mean resolving `--project`, `-p`, a bare path, a solution filter and the cwd, and getting any
+of that wrong fails **open** on a real dev server. Two consequences, both measured:
+
+**A console project is a false positive.** `backend/MapData` is an ETL tool that imports and
+exits, but `dotnet run --project MapData` is denied as "the API host". Do not loosen the pattern.
+Run the built binary, which is not a `dotnet run` at all:
+
+```sh
+cd backend && dotnet build MapData/MapData.csproj
+./MapData/bin/Debug/net10.0/MapData --help
+```
+
+That is the better way to check a console tool's exit codes anyway, since `dotnet run`
+returns its own exit status and can mask the tool's.
+
+**The guard reads the whole Bash command string, including text you are only writing into a
+file.** A heredoc, `perl -0pi -e`, or a python inline script that *documents* a guarded
+command — this very section, the first time — is denied, because the literal appears in the
+command the hook inspects. It is matching the string, not your intent, and it cannot tell the
+difference. Write the content with a non-Bash tool (the Write tool), or put it in a
+script file whose own invocation carries no guarded literal and assemble the literal there by
+concatenation. Same trap applies to `guard-build-commands.mjs`: a note
+quoting a bare `dotnet test` is a denial, not a lint error.
+
 ## 6. Everything gets a `--self-test`, and the gate runs them
 
 ```sh

@@ -1,3 +1,4 @@
+using Core.Common;
 using System.Linq.Expressions;
 using Core;
 using Core.Repositories;
@@ -13,18 +14,25 @@ public class TrailRepositoryTests : TestBase
     private const string TivedenIdentifier = "11a1b2c3-d4e5-4f6a-7b8c-9d0e1f2a3b4c";
     private const string StorsjoledenIdentifier = "22b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d";
 
-    // A verified trail with a real GeoPath (the seed trails have none), optionally
-    // carrying a single review so popularity ranking can be asserted. UserId 1 exists
-    // in the standard seed.
-    private static Trail VerifiedGeoTrail(string identifier, decimal? rating = null) => new()
+    // A verified trail with a real GeoPath, optionally carrying a single review so popularity
+    // ranking can be asserted, and optionally starting somewhere other than the default so
+    // proximity ranking can be. UserId 1 exists in the standard seed.
+    private static Trail VerifiedGeoTrail(
+        string identifier,
+        decimal? rating = null,
+        double startLongitude = 12.80,
+        double startLatitude = 57.62) => new()
     {
         Identifier = identifier,
         Name = identifier,
         TrailLength = 5M,
         IsVerified = true,
         City = "City",
-        GeoPath = Geometry.DefaultFactory.CreateLineString(
-            [new Coordinate(12.80, 57.62), new Coordinate(12.81, 57.63)]),
+        GeoPath = GeoPointFactory.FromLonLatPath(
+            [
+                new Coordinate(startLongitude, startLatitude),
+                new Coordinate(startLongitude + 0.01, startLatitude + 0.01),
+            ]),
         Reviews = rating.HasValue
             ? [new Review { Identifier = $"rev-{identifier}", Rating = rating.Value, UserId = 1 }]
             : null,
@@ -149,7 +157,7 @@ public class TrailRepositoryTests : TestBase
             FullDescription = string.Empty,
             TrailSymbol = "Red",
             TrailSymbolImage = "http://example.com/symbol.png",
-            GeoPath = Geometry.DefaultFactory.CreateLineString(
+            GeoPath = GeoPointFactory.FromLonLatPath(
                 [new Coordinate(12.80, 57.62), new Coordinate(12.81, 57.63)]),
             Tags = "[]",
             IsVerified = true,
@@ -301,7 +309,7 @@ public class TrailRepositoryTests : TestBase
         });
         var repo = new TrailRepository(factory, NullLogger<TrailRepository>.Instance);
 
-        // Act — a user location triggers the proximity branch (StartPoint.Distance)
+        // Act — a user location selects the proximity-scored branch of the query
         var result = await repo.GetPopularTrailOverviewsAsync(
             57.72, 12.94,
             t => t.Identifier,
@@ -311,6 +319,61 @@ public class TrailRepositoryTests : TestBase
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().Contain("pop-with-path");
         result.Value.Should().NotContain("pop-no-path");
+    }
+
+    // The user is deliberately ~335 km from the seed trails, all of which start at
+    // (12.80, 57.62) and six of which are verified with a GeoPath. Standing the user on that
+    // coordinate instead would hand all six the full proximity boost — up to 9.75 — and the
+    // assertions below would silently be about them rather than about the trails these tests
+    // seed. See docs/notes/seeded-trails-compete-in-ranking-tests.md.
+    private const double UserLatitude = 59.00;
+    private const double UserLongitude = 18.00;
+
+    [Fact]
+    public async Task GetPopularTrailOverviews_WithLocation_RanksANearerTrailAboveABetterRatedFarOne()
+    {
+        // Arrange — the poorly-rated trail starts under the user's feet; the well-rated one is
+        // a degree of latitude north, about 111 km.
+        var factory = CreateSeededFactory(ctx => ctx.Trails.AddRange(
+            VerifiedGeoTrail("pop-near-poor", 2.0M, UserLongitude, UserLatitude),
+            VerifiedGeoTrail("pop-far-great", 5.0M, UserLongitude, UserLatitude + 1.0)));
+        var repo = new TrailRepository(factory, NullLogger<TrailRepository>.Instance);
+
+        // Act
+        var result = await repo.GetPopularTrailOverviewsAsync(
+            UserLatitude, UserLongitude,
+            t => t.Identifier,
+            CancellationToken.None);
+
+        // Assert — 2.0 + the full 5.0 boost beats 5.0 + 5.0 / (1 + 111.3 / 5) ≈ 5.2.
+        //
+        // This is the assertion the old formula got wrong. It divided a distance in DEGREES by
+        // 10, so 111 km scored as 0.1 and the far trail kept a boost of 4.55 instead of 0.22 —
+        // near-constant for anything in the country, which made the ranking rating-only and put
+        // "pop-far-great" first.
+        result.IsSuccess.Should().BeTrue();
+        result.Value!.First().Should().Be("pop-near-poor");
+    }
+
+    [Fact]
+    public async Task GetPopularTrailOverviews_WithLocation_AtEqualDistance_StillOrdersByRating()
+    {
+        // Arrange — the same start point, so the proximity term is identical and cannot be what
+        // decides. Guards the other direction: the boost must not swamp the rating outright.
+        var factory = CreateSeededFactory(ctx => ctx.Trails.AddRange(
+            VerifiedGeoTrail("pop-same-poor", 2.0M, UserLongitude, UserLatitude),
+            VerifiedGeoTrail("pop-same-great", 5.0M, UserLongitude, UserLatitude)));
+        var repo = new TrailRepository(factory, NullLogger<TrailRepository>.Instance);
+
+        // Act
+        var result = await repo.GetPopularTrailOverviewsAsync(
+            UserLatitude, UserLongitude,
+            t => t.Identifier,
+            CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Value!.First().Should().Be("pop-same-great");
     }
 
     [Fact]
@@ -352,7 +415,7 @@ public class TrailRepositoryTests : TestBase
                 Accessibility = true,
                 IsVerified = true,
                 City = "Geo",
-                GeoPath = Geometry.DefaultFactory.CreateLineString(
+                GeoPath = GeoPointFactory.FromLonLatPath(
                 [
                     new Coordinate(startLon, startLat),
                     new Coordinate(startLon + 0.01, startLat + 0.01),
@@ -401,7 +464,7 @@ public class TrailRepositoryTests : TestBase
                 TrailLength = 5M,
                 IsVerified = true,
                 City = "Geo",
-                GeoPath = Geometry.DefaultFactory.CreateLineString(
+                GeoPath = GeoPointFactory.FromLonLatPath(
                     [new Coordinate(12.80, 57.62), new Coordinate(12.81, 57.63)]),
             });
             // Unverified + GeoPath -> excluded by the IsVerified filter
@@ -412,7 +475,7 @@ public class TrailRepositoryTests : TestBase
                 TrailLength = 5M,
                 IsVerified = false,
                 City = "U",
-                GeoPath = Geometry.DefaultFactory.CreateLineString(
+                GeoPath = GeoPointFactory.FromLonLatPath(
                     [new Coordinate(1.0, 2.0), new Coordinate(1.1, 2.1)]),
             });
         });

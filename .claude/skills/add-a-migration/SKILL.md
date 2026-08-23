@@ -52,6 +52,23 @@ migration is **scaffolded and unapplied**. An applied migration is already recor
 body then means two databases with the same migration list and different schemas. Add a new
 migration instead.
 
+## Read the SQL before you trust the scaffold
+
+```sh
+dotnet ef migrations script <previous> <yours> --project Infrastructure -o /tmp/mig.sql
+```
+
+No connection needed — `migrations script` does not even accept `--connection` (only
+`database update` does) — and it is the only thing that shows what will actually run. Worth the
+step every time, because an `AlterColumn` can silently emit **nothing**: `oldNullable`
+defaults to `false`, so `nullable: false` on its own reads as "unchanged" and the `SET NOT
+NULL` never appears. `20260630173510_HikePath` did exactly that, which is why
+`dbo."Hikes"."GeoPath"` is nullable in every deployed database while the snapshot says
+required — and why `has-pending-model-changes` stays green, since it compares the model to the
+snapshot rather than to a database. Whenever nullability changes, pass **both** `nullable:` and
+`oldNullable:`. See
+[altercolumn-nullable-needs-oldnullable](../../../docs/notes/altercolumn-nullable-needs-oldnullable.md).
+
 ## Nothing in the test suite applies your migration
 
 The suites run **SQLite in-memory** and build their schema from the model, not from the
@@ -76,3 +93,9 @@ and SRID configured in `StigViddDbContext`. Anything that *builds* a point in C#
 A migration that backfills geometry from existing columns is the `*PostGIS*` and facility/
 obstacle-point shape: hand-written `ST_SetSRID(ST_MakePoint(lon, lat), 4326)` in `Up`. Note
 the argument order there is also longitude first.
+
+Retagging an existing column's SRID needs **no** data statement, and adding one is harmful
+rather than cautious: `ALTER COLUMN ... TYPE geometry(..., 4326)` converts SRID-0 rows itself
+and *refuses* a foreign SRID, which is the only check that can catch a projected geometry —
+whereas an `ST_SetSRID` backfill would relabel SWEREF99 metres as degrees and report success.
+Measured in [postgis-srid-coercion](../../../docs/notes/postgis-srid-coercion.md).

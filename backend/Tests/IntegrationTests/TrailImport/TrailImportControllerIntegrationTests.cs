@@ -1,3 +1,4 @@
+using Core.Common;
 using FluentAssertions;
 using Infrastructure.Data;
 using Infrastructure.Data.Entities;
@@ -85,7 +86,7 @@ public class TrailImportControllerIntegrationTests : IClassFixture<StigViddWebAp
             FeatureName = "Sjuhäradsrundan",
             GeometryFingerprint = Guid.NewGuid().ToString("N") + Guid.NewGuid().ToString("N"),
             // Roughly a kilometre of it, so the measured length is something to look at.
-            FeatureGeometry = Geometry.DefaultFactory.CreateLineString(
+            FeatureGeometry = GeoPointFactory.FromLonLatPath(
             [
                 new Coordinate(12.805, 57.621),
                 new Coordinate(12.815, 57.626),

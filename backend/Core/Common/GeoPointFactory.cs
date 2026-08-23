@@ -2,9 +2,11 @@ using NetTopologySuite.Geometries;
 
 namespace Core.Common;
 
-// Builds the Point geometry stored on Facility.Coordinates and TrailObstacle.IncidentLocation
-// from the lat/long decimals the API contracts carry. The SRID and the (X = longitude,
-// Y = latitude) order live here only, so no call site has to remember either.
+// Builds every geometry this schema stores: the Points on Facility.Coordinates and
+// TrailObstacle.IncidentLocation, and the LineStrings on Trail.GeoPath, Hike.GeoPath and
+// TrailImportProposal.FeatureGeometry. The SRID and the (X = longitude, Y = latitude) order
+// live here only, so no call site has to remember either — and the one WithSRID call below
+// is the only one in the backend, which is what makes a second occurrence a review finding.
 public static class GeoPointFactory
 {
     public const int Wgs84Srid = 4326;
@@ -30,6 +32,18 @@ public static class GeoPointFactory
 
     public static Point FromLonLat(double longitude, double latitude) =>
         Wgs84Factory.CreatePoint(new Coordinate(longitude, latitude));
+
+    /// <summary>
+    /// A WGS84 path over (longitude, latitude) coordinates. Total by design: it builds the
+    /// line it is given, including the EMPTY line the test seeds use for a hike with no
+    /// recorded track — SpatiaLite accepts an empty LineString into a 4326 column, because
+    /// the SRID lives in the blob header independently of the point count.
+    /// NetTopologySuite rejects exactly one point (0 or >= 2 is legal); that throw is left to
+    /// propagate, because every caller already decides what a degenerate path means — the
+    /// services return 400, and the importers skip the feature.
+    /// </summary>
+    public static LineString FromLonLatPath(IEnumerable<Coordinate> lonLatCoordinates) =>
+        Wgs84Factory.CreateLineString([.. lonLatCoordinates]);
 
     /// <summary>Latitude of a stored point, as the API contracts express it.</summary>
     public static decimal? ToLatitude(Point? point) => point is null ? null : (decimal)point.Y;
