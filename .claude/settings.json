@@ -12,6 +12,22 @@
     "lives in ~/.claude/settings.json, and project settings merge with user settings, so a",
     "second declaration would inject the same context twice.",
     "",
+    "guard-symbol-search.mjs, by contrast, belongs HERE and not in user settings. It is a",
+    "statement about THIS tree — that .codegraph/ indexes it, and that a search for a symbol",
+    "in it is answered better by the index than by grep — so it has to travel with the repo",
+    "and apply to whoever is working in the checkout, not to one machine's user. It carries",
+    "the only timeout above 10 s among the PreToolUse guards, because on a candidate it",
+    "spawns one `codegraph query` (~190 ms warm); a non-candidate search never gets that far.",
+    "The 15 s is a real bound the hook is written against, not a round number — but it took two",
+    "fixes to actually BE one, and both are load-bearing. resolveLauncher() memoises its result",
+    "INCLUDING a null, and decide() stops consulting the index once GATE3_BUDGET_MS is spent.",
+    "Without those, probing and querying both ran once per identifier on the line: measured at",
+    "32 s for eight identifiers with every launcher candidate hanging, against this very 15 s.",
+    "The arithmetic that holds now: one probe round (4 x 2 s) plus one 5 s query = 13 s, and the",
+    "10 s budget means no second query is ever started after it. Re-measured at 4 s.",
+    "Raising any of those constants without raising this one buys back the stall — and it fails",
+    "OPEN, so the search runs and nothing says why the guard went quiet.",
+    "",
     "Machine-specific overrides belong in .claude/settings.local.json, which .gitignore",
     "already excludes."
   ],
@@ -55,6 +71,17 @@
             "command": "node",
             "args": ["${CLAUDE_PROJECT_DIR}/.claude/hooks/guard-long-running.mjs"],
             "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": "Grep|Glob|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": ["${CLAUDE_PROJECT_DIR}/.claude/hooks/guard-symbol-search.mjs"],
+            "timeout": 15
           }
         ]
       }

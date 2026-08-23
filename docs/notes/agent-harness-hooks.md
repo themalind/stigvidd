@@ -61,7 +61,7 @@ in all three vocabularies (inline assignments, `env`, `timeout`, `nice`, `stdbuf
 `set`, `$env:`) and steps into `$( )` and backticks. Spurious positions only make a guard
 look harder; a missed one makes it fail open.
 
-## 5b. The guards match a command shape, not a project — and they match your prose too
+## 5b. The guards match a command shape, not a project — and a rule's two halves can come from two different commands
 
 `guard-long-running.mjs`'s `NEVER_RETURNS` keys on the head of the command
 (`/^dotnet\s+run\b/` → "the API host"), which is deliberate: matching by *project* would
@@ -80,14 +80,67 @@ cd backend && dotnet build MapData/MapData.csproj
 That is the better way to check a console tool's exit codes anyway, since `dotnet run`
 returns its own exit status and can mask the tool's.
 
-**The guard reads the whole Bash command string, including text you are only writing into a
-file.** A heredoc, `perl -0pi -e`, or a python inline script that *documents* a guarded
-command — this very section, the first time — is denied, because the literal appears in the
-command the hook inspects. It is matching the string, not your intent, and it cannot tell the
-difference. Write the content with a non-Bash tool (the Write tool), or put it in a
-script file whose own invocation carries no guarded literal and assemble the literal there by
-concatenation. Same trap applies to `guard-build-commands.mjs`: a note
-quoting a bare `dotnet test` is a denial, not a lint error.
+**A two-part matcher can be satisfied by two DIFFERENT commands on the same line.** This
+section said something simpler and wrong for a while — that any Bash string *containing* a
+guarded literal is denied, so a heredoc documenting one is blocked. Measured, it is not:
+
+| command | |
+| --- | --- |
+| `echo "run dotnet test in backend/"` | allowed |
+| `ls; echo "dotnet test"` | allowed |
+| `cat > n.md <<EOF` / `run dotnet test here` / `EOF` | allowed |
+| `git commit -m "document dotnet test"` | allowed |
+| `ls; echo "docker compose up"` | allowed |
+
+All of them pass, because `invokes()` and `NEVER_RETURNS` match on the **head** of a
+`commandsIn()` position, and prose inside an `echo` or a heredoc body is never at a head.
+Quoting a guarded command is fine.
+
+What actually bites is narrower and order-dependent. `commandsIn()`'s position 0 is the
+**whole string**, and the docker rule is two conditions against one segment —
+`/^docker\s+compose\b/` at the head *and* `\bup\b` anywhere in it. So:
+
+| command | |
+| --- | --- |
+| `docker compose ps` | allowed |
+| `docker compose ps \|\| echo "not up yet"` | **DENIED** — `up` is English prose in an `echo` |
+| `docker compose ps -a; echo up` | **DENIED** |
+| `echo up; docker compose ps` | allowed — the same two commands, reversed |
+
+The head comes from the real command and the trigger word from an unrelated one later in the
+line. Reversing the order fixes it, which is the tell. This is live: it denied a
+`docker compose ps … || echo "(compose not up — …)"` written while building
+`guard-symbol-search.mjs`, and the first diagnosis — "the guard matched my prose" — was wrong
+in a way that cost a wrong turn. It applies to every rule with a second condition beyond the
+head: the docker `up` and `logs -f` rules, and the jest `--watch` rule.
+
+Workarounds, both of which still hold: split the line so the guarded command is not at the
+head of position 0, write file content with a non-Bash tool (the Write tool), or assemble the
+literal from fragments in a script — `const DC = "docker" + " compose"`.
+
+**A heredoc body line IS a command position, because `commandsIn()` splits on newlines.** So
+the "prose is safe" rule above has one exception, and it is the one that catches people writing
+notes about greps: a line *beginning* with a guarded command inside a heredoc is read as that
+command.
+
+| command | |
+| --- | --- |
+| `cat <<EOF` / `run grep -rn TrailRepository backend/` / `EOF` | allowed — the head is `run` |
+| `cat <<EOF` / `grep -rn TrailRepository backend/` / `EOF` | **DENIED** by `guard-symbol-search` |
+| `cat <<EOF` / ``run `grep -rn FromLonLat backend/` `` / `EOF` | allowed — see below |
+
+The third row is allowed for a reason specific to that guard rather than to this one: the
+backtick leaves ``backend/` `` as the path operand, and its gate 4 finds no declaration under
+it. Do not rely on that. Write file content with the Write tool.
+
+## 5c. The hook modules cannot be imported
+
+Every hook ends in `process.exit(main())` **at module scope**, so `await import()`-ing one to
+reach its exported `decide()` runs `main()` — which reads stdin, gets nothing, and exits,
+taking the importer with it. Silently: the probe just produces no output. That is why every
+suite is in-file behind `--self-test` and why `scripts/check-hooks.mjs` spawns rather than
+imports. To exercise a guard from outside, spawn it with the event on stdin
+(`spawnSync(process.execPath, [hook], { input: JSON.stringify(ev) })`).
 
 ## 6. Everything gets a `--self-test`, and the gate runs them
 

@@ -208,8 +208,29 @@ is X" questions in one call, with verbatim source plus call paths. Reach for it 
 grep/find.
 
 `.codegraph/` is **per-checkout and not committed**, so a freshly created worktree has no
-index and codegraph silently knows nothing about the tree. `session-start.mjs` says so on
-arrival.
+index and codegraph silently knows nothing about the tree. `session-start.mjs` says which of
+the two states this checkout is in, on arrival.
+
+Where the index IS present this stops being advice: `guard-symbol-search.mjs` denies a search
+for a single identifier the index provably holds — `Grep` for `TrailRepository`,
+`grep -rn GeoPointFactory backend/`, `Glob` for `**/GeoPointFactory.cs` — and hands back the
+`codegraph_explore` call instead, naming **every** symbol of that name rather than picking one
+(two files here are called `Utilities.cs`). It asks the index rather than guessing, so a config
+key like `ConnectionStrings__StigVidd` is identifier-shaped and still passes straight through;
+so does every regex, phrase and piped grep. **A count passes too** — `-c`, `--count`,
+`| wc -l`, `output_mode="count"` — because an index of declarations cannot answer how many
+times a string occurs.
+
+**And a search is only guarded where the symbol is actually declared.** The index holds 790
+files here and not one of them is markdown, so `grep -rn GeoPointFactory docs/`,
+`--include=*.md` and the `Grep` tool's `path`/`glob`/`type` all pass — as does a search pinned
+to a directory holding only the symbol's *callers*, which is a usage search, not a declaration
+lookup. Searching `docs/notes/` for a symbol name is ordinary work and is never denied.
+
+Finally, because a deny cannot be retried, an identical search is **allowed through on the
+second attempt** — every identifier on the line, so a two-symbol command needs two attempts,
+not three. If CodeGraph's answer did not cover what you needed (every *usage* of a symbol,
+text that is not a symbol), just run the same search again.
 
 ## The agent harness (hooks, skills, the gate)
 
@@ -222,6 +243,7 @@ arrival.
 | `guard-generated-files.mjs` | PreToolUse write | denies edits to generated/EF-owned files |
 | `guard-build-commands.mjs` | PreToolUse Bash | `dotnet test` without the connection string, `dotnet ef` without `--project` |
 | `guard-long-running.mjs` | PreToolUse Bash | foreground dev servers, watchers, `compose up` |
+| `guard-symbol-search.mjs` | PreToolUse Grep/Glob/Bash | a search for a single identifier that `codegraph query` proves the index holds **and declares inside the path being searched** — denied **once**, with the `codegraph_explore` call to make instead and every match of that name listed; the identical retry passes. Silent when there is no `.codegraph/` here, and silent on any regex, phrase, count, prose-scoped search (`docs/`, `*.md`) or non-symbol string |
 | `check-dotnet-build.mjs` | PostToolUse edit | builds the project owning the edited `.cs` and reports that file's errors |
 | `check-lint.mjs` | PostToolUse edit | eslint on the edited TS/JS, differenced against HEAD |
 | `plan-eval.mjs` | ExitPlanMode, Stop | matches an approved plan against `docs/notes/`; at the end, what the diff obliges vs what ran |

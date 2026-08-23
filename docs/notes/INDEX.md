@@ -122,6 +122,27 @@ you get approved.
   `DeleteSessionAsync_ShouldTakeTheProposalsWithItAndLeaveTheTrailsAlone` a known failure.
   Fixed by `Foreign Keys=True` in WebApplicationFactory's connection string; the pragma is a
   silent no-op inside a transaction, so it has to go there.
+- [Driving `codegraph` from a hook: the bundle's own node, and why the query must be exact](codegraph-from-a-hook.md) —
+  `guard-symbol-search.mjs` denies a Grep/Glob/`grep -rn` for a symbol the CodeGraph index
+  provably holds, so it has to spawn `codegraph query --json` from a hook: `codegraph` on PATH
+  is an sh script and a Windows shim, and the only shim-free route is the bundle's **own node**
+  plus `lib/dist/bin/codegraph.js` (`--print` says which launcher resolved; the Windows bundle
+  layout is the one thing unverifiable from Linux, and it fails open). `codegraph query`
+  is **fuzzy** — `GeoPoint` returns 10 rows and no symbol of that name — so the match must be
+  exact, and kind must agree with file-vs-symbol. But an exact match is **not a unique** one
+  either: this tree has two `Utilities.cs`, two `Program`, 40+ `Create`, so the denial lists
+  every hit instead of asserting one path "IS the answer", and the query limit is part of the
+  message. Holding a symbol is still not being able to answer a **search** for it: the index has
+  790 files and **zero markdown**, so a search scoped to `docs/`, `*.md` or to a directory
+  holding only the callers must pass — gate 4 keys that on the rows already fetched rather than
+  on a list of prose extensions. A **count** — `-rc`, `--count`, `| wc -l`, `output_mode=count`
+  — is rejected at gate 1 before any query. A negative fixture of `[]` cannot test the
+  exact-name rule at all; **thirteen** mutations are known to go red. Because a `deny` cannot be
+  retried it denies **once** and lets the identical search through — for **every** identifier on
+  the line, or a two-symbol command needs three attempts. Costs 40 ms on a non-candidate, 190 ms
+  when the index is consulted; the budget is per **event**, not per identifier, and forgetting
+  that measured 32 s against the `"timeout": 15` it is registered with. Verified silent all four
+  ways CodeGraph can be missing.
 - [The rules that keep a hook working on Windows, Gentoo and Debian at once](agent-harness-hooks.md) —
   hooks are Node `.mjs` because `python3` does not exist on Windows; registered in **exec
   form** because Claude Code expands `${CLAUDE_PROJECT_DIR}` itself and Windows may fall
@@ -129,8 +150,13 @@ you get approved.
   matching and lowercase fixed repo paths unconditionally (`fold()` is a no-op off win32 and
   left half a guard dead); `path.resolve` cannot parse a Windows root on Linux; command
   guards must strip bash, cmd and PowerShell prefix runs. Plus the exit-code contract and
-  why `scripts/check-hooks.mjs` exists, and two ways the command guards
-  surprise you: they match a command SHAPE not a project, so `dotnet run --project MapData` — a
-  console ETL tool that exits — is denied as "the API host" (run the built binary instead of
-  loosening the pattern), and they inspect the whole Bash string, so a heredoc or inline script
-  that merely *documents* a guarded command is itself denied.
+  why `scripts/check-hooks.mjs` exists, and three ways the command guards surprise you: they
+  match a command SHAPE not a project, so `dotnet run --project MapData` — a console ETL tool
+  that exits — is denied as "the API host" (run the built binary instead of loosening the
+  pattern); a rule with TWO conditions can take its head from one command and its trigger word
+  from an unrelated one later in the same line, so `docker compose ps || echo "not up yet"` is
+  denied over the word `up` in English prose while the reversed order passes and a quoted
+  `docker compose up` passes too (this note claimed the opposite until it was measured) — but a
+  heredoc body line *beginning* with a guarded command IS denied, because `commandsIn()` splits
+  on newlines; and the hooks `process.exit()` at module scope, so `import`-ing one to test its
+  `decide()` kills the importer — spawn it with the event on stdin instead.

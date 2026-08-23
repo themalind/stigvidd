@@ -99,12 +99,23 @@ export function compose(root) {
   out.push(tree);
 
   // --- what this checkout cannot do ----------------------------------------------
-  if (!existsSync(path.join(root, ".codegraph")))
-    out.push(
-      "CodeGraph: this checkout has NO .codegraph/ index (it is per-checkout and is not " +
-        "committed), so `codegraph explore` and the codegraph MCP tool have nothing to " +
-        "read here. Use grep/Read, or index this tree first.",
-    );
+  // Both halves matter, and they are opposite instructions. Saying only the first would
+  // leave a session guessing why its greps are being denied in one checkout and not another.
+  out.push(
+    existsSync(path.join(root, ".codegraph"))
+      ? "CodeGraph: this checkout IS indexed, so reach for `codegraph explore` / the " +
+          "codegraph_explore MCP tool before grep — one call gives verbatim source, call " +
+          "paths and blast radius. guard-symbol-search.mjs enforces it: a search for a " +
+          "single identifier the index holds AND declares inside the path you are searching " +
+          "is DENIED once, with the call to make instead; re-running the identical search is " +
+          "allowed through. Never touched: any regex, phrase, count (-c, | wc -l, " +
+          "output_mode=count), non-symbol string, or a search scoped to prose or to callers " +
+          "— grepping docs/ or *.md for a symbol name is ordinary work and always passes."
+      : "CodeGraph: this checkout has NO .codegraph/ index (it is per-checkout and is not " +
+          "committed), so `codegraph explore` and the codegraph MCP tool have nothing to " +
+          "read here. Use grep/Read, or index this tree first — and guard-symbol-search.mjs " +
+          "stays silent, so every search passes.",
+  );
 
   // --- the contract chain and the EF model ---------------------------------------
   const notes = classify(entries);
@@ -233,6 +244,7 @@ function selfTest() {
       [CONN, "the connection-string variable"],
       ["Green means", "the green commands"],
       ["npm run generate:api", "the regeneration command"],
+      ["CodeGraph:", "the CodeGraph state — the guard's behaviour depends on it"],
     ]) {
       ok(text.includes(want), `orientation is missing ${why}`);
       n++;
