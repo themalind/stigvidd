@@ -92,14 +92,25 @@ export default function TrailImportPage() {
     }
   }
 
-  async function handleAnalyze(sessionId: number) {
+  async function handleAnalyze(sessionId: number, force = false) {
     setBusyId(sessionId);
     try {
-      await analyzeSession(sessionId);
+      await analyzeSession(sessionId, force);
       toast.success("Analysis queued. This page updates itself while it runs.");
       await load();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "The analysis could not be queued.");
+      const message =
+        error instanceof Error ? error.message : "The analysis could not be queued.";
+
+      // The API refuses rather than silently replacing decided proposals, and says how many.
+      if (!force && message.includes("discard")) {
+        if (window.confirm(`${message}\n\nRun it anyway?`)) {
+          await handleAnalyze(sessionId, true);
+          return;
+        }
+      } else {
+        toast.error(message);
+      }
     } finally {
       setBusyId(null);
     }

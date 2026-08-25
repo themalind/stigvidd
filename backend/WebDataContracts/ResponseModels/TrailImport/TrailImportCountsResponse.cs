@@ -15,4 +15,33 @@ public class TrailImportCountsResponse
     public int CreateNew { get; set; }
     public int Excluded { get; set; }
     public int Skipped { get; set; }
+
+    public static TrailImportCountsResponse Create(
+        int total,
+        int certain,
+        int high,
+        int medium,
+        int unmatched,
+        int pending,
+        int accepted,
+        int relinked,
+        int createNew,
+        int excluded,
+        int skipped)
+    {
+        return new TrailImportCountsResponse
+        {
+            Total = total,
+            Certain = certain,
+            High = high,
+            Medium = medium,
+            Unmatched = unmatched,
+            Pending = pending,
+            Accepted = accepted,
+            Relinked = relinked,
+            CreateNew = createNew,
+            Excluded = excluded,
+            Skipped = skipped
+        };
+    }
 }

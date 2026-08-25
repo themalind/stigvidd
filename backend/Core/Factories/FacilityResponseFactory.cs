@@ -1,4 +1,3 @@
-using Core.Common;
 using Infrastructure.Data.Entities;
 using WebDataContracts.ResponseModels.Facility;
 

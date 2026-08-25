@@ -43,7 +43,7 @@ public class KeycloakRealmRolesTransformationTests
         // Assert
         transformed.IsInRole(AdminRole).Should().BeTrue();
         transformed.IsInRole("offline_access").Should().BeTrue();
-        transformed.IsInRole("stigvidd-user").Should().BeFalse();
+        transformed.IsInRole("a-role-the-token-does-not-carry").Should().BeFalse();
     }
 
     [Fact]

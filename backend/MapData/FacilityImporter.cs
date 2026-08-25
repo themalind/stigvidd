@@ -1,7 +1,6 @@
 ﻿using CsvHelper;
 using CsvHelper.Configuration;
 using CsvHelper.Configuration.Attributes;
-using Core.Common;
 using Infrastructure.Data;
 using Infrastructure.Data.Entities;
 using System.Globalization;

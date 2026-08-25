@@ -1,5 +1,4 @@
-﻿using Core.Common;
-using Core.Repositories;
+﻿using Core.Repositories;
 using FluentAssertions;
 using Infrastructure.Data.Entities;
 using Microsoft.Extensions.Logging.Abstractions;

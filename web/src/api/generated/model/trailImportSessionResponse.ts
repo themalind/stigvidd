@@ -4,6 +4,7 @@
  * StigVidd
  * OpenAPI spec version: 1.0.0
  */
+import type { TrailImportApplyResponse } from './trailImportApplyResponse';
 import type { TrailImportCountsResponse } from './trailImportCountsResponse';
 
 export interface TrailImportSessionResponse {
@@ -25,6 +26,7 @@ export interface TrailImportSessionResponse {
   /** @nullable */
   errorMessage?: string | null;
   counts?: TrailImportCountsResponse | null;
+  applied?: TrailImportApplyResponse | null;
   /** @nullable */
   duplicateOf?: string[] | null;
 }

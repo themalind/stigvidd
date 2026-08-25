@@ -1,6 +1,6 @@
 import { Link } from "react-router";
-import CommingSoonImages from "./comming-soon-images";
 import iconUrl from "../../assets/icon.png";
+import CommingSoonImages from "./comming-soon-images";
 
 export default function CommingSoonPage() {
   return (
@@ -25,7 +25,6 @@ export default function CommingSoonPage() {
 
             <div className="text-stone-200">
               <p>Kommer snart!</p>
-              <p>Våren 2026</p>
             </div>
           </div>
 

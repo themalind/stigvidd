@@ -49,6 +49,8 @@ type Props = {
   proposal: Proposal;
   trails: TrailShortInfoResponse[];
   onDecided: () => void;
+  /** An applied session is history: the numbers stay, the controls go. */
+  readOnly?: boolean;
   /** Set by the page's keyboard shortcuts; cleared once acted on. */
   pendingShortcut: Decision | null;
   onShortcutHandled: () => void;
@@ -174,6 +176,7 @@ export function ProposalDetail({
   proposal,
   trails,
   onDecided,
+  readOnly = false,
   pendingShortcut,
   onShortcutHandled,
 }: Props) {
@@ -504,7 +507,9 @@ export function ProposalDetail({
         <p className="text-sm text-muted-foreground">No preview available.</p>
       )}
 
-      <Separator />
+      {!readOnly && (
+        <>
+          <Separator />
 
       {(canAccept || relinking) && (
         <div className="space-y-2">
@@ -871,6 +876,8 @@ export function ProposalDetail({
           </div>
         </div>
       </TooltipProvider>
+        </>
+      )}
     </div>
   );
 }

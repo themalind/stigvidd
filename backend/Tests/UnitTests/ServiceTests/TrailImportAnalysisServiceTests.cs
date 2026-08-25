@@ -1,6 +1,6 @@
-﻿using Core.Common;
-using Core.Interfaces.Repositories;
+﻿using Core.Interfaces.Repositories;
 using Core.Services;
+using Core.TrailImport.Matching;
 using FluentAssertions;
 using Infrastructure.Data.Entities;
 using Infrastructure.Enums;

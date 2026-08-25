@@ -1,4 +1,3 @@
-using Core.Common;
 using FluentAssertions;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;

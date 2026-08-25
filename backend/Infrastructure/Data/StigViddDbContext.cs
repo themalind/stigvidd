@@ -25,6 +25,7 @@ public class StigViddDbContext(DbContextOptions<StigViddDbContext> options) : Db
     public DbSet<TrailSourceLink> TrailSourceLinks { get; set; }
     public DbSet<TrailImportSession> TrailImportSessions { get; set; }
     public DbSet<TrailImportProposal> TrailImportProposals { get; set; }
+    public DbSet<TrailRelation> TrailRelations { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -245,6 +246,34 @@ public class StigViddDbContext(DbContextOptions<StigViddDbContext> options) : Db
         modelBuilder.Entity<TrailImportProposal>()
             .Property(p => p.FeatureProperties)
             .HasColumnType("jsonb");
+
+        // TrailRelation → Trail, both ends (cascade; a relation means nothing once either
+        // trail is gone)
+        modelBuilder.Entity<TrailRelation>()
+            .HasOne(r => r.FromTrail)
+            .WithMany()
+            .HasForeignKey(r => r.FromTrailId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<TrailRelation>()
+            .HasOne(r => r.ToTrail)
+            .WithMany()
+            .HasForeignKey(r => r.ToTrailId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // One relation of a given type per ordered pair
+        modelBuilder.Entity<TrailRelation>()
+            .HasIndex(r => new { r.FromTrailId, r.ToTrailId, r.Type })
+            .IsUnique();
+
+        // Reading a symmetric relation from the far column, and listing a parent's stages
+        modelBuilder.Entity<TrailRelation>()
+            .HasIndex(r => new { r.ToTrailId, r.Type });
+
+        // A trail cannot relate to itself
+        modelBuilder.Entity<TrailRelation>()
+            .ToTable(t => t.HasCheckConstraint(
+                "CK_TrailRelations_NotSelf", "\"FromTrailId\" <> \"ToTrailId\""));
 
         // Decimal precision for entity properties
         modelBuilder.Entity<Trail>()

@@ -1,10 +1,13 @@
-﻿using Core.Common;
-using Core.Interfaces.Repositories;
-using Infrastructure.Data;
+﻿using Core.Interfaces.Repositories;
+using Core.TrailImport.Apply;
+using Core.TrailImport.Matching;
+using Core.TrailImport.Review;
 using Infrastructure.Data.Entities;
+using Infrastructure.Data;
 using Infrastructure.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using System.Linq.Expressions;
 using System.Net.Sockets;
 
 namespace Core.Repositories;
@@ -295,6 +298,337 @@ public class TrailImportRepository : ITrailImportRepository
         }
     }
 
+    public async Task<RepositoryResult<ApplyPlan>> GetApplyPlanAsync(
+        int sessionId, string source, CancellationToken ctoken)
+    {
+        try
+        {
+            using var context = await _dbContextFactory.CreateDbContextAsync(ctoken);
+
+            // Accept keeps the suggestion, Relink points somewhere else, and every other
+            // decision writes no trail at all.
+            var rows = await context.TrailImportProposals
+                .AsNoTracking()
+                .Where(p => p.SessionId == sessionId)
+                .Select(p => new
+                {
+                    p.Id,
+                    p.FeatureName,
+                    p.ExternalId,
+                    p.GeometryFingerprint,
+                    p.Decision,
+                    p.DecidedRole,
+                    p.Confidence,
+                    p.CoverageForward,
+                    p.DecidedName,
+                    p.DecidedLengthKm,
+                    TargetTrailId =
+                        p.Decision == ProposalDecision.Accept ? p.SuggestedTrailId
+                        : p.Decision == ProposalDecision.Relink ? p.DecidedTrailId
+                        : null,
+                })
+                .ToListAsync(ctoken);
+
+            var targetIds = rows.Where(r => r.TargetTrailId != null)
+                .Select(r => r.TargetTrailId!.Value).Distinct().ToList();
+
+            var names = await context.Trails.AsNoTracking()
+                .Where(t => targetIds.Contains(t.Id))
+                .Select(t => new { t.Id, t.Name })
+                .ToDictionaryAsync(t => t.Id, t => t.Name, ctoken);
+
+            // Links already on file for this source, which is what gives a trail a baseline.
+            var existing = await context.TrailSourceLinks.AsNoTracking()
+                .Where(l => l.Source == source && l.TrailId != null)
+                .Select(l => new { TrailId = l.TrailId!.Value, l.Role })
+                .ToListAsync(ctoken);
+
+            var plan = new ApplyPlan(
+                rows.Select(r => new ApplyPlanRow(
+                    r.Id,
+                    r.FeatureName,
+                    r.ExternalId,
+                    r.GeometryFingerprint,
+                    r.Decision,
+                    r.DecidedRole,
+                    r.Confidence,
+                    r.CoverageForward,
+                    r.TargetTrailId,
+                    r.TargetTrailId != null && names.TryGetValue(r.TargetTrailId.Value, out var name) ? name : null,
+                    r.DecidedName,
+                    r.DecidedLengthKm)).ToList(),
+                existing.Where(l => l.Role == TrailSourceLinkRole.Segment)
+                    .Select(l => l.TrailId).ToHashSet(),
+                existing.Select(l => l.TrailId).ToHashSet());
+
+            return RepositoryResult<ApplyPlan>.Success(plan);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "TrailImportRepository: GetApplyPlanAsync -> Something went wrong when reading the apply plan for session {sessionId}.", sessionId);
+            return RepositoryResult<ApplyPlan>.Error();
+        }
+    }
+
+    // Decisions a new analysis would throw away. An exclusion the analysis carries forward
+    // from an applied link is not one of them: it comes back on its own, so counting it
+    // would warn about work that is not at risk.
+    public async Task<RepositoryResult<int>> GetDiscardableDecisionCountAsync(
+        int sessionId, string source, CancellationToken ctoken)
+    {
+        try
+        {
+            using var context = await _dbContextFactory.CreateDbContextAsync(ctoken);
+
+            var carriedForward = context.TrailSourceLinks
+                .Where(l => l.Source == source && l.Role == TrailSourceLinkRole.Excluded)
+                .Select(l => l.GeometryFingerprint);
+
+            var count = await context.TrailImportProposals
+                .Where(p => p.SessionId == sessionId
+                    && p.Decision != ProposalDecision.Pending
+                    && !(p.Decision == ProposalDecision.Exclude && carriedForward.Contains(p.GeometryFingerprint)))
+                .CountAsync(ctoken);
+
+            return RepositoryResult<int>.Success(count);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "TrailImportRepository: GetDiscardableDecisionCountAsync -> Something went wrong when counting decisions for session {sessionId}.", sessionId);
+            return RepositoryResult<int>.Error();
+        }
+    }
+
+    // The same rows as GetApplyPlanAsync plus the geometry and properties, which is the
+    // expensive half. Read only when a session is actually being applied.
+    public async Task<RepositoryResult<ApplyInput>> GetApplyInputAsync(
+        int sessionId, string source, CancellationToken ctoken)
+    {
+        try
+        {
+            using var context = await _dbContextFactory.CreateDbContextAsync(ctoken);
+
+            var features = await context.TrailImportProposals
+                .AsNoTracking()
+                .Where(p => p.SessionId == sessionId)
+                .Select(p => new ApplyFeature(
+                    p.Id,
+                    p.ExternalId,
+                    p.FeatureName,
+                    p.GeometryFingerprint,
+                    p.FeatureProperties,
+                    p.FeatureGeometry,
+                    p.Decision,
+                    p.DecidedRole,
+                    p.Confidence,
+                    p.Decision == ProposalDecision.Accept ? p.SuggestedTrailId
+                        : p.Decision == ProposalDecision.Relink ? p.DecidedTrailId
+                        : null,
+                    p.DecidedName,
+                    p.DecidedLengthKm))
+                .ToListAsync(ctoken);
+
+            var targetIds = features.Where(f => f.TargetTrailId != null)
+                .Select(f => f.TargetTrailId!.Value).Distinct().ToList();
+
+            var targets = await context.Trails.AsNoTracking()
+                .Where(t => targetIds.Contains(t.Id))
+                .Select(t => new ApplyTarget(
+                    t.Id, t.Name, t.Classification, t.Accessibility, t.AccessibilityInfo, t.TrailSymbol, t.GeoPath))
+                .ToDictionaryAsync(t => t.TrailId, ctoken);
+
+            var links = await context.TrailSourceLinks.AsNoTracking()
+                .Where(l => l.Source == source)
+                .Select(l => new { l.GeometryFingerprint, Baseline = new ApplyBaseline(l.Id, l.TrailId, l.SourceSnapshot) })
+                .ToListAsync(ctoken);
+
+            var input = new ApplyInput(
+                features,
+                targets,
+                links.ToDictionary(l => l.GeometryFingerprint, l => l.Baseline, StringComparer.Ordinal),
+                links.Where(l => l.Baseline.TrailId != null)
+                    .Select(l => l.Baseline.TrailId!.Value).ToHashSet());
+
+            return RepositoryResult<ApplyInput>.Success(input);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "TrailImportRepository: GetApplyInputAsync -> Something went wrong when reading session {sessionId} for apply.", sessionId);
+            return RepositoryResult<ApplyInput>.Error();
+        }
+    }
+
+    // The one destructive method in the sync. Everything it writes is decided before it is
+    // called, so all it owns is the transaction and the order the writes go in.
+    public async Task<RepositoryResult<IReadOnlyDictionary<int, int>>> ApplySessionAsync(
+        int sessionId, ApplyWriteSet writes, string report, CancellationToken ctoken)
+    {
+        try
+        {
+            using var context = await _dbContextFactory.CreateDbContextAsync(ctoken);
+
+            await using var transaction = await context.Database.BeginTransactionAsync(ctoken);
+
+            var session = await context.TrailImportSessions
+                .FirstOrDefaultAsync(s => s.Id == sessionId, ctoken);
+
+            if (session is null)
+                return RepositoryResult<IReadOnlyDictionary<int, int>>.NotFound();
+
+            // Re-read inside the transaction: the status the service checked could have
+            // been taken by another apply between the two calls.
+            if (session.Status != ImportSessionStatus.AwaitingReview)
+                return RepositoryResult<IReadOnlyDictionary<int, int>>.Conflict();
+
+            var created = await CreateTrailsAsync(context, session.Source, writes.Creates, ctoken);
+
+            await UpdateTrailsAsync(context, writes.Updates, ctoken);
+            await WriteLinksAsync(context, session.Source, writes.Links, created, ctoken);
+
+            session.Status = ImportSessionStatus.Applied;
+            session.AppliedAt = DateTime.UtcNow;
+            session.ApplyReport = report;
+            session.LastUpdatedAt = DateTime.UtcNow;
+
+            await context.SaveChangesAsync(ctoken);
+            await transaction.CommitAsync(ctoken);
+
+            return RepositoryResult<IReadOnlyDictionary<int, int>>.Success(created);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "TrailImportRepository: ApplySessionAsync -> Something went wrong when applying session {sessionId}.", sessionId);
+            return RepositoryResult<IReadOnlyDictionary<int, int>>.Error();
+        }
+    }
+
+    private static async Task<Dictionary<int, int>> CreateTrailsAsync(
+        StigViddDbContext context, string source, IReadOnlyList<TrailCreate> creates, CancellationToken ctoken)
+    {
+        var created = new Dictionary<int, int>();
+
+        if (creates.Count == 0)
+            return created;
+
+        foreach (var create in creates)
+        {
+            var trail = new Trail
+            {
+                Name = create.Name,
+                TrailLength = create.TrailLength,
+                GeoPath = create.Geometry,
+                Classification = create.Classification,
+                Accessibility = create.Accessibility,
+                AccessibilityInfo = create.AccessibilityInfo,
+                TrailSymbol = create.TrailSymbol,
+                CreatedBy = source,
+
+                // An imported trail is not published until someone has looked at it: the app
+                // only lists trails that are verified and carry a route.
+                IsVerified = false,
+            };
+
+            context.Trails.Add(trail);
+
+            // Saved one at a time so the new id is known before the proposal records it.
+            await context.SaveChangesAsync(ctoken);
+
+            created[create.ProposalId] = trail.Id;
+        }
+
+        var proposalIds = created.Keys.ToList();
+
+        // The proposal is the record of what a decision produced, so the new id goes back
+        // onto the row that caused it.
+        var proposals = await context.TrailImportProposals
+            .Where(p => proposalIds.Contains(p.Id))
+            .ToListAsync(ctoken);
+
+        foreach (var proposal in proposals)
+            proposal.CreatedTrailId = created[proposal.Id];
+
+        return created;
+    }
+
+    private static async Task UpdateTrailsAsync(
+        StigViddDbContext context, IReadOnlyList<TrailUpdate> updates, CancellationToken ctoken)
+    {
+        if (updates.Count == 0)
+            return;
+
+        var ids = updates.Select(u => u.TrailId).ToList();
+
+        var trails = await context.Trails
+            .Where(t => ids.Contains(t.Id))
+            .ToDictionaryAsync(t => t.Id, ctoken);
+
+        foreach (var update in updates)
+        {
+            if (!trails.TryGetValue(update.TrailId, out var trail))
+                continue;
+
+            // Null means the merge left the field alone, which is not the same as clearing it.
+            trail.TrailLength = update.TrailLength ?? trail.TrailLength;
+            trail.Classification = update.Classification ?? trail.Classification;
+            trail.Accessibility = update.Accessibility ?? trail.Accessibility;
+            trail.AccessibilityInfo = update.AccessibilityInfo ?? trail.AccessibilityInfo;
+            trail.TrailSymbol = update.TrailSymbol ?? trail.TrailSymbol;
+            trail.GeoPath = update.GeoPath ?? trail.GeoPath;
+            trail.LastUpdatedAt = DateTime.UtcNow;
+        }
+    }
+
+    private static async Task WriteLinksAsync(
+        StigViddDbContext context, string source, IReadOnlyList<LinkWrite> links,
+        IReadOnlyDictionary<int, int> created, CancellationToken ctoken)
+    {
+        if (links.Count == 0)
+            return;
+
+        var ids = links.Where(l => l.LinkId != null).Select(l => l.LinkId!.Value).ToList();
+
+        var existing = await context.TrailSourceLinks
+            .Where(l => ids.Contains(l.Id))
+            .ToDictionaryAsync(l => l.Id, ctoken);
+
+        var seenAt = DateTime.UtcNow;
+
+        foreach (var write in links)
+        {
+            // A feature whose trail this apply just created carries the create's id rather
+            // than a trail id, because there was none to carry when the write was planned.
+            var trailId = write.CreatedForProposalId is int proposalId
+                ? created.TryGetValue(proposalId, out var newId) ? newId : null
+                : write.TrailId;
+
+            if (write.LinkId is int linkId && existing.TryGetValue(linkId, out var link))
+            {
+                link.TrailId = trailId;
+                link.Role = write.Role;
+                link.Confidence = write.Confidence;
+                link.LastSeenExternalId = write.ExternalId;
+                link.SourceSnapshot = write.SourceSnapshot;
+                link.ConfirmedByHuman = write.ConfirmedByHuman;
+                link.LastSeenAt = seenAt;
+                link.LastUpdatedAt = seenAt;
+                continue;
+            }
+
+            context.TrailSourceLinks.Add(new TrailSourceLink
+            {
+                Source = source,
+                GeometryFingerprint = write.GeometryFingerprint,
+                LastSeenExternalId = write.ExternalId,
+                TrailId = trailId,
+                Role = write.Role,
+                Confidence = write.Confidence,
+                SourceSnapshot = write.SourceSnapshot,
+                ConfirmedByHuman = write.ConfirmedByHuman,
+                LastSeenAt = seenAt,
+            });
+        }
+    }
+
     public async Task<RepositoryResult<ProposalCounts>> GetProposalCountsAsync(int sessionId, CancellationToken ctoken)
     {
         try
@@ -436,8 +770,9 @@ public class TrailImportRepository : ITrailImportRepository
     }
 
     // CreateNew and Exclude aim at no trail at all, so they are not competing for this one.
-    public async Task<RepositoryResult<IReadOnlyList<ProposalSibling>>> GetSiblingsOnTrailAsync(
-        int sessionId, int proposalId, int trailId, CancellationToken ctoken)
+    public async Task<RepositoryResult<IReadOnlyList<T>>> GetSiblingsOnTrailAsync<T>(
+        int sessionId, int proposalId, int trailId,
+        Expression<Func<TrailImportProposal, T>> selector, CancellationToken ctoken)
     {
         try
         {
@@ -451,15 +786,15 @@ public class TrailImportRepository : ITrailImportRepository
                     && p.Decision != ProposalDecision.CreateNew
                     && p.Decision != ProposalDecision.Exclude)
                 .OrderBy(p => p.Id)
-                .Select(p => new ProposalSibling(p.Id, p.FeatureName, p.Decision, p.DecidedRole))
+                .Select(selector)
                 .ToListAsync(ctoken);
 
-            return RepositoryResult<IReadOnlyList<ProposalSibling>>.Success(siblings);
+            return RepositoryResult<IReadOnlyList<T>>.Success(siblings);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "TrailImportRepository: GetSiblingsOnTrailAsync -> Something went wrong when reading the other proposals on trail {trailId}.", trailId);
-            return RepositoryResult<IReadOnlyList<ProposalSibling>>.Error();
+            return RepositoryResult<IReadOnlyList<T>>.Error();
         }
     }
 

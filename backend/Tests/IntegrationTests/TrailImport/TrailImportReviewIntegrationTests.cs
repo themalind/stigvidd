@@ -1,5 +1,6 @@
-using Core.Common;
+using Core.TrailImport.Review;
 using Core.Interfaces.Repositories;
+using System.Linq.Expressions;
 using FluentAssertions;
 using Infrastructure.Data;
 using Infrastructure.Data.Entities;
@@ -8,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using NetTopologySuite.Geometries;
 using StigviddAPI;
+using WebDataContracts.ResponseModels.TrailImport;
 
 namespace IntegrationTests.TrailImport;
 
@@ -20,6 +22,11 @@ public class TrailImportReviewIntegrationTests : IClassFixture<StigViddWebApplic
 {
     private const int TivedenId = 1;
     private const int StorsjoledenId = 2;
+
+    // The projection the review view asks for, so the tests exercise the one that ships.
+    private static readonly Expression<Func<TrailImportProposal, TrailImportSiblingResponse>> AsSibling =
+        p => TrailImportSiblingResponse.Create(
+            p.Id, p.FeatureName, p.Decision.ToString(), p.DecidedRole.ToString());
 
     private readonly StigViddWebApplicationFactory<Program> _factory;
 
@@ -296,14 +303,14 @@ public class TrailImportReviewIntegrationTests : IClassFixture<StigViddWebApplic
 
         // Act
         var result = await repository.GetSiblingsOnTrailAsync(
-            sessionId, first.Id, TivedenId, TestContext.Current.CancellationToken);
+            sessionId, first.Id, TivedenId, AsSibling, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().ContainSingle();
         result.Value[0].ProposalId.Should().Be(second.Id);
         result.Value[0].FeatureName.Should().Be("Vildmarksspåret (gran)");
-        result.Value[0].Decision.Should().Be(ProposalDecision.Pending);
+        result.Value[0].Decision.Should().Be(nameof(ProposalDecision.Pending));
     }
 
     [Fact]
@@ -328,7 +335,7 @@ public class TrailImportReviewIntegrationTests : IClassFixture<StigViddWebApplic
 
         // Act
         var result = await repository.GetSiblingsOnTrailAsync(
-            sessionId, mine.Id, TivedenId, TestContext.Current.CancellationToken);
+            sessionId, mine.Id, TivedenId, AsSibling, TestContext.Current.CancellationToken);
 
         // Assert
         result.Value.Should().BeEmpty();
@@ -351,7 +358,7 @@ public class TrailImportReviewIntegrationTests : IClassFixture<StigViddWebApplic
 
         // Act
         var result = await repository.GetSiblingsOnTrailAsync(
-            sessionId, mine.Id, StorsjoledenId, TestContext.Current.CancellationToken);
+            sessionId, mine.Id, StorsjoledenId, AsSibling, TestContext.Current.CancellationToken);
 
         // Assert
         result.Value.Should().ContainSingle();
@@ -371,7 +378,7 @@ public class TrailImportReviewIntegrationTests : IClassFixture<StigViddWebApplic
 
         // Act
         var result = await repository.GetSiblingsOnTrailAsync(
-            mineSession, mine.Id, TivedenId, TestContext.Current.CancellationToken);
+            mineSession, mine.Id, TivedenId, AsSibling, TestContext.Current.CancellationToken);
 
         // Assert
         result.Value.Should().BeEmpty();
@@ -581,7 +588,7 @@ public class TrailImportReviewIntegrationTests : IClassFixture<StigViddWebApplic
         var result = await repository.DeleteSessionAsync(987654, TestContext.Current.CancellationToken);
 
         // Assert
-        result.Status.Should().Be(Core.Common.RepositoryResultStatus.NotFound);
+        result.Status.Should().Be(RepositoryResultStatus.NotFound);
     }
 
     [Fact]

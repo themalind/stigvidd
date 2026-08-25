@@ -1,4 +1,4 @@
-using Core.Common;
+using Core.TrailImport.Review;
 using WebDataContracts.ResponseModels.TrailImport;
 
 namespace Core.Interfaces.Services;
@@ -8,7 +8,7 @@ public interface ITrailImportService
     Task<Result<TrailImportSessionResponse>> CreateSessionAsync(
         Stream content, string fileName, string? source, string uploadedBy, CancellationToken ctoken);
 
-    Task<Result<TrailImportSessionResponse>> QueueAnalysisAsync(int sessionId, CancellationToken ctoken);
+    Task<Result<TrailImportSessionResponse>> QueueAnalysisAsync(int sessionId, bool force, CancellationToken ctoken);
 
     Task<Result<IReadOnlyCollection<TrailImportSessionResponse>>> GetSessionsAsync(CancellationToken ctoken);
 
@@ -18,6 +18,8 @@ public interface ITrailImportService
         int sessionId, string? confidence, string? decision, int page, int pageSize, CancellationToken ctoken);
 
     Task<Result<TrailImportPreviewResponse>> GetPreviewAsync(int sessionId, int proposalId, CancellationToken ctoken);
+    Task<Result<TrailImportDiffResponse>> GetDiffAsync(int sessionId, CancellationToken ctoken);
+    Task<Result<TrailImportApplyResponse>> ApplyAsync(int sessionId, CancellationToken ctoken);
 
     Task<Result<int>> DecideAsync(
         int sessionId, IReadOnlyCollection<int> proposalIds, string decision,

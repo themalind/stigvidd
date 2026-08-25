@@ -1,5 +1,4 @@
-﻿using Core.Common;
-using Core.Factories;
+﻿using Core.Factories;
 using FluentAssertions;
 using Infrastructure.Data.Entities;
 

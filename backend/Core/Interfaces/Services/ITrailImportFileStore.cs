@@ -1,4 +1,4 @@
-using Core.Common;
+using Core.TrailImport.Source;
 
 namespace Core.Interfaces.Services;
 

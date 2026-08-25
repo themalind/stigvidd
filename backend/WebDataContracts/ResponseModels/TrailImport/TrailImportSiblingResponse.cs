@@ -7,4 +7,19 @@ public class TrailImportSiblingResponse
     public required string FeatureName { get; set; }
     public required string Decision { get; set; }
     public required string DecidedRole { get; set; }
+
+    public static TrailImportSiblingResponse Create(
+        int proposalId,
+        string featureName,
+        string decision,
+        string decidedRole)
+    {
+        return new TrailImportSiblingResponse
+        {
+            ProposalId = proposalId,
+            FeatureName = featureName,
+            Decision = decision,
+            DecidedRole = decidedRole
+        };
+    }
 }

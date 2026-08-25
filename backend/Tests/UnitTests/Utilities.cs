@@ -9,7 +9,6 @@ using NetTopologySuite.Geometries;
 using System.Linq.Expressions;
 using System.Text;
 using UserResponseModel = WebDataContracts.ResponseModels.User.UserResponse;
-using Core.Common;
 
 namespace UnitTests;
 

@@ -66,7 +66,7 @@ you get approved.
   PostGIS raises, so a mixed-SRID **query** is invisible to every suite. Plus how to verify a
   geometry migration on a throwaway PostGIS when `.env` is absent and compose refuses.
 - [Build every geometry through GeoPointFactory — a raw NTS factory gives you SRID 0](srid-4326.md) —
-  `Core/Common/GeoPointFactory.cs` is the only place the SRID and the (X = longitude,
+  `Core/Spatial/GeoPointFactory.cs` is the only place the SRID and the (X = longitude,
   Y = latitude) order live, and `Geometry.DefaultFactory.WithSRID(...)` appears exactly once
   in the backend, inside it; a second occurrence in a diff is the finding. NetTopologySuite's
   default factory yields SRID 0 and nothing in the type system objects. PostGIS refuses or

@@ -31,4 +31,53 @@ public class TrailImportProposalResponse
     // write. Null in either means the row carries no override.
     public string? DecidedName { get; set; }
     public decimal? DecidedLengthKm { get; set; }
+
+    public static TrailImportProposalResponse Create(
+        int id,
+        string externalId,
+        string featureName,
+        string confidence,
+        double coverageForward,
+        double coverageBackward,
+        double? hausdorffMeters,
+        string? matchReason,
+        string decision,
+        string decidedRole,
+        int? suggestedTrailId,
+        string? suggestedTrailName,
+        int? nearestTrailId,
+        string? nearestTrailName,
+        int? decidedTrailId,
+        string? decidedTrailName,
+        string? decidedBy,
+        DateTime? decidedAt,
+        string? note,
+        string? decidedName,
+        decimal? decidedLengthKm)
+    {
+        return new TrailImportProposalResponse
+        {
+            Id = id,
+            ExternalId = externalId,
+            FeatureName = featureName,
+            Confidence = confidence,
+            CoverageForward = coverageForward,
+            CoverageBackward = coverageBackward,
+            HausdorffMeters = hausdorffMeters,
+            MatchReason = matchReason,
+            Decision = decision,
+            DecidedRole = decidedRole,
+            SuggestedTrailId = suggestedTrailId,
+            SuggestedTrailName = suggestedTrailName,
+            NearestTrailId = nearestTrailId,
+            NearestTrailName = nearestTrailName,
+            DecidedTrailId = decidedTrailId,
+            DecidedTrailName = decidedTrailName,
+            DecidedBy = decidedBy,
+            DecidedAt = decidedAt,
+            Note = note,
+            DecidedName = decidedName,
+            DecidedLengthKm = decidedLengthKm
+        };
+    }
 }

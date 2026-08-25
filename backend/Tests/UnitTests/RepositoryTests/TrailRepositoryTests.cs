@@ -1,4 +1,3 @@
-using Core.Common;
 using System.Linq.Expressions;
 using Core;
 using Core.Repositories;
@@ -321,11 +320,8 @@ public class TrailRepositoryTests : TestBase
         result.Value.Should().NotContain("pop-no-path");
     }
 
-    // The user is deliberately ~335 km from the seed trails, all of which start at
-    // (12.80, 57.62) and six of which are verified with a GeoPath. Standing the user on that
-    // coordinate instead would hand all six the full proximity boost — up to 9.75 — and the
-    // assertions below would silently be about them rather than about the trails these tests
-    // seed. See docs/notes/seeded-trails-compete-in-ranking-tests.md.
+    // The user stands ~335 km from the seed trails, so the proximity boost never reaches them
+    // and each test's assertions are about the trails it seeds itself.
     private const double UserLatitude = 59.00;
     private const double UserLongitude = 18.00;
 

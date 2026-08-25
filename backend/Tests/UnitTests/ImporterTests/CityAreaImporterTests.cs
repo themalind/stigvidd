@@ -1,5 +1,4 @@
-﻿using Core.Common;
-using FluentAssertions;
+﻿using FluentAssertions;
 using Infrastructure.Data;
 using Infrastructure.Data.Entities;
 using MapData;

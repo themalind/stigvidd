@@ -812,6 +812,49 @@ namespace Infrastructure.Migrations
                     b.ToTable("TrailObstacleSolvedVotes", "dbo");
                 });
 
+            modelBuilder.Entity("Infrastructure.Data.Entities.TrailRelation", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("FromTrailId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Identifier")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("LastUpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("Sequence")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ToTrailId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ToTrailId", "Type");
+
+                    b.HasIndex("FromTrailId", "ToTrailId", "Type")
+                        .IsUnique();
+
+                    b.ToTable("TrailRelations", "dbo", t =>
+                        {
+                            t.HasCheckConstraint("CK_TrailRelations_NotSelf", "\"FromTrailId\" <> \"ToTrailId\"");
+                        });
+                });
+
             modelBuilder.Entity("Infrastructure.Data.Entities.TrailSourceLink", b =>
                 {
                     b.Property<int>("Id")
@@ -1243,6 +1286,25 @@ namespace Infrastructure.Migrations
                     b.Navigation("TrailObstacle");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Infrastructure.Data.Entities.TrailRelation", b =>
+                {
+                    b.HasOne("Infrastructure.Data.Entities.Trail", "FromTrail")
+                        .WithMany()
+                        .HasForeignKey("FromTrailId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Infrastructure.Data.Entities.Trail", "ToTrail")
+                        .WithMany()
+                        .HasForeignKey("ToTrailId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("FromTrail");
+
+                    b.Navigation("ToTrail");
                 });
 
             modelBuilder.Entity("Infrastructure.Data.Entities.TrailSourceLink", b =>

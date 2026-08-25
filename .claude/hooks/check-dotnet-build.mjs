@@ -144,10 +144,10 @@ function main() {
 // Verbatim `dotnet build` output from this tree, from a planted `s.Length` on a `string?`
 // and a call to an undeclared name. Kept as a fixture so the gate needs no compiler.
 const FIXTURE = `
-/w/stigvidd/backend/Core/Common/ZzTemp.cs(4,46): error CS8602: Dereference of a possibly null reference. [/w/stigvidd/backend/Core/Core.csproj]
-/w/stigvidd/backend/Core/Common/ZzTemp.cs(5,34): error CS0103: The name 'NoSuchThing' does not exist in the current context [/w/stigvidd/backend/Core/Core.csproj]
-/w/stigvidd/backend/Core/Common/ZzTemp.cs(4,46): error CS8602: Dereference of a possibly null reference. [/w/stigvidd/backend/Core/Core.csproj]
-/w/stigvidd/backend/Core/Common/ZzTemp.cs(5,34): error CS0103: The name 'NoSuchThing' does not exist in the current context [/w/stigvidd/backend/Core/Core.csproj]
+/w/stigvidd/backend/Core/Spatial/ZzTemp.cs(4,46): error CS8602: Dereference of a possibly null reference. [/w/stigvidd/backend/Core/Core.csproj]
+/w/stigvidd/backend/Core/Spatial/ZzTemp.cs(5,34): error CS0103: The name 'NoSuchThing' does not exist in the current context [/w/stigvidd/backend/Core/Core.csproj]
+/w/stigvidd/backend/Core/Spatial/ZzTemp.cs(4,46): error CS8602: Dereference of a possibly null reference. [/w/stigvidd/backend/Core/Core.csproj]
+/w/stigvidd/backend/Core/Spatial/ZzTemp.cs(5,34): error CS0103: The name 'NoSuchThing' does not exist in the current context [/w/stigvidd/backend/Core/Core.csproj]
 /w/stigvidd/backend/Core/Services/Other.cs(9,1): error CS1002: ; expected [/w/stigvidd/backend/Core/Core.csproj]
     5 Warning(s)
     5 Error(s)
@@ -166,17 +166,17 @@ function selfTest(withCompiler) {
 
   // Windows-shaped output must parse and attribute the same way.
   const win = parseErrors(
-    String.raw`C:\w\stigvidd\backend\Core\Common\ZzTemp.cs(4,46): error CS8602: Dereference of a possibly null reference. [C:\w\stigvidd\backend\Core\Core.csproj]`,
+    String.raw`C:\w\stigvidd\backend\Core\Spatial\ZzTemp.cs(4,46): error CS8602: Dereference of a possibly null reference. [C:\w\stigvidd\backend\Core\Core.csproj]`,
   );
   ok(win.length === 1 && win[0].line === 4, "a Windows path did not parse");
-  const winAttr = attribute(win, String.raw`C:\w\stigvidd`, "backend/Core/Common/ZzTemp.cs");
+  const winAttr = attribute(win, String.raw`C:\w\stigvidd`, "backend/Core/Spatial/ZzTemp.cs");
   ok(winAttr.mine.length === 1, "a Windows path did not attribute to the edited file");
   n += 2;
 
-  const { mine, elsewhere } = attribute(errs, "/w/stigvidd", "backend/Core/Common/ZzTemp.cs");
+  const { mine, elsewhere } = attribute(errs, "/w/stigvidd", "backend/Core/Spatial/ZzTemp.cs");
   ok(mine.length === 2, `attribute: ${mine.length} in the edited file, expected 2`);
   ok(elsewhere === 1, `attribute: ${elsewhere} elsewhere, expected 1`);
-  const msg = render("backend/Core/Common/ZzTemp.cs", "backend/Core/Core.csproj", mine, elsewhere);
+  const msg = render("backend/Core/Spatial/ZzTemp.cs", "backend/Core/Core.csproj", mine, elsewhere);
   ok(/CS8602/.test(msg) && /elsewhere/.test(msg), "the message dropped the diagnostics or the count");
   ok(/WarningsAsErrors/.test(msg), "the message does not say nullable warnings are errors here");
   n += 4;
@@ -194,10 +194,10 @@ function selfTest(withCompiler) {
 
   // Opt-in: plant the defect for real and prove the whole path reports it.
   if (withCompiler && root) {
-    const rel = "backend/Core/Common/ZzHookSelfTest.cs";
+    const rel = "backend/Core/Spatial/ZzHookSelfTest.cs";
     const abs = path.join(root, rel);
     try {
-      writeFileSync(abs, "namespace Core.Common;\ninternal static class ZzHookSelfTest\n{\n    internal static int L(string? s) => s.Length;\n}\n");
+      writeFileSync(abs, "namespace Core.Spatial;\ninternal static class ZzHookSelfTest\n{\n    internal static int L(string? s) => s.Length;\n}\n");
       const r = run("dotnet", ["build", owningProject(root, rel), "--no-restore", "-v", "q", "--nologo"],
                     { cwd: path.join(root, "backend"), timeout: 90_000 });
       const got = r ? attribute(parseErrors(r.stdout + "\n" + r.stderr), root, rel) : { mine: [] };

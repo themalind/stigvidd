@@ -19,7 +19,7 @@ that has just written five files does not know which one. Confirmed by planting
 `int Length(string? s) => s.Length;` in `Core/`:
 
 ```
-Core/Common/ZzTemp.cs(4,46): error CS8602: Dereference of a possibly null reference.
+Core/Spatial/ZzTemp.cs(4,46): error CS8602: Dereference of a possibly null reference.
 ```
 
 `error`, not `warning`.

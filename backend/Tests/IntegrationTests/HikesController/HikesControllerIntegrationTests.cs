@@ -1,4 +1,3 @@
-using Core.Common;
 using Core.Interfaces.Services;
 using FluentAssertions;
 using Infrastructure.Data;

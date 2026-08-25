@@ -10,7 +10,7 @@ namespace StigviddAPI.Extensions;
 
 /// <summary>
 /// OpenTelemetry wiring: logs, traces and metrics exported over OTLP/HTTP to the
-/// self-hosted OpenObserve instance (see docs/observability.md).
+/// self-hosted OpenObserve instance.
 ///
 /// Telemetry is strictly OPT-IN. With no <c>Otlp:Endpoint</c> configured this registers
 /// nothing at all — no providers, no exporters, no background export threads. That is a

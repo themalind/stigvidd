@@ -1,4 +1,4 @@
-using Core.Common;
+using Core.TrailImport.Review;
 using Core.Interfaces.Services;
 using Infrastructure.Enums;
 using Microsoft.AspNetCore.Authorization;
@@ -49,11 +49,15 @@ public class TrailImportController : StigViddController
         return Created($"/api/v1/admin/trail-import/sessions/{result.Value!.Id}", result.Value);
     }
 
-    /// <summary>Queues the analysis. Returns straight away; poll the session for progress.</summary>
+    /// <summary>
+    /// Queues the analysis. Returns straight away; poll the session for progress. Refuses
+    /// when decisions would be thrown away, unless force says to run it anyway.
+    /// </summary>
     [HttpPost("sessions/{id:int}/analyze")]
-    public async Task<ActionResult<TrailImportSessionResponse>> Analyze([FromRoute] int id, CancellationToken ctoken)
+    public async Task<ActionResult<TrailImportSessionResponse>> Analyze(
+        [FromRoute] int id, [FromQuery] bool force, CancellationToken ctoken)
     {
-        var result = await _trailImport.QueueAnalysisAsync(id, ctoken);
+        var result = await _trailImport.QueueAnalysisAsync(id, force, ctoken);
 
         if (result.IsFailure && result.Message is not null)
             return ToActionResult(result.Message);
@@ -110,6 +114,37 @@ public class TrailImportController : StigViddController
 
         if (result.IsFailure && result.Message is not null)
             return ToActionResult(result.Message);
+
+        return Ok(result.Value);
+    }
+
+    /// <summary>What applying this session would write, without writing any of it.</summary>
+    [HttpGet("sessions/{id:int}/diff")]
+    public async Task<ActionResult<TrailImportDiffResponse>> GetDiff(
+        [FromRoute] int id, CancellationToken ctoken)
+    {
+        var result = await _trailImport.GetDiffAsync(id, ctoken);
+
+        if (result.IsFailure && result.Message is not null)
+            return ToActionResult(result.Message);
+
+        return Ok(result.Value);
+    }
+
+    /// <summary>
+    /// Writes the session's decisions to Trails and their source links. The one destructive
+    /// call in the sync, and a no-op on a session that has already been applied.
+    /// </summary>
+    [HttpPost("sessions/{id:int}/apply")]
+    public async Task<ActionResult<TrailImportApplyResponse>> Apply([FromRoute] int id, CancellationToken ctoken)
+    {
+        var result = await _trailImport.ApplyAsync(id, ctoken);
+
+        if (result.IsFailure && result.Message is not null)
+        {
+            _logger.LogInformation("Apply: Session {sessionId} was not applied.", id);
+            return ToActionResult(result.Message);
+        }
 
         return Ok(result.Value);
     }

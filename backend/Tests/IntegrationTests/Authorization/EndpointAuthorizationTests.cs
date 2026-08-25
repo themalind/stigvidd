@@ -87,26 +87,26 @@ public class EndpointAuthorizationTests : IClassFixture<StigViddWebApplicationFa
 
 
     [Fact]
-    public async Task UserPolicy_WhenTheRoleIsConfigured_ShouldRejectCallersWithoutIt()
+    public async Task UserPolicy_ShouldAdmitAnySignedInCallerAndRejectAnonymousOnes()
     {
-        // Arrange — stand in for the Keycloak realm role once it exists.
-        using var factory = _factory.WithWebHostBuilder(builder =>
-            builder.UseSetting("Authorization:UserRole", "stigvidd-user"));
-
-        var client = factory.CreateClient();
-        client.DefaultRequestHeaders.Authorization =
+        // Arrange — the realm has one role, admin. "User" gates on being signed in and
+        // nothing else, so a caller carrying no role at all has to get through.
+        var signedIn = _factory.CreateClient();
+        signedIn.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", "firebase-uid-12346");
 
-        // Act
-        var withoutRole = await client.GetAsync("/api/v1/hikes", TestContext.Current.CancellationToken);
+        var anonymous = _factory.CreateClient();
 
-        client.DefaultRequestHeaders.Add("X-Test-Roles", "stigvidd-user");
-        var withRole = await client.GetAsync("/api/v1/hikes", TestContext.Current.CancellationToken);
+        // Act
+        var withoutAnyRole = await signedIn.GetAsync("/api/v1/hikes", TestContext.Current.CancellationToken);
+        var withoutAToken = await anonymous.GetAsync("/api/v1/hikes", TestContext.Current.CancellationToken);
 
         // Assert
-        withoutRole.StatusCode.Should().Be(HttpStatusCode.Forbidden);
-        withRole.StatusCode.Should().NotBe(HttpStatusCode.Forbidden);
+        withoutAnyRole.StatusCode.Should().NotBe(HttpStatusCode.Forbidden);
+        withoutAnyRole.StatusCode.Should().NotBe(HttpStatusCode.Unauthorized);
+        withoutAToken.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
+
     private IEnumerable<RouteEndpoint> Endpoints() =>
         _factory.Services
             .GetRequiredService<IEnumerable<EndpointDataSource>>()

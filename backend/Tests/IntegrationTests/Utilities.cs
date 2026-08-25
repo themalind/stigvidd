@@ -2,7 +2,6 @@
 using Infrastructure.Data.Entities;
 using Infrastructure.Enums;
 using NetTopologySuite.Geometries;
-using Core.Common;
 
 namespace IntegrationTests;
 

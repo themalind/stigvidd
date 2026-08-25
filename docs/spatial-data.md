@@ -15,9 +15,9 @@ built on them.
 | Hike entity (`GeoPath` geometry column)  | `backend/Infrastructure/Data/Entities/Hike.cs`                                          |
 | Facility entity (`Coordinates` point)    | `backend/Infrastructure/Data/Entities/Facility.cs`                                      |
 | Obstacle entity (`IncidentLocation`)     | `backend/Infrastructure/Data/Entities/TrailObstacle.cs`                                 |
-| Point ⇄ lat/long decimals                | `backend/Core/Common/GeoPointFactory.cs`                                                |
+| Point ⇄ lat/long decimals                | `backend/Core/Spatial/GeoPointFactory.cs`                                                |
 | Geometry column config (typmod + SRID)   | `backend/Infrastructure/Data/StigViddDbContext.cs`                                      |
-| Geometry → wire JSON                     | `backend/Core/Common/GeoPathSerializer.cs`                                              |
+| Geometry → wire JSON                     | `backend/Core/Spatial/GeoPathSerializer.cs`                                              |
 | Trail read/write + spatial ranking       | `backend/Core/Services/TrailService.cs`, `backend/Core/Repositories/TrailRepository.cs` |
 | Hike write + validation                  | `backend/Core/Services/HikeService.cs`                                                  |
 | PostGIS enablement + backfill migrations | `backend/Infrastructure/Migrations/*PostGIS*.cs`                                        |

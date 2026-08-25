@@ -1,4 +1,8 @@
-using Core.Common;
+using Core.TrailImport.Apply;
+using Core.TrailImport.Matching;
+using Core.TrailImport.Review;
+using Core.TrailImport.Source;
+using Core.Factories;
 using Core.Interfaces.Repositories;
 using Core.Interfaces.Services;
 using Infrastructure.Data.Entities;
@@ -6,6 +10,7 @@ using Infrastructure.Enums;
 using Microsoft.Extensions.Logging;
 using NetTopologySuite.Geometries;
 using System.Net;
+using System.Text.Json;
 using WebDataContracts.ResponseModels.TrailImport;
 
 namespace Core.Services;
@@ -25,17 +30,20 @@ public class TrailImportService : ITrailImportService
     private readonly ITrailImportRepository _repository;
     private readonly ITrailImportFileStore _fileStore;
     private readonly ITrailImportAnalysisQueue _queue;
+    private readonly TrailImportResponseFactory _responseFactory;
     private readonly ILogger<TrailImportService> _logger;
 
     public TrailImportService(
         ITrailImportRepository repository,
         ITrailImportFileStore fileStore,
         ITrailImportAnalysisQueue queue,
+        TrailImportResponseFactory responseFactory,
         ILogger<TrailImportService> logger)
     {
         _repository = repository;
         _fileStore = fileStore;
         _queue = queue;
+        _responseFactory = responseFactory;
         _logger = logger;
     }
 
@@ -95,7 +103,7 @@ public class TrailImportService : ITrailImportService
                 (int)HttpStatusCode.InternalServerError, "The session could not be created."));
         }
 
-        var response = ToResponse(created.Value, counts: null);
+        var response = _responseFactory.Create(created.Value, counts: null);
 
         response.DuplicateOf = earlier.IsSuccess
             ? earlier.Value.Select(s => s.Identifier).ToList()
@@ -108,7 +116,8 @@ public class TrailImportService : ITrailImportService
         return Result.Ok(response);
     }
 
-    public async Task<Result<TrailImportSessionResponse>> QueueAnalysisAsync(int sessionId, CancellationToken ctoken)
+    public async Task<Result<TrailImportSessionResponse>> QueueAnalysisAsync(
+        int sessionId, bool force, CancellationToken ctoken)
     {
         var found = await _repository.GetSessionAsync(sessionId, ctoken);
 
@@ -130,6 +139,18 @@ public class TrailImportService : ITrailImportService
             return Result.Fail<TrailImportSessionResponse>(new Message(
                 (int)HttpStatusCode.Conflict, "The uploaded file is no longer on disk. Upload it again."));
 
+        // A new analysis replaces every proposal, and the decisions go with them. Two
+        // hundred rows worked through is not something to lose to a stray click.
+        if (!force)
+        {
+            var decided = await _repository.GetDiscardableDecisionCountAsync(sessionId, session.Source, ctoken);
+
+            if (decided.IsSuccess && decided.Value > 0)
+                return Result.Fail<TrailImportSessionResponse>(new Message(
+                    (int)HttpStatusCode.Conflict,
+                    $"A new analysis would discard {decided.Value} decision(s). Analyse again with force to run it anyway."));
+        }
+
         // Set here rather than in the worker so the queued session cannot be queued twice
         // while it waits its turn.
         session.Status = ImportSessionStatus.Analyzing;
@@ -145,7 +166,7 @@ public class TrailImportService : ITrailImportService
 
         _logger.LogInformation("TrailImportService: Session {sessionId} queued for analysis.", session.Id);
 
-        return Result.Ok(ToResponse(session, counts: null));
+        return Result.Ok(_responseFactory.Create(session, counts: null));
     }
 
     public async Task<Result<IReadOnlyCollection<TrailImportSessionResponse>>> GetSessionsAsync(CancellationToken ctoken)
@@ -159,7 +180,7 @@ public class TrailImportService : ITrailImportService
         // No counts on the list: one grouped query per session would turn a page of ten
         // into twenty round trips for a number the list does not show.
         return Result.Ok<IReadOnlyCollection<TrailImportSessionResponse>>(
-            sessions.Value.Select(s => ToResponse(s, counts: null)).ToList());
+            sessions.Value.Select(s => _responseFactory.Create(s, counts: null)).ToList());
     }
 
     public async Task<Result<TrailImportSessionResponse>> GetSessionAsync(int sessionId, CancellationToken ctoken)
@@ -171,7 +192,7 @@ public class TrailImportService : ITrailImportService
 
         var counts = await _repository.GetProposalCountsAsync(sessionId, ctoken);
 
-        return Result.Ok(ToResponse(found.Value, counts.IsSuccess ? counts.Value : null));
+        return Result.Ok(_responseFactory.Create(found.Value, counts.IsSuccess ? counts.Value : null));
     }
 
     public async Task<Result<PagedResult<TrailImportProposalResponse>>> GetProposalsAsync(
@@ -197,7 +218,7 @@ public class TrailImportService : ITrailImportService
             return Result.Fail<PagedResult<TrailImportProposalResponse>>(new Message(
                 (int)HttpStatusCode.InternalServerError, "The proposals could not be listed."));
 
-        var items = proposals.Value.Items.Select(ToResponse).ToList();
+        var items = proposals.Value.Items.Select(Response).ToList();
 
         return Result.Ok(new PagedResult<TrailImportProposalResponse>(
             items, proposals.Value.Page, proposals.Value.HasMore, proposals.Value.TotalCount));
@@ -218,24 +239,7 @@ public class TrailImportService : ITrailImportService
             return Result.Fail<TrailImportPreviewResponse>(new Message(
                 (int)HttpStatusCode.Conflict, "The proposal has no geometry to preview."));
 
-        var stated = TrailLength.Parse(ReadSourceLength(proposal.FeatureProperties));
-        var measured = TrailLength.FromGeometry(proposal.FeatureGeometry);
-
-        var preview = new TrailImportPreviewResponse
-        {
-            ProposalId = proposal.Id,
-            FeatureName = proposal.FeatureName,
-            Confidence = proposal.Confidence.ToString(),
-            MatchReason = proposal.MatchReason,
-            CoverageForward = proposal.CoverageForward,
-            CoverageBackward = proposal.CoverageBackward,
-            HausdorffMeters = proposal.HausdorffMeters,
-            FeatureCoordinates = ToCoordinates(proposal.FeatureGeometry),
-            FeatureLengthKm = measured,
-            SourceStatedLengthKm = stated,
-            SourceLengthDisagrees = stated.HasValue && TrailLength.Disagrees(stated.Value, measured),
-            FeatureProperties = proposal.FeatureProperties,
-        };
+        var preview = _responseFactory.Create(proposal);
 
         // The decided trail wins over the suggested one: once a reviewer has relinked the
         // feature, the preview has to show what they picked. Failing both, the nearest
@@ -260,16 +264,17 @@ public class TrailImportService : ITrailImportService
         // drawn for orientation and nothing is linked to it.
         if (!preview.TrailIsNearestOnly)
         {
-            var siblings = await _repository.GetSiblingsOnTrailAsync(sessionId, proposalId, trailId.Value, ctoken);
+            var siblings = await _repository.GetSiblingsOnTrailAsync(
+                sessionId, proposalId, trailId.Value,
+                p => TrailImportSiblingResponse.Create(
+                    p.Id,
+                    p.FeatureName,
+                    p.Decision.ToString(),
+                    p.DecidedRole.ToString()),
+                ctoken);
 
             if (siblings.IsSuccess)
-                preview.SharingTheTrail = [.. siblings.Value.Select(s => new TrailImportSiblingResponse
-                {
-                    ProposalId = s.ProposalId,
-                    FeatureName = s.FeatureName,
-                    Decision = s.Decision.ToString(),
-                    DecidedRole = s.DecidedRole.ToString(),
-                })];
+                preview.SharingTheTrail = [.. siblings.Value];
         }
 
         preview.TrailId = trail.Value.TrailId;
@@ -280,7 +285,7 @@ public class TrailImportService : ITrailImportService
 
         if (trail.Value.GeoPath is not null)
         {
-            preview.TrailCoordinates = ToCoordinates(trail.Value.GeoPath);
+            preview.TrailCoordinates = GeoPathSerializer.ToCoordinatePairs(trail.Value.GeoPath);
             preview.TrailMeasuredLengthKm = TrailLength.FromGeometry(trail.Value.GeoPath);
         }
 
@@ -436,88 +441,195 @@ public class TrailImportService : ITrailImportService
         return true;
     }
 
-    private static IReadOnlyList<double[]> ToCoordinates(LineString line) =>
-        line.Coordinates.Select(c => new[] { c.X, c.Y }).ToList();
-
-    // sparlangd out of the stored properties. Read as text rather than deserialised: the
-    // source writes the field in six different shapes and TrailLength.Parse expects that.
-    private static string? ReadSourceLength(string? properties)
+    /// <summary>A dry run of the apply phase. Writes nothing.</summary>
+    public async Task<Result<TrailImportDiffResponse>> GetDiffAsync(int sessionId, CancellationToken ctoken)
     {
-        if (string.IsNullOrWhiteSpace(properties))
-            return null;
+        var found = await _repository.GetSessionAsync(sessionId, ctoken);
 
-        try
-        {
-            using var document = System.Text.Json.JsonDocument.Parse(properties);
+        if (!found.IsSuccess)
+            return SessionFailure<TrailImportDiffResponse>(found.Status, sessionId);
 
-            return document.RootElement.TryGetProperty("sparlangd", out var value)
-                ? value.ToString()
-                : null;
-        }
-        catch (System.Text.Json.JsonException)
-        {
-            return null;
-        }
+        var session = found.Value;
+        var plan = await _repository.GetApplyPlanAsync(sessionId, session.Source, ctoken);
+
+        if (!plan.IsSuccess)
+            return Result.Fail<TrailImportDiffResponse>(new Message(
+                (int)HttpStatusCode.InternalServerError, "The apply plan could not be read."));
+
+        var rows = plan.Value.Rows;
+
+        // The panel promises what applying would write, so the figures come from the
+        // planner rather than from the decisions: a decided feature does not necessarily
+        // change the trail it lands on. That costs this preview the same geometry read the
+        // apply does, which is the price of the promise being true.
+        var read = await _repository.GetApplyInputAsync(sessionId, session.Source, ctoken);
+
+        if (!read.IsSuccess)
+            return Result.Fail<TrailImportDiffResponse>(new Message(
+                (int)HttpStatusCode.InternalServerError, "The apply plan could not be read."));
+
+        var writeSet = ApplyPlanner.Plan(read.Value);
+
+        int Decided(ProposalDecision decision) => rows.Count(r => r.Decision == decision);
+
+        // Accept and Relink land on a trail that already exists; the same trail may take
+        // several features, so it is counted once. These are the trails the apply LINKS —
+        // how many it changes is writeSet.Updates.
+        var linkedTrails = rows
+            .Where(r => r.Decision is ProposalDecision.Accept or ProposalDecision.Relink && r.TargetTrailId != null)
+            .Select(r => r.TargetTrailId!.Value)
+            .Distinct()
+            .ToList();
+
+        // Accept agrees with the analysis and Skip defers; the other three override it.
+        var againstStrongMatch = rows
+            .Where(r => r.Confidence >= MatchConfidence.High
+                && r.Decision is ProposalDecision.CreateNew or ProposalDecision.Exclude or ProposalDecision.Relink)
+            .OrderByDescending(r => r.CoverageForward)
+            .Select(r => TrailImportDiffWarningResponse.Create(
+                r.ProposalId,
+                r.FeatureName,
+                r.Decision.ToString(),
+                r.Confidence.ToString(),
+                r.CoverageForward,
+                r.TargetTrailName));
+
+        // A trail whose links are all Duplicate has no Segment to merge geometry from.
+        var withoutSegment = linkedTrails
+            .Where(id => !plan.Value.TrailsWithExistingSegment.Contains(id)
+                && !rows.Any(r => r.TargetTrailId == id && r.Role == TrailSourceLinkRole.Segment))
+            .Select(id => TrailImportDiffTrailResponse.Create(
+                id,
+                rows.First(r => r.TargetTrailId == id).TargetTrailName ?? string.Empty,
+                rows.Count(r => r.TargetTrailId == id && r.Role == TrailSourceLinkRole.Duplicate)));
+
+        var writes = Decided(ProposalDecision.Accept) + Decided(ProposalDecision.Relink)
+            + Decided(ProposalDecision.CreateNew) + Decided(ProposalDecision.Exclude);
+
+        var blocked = BlockedReason(session.Status, writes);
+
+        return Result.Ok(TrailImportDiffResponse.Create(
+            sessionId,
+            blocked is null,
+            blocked,
+            writeSet.Creates.Count,
+            writeSet.Updates.Count,
+            linkedTrails.Count,
+            writeSet.Links.Count,
+            writeSet.Links.Count(l => l.Role == TrailSourceLinkRole.Excluded),
+            Decided(ProposalDecision.Skip),
+            Decided(ProposalDecision.Pending),
+            againstStrongMatch,
+            withoutSegment));
     }
+
+    public async Task<Result<TrailImportApplyResponse>> ApplyAsync(int sessionId, CancellationToken ctoken)
+    {
+        var found = await _repository.GetSessionAsync(sessionId, ctoken);
+
+        if (!found.IsSuccess)
+            return SessionFailure<TrailImportApplyResponse>(found.Status, sessionId);
+
+        var session = found.Value;
+
+        // Applying an applied session is a no-op, not an error: the report it wrote is the
+        // answer, and a retried request must not write anything a second time.
+        if (session.Status == ImportSessionStatus.Applied)
+            return Result.Ok(_responseFactory.Create(session, ApplyReport.Read(session.ApplyReport)));
+
+        var read = await _repository.GetApplyInputAsync(sessionId, session.Source, ctoken);
+
+        if (!read.IsSuccess)
+            return Result.Fail<TrailImportApplyResponse>(new Message(
+                (int)HttpStatusCode.InternalServerError, "The session could not be read for apply."));
+
+        var input = read.Value;
+
+        var decided = input.Features.Count(f => f.Decision
+            is ProposalDecision.Accept or ProposalDecision.Relink
+            or ProposalDecision.CreateNew or ProposalDecision.Exclude);
+
+        var blocked = BlockedReason(session.Status, decided);
+
+        if (blocked is not null)
+            return Result.Fail<TrailImportApplyResponse>(new Message((int)HttpStatusCode.Conflict, blocked));
+
+        var writes = ApplyPlanner.Plan(input);
+
+        var report = new ApplyReport(
+            writes.Creates.Count,
+            writes.Updates.Count,
+            writes.Links.Count,
+            writes.Links.Count(l => l.Role == TrailSourceLinkRole.Excluded),
+            writes.Conflicts,
+            LinkedTrails(input));
+
+        var applied = await _repository.ApplySessionAsync(sessionId, writes, JsonSerializer.Serialize(report), ctoken);
+
+        if (applied.Status == RepositoryResultStatus.Conflict)
+            return Result.Fail<TrailImportApplyResponse>(new Message(
+                (int)HttpStatusCode.Conflict, "The session changed while it was being applied. Read it again."));
+
+        if (!applied.IsSuccess)
+            return Result.Fail<TrailImportApplyResponse>(new Message(
+                (int)HttpStatusCode.InternalServerError, "The session could not be applied."));
+
+        _logger.LogInformation(
+            "TrailImportService: Session {sessionId} applied. {created} trail(s) created, {updated} updated, {links} link(s) written, {conflicts} conflict(s).",
+            sessionId, report.TrailsCreated, report.TrailsUpdated, report.LinksWritten, report.Conflicts.Count);
+
+        session.Status = ImportSessionStatus.Applied;
+        session.AppliedAt = DateTime.UtcNow;
+
+        return Result.Ok(_responseFactory.Create(session, report));
+    }
+
+    // Existing trails the decisions attach a link to, counted once each. The apply may
+    // change none of them and still be the run that linked them.
+    private static int LinkedTrails(ApplyInput input) => input.Features
+        .Where(f => f.Decision is ProposalDecision.Accept or ProposalDecision.Relink
+            && f.TargetTrailId is not null)
+        .Select(f => f.TargetTrailId!.Value)
+        .Distinct()
+        .Count();
+
+    // Why the session cannot be applied, or null when it can.
+    private static string? BlockedReason(ImportSessionStatus status, int decided) => status switch
+    {
+        ImportSessionStatus.AwaitingReview when decided == 0 => "No proposal has been decided yet.",
+        ImportSessionStatus.AwaitingReview => null,
+        ImportSessionStatus.Applied => "This session has already been applied.",
+        ImportSessionStatus.Applying => "This session is being applied.",
+        _ => "Only a session awaiting review can be applied.",
+    };
+
 
     private static Result<T> SessionFailure<T>(RepositoryResultStatus status, int sessionId) =>
         status == RepositoryResultStatus.NotFound
             ? Result.Fail<T>(new Message((int)HttpStatusCode.NotFound, $"Session {sessionId} was not found."))
             : Result.Fail<T>(new Message((int)HttpStatusCode.InternalServerError, "The session could not be read."));
 
-    private static TrailImportSessionResponse ToResponse(TrailImportSession session, ProposalCounts? counts) => new()
-    {
-        Id = session.Id,
-        Identifier = session.Identifier,
-        Source = session.Source,
-        FileName = session.FileName,
-        FileHash = session.FileHash,
-        FileSizeBytes = session.FileSizeBytes,
-        Status = session.Status.ToString(),
-        UploadedBy = session.UploadedBy,
-        CreatedAt = session.CreatedAt,
-        AnalyzedAt = session.AnalyzedAt,
-        AppliedAt = session.AppliedAt,
-        FeatureCount = session.FeatureCount,
-        ErrorMessage = session.ErrorMessage,
-        Counts = counts is null ? null : new TrailImportCountsResponse
-        {
-            Total = counts.Total,
-            Certain = counts.Certain,
-            High = counts.High,
-            Medium = counts.Medium,
-            Unmatched = counts.Unmatched,
-            Pending = counts.Pending,
-            Accepted = counts.Accepted,
-            Relinked = counts.Relinked,
-            CreateNew = counts.CreateNew,
-            Excluded = counts.Excluded,
-            Skipped = counts.Skipped,
-        },
-    };
-
-    private static TrailImportProposalResponse ToResponse(ProposalSummary summary) => new()
-    {
-        Id = summary.Id,
-        ExternalId = summary.ExternalId,
-        FeatureName = summary.FeatureName,
-        Confidence = summary.Confidence.ToString(),
-        CoverageForward = summary.CoverageForward,
-        CoverageBackward = summary.CoverageBackward,
-        HausdorffMeters = summary.HausdorffMetres,
-        MatchReason = summary.MatchReason,
-        Decision = summary.Decision.ToString(),
-        DecidedRole = summary.DecidedRole.ToString(),
-        SuggestedTrailId = summary.SuggestedTrailId,
-        SuggestedTrailName = summary.SuggestedTrailName,
-        NearestTrailId = summary.NearestTrailId,
-        NearestTrailName = summary.NearestTrailName,
-        DecidedTrailId = summary.DecidedTrailId,
-        DecidedTrailName = summary.DecidedTrailName,
-        DecidedBy = summary.DecidedBy,
-        DecidedAt = summary.DecidedAt,
-        Note = summary.Note,
-        DecidedName = summary.DecidedName,
-        DecidedLengthKm = summary.DecidedLengthKm,
-    };
+    private static TrailImportProposalResponse Response(ProposalSummary summary) =>
+        TrailImportProposalResponse.Create(
+            summary.Id,
+            summary.ExternalId,
+            summary.FeatureName,
+            summary.Confidence.ToString(),
+            summary.CoverageForward,
+            summary.CoverageBackward,
+            summary.HausdorffMetres,
+            summary.MatchReason,
+            summary.Decision.ToString(),
+            summary.DecidedRole.ToString(),
+            summary.SuggestedTrailId,
+            summary.SuggestedTrailName,
+            summary.NearestTrailId,
+            summary.NearestTrailName,
+            summary.DecidedTrailId,
+            summary.DecidedTrailName,
+            summary.DecidedBy,
+            summary.DecidedAt,
+            summary.Note,
+            summary.DecidedName,
+            summary.DecidedLengthKm);
 }

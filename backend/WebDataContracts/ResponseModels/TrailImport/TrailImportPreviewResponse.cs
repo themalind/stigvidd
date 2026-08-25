@@ -39,4 +39,35 @@ public class TrailImportPreviewResponse
     // Other features in this session aiming at the same trail. Empty for all but a handful:
     // the source repeats a trail now and then, and only one copy may carry its geometry.
     public IReadOnlyList<TrailImportSiblingResponse> SharingTheTrail { get; set; } = [];
+
+    public static TrailImportPreviewResponse Create(
+        int proposalId,
+        string featureName,
+        string confidence,
+        string? matchReason,
+        double coverageForward,
+        double coverageBackward,
+        double? hausdorffMeters,
+        IReadOnlyList<double[]> featureCoordinates,
+        decimal featureLengthKm,
+        decimal? sourceStatedLengthKm,
+        bool sourceLengthDisagrees,
+        string? featureProperties)
+    {
+        return new TrailImportPreviewResponse
+        {
+            ProposalId = proposalId,
+            FeatureName = featureName,
+            Confidence = confidence,
+            MatchReason = matchReason,
+            CoverageForward = coverageForward,
+            CoverageBackward = coverageBackward,
+            HausdorffMeters = hausdorffMeters,
+            FeatureCoordinates = featureCoordinates,
+            FeatureLengthKm = featureLengthKm,
+            SourceStatedLengthKm = sourceStatedLengthKm,
+            SourceLengthDisagrees = sourceLengthDisagrees,
+            FeatureProperties = featureProperties
+        };
+    }
 }

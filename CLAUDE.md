@@ -110,10 +110,25 @@ Core/Services/                 business logic, returns Result / RepositoryResult
 Core/Repositories/             EF queries, including all spatial ranking and ordering
 Core/Factories/                entity -> response mapping
 Core/Validators/               FluentValidation; auto-registered, see below
+Core/Results/                  Result, RepositoryResult, PagedResult — global using
+Core/Spatial/                  GeoPointFactory, GeoPathSerializer, LocalMetricProjection
+Core/TrailImport/              the Boras sync: Source/, Matching/, Review/, Apply/
 Infrastructure/Data/Entities/  EF entities and the DbContext
 Infrastructure/Migrations/     EF migrations; DbMigrationRunner applies them on startup
 MapData/                       one-off importers (trails, facilities, city areas)
 ```
+
+- **`Core/Results/` and `Core/Spatial/` are `global using`**, declared once per assembly in
+  each `GlobalUsings.cs`. `Core/TrailImport/` deliberately is **not**: it is reached for
+  explicitly, which is what stops it drifting back into the catch-all `Core/Common/` used to
+  be. Its four subfolders each have their own namespace
+  (`Core.TrailImport.Apply` and so on), so an import type is never one `using` away by
+  accident. `MapData` needs no `Core.Results`, `StigviddAPI` no `Core.Spatial` — each
+  `GlobalUsings.cs` carries only what its assembly actually compiles against.
+- Unit tests mirror the source folder: `Tests/UnitTests/TrailImportTests/{Apply,Matching,
+  Review,Source}` and `SpatialTests`, alongside `ServiceTests`, `RepositoryTests`,
+  `FactoryTests`, `ValidatorTests`, `ControllerTests` and `ImporterTests` — the last being
+  `MapData/`'s one-off importers, **not** the sync.
 
 - **Validators are auto-registered.** `Program.cs` calls
   `AddValidatorsFromAssemblyContaining<AddToUserFavoriteValidator>()`, so a new validator in
@@ -131,7 +146,7 @@ MapData/                       one-off importers (trails, facilities, city areas
 ## Spatial data
 
 Every geometry column is **SRID 4326** (WGS84), and
-[`Core/Common/GeoPointFactory.cs`](backend/Core/Common/GeoPointFactory.cs) is the only place
+[`Core/Spatial/GeoPointFactory.cs`](backend/Core/Spatial/GeoPointFactory.cs) is the only place
 that knows it — along with the `(X = longitude, Y = latitude)` order. **Build points through
 it**, never a raw NTS factory:
 

@@ -20,6 +20,7 @@ import {
   StatusBadge,
   decisionLabel,
 } from "@/components/trail-import/badges";
+import { ApplyPanel } from "@/components/trail-import/apply-panel";
 import { ProposalDetail } from "@/components/trail-import/proposal-detail";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -73,6 +74,9 @@ export default function TrailImportReviewPage() {
   const [selectingAll, setSelectingAll] = useState(false);
   const [shortcut, setShortcut] = useState<Decision | null>(null);
   const [bulkSaving, setBulkSaving] = useState(false);
+  // An applied session is a record of what happened, not a queue: nothing on it can be
+  // decided, and the server refuses the attempt, so the controls go rather than fail.
+  const applied = session?.status === "Applied";
 
   const load = useCallback(async () => {
     try {
@@ -103,6 +107,11 @@ export default function TrailImportReviewPage() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  // Pending is the right default while reviewing and shows an empty list afterwards.
+  useEffect(() => {
+    if (applied) setDecision((current) => (current === "Pending" ? "All" : current));
+  }, [applied]);
 
   useEffect(() => {
     getAllTrails()
@@ -149,6 +158,8 @@ export default function TrailImportReviewPage() {
   // 203 features go fast when the hand never leaves the keyboard. Typing in the note or
   // the trail search must not fire them.
   useEffect(() => {
+    if (applied) return;
+
     function onKeyDown(event: KeyboardEvent) {
       const target = event.target as HTMLElement | null;
       if (target && ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName))
@@ -175,7 +186,7 @@ export default function TrailImportReviewPage() {
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [step]);
+  }, [step, applied]);
 
   function toggle(proposal: Proposal) {
     setChecked((current) => {
@@ -341,6 +352,17 @@ export default function TrailImportReviewPage() {
           </p>
         )}
 
+        {session && (
+          <ApplyPanel
+            session={session}
+            onApplied={() => void load()}
+            onShowCreated={() => {
+              setDecision("CreateNew");
+              setPage(1);
+            }}
+          />
+        )}
+
         <div className="flex flex-wrap items-center gap-2">
           {decisionFilters.map((filter) => (
             <Button
@@ -356,7 +378,7 @@ export default function TrailImportReviewPage() {
             </Button>
           ))}
 
-          {checked.size > 0 && (
+          {!applied && checked.size > 0 && (
             <div className="ml-auto flex items-center gap-2">
               <span className="text-sm text-muted-foreground">
                 {checked.size} selected
@@ -420,7 +442,7 @@ export default function TrailImportReviewPage() {
               </div>
             )}
 
-            {proposals !== null && proposals.length > 0 && (
+            {!applied && proposals !== null && proposals.length > 0 && (
               <div className="flex flex-wrap items-center gap-2 rounded-md border bg-muted/30 px-2 py-1.5">
                 <Checkbox
                   checked={
@@ -464,12 +486,14 @@ export default function TrailImportReviewPage() {
                       : "hover:bg-accent/50"
                   }`}
                 >
-                  <Checkbox
-                    className="mt-1"
-                    checked={checked.has(proposal.id)}
-                    onCheckedChange={() => toggle(proposal)}
-                    aria-label={`Select ${proposal.featureName}`}
-                  />
+                  {!applied && (
+                    <Checkbox
+                      className="mt-1"
+                      checked={checked.has(proposal.id)}
+                      onCheckedChange={() => toggle(proposal)}
+                      aria-label={`Select ${proposal.featureName}`}
+                    />
+                  )}
                   <button
                     type="button"
                     className="min-w-0 flex-1 text-left"
@@ -528,6 +552,7 @@ export default function TrailImportReviewPage() {
               </span>
             </div>
 
+            {!applied && (
             <p className="pt-2 text-xs text-muted-foreground">
               <kbd className="rounded border px-1">j</kbd>/
               <kbd className="rounded border px-1">k</kbd> step ·{" "}
@@ -538,6 +563,7 @@ export default function TrailImportReviewPage() {
               <kbd className="rounded border px-1">s</kbd> skip ·{" "}
               <kbd className="rounded border px-1">u</kbd> undo
             </p>
+            )}
           </div>
 
           <div className="rounded-md border p-4">
@@ -546,6 +572,7 @@ export default function TrailImportReviewPage() {
                 sessionId={sessionId}
                 proposal={selected}
                 trails={trails}
+                readOnly={applied}
                 // Move on first: with the Pending filter the decided row leaves the list,
                 // and without this the selection would fall back to the top of it.
                 onDecided={() => {

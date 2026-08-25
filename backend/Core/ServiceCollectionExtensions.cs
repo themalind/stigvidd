@@ -105,6 +105,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<TrailObstaclesResponseFactory>();
         services.AddTransient<FacilityResponseFactory>();
         services.AddTransient<CityAreaResponseFactory>();
+        services.AddTransient<TrailImportResponseFactory>();
 
         services.AddTransient<IDbMigrationRunner, DbMigrationRunner>();
     }

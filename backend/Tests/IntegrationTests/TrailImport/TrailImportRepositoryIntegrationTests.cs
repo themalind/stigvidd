@@ -1,4 +1,4 @@
-﻿using Core.Common;
+﻿using Core.TrailImport.Matching;
 using Core.Interfaces.Repositories;
 using FluentAssertions;
 using Infrastructure.Data;

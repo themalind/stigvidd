@@ -1,1 +1,2 @@
-global using Core.Common;
+global using Core.Results;
+global using Core.Spatial;

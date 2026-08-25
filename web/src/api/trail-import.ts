@@ -1,9 +1,11 @@
 import {
   getTrailImportCreateSessionUrl,
   trailImportAnalyze,
+  trailImportApply,
   trailImportDecide,
   trailImportDecideBulk,
   trailImportDeleteSession,
+  trailImportGetDiff,
   trailImportGetPreview,
   trailImportGetProposals,
   trailImportGetSession,
@@ -13,6 +15,8 @@ import type {
   DecideProposalRequest,
   DecideProposalsBulkRequest,
   PagedResultOfTrailImportProposalResponse,
+  TrailImportApplyResponse,
+  TrailImportDiffResponse,
   TrailImportPreviewResponse,
   TrailImportProposalResponse,
   TrailImportSessionResponse,
@@ -41,6 +45,8 @@ export const confidenceOrder: Confidence[] = ["Unmatched", "Medium", "High", "Ce
 export type Proposal = TrailImportProposalResponse;
 export type Session = TrailImportSessionResponse;
 export type Preview = TrailImportPreviewResponse;
+export type Diff = TrailImportDiffResponse;
+export type ApplyResult = TrailImportApplyResponse;
 
 /**
  * The generated multipart function expands IFormFile's own properties into form fields
@@ -58,8 +64,19 @@ export async function createSession(file: File, source?: string): Promise<Sessio
   });
 }
 
-export async function analyzeSession(sessionId: number): Promise<Session> {
-  return trailImportAnalyze(sessionId);
+/** Refuses when decisions would be discarded, unless force says to run it anyway. */
+export async function analyzeSession(sessionId: number, force = false): Promise<Session> {
+  return trailImportAnalyze(sessionId, { force });
+}
+
+/** What applying the session would write, without writing any of it. */
+export async function getDiff(sessionId: number): Promise<Diff> {
+  return trailImportGetDiff(sessionId);
+}
+
+/** The destructive one: writes the decisions to Trails and their source links. */
+export async function applySession(sessionId: number): Promise<ApplyResult> {
+  return trailImportApply(sessionId);
 }
 
 export async function getSessions(): Promise<Session[]> {

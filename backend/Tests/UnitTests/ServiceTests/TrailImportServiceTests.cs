@@ -1,4 +1,7 @@
-using Core.Common;
+using Core.TrailImport.Apply;
+using Core.TrailImport.Review;
+using Core.TrailImport.Source;
+using Core.Factories;
 using Core.Interfaces.Repositories;
 using Core.Interfaces.Services;
 using Core.Services;
@@ -7,6 +10,7 @@ using Infrastructure.Data.Entities;
 using Infrastructure.Enums;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
+using NetTopologySuite.Geometries;
 using System.Net;
 using System.Text;
 
@@ -27,7 +31,8 @@ public class TrailImportServiceTests
     private readonly Mock<ITrailImportAnalysisQueue> _queue = new();
 
     private TrailImportService CreateService() =>
-        new(_repository.Object, _fileStore.Object, _queue.Object, NullLogger<TrailImportService>.Instance);
+        new(_repository.Object, _fileStore.Object, _queue.Object, new TrailImportResponseFactory(),
+            NullLogger<TrailImportService>.Instance);
 
     private static TrailImportSession Session(ImportSessionStatus status, string? storedPath = null) => new()
     {
@@ -42,6 +47,10 @@ public class TrailImportServiceTests
     private void SessionIs(ImportSessionStatus status, string? storedPath = null) =>
         _repository.Setup(r => r.GetSessionAsync(SessionId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<TrailImportSession>.Success(Session(status, storedPath)));
+
+    private void DecisionsAtRisk(int count) =>
+        _repository.Setup(r => r.GetDiscardableDecisionCountAsync(SessionId, It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<int>.Success(count));
 
     private void ProposalsCheckOutAs(int found, int withoutSuggestion) =>
         _repository.Setup(r => r.CheckProposalsAsync(SessionId, It.IsAny<IReadOnlyCollection<int>>(), It.IsAny<CancellationToken>()))
@@ -121,7 +130,7 @@ public class TrailImportServiceTests
         var service = CreateService();
 
         // Act
-        var result = await service.QueueAnalysisAsync(SessionId, CancellationToken.None);
+        var result = await service.QueueAnalysisAsync(SessionId, force: false, CancellationToken.None);
 
         // Assert
         result.Message!.StatusCode.Should().Be((int)HttpStatusCode.Conflict);
@@ -136,7 +145,7 @@ public class TrailImportServiceTests
         var service = CreateService();
 
         // Act
-        var result = await service.QueueAnalysisAsync(SessionId, CancellationToken.None);
+        var result = await service.QueueAnalysisAsync(SessionId, force: false, CancellationToken.None);
 
         // Assert
         result.Message!.StatusCode.Should().Be((int)HttpStatusCode.Conflict);
@@ -151,7 +160,7 @@ public class TrailImportServiceTests
         var service = CreateService();
 
         // Act
-        var result = await service.QueueAnalysisAsync(SessionId, CancellationToken.None);
+        var result = await service.QueueAnalysisAsync(SessionId, force: false, CancellationToken.None);
 
         // Assert
         result.Message!.StatusCode.Should().Be((int)HttpStatusCode.Conflict);
@@ -169,6 +178,7 @@ public class TrailImportServiceTests
         try
         {
             SessionIs(ImportSessionStatus.Uploaded, file);
+            DecisionsAtRisk(0);
 
             TrailImportSession? saved = null;
             _repository.Setup(r => r.UpdateSessionAsync(It.IsAny<TrailImportSession>(), It.IsAny<CancellationToken>()))
@@ -178,7 +188,7 @@ public class TrailImportServiceTests
             var service = CreateService();
 
             // Act
-            var result = await service.QueueAnalysisAsync(SessionId, CancellationToken.None);
+            var result = await service.QueueAnalysisAsync(SessionId, force: false, CancellationToken.None);
 
             // Assert
             result.Success.Should().BeTrue();
@@ -529,5 +539,190 @@ public class TrailImportServiceTests
         // Assert
         result.Success.Should().BeTrue();
         _fileStore.Verify(f => f.Delete("/tmp/stored.geojson"), Times.Once);
+    }
+
+    private static ApplyPlanRow Row(
+        int id, ProposalDecision decision, int? targetTrailId = null, string? trailName = null,
+        MatchConfidence confidence = MatchConfidence.Unmatched,
+        TrailSourceLinkRole role = TrailSourceLinkRole.Segment, double coverage = 0) =>
+        new(id, $"feature {id}", id.ToString(), new string('f', 64), decision, role, confidence,
+            coverage, targetTrailId, trailName, null, null);
+
+    private void PlanIs(params ApplyPlanRow[] rows) => PlanIs(rows, [], []);
+
+    private static LineString Line() => GeoPointFactory.FromLonLatPath(
+        [new Coordinate(12.9, 57.7), new Coordinate(12.91, 57.71)]);
+
+    private void PlanIs(ApplyPlanRow[] rows, int[] withExistingSegment, int[] withBaseline)
+    {
+        _repository.Setup(r => r.GetApplyPlanAsync(SessionId, "boras-stad", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<ApplyPlan>.Success(new ApplyPlan(
+                rows, withExistingSegment.ToHashSet(), withBaseline.ToHashSet())));
+
+        // The diff runs the real planner over the same rows, so what the preview reports is
+        // what an apply would write rather than what the decisions look like.
+        ApplyInputIs(rows, withBaseline, []);
+    }
+
+    private void ApplyInputIs(
+        ApplyPlanRow[] rows, int[] withBaseline, (string Fingerprint, ApplyBaseline Link)[] links,
+        string? properties = null)
+    {
+        var features = rows.Select(r => new ApplyFeature(
+            r.ProposalId, r.ExternalId, r.FeatureName, r.GeometryFingerprint, properties, Line(),
+            r.Decision, r.Role, r.Confidence, r.TargetTrailId, r.DecidedName, r.DecidedLengthKm))
+            .ToList();
+
+        // The target carries the same line as the features, so a preview only reports a
+        // route change when the test means one.
+        var targets = rows
+            .Where(r => r.TargetTrailId is not null)
+            .GroupBy(r => r.TargetTrailId!.Value)
+            .ToDictionary(g => g.Key, g => new ApplyTarget(
+                g.Key, g.First().TargetTrailName ?? string.Empty, 0, false, string.Empty,
+                string.Empty, Line()));
+
+        _repository.Setup(r => r.GetApplyInputAsync(SessionId, "boras-stad", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<ApplyInput>.Success(new ApplyInput(
+                features,
+                targets,
+                links.ToDictionary(l => l.Fingerprint, l => l.Link, StringComparer.Ordinal),
+                withBaseline.ToHashSet())));
+    }
+
+    [Fact]
+    public async Task GetDiffAsync_ForTwoFeaturesOnOneTrail_ShouldCountThatTrailOnce()
+    {
+        // Arrange — the 1:N case: several source features make up one real trail
+        SessionIs(ImportSessionStatus.AwaitingReview);
+        PlanIs(
+            Row(1, ProposalDecision.Accept, targetTrailId: 302, trailName: "Etapp 04"),
+            Row(2, ProposalDecision.Accept, targetTrailId: 302, trailName: "Etapp 04"),
+            Row(3, ProposalDecision.CreateNew),
+            Row(4, ProposalDecision.Skip),
+            Row(5, ProposalDecision.Pending));
+
+        var service = CreateService();
+
+        // Act
+        var result = await service.GetDiffAsync(SessionId, CancellationToken.None);
+
+        // Assert
+        result.Success.Should().BeTrue();
+        result.Value!.TrailsLinked.Should().Be(1);
+        // Linked is not updated: with no stored snapshot the merge may write no field.
+        result.Value.TrailsToUpdate.Should().Be(0);
+        result.Value.TrailsToCreate.Should().Be(1);
+        result.Value.LinksToWrite.Should().Be(3);
+        result.Value.FeaturesSkipped.Should().Be(1);
+        result.Value.FeaturesPending.Should().Be(1);
+        result.Value.CanApply.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task GetDiffAsync_ForATrailTheSourceHasWrittenBefore_ShouldCountItAsUpdated()
+    {
+        // Arrange — the second sync: a snapshot exists, so a field the source changed and
+        // nobody edited locally is one the merge may take
+        SessionIs(ImportSessionStatus.AwaitingReview);
+        var rows = new[] { Row(1, ProposalDecision.Accept, targetTrailId: 302, trailName: "Etapp 04") };
+        PlanIs(rows, [], [302]);
+        ApplyInputIs(
+            rows,
+            [302],
+            [(rows[0].GeometryFingerprint, new ApplyBaseline(11, 302, "{}"))],
+            properties: """{"klassning":"Svår"}""");
+
+        var service = CreateService();
+
+        // Act
+        var result = await service.GetDiffAsync(SessionId, CancellationToken.None);
+
+        // Assert
+        result.Success.Should().BeTrue();
+        result.Value!.TrailsLinked.Should().Be(1);
+        result.Value.TrailsToUpdate.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task GetDiffAsync_ForADecisionAgainstAStrongMatch_ShouldListIt()
+    {
+        // Arrange — the Banvallen case: a High overlap the reviewer deliberately overrode,
+        // alongside an Accept that agrees with the analysis and must not be listed
+        SessionIs(ImportSessionStatus.AwaitingReview);
+        PlanIs(
+            Row(1, ProposalDecision.CreateNew, confidence: MatchConfidence.High, coverage: 0.91),
+            Row(2, ProposalDecision.Accept, targetTrailId: 276, trailName: "Banvallen",
+                confidence: MatchConfidence.Certain, coverage: 1.0),
+            Row(3, ProposalDecision.Exclude, confidence: MatchConfidence.Medium));
+
+        var service = CreateService();
+
+        // Act
+        var result = await service.GetDiffAsync(SessionId, CancellationToken.None);
+
+        // Assert — only the override on a strong match, not the agreement and not the Medium
+        result.Value!.AgainstStrongMatch.Should().ContainSingle()
+            .Which.ProposalId.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task GetDiffAsync_ForATrailLeftWithOnlyDuplicateLinks_ShouldListIt()
+    {
+        // Arrange — trail 400 gets nothing but Duplicate links, so no geometry to merge
+        // from; trail 401 gets the same but already carries a Segment link from before
+        SessionIs(ImportSessionStatus.AwaitingReview);
+        PlanIs(
+            [
+                Row(1, ProposalDecision.Accept, targetTrailId: 400, trailName: "Vänga mosse",
+                    role: TrailSourceLinkRole.Duplicate),
+                Row(2, ProposalDecision.Accept, targetTrailId: 401, trailName: "Sjuhäradsrundan",
+                    role: TrailSourceLinkRole.Duplicate),
+            ],
+            withExistingSegment: [401],
+            withBaseline: [401]);
+
+        var service = CreateService();
+
+        // Act
+        var result = await service.GetDiffAsync(SessionId, CancellationToken.None);
+
+        // Assert
+        result.Value!.WithoutSegment.Should().ContainSingle()
+            .Which.TrailId.Should().Be(400);
+    }
+
+    [Fact]
+    public async Task GetDiffAsync_WithNothingDecided_ShouldNotBeApplicable()
+    {
+        // Arrange
+        SessionIs(ImportSessionStatus.AwaitingReview);
+        PlanIs(Row(1, ProposalDecision.Pending), Row(2, ProposalDecision.Skip));
+
+        var service = CreateService();
+
+        // Act
+        var result = await service.GetDiffAsync(SessionId, CancellationToken.None);
+
+        // Assert
+        result.Value!.CanApply.Should().BeFalse();
+        result.Value.BlockedReason.Should().Contain("decided");
+    }
+
+    [Fact]
+    public async Task GetDiffAsync_ForASessionAlreadyApplied_ShouldNotBeApplicableAgain()
+    {
+        // Arrange
+        SessionIs(ImportSessionStatus.Applied);
+        PlanIs(Row(1, ProposalDecision.Accept, targetTrailId: 302, trailName: "Etapp 04"));
+
+        var service = CreateService();
+
+        // Act
+        var result = await service.GetDiffAsync(SessionId, CancellationToken.None);
+
+        // Assert
+        result.Value!.CanApply.Should().BeFalse();
+        result.Value.BlockedReason.Should().Contain("already been applied");
     }
 }

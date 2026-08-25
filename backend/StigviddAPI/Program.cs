@@ -71,25 +71,13 @@ public class Program
         builder.Services.AddSingleton<IClaimsTransformation, StigviddAPI.Authorization.KeycloakRealmRolesTransformation>();
         var adminRole = builder.Configuration["Authorization:AdminRole"] ?? "stigvidd-admin";
 
-        // The member realm role is not provisioned in Keycloak yet. While
-        // Authorization:UserRole is unset the "User" policy means "any authenticated
-        // caller"; setting it switches on role enforcement without a code change.
-        var userRole = builder.Configuration["Authorization:UserRole"];
-
         builder.Services.AddAuthorization(options =>
         {
             options.AddPolicy("Admin", policy => policy.RequireRole(adminRole));
 
-            options.AddPolicy("User", policy =>
-            {
-                policy.RequireAuthenticatedUser();
-
-                if (!string.IsNullOrWhiteSpace(userRole))
-                {
-                    // Admins are members too, so either role satisfies the policy.
-                    policy.RequireRole(userRole, adminRole);
-                }
-            });
+            // The realm has one role, admin. "User" means a signed-in caller and
+            // carries no role requirement.
+            options.AddPolicy("User", policy => policy.RequireAuthenticatedUser());
 
             // Endpoints without any authorization metadata require a signed-in caller,
             // so a forgotten attribute fails closed. Public endpoints opt out with

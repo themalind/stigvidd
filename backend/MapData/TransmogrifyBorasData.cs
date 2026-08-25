@@ -1,5 +1,4 @@
-﻿using Core.Common;
-using Infrastructure.Data;
+﻿using Infrastructure.Data;
 using Infrastructure.Data.Entities;
 using System.Globalization;
 using System.Text.Json;
