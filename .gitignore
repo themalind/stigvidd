@@ -8,6 +8,10 @@ TestResults/
 # keys. Lives only on the deploy host; carried by hand like .env.
 mail-config/
 
+# Postgres server certificate + PRIVATE KEY for the published 5432 (see
+# scripts/db-cert.sh). Per-host, regenerable, never committed.
+db-certs/
+
 # dependencies
 node_modules/
 

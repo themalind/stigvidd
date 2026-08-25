@@ -11,9 +11,11 @@
 # target. Both hosts run the same images, so it's a byte-for-byte copy — no
 # logical dump/restore needed. (<project>_maillogs is deliberately excluded.)
 #
-# (Config that is NOT data — docker-compose.yml, db/, and especially .env and
-#  mail-config/ with their secrets — must be copied to the target separately;
-#  see the flow below.)
+# (Config that is NOT data — docker-compose.yml, db/, and especially .env,
+#  mail-config/ and db-certs/ with their secrets — must be copied to the target
+#  separately; see the flow below. db-certs/ holds the Postgres server key for
+#  the published 5432: copy it, or regenerate it on the target with
+#  scripts/db-cert.sh. `db` will not START without it.)
 #
 # Usage:
 #   ./scripts/migrate.sh backup  [outfile.tar.gz]      # on the SOURCE host
@@ -23,7 +25,7 @@
 #   # source host, in the compose dir:
 #   ./scripts/migrate.sh backup stigvidd-data.tar.gz
 #   scp stigvidd-data.tar.gz .env docker-compose.yml  target:/opt/stigvidd/
-#   scp -r db mail-config                              target:/opt/stigvidd/
+#   scp -r db db-certs mail-config                     target:/opt/stigvidd/
 #   # target host, in /opt/stigvidd:
 #   docker login inkaben.se
 #   ./scripts/migrate.sh restore stigvidd-data.tar.gz
