@@ -76,3 +76,6 @@ stigvidd-b4cd0-firebase-adminsdk-fbsvc-b5f1386e98.json
 
 .clj-kondo/
 .lsp/
+
+# Temporary working document for the trail import; distilled into docs/notes/ and deleted when done.
+plan.md
