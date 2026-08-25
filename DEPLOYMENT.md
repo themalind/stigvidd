@@ -8,6 +8,7 @@ and is designed to be picked up and moved at will.
 - [Prerequisites](#prerequisites) · [Mail DNS records](#mail-dns-records)
 - [Part 1 — Deploy to a new host](#part-1--deploy-to-a-new-host)
 - [Part 2 — Configuration reference](#part-2--configuration-reference-env)
+- [Direct database access (published 5432)](#direct-database-access-published-5432)
 - [Part 3 — CI/CD (Jenkins)](#part-3--cicd-jenkins)
 - [Part 4 — Migrating data](#part-4--migrating-data)
 - [Part 5 — Cutover checklist](#part-5--cutover-checklist)
@@ -49,8 +50,11 @@ to the internet.
 - **`maillogs` volume** — not migrated.
 
 Everything else (images, compose file, `db/` init scripts) is reproducible. The
-files you carry by hand are **`.env`** and **`mail-config/`** (mail accounts,
-aliases and the DKIM private key) — both git-ignored, both secret.
+files you carry by hand are **`.env`**, **`mail-config/`** (mail accounts,
+aliases and the DKIM private key) and **`db-certs/`** (the Postgres server key
+for the published 5432) — all git-ignored, all secret. `db-certs/` is the only
+one of the three that can simply be regenerated on the new host instead
+(`./scripts/db-cert.sh <domain>`), because the certificate is self-signed.
 
 ### Domains
 
@@ -437,6 +441,7 @@ Copy [.env.example](.env.example) to `.env` and set:
 | `ACME_EMAIL` | Let's Encrypt contact address. |
 | `ACME_CA` | Leave at production; switch to LE staging while testing. |
 | `POSTGRES_DB` / `POSTGRES_USER` / `POSTGRES_PASSWORD` | Database. Keep identical to the source when restoring a backup. |
+| `DB_PUBLIC_PORT` | Host port Postgres is **published** on (default `5432`), reachable from any IP that can reach this host — see [Direct database access](#direct-database-access-published-5432). Named this rather than `POSTGRES_PORT` so it is never confused with libpq's `PGPORT`. Moving it (e.g. `5433`) is noise reduction, not security. |
 | `KEYCLOAK_URL` | Public issuer URL, e.g. `https://auth.stigvidd.se`. |
 | `KEYCLOAK_DB` | Keycloak's database name (default `keycloak`). |
 | `KC_ADMIN_USER` / `KC_ADMIN_PASSWORD` | First-boot Keycloak admin. Rotate after first login. |
@@ -466,6 +471,139 @@ Copy [.env.example](.env.example) to `.env` and set:
 > file. Changing them needs a new app build, and they are public once shipped.
 
 Keep `.env` secret and out of git (it already is).
+
+---
+
+## Direct database access (published 5432)
+
+The `db` service **publishes `${DB_PUBLIC_PORT:-5432}` on the host's public IP**,
+so pgAdmin (or `psql`, DataGrip, DBeaver) connects to `stigvidd.se:5432` from
+anywhere. This is deliberate. It is also the only service in the stack other than
+the proxy and the mail server that is reachable from the internet, so read the
+risk paragraph before you widen it further.
+
+### What protects it
+
+Two things, and nothing else:
+
+1. **Postgres' own authentication.** Every connection arriving over the network
+   matches the image's last `pg_hba` rule, `host all all all scram-sha-256`, so a
+   password is required. Measured: a wrong password gives
+   `FATAL: password authentication failed` and is logged. The `trust` rules in
+   that file cover `127.0.0.1`/`::1` **inside the container** only — which is why
+   `docker compose exec db psql -U stigvidd` needs no password and an external
+   client does. Never set `POSTGRES_HOST_AUTH_METHOD`: `trust` there would replace
+   that last rule and leave the database open to the internet with no password at
+   all, and nothing in the stack would report it.
+2. **TLS.** `docker-compose.yml` starts Postgres with `-c ssl=on` and the
+   certificate from `./db-certs`, so queries and results are encrypted (measured:
+   TLSv1.3 / `TLS_AES_256_GCM_SHA384`). The certificate is **self-signed**, so
+   clients use SSL mode `require` — encrypted, identity unverified. Without this
+   every row you browse would cross the internet in clear text.
+
+`log_connections`/`log_disconnections` are on, so `docker compose logs db` is the
+record of who connected and of the brute-force traffic a public 5432 attracts.
+
+> **The risk, stated plainly.** This Postgres instance holds the **`keycloak`
+> database as well as the app's** — realms, users and `user_entity` credential
+> hashes. Publishing 5432 puts the identity store behind `POSTGRES_PASSWORD`
+> alone. Use a long random `POSTGRES_PASSWORD`, do interactive work as the
+> read-only role below rather than as the owner, and check the log for
+> `password authentication failed` occasionally. If the exposure is ever no
+> longer wanted, delete the `ports:` block from the `db` service and run
+> `docker compose up -d db` — nothing else depends on it.
+
+### First-time setup on a host
+
+The certificate must exist **before** the container is recreated: `ssl=on` with
+the files missing means Postgres *refuses to start*, and `restart: unless-stopped`
+turns that into a restart loop.
+
+```bash
+cd /opt/stigvidd
+
+# 1. Server certificate. The CN/SAN should be the name clients will use.
+./scripts/db-cert.sh stigvidd.se
+
+# 2. The key must be readable by the postgres user (uid 999) inside the
+#    container and by nobody else. The script says so if it could not do it
+#    itself, which it cannot when run as a non-root user:
+sudo chown 0:999 db-certs/server.key    # root-owned, mode 0640 — the one
+                                        # combination a bind mount can offer
+
+# 3. Recreate the database container. CI NEVER does this for you (Part 3).
+docker compose up -d db
+
+# 4. Confirm.
+docker compose exec db psql -U stigvidd -d stigvidd -tAc 'show ssl'   # -> on
+docker compose ps db                                                 # -> published 5432, healthy
+```
+
+Recreating `db` drops the API's open connections for a few seconds. Npgsql
+reconnects on its own, but do it in a quiet window, and check
+`curl -s https://api.stigvidd.se/readyz` afterwards — `/readyz` is the probe that
+actually touches the database.
+
+### A read-only role to browse with
+
+Connecting as `stigvidd` means every session can `DROP TABLE`. `db/init/` runs
+**only on an empty data directory**, so on an existing host this is a hand-run
+snippet — the same situation as `createdb keycloak` in
+[db/init/02-keycloak-db.sql](db/init/02-keycloak-db.sql):
+
+```bash
+docker compose exec db psql -U stigvidd -d stigvidd
+```
+
+```sql
+CREATE ROLE stigvidd_ro LOGIN PASSWORD 'pick-a-strong-secret';
+GRANT CONNECT ON DATABASE stigvidd TO stigvidd_ro;
+GRANT USAGE ON SCHEMA public TO stigvidd_ro;
+GRANT SELECT ON ALL TABLES IN SCHEMA public TO stigvidd_ro;
+-- Without this line every table a FUTURE EF migration creates is invisible to
+-- the role, which looks like missing data rather than missing privilege.
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO stigvidd_ro;
+```
+
+The role is not carried by `.env` and is not recreated by anything, so it lives
+in `pgdata` — a Method B volume copy brings it along, a fresh database does not.
+
+### pgAdmin
+
+Register a server with:
+
+| Field | Value |
+|-------|-------|
+| Host | `stigvidd.se` |
+| Port | `5432` (whatever `DB_PUBLIC_PORT` is) |
+| Maintenance database | `stigvidd` |
+| Username | `stigvidd_ro`, or `stigvidd` when you need to write |
+| Password | that role's password |
+| SSL mode | **Require** |
+
+`Require` is correct for a self-signed certificate. `Verify-CA`/`Verify-Full`
+will fail unless you also hand pgAdmin the certificate as a root CA — the
+fingerprint `./scripts/db-cert.sh` printed is what to check it against.
+
+Keycloak's database is reachable the same way: same host and credentials,
+maintenance database `keycloak`.
+
+From a shell, the equivalent is:
+
+```bash
+psql "postgresql://stigvidd_ro@stigvidd.se:5432/stigvidd?sslmode=require" -c 'select count(*) from trails'
+```
+
+### If you want a publicly-trusted certificate instead
+
+Caddy already holds a Let's Encrypt cert for the stack's domains in the
+`caddy_data` volume, but Postgres cannot use it as-is: it needs the key at
+`0640` owned by root or `0600` owned by uid 999, and it re-reads the files only
+on restart, so each renewal would need a copy-and-`chown` step plus a `db`
+restart. The proxy image is plain `caddy:2-alpine`, so TCP passthrough
+(`layer4`) is not available either. Self-signed plus `sslmode=require` is the
+deliberate trade; publish a `db.stigvidd.se` record and wire the renewal hook
+only if `verify-full` becomes a requirement.
 
 ---
 
@@ -500,8 +638,18 @@ cd /opt/stigvidd && docker compose up -d mailserver
 cd /opt/stigvidd && docker compose up -d openobserve
 ```
 
-Any change to the `mailserver` or `openobserve` service blocks needs its command
-too; a normal CI deploy will not pick it up.
+Any change to the `mailserver`, `openobserve` **or `db`** service blocks needs its
+command too; a normal CI deploy will not pick it up. This is the whole reason the
+published 5432 needs a one-time manual step: the deploy **does** `scp` the new
+`docker-compose.yml`, so the `ports:` and `command:` lines are permanent in the
+file and every later deploy keeps them — but the *running* `db` container is only
+replaced by that first `docker compose up -d db`. Until then `docker compose ps db`
+shows no published port and the compose file and reality disagree, silently. After
+the first deploy that carries a `db` change, check:
+
+```bash
+cd /opt/stigvidd && docker compose ps db     # published port present?
+```
 
 Note the asymmetry for observability, which is genuinely non-obvious: the
 **Caddyfile is baked into the proxy image**, and `proxy` *is* in the deploy set —
@@ -586,14 +734,22 @@ On the **source** (in the compose dir):
 ```bash
 ./scripts/migrate.sh backup stigvidd-data.tar.gz     # stops the stack, snapshots volumes
 scp stigvidd-data.tar.gz .env docker-compose.yml  target:/opt/stigvidd/
-scp -r db mail-config                              target:/opt/stigvidd/
+scp -r db db-certs mail-config                     target:/opt/stigvidd/
 docker compose up -d                                 # bring source back up (or leave down for cutover)
 ```
 
-> `mail-config/` is a bind mount, not a volume, so `migrate.sh` does **not**
-> carry it — copy it explicitly as above. It holds the mail accounts and the
-> DKIM private key; lose it and you must recreate every mailbox and republish
-> the DKIM TXT record.
+> `mail-config/` and `db-certs/` are bind mounts, not volumes, so `migrate.sh`
+> does **not** carry either — copy them explicitly as above. `mail-config/` holds
+> the mail accounts and the DKIM private key; lose it and you must recreate every
+> mailbox and republish the DKIM TXT record. `db-certs/` holds the Postgres server
+> certificate: without it `db` will not start on the target at all, though
+> regenerating it there with `./scripts/db-cert.sh <domain>` is equally valid
+> since it is self-signed. Either way, re-run the `chown 0:999` on the key —
+> `scp` does not preserve it.
+>
+> Note that a **CI deploy** copies only `docker-compose.yml` and `db/init/*.sql`,
+> so `db-certs/` never travels that way, by design — a private key has no business
+> in the pipeline.
 
 On the **target** (in `/opt/stigvidd`):
 
@@ -666,6 +822,10 @@ For a near-zero-loss move to a new host:
 docker compose ps                                   # all Up
 docker compose exec db psql -U stigvidd -d stigvidd -c "SELECT count(*) FROM trails;"
 docker compose exec db psql -U stigvidd -d keycloak -tAc "SELECT count(*) FROM user_entity;"
+# The published 5432 needs the cert in place and a manual recreate — see
+# "Direct database access". From OUTSIDE the host:
+#   psql "postgresql://stigvidd_ro@stigvidd.se:5432/stigvidd?sslmode=require" -c 'select 1'
+docker compose exec db psql -U stigvidd -tAc 'show ssl'      # -> on
 curl -I https://media.stigvidd.se/<some/known/image/path>   # 200
 curl -s https://observatory.stigvidd.se/healthz            # {"status":"ok"}
 # sign in to the web admin and confirm content + that login (Keycloak) works
@@ -694,6 +854,35 @@ the API returns 204 either way, so the mail log is the only evidence.
 ---
 
 ## Troubleshooting
+
+**`db` won't start / restart-loops after a compose change.**
+`ssl=on` makes Postgres refuse to start when the certificate is unusable, and
+`restart: unless-stopped` then loops it. `docker compose logs db | tail -5` names
+which of the two it is — both were measured on `postgis/postgis:17-3.5`:
+
+| log line | fix |
+|----------|-----|
+| `FATAL: could not load server certificate file ".../server.crt": No such file or directory` | `./scripts/db-cert.sh <domain>` — `db-certs/` is empty (a fresh host, or a `scp` that skipped it). If compose created the directory first it is root-owned and the script cannot write to it: `sudo chown $USER db-certs`. |
+| `FATAL: private key file ".../server.key" has group or world access` | `sudo chown 0:999 db-certs/server.key && sudo chmod 640 db-certs/server.key` |
+| `could not load private key file ...: Permission denied` | same — the key is `0640` but owned by neither root nor uid 999, so the server cannot read it at all |
+
+**5432 is open but connections are refused / time out.**
+Check `docker compose ps db` first: if no published port is listed, the running
+container predates the compose change and needs `docker compose up -d db` — CI
+never recreates `db` (Part 3). If the port *is* published and connections still
+fail, confirm `db` is attached to **`dbedge`** as well as `internal`: a container
+whose only network is `internal: true` binds the host port and then has the
+forwarded packet dropped by Docker's own isolation rules, which looks exactly
+like a firewall problem and is not one. Note also that Docker's DNAT rules sit
+ahead of `ufw`'s INPUT chain, so a host firewall is **not** what is blocking a
+published port — and equally, `ufw deny 5432` will not close it.
+
+**Connections work but every password is rejected.**
+Network connections match `host all all all scram-sha-256`, so the password must
+be right; the `trust` lines in `pg_hba.conf` apply to `127.0.0.1` *inside the
+container* only, which is why `docker compose exec db psql` needs no password
+while pgAdmin does. `docker compose logs db | grep -i 'authentication failed'`
+shows the attempts — including the ones that are not you.
 
 **Certificates won't issue / HTTPS fails.**
 DNS for the domain must resolve to this host and ports 80/443 must be reachable
