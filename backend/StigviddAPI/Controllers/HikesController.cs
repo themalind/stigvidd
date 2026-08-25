@@ -19,7 +19,7 @@ public class HikesController : StigViddController
         _userService = userService;
     }
 
-    [Authorize(Policy = "User")]
+    [Authorize]
     [HttpGet("{hikeIdentifier}")]
     public async Task<ActionResult<HikeResponse>> GetHikeByIdentifier(
         string hikeIdentifier,
@@ -43,7 +43,7 @@ public class HikesController : StigViddController
         return Ok(result.Value);
     }
 
-    [Authorize(Policy = "User")]
+    [Authorize]
     [HttpGet]
     public async Task<ActionResult<IReadOnlyCollection<HikeResponse>>> GetHikes(
         [FromQuery] string? createdBy,
@@ -74,7 +74,7 @@ public class HikesController : StigViddController
         return Ok(result.Value);
     }
 
-    [Authorize(Policy = "User")]
+    [Authorize]
     [HttpPost]
     public async Task<ActionResult<HikeResponse>> CreateHike(
         [FromBody] CreateHikeRequest request,
@@ -100,7 +100,7 @@ public class HikesController : StigViddController
         return Created($"/api/v1/hikes/{result.Value.Identifier}", result.Value);
     }
 
-    [Authorize(Policy = "User")]
+    [Authorize]
     [HttpPut]
     [Route("{hikeIdentifier}")]
     public async Task<ActionResult<HikeResponse>> UpdateHike(
@@ -130,7 +130,7 @@ public class HikesController : StigViddController
         return Ok(result.Value);
     }
 
-    [Authorize(Policy = "User")]
+    [Authorize]
     [HttpDelete]
     [Route("{hikeIdentifier}")]
     public async Task<ActionResult> DeleteHike(

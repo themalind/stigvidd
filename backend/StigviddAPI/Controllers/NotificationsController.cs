@@ -5,7 +5,7 @@ using WebDataContracts.RequestModels.PushToken;
 
 namespace StigviddAPI.Controllers;
 
-[Authorize(Policy = "User")]
+[Authorize]
 [ApiController]
 [Route("api/v1/[controller]")]
 public class NotificationsController : StigViddController

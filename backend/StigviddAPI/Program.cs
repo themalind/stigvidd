@@ -73,11 +73,9 @@ public class Program
 
         builder.Services.AddAuthorization(options =>
         {
+            // The realm has one role. Everything else an endpoint can ask for is
+            // "signed in", which is a bare [Authorize] and needs no policy.
             options.AddPolicy("Admin", policy => policy.RequireRole(adminRole));
-
-            // The realm has one role, admin. "User" means a signed-in caller and
-            // carries no role requirement.
-            options.AddPolicy("User", policy => policy.RequireAuthenticatedUser());
 
             // Endpoints without any authorization metadata require a signed-in caller,
             // so a forgotten attribute fails closed. Public endpoints opt out with

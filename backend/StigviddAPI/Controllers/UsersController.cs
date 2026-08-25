@@ -8,7 +8,7 @@ using WebDataContracts.ResponseModels.User;
 
 namespace StigviddAPI.Controllers;
 
-[Authorize(Policy = "User")]
+[Authorize]
 [ApiController]
 [Route("/api/v1/[controller]")]
 public class UsersController : StigViddController

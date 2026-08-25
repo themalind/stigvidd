@@ -51,7 +51,7 @@ public class TrailObstaclesController : StigViddController
         return Ok(Enum.GetNames<TrailIssueType>());
     }
 
-    [Authorize(Policy = "User")]
+    [Authorize]
     [HttpPost]
     [Route("")]
     public async Task<ActionResult> CreateTrailObstacle(
@@ -83,7 +83,7 @@ public class TrailObstaclesController : StigViddController
         return Created();
     }
 
-    [Authorize(Policy = "User")]
+    [Authorize]
     [HttpPost]
     [Route("solve/{trailObstacleIdentifier}")]
     public async Task<ActionResult> AddSolvedVote([FromRoute] string trailObstacleIdentifier, CancellationToken ctoken)
@@ -107,7 +107,7 @@ public class TrailObstaclesController : StigViddController
         return Ok();
     }
 
-    [Authorize(Policy = "User")]
+    [Authorize]
     [HttpPut]
     [Route("{trailObstacleIdentifier}")]
     public async Task<ActionResult> UpdateTrailObstacle(
@@ -138,7 +138,7 @@ public class TrailObstaclesController : StigViddController
         return NoContent();
     }
 
-    [Authorize(Policy = "User")]
+    [Authorize]
     [HttpDelete]
     [Route("solve/{trailObstacleIdentifier}")]
     public async Task<ActionResult> DeleteSolvedVoteByUserIdentifier([FromRoute] string trailObstacleIdentifier, CancellationToken ctoken)
@@ -162,7 +162,7 @@ public class TrailObstaclesController : StigViddController
         return NoContent();
     }
 
-    [Authorize(Policy = "User")]
+    [Authorize]
     [HttpDelete]
     [Route("{trailObstacleIdentifier}")]
     public async Task<ActionResult> DeleteTrailObstacle([FromRoute] string trailObstacleIdentifier, CancellationToken ctoken)

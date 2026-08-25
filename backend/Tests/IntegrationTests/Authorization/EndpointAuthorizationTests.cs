@@ -1,11 +1,8 @@
 ﻿using FluentAssertions;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using StigviddAPI;
-using System.Net;
-using System.Net.Http.Headers;
 
 namespace IntegrationTests.Authorization;
 
@@ -13,7 +10,8 @@ namespace IntegrationTests.Authorization;
 /// Program.cs sets a FallbackPolicy so an endpoint without authorization metadata
 /// requires a signed-in caller. These tests keep that from being undone by accident:
 /// the first pins the list of deliberately public endpoints, the second insists every
-/// other endpoint names its policy instead of leaning on the fallback.
+/// other endpoint is gated by an attribute of its own instead of leaning on the
+/// fallback, and the third pins which of them are behind the realm's only role.
 /// </summary>
 public class EndpointAuthorizationTests : IClassFixture<StigViddWebApplicationFactory<Program>>
 {
@@ -51,6 +49,45 @@ public class EndpointAuthorizationTests : IClassFixture<StigViddWebApplicationFa
         "GET /openapi/{documentName}.json",
     ];
 
+    private static readonly string[] ApprovedAdminEndpoints =
+    [
+        // Curated content: trails and facilities are ours to write, and their images
+        // with them. Reading any of it is anonymous, so only the writes appear here.
+        "DELETE /api/v1/Facilities/images/{imageIdentifier}",
+        "DELETE /api/v1/Facilities/{identifier}",
+        "DELETE /api/v1/Trails/images/{imageIdentifier}",
+        "POST /api/v1/Facilities",
+        "POST /api/v1/Facilities/{identifier}/images",
+        "POST /api/v1/Trails/create",
+        "POST /api/v1/Trails/{identifier}/images",
+        "POST /api/v1/Trails/{identifier}/symbol",
+        "PUT /api/v1/Facilities/update/{identifier}",
+        "PUT /api/v1/Trails/{identifier}",
+
+        // The media library is the whole upload store, reads included.
+        "GET /api/v1/Media",
+        "PATCH /api/v1/Media/{imageIdentifier}",
+
+        // export hands out the database, the media volume and the Keycloak realm;
+        // import replaces this host's data.
+        "GET /api/v1/admin/export",
+        "POST /api/v1/admin/import",
+
+        // The Boras sync, gated at the class.
+        "DELETE /api/v1/admin/trail-import/sessions/{id:int}",
+        "GET /api/v1/admin/trail-import/sessions",
+        "GET /api/v1/admin/trail-import/sessions/{id:int}",
+        "GET /api/v1/admin/trail-import/sessions/{id:int}/diff",
+        "GET /api/v1/admin/trail-import/sessions/{id:int}/proposals",
+        "GET /api/v1/admin/trail-import/sessions/{id:int}/proposals/{proposalId:int}/preview",
+        "GET /api/v1/admin/trail-import/vocabulary",
+        "POST /api/v1/admin/trail-import/sessions",
+        "POST /api/v1/admin/trail-import/sessions/{id:int}/analyze",
+        "POST /api/v1/admin/trail-import/sessions/{id:int}/apply",
+        "POST /api/v1/admin/trail-import/sessions/{id:int}/decide-bulk",
+        "POST /api/v1/admin/trail-import/sessions/{id:int}/proposals/{proposalId:int}/decide",
+    ];
+
     public EndpointAuthorizationTests(StigViddWebApplicationFactory<Program> factory)
     {
         _factory = factory;
@@ -70,41 +107,36 @@ public class EndpointAuthorizationTests : IClassFixture<StigViddWebApplicationFa
     }
 
     [Fact]
-    public void ProtectedEndpoints_ShouldNameAPolicy()
+    public void ProtectedEndpoints_ShouldCarryTheirOwnAuthorizationMetadata()
     {
-        // Act — endpoints that are neither public nor explicitly gated only survive
-        // because of the fallback, which exists to catch mistakes, not to be relied on.
-        var unpolicied = Endpoints()
+        // Act — an endpoint that is neither public nor gated by an attribute of its own
+        // survives only because of the fallback, which exists to catch mistakes, not to
+        // be relied on. A bare [Authorize] counts: the realm has one role, so "signed in"
+        // is the whole requirement and names no policy.
+        var ungated = Endpoints()
             .Where(endpoint => endpoint.Metadata.GetMetadata<IAllowAnonymous>() is null)
-            .Where(endpoint => !endpoint.Metadata.GetOrderedMetadata<IAuthorizeData>()
-                .Any(data => !string.IsNullOrEmpty(data.Policy)))
+            .Where(endpoint => !endpoint.Metadata.GetOrderedMetadata<IAuthorizeData>().Any())
             .Select(Describe)
             .OrderBy(description => description, StringComparer.Ordinal);
 
         // Assert
-        unpolicied.Should().BeEmpty();
+        ungated.Should().BeEmpty();
     }
 
-
     [Fact]
-    public async Task UserPolicy_ShouldAdmitAnySignedInCallerAndRejectAnonymousOnes()
+    public void AdminEndpoints_ShouldBeExactlyTheApprovedOnes()
     {
-        // Arrange — the realm has one role, admin. "User" gates on being signed in and
-        // nothing else, so a caller carrying no role at all has to get through.
-        var signedIn = _factory.CreateClient();
-        signedIn.DefaultRequestHeaders.Authorization =
-            new AuthenticationHeaderValue("Bearer", "firebase-uid-12346");
-
-        var anonymous = _factory.CreateClient();
-
-        // Act
-        var withoutAnyRole = await signedIn.GetAsync("/api/v1/hikes", TestContext.Current.CancellationToken);
-        var withoutAToken = await anonymous.GetAsync("/api/v1/hikes", TestContext.Current.CancellationToken);
+        // Act — "Admin" is the only policy left, so the set of endpoints naming one is
+        // the set gated on the realm's only role. Pinning it means an attribute lost in
+        // an edit shows up here rather than in production.
+        var admin = Endpoints()
+            .Where(endpoint => endpoint.Metadata.GetOrderedMetadata<IAuthorizeData>()
+                .Any(data => data.Policy == "Admin"))
+            .Select(Describe)
+            .OrderBy(description => description, StringComparer.Ordinal);
 
         // Assert
-        withoutAnyRole.StatusCode.Should().NotBe(HttpStatusCode.Forbidden);
-        withoutAnyRole.StatusCode.Should().NotBe(HttpStatusCode.Unauthorized);
-        withoutAToken.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        admin.Should().BeEquivalentTo(ApprovedAdminEndpoints);
     }
 
     private IEnumerable<RouteEndpoint> Endpoints() =>

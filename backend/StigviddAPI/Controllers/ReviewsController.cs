@@ -38,7 +38,7 @@ public class ReviewsController : StigViddController
         return Ok(result.Value);
     }
 
-    [Authorize(Policy = "User")]
+    [Authorize]
     [HttpGet]
     [Route("trail/{trailIdentifier}/mine")]
     public async Task<ActionResult<bool>> HasReviewedTrail(
@@ -62,7 +62,7 @@ public class ReviewsController : StigViddController
         return Ok(result.Value);
     }
 
-    [Authorize(Policy = "User")]
+    [Authorize]
     [HttpPost]
     [Route("create")]
     public async Task<ActionResult> CreateReview(
@@ -92,7 +92,7 @@ public class ReviewsController : StigViddController
         return Created($"/api/v1/review/{result.Value.Identifier}", result.Value);
     }
 
-    [Authorize(Policy = "User")]
+    [Authorize]
     [HttpDelete]
     [Route("{reviewIdentifier}")]
     public async Task<ActionResult> DeleteReview(
