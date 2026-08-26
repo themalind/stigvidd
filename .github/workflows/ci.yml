@@ -79,3 +79,39 @@ jobs:
       run: npm run lint
     - name: Test
       run: npm test -- --watchAll=false
+
+  # web/ was previously built and tested only by the Jenkinsfile, which runs on main and
+  # on nothing else -- so a web change could be green on a PR here and broken. This job
+  # closes that. It deliberately does NOT duplicate Jenkins' generated-client staleness
+  # gate (generate:api followed by git diff --exit-code): that check belongs next to the
+  # image build that would ship the stale client, and it is the one step here that would
+  # fail for a reason unrelated to the diff under test.
+  web:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./web
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup Node
+      uses: actions/setup-node@v4
+      with:
+        # Keep in step with web/Dockerfile's build stage and with the app job.
+        node-version: 24
+        cache: 'npm'
+        cache-dependency-path: web/package-lock.json
+    - name: Install dependencies
+      run: npm ci
+    - name: Lint
+      run: npm run lint
+    # Vitest over jsdom, configured in web/vitest.config.ts and NOT in vite.config.ts.
+    # The npm script is "vitest run" -- the bare binary watches and never exits.
+    # No server and no backend: every call the suite makes is stubbed.
+    - name: Test
+      run: npm test
+    # "tsc -b && vite build" IS the web type check -- Vitest type-checks nothing. The
+    # VITE_* vars are inlined at build time and none is set here; that matches the
+    # Jenkins Test stage, and an unset one only becomes undefined in the bundle this
+    # job throws away.
+    - name: Build
+      run: npm run build

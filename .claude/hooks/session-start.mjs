@@ -151,13 +151,16 @@ export function compose(root) {
   out.push(
     "Green means, per area (nothing checks another area's):\n" +
       `  backend  cd backend && dotnet build && ${CONN}="DataSource=:memory:" dotnet test --no-build\n` +
-      "  web      cd web && npm run lint && npm run generate:api && git diff --exit-code -- src/api/generated && npm run build\n" +
+      "  web      cd web && npm run lint && npm run generate:api && git diff --exit-code -- src/api/generated && npm test && npm run build\n" +
       "  app      cd app && npm run format:check && npm run lint && npm test -- --watchAll=false\n" +
       "  harness  node scripts/check-hooks.mjs\n" +
       `  ${CONN} is required or every integration test fails at host startup; on ` +
       `PowerShell it is \`$env:${CONN}="DataSource=:memory:"; dotnet test --no-build\`.\n` +
-      "  There are NO web tests — `npm run build` (tsc -b && vite build) IS the web type " +
-      "check. Nothing in GitHub CI builds an image or runs docker compose.",
+      "  web tests are Vitest — `npm test` is `vitest run`, configured in " +
+      "web/vitest.config.ts and NOT in vite.config.ts, and it type-checks nothing: " +
+      "`npm run build` (tsc -b && vite build) is still the web type check. Both run in " +
+      "GitHub CI and in Jenkins; the generated-client staleness gate is Jenkins ONLY. " +
+      "Nothing in GitHub CI builds an image or runs docker compose.",
   );
 
   // --- memory ----------------------------------------------------------------------

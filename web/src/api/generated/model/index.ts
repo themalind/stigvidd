@@ -43,6 +43,7 @@ export * from './trailImportApplyConflictResponse';
 export * from './trailImportApplyResponse';
 export * from './trailImportCountsResponse';
 export * from './trailImportCreateSessionBody';
+export * from './trailImportDecideBulkResponse';
 export * from './trailImportDiffResponse';
 export * from './trailImportDiffTrailResponse';
 export * from './trailImportDiffWarningResponse';

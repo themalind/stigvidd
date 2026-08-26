@@ -30,6 +30,7 @@ import type {
   TrailImportAnalyzeParams,
   TrailImportApplyResponse,
   TrailImportCreateSessionBody,
+  TrailImportDecideBulkResponse,
   TrailImportDiffResponse,
   TrailImportGetProposalsParams,
   TrailImportPreviewResponse,
@@ -920,9 +921,9 @@ export const getTrailImportDecideBulkUrl = (id: number,) => {
 }
 
 export const trailImportDecideBulk = async (id: number,
-    decideProposalsBulkRequest: DecideProposalsBulkRequest, options?: RequestInit): Promise<number> => {
+    decideProposalsBulkRequest: DecideProposalsBulkRequest, options?: RequestInit): Promise<TrailImportDecideBulkResponse> => {
 
-  return customFetch<number>(getTrailImportDecideBulkUrl(id),
+  return customFetch<TrailImportDecideBulkResponse>(getTrailImportDecideBulkUrl(id),
   {
     ...options,
     method: 'POST',

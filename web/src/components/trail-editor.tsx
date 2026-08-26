@@ -63,11 +63,13 @@ const emptyForm = (): UpdateTrailRequest => ({
 export default function TrailEditor({ data, selected }: Props) {
   const [formData, setFormData] = useState<UpdateTrailRequest>(emptyForm);
   const [loading, setLoading] = useState(false);
+  const [loaded, setLoaded] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   async function handleOpenChange(open: boolean) {
     if (!open) return;
     setLoading(true);
+    setLoaded(false);
     try {
       const trail = await getTrailByIdentifier({ identifier: data.identifier });
       setFormData({
@@ -92,6 +94,7 @@ export default function TrailEditor({ data, selected }: Props) {
             trail.visitorInformation?.winterMaintenance ?? false,
         },
       });
+      setLoaded(true);
     } catch {
       toast.error("Failed to load trail data.");
     } finally {
@@ -134,6 +137,13 @@ export default function TrailEditor({ data, selected }: Props) {
         {loading ? (
           <div className="flex flex-1 items-center justify-center">
             <p className="text-muted-foreground text-sm">Loading...</p>
+          </div>
+        ) : !loaded ? (
+          <div className="flex flex-1 items-center justify-center px-4">
+            <p className="text-muted-foreground text-sm">
+              This trail could not be loaded, so there is nothing to edit. Close
+              the panel and open it again.
+            </p>
           </div>
         ) : (
           <div className="flex-1 overflow-y-auto">
@@ -377,7 +387,10 @@ export default function TrailEditor({ data, selected }: Props) {
         )}
 
         <SheetFooter>
-          <Button onClick={handleSubmit} disabled={submitting || loading}>
+          <Button
+            onClick={handleSubmit}
+            disabled={submitting || loading || !loaded}
+          >
             {submitting ? "Saving..." : "Save changes"}
           </Button>
           <SheetClose asChild>

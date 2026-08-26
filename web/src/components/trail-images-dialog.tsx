@@ -59,6 +59,7 @@ export default function TrailImagesDialog({ data, selected }: Props) {
   }
 
   async function handleDelete(img: TrailImageResponse) {
+    if (!confirm("Delete this image?")) return;
     setDeletingId(img.identifier);
     try {
       await deleteTrailImage(img.identifier);
@@ -110,6 +111,7 @@ export default function TrailImagesDialog({ data, selected }: Props) {
                     <button
                       onClick={() => handleDelete(img)}
                       disabled={deletingId === img.identifier}
+                      title="Delete image"
                       className={cn(
                         "bg-background/80 hover:bg-background absolute top-1 right-1 rounded-xs p-0.5 opacity-0 transition-opacity group-hover:opacity-100",
                         deletingId === img.identifier &&

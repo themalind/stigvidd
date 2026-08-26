@@ -196,6 +196,11 @@ pipeline {
               // has to run here. OpenApiContractTests in the backend stage is
               // what keeps that file honest; this step only catches a contract
               // change that was never regenerated into the client.
+              //
+              // `npm test` is `vitest run` — vitest.config.ts, not vite.config.ts,
+              // and it needs no server and no backend. GitHub Actions runs the same
+              // three steps in its own web job; this stage is what gates the DEPLOY,
+              // and it is the only place the staleness check above runs.
               sh '''
                 set -e
                 npm ci
@@ -206,6 +211,7 @@ pipeline {
                   echo "       Run 'npm run generate:api' in web/ and commit the result." >&2
                   exit 1
                 fi
+                npm test
                 npm run build
               '''
             }

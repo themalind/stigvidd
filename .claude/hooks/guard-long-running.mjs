@@ -46,6 +46,16 @@ export function decide(command) {
         ];
     }
 
+    // Vitest watches by default: `vitest` is watch mode, `vitest run` is the one that
+    // exits. There is no TTY here, so the watcher never even redraws — the turn just
+    // sits. `web/package.json` carries a `test:watch` script that is exactly this.
+    if (/^vitest\b/i.test(seg) && !/^vitest\s+(?:run|list|bench\s+--run)\b/i.test(seg)) {
+      if (!/(?:^|\s)--run\b/i.test(seg))
+        return ["vitest", "Vitest in watch mode", "`vitest run`"];
+    }
+    if (/^npm\s+run\s+test:watch\b/i.test(seg))
+      return ["npm run test:watch", "Vitest in watch mode in web/", "`npm test`"];
+
     // `docker compose up` blocks unless detached; `logs -f` follows forever. Both have a
     // flag, so they are worth separating from the table for the sake of the message.
     if (/^docker\s+compose\b/i.test(seg)) {
@@ -88,6 +98,11 @@ function selfTest() {
     ["docker compose logs -f api", true],
     ["cd app && npx jest --watch", true],
     ["cd app && npm test -- --watchAll", true],
+    ["cd web && npx vitest", true],
+    ["cd web && npm run test:watch", true],
+    ["cd web && npx vitest --ui", true],
+    ["cd web && npx vitest watch", true],
+    ["cd web && npx vitest src/api", true],              // a filter is still watch mode
     // Must stay silent: each of these terminates.
     ["docker compose up -d", false],
     ["docker compose up -d --build", false],
@@ -98,6 +113,12 @@ function selfTest() {
     ["cd web && vite build", false],
     ["cd app && npm test -- --watchAll=false", false],
     ["cd app && npx jest --watchAll=false", false],
+    ["cd web && npm test", false],                       // `npm test` IS `vitest run`
+    ["cd web && npx vitest run", false],
+    ["cd web && npx vitest run src/api/mutator.test.ts", false],
+    ["cd web && npx vitest --run", false],
+    ["cd web && npx vitest bench --run", false],
+    ["cd web && npx vitest list", false],
     ["cd backend && dotnet build", false],
     ["git log --oneline -5", false],
     ["echo 'do not docker compose up here'", false],

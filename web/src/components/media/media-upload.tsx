@@ -13,7 +13,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import ImageCrop, { type CropRect } from "./image-crop";
+import ImageCrop from "./image-crop";
+import {
+  acceptImages,
+  attachedTo,
+  buildImageOptions,
+  formatBytes,
+  OWNER_TYPE,
+  type CropRect,
+  type TargetType,
+} from "@/lib/media-upload";
 import {
   getAllTrails,
   addTrailImages,
@@ -35,25 +44,9 @@ import {
 import {
   CLASSIFICATION,
   type FacilityResponse,
-  type ImageProcessingOptions,
   type MediaItemResponse,
   type TrailShortInfoResponse,
 } from "@/types/types";
-
-type TargetType = "trail-gallery" | "trail-symbol" | "facility";
-
-/** The `ownerType` the media library reports for each upload target. */
-const OWNER_TYPE: Record<TargetType, string> = {
-  "trail-gallery": "Trail",
-  "trail-symbol": "TrailSymbol",
-  facility: "Facility",
-};
-
-function formatBytes(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
 
 // Trails can share a name, so the option label carries length + city to tell
 // same-named trails apart; the panel under the select shows the full details.
@@ -139,14 +132,7 @@ export default function MediaUpload({ onMediaChanged }: Props) {
 
   // Images already attached to the selected target, from the media library.
   const existing = useMemo(
-    () =>
-      targetId
-        ? media.filter(
-            (m) =>
-              m.ownerIdentifier === targetId &&
-              m.ownerType === OWNER_TYPE[targetType],
-          )
-        : [],
+    () => attachedTo(media, targetId, targetType),
     [media, targetId, targetType],
   );
 
@@ -211,36 +197,23 @@ export default function MediaUpload({ onMediaChanged }: Props) {
   }, [canCrop, crop]);
 
   function addFiles(incoming: FileList | File[]) {
-    const imgs = Array.from(incoming).filter((f) =>
-      f.type.startsWith("image/"),
-    );
-    if (imgs.length === 0) return;
-    setFiles((prev) => (allowMultiple ? [...prev, ...imgs] : [imgs[0]]));
+    setFiles((prev) => acceptImages(prev, incoming, allowMultiple));
   }
 
   function removeFile(index: number) {
     setFiles((prev) => prev.filter((_, i) => i !== index));
   }
 
-  function buildOptions(): ImageProcessingOptions {
-    const options: ImageProcessingOptions = {};
-    if (resolution === "custom") {
-      if (customWidth) options.maxWidth = Number(customWidth);
-      if (customHeight) options.maxHeight = Number(customHeight);
-    } else if (resolution !== "original") {
-      options.maxWidth = Number(resolution);
-      options.maxHeight = Number(resolution);
-    }
-    if (format !== "original") options.format = format;
-    options.quality = quality;
-    if (canCrop && crop) {
-      options.cropX = crop.x;
-      options.cropY = crop.y;
-      options.cropWidth = crop.width;
-      options.cropHeight = crop.height;
-    }
-    return options;
-  }
+  const buildOptions = () =>
+    buildImageOptions({
+      resolution,
+      customWidth,
+      customHeight,
+      quality,
+      format,
+      crop,
+      canCrop,
+    });
 
   async function handleUpload() {
     if (!targetId) {
@@ -299,12 +272,12 @@ export default function MediaUpload({ onMediaChanged }: Props) {
       <div className="space-y-5">
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-1.5">
-            <Label>Attach to</Label>
+            <Label htmlFor="target-type">Attach to</Label>
             <Select
               value={targetType}
               onValueChange={(v) => changeTargetType(v as TargetType)}
             >
-              <SelectTrigger className="w-full">
+              <SelectTrigger id="target-type" className="w-full">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -315,9 +288,11 @@ export default function MediaUpload({ onMediaChanged }: Props) {
             </Select>
           </div>
           <div className="space-y-1.5">
-            <Label>{targetType === "facility" ? "Facility" : "Trail"}</Label>
+            <Label htmlFor="target">
+              {targetType === "facility" ? "Facility" : "Trail"}
+            </Label>
             <Select value={targetId} onValueChange={setTargetId}>
-              <SelectTrigger className="w-full">
+              <SelectTrigger id="target" className="w-full">
                 <SelectValue placeholder="Select…" />
               </SelectTrigger>
               <SelectContent>
@@ -524,9 +499,9 @@ export default function MediaUpload({ onMediaChanged }: Props) {
         <h3 className="text-sm font-semibold">Processing</h3>
 
         <div className="space-y-1.5">
-          <Label>Max resolution</Label>
+          <Label htmlFor="resolution">Max resolution</Label>
           <Select value={resolution} onValueChange={setResolution}>
-            <SelectTrigger className="w-full">
+            <SelectTrigger id="resolution" className="w-full">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -543,6 +518,7 @@ export default function MediaUpload({ onMediaChanged }: Props) {
               <Input
                 type="number"
                 min={1}
+                aria-label="Max width"
                 placeholder="Max width"
                 value={customWidth}
                 onChange={(e) => setCustomWidth(e.target.value)}
@@ -550,6 +526,7 @@ export default function MediaUpload({ onMediaChanged }: Props) {
               <Input
                 type="number"
                 min={1}
+                aria-label="Max height"
                 placeholder="Max height"
                 value={customHeight}
                 onChange={(e) => setCustomHeight(e.target.value)}
@@ -573,9 +550,9 @@ export default function MediaUpload({ onMediaChanged }: Props) {
         </div>
 
         <div className="space-y-1.5">
-          <Label>Format</Label>
+          <Label htmlFor="format">Format</Label>
           <Select value={format} onValueChange={setFormat}>
-            <SelectTrigger className="w-full">
+            <SelectTrigger id="format" className="w-full">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

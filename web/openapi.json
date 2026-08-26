@@ -2072,8 +2072,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "integer",
-                  "format": "int32"
+                  "$ref": "#/components/schemas/TrailImportDecideBulkResponse"
                 }
               }
             }
@@ -4811,6 +4810,19 @@
             "maximum": 1000.0,
             "minimum": 0.01,
             "nullable": true
+          }
+        }
+      },
+      "TrailImportDecideBulkResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "decided"
+        ],
+        "properties": {
+          "decided": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },

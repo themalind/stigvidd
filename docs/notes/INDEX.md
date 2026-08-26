@@ -160,3 +160,35 @@ you get approved.
   heredoc body line *beginning* with a guarded command IS denied, because `commandsIn()` splits
   on newlines; and the hooks `process.exit()` at module scope, so `import`-ing one to test its
   `decide()` kills the importer — spawn it with the event on stdin instead.
+- [The web test environment substitutes two things quietly: Blobs and `.env`](web-vitest-environment.md) —
+  `web/` now has a Vitest + jsdom suite (`npm test` = `vitest run`, config in
+  **`web/vitest.config.ts`, not `vite.config.ts`**), and two of the environment defaults hand
+  the code something a browser would not. `fake-indexeddb` clones through the global
+  `structuredClone`, which under jsdom is **Node's**: it does not recognise a jsdom `Blob` and
+  returns `{}` instead of raising, so `staged-media.ts`'s `blob instanceof Blob` filtered every
+  staged file out while the code was correct — `staged-media.test.ts` installs Node's
+  `Blob`/`File` over jsdom's, deliberately in that one file and **not** in `setup.ts`, because
+  jsdom's `FormData` appends a Node `File` as the string `"[object File]"` and would silently
+  turn every multipart upload under test into fields. And Vitest otherwise loads the
+  developer's real `web/.env`, whose `VITE_OIDC_*` `keycloak-auth.ts` captures at **module
+  load**, pointing the token tests at a live Keycloak —
+  `test.env` in the config is what overrides it, and module-scope token caching is why those
+  tests `vi.resetModules()` per case. Plus: `vitest` watches by default (`vitest run` exits, and
+  `guard-long-running.mjs` now denies the watch forms, and `setup.ts` installs the pointer-capture,
+  ResizeObserver and object-URL stubs jsdom lacks — without them Radix's Select fails **silently**,
+  naming the option it could not find rather than the TypeError that stopped the click). The suite
+  is 336 tests over 17 files, mutation-proved 14/15, 21/21, 32/32, 69/71 and 28/29 with all four
+  survivors equivalent (the note says why each is, and what the two second rounds found).
+  It covers the **surfaces that can change the database most** and the gate
+  in front of each: the trail-import review (which selections may be batch-decided, whether
+  'select all' really means all, the apply button that stays out of reach until the diff is
+  read, and — in `proposal-detail` — the role that decides which feature carries a trail's
+  route); the migration page, whose import replaces the database, the media and the Keycloak
+  realm and is armed only by typing the host's own name; and the trail editor, where a failed
+  load used to leave a live Save button over an empty form. Plus the auth provider and
+  `ProtectedRoute`. Four `src/lib/` modules exist only so a large component's arithmetic can
+  be tested without rendering it — `trail-import-review.ts`, `geometry-preview.ts`,
+  `media-upload.ts`, `staged-media.ts`; the note has the split, what each is worth, and why the
+  media upload keeps a component test on top (what is left there is effect **ordering**). It
+  deliberately duplicates none of the import semantics `backend/Core/TrailImport/` already
+  tests.

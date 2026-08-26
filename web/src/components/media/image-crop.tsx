@@ -1,7 +1,9 @@
 import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 
-export type CropRect = { x: number; y: number; width: number; height: number };
+import type { CropRect } from "@/lib/media-upload";
+
+export type { CropRect };
 
 interface Props {
   src: string;

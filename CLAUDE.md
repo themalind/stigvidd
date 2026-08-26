@@ -14,7 +14,7 @@ where a command differs per shell, all the forms are given.
 cd backend && dotnet tool restore && dotnet restore && dotnet build
 
 # web  (Vite + React 19 + TS)
-cd web && npm ci && npm run build          # tsc -b && vite build
+cd web && npm ci && npm test && npm run build   # vitest run; then tsc -b && vite build
 
 # app  (Expo)
 cd app && npm ci && npm test -- --watchAll=false
@@ -41,20 +41,22 @@ Use `run_in_background: true`, or `-d`. `.claude/hooks/guard-long-running.mjs` d
 | question | use | and not |
 | --- | --- | --- |
 | is the backend green? | `cd backend && dotnet build && dotnet test --no-build`, **with `ConnectionStrings__StigVidd` set** | `dotnet test` bare — it fails at host startup on the missing connection string, and the output never names it ([note](docs/notes/dotnet-test-connection-string.md)) |
-| do the web types check? | `cd web && npm run build` — `tsc -b && vite build` **is** the type check | looking for web tests; there are none |
+| do the web types check? | `cd web && npm run build` — `tsc -b && vite build` **is** the type check | `npm test`, which is Vitest and type-checks nothing |
+| is the web logic still right? | `cd web && npm test` — Vitest over `src/**/*.test.ts` | assuming a green backend covers it; nothing outside `web/` runs this suite |
 | do the app types check? | `cd app && npx tsc --noEmit`, deliberately | CI — it runs prettier, eslint and jest, and type-checks **nothing** |
 | is the API contract still in step? | the backend test run, then `cd web && npm run generate:api` | assuming a green backend means the web client is current |
-| is the generated client current? | `cd web && npm run generate:api && git diff --exit-code -- src/api/generated` | GitHub Actions — only **Jenkins** runs this check |
+| is the generated client current? | `cd web && npm run generate:api && git diff --exit-code -- src/api/generated` | GitHub Actions — only **Jenkins** runs this check, even now that a web job exists |
 | does a migration apply? | `docker compose up -d` and let `DbMigrationRunner` run it against real PostGIS | any test — the suites are SQLite in-memory and apply no migration |
 | does the stack come up? | `docker compose up -d`, then `/healthz` (liveness) and `/readyz` (readiness, which is the one that checks the database) | GitHub CI, which builds no image and never runs compose; Jenkins does, and only on `main` |
 | is the agent harness intact? | `node scripts/check-hooks.mjs` | reading the hooks and believing them |
 | what did an earlier session learn? | `node .claude/hooks/plan-eval.mjs --match "<what you are about to do>"` | re-deriving it |
 
-**What CI actually covers.** [.github/workflows/ci.yml](.github/workflows/ci.yml) has two
-jobs: `backend` and `app`. There is **no web job** — `web/` is built and lint-checked only
-by the [Jenkinsfile](Jenkinsfile), which also owns the generated-client staleness gate and
-the image builds, and which pushes and deploys only from `main`. So a `web/` change can be
-green on a GitHub PR and broken.
+**What CI actually covers.** [.github/workflows/ci.yml](.github/workflows/ci.yml) has four
+jobs: `harness`, `backend`, `app` and `web`. The web job lints, tests and builds `web/`, so
+a broken web change no longer passes a PR unnoticed. What GitHub still does **not** do is
+the generated-client staleness gate or the image builds — both are the
+[Jenkinsfile](Jenkinsfile)’s alone, and Jenkins pushes and deploys only from `main`. So a
+stale `src/api/generated` is still green on a GitHub PR and broken on deploy.
 
 ### The green commands, per shell
 
@@ -188,7 +190,19 @@ against real PostGIS.
 - `backend/Tests/IntegrationTests` — one folder per controller, booting the real host
   through `StigViddWebApplicationFactory` against SQLite + SpatiaLite in-memory.
 - `app` — jest via `jest-expo`.
-- `web` — **no tests.** `npm run build` and `npm run lint` are all it has.
+- `web` — Vitest + jsdom, config in `web/vitest.config.ts` (deliberately **not**
+  `vite.config.ts`, so a broken test config cannot break the bundle). Tests sit beside
+  what they test as `*.test.ts`; `src/test/setup.ts` is the shared fixture. The env the
+  tests see comes from `test.env` in the config, never from your own `web/.env` —
+  `keycloak-auth.ts` reads `VITE_OIDC_*` at module load, so a real URL leaking in would
+  point the token tests at a live Keycloak. Run one file with `npx vitest run <path>`.
+  The suite covers the surfaces that can change the database most — the **trail-import
+  review**, the **migration page** and the **trail editor** — and in each case the guard rail
+  between an operator and an irreversible write, not the write itself. Where a component is
+  too large to render for its own arithmetic, that arithmetic is extracted to `src/lib/`
+  (`trail-import-review.ts`, `geometry-preview.ts`, `media-upload.ts`, `staged-media.ts`) and
+  tested there. It deliberately duplicates none of the import semantics;
+  `backend/Core/TrailImport/` already owns those.
 
 Running one project rather than the whole solution needs `--project`, because
 `global.json` selects the Microsoft.Testing.Platform runner and it refuses a bare path:
@@ -257,7 +271,7 @@ text that is not a symbol), just run the same search again.
 | `session-start.mjs` | SessionStart | tree state, which checkout this is, whether the contract chain is mid-flight, the green commands |
 | `guard-generated-files.mjs` | PreToolUse write | denies edits to generated/EF-owned files |
 | `guard-build-commands.mjs` | PreToolUse Bash | `dotnet test` without the connection string, `dotnet ef` without `--project` |
-| `guard-long-running.mjs` | PreToolUse Bash | foreground dev servers, watchers, `compose up` |
+| `guard-long-running.mjs` | PreToolUse Bash | foreground dev servers, watchers, `compose up`. Vitest counts: `vitest` watches by default, `vitest run` is the one that exits |
 | `guard-symbol-search.mjs` | PreToolUse Grep/Glob/Bash | a search for a single identifier that `codegraph query` proves the index holds **and declares inside the path being searched** — denied **once**, with the `codegraph_explore` call to make instead and every match of that name listed; the identical retry passes. Silent when there is no `.codegraph/` here, and silent on any regex, phrase, count, prose-scoped search (`docs/`, `*.md`) or non-symbol string |
 | `check-dotnet-build.mjs` | PostToolUse edit | builds the project owning the edited `.cs` and reports that file's errors |
 | `check-lint.mjs` | PostToolUse edit | eslint on the edited TS/JS, differenced against HEAD |

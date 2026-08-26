@@ -22,14 +22,30 @@ import {
 } from "@/components/trail-import/badges";
 import { ApplyPanel } from "@/components/trail-import/apply-panel";
 import { ProposalDetail } from "@/components/trail-import/proposal-detail";
+import {
+  canBulkDecide,
+  canSelectAllMatching,
+  collectAllMatching,
+  countFor,
+  pageSelection,
+  toggleProposal,
+  togglePageSelection,
+} from "@/lib/trail-import-review";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const PageSize = 50;
 
-// Only these two are ever worth a batch: the ones the geometry settled by itself.
-const bulkTiers: Confidence[] = ["Certain", "High"];
+// A ceiling for the select-all walk that real data cannot reach — the largest export so
+// far is 203 features. Its only other exit is the server saying there is no more, so a
+// server that always says there is spins in the browser forever.
+const MaxSelectAllPages = 50;
+
+// Anything the reviewer could be typing or picking in.
+const EditableTargets =
+  'input, textarea, select, [contenteditable="true"], [role="textbox"], ' +
+  '[role="combobox"], [role="listbox"], [role="searchbox"]';
 
 const decisionFilters: (Decision | "All")[] = [
   "All",
@@ -40,20 +56,6 @@ const decisionFilters: (Decision | "All")[] = [
   "Exclude",
   "Skip",
 ];
-
-function countFor(session: Session | null, confidence: Confidence): number {
-  const counts = session?.counts;
-  if (!counts) return 0;
-
-  return (
-    {
-      Certain: counts.certain,
-      High: counts.high,
-      Medium: counts.medium,
-      Unmatched: counts.unmatched,
-    }[confidence] ?? 0
-  );
-}
 
 export default function TrailImportReviewPage() {
   const { sessionId: sessionParam } = useParams();
@@ -161,9 +163,11 @@ export default function TrailImportReviewPage() {
     if (applied) return;
 
     function onKeyDown(event: KeyboardEvent) {
+      // `x` is Exclude, so a keypress landing while the reviewer types must never decide
+      // a row. tagName alone misses a contenteditable and every Radix trigger, which is a
+      // <button role="combobox">, so ask what the target sits inside rather than what it is.
       const target = event.target as HTMLElement | null;
-      if (target && ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName))
-        return;
+      if (target?.closest?.(EditableTargets)) return;
       if (event.metaKey || event.ctrlKey || event.altKey) return;
 
       const shortcuts: Record<string, () => void> = {
@@ -189,53 +193,41 @@ export default function TrailImportReviewPage() {
   }, [step, applied]);
 
   function toggle(proposal: Proposal) {
-    setChecked((current) => {
-      const next = new Map(current);
-      if (next.has(proposal.id)) next.delete(proposal.id);
-      else next.set(proposal.id, proposal.confidence);
-      return next;
-    });
+    setChecked((current) => toggleProposal(current, proposal));
   }
 
   function togglePage() {
     if (!proposals) return;
 
-    setChecked((current) => {
-      const next = new Map(current);
-      const allOn = proposals.every((proposal) => next.has(proposal.id));
-
-      for (const proposal of proposals) {
-        if (allOn) next.delete(proposal.id);
-        else next.set(proposal.id, proposal.confidence);
-      }
-
-      return next;
-    });
+    setChecked((current) => togglePageSelection(current, proposals));
   }
 
   /** Every proposal matching the current filter, not just the page in view. */
   async function selectAllMatching() {
     setSelectingAll(true);
     try {
-      const everything = new Map<number, string>();
-
       // Walked page by page: the API caps a page at 200, and the ids are what
       // decide-bulk needs.
-      for (let cursor = 1; ; cursor++) {
-        const paged = await getProposals(sessionId, {
-          confidence: confidence === "All" ? undefined : confidence,
-          decision: decision === "All" ? undefined : decision,
-          page: cursor,
-          pageSize: 200,
-        });
+      const outcome = await collectAllMatching(
+        (cursor) =>
+          getProposals(sessionId, {
+            confidence: confidence === "All" ? undefined : confidence,
+            decision: decision === "All" ? undefined : decision,
+            page: cursor,
+            pageSize: 200,
+          }),
+        MaxSelectAllPages,
+      );
 
-        for (const proposal of paged.items ?? [])
-          everything.set(proposal.id, proposal.confidence);
-
-        if (!paged.hasMore) break;
+      if (!outcome.complete) {
+        toast.error(
+          `Stopped after ${outcome.pagesWalked} pages, so the selection is incomplete ` +
+            "and has been left alone. Narrow the filter and try again.",
+        );
+        return;
       }
 
-      setChecked(everything);
+      setChecked(outcome.checked);
     } catch (error) {
       toast.error(
         error instanceof Error
@@ -280,22 +272,9 @@ export default function TrailImportReviewPage() {
     setPage(1);
   };
 
-  const bulkable =
-    checked.size > 0 &&
-    [...checked.values()].every((tier) =>
-      bulkTiers.includes(tier as Confidence),
-    );
-
-  const pageChecked =
-    proposals?.filter((proposal) => checked.has(proposal.id)).length ?? 0;
-  const wholePageChecked =
-    proposals !== null &&
-    proposals.length > 0 &&
-    pageChecked === proposals.length;
-
-  // Offered once the page is exhausted and the filter still holds more, the way a mail
-  // client does it — otherwise "select all" quietly means "select these fifty".
-  const canSelectAllMatching = wholePageChecked && total > checked.size;
+  const bulkable = canBulkDecide(checked);
+  const selection = pageSelection(checked, proposals);
+  const selectAllOffered = canSelectAllMatching(selection, total, checked);
 
   return (
     <main>
@@ -336,7 +315,7 @@ export default function TrailImportReviewPage() {
                 }`}
               >
                 <p className="text-2xl font-semibold tabular-nums">
-                  {countFor(session, tier)}
+                  {countFor(session?.counts, tier)}
                 </p>
                 <ConfidenceBadge confidence={tier} />
               </button>
@@ -446,9 +425,9 @@ export default function TrailImportReviewPage() {
               <div className="flex flex-wrap items-center gap-2 rounded-md border bg-muted/30 px-2 py-1.5">
                 <Checkbox
                   checked={
-                    wholePageChecked
+                    selection.whole
                       ? true
-                      : pageChecked > 0
+                      : selection.onPage > 0
                         ? "indeterminate"
                         : false
                   }
@@ -461,7 +440,7 @@ export default function TrailImportReviewPage() {
                     : `Select all ${proposals.length} on this page`}
                 </span>
 
-                {canSelectAllMatching && (
+                {selectAllOffered && (
                   <Button
                     size="sm"
                     variant="link"

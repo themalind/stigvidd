@@ -168,7 +168,7 @@ public class TrailImportController : StigViddController
 
     /// <summary>The same decision across a batch, for clearing the certain matches at once.</summary>
     [HttpPost("sessions/{id:int}/decide-bulk")]
-    public async Task<ActionResult<int>> DecideBulk(
+    public async Task<ActionResult<TrailImportDecideBulkResponse>> DecideBulk(
         [FromRoute] int id,
         [FromBody] DecideProposalsBulkRequest request,
         CancellationToken ctoken)
@@ -180,7 +180,7 @@ public class TrailImportController : StigViddController
         if (result.IsFailure && result.Message is not null)
             return ToActionResult(result.Message);
 
-        return Ok(new { decided = result.Value });
+        return Ok(TrailImportDecideBulkResponse.Create(result.Value));
     }
 
     /// <summary>Drops the session, its proposals and the uploaded file. Trails are untouched.</summary>

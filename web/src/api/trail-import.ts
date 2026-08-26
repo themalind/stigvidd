@@ -114,10 +114,7 @@ export async function decideBulk(
   sessionId: number,
   request: DecideProposalsBulkRequest,
 ): Promise<number> {
-  const result = (await trailImportDecideBulk(
-    sessionId,
-    request,
-  )) as unknown as { decided?: number };
+  const result = await trailImportDecideBulk(sessionId, request);
 
-  return result?.decided ?? 0;
+  return result.decided;
 }
