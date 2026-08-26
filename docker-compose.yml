@@ -10,17 +10,46 @@ services:
     # PostGIS is required — the EF migrations create the `postgis` extension.
     image: postgis/postgis:17-3.5
     restart: unless-stopped
+    # PUBLISHED TO THE INTERNET, deliberately, so external clients (pgAdmin) can
+    # connect to <host>:5432. Everything then rests on Postgres' own auth: every
+    # `host` connection is scram-sha-256, and TLS is switched on below so queries
+    # and results are not cleartext. Note this instance also holds Keycloak's
+    # database — see "Direct database access" in DEPLOYMENT.md before changing it.
+    ports:
+      - "${DB_PUBLIC_PORT:-5432}:5432"
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-stigvidd}
       POSTGRES_USER: ${POSTGRES_USER:-stigvidd}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}
+    # ssl=on makes Postgres REFUSE TO START if the two files below are missing,
+    # so ./db-certs must be populated (scripts/db-cert.sh) before the first
+    # `up -d db`. log_connections/log_disconnections put every attempt —
+    # including the brute-force traffic a public 5432 attracts — in the logs.
+    command: >
+      postgres
+      -c ssl=on
+      -c ssl_cert_file=/etc/postgresql/certs/server.crt
+      -c ssl_key_file=/etc/postgresql/certs/server.key
+      -c log_connections=on
+      -c log_disconnections=on
     volumes:
       - pgdata:/var/lib/postgresql/data
       # Runs only on first init (empty data dir); guarantees the extension is
       # present. Migrations also create it, so this is belt-and-suspenders.
       - ./db/init:/docker-entrypoint-initdb.d:ro
+      # Server cert + key. Bind mount, not a volume: holds a private key, is
+      # gitignored, and is carried by hand between hosts like mail-config/.
+      - ./db-certs:/etc/postgresql/certs:ro
     networks:
+      # `internal` stays the path api/keycloak use — Host=db still resolves here.
       - internal
+      # And `dbedge` exists only so the published port above is reachable: a
+      # container whose *only* network is `internal: true` binds the host port
+      # and then has the forwarded packet dropped by Docker's isolation rules.
+      # libnetwork orders a container's endpoints non-internal-first, so this is
+      # the endpoint the published port is DNAT'd to. See "5432 is open but
+      # connections are refused" in DEPLOYMENT.md's Troubleshooting.
+      - dbedge
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-stigvidd} -d ${POSTGRES_DB:-stigvidd}"]
       interval: 10s
@@ -421,6 +450,10 @@ networks:
     internal: true
   # Public-facing + internet egress (frontend, and the API's Keycloak calls).
   public:
+  # Exists for one reason: to give `db` a non-internal endpoint so its published
+  # 5432 is actually routable. Nothing else joins it, so it is not a general
+  # "everything can see the database" network.
+  dbedge:
 
 volumes:
   pgdata:
