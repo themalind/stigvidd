@@ -251,7 +251,7 @@ pipeline {
             # which is how all five are declared in docker-compose.yml.
             for svc in api web media proxy keycloak; do
               docker tag  "${REGISTRY}/stigvidd-${svc}:${IMAGE_TAG}" "${REGISTRY}/stigvidd-${svc}:latest"
-              docker push "${REGISTRY}/stigvidd-${svc}:latest"
+              docker push --quiet "${REGISTRY}/stigvidd-${svc}:latest"
             done
           '''
         }
