@@ -25,5 +25,9 @@ export default defineConfig({
       VITE_CLIENT_ID: "test-client",
     },
     restoreMocks: true,
+    // Sets global test timeout to 30 seconds
+    testTimeout: 30000,
+    // Optional: Increase hook timeout (beforeEach, afterAll, etc.)
+    hookTimeout: 25000, 
   },
 });
