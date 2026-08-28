@@ -31,6 +31,11 @@ export function TagInput({ value, onChange }: Props) {
     onChange(buildTags([...tags, tag]));
   }
 
+  function commit(input: HTMLInputElement) {
+    addTag(input.value.trim());
+    input.value = "";
+  }
+
   return (
     <div className="flex flex-col gap-2">
       <div className="flex flex-wrap gap-1">
@@ -52,9 +57,11 @@ export function TagInput({ value, onChange }: Props) {
         onKeyDown={(e) => {
           if (e.key !== "Enter") return;
           e.preventDefault();
-          addTag(e.currentTarget.value.trim());
-          e.currentTarget.value = "";
+          commit(e.currentTarget);
         }}
+        // Clicking Save blurs the field first, so a tag that was typed but
+        // never entered is kept rather than thrown away with the edit.
+        onBlur={(e) => commit(e.currentTarget)}
       />
     </div>
   );

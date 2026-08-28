@@ -1,9 +1,9 @@
 import { SURFACE_BORDER_RADIUS } from "@/constants/constants";
 import { Trail } from "@/data/types";
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { StyleSheet } from "react-native";
 import { Divider, List, Surface, useTheme } from "react-native-paper";
-import { useTranslation } from "react-i18next";
 import FullDescriptionSection from "./full-description-section";
 import LinkSection from "./link-section";
 import VisitorInformationSection from "./visitor-information-section";
@@ -15,13 +15,23 @@ export default function TrailMiscInfo({ trail }: Props) {
   const [expandedId, setExpandedId] = useState<string | number>("1");
   const theme = useTheme();
   const { t } = useTranslation();
+  const visitorInfo = trail.visitorInformation;
+  // Ett tomt VisitorInformation-objekt är fortfarande truthy — kolla innehållet.
+  const hasVisitorInfo = Boolean(
+    visitorInfo &&
+      (visitorInfo.gettingThere ||
+        visitorInfo.publicTransport ||
+        visitorInfo.parking ||
+        visitorInfo.maintainedBy ||
+        (visitorInfo.illumination && visitorInfo.illuminationText)),
+  );
   return (
     <Surface elevation={0} style={[s.container, { backgroundColor: theme.colors.surface }]}>
       <List.AccordionGroup
         expandedId={expandedId}
         onAccordionPress={(id) => setExpandedId((prev) => (prev === id ? "" : id))}
       >
-        {trail.visitorInformation && (
+        {visitorInfo && hasVisitorInfo && (
           <>
             <List.Accordion
               titleStyle={[s.titleText, { color: theme.colors.onSurface }]}
@@ -37,12 +47,12 @@ export default function TrailMiscInfo({ trail }: Props) {
                 />
               )}
             >
-              <VisitorInformationSection visitorInfo={trail.visitorInformation} />
+              <VisitorInformationSection visitorInfo={visitorInfo} />
             </List.Accordion>
             <Divider />
           </>
         )}
-        {trail.fullDescription && (
+        {!!trail.fullDescription && (
           <>
             <List.Accordion
               titleStyle={[s.titleText, { color: theme.colors.onSurface }]}

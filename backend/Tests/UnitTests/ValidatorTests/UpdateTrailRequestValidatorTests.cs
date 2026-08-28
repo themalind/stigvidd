@@ -107,14 +107,14 @@ public class UpdateTrailRequestValidatorTests
     }
 
     [Fact]
-    public void Validate_WithClassificationBelowMinBoundary_ShouldFail()
+    public void Validate_WithUnclassifiedZero_ShouldPass()
     {
         var request = ValidRequest();
         request.Classification = 0;
 
         var result = _validator.Validate(request);
 
-        result.IsValid.Should().BeFalse();
+        result.IsValid.Should().BeTrue();
     }
 
     [Fact]
@@ -153,14 +153,14 @@ public class UpdateTrailRequestValidatorTests
     }
 
     [Fact]
-    public void Validate_WithEmptyAccessibilityInfo_ShouldFail()
+    public void Validate_WithEmptyAccessibilityInfo_ShouldPass()
     {
         var request = ValidRequest();
         request.AccessibilityInfo = string.Empty;
 
         var result = _validator.Validate(request);
 
-        result.IsValid.Should().BeFalse();
+        result.IsValid.Should().BeTrue();
     }
 
     [Fact]
@@ -199,21 +199,21 @@ public class UpdateTrailRequestValidatorTests
     }
 
     [Fact]
-    public void Validate_WithEmptyTrailSymbol_ShouldFail()
+    public void Validate_WithEmptyTrailSymbol_ShouldPass()
     {
         var request = ValidRequest();
         request.TrailSymbol = string.Empty;
 
         var result = _validator.Validate(request);
 
-        result.IsValid.Should().BeFalse();
+        result.IsValid.Should().BeTrue();
     }
 
     [Fact]
     public void Validate_WithTrailSymbolExceedingMaxLength_ShouldFail()
     {
         var request = ValidRequest();
-        request.TrailSymbol = new string('a', 61);
+        request.TrailSymbol = new string('a', 41);
 
         var result = _validator.Validate(request);
 
@@ -245,21 +245,21 @@ public class UpdateTrailRequestValidatorTests
     }
 
     [Fact]
-    public void Validate_WithEmptyDescription_ShouldFail()
+    public void Validate_WithEmptyDescription_ShouldPass()
     {
         var request = ValidRequest();
         request.Description = string.Empty;
 
         var result = _validator.Validate(request);
 
-        result.IsValid.Should().BeFalse();
+        result.IsValid.Should().BeTrue();
     }
 
     [Fact]
     public void Validate_WithDescriptionExceedingMaxLength_ShouldFail()
     {
         var request = ValidRequest();
-        request.Description = new string('a', 501);
+        request.Description = new string('a', 801);
 
         var result = _validator.Validate(request);
 
@@ -280,10 +280,10 @@ public class UpdateTrailRequestValidatorTests
     }
 
     [Fact]
-    public void Validate_WithFullDescriptionAtMinLength_ShouldPass()
+    public void Validate_WithFullDescriptionAtMaxLength_ShouldPass()
     {
         var request = ValidRequest();
-        request.FullDescription = new string('a', 1000);
+        request.FullDescription = new string('a', 2000);
 
         var result = _validator.Validate(request);
 
@@ -291,21 +291,21 @@ public class UpdateTrailRequestValidatorTests
     }
 
     [Fact]
-    public void Validate_WithEmptyFullDescription_ShouldFail()
+    public void Validate_WithEmptyFullDescription_ShouldPass()
     {
         var request = ValidRequest();
         request.FullDescription = string.Empty;
 
         var result = _validator.Validate(request);
 
-        result.IsValid.Should().BeFalse();
+        result.IsValid.Should().BeTrue();
     }
 
     [Fact]
-    public void Validate_WithFullDescriptionBelowMinLength_ShouldFail()
+    public void Validate_WithFullDescriptionExceedingMaxLength_ShouldFail()
     {
         var request = ValidRequest();
-        request.FullDescription = new string('a', 999);
+        request.FullDescription = new string('a', 2001);
 
         var result = _validator.Validate(request);
 
@@ -337,14 +337,14 @@ public class UpdateTrailRequestValidatorTests
     }
 
     [Fact]
-    public void Validate_WithEmptyTags_ShouldFail()
+    public void Validate_WithEmptyTags_ShouldPass()
     {
         var request = ValidRequest();
         request.Tags = string.Empty;
 
         var result = _validator.Validate(request);
 
-        result.IsValid.Should().BeFalse();
+        result.IsValid.Should().BeTrue();
     }
 
     // --- City ---
@@ -372,21 +372,21 @@ public class UpdateTrailRequestValidatorTests
     }
 
     [Fact]
-    public void Validate_WithEmptyCity_ShouldFail()
+    public void Validate_WithEmptyCity_ShouldPass()
     {
         var request = ValidRequest();
         request.City = string.Empty;
 
         var result = _validator.Validate(request);
 
-        result.IsValid.Should().BeFalse();
+        result.IsValid.Should().BeTrue();
     }
 
     [Fact]
     public void Validate_WithCityExceedingMaxLength_ShouldFail()
     {
         var request = ValidRequest();
-        request.City = new string('a', 101);
+        request.City = new string('a', 31);
 
         var result = _validator.Validate(request);
 
@@ -427,11 +427,94 @@ public class UpdateTrailRequestValidatorTests
         var request = ValidRequest();
         request.VisitorInformation = new UpdateVisitorInformationRequest
         {
-            GettingThere = string.Empty,
+            GettingThere = new string('a', 401),
         };
 
         var result = _validator.Validate(request);
 
         result.IsValid.Should().BeFalse();
+    }
+
+    [Fact]
+    public void Validate_WithNegativeClassification_ShouldFail()
+    {
+        var request = ValidRequest();
+        request.Classification = -1;
+
+        var result = _validator.Validate(request);
+
+        result.IsValid.Should().BeFalse();
+    }
+
+    [Fact]
+    public void Validate_WithAccessibilityInfoAtMaxLength_ShouldPass()
+    {
+        var request = ValidRequest();
+        request.AccessibilityInfo = new string('a', 200);
+
+        var result = _validator.Validate(request);
+
+        result.IsValid.Should().BeTrue();
+    }
+
+    // The web trail editor round-trips every field from GET, and the entity
+    // stores "" for anything unset, so the fields an operator leaves alone
+    // arrive as empty strings and Classification 0.
+    [Fact]
+    public void Validate_WithTrailEditorRoundTripPayload_ShouldPass()
+    {
+        var request = new UpdateTrailRequest
+        {
+            Name = "SÃ¶rknatten",
+            TrailLength = 5.0m,
+            Classification = 0,
+            Accessibility = false,
+            AccessibilityInfo = "RullstolsvÃ¤nlig hela vÃ¤gen.",
+            TrailSymbol = string.Empty,
+            Description = "En vacker led genom skogen.",
+            FullDescription = string.Empty,
+            Tags = string.Empty,
+            City = string.Empty,
+            VisitorInformation = new UpdateVisitorInformationRequest
+            {
+                GettingThere = "Ta E18 mot Karlstad.",
+                PublicTransport = string.Empty,
+                Parking = string.Empty,
+                Illumination = false,
+                IlluminationText = string.Empty,
+                MaintainedBy = string.Empty,
+                WinterMaintenance = false,
+            },
+        };
+
+        var result = _validator.Validate(request);
+
+        result.Errors.Select(e => e.PropertyName).Should().BeEmpty();
+    }
+
+    // The longest value each column actually holds, measured against the test
+    // database 2026-08-28. A limit set under one of these makes that trail
+    // impossible to update at all.
+    [Fact]
+    public void Validate_WithLongestValuesInTheDatabase_ShouldPass()
+    {
+        var request = ValidRequest();
+        request.AccessibilityInfo = new string('a', 139);
+        request.TrailSymbol = new string('a', 31);
+        request.Description = new string('a', 622);
+        request.FullDescription = new string('a', 1208);
+        request.City = new string('a', 10);
+        request.VisitorInformation = new UpdateVisitorInformationRequest
+        {
+            GettingThere = new string('a', 248),
+            PublicTransport = new string('a', 287),
+            Parking = new string('a', 200),
+            IlluminationText = new string('a', 139),
+            MaintainedBy = new string('a', 10),
+        };
+
+        var result = _validator.Validate(request);
+
+        result.Errors.Select(e => e.PropertyName).Should().BeEmpty();
     }
 }

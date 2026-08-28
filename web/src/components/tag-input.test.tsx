@@ -132,3 +132,34 @@ describe("removing a tag", () => {
     expect(onChange).toHaveBeenCalledWith("[]");
   });
 });
+
+describe("a tag that was typed but not entered", () => {
+  // Save is a click, which blurs the field first. Before this the half-typed
+  // tag went nowhere and the save looked like it had simply lost it.
+  it("is kept when the field loses focus", async () => {
+    const { onChange } = renderTags('["forest"]');
+
+    await userEvent.type(field(), "lake");
+    await userEvent.tab();
+
+    expect(onChange).toHaveBeenCalledWith('["forest","lake"]');
+  });
+
+  it("leaves the value alone when the field is empty", async () => {
+    const { onChange } = renderTags('["forest"]');
+
+    await userEvent.click(field());
+    await userEvent.tab();
+
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it("is not added twice when Enter is pressed first", async () => {
+    const { onChange } = renderTags('["forest"]');
+
+    await userEvent.type(field(), "lake{Enter}");
+    await userEvent.tab();
+
+    expect(onChange).toHaveBeenCalledTimes(1);
+  });
+});

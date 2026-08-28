@@ -1,5 +1,6 @@
 import { BORDER_RADIUS } from "@/constants/constants";
 import { VisitorInformation } from "@/data/types";
+import React from "react";
 import { StyleSheet, View } from "react-native";
 import { Divider, Icon, Text, useTheme } from "react-native-paper";
 
@@ -9,49 +10,20 @@ interface Props {
 
 export default function VisitorInformationSection({ visitorInfo }: Props) {
   const theme = useTheme();
+  // Bara ifyllda fält blir rader, och avdelarna sitter mellan dem.
+  const rows = [
+    { icon: "map-search-outline", text: visitorInfo.gettingThere },
+    { icon: "bus", text: visitorInfo.publicTransport },
+    { icon: "parking", text: visitorInfo.parking },
+    { icon: "account-hard-hat", text: visitorInfo.maintainedBy },
+    { icon: "outdoor-lamp", text: visitorInfo.illumination ? visitorInfo.illuminationText : "" },
+  ].filter((row) => !!row.text);
+
   return (
     <View style={[s.container, { backgroundColor: theme.colors.surface }]}>
-      <View style={s.propertyContainer}>
-        <View
-          style={[
-            s.iconBox,
-            { backgroundColor: theme.colors.surfaceVariant, borderColor: theme.colors.outlineVariant },
-          ]}
-        >
-          <Icon size={25} source="map-search-outline" color={theme.colors.onSurfaceVariant} />
-        </View>
-        <Text style={s.propertyText}>{visitorInfo.gettingThere}</Text>
-      </View>
-      <Divider />
-
-      <View style={s.propertyContainer}>
-        <View
-          style={[
-            s.iconBox,
-            { backgroundColor: theme.colors.surfaceVariant, borderColor: theme.colors.outlineVariant },
-          ]}
-        >
-          <Icon size={25} source="bus" color={theme.colors.onSurfaceVariant} />
-        </View>
-        <Text style={s.propertyText}>{visitorInfo.publicTransport}</Text>
-      </View>
-      <Divider />
-
-      <View style={s.propertyContainer}>
-        <View
-          style={[
-            s.iconBox,
-            { backgroundColor: theme.colors.surfaceVariant, borderColor: theme.colors.outlineVariant },
-          ]}
-        >
-          <Icon size={25} source="parking" color={theme.colors.onSurfaceVariant} />
-        </View>
-        <Text style={s.propertyText}>{visitorInfo.parking}</Text>
-      </View>
-
-      {visitorInfo.maintainedBy && (
-        <>
-          <Divider />
+      {rows.map((row, index) => (
+        <React.Fragment key={row.icon}>
+          {index > 0 && <Divider />}
           <View style={s.propertyContainer}>
             <View
               style={[
@@ -59,28 +31,12 @@ export default function VisitorInformationSection({ visitorInfo }: Props) {
                 { backgroundColor: theme.colors.surfaceVariant, borderColor: theme.colors.outlineVariant },
               ]}
             >
-              <Icon source={"account-hard-hat"} size={25} color={theme.colors.onSurfaceVariant} />
+              <Icon size={25} source={row.icon} color={theme.colors.onSurfaceVariant} />
             </View>
-            <Text style={s.propertyText}>{visitorInfo.maintainedBy}</Text>
+            <Text style={s.propertyText}>{row.text}</Text>
           </View>
-        </>
-      )}
-      {visitorInfo.illumination && visitorInfo.illuminationText && (
-        <>
-          <Divider />
-          <View style={s.propertyContainer}>
-            <View
-              style={[
-                s.iconBox,
-                { backgroundColor: theme.colors.surfaceVariant, borderColor: theme.colors.outlineVariant },
-              ]}
-            >
-              <Icon source="outdoor-lamp" size={25} color={theme.colors.onSurfaceVariant} />
-            </View>
-            <Text style={s.propertyText}>{visitorInfo.illuminationText}</Text>
-          </View>
-        </>
-      )}
+        </React.Fragment>
+      ))}
     </View>
   );
 }

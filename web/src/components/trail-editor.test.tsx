@@ -240,4 +240,40 @@ describe("TrailEditor", () => {
       winterMaintenance: false,
     });
   });
+
+  // The API rejects the whole request when one field is too long, so the field
+  // has to stop the operator rather than the save.
+  it("stops a field at the limit the API enforces", async () => {
+    render(<TrailEditor data={short} selected />);
+    await open();
+
+    const symbol = await screen.findByDisplayValue("symbol.png");
+    await userEvent.clear(symbol);
+    await userEvent.type(symbol, "s".repeat(45));
+
+    expect((symbol as HTMLInputElement).value).toHaveLength(40);
+    expect(screen.getByText("40/40")).toBeTruthy();
+
+    await userEvent.click(saveButton());
+
+    await waitFor(() => expect(api.updateTrail).toHaveBeenCalled());
+    expect(sent().trailSymbol).toHaveLength(40);
+  });
+
+  // A tag is only committed to the form when the field is left, so saving
+  // straight after typing one used to send the trail back without it.
+  it("saves a tag that was typed but never entered", async () => {
+    render(<TrailEditor data={short} selected />);
+    await open();
+    await screen.findByDisplayValue("Knalleleden");
+
+    await userEvent.type(
+      screen.getByPlaceholderText("Add tag and press Enter"),
+      "moss",
+    );
+    await userEvent.click(saveButton());
+
+    await waitFor(() => expect(api.updateTrail).toHaveBeenCalled());
+    expect(sent().tags).toBe('["forest","moss"]');
+  });
 });

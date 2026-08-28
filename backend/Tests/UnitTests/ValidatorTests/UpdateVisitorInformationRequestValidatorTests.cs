@@ -44,21 +44,21 @@ public class UpdateVisitorInformationRequestValidatorTests
     }
 
     [Fact]
-    public void Validate_WithEmptyGettingThere_ShouldFail()
+    public void Validate_WithEmptyGettingThere_ShouldPass()
     {
         var request = EmptyRequest();
         request.GettingThere = string.Empty;
 
         var result = _validator.Validate(request);
 
-        result.IsValid.Should().BeFalse();
+        result.IsValid.Should().BeTrue();
     }
 
     [Fact]
     public void Validate_WithGettingThereExceedingMaxLength_ShouldFail()
     {
         var request = EmptyRequest();
-        request.GettingThere = new string('a', 201);
+        request.GettingThere = new string('a', 401);
 
         var result = _validator.Validate(request);
 
@@ -90,21 +90,21 @@ public class UpdateVisitorInformationRequestValidatorTests
     }
 
     [Fact]
-    public void Validate_WithEmptyPublicTransport_ShouldFail()
+    public void Validate_WithEmptyPublicTransport_ShouldPass()
     {
         var request = EmptyRequest();
         request.PublicTransport = string.Empty;
 
         var result = _validator.Validate(request);
 
-        result.IsValid.Should().BeFalse();
+        result.IsValid.Should().BeTrue();
     }
 
     [Fact]
     public void Validate_WithPublicTransportExceedingMaxLength_ShouldFail()
     {
         var request = EmptyRequest();
-        request.PublicTransport = new string('a', 201);
+        request.PublicTransport = new string('a', 401);
 
         var result = _validator.Validate(request);
 
@@ -136,21 +136,21 @@ public class UpdateVisitorInformationRequestValidatorTests
     }
 
     [Fact]
-    public void Validate_WithEmptyParking_ShouldFail()
+    public void Validate_WithEmptyParking_ShouldPass()
     {
         var request = EmptyRequest();
         request.Parking = string.Empty;
 
         var result = _validator.Validate(request);
 
-        result.IsValid.Should().BeFalse();
+        result.IsValid.Should().BeTrue();
     }
 
     [Fact]
     public void Validate_WithParkingExceedingMaxLength_ShouldFail()
     {
         var request = EmptyRequest();
-        request.Parking = new string('a', 201);
+        request.Parking = new string('a', 401);
 
         var result = _validator.Validate(request);
 
@@ -182,21 +182,21 @@ public class UpdateVisitorInformationRequestValidatorTests
     }
 
     [Fact]
-    public void Validate_WithEmptyIlluminationText_ShouldFail()
+    public void Validate_WithEmptyIlluminationText_ShouldPass()
     {
         var request = EmptyRequest();
         request.IlluminationText = string.Empty;
 
         var result = _validator.Validate(request);
 
-        result.IsValid.Should().BeFalse();
+        result.IsValid.Should().BeTrue();
     }
 
     [Fact]
     public void Validate_WithIlluminationTextExceedingMaxLength_ShouldFail()
     {
         var request = EmptyRequest();
-        request.IlluminationText = new string('a', 201);
+        request.IlluminationText = new string('a', 401);
 
         var result = _validator.Validate(request);
 
@@ -228,14 +228,14 @@ public class UpdateVisitorInformationRequestValidatorTests
     }
 
     [Fact]
-    public void Validate_WithEmptyMaintainedBy_ShouldFail()
+    public void Validate_WithEmptyMaintainedBy_ShouldPass()
     {
         var request = EmptyRequest();
         request.MaintainedBy = string.Empty;
 
         var result = _validator.Validate(request);
 
-        result.IsValid.Should().BeFalse();
+        result.IsValid.Should().BeTrue();
     }
 
     [Fact]
