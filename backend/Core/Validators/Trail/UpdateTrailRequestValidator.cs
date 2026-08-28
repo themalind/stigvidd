@@ -1,4 +1,4 @@
-﻿using FluentValidation;
+using FluentValidation;
 using WebDataContracts.RequestModels.Trail;
 
 public class UpdateTrailRequestValidator : AbstractValidator<UpdateTrailRequest>
@@ -11,38 +11,25 @@ public class UpdateTrailRequestValidator : AbstractValidator<UpdateTrailRequest>
         RuleFor(x => x.TrailLength)
             .GreaterThan(0);
 
+        // 0 is the entity default and means "not classified".
         RuleFor(x => x.Classification)
-            .InclusiveBetween(1, 5)
+            .InclusiveBetween(0, 5)
             .When(x => x.Classification.HasValue);
 
         RuleFor(x => x.AccessibilityInfo)
-            .NotEmpty()
-            .MaximumLength(200)
-            .When(x => x.AccessibilityInfo != null);
+            .MaximumLength(200);
 
         RuleFor(x => x.TrailSymbol)
-            .NotEmpty()
-            .MaximumLength(60)
-            .When(x => x.TrailSymbol != null);
+            .MaximumLength(40);
 
         RuleFor(x => x.Description)
-            .NotEmpty()
-            .MaximumLength(500)
-            .When(x => x.Description != null);
+            .MaximumLength(800);
 
         RuleFor(x => x.FullDescription)
-            .NotEmpty()
-            .MinimumLength(1000)
-            .When(x => x.FullDescription != null);
-
-        RuleFor(x => x.Tags)
-            .NotEmpty()
-            .When(x => x.Tags != null);
+            .MaximumLength(2000);
 
         RuleFor(x => x.City)
-            .NotEmpty()
-            .MaximumLength(100)
-            .When(x => x.City != null);
+            .MaximumLength(30);
 
         RuleFor(x => x.VisitorInformation!)
             .SetValidator(new UpdateVisitorInformationRequestValidator())
