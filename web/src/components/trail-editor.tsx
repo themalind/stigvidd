@@ -60,6 +60,46 @@ const emptyForm = (): UpdateTrailRequest => ({
   },
 });
 
+// Mirrors the max lengths in UpdateTrailRequestValidator; over these the API
+// rejects the whole request with a 400.
+const LIMITS = {
+  city: 30,
+  accessibilityInfo: 200,
+  trailSymbol: 40,
+  description: 800,
+  fullDescription: 2000,
+  gettingThere: 400,
+  publicTransport: 400,
+  parking: 400,
+  illuminationText: 400,
+  maintainedBy: 100,
+} as const;
+
+function FieldHeader({
+  label,
+  value,
+  max,
+}: {
+  label: string;
+  value: string;
+  max: number;
+}) {
+  return (
+    <div className="flex items-baseline justify-between gap-2">
+      <p>{label}</p>
+      <span
+        className={
+          value.length === max
+            ? "text-destructive text-xs"
+            : "text-muted-foreground text-xs"
+        }
+      >
+        {value.length}/{max}
+      </span>
+    </div>
+  );
+}
+
 export default function TrailEditor({ data, selected }: Props) {
   const [formData, setFormData] = useState<UpdateTrailRequest>(emptyForm);
   const [loading, setLoading] = useState(false);
@@ -173,9 +213,14 @@ export default function TrailEditor({ data, selected }: Props) {
                 />
               </div>
               <div className="flex flex-col gap-2">
-                <p>City</p>
+                <FieldHeader
+                  label="City"
+                  value={formData.city ?? ""}
+                  max={LIMITS.city}
+                />
                 <Input
                   value={formData.city ?? ""}
+                  maxLength={LIMITS.city}
                   onChange={(e) =>
                     setFormData({ ...formData, city: e.target.value })
                   }
@@ -220,9 +265,14 @@ export default function TrailEditor({ data, selected }: Props) {
                 <p>Accessible</p>
               </div>
               <div className="flex flex-col gap-2">
-                <p>Accessibility Info</p>
+                <FieldHeader
+                  label="Accessibility Info"
+                  value={formData.accessibilityInfo ?? ""}
+                  max={LIMITS.accessibilityInfo}
+                />
                 <Input
                   value={formData.accessibilityInfo ?? ""}
+                  maxLength={LIMITS.accessibilityInfo}
                   onChange={(e) =>
                     setFormData({
                       ...formData,
@@ -232,27 +282,42 @@ export default function TrailEditor({ data, selected }: Props) {
                 />
               </div>
               <div className="flex flex-col gap-2">
-                <p>Trail Symbol</p>
+                <FieldHeader
+                  label="Trail Symbol"
+                  value={formData.trailSymbol ?? ""}
+                  max={LIMITS.trailSymbol}
+                />
                 <Input
                   value={formData.trailSymbol ?? ""}
+                  maxLength={LIMITS.trailSymbol}
                   onChange={(e) =>
                     setFormData({ ...formData, trailSymbol: e.target.value })
                   }
                 />
               </div>
               <div className="flex flex-col gap-2">
-                <p>Description</p>
+                <FieldHeader
+                  label="Description"
+                  value={formData.description ?? ""}
+                  max={LIMITS.description}
+                />
                 <Textarea
                   value={formData.description ?? ""}
+                  maxLength={LIMITS.description}
                   onChange={(e) =>
                     setFormData({ ...formData, description: e.target.value })
                   }
                 />
               </div>
               <div className="flex flex-col gap-2">
-                <p>Full Description</p>
+                <FieldHeader
+                  label="Full Description"
+                  value={formData.fullDescription ?? ""}
+                  max={LIMITS.fullDescription}
+                />
                 <Textarea
                   value={formData.fullDescription ?? ""}
+                  maxLength={LIMITS.fullDescription}
                   onChange={(e) =>
                     setFormData({
                       ...formData,
@@ -274,9 +339,14 @@ export default function TrailEditor({ data, selected }: Props) {
               <p className="font-semibold">Visitor Information</p>
 
               <div className="flex flex-col gap-2">
-                <p>Getting There</p>
+                <FieldHeader
+                  label="Getting There"
+                  value={formData.visitorInformation?.gettingThere ?? ""}
+                  max={LIMITS.gettingThere}
+                />
                 <Textarea
                   value={formData.visitorInformation?.gettingThere ?? ""}
+                  maxLength={LIMITS.gettingThere}
                   onChange={(e) =>
                     setFormData({
                       ...formData,
@@ -289,9 +359,14 @@ export default function TrailEditor({ data, selected }: Props) {
                 />
               </div>
               <div className="flex flex-col gap-2">
-                <p>Public Transport</p>
+                <FieldHeader
+                  label="Public Transport"
+                  value={formData.visitorInformation?.publicTransport ?? ""}
+                  max={LIMITS.publicTransport}
+                />
                 <Textarea
                   value={formData.visitorInformation?.publicTransport ?? ""}
+                  maxLength={LIMITS.publicTransport}
                   onChange={(e) =>
                     setFormData({
                       ...formData,
@@ -304,9 +379,14 @@ export default function TrailEditor({ data, selected }: Props) {
                 />
               </div>
               <div className="flex flex-col gap-2">
-                <p>Parking</p>
+                <FieldHeader
+                  label="Parking"
+                  value={formData.visitorInformation?.parking ?? ""}
+                  max={LIMITS.parking}
+                />
                 <Textarea
                   value={formData.visitorInformation?.parking ?? ""}
+                  maxLength={LIMITS.parking}
                   onChange={(e) =>
                     setFormData({
                       ...formData,
@@ -335,9 +415,14 @@ export default function TrailEditor({ data, selected }: Props) {
                 <p>Illuminated</p>
               </div>
               <div className="flex flex-col gap-2">
-                <p>Illumination Info</p>
+                <FieldHeader
+                  label="Illumination Info"
+                  value={formData.visitorInformation?.illuminationText ?? ""}
+                  max={LIMITS.illuminationText}
+                />
                 <Input
                   value={formData.visitorInformation?.illuminationText ?? ""}
+                  maxLength={LIMITS.illuminationText}
                   onChange={(e) =>
                     setFormData({
                       ...formData,
@@ -350,9 +435,14 @@ export default function TrailEditor({ data, selected }: Props) {
                 />
               </div>
               <div className="flex flex-col gap-2">
-                <p>Maintained By</p>
+                <FieldHeader
+                  label="Maintained By"
+                  value={formData.visitorInformation?.maintainedBy ?? ""}
+                  max={LIMITS.maintainedBy}
+                />
                 <Input
                   value={formData.visitorInformation?.maintainedBy ?? ""}
+                  maxLength={LIMITS.maintainedBy}
                   onChange={(e) =>
                     setFormData({
                       ...formData,
