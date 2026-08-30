@@ -487,16 +487,28 @@ container logs**, which are a different mechanism entirely.
 >
 > ```bash
 > cd /opt/stigvidd
-> docker compose up -d db mailserver openobserve
+> docker compose up -d --no-deps db mailserver openobserve
 > for s in db api web media keycloak openobserve proxy mailserver; do
 >   printf '%-12s %s\n' "$s" "$(docker inspect --format '{{.HostConfig.LogConfig}}' $(docker compose ps -q $s))"
 > done
 > ```
 >
-> Every line must show `max-size:10m`. Recreating `db` restarts the database —
-> brief downtime, and `pgdata` is untouched. Note the recreation also *discards*
-> the old container's log file, which is the backlog this change exists to bound;
-> the script below prunes that backlog on containers you have not recreated yet.
+> **`--no-deps` is not optional here.** `mailserver` depends on `proxy`, which
+> depends on `web`/`api`/`media`/`keycloak`, which depend on `db` — so naming
+> `mailserver` without it pulls in all eight services and restarts the whole stack.
+> Same trap as "Restarting `mailserver` restarts half the stack" in Troubleshooting.
+>
+> Every line must show `max-size:10m`. A bare `map[]` on **all eight** means the
+> containers were never replaced, and the usual cause is that the host's
+> `docker-compose.yml` predates the anchor — check with
+> `grep -c max-size docker-compose.yml` before recreating anything again. Compose
+> reports an up-to-date container as `Running`, not `Recreated`, so a run that
+> changed nothing looks much like one that did.
+>
+> Recreating `db` restarts the database — brief downtime, and `pgdata` is
+> untouched. The recreation also *discards* the old container's log file, which is
+> the backlog this change exists to bound; the script below prunes that backlog on
+> containers you have not recreated yet.
 
 Check what it would do first — it needs root, since `/var/lib/docker/containers`
 is `0700`:
