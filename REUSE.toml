@@ -1,0 +1,39 @@
+# Licensing for files that cannot carry an SPDX header of their own.
+#
+# Most source files in this repository declare their licence in a header. This
+# file covers the rest, and there are only three reasons a file lands here:
+#
+#   1. It is GENERATED or TOOL-OWNED. orval rewrites web/src/api/generated/**,
+#      the backend test suite rewrites web/openapi.json, and EF Core owns
+#      backend/Infrastructure/Migrations/**. Each of those accepts a hand-edited
+#      header and then discards it at a moment far from the edit, so
+#      .claude/hooks/guard-generated-files.mjs refuses the edit outright.
+#   2. It is BINARY (images, fonts, keystores) and has nowhere to put a comment.
+#   3. It is a CONFIG or DATA format with no comment syntax — JSON, most of all.
+#
+# `precedence` is left at the default ("closest"), so a file that does carry a
+# header keeps what the header says and these entries never override it.
+#
+# See docs/notes/licensing-and-reuse.md for why the split is what it is.
+
+version = 1
+SPDX-PackageName = "Stigvidd"
+SPDX-PackageSupplier = "The Stigvidd Authors"
+SPDX-PackageDownloadLocation = "https://github.com/themalind/stigvidd"
+
+# --- The mobile app: MPL-2.0, matching the headers in app/src -----------------
+# Exhibit B is deliberately NOT applied anywhere in app/, so GPL-2.0-or-later,
+# LGPL-2.1-or-later and AGPL-3.0-or-later remain available as Secondary
+# Licenses (MPL-2.0 section 1.12). See app/LICENSE.md.
+[[annotations]]
+path = "app/**"
+SPDX-FileCopyrightText = "2025-2026 The Stigvidd Authors"
+SPDX-License-Identifier = "MPL-2.0"
+
+# --- Everything else: AGPL-3.0-or-later --------------------------------------
+# The backend and the admin web are two halves of one network service, which is
+# the case the AGPL exists for.
+[[annotations]]
+path = "**"
+SPDX-FileCopyrightText = "2025-2026 The Stigvidd Authors"
+SPDX-License-Identifier = "AGPL-3.0-or-later"

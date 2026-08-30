@@ -1,3 +1,10 @@
+// SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
+// SPDX-License-Identifier: MPL-2.0
+//
+// This Source Code Form is subject to the terms of the Mozilla Public License,
+// v. 2.0. If a copy of the MPL was not distributed with this file, You can
+// obtain one at https://mozilla.org/MPL/2.0/.
+
 // jest.mock calls are hoisted by babel-jest so they run before the module is imported.
 // The mutable `mockIsDevice` variable is safe to use in the getter because the getter
 // is only evaluated when tests run, not during factory execution.

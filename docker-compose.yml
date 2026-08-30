@@ -5,11 +5,32 @@
 
 name: stigvidd
 
+# Container log retention. EVERY service below references this anchor, and the
+# reason it is not merely housekeeping is that the privacy policy commits to a
+# number: "Serverloggar: 7 dagar" (web/public/privacy-policy/index.html, §5, both
+# languages). Container logs are personal data — `db` runs with log_connections=on
+# against a publicly published 5432, so every connection attempt lands here with
+# its source IP.
+#
+# THE TRAP: json-file (and `local`) have NO time-based retention. max-size and
+# max-file bound DISK, not AGE — a quiet service keeps its oldest line forever,
+# and the driver's default is no rotation at all. So the caps below are only half
+# the promise; the other half is scripts/container-log-retention.sh, run daily by
+# a systemd timer on the host (DEPLOYMENT.md Part 1). Removing that timer does not
+# break anything visibly — it just makes a published legal document false.
+# See docs/notes/json-file-has-no-time-retention.md.
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
 services:
   db:
     # PostGIS is required — the EF migrations create the `postgis` extension.
     image: postgis/postgis:17-3.5
     restart: unless-stopped
+    logging: *default-logging
     # PUBLISHED TO THE INTERNET, deliberately, so external clients (pgAdmin) can
     # connect to <host>:5432. Everything then rests on Postgres' own auth: every
     # `host` connection is scram-sha-256, and TLS is switched on below so queries
@@ -64,6 +85,7 @@ services:
     build:
       context: ./backend
     restart: unless-stopped
+    logging: *default-logging
     depends_on:
       db:
         condition: service_healthy
@@ -158,6 +180,7 @@ services:
         VITE_OIDC_REALM: ${VITE_OIDC_REALM:-}
         VITE_CLIENT_ID: ${VITE_CLIENT_ID:-}
     restart: unless-stopped
+    logging: *default-logging
     depends_on:
       - api
     # Served by the proxy as `web:80` on the `public` network.
@@ -171,6 +194,7 @@ services:
     build:
       context: ./media
     restart: unless-stopped
+    logging: *default-logging
     environment:
       WEBDAV_USER: ${WEBDAV_USER:?WEBDAV_USER must be set}
       WEBDAV_PASSWORD: ${WEBDAV_PASSWORD:?WEBDAV_PASSWORD must be set}
@@ -196,6 +220,7 @@ services:
     build:
       context: ./keycloak
     restart: unless-stopped
+    logging: *default-logging
     depends_on:
       db:
         condition: service_healthy
@@ -229,6 +254,7 @@ services:
     # `docker compose up -d openobserve` on the host. See DEPLOYMENT.md Part 3.
     image: public.ecr.aws/zinclabs/openobserve:v0.92.2
     restart: unless-stopped
+    logging: *default-logging
     # No depends_on, in either direction. Telemetry must never gate the API's
     # startup — an observability outage taking down the product is exactly the
     # failure this avoids — and Caddy resolves upstreams lazily, so it 502s until
@@ -310,6 +336,7 @@ services:
     build:
       context: ./proxy
     restart: unless-stopped
+    logging: *default-logging
     depends_on:
       - web
       - api
@@ -363,6 +390,7 @@ services:
     # Postfix derives myhostname/HELO from this — must be the public mail name.
     hostname: ${MAIL_DOMAIN:?MAIL_DOMAIN must be set}
     restart: unless-stopped
+    logging: *default-logging
     depends_on:
       # SSL_TYPE=manual refuses to start without the cert files, and Caddy is
       # what issues them. This orders startup only — on a first deploy, give the

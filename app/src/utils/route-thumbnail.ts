@@ -1,3 +1,10 @@
+// SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
+// SPDX-License-Identifier: MPL-2.0
+//
+// This Source Code Form is subject to the terms of the Mozilla Public License,
+// v. 2.0. If a copy of the MPL was not distributed with this file, You can
+// obtain one at https://mozilla.org/MPL/2.0/.
+
 // Projects a recorded GPS track into a small SVG path, so a hike row can show its own
 // shape instead of a shared icon. Unlike decorative-route this is data: the outline is
 // the actual track.

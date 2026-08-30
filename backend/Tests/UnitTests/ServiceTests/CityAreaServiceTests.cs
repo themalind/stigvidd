@@ -1,8 +1,11 @@
+// SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 using System.Linq.Expressions;
 using Core.Factories;
 using Core.Interfaces.Repositories;
 using Core.Services;
-using FluentAssertions;
+using AwesomeAssertions;
 using Infrastructure.Data.Entities;
 using Microsoft.Extensions.Configuration;
 using Moq;

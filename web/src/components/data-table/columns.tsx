@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 import type { TableColumn, TrailShortInfoResponse } from "@/types/types";
 
 export const trailColumns: TableColumn<TrailShortInfoResponse>[] = [

@@ -210,21 +210,50 @@ the authoritative relay details.
 > ```
 >
 > Then do step 8 to create the ingest credentials.
+>
+> ### Container log retention is new, and applies to hosts that already exist
+>
+> `docker-compose.yml` now caps every service's log size, and
+> `CONTAINER_LOG_RETENTION_DAYS` (default 7) sets how long container logs are kept.
+> Neither is `${…:?}`-guarded, so nothing breaks if you skip this — which is
+> exactly the problem: the privacy policy is published stating 7 days, and until
+> the timer in **step 9** is installed on this host, nothing deletes anything. Do
+> step 9 on every existing host, not just new ones. Optionally pin the window
+> explicitly:
+>
+> ```bash
+> cd /opt/stigvidd
+> echo 'CONTAINER_LOG_RETENTION_DAYS=7' >> .env
+> ```
+>
+> The size caps take effect only on containers **recreated** after the new compose
+> file lands (`docker compose up -d` does that); an untouched container keeps the
+> unbounded log config it was created with. `docker inspect --format
+> '{{.HostConfig.LogConfig}}' $(docker compose ps -q api)` shows which you have.
 
 ### 1. Get the deploy files onto the host
 
-You need `docker-compose.yml`, the `db/` directory, and a `.env`. Create a
-working directory (the compose "project" dir), e.g. `/opt/stigvidd`:
+You need `docker-compose.yml`, the `db/` directory, `scripts/`, and a `.env`.
+Create a working directory (the compose "project" dir), e.g. `/opt/stigvidd`:
 
 ```bash
 mkdir -p /opt/stigvidd && cd /opt/stigvidd
-# copy docker-compose.yml and db/ here (git checkout, scp, or Jenkins deploy)
+# copy docker-compose.yml, db/ and scripts/ here (git checkout, scp, or Jenkins deploy)
 cp /path/to/repo/docker-compose.yml .
 cp -r /path/to/repo/db .
+cp -r /path/to/repo/scripts .
+chmod +x scripts/*.sh
 cp /path/to/repo/.env.example .env
 # The mail server's config dir. Empty is fine — it is filled in step 6.
 mkdir -p mail-config
 ```
+
+> **`scripts/` is easy to miss and nothing complains until you need it.** Steps 8
+> and 9 below, `db-cert.sh` and `migrate.sh` are all invoked as
+> `./scripts/<name>.sh` **from this directory**. The Jenkins deploy `scp`s them
+> alongside `docker-compose.yml` (Part 3), so once the stack is live they stay
+> current on their own — but on a brand-new host, before the first deploy, they
+> only get here because you put them here.
 
 ### 2. Fill in `.env`
 
@@ -427,6 +456,100 @@ as a per-stream override:
 None of this lives in `.env` or in the database the other services share — it is
 stored in OpenObserve's own SQLite metadata DB inside the `observatory` volume,
 which `migrate.sh` does **not** carry. Redo this step after a host move.
+
+---
+
+### 9. Container log retention timer (every host)
+
+The privacy policy published at `stigvidd.se/privacy-policy/` states a number —
+"Serverloggar: 7 dagar" / "Server logs: 7 days" (§5, both languages) — and
+container logs are personal data: `db` runs with `log_connections=on` behind a
+publicly published 5432, so every connection attempt is recorded with its source
+IP. Step 8 covers the OpenObserve *streams*. This step covers the **host's own
+container logs**, which are a different mechanism entirely.
+
+> **Docker's `json-file` driver has NO time-based retention.** The `max-size` /
+> `max-file` caps set by the `x-logging` anchor in `docker-compose.yml` bound
+> **disk**, not **age** — under any size cap a quiet service keeps its oldest line
+> forever, and the driver's own default is no rotation at all. So the caps are half
+> the promise. [`scripts/container-log-retention.sh`](scripts/container-log-retention.sh)
+> is the other half, and unlike `observatory-retention.sh` **it must recur**: a
+> single manual run is the failure mode, because nothing afterwards reports that
+> logs have aged past the window. The stack keeps working and the published policy
+> quietly stops being true.
+
+> **A CI deploy applies the size caps to only five of the eight services.** The
+> deploy `up -d` is scoped to `api web media proxy keycloak --no-deps` (Part 3), and
+> log options are fixed at container **create** time — so `db`, `mailserver` and
+> `openobserve` keep the unbounded log config they were created with until you
+> recreate them by hand. `db` is the one that matters most here: it is the service
+> logging a source IP per connection attempt. On the deploy that introduces this:
+>
+> ```bash
+> cd /opt/stigvidd
+> docker compose up -d db mailserver openobserve
+> for s in db api web media keycloak openobserve proxy mailserver; do
+>   printf '%-12s %s\n' "$s" "$(docker inspect --format '{{.HostConfig.LogConfig}}' $(docker compose ps -q $s))"
+> done
+> ```
+>
+> Every line must show `max-size:10m`. Recreating `db` restarts the database —
+> brief downtime, and `pgdata` is untouched. Note the recreation also *discards*
+> the old container's log file, which is the backlog this change exists to bound;
+> the script below prunes that backlog on containers you have not recreated yet.
+
+Check what it would do first — it needs root, since `/var/lib/docker/containers`
+is `0700`:
+
+```bash
+sudo ./scripts/container-log-retention.sh --dry-run
+```
+
+Then install a daily timer. `Persistent=true` matters: it makes the run happen on
+the next boot if the host was down when it was due.
+
+```bash
+sudo tee /etc/systemd/system/stigvidd-log-retention.service >/dev/null <<'UNIT'
+[Unit]
+Description=Age out Stigvidd container logs to the published retention window
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+# The compose directory: the script runs `docker compose ps` and reads ./.env
+WorkingDirectory=/opt/stigvidd
+ExecStart=/opt/stigvidd/scripts/container-log-retention.sh
+UNIT
+
+sudo tee /etc/systemd/system/stigvidd-log-retention.timer >/dev/null <<'UNIT'
+[Unit]
+Description=Daily Stigvidd container log retention
+
+[Timer]
+OnCalendar=daily
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+UNIT
+
+sudo systemctl daemon-reload
+sudo systemctl enable --now stigvidd-log-retention.timer
+```
+
+Adjust `WorkingDirectory`/`ExecStart` if the stack does not live in `/opt/stigvidd`.
+Verify:
+
+```bash
+systemctl list-timers stigvidd-log-retention.timer   # NEXT/LEFT must be populated
+sudo systemctl start stigvidd-log-retention.service  # run it once now
+journalctl -u stigvidd-log-retention.service -n 30 --no-pager
+```
+
+The window comes from `CONTAINER_LOG_RETENTION_DAYS` in `.env` (default 7).
+**Raising it without editing §5 of the privacy policy in both languages makes a
+published legal document false**, so treat the two as one change.
 
 ---
 
@@ -973,6 +1096,25 @@ Compaction reclaims space on its next cycle, not instantly.
 **Telemetry is missing after a host move.**
 Expected: `observatory` is not in `migrate.sh`'s volume list. Redo Part 1 step 8
 to recreate the ingest user, RUM application and retention override.
+
+**Container log files are growing, or hold entries older than 7 days.**
+Two separate causes, and the first hides the second.
+
+```bash
+docker inspect --format '{{.HostConfig.LogConfig}}' $(docker compose ps -q api)
+systemctl list-timers stigvidd-log-retention.timer
+```
+
+If `LogConfig` shows no `max-size`, that container predates the `x-logging` anchor
+— log options are fixed at *create* time, so `docker compose up -d` (which
+recreates it) is the fix, not `restart`. If the timer is not listed or shows no
+next run, Part 1 step 9 was never done on this host, and **nothing has ever
+deleted a log line here** — the size caps bound disk, not age. Run it once by hand
+(`sudo ./scripts/container-log-retention.sh --dry-run` first) and install the timer.
+
+Note this is a compliance failure, not just a disk one: the published privacy
+policy states a 7-day window for server logs, and `db` records the source IP of
+every connection attempt on the public 5432.
 
 ### Mail
 

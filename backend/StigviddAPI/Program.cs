@@ -1,3 +1,6 @@
+﻿// SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 using System.Diagnostics;
 using System.Globalization;
 using System.Text.Json;
@@ -141,6 +144,18 @@ public class Program
         builder.Services.AddOpenApiDocument(config =>
         {
             config.Title = "StigVidd";
+
+            // AGPL section 13: everyone who interacts with this server over a network
+            // is entitled to its Corresponding Source. Putting the offer in the OpenAPI
+            // description means it reaches API consumers, who never see the app's or the
+            // admin web's About screen. Editing this text changes the API contract, so
+            // OpenApiContractTests will rewrite web/openapi.json and fail once - review
+            // the diff, then `cd web && npm run generate:api` and commit both.
+            config.Description =
+                "Stigvidd API. This is free software, licensed under the GNU Affero General "
+                + "Public License version 3 or later. Under section 13 of that licence you "
+                + "are entitled to the Corresponding Source of this running service: "
+                + "https://github.com/themalind/stigvidd";
 
             config.AddSecurity("Bearer", new NSwag.OpenApiSecurityScheme
             {

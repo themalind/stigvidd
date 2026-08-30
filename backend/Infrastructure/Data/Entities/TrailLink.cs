@@ -1,4 +1,7 @@
-﻿namespace Infrastructure.Data.Entities;
+﻿// SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+namespace Infrastructure.Data.Entities;
 
 public class TrailLink : BaseEntity
 {

@@ -1,3 +1,10 @@
+// SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
+// SPDX-License-Identifier: MPL-2.0
+//
+// This Source Code Form is subject to the terms of the Mozilla Public License,
+// v. 2.0. If a copy of the MPL was not distributed with this file, You can
+// obtain one at https://mozilla.org/MPL/2.0/.
+
 // Pure decision logic for what should happen when a trail cluster is tapped,
 // extracted from the map component so it can be unit-tested in isolation. The
 // map layer stays a thin shell that only performs the resulting camera move or

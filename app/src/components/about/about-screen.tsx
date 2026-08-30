@@ -1,5 +1,12 @@
+// SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
+// SPDX-License-Identifier: MPL-2.0
+//
+// This Source Code Form is subject to the terms of the Mozilla Public License,
+// v. 2.0. If a copy of the MPL was not distributed with this file, You can
+// obtain one at https://mozilla.org/MPL/2.0/.
+
 import BackButton from "@/components/back-button";
-import { PRIVACY_POLICY_URL, SCREEN_PADDING, TERMS_OF_USE_URL } from "@/constants/constants";
+import { PRIVACY_POLICY_URL, SCREEN_PADDING, SOURCE_CODE_URL, TERMS_OF_USE_URL } from "@/constants/constants";
 import Constants from "expo-constants";
 import { Linking, Platform, ScrollView, StyleSheet, View } from "react-native";
 import { Text, useTheme } from "react-native-paper";
@@ -87,6 +94,25 @@ export default function AboutScreen() {
             </Text>
             <Text variant="bodyMedium" style={[s.featureText, { color: theme.colors.onSecondaryContainer }]}>
               {t("about.dataSourceText")}
+            </Text>
+          </View>
+
+          {/* AGPL section 13: everyone interacting with the deployed backend is
+              entitled to its Corresponding Source, and app users are those users.
+              This link is how the offer is made, so it is not decoration. */}
+          <View style={[s.section, { backgroundColor: theme.colors.secondaryContainer }]}>
+            <Text variant="titleSmall" style={[s.sectionTitle, { color: theme.colors.onSecondaryContainer }]}>
+              {t("about.licenceTitle")}
+            </Text>
+            <Text variant="bodyMedium" style={[s.featureText, { color: theme.colors.onSecondaryContainer }]}>
+              {t("about.licenceText")}
+            </Text>
+            <Text
+              variant="bodyMedium"
+              style={[s.link, { color: theme.colors.primary }]}
+              onPress={() => Linking.openURL(SOURCE_CODE_URL).catch(() => undefined)}
+            >
+              {t("about.licenceLink")}
             </Text>
           </View>
 

@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 import { DarkModeToggle } from "@/components/dark-mode-toggle";
 import { LoginCard } from "@/components/login/login-card";
 

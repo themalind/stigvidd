@@ -1,5 +1,8 @@
-﻿using Core.Validators.TrailObstacle;
-using FluentAssertions;
+﻿// SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+using Core.Validators.TrailObstacle;
+using AwesomeAssertions;
 using WebDataContracts.RequestModels.TrailObstacle;
 
 namespace UnitTests.ValidatorTests;

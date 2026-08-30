@@ -1,4 +1,7 @@
-﻿namespace Infrastructure.Enums;
+﻿// SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+namespace Infrastructure.Enums;
 
 // What the reviewer chose for one proposed feature. Pending is the default, so an
 // undecided proposal cannot be mistaken for an approved one.

@@ -115,3 +115,16 @@ jobs:
     # job throws away.
     - name: Build
       run: npm run build
+
+  # Licensing. Every source file must declare its licence with an SPDX header, and the
+  # files that cannot carry one -- generated code, EF migrations, binaries -- must be
+  # covered by REUSE.toml. Without a gate this decays silently: a new file simply arrives
+  # with no licence and nothing anywhere says so. Note the repo is NOT single-licence --
+  # app/ is MPL-2.0 (App Store distribution) while backend/ and web/ are AGPL-3.0-or-later
+  # -- so "it compiles" tells you nothing about whether the split is still intact.
+  licensing:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Check REUSE compliance
+      uses: fsfe/reuse-action@v5

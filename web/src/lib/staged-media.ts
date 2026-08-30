@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 // Staged uploads survive a page refresh: the picked image data lives in
 // IndexedDB (it stores binary, which localStorage cannot) and the chosen upload
 // target in localStorage. Everything here is best-effort — a failing store must

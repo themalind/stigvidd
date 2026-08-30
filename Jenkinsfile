@@ -290,8 +290,18 @@ pipeline {
               # fingerprint against the deploy host before trusting it:
               #   sudo -u jenkins ssh-keygen -R stigvidd.se -f /var/lib/jenkins/.ssh/known_hosts
               #   sudo -u jenkins sh -c 'ssh-keyscan -H stigvidd.se >> /var/lib/jenkins/.ssh/known_hosts'
-              ssh -o BatchMode=yes "${DEPLOY_HOST}" "mkdir -p ${DEPLOY_PATH}/db/init"
+              ssh -o BatchMode=yes "${DEPLOY_HOST}" "mkdir -p ${DEPLOY_PATH}/db/init ${DEPLOY_PATH}/scripts"
               scp docker-compose.yml "${DEPLOY_HOST}:${DEPLOY_PATH}/docker-compose.yml"
+              # The host's operational scripts. DEPLOYMENT.md invokes all of these
+              # as ./scripts/<name>.sh from the compose directory, and
+              # container-log-retention.sh is run by a systemd timer there — so
+              # unlike the one-off scripts it has to stay CURRENT, not merely be
+              # present once. Without this scp a fix to it would live only in git
+              # while the host kept running the copy someone hand-placed months
+              # ago, with nothing reporting the drift. scp does not reliably carry
+              # the executable bit, hence the chmod.
+              scp scripts/*.sh "${DEPLOY_HOST}:${DEPLOY_PATH}/scripts/"
+              ssh -o BatchMode=yes "${DEPLOY_HOST}" "chmod +x ${DEPLOY_PATH}/scripts/*.sh"
               # Every NN-*.sql, not just postgis — 02-keycloak-db.sql creates the
               # keycloak database and was previously never copied. These only run
               # against an EMPTY pgdata, so this is inert on a live host; it keeps

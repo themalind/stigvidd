@@ -1,3 +1,10 @@
+// SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
+// SPDX-License-Identifier: MPL-2.0
+//
+// This Source Code Form is subject to the terms of the Mozilla Public License,
+// v. 2.0. If a copy of the MPL was not distributed with this file, You can
+// obtain one at https://mozilla.org/MPL/2.0/.
+
 // Pure helpers for the carousel's "still matches the map" zoom band, extracted from
 // the Map screen so the fiddly cluster merge/split math can be unit-tested without
 // mounting a map (same pattern as cluster-action.ts). The screen only stores the

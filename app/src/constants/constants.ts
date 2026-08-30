@@ -1,3 +1,10 @@
+// SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
+// SPDX-License-Identifier: MPL-2.0
+//
+// This Source Code Form is subject to the terms of the Mozilla Public License,
+// v. 2.0. If a copy of the MPL was not distributed with this file, You can
+// obtain one at https://mozilla.org/MPL/2.0/.
+
 export const BORDER_RADIUS = 5;
 export const SURFACE_BORDER_RADIUS = BORDER_RADIUS;
 export const DIALOG_BORDER_RADIUS = BORDER_RADIUS;
@@ -15,6 +22,10 @@ export const OVERLAY_TEXT_SHADOW = {
 export const PRIVACY_POLICY_URL = "https://stigvidd.se/privacy-policy/";
 export const TERMS_OF_USE_URL = "https://stigvidd.se/terms-of-use/";
 export const DELETE_ACCOUNT_URL = "https://stigvidd.se/delete-account/";
+// AGPL section 13 obliges the operator to offer the running service's Corresponding
+// Source to everyone who interacts with it. App users are users of that backend, so
+// the About screen links here. This repository IS that source.
+export const SOURCE_CODE_URL = "https://github.com/themalind/stigvidd";
 export const START_COORDINATE_BORAS = {
   latitude: 57.72096,
   longitude: 12.93816,

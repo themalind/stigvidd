@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { AlertTriangle, ArrowLeft, CheckCircle2, Loader2 } from "lucide-react";

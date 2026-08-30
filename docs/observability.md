@@ -18,6 +18,7 @@ wrong is "we retained precise location data about identifiable users for two yea
 | Service definition, retention + memory caps    | `docker-compose.yml` → `openobserve`     |
 | Public routing, ingest/UI split, body cap      | `proxy/Caddyfile`                        |
 | Metrics retention override + PII guard         | `scripts/observatory-retention.sh`       |
+| Host container log retention (a separate 7 days) | `scripts/container-log-retention.sh`, `x-logging` in `docker-compose.yml` |
 | Operational runbook (first boot, troubleshooting) | `DEPLOYMENT.md` Part 1 step 8         |
 | Deployment variables                           | `.env.example`                           |
 
@@ -236,6 +237,46 @@ deliberate, reviewable code change — so the rule is:
 > must be followed by re-running `scripts/observatory-retention.sh` on the host.**
 
 The script is idempotent; re-running it is always safe.
+
+### The other 7 days: the host's container logs
+
+Everything above is about **OpenObserve streams**. The host also keeps a second,
+completely separate body of logs — Docker's per-container `json-file` files, which
+`docker compose logs` reads — and they carry personal data too: `db` runs with
+`log_connections=on` behind a publicly published 5432, so every connection attempt
+lands there with its source IP.
+
+Both land on 7 days, because §5 of the published privacy policy states one number
+for "serverloggar". They get there by different means, and the difference is the
+part that catches people out:
+
+| | OpenObserve streams | Host container logs |
+| --- | --- | --- |
+| holds | logs, traces, RUM, metrics | stdout/stderr of the 8 compose services |
+| bounded by | `ZO_COMPACT_DATA_RETENTION_DAYS` — genuinely **time**-based | `max-size`/`max-file` on the `x-logging` anchor — **size** only |
+| aged out by | OpenObserve's own compactor, continuously | `scripts/container-log-retention.sh`, from a daily systemd timer |
+| set by | `OBSERVATORY_RETENTION_DAYS` | `CONTAINER_LOG_RETENTION_DAYS` |
+| fails by | a new stream inheriting the global (see above) | the timer never being installed — **silent**, see below |
+
+> **`json-file` has no time-based retention.** `max-size` and `max-file` bound
+> *disk*, not *age*: under any size cap a quiet service keeps its oldest line
+> forever, and the driver's default is no rotation at all. Nothing in
+> `docker-compose.yml` can express "7 days", so the compose caps are only half the
+> promise and `scripts/container-log-retention.sh` is the other half. See
+> [notes/json-file-has-no-time-retention.md](notes/json-file-has-no-time-retention.md).
+
+The asymmetry with `observatory-retention.sh` is worth stating plainly: that one is
+a **one-off** re-applied after instrumentation changes, this one **must recur**. A
+host where the timer was never installed looks completely healthy — the stack runs,
+logs are readable, disk is capped — while the published policy is false. Part 1
+step 9 of [DEPLOYMENT.md](../DEPLOYMENT.md) installs it, and the check is
+`systemctl list-timers stigvidd-log-retention.timer`.
+
+The script prunes rotated segments by mtime and rewrites the active segment in
+place, keeping the file's inode because Docker holds it open. That rewrite is
+logrotate's `copytruncate` trade: a line appended during the rewrite is lost, at
+most once a day per container. Retaining personal data past its stated window is
+the worse of the two.
 
 ## GDPR
 

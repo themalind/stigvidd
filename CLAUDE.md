@@ -49,10 +49,11 @@ Use `run_in_background: true`, or `-d`. `.claude/hooks/guard-long-running.mjs` d
 | does a migration apply? | `docker compose up -d` and let `DbMigrationRunner` run it against real PostGIS | any test — the suites are SQLite in-memory and apply no migration |
 | does the stack come up? | `docker compose up -d`, then `/healthz` (liveness) and `/readyz` (readiness, which is the one that checks the database) | GitHub CI, which builds no image and never runs compose; Jenkins does, and only on `main` |
 | is the agent harness intact? | `node scripts/check-hooks.mjs` | reading the hooks and believing them |
+| is the licensing still declared? | `reuse lint` — every file needs an SPDX header or a `REUSE.toml` entry | assuming the root `LICENSE` covers everything; `app/` is MPL-2.0, not AGPL |
 | what did an earlier session learn? | `node .claude/hooks/plan-eval.mjs --match "<what you are about to do>"` | re-deriving it |
 
-**What CI actually covers.** [.github/workflows/ci.yml](.github/workflows/ci.yml) has four
-jobs: `harness`, `backend`, `app` and `web`. The web job lints, tests and builds `web/`, so
+**What CI actually covers.** [.github/workflows/ci.yml](.github/workflows/ci.yml) has five
+jobs: `harness`, `backend`, `app`, `web` and `licensing`. The web job lints, tests and builds `web/`, so
 a broken web change no longer passes a PR unnoticed. What GitHub still does **not** do is
 the generated-client staleness gate or the image builds — both are the
 [Jenkinsfile](Jenkinsfile)’s alone, and Jenkins pushes and deploys only from `main`. So a
@@ -221,6 +222,42 @@ skill before citing a new assertion.
 [observability](docs/observability.md), [push-notifications](docs/push-notifications.md),
 [record-hike](docs/record-hike.md), [spatial-data](docs/spatial-data.md).
 [DEPLOYMENT.md](DEPLOYMENT.md) is the host runbook.
+
+## Licensing — the repo is NOT single-licence
+
+The root `LICENSE` is the AGPL and GitHub reports the repo as AGPL-3.0, but that is the
+licence of **two of the three areas**:
+
+| area | licence |
+| --- | --- |
+| `backend/`, `web/` | AGPL-3.0-or-later |
+| `app/` | **MPL-2.0**, Exhibit B deliberately omitted |
+
+`app/` differs because Android and iOS are one codebase and Apple's App Store terms conflict
+with GPLv3/AGPLv3 §6. Omitting Exhibit B keeps GPL/AGPL available as Secondary Licenses —
+**never add an Exhibit B notice** to a file under `app/`. See
+[app/LICENSE.md](app/LICENSE.md) and [docs/notes/licence-is-per-area-not-repo-wide.md](docs/notes/licence-is-per-area-not-repo-wide.md).
+
+Every source file carries an `SPDX-License-Identifier` header, so **a new file needs one** —
+matching its area, not the repo. Files that cannot carry one (orval output, `web/openapi.json`,
+EF migrations, binaries) are declared in [REUSE.toml](REUSE.toml) instead, because
+`guard-generated-files.mjs` denies the edit. `reuse lint` is the `licensing` CI job:
+
+```sh
+reuse lint          # 1011/1011 files must be covered
+```
+
+Two mechanical traps when adding headers in bulk: **196 of the 402 `.cs` files carry a UTF-8
+BOM**, which must stay the first bytes (header goes *after* it), and everything is LF per
+`.gitattributes`.
+
+Copyright notices read `The Stigvidd Authors`; the individuals are in [AUTHORS](AUTHORS).
+There is no CLA, so **relicensing any area needs every holder's agreement**.
+
+Adding a dependency? `dotnet build` and `npm` say nothing about licences. Check the
+`.nuspec`: `<license type="file">` instead of an SPDX expression means a custom licence —
+that is how FluentAssertions 8 turned out to be non-free
+([note](docs/notes/fluentassertions-8-is-not-free-software.md)).
 
 ## Secrets
 

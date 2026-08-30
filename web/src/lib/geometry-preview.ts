@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 /**
  * The geometry the import preview draws with: longitude/latitude projected to metres, and
  * the view arithmetic that fits, zooms and thins a line for an SVG viewBox.

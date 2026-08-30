@@ -1,3 +1,10 @@
+// SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
+// SPDX-License-Identifier: MPL-2.0
+//
+// This Source Code Form is subject to the terms of the Mozilla Public License,
+// v. 2.0. If a copy of the MPL was not distributed with this file, You can
+// obtain one at https://mozilla.org/MPL/2.0/.
+
 /**
  * Mock images are recognized by their path: trails live under ".../trails/mock/..."
  * (e.g. "mock/gesebol/20250824100243.jpg", "mock/vindskydd_mock.jpg") and areas

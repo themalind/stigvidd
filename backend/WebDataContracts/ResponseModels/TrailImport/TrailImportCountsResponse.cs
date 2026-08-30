@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 namespace WebDataContracts.ResponseModels.TrailImport;
 
 // The summary row above the review list, and what tells the reviewer whether anything is

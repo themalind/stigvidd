@@ -1,3 +1,10 @@
+// SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
+// SPDX-License-Identifier: MPL-2.0
+//
+// This Source Code Form is subject to the terms of the Mozilla Public License,
+// v. 2.0. If a copy of the MPL was not distributed with this file, You can
+// obtain one at https://mozilla.org/MPL/2.0/.
+
 // JS wrapper for the local native module in `app/modules/expo-live-location/`
 // (Swift, Apple-only). It lives here rather than inside the module folder so the
 // module directory stays purely native: a stray .ts file there sits outside

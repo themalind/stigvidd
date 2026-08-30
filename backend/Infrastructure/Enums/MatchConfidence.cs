@@ -1,4 +1,7 @@
-﻿namespace Infrastructure.Enums;
+﻿// SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+namespace Infrastructure.Enums;
 
 // How sure the sync is that a feature belongs to the trail it was matched against.
 // Ascending, so a threshold reads as Confidence >= MatchConfidence.High, and the default

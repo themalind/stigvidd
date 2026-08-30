@@ -340,3 +340,62 @@ Authentication is handled by Keycloak. The mobile app and admin dashboard obtain
 ## Data Source
 
 Trail and facility data (grill sites, wind shelters) for the Borås area is sourced from [Borås Stad's open data portal](https://www.boras.se) in GeoJSON/CSV format and imported using the `MapData` ETL tool.
+
+---
+
+## Licence
+
+Stigvidd is free software. It is **not** under a single licence, because the two halves ship
+through different channels and one of those channels will not accept copyleft of the strongest
+kind.
+
+| Part | Licence | |
+| --- | --- | --- |
+| `backend/` — REST API | **AGPL-3.0-or-later** | [text](LICENSES/AGPL-3.0-or-later.txt) |
+| `web/` — admin dashboard | **AGPL-3.0-or-later** | [text](LICENSES/AGPL-3.0-or-later.txt) |
+| `app/` — mobile app (Android + iOS) | **MPL-2.0**, Exhibit B not applied | [text](LICENSES/MPL-2.0.txt) · [why](app/LICENSE.md) |
+
+Every file says which of the two it is under, as an `SPDX-License-Identifier` header. Files
+that cannot carry one — generated code, EF migrations, binaries — are covered by
+[`REUSE.toml`](REUSE.toml). The repository follows the
+[REUSE](https://reuse.software) specification, and CI checks that it still does.
+
+### The backend and admin web are AGPL
+
+They are two halves of one network service, which is exactly the case the GNU Affero GPL
+exists for: ordinary GPL copyleft reaches people you hand a binary to, and a hosted service
+hands out no binaries. AGPL § 13 closes that.
+
+### The app is MPL-2.0, and keeps the GPL option open
+
+Android and iOS are built from one codebase, so the licence has to satisfy the stricter store.
+Apple's App Store terms impose DRM and per-account device limits, which GPLv3/AGPLv3 § 6
+forbids imposing on a recipient — the conflict that pushed VLC's iOS port off the GPL.
+
+MPL-2.0 is compatible with store distribution. Crucially, **Exhibit B is deliberately not
+applied**, so the Secondary Licenses in MPL-2.0 § 1.12 stay available: anyone who wants this
+code under GPL-2.0-or-later, LGPL-2.1-or-later or AGPL-3.0-or-later may take it on those terms
+instead. See [`app/LICENSE.md`](app/LICENSE.md) — and do not add an Exhibit B notice.
+
+### Source for the running service
+
+AGPL § 13 entitles everyone who interacts with a deployed Stigvidd server to its Corresponding
+Source. This repository is that source: <https://github.com/themalind/stigvidd>. The admin
+dashboard and the mobile app both link to it from their About screens, and the API advertises
+it in its OpenAPI description.
+
+### Third-party components
+
+Dependencies keep their own licences, listed in
+[`backend/THIRD-PARTY-NOTICES.md`](backend/THIRD-PARTY-NOTICES.md),
+[`web/THIRD-PARTY-NOTICES.md`](web/THIRD-PARTY-NOTICES.md) and
+[`app/THIRD-PARTY-NOTICES.md`](app/THIRD-PARTY-NOTICES.md). Nothing in the tree is non-free.
+
+Map data is OpenStreetMap under **ODbL 1.0**, served by MapTiler; the attribution is rendered
+on every map screen and is not optional. Trail and facility data comes from Borås Stad's open
+data portal under **CC0 1.0**, a public domain dedication that requires no attribution — the
+credit given to Borås Stad is a courtesy, and only the ODbL one is an obligation.
+
+Copyright © 2025-2026 The Stigvidd Authors. The individual copyright holders are listed
+in [`AUTHORS`](AUTHORS) — relicensing any part of this project needs the agreement of all
+of them, since there is no CLA and no copyright assignment.

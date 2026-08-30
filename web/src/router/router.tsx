@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 import { ProtectedRoute } from "@/components/auth/protected-route";
 import { Loader2 } from "lucide-react";
 import { lazy, Suspense, type ComponentType } from "react";

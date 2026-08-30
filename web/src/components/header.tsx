@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 import { useMatches } from "react-router";
 import { DarkModeToggle } from "./dark-mode-toggle";
 import { SidebarTrigger } from "./ui/sidebar";

@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 using Core.TrailImport.Apply;
 using Core.TrailImport.Review;
 using Core.TrailImport.Source;
@@ -5,7 +8,7 @@ using Core.Factories;
 using Core.Interfaces.Repositories;
 using Core.Interfaces.Services;
 using Core.Services;
-using FluentAssertions;
+using AwesomeAssertions;
 using Infrastructure.Data.Entities;
 using Infrastructure.Enums;
 using Microsoft.Extensions.Logging.Abstractions;

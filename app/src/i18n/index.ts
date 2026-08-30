@@ -1,3 +1,10 @@
+// SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
+// SPDX-License-Identifier: MPL-2.0
+//
+// This Source Code Form is subject to the terms of the Mozilla Public License,
+// v. 2.0. If a copy of the MPL was not distributed with this file, You can
+// obtain one at https://mozilla.org/MPL/2.0/.
+
 // i18next's default export IS the i18n instance, so i18n.use()/i18n.changeLanguage()
 // are the intended API — not a mistaken access of a same-named named export.
 /* eslint-disable import/no-named-as-default-member */

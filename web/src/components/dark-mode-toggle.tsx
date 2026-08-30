@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 import { Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import useTheme from "@/hooks/use-theme";

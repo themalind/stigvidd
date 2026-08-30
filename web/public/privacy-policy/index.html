@@ -9,12 +9,21 @@
   Sidan är tvåspråkig: svenska först, engelska under samma URL (#english). Ändras
   ett avsnitt måste båda språken följas åt.
 
-  FÅR INTE DEPLOYAS FÖRRÄN:
-    1. Alla <span class="todo">-markeringar är ersatta med riktiga uppgifter.
-       De syns som röda markeringar på sidan, så en oavsiktlig deploy är svår att missa.
-       Kvar 2026-08-19: en enda, i §8 (Hostups teknikeråtkomst), i båda språken.
-    2. §5 om serverloggar kräver att en faktisk retention införs — i dag roterar
-       loggarna inte alls (ingen logging-sektion i docker-compose.yml).
+  PUBLICERAD 2026-08-30. Båda grindarna som höll sidan tillbaka är klarade:
+    1. Alla <span class="todo">-markeringar är ersatta. Den sista satt i §8
+       (Hostups teknikeråtkomst) och togs bort i båda språken 2026-08-30.
+    2. §5:s "Serverloggar: 7 dagar" är nu sant på riktigt. Container-loggarna
+       storleksbegränsas av x-logging-ankaret i docker-compose.yml och åldras ut
+       av scripts/container-log-retention.sh, som en systemd-timer kör dagligen
+       på värden (DEPLOYMENT.md del 1). json-file-drivern har INGEN tidsbaserad
+       retention alls, så skriptet — inte compose — är det som håller löftet.
+
+  Regel 1 står kvar som en stående regel, inte en engångsgrind: .todo-klassen finns
+  fortfarande i stilmallen och ska användas för varje ofärdig uppgift. En sida med en
+  enda kvarvarande markering FÅR INTE publiceras.
+
+  Och siffran i §5 är nu bunden till CONTAINER_LOG_RETENTION_DAYS i .env: ändras
+  den ena måste den andra följa med, i BÅDA språken.
 
   Kodändringarna som texten vilade på har landat (se docs/gdpr-analys.md):
     §3  vidaredelning kräver ägarens tillstånd  → AllowResharing per delning (steg 1-2)
@@ -213,7 +222,7 @@
     <main id="top">
       <header>
         <h1>Integritetspolicy för Stigvidd</h1>
-        <p class="updated">Senast uppdaterad: 15 augusti 2026</p>
+        <p class="updated">Senast uppdaterad: 30 augusti 2026</p>
         <p class="lang-nav"><strong>Svenska</strong> · <a href="#english">In English</a></p>
       </header>
 
@@ -447,7 +456,6 @@
       <p>
         All trafik mellan appen och våra servrar är krypterad med TLS. Lösenord lagras aldrig i
         klartext. Endast vi som driver tjänsten har åtkomst till servrarna.
-        <span class="todo">[Komplettera om Hostups tekniker har åtkomst till servern]</span>
       </p>
 
       <h2>9. Ändringar</h2>
@@ -460,7 +468,7 @@
       <section class="lang-section" id="english" lang="en">
         <header>
           <h1>Privacy Policy for Stigvidd</h1>
-          <p class="updated">Last updated: 15 August 2026</p>
+          <p class="updated">Last updated: 30 August 2026</p>
           <p class="lang-nav"><a href="#top">På svenska</a> · <strong>English</strong></p>
         </header>
 
@@ -697,7 +705,6 @@
         <p>
           All traffic between the app and our servers is encrypted with TLS. Passwords are never
           stored in plain text. Only we who run the service have access to the servers.
-          <span class="todo">[Complete if Hostup's technicians have server access]</span>
         </p>
 
         <h2>9. Changes</h2>

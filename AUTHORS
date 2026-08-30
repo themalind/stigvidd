@@ -1,0 +1,25 @@
+Stigvidd — copyright holders and contributors
+=============================================
+
+Source files in this repository carry the collective notice
+
+    Copyright (C) 2025-2026 The Stigvidd Authors
+
+"The Stigvidd Authors" is a convenience label, not a legal entity and not an
+assignment of anything. There is no CLA and no copyright pooling: each person
+below individually holds copyright in their own contributions. That matters in
+one concrete way — **relicensing any part of this project requires the
+agreement of every holder listed here**, not of a majority or of a maintainer.
+
+Copyright holders, in order of first contribution:
+
+    Therese Lindberg   <therese.m.lindberg@gmail.com>
+    Martin Börjesson   <martinjborjesson@gmail.com>
+    Ralf Lindberg      <ralf.lindberg@gmail.com>
+
+The authoritative record of who wrote what is the git history:
+
+    git shortlog -sne --all
+
+Licensing is described in README.md; the app is under different terms from the
+backend and admin web, and app/LICENSE.md explains why.

@@ -5,14 +5,19 @@
   Tvåspråkig: svenska först, engelska under samma URL (#english). Ändras ett
   avsnitt måste båda språken följas åt.
 
-  UTKAST. FÅR INTE DEPLOYAS FÖRRÄN:
-    1. Alla <span class="todo">-markeringar är ersatta. De syns som röda
-       markeringar på sidan, så en oavsiktlig deploy är svår att missa.
-    2. Villkoren är lästa i sin helhet av den som står som ansvarig. Det här är
-       ett utkast skrivet utifrån vad appen faktiskt gör — inte juridisk
-       rådgivning, och inte kontrollerat av jurist.
+  PUBLICERAD 2026-08-30. Utkaststatusen är hävd och alla tre grindar är klarade:
+    1. Alla <span class="todo">-markeringar är ersatta. Den sista satt i §6
+       (källa och licens för kart- och leddata) och fylldes i 2026-08-30.
+    2. Villkoren är lästa i sin helhet och godkända för publicering av den
+       ansvarige, 2026-08-30. Observera vad det inte är: texten är skriven utifrån
+       vad appen faktiskt gör, inte juridisk rådgivning, och inte granskad av jurist.
     3. Registreringsskärmen hänvisar till villkoren. Klart 2026-08-19: länken
        finns i register.tsx (auth.consentBefore + auth.termsOfUse).
+
+  Regel 1 står kvar som en stående regel, inte en engångsgrind: .todo-klassen finns
+  fortfarande i stilmallen och ska användas för varje ofärdig uppgift. En sida med en
+  enda kvarvarande markering FÅR INTE publiceras — de syns som röda markeringar, så
+  en oavsiktlig deploy är svår att missa.
 
   §6 är det avsnitt som betyder mest för just den här appen: ledinformation och
   hinderrapporter kommer från användare och öppna datakällor, inte från en
@@ -178,7 +183,7 @@
     <main id="top">
       <header>
         <h1>Användarvillkor för Stigvidd</h1>
-        <p class="updated">Senast uppdaterad: 13 augusti 2026</p>
+        <p class="updated">Senast uppdaterad: 30 augusti 2026</p>
         <p class="lang-nav"><strong>Svenska</strong> · <a href="#english">In English</a></p>
       </header>
 
@@ -265,8 +270,12 @@
         inte att den går på mark där du har rätt att vistas, eller att markägaren tillåter det.
       </p>
       <p>
-        Kartunderlag levereras av MapTiler. Delar av ledinformationen kommer från öppna data
-        <span class="todo">[fyll i källa och licens, t.ex. Borås Stads öppna data]</span>.
+        Kartunderlag levereras av MapTiler och bygger på OpenStreetMap, som tillhandahålls
+        under Open Database License (ODbL) 1.0. Upphovsangivelse visas i appen på varje
+        kartvy. Ledinformation för Boråsområdet kommer från Borås Stads öppna data
+        (<a href="https://www.boras.se">boras.se</a>), som tillhandahålls under Creative
+        Commons CC0 1.0 — en public domain-dedikering utan upphovsrätt. CC0 kräver ingen
+        upphovsangivelse; vi anger ändå Borås Stad som källa.
       </p>
 
       <h2>7. Tillgänglighet</h2>
@@ -327,7 +336,7 @@
       <section class="lang-section" id="english" lang="en">
         <header>
           <h1>Terms of Use for Stigvidd</h1>
-          <p class="updated">Last updated: 13 August 2026</p>
+          <p class="updated">Last updated: 30 August 2026</p>
           <p class="lang-nav"><a href="#top">På svenska</a> · <strong>English</strong></p>
         </header>
 
@@ -412,8 +421,12 @@
           enter, or that the landowner permits it.
         </p>
         <p>
-          Map imagery is provided by MapTiler. Parts of the trail information come from open data
-          <span class="todo">[fill in source and licence]</span>.
+          Map imagery is provided by MapTiler and is based on OpenStreetMap, made available
+          under the Open Database License (ODbL) 1.0. Attribution is shown in the app on
+          every map view. Trail information for the Borås area comes from the City of Borås
+          open data portal (<a href="https://www.boras.se">boras.se</a>), released under
+          Creative Commons CC0 1.0 — a public domain dedication with no copyright reserved.
+          CC0 requires no attribution; we credit the City of Borås as the source regardless.
         </p>
 
         <h2>7. Availability</h2>

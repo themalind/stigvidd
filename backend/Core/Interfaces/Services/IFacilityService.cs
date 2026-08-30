@@ -1,4 +1,7 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿// SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+using Microsoft.AspNetCore.Http;
 using WebDataContracts.ResponseModels.Facility;
 
 namespace Core.Interfaces.Services;

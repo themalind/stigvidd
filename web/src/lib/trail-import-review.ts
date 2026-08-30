@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 // The rules the import review runs on, kept out of the page so they can be tested without
 // a browser. Everything here is pure except `collectAllMatching`, which is given the
 // fetcher rather than reaching for one.

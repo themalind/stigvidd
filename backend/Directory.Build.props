@@ -2,4 +2,15 @@
   <PropertyGroup>
     <WarningsAsErrors>nullable</WarningsAsErrors>
   </PropertyGroup>
+
+  <!-- Licence and copyright, compiled into every assembly's metadata so a built
+       DLL carries the same answer the source tree does. The backend is AGPL:
+       it is network server software, which is the case that licence exists for.
+       The mobile app in app/ is MPL-2.0 instead - see app/LICENSE.md. -->
+  <PropertyGroup>
+    <Copyright>Copyright (C) 2025-2026 The Stigvidd Authors</Copyright>
+    <PackageLicenseExpression>AGPL-3.0-or-later</PackageLicenseExpression>
+    <Authors>The Stigvidd Authors</Authors>
+    <Product>Stigvidd</Product>
+  </PropertyGroup>
 </Project>

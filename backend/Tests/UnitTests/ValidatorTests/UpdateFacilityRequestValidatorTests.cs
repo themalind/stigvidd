@@ -1,5 +1,8 @@
-﻿using Core.Validators.Facility;
-using FluentAssertions;
+﻿// SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+using Core.Validators.Facility;
+using AwesomeAssertions;
 using WebDataContracts.RequestModels.Facility;
 
 namespace UnitTests.ValidatorTests;

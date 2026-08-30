@@ -192,3 +192,50 @@ you get approved.
   media upload keeps a component test on top (what is left there is effect **ordering**). It
   deliberately duplicates none of the import semantics `backend/Core/TrailImport/` already
   tests.
+
+- [The licence is per-area, not repo-wide: `app/` is MPL-2.0 while the rest is AGPL](licence-is-per-area-not-repo-wide.md) —
+  the root `LICENSE` is the AGPL but only `backend/` and `web/` are under it; `app/` is
+  MPL-2.0 because Apple's App Store terms conflict with GPLv3/AGPLv3 section 6, and its
+  Exhibit B is deliberately omitted so GPL/AGPL stay available as Secondary Licenses. Every
+  file carries an `SPDX-License-Identifier`; generated code, EF migrations and binaries are
+  declared in `REUSE.toml` instead because `guard-generated-files.mjs` denies the edit.
+  `reuse lint` is the `licensing` CI job. Warns that 196 `.cs` files have a UTF-8 BOM a
+  header must go after.
+- [FluentAssertions 8.x is not free software, and nothing in the build says so](fluentassertions-8-is-not-free-software.md) —
+  version 8.0.0 onward is the Xceed Community License, non-commercial only and revocable;
+  7.2.0 was the last Apache-2.0 release. `dotnet build` and `dotnet test` say nothing about
+  licences: the tell is `<license type="file">` rather than an SPDX expression in the
+  package's `.nuspec`. Replaced here by `AwesomeAssertions` (Apache-2.0), which renames the
+  namespace in the 96 files that had `using FluentAssertions;`.
+- [On Node 26 the whole `web/` test suite fails, and the error names `clear`](node-26-shadows-jsdom-localstorage.md) —
+  all 383 tests fail with `Cannot read properties of undefined (reading 'clear')` because
+  Node 26 defines a global `localStorage` that is undefined without `--localstorage-file`
+  and shadows jsdom's, so `src/test/setup.ts`'s `afterEach` throws for every test. The repo
+  pins Node 24 in `web/Dockerfile` and CI. Do not work around it with `--localstorage-file`:
+  that store is shared across test files and pollutes `media-upload.test.tsx`.
+- [`git diff --exit-code -- <path>` exits 0 when the path matches NOTHING, so the staleness gate fails open](diff-exit-code-pathspec-fails-open.md) —
+  the pathspec is relative to the cwd and git does not complain about one that matches
+  nothing, so `git diff --exit-code -- web/src/api/generated` run from inside `web/` passes
+  unconditionally while `src/api/generated` reports the real 88-file difference. It fails
+  OPEN, so a wrong `cd` turns the generated-client gate into a no-op that reports success.
+  Locally, assert orval is idempotent (regenerate and `diff -rq` against a snapshot) instead
+  of diffing against HEAD, which cannot tell "regenerated" from "not yet committed".
+- [Docker's `json-file` driver has no time-based retention, so `max-size` never means "7 days"](json-file-has-no-time-retention.md) —
+  `max-size`/`max-file` on the `x-logging` anchor in `docker-compose.yml` bound disk, not age:
+  a quiet service keeps its oldest line forever under any size cap, and with no `logging:` key
+  at all the file grows unbounded. The privacy policy's published "Serverloggar: 7 dagar" (§5,
+  both languages) is held by `scripts/container-log-retention.sh` on a daily systemd timer
+  (`DEPLOYMENT.md` Part 1 step 9), not by compose — and it fails silently twice over: an
+  uninstalled timer deletes nothing while everything looks healthy, and log options are fixed
+  at container *create* time, so `docker compose restart` never applies the caps. Distinct
+  from `OBSERVATORY_RETENTION_DAYS`, which is OpenObserve's genuinely time-based retention.
+- [Anything in `web/public/` is already live — an HTML comment never gated it](web-public-is-already-live.md) —
+  the bundler copies `publicDir` verbatim into `dist/`, `web/Dockerfile` copies `dist/` into nginx
+  and Jenkins pushes it, so a draft parked in `web/public/` is published by the next merge to
+  `main` with no route, no config and nothing excluding it — the `FÅR INTE DEPLOYAS FÖRRÄN`
+  comments on the legal pages gated nothing and shipped inside the served HTML. Do not go looking
+  in `.dockerignore`, the build config, the `Jenkinsfile` or `proxy/Caddyfile` for the thing
+  holding a public/ page back; there isn't one. They are files, not routes: link them with a plain
+  `<a>` (react-router `<Link>` renders `NotFoundPage`), the trailing slash matters because they
+  are directories, and nginx's default `absolute_redirect on` made that 301 downgrade TLS
+  visitors to http until `web/nginx.conf` set `absolute_redirect off`.

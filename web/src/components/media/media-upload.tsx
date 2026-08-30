@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Trash2, X } from "lucide-react";
