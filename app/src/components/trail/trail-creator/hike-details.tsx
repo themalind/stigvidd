@@ -28,15 +28,23 @@ import { Dimensions, Pressable, ScrollView, StyleSheet, View } from "react-nativ
 import { Button, Divider, Icon, Modal, Portal, Text, useTheme } from "react-native-paper";
 import RoutePreviewMap from "../../map/route-preview-map";
 
+// The modal opens from more than one tab stack. Each caller passes the follow route in
+// its own stack, so the map opens there and back returns to the screen that opened it —
+// navigating into another tab strands the map view in that tab's history instead.
+export type HikeFollowRoute =
+  | "/(tabs)/(home)/hike-follow/[identifier]"
+  | "/(tabs)/(profile-stack)/hike-follow/[identifier]";
+
 interface Props {
   visible: boolean;
   hike: Hike;
   onDismiss: () => void;
+  hikeFollowRoute: HikeFollowRoute;
 }
 
 const HEIGHT = Dimensions.get("screen").height;
 
-export default function HikeDetails({ visible, hike, onDismiss }: Props) {
+export default function HikeDetails({ visible, hike, onDismiss, hikeFollowRoute }: Props) {
   const setErrorMsg = useSetAtom(showErrorAtom);
   const setSuccessMsg = useSetAtom(showSuccessAtom);
   const [showOnDeleteDialog, setOnDeleteDialog] = useState(false);
@@ -63,7 +71,7 @@ export default function HikeDetails({ visible, hike, onDismiss }: Props) {
     requestAnimationFrame(() =>
       guardedNavigate(() =>
         router.navigate({
-          pathname: "/(tabs)/(profile-stack)/hike-follow/[identifier]",
+          pathname: hikeFollowRoute,
           params: { identifier: hike.identifier, name: hike.name },
         }),
       ),

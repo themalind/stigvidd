@@ -192,6 +192,7 @@ export default function MyHikesScreen() {
             setVisible(false);
             setSelectedhike(null);
           }}
+          hikeFollowRoute="/(tabs)/(profile-stack)/hike-follow/[identifier]"
         />
       )}
       <HikeFilterModal

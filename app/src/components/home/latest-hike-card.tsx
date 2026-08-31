@@ -81,7 +81,12 @@ export default function LatestHikeCard({ hike }: Props) {
           <Icon source="chevron-right" size={24} color="#ffffff" />
         </Pressable>
       </View>
-      <HikeDetails visible={detailsVisible} hike={hike} onDismiss={() => setDetailsVisible(false)} />
+      <HikeDetails
+        visible={detailsVisible}
+        hike={hike}
+        onDismiss={() => setDetailsVisible(false)}
+        hikeFollowRoute="/(tabs)/(home)/hike-follow/[identifier]"
+      />
     </View>
   );
 }
