@@ -4,9 +4,8 @@
 import { ProtectedRoute } from "@/components/auth/protected-route";
 import { Loader2 } from "lucide-react";
 import { lazy, Suspense, type ComponentType } from "react";
-import { createBrowserRouter } from "react-router";
+import { createBrowserRouter, Navigate } from "react-router";
 
-const CommingSoonPage = lazy(() => import("@/pages/comming-soon/comming-soon-page"));
 const DashboardPage = lazy(() => import("@/pages/dashboard/dashboard-page"));
 const Layout = lazy(() => import("@/pages/Layout"));
 const LoginPage = lazy(() => import("@/pages/login/login-page"));
@@ -14,7 +13,9 @@ const MediaPage = lazy(() => import("@/pages/media/media-page"));
 const MigrationPage = lazy(() => import("@/pages/admin/migration-page"));
 const NotFoundPage = lazy(() => import("@/pages/NotFoundPage"));
 const TrailImportPage = lazy(() => import("@/pages/admin/trail-import-page"));
-const TrailImportReviewPage = lazy(() => import("@/pages/admin/trail-import-review-page"));
+const TrailImportReviewPage = lazy(
+  () => import("@/pages/admin/trail-import-review-page"),
+);
 const TrailsPage = lazy(() => import("@/pages/trails/trails-page"));
 const UsersPage = lazy(() => import("@/pages/users/users-page"));
 
@@ -37,12 +38,13 @@ function withSuspense(Component: ComponentType) {
 export const router = createBrowserRouter([
   {
     path: "/",
-    element: withSuspense(CommingSoonPage),
+    element: withSuspense(LoginPage),
     errorElement: withSuspense(NotFoundPage),
   },
   {
+    // Old bookmarks and links that still point at the former login route.
     path: "/login",
-    element: withSuspense(LoginPage),
+    element: <Navigate to="/" replace />,
   },
   {
     element: <ProtectedRoute />,
@@ -88,5 +90,9 @@ export const router = createBrowserRouter([
         ],
       },
     ],
+  },
+  {
+    path: "*",
+    element: withSuspense(NotFoundPage),
   },
 ]);

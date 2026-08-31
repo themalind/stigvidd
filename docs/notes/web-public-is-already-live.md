@@ -39,7 +39,8 @@ fit to be public right now".
 
 1. **Link with a plain `<a href>`, never react-router's `<Link>`.** `Link` handles the click
    client-side, matches no route, and renders `NotFoundPage` — the server is never asked for
-   the file. See the comment in `web/src/pages/comming-soon/comming-soon-page.tsx`.
+   the file. See the comment in `web/src/pages/login/login-page.tsx`, which is where the
+   three links now live (`/` is the login page; the coming-soon page is gone).
 2. **The trailing slash is load-bearing.** These are *directories*. `/privacy-policy/` is
    200; `/privacy-policy` is a 301 to the slashed form. `app/src/constants/constants.ts` and
    the Play Console entries use the slashed form and never pay for it; a human typing the URL

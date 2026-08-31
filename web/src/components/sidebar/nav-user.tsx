@@ -31,7 +31,7 @@ export function NavUser() {
 
   async function handleSignOut() {
     await logout();
-    navigate("/login");
+    navigate("/");
   }
 
   return (

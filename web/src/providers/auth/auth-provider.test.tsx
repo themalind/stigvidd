@@ -180,7 +180,7 @@ describe("ProtectedRoute", () => {
             <Route element={<ProtectedRoute />}>
               <Route path="/admin" element={<p>the admin</p>} />
             </Route>
-            <Route path="/login" element={<p>the login page</p>} />
+            <Route path="/" element={<p>the login page</p>} />
           </Routes>
         </MemoryRouter>
       </AuthProvider>,
@@ -202,7 +202,7 @@ describe("ProtectedRoute", () => {
     expect(await screen.findByText("the admin")).toBeInTheDocument();
   });
 
-  // Deciding before the restore has finished would bounce a signed-in admin to /login on
+  // Deciding before the restore has finished would bounce a signed-in admin to the login page on
   // every reload, so while it is loading the gate renders nothing at all.
   it("shows neither while the session is still being restored", () => {
     keycloak.restoreSession.mockReturnValue(new Promise(() => {}));
