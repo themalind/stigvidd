@@ -58,11 +58,6 @@ export interface UserName {
   nickName: string;
 }
 
-export interface CreateStigViddUserCredentials {
-  email: string;
-  nickname: string;
-}
-
 export interface RegisterData {
   nickName: string;
   email: string;

@@ -5,7 +5,7 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import { CreateStigViddUserCredentials, User, UserFavoritesTrail, UserWishlistTrail } from "@/data/types";
+import { User, UserFavoritesTrail, UserWishlistTrail } from "@/data/types";
 import { getValidAccessToken } from "@/services/keycloak-auth";
 import { BASE_URL } from "./api-config";
 import { ApiError } from "./api-error";
@@ -13,44 +13,6 @@ import { logger } from "@/services/logger";
 
 export async function getUserToken(): Promise<string | null> {
   return getValidAccessToken();
-}
-
-export async function createStigViddUser({ email, nickname }: CreateStigViddUserCredentials): Promise<User> {
-  const token = await getUserToken();
-
-  if (!token) {
-    throw new Error("User not authenticated");
-  }
-
-  try {
-    const response = await fetch(`${BASE_URL}/users/create`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        email,
-        nickname,
-      }),
-    });
-
-    if (response.status === 409) {
-      throw new ApiError("nickname-taken", 409);
-    }
-
-    if (!response.ok) {
-      throw new ApiError(`HTTP error ${response.status}`, response.status);
-    }
-
-    return await response.json();
-  } catch (error) {
-    logger.error("Create stig vidd user failed", {
-      endpoint: "POST /users/create",
-      errorMessage: String(error),
-    });
-    throw error;
-  }
 }
 
 export async function getStigViddUser(): Promise<User> {

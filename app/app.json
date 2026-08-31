@@ -19,9 +19,7 @@
       "bundleIdentifier": "com.stigvidd.app",
       "buildNumber": "3",
       "infoPlist": {
-        "UIBackgroundModes": [
-          "location"
-        ],
+        "UIBackgroundModes": ["location"],
         "ITSAppUsesNonExemptEncryption": false
       }
     },
