@@ -19,8 +19,11 @@ public class AccountControllerTests : IClassFixture<StigViddWebApplicationFactor
     private const string ForgotPasswordUrl = "/api/v1/account/forgot-password";
     private const string KeycloakSubjectId = "kc-subject-id";
 
-    // A nickname seeded by Utilities.GetSeedingUsers (User 1) — taken, so the DB insert is rejected.
+    // A nickname seeded by Utilities.GetSeedingUsers (User 1) — taken, so registration is rejected.
     private const string TakenNickName = "NaturElskaren";
+
+    // A subject id seeded by Utilities.GetSeedingUsers — it already has a StigVidd record.
+    private const string SeededSubjectId = "firebase-uid-12345";
 
     public AccountControllerTests(StigViddWebApplicationFactory<Program> factory)
     {
@@ -65,7 +68,7 @@ public class AccountControllerTests : IClassFixture<StigViddWebApplicationFactor
     }
 
     [Fact]
-    public async Task Register_WhenKeycloakReportsConflict_ReturnsConflict()
+    public async Task Register_WhenKeycloakReportsConflict_ReturnsTheEmailConflictCode()
     {
         // Arrange
         _factory.KeycloakAdminMock
@@ -84,17 +87,18 @@ public class AccountControllerTests : IClassFixture<StigViddWebApplicationFactor
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Conflict);
+        var body = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+        body.Trim('"').Should().Be(StigviddAPI.Controllers.AccountController.EmailTakenCode);
     }
 
     [Fact]
-    public async Task Register_WhenDbCreateFails_RollsBackTheKeycloakUser()
+    public async Task Register_WhenNickNameIsTaken_ReturnsTheNickNameConflictCode()
     {
-        // Arrange: Keycloak provisioning succeeds, but the nickname is already taken in the DB,
-        // so the StigVidd record cannot be created and the Keycloak user must be rolled back.
+        // Arrange: only the nickname collides, and it is checked before provisioning.
         var client = _factory.CreateClient();
         var request = new RegisterRequest
         {
-            Email = "rollback@test.local",
+            Email = "nickclash@test.local",
             NickName = TakenNickName,
             Password = "Password123!",
         };
@@ -104,8 +108,36 @@ public class AccountControllerTests : IClassFixture<StigViddWebApplicationFactor
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Conflict);
+        var body = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+        body.Trim('"').Should().Be(StigviddAPI.Controllers.AccountController.NickNameTakenCode);
         _factory.KeycloakAdminMock.Verify(
-            k => k.DeleteUserAsync(KeycloakSubjectId, It.IsAny<CancellationToken>()),
+            k => k.CreateUserAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task Register_WhenDbCreateFails_RollsBackTheKeycloakUser()
+    {
+        // Arrange: Keycloak hands back a subject id the DB already holds, so the insert fails after
+        // provisioning.
+        _factory.KeycloakAdminMock
+            .Setup(k => k.CreateUserAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(SeededSubjectId);
+        var client = _factory.CreateClient();
+        var request = new RegisterRequest
+        {
+            Email = "rollback@test.local",
+            NickName = "RollbackNick",
+            Password = "Password123!",
+        };
+
+        // Act
+        var response = await client.PostAsJsonAsync(RegisterUrl, request, TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.Conflict);
+        _factory.KeycloakAdminMock.Verify(
+            k => k.DeleteUserAsync(SeededSubjectId, It.IsAny<CancellationToken>()),
             Times.Once);
     }
 

@@ -34,9 +34,16 @@ public class AccountController : StigViddController
         _logger = logger;
     }
 
+    /// <summary>Body of a 409 when the email is already registered in Keycloak.</summary>
+    public const string EmailTakenCode = "email-taken";
+
+    /// <summary>Body of a 409 when the nickname is already taken by another StigVidd user.</summary>
+    public const string NickNameTakenCode = "nickname-taken";
+
     /// <summary>
     /// Creates the Keycloak user and the matching StigVidd DB record. On DB failure the Keycloak
-    /// user is rolled back so the two systems don't drift.
+    /// user is rolled back so the two systems don't drift. A 409 body carries the code for the
+    /// field that collided.
     /// </summary>
     [HttpPost]
     [Route("register")]
@@ -44,6 +51,15 @@ public class AccountController : StigViddController
         [FromBody] RegisterRequest request,
         CancellationToken ctoken)
     {
+        // Checked before provisioning, so a taken nickname leaves no Keycloak user to roll back.
+        var nickNameCheck = await _userService.CheckForUsername(request.NickName, ctoken);
+
+        if (!nickNameCheck.Success)
+            return nickNameCheck.Message != null ? ToActionResult(nickNameCheck.Message) : StatusCode(500);
+
+        if (nickNameCheck.Value?.Exists == true)
+            return Conflict(NickNameTakenCode);
+
         string subjectId;
         try
         {
@@ -51,7 +67,7 @@ public class AccountController : StigViddController
         }
         catch (KeycloakUserConflictException)
         {
-            return Conflict("A user with that email already exists.");
+            return Conflict(EmailTakenCode);
         }
 
         var result = await _userService.CreateUserAsync(request.Email, request.NickName, subjectId, ctoken);
@@ -67,6 +83,10 @@ public class AccountController : StigViddController
             {
                 _logger.LogError(ex, "Failed to roll back Keycloak user {SubjectId} after DB create failure.", subjectId);
             }
+
+            // The nickname was free before provisioning, so a conflict here is a lost race.
+            if (result.Message?.StatusCode == StatusCodes.Status409Conflict)
+                return Conflict(NickNameTakenCode);
 
             if (result.Message != null)
                 return ToActionResult(result.Message);

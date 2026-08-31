@@ -97,11 +97,10 @@ export default function ResetPasswordModal({ visible, onDismiss }: Props) {
             {errors.email && (
               <View style={s.errorContainer}>
                 <Text
-                  style={{
-                    color: theme.colors.onErrorContainer,
-                    backgroundColor: theme.colors.errorContainer,
-                    fontWeight: 600,
-                  }}
+                  style={[
+                    s.errorBadge,
+                    { color: theme.colors.onErrorContainer, backgroundColor: theme.colors.errorContainer },
+                  ]}
                 >
                   {errors.email.message ? t(asTranslationKey(errors.email.message)) : ""}
                 </Text>
@@ -137,7 +136,16 @@ const s = StyleSheet.create({
     width: width * 0.65,
   },
   errorContainer: {
-    height: 30,
+    // Pinned to the field width so a long error message wraps instead of widening the modal.
+    width: width * 0.65,
+  },
+  errorBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: BORDER_RADIUS,
+    fontSize: 13,
+    lineHeight: 17,
+    fontWeight: "600",
   },
   errorText: {
     fontSize: 15,

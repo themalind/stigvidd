@@ -14,9 +14,11 @@ import {
   HIKE_STORAGE_KEY,
   INACTIVITY_TIMEOUT,
   MAX_DURATION,
+  MAX_FIX_AGE,
   MIN_SEGMENT_DISTANCE,
   RawFix,
   StoredHikeState,
+  WARMUP_MS,
   defaultHikeState,
   evaluatePoint,
   finalizeActiveSegment,
@@ -343,13 +345,13 @@ describe("location background task", () => {
     mockGetItem.mockResolvedValue(JSON.stringify(stateWithPoint));
 
     // Gaps large enough that the accepted hops stay under the speed cap:
-    // 50m/~6s and 30m/4s. The 1m hop is rejected as jitter regardless.
+    // 50m/~8s and 30m/5s. The 1m hop is rejected as jitter regardless.
     await locationTaskCallback({
       data: {
         locations: [
-          makeLocation(57.7005, 11.97, 10, NOW + 6000),
-          makeLocation(57.70051, 11.97, 10, NOW + 7000),
-          makeLocation(57.701, 11.97, 10, NOW + 10000),
+          makeLocation(57.7005, 11.97, 10, NOW + 8000),
+          makeLocation(57.70051, 11.97, 10, NOW + 9000),
+          makeLocation(57.701, 11.97, 10, NOW + 13000),
         ],
       },
       error: null,
@@ -611,9 +613,20 @@ describe("evaluatePoint", () => {
     expect(evaluatePoint(point(NOW - 1000), point(NOW), 10)).toEqual({ accept: false, distance: 0 });
   });
 
-  it("accepts a jump at exactly the speed cap", () => {
-    mockGetDistance.mockReturnValue(10); // 10m in 1s = 10 m/s (== MAX_SPEED, not over)
-    expect(evaluatePoint(point(NOW - 1000), point(NOW), 10)).toEqual({ accept: true, distance: 10 });
+  it("accepts a jump at exactly the burst cap", () => {
+    mockGetDistance.mockReturnValue(7); // 7m in 1s = 7 m/s (== MAX_SPEED_BURST, not over)
+    expect(evaluatePoint(point(NOW - 1000), point(NOW), 10)).toEqual({ accept: true, distance: 7 });
+  });
+
+  it("rejects drift-scale movement between consecutive fixes that the gap cap would allow", () => {
+    // 9m in 1s: under the 10 m/s gap cap, over the 7 m/s burst cap.
+    mockGetDistance.mockReturnValue(9);
+    expect(evaluatePoint(point(NOW - 1000), point(NOW), 10)).toEqual({ accept: false, distance: 0 });
+  });
+
+  it("keeps the wider cap once the gap is past the burst window", () => {
+    mockGetDistance.mockReturnValue(90); // 90m over 10s = 9 m/s: over the burst cap, under MAX_SPEED
+    expect(evaluatePoint(point(NOW - 10000), point(NOW), 10)).toEqual({ accept: true, distance: 90 });
   });
 
   it("accepts a large jump over a long gap so the track re-anchors after a suspension", () => {
@@ -629,6 +642,57 @@ describe("evaluatePoint", () => {
   it("accepts a within-cap move when the time delta is not usable", () => {
     mockGetDistance.mockReturnValue(50); // dt = 0, 50 ≤ cap and clears the floor
     expect(evaluatePoint(point(NOW), point(NOW), 10)).toEqual({ accept: true, distance: 50 });
+  });
+
+  it("rejects the cached position Core Location answers the first subscription with", () => {
+    // Stamped well before the recording began.
+    const started = NOW;
+    expect(evaluatePoint(undefined, point(started - MAX_FIX_AGE - 1000), 10, { trackStartedAt: started })).toEqual({
+      accept: false,
+      distance: 0,
+    });
+  });
+
+  it("keeps a fix stamped just inside the age window", () => {
+    const started = NOW;
+    expect(evaluatePoint(undefined, point(started - MAX_FIX_AGE + 1000), 10, { trackStartedAt: started })).toEqual({
+      accept: true,
+      distance: 0,
+    });
+  });
+
+  it("holds the anchor back for a coarse first fix inside the warm-up window", () => {
+    // 30m passes the 40m iOS gate but is coarser than ANCHOR_ACCURACY.
+    expect(evaluatePoint(undefined, point(NOW + 2000), 30, { trackStartedAt: NOW })).toEqual({
+      accept: false,
+      distance: 0,
+    });
+  });
+
+  it("anchors on a converged first fix immediately", () => {
+    expect(evaluatePoint(undefined, point(NOW + 2000), 15, { trackStartedAt: NOW })).toEqual({
+      accept: true,
+      distance: 0,
+    });
+  });
+
+  it("takes the coarse fix once the warm-up window has passed, so poor reception only delays the start", () => {
+    expect(evaluatePoint(undefined, point(NOW + WARMUP_MS + 1000), 30, { trackStartedAt: NOW })).toEqual({
+      accept: true,
+      distance: 0,
+    });
+  });
+
+  it("applies neither the age nor the warm-up rule without a segment start", () => {
+    expect(evaluatePoint(undefined, point(NOW - 600_000), 30)).toEqual({ accept: true, distance: 0 });
+  });
+
+  it("holds the anchor back only for the first point, not for later ones", () => {
+    mockGetDistance.mockReturnValue(20); // accuracy 30 → floor 15; 20 ≥ 15
+    expect(evaluatePoint(point(NOW + 1000), point(NOW + 5000), 30, { trackStartedAt: NOW })).toEqual({
+      accept: true,
+      distance: 20,
+    });
   });
 });
 

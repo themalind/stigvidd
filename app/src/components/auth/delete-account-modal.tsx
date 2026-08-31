@@ -104,11 +104,10 @@ export default function DeleteAccountModal({ visible, onDismiss }: Props) {
             {errors.password && (
               <View style={s.errorContainer}>
                 <Text
-                  style={{
-                    color: theme.colors.onErrorContainer,
-                    backgroundColor: theme.colors.errorContainer,
-                    fontWeight: 600,
-                  }}
+                  style={[
+                    s.errorBadge,
+                    { color: theme.colors.onErrorContainer, backgroundColor: theme.colors.errorContainer },
+                  ]}
                 >
                   {errors.password.message ? t(asTranslationKey(errors.password.message)) : ""}
                 </Text>
@@ -157,7 +156,16 @@ const s = StyleSheet.create({
     alignItems: "center",
   },
   errorContainer: {
-    height: 30,
+    // Pinned to the field width so a long error message wraps instead of widening the modal.
+    width: width * 0.65,
+  },
+  errorBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: BORDER_RADIUS,
+    fontSize: 13,
+    lineHeight: 17,
+    fontWeight: "600",
   },
   errorText: {
     fontSize: 15,

@@ -35,8 +35,8 @@ const obstacleFields = z.object({
   description: z
     .string({ required_error: "obstacle.descriptionRequired" })
     .min(15, "obstacle.descriptionTooShort")
-    .max(500),
-  issueType: z.string().nonempty(),
+    .max(500, "obstacle.descriptionMax"),
+  issueType: z.string().nonempty("obstacle.categoryRequired"),
   useLocation: z.boolean().optional(),
   incidentLatitude: z.number().nullable().optional(),
   incidentLongitude: z.number().nullable().optional(),
@@ -210,7 +210,11 @@ export default function TrailObstacleForm({ trailIdentifier, visible, onDismiss 
                     )}
                   />
                 )}
-                {errors.issueType && <Text>{errors.issueType.message}</Text>}
+                {errors.issueType?.message && (
+                  <Text style={[s.bold, { color: theme.colors.error }]}>
+                    {t(asTranslationKey(errors.issueType.message))}
+                  </Text>
+                )}
               </View>
               <View style={s.fieldGroup}>
                 <Text style={[s.fieldLabel, { color: theme.colors.onSurfaceVariant }]}>
@@ -240,9 +244,9 @@ export default function TrailObstacleForm({ trailIdentifier, visible, onDismiss 
                 <Text style={[s.privacyInfo, { color: theme.colors.onSurfaceVariant }]}>
                   {t("obstacle.descriptionPrivacyInfo")}
                 </Text>
-                {errors.description && (
+                {errors.description?.message && (
                   <Text style={[s.bold, { color: theme.colors.error }]}>
-                    {t(asTranslationKey(errors.description.message as string))}
+                    {t(asTranslationKey(errors.description.message))}
                   </Text>
                 )}
               </View>

@@ -10,6 +10,7 @@ import { stigviddUserAtom } from "@/atoms/user-atoms";
 import { FRIENDS_STALE_TIME } from "@/constants/cache";
 import { BORDER_RADIUS } from "@/constants/constants";
 import { FriendResponse } from "@/data/types";
+import { asTranslationKey } from "@/i18n";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
@@ -23,10 +24,13 @@ import { z } from "zod";
 
 const HEIGHT = Dimensions.get("screen").height;
 
+// Limits mirror CreateHikeRequestValidator; the message key follows the limit.
+const maxChars = (max: 200 | 500) => z.string().max(max, `hike.maxChars${max}`).optional();
+
 const additionalHikeFields = z.object({
-  gettingThere: z.string().max(200, "Max 500 tecken").optional(),
-  parkingInfo: z.string().max(200, "Max 500 tecken").optional(),
-  description: z.string().max(500, "Max 500 tecken").optional(),
+  gettingThere: maxChars(200),
+  parkingInfo: maxChars(200),
+  description: maxChars(500),
   allowResharing: z.boolean().optional(),
 });
 
@@ -41,6 +45,7 @@ interface FormFieldProps {
 
 function FormField({ name, label, control, error }: FormFieldProps) {
   const theme = useTheme();
+  const { t } = useTranslation();
   return (
     <View style={s.field}>
       <Controller
@@ -62,11 +67,11 @@ function FormField({ name, label, control, error }: FormFieldProps) {
           />
         )}
       />
-      {error && (
+      {error?.message && (
         <Text
-          style={[s.errorText, { color: theme.colors.onErrorContainer, backgroundColor: theme.colors.errorContainer }]}
+          style={[s.errorBadge, { color: theme.colors.onErrorContainer, backgroundColor: theme.colors.errorContainer }]}
         >
-          {error.message}
+          {t(asTranslationKey(error.message))}
         </Text>
       )}
     </View>
@@ -305,7 +310,12 @@ const s = StyleSheet.create({
     gap: 4,
     marginBottom: 14,
   },
-  errorText: {
+  errorBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: BORDER_RADIUS,
+    fontSize: 13,
+    lineHeight: 17,
     fontWeight: "600",
   },
   infoLabel: {

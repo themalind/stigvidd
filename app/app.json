@@ -17,14 +17,16 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.stigvidd.app",
-      "buildNumber": "1",
+      "buildNumber": "3",
       "infoPlist": {
-        "UIBackgroundModes": ["location"],
+        "UIBackgroundModes": [
+          "location"
+        ],
         "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
-      "versionCode": 1,
+      "versionCode": 3,
       "softwareKeyboardLayoutMode": "pan",
       "adaptiveIcon": {
         "backgroundColor": "#68AE82",

@@ -38,6 +38,8 @@ public class OpenApiContractTests : IClassFixture<StigViddWebApplicationFactory<
             ? await File.ReadAllTextAsync(snapshotPath, TestContext.Current.CancellationToken)
             : null;
 
+        // Ordinal, so line endings count: on Windows this always fails against the LF snapshot.
+        // See docs/notes/openapi-snapshot-fails-on-windows-line-endings.md.
         if (string.Equals(committed, current, StringComparison.Ordinal))
             return;
 

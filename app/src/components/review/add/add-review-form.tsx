@@ -6,6 +6,7 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { showErrorAtom } from "@/atoms/snackbar-atoms";
+import { asTranslationKey } from "@/i18n";
 import { BORDER_RADIUS } from "@/constants/constants";
 import { useCreateReview } from "@/hooks/review/useCreateReview";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -27,8 +28,8 @@ interface ReviewFormProps {
 }
 
 const newReviewForm = z.object({
-  trailReview: z.optional(z.string().max(500, "Review is too long. Max char 500.")),
-  rating: z.number().min(1).max(5),
+  trailReview: z.optional(z.string().max(500, "review.reviewTooLong")),
+  rating: z.number().min(1, "review.ratingRequired").max(5, "review.ratingRequired"),
   trailIdentifier: z
     .string({ required_error: "trailIdentifier is required." })
     .uuid({ message: "trailIdentifier must be of type uuid." }),
@@ -109,7 +110,9 @@ export default function AddReviewForm({ trailIdentifier, onSuccess }: ReviewForm
           name="rating"
           defaultValue={1}
         />
-        {errors.rating && <Text>{errors.rating.message}</Text>}
+        {errors.rating?.message && (
+          <Text style={[s.error, { color: theme.colors.error }]}>{t(asTranslationKey(errors.rating.message))}</Text>
+        )}
       </View>
       <Divider />
       <View style={s.rowGap}>
@@ -174,16 +177,18 @@ export default function AddReviewForm({ trailIdentifier, onSuccess }: ReviewForm
           )}
           name="trailReview"
         />
-        {errors.trailReview && <Text>{errors.trailReview.message}</Text>}
+        {errors.trailReview?.message && (
+          <Text style={[s.error, { color: theme.colors.error }]}>
+            {t(asTranslationKey(errors.trailReview.message))}
+          </Text>
+        )}
       </View>
       <Divider />
       <View>
         <Button
           mode="contained"
           style={s.button}
-          onPress={handleSubmit(onSubmit, (errors) => {
-            console.log("Validation failed:", errors);
-          })}
+          onPress={handleSubmit(onSubmit)}
           disabled={isSubmitting || createReviewMutation.isPending}
         >
           {createReviewMutation.isPending ? t("common.saving") : t("common.save")}
@@ -208,5 +213,8 @@ const s = StyleSheet.create({
   },
   button: {
     borderRadius: BORDER_RADIUS,
+  },
+  error: {
+    fontWeight: "700",
   },
 });

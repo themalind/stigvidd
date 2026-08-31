@@ -32,7 +32,7 @@ const registerFields = z
   .object({
     nickName: z
       .string({ required_error: "auth.validation.nicknameRequired" })
-      .min(1)
+      .min(1, "auth.validation.nicknameRequired")
       .max(20, "auth.validation.nicknameTooLong")
       .regex(/^[a-zA-Z0-9_-]+$/, "auth.validation.nicknameInvalidChars"),
     email: z.string({ required_error: "auth.validation.emailRequired" }).email("auth.validation.emailInvalid"),
@@ -90,8 +90,13 @@ export default function RegisterScreen() {
     try {
       await register(data);
     } catch (error) {
+      // The 409 code says which field collided.
       if (error instanceof ApiError && error.message === "nickname-taken") {
         setError("nickName", { message: "auth.validation.nicknameTaken" });
+        return;
+      }
+      if (error instanceof ApiError && error.message === "email-taken") {
+        setError("email", { message: "auth.validation.emailTaken" });
         return;
       }
       // Account was created but auto-login failed: send the user to login with a
@@ -149,11 +154,10 @@ export default function RegisterScreen() {
               <View style={s.errorContainer}>
                 {errors.nickName && (
                   <Text
-                    style={{
-                      color: theme.colors.onErrorContainer,
-                      backgroundColor: theme.colors.errorContainer,
-                      fontWeight: 600,
-                    }}
+                    style={[
+                      s.errorBadge,
+                      { color: theme.colors.onErrorContainer, backgroundColor: theme.colors.errorContainer },
+                    ]}
                   >
                     {errors.nickName?.message ? t(asTranslationKey(errors.nickName.message)) : ""}
                   </Text>
@@ -184,11 +188,10 @@ export default function RegisterScreen() {
               <View style={s.errorContainer}>
                 {errors.email && (
                   <Text
-                    style={{
-                      color: theme.colors.onErrorContainer,
-                      backgroundColor: theme.colors.errorContainer,
-                      fontWeight: 600,
-                    }}
+                    style={[
+                      s.errorBadge,
+                      { color: theme.colors.onErrorContainer, backgroundColor: theme.colors.errorContainer },
+                    ]}
                   >
                     {errors.email?.message ? t(asTranslationKey(errors.email.message)) : ""}
                   </Text>
@@ -210,11 +213,10 @@ export default function RegisterScreen() {
               <View style={s.errorContainer}>
                 {errors.password && (
                   <Text
-                    style={{
-                      color: theme.colors.onErrorContainer,
-                      backgroundColor: theme.colors.errorContainer,
-                      fontWeight: 600,
-                    }}
+                    style={[
+                      s.errorBadge,
+                      { color: theme.colors.onErrorContainer, backgroundColor: theme.colors.errorContainer },
+                    ]}
                   >
                     {errors.password?.message ? t(asTranslationKey(errors.password.message)) : ""}
                   </Text>
@@ -225,7 +227,7 @@ export default function RegisterScreen() {
                 render={({ field: { onChange, onBlur } }) => (
                   <PasswordInputField
                     passwordCallback={onChange}
-                    error={!!errors.password}
+                    error={!!errors.confirmPassword}
                     onBlur={onBlur}
                     label={t("auth.repeatPassword")}
                     onSubmitEditing={handleSubmit(onSubmit)}
@@ -237,11 +239,10 @@ export default function RegisterScreen() {
               <View style={s.errorContainer}>
                 {errors.confirmPassword && (
                   <Text
-                    style={{
-                      color: theme.colors.onErrorContainer,
-                      backgroundColor: theme.colors.errorContainer,
-                      fontWeight: 600,
-                    }}
+                    style={[
+                      s.errorBadge,
+                      { color: theme.colors.onErrorContainer, backgroundColor: theme.colors.errorContainer },
+                    ]}
                   >
                     {errors.confirmPassword?.message ? t(asTranslationKey(errors.confirmPassword.message)) : ""}
                   </Text>
@@ -329,6 +330,8 @@ const s = StyleSheet.create({
   },
   textInputContainer: {
     flex: 1,
+    // Pinned to the field width so a long error message wraps instead of widening the column.
+    width: WIDTH * 0.65,
   },
   textInput: {
     width: WIDTH * 0.65,
@@ -366,6 +369,14 @@ const s = StyleSheet.create({
     // keeps the spacing and lets the row grow only when there is something to show.
     minHeight: 12,
     justifyContent: "center",
+  },
+  errorBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: BORDER_RADIUS,
+    fontSize: 13,
+    lineHeight: 17,
+    fontWeight: "600",
   },
   errorText: {
     fontSize: 15,

@@ -128,11 +128,10 @@ export default function LoginScreen({ showBackButton = false }: { showBackButton
               <View style={s.errorContainer}>
                 {errors.email && (
                   <Text
-                    style={{
-                      color: theme.colors.onErrorContainer,
-                      backgroundColor: theme.colors.errorContainer,
-                      fontWeight: 600,
-                    }}
+                    style={[
+                      s.errorBadge,
+                      { color: theme.colors.onErrorContainer, backgroundColor: theme.colors.errorContainer },
+                    ]}
                   >
                     {errors.email.message ? t(asTranslationKey(errors.email.message)) : ""}
                   </Text>
@@ -155,11 +154,10 @@ export default function LoginScreen({ showBackButton = false }: { showBackButton
               <View style={s.errorContainer}>
                 {errors.password && (
                   <Text
-                    style={{
-                      color: theme.colors.onErrorContainer,
-                      backgroundColor: theme.colors.errorContainer,
-                      fontWeight: 600,
-                    }}
+                    style={[
+                      s.errorBadge,
+                      { color: theme.colors.onErrorContainer, backgroundColor: theme.colors.errorContainer },
+                    ]}
                   >
                     {errors.password.message ? t(asTranslationKey(errors.password.message)) : ""}
                   </Text>
@@ -235,6 +233,8 @@ const s = StyleSheet.create({
   },
   textInputContainer: {
     flex: 1,
+    // Pinned to the field width so a long error message wraps instead of widening the column.
+    width: WIDTH * 0.65,
   },
   textInput: {
     flex: 1,
@@ -272,6 +272,14 @@ const s = StyleSheet.create({
     // keeps the spacing and lets the row grow only when there is something to show.
     minHeight: 12,
     justifyContent: "center",
+  },
+  errorBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: BORDER_RADIUS,
+    fontSize: 13,
+    lineHeight: 17,
+    fontWeight: "600",
   },
   errorText: {
     fontSize: 15,

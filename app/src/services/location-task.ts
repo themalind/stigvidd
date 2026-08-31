@@ -42,6 +42,17 @@ const MOVING_SPEED = 0.5;
 // Physically impossible speed (m/s) between two fixes ⇒ GPS glitch, not movement.
 // ~10 m/s (36 km/h) clears hiking/running/cycling while catching teleport spikes.
 const MAX_SPEED = 10;
+// Tighter cap (m/s) for fixes less than BURST_WINDOW seconds apart, where drift can
+// outrun the allowance MAX_SPEED makes for suspension gaps.
+const MAX_SPEED_BURST = 7;
+const BURST_WINDOW = 5;
+// A fix stamped more than this (ms) before the recording started is Core Location's
+// cached position from an earlier session, not where the user is now.
+export const MAX_FIX_AGE = 15_000;
+// Accuracy (m) a fix must reach to anchor a segment's first point, and how long (ms)
+// the segment waits for one before falling back to the normal gate.
+const ANCHOR_ACCURACY = 20;
+export const WARMUP_MS = 15_000;
 
 // A segment shorter than this (meters) is discarded when finalized — it's noise,
 // not a walk. Shared by stopTracking and the stale-session finalizer.
@@ -204,6 +215,12 @@ export function evaluatePoint(
   context: PointContext = {},
 ): PointDecision {
   const { trackStartedAt, speed } = context;
+
+  // Reject Core Location's cached first fix: its timestamp predates the recording.
+  if (trackStartedAt !== undefined && trackStartedAt - candidate.timeStamp > MAX_FIX_AGE) {
+    return { accept: false, distance: 0 };
+  }
+
   // The gate relaxes once the track has stalled, so poor reception costs detail
   // rather than the whole stretch.
   const stalledSince = lastPoint?.timeStamp ?? trackStartedAt ?? candidate.timeStamp;
@@ -213,19 +230,25 @@ export function evaluatePoint(
   // horizontalAccuracy when it can't determine one — the fix is unusable), as well
   // as anything worse than the gate in force.
   if (!accuracy || accuracy < 0 || accuracy > maxAccuracy) return { accept: false, distance: 0 };
-  if (!lastPoint) return { accept: true, distance: 0 };
+
+  if (!lastPoint) {
+    // Every later point is measured from the anchor, so it holds out for a converged
+    // fix until WARMUP_MS has passed.
+    const warmingUp = trackStartedAt !== undefined && candidate.timeStamp - trackStartedAt < WARMUP_MS;
+    if (warmingUp && accuracy > ANCHOR_ACCURACY) return { accept: false, distance: 0 };
+    return { accept: true, distance: 0 };
+  }
 
   const distance = getDistance(lastPoint.data, candidate.data);
 
   const dtSeconds = (candidate.timeStamp - lastPoint.timeStamp) / 1000;
   if (dtSeconds > 0) {
     // With a valid time delta, speed — not an absolute distance cap — is the
-    // plausibility gate. A suspension gap (pocket, locked screen) legitimately
-    // places the next fix hundreds of metres from the last recorded point: the user
-    // kept walking while JS wasn't running, so a large jump over a long gap is a
-    // low, plausible speed. Accepting it re-anchors the track to the user's real
-    // position; a large jump over a short gap is a GPS glitch and is rejected.
-    if (distance / dtSeconds > MAX_SPEED) return { accept: false, distance: 0 };
+    // plausibility gate, tighter for consecutive fixes than across a gap: a jump over
+    // a suspension gap (pocket, locked screen) is real ground covered at a plausible
+    // speed, the same jump over a short gap is a glitch.
+    const maxSpeed = dtSeconds <= BURST_WINDOW ? MAX_SPEED_BURST : MAX_SPEED;
+    if (distance / dtSeconds > maxSpeed) return { accept: false, distance: 0 };
   } else if (distance > MAX_DISTANCE) {
     // No usable time delta (missing or non-increasing timestamps): fall back to an
     // absolute distance cap to reject teleport glitches.

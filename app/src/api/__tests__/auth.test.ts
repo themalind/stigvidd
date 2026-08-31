@@ -16,11 +16,12 @@ import { ApiError } from "../api-error";
 import { registerAccount, userPasswordReset } from "../auth";
 import { RegisterData } from "@/data/types";
 
-function mockFetch(status: number, body: unknown = {}) {
+function mockFetch(status: number, body: unknown = {}, text = "") {
   global.fetch = jest.fn().mockResolvedValue({
     ok: status >= 200 && status < 300,
     status,
     json: jest.fn().mockResolvedValue(body),
+    text: jest.fn().mockResolvedValue(text),
   } as unknown as Response);
 }
 
@@ -65,10 +66,31 @@ describe("registerAccount", () => {
     await expect(registerAccount(registerData)).resolves.toBeUndefined();
   });
 
-  it("throws ApiError 'nickname-taken' on 409", async () => {
-    mockFetch(409);
+  it("throws ApiError 'nickname-taken' when the 409 body says the nickname collided", async () => {
+    mockFetch(409, {}, "nickname-taken");
     await expect(registerAccount(registerData)).rejects.toMatchObject({
       message: "nickname-taken",
+      status: 409,
+    });
+  });
+
+  it("throws ApiError 'email-taken' when the 409 body says the email collided", async () => {
+    mockFetch(409, {}, "email-taken");
+    await expect(registerAccount(registerData)).rejects.toMatchObject({
+      message: "email-taken",
+      status: 409,
+    });
+  });
+
+  it("tolerates a JSON-quoted conflict code", async () => {
+    mockFetch(409, {}, '"email-taken"');
+    await expect(registerAccount(registerData)).rejects.toMatchObject({ message: "email-taken" });
+  });
+
+  it("blames no field when the 409 body is not a known code", async () => {
+    mockFetch(409, {}, "A user with that email already exists.");
+    await expect(registerAccount(registerData)).rejects.toMatchObject({
+      message: "registration-conflict",
       status: 409,
     });
   });

@@ -28,8 +28,8 @@ const updateObstacleFields = z.object({
   description: z
     .string({ required_error: "obstacle.descriptionRequired" })
     .min(15, "obstacle.descriptionTooShort")
-    .max(500),
-  issueType: z.string().nonempty(),
+    .max(500, "obstacle.descriptionMax"),
+  issueType: z.string().nonempty("obstacle.categoryRequired"),
 });
 
 type FormFields = z.infer<typeof updateObstacleFields>;
@@ -127,7 +127,9 @@ export default function TrailObstacleUpdateForm({
                 )}
               />
             )}
-            {errors.issueType && <Text style={{ color: theme.colors.error }}>{errors.issueType.message}</Text>}
+            {errors.issueType?.message && (
+              <Text style={{ color: theme.colors.error }}>{t(asTranslationKey(errors.issueType.message))}</Text>
+            )}
           </View>
 
           <View style={s.fieldGroup}>

@@ -10,10 +10,21 @@ import { RegisterData, UpdateUserResult } from "@/data/types";
 import { BASE_URL } from "./api-config";
 import { ApiError } from "./api-error";
 
+/** Reads the conflict code from a 409 body; an unrecognised body is a generic conflict. */
+async function readConflictCode(response: Response): Promise<string> {
+  try {
+    const body = (await response.text()).trim().replace(/^"|"$/g, "");
+    if (body === "nickname-taken" || body === "email-taken") return body;
+  } catch {
+    // fall through to the generic code
+  }
+  return "registration-conflict";
+}
+
 /**
  * Provision a new account: the backend creates the Keycloak user (via the
  * Keycloak Admin API) and the matching StigVidd DB record in one call.
- * Throws ApiError("nickname-taken", 409) when the nickname is taken.
+ * A 409 throws ApiError carrying the code for the field that collided.
  */
 export async function registerAccount(data: RegisterData): Promise<void> {
   const response = await fetch(`${BASE_URL}/account/register`, {
@@ -27,7 +38,7 @@ export async function registerAccount(data: RegisterData): Promise<void> {
   });
 
   if (response.status === 409) {
-    throw new ApiError("nickname-taken", 409);
+    throw new ApiError(await readConflictCode(response), 409);
   }
 
   if (!response.ok) {
