@@ -107,6 +107,12 @@ services:
       # proxy's network alias makes this resolve internally with a valid cert.
       Keycloak__auth-server-url: ${KEYCLOAK_URL:?KEYCLOAK_URL must be set}
       KeycloakAdminClient__auth-server-url: ${KEYCLOAK_URL}
+      # Secret of the confidential `stigvidd-admin-api` client, from its Credentials
+      # tab in the realm. Mints the client-credentials token behind
+      # IKeycloakAdminRepository, so registration, forgot-password and admin user
+      # provisioning all fail at runtime without it. Deliberately NOT in
+      # appsettings.json — it is a real credential, and appsettings.json is public.
+      KeycloakAdminClient__credentials__secret: ${KEYCLOAK_ADMIN_CLIENT_SECRET:?KEYCLOAK_ADMIN_CLIENT_SECRET must be set}
       # Name of Keycloak's database (same Postgres) — used by admin export/import.
       KEYCLOAK_DB: ${KEYCLOAK_DB:-keycloak}
       # Outbound mail via the `mailserver` service. Nothing in the API sends mail

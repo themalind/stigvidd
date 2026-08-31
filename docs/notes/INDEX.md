@@ -44,7 +44,28 @@ you get approved.
   WebApplicationFactory swaps in SQLite regardless. The bash, PowerShell and cmd forms all
   differ, the separator is a **double** underscore, and shell state does not persist between
   Bash tool calls. Also: under the Microsoft.Testing.Platform runner that `global.json`
-  selects, `dotnet test <path.csproj>` is refused — one project needs `--project`.
+  selects, `dotnet test <path.csproj>` is refused — one project needs `--project`, while
+  `dotnet build --project <path.csproj>` is refused by MSBuild in the other direction (it
+  takes the path positionally) with only "Switch: --project" to say so — and the
+  `dotnet test --no-build` that follows then runs the **stale DLL**, so a mutation or a fix
+  reports the previous binary's result.
+- [The integration tests inherit StigviddAPI's appsettings.json *and* your user secrets, so a config deletion is green locally and 337 red on CI](integration-tests-inherit-api-config.md) —
+  `StigViddWebApplicationFactory` boots the real `Program.Main` and substitutes the database,
+  WebDAV and `IKeycloakAdminRepository` but **no configuration**, so the host reads
+  `backend/StigviddAPI/appsettings.json`, `appsettings.Development.json` and — because the
+  factory runs as `Development` and StigviddAPI has a `UserSecretsId` — the developer's
+  `~/.microsoft/usersecrets` too. Deleting the Keycloak client secrets from `appsettings.json`
+  (commit `ab97fb3`) failed **337 of 1441** tests on Jenkins with
+  `OptionsValidationException : Keycloak Admin HTTP client requires a valid absolute URI for
+  'AuthServerUrl'` from `AddKeycloakAdminHttpClient`'s `ValidateOnStart`, while staying green
+  on any box holding those values in user secrets — so a local `dotnet test` is **not**
+  evidence about a configuration change. Fixed with `KeycloakConfigPreload.cs`, a
+  `[ModuleInitializer]` setting environment variables, because
+  `builder.ConfigureAppConfiguration` in `ConfigureWebHost` runs too late on the
+  `DeferredHostBuilder` path and still fails 337/337. Has the per-key mutation table, and the
+  half no test sees: `docker-compose.yml` overrode only `auth-server-url`, so the deployed API
+  had no `KeycloakAdminClient` client secret at all and every Keycloak Admin call — register,
+  forgot-password, admin provisioning — was broken with nothing reporting it.
 - [SpatiaLite in the integration tests is set up differently on Windows and on Linux](spatialite-per-os.md) —
   the csproj already splits on `$(OS)`: Windows uses the bundled `e_sqlite3`, Linux binds
   the **system** libsqlite3 via a `[ModuleInitializer]` because the bundle would shadow the

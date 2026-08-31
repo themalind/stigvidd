@@ -176,6 +176,23 @@ the authoritative relay details.
 > Then follow steps 6 and 7 below to create the mailboxes and point Keycloak at
 > them. Steps 1–5 are for a genuinely new host.
 >
+> ### The Keycloak admin client secret does it a third time
+>
+> `KEYCLOAK_ADMIN_CLIENT_SECRET` is `${…:?}`-guarded on `api`, so the same trap applies
+> once more — until it exists in `/opt/stigvidd/.env`, *every* compose command on that
+> host fails, the CI deploy's `pull`/`up` included. Add it **before** merging:
+>
+> ```bash
+> cd /opt/stigvidd
+> cat >> .env <<'EOF'
+> KEYCLOAK_ADMIN_CLIENT_SECRET=<stigvidd-admin-api's secret, from its Credentials tab>
+> EOF
+> ```
+>
+> This value previously lived in `backend/StigviddAPI/appsettings.json`, which is a public
+> file — so regenerate the secret in Keycloak rather than copying the old one across, and
+> put the new value here.
+>
 > ### Observability does the same thing again
 >
 > `OBSERVATORY_DOMAIN`, `OBSERVATORY_ROOT_EMAIL` and `OBSERVATORY_ROOT_PASSWORD`
@@ -327,14 +344,19 @@ is nothing to probe with; the `/healthz` call above is the check.
 A fresh Keycloak is empty. The app expects realm `stigvidd` with clients
 `stigvidd-api`, `stigvidd-admin-api`, `stigvidd-admin`. Either:
 
-- **Import an existing realm export** (keeps client secrets matching
-  [appsettings.json](backend/StigviddAPI/appsettings.json)) — recommended, or
+- **Import an existing realm export** (keeps the client secrets that are already
+  deployed) — recommended, or
 - Recreate the realm/clients by hand in the admin console at
   `https://auth.stigvidd.se/admin` (log in with `KC_ADMIN_USER` /
   `KC_ADMIN_PASSWORD`).
 
 Grant your admin user the **`admin` realm role** — the web Migration page and
 its API endpoints require it.
+
+Either way, copy `stigvidd-admin-api`'s secret from its **Credentials** tab into
+`KEYCLOAK_ADMIN_CLIENT_SECRET` in `.env`. The client secrets used to live in
+`backend/StigviddAPI/appsettings.json` and no longer do — that file is public, and
+anything that was ever in it has to be treated as disclosed and regenerated.
 
 > If you migrate data from another host (Part 4), the realm comes across with it
 > and you can skip this step.
@@ -662,6 +684,7 @@ Copy [.env.example](.env.example) to `.env` and set:
 | `POSTGRES_DB` / `POSTGRES_USER` / `POSTGRES_PASSWORD` | Database. Keep identical to the source when restoring a backup. |
 | `DB_PUBLIC_PORT` | Host port Postgres is **published** on (default `5432`), reachable from any IP that can reach this host — see [Direct database access](#direct-database-access-published-5432). Named this rather than `POSTGRES_PORT` so it is never confused with libpq's `PGPORT`. Moving it (e.g. `5433`) is noise reduction, not security. |
 | `KEYCLOAK_URL` | Public issuer URL, e.g. `https://auth.stigvidd.se`. |
+| `KEYCLOAK_ADMIN_CLIENT_SECRET` | Secret of the confidential `stigvidd-admin-api` client, from its **Credentials** tab in the `stigvidd` realm. The API mints its Keycloak Admin API token with it, so registration, forgot-password and admin user provisioning fail at runtime without it. It is **not** in `appsettings.json` — that file is public. Rotating it in Keycloak means updating it here too. |
 | `KEYCLOAK_DB` | Keycloak's database name (default `keycloak`). |
 | `KC_ADMIN_USER` / `KC_ADMIN_PASSWORD` | First-boot Keycloak admin. Rotate after first login. |
 | `WEBDAV_USER` / `WEBDAV_PASSWORD` | Credentials the API uses to write media. |

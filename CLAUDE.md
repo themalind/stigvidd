@@ -189,7 +189,14 @@ against real PostGIS.
 - `backend/Tests/UnitTests` — services, repositories, factories, validators, importers.
   EF InMemory provider, xunit.v3 + FluentAssertions + Moq.
 - `backend/Tests/IntegrationTests` — one folder per controller, booting the real host
-  through `StigViddWebApplicationFactory` against SQLite + SpatiaLite in-memory.
+  through `StigViddWebApplicationFactory` against SQLite + SpatiaLite in-memory. It boots the
+  real `Program.Main`, so it inherits **StigviddAPI's whole configuration stack** —
+  `appsettings.json`, and, because the factory runs as `Development`, your **user secrets**.
+  So a green local run is not evidence about a config change: deleting a value from
+  `appsettings.json` failed 337 tests on Jenkins while passing on every box that had it in
+  `~/.microsoft/usersecrets`. `KeycloakConfigPreload.cs` now pins the Keycloak keys as
+  environment variables (which outrank user secrets) so every box agrees with CI —
+  [note](docs/notes/integration-tests-inherit-api-config.md).
 - `app` — jest via `jest-expo`.
 - `web` — Vitest + jsdom, config in `web/vitest.config.ts` (deliberately **not**
   `vite.config.ts`, so a broken test config cannot break the bundle). Tests sit beside
