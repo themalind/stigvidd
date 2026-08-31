@@ -25,6 +25,13 @@ you get approved.
   leaves the file modified; the fix is `npm run generate:api` in web/ and commit both.
   Jenkins alone runs `git diff --exit-code -- src/api/generated`, so a stale or
   hand-edited client is a red build talking about staleness rather than about your change.
+- [On Windows `OpenApiContractTests` fails on a clean checkout, and the "contract change" is only CR bytes](openapi-snapshot-fails-on-windows-line-endings.md) —
+  The test compares the served `/swagger/v1/swagger.json` against `web/openapi.json` with
+  `StringComparison.Ordinal`, but `.gitattributes` keeps the snapshot at LF while the served
+  document is CRLF on Windows — so it fails, rewrites the file, passes on the second run, and
+  fails again after `git checkout -- web/openapi.json`. `git status` says modified while
+  `git diff` prints only a CRLF warning. Strip CR from both and diff before hunting for an API
+  change that is not there. Linux and CI are unaffected, which is why nothing catches it.
 - [In a linked worktree `.git` is a FILE, and code that tests for a directory walks past it](git-worktree-repo-root.md) —
   `Directory.Exists(".git")` is false at a worktree root, which made
   `OpenApiContractTests.FindRepositoryRoot` run off the top of the filesystem and throw,
@@ -97,13 +104,15 @@ you get approved.
   src/api/generated` then fails with "the generated API client is stale" for reasons that
   have nothing to do with the API. Four migration files were committed CRLF+BOM. Fixed with
   `* text=auto eol=lf`; keep content comparisons newline-agnostic regardless.
-- [`npx tsc --noEmit` in app/ has 19 pre-existing errors, and no CI job runs it](app-typecheck-baseline.md) —
+- [`npx tsc --noEmit` in app/ is clean, and no CI job runs it](app-typecheck-baseline.md) —
   nothing type-checks app/: CI runs prettier, expo lint and jest, and jest-expo transpiles
   via Babel without type-checking, so a type error in app production code is caught by
-  nothing. The 19 errors are all in `src/**/__tests__/*.ts`; 16 are
-  `TS2304: Cannot find name 'global'` because `tsconfig.json`'s `"types": ["jest","geojson"]`
-  replaces the default type roots and drops `@types/node`, and 3 are a real signature
-  mismatch in `logger.test.ts`. Use 19 as the baseline before blaming your own change.
+  nothing. Measured 2026-08-31: **0 errors, exit 0** — any error is one you added. This note
+  previously recorded 19 and blamed `tsconfig.json`'s `"types": ["jest","geojson"]` for
+  dropping `@types/node`; that array is unchanged and the `TS2304: Cannot find name 'global'`
+  errors are gone, because `expo-env.d.ts` reaches `expo/types/global.d.ts`'s
+  `/// <reference types="node" />`, which `compilerOptions.types` does not filter. Don't add
+  `"node"` to that array — check `expo-env.d.ts` exists, it is gitignored.
 - [A popular-trails ranking test competes with the standard seed: six verified GeoPath trails at one location](seeded-trails-compete-in-ranking-tests.md) —
   writing a test for popular-trail ranking, proximity, distance or user location: `TestBase.CreateSeededFactory()`'s
   `extraSeed` is **additive**, and `Utilities.InitializeDbForTests` already supplies six
@@ -229,6 +238,17 @@ you get approved.
   uninstalled timer deletes nothing while everything looks healthy, and log options are fixed
   at container *create* time, so `docker compose restart` never applies the caps. Distinct
   from `OBSERVATORY_RETENTION_DAYS`, which is OpenObserve's genuinely time-based retention.
+- [An EAS build never sees `app/.env`, and `eas.json` does not say which variables it does see](eas-env-vars-are-not-your-dotenv.md) —
+  EAS Build uploads the working tree — uncommitted and untracked files included, since
+  `requireCommit` defaults to false — but drops what `.gitignore` drops, and `app/.env` is
+  git-ignored, so a cloud build reads only the variables held on EAS
+  (`eas env:list --environment preview`); rename an `EXPO_PUBLIC_*` in `app/src/api/` and the
+  build silently inlines `undefined` rather than failing. The profiles in `app/eas.json` declare
+  no `environment`, so eas-cli infers it — store distribution to `production`, a
+  `developmentClient` profile to `development`, everything else to `preview`. `eas update` is
+  the real trap: without `--environment` it bundles from your **local `.env`** and pushes a
+  laptop's LAN address over the air, and it prompts only from SDK 55 up. Locally `.env.local`
+  beats `.env`, and a variable marked SENSITIVE on EAS is still inlined into the APK/IPA.
 - [Anything in `web/public/` is already live — an HTML comment never gated it](web-public-is-already-live.md) —
   the bundler copies `publicDir` verbatim into `dist/`, `web/Dockerfile` copies `dist/` into nginx
   and Jenkins pushes it, so a draft parked in `web/public/` is published by the next merge to

@@ -125,12 +125,14 @@ the **same** pure `evaluatePoint(lastPoint, candidate, accuracy, context)` funct
 recorded track and the drawn live line always agree on what counts. A fix is
 **rejected** when:
 
-| Rule                     | Threshold                                      | Why                                                                                                                 |
-| ------------------------ | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| Bad accuracy             | missing, `< 0`, or `> MAX_ACCURACY`            | iOS reports negative accuracy when it can't determine one (unusable). iOS gate 40 m, Android 15 m.                  |
-| Impossible speed         | `distance / dt > MAX_SPEED` (10 m/s ≈ 36 km/h) | Catches GPS teleport spikes while allowing hike/run/cycle.                                                          |
-| Teleport (no time delta) | `distance > MAX_DISTANCE` (100 m)              | Fallback when timestamps are missing/non-increasing.                                                                |
-| Jitter in place          | `distance < max(MIN_DISTANCE, noiseFloor)`     | A stationary phone wanders within its accuracy radius. `noiseFloor = accuracy/2` while travelling, else `accuracy`. |
+| Rule                     | Threshold                                             | Why                                                                                                                 |
+| ------------------------ | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| Stale cached fix         | `trackStartedAt - timestamp > MAX_FIX_AGE` (15 s)     | Core Location answers a fresh subscription with its cached position, stamped before the recording began.            |
+| Bad accuracy             | missing, `< 0`, or `> MAX_ACCURACY`                   | iOS reports negative accuracy when it can't determine one (unusable). iOS gate 40 m, Android 15 m.                  |
+| Unconverged anchor       | first point, `accuracy > ANCHOR_ACCURACY` (20 m)      | Only inside `WARMUP_MS` (15 s) of the segment start — see below.                                                    |
+| Impossible speed         | `distance / dt > 7 m/s` (`dt ≤ 5 s`), else `> 10 m/s` | Catches GPS teleport spikes and in-place drift while allowing hike/run/cycle.                                       |
+| Teleport (no time delta) | `distance > MAX_DISTANCE` (100 m)                     | Fallback when timestamps are missing/non-increasing.                                                                |
+| Jitter in place          | `distance < max(MIN_DISTANCE, noiseFloor)`            | A stationary phone wanders within its accuracy radius. `noiseFloor = accuracy/2` while travelling, else `accuracy`. |
 
 **Why Android has two gates.** On Android `coords.accuracy` is expo-location's
 pass-through of `Location.getAccuracy()` — the fix's own horizontal error radius at
@@ -182,6 +184,32 @@ relaxes, and takes those fixes, because a sparse wrong line still beats no line.
 Straightening that case needs a filter that judges a fix against the recent norm
 rather than against a fixed threshold, which means storing each accepted point's
 accuracy and validating on a real walk.
+
+**The first fixes of a recording are the worst ones.** `CLLocationUpdate.liveUpdates`
+has no `distanceFilter` or `desiredAccuracy` of its own: it streams 1-2 fixes a second
+of whatever Core Location currently has, and what it has at subscription time is a
+cached position plus coarse wifi/cell fixes, for up to ~10 s before the receiver
+converges. On iOS those pass the 40 m gate, and since every later point is measured
+against the anchor, a wrong anchor turns the walk back to reality into distance. Two
+rules bound that:
+
+- **Stale fixes never join.** A fix stamped more than `MAX_FIX_AGE` (15 s) before the
+  segment's `startTime` is the cached position and is dropped. Measuring against the
+  segment start, not against `Date.now()`, is what makes this safe for the native
+  engine, whose whole purpose is to hand over fixes recorded minutes ago.
+- **The anchor waits for convergence.** Inside `WARMUP_MS` (15 s) of the segment start,
+  the segment's _first_ point needs `ANCHOR_ACCURACY` (20 m) or better. After that the
+  normal gate applies, so bad reception delays where the line starts instead of
+  blocking the recording. Later points are unaffected — a coarse fix mid-hike is still
+  a usable point.
+
+**Why the speed cap is tighter for consecutive fixes.** A fix that clears its own noise
+floor has moved at least `accuracy/2`; at the 1-2 Hz iOS delivers, that is 4-20 m/s for
+the coarse fixes the platform accepts. A flat 10 m/s cap therefore never sees in-place
+drift. So the cap is 7 m/s within `BURST_WINDOW` (5 s) of the last accepted point and
+stays at 10 m/s beyond it, where a real suspension gap legitimately covers ground.
+Rejection is self-healing: the anchor does not move, so the next fix is judged over a
+longer delta.
 
 `MIN_DISTANCE` (3 m) is also the GPS `distanceInterval`.
 

@@ -64,5 +64,5 @@ So a purely documentational edit to the API description still runs the whole cha
 obliges an 88-file commit. Worth knowing before assuming a description-only change is free,
 and worth saying in the commit message so the 88 files do not read as an accident.
 
-Related: [[nullable-warnings-are-errors]], [[agent-harness-hooks]],
-[[diff-exit-code-pathspec-fails-open]].
+Related: [[openapi-snapshot-fails-on-windows-line-endings]], [[nullable-warnings-are-errors]],
+[[agent-harness-hooks]], [[diff-exit-code-pathspec-fails-open]].

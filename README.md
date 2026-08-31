@@ -267,7 +267,9 @@ style preferences.
 3. Create a `.env` file with your API, Keycloak and MapTiler config:
 
    ```
-   EXPO_PUBLIC_API_HOST=https://localhost:7xxx
+   # The FULL base URL, scheme and path included — the app uses it verbatim.
+   # On a device this must be your machine's LAN IP, not localhost.
+   EXPO_PUBLIC_API_URL=http://10.0.0.2:5265/api/v1
    EXPO_PUBLIC_OIDC_URL=https://your-keycloak-host/auth
    EXPO_PUBLIC_OIDC_REALM=stigvidd
    EXPO_PUBLIC_CLIENT_ID=...
@@ -287,6 +289,26 @@ style preferences.
    ```bash
    npx expo start
    ```
+
+#### Builds and OTA updates read a different set of variables
+
+EAS Build uploads your working tree, uncommitted and untracked files included, minus
+whatever `.gitignore` excludes — and `app/.env` is git-ignored. A cloud build therefore sees
+only the variables stored on EAS. Those are per environment, and the profiles in
+[app/eas.json](app/eas.json) declare no `environment`, so eas-cli infers one — `preview`
+for the preview profile, `development` for the dev client, `production` for a store build.
+
+```sh
+cd app
+npx eas env:list --environment preview            # what a preview build will actually see
+npx eas env:create preview --name EXPO_PUBLIC_FOO --value ... --visibility plaintext
+npx eas update --branch preview --environment preview
+```
+
+The `--environment` flag on `eas update` is not optional in practice: without it the
+bundle is built from **your local `.env`**, which is how a laptop's LAN address reaches
+testers over the air. See
+[docs/notes/eas-env-vars-are-not-your-dotenv.md](docs/notes/eas-env-vars-are-not-your-dotenv.md).
 
 ---
 

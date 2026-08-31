@@ -188,9 +188,9 @@ several places (it still links `app.datadoghq.com`, and its `startView` example 
 the arguments in the wrong order):
 
 - `firstPartyHosts` is `Array<{ match, propagatorTypes }>`, **not** the `string[]`
-  the README shows. `match` is a hostname, and `EXPO_PUBLIC_API_HOST` is
-  `host:port` — strip the port or matching silently fails, which is the most
-  common cause of "correlation isn't working".
+  the README shows. `match` is a hostname, while `EXPO_PUBLIC_API_URL` is a full
+  base URL — pass the host alone, without scheme, port or path, or matching
+  silently fails, which is the most common cause of "correlation isn't working".
 - `customEndpoint` is **per feature** (`rumConfiguration`, `logsConfiguration`,
   `traceConfiguration`); there is no top-level one.
 - `sessionSampleRate` and `resourceTraceSampleRate` both default to **100** in
