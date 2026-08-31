@@ -370,6 +370,8 @@
     "favorite": "Favorite",
     "wishlist": "Wishlist",
     "share": "Share",
+    "shareTitle": "Share a walk",
+    "shareUnavailable": "Sharing a walk is not available during the test period.",
     "alreadyInList": "Trail already in the list!",
     "errorOccurred": "An error occurred",
     "notAuthFavorite": "You need to be logged in to add to favorites.",

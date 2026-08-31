@@ -21,10 +21,10 @@
       "infoPlist": {
         "UIBackgroundModes": ["location"],
         "ITSAppUsesNonExemptEncryption": false
-      },
-      "config": {}
+      }
     },
     "android": {
+      "versionCode": 1,
       "softwareKeyboardLayoutMode": "pan",
       "adaptiveIcon": {
         "backgroundColor": "#68AE82",

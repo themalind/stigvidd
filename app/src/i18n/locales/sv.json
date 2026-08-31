@@ -370,6 +370,8 @@
     "favorite": "Favorit",
     "wishlist": "Vill gå",
     "share": "Dela",
+    "shareTitle": "Dela en promenad",
+    "shareUnavailable": "Att dela en promenad är inte möjligt under testperioden.",
     "alreadyInList": "Leden finns redan i listan!",
     "errorOccurred": "Ett fel uppstod",
     "notAuthFavorite": "Du behöver vara inloggad för att lägga till i favoriter.",
