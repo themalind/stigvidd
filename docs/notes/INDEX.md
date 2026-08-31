@@ -259,3 +259,17 @@ you get approved.
   `<a>` (react-router `<Link>` renders `NotFoundPage`), the trailing slash matters because they
   are directories, and nginx's default `absolute_redirect on` made that 301 downgrade TLS
   visitors to http until `web/nginx.conf` set `absolute_redirect off`.
+- [Loading mod_spatialite puts the system libjpeg 8 under Magick.NET, and only a full round-trip preload pins it](magick-jpeg-collides-with-mod-spatialite.md) —
+  on Linux `sqlite3_load_extension` dlopens `mod_spatialite` with **RTLD_GLOBAL**, pulling
+  libgeotiff -> libtiff -> `libjpeg.so.8` into the global namespace, where it interposes the
+  JPEG symbols `Magick.Native-Q8-x64.dll.so` exports but links statically — so the integration
+  suite dies as `Wrong JPEG library version: library is 80, caller expects 62`, as
+  `JPEG parameter struct mismatch: library thinks size is 101, caller expects 0`, or as a
+  `double free or corruption (fasttop)` SIGABRT (exit 134) reporting 0 failed tests. It is not
+  a race; it reproduces deterministically in `mcr.microsoft.com/dotnet/sdk:10.0`. The fix is
+  `Tests/IntegrationTests/MagickPreload.cs`, a `[ModuleInitializer]` that binds the symbols
+  before any `SqliteConnection` opens — but binding is lazy and **per-symbol**, so an
+  encode-only preload silently fixes only part of it (8 failures -> 5) and it must round-trip
+  encode -> EXIF APP1 marker (`jpeg_write_marker`, via `TestImages.JpegWithGps`) -> decode
+  (`ImageProcessingService.Process`, which is why an imageless AddTrail test 500s). Production
+  on PostGIS/Npgsql never loads the extension and is unaffected.

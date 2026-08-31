@@ -12,6 +12,7 @@ internal static class MagickPreload
     // Binds Magick's JPEG symbols to its own bundled libjpeg (6.2 ABI) before SQLite dlopens
     // mod_spatialite with RTLD_GLOBAL and puts the system libjpeg 8 in their place. Binding is
     // lazy and per-symbol, so this walks every path the suite uses: encode, EXIF marker, decode.
+    // See docs/notes/magick-jpeg-collides-with-mod-spatialite.md.
     [ModuleInitializer]
     internal static void Init()
     {
