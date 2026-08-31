@@ -74,6 +74,10 @@ export function useLocationTracking() {
   // in a ref — the answer can't change during a session (it's OS/build-fixed).
   const useNativeRef = useRef(isLiveLocationAvailable());
 
+  // Start time of the open segment, in a ref so the live watcher's subscription
+  // survives a poll tick.
+  const segmentStartRef = useRef<number | undefined>(undefined);
+
   // Pulls fixes the native engine buffered while JS was suspended (or is actively
   // delivering) and runs them through the shared evaluatePoint pipeline. Native is
   // the single background source of truth on iOS 18+, so this is the only writer of
@@ -122,6 +126,7 @@ export function useLocationTracking() {
   const applyState = useCallback((state: StoredHikeState) => {
     setHike(state.hike);
     setCurrentSegment(state.currentSegment);
+    segmentStartRef.current = state.currentSegment?.startTime;
     setIsTracking(state.isTracking);
   }, []);
 
@@ -213,7 +218,9 @@ export function useLocationTracking() {
           data: { latitude: fix.latitude, longitude: fix.longitude },
           timeStamp: fix.timestamp,
         };
-        const { accept } = evaluatePoint(liveCoordsRef.current.at(-1), candidate, fix.accuracy);
+        const { accept } = evaluatePoint(liveCoordsRef.current.at(-1), candidate, fix.accuracy, {
+          trackStartedAt: segmentStartRef.current,
+        });
         if (!accept) return;
         setLive([...liveCoordsRef.current, candidate]);
       });
@@ -234,7 +241,10 @@ export function useLocationTracking() {
               data: { latitude: location.coords.latitude, longitude: location.coords.longitude },
               timeStamp: location.timestamp,
             };
-            const { accept } = evaluatePoint(liveCoordsRef.current.at(-1), candidate, location.coords.accuracy);
+            const { accept } = evaluatePoint(liveCoordsRef.current.at(-1), candidate, location.coords.accuracy, {
+              trackStartedAt: segmentStartRef.current,
+              speed: location.coords.speed,
+            });
             if (!accept) return;
             setLive([...liveCoordsRef.current, candidate]);
           },

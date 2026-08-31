@@ -26,9 +26,19 @@ const MAX_DISTANCE = 100;
 // Drop fixes worse than this (metres). iOS uses a looser gate than Android: in a
 // pocket with a locked screen iOS routinely reports 20-50m even at
 // BestForNavigation, and a 40m fix on a hike is still a useful point — too strict
-// a gate leaves gaps that render as straight lines through buildings. Android GPS
-// runs tighter in practice, so it keeps the stricter 20m gate.
-const MAX_ACCURACY = Platform.OS === "ios" ? 40 : 20;
+// a gate leaves gaps that render as straight lines through buildings. Android's
+// value is Location.getAccuracy() passed through — the fix's own error radius at
+// 68% confidence, so a 20m fix can sit a building's width off the road.
+const MAX_ACCURACY = Platform.OS === "ios" ? 40 : 15;
+// The gate in force once nothing has been accepted for ACCURACY_STALL_MS, so a
+// bad stretch costs detail rather than becoming a hole the map draws a chord across.
+const MAX_ACCURACY_STALLED = Platform.OS === "ios" ? 40 : 20;
+// How long (ms) without an accepted point before the relaxed gate applies — four
+// sampling intervals, the most detail the strict gate can withhold at a stretch.
+export const ACCURACY_STALL_MS = 12_000;
+// Reported speed (m/s) above which a fix describes travel rather than drift: 1.8
+// km/h. Android reports 0 when it has none, which reads as standing still.
+const MOVING_SPEED = 0.5;
 // Physically impossible speed (m/s) between two fixes ⇒ GPS glitch, not movement.
 // ~10 m/s (36 km/h) clears hiking/running/cycling while catching teleport spikes.
 const MAX_SPEED = 10;
@@ -173,6 +183,16 @@ export function maybeFinalizeStaleHike(state: StoredHikeState, now: number): Sto
 
 export type PointDecision = { accept: boolean; distance: number };
 
+// The parts of a fix beyond its position that steer the filter. Both are optional:
+// a caller that has neither gets the strictest behaviour.
+export type PointContext = {
+  // Where the accuracy gate measures its stall from before anything has been
+  // accepted — the open segment's startTime.
+  trackStartedAt?: number;
+  // Reported ground speed in m/s, as the receiver gives it.
+  speed?: number | null;
+};
+
 // Decides whether a freshly-sampled GPS fix joins the track, and how much distance
 // it adds relative to the last accepted point. Shared by the background task and
 // the foreground live watcher so both filter identically. Rejects low-accuracy
@@ -181,11 +201,18 @@ export function evaluatePoint(
   lastPoint: LocationData | undefined,
   candidate: LocationData,
   accuracy: number | null | undefined,
+  context: PointContext = {},
 ): PointDecision {
+  const { trackStartedAt, speed } = context;
+  // The gate relaxes once the track has stalled, so poor reception costs detail
+  // rather than the whole stretch.
+  const stalledSince = lastPoint?.timeStamp ?? trackStartedAt ?? candidate.timeStamp;
+  const maxAccuracy = candidate.timeStamp - stalledSince > ACCURACY_STALL_MS ? MAX_ACCURACY_STALLED : MAX_ACCURACY;
+
   // Reject missing/zero and negative accuracy (iOS reports a negative
   // horizontalAccuracy when it can't determine one — the fix is unusable), as well
-  // as anything worse than the platform gate.
-  if (!accuracy || accuracy < 0 || accuracy > MAX_ACCURACY) return { accept: false, distance: 0 };
+  // as anything worse than the gate in force.
+  if (!accuracy || accuracy < 0 || accuracy > maxAccuracy) return { accept: false, distance: 0 };
   if (!lastPoint) return { accept: true, distance: 0 };
 
   const distance = getDistance(lastPoint.data, candidate.data);
@@ -207,12 +234,12 @@ export function evaluatePoint(
 
   // A stationary phone wanders within its accuracy radius, so a move only counts
   // once it clears that noise envelope (but never below MIN_DISTANCE) — otherwise
-  // drift piles up phantom distance and zig-zags in place. iOS uses half the
-  // accuracy radius: consecutive fixes are correlated, so their relative noise is
-  // smaller than one fix's absolute error, and gating on the full radius would
-  // flatten real curves into corner-cutting straight lines. Android uses the full
-  // radius, which suits its steadier fixes.
-  const noiseFloor = Platform.OS === "ios" ? accuracy / 2 : accuracy;
+  // drift piles up phantom distance and zig-zags in place. Consecutive fixes share
+  // most of their error, so half the radius is the envelope for a receiver in
+  // motion; the full radius applies while it reports standing still, where drift
+  // would otherwise become distance. iOS halves throughout.
+  const travelling = Platform.OS === "ios" || (speed ?? 0) > MOVING_SPEED;
+  const noiseFloor = travelling ? accuracy / 2 : accuracy;
   const minStep = Math.max(MIN_DISTANCE, noiseFloor);
   if (distance < minStep) return { accept: false, distance: 0 };
 
@@ -227,6 +254,8 @@ export type RawFix = {
   longitude: number;
   accuracy: number | null | undefined;
   timestamp: number;
+  // Reported ground speed in m/s. Absent from sources that don't supply one.
+  speed?: number | null;
 };
 
 // Outcome of ingesting a batch — used by callers for task control.
@@ -267,7 +296,10 @@ export async function ingestFixes(fixes: RawFix[]): Promise<IngestResult> {
       // Same filter as the foreground live watcher (see evaluatePoint) so the
       // recorded track and the drawn live tail always agree on what counts.
       const lastPoint = currentSegment.coordinates.at(-1);
-      const { accept, distance } = evaluatePoint(lastPoint, newPoint, fix.accuracy);
+      const { accept, distance } = evaluatePoint(lastPoint, newPoint, fix.accuracy, {
+        trackStartedAt: currentSegment.startTime,
+        speed: fix.speed,
+      });
       if (!accept) {
         continue;
       }
@@ -327,6 +359,7 @@ TaskManager.defineTask(
         longitude: location.coords.longitude,
         accuracy: location.coords.accuracy,
         timestamp: location.timestamp,
+        speed: location.coords.speed,
       }));
 
       const { didFinalize } = await ingestFixes(fixes);

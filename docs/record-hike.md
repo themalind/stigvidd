@@ -121,16 +121,67 @@ PAUSED in the UI (`trail-creator.tsx`).
 ## The GPS filter (`evaluatePoint`)
 
 Every fix — from either background engine or the foreground watcher — passes through
-the **same** pure `evaluatePoint(lastPoint, candidate, accuracy)` function, so the
+the **same** pure `evaluatePoint(lastPoint, candidate, accuracy, context)` function, so the
 recorded track and the drawn live line always agree on what counts. A fix is
 **rejected** when:
 
-| Rule                     | Threshold                                      | Why                                                                                                         |
-| ------------------------ | ---------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| Bad accuracy             | missing, `< 0`, or `> MAX_ACCURACY`            | iOS reports negative accuracy when it can't determine one (unusable). iOS gate 40 m, Android 20 m.          |
-| Impossible speed         | `distance / dt > MAX_SPEED` (10 m/s ≈ 36 km/h) | Catches GPS teleport spikes while allowing hike/run/cycle.                                                  |
-| Teleport (no time delta) | `distance > MAX_DISTANCE` (100 m)              | Fallback when timestamps are missing/non-increasing.                                                        |
-| Jitter in place          | `distance < max(MIN_DISTANCE, noiseFloor)`     | A stationary phone wanders within its accuracy radius. iOS `noiseFloor = accuracy/2`, Android `= accuracy`. |
+| Rule                     | Threshold                                      | Why                                                                                                                 |
+| ------------------------ | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| Bad accuracy             | missing, `< 0`, or `> MAX_ACCURACY`            | iOS reports negative accuracy when it can't determine one (unusable). iOS gate 40 m, Android 15 m.                  |
+| Impossible speed         | `distance / dt > MAX_SPEED` (10 m/s ≈ 36 km/h) | Catches GPS teleport spikes while allowing hike/run/cycle.                                                          |
+| Teleport (no time delta) | `distance > MAX_DISTANCE` (100 m)              | Fallback when timestamps are missing/non-increasing.                                                                |
+| Jitter in place          | `distance < max(MIN_DISTANCE, noiseFloor)`     | A stationary phone wanders within its accuracy radius. `noiseFloor = accuracy/2` while travelling, else `accuracy`. |
+
+**Why Android has two gates.** On Android `coords.accuracy` is expo-location's
+pass-through of `Location.getAccuracy()` — the fix's own horizontal error radius at
+68% confidence. A fix that reports 20 m can therefore sit a building's width off the
+road, which is what draws a walk through the house next to it. So the gate is 15 m
+while fixes are flowing, and widens to `MAX_ACCURACY_STALLED` once nothing has been
+accepted for `ACCURACY_STALL_MS`. iOS keeps 40 m at both ends — the split is
+Android's alone.
+
+Two properties bound what the split can do, and both are pinned by tests:
+
+- **20 m is the hard ceiling.** `MAX_ACCURACY_STALLED` is the widest the gate ever
+  opens, so no fix worse than 20 m joins a track however long the stall has run.
+- **Its cost is bounded by `ACCURACY_STALL_MS` (12 s, four sampling intervals).** That
+  is the most track detail the strict gate can withhold before stepping aside. Under
+  canopy, where every fix can sit near the gate, the track thins for at most 12 s at
+  a stretch — never a hole, and never a straight chord across a switchback.
+
+The stall is measured from the last accepted point, or — before there is one — from
+the open segment's `startTime`, which is what `trackStartedAt` carries in. That last
+part is what lets a recording start at all when reception is poor from the first
+second.
+
+**The noise floor and why it halves.** Consecutive fixes share most of their error
+sources, so the _relative_ noise between two of them is smaller than either one's
+absolute radius. Gating a step on the full radius therefore over-corrects: under
+canopy at 15 m accuracy it records a point only every 15 m, and a switchback taken
+in 15 m strides comes back as a corner-cutting straight line — which is what someone
+following a shared route walks into. Half the radius is the real envelope for a
+receiver in motion.
+
+The catch is that it is _not_ the right envelope for a phone standing still, where
+drift within the radius would start counting as distance. So the halving is
+conditioned on the fix's own reported ground speed (`coords.speed`, which
+expo-location passes through on both platforms' recording paths):
+
+| State                            | Android floor  | Effect                                                                                 |
+| -------------------------------- | -------------- | -------------------------------------------------------------------------------------- |
+| `speed > MOVING_SPEED` (0.5 m/s) | `accuracy / 2` | Curves keep their shape — a point every ~6 m at 12 m accuracy.                         |
+| Otherwise, or no speed given     | `accuracy`     | Drift at a rest stop still has to clear the full radius before it can become distance. |
+
+iOS halves throughout, as it always has. Android returns `0` when it has no speed to
+report, which reads as "standing still" — so a device that supplies none behaves
+exactly as it did before.
+
+**What this does not do.** It removes a bad fix that arrives _among_ good ones. Where
+a whole stretch reads 15-20 m — dense canopy, a street canyon — the gate stalls,
+relaxes, and takes those fixes, because a sparse wrong line still beats no line.
+Straightening that case needs a filter that judges a fix against the recent norm
+rather than against a fixed threshold, which means storing each accepted point's
+accuracy and validating on a real walk.
 
 `MIN_DISTANCE` (3 m) is also the GPS `distanceInterval`.
 
@@ -319,7 +370,10 @@ than a transient snackbar, while still letting the recording start provisionally
 | `MIN_DISTANCE`         | 3 m                     | Min step between accepted points; also GPS `distanceInterval`. |
 | `MIN_SEGMENT_DISTANCE` | 10 m                    | Segments shorter than this are discarded on finalize.          |
 | `MAX_DISTANCE`         | 100 m                   | Teleport cap when there's no usable time delta.                |
-| `MAX_ACCURACY`         | 40 m iOS / 20 m Android | Worst accuracy still accepted.                                 |
+| `MAX_ACCURACY`         | 40 m iOS / 15 m Android | Worst accuracy still accepted.                                 |
+| `MAX_ACCURACY_STALLED` | 40 m iOS / 20 m Android | Gate after a stall; the widest it ever opens.                  |
+| `ACCURACY_STALL_MS`    | 12 s                    | No accepted point for this long ⇒ the relaxed gate applies.    |
+| `MOVING_SPEED`         | 0.5 m/s                 | Reported speed above which the halved noise floor applies.     |
 | `MAX_SPEED`            | 10 m/s                  | Plausibility gate between two fixes.                           |
 | `INACTIVITY_TIMEOUT`   | 60 min                  | Auto-finalize after no movement.                               |
 | `MAX_DURATION`         | 12 h                    | Absolute recording ceiling.                                    |

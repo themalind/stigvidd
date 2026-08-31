@@ -10,6 +10,7 @@ import { LocationData } from "@/data/types";
 import * as Location from "expo-location";
 import { getDistance } from "geolib";
 import {
+  ACCURACY_STALL_MS,
   HIKE_STORAGE_KEY,
   INACTIVITY_TIMEOUT,
   MAX_DURATION,
@@ -60,7 +61,7 @@ const mockStopUpdates = Location.stopLocationUpdatesAsync as jest.Mock;
 const NOW = 1_000_000;
 
 // Builds a minimal expo-location LocationObject
-function makeLocation(lat: number, lng: number, accuracy: number | null, timestamp = NOW) {
+function makeLocation(lat: number, lng: number, accuracy: number | null, timestamp = NOW, speed: number | null = null) {
   return {
     coords: {
       latitude: lat,
@@ -69,7 +70,7 @@ function makeLocation(lat: number, lng: number, accuracy: number | null, timesta
       altitude: null,
       altitudeAccuracy: null,
       heading: null,
-      speed: null,
+      speed,
     },
     timestamp,
     mocked: false,
@@ -580,6 +581,13 @@ describe("evaluatePoint", () => {
     expect(evaluatePoint(undefined, point(NOW), 41)).toEqual({ accept: false, distance: 0 });
   });
 
+  it("keeps the same 40m gate through a stall — the relaxation is Android's alone", () => {
+    expect(evaluatePoint(point(NOW - ACCURACY_STALL_MS - 1000), point(NOW), 41)).toEqual({
+      accept: false,
+      distance: 0,
+    });
+  });
+
   it("rejects a move that stays within the iOS half-accuracy noise floor", () => {
     mockGetDistance.mockReturnValue(8); // accuracy 20 → floor 10; 8 < 10
     expect(evaluatePoint(point(NOW - 3000), point(NOW), 20)).toEqual({ accept: false, distance: 0 });
@@ -646,20 +654,178 @@ describe("evaluatePoint — Android platform divergence", () => {
 
   const point = (timeStamp: number): LocationData => ({ data: { latitude: 57.7, longitude: 11.97 }, timeStamp });
 
-  it("uses the stricter 20m accuracy gate that iOS relaxes to 40m", () => {
+  it("uses the stricter 15m accuracy gate that iOS relaxes to 40m", () => {
     const { evaluatePoint: evalAndroid } = loadAndroid();
-    // 25m accuracy: accepted on iOS (< 40), rejected on Android (> 20).
-    expect(evaluatePoint(undefined, point(NOW), 25)).toEqual({ accept: true, distance: 0 });
-    expect(evalAndroid(undefined, point(NOW), 25)).toEqual({ accept: false, distance: 0 });
+    // 18m accuracy: accepted on iOS (< 40), rejected on Android (> 15).
+    expect(evaluatePoint(undefined, point(NOW), 18)).toEqual({ accept: true, distance: 0 });
+    expect(evalAndroid(undefined, point(NOW), 18)).toEqual({ accept: false, distance: 0 });
+    expect(evalAndroid(undefined, point(NOW), 15)).toEqual({ accept: true, distance: 0 });
   });
 
-  it("uses the full accuracy radius as its noise floor where iOS uses half", () => {
+  it("relaxes to 20m once nothing has been accepted for the stall window", () => {
     const { evaluatePoint: evalAndroid, getDistance: getDistanceAndroid } = loadAndroid();
-    mockGetDistance.mockReturnValue(15);
-    getDistanceAndroid.mockReturnValue(15);
-    // 15m move, accuracy 20: iOS floor 10 → accept; Android floor 20 → reject.
-    expect(evaluatePoint(point(NOW - 3000), point(NOW), 20)).toEqual({ accept: true, distance: 15 });
-    expect(evalAndroid(point(NOW - 3000), point(NOW), 20)).toEqual({ accept: false, distance: 0 });
+    getDistanceAndroid.mockReturnValue(40);
+    const stale = point(NOW - ACCURACY_STALL_MS - 1000);
+    // 18m is over the strict gate but under the relaxed one, so a stalled track
+    // takes the fix rather than leaving a hole for the map to draw across.
+    expect(evalAndroid(stale, point(NOW), 18)).toEqual({ accept: true, distance: 40 });
+  });
+
+  it("never relaxes past the flat 20m gate the split replaced", () => {
+    // Every fix the filter accepts, a 20m gate accepts too, however long the track
+    // has stalled. Widening this lets a worse fix onto the track.
+    const { evaluatePoint: evalAndroid, getDistance: getDistanceAndroid } = loadAndroid();
+    getDistanceAndroid.mockReturnValue(40);
+    expect(evalAndroid(point(NOW - ACCURACY_STALL_MS - 1000), point(NOW), 21)).toEqual({
+      accept: false,
+      distance: 0,
+    });
+    expect(evalAndroid(point(0), point(NOW), 21)).toEqual({ accept: false, distance: 0 });
+    expect(evalAndroid(undefined, point(NOW), 21, { trackStartedAt: 0 })).toEqual({ accept: false, distance: 0 });
+  });
+
+  it("holds the strict gate while points are still arriving", () => {
+    const { evaluatePoint: evalAndroid, getDistance: getDistanceAndroid } = loadAndroid();
+    getDistanceAndroid.mockReturnValue(40);
+    expect(evalAndroid(point(NOW - ACCURACY_STALL_MS), point(NOW), 18)).toEqual({ accept: false, distance: 0 });
+  });
+
+  it("measures the stall from the segment start when nothing has been accepted yet", () => {
+    const { evaluatePoint: evalAndroid } = loadAndroid();
+    // A segment that has been open past the stall window with no usable fix yet
+    // takes a mediocre one so recording can start at all.
+    expect(evalAndroid(undefined, point(NOW), 18, { trackStartedAt: NOW - ACCURACY_STALL_MS - 1000 })).toEqual({
+      accept: true,
+      distance: 0,
+    });
+    // Just-started segment: the strict gate still applies.
+    expect(evalAndroid(undefined, point(NOW), 18, { trackStartedAt: NOW - 1000 })).toEqual({
+      accept: false,
+      distance: 0,
+    });
+  });
+
+  it("keeps the full accuracy radius as its noise floor when the fix reports no travel", () => {
+    const { evaluatePoint: evalAndroid, getDistance: getDistanceAndroid } = loadAndroid();
+    mockGetDistance.mockReturnValue(8);
+    getDistanceAndroid.mockReturnValue(8);
+    // 8m move, accuracy 12: iOS floor 6 → accept; a standing Android phone keeps
+    // floor 12 → reject, so drift at a rest stop can't become distance.
+    expect(evaluatePoint(point(NOW - 3000), point(NOW), 12)).toEqual({ accept: true, distance: 8 });
+    expect(evalAndroid(point(NOW - 3000), point(NOW), 12)).toEqual({ accept: false, distance: 0 });
+    expect(evalAndroid(point(NOW - 3000), point(NOW), 12, { speed: 0 })).toEqual({ accept: false, distance: 0 });
+    // Absent speed (a source that supplies none) reads as standing still.
+    expect(evalAndroid(point(NOW - 3000), point(NOW), 12, { speed: null })).toEqual({ accept: false, distance: 0 });
+  });
+
+  it("halves the noise floor once the fix reports walking pace, so curves keep their shape", () => {
+    const { evaluatePoint: evalAndroid, getDistance: getDistanceAndroid } = loadAndroid();
+    getDistanceAndroid.mockReturnValue(8);
+    // The same 8m move a standing phone refuses is taken at walking pace: at 12m
+    // accuracy that is a point every ~6m rather than every ~12m.
+    expect(evalAndroid(point(NOW - 3000), point(NOW), 12, { speed: 1.3 })).toEqual({ accept: true, distance: 8 });
+    // Drift-level speed is not travel.
+    expect(evalAndroid(point(NOW - 3000), point(NOW), 12, { speed: 0.4 })).toEqual({ accept: false, distance: 0 });
+  });
+});
+
+// The segment start and the fix's speed steer the filter only if ingestFixes passes
+// them on. Loaded as Android, the platform whose tuning tells the cases apart.
+describe("ingestFixes — what it hands the filter", () => {
+  function loadAndroid() {
+    let mod!: typeof import("../location-task");
+    let getItem!: jest.Mock;
+    let setItem!: jest.Mock;
+    let getDistance!: jest.Mock;
+    jest.isolateModules(() => {
+      jest.doMock("react-native", () => ({ Platform: { OS: "android" } }));
+      /* eslint-disable @typescript-eslint/no-require-imports */
+      mod = require("../location-task");
+      const storage = require("@react-native-async-storage/async-storage");
+      getDistance = require("geolib").getDistance as jest.Mock;
+      /* eslint-enable @typescript-eslint/no-require-imports */
+      getDistance.mockReturnValue(0);
+      getItem = storage.getItem as jest.Mock;
+      setItem = storage.setItem as jest.Mock;
+    });
+    jest.dontMock("react-native");
+    setItem.mockResolvedValue(undefined);
+    // Re-requiring the module re-runs defineTask, so locationTaskCallback now holds
+    // the Android-loaded copy's callback.
+    return { ingestFixes: mod.ingestFixes, getItem, setItem, getDistance, taskCallback: locationTaskCallback };
+  }
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    jest.spyOn(Date, "now").mockReturnValue(NOW);
+  });
+
+  afterAll(() => jest.restoreAllMocks());
+
+  const poorFix: RawFix = { latitude: 57.7, longitude: 11.97, accuracy: 18, timestamp: NOW };
+
+  const stateWithSegmentStart = (startTime: number) =>
+    JSON.stringify({ ...activeState, currentSegment: { ...baseSegment, startTime } });
+
+  it("takes a mediocre first fix once the segment has waited out the stall window", async () => {
+    const { ingestFixes: ingest, getItem } = loadAndroid();
+    getItem.mockResolvedValue(stateWithSegmentStart(NOW - ACCURACY_STALL_MS - 1000));
+
+    const result = await ingest([poorFix]);
+
+    expect(result.resultPts).toBe(1);
+  });
+
+  it("holds the strict gate for a segment that just started", async () => {
+    const { ingestFixes: ingest, getItem } = loadAndroid();
+    getItem.mockResolvedValue(stateWithSegmentStart(NOW - 1000));
+
+    const result = await ingest([poorFix]);
+
+    expect(result.resultPts).toBe(0);
+  });
+
+  // The halved floor turns on the fix's own speed, which reaches evaluatePoint only
+  // if ingestFixes forwards it off the RawFix.
+  const walked: StoredHikeState = {
+    ...activeState,
+    currentSegment: {
+      ...baseSegment,
+      coordinates: [{ data: { latitude: 57.7, longitude: 11.97 }, timeStamp: NOW - 3000 }],
+    },
+  };
+
+  it("forwards the reported speed, so a walked 8m step clears the halved floor", async () => {
+    const { ingestFixes: ingest, getItem, getDistance } = loadAndroid();
+    getItem.mockResolvedValue(JSON.stringify(walked));
+    getDistance.mockReturnValue(8);
+
+    const result = await ingest([{ latitude: 57.7, longitude: 11.97, accuracy: 12, timestamp: NOW, speed: 1.3 }]);
+
+    expect(result.resultPts).toBe(2);
+  });
+
+  it("leaves the same step below the full floor when the fix reports standing still", async () => {
+    const { ingestFixes: ingest, getItem, getDistance } = loadAndroid();
+    getItem.mockResolvedValue(JSON.stringify(walked));
+    getDistance.mockReturnValue(8);
+
+    const result = await ingest([{ latitude: 57.7, longitude: 11.97, accuracy: 12, timestamp: NOW, speed: 0 }]);
+
+    expect(result.resultPts).toBe(1);
+  });
+
+  // The background task builds the RawFix itself, so speed has to survive that
+  // mapping too.
+  it("maps speed off the LocationObject the background task receives", async () => {
+    const { getItem, setItem, getDistance, taskCallback } = loadAndroid();
+    getItem.mockResolvedValue(JSON.stringify(walked));
+    getDistance.mockReturnValue(8);
+
+    await taskCallback({ data: { locations: [makeLocation(57.7, 11.97, 12, NOW, 1.3)] }, error: null });
+
+    const written = JSON.parse(setItem.mock.calls.at(-1)![1]) as StoredHikeState;
+    expect(written.currentSegment?.coordinates).toHaveLength(2);
   });
 });
 
