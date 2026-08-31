@@ -167,20 +167,34 @@ public static class TelemetryExtensions
     }
 
     /// <summary>
-    /// Builds the Basic credentials OpenObserve expects for OTLP ingest.
+    /// Builds the Basic credentials OpenObserve expects for OTLP ingest, from the first of
+    /// three sources that is set:
     ///
-    /// Assembled here from a plain username/password so the deployment secret stays a
-    /// readable password in the host `.env` rather than an opaque pre-encoded blob — and so
-    /// that each signal can carry its own stream-name, which a single
-    /// OTEL_EXPORTER_OTLP_HEADERS string cannot express. It also sidesteps
-    /// open-telemetry/opentelemetry-dotnet#5315: the .NET SDK does not URL-decode that
-    /// variable, so a spec-correct percent-encoded value is sent literally and rejected as a
-    /// 401 that looks exactly like a wrong password.
+    /// <list type="number">
+    /// <item><c>Otlp:Headers</c> — a fully pre-formed header string, for anything exotic.</item>
+    /// <item><c>Otlp:Token</c> — the INGESTION TOKEN, base64 of "user:passcode", exactly as
+    /// OpenObserve's Ingestion page prints it. This is the production path.</item>
+    /// <item><c>Otlp:Username</c> + <c>Otlp:Password</c> — a login password, base64'd here.
+    /// Kept for the throwaway local instance in README's "Telemetry" section ONLY.</item>
+    /// </list>
+    ///
+    /// Prefer the token, and not merely for tidiness. OpenObserve OSS has no RBAC — every
+    /// account is an admin — so the passcode is the ONLY scope boundary there is. Measured
+    /// against v0.92.2: a passcode ingests (200) but cannot read (401 on /_search) or
+    /// administer (401 on /users), whereas the login password of the same account reads
+    /// every stream AND creates further admin users. A password here is therefore a
+    /// full-admin credential, not an ingest one. See docs/notes/openobserve-oss-has-no-rbac.md.
+    ///
+    /// Assembling the header here rather than via OTEL_EXPORTER_OTLP_HEADERS lets each signal
+    /// carry its own stream-name, which a single header string cannot express. It also
+    /// sidesteps open-telemetry/opentelemetry-dotnet#5315: the .NET SDK does not URL-decode
+    /// that variable, so a spec-correct percent-encoded value is sent literally and rejected
+    /// as a 401 that looks exactly like a wrong password.
     ///
     /// Base64 padding is safe in the header string: the exporter splits each comma-separated
     /// pair on the FIRST '=' only, and base64 never contains a comma.
     /// </summary>
-    private static string BuildAuthHeader(IConfiguration configuration)
+    internal static string BuildAuthHeader(IConfiguration configuration)
     {
         // Escape hatch for anything exotic: a fully pre-formed header string wins.
         var raw = configuration["Otlp:Headers"];
@@ -189,15 +203,25 @@ public static class TelemetryExtensions
             return raw;
         }
 
+        // The ingestion token is already base64("user:passcode") — pass it through untouched
+        // rather than encoding it a second time.
+        var token = configuration["Otlp:Token"];
+        if (!string.IsNullOrWhiteSpace(token))
+        {
+            return $"Authorization=Basic {token.Trim()}";
+        }
+
         var user = configuration["Otlp:Username"];
         var password = configuration["Otlp:Password"];
 
         if (string.IsNullOrWhiteSpace(user) || string.IsNullOrWhiteSpace(password))
         {
             throw new InvalidOperationException(
-                "Otlp:Endpoint is set, so Otlp:Username and Otlp:Password must be too "
-                + "(or Otlp:Headers, to supply the header string verbatim). Use the dedicated "
-                + "ingest account from DEPLOYMENT.md Part 1 step 8, not the root account.");
+                "Otlp:Endpoint is set, so Otlp:Token must be too — the ingestion token of the "
+                + "dedicated api@ account from DEPLOYMENT.md Part 1 step 8. (Otlp:Username plus "
+                + "Otlp:Password is accepted for a local throwaway instance, and Otlp:Headers "
+                + "supplies the header string verbatim.) Never the root account: on OpenObserve "
+                + "OSS a login password can read all telemetry and create admin users.");
         }
 
         var basicAuth = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{user}:{password}"));

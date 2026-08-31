@@ -18,10 +18,16 @@ ARG VITE_API_URL
 ARG VITE_OIDC_URL
 ARG VITE_OIDC_REALM
 ARG VITE_CLIENT_ID
+# Telemetry, optional. Unset means no sink is installed at all. The token is an ingestion
+# token and is BAKED INTO THE PUBLIC BUNDLE, so rotating it needs a rebuild, not a restart.
+ARG VITE_OO_LOGS_URL
+ARG VITE_OO_LOGS_TOKEN
 ENV VITE_API_URL=$VITE_API_URL \
     VITE_OIDC_URL=$VITE_OIDC_URL \
     VITE_OIDC_REALM=$VITE_OIDC_REALM \
-    VITE_CLIENT_ID=$VITE_CLIENT_ID
+    VITE_CLIENT_ID=$VITE_CLIENT_ID \
+    VITE_OO_LOGS_URL=$VITE_OO_LOGS_URL \
+    VITE_OO_LOGS_TOKEN=$VITE_OO_LOGS_TOKEN
 
 RUN npm run build
 
