@@ -41,7 +41,7 @@ to the internet.
   SQLite metadata DB holding users, ingest credentials and stream settings).
   *Not* migrated by `migrate.sh`: it is potentially the largest volume in the
   stack and its contents are, by definition, disposable history. The cost of
-  skipping it is that the ingest user, the RUM application and the metrics
+  skipping it is that the ingest accounts, the RUM application and the metrics
   retention override must be recreated on the new host — step 8, about two
   minutes.
 - **`maildata` volume** — mailboxes.
@@ -403,17 +403,50 @@ travels with both migration methods in Part 4.
 
 A fresh OpenObserve has the `default` organisation and the root user from
 `OBSERVATORY_ROOT_*`, and nothing else. Sign in at
-`https://observatory.stigvidd.se` and create three things.
+`https://observatory.stigvidd.se` and create the accounts below.
 
-**a. A dedicated ingest user for the backend.** Do not hand the root credentials
-to the API — root can read all telemetry and mint credentials. *IAM → Users →
-Add*: `ingest@stigvidd.se`, role `Member`, with write access to the `default`
-org. Put its details in the host `.env`:
+> **Read this before creating anything.** OpenObserve OSS **has no RBAC** — the
+> UI offers roles, but the only value it accepts is `Admin`, and every account is
+> a full admin regardless of what you pick. (`Member`, which earlier versions of
+> this runbook told you to choose, is rejected outright with "Custom roles not
+> allowed"; `service_account` is accepted and silently stored as `admin`.)
+>
+> The **only** privilege boundary that exists here is the *ingestion token* — the
+> per-user "passcode" on the **Ingestion** page, which is a different secret from
+> the account's login password. Measured against v0.92.2, for one and the same
+> account:
+>
+> | credential | `_json` / OTLP ingest | `/_search` | `/users` |
+> | --- | --- | --- | --- |
+> | ingestion token (passcode) | 200 | **401** | **401** |
+> | login password | 200 | **200** — reads every stream | **200** — creates admin users |
+>
+> So an ingestion token is safe to ship in a public binary and a password is not,
+> and that is the whole reason the steps below hand out tokens. Never put an
+> account password into `.env`, `app/.env` or a build arg. See
+> [docs/notes/openobserve-oss-has-no-rbac.md](docs/notes/openobserve-oss-has-no-rbac.md).
+
+**a. Create four accounts.** *IAM → Users → Add*, role `Admin` (the only option),
+one per producer — separate accounts so that a token extracted from a public
+bundle is not also the backend's, and so one can be rotated without disturbing
+the others:
+
+| account | used by | credential it hands out |
+| --- | --- | --- |
+| `api@stigvidd.se` | the backend API | ingestion token |
+| `app@stigvidd.se` | the mobile app | ingestion token — **public** |
+| `web@stigvidd.se` | the admin web | ingestion token — **public** |
+| `ops@stigvidd.se` | `scripts/observatory-retention.sh` | password (see **d**) |
+
+**b. The backend's ingestion token.** Sign in **as `api@stigvidd.se`**, open
+*Ingestion*, and copy the Authorization value — it is already
+`base64("api@stigvidd.se:<passcode>")`. The passcode is per user and per
+organisation, so it has to be fetched while signed in as that user; root cannot
+read someone else's. Put it in the host `.env`:
 
 ```bash
 OTLP_ENDPOINT=http://openobserve:5080/api/default
-OTLP_USER=ingest@stigvidd.se
-OTLP_PASSWORD=<the ingest user's password>
+OTLP_TOKEN=<the value copied from the Ingestion page>
 ```
 
 Then restart the API so it picks them up. Until this is done it runs with **no
@@ -423,18 +456,69 @@ exporter at all**, which is the intended fallback, not a failure:
 docker compose up -d --no-deps api
 ```
 
-**b. A RUM application for the mobile apps.** *Ingestion → RUM → New
+Confirm it worked by watching for the absence of failures — an OTLP export error
+never surfaces as an application error, so a wrong token looks exactly like
+telemetry being switched off:
+
+```bash
+docker compose logs --tail=50 api | grep -i otlp   # expect nothing
+```
+
+then check that `stigvidd_api_logs` is filling in the UI.
+
+**c. The two public tokens.** Repeat **b** signed in as `app@stigvidd.se` and
+`web@stigvidd.se`.
+
+> **Both of these ship inside something the public can read**, and are therefore
+> public themselves: the app's is inlined into every APK and IPA by Metro, and the
+> web's is inlined into the JS bundle by Vite and served from the web domain — that
+> one needs no APK to extract, just a `curl`. That is the accepted trade for
+> direct-from-client telemetry; what makes it acceptable is that an ingestion token
+> **cannot read or administer anything** (the table above), plus the retention caps,
+> `request_body max_size 10MB` in the Caddyfile, and `ZO_INGEST_ALLOWED_UPTO`. If one
+> is abused, reset that user's passcode on the Ingestion page and ship a new build.
+
+The web token is a **build arg**, not runtime config, because Vite inlines it:
+
+```bash
+VITE_OO_LOGS_URL=https://observatory.stigvidd.se/api/default/stigvidd_web_logs/_json
+VITE_OO_LOGS_TOKEN=<the value copied while signed in as web@>
+```
+
+The app's goes on EAS, not in this `.env` — `app/.env` is git-ignored and a cloud
+build never sees it, so it must be `eas env:create`d per environment. See the
+**Telemetry** section of the root [README.md](README.md).
+
+**Rotating any of these three:** reset the passcode on that user's Ingestion page,
+then update the value. The API needs only a restart; the **app and web need a
+rebuild and redeploy**, because their tokens are compiled in. Jenkins builds and
+deploys only from `main`.
+
+**d. The ops account for the retention script.** Changing stream settings is not
+an ingest route, so `scripts/observatory-retention.sh` cannot use an ingestion
+token at all — a passcode gets a 401 there. It needs an account password, which on
+OSS is unavoidably full admin. Use `ops@stigvidd.se` rather than root anyway: the
+root password is the first-boot `ZO_ROOT_USER_PASSWORD` and editing `.env` cannot
+change it afterwards, so it is the one credential here that **cannot be rotated**.
+
+```bash
+OBSERVATORY_OPS_EMAIL=ops@stigvidd.se
+OBSERVATORY_OPS_PASSWORD=<the ops account's password>
+```
+
+The script falls back to `OBSERVATORY_ROOT_*` when these are unset, so a host
+provisioned before this step existed keeps working unchanged.
+
+**e. A RUM application for the mobile apps.** *Ingestion → RUM → New
 application*, named `stigvidd-app`. It produces an `applicationId` and a
 `clientToken`, which the app build needs.
 
-> **These two values ship inside the installed app and are therefore public.**
-> Anyone who extracts them from an APK or IPA can write telemetry into this
-> instance. That is the accepted trade for direct-from-device RUM; the mitigations
-> are the ingest-only scope of the token, the retention caps, and the 10MB
-> request-size limit in the Caddyfile. They must **never** be the same credentials
-> the backend uses. If a token is abused, revoke it here and ship a new app build.
+> The RUM `clientToken` is a **third** kind of credential — per organisation, not
+> per user, and distinct from both the passcode and any password. It authorises
+> only `/rum/v1/<org>/{rum,logs,replay}`. It is public for the same reason as **c**.
+> They must **never** be the same credentials the backend uses.
 
-**c. The metrics retention override.** The global default gives logs and traces
+**f. The metrics retention override.** The global default gives logs and traces
 their 7 days. Metrics are kept for two years, which OpenObserve can only express
 as a per-stream override:
 
@@ -594,16 +678,21 @@ Copy [.env.example](.env.example) to `.env` and set:
 | `OBSERVATORY_RETENTION_DAYS` | **Logs and traces** retention (default 7). This is the *global* default and the only one OpenObserve has; upstream's own default is 3650, so do not remove it. Minimum 3. |
 | `OBSERVATORY_METRICS_RETENTION_DAYS` | **Metrics** retention (default 730), applied as a per-stream override by `scripts/observatory-retention.sh`. Lawful only while metrics carry no personal data — see [docs/observability.md](docs/observability.md). |
 | `OTLP_ENDPOINT` | **The telemetry on/off switch.** Unset (the default in `.env.example`) = the API registers no telemetry providers at all and behaves exactly as before. In-stack OTLP target when set: `http://openobserve:5080/api/default`. |
-| `OTLP_USER` / `OTLP_PASSWORD` | **Required once `OTLP_ENDPOINT` is set; the password is secret.** The dedicated ingest account from Part 1 step 8 — never the root account. Setting the endpoint without these is a configuration error and the API **refuses to start**, rather than running an exporter that would 401 every batch silently. Set all three together, or none. |
+| `OTLP_TOKEN` | **Required once `OTLP_ENDPOINT` is set, and secret.** The `api@` account's INGESTION TOKEN from Part 1 step 8 — already `base64("user:passcode")`, passed through verbatim. **Not a login password:** OSS has no RBAC, so a password would also read every stream and create admin users. Setting the endpoint without a credential is a configuration error and the API **refuses to start**, rather than running an exporter that would 401 every batch silently. |
+| `OTLP_USER` / `OTLP_PASSWORD` | Legacy fallback, still accepted, for a local throwaway instance only. `OTLP_TOKEN` wins when both are present, so a host that still carries this pair is not silently left on the weaker credential. |
 | `OTLP_LOG_STREAM` | Stream the API's logs land in (default `stigvidd_api_logs`). |
+| `OBSERVATORY_OPS_EMAIL` / `OBSERVATORY_OPS_PASSWORD` | Account `scripts/observatory-retention.sh` authenticates as. A **password**, necessarily: stream settings are not an ingest route, so an ingestion token gets a 401 there. Falls back to `OBSERVATORY_ROOT_*` when unset. Preferred over root because the root password is first-boot-only and cannot be rotated. |
+| `VITE_OO_LOGS_URL` / `VITE_OO_LOGS_TOKEN` | Admin-web telemetry, optional; with either unset the bundle installs no sink. **Build args, not runtime config** — Vite inlines them, so changing one needs a web image rebuild. The token is the `web@` account's ingestion token and is **public**: it is served in a JS bundle anyone can fetch. |
 
 > **`VITE_*` are build-time.** They are compiled into the web image by CI. With
 > stable public domains you rarely change them, but if you do, the web image must
 > be **rebuilt** (not just restarted).
 
-> **The apps' telemetry config is not here.** The RUM `applicationId` and
-> `clientToken` are compiled into the mobile binary by EAS, not by this compose
-> file. Changing them needs a new app build, and they are public once shipped.
+> **The mobile app's telemetry config is not here.** `EXPO_PUBLIC_OO_LOGS_*` and the
+> RUM `applicationId` / `clientToken` are compiled into the mobile binary by EAS, not
+> by this compose file — `app/.env` is git-ignored and a cloud build never sees it, so
+> they must be `eas env:create`d. Changing them needs a new app build, and they are
+> public once shipped.
 
 Keep `.env` secret and out of git (it already is).
 
@@ -937,7 +1026,7 @@ For a near-zero-loss move to a new host:
 4. On the target: restore, `docker compose up -d`, and if you used Method A,
    `docker compose restart api keycloak`.
 5. **Recreate the observability config** on the target — the `observatory`
-   volume is not carried by `migrate.sh`, so the ingest user, RUM application and
+   volume is not carried by `migrate.sh`, so the ingest accounts, RUM application and
    metrics retention override need Part 1 step 8 again. The apps' RUM endpoint
    follows the domain name, so no app rebuild is needed as long as
    `observatory.stigvidd.se` moves with everything else. **Telemetry history does
@@ -1070,8 +1159,14 @@ does nothing and you must rotate in the UI instead.
 
 **401 on ingest.**
 The org in the URL path must exist (`default` unless you made another), and the
-credentials must be the dedicated *ingest* account from step 8 — not the root UI
-password, and not a stale one from before the volume was recreated.
+credential must be the *ingestion token* of the matching account from step 8 — not
+a login password, and not a stale token from before the volume was recreated or the
+passcode was reset.
+
+Two traps specific to the token. It is **already base64**, so encoding it a second
+time yields a 401 indistinguishable from a wrong credential — paste it verbatim.
+And a passcode is valid **only on ingest routes**: a 401 from `/_search` or
+`/streams` while ingest works is the token behaving correctly, not a broken one.
 
 **Telemetry is accepted but does not appear where expected.**
 Logs are routed to a stream by the `stream-name` header; without it they land in
@@ -1107,7 +1202,7 @@ Compaction reclaims space on its next cycle, not instantly.
 
 **Telemetry is missing after a host move.**
 Expected: `observatory` is not in `migrate.sh`'s volume list. Redo Part 1 step 8
-to recreate the ingest user, RUM application and retention override.
+to recreate the ingest accounts, RUM application and retention override.
 
 **Container log files are growing, or hold entries older than 7 days.**
 Two separate causes, and the first hides the second.

@@ -23,6 +23,12 @@ export default defineConfig({
       VITE_OIDC_URL: "https://oidc.test",
       VITE_OIDC_REALM: "test-realm",
       VITE_CLIENT_ID: "test-client",
+      // telemetry.ts reads these at module load too. Left EMPTY on purpose: the default
+      // for the suite is telemetry OFF, so no test can post to a real observatory even if
+      // the developer's own .env has working credentials. The tests that need it on set
+      // them per-file with vi.stubEnv and re-import the module.
+      VITE_OO_LOGS_URL: "",
+      VITE_OO_LOGS_TOKEN: "",
     },
     restoreMocks: true,
     // Sets global test timeout to 30 seconds

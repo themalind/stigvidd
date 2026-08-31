@@ -133,10 +133,16 @@ services:
       # certificate, no hairpin, no TLS cost on a per-span path. No signal path
       # either — the exporter appends /v1/logs, /v1/traces and /v1/metrics itself.
       Otlp__Endpoint: ${OTLP_ENDPOINT:-}
-      # Dedicated ingest user created in the OpenObserve UI — NEVER the root
-      # account. Kept as a readable password rather than a pre-encoded blob; the
-      # base64 is built in code (see TelemetryExtensions.cs), which also avoids
-      # the OTEL_EXPORTER_OTLP_HEADERS percent-encoding trap in the .NET SDK.
+      # The api@ account's INGESTION TOKEN, copied verbatim from OpenObserve's
+      # Ingestion page — it is already base64("user:passcode") and is passed
+      # straight through, which also avoids the OTEL_EXPORTER_OTLP_HEADERS
+      # percent-encoding trap in the .NET SDK.
+      #
+      # NEVER a login password, and never root: OpenObserve OSS has no RBAC, so a
+      # password is not a scoped ingest credential — it reads every stream and
+      # creates admin users. See docs/notes/openobserve-oss-has-no-rbac.md.
+      Otlp__Token: ${OTLP_TOKEN:-}
+      # Legacy fallback for a local throwaway instance; Otlp__Token wins over it.
       Otlp__Username: ${OTLP_USER:-}
       Otlp__Password: ${OTLP_PASSWORD:-}
       # Log stream inside the org. Traces and metrics have their own stores.
@@ -179,6 +185,10 @@ services:
         VITE_OIDC_URL: ${VITE_OIDC_URL:-}
         VITE_OIDC_REALM: ${VITE_OIDC_REALM:-}
         VITE_CLIENT_ID: ${VITE_CLIENT_ID:-}
+        # Telemetry, optional — unset means the bundle installs no log sink.
+        # `:-` soft refs, so ci/build.env needs no placeholder for these.
+        VITE_OO_LOGS_URL: ${VITE_OO_LOGS_URL:-}
+        VITE_OO_LOGS_TOKEN: ${VITE_OO_LOGS_TOKEN:-}
     restart: unless-stopped
     logging: *default-logging
     depends_on:

@@ -92,6 +92,9 @@ pipeline {
     VITE_OIDC_URL   = 'https://auth.stigvidd.se'
     VITE_OIDC_REALM = 'stigvidd'
     VITE_CLIENT_ID  = 'stigvidd-admin'
+    VITE_OO_LOGS_URL= 'https://observatory.stigvidd.se/api/3Igh0Ez9tpaLNBgzzVouYA1NyT5/stigvidd_web_logs/_json'
+    VITE_OO_LOGS_TOKEN='c3RpZ3ZpZGQtcHJvZHVjdGlvbi13ZWI6bzJvaV9PcTZHNHo5VGR4UXFpYmhJMjlQU1RENGFXRlhWNHdMTg=='
+    
     // ========================================================================
 
     DOTNET_NOLOGO = '1'

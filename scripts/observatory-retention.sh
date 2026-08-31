@@ -70,8 +70,6 @@ else
 fi
 
 : "${OBSERVATORY_DOMAIN:?OBSERVATORY_DOMAIN must be set (in .env or the environment)}"
-: "${OBSERVATORY_ROOT_EMAIL:?OBSERVATORY_ROOT_EMAIL must be set}"
-: "${OBSERVATORY_ROOT_PASSWORD:?OBSERVATORY_ROOT_PASSWORD must be set}"
 ORG="${OBSERVATORY_ORG:-default}"
 DAYS="${OBSERVATORY_METRICS_RETENTION_DAYS:-730}"
 
@@ -79,10 +77,26 @@ DAYS="${OBSERVATORY_METRICS_RETENTION_DAYS:-730}"
 # origin so the same script works against a local dev instance on plain HTTP
 # (see README "Telemetry"), without special-casing anything.
 BASE="${OBSERVATORY_BASE_URL:-https://${OBSERVATORY_DOMAIN}}/api/${ORG}"
-AUTH="${OBSERVATORY_ROOT_EMAIL}:${OBSERVATORY_ROOT_PASSWORD}"
 
-# Admin operation, so this uses the ROOT credentials — deliberately not the
-# ingest account, which has no business changing stream settings.
+# This changes STREAM SETTINGS, which is not an ingest route — so it cannot use an
+# ingestion token at all. OpenObserve accepts a passcode only on the ingest paths and
+# answers 401 on /streams, so this needs an account PASSWORD, and on OpenObserve OSS
+# (no RBAC — see docs/notes/openobserve-oss-has-no-rbac.md) that password is
+# unavoidably full admin.
+#
+# Prefer the dedicated ops@ account over root: the root password is the first-boot
+# ZO_ROOT_USER_PASSWORD, which docker-compose.yml cannot change after the volume
+# exists, so it is the one credential here that CANNOT be rotated. ops@ can.
+# Falls back to root so a host provisioned before ops@ existed keeps working.
+OPS_EMAIL="${OBSERVATORY_OPS_EMAIL:-${OBSERVATORY_ROOT_EMAIL:-}}"
+OPS_PASSWORD="${OBSERVATORY_OPS_PASSWORD:-${OBSERVATORY_ROOT_PASSWORD:-}}"
+
+if [ -z "$OPS_EMAIL" ] || [ -z "$OPS_PASSWORD" ]; then
+  die "set OBSERVATORY_OPS_EMAIL and OBSERVATORY_OPS_PASSWORD (or the OBSERVATORY_ROOT_* pair) in .env or the environment"
+fi
+
+AUTH="${OPS_EMAIL}:${OPS_PASSWORD}"
+
 api() {
   local method="$1" path="$2"; shift 2
   curl -fsS -u "$AUTH" -X "$method" "$@" "${BASE}${path}"
@@ -90,7 +104,7 @@ api() {
 
 log "Listing metrics streams in org '${ORG}' at ${OBSERVATORY_DOMAIN}"
 streams_json=$(api GET "/streams?type=metrics") \
-  || die "could not list streams — check OBSERVATORY_DOMAIN and the root credentials"
+  || die "could not list streams — check OBSERVATORY_DOMAIN and the ops credentials"
 
 # Field order in the response is not guaranteed, so parse per-stream rather than
 # grepping names and retentions independently and hoping they line up.

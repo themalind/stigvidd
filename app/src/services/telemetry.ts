@@ -33,10 +33,19 @@ let initialised = false;
  * array body.
  *
  * NOTE ON THE CREDENTIAL: anything in an EXPO_PUBLIC_* var is inlined into the JS bundle by
- * Metro and is trivially extractable from an installed APK or IPA. OpenObserve's `_json`
- * endpoint takes HTTP Basic — i.e. a real account — so the value here MUST be an ingest-only
- * account scoped to this one stream, treated as public, and rotatable. It must never be the
- * root account, which can read every stream including the backend's.
+ * Metro and is trivially extractable from an installed APK or IPA. So the value here MUST be
+ * an INGESTION TOKEN — base64 of "user:passcode", copied from OpenObserve's Ingestion page —
+ * and never base64 of a login PASSWORD, which is what this used to say.
+ *
+ * The distinction is the whole security model, because OpenObserve OSS has no RBAC: every
+ * account is an admin, and the passcode is the only thing that scopes a credential to
+ * ingest. Measured against v0.92.2 with the same account: the passcode ingests (200) but
+ * answers 401 on /_search and /users, while the password reads every stream and creates
+ * further admin users. A password in this file would therefore hand full control of the
+ * observatory to anyone who unzips the APK. See docs/notes/openobserve-oss-has-no-rbac.md.
+ *
+ * Treat it as public and rotatable regardless: rotating means a new app build and release,
+ * so it is worth getting right the first time.
  */
 function createHttpSink(url: string, token: string) {
   return async (records: LogRecord[]) => {

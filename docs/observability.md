@@ -41,6 +41,12 @@ wrong is "we retained precise location data about identifiable users for two yea
   accepts effectively-unauthenticated traffic from the open internet — `media`
   takes public reads but authed writes, `api` requires a Keycloak token, and
   `auth` is Keycloak's own hardened surface. This one is different in kind.
+- **The admin web** posts logs the same way, to `stigvidd_web_logs`, from
+  `web/src/services/telemetry.ts`. Same bulk `_json` endpoint as the app, same
+  credential shape, and one difference that matters: its token is inlined by Vite
+  into a bundle served publicly from the web domain, so extracting it needs a
+  single `curl` rather than an APK. `ZO_CORS_ALLOWED_ORIGINS` already permits the
+  web domain, which is what makes a browser-side POST possible at all.
 - Telemetry is **opt-in everywhere**: with the config absent, the backend
   registers no OpenTelemetry providers at all and the app initialises no SDK.
   Nothing breaks when observability is unconfigured, or down.
@@ -389,13 +395,42 @@ Worth recording, because it is a real advantage over a SaaS APM:
 ## Security posture
 
 The app's RUM client token is **public**: it ships in every APK/IPA and can be
-extracted in minutes. There is no way to make direct-from-device RUM not have this
-property; the question is only how much a stolen token buys.
+extracted in minutes, and the admin web's ingestion token is more exposed still —
+served in a JS bundle, readable without unpacking anything. There is no way to make
+direct-from-client telemetry not have this property; the question is only how much a
+stolen credential buys, and that is entirely decided by item 1 below.
 
-1. **Three separate identities** — root (UI only), the backend's ingest account
-   (server-side only), and the app's RUM client token (public). A stolen client
-   token must not be able to *read* telemetry or change configuration. Verify what
-   a `Member` can actually see: OSS RBAC is coarser than Enterprise.
+1. **The ingestion token is the only privilege boundary there is.** The open
+   question this section used to carry — "verify what a `Member` can actually
+   see" — has been answered, and the answer is *everything*: **OpenObserve OSS
+   has no RBAC at all**. `Member`, `Editor` and `Viewer` are rejected outright
+   ("Custom roles not allowed"), `service_account` is accepted and silently
+   stored as `admin`, and every account is a full admin. Enterprise-only, all of
+   it — including Service Accounts.
+
+   What *is* enforced is the split between an account's login **password** and
+   its per-user, per-organisation **passcode** (the "ingestion token" on the
+   Ingestion page). Measured against v0.92.2, one and the same account:
+
+   | credential | `_json` / OTLP ingest | `/_search` | `/users` |
+   | --- | --- | --- | --- |
+   | ingestion token | 200 | **401** | **401** |
+   | login password | 200 | 200 — reads every stream | 200 — creates admin users |
+
+   So the rule is mechanical: **anything that ships to a client carries an
+   ingestion token, never a password.** A password in a public bundle is not a
+   scoped ingest credential, it is full control of the observatory — which is
+   what the app shipped before this was measured.
+
+   **Five identities**, one per producer so that a token extracted from a public
+   bundle is not also another producer's, and so one can be rotated alone:
+   root (first boot only, and unrotatable), `api@` (server-side), `app@` and
+   `web@` (both public, ingest-only), and `ops@` (a password, because stream
+   management is not an ingest route and a passcode gets a 401 there).
+
+   Rotation is asymmetric and worth remembering: the API takes a restart, while
+   `app@` and `web@` are compiled in and take a rebuild and a release.
+   See [notes/openobserve-oss-has-no-rbac.md](notes/openobserve-oss-has-no-rbac.md).
 2. **Retention as blast-radius cap.** An abuser cannot fill the disk forever, only
    up to `retention × their rate`. Note that garbage written into a *metrics*
    stream would sit for two years — if the token is ever abused, look for junk

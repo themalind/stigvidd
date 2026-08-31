@@ -167,8 +167,13 @@ you get approved.
   denied over the word `up` in English prose while the reversed order passes and a quoted
   `docker compose up` passes too (this note claimed the opposite until it was measured) — but a
   heredoc body line *beginning* with a guarded command IS denied, because `commandsIn()` splits
-  on newlines; and the hooks `process.exit()` at module scope, so `import`-ing one to test its
-  `decide()` kills the importer — spawn it with the event on stdin instead.
+  on newlines. Worse, inside a heredoc **backticks are command substitution**, so Markdown/JSDoc
+  inline code around a guarded name is a command at head position: a `cat > file.ts <<EOF` whose
+  body merely mentions `` `vitest.config.ts` `` or `` `docker compose up` `` in a COMMENT is
+  denied and the file is never written, while the same sentence without backticks passes — write
+  file content with the Write tool. And the hooks `process.exit()` at module scope, so
+  `import`-ing one to test its `decide()` kills the importer — spawn it with the event on stdin
+  instead.
 - [The web test environment substitutes two things quietly: Blobs and `.env`](web-vitest-environment.md) —
   `web/` now has a Vitest + jsdom suite (`npm test` = `vitest run`, config in
   **`web/vitest.config.ts`, not `vite.config.ts`**), and two of the environment defaults hand
@@ -238,6 +243,19 @@ you get approved.
   uninstalled timer deletes nothing while everything looks healthy, and log options are fixed
   at container *create* time, so `docker compose restart` never applies the caps. Distinct
   from `OBSERVATORY_RETENTION_DAYS`, which is OpenObserve's genuinely time-based retention.
+- [OpenObserve OSS has no RBAC, so the ingestion token is the only thing a public credential may be](openobserve-oss-has-no-rbac.md) —
+  the `Member` role DEPLOYMENT.md told you to give the ingest account is rejected outright
+  ("Custom roles not allowed"), `service_account` is accepted and silently stored as `admin`,
+  and Service Accounts are Enterprise-only — every OSS account is a full admin. The only real
+  boundary is an account's per-user **passcode** (the "ingestion token" on the Ingestion page,
+  already base64 of `user:passcode`) versus its **login password**: measured on v0.92.2 the
+  passcode ingests via `_json` and OTLP `v1/logs` but answers 401 on `/_search` and `/users`,
+  while the same account's password reads every stream and creates admin users. So
+  `EXPO_PUBLIC_OO_LOGS_TOKEN`, `VITE_OO_LOGS_TOKEN` and `OTLP_TOKEN` must all be ingestion
+  tokens — a password in a public bundle is full control of the observatory. Passcodes do not
+  work on stream-settings routes, which is why `scripts/observatory-retention.sh` needs
+  `OBSERVATORY_OPS_*`. Reproducing it: `localhost:5080` fails on rootless podman (IPv4 only,
+  use `127.0.0.1`), and `_search` wants microsecond times or returns `invalid time range`.
 - [An EAS build never sees `app/.env`, and `eas.json` does not say which variables it does see](eas-env-vars-are-not-your-dotenv.md) —
   EAS Build uploads the working tree — uncommitted and untracked files included, since
   `requireCommit` defaults to false — but drops what `.gitignore` drops, and `app/.env` is

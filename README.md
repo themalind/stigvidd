@@ -232,6 +232,21 @@ dotnet user-secrets set "Otlp:Username" "dev@stigvidd.se"
 dotnet user-secrets set "Otlp:Password" "DevDev#123"
 ```
 
+Username plus password is fine **here**, against a throwaway container. In production
+the API takes `Otlp:Token` instead — an *ingestion token*, which is what OpenObserve's
+**Ingestion** page prints and is already `base64("user:passcode")`:
+
+```bash
+dotnet user-secrets set "Otlp:Token" "<paste from the Ingestion page>"
+```
+
+The difference is not cosmetic. **OpenObserve OSS has no RBAC** — every account is an
+admin — so the ingestion token is the only thing that scopes a credential to writing.
+Measured on v0.92.2, for one and the same account: the token ingests but answers 401 on
+`/_search` and `/users`, while the password reads every stream and creates admin users.
+That is why nothing public may ever carry a password. See
+[docs/notes/openobserve-oss-has-no-rbac.md](docs/notes/openobserve-oss-has-no-rbac.md).
+
 The endpoint takes **no signal path** — the exporter appends `/v1/logs`,
 `/v1/traces` and `/v1/metrics` itself.
 
@@ -277,11 +292,12 @@ style preferences.
    EXPO_PUBLIC_MAPTILER_STYLE_ID=...
 
    # Telemetry (optional — omit and the app collects and sends nothing).
-   # Ingest-only credentials from OpenObserve; see the Telemetry section above.
-   # These ship inside the installed binary and are therefore PUBLIC: scope them
-   # to a single stream, and never use the root account.
+   # Copy the token from OpenObserve's Ingestion page while signed in as app@;
+   # see the Telemetry section above. These ship inside the installed binary and
+   # are therefore PUBLIC, which is exactly why the token must be an ingestion
+   # token: a password would give anyone who unzips the APK full admin.
    EXPO_PUBLIC_OO_LOGS_URL=https://observatory.stigvidd.se/api/default/stigvidd_app_logs/_json
-   EXPO_PUBLIC_OO_LOGS_TOKEN=...      # base64 of "<ingest-user>:<password>"
+   EXPO_PUBLIC_OO_LOGS_TOKEN=...      # the app@ account's INGESTION TOKEN, never a password
    EXPO_PUBLIC_LOG_LEVEL=debug
    ```
 
@@ -332,7 +348,22 @@ testers over the air. See
    VITE_OIDC_URL=https://your-keycloak-host/auth
    VITE_OIDC_REALM=stigvidd
    VITE_CLIENT_ID=...
+
+   # Telemetry (optional — omit both and the bundle installs no log sink and
+   # makes no request). Copy the token from OpenObserve's Ingestion page while
+   # signed in as web@; see the Telemetry section above.
+   #
+   # PUBLIC, and more exposed than the app's: Vite inlines VITE_* into a bundle
+   # served from the web domain, so anyone can read this with one curl — no APK
+   # to unpack. It must be an ingestion token; a password would hand every
+   # visitor full admin over the observatory.
+   VITE_OO_LOGS_URL=https://observatory.stigvidd.se/api/default/stigvidd_web_logs/_json
+   VITE_OO_LOGS_TOKEN=...
    ```
+
+   The tests never read this file — `vitest.config.ts` supplies its own values, so a
+   real token here cannot leak into the suite. See
+   [docs/notes/web-vitest-environment.md](docs/notes/web-vitest-environment.md).
 
 4. Start the development server:
    ```bash

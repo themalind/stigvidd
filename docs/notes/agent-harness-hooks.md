@@ -131,7 +131,34 @@ command.
 
 The third row is allowed for a reason specific to that guard rather than to this one: the
 backtick leaves ``backend/` `` as the path operand, and its gate 4 finds no declaration under
-it. Do not rely on that. Write file content with the Write tool.
+it. Do not rely on that — and in particular do not generalise it, because for
+`guard-long-running.mjs` **the backticks are what causes the deny**.
+
+**Backticks inside a heredoc are command substitution, so inline code in prose is a command
+at head position.** This is the trap, because backticks are exactly how you write a command
+name in Markdown, in a JSDoc block, or in a TS comment — so documenting a guarded command in
+a file you write with a heredoc is denied, while the identical sentence without backticks
+passes. Measured against `guard-long-running.mjs`:
+
+| heredoc body line | |
+| --- | --- |
+| `` * vitest.config.ts sets the env`` | allowed — prose, no command position |
+| ``` * `vitest.config.ts` sets the env ``` | **DENIED** — substitution, head is `vitest`, no `run` after it |
+| ``` * `docker compose up` brings it up ``` | **DENIED** |
+| ``` * `vitest run` is the form that exits ``` | allowed — the substitution is itself an allowed form |
+| ``` * `npm test` for the runner ``` | allowed — same |
+| `echo "see `` `vitest.config.ts` ``"` (no heredoc) | allowed |
+
+Note the last row: outside a heredoc the same backticks are fine, so this is specifically the
+heredoc path. And note the fourth and fifth: whether it denies depends on what is *inside* the
+backticks, not on the prose around it — which is why it looks so arbitrary from the outside.
+
+This is live. It denied a `cat > web/src/services/telemetry.test.ts <<'EOF' … EOF` whose body
+was a test file with `` `vitest.config.ts` `` in one comment and no `vitest` command anywhere;
+the whole call is rejected, so the file is not written and the first symptom is a missing file
+rather than a message about prose. **Write file content with the Write tool** — that is the
+workaround for both guards, and it is cheaper than finding out which of your comments is a
+command.
 
 ## 5c. The hook modules cannot be imported
 
