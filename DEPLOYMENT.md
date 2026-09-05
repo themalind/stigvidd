@@ -1,5 +1,10 @@
 # Deploying & Migrating Stigvidd
 
+> Setting up **staging**? [STAGING.md](STAGING.md) is the runbook for that. Staging is a
+> partial stack — five services of its own, borrowing production's Keycloak, mail server and
+> OpenObserve — so it differs from this document in ways that matter. Read this one first for
+> the mechanics; follow that one for the steps.
+
 How to stand up the full Stigvidd stack on a new host and move data between
 hosts. The whole environment is defined by [docker-compose.yml](docker-compose.yml)
 and is designed to be picked up and moved at will.
@@ -37,6 +42,9 @@ to the internet.
 - **`pgdata` volume** — the app database *and* the `keycloak` database live here.
   Keycloak's SMTP settings are realm config, so they live here too.
 - **`media` volume** — uploaded images.
+- **`trail_imports` volume** — uploaded trail-import source exports awaiting
+  review. Stateful because a review session is re-analysed from the file it was
+  created from, days after the upload. Migrated by `migrate.sh`.
 - **`observatory` volume** — telemetry (parquet, WAL, and OpenObserve's own
   SQLite metadata DB holding users, ingest credentials and stream settings).
   *Not* migrated by `migrate.sh`: it is potentially the largest volume in the
@@ -600,8 +608,8 @@ container logs**, which are a different mechanism entirely.
 > ```
 >
 > **`--no-deps` is not optional here.** `mailserver` depends on `proxy`, which
-> depends on `web`/`api`/`media`/`keycloak`, which depend on `db` — so naming
-> `mailserver` without it pulls in all eight services and restarts the whole stack.
+> depends on `web`/`api`/`media`, which depend on `db` — so naming `mailserver`
+> without it pulls in most of the stack and restarts it.
 > Same trap as "Restarting `mailserver` restarts half the stack" in Troubleshooting.
 >
 > Every line must show `max-size:10m`. A bare `map[]` on **all eight** means the
@@ -869,8 +877,8 @@ images it builds — `api web media proxy keycloak` — and passes `--no-deps` s
 compose never acts on `db`, `mailserver` or `openobserve`.
 
 Left alone: the `db`, `mailserver` and `openobserve` services, and every named
-volume (`pgdata`, `media`, `observatory`, `maildata`, `mailstate`, `maillogs`,
-`caddy_data`, `caddy_config`). Recreating the five app containers does not disturb uploads,
+volume (`pgdata`, `media`, `trail_imports`, `observatory`, `maildata`,
+`mailstate`, `maillogs`, `caddy_data`, `caddy_config`). Recreating the five app containers does not disturb uploads,
 mailboxes or issued certificates, and Keycloak's realm — including its SMTP
 settings — survives because it lives in the untouched database.
 
@@ -973,8 +981,10 @@ browser, without SSH.
 ### Method B — Volume copy (shell) — exact byte-for-byte clone
 
 Best for a full host move where you have SSH on both ends. Copies the raw
-`pgdata` (app **and** Keycloak databases), `media`, `maildata` and `mailstate`
-volumes.
+`pgdata` (app **and** Keycloak databases), `media`, `maildata`, `mailstate` and
+`trail_imports` volumes — the list `scripts/migrate.sh` actually carries. Adding
+a named volume to `docker-compose.yml` is therefore also a change to that script
+and to this list; see `docs/notes/compose-volume-needs-migrate-sh.md`.
 
 On the **source** (in the compose dir):
 
@@ -1265,9 +1275,12 @@ bind the container to the public IP only (`"<host-ip>:25:25"`) instead, at the
 cost of hardcoding the IP and running two MTAs.
 
 **Restarting `mailserver` restarts half the stack.**
-`mailserver` depends on `proxy`, which depends on `web`/`api`/`media`/`keycloak`,
-which depend on `db` — so a bare `docker compose up -d mailserver` walks the
-whole chain. Pass `--no-deps` for mail-only work:
+`mailserver` depends on `proxy`, which depends on `web`/`api`/`media`, which
+depend on `db` — so a bare `docker compose up -d mailserver` walks the whole
+chain. (`proxy` deliberately does **not** depend on `keycloak`: Caddy resolves an
+upstream lazily, and the dependency would force a partial stack to start a
+Keycloak it borrows from elsewhere — see [STAGING.md](STAGING.md).) Pass
+`--no-deps` for mail-only work:
 
 ```bash
 docker compose up -d --no-deps mailserver

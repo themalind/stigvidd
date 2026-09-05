@@ -107,6 +107,17 @@ services:
       # proxy's network alias makes this resolve internally with a valid cert.
       Keycloak__auth-server-url: ${KEYCLOAK_URL:?KEYCLOAK_URL must be set}
       KeycloakAdminClient__auth-server-url: ${KEYCLOAK_URL}
+      # The realm, which appsettings.json otherwise pins to "stigvidd" for BOTH
+      # sections. Overriding it here is what lets a second environment point at
+      # the same Keycloak and a different realm — a staging stack borrowing
+      # production's identity provider. AddKeycloakWebApiAuthentication binds the
+      # whole `Keycloak` section, and KeycloakAdminRepository reads Keycloak:realm
+      # (that section, not KeycloakAdminClient's), so both must move together or
+      # tokens validate against one realm while admin calls hit the other.
+      # Defaulted, so an .env that never mentions it behaves exactly as before.
+      # See docs/notes/keycloak-realm-lives-in-appsettings-not-compose.md.
+      Keycloak__realm: ${KEYCLOAK_REALM:-stigvidd}
+      KeycloakAdminClient__realm: ${KEYCLOAK_REALM:-stigvidd}
       # Secret of the confidential `stigvidd-admin-api` client, from its Credentials
       # tab in the realm. Mints the client-credentials token behind
       # IKeycloakAdminRepository, so registration, forgot-password and admin user
@@ -353,11 +364,21 @@ services:
       context: ./proxy
     restart: unless-stopped
     logging: *default-logging
+    # Which Caddyfile the image runs. Defaults to the full six-site config, so a
+    # host that never sets this is unchanged. A partial stack sets
+    # CADDYFILE=/etc/caddy/Caddyfile.app to drop the auth/observatory/mail sites,
+    # which is what stops Caddy requesting certificates for three names it does
+    # not serve. Both files are baked into the image by proxy/Dockerfile.
+    command: caddy run --config ${CADDYFILE:-/etc/caddy/Caddyfile} --adapter caddyfile
+    # Deliberately NOT depends_on keycloak (nor openobserve): Caddy resolves an
+    # upstream lazily, at the first request for that site, so naming them buys
+    # no ordering — and it would force a partial stack (see STAGING.md, which
+    # runs db/api/web/media/proxy and borrows production's Keycloak) to start a
+    # Keycloak it does not want. web/api/media stay: those it always fronts.
     depends_on:
       - web
       - api
       - media
-      - keycloak
     environment:
       WEB_DOMAIN: ${WEB_DOMAIN:?WEB_DOMAIN must be set}
       API_DOMAIN: ${API_DOMAIN:?API_DOMAIN must be set}
@@ -388,6 +409,15 @@ services:
         # Make the public hostnames resolve to the proxy from INSIDE the stack,
         # so the API's server-to-server calls to https://auth.<domain> hit Caddy
         # (valid cert) instead of hairpinning out to the public IP.
+        #
+        # THE TRAP: this is unconditional. Whatever a *_DOMAIN is set to, THIS
+        # stack owns that name on the docker network. A stack that borrows
+        # another environment's Keycloak/OpenObserve must therefore set these to
+        # its OWN hostnames and reach the other environment through KEYCLOAK_URL
+        # / OTLP_ENDPOINT, which are not aliased — otherwise it answers its own
+        # request with a service it does not run, and curl from the host still
+        # works because the host is not on this network.
+        # See docs/notes/proxy-aliases-shadow-public-hostnames.md and STAGING.md.
         aliases:
           - ${WEB_DOMAIN}
           - ${API_DOMAIN}

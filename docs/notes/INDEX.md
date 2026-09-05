@@ -125,15 +125,18 @@ you get approved.
   src/api/generated` then fails with "the generated API client is stale" for reasons that
   have nothing to do with the API. Four migration files were committed CRLF+BOM. Fixed with
   `* text=auto eol=lf`; keep content comparisons newline-agnostic regardless.
-- [`npx tsc --noEmit` in app/ is clean, and no CI job runs it](app-typecheck-baseline.md) —
+- [`npx tsc --noEmit` in app/ has no fixed baseline — the count depends on a gitignored generated file](app-typecheck-baseline.md) —
   nothing type-checks app/: CI runs prettier, expo lint and jest, and jest-expo transpiles
   via Babel without type-checking, so a type error in app production code is caught by
-  nothing. Measured 2026-08-31: **0 errors, exit 0** — any error is one you added. This note
-  previously recorded 19 and blamed `tsconfig.json`'s `"types": ["jest","geojson"]` for
-  dropping `@types/node`; that array is unchanged and the `TS2304: Cannot find name 'global'`
-  errors are gone, because `expo-env.d.ts` reaches `expo/types/global.d.ts`'s
-  `/// <reference types="node" />`, which `compilerOptions.types` does not filter. Don't add
-  `"node"` to that array — check `expo-env.d.ts` exists, it is gitignored.
+  nothing. But do NOT treat the error count as a repo constant: expo-router's typed-route
+  union comes from `.expo/types/router.d.ts`, which the Expo CLI generates and `.gitignore`
+  ignores, so a stale copy makes `tsc` reject routes that exist and are committed. Measured
+  2026-09-05: **2 errors, exit 2**, both `hike-follow` routes added six weeks after the local
+  router.d.ts was written — TS2820/TS2322, and TypeScript's "Did you mean `follow/`?" hint is
+  wrong, `follow/` and `hike-follow/` are different screens. Regenerate by starting the dev
+  server (background it) before believing any number. This note has recorded 19, then 0, then
+  2. The old 19 was `tsconfig.json`'s `"types": ["jest","geojson"]` dropping `@types/node`;
+  that is resolved — `expo-env.d.ts` reaches `expo/types/global.d.ts`, so don't add `"node"`.
 - [A popular-trails ranking test competes with the standard seed: six verified GeoPath trails at one location](seeded-trails-compete-in-ranking-tests.md) —
   writing a test for popular-trail ranking, proximity, distance or user location: `TestBase.CreateSeededFactory()`'s
   `extraSeed` is **additive**, and `Utilities.InitializeDbForTests` already supplies six
@@ -312,3 +315,42 @@ you get approved.
   encode -> EXIF APP1 marker (`jpeg_write_marker`, via `TestImages.JpegWithGps`) -> decode
   (`ImageProcessingService.Process`, which is why an imageless AddTrail test 500s). Production
   on PostGIS/Npgsql never loads the extension and is unaffected.
+- [The proxy publishes every `*_DOMAIN` as a network alias, so a stack pointed at another environment's service swallows its own request](proxy-aliases-shadow-public-hostnames.md) —
+  deploying a partial/staging stack, or any compose stack that borrows another environment's
+  Keycloak, OpenObserve or mail server: `docker-compose.yml`'s `proxy` service aliases
+  `${WEB_DOMAIN}`, `${API_DOMAIN}`, `${MEDIA_DOMAIN}`, `${AUTH_DOMAIN}` and
+  `${OBSERVATORY_DOMAIN}` onto itself on the `public` network, deliberately, so in-stack
+  calls to `https://auth.<domain>` hit Caddy instead of hairpinning. The alias is
+  unconditional, so setting `AUTH_DOMAIN=auth.stigvidd.se` on a stack that runs no
+  `keycloak` makes THAT stack own production's hostname internally: the API's calls 502 or
+  fail to connect while every value looks right, and `curl` from the host works because the
+  host is not on the docker network. Test with
+  `docker compose exec api getent hosts auth.stigvidd.se` — a `10.x` answer is the alias.
+  `*_DOMAIN` means "names this proxy serves", never "names this stack talks to"; reach other
+  environments through `KEYCLOAK_URL`/`OTLP_ENDPOINT`, which are not aliased. Paired with
+  `proxy/Caddyfile.app` and `CADDYFILE=/etc/caddy/Caddyfile.app`, because Caddy has no
+  conditionals and an empty site address makes it reject its entire config.
+- [The Keycloak realm came from appsettings.json, not compose — and one `Keycloak:realm` feeds both authentication and the admin client](keycloak-realm-lives-in-appsettings-not-compose.md) —
+  changing the Keycloak realm, or pointing a second environment at the same Keycloak:
+  `appsettings.json` pins `"realm": "stigvidd"` in BOTH the `Keycloak` and
+  `KeycloakAdminClient` sections and compose overrode only `auth-server-url`, so the realm
+  was the one Keycloak setting needing a committed-file edit. Now
+  `Keycloak__realm`/`KeycloakAdminClient__realm` come from `${KEYCLOAK_REALM:-stigvidd}`.
+  Set both: `AddKeycloakWebApiAuthentication` binds the `Keycloak` section for token
+  validation, and `KeycloakAdminRepository.cs:26` reads `Keycloak:realm` too — that section,
+  NOT `KeycloakAdminClient`'s — while minting its token against `KeycloakAdminClient`. Set
+  one only and tokens validate against one realm while registration, forgot-password and
+  admin provisioning hit another, with no startup error: a runtime 404/401 from the Admin
+  API. Sign-in works but every `[Authorize]` call returns 401 means the SPA's
+  `VITE_OIDC_REALM` (a build arg, baked into the bundle) drifted from the API's env.
+- [A markdown backtick reads as shell command substitution, so *documenting* a dev server trips `guard-long-running`](backticks-in-prose-trip-the-long-running-guard.md) —
+  writing a note, a skill or any .claude/ or docs/ file that NAMES a guarded command: a
+  heredoc whose body mentions a dev server in markdown inline code is DENIED by
+  guard-long-running.mjs even though nothing is being run. `commandsIn()` in
+  .claude/hooks/lib.mjs starts a new command segment at every backtick, newline, `(` and
+  `{`, because a backtick is real command substitution — and it sees one flat string with no
+  concept of a heredoc, so the body is scanned like code. The tell is that the quoted
+  "command" in the denial contains prose. Quoting does not help the way the hook's own
+  self-test (`echo 'do not docker compose up here'` is allowed) suggests: that passes only
+  because quoted spans are consumed first, and `<<'EOF'` quotes the body for bash, not for
+  the splitter. Write the file with the Write tool instead of a heredoc.

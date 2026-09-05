@@ -14,7 +14,7 @@
 # `precedence` is left at the default ("closest"), so a file that does carry a
 # header keeps what the header says and these entries never override it.
 #
-# See docs/notes/licensing-and-reuse.md for why the split is what it is.
+# See docs/notes/licence-is-per-area-not-repo-wide.md for why the split is what it is.
 
 version = 1
 SPDX-PackageName = "Stigvidd"

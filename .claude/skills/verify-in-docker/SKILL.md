@@ -5,10 +5,10 @@ description: Verify a change by actually running the stack under docker compose 
 
 # Nothing in GitHub CI runs this stack
 
-[.github/workflows/ci.yml](../../../.github/workflows/ci.yml) has exactly two jobs,
-`backend` and `app`. It builds **no image** and never invokes `docker compose`. The
-[Jenkinsfile](../../../Jenkinsfile) does — and only on `main`, after the tests. So every one
-of these is green on a PR while broken:
+[.github/workflows/ci.yml](../../../.github/workflows/ci.yml) has five jobs — `harness`,
+`backend`, `app`, `web` and `licensing`. Not one of them builds an **image** or invokes
+`docker compose`. The [Jenkinsfile](../../../Jenkinsfile) does — and only on `main`, after
+the tests. So every one of these is green on a PR while broken:
 
 - `docker-compose.yml` — a bad env var, a missing volume, a service that cannot resolve a peer
 - `proxy/` (Caddy), `db/`, `keycloak/`, `media/`

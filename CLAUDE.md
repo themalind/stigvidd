@@ -228,7 +228,9 @@ skill before citing a new assertion.
 [map](docs/map.md), [media-upload](docs/media-upload.md),
 [observability](docs/observability.md), [push-notifications](docs/push-notifications.md),
 [record-hike](docs/record-hike.md), [spatial-data](docs/spatial-data.md).
-[DEPLOYMENT.md](DEPLOYMENT.md) is the host runbook.
+[DEPLOYMENT.md](DEPLOYMENT.md) is the host runbook; [STAGING.md](STAGING.md) is the
+staging one — a **partial stack** (db/api/web/media/proxy) that borrows production's
+Keycloak realm, mail server and OpenObserve org, which is why it is a separate document.
 
 ## Licensing — the repo is NOT single-licence
 
