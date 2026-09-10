@@ -66,9 +66,9 @@ export default function ResetPasswordModal({ visible, onDismiss }: Props) {
         onDismiss={onDismiss}
       >
         <View style={{ gap: 20, padding: 20 }}>
-          <View style={s.titleDismissView}>
+          <View testID="reset-password-title-row" style={s.titleDismissView}>
             <Text style={s.textTitle}>{t("auth.resetPassword")} </Text>
-            <Pressable hitSlop={12} onPress={onDismiss}>
+            <Pressable testID="reset-password-close" hitSlop={12} onPress={onDismiss}>
               <Icon source="close" size={24} />
             </Pressable>
           </View>
@@ -77,6 +77,7 @@ export default function ResetPasswordModal({ visible, onDismiss }: Props) {
               control={control}
               render={({ field: { onChange, onBlur, value } }) => (
                 <TextInput
+                  testID="reset-password-email"
                   error={!!errors.email}
                   style={s.textInput}
                   onBlur={onBlur}
@@ -95,7 +96,7 @@ export default function ResetPasswordModal({ visible, onDismiss }: Props) {
               name="email"
             />
             {errors.email && (
-              <View style={s.errorContainer}>
+              <View testID="reset-password-email-error" style={s.errorContainer}>
                 <Text
                   style={[
                     s.errorBadge,

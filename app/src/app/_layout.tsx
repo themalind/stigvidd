@@ -22,7 +22,6 @@ import {
   registerForPushNotificationsAsync,
 } from "@/services/notifications";
 import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query";
-import * as NavigationBar from "expo-navigation-bar";
 import * as Notifications from "expo-notifications";
 import { ThemeProvider } from "@react-navigation/native";
 import { Stack, useRouter } from "expo-router";
@@ -31,7 +30,7 @@ import { useSetAtom } from "jotai";
 import { queryClientAtom } from "jotai-tanstack-query";
 import { Inter_600SemiBold, useFonts } from "@expo-google-fonts/inter";
 import React, { useEffect, useMemo, useRef } from "react";
-import { Platform, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { PaperProvider } from "react-native-paper";
 import "react-native-reanimated";
@@ -124,11 +123,6 @@ export default function RootLayout() {
     );
   }, [user]);
 
-  useEffect(() => {
-    if (Platform.OS !== "android") return;
-    NavigationBar.setButtonStyleAsync(theme.dark ? "light" : "dark");
-  }, [theme.dark]);
-
   const [fontsLoaded] = useFonts({ Inter_600SemiBold });
 
   // Render nothing until the initial session restore has resolved — prevents an
@@ -142,7 +136,7 @@ export default function RootLayout() {
         <ThemeProvider value={theme}>
           <StatusBar style={statusBarStyle} />
           <GestureHandlerRootView>
-            <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+            <View testID="root-container" style={[styles.container, { backgroundColor: theme.colors.background }]}>
               <NotificationHandler />
               <Stack>
                 <Stack.Screen name="(tabs)" options={{ headerShown: false }} />

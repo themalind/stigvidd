@@ -35,7 +35,7 @@ let initialised = false;
  * NOTE ON THE CREDENTIAL: anything in an EXPO_PUBLIC_* var is inlined into the JS bundle by
  * Metro and is trivially extractable from an installed APK or IPA. So the value here MUST be
  * an INGESTION TOKEN — base64 of "user:passcode", copied from OpenObserve's Ingestion page —
- * and never base64 of a login PASSWORD, which is what this used to say.
+ * and never base64 of a login PASSWORD.
  *
  * The distinction is the whole security model, because OpenObserve OSS has no RBAC: every
  * account is an admin, and the passcode is the only thing that scopes a credential to

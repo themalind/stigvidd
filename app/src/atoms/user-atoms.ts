@@ -93,7 +93,8 @@ export const addToFavoritesAtom = atomWithMutation((get) => {
 
       return { previousFavoritesList };
     },
-    onError: (context: { previousFavoritesList: UserFavoritesTrail[] } | undefined) => {
+    // react-query passes the context onMutate returned as the third argument.
+    onError: (_error, _trailIdentifier, context: { previousFavoritesList?: UserFavoritesTrail[] } | undefined) => {
       if (context?.previousFavoritesList) {
         queryClient.setQueryData(["userFavorites", uid], context.previousFavoritesList);
       }
@@ -137,7 +138,7 @@ export const addToWishlistAtom = atomWithMutation((get) => {
       return { previousWishlist };
     },
 
-    onError: (context: { previousWishlist: UserWishlistTrail[] } | undefined) => {
+    onError: (_error, _trailIdentifier, context: { previousWishlist?: UserWishlistTrail[] } | undefined) => {
       if (context?.previousWishlist) {
         queryClient.setQueryData(["userWishlist", uid], context.previousWishlist);
       }

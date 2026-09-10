@@ -39,10 +39,10 @@ export default function DifficultyInfoModal({ difficulty, visible, onDismiss }: 
           extraScrollHeight={20}
           contentContainerStyle={s.scrollContent}
         >
-          <View style={s.content}>
-            <View style={s.header}>
+          <View testID="difficulty-info-content" style={s.content}>
+            <View testID="difficulty-info-header" style={s.header}>
               <Text style={s.title}>{t("trail.difficultiesTitle")}</Text>
-              <Pressable hitSlop={16} onPress={onDismiss}>
+              <Pressable testID="difficulty-info-close" hitSlop={16} onPress={onDismiss}>
                 <Icon source="close" size={20} color={theme.colors.onSurface} />
               </Pressable>
             </View>
@@ -52,6 +52,7 @@ export default function DifficultyInfoModal({ difficulty, visible, onDismiss }: 
               return (
                 <View
                   key={item.value}
+                  testID="difficulty-info-card"
                   style={[
                     s.classificationSection,
                     {

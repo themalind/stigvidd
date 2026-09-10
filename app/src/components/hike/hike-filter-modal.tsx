@@ -40,16 +40,21 @@ export const HikeFilterModal: React.FC<HikeFilterModalProps> = ({
   const theme = useTheme();
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
-      <SafeAreaView style={[s.modalContainer, { backgroundColor: theme.colors.background }]}>
+      <SafeAreaView testID="hike-filter-sheet" style={[s.modalContainer, { backgroundColor: theme.colors.background }]}>
         <View style={s.header}>
           <Pressable
+            testID="hike-filter-clear"
             style={[s.clearButtonWrapper, { backgroundColor: theme.colors.secondary }]}
             onPress={onClearFilters}
           >
             <Text style={[s.clearButton, { color: theme.colors.onSecondary }]}>{t("filter.clear")}</Text>
           </Pressable>
           <Text style={s.headerTitle}>{t("filter.title")}</Text>
-          <Pressable style={[s.doneButtonWrapper, { backgroundColor: theme.colors.primary }]} onPress={onClose}>
+          <Pressable
+            testID="hike-filter-done"
+            style={[s.doneButtonWrapper, { backgroundColor: theme.colors.primary }]}
+            onPress={onClose}
+          >
             <Text style={[s.doneButton, { color: theme.colors.onPrimary }]}>{t("filter.done")}</Text>
           </Pressable>
         </View>

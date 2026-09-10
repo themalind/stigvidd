@@ -35,9 +35,9 @@ function getCurrentBuildId(): string {
 }
 
 // Run once at app startup. On a new build (or first launch) it resets the cache
-// database — the in-app equivalent of `pm clear`, which we verified fixes the
-// blank map. On the same build it cheaply revalidates so a stale/bad entry isn't
-// served, without throwing away an otherwise-warm cache.
+// database — the in-app equivalent of `pm clear`, which clears the blank map. On the
+// same build it cheaply revalidates so a stale/bad entry isn't served, without throwing
+// away an otherwise-warm cache.
 export async function initMapCache(): Promise<void> {
   try {
     await OfflineManager.setMaximumAmbientCacheSize(MAP_AMBIENT_CACHE_MAX_BYTES);

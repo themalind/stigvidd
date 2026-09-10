@@ -67,9 +67,9 @@ export default function AreaDetailScreen() {
   const totalKm = Math.round(area.trails.reduce((sum, tr) => sum + (tr.trailLength ?? 0), 0));
 
   return (
-    <View style={[s.screen, { backgroundColor: theme.colors.background }]}>
+    <View testID="area-screen" style={[s.screen, { backgroundColor: theme.colors.background }]}>
       <ScrollView contentContainerStyle={s.container} showsVerticalScrollIndicator={false}>
-        <View style={s.hero}>
+        <View testID="area-hero" style={s.hero}>
           <Image source={{ uri: area.imageUrl }} style={s.heroImage} contentFit="cover" transition={200} />
           <ExampleImageOverlay source={{ uri: area.imageUrl }} />
           <LinearGradient
@@ -94,6 +94,7 @@ export default function AreaDetailScreen() {
 
         {Platform.OS === "ios" && (
           <Pressable
+            testID="area-back"
             onPress={() => router.back()}
             hitSlop={12}
             style={({ pressed }) => [s.backButton, pressed && { opacity: 0.7 }]}
@@ -103,7 +104,7 @@ export default function AreaDetailScreen() {
         )}
 
         {(trailCount > 0 || totalKm > 0) && (
-          <View style={s.statsRow}>
+          <View testID="area-stats" style={s.statsRow}>
             {trailCount > 0 && (
               <View style={s.stat}>
                 <Icon source="hiking" size={18} color={theme.colors.primary} />

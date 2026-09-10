@@ -169,6 +169,7 @@ export default function ListHeaderAction({
             onPress={() => setSortOpen(false)}
           />
           <Animated.View
+            testID="sort-popover"
             entering={FadeInUp.duration(150)}
             style={[
               s.popover,

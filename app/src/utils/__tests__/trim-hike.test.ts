@@ -62,8 +62,8 @@ describe("recomputeTrimmedHike", () => {
   });
 
   it("rounds duration to a whole number so iOS fractional-ms timestamps stay int-safe", () => {
-    // iOS reports location.timestamp with fractional milliseconds; the backend's
-    // Duration is an int, so a non-integer duration is rejected (400) on save.
+    // iOS timestamps carry fractional milliseconds, and the backend's int Duration rejects a
+    // non-integer with a 400.
     const iosSegment: Segment[] = [
       segment([
         [57.0, 12.0, 1000.1],
@@ -93,8 +93,7 @@ describe("recomputeTrimmedHike", () => {
     // Duration = each segment's own span, never the 10-minute pause between them.
     expect(result.duration).toBe(2000 + 2000);
 
-    // Distance must exclude the huge inter-segment jump: it equals the sum of the
-    // two within-segment legs, not the leg crossing from segment 0 to segment 1.
+    // Distance is the sum of the two within-segment legs, excluding the jump between segments.
     const within =
       recomputeTrimmedHike([segments[0]], 0, 1).distance + recomputeTrimmedHike([segments[1]], 0, 1).distance;
     expect(result.distance).toBe(within);

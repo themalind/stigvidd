@@ -56,7 +56,7 @@ export default function StatsHero({ figure, label, satellites }: Props) {
   const routeOpacity = theme.dark ? 0.3 : 0.65;
 
   return (
-    <View style={[s.card, { backgroundColor: surface }]}>
+    <View testID="stats-hero-card" style={[s.card, { backgroundColor: surface }]}>
       <View style={s.content}>
         <View style={s.hero}>
           <Text style={[s.heroValue, { color: onSurface }]}>{value}</Text>
@@ -65,7 +65,7 @@ export default function StatsHero({ figure, label, satellites }: Props) {
         <Text style={[s.heroLabel, { color: onSurface }]}>{label}</Text>
 
         {/* In flow: the lane is what sets the gap between the figure and the satellites. */}
-        <View style={s.routeBand} pointerEvents="none">
+        <View testID="stats-hero-route" style={s.routeBand} pointerEvents="none">
           <Svg width={width} height={ROUTE_BAND_HEIGHT} opacity={routeOpacity}>
             <Path
               d={route.d}
@@ -83,8 +83,10 @@ export default function StatsHero({ figure, label, satellites }: Props) {
         <View style={s.satellites}>
           {satellites.map((satellite, index) => (
             <View key={`${satellite.icon}-${satellite.label}`} style={s.satelliteGroup}>
-              {index > 0 && <View style={[s.separator, { backgroundColor: onSurface }]} />}
-              <View style={s.satellite}>
+              {index > 0 && (
+                <View testID="stats-hero-separator" style={[s.separator, { backgroundColor: onSurface }]} />
+              )}
+              <View testID={`stats-hero-satellite-${index}`} style={s.satellite}>
                 <MaterialCommunityIcons name={satellite.icon} size={16} color={theme.colors.primary} />
                 {satellite.labelFirst && (
                   <Text style={[s.satLabel, { color: onSurface }]} numberOfLines={1}>

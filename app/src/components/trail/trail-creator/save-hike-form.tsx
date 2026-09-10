@@ -37,7 +37,9 @@ interface Props {
 }
 
 const saveHikeFields = z.object({
-  hikeName: z.string({ required_error: "hike.nameRequired" }).min(3, "hike.nameTooShort").max(40, "hike.nameTooLong"),
+  // No required_error: the field defaults to "", so it is never undefined and min(3) is
+  // what an untouched form trips.
+  hikeName: z.string().min(3, "hike.nameTooShort").max(40, "hike.nameTooLong"),
 });
 
 type SaveHikeFormData = z.infer<typeof saveHikeFields>;
@@ -131,6 +133,7 @@ export default function SaveHikeForm({ hike, onDismiss, onSaveSuccess }: Props) 
         control={control}
         render={({ field: { onChange, onBlur, value } }) => (
           <TextInput
+            testID="save-hike-name"
             error={!!errors.hikeName}
             style={{ backgroundColor: theme.colors.surface }}
             onChangeText={onChange}

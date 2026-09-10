@@ -114,7 +114,7 @@ export default function TrailObstacleUpdateForm({
 
           <View style={s.fieldGroup}>
             <Text style={[s.fieldLabel, { color: theme.colors.onSurfaceVariant }]}>{t("obstacle.selectCategory")}</Text>
-            {issueTypes?.length && (
+            {!!issueTypes?.length && (
               <Controller
                 control={control}
                 name="issueType"
@@ -139,6 +139,7 @@ export default function TrailObstacleUpdateForm({
               name="description"
               render={({ field: { onChange, onBlur, value } }) => (
                 <TextInput
+                  testID="obstacle-update-description"
                   mode="outlined"
                   error={!!errors.description}
                   style={[s.textInput, { backgroundColor: theme.colors.surfaceVariant }]}
@@ -162,7 +163,13 @@ export default function TrailObstacleUpdateForm({
             )}
           </View>
 
-          <Button onPress={handleSubmit(onSubmit)} mode="contained" style={s.button} disabled={isPending}>
+          <Button
+            testID="obstacle-update-submit"
+            onPress={handleSubmit(onSubmit)}
+            mode="contained"
+            style={s.button}
+            disabled={isPending}
+          >
             {isPending ? t("common.saving") : t("common.save")}
           </Button>
         </View>

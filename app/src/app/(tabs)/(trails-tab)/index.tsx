@@ -91,14 +91,14 @@ export default function TrailsScreen() {
   }
 
   return (
-    <View style={[s.container, { backgroundColor: theme.colors.background }]}>
+    <View testID="trails-screen" style={[s.container, { backgroundColor: theme.colors.background }]}>
       <View style={[s.stickyHeader, { backgroundColor: theme.colors.background }]}>
         <View style={s.headerRow}>
           <View style={s.titleRow}>
             <Image contentFit="contain" source={hikers} style={s.hikers} />
             <Text style={[s.titleText, { color: theme.colors.onBackground }]}>{t("trailList.title")}</Text>
           </View>
-          <Pressable onPress={() => setFilterModalVisible(true)}>
+          <Pressable testID="trails-filter-button" onPress={() => setFilterModalVisible(true)}>
             <View style={[s.filterButtonInner, { backgroundColor: theme.colors.secondary }]}>
               <MaterialIcons name="filter-list" size={24} color={theme.colors.onSecondary} />
               <Text style={[s.filterButtonText, { color: theme.colors.onSecondary }]}>{t("trailList.filter")}</Text>
@@ -111,7 +111,11 @@ export default function TrailsScreen() {
           value={searchQuery}
           onChangeText={setSearchQuery}
           left={<TextInput.Icon icon="magnify" />}
-          right={searchQuery ? <TextInput.Icon icon="close" onPress={() => setSearchQuery("")} /> : undefined}
+          right={
+            searchQuery ? (
+              <TextInput.Icon testID="search-close-icon" icon="close" onPress={() => setSearchQuery("")} />
+            ) : undefined
+          }
           style={[s.searchInput, { backgroundColor: theme.colors.surface }]}
           theme={{
             colors: {
@@ -122,13 +126,14 @@ export default function TrailsScreen() {
         <View style={s.filterContainer}>
           <Text style={s.resultText}>{t("trailList.showing", { count: totalCount, shown: filteredCount })}</Text>
           {Object.values(filters).some((v) => v !== undefined) || searchQuery ? (
-            <Pressable onPress={clearFilters}>
+            <Pressable testID="trails-clear-filters" onPress={clearFilters}>
               <Text style={[s.clearFilters, { color: theme.colors.tertiary }]}>{t("trailList.clearFilters")}</Text>
             </Pressable>
           ) : null}
         </View>
       </View>
       <FlatList
+        testID="trail-list"
         ref={listRef}
         data={filteredTrails}
         renderItem={renderTrailItem}
@@ -157,7 +162,7 @@ export default function TrailsScreen() {
         }
         ListFooterComponent={
           showScrollToTop ? (
-            <Pressable style={s.backToTop} onPress={onPressScrollToTop}>
+            <Pressable testID="trails-back-to-top" style={s.backToTop} onPress={onPressScrollToTop}>
               <Text style={[s.text, { color: theme.colors.secondary }]}>{t("trail.backToTop")}</Text>
             </Pressable>
           ) : null

@@ -50,7 +50,7 @@ interface Props {
 // pipeline as the route and trailhead — never a view-hosted annotation, which is
 // the most fragile path on iOS under the New Architecture (see StartMarker). Its
 // position is fed by useLiveUserLocation (expo-location) rather than MapLibre's
-// built-in location engine, which froze the dot mid-walk on both platforms.
+// built-in location engine, which freezes the dot mid-walk on both platforms.
 export default function UserLocationMarker({ id, position, heading, aboveLayerId }: Props) {
   const shape = useMemo(() => pointFeatureFromPosition(position), [position]);
   const hasHeading = typeof heading === "number";
@@ -61,14 +61,11 @@ export default function UserLocationMarker({ id, position, heading, aboveLayerId
   // uses). Each layer is pinned above the previous one so the order survives no
   // matter which source finishes loading first (see aboveLayerId).
   //
-  // Every afterId below is derived only from `id` and `aboveLayerId`, both fixed for
-  // the lifetime of a mount. That is deliberate: the arrow layer therefore stays
-  // mounted even while stationary and is hidden with icon-opacity (a paint property,
-  // applied in place) rather than being unmounted. Toggling its presence used to
-  // shift the dot's anchor between the halo and the arrow, and each shift made the
-  // native side remove the dot layer and re-add the same object — a use-after-free
-  // that could also strand the dot permanently when the anchor vanished first,
-  // making the puck disappear the moment you stopped walking.
+  // Every afterId below is derived only from `id` and `aboveLayerId`, both fixed for the
+  // lifetime of a mount, so the arrow layer stays mounted while stationary and is hidden
+  // with icon-opacity (a paint property, applied in place). Unmounting it would move the
+  // dot's anchor between the halo and the arrow, and each move makes the native side
+  // remove the dot layer and re-add the same object — the use-after-free described above.
   //
   // <Images> registers the icon into the style and is a sibling of the source (not
   // a layer child). It's registered unconditionally so the icon is always present

@@ -57,7 +57,6 @@ export const userSearchAtomFamily = (query: string) =>
   });
 
 // Sum of all pending notification sources for the tab-bar badge.
-// Add incomingSharesAtom here when the shared-hikes feature lands.
 export const pendingNotificationsCountAtom = atom((get) => {
   const requests = get(incomingRequestsAtom).data?.length ?? 0;
   const shares = get(incomingSharedHikesAtom).data?.length ?? 0;

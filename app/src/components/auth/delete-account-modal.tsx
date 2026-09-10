@@ -82,7 +82,7 @@ export default function DeleteAccountModal({ visible, onDismiss }: Props) {
         <View style={{ gap: 20, padding: 20 }}>
           <View style={s.titleDismissView}>
             <Text style={s.textTitle}>{t("auth.deleteAccount")} </Text>
-            <Pressable hitSlop={12} onPress={onDismiss}>
+            <Pressable testID="delete-account-close" hitSlop={12} onPress={onDismiss}>
               <Icon source="close" size={24} />
             </Pressable>
           </View>
@@ -92,6 +92,7 @@ export default function DeleteAccountModal({ visible, onDismiss }: Props) {
               control={control}
               render={({ field: { onChange, onBlur, value } }) => (
                 <PasswordInputField
+                  testID="delete-account-password"
                   passwordCallback={onChange}
                   error={!!errors.password}
                   onBlur={onBlur}
@@ -102,7 +103,7 @@ export default function DeleteAccountModal({ visible, onDismiss }: Props) {
               name="password"
             />
             {errors.password && (
-              <View style={s.errorContainer}>
+              <View testID="delete-account-password-error" style={s.errorContainer}>
                 <Text
                   style={[
                     s.errorBadge,

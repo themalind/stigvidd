@@ -134,6 +134,7 @@ export default function RegisterScreen() {
                 control={control}
                 render={({ field: { onChange, onBlur, value } }) => (
                   <TextInput
+                    testID="register-nickname"
                     error={!!errors.nickName}
                     dense
                     style={s.textInput}
@@ -154,6 +155,7 @@ export default function RegisterScreen() {
               <View style={s.errorContainer}>
                 {errors.nickName && (
                   <Text
+                    testID="register-nickname-error"
                     style={[
                       s.errorBadge,
                       { color: theme.colors.onErrorContainer, backgroundColor: theme.colors.errorContainer },
@@ -167,6 +169,7 @@ export default function RegisterScreen() {
                 control={control}
                 render={({ field: { onChange, onBlur, value } }) => (
                   <TextInput
+                    testID="register-email"
                     error={!!errors.email}
                     dense
                     style={s.textInput}
@@ -188,6 +191,7 @@ export default function RegisterScreen() {
               <View style={s.errorContainer}>
                 {errors.email && (
                   <Text
+                    testID="register-email-error"
                     style={[
                       s.errorBadge,
                       { color: theme.colors.onErrorContainer, backgroundColor: theme.colors.errorContainer },
@@ -202,6 +206,7 @@ export default function RegisterScreen() {
                 render={({ field: { onChange, onBlur } }) => (
                   <PasswordInputField
                     passwordCallback={onChange}
+                    testID="register-password"
                     error={!!errors.password}
                     onBlur={onBlur}
                     label={t("auth.password")}
@@ -213,6 +218,7 @@ export default function RegisterScreen() {
               <View style={s.errorContainer}>
                 {errors.password && (
                   <Text
+                    testID="register-password-error"
                     style={[
                       s.errorBadge,
                       { color: theme.colors.onErrorContainer, backgroundColor: theme.colors.errorContainer },
@@ -227,6 +233,7 @@ export default function RegisterScreen() {
                 render={({ field: { onChange, onBlur } }) => (
                   <PasswordInputField
                     passwordCallback={onChange}
+                    testID="register-confirm-password"
                     error={!!errors.confirmPassword}
                     onBlur={onBlur}
                     label={t("auth.repeatPassword")}
@@ -239,6 +246,7 @@ export default function RegisterScreen() {
               <View style={s.errorContainer}>
                 {errors.confirmPassword && (
                   <Text
+                    testID="register-confirm-password-error"
                     style={[
                       s.errorBadge,
                       { color: theme.colors.onErrorContainer, backgroundColor: theme.colors.errorContainer },
@@ -249,7 +257,13 @@ export default function RegisterScreen() {
                 )}
               </View>
               <View style={s.actionContainer}>
-                <Button mode="contained" style={s.button} onPress={handleSubmit(onSubmit)} disabled={isSubmitting}>
+                <Button
+                  testID="register-submit"
+                  mode="contained"
+                  style={s.button}
+                  onPress={handleSubmit(onSubmit)}
+                  disabled={isSubmitting}
+                >
                   {isSubmitting ? t("auth.registering") : t("auth.register")}
                 </Button>
                 <Text style={[s.consentText, { color: theme.colors.onSurfaceVariant }]}>

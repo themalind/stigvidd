@@ -78,7 +78,7 @@ export default function RoutePreviewMap({
   }, [bounds, path]);
 
   return (
-    <View style={style}>
+    <View testID="route-preview" style={style}>
       {path.length > 0 && (
         <Map
           style={s.map}
@@ -119,7 +119,12 @@ export default function RoutePreviewMap({
             startPosition={showDirections ? path[0] : undefined}
           />
         ) : (
-          <Pressable style={StyleSheet.absoluteFill} onPress={onOpen} accessibilityRole="button" />
+          <Pressable
+            testID="route-preview-cover"
+            style={StyleSheet.absoluteFill}
+            onPress={onOpen}
+            accessibilityRole="button"
+          />
         ))}
     </View>
   );

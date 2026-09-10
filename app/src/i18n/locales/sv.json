@@ -5,20 +5,15 @@
     "cancel": "Avbryt",
     "close": "Stäng",
     "done": "Klar",
-    "confirm": "Bekräfta",
     "back": "Gå tillbaka",
-    "clear": "Rensa",
     "send": "Skicka",
     "sending": "Skickar...",
-    "all": "Alla",
     "retry": "Försök igen",
     "ok": "Ok",
     "delete": "Ta bort",
     "share": "Dela",
     "next": "Nästa",
     "select": "Välj...",
-    "time": "Tid",
-    "distance": "Distans",
     "exampleImage": "Exempelbild",
     "exampleImageShort": "Exempel"
   },
@@ -53,7 +48,6 @@
     "confirmDeleteAccount": "Är du säker på att du vill avsluta ditt konto?",
     "deleteAccountWarning": "Ditt konto och dina promenader raderas för alltid. Promenader du delat med någon finns kvar hos mottagarna.",
     "deleteAccountKeptData": "Dina recensionsbetyg och hinderrapporter står kvar utan koppling till dig – texten och bilderna raderas.",
-    "nicknameTakenMsg": "Smeknamnet upptaget",
     "unknownError": "Ett oväntat fel inträffade",
     "couldNotLogout": "Kunde inte logga ut.",
     "notLoggedIn": "Du är inte inloggad",
@@ -84,8 +78,6 @@
     "createHike": "Skapa en promenad",
     "myHikes": "Mina egna promenader",
     "sharedHikes": "Promenader delade med mig",
-    "achievements": "Utmärkelser",
-    "statistics": "Statistik",
     "about": "Om Stigvidd",
     "deleteAccount": "Avsluta konto"
   },
@@ -237,7 +229,6 @@
     "modalBody": "Hjälp gärna till genom att markera ett hinder som löst om det är åtgärdat. Det gör du genom att trycka på bockikonen (✓) på det hinder du vill markera. Varningen tas bort efter 3 bekräftelser eller 30 dagar.",
     "report": "Rapportera",
     "reportTitle": "Rapportera hinder",
-    "notAuthMessage": "Du behöver vara inloggad för att rapportera en händelse.",
     "formInfo1": "Upptäcker du något som påverkar framkomligheten eller säkerheten på leden?",
     "formInfo2": "Använd formuläret för att berätta om hinder, skador eller andra händelser längs promenaden som kan vara bra för andra att känna till.",
     "descriptionPrivacyInfo": "Skriv inte namn, adress eller annat som pekar ut en enskild person – varken dig själv eller någon annan.",
@@ -286,13 +277,11 @@
   },
   "hike": {
     "name": "Promenadnamn",
-    "nameRequired": "Ange ett promenadnamn",
     "nameTooShort": "Namnet är för kort. Minst 3 tecken",
     "nameTooLong": "Namnet är för långt. Max 40 tecken",
     "maxChars200": "Max 200 tecken",
     "maxChars500": "Max 500 tecken",
     "goBack": "Gå tillbaka",
-    "confirm": "Bekräfta",
     "errorSaving": "Något gick fel försök igen senare.",
     "saveTitle": "Spara Promenad",
     "trimRoute": "Trimma rutt",
@@ -313,7 +302,6 @@
     "shareWithFriend": "Dela med en vän",
     "noFriendsToShare": "Du har inga vänner att dela med.",
     "back": "Tillbaka",
-    "next": "Nästa",
     "sharedBy": "Delad av:",
     "createdAt": "Skapad:",
     "date": "Datum:",
@@ -334,7 +322,6 @@
     "descriptionHelp": "Här kan du ge en kort beskrivning av hur till exempel miljön ser ut.",
     "descriptionOptional": "Beskrivning (valfritt)",
     "myHikesTitle": "Mina sparade promenader",
-    "pressForInfo": "Tryck på en promenad för att se mer information eller ta bort den.",
     "noHikes": "Inga sparade promenader",
     "sharedHikesTitle": "Delade promenader",
     "noShared": "Inga delade promenader här än",
@@ -411,62 +398,6 @@
     },
     "retry": "Försök igen"
   },
-  "firebaseErrors": {
-    "register": {
-      "emailInUse": "E-postadressen används redan",
-      "invalidEmail": "Ogiltig e-postadress",
-      "weakPassword": "Lösenordet är för svagt (minst 6 tecken)",
-      "networkFailed": "Nätverksfel. Kontrollera din anslutning",
-      "default": "Ett fel uppstod. Försök igen"
-    },
-    "passwordReset": {
-      "invalidEmail": "Ogiltig e-postadress",
-      "userNotFound": "Ingen användare med denna e-postadress finns",
-      "missingEmail": "Ange en e-postadress",
-      "tooManyRequests": "För många försök. Försök igen senare",
-      "networkFailed": "Nätverksfel. Kontrollera din anslutning",
-      "default": "Ett fel uppstod. Försök igen"
-    },
-    "deleteAccount": {
-      "invalidCredential": "Felaktigt lösenord",
-      "userMismatch": "Uppgifterna matchar inte det inloggade kontot",
-      "userNotFound": "Kontot hittades inte",
-      "userDisabled": "Detta konto har inaktiverats",
-      "tooManyRequests": "För många försök. Försök igen senare",
-      "networkFailed": "Nätverksfel. Kontrollera din anslutning",
-      "deleteFailed": "Kunde inte ta bort kontot. Försök igen senare",
-      "default": "Något gick fel. Försök igen"
-    },
-    "reauthenticate": {
-      "invalidCredential": "Felaktigt lösenord",
-      "userMismatch": "Uppgifterna matchar inte det inloggade kontot",
-      "userNotFound": "Kontot hittades inte",
-      "userDisabled": "Detta konto har inaktiverats",
-      "tooManyRequests": "För många försök. Försök igen senare",
-      "networkFailed": "Nätverksfel. Kontrollera din anslutning",
-      "invalidEmail": "Ogiltig e-postadress",
-      "default": "Kunde inte verifiera dina uppgifter. Försök igen"
-    },
-    "login": {
-      "userNotFound": "Ingen användare med denna e-postadress finns",
-      "wrongPassword": "Felaktigt lösenord",
-      "invalidEmail": "Ogiltig e-postadress",
-      "userDisabled": "Detta konto har inaktiverats",
-      "tooManyRequests": "För många misslyckade inloggningsförsök. Försök igen senare",
-      "networkFailed": "Nätverksfel. Kontrollera din anslutning",
-      "invalidCredential": "Felaktig e-postadress eller lösenord",
-      "operationNotAllowed": "Inloggning med e-post och lösenord är inte aktiverat",
-      "popupClosed": "Inloggningen avbröts",
-      "default": "Ett fel uppstod vid inloggning. Försök igen"
-    },
-    "deleteUser": {
-      "requiresRecentLogin": "Du behöver logga in på nytt innan du kan ta bort kontot",
-      "userNotFound": "Kontot hittades inte",
-      "networkFailed": "Nätverksfel. Kontrollera din anslutning",
-      "tooManyRequests": "För många försök. Försök igen senare",
-      "default": "Kunde inte ta bort kontot. Försök igen"
-    }
-  },
   "friends": {
     "title": "Vänner",
     "search": "Sök användare",
@@ -491,6 +422,11 @@
     "removeContinue": "Vill du fortsätta?",
     "remove": "Ta bort",
     "retry": "Försök igen",
+    "accept": "Acceptera vänförfrågan",
+    "reject": "Avvisa vänförfrågan",
+    "sendRequest": "Skicka vänförfrågan",
+    "cancelRequest": "Ångra skickad förfrågan",
+    "removeFriend": "Ta bort vän",
     "requestAccepted": "Förfrågan accepterad!",
     "acceptError": "Kunde inte godkänna, försök igen senare!",
     "requestRejected": "Förfrågan nekad",
@@ -508,14 +444,11 @@
     },
     "wishlist": {
       "title": "Vill gå",
-      "description": "Här är promenader du sparat att du vill gå.",
       "empty": "Du har inga sparade promenader som du vill gå än. Gå till en promenad och tryck på plusset för att lägga till."
     },
     "searchPlaceholder": "Sök efter led eller ort..."
   },
   "area": {
-    "title": "Områden",
-    "readMore": "Läs mer",
     "trailsShort": "leder",
     "km": "km",
     "trails": "Vandring, motion & promenadstigar",
@@ -535,7 +468,6 @@
     "explore": "Utforska Borås",
     "exploreSubtitle": "Rya åsar · Kype · m.fl.",
     "latestHike": "Din senaste promenad",
-    "showHike": "Visa promenad",
     "getStartedSignedOutTitle": "Din nästa promenad börjar här",
     "getStartedSignedOutBody": "Logga in för att spela in dina turer med GPS, se rutten på kartan och spara dem du vill gå om.",
     "getStartedSignedOutAction": "Logga in",
@@ -551,8 +483,7 @@
   "settings": {
     "theme": "Tema",
     "guide": "Naturguide",
-    "about": "Om Stigvidd",
-    "language": "Språk"
+    "about": "Om Stigvidd"
   },
   "about": {
     "tagline": "Upptäck leder nära dig",
@@ -665,7 +596,6 @@
     "resume": "Återuppta",
     "trackingError": "Något gick fel med inspelningen. Försök igen.",
     "fgPermissionDenied": "Åtkomst till plats nekades.",
-    "bgPermissionDenied": "Åtkomst till bakgrundsplats nekades.",
     "notificationBody": "Spelar in vandring...",
     "disclosureTitle": "Stigvidd behöver din plats",
     "disclosureIntro": "För att kunna rita din promenadrutt spelar Stigvidd in var du befinner dig.",

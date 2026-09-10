@@ -64,7 +64,11 @@ export default function ProfilePageScreen() {
   }
 
   return (
-    <ScrollView ref={scrollViewRef} contentContainerStyle={[s.container, { backgroundColor: theme.colors.background }]}>
+    <ScrollView
+      testID="profile-scroll"
+      ref={scrollViewRef}
+      contentContainerStyle={[s.container, { backgroundColor: theme.colors.background }]}
+    >
       <Text style={s.topTitle}>{t("profile.title")}</Text>
       <View style={s.userInfoContainer}>
         <Image
@@ -73,13 +77,14 @@ export default function ProfilePageScreen() {
               ? require("../../../assets/images/wizard-darkmode.png")
               : require("../../../assets/images/wizard-lightmode.png")
           }
+          testID="profile-avatar"
           style={[s.image, { borderColor: theme.colors.outline }]}
         />
         <View style={s.userProfileInfoText}>
           <Text>{user?.nickName}</Text>
           <Text>{user?.email}</Text>
         </View>
-        <View style={s.themeToggleContainer}>
+        <View testID="profile-theme-toggle" style={s.themeToggleContainer}>
           <ThemeToggle />
         </View>
       </View>
@@ -121,7 +126,7 @@ export default function ProfilePageScreen() {
           route="/(tabs)/(profile-stack)/about"
           icon={<MaterialIcons name="perm-device-info" size={30} color={theme.colors.onSurfaceVariant} />}
         />
-        <View style={s.accountActionsContainer}>
+        <View testID="profile-account-actions" style={s.accountActionsContainer}>
           <Pressable onPress={handleSignOut}>
             <Text style={s.actionText}>{t("auth.logout")}</Text>
           </Pressable>

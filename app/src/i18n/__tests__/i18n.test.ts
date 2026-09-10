@@ -45,8 +45,7 @@ describe("loadStoredLanguage", () => {
 });
 
 describe("map preview labels", () => {
-  // Two deliberately different labels: trails say "Se på karta", hikes say "Visa
-  // kartvy". They are easy to "helpfully" unify during a refactor, so pin both.
+  // Two deliberately different labels: trails say "Se på karta", hikes say "Visa kartvy".
   it("uses the trail wording for showOnMap", async () => {
     expect(i18n.t("map.showOnMap")).toBe("Se på karta");
     await i18n.changeLanguage("en");

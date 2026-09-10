@@ -65,12 +65,12 @@ export default function TrailReviewsContainer({ trail, surfaceToScrollToRef, onR
     }
   }, [reviews, totalReviewsCount, onReviewsLoaded]);
 
-  if (isLoading || !reviewResponse) {
-    return <LoadingIndicator />;
-  }
-
   if (isError) {
     return <ErrorView error={error} />;
+  }
+
+  if (isLoading || !reviewResponse) {
+    return <LoadingIndicator />;
   }
 
   const handleAddReviewPress = () => {
@@ -87,7 +87,11 @@ export default function TrailReviewsContainer({ trail, surfaceToScrollToRef, onR
 
   return (
     <View ref={surfaceToScrollToRef}>
-      <Surface elevation={0} style={[s.surface, { backgroundColor: theme.colors.surface, gap: 10 }]}>
+      <Surface
+        testID="reviews-surface"
+        elevation={0}
+        style={[s.surface, { backgroundColor: theme.colors.surface, gap: 10 }]}
+      >
         <View style={{ flexDirection: "row" }}>
           <View style={s.ratingSection}>
             <Text style={[s.title, { color: theme.colors.onSurface }]}>{t("review.title")}</Text>
@@ -157,10 +161,6 @@ const s = StyleSheet.create({
   },
   ratingNumber: {
     fontSize: 15,
-  },
-  ratingContainer: {
-    transform: [{ translateX: -5 }],
-    paddingTop: 10,
   },
   ratingSection: {
     flexDirection: "row",

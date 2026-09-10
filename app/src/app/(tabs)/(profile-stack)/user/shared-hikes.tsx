@@ -183,6 +183,7 @@ export default function SharedHikesScreen() {
                             <View style={s.rowActions}>
                               <IconButton
                                 hitSlop={16}
+                                accessibilityLabel={t("hike.accept")}
                                 icon="check-circle-outline"
                                 size={30}
                                 iconColor={theme.colors.primary}
@@ -192,6 +193,7 @@ export default function SharedHikesScreen() {
                               />
                               <IconButton
                                 hitSlop={16}
+                                accessibilityLabel={t("hike.reject")}
                                 icon="close-circle-outline"
                                 size={30}
                                 iconColor={theme.colors.error}

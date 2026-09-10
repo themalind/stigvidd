@@ -21,13 +21,13 @@ export default function AboutScreen() {
   const email = t("about.contactEmail");
 
   return (
-    <View style={[s.screen, { backgroundColor: theme.colors.background }]}>
+    <View testID="about-screen" style={[s.screen, { backgroundColor: theme.colors.background }]}>
       <ScrollView contentContainerStyle={s.container} showsVerticalScrollIndicator={false}>
         <View style={s.header}>
           <BackButton />
           <Text style={[s.appName, { color: theme.colors.onBackground }]}>Stigvidd</Text>
         </View>
-        <View style={s.content}>
+        <View testID="about-content" style={s.content}>
           <Text variant="titleMedium" style={[s.tagline, { color: theme.colors.onBackground }]}>
             {t("about.tagline")}
           </Text>
@@ -35,7 +35,10 @@ export default function AboutScreen() {
             {t("about.description")}
           </Text>
 
-          <View style={[s.section, { backgroundColor: theme.colors.secondaryContainer }]}>
+          <View
+            testID="about-section-features"
+            style={[s.section, { backgroundColor: theme.colors.secondaryContainer }]}
+          >
             <Text variant="titleSmall" style={[s.sectionTitle, { color: theme.colors.onSecondaryContainer }]}>
               {t("about.featuresTitle")}
             </Text>
@@ -49,7 +52,10 @@ export default function AboutScreen() {
             ))}
           </View>
 
-          <View style={[s.section, { backgroundColor: theme.colors.secondaryContainer }]}>
+          <View
+            testID="about-section-contact"
+            style={[s.section, { backgroundColor: theme.colors.secondaryContainer }]}
+          >
             <Text variant="titleSmall" style={[s.sectionTitle, { color: theme.colors.onSecondaryContainer }]}>
               {t("about.contactTitle")}
             </Text>
@@ -59,13 +65,16 @@ export default function AboutScreen() {
             <Text
               variant="bodyMedium"
               style={[s.link, { color: theme.colors.primary }]}
-              onPress={() => Linking.openURL(`mailto:${email}`)}
+              onPress={() => Linking.openURL(`mailto:${email}`).catch(() => undefined)}
             >
               {email}
             </Text>
           </View>
 
-          <View style={[s.section, { backgroundColor: theme.colors.secondaryContainer }]}>
+          <View
+            testID="about-section-privacy"
+            style={[s.section, { backgroundColor: theme.colors.secondaryContainer }]}
+          >
             <Text variant="titleSmall" style={[s.sectionTitle, { color: theme.colors.onSecondaryContainer }]}>
               {t("about.privacyTitle")}
             </Text>
@@ -88,7 +97,10 @@ export default function AboutScreen() {
             </Text>
           </View>
 
-          <View style={[s.section, { backgroundColor: theme.colors.secondaryContainer }]}>
+          <View
+            testID="about-section-data-source"
+            style={[s.section, { backgroundColor: theme.colors.secondaryContainer }]}
+          >
             <Text variant="titleSmall" style={[s.sectionTitle, { color: theme.colors.onSecondaryContainer }]}>
               {t("about.dataSourceTitle")}
             </Text>
@@ -100,7 +112,10 @@ export default function AboutScreen() {
           {/* AGPL section 13: everyone interacting with the deployed backend is
               entitled to its Corresponding Source, and app users are those users.
               This link is how the offer is made, so it is not decoration. */}
-          <View style={[s.section, { backgroundColor: theme.colors.secondaryContainer }]}>
+          <View
+            testID="about-section-licence"
+            style={[s.section, { backgroundColor: theme.colors.secondaryContainer }]}
+          >
             <Text variant="titleSmall" style={[s.sectionTitle, { color: theme.colors.onSecondaryContainer }]}>
               {t("about.licenceTitle")}
             </Text>

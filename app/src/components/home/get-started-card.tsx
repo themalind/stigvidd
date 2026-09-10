@@ -58,7 +58,7 @@ export default function GetStartedCard({ signedIn }: Props) {
   const target = signedIn ? "/(tabs)/(profile-stack)/user/create-hike" : "/(tabs)/(profile-stack)/login";
 
   return (
-    <View style={s.card}>
+    <View testID="get-started-card" style={s.card}>
       {/* Portrait photo in a landscape card, so cover takes a horizontal slice. */}
       <Image source={background} style={StyleSheet.absoluteFill} contentFit="cover" contentPosition="center" />
       {/* Leaves the top third clear so the photo keeps its light, then ramps to near-solid
@@ -68,7 +68,7 @@ export default function GetStartedCard({ signedIn }: Props) {
         locations={[0, 0.35, 0.55, 0.72, 1]}
         style={StyleSheet.absoluteFill}
       />
-      <View style={s.routeBand} pointerEvents="none">
+      <View testID="get-started-route" style={s.routeBand} pointerEvents="none">
         <Svg width={cardWidth} height={ROUTE_BAND_HEIGHT}>
           {/* Drawn twice: a dark halo under a white line, so the route reads over sky,
               cloud or foliage alike. */}
@@ -102,7 +102,7 @@ export default function GetStartedCard({ signedIn }: Props) {
           />
         </Svg>
       </View>
-      <View style={s.content}>
+      <View testID="get-started-content" style={s.content}>
         <Text style={s.title}>{signedIn ? t("home.getStartedNoHikesTitle") : t("home.getStartedSignedOutTitle")}</Text>
         <Text style={s.body}>{signedIn ? t("home.getStartedNoHikesBody") : t("home.getStartedSignedOutBody")}</Text>
         <Button

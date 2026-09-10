@@ -101,7 +101,7 @@ export default function TrailObstacleItem({ obstacle, trailIdentifier, onCloseMo
   }
 
   return (
-    <View style={[s.container, { borderColor: theme.colors.outlineVariant }]}>
+    <View testID="obstacle-card" style={[s.container, { borderColor: theme.colors.outlineVariant }]}>
       <View style={s.categoryRow}>
         <View style={s.field}>
           <Text style={[s.label, { color: theme.colors.onSurfaceVariant }]}>{t("obstacle.category")}</Text>
@@ -134,7 +134,12 @@ export default function TrailObstacleItem({ obstacle, trailIdentifier, onCloseMo
         <View style={s.voteRow}>
           <Text style={s.voteCount}>{obstacle.solvedVotes?.length ?? 0}/3</Text>
           {!isOwner && (
-            <Pressable hitSlop={12} onPress={handlePress} disabled={isPending || deleteSolvedVoteIsPending}>
+            <Pressable
+              testID="vote-button"
+              hitSlop={12}
+              onPress={handlePress}
+              disabled={isPending || deleteSolvedVoteIsPending}
+            >
               <MaterialIcons
                 size={24}
                 name={hasVoted ? "check-circle" : "radio-button-unchecked"}

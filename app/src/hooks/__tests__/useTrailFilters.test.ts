@@ -9,9 +9,8 @@ import { LatLng } from "@/data/types";
 import { FilterableTrail, useTrailFilters } from "@/hooks/trail/useTrailFilters";
 import { act, renderHook } from "@testing-library/react-native";
 
-// Borås, and a handful of trails at increasing distances from it. Real coordinates
-// so geolib runs for real — the distance maths is not what these tests are pinning down,
-// only the ordering and the radius cut-off it produces.
+// Borås, and trails at increasing distances from it. Real coordinates, so geolib runs for real;
+// what is pinned down is the ordering and the radius cut-off.
 const BORAS: LatLng = { latitude: 57.721, longitude: 12.9401 };
 
 function makeTrail(overrides: Partial<FilterableTrail> & { identifier: string }): FilterableTrail {
@@ -27,8 +26,7 @@ function makeTrail(overrides: Partial<FilterableTrail> & { identifier: string })
   };
 }
 
-// A deliberately mixed set: three cities, three difficulties, lengths 2/8/20,
-// one accessible, and start points spread out from Borås.
+// A mixed set: three cities, three difficulties, lengths 2/8/20, one accessible, spread out from Borås.
 const TRAILS: FilterableTrail[] = [
   makeTrail({
     identifier: "a",
@@ -317,8 +315,7 @@ describe("useTrailFilters", () => {
   });
 
   describe("generic trail types", () => {
-    // The hook was made generic so favourites and wishlist entries can reuse it.
-    // Extra fields must survive filtering and sorting untouched.
+    // The hook is generic so favourites and wishlist entries reuse it: extra fields survive untouched.
     it("preserves fields beyond FilterableTrail on the returned trails", () => {
       type Favourite = FilterableTrail & { ratingResponse: { rating: number }[] };
       const favourites: Favourite[] = [

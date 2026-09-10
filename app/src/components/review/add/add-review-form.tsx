@@ -43,7 +43,6 @@ export default function AddReviewForm({ trailIdentifier, onSuccess }: ReviewForm
   const [showImageInfoModal, setShowImageInfoModal] = useState(false);
   const [showStarInfoModal, setShowStarInfoModal] = useState(false);
   const [showReviewInfoModal, setShowReviewInfoModal] = useState(false);
-  const [rating, setRating] = useState(1);
   const [reviewImages, setReviewImages] = useState<string[]>([]);
   const setError = useSetAtom(showErrorAtom);
   const createReviewMutation = useCreateReview(onSuccess);
@@ -54,8 +53,10 @@ export default function AddReviewForm({ trailIdentifier, onSuccess }: ReviewForm
     formState: { errors, isSubmitting },
   } = useForm<FormFields>({
     resolver: zodResolver(newReviewForm),
+    // 0 is "no star picked yet"; the schema's min(1) is what makes a rating required.
     defaultValues: {
       trailIdentifier: trailIdentifier,
+      rating: 0,
     },
   });
 
@@ -68,7 +69,7 @@ export default function AddReviewForm({ trailIdentifier, onSuccess }: ReviewForm
     createReviewMutation.mutate({
       trailIdentifier: data.trailIdentifier,
       review: data.trailReview ?? "",
-      rating: rating,
+      rating: data.rating,
       imageUris: reviewImages,
     });
   };
@@ -97,18 +98,9 @@ export default function AddReviewForm({ trailIdentifier, onSuccess }: ReviewForm
         <Controller
           control={control}
           render={({ field: { onChange, value } }) => (
-            <StarRating
-              rating={value}
-              onChange={(newRating) => {
-                setRating(newRating);
-                onChange(newRating);
-              }}
-              color={theme.colors.onSurface}
-              starSize={25}
-            />
+            <StarRating rating={value} onChange={onChange} color={theme.colors.onSurface} starSize={25} step="full" />
           )}
           name="rating"
-          defaultValue={1}
         />
         {errors.rating?.message && (
           <Text style={[s.error, { color: theme.colors.error }]}>{t(asTranslationKey(errors.rating.message))}</Text>
@@ -158,6 +150,7 @@ export default function AddReviewForm({ trailIdentifier, onSuccess }: ReviewForm
           control={control}
           render={({ field: { onChange, onBlur, value } }) => (
             <TextInput
+              testID="review-text"
               error={!!errors.trailReview}
               onBlur={onBlur}
               autoCapitalize="sentences"

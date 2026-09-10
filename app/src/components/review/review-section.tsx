@@ -17,7 +17,7 @@ import { Alert, Pressable, StyleSheet, View } from "react-native";
 import { Divider, List, Text, useTheme } from "react-native-paper";
 import { useTranslation } from "react-i18next";
 import { Rating } from "./rating";
-import ReviewImageGrid from "./review-image-grid ";
+import ReviewImageGrid from "./review-image-grid";
 
 interface ReviewProps {
   reviews: Review[];

@@ -8,8 +8,8 @@
 import { HikeAccessors, useHikeFilters } from "@/hooks/hike/useHikeFilters";
 import { act, renderHook } from "@testing-library/react-native";
 
-// The two shapes the hook has to serve, with the field names that differ in the real
-// API types: Hike uses name/createdAt, SharedHike uses hikeName/sharedAt and adds a sharer.
+// The two shapes the hook serves: Hike uses name/createdAt, SharedHike uses hikeName/sharedAt
+// and adds a sharer.
 interface TestHike {
   identifier: string;
   name: string;
@@ -29,8 +29,7 @@ interface TestSharedHike {
 
 const MINUTE = 60_000;
 
-// Declared at module level, as the screens are meant to: a fresh object literal on every
-// render would give the hook a new dependency each time and defeat its memoisation.
+// Declared at module level, as the screens do: a fresh literal per render would defeat the memoisation.
 const hikeAccessors: HikeAccessors<TestHike> = {
   name: (h) => h.name,
   length: (h) => h.hikeLength,

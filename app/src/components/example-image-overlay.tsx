@@ -52,10 +52,10 @@ export default function ExampleImageOverlay({ source, variant = "badge" }: Props
   // Nothing is drawn until the first layout pass, so a thumbnail never flashes
   // a full-size badge before shrinking it.
   return (
-    <View style={s.fill} pointerEvents="none" onLayout={onLayout}>
+    <View testID="example-image-overlay" style={s.fill} pointerEvents="none" onLayout={onLayout}>
       {width > 0 &&
         (variant === "watermark" ? (
-          <View style={s.watermarkFill}>
+          <View testID="example-image-watermark" style={s.watermarkFill}>
             <Text style={[s.watermarkText, { fontSize: watermarkFontSize(width) }]} allowFontScaling={false}>
               {label}
             </Text>
@@ -64,7 +64,7 @@ export default function ExampleImageOverlay({ source, variant = "badge" }: Props
           // A ribbon along the bottom edge: it fits any thumbnail width and keeps
           // the picture itself visible. Inset slightly so it stays clear of the
           // image's rounded corners.
-          <View style={s.ribbon}>
+          <View testID="example-image-ribbon" style={s.ribbon}>
             <Text
               style={s.ribbonText}
               numberOfLines={1}
@@ -76,7 +76,7 @@ export default function ExampleImageOverlay({ source, variant = "badge" }: Props
             </Text>
           </View>
         ) : (
-          <View style={[s.badge, width < COMPACT_WIDTH && s.badgeCompact]}>
+          <View testID="example-image-badge" style={[s.badge, width < COMPACT_WIDTH && s.badgeCompact]}>
             <Text
               style={[s.badgeText, width < COMPACT_WIDTH && s.badgeTextCompact]}
               numberOfLines={1}

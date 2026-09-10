@@ -148,7 +148,7 @@ export default function HikeDetails({ visible, hike, onDismiss, hikeFollowRoute 
           <View style={s.closeButtonSpacer} />
         </View>
         <RoutePreviewMap idPrefix="hike-details" path={coordinates} onOpen={openFollowMap} style={s.mapContainer} />
-        <View style={[s.statsCard, { backgroundColor: theme.colors.outlineVariant }]}>
+        <View testID="hike-stats" style={[s.statsCard, { backgroundColor: theme.colors.outlineVariant }]}>
           <View style={s.statItem}>
             <Text style={s.statLabel}>{t("hike.length")}</Text>
             <Text style={s.statValue}>{hike.hikeLength} km</Text>
@@ -199,10 +199,16 @@ export default function HikeDetails({ visible, hike, onDismiss, hikeFollowRoute 
           )}
         </ScrollView>
         <View style={s.buttonGroup}>
-          <Button style={s.button} mode="contained" icon="share" onPress={() => setShowShareModal(true)}>
+          <Button
+            testID="hike-share"
+            style={s.button}
+            mode="contained"
+            icon="share"
+            onPress={() => setShowShareModal(true)}
+          >
             {t("hike.share")}
           </Button>
-          <Button style={s.button} mode="outlined" icon="delete" onPress={handeleDelete}>
+          <Button testID="hike-delete" style={s.button} mode="outlined" icon="delete" onPress={handeleDelete}>
             {t("hike.delete")}
           </Button>
         </View>

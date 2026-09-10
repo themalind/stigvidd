@@ -13,9 +13,8 @@ import { TrailCard } from "@/data/types";
 
 jest.mock("@react-native-async-storage/async-storage", () => ({
   getItem: jest.fn(),
-  // setItem/multiRemove return resolved promises to match the real API — the
-  // batch hook calls setItem(...).catch(...) without awaiting, so a non-thenable
-  // mock would throw.
+  // setItem/multiRemove return resolved promises: the batch hook calls setItem(...).catch(...) without
+  // awaiting, so a non-thenable mock would throw.
   setItem: jest.fn(() => Promise.resolve()),
   getAllKeys: jest.fn(),
   multiRemove: jest.fn(() => Promise.resolve()),
@@ -36,8 +35,7 @@ const mockGetTrailCards = getTrailCards as jest.Mock;
 const CACHE_PREFIX = "@stigvidd_trail_card";
 const HOUR_MS = 60 * 60 * 1000;
 
-// Builds a getItem implementation backed by a key→entry map, so each trail's
-// cache entry can be controlled independently across a batched read.
+// A getItem backed by a key→entry map, so each trail's cache entry is controlled independently.
 function cacheBackedGetItem(entries: Record<string, { data: TrailCard; cachedAt: number }>) {
   return (key: string) => {
     const id = key.replace(`${CACHE_PREFIX}_`, "");

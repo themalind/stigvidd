@@ -11,9 +11,9 @@ import { AppState, AppStateStatus } from "react-native";
 /**
  * Central structured logger.
  *
- * Replaces scattered `console.log` in error paths with something that (a) always keeps the
- * console output developers already rely on, and (b) additionally ships to OpenObserve when —
- * and only when — a sink has been registered. With no sink this is a thin wrapper around
+ * Used in error paths instead of `console.log`: it (a) always keeps the console output
+ * developers rely on, and (b) additionally ships to OpenObserve when — and only when — a
+ * sink has been registered. With no sink this is a thin wrapper around
  * console: nothing buffered, nothing scheduled, nothing sent. That is what keeps
  * `npx expo start` and CI unchanged, and it is why the API tests can keep asserting exact
  * `fetch` call counts.

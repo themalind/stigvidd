@@ -26,8 +26,8 @@ interface Props {
   stroke?: string;
 }
 
-// The hike's own outline, in the slot a shared icon used to fill. Memoized because a list
-// row remounts on every sort and the parse is the expensive part.
+// The hike's own outline, drawn in the list row's icon slot. Memoized because a row
+// remounts on every sort and the parse is the expensive part.
 function RouteThumbnail({ coordinates, identifier, size = DEFAULT_SIZE, background, stroke }: Props) {
   const theme = useTheme();
   const tint = background ?? theme.colors.secondaryContainer;

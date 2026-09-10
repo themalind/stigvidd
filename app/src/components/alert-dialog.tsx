@@ -7,9 +7,9 @@
 
 import { DIALOG_BORDER_RADIUS } from "@/constants/constants";
 import React from "react";
-import { Text, View } from "react-native";
-import { Button, Dialog, Portal } from "react-native-paper";
 import { useTranslation } from "react-i18next";
+import { Text, View } from "react-native";
+import { Button, Dialog, Portal, useTheme } from "react-native-paper";
 
 interface AlertDialogProps {
   visible: boolean;
@@ -35,10 +35,13 @@ export default function AlertDialog({
   cancelText,
 }: AlertDialogProps) {
   const { t } = useTranslation();
+  const theme = useTheme();
   const resolvedCancelText = cancelText ?? t("common.ok");
+  const resolvedTextColor = textColor ?? theme.colors.onSurface;
   return (
     <Portal>
       <Dialog
+        testID="alert-dialog"
         style={{ backgroundColor: backgroundColor, borderRadius: DIALOG_BORDER_RADIUS }}
         visible={visible}
         onDismiss={onDismiss}
@@ -47,7 +50,7 @@ export default function AlertDialog({
         <Dialog.Content>
           <View style={{ gap: 10 }}>
             {infoText.map((t, index) => (
-              <Text key={index} style={{ fontSize: 15, lineHeight: 24, color: textColor }}>
+              <Text key={index} style={{ fontSize: 15, lineHeight: 24, color: resolvedTextColor }}>
                 {infoText[index]}
               </Text>
             ))}
@@ -55,11 +58,11 @@ export default function AlertDialog({
         </Dialog.Content>
         <Dialog.Actions>
           <Button onPress={onDismiss}>
-            <Text style={{ fontSize: 18, color: textColor }}>{resolvedCancelText}</Text>
+            <Text style={{ fontSize: 18, color: resolvedTextColor }}>{resolvedCancelText}</Text>
           </Button>
           {confirmText && onConfirm && (
             <Button onPress={onConfirm}>
-              <Text style={{ fontSize: 18, color: textColor }}>{confirmText}</Text>
+              <Text style={{ fontSize: 18, color: resolvedTextColor }}>{confirmText}</Text>
             </Button>
           )}
         </Dialog.Actions>

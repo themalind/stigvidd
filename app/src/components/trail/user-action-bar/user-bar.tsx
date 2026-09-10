@@ -23,7 +23,7 @@ interface Props {
 export default function UserBar({ trail }: Props) {
   const theme = useTheme();
   return (
-    <View style={[s.container, { backgroundColor: theme.colors.outlineVariant }]}>
+    <View testID="user-bar" style={[s.container, { backgroundColor: theme.colors.outlineVariant }]}>
       <AddToUserWishlist trailIdentifier={trail.identifier} />
       <UserShare />
       <UserRating trail={trail} />

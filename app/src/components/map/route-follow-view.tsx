@@ -36,7 +36,7 @@ interface Props {
   idPrefix: string;
   // The route to walk, as [longitude, latitude] positions.
   path: GeoJSON.Position[];
-  // Shown in the pill beside the back button.
+  // Shown on the surface beside the back button.
   title?: string;
   isLoading?: boolean;
   // Shown centred when the route could not be loaded. Mutually exclusive with isLoading.
@@ -52,7 +52,7 @@ export default function RouteFollowView({ idPrefix, path, title, isLoading, erro
   const mapReadyRef = useRef(false);
 
   // The puck is driven by the app's own location watcher, not MapLibre's built-in
-  // engine (which froze the dot mid-walk on both platforms — see the hook).
+  // engine, which freezes the dot mid-walk on both platforms (see the hook).
   const userLocation = useLiveUserLocation();
 
   const lineShape = useMemo(() => lineStringFromPositions(path), [path]);
@@ -65,10 +65,9 @@ export default function RouteFollowView({ idPrefix, path, title, isLoading, erro
   // a layer that might never appear.
   //
   // Anchor to the start marker's *label* (its topmost layer), not the route line: the
-  // marker is mounted after the line, so it ends up above it, and anchoring to the line
-  // left the puck buried under the trailhead circle. That is easy to miss on a trail but
-  // obvious on a hike, where you're standing on the start point when you set off. A
-  // one-point route still has a marker, so this covers that case too.
+  // marker is mounted after the line and so ends up above it, and anchoring to the line
+  // buries the puck under the trailhead circle — where you are standing when you set off.
+  // A one-point route still has a marker, so this covers that case too.
   const puckAnchor = path.length > 0 ? `${idPrefix}-start-label` : undefined;
 
   // Tapping the trailhead hands off to the device's maps app for directions.
@@ -127,7 +126,7 @@ export default function RouteFollowView({ idPrefix, path, title, isLoading, erro
         )}
       </Map>
 
-      {/* Back arrow and route name share one pill that hugs its text, so the map keeps
+      {/* Back arrow and route name share one surface that hugs its text, so the map keeps
           as much of its top edge as possible. The whole chip goes back. No safe-area
           offset: the app header sits above the tab navigator and already clears it. */}
       <Pressable
@@ -180,7 +179,7 @@ const s = StyleSheet.create({
     gap: 8,
     paddingLeft: 8,
     paddingRight: 16,
-    borderRadius: 20,
+    borderRadius: SURFACE_BORDER_RADIUS,
   },
   iconButton: {
     position: "absolute",
@@ -188,7 +187,7 @@ const s = StyleSheet.create({
     left: SURFACE_BORDER_RADIUS,
     width: 40,
     height: 40,
-    borderRadius: 20,
+    borderRadius: SURFACE_BORDER_RADIUS,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -205,6 +204,6 @@ const s = StyleSheet.create({
   messagePill: {
     paddingHorizontal: 16,
     paddingVertical: 10,
-    borderRadius: 20,
+    borderRadius: SURFACE_BORDER_RADIUS,
   },
 });

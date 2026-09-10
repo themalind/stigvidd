@@ -31,5 +31,8 @@ export function useDeleteReview() {
         setError(t("review.deleteError"));
       }
     },
+    onError: () => {
+      setError(t("review.deleteError"));
+    },
   });
 }

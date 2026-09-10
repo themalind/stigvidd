@@ -115,6 +115,7 @@ export default function FriendsScreen() {
                                 ) : (
                                   <IconButton
                                     hitSlop={20}
+                                    accessibilityLabel={t("friends.sendRequest")}
                                     icon="account-plus"
                                     size={25}
                                     onPress={() => sendRequestMutation.mutate(user.nickName)}
@@ -168,6 +169,7 @@ export default function FriendsScreen() {
                           <View style={s.rowActions}>
                             <IconButton
                               hitSlop={16}
+                              accessibilityLabel={t("friends.accept")}
                               icon="check-circle-outline"
                               size={30}
                               iconColor={theme.colors.primary}
@@ -177,6 +179,7 @@ export default function FriendsScreen() {
                             />
                             <IconButton
                               hitSlop={16}
+                              accessibilityLabel={t("friends.reject")}
                               icon="close-circle-outline"
                               size={30}
                               iconColor={theme.colors.error}
@@ -245,6 +248,7 @@ export default function FriendsScreen() {
                           </Text>
                           <IconButton
                             hitSlop={16}
+                            accessibilityLabel={t("friends.cancelRequest")}
                             icon="close"
                             size={25}
                             iconColor={theme.colors.outline}
@@ -318,13 +322,12 @@ export default function FriendsScreen() {
                             style={{ backgroundColor: theme.colors.surfaceVariant }}
                             labelStyle={{ color: theme.colors.onSurfaceVariant, fontSize: 14 }}
                           />
-                          <View style={s.rowText}>
-                            <Text style={s.rowName} variant="bodyLarge" numberOfLines={1}>
-                              {friend.nickName}
-                            </Text>
-                          </View>
+                          <Text style={s.rowName} variant="bodyLarge" numberOfLines={1}>
+                            {friend.nickName}
+                          </Text>
                           <IconButton
                             hitSlop={16}
+                            accessibilityLabel={t("friends.removeFriend")}
                             icon="account-remove"
                             size={25}
                             iconColor={theme.colors.outline}
@@ -449,9 +452,6 @@ const s = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 10,
     gap: 14,
-  },
-  rowText: {
-    flex: 1,
   },
   rowName: {
     flex: 1,

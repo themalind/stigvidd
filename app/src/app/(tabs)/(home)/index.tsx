@@ -50,7 +50,11 @@ export default function HomeScreen() {
   );
 
   return (
-    <ScrollView ref={scrollViewRef} contentContainerStyle={[s.container, { backgroundColor: theme.colors.background }]}>
+    <ScrollView
+      testID="home-scroll"
+      ref={scrollViewRef}
+      contentContainerStyle={[s.container, { backgroundColor: theme.colors.background }]}
+    >
       <HeroBanner lat={userLocation?.latitude} lon={userLocation?.longitude} />
       {(latest.kind === "signedOut" || latest.kind === "empty") && (
         <GetStartedCard signedIn={latest.kind === "empty"} />
@@ -69,8 +73,9 @@ export default function HomeScreen() {
       {latest.kind === "loading" && <LatestHikeSkeleton />}
       {latest.kind === "hike" && <LatestHikeCard hike={latest.hike} />}
 
-      <View style={s.cardRow}>
+      <View testID="home-card-row" style={s.cardRow}>
         <Pressable
+          testID="home-guide-card"
           style={[s.guideCard, s.halfCard]}
           onPress={() => guardedNavigate(() => router.navigate("/(tabs)/(settings)/guide"))}
         >
@@ -84,6 +89,7 @@ export default function HomeScreen() {
         </Pressable>
 
         <Pressable
+          testID="home-areas-card"
           style={[s.areasCard, s.halfCard]}
           onPress={() => guardedNavigate(() => router.navigate("/(tabs)/(home)/area/area-list-screen"))}
         >

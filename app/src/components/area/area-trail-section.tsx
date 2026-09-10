@@ -32,6 +32,7 @@ export default function AreaTrailSection({ trails }: AreaTrailSectionProps) {
         return (
           <Pressable
             key={trail.identifier}
+            testID={`area-trail-${trail.identifier}`}
             onPress={() =>
               guardedNavigate(() =>
                 router.navigate({

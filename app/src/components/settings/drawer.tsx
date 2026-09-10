@@ -75,10 +75,11 @@ export default function SettingsDrawer({ visible, onDismiss }: Props) {
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onDismiss}>
-      <Pressable style={s.backdrop} onPress={onDismiss}>
+      <Pressable testID="drawer-backdrop" style={s.backdrop} onPress={onDismiss}>
         <BlurView intensity={80} tint={theme.dark ? "dark" : "light"} style={StyleSheet.absoluteFill} />
       </Pressable>
       <View
+        testID="drawer-panel"
         style={[
           s.panel,
           {
@@ -92,11 +93,11 @@ export default function SettingsDrawer({ visible, onDismiss }: Props) {
         <View style={s.stigviddContainer}>
           <Image style={s.image} contentFit="contain" source={require("../../assets/images/mammaapp.png")} />
           <Text style={[s.text, { color: theme.colors.onSurfaceVariant }]}>Stigvidd</Text>
-          <Pressable hitSlop={12} onPress={onDismiss} style={s.closeButton}>
+          <Pressable testID="drawer-close" hitSlop={12} onPress={onDismiss} style={s.closeButton}>
             <MaterialIcons name="close" size={24} color={theme.colors.onSurfaceVariant} />
           </Pressable>
         </View>
-        <View style={s.drawerItemContainer}>
+        <View testID="drawer-items" style={s.drawerItemContainer}>
           <Divider bold style={{ marginHorizontal: 16 }} />
           <Drawer.Section showDivider={false} style={s.drawerSection}>
             <Drawer.Item

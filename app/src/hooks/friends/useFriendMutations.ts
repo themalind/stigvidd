@@ -20,7 +20,7 @@ export function useFriendMutations() {
   const acceptMutation = useMutation({
     mutationFn: (requesterIdentifier: string) => acceptFriendRequest(requesterIdentifier),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["friends", "incoming"] });
+      // Covers the incoming requests too, which are keyed under the same prefix.
       queryClient.invalidateQueries({ queryKey: ["friends"] });
       setSuccessMsg(t("friends.requestAccepted"));
     },

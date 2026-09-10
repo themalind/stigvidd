@@ -45,6 +45,7 @@ export default function CenterOnUserButton({ cameraRef, onPress, position }: Pro
 
   return (
     <Pressable
+      testID="center-on-user"
       style={[s.center, { backgroundColor: CONTROL_COLORS.primary, borderColor: CONTROL_COLORS.onPrimary }]}
       onPress={centerOnUser}
     >

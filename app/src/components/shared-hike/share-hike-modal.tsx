@@ -53,6 +53,7 @@ function FormField({ name, label, control, error }: FormFieldProps) {
         name={name}
         render={({ field: { onChange, onBlur, value } }) => (
           <TextInput
+            testID={`share-${name}`}
             error={!!error}
             style={[s.textInput, { backgroundColor: theme.colors.surfaceVariant }]}
             onBlur={onBlur}
@@ -137,7 +138,12 @@ export default function ShareHikeModal({
             <Text variant="titleMedium" style={{ color: theme.colors.onSurface }}>
               {t("hike.shareWithFriend")}
             </Text>
-            <Pressable hitSlop={12} onPress={handleDismiss}>
+            <Pressable
+              hitSlop={12}
+              onPress={handleDismiss}
+              accessibilityRole="button"
+              accessibilityLabel={t("common.close")}
+            >
               <Icon size={24} source="close" color={theme.colors.onSurface} />
             </Pressable>
           </View>

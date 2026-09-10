@@ -40,15 +40,18 @@ export default function AccesibilityInfoModal({ visible, onDismiss }: Props) {
           extraScrollHeight={20}
           contentContainerStyle={s.scrollContent}
         >
-          <View style={s.content}>
-            <View style={s.header}>
-              <View style={s.headerLeft}>
-                <View style={[s.headerIconCircle, { borderColor: theme.colors.primary }]}>
+          <View testID="accessibility-info-content" style={s.content}>
+            <View testID="accessibility-info-header" style={s.header}>
+              <View testID="accessibility-info-header-left" style={s.headerLeft}>
+                <View
+                  testID="accessibility-info-symbol"
+                  style={[s.headerIconCircle, { borderColor: theme.colors.primary }]}
+                >
                   <Icon size={20} source="human-handsup" color={theme.colors.tertiary} />
                 </View>
                 <Text style={s.title}>{t("trail.accessibilityTitle")}</Text>
               </View>
-              <Pressable hitSlop={16} onPress={onDismiss}>
+              <Pressable testID="accessibility-info-close" hitSlop={16} onPress={onDismiss}>
                 <Icon source="close" size={20} color={theme.colors.onSurface} />
               </Pressable>
             </View>
@@ -61,6 +64,7 @@ export default function AccesibilityInfoModal({ visible, onDismiss }: Props) {
               return (
                 <View
                   key={info.title}
+                  testID="accessibility-info-card"
                   style={[
                     s.infoCard,
                     {
@@ -69,7 +73,7 @@ export default function AccesibilityInfoModal({ visible, onDismiss }: Props) {
                     },
                   ]}
                 >
-                  <View style={s.infoHeader}>
+                  <View testID="accessibility-info-card-header" style={s.infoHeader}>
                     <MaterialCommunityIcons name={info.iconName} size={24} color={theme.colors.primary} />
                     <Text style={s.infoLabel}>{t(asTranslationKey(info.title))}</Text>
                   </View>

@@ -101,13 +101,14 @@ export default function PagerCarousel({ data, onItemPress, containerPadding = 24
         />
 
         {currentIndex > 0 && (
-          <Pressable style={[s.chevron, s.chevronLeft]} onPress={() => goTo(currentIndex - 1)}>
+          <Pressable testID="carousel-prev" style={[s.chevron, s.chevronLeft]} onPress={() => goTo(currentIndex - 1)}>
             <Ionicons name="chevron-back" size={24} color="#fff" />
           </Pressable>
         )}
 
         {data.length > 1 && (
           <Pressable
+            testID="carousel-next"
             style={[s.chevron, s.chevronRight, currentIndex === data.length - 1 && s.chevronDisabled]}
             onPress={() => goTo(currentIndex + 1)}
             disabled={currentIndex === data.length - 1}
@@ -117,10 +118,11 @@ export default function PagerCarousel({ data, onItemPress, containerPadding = 24
         )}
       </View>
 
-      <View style={s.dots}>
+      <View testID="carousel-dots" style={s.dots}>
         {data.map((_, i) => (
           <View
             key={i}
+            testID={`carousel-dot-${i}`}
             style={[
               s.dot,
               { backgroundColor: i === currentIndex ? theme.colors.primary : theme.colors.outlineVariant },

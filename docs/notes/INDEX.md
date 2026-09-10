@@ -291,3 +291,57 @@ you get approved.
   encode -> EXIF APP1 marker (`jpeg_write_marker`, via `TestImages.JpegWithGps`) -> decode
   (`ImageProcessingService.Process`, which is why an imageless AddTrail test 500s). Production
   on PostGIS/Npgsql never loads the extension and is unaffected.
+- [A jotai-tanstack-query atom builds its own QueryClient unless `queryClientAtom` is seeded](jotai-query-atom-builds-its-own-queryclient.md) —
+  a jest suite in `app/` that mounts anything reading `stigviddUserAtom` (via `ShareHikeModal`,
+  `HikeDetails`) passes and then refuses to exit: "Jest did not exit one second after the test
+  run has completed", for 300 s, with `--detectOpenHandles` reporting nothing. `atomWithQuery`
+  falls back to a `new QueryClient()` of its own when `queryClientAtom` is unset, and that
+  default five-minute `gcTime` timer holds Node's event loop open. `src/app/_layout.tsx` seeds
+  the atom; `src/test/render.tsx` now does too. Running the whole suite hides it as
+  "A worker process has failed to exit gracefully".
+- [React Query notifies only about result fields read during render, so a test probe reads stale `data`](react-query-tracked-props.md) —
+  a `useQuery` result is a Proxy (`trackResult` in `@tanstack/query-core`) and the observer
+  re-renders only for fields read *during* render. A test probe that assigns the whole result
+  and reads `.data`, `isSuccess` or `staleTime` in the assertions afterwards never re-renders
+  on a data-only change — `queryClient.getQueryData` holds the new value while the probe holds
+  the old one, with no error and no failing `act`, so `flushUntil` just runs out of ticks.
+  Reading *nothing* is safe and reading one field is not, and the first `pending -> success`
+  transition always lands, so it only bites on a later `setQueryData` or refetch.
+  `renderWithProviders` sets `notifyOnChangeProps: "all"` to switch the whole optimisation off
+  in tests; never set it on the hook.
+- [In app/ jest tests style is assertable and geometry is not: `onLayout` never fires](app-component-testing-what-layout-can-be-asserted.md) —
+  testing design, layout or position in `app/`: `jest-expo` runs no Yoga, so `onLayout` and
+  `measure()` give nothing and no px position, overlap or actual truncation can be checked —
+  but `toHaveStyle` over `flex`, `gap`, `maxWidth`, `borderRadius` tokens, `numberOfLines` and
+  theme colours (pass `theme: AppDarkTheme` to `renderWithProviders`) catches the rules those
+  bugs actually live in. Also: react-native-paper puts your `style` on derived testIDs —
+  `<Button testID="x">` layout on `x-container-outer-layer`, colour on `x-container`,
+  `<Dialog testID="x">` on `x-surface` — and `@expo/vector-icons` is mocked as `icon-<name>`.
+  Also covers driving the tree: `waitFor` costs ~900 ms per call here and makes suites flaky,
+  so flush an already-triggered change with `await act(async () => {})`, and flush between
+  interactions too or the next `fireEvent` runs against a stale closure; `Platform.OS` is
+  `"ios"` under jest-expo, so an Android branch (SelectInput rows vs the iOS Picker) needs an
+  override; and an ESM-only package missing from `transformIgnorePatterns` fails as
+  `SyntaxError: Cannot use import statement outside a module` pointing at your test file.
+  And a component that measures itself renders nothing: `measureInWindow` never calls back, so
+  a popover positioned off an anchor never opens — `src/test/measure.tsx` stubs it, while an
+  `onLayout` handler can just be fired with `fireEvent(el, "layout", ...)`.
+  Two blind spots and their fixes: a raw string under a non-`Text` host (what
+  `{list.length && <X/>}` renders when the list is empty) is a red box on a device and invisible
+  to `queryByText` — `jest.after-env.js` now fails any test whose tree contains one; and a
+  dismissed Paper `Dialog` lingers through its 220 ms exit animation, so `renderWithProviders`
+  scales Paper's animations to zero and `flushUntilGone` makes "the dialog closed" assertable.
+  Plus: react-hook-form's `field.onChange` returns a promise, so a *synchronous* `act()` around a
+  hand-called `onChange` drops the update — it needs `await act(async () => {...})`.
+  Plus: an *empty* `<Text />` is the mirror case the guard misses — invisible to every query,
+  but still a `gap` slot on the device; and Paper's own `<Icon source="x">` is hidden from
+  accessibility, so `queryByTestId("icon-x")` needs `{ includeHiddenElements: true }` or an
+  "icon is absent" assertion passes whether it renders or not.
+  And two ways a *passing* suite hangs the run: a hook whose own `gcTime` beats the client's
+  `gcTime: 0` (`useTrails` asks for 24 h — `jest.after-env.js` now disposes every client), and
+  a fetch left in flight, which clearing the client does not dispose — resolve the promise
+  before the test returns.
+  Plus two more the environment settles for you: a `Platform.select` inside a
+  `StyleSheet.create` resolves at import, so flipping `Platform.OS` later cannot reach it; and
+  `getByTestId(x).parent` is a composite fiber, which `toHaveStyle` refuses — give the wrapper
+  its own `testID`.

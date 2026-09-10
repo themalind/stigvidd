@@ -28,21 +28,19 @@ export interface LiveUserLocation {
 //
 // Two thresholds, not one (metres/second): the arrow turns on above HEADING_ON_SPEED
 // and only off again below HEADING_OFF_SPEED, with a dead band between. A single
-// threshold sat right in the middle of ordinary GPS speed noise at walking pace, so
-// the arrow flickered on and off several times a second — and each flip was a style
-// change on the map, not just a repaint. ~0.8 m/s is a deliberate walk; ~0.4 m/s is
-// slow enough to count as stopped.
+// threshold sits inside ordinary GPS speed noise at walking pace, which flickers the
+// arrow several times a second — and each flip is a style change on the map, not just a
+// repaint. ~0.8 m/s is a deliberate walk; ~0.4 m/s is slow enough to count as stopped.
 const HEADING_ON_SPEED = 0.8;
 const HEADING_OFF_SPEED = 0.4;
 
 // Drives the follow-screen user puck from the app's own expo-location watcher
-// instead of MapLibre's built-in <UserLocation> engine. That engine proved
-// unreliable for live "follow me" tracking on both platforms: on iOS its
-// CLLocationManager leaves pausesLocationUpdatesAutomatically at its YES default
-// and never re-issues startUpdatingLocation, so it auto-pauses when idle and
-// freezes; on Android MapLibre's default (non-fused) engine delivers an initial
-// fix and then stops. In both cases the dot appears and then goes stale while you
-// walk — exactly the reported bug.
+// instead of MapLibre's built-in <UserLocation> engine, which is unreliable for live
+// "follow me" tracking on both platforms: on iOS its CLLocationManager leaves
+// pausesLocationUpdatesAutomatically at its YES default and never re-issues
+// startUpdatingLocation, so it auto-pauses when idle and freezes; on Android
+// MapLibre's default (non-fused) engine delivers an initial fix and then stops. Either
+// way the dot appears and then goes stale while you walk.
 //
 // expo-location's watchPositionAsync only delivers while the app is foregrounded
 // (per its docs) and iOS suspends JS in the background, so on every foreground
@@ -70,10 +68,9 @@ export function useLiveUserLocation(enabled = true): LiveUserLocation | null {
     // Only ever *queries* the permission on a re-arm. Requesting launches Android's
     // GrantPermissionsActivity, which pauses our activity — and the AppState listener
     // below re-arms as soon as it resumes, so an unconditional request here feeds
-    // itself: dialog -> pause -> resume -> dialog. That livelocked the app on a real
-    // device (203 GrantPermissionsActivity launches in 30 s, the screen flickering the
-    // whole time) whenever the grant wasn't already permanent — e.g. Android's
-    // "Ask every time" / one-time location access, which re-prompts on every request.
+    // itself: dialog -> pause -> resume -> dialog. That livelocks the app whenever the
+    // grant is not already permanent — e.g. Android's "Ask every time" / one-time
+    // location access, which re-prompts on every request.
     // useUserLocation already asks once per launch on the first screen that needs a
     // position; asking here is only a fallback for a one-time grant that expired, so
     // once per mount is enough.

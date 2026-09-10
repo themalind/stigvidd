@@ -40,7 +40,11 @@ export default function MapFilterMenu({ filter, onChange }: Props) {
 
   return (
     <View style={s.container}>
-      <Pressable onPress={() => setOpen((v) => !v)} style={[s.trigger, { backgroundColor: surface }]}>
+      <Pressable
+        testID="map-filter-trigger"
+        onPress={() => setOpen((v) => !v)}
+        style={[s.trigger, { backgroundColor: surface }]}
+      >
         <MaterialCommunityIcons name="tune-variant" size={18} color={theme.colors.onSurface} />
         <Text style={[s.triggerText, { color: theme.colors.onSurface }]}>{t("filter.label")}</Text>
         {activeCount > 0 && (
@@ -57,6 +61,7 @@ export default function MapFilterMenu({ filter, onChange }: Props) {
 
       {open && (
         <Animated.View
+          testID="map-filter-panel"
           entering={FadeInUp.duration(150)}
           exiting={FadeOutUp.duration(120)}
           style={[s.panel, { backgroundColor: surface }]}
@@ -66,6 +71,7 @@ export default function MapFilterMenu({ filter, onChange }: Props) {
             return (
               <Pressable
                 key={item.key}
+                testID={`map-filter-row-${item.key}`}
                 onPress={() => onChange({ ...filter, [item.key]: !filter[item.key] })}
                 style={s.row}
               >
@@ -79,6 +85,7 @@ export default function MapFilterMenu({ filter, onChange }: Props) {
                   ) : (
                     // Colour swatch matching the category's pin on the map (a legend).
                     <View
+                      testID={`map-filter-dot-${item.key}`}
                       style={[
                         s.dot,
                         { backgroundColor: MARKER_COLORS[item.key].fill, borderColor: MARKER_COLORS[item.key].stroke },

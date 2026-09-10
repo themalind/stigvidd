@@ -73,8 +73,8 @@ export default function CreateHikeScreen() {
   // recording.
   //
   // getForegroundPermissionsAsync *reads* the status; it must never be swapped for
-  // requestForegroundPermissionsAsync here. Requesting from AppState-driven code is what
-  // caused the Android permission-dialog livelock.
+  // requestForegroundPermissionsAsync here. Requesting from AppState-driven code livelocks
+  // the Android permission dialog.
   useEffect(() => {
     if (phase !== "denied") return;
 
@@ -105,12 +105,15 @@ export default function CreateHikeScreen() {
 
   if (phase === "denied") {
     return (
-      <View style={[s.screen, { backgroundColor: theme.colors.background }]}>
+      <View testID="create-hike-denied" style={[s.screen, { backgroundColor: theme.colors.background }]}>
         <View style={s.header}>
           <BackButton />
         </View>
         <View style={s.deniedContent}>
-          <View style={[s.deniedIcon, { backgroundColor: theme.colors.secondaryContainer }]}>
+          <View
+            testID="create-hike-denied-icon"
+            style={[s.deniedIcon, { backgroundColor: theme.colors.secondaryContainer }]}
+          >
             <Icon source="map-marker-off-outline" size={40} color={theme.colors.onSecondaryContainer} />
           </View>
           <Text style={[s.deniedTitle, { color: theme.colors.onBackground }]}>
@@ -143,11 +146,12 @@ export default function CreateHikeScreen() {
   }
 
   return (
-    <View style={[s.screen, { backgroundColor: theme.colors.background }]}>
-      <View style={s.header}>
+    <View testID="create-hike-screen" style={[s.screen, { backgroundColor: theme.colors.background }]}>
+      <View testID="create-hike-header" style={s.header}>
         <BackButton />
         <Text style={s.title}>{t("createHike.title")}</Text>
         <IconButton
+          testID="create-hike-info"
           icon="information-outline"
           size={20}
           iconColor={theme.colors.onBackground}
@@ -156,7 +160,7 @@ export default function CreateHikeScreen() {
           onPress={() => setShowInfo(true)}
         />
       </View>
-      <View style={s.content}>
+      <View testID="create-hike-content" style={s.content}>
         <TrailCreator />
       </View>
 

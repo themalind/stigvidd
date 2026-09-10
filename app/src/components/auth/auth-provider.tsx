@@ -40,9 +40,8 @@ interface Auth {
 }
 
 /**
- * Keycloak Direct Access Grant auth, backed by Jotai atoms (global store, no
- * React Context) so it works the same way the old singleton-based useOidcAuth
- * did — including when read from a component that renders the bootstrap itself.
+ * Keycloak Direct Access Grant auth, backed by Jotai atoms (a global store, no React
+ * Context), so it can also be read from a component that renders the bootstrap itself.
  */
 export function useAuth(): Auth {
   const user = useAtomValue(userAtom);

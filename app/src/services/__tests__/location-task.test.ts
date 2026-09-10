@@ -57,9 +57,8 @@ const mockGetDistance = getDistance as jest.Mock;
 const mockHasStarted = Location.hasStartedLocationUpdatesAsync as jest.Mock;
 const mockStopUpdates = Location.stopLocationUpdatesAsync as jest.Mock;
 
-// All the synthetic timestamps below sit near this value; the task's real-clock
-// staleness check is pinned here so an active test segment is never treated as
-// "forgotten". Tests that exercise the auto-stop path move the clock forward.
+// The synthetic timestamps below sit near this value, so an active test segment is never stale.
+// Tests of the auto-stop path move the clock forward.
 const NOW = 1_000_000;
 
 // Builds a minimal expo-location LocationObject
@@ -225,9 +224,8 @@ describe("location background task", () => {
       },
     };
     mockGetItem.mockResolvedValue(JSON.stringify(stateWithPoint));
-    // 170m from the last recorded point, but 120s elapsed — the app was suspended
-    // in a pocket while the user kept walking (~1.4 m/s). This is legitimate travel,
-    // so it must be accepted; rejecting it as a "teleport" wedged the recording.
+    // 170 m from the last point but 120 s elapsed (~1.4 m/s): the app was suspended in a pocket
+    // while the user kept walking, so this is legitimate travel, not a teleport.
     mockGetDistance.mockReturnValue(170);
 
     await locationTaskCallback({
@@ -251,8 +249,7 @@ describe("location background task", () => {
     mockGetItem.mockResolvedValue(JSON.stringify(stateWithPoint));
     mockGetDistance.mockReturnValue(150); // 150m — above MAX_DISTANCE of 100m
 
-    // Same timestamp as the last point ⇒ dt = 0, so the speed check can't apply and
-    // the absolute distance cap is what catches the glitch.
+    // Same timestamp ⇒ dt = 0, so the speed check cannot apply and the absolute distance cap catches it.
     await locationTaskCallback({
       data: { locations: [makeLocation(57.702, 11.97, 10, NOW)] },
       error: null,
@@ -294,8 +291,7 @@ describe("location background task", () => {
       },
     };
     mockGetItem.mockResolvedValue(JSON.stringify(stateWithPoint));
-    // 8m hop but the fix's accuracy is 20m — half the accuracy radius (10m) is the
-    // noise envelope on iOS, so an 8m move is still within it and must be rejected.
+    // An 8 m hop at 20 m accuracy is inside the iOS noise envelope (half the radius), so it is rejected.
     mockGetDistance.mockReturnValue(8);
 
     await locationTaskCallback({
@@ -344,8 +340,7 @@ describe("location background task", () => {
     };
     mockGetItem.mockResolvedValue(JSON.stringify(stateWithPoint));
 
-    // Gaps large enough that the accepted hops stay under the speed cap:
-    // 50m/~8s and 30m/5s. The 1m hop is rejected as jitter regardless.
+    // Gaps large enough to keep the accepted hops under the speed cap: 50 m/~8 s and 30 m/5 s.
     await locationTaskCallback({
       data: {
         locations: [
@@ -487,10 +482,9 @@ describe("maybeFinalizeStaleHike", () => {
   });
 });
 
-// finalizeActiveSegment always closes the active segment (trimming to the last GPS
-// point), unlike maybeFinalizeStaleHike which only does so when the session is stale.
-// It backs the cold-launch recovery path: a killed recording is recovered as a
-// paused, completed segment rather than a phantom "still recording" state.
+// finalizeActiveSegment always closes the active segment, trimming to the last GPS point, where
+// maybeFinalizeStaleHike only does so when the session is stale. It is the cold-launch recovery
+// path: a killed recording comes back as a paused, completed segment.
 describe("finalizeActiveSegment", () => {
   const point = (timeStamp: number) => ({ data: { latitude: 57.7, longitude: 11.97 }, timeStamp });
 
@@ -508,8 +502,7 @@ describe("finalizeActiveSegment", () => {
     expect(result.isTracking).toBe(false);
     expect(result.currentSegment).toBeNull();
     expect(result.hike.segments).toHaveLength(1);
-    // End trimmed to the last recorded point, not "now" — the process died at that
-    // point, so time after it must not be counted.
+    // End trimmed to the last recorded point, not "now": the process died there.
     expect(result.hike.segments[0].endTime).toBe(lastMovement);
     expect(result.hike.totalTime).toBe(lastMovement - (NOW - 2000));
   });
@@ -547,11 +540,9 @@ describe("finalizeActiveSegment", () => {
   });
 });
 
-// evaluatePoint is the single filter shared by every recording path (Android task,
-// iOS native drain, foreground live tail). getDistance is mocked so each test sets
-// the metres between the two points directly. Jest runs as iOS by default, so these
-// exercise the iOS tuning (40m gate, half-accuracy noise floor); the Android
-// divergence is covered separately below.
+// evaluatePoint is the filter shared by every recording path (Android task, iOS native drain,
+// foreground live tail). getDistance is mocked so each test sets the metres between two points.
+// Jest runs as iOS, so these cover the iOS tuning: 40 m gate, half-accuracy noise floor.
 describe("evaluatePoint", () => {
   beforeEach(() => jest.clearAllMocks());
 
@@ -570,8 +561,7 @@ describe("evaluatePoint", () => {
   });
 
   it("rejects a fix with negative accuracy (iOS reports it when accuracy is unknown)", () => {
-    // Guard for the negative-accuracy edge: a plain falsiness check lets -1 through,
-    // so it must be rejected explicitly or a garbage fix slips past the gate.
+    // Negative accuracy is rejected explicitly; a falsiness check would let -1 through.
     expect(evaluatePoint(undefined, point(NOW), -1)).toEqual({ accept: false, distance: 0 });
   });
 
@@ -696,10 +686,8 @@ describe("evaluatePoint", () => {
   });
 });
 
-// The iOS and Android gates diverge deliberately (see evaluatePoint): iOS relaxes
-// the accuracy gate to 40m and halves the noise floor. These load a fresh copy of
-// the module with Platform.OS forced to "android" and assert the same inputs decide
-// differently — a guard against the two platforms being accidentally unified.
+// iOS relaxes the accuracy gate to 40 m and halves the noise floor. These load a fresh copy of the
+// module with Platform.OS forced to "android" and assert the same inputs decide differently.
 describe("evaluatePoint — Android platform divergence", () => {
   function loadAndroid() {
     let evaluatePointFn!: typeof evaluatePoint;
@@ -730,14 +718,12 @@ describe("evaluatePoint — Android platform divergence", () => {
     const { evaluatePoint: evalAndroid, getDistance: getDistanceAndroid } = loadAndroid();
     getDistanceAndroid.mockReturnValue(40);
     const stale = point(NOW - ACCURACY_STALL_MS - 1000);
-    // 18m is over the strict gate but under the relaxed one, so a stalled track
-    // takes the fix rather than leaving a hole for the map to draw across.
+    // 18 m is over the strict gate and under the relaxed one, so a stalled track takes the fix.
     expect(evalAndroid(stale, point(NOW), 18)).toEqual({ accept: true, distance: 40 });
   });
 
   it("never relaxes past the flat 20m gate the split replaced", () => {
-    // Every fix the filter accepts, a 20m gate accepts too, however long the track
-    // has stalled. Widening this lets a worse fix onto the track.
+    // Every fix the filter accepts, a 20 m gate accepts too, however long the track has stalled.
     const { evaluatePoint: evalAndroid, getDistance: getDistanceAndroid } = loadAndroid();
     getDistanceAndroid.mockReturnValue(40);
     expect(evalAndroid(point(NOW - ACCURACY_STALL_MS - 1000), point(NOW), 21)).toEqual({
@@ -756,8 +742,7 @@ describe("evaluatePoint — Android platform divergence", () => {
 
   it("measures the stall from the segment start when nothing has been accepted yet", () => {
     const { evaluatePoint: evalAndroid } = loadAndroid();
-    // A segment that has been open past the stall window with no usable fix yet
-    // takes a mediocre one so recording can start at all.
+    // A segment open past the stall window with no usable fix takes a mediocre one, so recording starts.
     expect(evalAndroid(undefined, point(NOW), 18, { trackStartedAt: NOW - ACCURACY_STALL_MS - 1000 })).toEqual({
       accept: true,
       distance: 0,
@@ -773,8 +758,7 @@ describe("evaluatePoint — Android platform divergence", () => {
     const { evaluatePoint: evalAndroid, getDistance: getDistanceAndroid } = loadAndroid();
     mockGetDistance.mockReturnValue(8);
     getDistanceAndroid.mockReturnValue(8);
-    // 8m move, accuracy 12: iOS floor 6 → accept; a standing Android phone keeps
-    // floor 12 → reject, so drift at a rest stop can't become distance.
+    // 8 m at accuracy 12: the iOS floor of 6 accepts, a standing Android phone's floor of 12 rejects.
     expect(evaluatePoint(point(NOW - 3000), point(NOW), 12)).toEqual({ accept: true, distance: 8 });
     expect(evalAndroid(point(NOW - 3000), point(NOW), 12)).toEqual({ accept: false, distance: 0 });
     expect(evalAndroid(point(NOW - 3000), point(NOW), 12, { speed: 0 })).toEqual({ accept: false, distance: 0 });
@@ -785,16 +769,15 @@ describe("evaluatePoint — Android platform divergence", () => {
   it("halves the noise floor once the fix reports walking pace, so curves keep their shape", () => {
     const { evaluatePoint: evalAndroid, getDistance: getDistanceAndroid } = loadAndroid();
     getDistanceAndroid.mockReturnValue(8);
-    // The same 8m move a standing phone refuses is taken at walking pace: at 12m
-    // accuracy that is a point every ~6m rather than every ~12m.
+    // The same 8 m move is taken at walking pace: at 12 m accuracy, a point every ~6 m.
     expect(evalAndroid(point(NOW - 3000), point(NOW), 12, { speed: 1.3 })).toEqual({ accept: true, distance: 8 });
     // Drift-level speed is not travel.
     expect(evalAndroid(point(NOW - 3000), point(NOW), 12, { speed: 0.4 })).toEqual({ accept: false, distance: 0 });
   });
 });
 
-// The segment start and the fix's speed steer the filter only if ingestFixes passes
-// them on. Loaded as Android, the platform whose tuning tells the cases apart.
+// The segment start and the fix's speed steer the filter only if ingestFixes passes them on.
+// Loaded as Android, whose tuning tells the cases apart.
 describe("ingestFixes — what it hands the filter", () => {
   function loadAndroid() {
     let mod!: typeof import("../location-task");
@@ -814,8 +797,7 @@ describe("ingestFixes — what it hands the filter", () => {
     });
     jest.dontMock("react-native");
     setItem.mockResolvedValue(undefined);
-    // Re-requiring the module re-runs defineTask, so locationTaskCallback now holds
-    // the Android-loaded copy's callback.
+    // Re-requiring the module re-runs defineTask, so locationTaskCallback is the Android copy's.
     return { ingestFixes: mod.ingestFixes, getItem, setItem, getDistance, taskCallback: locationTaskCallback };
   }
 
@@ -849,8 +831,7 @@ describe("ingestFixes — what it hands the filter", () => {
     expect(result.resultPts).toBe(0);
   });
 
-  // The halved floor turns on the fix's own speed, which reaches evaluatePoint only
-  // if ingestFixes forwards it off the RawFix.
+  // The halved floor turns on the fix's speed, which reaches evaluatePoint only off the RawFix.
   const walked: StoredHikeState = {
     ...activeState,
     currentSegment: {
@@ -879,8 +860,7 @@ describe("ingestFixes — what it hands the filter", () => {
     expect(result.resultPts).toBe(1);
   });
 
-  // The background task builds the RawFix itself, so speed has to survive that
-  // mapping too.
+  // The background task builds the RawFix itself, so speed survives that mapping too.
   it("maps speed off the LocationObject the background task receives", async () => {
     const { getItem, setItem, getDistance, taskCallback } = loadAndroid();
     getItem.mockResolvedValue(JSON.stringify(walked));
@@ -893,10 +873,8 @@ describe("ingestFixes — what it hands the filter", () => {
   });
 });
 
-// ingestFixes is the shared write path: it runs a batch of raw fixes through
-// evaluatePoint into stored state atomically. The Android TaskManager task and the
-// iOS native drain both go through it, so these tests cover that shared behaviour
-// directly (the task-callback tests above exercise the same path via Android).
+// ingestFixes is the shared write path: a batch of raw fixes through evaluatePoint into stored
+// state, atomically. The Android task and the iOS native drain both go through it.
 describe("ingestFixes", () => {
   beforeEach(() => {
     jest.clearAllMocks();

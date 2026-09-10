@@ -5,24 +5,29 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
+// The wire contract of every function here — path, method, token, error shape — is asserted
+// from the table in endpoint-contract.test.ts. What is left is what that table cannot say:
+// what each call hands back.
+
 jest.mock("@/api/api-config", () => ({ BASE_URL: "http://test/api/v1" }));
 
-jest.mock("@/api/users", () => ({
-  getUserToken: jest.fn(),
-  ApiError: class ApiError extends Error {
-    status?: number;
-    constructor(message: string, status?: number) {
-      super(message);
-      this.name = "ApiError";
-      this.status = status;
-    }
-  },
+jest.mock("@/api/users", () => ({ getUserToken: jest.fn() }));
+
+jest.mock("@/services/logger", () => ({
+  logger: { error: jest.fn(), warn: jest.fn(), info: jest.fn(), debug: jest.fn() },
 }));
 
 import { getUserToken } from "@/api/users";
-import { createHike, getHikeByIdentifier, hikeRouteQueryKey } from "../hikes";
-import { ApiError } from "../api-error";
-import { CreateHikeRequest, Hike } from "@/data/types";
+import { CreateHikeRequest, Hike, ShareHikeRequest, UpdateHikeRequest } from "@/data/types";
+import {
+  createHike,
+  deleteHike,
+  getAllHikesByUserId,
+  getHikeByIdentifier,
+  hikeRouteQueryKey,
+  shareHike,
+  updateHike,
+} from "../hikes";
 
 const mockGetUserToken = getUserToken as jest.Mock;
 
@@ -31,11 +36,20 @@ function mockFetch(ok: boolean, body: unknown = {}) {
     ok,
     status: ok ? 200 : 500,
     json: jest.fn().mockResolvedValue(body),
-    body: null,
   } as unknown as Response);
 }
 
-const baseRequest: CreateHikeRequest = {
+const hike: Hike = {
+  identifier: "abc-123",
+  name: "Testpromenad",
+  hikeLength: 5,
+  duration: 3600,
+  coordinates: '[{"latitude":59.3,"longitude":18.0}]',
+  createdBy: "user-1",
+  createdAt: "2026-08-04T10:00:00Z",
+};
+
+const createRequest: CreateHikeRequest = {
   name: "Testpromenad",
   hikeLength: 5,
   duration: 3600,
@@ -45,87 +59,53 @@ const baseRequest: CreateHikeRequest = {
   ],
 };
 
+const updateRequest: UpdateHikeRequest = {
+  hikeIdentifier: "abc-123",
+  parkingInfo: "Vid vändplanen",
+  gettingThere: "Buss 100",
+  description: "Fin runda",
+};
+
+const shareRequest: ShareHikeRequest = {
+  hikeIdentifier: "abc-123",
+  sharedWithName: "stigvandraren",
+  allowResharing: true,
+};
+
 beforeEach(() => {
   jest.clearAllMocks();
   mockGetUserToken.mockResolvedValue("bearer-token");
 });
 
-describe("createHike", () => {
-  it("serializes coordinates as a JSON string in the request body", async () => {
-    mockFetch(true);
-    await createHike(baseRequest);
-
-    const body = JSON.parse((fetch as jest.Mock).mock.calls[0][1].body);
-    expect(typeof body.coordinates).toBe("string");
-    expect(JSON.parse(body.coordinates)).toEqual(baseRequest.coordinates);
+describe("what each call returns", () => {
+  it("createHike reports success rather than a body", async () => {
+    mockFetch(true, { identifier: "abc-123" });
+    await expect(createHike(createRequest)).resolves.toEqual({ success: true });
   });
 
-  it("makes POST to /hikes", async () => {
-    mockFetch(true);
-    await createHike(baseRequest);
-    expect(fetch).toHaveBeenCalledWith("http://test/api/v1/hikes", expect.objectContaining({ method: "POST" }));
-  });
-
-  it("returns success: true when the response is ok", async () => {
-    mockFetch(true);
-    const result = await createHike(baseRequest);
-    expect(result).toEqual({ success: true });
-  });
-
-  it("throws when the response is not ok", async () => {
-    mockFetch(false);
-    await expect(createHike(baseRequest)).rejects.toThrow();
-  });
-
-  it("throws when there is no auth token", async () => {
-    mockGetUserToken.mockResolvedValue(null);
-    await expect(createHike(baseRequest)).rejects.toThrow("User not authenticated");
-  });
-});
-
-describe("getHikeByIdentifier", () => {
-  // The route the follow screen walks. The same endpoint serves the creator and anyone
-  // the hike was shared with, which is what makes a shared hike walkable.
-  const hike: Hike = {
-    identifier: "abc-123",
-    name: "Testpromenad",
-    hikeLength: 5,
-    duration: 3600,
-    coordinates: '[{"latitude":59.3,"longitude":18.0}]',
-    createdBy: "user-1",
-    createdAt: "2026-08-04T10:00:00Z",
-  };
-
-  it("makes a GET to /hikes/{identifier}", async () => {
-    mockFetch(true, hike);
-    await getHikeByIdentifier("abc-123");
-    expect(fetch).toHaveBeenCalledWith("http://test/api/v1/hikes/abc-123", expect.objectContaining({ method: "GET" }));
-  });
-
-  it("sends the bearer token", async () => {
-    mockFetch(true, hike);
-    await getHikeByIdentifier("abc-123");
-    const { headers } = (fetch as jest.Mock).mock.calls[0][1];
-    expect(headers.Authorization).toBe("Bearer bearer-token");
-  });
-
-  it("returns the parsed hike, including its coordinates", async () => {
+  it("getHikeByIdentifier returns the parsed hike, coordinates and all", async () => {
     mockFetch(true, hike);
     await expect(getHikeByIdentifier("abc-123")).resolves.toEqual(hike);
   });
 
-  it("throws an ApiError carrying the status when the response is not ok", async () => {
-    mockFetch(false);
-    await expect(getHikeByIdentifier("abc-123")).rejects.toMatchObject({
-      name: "ApiError",
-      status: 500,
-    });
-    await expect(getHikeByIdentifier("abc-123")).rejects.toBeInstanceOf(ApiError);
+  it("updateHike returns the hike the server wrote, not the request", async () => {
+    mockFetch(true, { ...hike, description: "Fin runda" });
+    await expect(updateHike(updateRequest)).resolves.toEqual({ ...hike, description: "Fin runda" });
   });
 
-  it("throws when there is no auth token", async () => {
-    mockGetUserToken.mockResolvedValue(null);
-    await expect(getHikeByIdentifier("abc-123")).rejects.toThrow("User not authenticated");
+  it("getAllHikesByUserId returns the list as sent", async () => {
+    mockFetch(true, [hike]);
+    await expect(getAllHikesByUserId("user-1")).resolves.toEqual([hike]);
+  });
+
+  it("shareHike reports success", async () => {
+    mockFetch(true);
+    await expect(shareHike(shareRequest)).resolves.toEqual({ success: true });
+  });
+
+  it("deleteHike reports success", async () => {
+    mockFetch(true);
+    await expect(deleteHike("abc-123")).resolves.toEqual({ success: true });
   });
 });
 

@@ -20,9 +20,8 @@ import {
 } from "../logger";
 
 describe("logger redaction", () => {
-  // These assertions are the GDPR guarantee in executable form: this app handles Keycloak
-  // tokens, user emails and GPS traces, and a hike trace identifies where someone lives.
-  // See docs/observability.md.
+  // The GDPR guarantee in executable form: this app handles Keycloak tokens, emails and GPS traces,
+  // and a hike trace identifies where someone lives. See docs/observability.md.
 
   it("drops credential-bearing keys entirely rather than truncating them", () => {
     const result = redact({
@@ -90,8 +89,7 @@ describe("logger sink", () => {
 
     // The console output developers rely on is unconditional...
     expect(spy).toHaveBeenCalledWith("boom", { endpoint: "GET /trails" });
-    // ...but nothing is buffered or sent, which is why the API tests can keep asserting
-    // exact fetch call counts.
+    // ...but nothing is buffered or sent, so the API tests can assert exact fetch call counts.
     expect(jest.mocked(global.fetch)).not.toHaveBeenCalled();
   });
 
@@ -138,9 +136,8 @@ describe("logger sink watchdog", () => {
     jest.useFakeTimers();
     jest.spyOn(console, "error").mockImplementation(() => {});
 
-    // What a stalled request looks like from the logger's side: React Native's fetch is
-    // XHR-backed and has no default timeout. Without the watchdog `flushing` stays true
-    // forever, and no later flush — timer, batch or background — ever sends again.
+    // A stalled request: React Native's fetch is XHR-backed with no default timeout, so without the
+    // watchdog `flushing` stays true and no later flush ever sends again.
     const stuck = jest.fn().mockReturnValue(new Promise<void>(() => {}));
     setLogSink(stuck);
 
@@ -164,9 +161,8 @@ describe("logger sink watchdog", () => {
 });
 
 describe("logger lifecycle", () => {
-  // The risk in the flush-on-background path is not losing records but delivering them TWICE:
-  // persisting a snapshot taken BEFORE the flush replays already-shipped records on the next
-  // launch, duplicating them on every background/foreground cycle.
+  // The risk on the flush-on-background path is double delivery: a snapshot persisted before the
+  // flush replays shipped records on the next launch, once per background cycle.
 
   const PENDING_KEY = "@stigvidd_pending_logs";
 
@@ -178,8 +174,7 @@ describe("logger lifecycle", () => {
   };
 
   beforeAll(() => {
-    // startLogLifecycle() subscribes once per module instance, so capture the handler here
-    // rather than per-test.
+    // startLogLifecycle() subscribes once per module instance, so the handler is captured here.
     jest.spyOn(AppState, "addEventListener").mockImplementation(((
       _type: string,
       handler: (state: AppStateStatus) => void,
@@ -252,8 +247,8 @@ describe("logger backoff", () => {
     await new Promise((resolve) => setImmediate(resolve));
     expect(sink).toHaveBeenCalledTimes(1);
 
-    // ...and the restored batch keeps the buffer at BATCH_SIZE. Without the failure guard
-    // every one of these would fire its own request at the known-broken endpoint.
+    // ...and the restored batch keeps the buffer at BATCH_SIZE, which without the failure guard
+    // would fire a request each at the broken endpoint.
     for (let i = 0; i < 20; i++) logger.error(`more ${i}`);
     await new Promise((resolve) => setImmediate(resolve));
     expect(sink).toHaveBeenCalledTimes(1);

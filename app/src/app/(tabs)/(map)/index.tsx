@@ -147,7 +147,7 @@ export default function MapScreen() {
       : undefined);
 
   return (
-    <View style={s.container}>
+    <View testID="map-screen" style={s.container}>
       {isFocused && (
         <TrailMarkersMap
           filter={filters}
@@ -166,12 +166,12 @@ export default function MapScreen() {
         />
       )}
       {(!isMapReady || !isFocused) && (
-        <View style={[StyleSheet.absoluteFill, { backgroundColor: theme.colors.background }]} />
+        <View testID="map-cover" style={[StyleSheet.absoluteFill, { backgroundColor: theme.colors.background }]} />
       )}
 
       {/* No safe-area offset: the app header sits above the tab navigator and already
           clears it, so the map's top edge starts below the status bar. */}
-      <View style={s.topBar}>
+      <View testID="map-top-bar" style={s.topBar}>
         <MapFilterMenu filter={filters} onChange={setFilters} />
       </View>
 

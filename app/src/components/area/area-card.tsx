@@ -56,6 +56,7 @@ export default function AreaCard({ area }: Props) {
 
   return (
     <Pressable
+      testID="area-card"
       onPress={() =>
         guardedNavigate(() =>
           router.navigate({
@@ -144,7 +145,11 @@ export default function AreaCard({ area }: Props) {
         )}
       </View>
 
-      <View style={[s.accent, { backgroundColor: accentColor, top: accentTop }]} pointerEvents="none" />
+      <View
+        testID="area-card-accent"
+        style={[s.accent, { backgroundColor: accentColor, top: accentTop }]}
+        pointerEvents="none"
+      />
     </Pressable>
   );
 }

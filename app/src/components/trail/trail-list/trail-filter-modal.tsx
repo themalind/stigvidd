@@ -120,6 +120,7 @@ export const TrailFilterModal: React.FC<TrailFilterModalProps> = ({
                     ? { backgroundColor: theme.colors.primary }
                     : { backgroundColor: theme.colors.surface },
                 ]}
+                testID="filter-accessibility-all"
                 onPress={() => onUpdateFilter("accessibility", undefined)}
               >
                 <Text
@@ -140,6 +141,7 @@ export const TrailFilterModal: React.FC<TrailFilterModalProps> = ({
                     ? { backgroundColor: theme.colors.primary }
                     : { backgroundColor: theme.colors.surface },
                 ]}
+                testID="filter-accessibility-adapted"
                 onPress={() => onUpdateFilter("accessibility", true)}
               >
                 <View style={s.accessibilityButton}>
@@ -179,6 +181,7 @@ export const TrailFilterModal: React.FC<TrailFilterModalProps> = ({
                       ? { backgroundColor: theme.colors.primary }
                       : { backgroundColor: theme.colors.surface },
                   ]}
+                  testID="filter-nearme-all"
                   onPress={() => onUpdateFilter("nearMe", undefined)}
                 >
                   <Text
@@ -197,6 +200,7 @@ export const TrailFilterModal: React.FC<TrailFilterModalProps> = ({
                       ? { backgroundColor: theme.colors.primary }
                       : { backgroundColor: theme.colors.surface },
                   ]}
+                  testID="filter-nearme-on"
                   onPress={() => onUpdateFilter("nearMe", true)}
                 >
                   <Text
@@ -327,10 +331,6 @@ const s = StyleSheet.create({
     fontSize: 14,
     marginTop: 10,
     marginBottom: 5,
-  },
-  slider: {
-    width: "100%",
-    height: 40,
   },
   rangeSliderContainer: {
     marginTop: 10,

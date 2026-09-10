@@ -62,20 +62,20 @@ export default function HeroBanner({ lat, lon }: Props) {
   }
 
   return (
-    <View style={[s.card, { backgroundColor: tint }]}>
-      <View style={s.left}>
+    <View testID="hero-banner" style={[s.card, { backgroundColor: tint }]}>
+      <View testID="hero-banner-text" style={s.left}>
         <Text style={[s.greeting, { color: theme.colors.onSurface }]}>{getGreeting()}!</Text>
         <Text style={[s.subtitle, { color: theme.colors.onSurfaceVariant }]}>{t("home.readyForWalk")}</Text>
       </View>
-      <View style={s.rightColumn}>
+      <View testID="hero-banner-aside" style={s.rightColumn}>
         {weather && (
-          <View style={s.right}>
+          <View testID="hero-banner-weather" style={s.right}>
             <Ionicons name={getWeatherIcon(weather.symbolCode)} size={30} color={accent} />
             <Text style={[s.temp, { color: theme.colors.onSurface }]}>{weather.temperature}°</Text>
           </View>
         )}
         {locationLabel && (
-          <View style={s.location}>
+          <View testID="hero-banner-location" style={s.location}>
             <MaterialIcons name="location-pin" size={15} color={accent} />
             <Text style={{ color: theme.colors.onSurface }}>{locationLabel}</Text>
           </View>

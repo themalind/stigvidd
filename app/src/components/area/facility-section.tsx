@@ -24,7 +24,7 @@ export default function FacilitySection({ title, icon, items }: FacilitySectionP
   const { t } = useTranslation();
   if (items.length === 0) return null;
   return (
-    <View style={s.section}>
+    <View testID={`facility-section-${icon}`} style={s.section}>
       <View style={s.sectionHeader}>
         <MaterialIcons name={icon} size={20} color={theme.colors.primary} />
         <Text style={[s.sectionTitle, { color: theme.colors.onBackground }]}>{title}</Text>

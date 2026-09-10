@@ -5,20 +5,15 @@
     "cancel": "Cancel",
     "close": "Close",
     "done": "Done",
-    "confirm": "Confirm",
     "back": "Go back",
-    "clear": "Clear",
     "send": "Send",
     "sending": "Sending...",
-    "all": "All",
     "retry": "Try again",
     "ok": "Ok",
     "delete": "Delete",
     "share": "Share",
     "next": "Next",
     "select": "Select...",
-    "time": "Time",
-    "distance": "Distance",
     "exampleImage": "Example image",
     "exampleImageShort": "Example"
   },
@@ -53,7 +48,6 @@
     "confirmDeleteAccount": "Are you sure you want to delete your account?",
     "deleteAccountWarning": "Your account and your walks are deleted permanently. Walks you have shared stay with the people you shared them with.",
     "deleteAccountKeptData": "Your review ratings and obstacle reports remain, with no link to you – the text and images are deleted.",
-    "nicknameTakenMsg": "Nickname already taken",
     "unknownError": "An unexpected error occurred",
     "couldNotLogout": "Could not log out.",
     "notLoggedIn": "You are not logged in",
@@ -84,8 +78,6 @@
     "createHike": "Create a walk",
     "myHikes": "My own walks",
     "sharedHikes": "Walks shared with me",
-    "achievements": "Achievements",
-    "statistics": "Statistics",
     "about": "About Stigvidd",
     "deleteAccount": "Delete account"
   },
@@ -237,7 +229,6 @@
     "modalBody": "Please help by marking an obstacle as resolved if it has been fixed. You do this by pressing the checkmark icon (✓) on the obstacle you want to mark. The warning is removed after 3 confirmations or 30 days.",
     "report": "Report",
     "reportTitle": "Report obstacle",
-    "notAuthMessage": "You need to be logged in to report an incident.",
     "formInfo1": "Have you noticed something that affects accessibility or safety on the trail?",
     "formInfo2": "Use the form to describe obstacles, damage, or other incidents along the trail that others should know about.",
     "descriptionPrivacyInfo": "Do not include names, addresses or anything else that identifies a person – neither yourself nor anyone else.",
@@ -286,13 +277,11 @@
   },
   "hike": {
     "name": "Walk name",
-    "nameRequired": "Enter a walk name",
     "nameTooShort": "Name too short. Min 3 characters",
     "nameTooLong": "Name too long. Max 40 characters",
     "maxChars200": "Max 200 characters",
     "maxChars500": "Max 500 characters",
     "goBack": "Go back",
-    "confirm": "Confirm",
     "errorSaving": "Something went wrong, please try again later.",
     "saveTitle": "Save Walk",
     "trimRoute": "Trim route",
@@ -313,7 +302,6 @@
     "shareWithFriend": "Share with a friend",
     "noFriendsToShare": "You have no friends to share with.",
     "back": "Back",
-    "next": "Next",
     "sharedBy": "Shared by:",
     "createdAt": "Created:",
     "date": "Date:",
@@ -334,7 +322,6 @@
     "descriptionHelp": "You can give a short description of the environment, for example.",
     "descriptionOptional": "Description (optional)",
     "myHikesTitle": "My saved walks",
-    "pressForInfo": "Tap a walk to see more information or delete it.",
     "noHikes": "No saved walks",
     "sharedHikesTitle": "Shared walks",
     "noShared": "No shared walks yet",
@@ -411,62 +398,6 @@
     },
     "retry": "Try again"
   },
-  "firebaseErrors": {
-    "register": {
-      "emailInUse": "Email address is already in use",
-      "invalidEmail": "Invalid email address",
-      "weakPassword": "Password is too weak (at least 6 characters)",
-      "networkFailed": "Network error. Check your connection",
-      "default": "An error occurred. Please try again"
-    },
-    "passwordReset": {
-      "invalidEmail": "Invalid email address",
-      "userNotFound": "No user with this email address exists",
-      "missingEmail": "Enter an email address",
-      "tooManyRequests": "Too many attempts. Please try again later",
-      "networkFailed": "Network error. Check your connection",
-      "default": "An error occurred. Please try again"
-    },
-    "deleteAccount": {
-      "invalidCredential": "Incorrect password",
-      "userMismatch": "Credentials do not match the logged in account",
-      "userNotFound": "Account not found",
-      "userDisabled": "This account has been disabled",
-      "tooManyRequests": "Too many attempts. Please try again later",
-      "networkFailed": "Network error. Check your connection",
-      "deleteFailed": "Could not delete account. Please try again later",
-      "default": "Something went wrong. Please try again"
-    },
-    "reauthenticate": {
-      "invalidCredential": "Incorrect password",
-      "userMismatch": "Credentials do not match the logged in account",
-      "userNotFound": "Account not found",
-      "userDisabled": "This account has been disabled",
-      "tooManyRequests": "Too many attempts. Please try again later",
-      "networkFailed": "Network error. Check your connection",
-      "invalidEmail": "Invalid email address",
-      "default": "Could not verify your credentials. Please try again"
-    },
-    "login": {
-      "userNotFound": "No user with this email address exists",
-      "wrongPassword": "Incorrect password",
-      "invalidEmail": "Invalid email address",
-      "userDisabled": "This account has been disabled",
-      "tooManyRequests": "Too many failed login attempts. Please try again later",
-      "networkFailed": "Network error. Check your connection",
-      "invalidCredential": "Incorrect email or password",
-      "operationNotAllowed": "Login with email and password is not enabled",
-      "popupClosed": "Login was cancelled",
-      "default": "An error occurred while logging in. Please try again"
-    },
-    "deleteUser": {
-      "requiresRecentLogin": "You need to log in again before you can delete your account",
-      "userNotFound": "Account not found",
-      "networkFailed": "Network error. Check your connection",
-      "tooManyRequests": "Too many attempts. Please try again later",
-      "default": "Could not delete account. Please try again"
-    }
-  },
   "friends": {
     "title": "Friends",
     "search": "Search users",
@@ -491,6 +422,11 @@
     "removeContinue": "Do you want to continue?",
     "remove": "Remove",
     "retry": "Try again",
+    "accept": "Accept friend request",
+    "reject": "Decline friend request",
+    "sendRequest": "Send friend request",
+    "cancelRequest": "Withdraw sent request",
+    "removeFriend": "Remove friend",
     "requestAccepted": "Request accepted!",
     "acceptError": "Could not accept, please try again later!",
     "requestRejected": "Request declined",
@@ -508,14 +444,11 @@
     },
     "wishlist": {
       "title": "Wishlist",
-      "description": "Here are walks you have saved to do.",
       "empty": "You have no saved walks on your wishlist yet. Go to a trail and tap the plus to add one."
     },
     "searchPlaceholder": "Search for a trail or town..."
   },
   "area": {
-    "title": "Areas",
-    "readMore": "Read more",
     "trailsShort": "trails",
     "km": "km",
     "trails": "Hiking, exercise & walking paths",
@@ -535,7 +468,6 @@
     "explore": "Explore Borås",
     "exploreSubtitle": "Rya åsar · Kype · and more",
     "latestHike": "Your latest walk",
-    "showHike": "Show walk",
     "getStartedSignedOutTitle": "Your next walk starts here",
     "getStartedSignedOutBody": "Log in to record your walks with GPS, see the route on the map and save the ones you want to walk again.",
     "getStartedSignedOutAction": "Log in",
@@ -551,8 +483,7 @@
   "settings": {
     "theme": "Theme",
     "guide": "Nature guide",
-    "about": "About Stigvidd",
-    "language": "Language"
+    "about": "About Stigvidd"
   },
   "about": {
     "tagline": "Discover trails near you",
@@ -665,7 +596,6 @@
     "resume": "Resume",
     "trackingError": "Something went wrong with the recording. Please try again.",
     "fgPermissionDenied": "Permission to access location was denied.",
-    "bgPermissionDenied": "Permission to access background location was denied.",
     "notificationBody": "Recording walk...",
     "disclosureTitle": "Stigvidd needs your location",
     "disclosureIntro": "To draw your route, Stigvidd records where you are.",

@@ -14,8 +14,7 @@ describe("clusterZoomBand", () => {
   });
 
   it("uses the expansion zoom as the upper edge for a separable cluster", () => {
-    // expansionZoom (12) is within the cap of z0 (11.9), so the merge distance is the
-    // real split distance, not the cap.
+    // expansionZoom (12) is inside z0's cap of 11.9, so the merge distance is the real split distance.
     expect(clusterZoomBand(11.9, 12)).toEqual({ min: 11.9 - 0.1, max: 12 });
   });
 

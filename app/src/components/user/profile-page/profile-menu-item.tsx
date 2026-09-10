@@ -28,11 +28,11 @@ export default function ProfileMenuItem({ text, route, icon, badge }: MenuItemPr
   return (
     <Pressable onPress={() => handlePress(route)}>
       <View style={[s.containerView, { backgroundColor: theme.colors.surface }]}>
-        <View style={s.userInfo}>
+        <View testID="menu-item-label-group" style={s.userInfo}>
           {icon}
           <Text style={s.choiceText}>{text}</Text>
         </View>
-        <View style={s.right}>
+        <View testID="menu-item-actions" style={s.right}>
           {badge !== undefined && badge > 0 && (
             <Badge size={24} style={{ backgroundColor: theme.colors.tertiary, color: theme.colors.onTertiary }}>
               {badge}
@@ -52,18 +52,22 @@ const s = StyleSheet.create({
     alignItems: "center",
     borderRadius: BORDER_RADIUS,
     justifyContent: "space-between",
+    gap: 8,
   },
   userInfo: {
+    flex: 1,
     flexDirection: "row",
     alignItems: "center",
     gap: 20,
   },
   right: {
+    flexShrink: 0,
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
   },
   choiceText: {
+    flexShrink: 1,
     fontFamily: "Inter_600SemiBold",
     fontSize: 14,
   },

@@ -32,14 +32,14 @@ export default function AddReviewImages({ setReviewImages }: ReviewImageProp) {
     if (!setReviewImages) {
       return;
     }
-    const urls = images.map((asset) => asset.uri); // Använd 'imgs' parametern
+    const urls = images.map((asset) => asset.uri);
     setReviewImages(urls);
   }
 
   const onDeleteImage = (uri: string) => {
     const newImages = images.filter((i) => i.uri !== uri);
     setImages(newImages);
-    OnImagesChange(newImages); // Använd den nya arrayen direkt
+    OnImagesChange(newImages);
   };
 
   const pickImage = async () => {
@@ -77,22 +77,23 @@ export default function AddReviewImages({ setReviewImages }: ReviewImageProp) {
   };
 
   return (
-    <View style={s.container}>
-      {images.length > 0 &&
-        images.map((image, index) => (
-          <View key={index}>
-            <Pressable
-              onPress={() => onDeleteImage(image.uri)}
-              style={[s.deleteButton, { backgroundColor: theme.colors.background }]}
-            >
-              <MaterialCommunityIcons name="close" size={25} color={theme.colors.onBackground} />
-            </Pressable>
-            <Image source={{ uri: image.uri }} contentFit="cover" style={s.image} />
-          </View>
-        ))}
+    <View testID="add-review-images" style={s.container}>
+      {images.map((image, index) => (
+        <View key={index} testID="add-review-image">
+          <Pressable
+            testID="add-review-image-delete"
+            onPress={() => onDeleteImage(image.uri)}
+            style={[s.deleteButton, { backgroundColor: theme.colors.background }]}
+          >
+            <MaterialCommunityIcons name="close" size={25} color={theme.colors.onBackground} />
+          </Pressable>
+          <Image source={{ uri: image.uri }} contentFit="cover" style={s.image} />
+        </View>
+      ))}
 
       {images.length < 3 && (
         <Pressable
+          testID="add-review-image-add"
           onPress={pickImage}
           style={({ pressed }) => [
             s.imageButton,
@@ -124,7 +125,6 @@ const s = StyleSheet.create({
     right: 0,
     zIndex: 1337,
     borderRadius: 50,
-    opacity: 1,
   },
   imageButton: {
     width: width * 0.25,

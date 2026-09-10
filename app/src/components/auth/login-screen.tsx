@@ -101,12 +101,13 @@ export default function LoginScreen({ showBackButton = false }: { showBackButton
               <Text style={[s.title, { color: theme.colors.onSurface }]}>Stigvidd</Text>
               <Image source={require("../../assets/images/mammaapp.png")} style={s.logo} contentFit="contain" />
             </View>
-            <View style={s.textInputContainer}>
+            <View testID="login-field-column" style={s.textInputContainer}>
               <Text style={[s.text, { color: theme.colors.onSurface }]}>{t("auth.login")}</Text>
               <Controller
                 control={control}
                 render={({ field: { onChange, onBlur, value } }) => (
                   <TextInput
+                    testID="login-email"
                     error={!!errors.email}
                     dense
                     style={s.textInput}
@@ -128,6 +129,7 @@ export default function LoginScreen({ showBackButton = false }: { showBackButton
               <View style={s.errorContainer}>
                 {errors.email && (
                   <Text
+                    testID="login-email-error"
                     style={[
                       s.errorBadge,
                       { color: theme.colors.onErrorContainer, backgroundColor: theme.colors.errorContainer },
@@ -141,6 +143,7 @@ export default function LoginScreen({ showBackButton = false }: { showBackButton
                 control={control}
                 render={({ field: { onChange, onBlur } }) => (
                   <PasswordInputField
+                    testID="login-password"
                     passwordCallback={onChange}
                     error={!!errors.password}
                     onBlur={onBlur}
@@ -154,6 +157,7 @@ export default function LoginScreen({ showBackButton = false }: { showBackButton
               <View style={s.errorContainer}>
                 {errors.password && (
                   <Text
+                    testID="login-password-error"
                     style={[
                       s.errorBadge,
                       { color: theme.colors.onErrorContainer, backgroundColor: theme.colors.errorContainer },
@@ -165,10 +169,20 @@ export default function LoginScreen({ showBackButton = false }: { showBackButton
               </View>
             </View>
             <View style={s.actionContainer}>
-              <Button mode="contained" style={s.button} onPress={handleSubmit(onSubmit)} disabled={isSubmitting}>
+              <Button
+                testID="login-submit"
+                mode="contained"
+                style={s.button}
+                onPress={handleSubmit(onSubmit)}
+                disabled={isSubmitting}
+              >
                 {isSubmitting ? t("auth.loggingIn") : t("auth.login")}
               </Button>
-              {loginError && <Text style={[s.errorText, { color: theme.colors.error }]}>{loginError}</Text>}
+              {loginError ? (
+                <Text testID="login-error" style={[s.errorText, { color: theme.colors.error }]}>
+                  {loginError}
+                </Text>
+              ) : null}
               <Pressable style={{ flexDirection: "row" }} hitSlop={12} onPress={() => setVisible(true)}>
                 <Text style={[s.linkText, { color: theme.colors.onSurface }]}>{t("auth.forgotPassword")} </Text>
                 <Text

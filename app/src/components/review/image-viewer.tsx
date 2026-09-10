@@ -46,14 +46,17 @@ export default function ImageViewer({ images, visible, onDismiss }: ModalProps) 
         onDismiss={onDismiss}
         contentContainerStyle={[s.modalContainerStyle, { backgroundColor: theme.colors.inverseOnSurface }]}
       >
-        <View style={{ position: "relative", overflow: "hidden", borderRadius: BORDER_RADIUS }}>
+        <View
+          testID="review-image-frame"
+          style={{ position: "relative", overflow: "hidden", borderRadius: BORDER_RADIUS }}
+        >
           <View>
             <Animated.FlatList
+              testID="review-image-list"
               horizontal
               pagingEnabled
               showsHorizontalScrollIndicator={false}
               bounces={false}
-              contentContainerStyle={s.flatListContainerStyle}
               keyExtractor={(image) => image.identifier}
               data={images}
               initialScrollIndex={currentIndex}
@@ -65,17 +68,22 @@ export default function ImageViewer({ images, visible, onDismiss }: ModalProps) 
               onMomentumScrollEnd={onMomentumScrollEnd}
               onScroll={Animated.event([{ nativeEvent: { contentOffset: { x: scrollX } } }], { useNativeDriver: true })}
               renderItem={({ item }) => (
-                <View style={s.imageContainer}>
+                <View testID="review-image-item" style={s.imageContainer}>
                   <Image source={item.imageUrl} contentFit="contain" style={s.image} />
                 </View>
               )}
             />
             {images.length > 1 && (
-              <View style={s.pagination}>
+              <View testID="review-image-pagination" style={s.pagination}>
                 {images.map((_, index) => (
-                  <View key={index} style={[s.dot, { backgroundColor: theme.colors.tertiary }]} />
+                  <View
+                    key={index}
+                    testID="review-image-dot"
+                    style={[s.dot, { backgroundColor: theme.colors.tertiary }]}
+                  />
                 ))}
                 <Animated.View
+                  testID="review-image-indicator"
                   style={[
                     s.dotIndicator,
                     {
@@ -110,9 +118,6 @@ const s = StyleSheet.create({
     maxWidth: width,
     borderRadius: BORDER_RADIUS,
   },
-  flatListContainerStyle: {
-    paddingBottom: 0,
-  },
   imageContainer: {
     padding: 30,
     alignItems: "center",
@@ -142,20 +147,6 @@ const s = StyleSheet.create({
     position: "absolute",
     top: -DOT_SPACING / 2,
     left: -DOT_SPACING / 2,
-  },
-  leftGradient: {
-    position: "absolute",
-    left: 0,
-    top: 0,
-    bottom: 0,
-    width: 30,
-  },
-  rightGradient: {
-    position: "absolute",
-    right: 0,
-    top: 0,
-    bottom: 0,
-    width: 30,
   },
 });
 

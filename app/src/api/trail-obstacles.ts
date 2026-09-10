@@ -38,6 +38,10 @@ export async function addSolvedVote(obstacleIdentifier: string): Promise<{ succe
   try {
     const token = await getUserToken();
 
+    if (!token) {
+      throw new Error("User not authenticated");
+    }
+
     const response = await fetch(`${BASE_URL}/trailobstacles/solve/${obstacleIdentifier}`, {
       method: "POST",
       headers: {
@@ -63,6 +67,10 @@ export async function addSolvedVote(obstacleIdentifier: string): Promise<{ succe
 export async function deleteSolvedVote(obstacleIdentifier: string): Promise<{ success: boolean }> {
   try {
     const token = await getUserToken();
+
+    if (!token) {
+      throw new Error("User not authenticated");
+    }
 
     const response = await fetch(`${BASE_URL}/trailobstacles/solve/${obstacleIdentifier}`, {
       method: "DELETE",

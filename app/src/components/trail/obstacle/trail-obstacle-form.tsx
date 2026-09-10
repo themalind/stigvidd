@@ -225,6 +225,7 @@ export default function TrailObstacleForm({ trailIdentifier, visible, onDismiss 
                   name="description"
                   render={({ field: { onChange, onBlur, value } }) => (
                     <TextInput
+                      testID="obstacle-description"
                       mode="outlined"
                       error={!!errors.description}
                       style={[s.textInput, { backgroundColor: theme.colors.surfaceVariant }]}
@@ -259,6 +260,7 @@ export default function TrailObstacleForm({ trailIdentifier, visible, onDismiss 
                   name="useLocation"
                   render={({ field: { value, onChange } }) => (
                     <Switch
+                      testID="obstacle-location-switch"
                       trackColor={{ false: theme.colors.outlineVariant, true: theme.colors.tertiary }}
                       thumbColor={value ? theme.colors.outlineVariant : theme.colors.tertiary}
                       style={s.switch}
@@ -279,7 +281,13 @@ export default function TrailObstacleForm({ trailIdentifier, visible, onDismiss 
               {locationError && <Text style={[s.bold, { color: theme.colors.error }]}>{locationError}</Text>}
             </KeyboardAwareScrollView>
 
-            <Button onPress={handleSubmit(onSubmit)} mode="contained" style={s.button} disabled={isPending}>
+            <Button
+              testID="obstacle-submit"
+              onPress={handleSubmit(onSubmit)}
+              mode="contained"
+              style={s.button}
+              disabled={isPending}
+            >
               {isPending ? t("common.sending") : t("common.send")}
             </Button>
           </View>

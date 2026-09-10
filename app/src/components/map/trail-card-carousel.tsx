@@ -94,7 +94,11 @@ export default function TrailCardCarousel({ identifiers, onClose, onReadMore, on
   );
 
   return (
-    <View style={s.wrapper} onLayout={(e) => onMeasure?.(e.nativeEvent.layout.height + BOTTOM_OFFSET)}>
+    <View
+      testID="carousel"
+      style={s.wrapper}
+      onLayout={(e) => onMeasure?.(e.nativeEvent.layout.height + BOTTOM_OFFSET)}
+    >
       <Pressable
         onPress={onClose}
         hitSlop={10}
@@ -107,6 +111,7 @@ export default function TrailCardCarousel({ identifiers, onClose, onReadMore, on
         <MaterialIcons name="keyboard-arrow-down" size={24} color={theme.colors.onSurfaceVariant} />
       </Pressable>
       <FlatList
+        testID="carousel-list"
         ref={listRef}
         data={identifiers}
         keyExtractor={(id) => id}
@@ -128,6 +133,7 @@ export default function TrailCardCarousel({ identifiers, onClose, onReadMore, on
           {identifiers.map((id, i) => (
             <View
               key={id}
+              testID="carousel-dot"
               style={[
                 s.dot,
                 {
@@ -168,7 +174,10 @@ const CarouselCard = memo(function CarouselCard({
   const { t } = useTranslation();
 
   return (
-    <View style={[s.card, { width: cardWidth, backgroundColor: theme.colors.surface }]}>
+    <View
+      testID={`carousel-card-${identifier}`}
+      style={[s.card, { width: cardWidth, backgroundColor: theme.colors.surface }]}
+    >
       {!card && isNotFound ? (
         // The server returned successfully but omitted this trail (e.g. it was
         // unverified/removed after its marker loaded) — there is nothing to retry.

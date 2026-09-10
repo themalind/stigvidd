@@ -184,13 +184,9 @@ export function useLocationTracking() {
   useEffect(() => {
     if (isTracking) {
       pollingRef.current = setInterval(syncFromStorage, POLL_INTERVAL);
-    } else {
-      // Stop polling when tracking is paused or stopped
-      if (pollingRef.current) {
-        clearInterval(pollingRef.current);
-        pollingRef.current = null;
-      }
     }
+    // The cleanup below stops the polling, and React runs it before every re-run of this
+    // effect as well as on unmount.
     return () => {
       if (pollingRef.current) {
         clearInterval(pollingRef.current);

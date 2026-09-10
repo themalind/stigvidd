@@ -38,8 +38,7 @@ describe("buildRouteThumbnail", () => {
   });
 
   it("touches the padding on the axis it fills, and centres on the other", () => {
-    // Latitude spans further than longitude does once the cos correction is applied, so
-    // the vertical axis is the one that fills.
+    // With the cos correction applied latitude spans further, so the vertical axis is the one that fills.
     const { d } = buildRouteThumbnail(SQUARE, 52, 52, 6)!;
     const points = pointsFrom(d);
     const ys = points.map(([, y]) => y);
@@ -66,8 +65,7 @@ describe("buildRouteThumbnail", () => {
   });
 
   it("corrects for longitude convergence rather than filling both axes", () => {
-    // Equal degree spans: at 57°N the longitude span is the shorter one on the ground,
-    // so it must render shorter than the latitude span.
+    // Equal degree spans: at 57°N the longitude span is shorter on the ground, so it renders shorter.
     const { d } = buildRouteThumbnail(SQUARE, 52, 52, 6)!;
     const points = pointsFrom(d);
     const drawnWidth = Math.max(...points.map(([x]) => x)) - Math.min(...points.map(([x]) => x));
