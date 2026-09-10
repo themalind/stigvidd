@@ -38,13 +38,34 @@ you get approved.
   so the whole integration suite was unrunnable in the checkout the work happens in. Use an
   exists-either-kind test. Also: `.codegraph/` is per-checkout and uncommitted, so a fresh
   worktree has no index and codegraph silently knows nothing about the tree.
-- [`dotnet test` needs ConnectionStrings__StigVidd, or every integration test fails at startup](dotnet-test-connection-string.md) —
+- [`dotnet test` needs ConnectionStrings\_\_StigVidd, or every integration test fails at startup](dotnet-test-connection-string.md) —
   `Program.cs` throws on the missing connection string before any code under test runs, and
   the output never names the variable. `DataSource=:memory:` satisfies the null-check;
   WebApplicationFactory swaps in SQLite regardless. The bash, PowerShell and cmd forms all
   differ, the separator is a **double** underscore, and shell state does not persist between
   Bash tool calls. Also: under the Microsoft.Testing.Platform runner that `global.json`
-  selects, `dotnet test <path.csproj>` is refused — one project needs `--project`.
+  selects, `dotnet test <path.csproj>` is refused — one project needs `--project`, while
+  `dotnet build --project <path.csproj>` is refused by MSBuild in the other direction (it
+  takes the path positionally) with only "Switch: --project" to say so — and the
+  `dotnet test --no-build` that follows then runs the **stale DLL**, so a mutation or a fix
+  reports the previous binary's result.
+- [The integration tests inherit StigviddAPI's appsettings.json _and_ your user secrets, so a config deletion is green locally and 337 red on CI](integration-tests-inherit-api-config.md) —
+  `StigViddWebApplicationFactory` boots the real `Program.Main` and substitutes the database,
+  WebDAV and `IKeycloakAdminRepository` but **no configuration**, so the host reads
+  `backend/StigviddAPI/appsettings.json`, `appsettings.Development.json` and — because the
+  factory runs as `Development` and StigviddAPI has a `UserSecretsId` — the developer's
+  `~/.microsoft/usersecrets` too. Deleting the Keycloak client secrets from `appsettings.json`
+  (commit `ab97fb3`) failed **337 of 1441** tests on Jenkins with
+  `OptionsValidationException : Keycloak Admin HTTP client requires a valid absolute URI for
+'AuthServerUrl'` from `AddKeycloakAdminHttpClient`'s `ValidateOnStart`, while staying green
+  on any box holding those values in user secrets — so a local `dotnet test` is **not**
+  evidence about a configuration change. Fixed with `KeycloakConfigPreload.cs`, a
+  `[ModuleInitializer]` setting environment variables, because
+  `builder.ConfigureAppConfiguration` in `ConfigureWebHost` runs too late on the
+  `DeferredHostBuilder` path and still fails 337/337. Has the per-key mutation table, and the
+  half no test sees: `docker-compose.yml` overrode only `auth-server-url`, so the deployed API
+  had no `KeycloakAdminClient` client secret at all and every Keycloak Admin call — register,
+  forgot-password, admin provisioning — was broken with nothing reporting it.
 - [SpatiaLite in the integration tests is set up differently on Windows and on Linux](spatialite-per-os.md) —
   the csproj already splits on `$(OS)`: Windows uses the bundled `e_sqlite3`, Linux binds
   the **system** libsqlite3 via a `[ModuleInitializer]` because the bundle would shadow the
@@ -52,7 +73,7 @@ you get approved.
   `libsqlite3-mod-spatialite` on Debian 13, `dev-db/spatialite` on Gentoo — or the geometry
   tests fail on extension load rather than on anything you changed.
 - [`AlterColumn(nullable: false)` without `oldNullable: true` emits nothing at all](altercolumn-nullable-needs-oldnullable.md) —
-  `MigrationBuilder.AlterColumn` describes the column before *and* after, and `oldNullable`
+  `MigrationBuilder.AlterColumn` describes the column before _and_ after, and `oldNullable`
   defaults to `false` — so `nullable: false` alone reads as "no change" and the `SET NOT NULL`
   never reaches the SQL. Measured: `20260630173510_HikePath` scaffolded exactly that, so
   `dbo."Hikes"."GeoPath"` is **nullable in every deployed database** while the model snapshot
@@ -60,7 +81,7 @@ you get approved.
   into it regardless — a NullReferenceException in code the compiler called safe.
   `dotnet ef migrations has-pending-model-changes` cannot see it, because it compares the model
   to the **snapshot**, not to a database. `dotnet ef migrations script <from> <to>
-  --project Infrastructure` is what shows you what will actually run, and needs no connection.
+--project Infrastructure` is what shows you what will actually run, and needs no connection.
 - [PostGIS treats SRID 0 as assignable, so the typmod normalises instead of rejecting](postgis-srid-coercion.md) —
   measured on PostGIS 3.5: writing an SRID-0 geometry into a `geometry(...,4326)` column, and
   `ALTER COLUMN ... TYPE geometry(...,4326)` over a column full of SRID-0 rows, both **silently
@@ -101,18 +122,20 @@ you get approved.
 - [No .gitattributes + a generated-file diff gate = a red build that is only line endings](line-endings-and-generated-files.md) —
   Git for Windows defaults `core.autocrlf=true`, so a Windows checkout of a repo without
   `.gitattributes` gets CRLF, orval writes LF, and Jenkins' `git diff --exit-code --
-  src/api/generated` then fails with "the generated API client is stale" for reasons that
+src/api/generated` then fails with "the generated API client is stale" for reasons that
   have nothing to do with the API. Four migration files were committed CRLF+BOM. Fixed with
   `* text=auto eol=lf`; keep content comparisons newline-agnostic regardless.
-- [`npx tsc --noEmit` in app/ is clean, and no CI job runs it](app-typecheck-baseline.md) —
+- [`npx tsc --noEmit` in app/ has no fixed baseline — the count depends on a gitignored generated file](app-typecheck-baseline.md) —
   nothing type-checks app/: CI runs prettier, expo lint and jest, and jest-expo transpiles
   via Babel without type-checking, so a type error in app production code is caught by
-  nothing. Measured 2026-08-31: **0 errors, exit 0** — any error is one you added. This note
-  previously recorded 19 and blamed `tsconfig.json`'s `"types": ["jest","geojson"]` for
-  dropping `@types/node`; that array is unchanged and the `TS2304: Cannot find name 'global'`
-  errors are gone, because `expo-env.d.ts` reaches `expo/types/global.d.ts`'s
-  `/// <reference types="node" />`, which `compilerOptions.types` does not filter. Don't add
-  `"node"` to that array — check `expo-env.d.ts` exists, it is gitignored.
+  nothing. But do NOT treat the error count as a repo constant: expo-router's typed-route
+  union comes from `.expo/types/router.d.ts`, which the Expo CLI generates and `.gitignore`
+  ignores, so a stale copy makes `tsc` reject routes that exist and are committed. Measured
+  2026-09-05: **2 errors, exit 2**, both `hike-follow` routes added six weeks after the local
+  router.d.ts was written — TS2820/TS2322, and TypeScript's "Did you mean `follow/`?" hint is
+  wrong, `follow/` and `hike-follow/` are different screens. Regenerate by starting the dev
+  server (background it) before believing any number. This note has recorded 19, then 0, then 2. The old 19 was `tsconfig.json`'s `"types": ["jest","geojson"]` dropping `@types/node`;
+  that is resolved — `expo-env.d.ts` reaches `expo/types/global.d.ts`, so don't add `"node"`.
 - [A popular-trails ranking test competes with the standard seed: six verified GeoPath trails at one location](seeded-trails-compete-in-ranking-tests.md) —
   writing a test for popular-trail ranking, proximity, distance or user location: `TestBase.CreateSeededFactory()`'s
   `extraSeed` is **additive**, and `Utilities.InitializeDbForTests` already supplies six
@@ -166,7 +189,7 @@ you get approved.
   from an unrelated one later in the same line, so `docker compose ps || echo "not up yet"` is
   denied over the word `up` in English prose while the reversed order passes and a quoted
   `docker compose up` passes too (this note claimed the opposite until it was measured) — but a
-  heredoc body line *beginning* with a guarded command IS denied, because `commandsIn()` splits
+  heredoc body line _beginning_ with a guarded command IS denied, because `commandsIn()` splits
   on newlines. Worse, inside a heredoc **backticks are command substitution**, so Markdown/JSDoc
   inline code around a guarded name is a command at head position: a `cat > file.ts <<EOF` whose
   body merely mentions `` `vitest.config.ts` `` or `` `docker compose up` `` in a COMMENT is
@@ -241,7 +264,7 @@ you get approved.
   both languages) is held by `scripts/container-log-retention.sh` on a daily systemd timer
   (`DEPLOYMENT.md` Part 1 step 9), not by compose — and it fails silently twice over: an
   uninstalled timer deletes nothing while everything looks healthy, and log options are fixed
-  at container *create* time, so `docker compose restart` never applies the caps. Distinct
+  at container _create_ time, so `docker compose restart` never applies the caps. Distinct
   from `OBSERVATORY_RETENTION_DAYS`, which is OpenObserve's genuinely time-based retention.
 - [OpenObserve OSS has no RBAC, so the ingestion token is the only thing a public credential may be](openobserve-oss-has-no-rbac.md) —
   the `Member` role DEPLOYMENT.md told you to give the ingest account is rejected outright
@@ -291,6 +314,45 @@ you get approved.
   encode -> EXIF APP1 marker (`jpeg_write_marker`, via `TestImages.JpegWithGps`) -> decode
   (`ImageProcessingService.Process`, which is why an imageless AddTrail test 500s). Production
   on PostGIS/Npgsql never loads the extension and is unaffected.
+- [The proxy publishes every `*_DOMAIN` as a network alias, so a stack pointed at another environment's service swallows its own request](proxy-aliases-shadow-public-hostnames.md) —
+  deploying a partial/staging stack, or any compose stack that borrows another environment's
+  Keycloak, OpenObserve or mail server: `docker-compose.yml`'s `proxy` service aliases
+  `${WEB_DOMAIN}`, `${API_DOMAIN}`, `${MEDIA_DOMAIN}`, `${AUTH_DOMAIN}` and
+  `${OBSERVATORY_DOMAIN}` onto itself on the `public` network, deliberately, so in-stack
+  calls to `https://auth.<domain>` hit Caddy instead of hairpinning. The alias is
+  unconditional, so setting `AUTH_DOMAIN=auth.stigvidd.se` on a stack that runs no
+  `keycloak` makes THAT stack own production's hostname internally: the API's calls 502 or
+  fail to connect while every value looks right, and `curl` from the host works because the
+  host is not on the docker network. Test with
+  `docker compose exec api getent hosts auth.stigvidd.se` — a `10.x` answer is the alias.
+  `*_DOMAIN` means "names this proxy serves", never "names this stack talks to"; reach other
+  environments through `KEYCLOAK_URL`/`OTLP_ENDPOINT`, which are not aliased. Paired with
+  `proxy/Caddyfile.app` and `CADDYFILE=/etc/caddy/Caddyfile.app`, because Caddy has no
+  conditionals and an empty site address makes it reject its entire config.
+- [The Keycloak realm came from appsettings.json, not compose — and one `Keycloak:realm` feeds both authentication and the admin client](keycloak-realm-lives-in-appsettings-not-compose.md) —
+  changing the Keycloak realm, or pointing a second environment at the same Keycloak:
+  `appsettings.json` pins `"realm": "stigvidd"` in BOTH the `Keycloak` and
+  `KeycloakAdminClient` sections and compose overrode only `auth-server-url`, so the realm
+  was the one Keycloak setting needing a committed-file edit. Now
+  `Keycloak__realm`/`KeycloakAdminClient__realm` come from `${KEYCLOAK_REALM:-stigvidd}`.
+  Set both: `AddKeycloakWebApiAuthentication` binds the `Keycloak` section for token
+  validation, and `KeycloakAdminRepository.cs:26` reads `Keycloak:realm` too — that section,
+  NOT `KeycloakAdminClient`'s — while minting its token against `KeycloakAdminClient`. Set
+  one only and tokens validate against one realm while registration, forgot-password and
+  admin provisioning hit another, with no startup error: a runtime 404/401 from the Admin
+  API. Sign-in works but every `[Authorize]` call returns 401 means the SPA's
+  `VITE_OIDC_REALM` (a build arg, baked into the bundle) drifted from the API's env.
+- [A markdown backtick reads as shell command substitution, so _documenting_ a dev server trips `guard-long-running`](backticks-in-prose-trip-the-long-running-guard.md) —
+  writing a note, a skill or any .claude/ or docs/ file that NAMES a guarded command: a
+  heredoc whose body mentions a dev server in markdown inline code is DENIED by
+  guard-long-running.mjs even though nothing is being run. `commandsIn()` in
+  .claude/hooks/lib.mjs starts a new command segment at every backtick, newline, `(` and
+  `{`, because a backtick is real command substitution — and it sees one flat string with no
+  concept of a heredoc, so the body is scanned like code. The tell is that the quoted
+  "command" in the denial contains prose. Quoting does not help the way the hook's own
+  self-test (`echo 'do not docker compose up here'` is allowed) suggests: that passes only
+  because quoted spans are consumed first, and `<<'EOF'` quotes the body for bash, not for
+  the splitter. Write the file with the Write tool instead of a heredoc.
 - [A jotai-tanstack-query atom builds its own QueryClient unless `queryClientAtom` is seeded](jotai-query-atom-builds-its-own-queryclient.md) —
   a jest suite in `app/` that mounts anything reading `stigviddUserAtom` (via `ShareHikeModal`,
   `HikeDetails`) passes and then refuses to exit: "Jest did not exit one second after the test
@@ -301,11 +363,11 @@ you get approved.
   "A worker process has failed to exit gracefully".
 - [React Query notifies only about result fields read during render, so a test probe reads stale `data`](react-query-tracked-props.md) —
   a `useQuery` result is a Proxy (`trackResult` in `@tanstack/query-core`) and the observer
-  re-renders only for fields read *during* render. A test probe that assigns the whole result
+  re-renders only for fields read _during_ render. A test probe that assigns the whole result
   and reads `.data`, `isSuccess` or `staleTime` in the assertions afterwards never re-renders
   on a data-only change — `queryClient.getQueryData` holds the new value while the probe holds
   the old one, with no error and no failing `act`, so `flushUntil` just runs out of ticks.
-  Reading *nothing* is safe and reading one field is not, and the first `pending -> success`
+  Reading _nothing_ is safe and reading one field is not, and the first `pending -> success`
   transition always lands, so it only bites on a later `setQueryData` or refetch.
   `renderWithProviders` sets `notifyOnChangeProps: "all"` to switch the whole optimisation off
   in tests; never set it on the hook.
@@ -331,13 +393,13 @@ you get approved.
   to `queryByText` — `jest.after-env.js` now fails any test whose tree contains one; and a
   dismissed Paper `Dialog` lingers through its 220 ms exit animation, so `renderWithProviders`
   scales Paper's animations to zero and `flushUntilGone` makes "the dialog closed" assertable.
-  Plus: react-hook-form's `field.onChange` returns a promise, so a *synchronous* `act()` around a
+  Plus: react-hook-form's `field.onChange` returns a promise, so a _synchronous_ `act()` around a
   hand-called `onChange` drops the update — it needs `await act(async () => {...})`.
-  Plus: an *empty* `<Text />` is the mirror case the guard misses — invisible to every query,
+  Plus: an _empty_ `<Text />` is the mirror case the guard misses — invisible to every query,
   but still a `gap` slot on the device; and Paper's own `<Icon source="x">` is hidden from
   accessibility, so `queryByTestId("icon-x")` needs `{ includeHiddenElements: true }` or an
   "icon is absent" assertion passes whether it renders or not.
-  And two ways a *passing* suite hangs the run: a hook whose own `gcTime` beats the client's
+  And two ways a _passing_ suite hangs the run: a hook whose own `gcTime` beats the client's
   `gcTime: 0` (`useTrails` asks for 24 h — `jest.after-env.js` now disposes every client), and
   a fetch left in flight, which clearing the client does not dispose — resolve the promise
   before the test returns.

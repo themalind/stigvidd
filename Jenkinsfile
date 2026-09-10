@@ -54,6 +54,10 @@
 //  4. On the DEPLOY HOST, at $DEPLOY_PATH, keep a persistent `.env` holding the
 //     runtime secrets that must NOT live in Jenkins/git:
 //       POSTGRES_PASSWORD=...   (+ POSTGRES_DB / POSTGRES_USER / ports if non-default)
+//       KEYCLOAK_ADMIN_CLIENT_SECRET=...  (stigvidd-admin-api's client secret; the API
+//         cannot reach the Keycloak Admin API without it, and compose refuses to
+//         interpolate the file at all while it is missing — so the deploy's own
+//         `pull`/`up` fails first. See DEPLOYMENT.md Part 1.)
 //     REGISTRY and IMAGE_TAG are injected by this pipeline at deploy time.
 //
 //  5. Adjust the CONFIGURE block below (registry, deploy host/path, VITE_* build

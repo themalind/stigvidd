@@ -46,6 +46,34 @@ dotnet test --project Tests/IntegrationTests/IntegrationTests.csproj --no-build
 
 A bare `dotnet test` from `backend/` runs the whole solution and is fine.
 
+### And `dotnet build` is the exact opposite — `--project` is not a build switch
+
+The symmetry is a trap. `dotnet build --project Tests/IntegrationTests/IntegrationTests.csproj`
+is **refused by MSBuild**, with a message that names neither the project nor the mistake:
+
+```
+Switch: --project
+
+For switch syntax, type "MSBuild -help"
+```
+
+`dotnet build` takes the project as a **positional** argument
+(`dotnet build Tests/IntegrationTests/IntegrationTests.csproj`). So the pair that looks
+consistent is wrong in one direction and right in the other:
+
+```sh
+dotnet build Tests/IntegrationTests/IntegrationTests.csproj              # positional
+dotnet test  --project Tests/IntegrationTests/IntegrationTests.csproj    # --project
+```
+
+Why it matters more than a typo: the usual next command is `dotnet test --no-build`, which
+happily runs the **stale DLL** the failed build left behind. Measured here while
+mutation-testing a config change — the build was rejected, the tests ran the previous
+binary, and the mutation reported *passing*, which read as "this key is not load-bearing"
+when in fact nothing had been rebuilt. A `&&` chain does not save you if the build's
+non-zero exit is swallowed by a pipe (`dotnet build ... | tail -3` exits 0). Grep the build
+output for `Error(s)`, or drop `--no-build`.
+
 Shell state does **not** persist between Claude Code Bash tool calls, so an `export` in an
 earlier call is already gone by the next one. That is what makes
 `.claude/hooks/guard-build-commands.mjs` able to decide this rather than guess: what the

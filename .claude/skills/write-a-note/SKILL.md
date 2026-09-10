@@ -65,6 +65,15 @@ Pick at least one:
 - cite it from the skill whose step it belongs to;
 - add it to a CLAUDE.md section if it is a rule rather than an incident.
 
+## Writing the file: use the Write tool, not a heredoc
+
+A note about a dev server, a watcher or a compose command has to *name* it, and markdown
+names things in inline code. Inside a shell heredoc that is a problem: the backtick is real
+command substitution, so `guard-long-running.mjs` starts a new command segment there and
+denies the write — for a file that runs nothing. The denial quotes prose back at you, which
+is the tell. Use the Write tool; it does not go through a shell.
+See [backticks-in-prose-trip-the-long-running-guard](../../../docs/notes/backticks-in-prose-trip-the-long-running-guard.md).
+
 ## Check it
 
 ```sh
