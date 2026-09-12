@@ -238,6 +238,16 @@ src/api/generated` then fails with "the generated API client is stale" for reaso
   declared in `REUSE.toml` instead because `guard-generated-files.mjs` denies the edit.
   `reuse lint` is the `licensing` CI job. Warns that 196 `.cs` files have a UTF-8 BOM a
   header must go after.
+- [`reuse lint` needs no local install — the CI job is a container, and the tag is `5`, not `v5`](reuse-lint-needs-no-install-it-runs-as-a-container.md) —
+  the `licensing` job's `fsfe/reuse-action@v5` wraps the `fsfe/reuse` Docker image, so no
+  Python, pipx or venv is needed to run the same check locally. `v5` is an Actions ref and
+  not an image tag: `docker run fsfe/reuse:v5` exits 125 with `not found`, and the published
+  tags are `5`, `5.1.1`, `6`, `6.2.0`, `latest`. Pass `safe.directory` as
+  `GIT_CONFIG_COUNT` / `GIT_CONFIG_KEY_0` / `GIT_CONFIG_VALUE_0` or git refuses the
+  bind-mounted checkout and reuse walks `node_modules`, `bin/` and `obj/` instead of asking
+  git. It lints the working tree, uncommitted files included. Do not hardcode the file
+  count: CLAUDE.md said 1011, the tree measured 1252 on 2026-09-12, and `Missing licenses: 0`
+  is the actual check.
 - [FluentAssertions 8.x is not free software, and nothing in the build says so](fluentassertions-8-is-not-free-software.md) —
   version 8.0.0 onward is the Xceed Community License, non-commercial only and revocable;
   7.2.0 was the last Apache-2.0 release. `dotnet build` and `dotnet test` say nothing about

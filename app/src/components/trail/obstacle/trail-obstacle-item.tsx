@@ -14,7 +14,7 @@ import { BORDER_RADIUS } from "@/constants/constants";
 import { TrailObstacle } from "@/data/types";
 import { formatDate } from "@/utils/format-date";
 import issueTypeParser from "@/utils/issue-type-parser";
-import { MaterialIcons } from "@expo/vector-icons";
+import { MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
 import { useState } from "react";
@@ -131,8 +131,9 @@ export default function TrailObstacleItem({ obstacle, trailIdentifier, onCloseMo
       <Divider />
       <View style={s.field}>
         <Text style={[s.label, { color: theme.colors.onSurfaceVariant }]}>{t("obstacle.description")}</Text>
+        {/* Trailing newlines from the multiline input would render as blank lines in the card. */}
         <Text style={[s.description, { color: theme.colors.onSurface }]}>
-          {obstacle.description || t("obstacle.removedDescription")}
+          {obstacle.description?.trim() || t("obstacle.removedDescription")}
         </Text>
       </View>
       <View style={s.footer}>
@@ -141,13 +142,15 @@ export default function TrailObstacleItem({ obstacle, trailIdentifier, onCloseMo
           <Text style={[s.value, { color: theme.colors.onSurface }]}>{formatDate(obstacle.createdAt)}</Text>
         </View>
 
-        <View style={s.voteRow}>
-          <Text style={s.voteCount}>{obstacle.solvedVotes?.length ?? 0}/3</Text>
+        <View testID="obstacle-actions" style={s.voteRow}>
           {!isOwner && (
-            <>
-              <Pressable testID="report-obstacle-button" hitSlop={12} onPress={handleReport}>
-                <MaterialIcons size={22} name="flag" color={theme.colors.outline} />
-              </Pressable>
+            <Pressable testID="report-obstacle-button" hitSlop={12} onPress={handleReport}>
+              <MaterialCommunityIcons size={24} name="alert-circle" color={theme.colors.outline} />
+            </Pressable>
+          )}
+          <View style={s.voteGroup}>
+            <Text style={s.voteCount}>{obstacle.solvedVotes?.length ?? 0}/3</Text>
+            {!isOwner && (
               <Pressable
                 testID="vote-button"
                 hitSlop={12}
@@ -160,8 +163,8 @@ export default function TrailObstacleItem({ obstacle, trailIdentifier, onCloseMo
                   color={isPending ? theme.colors.outline : theme.colors.tertiary}
                 />
               </Pressable>
-            </>
-          )}
+            )}
+          </View>
         </View>
       </View>
       <TrailObstacleUpdateForm
@@ -261,6 +264,12 @@ const s = StyleSheet.create({
     justifyContent: "space-between",
   },
   voteRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    // 24 is twice the hitSlop, so the report and vote touch areas meet without overlapping.
+    gap: 24,
+  },
+  voteGroup: {
     flexDirection: "row",
     alignItems: "center",
     gap: 4,

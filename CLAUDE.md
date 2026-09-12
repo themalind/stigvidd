@@ -253,8 +253,18 @@ EF migrations, binaries) are declared in [REUSE.toml](REUSE.toml) instead, becau
 `guard-generated-files.mjs` denies the edit. `reuse lint` is the `licensing` CI job:
 
 ```sh
-reuse lint          # 1011/1011 files must be covered
+reuse lint          # every file covered; the check is "Missing licenses: 0", not a count
+
+# no local install needed — the CI job is this image, and the tag is 5, not v5
+docker run --rm --volume "$PWD:/data" \
+  -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0=/data \
+  fsfe/reuse:5 lint
 ```
+
+The Docker form is the same check CI runs, on any box, over the whole working tree including
+uncommitted files — see
+[docs/notes/reuse-lint-needs-no-install-it-runs-as-a-container.md](docs/notes/reuse-lint-needs-no-install-it-runs-as-a-container.md)
+for why the `safe.directory` env vars are not optional.
 
 Two mechanical traps when adding headers in bulk: **196 of the 402 `.cs` files carry a UTF-8
 BOM**, which must stay the first bytes (header goes *after* it), and everything is LF per

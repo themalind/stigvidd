@@ -112,6 +112,17 @@ it("reports the obstacle the form describes", async () => {
   await waitFor(() => expect(onDismiss).toHaveBeenCalled());
 });
 
+// The input is multiline, so a reporter who presses return before sending would otherwise
+// store the blank lines and leave a gap in the card that shows the report.
+it("sends the description without the blank lines around it", async () => {
+  await showLoaded();
+
+  await fillDescription(`\n  ${DESCRIPTION}\n\n\n`);
+  await submit();
+
+  expect(mockCreate).toHaveBeenCalledWith(expect.objectContaining({ description: DESCRIPTION }));
+});
+
 // A one-word report helps nobody, and the limit is the backend validator's.
 it("refuses a description that is missing or too short", async () => {
   await showLoaded();

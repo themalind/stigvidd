@@ -372,6 +372,33 @@ it("offers to report someone else's obstacle, and opens the form on that obstacl
   expect(screen.getByTestId("report-form")).toHaveTextContent(`TrailObstacle:${OBSTACLE_ID}`);
 });
 
+// Reports stored before the form trimmed carry trailing newlines, which render as blank
+// lines and leave a gap between the description and the date.
+// The default matcher collapses whitespace, so the raw string is what has to be asserted.
+it("draws a stored description without the blank lines around it", () => {
+  show(obstacle({ description: "\n  Oframkomligt pga lerhav\n\n\n" }));
+
+  const verbatim = { normalizer: (text: string) => text };
+
+  expect(screen.getByText("Oframkomligt pga lerhav", verbatim)).toBeTruthy();
+});
+
+// Reporting is one action wherever it appears, so the obstacle uses the review's icon.
+it("reports with the same icon as a review report", () => {
+  show();
+
+  expect(screen.getByTestId("icon-alert-circle")).toBeTruthy();
+  expect(screen.queryByTestId("icon-flag")).toBeNull();
+});
+
+// Both buttons carry hitSlop 12, so a gap under 24 makes their touch areas overlap and a
+// thumb aimed at one lands on the other.
+it("keeps the report and the vote far enough apart not to overlap", () => {
+  show();
+
+  expect(screen.getByTestId("obstacle-actions")).toHaveStyle({ gap: 24 });
+});
+
 // Nobody reports their own report; the owner gets edit and delete instead.
 it("offers the owner no report button", () => {
   show(obstacle({ userIdentifier: "me" }));
