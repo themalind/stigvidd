@@ -87,6 +87,333 @@
         ]
       }
     },
+    "/api/v1/admin/content-reports/reports": {
+      "get": {
+        "tags": [
+          "AdminContentReports"
+        ],
+        "operationId": "AdminContentReports_GetReports",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 1
+          },
+          {
+            "name": "contentType",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 2
+          },
+          {
+            "name": "hideOutcome",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 3
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "x-position": 4
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "x-position": 5
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResultOfContentReportSummaryResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/admin/content-reports/reports/{identifier}": {
+      "get": {
+        "tags": [
+          "AdminContentReports"
+        ],
+        "operationId": "AdminContentReports_GetReport",
+        "parameters": [
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentReportDetailResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/admin/content-reports/counts": {
+      "get": {
+        "tags": [
+          "AdminContentReports"
+        ],
+        "operationId": "AdminContentReports_GetCounts",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentReportCountsResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/admin/content-reports/reports/{identifier}/decide": {
+      "post": {
+        "tags": [
+          "AdminContentReports"
+        ],
+        "operationId": "AdminContentReports_Decide",
+        "parameters": [
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "request",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DecideContentReportRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentReportDetailResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/admin/content-reports/reporters": {
+      "get": {
+        "tags": [
+          "AdminContentReports"
+        ],
+        "operationId": "AdminContentReports_GetReporters",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "x-position": 1
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "x-position": 2
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResultOfReporterStatisticResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/admin/content-reports/authors": {
+      "get": {
+        "tags": [
+          "AdminContentReports"
+        ],
+        "operationId": "AdminContentReports_GetAuthors",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "x-position": 1
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "x-position": 2
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResultOfAuthorStatisticResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/admin/content-reports/vocabulary": {
+      "get": {
+        "tags": [
+          "AdminContentReports"
+        ],
+        "operationId": "AdminContentReports_GetVocabulary",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
     "/api/v1/admin/export": {
       "get": {
         "tags": [
@@ -182,6 +509,111 @@
                 "schema": {
                   "type": "string",
                   "format": "binary"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/ContentReports": {
+      "post": {
+        "tags": [
+          "ContentReports"
+        ],
+        "operationId": "ContentReports_CreateContentReport",
+        "requestBody": {
+          "x-name": "request",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateContentReportRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 1
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentReportResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/ContentReports/reasons": {
+      "get": {
+        "tags": [
+          "ContentReports"
+        ],
+        "operationId": "ContentReports_GetReportReasons",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
                 }
               }
             }
@@ -3616,6 +4048,357 @@
         "properties": {
           "email": {
             "type": "string"
+          }
+        }
+      },
+      "PagedResultOfContentReportSummaryResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ContentReportSummaryResponse"
+            }
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "hasMore": {
+            "type": "boolean"
+          },
+          "totalCount": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "ContentReportSummaryResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "identifier",
+          "contentType",
+          "contentIdentifier",
+          "reason",
+          "status",
+          "hideOutcome"
+        ],
+        "properties": {
+          "identifier": {
+            "type": "string"
+          },
+          "contentType": {
+            "type": "string"
+          },
+          "contentIdentifier": {
+            "type": "string"
+          },
+          "trailIdentifier": {
+            "type": "string",
+            "nullable": true
+          },
+          "reason": {
+            "type": "string"
+          },
+          "reporterNote": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "string"
+          },
+          "hideOutcome": {
+            "type": "string"
+          },
+          "reporterNickName": {
+            "type": "string",
+            "nullable": true
+          },
+          "authorNickName": {
+            "type": "string",
+            "nullable": true
+          },
+          "contentSnapshot": {
+            "type": "string",
+            "nullable": true
+          },
+          "contentStillExists": {
+            "type": "boolean"
+          },
+          "decidedBy": {
+            "type": "string",
+            "nullable": true
+          },
+          "decidedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "decisionNote": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ContentReportDetailResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "report"
+        ],
+        "properties": {
+          "report": {
+            "$ref": "#/components/schemas/ContentReportSummaryResponse"
+          },
+          "authorStrikes": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "reporterTotal": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "reporterPending": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "reporterDismissed": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "reporterUpheld": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "ContentReportCountsResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "pending": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "dismissed": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "upheld": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "contentExpired": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "ProblemDetails": {
+        "type": "object",
+        "additionalProperties": {
+          "nullable": true
+        },
+        "properties": {
+          "type": {
+            "type": "string",
+            "nullable": true
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "detail": {
+            "type": "string",
+            "nullable": true
+          },
+          "instance": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "DecideContentReportRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "decision"
+        ],
+        "properties": {
+          "decision": {
+            "type": "string"
+          },
+          "decisionNote": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "PagedResultOfReporterStatisticResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReporterStatisticResponse"
+            }
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "hasMore": {
+            "type": "boolean"
+          },
+          "totalCount": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "ReporterStatisticResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "nickName": {
+            "type": "string",
+            "nullable": true
+          },
+          "total": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pending": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "dismissed": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "upheld": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "lastReportedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "reportsAreWithheld": {
+            "type": "boolean"
+          }
+        }
+      },
+      "PagedResultOfAuthorStatisticResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AuthorStatisticResponse"
+            }
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "hasMore": {
+            "type": "boolean"
+          },
+          "totalCount": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "AuthorStatisticResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "nickName": {
+            "type": "string",
+            "nullable": true
+          },
+          "strikes": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "ContentReportResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "identifier",
+          "contentType",
+          "contentIdentifier",
+          "reason",
+          "status",
+          "hideOutcome"
+        ],
+        "properties": {
+          "identifier": {
+            "type": "string"
+          },
+          "contentType": {
+            "type": "string"
+          },
+          "contentIdentifier": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "reporterNote": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "string"
+          },
+          "hideOutcome": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "CreateContentReportRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "contentType",
+          "contentIdentifier",
+          "reason"
+        ],
+        "properties": {
+          "contentType": {
+            "type": "string"
+          },
+          "contentIdentifier": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "reporterNote": {
+            "type": "string",
+            "nullable": true
           }
         }
       },

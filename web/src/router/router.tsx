@@ -11,6 +11,7 @@ const Layout = lazy(() => import("@/pages/Layout"));
 const LoginPage = lazy(() => import("@/pages/login/login-page"));
 const MediaPage = lazy(() => import("@/pages/media/media-page"));
 const MigrationPage = lazy(() => import("@/pages/admin/migration-page"));
+const ModerationPage = lazy(() => import("@/pages/admin/moderation-page"));
 const NotFoundPage = lazy(() => import("@/pages/NotFoundPage"));
 const TrailImportPage = lazy(() => import("@/pages/admin/trail-import-page"));
 const TrailImportReviewPage = lazy(
@@ -81,6 +82,11 @@ export const router = createBrowserRouter([
             path: "/trail-import/:sessionId",
             handle: { title: "Review Import" },
             element: withSuspense(TrailImportReviewPage),
+          },
+          {
+            path: "/moderation",
+            handle: { title: "Moderation" },
+            element: withSuspense(ModerationPage),
           },
           {
             path: "/migration",
