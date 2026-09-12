@@ -22,7 +22,8 @@ public class UserServiceTests
         Mock<IHikeService>? hikeService = null,
         Mock<ITrailObstacleRepository>? trailobstacleRepo = null,
         Mock<IFriendRepository>? friendRepo = null,
-        Mock<IReviewService>? reviewService = null)
+        Mock<IReviewService>? reviewService = null,
+        Mock<IContentReportRepository>? contentReportRepo = null)
     {
         var cfg = new Mock<IConfiguration>();
         cfg.Setup(c => c["PresentableBaseUrl"]).Returns("http://stigvidd.se/testing/");
@@ -31,6 +32,10 @@ public class UserServiceTests
         var userResponseFactory = new UserResponseFactory(cfg.Object);
         trailobstacleRepo ??= new Mock<ITrailObstacleRepository>();
         hikeService ??= new Mock<IHikeService>();
+        // Reports are settled on the way to every user deletion; tests that care pass their own
+        contentReportRepo ??= new Mock<IContentReportRepository>();
+        contentReportRepo.Setup(r => r.HandleUserDeletionAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult.Success());
         if (reviewService is null)
         {
             // Reviews are anonymized on the way to every user deletion; tests that care pass their own
@@ -39,7 +44,7 @@ public class UserServiceTests
                 .ReturnsAsync(Result.Ok());
         }
 
-        return new UserService(repo.Object, trailobstacleRepo.Object, userResponseFactory, hikeService.Object, reviewService.Object, friendRepo.Object);
+        return new UserService(repo.Object, trailobstacleRepo.Object, userResponseFactory, hikeService.Object, reviewService.Object, friendRepo.Object, contentReportRepo.Object);
     }
 
     [Fact]

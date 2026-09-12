@@ -89,6 +89,17 @@ public class EndpointAuthorizationTests : IClassFixture<StigViddWebApplicationFa
         "POST /api/v1/admin/trail-import/sessions/{id:int}/apply",
         "POST /api/v1/admin/trail-import/sessions/{id:int}/decide-bulk",
         "POST /api/v1/admin/trail-import/sessions/{id:int}/proposals/{proposalId:int}/decide",
+
+        // The moderation queue, gated at the class. Reporting itself is on the app-facing
+        // controller and only needs a signed-in caller; everything here reads other people's
+        // content and one route deletes it permanently.
+        "GET /api/v1/admin/content-reports/authors",
+        "GET /api/v1/admin/content-reports/counts",
+        "GET /api/v1/admin/content-reports/reporters",
+        "GET /api/v1/admin/content-reports/reports",
+        "GET /api/v1/admin/content-reports/reports/{identifier}",
+        "GET /api/v1/admin/content-reports/vocabulary",
+        "POST /api/v1/admin/content-reports/reports/{identifier}/decide",
     ];
 
     public EndpointAuthorizationTests(StigViddWebApplicationFactory<Program> factory)

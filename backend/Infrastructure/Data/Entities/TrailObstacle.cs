@@ -18,6 +18,7 @@ public class TrailObstacle : BaseEntity
     public Point? IncidentLocation { get; set; }
     public required int TrailId { get; set; }
     public required int? UserId { get; set; }
+    public ModerationState ModerationState { get; set; }
     public List<TrailObstacleSolvedVote> SolvedVotes { get; set; } = [];
 
     public Trail? Trail { get; set; }

@@ -2,6 +2,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 using AwesomeAssertions;
+using Infrastructure.Data;
+using Infrastructure.Enums;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Http;
 using StigviddAPI;
 using System.Net;
@@ -21,6 +25,7 @@ public class TrailsControllerIntegrationTests : IClassFixture<StigViddWebApplica
 
     // Trails
     private const string StorsjoledenIdentifier = "22b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d"; // Trail 2
+    private const string NassehultIdentifier = "77a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c"; // Trail 7
     #endregion
 
     public TrailsControllerIntegrationTests(StigViddWebApplicationFactory<Program> factory)
@@ -546,5 +551,33 @@ public class TrailsControllerIntegrationTests : IClassFixture<StigViddWebApplica
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+    }
+
+    // Step 0 of the moderation design, on SQLite rather than InMemory: the query filter on
+    // Review has to reach the rating average, which the service builds as an Expression and
+    // the repository only plugs into its Select.
+    [Fact]
+    public async Task GetTrailCard_ShouldLeaveHiddenReviewOutOfTheAverage()
+    {
+        // Arrange — Nässehult (Trail 7) has two reviews, 5.0 and 4.5. Hide the 4.5.
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var contextFactory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<StigViddDbContext>>();
+            using var context = contextFactory.CreateDbContext();
+            var review = await context.Reviews.SingleAsync(r => r.Id == 6, TestContext.Current.CancellationToken);
+            review.ModerationState = ModerationState.HiddenPendingReview;
+            await context.SaveChangesAsync(TestContext.Current.CancellationToken);
+        }
+
+        var client = _factory.CreateClient();
+
+        // Act
+        var response = await client.GetAsync($"/api/v1/trails/{NassehultIdentifier}/card", TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var card = await response.Content.ReadFromJsonAsync<TrailCardResponse>(TestContext.Current.CancellationToken);
+        card.Should().NotBeNull();
+        card!.AverageRating.Should().Be(5.0M);
     }
 }

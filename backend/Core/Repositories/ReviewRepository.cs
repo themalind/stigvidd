@@ -48,7 +48,11 @@ public class ReviewRepository : IReviewRepository
         {
             using var context = await _context.CreateDbContextAsync(ctoken);
 
-            var exists = await context.Reviews.AnyAsync(r => r.TrailId == trailId && r.UserId == userId, ctoken);
+            // Past the moderation filter on purpose: if a hidden review did not count, the
+            // author could simply write a new one and the hiding would mean nothing.
+            var exists = await context.Reviews
+                .IgnoreQueryFilters(["Moderation"])
+                .AnyAsync(r => r.TrailId == trailId && r.UserId == userId, ctoken);
 
             return RepositoryResult<bool>.Success(exists);
         }
@@ -59,9 +63,11 @@ public class ReviewRepository : IReviewRepository
         }
     }
 
-    // Shared so the collected image URLs match the rows that change.
+    // Shared so the collected image URLs match the rows that change. Past the moderation
+    // filter: account deletion has to clean up hidden reviews too, or their files stay on
+    // WebDAV forever.
     private static IQueryable<Review> UserReviews(StigViddDbContext context, int userId) =>
-        context.Reviews.Where(r => r.UserId == userId);
+        context.Reviews.IgnoreQueryFilters(["Moderation"]).Where(r => r.UserId == userId);
 
     public async Task<RepositoryResult<IEnumerable<string>>> GetReviewImageUrlsByUserIdAsync(int userId, CancellationToken ctoken)
     {
@@ -71,7 +77,10 @@ public class ReviewRepository : IReviewRepository
 
             var userReviewIds = UserReviews(context, userId).Select(r => r.Id);
 
+            // Repeated on the outer query because IgnoreQueryFilters applies to a query, not
+            // an entity, and UserReviews is a subquery here rather than the query itself.
             var imageUrls = await context.ReviewImages
+                .IgnoreQueryFilters(["Moderation"])
                 .Where(ri => userReviewIds.Contains(ri.ReviewId))
                 .Select(ri => ri.ImageUrl)
                 .ToListAsync(ctoken);

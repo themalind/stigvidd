@@ -57,6 +57,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<ITrailImportRepository, TrailImportRepository>();
         services.AddTransient<IMailTemplateRepository, MailTemplateRepository>();
         services.AddTransient<IMailOutboxRepository, MailOutboxRepository>();
+        services.AddTransient<IContentReportRepository, ContentReportRepository>();
 
         // Services
         services.AddTransient<ITrailService, TrailService>();
@@ -77,6 +78,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<ITrailImportAnalysisService, TrailImportAnalysisService>();
         services.AddTransient<ITrailImportService, TrailImportService>();
         services.AddTransient<ITrailImportFileStore, TrailImportFileStore>();
+        services.AddTransient<IContentReportService, ContentReportService>();
 
         // Singleton: the queue is the handover point between the upload request and the worker.
         services.AddSingleton<ITrailImportAnalysisQueue, TrailImportAnalysisQueue>();
@@ -132,6 +134,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<FacilityResponseFactory>();
         services.AddTransient<CityAreaResponseFactory>();
         services.AddTransient<TrailImportResponseFactory>();
+        services.AddTransient<ContentReportResponseFactory>();
 
         services.AddTransient<IDbMigrationRunner, DbMigrationRunner>();
     }

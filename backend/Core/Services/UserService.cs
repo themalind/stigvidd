@@ -23,13 +23,15 @@ public class UserService : IUserService
     // Same reason for reviews: their image files live in WebDAV, not the database.
     private readonly IReviewService _reviewService;
     private readonly IFriendRepository _friendRepository;
+    private readonly IContentReportRepository _contentReportRepository;
 
     public UserService(IUserRepository userResponseRepository,
     ITrailObstacleRepository trailObstacleRepository,
     UserResponseFactory userResponseFactory,
     IHikeService hikeService,
     IReviewService reviewService,
-    IFriendRepository friendRepository)
+    IFriendRepository friendRepository,
+    IContentReportRepository contentReportRepository)
     {
         _userRepository = userResponseRepository;
         _trailObstacleRepository = trailObstacleRepository;
@@ -37,6 +39,7 @@ public class UserService : IUserService
         _hikeService = hikeService;
         _reviewService = reviewService;
         _friendRepository = friendRepository;
+        _contentReportRepository = contentReportRepository;
     }
 
     public async Task<Result<UserResponse?>> GetUserBySubjectAsync(string subjectId, CancellationToken ctoken)
@@ -313,6 +316,13 @@ public class UserService : IUserService
         var obstacleResult = await _trailObstacleRepository.AnonymizeObstaclesByUserIdAsync(userResult.Value, ctoken);
 
         if (obstacleResult.Status == RepositoryResultStatus.Error)
+            return Result.Fail(new Message(500, $"Error deleting user with identifier {identifier}"));
+
+        // Must run before the user row goes: ReporterUserId is a real foreign key with
+        // SetNull, so afterwards there is no way left to find what this person reported.
+        var reportResult = await _contentReportRepository.HandleUserDeletionAsync(userResult.Value, ctoken);
+
+        if (reportResult.Status == RepositoryResultStatus.Error)
             return Result.Fail(new Message(500, $"Error deleting user with identifier {identifier}"));
 
         // FriendRequests use NoAction to avoid multiple cascade paths, so they must be removed explicitly before the user is deleted.

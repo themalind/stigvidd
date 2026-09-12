@@ -1,6 +1,8 @@
 ﻿// SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+using Infrastructure.Enums;
+
 namespace Infrastructure.Data.Entities;
 
 public class Review : BaseEntity
@@ -8,6 +10,7 @@ public class Review : BaseEntity
     public string? TrailReview { get; set; }
     public decimal Rating { get; set; }
     public int TrailId { get; set; }
+    public ModerationState ModerationState { get; set; }
     public int? UserId { get; set; }
     public ICollection<ReviewImage>? ReviewImages { get; set; }
 

@@ -30,15 +30,16 @@ public class TrailObstacleRepository : ITrailObstacleRepository
         _solvedVotesToHide = int.TryParse(configuration["ObstacleRetention:SolvedVotesToHide"], out var votes) ? votes : DefaultSolvedVotesToHide;
     }
 
-    // Reports young enough and with too few solved votes to be resolved. Must stay the exact
-    // opposite of ExpiredObstacles: what is shown is what is not deleted.
+    // Reports young enough and with too few solved votes to be resolved. No longer the exact
+    // opposite of ExpiredObstacles: this one also drops what moderation has hidden, while
+    // ExpiredObstacles deliberately sees everything so retention still clears hidden rows.
     private IQueryable<TrailObstacle> ActiveObstacles(StigViddDbContext context) =>
         context.TrailObstacles.Where(to =>
             to.CreatedAt > DateTime.UtcNow.AddDays(-_retentionDays) &&
             to.SolvedVotes.Count < _solvedVotesToHide);
 
     private IQueryable<TrailObstacle> ExpiredObstacles(StigViddDbContext context) =>
-        context.TrailObstacles.Where(to =>
+        context.TrailObstacles.IgnoreQueryFilters(["Moderation"]).Where(to =>
             to.CreatedAt <= DateTime.UtcNow.AddDays(-_retentionDays) ||
             to.SolvedVotes.Count >= _solvedVotesToHide);
 
@@ -265,6 +266,7 @@ public class TrailObstacleRepository : ITrailObstacleRepository
             using var context = await _context.CreateDbContextAsync(ctoken);
 
             var obstacles = await context.TrailObstacles
+                .IgnoreQueryFilters(["Moderation"])
                 .Where(to => to.UserId == userId && to.IssueType != TrailIssueType.Other)
                 .ToListAsync(ctoken);
 

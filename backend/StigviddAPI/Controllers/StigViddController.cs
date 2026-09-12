@@ -20,6 +20,7 @@ public abstract class StigViddController : Controller
             (int)HttpStatusCode.Conflict => Conflict(message.ResultMessage),
             (int)HttpStatusCode.Unauthorized => Unauthorized(message.ResultMessage),
             (int)HttpStatusCode.Forbidden => StatusCode(StatusCodes.Status403Forbidden, message.ResultMessage),
+            (int)HttpStatusCode.TooManyRequests => StatusCode(StatusCodes.Status429TooManyRequests, message.ResultMessage),
             _ => StatusCode(StatusCodes.Status500InternalServerError)
         };
 

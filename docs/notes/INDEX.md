@@ -437,3 +437,14 @@ src/api/generated` then fails with "the generated API client is stale" for reaso
   after adding tests check that the **total moved** (1104 -> 1114) rather than trusting
   "Passed!". Also generalises [[backticks-in-prose-trip-the-long-running-guard]] to every
   guard, not just the dev-server one: prose describing a guarded command trips it too.
+- [A global query filter DOES reach `t.Reviews!.Average(...)`, and `IgnoreQueryFilters` takes a list](query-filter-reaches-navigation-aggregates.md) —
+  Measured before the moderation work leaned on it: a global filter on `Review` reaches
+  inside the navigation even though the eight trail-rating averages are built by the caller
+  as an `Expression` and the repository only plugs them into its `Select`. Holds on EF
+  InMemory and SQLite, and in both shapes — the selector-only ones and the popularity
+  ranking's `let` that an `orderby` reads. So one filter covers all eight and a later
+  projection inherits it. Two traps: EF 10.0.9 has the named `HasQueryFilter("Name", ...)`
+  overload but dropping it takes a **collection**, `IgnoreQueryFilters(["Moderation"])`; and
+  `IgnoreQueryFilters` applies to a **query**, not an entity, which matters where
+  `ReviewRepository.UserReviews` is a subquery feeding `Contains` against `ReviewImages` —
+  miss it and account deletion silently stops cleaning hidden reviews' files off WebDAV.
