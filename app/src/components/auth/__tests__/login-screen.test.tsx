@@ -13,19 +13,28 @@ import { act, fireEvent, screen } from "@testing-library/react-native";
 import { Dimensions } from "react-native";
 
 const mockLogin = jest.fn();
+const mockPush = jest.fn();
 
 jest.mock("@/components/auth/auth-provider", () => ({
   useAuth: () => ({ login: mockLogin }),
 }));
 
-// The real module reaches Keycloak on import; only the error class matters here.
+jest.mock("expo-router", () => ({
+  router: { push: (...args: unknown[]) => mockPush(...args) },
+  Link: ({ children }: { children: React.ReactNode }) => children,
+}));
+
+// The real module reaches Keycloak on import; only the error classes matter here. The
+// subclassing mirrors the real module, and is the point of the "not yet verified" test:
+// the screen must test for the narrower class FIRST or the broader one swallows it.
 jest.mock("@/services/keycloak-auth", () => {
   class InvalidCredentialsError extends Error {}
-  return { InvalidCredentialsError };
+  class AccountNotVerifiedError extends InvalidCredentialsError {}
+  return { InvalidCredentialsError, AccountNotVerifiedError };
 });
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const { InvalidCredentialsError } = require("@/services/keycloak-auth");
+const { InvalidCredentialsError, AccountNotVerifiedError } = require("@/services/keycloak-auth");
 
 const WIDTH = Dimensions.get("screen").width;
 
@@ -97,6 +106,36 @@ it("tells a wrong password apart from a failing login service", async () => {
   mockLogin.mockRejectedValueOnce(new Error("504"));
   await submit();
   expect(screen.getByTestId("login-error")).toHaveTextContent("Inloggning misslyckades. Försök igen.");
+});
+
+// An unverified account is a DISABLED account at Keycloak, which answers the same
+// `invalid_grant` as a wrong password. Telling such a user their password is wrong leaves
+// them with no way forward, so they are sent to the verification step instead.
+it("sends a user whose address is not yet verified to the verification screen", async () => {
+  mockLogin.mockRejectedValueOnce(new AccountNotVerifiedError());
+  renderWithProviders(<LoginScreen />);
+
+  fillForm();
+  await submit();
+
+  expect(mockPush).toHaveBeenCalledWith({
+    pathname: "./verify-email",
+    params: { email: "vandrare@example.com" },
+  });
+  expect(screen.queryByTestId("login-error")).toBeNull();
+});
+
+// AccountNotVerifiedError EXTENDS InvalidCredentialsError, so an ordinary wrong password must
+// still stop at the message and not navigate anywhere.
+it("does not send an ordinary wrong password to the verification screen", async () => {
+  mockLogin.mockRejectedValueOnce(new InvalidCredentialsError());
+  renderWithProviders(<LoginScreen />);
+
+  fillForm();
+  await submit();
+
+  expect(screen.getByTestId("login-error")).toHaveTextContent("Fel e-post eller lösenord.");
+  expect(mockPush).not.toHaveBeenCalled();
 });
 
 it("clears the previous failure when the form is submitted again", async () => {

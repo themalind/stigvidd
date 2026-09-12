@@ -3,6 +3,7 @@ using System;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NetTopologySuite.Geometries;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(StigViddDbContext))]
-    partial class StigViddDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260912125829_AddEmailVerification")]
+    partial class AddEmailVerification
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -141,89 +144,6 @@ namespace Infrastructure.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("EmailVerificationTokens", "dbo");
-                });
-
-            modelBuilder.Entity("Infrastructure.Data.Entities.ContentReport", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("AuthorNickNameSnapshot")
-                        .HasColumnType("text");
-
-                    b.Property<int?>("ContentAuthorUserId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("ContentId")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("ContentIdentifier")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("ContentSnapshot")
-                        .HasColumnType("text");
-
-                    b.Property<int>("ContentType")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime?>("DecidedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("DecidedBy")
-                        .HasColumnType("text");
-
-                    b.Property<string>("DecisionNote")
-                        .HasColumnType("text");
-
-                    b.Property<int>("HideOutcome")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Identifier")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("LastUpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("Reason")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("ReporterNote")
-                        .HasColumnType("text");
-
-                    b.Property<int?>("ReporterUserId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("integer");
-
-                    b.Property<int?>("TrailId")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("TrailIdentifier")
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ContentAuthorUserId", "Status");
-
-                    b.HasIndex("ContentType", "ContentId");
-
-                    b.HasIndex("ReporterUserId", "Status");
-
-                    b.HasIndex("Status", "CreatedAt");
-
-                    b.HasIndex("ReporterUserId", "ContentType", "ContentId")
-                        .IsUnique();
-
-                    b.ToTable("ContentReports", "dbo");
                 });
 
             modelBuilder.Entity("Infrastructure.Data.Entities.Facility", b =>
@@ -595,9 +515,6 @@ namespace Infrastructure.Migrations
 
                     b.Property<DateTime>("LastUpdatedAt")
                         .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("ModerationState")
-                        .HasColumnType("integer");
 
                     b.Property<decimal>("Rating")
                         .HasPrecision(3, 1)
@@ -1004,9 +921,6 @@ namespace Infrastructure.Migrations
                     b.Property<DateTime>("LastUpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<int>("ModerationState")
-                        .HasColumnType("integer");
-
                     b.Property<int>("TrailId")
                         .HasColumnType("integer");
 
@@ -1372,16 +1286,6 @@ namespace Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("Infrastructure.Data.Entities.ContentReport", b =>
-                {
-                    b.HasOne("Infrastructure.Data.Entities.User", "Reporter")
-                        .WithMany()
-                        .HasForeignKey("ReporterUserId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.Navigation("Reporter");
                 });
 
             modelBuilder.Entity("Infrastructure.Data.Entities.FacilityImage", b =>

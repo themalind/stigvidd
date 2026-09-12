@@ -6,14 +6,14 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { asTranslationKey } from "@/i18n";
-import { InvalidCredentialsError } from "@/services/keycloak-auth";
+import { AccountNotVerifiedError, InvalidCredentialsError } from "@/services/keycloak-auth";
 import { userThemeAtom } from "@/atoms/user-theme-atom";
 import PasswordInputField from "@/components/auth/password-input-field";
 import BackButton from "@/components/back-button";
 import { BORDER_RADIUS, SURFACE_BORDER_RADIUS } from "@/constants/constants";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Image } from "expo-image";
-import { Link } from "expo-router";
+import { Link, router } from "expo-router";
 import { useAtom } from "jotai";
 import { useState } from "react";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
@@ -68,6 +68,14 @@ export default function LoginScreen({ showBackButton = false }: { showBackButton
     try {
       await login(data.email, data.password);
     } catch (error) {
+      // Must come FIRST: AccountNotVerifiedError extends InvalidCredentialsError, so the
+      // broader check would swallow it and tell a user with the right password that their
+      // password is wrong.
+      if (error instanceof AccountNotVerifiedError) {
+        router.push({ pathname: "./verify-email", params: { email: data.email } });
+        return;
+      }
+
       setLoginError(
         error instanceof InvalidCredentialsError ? t("auth.invalidCredentials") : t("auth.oidcLoginFailed"),
       );

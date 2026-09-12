@@ -9,6 +9,11 @@ public class User : BaseEntity
     public required string Email { get; set; }
     public required string SubjectId { get; set; }
 
+    // When this address was proven. Null means the user registered and never verified.
+    // This is the support-visible record only: what actually blocks sign-in is the Keycloak
+    // user being disabled, because the app's password grant never passes through this API.
+    public DateTime? EmailVerifiedAt { get; set; }
+
     public ICollection<Trail>? MyWishList { get; set; }
     public ICollection<Trail>? MyFavorites { get; set; }
 }

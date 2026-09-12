@@ -64,11 +64,27 @@
       "passwordRequired": "Ange ett lösenord",
       "passwordTooShort": "Lösenordet måste vara minst 8 tecken",
       "passwordMismatch": "Lösenorden matchar inte",
-      "confirmPasswordRequired": "Upprepa lösenord"
+      "confirmPasswordRequired": "Upprepa lösenord",
+      "codeRequired": "Ange koden från mejlet.",
+      "codeInvalid": "Koden består av sex siffror.",
+      "codeIncorrect": "Fel kod. Kontrollera mejlet och försök igen.",
+      "codeExpired": "Koden har gått ut. Begär ett nytt mejl.",
+      "codeTooManyAttempts": "För många försök. Begär ett nytt mejl."
     },
     "oidcLoginFailed": "Inloggning misslyckades. Försök igen.",
     "invalidCredentials": "Fel e-post eller lösenord.",
-    "registeredPleaseLogin": "Kontot har skapats. Logga in."
+    "registeredCheckYourEmail": "Kontot har skapats. Kolla din e-post för att bekräfta adressen.",
+    "emailVerifiedPleaseLogin": "E-postadressen är bekräftad. Logga in.",
+    "verificationResent": "Om adressen behöver bekräftas har vi skickat ett nytt mejl.",
+    "verifyEmailTitle": "Bekräfta din e-post",
+    "verifyEmailIntro": "Vi har skickat ett mejl till {{email}}. Klicka på länken i mejlet, eller skriv in koden här.",
+    "verifyEmailIntroNoAddress": "Vi har skickat ett mejl med en länk och en kod. Klicka på länken, eller skriv in koden här.",
+    "verificationCode": "Kod",
+    "verify": "Bekräfta",
+    "verifying": "Bekräftar...",
+    "resendVerification": "Skicka mejlet igen",
+    "resendInSeconds": "Skicka igen om {{seconds}} s",
+    "backToLogin": "Till inloggningen"
   },
   "profile": {
     "title": "Mitt Stigvidd",

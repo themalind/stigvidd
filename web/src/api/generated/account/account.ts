@@ -6,24 +6,31 @@
  * OpenAPI spec version: 1.0.0
  */
 import {
+  useMutation,
   useQuery
 } from '@tanstack/react-query';
 import type {
   DataTag,
   DefinedInitialDataOptions,
   DefinedUseQueryResult,
+  MutationFunction,
   QueryClient,
   QueryFunction,
   QueryKey,
   UndefinedInitialDataOptions,
+  UseMutationOptions,
+  UseMutationResult,
   UseQueryOptions,
   UseQueryResult
 } from '@tanstack/react-query';
 
 import type {
+  AccountVerifyEmailByLinkParams,
   ForgotPasswordRequest,
   RegisterRequest,
-  UserResponse
+  ResendVerificationRequest,
+  UserResponse,
+  VerifyEmailRequest
 } from '../model';
 
 import { customFetch } from '../../mutator';
@@ -225,6 +232,265 @@ export function useAccountForgotPassword<TData = Awaited<ReturnType<typeof accou
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getAccountForgotPasswordQueryOptions(forgotPasswordRequest,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export const getAccountVerifyEmailByLinkUrl = (params?: AccountVerifyEmailByLinkParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/v1/Account/verify-email?${stringifiedParams}` : `/api/v1/Account/verify-email`
+}
+
+export const accountVerifyEmailByLink = async (params?: AccountVerifyEmailByLinkParams, options?: RequestInit): Promise<Blob> => {
+
+  return customFetch<Blob>(getAccountVerifyEmailByLinkUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getAccountVerifyEmailByLinkMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accountVerifyEmailByLink>>, TError,{params?: AccountVerifyEmailByLinkParams}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof accountVerifyEmailByLink>>, TError,{params?: AccountVerifyEmailByLinkParams}, TContext> => {
+
+const mutationKey = ['accountVerifyEmailByLink'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof accountVerifyEmailByLink>>, {params?: AccountVerifyEmailByLinkParams}> = (props) => {
+          const {params} = props ?? {};
+
+          return  accountVerifyEmailByLink(params,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AccountVerifyEmailByLinkMutationResult = NonNullable<Awaited<ReturnType<typeof accountVerifyEmailByLink>>>
+
+    export type AccountVerifyEmailByLinkMutationError = unknown
+
+    export const useAccountVerifyEmailByLink = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accountVerifyEmailByLink>>, TError,{params?: AccountVerifyEmailByLinkParams}, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof accountVerifyEmailByLink>>,
+        TError,
+        {params?: AccountVerifyEmailByLinkParams},
+        TContext
+      > => {
+      return useMutation(getAccountVerifyEmailByLinkMutationOptions(options), queryClient);
+    }
+    export const getAccountVerifyEmailByCodeUrl = () => {
+
+
+
+
+  return `/api/v1/Account/verify-email`
+}
+
+export const accountVerifyEmailByCode = async (verifyEmailRequest: VerifyEmailRequest, options?: RequestInit): Promise<Blob> => {
+
+  return customFetch<Blob>(getAccountVerifyEmailByCodeUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(verifyEmailRequest)
+  }
+);}
+
+
+
+
+
+export const getAccountVerifyEmailByCodeQueryKey = (verifyEmailRequest?: VerifyEmailRequest,) => {
+    return [
+    'POST', `/api/v1/Account/verify-email`, verifyEmailRequest
+    ] as const;
+    }
+
+
+export const getAccountVerifyEmailByCodeQueryOptions = <TData = Awaited<ReturnType<typeof accountVerifyEmailByCode>>, TError = unknown>(verifyEmailRequest: VerifyEmailRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof accountVerifyEmailByCode>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAccountVerifyEmailByCodeQueryKey(verifyEmailRequest);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof accountVerifyEmailByCode>>> = ({ signal }) => accountVerifyEmailByCode(verifyEmailRequest, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof accountVerifyEmailByCode>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AccountVerifyEmailByCodeQueryResult = NonNullable<Awaited<ReturnType<typeof accountVerifyEmailByCode>>>
+export type AccountVerifyEmailByCodeQueryError = unknown
+
+
+export function useAccountVerifyEmailByCode<TData = Awaited<ReturnType<typeof accountVerifyEmailByCode>>, TError = unknown>(
+ verifyEmailRequest: VerifyEmailRequest, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof accountVerifyEmailByCode>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof accountVerifyEmailByCode>>,
+          TError,
+          Awaited<ReturnType<typeof accountVerifyEmailByCode>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAccountVerifyEmailByCode<TData = Awaited<ReturnType<typeof accountVerifyEmailByCode>>, TError = unknown>(
+ verifyEmailRequest: VerifyEmailRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof accountVerifyEmailByCode>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof accountVerifyEmailByCode>>,
+          TError,
+          Awaited<ReturnType<typeof accountVerifyEmailByCode>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAccountVerifyEmailByCode<TData = Awaited<ReturnType<typeof accountVerifyEmailByCode>>, TError = unknown>(
+ verifyEmailRequest: VerifyEmailRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof accountVerifyEmailByCode>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useAccountVerifyEmailByCode<TData = Awaited<ReturnType<typeof accountVerifyEmailByCode>>, TError = unknown>(
+ verifyEmailRequest: VerifyEmailRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof accountVerifyEmailByCode>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAccountVerifyEmailByCodeQueryOptions(verifyEmailRequest,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export const getAccountResendVerificationUrl = () => {
+
+
+
+
+  return `/api/v1/Account/resend-verification`
+}
+
+export const accountResendVerification = async (resendVerificationRequest: ResendVerificationRequest, options?: RequestInit): Promise<Blob> => {
+
+  return customFetch<Blob>(getAccountResendVerificationUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(resendVerificationRequest)
+  }
+);}
+
+
+
+
+
+export const getAccountResendVerificationQueryKey = (resendVerificationRequest?: ResendVerificationRequest,) => {
+    return [
+    'POST', `/api/v1/Account/resend-verification`, resendVerificationRequest
+    ] as const;
+    }
+
+
+export const getAccountResendVerificationQueryOptions = <TData = Awaited<ReturnType<typeof accountResendVerification>>, TError = unknown>(resendVerificationRequest: ResendVerificationRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof accountResendVerification>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAccountResendVerificationQueryKey(resendVerificationRequest);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof accountResendVerification>>> = ({ signal }) => accountResendVerification(resendVerificationRequest, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof accountResendVerification>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AccountResendVerificationQueryResult = NonNullable<Awaited<ReturnType<typeof accountResendVerification>>>
+export type AccountResendVerificationQueryError = unknown
+
+
+export function useAccountResendVerification<TData = Awaited<ReturnType<typeof accountResendVerification>>, TError = unknown>(
+ resendVerificationRequest: ResendVerificationRequest, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof accountResendVerification>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof accountResendVerification>>,
+          TError,
+          Awaited<ReturnType<typeof accountResendVerification>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAccountResendVerification<TData = Awaited<ReturnType<typeof accountResendVerification>>, TError = unknown>(
+ resendVerificationRequest: ResendVerificationRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof accountResendVerification>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof accountResendVerification>>,
+          TError,
+          Awaited<ReturnType<typeof accountResendVerification>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAccountResendVerification<TData = Awaited<ReturnType<typeof accountResendVerification>>, TError = unknown>(
+ resendVerificationRequest: ResendVerificationRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof accountResendVerification>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useAccountResendVerification<TData = Awaited<ReturnType<typeof accountResendVerification>>, TError = unknown>(
+ resendVerificationRequest: ResendVerificationRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof accountResendVerification>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAccountResendVerificationQueryOptions(resendVerificationRequest,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

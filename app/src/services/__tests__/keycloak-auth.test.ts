@@ -34,6 +34,7 @@ const {
   clearTokens,
   setSessionExpiredHandler,
   InvalidCredentialsError,
+  AccountNotVerifiedError,
 } = require("../keycloak-auth") as typeof KeycloakAuthModule;
 
 const TOKEN_ENDPOINT = "https://kc.test/auth/realms/stigvidd/protocol/openid-connect/token";
@@ -60,11 +61,15 @@ const tokenResponse = {
 };
 
 function mockFetch(status: number, body: unknown = {}) {
-  global.fetch = jest.fn().mockResolvedValue({
+  // clone() is real here because the rejected-grant path reads the body to tell a disabled
+  // account apart from a wrong password, and does so without consuming the response.
+  const response = {
     ok: status >= 200 && status < 300,
     status,
     json: jest.fn().mockResolvedValue(body),
-  } as unknown as Response);
+    clone: () => response,
+  };
+  global.fetch = jest.fn().mockResolvedValue(response as unknown as Response);
 }
 
 /** Load known tokens into the module's in-memory cache via loadTokens(). */
@@ -170,6 +175,35 @@ describe("passwordGrant", () => {
   it("throws InvalidCredentialsError on 400", async () => {
     mockFetch(400);
     await expect(passwordGrant("alice@example.com", "wrong")).rejects.toBeInstanceOf(InvalidCredentialsError);
+  });
+
+  // Keycloak answers a disabled account with the same 400 invalid_grant as a wrong password and
+  // separates them only in error_description. An unverified account IS a disabled account here,
+  // so losing this distinction tells a user with the right password that it is wrong.
+  it("throws AccountNotVerifiedError when Keycloak says the account is disabled", async () => {
+    mockFetch(400, { error: "invalid_grant", error_description: "Account disabled" });
+    await expect(passwordGrant("alice@example.com", "password123")).rejects.toBeInstanceOf(AccountNotVerifiedError);
+  });
+
+  // It extends InvalidCredentialsError so refreshGrant's existing check still ends the session.
+  it("makes AccountNotVerifiedError an InvalidCredentialsError too", async () => {
+    mockFetch(400, { error: "invalid_grant", error_description: "Account disabled" });
+    await expect(passwordGrant("alice@example.com", "password123")).rejects.toBeInstanceOf(InvalidCredentialsError);
+  });
+
+  it("still throws plain InvalidCredentialsError for a wrong password", async () => {
+    mockFetch(400, { error: "invalid_grant", error_description: "Invalid user credentials" });
+    await expect(passwordGrant("alice@example.com", "wrong")).rejects.not.toBeInstanceOf(AccountNotVerifiedError);
+  });
+
+  it("falls back to InvalidCredentialsError when the body cannot be read", async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: false,
+      status: 400,
+      clone: () => ({ json: jest.fn().mockRejectedValue(new Error("not json")) }),
+    } as unknown as Response);
+
+    await expect(passwordGrant("alice@example.com", "wrong")).rejects.not.toBeInstanceOf(AccountNotVerifiedError);
   });
 
   it("throws a generic error (not InvalidCredentialsError) on 500", async () => {

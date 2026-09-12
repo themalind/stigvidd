@@ -64,11 +64,27 @@
       "passwordRequired": "Enter a password",
       "passwordTooShort": "Password must be at least 8 characters",
       "passwordMismatch": "Passwords do not match",
-      "confirmPasswordRequired": "Repeat password"
+      "confirmPasswordRequired": "Repeat password",
+      "codeRequired": "Enter the code from the email.",
+      "codeInvalid": "The code is six digits.",
+      "codeIncorrect": "Wrong code. Check the email and try again.",
+      "codeExpired": "The code has expired. Request a new email.",
+      "codeTooManyAttempts": "Too many attempts. Request a new email."
     },
     "oidcLoginFailed": "Login failed. Please try again.",
     "invalidCredentials": "Incorrect email or password.",
-    "registeredPleaseLogin": "Account created. Please log in."
+    "registeredCheckYourEmail": "Your account has been created. Check your email to confirm the address.",
+    "emailVerifiedPleaseLogin": "Your email address is confirmed. Please log in.",
+    "verificationResent": "If the address needs confirming, we have sent a new email.",
+    "verifyEmailTitle": "Confirm your email",
+    "verifyEmailIntro": "We sent an email to {{email}}. Tap the link in it, or enter the code here.",
+    "verifyEmailIntroNoAddress": "We sent an email with a link and a code. Tap the link, or enter the code here.",
+    "verificationCode": "Code",
+    "verify": "Confirm",
+    "verifying": "Confirming...",
+    "resendVerification": "Send the email again",
+    "resendInSeconds": "Send again in {{seconds}}s",
+    "backToLogin": "Back to login"
   },
   "profile": {
     "title": "My Stigvidd",

@@ -329,6 +329,38 @@ src/api/generated` then fails with "the generated API client is stale" for reaso
   environments through `KEYCLOAK_URL`/`OTLP_ENDPOINT`, which are not aliased. Paired with
   `proxy/Caddyfile.app` and `CADDYFILE=/etc/caddy/Caddyfile.app`, because Caddy has no
   conditionals and an empty site address makes it reject its entire config.
+- [`docker compose up -d` cannot work on a fresh checkout, and the second blocker reports a certificate rather than a missing directory](compose-up-needs-two-hand-carried-things-that-are-not-in-the-repo.md) —
+  before trying to verify anything with `docker compose up -d` / `/readyz`, or when `db`
+  restart-loops on `could not load server certificate file "/etc/postgresql/certs/server.crt"`:
+  the stack needs BOTH the gitignored `.env` (or `--env-file ci/build.env` for anything that
+  only has to interpolate, which is enough to validate a compose edit and to `build api`) and
+  the hand-carried `./db-certs` bind mount. A bind mount of a missing host path is silently
+  empty, so `docker ps` shows `Up Less than a second (starting)` forever and nothing names
+  `./db-certs`. Includes what to run instead for a migration: a bare `postgis/postgis` container
+  plus `dotnet ef database update --connection …`, and a rollback/re-apply to exercise a
+  backfill `migrationBuilder.Sql`, which no test reaches because the suites use `EnsureCreated`.
+- [Adding an anonymous or admin endpoint fails a test that names neither your endpoint nor your file](new-endpoint-must-be-added-to-the-authorization-allowlist.md) —
+  adding a controller action with `[AllowAnonymous]` or the `"Admin"` policy, or debugging a
+  red `EndpointAuthorizationTests` / `AnonymousEndpoints_ShouldBeExactlyTheApprovedOnes` /
+  `BeEquivalentTo` collection diff: `Tests/IntegrationTests/Authorization/EndpointAuthorizationTests.cs`
+  pins the COMPLETE anonymous and admin endpoint lists as `string[]` literals and compares them
+  against the running host's endpoint data source, so a new route turns the suite red with a
+  failure pointing at a file your change never touched. Add `"<METHOD> /api/v1/<Controller>/<route>"`
+  to the right array, controller cased as the class. The `add-an-endpoint` skill's Step 3 and
+  Step 4 do not mention this existing test needs editing.
+- [The email-verification gate is one Keycloak flag, because the app's login never passes through this API](verification-gate-lives-in-keycloak-not-the-api.md) —
+  adding, changing or debugging new-user registration, email verification, or why an
+  unverified user can still log in: the app does the Keycloak Direct Access Grant straight
+  against Keycloak's token endpoint, so no `[Authorize]`, middleware or controller in
+  `backend/` is ever in the login path. The whole gate is `Enabled = false` in
+  `KeycloakAdminRepository.CreateUserAsync`, lifted by `ActivateVerifiedUserAsync`;
+  `User.EmailVerifiedAt` records it but enforces nothing. Keycloak's own `VERIFY_EMAIL`
+  required action was rejected because the realm is not in this repo. Keycloak answers a
+  disabled account with the SAME 400 `invalid_grant` as a wrong password, differing only in
+  `error_description`, so `AccountNotVerifiedError` reads the body — and because it extends
+  `InvalidCredentialsError`, a screen testing the broader class first swallows it with every
+  test still green. Mail scanners follow the `GET` link before the human, so
+  `AlreadyVerified` is a success.
 - [The Keycloak realm came from appsettings.json, not compose — and one `Keycloak:realm` feeds both authentication and the admin client](keycloak-realm-lives-in-appsettings-not-compose.md) —
   changing the Keycloak realm, or pointing a second environment at the same Keycloak:
   `appsettings.json` pins `"realm": "stigvidd"` in BOTH the `Keycloak` and

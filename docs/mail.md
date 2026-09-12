@@ -12,8 +12,8 @@ This is the API's own mail. Keycloak's password-reset mail is a separate path en
 Keycloak templates and sends it from realm configuration that is not in this repository
 (see [DEPLOYMENT.md](../DEPLOYMENT.md), "Keycloak email settings").
 
-> Nothing in the application calls the outbox yet. This document describes plumbing that is
-> in place and tested, waiting for its first caller.
+Its first caller is **registration**: `verify-email` carries the link and code that stand
+between signing up and being able to log in. See [auth](auth.md).
 
 ## Sending one
 
@@ -133,7 +133,11 @@ the rows part of the EF model, and a later migration would then revert an operat
 the wording, which is the whole reason the copy lives in the database. See
 [docs/notes/mail-templates-seeded-with-insertdata.md](notes/mail-templates-seeded-with-insertdata.md).
 
-`20260912103250_AddMailOutbox` seeds `welcome`/`sv` that way as a worked example.
+`20260912103250_AddMailOutbox` seeds `welcome`/`sv` that way as a worked example, and
+`20260912125829_AddEmailVerification` seeds `verify-email`/`sv` the same way. The latter takes
+three placeholders — `{{NickName}}`, `{{VerificationUrl}}` and `{{VerificationCode}}` — and an
+edit that drops one of them breaks registration, because a template using a placeholder the
+model has no value for fails the render and the enqueue fails with it.
 
 No test applies a migration, so a test needing a template seeds its own — see
 `Tests/IntegrationTests/Mail/MailOutboxIntegrationTests.cs`.

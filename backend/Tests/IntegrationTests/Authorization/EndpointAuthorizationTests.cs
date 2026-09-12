@@ -39,9 +39,14 @@ public class EndpointAuthorizationTests : IClassFixture<StigViddWebApplicationFa
         "GET /api/v1/Trails/{identifier}/coordinates",
         "POST /api/v1/Trails/cards",
 
-        // Signing up and recovering a password happen before there is a token.
+        // Signing up and recovering a password happen before there is a token. So does
+        // proving the address afterwards: until that is done the Keycloak user is disabled,
+        // so there is no token to present and these three cannot require one.
+        "GET /api/v1/Account/verify-email",
         "POST /api/v1/Account/forgot-password",
         "POST /api/v1/Account/register",
+        "POST /api/v1/Account/resend-verification",
+        "POST /api/v1/Account/verify-email",
 
         // Probes. Reached before anything is signed in and by design: healthz answers
         // liveness only and readyz runs the checks tagged ready, neither returns data.
