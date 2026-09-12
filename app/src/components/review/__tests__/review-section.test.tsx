@@ -6,7 +6,6 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import ReviewSection from "@/components/review/review-section";
-import { snackbarAtom } from "@/atoms/snackbar-atoms";
 import { AppDarkTheme, AppDefaultTheme } from "@/constants/theme";
 import { Review } from "@/data/types";
 import { settle } from "@/test/flush";
@@ -21,6 +20,33 @@ let mockIsDeleting = false;
 jest.mock("@/hooks/review/useDeleteReview", () => ({
   useDeleteReview: () => ({ mutate: mockDelete, isPending: mockIsDeleting }),
 }));
+
+let mockIsAuthenticated = true;
+jest.mock("@/components/auth/auth-provider", () => ({
+  useAuth: () => ({ isAuthenticated: mockIsAuthenticated }),
+}));
+
+// The report form is a modal with its own behaviour; what this section decides is what it
+// opens, and with which content.
+jest.mock("@/components/report/report-content-form", () => {
+  const { Text } = jest.requireActual("react-native");
+  const ReactActual = jest.requireActual("react");
+  return {
+    __esModule: true,
+    default: ({
+      visible,
+      contentType,
+      contentIdentifier,
+    }: {
+      visible: boolean;
+      contentType: string;
+      contentIdentifier: string;
+    }) =>
+      visible
+        ? ReactActual.createElement(Text, { testID: "report-form" }, `${contentType}:${contentIdentifier}`)
+        : null,
+  };
+});
 
 jest.mock("@/atoms/user-atoms", () => {
   const { atom } = jest.requireActual("jotai");
@@ -66,6 +92,7 @@ async function expand(title: string) {
 beforeEach(() => {
   jest.clearAllMocks();
   mockIsDeleting = false;
+  mockIsAuthenticated = true;
 });
 
 it("lists one row per review, under the name of whoever wrote it", () => {
@@ -159,14 +186,28 @@ it("offers neither action on a review whose author no longer exists", async () =
   expect(screen.queryByTestId("icon-trash-can-outline", { includeHiddenElements: true })).toBeNull();
 });
 
-it("acknowledges a report", async () => {
-  const { store } = show([review({ userIdentifier: "someone-else" })]);
+it("opens the report form on the review that was flagged", async () => {
+  show([review({ identifier: "r1", userName: "Alva" }), review({ identifier: "r2", userName: "Bo" })]);
 
-  await expand("Alva");
-  fireEvent.press(screen.getByTestId("icon-alert-circle", { includeHiddenElements: true }));
+  await expand("Bo");
+  fireEvent.press(screen.getByTestId("report-review-button"));
   await settle();
 
-  expect(store.get(snackbarAtom)).toMatchObject({ visible: true, type: "success" });
+  expect(screen.getByTestId("report-form")).toHaveTextContent("Review:r2");
+});
+
+// The icon shows signed out too, because the review list is public. Pressing it has to lead
+// somewhere useful rather than opening a form that cannot be submitted.
+it("asks a signed-out visitor to sign in instead of opening the form", async () => {
+  mockIsAuthenticated = false;
+  show([review({ userIdentifier: "someone-else" })]);
+
+  await expand("Alva");
+  fireEvent.press(screen.getByTestId("report-review-button"));
+  await settle();
+
+  expect(screen.queryByTestId("report-form")).toBeNull();
+  expect(screen.getByText("Du är inte inloggad")).toBeTruthy();
 });
 
 it("asks before deleting, and deletes nothing until the answer comes back", async () => {

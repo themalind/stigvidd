@@ -17,3 +17,4 @@ export * from "./hike";
 export * from "./friends";
 export * from "./obstacle";
 export * from "./facility";
+export * from "./content-report";

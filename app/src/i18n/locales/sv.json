@@ -659,5 +659,30 @@
     "refreshing": "Uppdaterar leder...",
     "noResults": "Inga leder hittades",
     "noResultsHint": "Prova att ändra dina filter"
+  },
+  "report": {
+    "title": "Anmäl innehåll",
+    "formInfo1": "Anmälan granskas",
+    "formInfo2": "Innehållet döljs medan en administratör tittar på det. Anmäl bara sådant som bryter mot reglerna.",
+    "selectReason": "Välj anledning",
+    "reasonRequired": "Du måste välja en anledning",
+    "noteLabel": "Beskriv gärna varför",
+    "note": "Kommentar (frivilligt)",
+    "noteMax": "Kommentaren får vara högst 300 tecken",
+    "notePrivacyInfo": "Skriv inga personuppgifter. Kommentaren läses av en administratör.",
+    "success": "Tack! Anmälan har skickats för granskning.",
+    "alreadyReported": "Du har redan anmält det här innehållet.",
+    "tooMany": "Du har anmält för mycket idag. Försök igen imorgon.",
+    "error": "Anmälan kunde inte skickas. Försök igen.",
+    "reviewAction": "Anmäl recension",
+    "obstacleAction": "Anmäl hinderrapport",
+    "notAuthReport": "Du behöver vara inloggad för att anmäla innehåll.",
+    "reasons": {
+      "Offensive": "Stötande",
+      "Spam": "Skräppost",
+      "PersonalData": "Personuppgifter",
+      "Misinformation": "Felaktig information",
+      "Other": "Annat"
+    }
   }
 }

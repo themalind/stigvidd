@@ -28,6 +28,27 @@ jest.mock("@/components/auth/auth-provider", () => ({
   useAuth: () => ({ isAuthenticated: mockIsAuthenticated }),
 }));
 
+// The report form is a modal with its own suite; what this item decides is what it opens.
+jest.mock("@/components/report/report-content-form", () => {
+  const { Text } = jest.requireActual("react-native");
+  const ReactActual = jest.requireActual("react");
+  return {
+    __esModule: true,
+    default: ({
+      visible,
+      contentType,
+      contentIdentifier,
+    }: {
+      visible: boolean;
+      contentType: string;
+      contentIdentifier: string;
+    }) =>
+      visible
+        ? ReactActual.createElement(Text, { testID: "report-form" }, `${contentType}:${contentIdentifier}`)
+        : null,
+  };
+});
+
 jest.mock("@/atoms/user-atoms", () => {
   const { atom } = jest.requireActual("jotai");
   return { stigviddUserAtom: atom({ data: { identifier: "me" } }) };
@@ -341,4 +362,29 @@ it("sits in a rounded, outlined card, in both themes", () => {
   show(obstacle(), AppDarkTheme);
 
   expect(screen.getByTestId("obstacle-card")).toHaveStyle({ borderColor: AppDarkTheme.colors.outlineVariant });
+});
+
+it("offers to report someone else's obstacle, and opens the form on that obstacle", async () => {
+  show();
+
+  await press("report-obstacle-button");
+
+  expect(screen.getByTestId("report-form")).toHaveTextContent(`TrailObstacle:${OBSTACLE_ID}`);
+});
+
+// Nobody reports their own report; the owner gets edit and delete instead.
+it("offers the owner no report button", () => {
+  show(obstacle({ userIdentifier: "me" }));
+
+  expect(screen.queryByTestId("report-obstacle-button")).toBeNull();
+});
+
+it("asks a signed-out visitor to sign in instead of opening the form", async () => {
+  mockIsAuthenticated = false;
+  show();
+
+  await press("report-obstacle-button");
+
+  expect(screen.queryByTestId("report-form")).toBeNull();
+  expect(screen.getByText("Du är inte inloggad")).toBeTruthy();
 });

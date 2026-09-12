@@ -659,5 +659,30 @@
     "refreshing": "Updating trails...",
     "noResults": "No trails found",
     "noResultsHint": "Try adjusting your filters"
+  },
+  "report": {
+    "title": "Report content",
+    "formInfo1": "Reports are reviewed",
+    "formInfo2": "The content is hidden while an administrator looks at it. Only report things that break the rules.",
+    "selectReason": "Choose a reason",
+    "reasonRequired": "Please choose a reason",
+    "noteLabel": "Tell us why",
+    "note": "Comment (optional)",
+    "noteMax": "The comment can be at most 300 characters",
+    "notePrivacyInfo": "Do not include personal data. An administrator will read this comment.",
+    "success": "Thanks. Your report has been sent for review.",
+    "alreadyReported": "You have already reported this content.",
+    "tooMany": "You have reported too much today. Try again tomorrow.",
+    "error": "The report could not be sent. Please try again.",
+    "reviewAction": "Report review",
+    "obstacleAction": "Report obstacle",
+    "notAuthReport": "You need to be signed in to report content.",
+    "reasons": {
+      "Offensive": "Offensive",
+      "Spam": "Spam",
+      "PersonalData": "Personal data",
+      "Misinformation": "Misinformation",
+      "Other": "Other"
+    }
   }
 }

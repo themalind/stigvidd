@@ -5,14 +5,16 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import { showSuccessAtom } from "@/atoms/snackbar-atoms";
+import NotAuthenticatedDialog from "@/components/auth/not-authenticated-msg-dialog";
+import ReportContentForm from "@/components/report/report-content-form";
+import { useAuth } from "@/components/auth/auth-provider";
 import { stigviddUserAtom } from "@/atoms/user-atoms";
 import { BORDER_RADIUS } from "@/constants/constants";
 import { Review } from "@/data/types";
 import { useDeleteReview } from "@/hooks/review/useDeleteReview";
 import { formatDate } from "@/utils/format-date";
-import { useAtom, useSetAtom } from "jotai";
-import { Fragment } from "react";
+import { useAtom } from "jotai";
+import { Fragment, useState } from "react";
 import { Alert, Pressable, StyleSheet, View } from "react-native";
 import { Divider, List, Text, useTheme } from "react-native-paper";
 import { useTranslation } from "react-i18next";
@@ -26,8 +28,10 @@ interface ReviewProps {
 export default function ReviewSection({ reviews }: ReviewProps) {
   const theme = useTheme();
   const { t } = useTranslation();
+  const { isAuthenticated } = useAuth();
   const [{ data: user }] = useAtom(stigviddUserAtom);
-  const setSuccessMessage = useSetAtom(showSuccessAtom);
+  const [showAuthDialog, setShowAuthDialog] = useState(false);
+  const [reportedReview, setReportedReview] = useState<Review | null>(null);
   const deleteMutation = useDeleteReview();
 
   const handleDelete = async (reviewIdentifier: string, trailIdentifier: string) => {
@@ -46,8 +50,13 @@ export default function ReviewSection({ reviews }: ReviewProps) {
     ]);
   };
 
-  const handleReportReview = () => {
-    setSuccessMessage("For Gnomeregan!");
+  const handleReportReview = (review: Review) => {
+    if (!isAuthenticated) {
+      setShowAuthDialog(true);
+      return;
+    }
+
+    setReportedReview(review);
   };
 
   return (
@@ -89,7 +98,7 @@ export default function ReviewSection({ reviews }: ReviewProps) {
               <Text>{formatDate(review.createdAt)}</Text>
               <View style={s.actionContainer}>
                 {!!review.userIdentifier && user?.identifier !== review.userIdentifier && (
-                  <Pressable onPress={handleReportReview}>
+                  <Pressable testID="report-review-button" onPress={() => handleReportReview(review)}>
                     <List.Icon color={theme.colors.outline} icon="alert-circle" />
                   </Pressable>
                 )}
@@ -110,6 +119,20 @@ export default function ReviewSection({ reviews }: ReviewProps) {
           <Divider />
         </Fragment>
       ))}
+      {reportedReview && (
+        <ReportContentForm
+          visible
+          contentType="Review"
+          contentIdentifier={reportedReview.identifier}
+          invalidateQueryKey={["reviews", reportedReview.trailIdentifier]}
+          onDismiss={() => setReportedReview(null)}
+        />
+      )}
+      <NotAuthenticatedDialog
+        visible={showAuthDialog}
+        onDissmiss={() => setShowAuthDialog(false)}
+        infoMessage={t("report.notAuthReport")}
+      />
     </List.Section>
   );
 }

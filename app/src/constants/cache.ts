@@ -18,6 +18,7 @@
 
 // --- Static / reference data — rarely or never changes ---
 export const ISSUE_TYPES_STALE_TIME = 24 * 60 * 60 * 1000; // obstacle issue-type lookup (fixed enum)
+export const REPORT_REASONS_STALE_TIME = 24 * 60 * 60 * 1000; // report-reason lookup (fixed enum)
 export const TRAIL_COORDINATES_STALE_TIME = 24 * 60 * 60 * 1000; // trail geometry is immutable
 export const TRAIL_LIST_STALE_TIME = 24 * 60 * 60 * 1000; // full trail list (also used as gcTime)
 export const CITY_AREAS_STALE_TIME = 24 * 60 * 60 * 1000; // city area list rarely changes

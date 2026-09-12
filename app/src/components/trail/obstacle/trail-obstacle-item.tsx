@@ -9,6 +9,7 @@ import { addSolvedVote, deleteSolvedVote, deleteTrailObstacle } from "@/api/trai
 import { stigviddUserAtom } from "@/atoms/user-atoms";
 import AlertDialog from "@/components/alert-dialog";
 import NotAuthenticatedDialog from "@/components/auth/not-authenticated-msg-dialog";
+import ReportContentForm from "@/components/report/report-content-form";
 import { BORDER_RADIUS } from "@/constants/constants";
 import { TrailObstacle } from "@/data/types";
 import { formatDate } from "@/utils/format-date";
@@ -39,6 +40,7 @@ export default function TrailObstacleItem({ obstacle, trailIdentifier, onCloseMo
   const [showUndoDialog, setShowUndoDialog] = useState(false);
   const [showUpdateForm, setShowUpdateForm] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showReportForm, setShowReportForm] = useState(false);
   const queryClient = useQueryClient();
   const hasVoted = obstacle.solvedVotes?.some((v) => v.userIdentifier === stigviddUser?.identifier);
   const isOwner = !!obstacle.userIdentifier && stigviddUser?.identifier === obstacle.userIdentifier;
@@ -95,6 +97,14 @@ export default function TrailObstacleItem({ obstacle, trailIdentifier, onCloseMo
     setShowVoteDialog(false);
   }
 
+  function handleReport() {
+    if (!isAuthenticated) {
+      setAuthDialog(true);
+      return;
+    }
+    setShowReportForm(true);
+  }
+
   function handleRemoveVote() {
     deleteSolvedVoteMutate();
     setShowUndoDialog(false);
@@ -134,18 +144,23 @@ export default function TrailObstacleItem({ obstacle, trailIdentifier, onCloseMo
         <View style={s.voteRow}>
           <Text style={s.voteCount}>{obstacle.solvedVotes?.length ?? 0}/3</Text>
           {!isOwner && (
-            <Pressable
-              testID="vote-button"
-              hitSlop={12}
-              onPress={handlePress}
-              disabled={isPending || deleteSolvedVoteIsPending}
-            >
-              <MaterialIcons
-                size={24}
-                name={hasVoted ? "check-circle" : "radio-button-unchecked"}
-                color={isPending ? theme.colors.outline : theme.colors.tertiary}
-              />
-            </Pressable>
+            <>
+              <Pressable testID="report-obstacle-button" hitSlop={12} onPress={handleReport}>
+                <MaterialIcons size={22} name="flag" color={theme.colors.outline} />
+              </Pressable>
+              <Pressable
+                testID="vote-button"
+                hitSlop={12}
+                onPress={handlePress}
+                disabled={isPending || deleteSolvedVoteIsPending}
+              >
+                <MaterialIcons
+                  size={24}
+                  name={hasVoted ? "check-circle" : "radio-button-unchecked"}
+                  color={isPending ? theme.colors.outline : theme.colors.tertiary}
+                />
+              </Pressable>
+            </>
           )}
         </View>
       </View>
@@ -167,6 +182,13 @@ export default function TrailObstacleItem({ obstacle, trailIdentifier, onCloseMo
         cancelText={t("common.cancel")}
         backgroundColor={theme.colors.surface}
         textColor={theme.colors.onSurface}
+      />
+      <ReportContentForm
+        visible={showReportForm}
+        contentType="TrailObstacle"
+        contentIdentifier={obstacle.identifier}
+        invalidateQueryKey={["obstacles", trailIdentifier]}
+        onDismiss={() => setShowReportForm(false)}
       />
       <NotAuthenticatedDialog
         visible={showAuthDialog}
