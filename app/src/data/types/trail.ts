@@ -65,6 +65,8 @@ export interface TrailShortInfoResponse {
   accessibility: boolean;
   classification: number;
   city: string;
+  // 0 means no reviews yet — ratings are always 1-5.
+  averageRating: number;
   startLatitude?: number;
   startLongitude?: number;
 }
@@ -106,6 +108,7 @@ export interface CreateTrailRequest {
 
 export interface FilterOptions {
   city?: string;
+  minRating?: number;
   minLength?: number;
   maxLength?: number;
   accessibility?: boolean;

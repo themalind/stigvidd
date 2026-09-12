@@ -30,7 +30,7 @@ jest.mock("expo-constants", () => ({
   },
 }));
 
-const EMAIL = "info@lingonberg.se";
+const EMAIL = "info@stigvidd.se";
 const SOURCE_LINK = "Visa källkoden på GitHub";
 
 function show(theme: typeof AppDefaultTheme | typeof AppDarkTheme = AppDefaultTheme) {

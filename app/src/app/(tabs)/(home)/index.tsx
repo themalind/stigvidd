@@ -6,6 +6,7 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { getPopularTrails } from "@/api/trails";
+import AdventureCard from "@/components/home/adventure-card";
 import GetStartedCard from "@/components/home/get-started-card";
 import HeroBanner from "@/components/home/hero-banner";
 import LatestHikeCard from "@/components/home/latest-hike-card";
@@ -125,6 +126,8 @@ export default function HomeScreen() {
           </View>
         </Pressable>
       </View>
+
+      <AdventureCard />
     </ScrollView>
   );
 }

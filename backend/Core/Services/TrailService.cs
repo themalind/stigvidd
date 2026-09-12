@@ -43,6 +43,7 @@ public class TrailService : ITrailService
                 t.Accessibility,
                 t.Classification,
                 t.City,
+                t.Reviews!.Any() ? t.Reviews!.Average(r => r.Rating) : 0m,
                 (decimal?)t.GeoPath!.StartPoint.Coordinate.Y,
                 (decimal?)t.GeoPath.StartPoint.Coordinate.X),
             ctoken);
@@ -52,7 +53,8 @@ public class TrailService : ITrailService
 
         var trails = result.Value
             .Select(v => TrailShortInfoResponse.Create(
-                v.Identifier, v.Name, v.TrailLength, v.Accessibility, v.Classification, v.City, v.StartLatitude, v.StartLongitude))
+                v.Identifier, v.Name, v.TrailLength, v.Accessibility, v.Classification, v.City, v.AverageRating,
+                v.StartLatitude, v.StartLongitude))
             .ToList();
 
         return Result.Ok<IReadOnlyCollection<TrailShortInfoResponse>>(trails);
@@ -526,7 +528,8 @@ internal record TrailMarkerProjection(
 
 internal record TrailShortInfoProjection(
     string Identifier, string Name, decimal TrailLength, bool Accessibility,
-    int? Classification, string City, decimal? StartLatitude, decimal? StartLongitude);
+    int? Classification, string City, decimal AverageRating,
+    decimal? StartLatitude, decimal? StartLongitude);
 
 internal record TrailOverviewProjection(
     string Identifier, string Name, decimal TrailLength, decimal AverageRating,

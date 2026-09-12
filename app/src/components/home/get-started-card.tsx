@@ -5,7 +5,7 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import { OVERLAY_TEXT_SHADOW, SCREEN_PADDING, SURFACE_BORDER_RADIUS } from "@/constants/constants";
+import { BORDER_RADIUS, OVERLAY_TEXT_SHADOW, SCREEN_PADDING, SURFACE_BORDER_RADIUS } from "@/constants/constants";
 import { buildDecorativeRoute } from "@/utils/decorative-route";
 import { guardedNavigate } from "@/utils/navigation";
 import { Image } from "expo-image";
@@ -152,5 +152,6 @@ const s = StyleSheet.create({
   action: {
     alignSelf: "flex-start",
     marginTop: 8,
+    borderRadius: BORDER_RADIUS,
   },
 });

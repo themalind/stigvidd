@@ -133,6 +133,14 @@ it("tells an empty collection apart from a filter that matched nothing", () => {
   expect(screen.queryByText("Inga favoriter sparade än.")).toBeNull();
 });
 
+it("hides the search and filter controls while nothing is saved", () => {
+  show({ trails: [] });
+
+  expect(screen.queryByTestId("icon-search")).toBeNull();
+  expect(screen.queryByTestId("icon-filter-list")).toBeNull();
+  expect(screen.queryByText("Tryck på en promenad för att se detaljer")).toBeNull();
+});
+
 it("searches by name and by city", () => {
   const { unmount } = show();
   search("sjö");

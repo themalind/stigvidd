@@ -65,6 +65,8 @@ export default function UserTrailCollection({
 
   const [filterModalVisible, setFilterModalVisible] = useState(false);
 
+  const isEmpty = totalCount === 0;
+
   // Length is set as two keys but is one choice to the user; maxDistance is a
   // modifier on "near me" rather than a filter of its own.
   const activeFilterCount = useMemo(() => {
@@ -78,6 +80,7 @@ export default function UserTrailCollection({
     () => [
       { key: "name", labelKey: "filter.fieldName" },
       { key: "length", labelKey: "filter.fieldLength" },
+      { key: "rating", labelKey: "filter.fieldRating", defaultDirection: "desc" as const },
       ...(userLocation ? [{ key: "distance", labelKey: "filter.fieldDistance" }] : []),
     ],
     [userLocation],
@@ -97,6 +100,7 @@ export default function UserTrailCollection({
           activeFilterCount={activeFilterCount}
           showingLabel={t("trailList.showing", { count: totalCount, shown: filteredCount })}
           onClearFilters={clearFilters}
+          showActions={!isEmpty}
         >
           <BackButton />
           {icon}
@@ -110,14 +114,14 @@ export default function UserTrailCollection({
         contentContainerStyle={[s.container]}
       >
         <View style={s.content}>
-          {/* Gives up its slot to the header's result counter, which occupies the same
-              line and matters more while filtering. */}
-          {activeFilterCount === 0 && !searchQuery && (
+          {/* Gives up its slot to the header's result counter, which shares the line
+              and matters more while filtering. */}
+          {!isEmpty && activeFilterCount === 0 && !searchQuery && (
             <Text variant="bodySmall" style={s.sectionSubtitle}>
               {t("collection.tapInfo")}
             </Text>
           )}
-          <Divider bold={true} />
+          {!isEmpty && <Divider bold={true} />}
 
           {filteredTrails.length ? (
             filteredTrails.map((trail) => (
@@ -181,8 +185,8 @@ export default function UserTrailCollection({
                 <Divider bold={true} />
               </Pressable>
             ))
-          ) : totalCount === 0 ? (
-            <View style={s.noTrailMsgContainer}>
+          ) : isEmpty ? (
+            <View style={[s.noTrailMsgContainer, s.emptyCollection]}>
               <Text style={s.noTrailMsg}>{noTrailsSavedInfo}</Text>
             </View>
           ) : (
@@ -287,6 +291,11 @@ const s = StyleSheet.create({
   noTrailMsgContainer: {
     justifyContent: "center",
     alignItems: "center",
+    paddingTop: 24,
+  },
+  // Clears the header, so it does not read as part of it.
+  emptyCollection: {
+    paddingTop: 72,
   },
   noTrailMsg: {
     fontSize: 15,

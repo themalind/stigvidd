@@ -277,7 +277,7 @@ it("marks each difficulty with its own icon", async () => {
 it("says a trail has no reviews rather than showing it zero stars", async () => {
   await show({ trails: [trail({ averageRating: 0 })] });
 
-  expect(screen.getByText("Det finns inga recensioner här ännu.")).toBeTruthy();
+  expect(screen.getByText("Inga recensioner än")).toBeTruthy();
   expect(screen.queryByText("★ 0.0")).toBeNull();
 });
 
