@@ -1,0 +1,154 @@
+<!--
+SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
+SPDX-License-Identifier: AGPL-3.0-or-later
+-->
+
+# Mail
+
+How the API sends email: a **template store** and an **outbox**, both database tables, drained
+by a background service that is triggered by an in-memory queue rather than a poll.
+
+This is the API's own mail. Keycloak's password-reset mail is a separate path entirely —
+Keycloak templates and sends it from realm configuration that is not in this repository
+(see [DEPLOYMENT.md](../DEPLOYMENT.md), "Keycloak email settings").
+
+> Nothing in the application calls the outbox yet. This document describes plumbing that is
+> in place and tested, waiting for its first caller.
+
+## Sending one
+
+```csharp
+await _mailOutbox.EnqueueAsync(
+    "welcome",                                              // template key
+    user.Email,
+    new Dictionary<string, string?> { ["NickName"] = user.NickName },
+    ctoken,
+    toName: user.NickName);                                 // optional
+```
+
+`EnqueueAsync` returns the new row's `Identifier`, and returns **before** any SMTP happens —
+a caller is never blocked on the mail server. It fails, with nothing written, when:
+
+| | |
+| --- | --- |
+| the template key (or its language) is unknown | 404 |
+| the model has no value for a placeholder the template uses | 400, naming the placeholder |
+| the recipient address has no domain | 400 |
+
+All three are caller bugs, and enqueue time is the last moment a caller is listening — which
+is the reason the template is rendered here rather than at send time.
+
+## The templating
+
+Templates live in `MailTemplates`, unique on **(Key, Language)**, so wording can be corrected
+by an operator without a deploy. A template carries a `Subject`, a `BodyHtml` and a `BodyText`;
+the text part is not optional, because a mail with no text alternative is both unreadable in a
+plain-text client and a spam-score penalty everywhere else.
+
+Substitution is `{{Placeholder}}` and nothing else — no conditionals, no loops, no partials. A
+template that wants a decision made in it is a sign the decision belongs in C# at the call
+site, where it can be tested.
+
+- Inner whitespace is allowed: `{{ NickName }}` and `{{NickName}}` are the same placeholder.
+- Model keys are matched case-insensitively.
+- A placeholder the model has **no key for** fails the render. Mailing somebody the literal
+  text `Hej {{NickName}}` is worse than not mailing them.
+- A key present with a `null` value renders as empty — that is the caller saying "no value",
+  which is a different thing from forgetting the key exists.
+- Values are **HTML-encoded into the HTML body only**. The subject and text body get the raw
+  value. A nickname containing `<` would otherwise break the markup, or inject into it.
+- CR and LF are stripped from the rendered **subject**: a newline there lets everything after
+  it be read as a new SMTP header.
+
+`language` defaults to `MailOutbox:DefaultLanguage` (`sv`). If a key exists but not in the
+language asked for, the default language is used; only if that misses too is it a 404.
+
+## The outbox, and why it is shaped this way
+
+`OutboxEmails` is the queue. The in-memory `Channel<int>` is only a hint that says "look at row
+N now rather than later", which is what gets a mail out in milliseconds instead of on a poll
+tick. Correctness rests entirely on the table, through three rules:
+
+1. **Write, then signal.** The row is committed before its id reaches the channel, so the
+   dispatcher can never be handed an id it cannot read.
+2. **Every boot re-signals the journal.** `MailOutboxDispatcher` first moves rows left in
+   `Sending` back to `Pending` (a restart orphaned them — the queue died with the process),
+   then pushes *every* `Pending` id into the channel. Interrupted, never signalled, or half
+   way through a backoff: all of it gets another chance.
+3. **A signal is a hint, not a claim.** Claiming is a `Pending` → `Sending` transition in the
+   database. A duplicate signal finds the row is not `Pending` and does nothing, so the same
+   mail is never sent twice.
+
+A lost signal therefore costs latency and never a mail.
+
+```
+Pending ──claim──> Sending ──sent────> Sent
+   ^                  │
+   └──failed, under ──┘
+      the attempt cap        ──permanent, or cap reached──> Failed
+```
+
+Retries are **scheduled, not polled**: a transient failure puts the row back to `Pending` with
+`NextAttemptAt` set, and the dispatcher starts a `Task.Delay` that re-signals the id when the
+backoff expires. That timer is best-effort by design — if the process dies before it fires,
+rule 2 recovers the row on the next start.
+
+Backoff is 1, 2, 4, 8, 16 minutes, capped, up to `MailOutbox:MaxAttempts` (default 5) before
+the row is parked as `Failed` with `LastError` kept. A **5xx** SMTP reply skips straight to
+`Failed`: the server has said the message itself is unacceptable, so four more attempts buy
+the same answer more slowly. Connection errors and 4xx replies retry — greylisting, which
+Rspamd has enabled on this mail server, is specifically designed to be retried.
+
+**This assumes a single API instance.** Claiming is a read-then-update, not `SELECT … FOR
+UPDATE SKIP LOCKED`, and the channel is per-process — the same assumption
+`TrailImportAnalysisWorker` documents.
+
+## Configuration
+
+Two sections, split by who owns them.
+
+`Smtp:*` is the transport, and is set by [docker-compose.yml](../docker-compose.yml) on the
+`api` service from `MAIL_DOMAIN` / `SMTP_NOREPLY_USER` / `SMTP_NOREPLY_PASSWORD`:
+
+| key | |
+| --- | --- |
+| `Smtp:Host` | the mail server. Its docker network alias, so STARTTLS matches its certificate |
+| `Smtp:Port` | 587 |
+| `Smtp:User` / `Smtp:Password` | the submission mailbox. Authentication is skipped when `User` is empty |
+| `Smtp:From` | envelope and header sender |
+
+**`Smtp` is deliberately absent from `appsettings.json`.** Its absence is what registers
+`LoggingMailSender` instead of `SmtpMailSender` — so local development, the test suite and a
+partial stack that runs no mail server log the mail at warning level and drain the outbox
+rather than accumulating rows that were never going to be sent. Adding an empty `Smtp` block
+would defeat that. The API must never fail to start over mail, so there is no fail-fast here.
+
+`MailOutbox:*` is in `appsettings.json`: `MaxAttempts` (5) and `DefaultLanguage` (`sv`).
+
+## Adding a template
+
+Templates are rows, so a new one is an `INSERT` — by hand on the host, or as a
+`migrationBuilder.InsertData` in a new migration. **Not `modelBuilder.HasData`**: that makes
+the rows part of the EF model, and a later migration would then revert an operator's edit to
+the wording, which is the whole reason the copy lives in the database. See
+[docs/notes/mail-templates-seeded-with-insertdata.md](notes/mail-templates-seeded-with-insertdata.md).
+
+`20260912103250_AddMailOutbox` seeds `welcome`/`sv` that way as a worked example.
+
+No test applies a migration, so a test needing a template seeds its own — see
+`Tests/IntegrationTests/Mail/MailOutboxIntegrationTests.cs`.
+
+## Where the code is
+
+| | |
+| --- | --- |
+| `Core/Services/MailOutboxService.cs` | the enqueue API: validate, render, journal, signal |
+| `Core/Services/MailTemplateRenderer.cs` | `{{Placeholder}}` substitution and the encoding rules |
+| `Core/Services/MailOutboxQueue.cs` | the `Channel<int>` trigger |
+| `Core/Services/SmtpMailSender.cs` | MailKit; STARTTLS on 587 |
+| `Core/Services/LoggingMailSender.cs` | the no-op used when `Smtp:Host` is absent |
+| `Core/Repositories/MailOutboxRepository.cs` | claim, mark, release, recover, and the backoff |
+| `StigviddAPI/BackgroundServices/MailOutboxDispatcher.cs` | the drain loop and the startup sweep |
+
+Related: [observability](observability.md) for where the logs go,
+[push-notifications](push-notifications.md) for the other notification channel.

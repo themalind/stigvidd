@@ -12,12 +12,19 @@ that these notices travel with any redistribution.
 Licences were read from each package's `.nuspec` in the local NuGet cache, for the exact
 version referenced, rather than from documentation.
 
-## Two entries that need more than a table row
+## Three entries that need more than a table row
 
 **CsvHelper is dual-licensed `MS-PL OR Apache-2.0`, and this project elects Apache-2.0.**
 The election matters: the FSF classes the Microsoft Public Licence as a free software licence
 but **GPL-incompatible**, so the MS-PL arm could not be combined with AGPL-covered code. The
 Apache-2.0 arm is GPLv3/AGPLv3-compatible. Used only by `MapData`.
+
+**MailKit brings MimeKit, BouncyCastle.Cryptography and System.Security.Cryptography.Pkcs.**
+Only `MailKit` is referenced by `Core.csproj`; the other three arrive transitively and are
+listed because a redistribution ships them too. All four declare an SPDX `MIT` expression in
+their `.nuspec` — none uses `<license type="file">`, the shape that meant a custom licence
+when FluentAssertions 8 was checked. MIT is GPLv3/AGPLv3-compatible. BouncyCastle is the
+"MIT adaptation" of the original Bouncy Castle licence and is the same permissive terms.
 
 **Magick.NET bundles native ImageMagick.** The managed wrapper is Apache-2.0 as listed; the
 native binaries it ships carry the ImageMagick Licence (an Apache-2.0 derivative with its own
@@ -29,6 +36,7 @@ native component that ships inside the deployed API image — `ImageProcessingSe
 | Package | Version | Licence |
 | --- | --- | --- |
 | AwesomeAssertions | 9.6.0 | Apache-2.0 |
+| BouncyCastle.Cryptography | 2.6.2 | MIT |
 | CsvHelper | 33.1.0 | MS-PL OR Apache-2.0 |
 | Duende.AccessTokenManagement | 4.2.0 | Apache-2.0 |
 | FluentValidation.DependencyInjectionExtensions | 12.1.1 | Apache-2.0 |
@@ -36,6 +44,7 @@ native component that ships inside the deployed API image — `ImageProcessingSe
 | Keycloak.AuthServices.Authentication | 3.0.0 | MIT |
 | Keycloak.AuthServices.Sdk | 3.0.0 | MIT |
 | Magick.NET-Q8-AnyCPU | 14.16.0 | Apache-2.0 |
+| MailKit | 4.17.0 | MIT |
 | Microsoft.AspNetCore.Authentication.JwtBearer | 10.0.9 | MIT |
 | Microsoft.AspNetCore.Mvc.Testing | 10.0.9 | MIT |
 | Microsoft.AspNetCore.OpenApi | 10.0.9 | MIT |
@@ -48,6 +57,7 @@ native component that ships inside the deployed API image — `ImageProcessingSe
 | Microsoft.Extensions.Configuration.UserSecrets | 10.0.9 | MIT |
 | Microsoft.NET.Test.Sdk | 18.7.0 | MIT |
 | Microsoft.OpenApi | 2.12.0 | MIT |
+| MimeKit | 4.17.0 | MIT |
 | Moq | 4.20.72 | BSD-3-Clause |
 | NSwag.AspNetCore | 14.7.1 | MIT |
 | NSwag.Core | 14.7.1 | MIT |
@@ -64,6 +74,7 @@ native component that ships inside the deployed API image — `ImageProcessingSe
 | OpenTelemetry.Instrumentation.Runtime | 1.18.0 | Apache-2.0 |
 | SQLitePCLRaw.bundle_e_sqlite3 | 2.1.13 | Apache-2.0 † |
 | SQLitePCLRaw.provider.sqlite3 | 2.1.13 | Apache-2.0 |
+| System.Security.Cryptography.Pkcs | 10.0.0 | MIT |
 | SharpGrip.FluentValidation.AutoValidation.Mvc | 2.0.0 | MIT |
 | WebDav.Client | 2.9.0 | MIT |
 | coverlet.collector | 10.0.1 | MIT |

@@ -126,10 +126,15 @@ services:
       KeycloakAdminClient__credentials__secret: ${KEYCLOAK_ADMIN_CLIENT_SECRET:?KEYCLOAK_ADMIN_CLIENT_SECRET must be set}
       # Name of Keycloak's database (same Postgres) — used by admin export/import.
       KEYCLOAK_DB: ${KEYCLOAK_DB:-keycloak}
-      # Outbound mail via the `mailserver` service. Nothing in the API sends mail
-      # yet (the only email path is Keycloak's password-reset action email), but
-      # wiring it here means the sending code needs no compose change. Host is
-      # the mail server's network alias, so STARTTLS matches its certificate.
+      # Outbound mail via the `mailserver` service, read by SmtpMailSender — see
+      # docs/mail.md. Host is the mail server's network alias, so STARTTLS matches
+      # its certificate. Keycloak's password-reset mail is a separate path with its
+      # own realm-level SMTP config (DEPLOYMENT.md).
+      #
+      # Smtp__Host is load-bearing beyond its value: with it UNSET the API registers
+      # a logging no-op sender instead, which is how local dev and the test suite
+      # avoid submitting real mail. That is why there is no Smtp block in
+      # appsettings.json.
       Smtp__Host: ${MAIL_DOMAIN:?MAIL_DOMAIN must be set}
       Smtp__Port: "587"
       Smtp__User: ${SMTP_NOREPLY_USER:-no-reply@stigvidd.se}

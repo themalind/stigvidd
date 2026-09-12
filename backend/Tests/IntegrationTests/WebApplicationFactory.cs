@@ -6,6 +6,7 @@ using Core.Interfaces.Repositories;
 using Core.Interfaces.Services;
 using Infrastructure;
 using Infrastructure.Data;
+using Infrastructure.Data.Entities;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -40,6 +41,12 @@ public class StigViddWebApplicationFactory<TProgram>
     /// so tests that read it clear it first.
     /// </summary>
     public List<byte[]> UploadedFileBytes { get; } = [];
+
+    /// <summary>
+    /// Every mail the test host "sent", in order. Lives as long as the factory, so tests that
+    /// read it clear it first.
+    /// </summary>
+    public List<OutboxEmail> SentMails { get; } = [];
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -121,13 +128,31 @@ public class StigViddWebApplicationFactory<TProgram>
 
             services.AddSingleton(KeycloakAdminMock.Object);
 
+            // Substituted rather than left to pick itself: the real registration chooses
+            // SmtpMailSender as soon as Smtp:Host is configured, and this host reads
+            // StigviddAPI's user secrets (see docs/notes/integration-tests-inherit-api-config.md).
+            // A developer holding real SMTP settings there would otherwise have the suite
+            // submitting mail to a live server.
+            var mailSender = new Mock<IMailSender>();
+            mailSender
+                .Setup(x => x.SendAsync(It.IsAny<OutboxEmail>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync((OutboxEmail email, CancellationToken _) =>
+                {
+                    SentMails.Add(email);
+                    return MailSendResult.Ok();
+                });
+
+            services.RemoveAll<IMailSender>();
+            services.AddSingleton(mailSender.Object);
+
             services.RemoveAll<IDbMigrationRunner>();
 
             // Their startup runs race SeedDatabase on the shared in-memory connection.
             var startupServices = services.Where(d =>
                 d.ServiceType == typeof(IHostedService) &&
                 (d.ImplementationType == typeof(ExpiredObstacleCleanupService) ||
-                 d.ImplementationType == typeof(TrailImportAnalysisWorker)))
+                 d.ImplementationType == typeof(TrailImportAnalysisWorker) ||
+                 d.ImplementationType == typeof(MailOutboxDispatcher)))
                 .ToList();
 
             foreach (var startupService in startupServices)
