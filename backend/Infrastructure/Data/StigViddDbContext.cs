@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 using Infrastructure.Data.Entities;
+using Infrastructure.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Data;
@@ -31,6 +32,7 @@ public class StigViddDbContext(DbContextOptions<StigViddDbContext> options) : Db
     public DbSet<TrailRelation> TrailRelations { get; set; }
     public DbSet<MailTemplate> MailTemplates { get; set; }
     public DbSet<OutboxEmail> OutboxEmails { get; set; }
+    public DbSet<ContentReport> ContentReports { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -289,6 +291,48 @@ public class StigViddDbContext(DbContextOptions<StigViddDbContext> options) : Db
         // columns on purpose — the integration tests build this schema on SQLite.
         modelBuilder.Entity<OutboxEmail>()
             .HasIndex(e => new { e.Status, e.NextAttemptAt });
+
+        // One report per user per piece of content. Postgres counts NULLs as distinct, so
+        // rows left by deleted reporters do not collide, which is what we want.
+        modelBuilder.Entity<ContentReport>()
+            .HasIndex(r => new { r.ReporterUserId, r.ContentType, r.ContentId })
+            .IsUnique();
+
+        // The admin queue, oldest first.
+        modelBuilder.Entity<ContentReport>()
+            .HasIndex(r => new { r.Status, r.CreatedAt });
+
+        // Every report on one piece of content, which is what a decision resolves.
+        modelBuilder.Entity<ContentReport>()
+            .HasIndex(r => new { r.ContentType, r.ContentId });
+
+        // Strikes per author, and the reporter's own record behind the withholding rule.
+        modelBuilder.Entity<ContentReport>()
+            .HasIndex(r => new { r.ContentAuthorUserId, r.Status });
+
+        modelBuilder.Entity<ContentReport>()
+            .HasIndex(r => new { r.ReporterUserId, r.Status });
+
+        // ContentReport -> Reporter (SetNull; the journal outlives the account)
+        modelBuilder.Entity<ContentReport>()
+            .HasOne(r => r.Reporter)
+            .WithMany()
+            .HasForeignKey(r => r.ReporterUserId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        // No query filter on ContentReport itself. The queue always sees everything.
+
+        // Reported content is hidden everywhere by reading it out of the model. Named so
+        // IgnoreQueryFilters(["Moderation"]) can drop just this one.
+        modelBuilder.Entity<Review>()
+            .HasQueryFilter("Moderation", r => r.ModerationState == ModerationState.Visible);
+        modelBuilder.Entity<TrailObstacle>()
+            .HasQueryFilter("Moderation", to => to.ModerationState == ModerationState.Visible);
+
+        // EF logs PossibleIncorrectRequiredNavigationWithQueryFilterInteractionWarning for
+        // ReviewImage and TrailObstacleSolvedVote because of those two filters. Deliberate:
+        // filtering ReviewImage as well would drop hidden reviews' images out of the backup
+        // export in DataTransferService, which is data loss. It is a log line, not a fault.
 
         // Decimal precision for entity properties
         modelBuilder.Entity<Trail>()
