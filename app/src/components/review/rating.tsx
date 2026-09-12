@@ -53,7 +53,8 @@ export const Rating = ({
   }
 
   if (!hasReviews) {
-    return <Text style={textStyle}>{t("review.noReviews")}</Text>;
+    // The compact variant sits inline on cards, where the full sentence crowds out the trail name.
+    return <Text style={textStyle}>{t(variant === "compact" ? "review.noReviewsShort" : "review.noReviews")}</Text>;
   }
 
   if (variant === "compact") {

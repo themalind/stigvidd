@@ -446,6 +446,22 @@ public class TrailsControllerIntegrationTests : IClassFixture<StigViddWebApplica
     }
 
     [Fact]
+    public async Task GetAllTrails_ShouldReturnAverageRating()
+    {
+        // Arrange
+        var client = _factory.CreateClient();
+
+        // Act
+        var response = await client.GetAsync("/api/v1/trails", TestContext.Current.CancellationToken);
+
+        // Assert — the average is projected in the query, so this proves it translates to SQL.
+        // Storsjoleden carries a single 3.5 review; an unreviewed trail reads 0.
+        var trails = await response.Content.ReadFromJsonAsync<List<TrailShortInfoResponse>>(TestContext.Current.CancellationToken);
+        trails!.Single(t => t.Identifier == StorsjoledenIdentifier).AverageRating.Should().Be(3.5M);
+        trails.Should().Contain(t => t.AverageRating == 0M);
+    }
+
+    [Fact]
     public async Task GetTrailMarkers_ShouldReturnMarkers()
     {
         // Arrange

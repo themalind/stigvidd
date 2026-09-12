@@ -18,6 +18,12 @@ import { Modal, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { Divider, Text, useTheme } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+// Minimum-rating steps; undefined is the "all ratings" button.
+const RATING_STEPS: (number | undefined)[] = [undefined, 3, 4, 4.5];
+
+// 4.5 reads as "4,5" in Swedish and "4.5" in English; whole steps carry no decimal.
+const formatRating = (value: number) => (Number.isInteger(value) ? String(value) : value.toLocaleString());
+
 interface TrailFilterModalProps {
   visible: boolean;
   onClose: () => void;
@@ -31,6 +37,8 @@ interface TrailFilterModalProps {
   onClearFilters: () => void;
   hasLocation: boolean;
   showSort?: boolean;
+  // Overrides the default header, "Filter & Sortering".
+  title?: string;
 }
 
 export const TrailFilterModal: React.FC<TrailFilterModalProps> = ({
@@ -46,6 +54,7 @@ export const TrailFilterModal: React.FC<TrailFilterModalProps> = ({
   onClearFilters,
   hasLocation,
   showSort = true,
+  title,
 }) => {
   const { t } = useTranslation();
   const theme = useTheme();
@@ -75,6 +84,7 @@ export const TrailFilterModal: React.FC<TrailFilterModalProps> = ({
 
   const sortOptions = useMemo(
     () => [
+      { label: t("filter.sortRatingDesc"), value: "rating-desc" },
       { label: t("filter.sortNameAsc"), value: "name-asc" },
       { label: t("filter.sortNameDesc"), value: "name-desc" },
       { label: t("filter.sortLengthAsc"), value: "length-asc" },
@@ -94,7 +104,7 @@ export const TrailFilterModal: React.FC<TrailFilterModalProps> = ({
           >
             <Text style={[s.clearButton, { color: theme.colors.onSecondary }]}>{t("filter.clear")}</Text>
           </Pressable>
-          <Text style={s.headerTitle}>{t("filter.title")}</Text>
+          <Text style={s.headerTitle}>{title ?? t("filter.title")}</Text>
           <Pressable style={[s.doneButtonWrapper, { backgroundColor: theme.colors.primary }]} onPress={onClose}>
             <Text style={[s.doneButton, { color: theme.colors.onPrimary }]}>{t("filter.done")}</Text>
           </Pressable>
@@ -247,6 +257,35 @@ export const TrailFilterModal: React.FC<TrailFilterModalProps> = ({
           </View>
           <Divider />
 
+          <View style={s.section}>
+            <Text style={s.sectionTitle}>{t("filter.rating")}</Text>
+            <View style={s.buttonGroup}>
+              {RATING_STEPS.map((step) => {
+                const selected = filters.minRating === step;
+                return (
+                  <Pressable
+                    key={step ?? "all"}
+                    testID={`filter-rating-${step === undefined ? "all" : String(step).replace(".", "-")}`}
+                    style={[
+                      s.filterButton,
+                      selected ? { backgroundColor: theme.colors.primary } : { backgroundColor: theme.colors.surface },
+                    ]}
+                    onPress={() => onUpdateFilter("minRating", step)}
+                  >
+                    <Text
+                      style={[
+                        s.buttonText,
+                        selected ? { color: theme.colors.onPrimary } : { color: theme.colors.onSurface },
+                      ]}
+                    >
+                      {step === undefined ? t("filter.all") : `${formatRating(step)}+`}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </View>
+          <Divider />
           <View style={s.section}>
             <Text style={s.sectionTitle}>{t("filter.trailLength", { min: minLength, max: maxLength })}</Text>
             <RangeSlider

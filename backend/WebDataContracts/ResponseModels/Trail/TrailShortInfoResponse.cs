@@ -11,11 +11,13 @@ public class TrailShortInfoResponse
     public bool Accessibility { get; set; }
     public int? Classification { get; set; }
     public required string City { get; set; }
+    public decimal AverageRating { get; set; }
     public decimal? StartLatitude { get; set; }
     public decimal? StartLongitude { get; set; }
 
     public static TrailShortInfoResponse Create(string identifier, string name, decimal trailLength,
-        bool accessibility, int? classification, string city, decimal? startLatitude = null, decimal? startLongitude = null)
+        bool accessibility, int? classification, string city, decimal averageRating = 0m,
+        decimal? startLatitude = null, decimal? startLongitude = null)
     {
         return new TrailShortInfoResponse
         {
@@ -25,6 +27,7 @@ public class TrailShortInfoResponse
             Accessibility = accessibility,
             Classification = classification,
             City = city,
+            AverageRating = averageRating,
             StartLatitude = startLatitude,
             StartLongitude = startLongitude
         };

@@ -11,9 +11,12 @@ import { Trail } from "@/data/types";
 import { flushUntilGone, settle } from "@/test/flush";
 import { renderWithProviders } from "@/test/render";
 import { fireEvent, screen } from "@testing-library/react-native";
+import { Image } from "expo-image";
 import { StyleSheet } from "react-native";
 
 type Theme = typeof AppDefaultTheme | typeof AppDarkTheme;
+
+const SYMBOL_URL = "https://media.stigvidd.se/symbols/bla-trekant.png";
 
 const TRAIL = {
   identifier: "t1",
@@ -82,12 +85,13 @@ describe("what the panel states about the trail", () => {
 });
 
 describe("the explanations behind the info icons", () => {
-  it("keeps both closed until asked for", () => {
-    show();
+  it("keeps them all closed until asked for", () => {
+    show({ trailSymbolImage: SYMBOL_URL });
 
     expect(screen.queryByText("Svårighetsgrader")).toBeNull();
     expect(screen.queryByTestId("difficulty-info-card")).toBeNull();
     expect(screen.queryByTestId("accessibility-info-card")).toBeNull();
+    expect(screen.queryByTestId("symbol-info-image-frame")).toBeNull();
   });
 
   it("opens the difficulty explanation", async () => {
@@ -97,6 +101,22 @@ describe("the explanations behind the info icons", () => {
     await settle();
 
     expect(screen.getByText("Svårighetsgrader")).toBeTruthy();
+  });
+
+  it("offers no symbol explanation for a trail with no symbol image", () => {
+    show();
+
+    expect(screen.queryByTestId("trail-info-symbol-help")).toBeNull();
+  });
+
+  it("opens the symbol explanation", async () => {
+    show({ trailSymbolImage: SYMBOL_URL });
+
+    fireEvent.press(screen.getByTestId("trail-info-symbol-help"));
+    await settle();
+
+    expect(screen.getByText("Ledmarkering")).toBeTruthy();
+    expect(screen.UNSAFE_getByType(Image).props.source).toBe(SYMBOL_URL);
   });
 
   it("opens the accessibility explanation", async () => {
@@ -145,10 +165,11 @@ describe("the explanations behind the info icons", () => {
 
   // A 17pt glyph is smaller than a finger, so the touch target is the slop around it.
   it("gives each info icon a reachable touch target", () => {
-    show();
+    show({ trailSymbolImage: SYMBOL_URL });
 
     expect(screen.getByTestId("trail-info-difficulty-help").props.hitSlop).toBe(16);
     expect(screen.getByTestId("trail-info-accessibility-help").props.hitSlop).toBe(16);
+    expect(screen.getByTestId("trail-info-symbol-help").props.hitSlop).toBe(16);
   });
 });
 

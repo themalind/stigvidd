@@ -64,6 +64,7 @@ function trail(overrides: Partial<TrailShortInfoResponse> = {}): TrailShortInfoR
     accessibility: false,
     classification: 1,
     city: "Borås",
+    averageRating: 0,
     ...overrides,
   };
 }

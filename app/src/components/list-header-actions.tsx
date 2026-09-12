@@ -32,6 +32,7 @@ interface ListHeaderActionsProps {
   activeFilterCount: number;
   showingLabel: string; // Pre-translated; the plural key differs per list.
   onClearFilters: () => void;
+  showActions?: boolean; // False leaves only the title row.
 }
 
 // Compact filter controls for the profile lists: two icons inside the existing header
@@ -49,6 +50,7 @@ export default function ListHeaderAction({
   activeFilterCount,
   showingLabel,
   onClearFilters,
+  showActions = true,
 }: ListHeaderActionsProps) {
   // Panel visibility only — no filter state lives here.
   const [searchOpen, setSearchOpen] = useState(false);
@@ -96,6 +98,10 @@ export default function ListHeaderAction({
   const theme = useTheme();
   const { t } = useTranslation();
   const hasActive = activeFilterCount > 0 || searchQuery.length > 0;
+
+  if (!showActions) {
+    return <View style={s.headerRow}>{children}</View>;
+  }
 
   return (
     <View>

@@ -158,6 +158,40 @@ it("reveals the distance slider only while near-me is on", () => {
   expect(screen.getByText("Max avstånd: 50 km")).toBeTruthy();
 });
 
+it("sends a minimum rating back as a number, and 'all' as no filter", () => {
+  show();
+
+  fireEvent.press(screen.getByTestId("filter-rating-4-5"));
+  expect(onUpdateFilter).toHaveBeenCalledWith("minRating", 4.5);
+
+  fireEvent.press(screen.getByTestId("filter-rating-3"));
+  expect(onUpdateFilter).toHaveBeenCalledWith("minRating", 3);
+
+  show({ filters: { minRating: 4 } });
+  fireEvent.press(screen.getAllByTestId("filter-rating-all")[0]);
+  expect(onUpdateFilter).toHaveBeenCalledWith("minRating", undefined);
+});
+
+it("marks which rating step is active", () => {
+  show({ filters: { minRating: 4 } });
+
+  expect(screen.getByTestId("filter-rating-4")).toHaveStyle({
+    backgroundColor: AppDefaultTheme.colors.primary,
+  });
+  expect(screen.getByTestId("filter-rating-all")).toHaveStyle({
+    backgroundColor: AppDefaultTheme.colors.surface,
+  });
+});
+
+it("offers the highest-rated sort", () => {
+  show();
+
+  openSelect("Namn (A-Ö)");
+  fireEvent.press(screen.getByText("Högst betyg"));
+
+  expect(onUpdateSort).toHaveBeenCalledWith("rating-desc");
+});
+
 it("marks which accessibility choice is active", () => {
   show({ filters: { accessibility: true } });
 

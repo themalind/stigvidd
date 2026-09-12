@@ -14,6 +14,7 @@ export interface TrailShortInfoResponse {
   /** @nullable */
   classification?: number | null;
   city: string;
+  averageRating?: number;
   /** @nullable */
   startLatitude?: number | null;
   /** @nullable */

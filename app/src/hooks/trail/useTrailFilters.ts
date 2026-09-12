@@ -9,7 +9,15 @@ import { FilterOptions, LatLng } from "@/data/types";
 import { getDistance } from "geolib";
 import { useMemo, useState } from "react";
 
-export type SortOption = "name-asc" | "name-desc" | "length-asc" | "length-desc" | "distance-asc" | "distance-desc";
+export type SortOption =
+  | "name-asc"
+  | "name-desc"
+  | "length-asc"
+  | "length-desc"
+  | "distance-asc"
+  | "distance-desc"
+  | "rating-asc"
+  | "rating-desc";
 
 export interface FilterableTrail {
   identifier: string;
@@ -20,7 +28,22 @@ export interface FilterableTrail {
   city: string;
   startLatitude?: number;
   startLongitude?: number;
+  // The trail list carries a precomputed average; saved trails carry the ratings themselves.
+  averageRating?: number;
+  ratingResponse?: { rating: number }[];
 }
+
+// 0 for an unrated trail, which keeps it out of every "at least N stars" filter.
+export const trailRating = (trail: FilterableTrail): number => {
+  if (typeof trail.averageRating === "number") {
+    return trail.averageRating;
+  }
+  const ratings = trail.ratingResponse;
+  if (!ratings || ratings.length === 0) {
+    return 0;
+  }
+  return ratings.reduce((sum, r) => sum + r.rating, 0) / ratings.length;
+};
 
 export const useTrailFilters = <T extends FilterableTrail>(trails: T[] | undefined, userLocation: LatLng | null) => {
   const [filters, setFilters] = useState<FilterOptions>({});
@@ -99,6 +122,11 @@ export const useTrailFilters = <T extends FilterableTrail>(trails: T[] | undefin
       result = result.filter((trail) => trail.trailLength <= maxLength);
     }
 
+    const minRating = filters.minRating;
+    if (minRating !== undefined) {
+      result = result.filter((trail) => trailRating(trail) >= minRating);
+    }
+
     if (filters.accessibility) {
       result = result.filter((trail) => trail.accessibility === filters.accessibility);
     }
@@ -130,6 +158,12 @@ export const useTrailFilters = <T extends FilterableTrail>(trails: T[] | undefin
         break;
       case "distance-desc":
         result.sort((a, b) => (b.distanceKm ?? -Infinity) - (a.distanceKm ?? -Infinity));
+        break;
+      case "rating-asc":
+        result.sort((a, b) => trailRating(a) - trailRating(b));
+        break;
+      case "rating-desc":
+        result.sort((a, b) => trailRating(b) - trailRating(a));
     }
     return result;
   }, [trailsWithDistance, trails, filters, sortBy, userLocation, searchQuery]);
@@ -139,6 +173,9 @@ export const useTrailFilters = <T extends FilterableTrail>(trails: T[] | undefin
     setFilters((prev) => ({ ...prev, [key]: value }));
     if (key === "nearMe" && value === true) {
       setSortBy("distance-asc");
+    }
+    if (key === "minRating" && value !== undefined) {
+      setSortBy("rating-desc");
     }
   };
 

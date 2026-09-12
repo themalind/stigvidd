@@ -34,6 +34,16 @@ jest.mock("@/hooks/hike/useLatestHike", () => ({
   useLatestHike: () => mockLatest,
 }));
 
+// The randomizer fetches the whole trail list; it has a suite of its own.
+jest.mock("@/components/home/adventure-card", () => {
+  const { View } = jest.requireActual("react-native");
+  const ReactActual = jest.requireActual("react");
+  return {
+    __esModule: true,
+    default: () => ReactActual.createElement(View, { testID: "adventure-card" }),
+  };
+});
+
 // The banner's own two queries would reach the network; it has a suite of its own.
 jest.mock("@/hooks/useWeather", () => ({ useWeather: () => ({ data: undefined }) }));
 jest.mock("@/hooks/useCityName", () => ({ useCityName: () => ({ data: "Borås", isPending: false }) }));
@@ -235,4 +245,18 @@ it("splits the bottom row evenly between the two cards", async () => {
       overflow: "hidden",
     });
   }
+});
+
+it("puts the randomizer below the two browse cards", async () => {
+  await showLoaded();
+
+  // The rendered tree, not the JSX children: the card is given no props, so its testID
+  // exists only once it renders.
+  const scroll = screen.getByTestId("home-scroll");
+  const order = scroll
+    .findAll((node: typeof scroll) => typeof node.props?.testID === "string")
+    .map((node: typeof scroll) => node.props.testID);
+
+  expect(order.indexOf("adventure-card")).toBeGreaterThan(order.indexOf("home-card-row"));
+  expect(order.at(-1)).toBe("adventure-card");
 });

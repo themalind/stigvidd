@@ -10,11 +10,12 @@ import { Trail } from "@/data/types";
 import { classificationParser } from "@/utils/classification-parser";
 import { getDifficultyIcon } from "@/utils/getDifficultyIcon";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Icon, Surface, useTheme } from "react-native-paper";
-import { useTranslation } from "react-i18next";
 import AccesibilityInfoModal from "./accessibility-info-modal";
 import DifficultyInfoModal from "./difficulty-info-modal";
+import SymbolInfoModal from "./symbol-info-modal";
 
 interface TrailinfoProps {
   trail: Trail;
@@ -25,13 +26,31 @@ export default function TrailInfo({ trail }: TrailinfoProps) {
   const { t } = useTranslation();
   const [difficultyModal, setDifficultyModal] = useState(false);
   const [accessibiltyModal, setAccessibilityModal] = useState(false);
+  const [symbolModal, setSymbolModal] = useState(false);
+  // The API sends "" for a trail without a symbol image, never null.
+  const hasSymbolImage = Boolean(trail.trailSymbolImage);
 
   return (
     <Surface testID="trail-info" elevation={0} style={[s.container, { backgroundColor: theme.colors.surface }]}>
       <Text style={[s.sectionTitle, { color: theme.colors.onSurface }]}>{t("trail.info")}</Text>
       <View style={s.grid}>
         <View style={s.item}>
-          <Text style={[s.label, { color: theme.colors.onSurfaceVariant }]}>{t("trail.marking")}</Text>
+          <View style={s.infoIconContainer}>
+            <Text style={[s.label, { color: theme.colors.onSurfaceVariant }]}>{t("trail.marking")}</Text>
+            {hasSymbolImage && (
+              <>
+                <Pressable testID="trail-info-symbol-help" hitSlop={16} onPress={() => setSymbolModal(true)}>
+                  <Icon source="information" size={17} color={theme.colors.onSurfaceVariant} />
+                </Pressable>
+                <SymbolInfoModal
+                  imageUrl={trail.trailSymbolImage}
+                  symbol={trail.trailSymbol}
+                  onDismiss={() => setSymbolModal(false)}
+                  visible={symbolModal}
+                />
+              </>
+            )}
+          </View>
           <Text style={[s.value, { color: theme.colors.onSurface }]}>{trail.trailSymbol}</Text>
         </View>
         <View style={s.item}>

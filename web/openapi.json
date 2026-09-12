@@ -5308,6 +5308,10 @@
           "city": {
             "type": "string"
           },
+          "averageRating": {
+            "type": "number",
+            "format": "decimal"
+          },
           "startLatitude": {
             "type": "number",
             "format": "decimal",
