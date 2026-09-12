@@ -12,12 +12,7 @@ that these notices travel with any redistribution.
 Licences were read from each package's `.nuspec` in the local NuGet cache, for the exact
 version referenced, rather than from documentation.
 
-## Three entries that need more than a table row
-
-**CsvHelper is dual-licensed `MS-PL OR Apache-2.0`, and this project elects Apache-2.0.**
-The election matters: the FSF classes the Microsoft Public Licence as a free software licence
-but **GPL-incompatible**, so the MS-PL arm could not be combined with AGPL-covered code. The
-Apache-2.0 arm is GPLv3/AGPLv3-compatible. Used only by `MapData`.
+## Two entries that need more than a table row
 
 **MailKit brings MimeKit, BouncyCastle.Cryptography and System.Security.Cryptography.Pkcs.**
 Only `MailKit` is referenced by `Core.csproj`; the other three arrive transitively and are
@@ -37,7 +32,6 @@ native component that ships inside the deployed API image — `ImageProcessingSe
 | --- | --- | --- |
 | AwesomeAssertions | 9.6.0 | Apache-2.0 |
 | BouncyCastle.Cryptography | 2.6.2 | MIT |
-| CsvHelper | 33.1.0 | MS-PL OR Apache-2.0 |
 | Duende.AccessTokenManagement | 4.2.0 | Apache-2.0 |
 | FluentValidation.DependencyInjectionExtensions | 12.1.1 | Apache-2.0 |
 | FluentValidation | 12.1.1 | Apache-2.0 |
@@ -98,7 +92,8 @@ apt key and is purged in the same layer.
 ## Data
 
 Trail and facility data for the Borås area comes from Borås Stad's open data portal and is
-imported by `MapData`. No data files are committed to this repository.
+brought in through the trail import (`Core/TrailImport/`). No data files are committed to this
+repository.
 
 That data is published under **Creative Commons CC0 1.0** — a public domain dedication, with
 Borås Stad named as the rights holder in the portal's rights statement. CC0 waives copyright

@@ -105,6 +105,14 @@ public class EndpointAuthorizationTests : IClassFixture<StigViddWebApplicationFa
         "GET /api/v1/admin/content-reports/reports/{identifier}",
         "GET /api/v1/admin/content-reports/vocabulary",
         "POST /api/v1/admin/content-reports/reports/{identifier}/decide",
+
+        // Mail copy. Editing it changes what every recipient of that template reads,
+        // and verify-email is what stands between a new account and being able to
+        // log in at all.
+        "GET /api/v1/admin/mail-templates",
+        "GET /api/v1/admin/mail-templates/{identifier}",
+        "POST /api/v1/admin/mail-templates/{identifier}/preview",
+        "PUT /api/v1/admin/mail-templates/{identifier}",
     ];
 
     public EndpointAuthorizationTests(StigViddWebApplicationFactory<Program> factory)

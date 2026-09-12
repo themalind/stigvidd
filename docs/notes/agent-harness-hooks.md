@@ -68,13 +68,16 @@ look harder; a missed one makes it fail open.
 mean resolving `--project`, `-p`, a bare path, a solution filter and the cwd, and getting any
 of that wrong fails **open** on a real dev server. Two consequences, both measured:
 
-**A console project is a false positive.** `backend/MapData` is an ETL tool that imports and
-exits, but `dotnet run --project MapData` is denied as "the API host". Do not loosen the pattern.
-Run the built binary, which is not a `dotnet run` at all:
+**A console project is a false positive.** Any such invocation is denied as "the API host",
+including one on a tool that imports something and exits. This was measured against
+`backend/MapData`, an ETL tool that has since been removed — there is no console project in
+the solution today, so the case is latent rather than live, and the guidance stands for the
+next one. Do not loosen the pattern. Run the built binary, which does not match the pattern
+at all:
 
 ```sh
-cd backend && dotnet build MapData/MapData.csproj
-./MapData/bin/Debug/net10.0/MapData --help
+cd backend && dotnet build Some/Tool.csproj
+./Some/bin/Debug/net10.0/Tool --help
 ```
 
 That is the better way to check a console tool's exit codes anyway, since `dotnet run`

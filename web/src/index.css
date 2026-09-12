@@ -132,3 +132,79 @@ body,
     @apply bg-background text-foreground;
   }
 }
+
+/* The mail-template editor.
+ *
+ * The editing canvas is a STRUCTURE editor, not a preview: Tailwind's preflight resets
+ * paragraph margins and link colours, so what is shown here is deliberately not what the mail
+ * looks like. The sandboxed iframe preview is the thing that answers that question. Enough
+ * spacing is restored to make the structure readable while editing.
+ */
+.prose-mail :where(p) {
+  margin-block: 0.6em;
+}
+
+.prose-mail :where(h1, h2, h3, h4, h5, h6) {
+  font-weight: 600;
+  margin-block: 0.8em 0.4em;
+}
+
+.prose-mail :where(ul, ol) {
+  margin-block: 0.6em;
+  padding-inline-start: 1.5em;
+}
+
+.prose-mail :where(ul) { list-style: disc; }
+.prose-mail :where(ol) { list-style: decimal; }
+
+.prose-mail :where(a) {
+  color: var(--primary);
+  text-decoration: underline;
+}
+
+.prose-mail :where(blockquote) {
+  border-inline-start: 3px solid var(--border);
+  padding-inline-start: 0.8em;
+  margin-block: 0.6em;
+}
+
+/* A placeholder chip. The label is the token's name rather than its friendly label because
+ * CSS cannot reach the catalogue -- the friendly wording lives in the palette beside the
+ * editor, and the raw name is what an operator needs to recognise here anyway.
+ *
+ * The node is an atom, so this is drawn as one indivisible thing on purpose: a placeholder
+ * that can be half-deleted is a mail that stops sending. */
+.prose-mail [data-token]::after {
+  content: "{{" attr(data-token) "}}";
+}
+
+.prose-mail [data-token] {
+  display: inline-block;
+  border-radius: 9999px;
+  padding: 0.05em 0.6em;
+  margin-inline: 0.1em;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.85em;
+  white-space: nowrap;
+  background: color-mix(in oklab, var(--primary) 15%, transparent);
+  color: var(--foreground);
+  border: 1px solid color-mix(in oklab, var(--primary) 35%, transparent);
+  cursor: default;
+  user-select: none;
+}
+
+.prose-mail [data-token].ProseMirror-selectednode {
+  outline: 2px solid var(--ring);
+}
+
+/* ProseMirror's own minimum: without white-space handling the editable behaves in ways that
+ * read as TipTap bugs. Taken from prosemirror-view's stylesheet rather than importing it, so
+ * the editor chunk stays JS-only. */
+.ProseMirror {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.ProseMirror:focus {
+  outline: none;
+}

@@ -1,7 +1,16 @@
 // SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { DatabaseBackup, Flag, Gauge, Images, Route, Settings2, Users } from "lucide-react";
+import {
+  DatabaseBackup,
+  Flag,
+  Gauge,
+  Images,
+  Mail,
+  Route,
+  Settings2,
+  Users,
+} from "lucide-react";
 import {
   SidebarGroup,
   SidebarGroupContent,
@@ -61,6 +70,14 @@ export default function NavMain() {
               <NavLink to={"/moderation"}>
                 <Flag />
                 <span>Moderation</span>
+              </NavLink>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild>
+              <NavLink to={"/mail-templates"}>
+                <Mail />
+                <span>Mail Templates</span>
               </NavLink>
             </SidebarMenuButton>
           </SidebarMenuItem>

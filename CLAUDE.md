@@ -118,7 +118,6 @@ Core/Spatial/                  GeoPointFactory, GeoPathSerializer, LocalMetricPr
 Core/TrailImport/              the Boras sync: Source/, Matching/, Review/, Apply/
 Infrastructure/Data/Entities/  EF entities and the DbContext
 Infrastructure/Migrations/     EF migrations; DbMigrationRunner applies them on startup
-MapData/                       one-off importers (trails, facilities, city areas)
 ```
 
 - **`Core/Results/` and `Core/Spatial/` are `global using`**, declared once per assembly in
@@ -126,12 +125,11 @@ MapData/                       one-off importers (trails, facilities, city areas
   explicitly, which is what stops it drifting back into the catch-all `Core/Common/` used to
   be. Its four subfolders each have their own namespace
   (`Core.TrailImport.Apply` and so on), so an import type is never one `using` away by
-  accident. `MapData` needs no `Core.Results`, `StigviddAPI` no `Core.Spatial` — each
-  `GlobalUsings.cs` carries only what its assembly actually compiles against.
+  accident. `StigviddAPI` needs no `Core.Spatial` — each `GlobalUsings.cs` carries only what
+  its assembly actually compiles against.
 - Unit tests mirror the source folder: `Tests/UnitTests/TrailImportTests/{Apply,Matching,
   Review,Source}` and `SpatialTests`, alongside `ServiceTests`, `RepositoryTests`,
-  `FactoryTests`, `ValidatorTests`, `ControllerTests` and `ImporterTests` — the last being
-  `MapData/`'s one-off importers, **not** the sync.
+  `FactoryTests`, `ValidatorTests` and `ControllerTests`.
 
 - **Validators are auto-registered.** `Program.cs` calls
   `AddValidatorsFromAssemblyContaining<AddToUserFavoriteValidator>()`, so a new validator in

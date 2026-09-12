@@ -1784,6 +1784,164 @@
         ]
       }
     },
+    "/api/v1/admin/mail-templates": {
+      "get": {
+        "tags": [
+          "MailTemplates"
+        ],
+        "operationId": "MailTemplates_GetAll",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MailTemplateListItemResponse"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/admin/mail-templates/{identifier}": {
+      "get": {
+        "tags": [
+          "MailTemplates"
+        ],
+        "operationId": "MailTemplates_GetByIdentifier",
+        "parameters": [
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MailTemplateResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "MailTemplates"
+        ],
+        "operationId": "MailTemplates_Update",
+        "parameters": [
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "request",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateMailTemplateRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MailTemplateResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/admin/mail-templates/{identifier}/preview": {
+      "post": {
+        "tags": [
+          "MailTemplates"
+        ],
+        "operationId": "MailTemplates_Preview",
+        "parameters": [
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-position": 1
+          }
+        ],
+        "requestBody": {
+          "x-name": "request",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PreviewMailTemplateRequest"
+              }
+            }
+          },
+          "required": true,
+          "x-position": 2
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MailTemplatePreviewResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
     "/api/v1/Media": {
       "get": {
         "tags": [
@@ -4941,6 +5099,208 @@
           },
           "allowResharing": {
             "type": "boolean"
+          }
+        }
+      },
+      "MailTemplateListItemResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "identifier",
+          "key",
+          "language",
+          "subject"
+        ],
+        "properties": {
+          "identifier": {
+            "type": "string"
+          },
+          "key": {
+            "type": "string"
+          },
+          "language": {
+            "type": "string"
+          },
+          "subject": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "lastUpdatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "isKnown": {
+            "type": "boolean"
+          },
+          "unknownTokenCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "missingTokenCount": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "MailTemplateResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "identifier",
+          "key",
+          "language",
+          "subject",
+          "bodyHtml",
+          "bodyText",
+          "tokens",
+          "unknownTokens",
+          "missingTokens"
+        ],
+        "properties": {
+          "identifier": {
+            "type": "string"
+          },
+          "key": {
+            "type": "string"
+          },
+          "language": {
+            "type": "string"
+          },
+          "subject": {
+            "type": "string"
+          },
+          "bodyHtml": {
+            "type": "string"
+          },
+          "bodyText": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "lastUpdatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "purpose": {
+            "type": "string",
+            "nullable": true
+          },
+          "isKnown": {
+            "type": "boolean"
+          },
+          "tokens": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MailTemplateTokenResponse"
+            }
+          },
+          "unknownTokens": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "missingTokens": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "MailTemplateTokenResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "label",
+          "description",
+          "sampleValue"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "sampleValue": {
+            "type": "string"
+          },
+          "isUsed": {
+            "type": "boolean"
+          }
+        }
+      },
+      "UpdateMailTemplateRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "subject",
+          "bodyHtml",
+          "bodyText"
+        ],
+        "properties": {
+          "subject": {
+            "type": "string"
+          },
+          "bodyHtml": {
+            "type": "string"
+          },
+          "bodyText": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "MailTemplatePreviewResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "subject",
+          "bodyHtml",
+          "bodyText"
+        ],
+        "properties": {
+          "subject": {
+            "type": "string"
+          },
+          "bodyHtml": {
+            "type": "string"
+          },
+          "bodyText": {
+            "type": "string"
+          }
+        }
+      },
+      "PreviewMailTemplateRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "subject",
+          "bodyHtml",
+          "bodyText"
+        ],
+        "properties": {
+          "subject": {
+            "type": "string"
+          },
+          "bodyHtml": {
+            "type": "string"
+          },
+          "bodyText": {
+            "type": "string"
           }
         }
       },

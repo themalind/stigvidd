@@ -183,9 +183,8 @@ src/api/generated` then fails with "the generated API client is stale" for reaso
   left half a guard dead); `path.resolve` cannot parse a Windows root on Linux; command
   guards must strip bash, cmd and PowerShell prefix runs. Plus the exit-code contract and
   why `scripts/check-hooks.mjs` exists, and three ways the command guards surprise you: they
-  match a command SHAPE not a project, so `dotnet run --project MapData` — a console ETL tool
-  that exits — is denied as "the API host" (run the built binary instead of loosening the
-  pattern); a rule with TWO conditions can take its head from one command and its trigger word
+  match a command SHAPE not a project, so a console tool that merely exits is still denied as
+  "the API host" (run the built binary instead of loosening the pattern); a rule with TWO conditions can take its head from one command and its trigger word
   from an unrelated one later in the same line, so `docker compose ps || echo "not up yet"` is
   denied over the word `up` in English prose while the reversed order passes and a quoted
   `docker compose up` passes too (this note claimed the opposite until it was measured) — but a
@@ -197,6 +196,33 @@ src/api/generated` then fails with "the generated API client is stale" for reaso
   file content with the Write tool. And the hooks `process.exit()` at module scope, so
   `import`-ing one to test its `decide()` kills the importer — spawn it with the event on stdin
   instead.
+- [When the defence is an allowlist, a test asserting "this obfuscated attack is rejected" cannot fail](allowlist-defences-make-obfuscation-tests-tautological.md) —
+  Writing a validator or sanitiser that blocks unsafe URLs and markup: `MailHtmlPolicy` and
+  `isSafeMailUrl` HTML-decode and strip control characters before checking a `javascript:` /
+  `data:` scheme against an allowlist, and two security tests named for that decoding passed
+  with both lines deleted — measured, `failed: 0`. Any normalise/decode step in front of an
+  allowlist can only move a value TOWARDS being accepted, so no rejection test can ever cover
+  it; the test that bites asserts an obfuscated LEGITIMATE value is still accepted. Same trap
+  for the tag/attribute allowlist and for `ApprovedAnonymousEndpoints` /
+  `ApprovedAdminEndpoints`. Before trusting any new security assertion, ask which line of
+  production code you would delete to make it fail — see the prove-it-bites skill.
+- [A WYSIWYG over HTML somebody else wrote rewrites it by default, and three TipTap defaults are how](wysiwyg-over-operator-authored-html.md) —
+  Editing operator-authored `MailTemplates` HTML in TipTap: "has this changed" must come from
+  edit EVENTS, never from comparing strings, or merely opening the mail-template editor
+  rewrites every row. `Link` injects `rel`/`target` and `HTMLAttributes: {}` does NOT clear
+  them; `setContent`'s `emitUpdate` defaults to **true**; unknown attributes like the inline
+  `style` on the verification button are dropped unless a passthrough extension keeps them.
+  ProseMirror writes `style.cssText`, so `#3f6b43` becomes `rgb(63, 107, 67)` — measured as the
+  editor's doing, not jsdom's. Compare for LOSS (`detectLoss`), not equality. `@tiptap/pm`
+  cannot be a `manualChunks` id; jsdom cannot type into a contenteditable but a headless
+  `new Editor` + `getHTML()` makes round-trip fidelity testable.
+- [`userEvent.type` reads `{{` as an escape, so a test that types a `{{Placeholder}}` never types one](userevent-type-eats-double-braces.md) —
+  In `web/` tests, `userEvent.type(field, "{{NickName}}")` types no placeholder at all —
+  `{`/`[` open keyboard descriptors and `{{` is the escape for a literal brace — so mail
+  template placeholder assertions fail with something plausible like *Unable to find an
+  element with the text*, while the code is correct. Use `userEvent.paste`. Also: Radix Tabs
+  label the panel by its trigger, so `getByLabelText` can match two elements, and a message
+  split by an interpolated expression needs a function matcher on `textContent`.
 - [The web test environment substitutes two things quietly: Blobs and `.env`](web-vitest-environment.md) —
   `web/` now has a Vitest + jsdom suite (`npm test` = `vitest run`, config in
   **`web/vitest.config.ts`, not `vite.config.ts`**), and two of the environment defaults hand

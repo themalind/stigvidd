@@ -135,12 +135,70 @@ the wording, which is the whole reason the copy lives in the database. See
 
 `20260912103250_AddMailOutbox` seeds `welcome`/`sv` that way as a worked example, and
 `20260912125829_AddEmailVerification` seeds `verify-email`/`sv` the same way. The latter takes
-three placeholders — `{{NickName}}`, `{{VerificationUrl}}` and `{{VerificationCode}}` — and an
-edit that drops one of them breaks registration, because a template using a placeholder the
-model has no value for fails the render and the enqueue fails with it.
+three placeholders — `{{NickName}}`, `{{VerificationUrl}}` and `{{VerificationCode}}`.
 
 No test applies a migration, so a test needing a template seeds its own — see
 `Tests/IntegrationTests/Mail/MailOutboxIntegrationTests.cs`.
+
+## Editing the wording
+
+Editing copy is what the table exists for, and it is done in the **web admin** — *Mail
+Templates* in the sidebar — rather than by hand on the host. `Key` and `Language` are not
+editable there: they are what the calling code passes to `EnqueueAsync`, so changing either
+orphans the call site.
+
+### The two ways to break a mail are not symmetric
+
+This is the whole basis of the editor, and both halves are measured in
+`Tests/UnitTests/ServiceTests/MailTemplateRendererTests.cs`:
+
+| the edit | what happens | what the editor does |
+| --- | --- | --- |
+| **adds** a placeholder the caller does not supply (`{{NickNmae}}`) | `Render` fails 400, `EnqueueAsync` fails with it, and **the mail is never sent** | refuses the save, naming the placeholder |
+| **drops** a placeholder the caller does supply | renders fine — a model key the template does not use is ignored — but the recipient gets a verification mail with no link in it | allows it, and says what the mail will no longer contain |
+
+Only the first stops mail. The second is a judgement for the operator, so it is a warning and
+not a refusal.
+
+### Which placeholders a template may use
+
+That set used to exist only as prose in the `Description` column, which nothing validated.
+It is now declared in [`Core/Services/MailTemplateCatalog.cs`](../backend/Core/Services/MailTemplateCatalog.cs)
+— a label, a description and a sample value per placeholder, per template key — and the editor
+shows it beside the copy.
+
+A catalogue that can drift from the call site would be no better than the prose it replaced,
+so `MailTemplateCatalogTests` drives the real caller, captures the model dictionary it passes,
+and asserts the two agree. **Adding a placeholder to a mail means adding it in both places**,
+or that test fails.
+
+A key the catalogue does not describe is not an error: nothing in C# sends it, so nothing can
+be said about what its caller supplies, and the editor reports rather than condemns it.
+
+### Preview
+
+`POST /api/v1/admin/mail-templates/{identifier}/preview` renders an **unsaved** draft through
+`IMailTemplateRenderer` with the catalogue's sample values — the same code path a real send
+takes. So a draft that would fail at enqueue fails in the editor first, with the same message,
+before it is saved. It writes nothing.
+
+### What the visual editor can and cannot keep
+
+The editor is TipTap over a deliberately small schema. Inline styles, link attributes and
+table attributes are carried through verbatim, because mail is styled inline and a schema that
+dropped them would turn the verification button into a plain link.
+
+Anything the schema cannot represent — `<table>` layouts, most of all — is **detected rather
+than silently rewritten**: the body is put through the schema headlessly on load, compared for
+what was dropped, and a template that would lose something opens in an HTML source view with a
+banner saying what. Two things change without being losses, and both are deliberate: the
+newlines between stored `<p>` blocks do not survive, and style *values* are re-serialised by
+the CSSOM (`#3f6b43` becomes `rgb(63, 107, 67)`).
+
+Nothing is written unless the operator actually edits something — dirtiness comes from edit
+events, never from comparing strings, precisely because the comparison would be true the
+moment the page opened. See
+[docs/notes/wysiwyg-over-operator-authored-html.md](notes/wysiwyg-over-operator-authored-html.md).
 
 ## Where the code is
 
@@ -148,6 +206,11 @@ No test applies a migration, so a test needing a template seeds its own — see
 | --- | --- |
 | `Core/Services/MailOutboxService.cs` | the enqueue API: validate, render, journal, signal |
 | `Core/Services/MailTemplateRenderer.cs` | `{{Placeholder}}` substitution and the encoding rules |
+| `Core/Services/MailTemplateCatalog.cs` | which placeholders each template key may use |
+| `Core/Services/MailTemplateAdminService.cs` | the editor's read/update/preview, and the unknown-placeholder refusal |
+| `Core/Services/MailHtmlPolicy.cs` | the email-safe markup allowlist a save is checked against |
+| `StigviddAPI/Controllers/MailTemplatesController.cs` | `api/v1/admin/mail-templates`, admin-only |
+| `web/src/lib/mail-template.ts` | the editor's pure rules: the token grammar, the HTML scanner, loss detection |
 | `Core/Services/MailOutboxQueue.cs` | the `Channel<int>` trigger |
 | `Core/Services/SmtpMailSender.cs` | MailKit; STARTTLS on 587 |
 | `Core/Services/LoggingMailSender.cs` | the no-op used when `Smtp:Host` is absent |

@@ -143,3 +143,65 @@ export const CLASSIFICATION: Record<number, string> = {
   2: "Medium",
   3: "Hard",
 };
+
+// ── mail templates ───────────────────────────────────────────────────────────
+// Tightened from the generated models, which are looser than the UI needs (orval marks the
+// value types optional/nullable). Asserted back to these in src/api/mail-templates.ts, which
+// is the convention src/api/trail.ts documents.
+
+export type MailTemplateToken = {
+  name: string;
+  label: string;
+  description: string;
+  sampleValue: string;
+  isUsed: boolean;
+};
+
+export type MailTemplateListItem = {
+  identifier: string;
+  key: string;
+  language: string;
+  subject: string;
+  description?: string | null;
+  lastUpdatedAt: string;
+  /** Whether any C# caller declares this key. False means nothing sends this row. */
+  isKnown: boolean;
+  /** Placeholders used that the caller does not supply. Any at all stops the mail. */
+  unknownTokenCount: number;
+  /** Placeholders supplied but unused. Renders fine; may mean a useless mail. */
+  missingTokenCount: number;
+};
+
+export type MailTemplate = {
+  identifier: string;
+  key: string;
+  language: string;
+  subject: string;
+  bodyHtml: string;
+  bodyText: string;
+  description?: string | null;
+  lastUpdatedAt: string;
+  purpose?: string | null;
+  /**
+   * Whether any C# caller declares this key. NOT the same as `tokens` being empty: an
+   * undeclared key has no token list because nothing knows what its caller passes, so nothing
+   * in it may be called unknown. A declared key with no tokens means the opposite.
+   */
+  isKnown: boolean;
+  tokens: MailTemplateToken[];
+  unknownTokens: string[];
+  missingTokens: string[];
+};
+
+export type UpdateMailTemplateRequest = {
+  subject: string;
+  bodyHtml: string;
+  bodyText: string;
+  description?: string | null;
+};
+
+export type MailTemplatePreview = {
+  subject: string;
+  bodyHtml: string;
+  bodyText: string;
+};

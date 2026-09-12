@@ -64,7 +64,7 @@ this tree, that is wrong more often than it is right:
 | the search | exact matches | in | what it used to say |
 | --- | --- | --- | --- |
 | `Glob **/Utilities.cs` | 2 | 2 files | *"That path **IS** the answer"* — naming `IntegrationTests/Utilities.cs` and dropping `UnitTests/Utilities.cs`, which exists |
-| `Grep Program` | 2 | 2 files | named `StigviddAPI::Program`, dropped `MapData::Program` |
+| `Grep Program` | 2 at the time | 2 files | named `StigviddAPI::Program`, dropped the other (`MapData::Program`, in a project since removed) |
 | `Grep Create` | 40 at `--limit 40`, 45 at 80 | 39 files | named one arbitrary `UserResponseFactory::Create` |
 
 The `Utilities.cs` row is the one that matters: a guard whose whole justification is *"it asks

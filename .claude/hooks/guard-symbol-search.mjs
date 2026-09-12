@@ -941,10 +941,11 @@ const FIXTURES = {
     { node: { id: "class:synthetic1", kind: "class", name: "LoosePart.cs", qualifiedName: "Nowhere::LoosePart.cs", filePath: "backend/Core/Nowhere.cs", startLine: 3, endLine: 90 }, score: 90.0 },
   ],
   // Two exact matches in two different files, and the reason the message lists instead of
-  // picking. Taking the widest here named StigviddAPI::Program and silently dropped
-  // MapData::Program, which exists.
+  // picking: taking the widest named one of them and silently dropped the other. Synthetic
+  // now — the second Program lived in backend/MapData, a project that has been removed — but
+  // the behaviour it pins is the same one the real two Utilities.cs still exercise below.
   program: [
-    { node: { id: "class:92521596", kind: "class", name: "Program", qualifiedName: "Program", filePath: "backend/MapData/Program.cs", startLine: 6, endLine: 151 }, score: 113.0 },
+    { node: { id: "class:92521596", kind: "class", name: "Program", qualifiedName: "Tool::Program", filePath: "backend/Tool/Program.cs", startLine: 6, endLine: 151 }, score: 113.0 },
     { node: { id: "class:c38cf800", kind: "class", name: "Program", qualifiedName: "StigviddAPI::Program", filePath: "backend/StigviddAPI/Program.cs", startLine: 20, endLine: 248 }, score: 112.4 },
   ],
   // The same defect on the Glob path, where the old text asserted "That path IS the answer"
@@ -1413,7 +1414,7 @@ function selfTest() {
     n++;
     ok(d !== null && d.nodes.length === 2, `Program should resolve to 2 declarations, got ${d?.nodes.length}`);
     const m = d ? message(d) : "";
-    for (const p of ["backend/MapData/Program.cs", "backend/StigviddAPI/Program.cs"]) {
+    for (const p of ["backend/Tool/Program.cs", "backend/StigviddAPI/Program.cs"]) {
       n++;
       ok(m.includes(p), `the denial dropped ${p} — it must name every match`);
     }

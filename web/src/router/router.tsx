@@ -9,6 +9,8 @@ import { createBrowserRouter, Navigate } from "react-router";
 const DashboardPage = lazy(() => import("@/pages/dashboard/dashboard-page"));
 const Layout = lazy(() => import("@/pages/Layout"));
 const LoginPage = lazy(() => import("@/pages/login/login-page"));
+const MailTemplatePage = lazy(() => import("@/pages/admin/mail-template-page"));
+const MailTemplatesPage = lazy(() => import("@/pages/admin/mail-templates-page"));
 const MediaPage = lazy(() => import("@/pages/media/media-page"));
 const MigrationPage = lazy(() => import("@/pages/admin/migration-page"));
 const ModerationPage = lazy(() => import("@/pages/admin/moderation-page"));
@@ -87,6 +89,16 @@ export const router = createBrowserRouter([
             path: "/moderation",
             handle: { title: "Moderation" },
             element: withSuspense(ModerationPage),
+          },
+          {
+            path: "/mail-templates",
+            handle: { title: "Mail Templates" },
+            element: withSuspense(MailTemplatesPage),
+          },
+          {
+            path: "/mail-templates/:identifier",
+            handle: { title: "Edit Mail Template" },
+            element: withSuspense(MailTemplatePage),
           },
           {
             path: "/migration",

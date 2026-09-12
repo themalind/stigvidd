@@ -51,7 +51,14 @@ all.
 The same applies to any guarded command name in prose — `dotnet watch`, `npm run dev`,
 `docker compose up`, `vitest` without `run` — and to `.claude/` docs, `docs/notes/` entries
 and skill files most of all, since those are precisely the files that *have* to name the
-commands they warn about. It is silent otherwise: the deny cannot be retried, so a session
+commands they warn about.
+
+It is **not only documentation files**. Measured again while writing
+`Tests/IntegrationTests/MailTemplatesController/EditedCopyReachesTheOutboxTests.cs`: a `///`
+comment explaining that the test exists *because* the stack cannot be brought up on a plain
+checkout named the compose command in inline code, and the heredoc writing that .cs file was
+denied. That shape recurs — a test or a hook whose comment says "this exists because you
+cannot run X here" has to name X — so it is worth expecting in source as much as in prose. It is silent otherwise: the deny cannot be retried, so a session
 that does not recognise the message tends to reword the documentation rather than change how
 it is writing it.
 

@@ -64,7 +64,6 @@ stigvidd/
 │   ├── Core/               # Services, validators, factories
 │   ├── Infrastructure/     # EF Core entities, DbContext, migrations
 │   ├── WebDataContracts/   # Request/response DTOs
-│   ├── MapData/            # GeoJSON/CSV import ETL tool (see below)
 │   └── Tests/              # Unit and integration tests
 ```
 
@@ -119,28 +118,6 @@ stigvidd/
 - Admin dashboard for trail management
 
 > **In progress:** Swedish/English language support (i18n) is being built but not yet user-facing.
-
----
-
-## MapData – Import Tool
-
-`backend/MapData` is a C# console application that imports geographic data from Borås municipality's open data portal into the database. It contains two separate ETL (Extract, Transform, Load) parsers:
-
-- **`TransmogrifyBorasData`** — imports trail data from a GeoJSON file (`spar_leder.json`)
-- **`FacilityImporter`** — imports facility data (grill sites, wind shelters) from a CSV file
-
-Both parsers:
-
-1. **Extract** the source data from the municipality-provided file
-2. **Transform** the data:
-   - Parse Swedish property names and values (`"lätt"/"medel"/"svår"` → Classification enum)
-   - Convert Swedish decimal format (`"2,3 km"` → decimal)
-   - Swap GeoJSON coordinate order (`[longitude, latitude]` → `{latitude, longitude}`)
-   - Map accessibility values (`"JA"/"NEJ"` → bool)
-   - Handle missing and null fields gracefully
-3. **Load** the transformed entities into PostgreSQL (PostGIS) via Entity Framework Core
-
-To run an import, place the source file in the expected path and run the `MapData` project. Connection string is configured via .NET user secrets.
 
 ---
 
@@ -392,7 +369,7 @@ Authentication is handled by Keycloak. The mobile app and admin dashboard obtain
 
 ## Data Source
 
-Trail and facility data (grill sites, wind shelters) for the Borås area is sourced from [Borås Stad's open data portal](https://www.boras.se) in GeoJSON/CSV format and imported using the `MapData` ETL tool.
+Trail and facility data (grill sites, wind shelters) for the Borås area is sourced from [Borås Stad's open data portal](https://www.boras.se). Trails are kept in step through the trail-import review in the admin dashboard; see [docs/notes](docs/notes/) and `backend/Core/TrailImport/`.
 
 ---
 

@@ -4,8 +4,8 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
-# Copy the whole backend solution (restore pulls in Core, WebDataContracts,
-# Infrastructure and MapData transitively via the project graph).
+# Copy the whole backend solution (restore pulls in Core, WebDataContracts and
+# Infrastructure transitively via the project graph).
 COPY . .
 
 RUN dotnet restore StigviddAPI/StigviddAPI.csproj
