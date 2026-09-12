@@ -57,6 +57,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<ITrailImportRepository, TrailImportRepository>();
         services.AddTransient<IMailTemplateRepository, MailTemplateRepository>();
         services.AddTransient<IMailOutboxRepository, MailOutboxRepository>();
+        services.AddTransient<IEmailVerificationTokenRepository, EmailVerificationTokenRepository>();
 
         // Services
         services.AddTransient<ITrailService, TrailService>();
@@ -83,6 +84,7 @@ public static class ServiceCollectionExtensions
 
         services.AddTransient<IMailTemplateRenderer, MailTemplateRenderer>();
         services.AddTransient<IMailOutboxService, MailOutboxService>();
+        services.AddTransient<IEmailVerificationService, EmailVerificationService>();
 
         // Singleton for the same reason: the handover point between a caller queueing mail and
         // the dispatcher draining it. Unlike the import queue this one is only a hint — the

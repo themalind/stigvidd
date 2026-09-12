@@ -13,23 +13,15 @@ import RegisterScreen from "../register";
 const mockRegister = jest.fn();
 const mockReplace = jest.fn();
 
-// The real provider talks to Keycloak on import. The error type comes from the mock too, so the
-// screen's instanceof check sees the class the test throws.
-jest.mock("@/components/auth/auth-provider", () => {
-  class RegisteredButLoginFailedError extends Error {}
-  return {
-    RegisteredButLoginFailedError,
-    useAuth: () => ({ register: mockRegister }),
-  };
-});
+// The real provider talks to Keycloak on import.
+jest.mock("@/components/auth/auth-provider", () => ({
+  useAuth: () => ({ register: mockRegister }),
+}));
 
 jest.mock("expo-router", () => ({
   router: { replace: (...args: unknown[]) => mockReplace(...args) },
   Link: ({ children }: { children: React.ReactNode }) => children,
 }));
-
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const { RegisteredButLoginFailedError } = require("@/components/auth/auth-provider");
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -145,14 +137,20 @@ describe("conflicts reported by the backend", () => {
     noErrorUnder("nickname");
   });
 
-  it("sends the user to login when the account was created but auto-login failed", async () => {
-    mockRegister.mockRejectedValueOnce(new RegisteredButLoginFailedError());
+  // The account is created disabled, so there is no session to land in — the user goes to the
+  // verification step, carrying the address they just typed.
+  it("sends the user to the verification screen with the address they registered", async () => {
     renderWithProviders(<RegisterScreen />);
 
-    fillForm();
+    fillForm({ email: "vandrare@example.com" });
     submit();
 
-    await waitFor(() => expect(mockReplace).toHaveBeenCalledWith("./login"));
+    await waitFor(() =>
+      expect(mockReplace).toHaveBeenCalledWith({
+        pathname: "./verify-email",
+        params: { email: "vandrare@example.com" },
+      }),
+    );
     expect(screen.queryByText("Ett oväntat fel inträffade")).toBeNull();
   });
 
@@ -166,5 +164,7 @@ describe("conflicts reported by the backend", () => {
     expect(await screen.findByText("Ett oväntat fel inträffade")).toBeTruthy();
     noErrorUnder("nickname");
     noErrorUnder("email");
+    // A registration that failed leaves nothing to verify, so nobody is sent onward.
+    expect(mockReplace).not.toHaveBeenCalled();
   });
 });

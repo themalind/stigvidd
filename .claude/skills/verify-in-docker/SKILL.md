@@ -11,6 +11,12 @@ description: Verify a change by actually running the stack under docker compose 
 the tests. So every one of these is green on a PR while broken:
 
 - `docker-compose.yml` — a bad env var, a missing volume, a service that cannot resolve a peer
+
+**First check you can run the stack at all.** It needs two hand-carried, gitignored things that
+are not in the repo: `.env`, and the `./db-certs` bind mount Postgres reads its TLS key from.
+Without the second, `db` restart-loops on a missing `server.crt` and nothing names the mount —
+see [docs/notes/compose-up-needs-two-hand-carried-things-that-are-not-in-the-repo.md](../../../docs/notes/compose-up-needs-two-hand-carried-things-that-are-not-in-the-repo.md),
+which also gives what to verify instead when the stack is out of reach.
 - `proxy/` (Caddy), `db/`, `keycloak/`, `media/`
 - any `Dockerfile`
 - `scripts/*.sh` — covered by no test and no CI stage at all

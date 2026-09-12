@@ -140,6 +140,12 @@ services:
       Smtp__User: ${SMTP_NOREPLY_USER:-no-reply@stigvidd.se}
       Smtp__Password: ${SMTP_NOREPLY_PASSWORD:-}
       Smtp__From: ${SMTP_NOREPLY_USER:-no-reply@stigvidd.se}
+      # ---- Email verification ---------------------------------------------
+      # The public origin the registration verification link points at. It goes into
+      # a mail, so it must be the address a human's browser can reach -- not a
+      # container alias. Unset, the API falls back to the origin of the request that
+      # triggered the mail, which is what makes local dev work unconfigured.
+      EmailVerification__BaseUrl: https://${API_DOMAIN:?API_DOMAIN must be set}
       # ---- Telemetry (OpenObserve) ----------------------------------------
       # OPT-IN. Leave OTLP_ENDPOINT unset and the API registers no OpenTelemetry
       # providers at all — identical behaviour to before this block existed. The

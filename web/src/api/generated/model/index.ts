@@ -6,6 +6,7 @@
  * OpenAPI spec version: 1.0.0
  */
 
+export * from './accountVerifyEmailByLinkParams';
 export * from './addToUserFavoritesRequest';
 export * from './addToUserWishlistRequest';
 export * from './coordinatesResponse';
@@ -30,6 +31,7 @@ export * from './pagedReviewResponse';
 export * from './ratingResponse';
 export * from './registerPushTokenRequest';
 export * from './registerRequest';
+export * from './resendVerificationRequest';
 export * from './reshareSharedHikeRequest';
 export * from './reviewImageResponse';
 export * from './reviewResponse';
@@ -77,4 +79,5 @@ export * from './userResponse';
 export * from './usersCheckUsernameParams';
 export * from './usersSearchForUserByUsernameParams';
 export * from './userWishlistTrailResponse';
+export * from './verifyEmailRequest';
 export * from './visitorInformationResponse';

@@ -61,6 +61,25 @@ export class InvalidCredentialsError extends Error {
   }
 }
 
+/**
+ * Thrown when Keycloak rejects the grant because the account is disabled — which is what a
+ * registered but not yet email-verified account looks like from here. Keycloak answers 400
+ * with the same `invalid_grant` error as a wrong password and only distinguishes the two in
+ * `error_description`.
+ *
+ * It EXTENDS InvalidCredentialsError deliberately: refreshGrant() ends the session on
+ * `instanceof InvalidCredentialsError`, and a mid-session account disable should end the
+ * session exactly like a dead refresh token. Only the login screen needs the narrower type,
+ * and it has to test for this one FIRST — see
+ * docs/notes/verification-gate-lives-in-keycloak-not-the-api.md.
+ */
+export class AccountNotVerifiedError extends InvalidCredentialsError {
+  constructor() {
+    super();
+    this.name = "AccountNotVerifiedError";
+  }
+}
+
 // In-memory cache so the hot path (every API call) avoids hitting SecureStore.
 let accessToken: string | null = null;
 let refreshToken: string | null = null;
@@ -78,6 +97,20 @@ export function setSessionExpiredHandler(handler: (() => void) | null): void {
 
 function nowSeconds(): number {
   return Math.floor(Date.now() / 1000);
+}
+
+/**
+ * Whether a rejected grant was rejected because the account is disabled. Keycloak says so only
+ * in `error_description`, so the body has to be read — and an unreadable or unexpected body
+ * must fall back to the ordinary "bad credentials" answer rather than throw over it.
+ */
+async function isAccountDisabled(response: Response): Promise<boolean> {
+  try {
+    const body = (await response.clone().json()) as { error_description?: string };
+    return body.error_description?.toLowerCase().includes("disabled") ?? false;
+  } catch {
+    return false;
+  }
 }
 
 async function persistTokens(tokens: KeycloakTokenResponse): Promise<void> {
@@ -127,7 +160,7 @@ async function requestToken(body: Record<string, string>): Promise<KeycloakToken
   });
 
   if (response.status === 400 || response.status === 401) {
-    throw new InvalidCredentialsError();
+    throw (await isAccountDisabled(response)) ? new AccountNotVerifiedError() : new InvalidCredentialsError();
   }
 
   if (!response.ok) {

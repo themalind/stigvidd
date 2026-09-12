@@ -24,7 +24,7 @@ import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view
 import { Button, TextInput, useTheme } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { z } from "zod";
-import { RegisteredButLoginFailedError, useAuth } from "@/components/auth/auth-provider";
+import { useAuth } from "@/components/auth/auth-provider";
 
 const WIDTH = Dimensions.get("screen").width;
 
@@ -99,16 +99,15 @@ export default function RegisterScreen() {
         setError("email", { message: "auth.validation.emailTaken" });
         return;
       }
-      // Account was created but auto-login failed: send the user to login with a
-      // friendly note rather than a generic error — they just need to sign in.
-      if (error instanceof RegisteredButLoginFailedError) {
-        showSuccess(t("auth.registeredPleaseLogin"));
-        router.replace("./login");
-        return;
-      }
       setRegisterError(t("auth.unknownError"));
       return;
     }
+
+    // The account exists but is disabled until the mailed link or code is used, so there is
+    // no session to land in. Carry the address forward: the verification screen needs it for
+    // both the code check and the resend, and asking the user to retype it would be absurd.
+    showSuccess(t("auth.registeredCheckYourEmail"));
+    router.replace({ pathname: "./verify-email", params: { email: data.email } });
   };
 
   return (

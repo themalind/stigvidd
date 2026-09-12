@@ -74,6 +74,13 @@ as `RequireRole(adminRole)`, with Keycloak realm roles mapped by
 `Authorization/KeycloakRealmRolesTransformation.cs`) for admin-only. An endpoint with no
 attribute is **anonymous** — decide that, do not default into it.
 
+**An anonymous or admin endpoint also needs a line in an existing test.**
+`Tests/IntegrationTests/Authorization/EndpointAuthorizationTests.cs` pins the complete list of
+both, so a new one turns the suite red with a `BeEquivalentTo` diff that names that file and
+not yours. Add `"<METHOD> /api/v1/<Controller>/<route>"` to `ApprovedAnonymousEndpoints` or
+`ApprovedAdminEndpoints` — see
+[docs/notes/new-endpoint-must-be-added-to-the-authorization-allowlist.md](../../../docs/notes/new-endpoint-must-be-added-to-the-authorization-allowlist.md).
+
 ## Step 4 — the test pair
 
 - **Unit** (`Tests/UnitTests/ServiceTests`, `RepositoryTests`, `FactoryTests`,

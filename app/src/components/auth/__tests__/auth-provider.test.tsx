@@ -8,7 +8,7 @@
 import { registerAccount } from "@/api/auth";
 import { deleteStigViddUser } from "@/api/users";
 import { authLoadingAtom, userAtom } from "@/atoms/auth-atoms";
-import { RegisteredButLoginFailedError, useAuth, useInitAuth } from "@/components/auth/auth-provider";
+import { useAuth, useInitAuth } from "@/components/auth/auth-provider";
 import { AuthUser, RegisterData } from "@/data/types";
 import { logoutKeycloak, passwordGrant, restoreSession, setSessionExpiredHandler } from "@/services/keycloak-auth";
 import { unregisterForPushNotificationsAsync } from "@/services/notifications";
@@ -121,25 +121,16 @@ it("leaves the user signed out when the credentials are wrong", async () => {
   expect(store.get(userAtom)).toBeNull();
 });
 
-it("creates the account and signs straight in with it", async () => {
+// The new account is disabled at Keycloak until its address is verified, so there is no
+// session to establish here — attempting one would only fail. The screen routes to the
+// verification step instead.
+it("creates the account and leaves the user signed out, pending verification", async () => {
   const { store } = show();
 
   await attempt(() => auth.register(FORM));
 
   expect(register).toHaveBeenCalledWith(FORM);
-  expect(grant).toHaveBeenCalledWith(FORM.email, FORM.password);
-  expect(store.get(userAtom)).toEqual(USER);
-});
-
-// The account exists at this point, so the user is sent to the login form, not told the registration failed.
-it("marks a registration whose auto-login failed as its own kind of failure", async () => {
-  const { store } = show();
-  grant.mockRejectedValueOnce(new Error("network"));
-
-  const thrown = await attempt(() => auth.register(FORM));
-
-  expect(thrown).toBeInstanceOf(RegisteredButLoginFailedError);
-  expect(register).toHaveBeenCalledTimes(1);
+  expect(grant).not.toHaveBeenCalled();
   expect(store.get(userAtom)).toBeNull();
 });
 

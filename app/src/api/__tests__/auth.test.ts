@@ -13,7 +13,7 @@ jest.mock("@/i18n", () => ({
 }));
 
 import { ApiError } from "../api-error";
-import { registerAccount, userPasswordReset } from "../auth";
+import { registerAccount, resendVerification, userPasswordReset, verifyEmailCode } from "../auth";
 import { RegisterData } from "@/data/types";
 
 function mockFetch(status: number, body: unknown = {}, text = "") {
@@ -100,6 +100,83 @@ describe("registerAccount", () => {
     await expect(registerAccount(registerData)).rejects.toBeInstanceOf(ApiError);
     mockFetch(500);
     await expect(registerAccount(registerData)).rejects.toMatchObject({ status: 500 });
+  });
+});
+
+describe("verifyEmailCode", () => {
+  it("POSTs the address and code to /account/verify-email", async () => {
+    mockFetch(204);
+
+    await verifyEmailCode("alice@example.com", "123456");
+
+    expect(fetch).toHaveBeenCalledWith(
+      "http://test/api/v1/account/verify-email",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({ email: "alice@example.com", code: "123456" }),
+      }),
+    );
+  });
+
+  it("sends no bearer token — the account is disabled until this succeeds", async () => {
+    mockFetch(204);
+
+    await verifyEmailCode("alice@example.com", "123456");
+
+    const init = (fetch as jest.Mock).mock.calls[0][1] as RequestInit;
+    expect((init.headers as Record<string, string>).Authorization).toBeUndefined();
+  });
+
+  // The screen puts each of these under the code field as its own message, so the code has to
+  // survive the trip rather than collapsing into a generic failure.
+  it.each(["invalid-code", "code-expired", "too-many-attempts"])("surfaces the %s code from the body", async (code) => {
+    mockFetch(400, {}, `"${code}"`);
+
+    await expect(verifyEmailCode("alice@example.com", "000000")).rejects.toMatchObject({ message: code });
+  });
+
+  it("falls back to a generic code for a body it does not recognise", async () => {
+    mockFetch(500, {}, "<html>gateway</html>");
+
+    await expect(verifyEmailCode("alice@example.com", "123456")).rejects.toMatchObject({
+      message: "verification-failed",
+    });
+  });
+
+  it("resolves without throwing on success", async () => {
+    mockFetch(204);
+
+    await expect(verifyEmailCode("alice@example.com", "123456")).resolves.toBeUndefined();
+  });
+});
+
+describe("resendVerification", () => {
+  it("POSTs the address to /account/resend-verification", async () => {
+    mockFetch(204);
+
+    await resendVerification("alice@example.com");
+
+    expect(fetch).toHaveBeenCalledWith(
+      "http://test/api/v1/account/resend-verification",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({ email: "alice@example.com" }),
+      }),
+    );
+  });
+
+  // The backend answers 204 whether or not the address exists, so this resolving says nothing
+  // about the address — which is the point.
+  it("resolves for an address the backend says nothing about", async () => {
+    mockFetch(204);
+
+    await expect(resendVerification("nobody@example.com")).resolves.toBeUndefined();
+  });
+
+  it("throws an ApiError when the request itself fails", async () => {
+    mockFetch(500);
+
+    await expect(resendVerification("alice@example.com")).rejects.toBeInstanceOf(ApiError);
   });
 });
 

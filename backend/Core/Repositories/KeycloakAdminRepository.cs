@@ -34,8 +34,12 @@ public class KeycloakAdminRepository : IKeycloakAdminRepository
             Username = email,
             Email = email,
             FirstName = nickName,
-            Enabled = true,
-            EmailVerified = true,
+            // Disabled until the address is proven. This is the email-verification gate --
+            // the app logs in directly against Keycloak, so nothing in this API could refuse
+            // a sign-in. See ActivateVerifiedUserAsync, and
+            // docs/notes/verification-gate-lives-in-keycloak-not-the-api.md.
+            Enabled = false,
+            EmailVerified = false,
             Credentials = new List<CredentialRepresentation>
             {
                 new() { Type = "password", Value = password, Temporary = false },
@@ -71,6 +75,18 @@ public class KeycloakAdminRepository : IKeycloakAdminRepository
         }
 
         return subjectId;
+    }
+
+    public async Task ActivateVerifiedUserAsync(string subjectId, CancellationToken ctoken)
+    {
+        // A partial representation: Keycloak merges it, so the password and profile set at
+        // creation are untouched. Sending it twice is harmless, which is what keeps a repeated
+        // verification click idempotent.
+        await _userClient.UpdateUserAsync(
+            _realm,
+            subjectId,
+            new UserRepresentation { Enabled = true, EmailVerified = true },
+            ctoken);
     }
 
     public async Task DeleteUserAsync(string subjectId, CancellationToken ctoken)

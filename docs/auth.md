@@ -13,7 +13,9 @@ failure mode of getting it subtly wrong is "every user gets silently logged out.
 | Token service: grants, refresh, storage, single-flight | `app/src/services/keycloak-auth.ts`                                     |
 | Auth state + actions (login/register/logout/delete)    | `app/src/components/auth/auth-provider.tsx`                             |
 | Auth atoms (`userAtom`, `authLoadingAtom`)             | `app/src/atoms/auth-atoms.ts`                                           |
-| Account provisioning + password reset                  | `app/src/api/auth.ts`                                                   |
+| Account provisioning + password reset + verification   | `app/src/api/auth.ts`                                                   |
+| Email verification (backend)                           | `backend/Core/Services/EmailVerificationService.cs`                     |
+| The gate itself: create disabled, enable on verify     | `backend/Core/Repositories/KeycloakAdminRepository.cs`                  |
 | Access-token accessor for the API layer                | `app/src/api/users.ts` → `getUserToken`                                 |
 | API base URL                                           | `app/src/api/api-config.ts`                                             |
 | Realm-role → `[Authorize(Roles=…)]` mapping (backend)  | `backend/StigviddAPI/Authorization/KeycloakRealmRolesTransformation.cs` |
@@ -33,6 +35,47 @@ Endpoints are derived from `EXPO_PUBLIC_OIDC_URL` / `_OIDC_REALM` / `_CLIENT_ID`
 {OIDC_URL}/realms/{REALM}/protocol/openid-connect/token    ← password + refresh grants
 {OIDC_URL}/realms/{REALM}/protocol/openid-connect/logout   ← session revoke
 ```
+
+## Email verification, and why the gate has to live in Keycloak
+
+A new account is created **disabled** (`KeycloakAdminRepository.CreateUserAsync` sets
+`Enabled = false, EmailVerified = false`) and stays that way until the address is proven.
+
+That single flag is the whole enforcement, and it has to be, because of the section above:
+**the app performs the password grant directly against Keycloak's token endpoint, so this API
+is never in the login path and cannot refuse a sign-in.** A check in the backend would guard
+nothing. Keycloak rejecting a disabled user is the only thing an unverified account actually
+runs into.
+
+Keycloak's own `VERIFY_EMAIL` required action is deliberately not used: the link is processed
+at a StigVidd endpoint, and the realm is not in this repository ([DEPLOYMENT.md](../DEPLOYMENT.md)
+§5), so its flags cannot be relied on from here.
+
+```
+register ──> Keycloak user (disabled) + User row + mail via the outbox
+                                   │
+            link (GET, returns an HTML page) ──┤
+            code (POST, six digits) ───────────┴──> ActivateVerifiedUserAsync
+                                                    Enabled = true, EmailVerified = true
+                                                            │
+                                                    login now works
+```
+
+`User.EmailVerifiedAt` records the same fact in our database. It is for operators and support —
+it enforces nothing, and the two are written together so they cannot drift.
+
+Both secrets are stored only as SHA-256 hashes; the raw token and code exist solely in the mail
+that was sent. The six-digit code is bounded by an attempt cap (`EmailVerification:MaxCodeAttempts`,
+default 5), without which it would be a million guesses.
+
+**Already-verified counts as success.** Mail scanners and corporate link-prefetchers follow a
+`GET` link before the human clicks it, so a consumed token belonging to a verified user reports
+success rather than "this link is dead."
+
+Configuration is `EmailVerification:*` in `appsettings.json` (lifetime 24 h, resend cooldown 60 s,
+attempt cap 5). `EmailVerification:BaseUrl` is deliberately **not** there — like `Smtp:*` it comes
+from `docker-compose.yml`, and when it is absent the API falls back to the origin of the request
+that triggered the mail, which is what makes local development work unconfigured.
 
 ## Tokens: what's stored and where
 
@@ -128,7 +171,8 @@ same reason: `useAuth()` runs in `RootLayout`, which sits _above_ the
 | Action            | Flow                                                                                                                                                                                                                                     |
 | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **login**         | `passwordGrant(email, pw)` → persist tokens → `setUser`                                                                                                                                                                                  |
-| **register**      | Backend provisions Keycloak user + StigVidd DB record (`/account/register`), then auto-login. A login failure _after_ successful provisioning throws `RegisteredButLoginFailedError` so the screen routes to login, not a generic error. |
+| **register**      | Backend provisions a **disabled** Keycloak user + StigVidd DB record (`/account/register`) and mails a verification link and code. **No auto-login** — the account cannot log in yet — so the screen routes to the verification step carrying the address. |
+| **verify**        | `POST /account/verify-email` with the six-digit code, or the browser opening `GET /account/verify-email?token=…` from the mail. Either enables the Keycloak user; the screen then routes to login. `POST /account/resend-verification` asks for another mail. |
 | **logout**        | Unregister push token (best-effort) → `logoutKeycloak()` (revoke at Keycloak + clear tokens) → `setUser(null)` → `queryClient.clear()`                                                                                                   |
 | **deleteAccount** | Re-verify identity via `passwordGrant` (throws on wrong pw) → backend deletes DB + Keycloak user → `logout()`                                                                                                                            |
 
@@ -155,7 +199,10 @@ A malformed claim leaves the principal unchanged rather than throwing.
 | Refresh token genuinely rejected (`invalid_grant`) | Tokens cleared, `onSessionExpired` → login screen.                 |
 | Network blip during refresh                        | Tokens **kept**; retried later. User not logged out.               |
 | Wrong password on login / delete                   | `InvalidCredentialsError` surfaced to the screen.                  |
-| Register succeeds but auto-login fails             | `RegisteredButLoginFailedError` → route to login (account exists). |
+| Register succeeds                                  | Account exists but is **disabled**; user goes to the verification screen. |
+| Login before verifying                             | Keycloak 400 `Account disabled` → `AccountNotVerifiedError` → verification screen with a resend, **not** "wrong password". |
+| Verification link followed twice (or prefetched)   | Reported as success — a mail scanner must not burn the user's link. |
+| Verification link or code expired                  | 410 / "request a new email"; the resend is cooldown-limited. |
 | Logout                                             | Session revoked at Keycloak, tokens wiped, query cache cleared.    |
 | SSO idle/max timeout                               | Irrelevant — offline token isn't bound to the SSO session.         |
 

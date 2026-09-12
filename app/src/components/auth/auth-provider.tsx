@@ -15,19 +15,6 @@ import { useAtomValue, useSetAtom } from "jotai";
 import { queryClientAtom } from "jotai-tanstack-query";
 import { useEffect } from "react";
 
-/**
- * Thrown by register() when the account was provisioned successfully but the
- * follow-up auto-login failed. The account exists — the user just needs to log
- * in manually — so callers should route to the login screen, not show a generic
- * error.
- */
-export class RegisteredButLoginFailedError extends Error {
-  constructor() {
-    super("registered-but-login-failed");
-    this.name = "RegisteredButLoginFailedError";
-  }
-}
-
 interface Auth {
   user: AuthUser | null;
   isAuthenticated: boolean;
@@ -57,16 +44,13 @@ export function useAuth(): Auth {
   };
 
   const register = async (data: RegisterData) => {
-    // Backend provisions the Keycloak user and the StigVidd DB record.
+    // Backend provisions the Keycloak user (DISABLED) and the StigVidd DB record, then
+    // mails a verification link and code.
+    //
+    // There is deliberately no auto-login here: the account cannot log in until the
+    // address is verified, so a password grant would only fail. The caller routes to the
+    // verification screen instead.
     await registerAccount(data);
-    // Then auto-login via Direct Access Grant. The account already exists at this
-    // point, so a login failure here is recoverable — surface it distinctly so the
-    // screen can route to login instead of showing a generic "registration failed".
-    try {
-      setUser(await passwordGrant(data.email, data.password));
-    } catch {
-      throw new RegisteredButLoginFailedError();
-    }
   };
 
   const logout = async () => {
