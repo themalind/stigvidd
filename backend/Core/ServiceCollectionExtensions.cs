@@ -11,6 +11,7 @@ using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using System.Net.Http.Headers;
 using System.Text;
 using WebDav;
@@ -54,6 +55,8 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IMediaRepository, MediaRepository>();
         services.AddTransient<ICityAreaRepository, CityAreaRepository>();
         services.AddTransient<ITrailImportRepository, TrailImportRepository>();
+        services.AddTransient<IMailTemplateRepository, MailTemplateRepository>();
+        services.AddTransient<IMailOutboxRepository, MailOutboxRepository>();
 
         // Services
         services.AddTransient<ITrailService, TrailService>();
@@ -77,6 +80,26 @@ public static class ServiceCollectionExtensions
 
         // Singleton: the queue is the handover point between the upload request and the worker.
         services.AddSingleton<ITrailImportAnalysisQueue, TrailImportAnalysisQueue>();
+
+        services.AddTransient<IMailTemplateRenderer, MailTemplateRenderer>();
+        services.AddTransient<IMailOutboxService, MailOutboxService>();
+
+        // Singleton for the same reason: the handover point between a caller queueing mail and
+        // the dispatcher draining it. Unlike the import queue this one is only a hint — the
+        // OutboxEmails table is what survives a restart.
+        services.AddSingleton<IMailOutboxQueue, MailOutboxQueue>();
+
+        // No Smtp:Host means mail is not configured here: local development, the test suite,
+        // or a partial stack that runs no mail server. Log it rather than send it. The API
+        // must never fail to start over mail, so this is a fallback and not a throw.
+        services.AddTransient<IMailSender>(sp =>
+        {
+            var config = sp.GetRequiredService<IConfiguration>();
+
+            return string.IsNullOrWhiteSpace(config["Smtp:Host"])
+                ? new LoggingMailSender(sp.GetRequiredService<ILogger<LoggingMailSender>>())
+                : new SmtpMailSender(config, sp.GetRequiredService<ILogger<SmtpMailSender>>());
+        });
         services.AddHttpClient<IPushNotificationService, ExpoPushService>(c => c.BaseAddress = new Uri("https://exp.host"));
 
         services.AddTransient<Func<IWebDavClient>>(sp =>

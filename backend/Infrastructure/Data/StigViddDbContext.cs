@@ -29,6 +29,8 @@ public class StigViddDbContext(DbContextOptions<StigViddDbContext> options) : Db
     public DbSet<TrailImportSession> TrailImportSessions { get; set; }
     public DbSet<TrailImportProposal> TrailImportProposals { get; set; }
     public DbSet<TrailRelation> TrailRelations { get; set; }
+    public DbSet<MailTemplate> MailTemplates { get; set; }
+    public DbSet<OutboxEmail> OutboxEmails { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -277,6 +279,16 @@ public class StigViddDbContext(DbContextOptions<StigViddDbContext> options) : Db
         modelBuilder.Entity<TrailRelation>()
             .ToTable(t => t.HasCheckConstraint(
                 "CK_TrailRelations_NotSelf", "\"FromTrailId\" <> \"ToTrailId\""));
+
+        // One row per key per language; a caller asking for a key gets exactly one template.
+        modelBuilder.Entity<MailTemplate>()
+            .HasIndex(t => new { t.Key, t.Language })
+            .IsUnique();
+
+        // The dispatcher's recovery sweep: everything still Pending, oldest first. Plain
+        // columns on purpose — the integration tests build this schema on SQLite.
+        modelBuilder.Entity<OutboxEmail>()
+            .HasIndex(e => new { e.Status, e.NextAttemptAt });
 
         // Decimal precision for entity properties
         modelBuilder.Entity<Trail>()

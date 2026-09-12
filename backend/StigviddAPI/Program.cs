@@ -140,6 +140,10 @@ public class Program
         builder.Services.AddHostedService<StigviddAPI.BackgroundServices.ExpiredObstacleCleanupService>();
         builder.Services.AddHostedService<StigviddAPI.BackgroundServices.TrailImportAnalysisWorker>();
 
+        // Drains the mail outbox. Triggered by the in-memory queue, reconciled against the
+        // OutboxEmails table on every start.
+        builder.Services.AddHostedService<StigviddAPI.BackgroundServices.MailOutboxDispatcher>();
+
         // Swagger auth
         builder.Services.AddOpenApiDocument(config =>
         {

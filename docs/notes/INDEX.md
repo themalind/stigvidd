@@ -407,3 +407,33 @@ src/api/generated` then fails with "the generated API client is stale" for reaso
   `StyleSheet.create` resolves at import, so flipping `Platform.OS` later cannot reach it; and
   `getByTestId(x).parent` is a composite fiber, which `toHaveStyle` refuses — give the wrapper
   its own `testID`.
+- [An in-memory queue is safe in front of a database journal only if you write-then-signal, re-signal on boot, and claim in the database](in-memory-queue-in-front-of-a-database-journal.md) —
+  The mail outbox triggers on a `Channel<int>` but keeps `OutboxEmails` as the truth, so a
+  lost signal costs latency and never a mail. Three rules make that safe and each has a
+  mutation-checked test: commit the row **before** putting its id on the channel; on every
+  start move `Sending` rows back to `Pending` and re-signal **every** `Pending` id, including
+  ones whose backoff has not expired (filtering that sweep by `NextAttemptAt <= now` is the
+  easy mistake and strands them until the next restart); and claim by a `Pending` -> `Sending`
+  transition in the database so a duplicate signal is a no-op rather than a second send. The
+  retry `Task.Delay` is deliberately best-effort — killing the API mid-backoff must still
+  deliver, which is the test that separates this from a polling loop. Unlike
+  `TrailImportAnalysisQueue`, whose work may legitimately be lost on restart.
+- [Seed an operator-editable table with `InsertData`, never `HasData`](mail-templates-seeded-with-insertdata.md) —
+  `HasData` does not mean "insert once": it declares the rows as part of the EF model, so a
+  later unrelated migration scaffolds `UpdateData` that silently reverts an operator's edit to
+  a `MailTemplates` row — months after the seed, which is what makes it hard to attribute. Use
+  hand-written `migrationBuilder.InsertData` in the scaffolded migration body (only
+  `*ModelSnapshot.cs` and `*.Designer.cs` are denied; a migration body is merely warned), and
+  **omit the `Id`** so the identity sequence stays ahead of the data. Cost: no test applies a
+  migration, so fixtures seed their own templates — which is better test hygiene anyway.
+  `HasData` stays right for lookup tables nobody edits.
+- [A guard denies the whole Bash call, so a file written earlier in that same call never exists](a-denied-bash-call-runs-nothing-including-the-file-write.md) —
+  A PreToolUse deny rejects the **tool call**, not the offending segment, so a heredoc writing
+  a file in the same call silently does not run — and the denial message mentions only the
+  command it objected to. Measured: a new unit-test file was lost this way and the suite then
+  reported 1104 passed, green about a project missing the ten tests just "written", because a
+  missing test file fails nothing. Caught only by filtering to the class and seeing
+  `Zero tests ran`. So never combine a file write with a command a guard might refuse, and
+  after adding tests check that the **total moved** (1104 -> 1114) rather than trusting
+  "Passed!". Also generalises [[backticks-in-prose-trip-the-long-running-guard]] to every
+  guard, not just the dev-server one: prose describing a guarded command trips it too.
