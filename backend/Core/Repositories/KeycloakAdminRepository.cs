@@ -94,25 +94,29 @@ public class KeycloakAdminRepository : IKeycloakAdminRepository
         await _userClient.DeleteUserAsync(_realm, subjectId, ctoken);
     }
 
-    public async Task SendPasswordResetEmailAsync(string email, CancellationToken ctoken)
+    public async Task<bool> SetPasswordAsync(string subjectId, string newPassword, CancellationToken ctoken)
     {
-        var users = await _userClient.GetUsersAsync(
-            _realm,
-            new GetUsersRequestParameters { Email = email, Exact = true },
-            ctoken);
-
-        var subjectId = users.FirstOrDefault()?.Id;
-        if (string.IsNullOrEmpty(subjectId))
-        {
-            // Don't reveal whether the email is registered.
-            _logger.LogInformation("Password reset requested for unknown email; ignoring.");
-            return;
-        }
-
-        await _userClient.ExecuteActionsEmailAsync(
+        // WithResponse rather than the throwing overload, for the same reason CreateUserAsync
+        // uses it: one specific status is an expected answer and not a fault. Keycloak replies
+        // 400 when the new password violates the realm's password policy.
+        using var response = await _userClient.ResetPasswordWithResponseAsync(
             _realm,
             subjectId,
-            new ExecuteActionsEmailRequest { Actions = new List<string> { "UPDATE_PASSWORD" } },
+            new CredentialRepresentation { Type = "password", Value = newPassword, Temporary = false },
             ctoken);
+
+        if (response.StatusCode == System.Net.HttpStatusCode.BadRequest)
+        {
+            // The body carries a Keycloak message key (invalidPasswordMinLengthMessage and
+            // friends), localised by the realm's own bundles. It is logged rather than shown:
+            // a raw message key is not something to put in front of a user.
+            var body = await response.Content.ReadAsStringAsync(ctoken);
+            _logger.LogInformation("Keycloak refused a new password for {SubjectId}: {Body}", subjectId, body);
+            return false;
+        }
+
+        response.EnsureSuccessStatusCode();
+
+        return true;
     }
 }

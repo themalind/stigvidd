@@ -157,9 +157,9 @@ export const getAccountForgotPasswordUrl = () => {
   return `/api/v1/Account/forgot-password`
 }
 
-export const accountForgotPassword = async (forgotPasswordRequest: ForgotPasswordRequest, options?: RequestInit): Promise<Blob> => {
+export const accountForgotPassword = async (forgotPasswordRequest: ForgotPasswordRequest, options?: RequestInit): Promise<void> => {
 
-  return customFetch<Blob>(getAccountForgotPasswordUrl(),
+  return customFetch<void>(getAccountForgotPasswordUrl(),
   {
     ...options,
     method: 'POST',

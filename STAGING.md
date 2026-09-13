@@ -144,11 +144,12 @@ Then:
   domain (`https://staging.stigvidd.se/*`), not production's.
 - Create the realm role **`admin`** and grant it to whoever needs the migration page.
 - **Generate a new secret for `stigvidd-admin-api`.** Do not reuse production's.
-- Configure **Realm settings → Email** for this realm: host `mail.stigvidd.se`, port 587,
-  StartTLS, authenticating as `SMTP_NOREPLY_USER` / `SMTP_NOREPLY_PASSWORD`. Realm SMTP is
-  per-realm config stored in the database — the staging realm does **not** inherit
-  production's. Without it, `POST /api/v1/account/forgot-password` silently returns 204 and
-  sends nothing.
+- Configure **Realm settings → Email** for this realm if you want Keycloak's own admin-console
+  mail to work: host `mail.stigvidd.se`, port 587, StartTLS, authenticating as
+  `SMTP_NOREPLY_USER` / `SMTP_NOREPLY_PASSWORD`. Realm SMTP is per-realm config stored in the
+  database — the staging realm does **not** inherit production's. **No user-facing flow needs
+  it:** both `forgot-password` and email verification send through the API's own outbox
+  (`Smtp__*`), not Keycloak.
 
 The quickest route is to export the production realm, edit the realm name and redirect URIs,
 and import it — that also carries the role and client layout. Regenerate every secret

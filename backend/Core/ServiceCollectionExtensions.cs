@@ -59,6 +59,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IMailTemplateRepository, MailTemplateRepository>();
         services.AddTransient<IMailOutboxRepository, MailOutboxRepository>();
         services.AddTransient<IEmailVerificationTokenRepository, EmailVerificationTokenRepository>();
+        services.AddTransient<IPasswordResetTokenRepository, PasswordResetTokenRepository>();
         services.AddTransient<IContentReportRepository, ContentReportRepository>();
 
         // Services
@@ -88,6 +89,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IMailTemplateRenderer, MailTemplateRenderer>();
         services.AddTransient<IMailOutboxService, MailOutboxService>();
         services.AddTransient<IEmailVerificationService, EmailVerificationService>();
+        services.AddTransient<IPasswordResetService, PasswordResetService>();
 
         // The admin editor. The catalogue is the declared set of placeholders per
         // template key; MailTemplateCatalogTests keeps it honest against the call sites.

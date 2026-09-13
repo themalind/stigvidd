@@ -26,7 +26,7 @@ const WIDTH = Dimensions.get("screen").width;
 const EMAIL = "vandrare@stigvidd.se";
 const TITLE = "Återställ ditt lösenord";
 const FAILURE = "Ett oväntat fel inträffade";
-const SENT = "Kolla din e-post! Kika även i skräpposten.";
+const SENT = "Kolla din e-post! Länken gäller i två timmar. Kika även i skräpposten.";
 
 const onDismiss = jest.fn();
 

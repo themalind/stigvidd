@@ -27,8 +27,11 @@ the same save as the token's `ConsumedAt` so the two cannot drift.
 
 ## Why Keycloak's own VERIFY_EMAIL was not used
 
-`SendPasswordResetEmailAsync` already calls `ExecuteActionsEmailAsync(["UPDATE_PASSWORD"])`, so
-`["VERIFY_EMAIL"]` looks like one line of reuse. It was rejected for two measured reasons:
+At the time, `SendPasswordResetEmailAsync` called `ExecuteActionsEmailAsync(["UPDATE_PASSWORD"])`,
+so `["VERIFY_EMAIL"]` looked like one line of reuse. It was rejected for two measured reasons —
+and the same two reasons later took the **password reset** off that call as well, so the method
+no longer exists and neither flow uses Keycloak's own mail
+([[password-reset-does-not-end-existing-sessions]] covers what that cost):
 
 - the requirement is that the link be processed at a **StigVidd** endpoint, which Keycloak's own
   mail does not do; and

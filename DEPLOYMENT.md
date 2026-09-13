@@ -32,7 +32,7 @@ to the internet.
 | `web`        | `stigvidd-web` (nginx)    | React admin SPA.                                 |
 | `api`        | `stigvidd-api` (.NET 10)  | Backend API. Runs EF migrations on startup.     |
 | `media`      | `stigvidd-media` (nginx)  | WebDAV media server (authed writes, public reads). |
-| `keycloak`   | `stigvidd-keycloak`       | Identity provider. Sends the password-reset emails. |
+| `keycloak`   | `stigvidd-keycloak`       | Identity provider. Owns every password; sends no user-facing mail. |
 | `openobserve`| `openobserve` v0.92.2     | Telemetry at observatory.<domain>: logs, traces, metrics and mobile RUM. Ingests from the API (in-stack OTLP) and from the apps (public HTTPS). Upstream image — **not** built by CI. |
 | `mailserver` | `docker-mailserver` 15.1.0 | Mail for the domain: inbound on 25, submission on 465/587, IMAPS on 993. Upstream image — **not** built by CI. |
 | `db`         | `postgis/postgis:17-3.5`  | PostgreSQL + PostGIS. Holds **both** the app database and Keycloak's. |
@@ -414,12 +414,19 @@ Then check the rest of the [mail DNS records](#mail-dns-records) are in place �
 `docker compose exec mailserver setup debug show-mail-logs` will show relay
 rejections if SPF or the `_hostup` record is wrong.
 
-### 7. Keycloak email settings (first deploy only)
+### 7. Keycloak email settings (first deploy only, and now optional)
 
 Keycloak's SMTP configuration is **realm config stored in its database**, not
-environment variables — so there is nothing in `.env` for it. Without this step
-`POST /api/v1/account/forgot-password` silently does nothing (it always returns
-204, whether or not the mail was sent).
+environment variables — so there is nothing in `.env` for it.
+
+**No user-facing flow depends on this any more.** Password reset used to be Keycloak's
+own `UPDATE_PASSWORD` action mail; it is now StigVidd's, sent through the API's outbox
+from the operator-editable `reset-password` template (see [docs/mail.md](docs/mail.md)),
+and email verification always was. What the API needs is `Smtp__*`, not this.
+
+Configure it anyway if you want Keycloak's admin-console flows (an admin sending a
+recovery mail by hand from the Users screen) to work. Skip it and those are simply
+unavailable; nothing a user can reach is affected.
 
 In the admin console → realm `stigvidd` → **Realm settings → Email**:
 
@@ -1229,8 +1236,15 @@ docker compose logs mailserver | grep -E 'relay=|status='   # expect status=sent
 Then send a mail *to* `info@stigvidd.se` from an outside account and check
 `docker compose exec mailserver setup debug show-mail-logs` for
 `status=sent (delivered to maildir)`. Finally, trigger the real path — the
-**Forgot password** flow in the web admin — and confirm the message arrives;
-the API returns 204 either way, so the mail log is the only evidence.
+**Forgot password** flow in the app — and confirm the message arrives; the API
+returns 204 either way, so the mail log is the only evidence. The mail now comes
+from the API's own outbox, so `dbo."OutboxEmails"` is a second place to look: a row
+with `Status = 3` (Failed) and a `LastError` says the send failed rather than the
+request; `Status = 2` is Sent.
+
+Note that an account with **no StigVidd user row** cannot use that flow — the mail
+needs the nickname that row carries, so an admin who exists only in Keycloak gets a
+204 and no mail. Reset those in the Keycloak admin console.
 
 ---
 

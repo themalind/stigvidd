@@ -42,7 +42,7 @@
     "repeatPassword": "Repeat Password",
     "enterPassword": "Enter password",
     "enterEmail": "Enter email",
-    "checkEmail": "Check your email! Also look in your spam folder.",
+    "checkEmail": "Check your email! The link is valid for two hours. Also look in your spam folder.",
     "checkSpam": "Didn't receive an email? Check your spam folder!",
     "enterYourPassword": "Enter your password",
     "confirmDeleteAccount": "Are you sure you want to delete your account?",

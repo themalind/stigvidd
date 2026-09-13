@@ -146,6 +146,10 @@ services:
       # container alias. Unset, the API falls back to the origin of the request that
       # triggered the mail, which is what makes local dev work unconfigured.
       EmailVerification__BaseUrl: https://${API_DOMAIN:?API_DOMAIN must be set}
+      # Same requirement, and required for a second reason: there is no forwarded-headers
+      # middleware in Program.cs, so the request-origin fallback yields http:// behind the
+      # proxy. A password-reset link is the last place to send a downgraded URL.
+      PasswordReset__BaseUrl: https://${API_DOMAIN:?API_DOMAIN must be set}
       # ---- Telemetry (OpenObserve) ----------------------------------------
       # OPT-IN. Leave OTLP_ENDPOINT unset and the API registers no OpenTelemetry
       # providers at all — identical behaviour to before this block existed. The

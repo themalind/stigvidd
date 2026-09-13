@@ -47,6 +47,21 @@ public class MailTemplateCatalog : IMailTemplateCatalog
                         + "typing it into the app instead.",
                     "402913"),
             ]),
+
+        new MailTemplateDefinition(
+            "reset-password",
+            "Sent when somebody asks to reset a forgotten password. It carries the only link "
+                + "that can set a new one, and that link is valid for two hours -- so wording "
+                + "that delays the recipient is worse here than in any other template.",
+            [
+                NickName,
+                new MailTemplateToken(
+                    "ResetUrl",
+                    "Reset link",
+                    "The one-time URL that opens the page where a new password is chosen. "
+                        + "Valid for two hours, and spent as soon as a password is set.",
+                    "https://stigvidd.se/api/v1/account/reset-password?token=8c2e4b6a9d1f37e5"),
+            ]),
     ];
 
     public IReadOnlyList<MailTemplateDefinition> All => Definitions;

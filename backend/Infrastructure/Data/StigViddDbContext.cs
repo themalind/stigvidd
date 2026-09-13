@@ -33,6 +33,7 @@ public class StigViddDbContext(DbContextOptions<StigViddDbContext> options) : Db
     public DbSet<MailTemplate> MailTemplates { get; set; }
     public DbSet<OutboxEmail> OutboxEmails { get; set; }
     public DbSet<EmailVerificationToken> EmailVerificationTokens { get; set; }
+    public DbSet<PasswordResetToken> PasswordResetTokens { get; set; }
     public DbSet<ContentReport> ContentReports { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -228,6 +229,23 @@ public class StigViddDbContext(DbContextOptions<StigViddDbContext> options) : Db
         // Finding a user's outstanding challenge, on resend and on code entry. Not unique:
         // consumed rows are kept, so a user accumulates one per verification attempt.
         modelBuilder.Entity<EmailVerificationToken>()
+            .HasIndex(t => t.UserId);
+
+        // PasswordResetToken -> User (cascade; a challenge means nothing without its user)
+        modelBuilder.Entity<PasswordResetToken>()
+            .HasOne(t => t.User)
+            .WithMany()
+            .HasForeignKey(t => t.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Both reset endpoints look a row up by this alone, so it must be unique.
+        modelBuilder.Entity<PasswordResetToken>()
+            .HasIndex(t => t.TokenHash)
+            .IsUnique();
+
+        // Finding a user's outstanding reset, to retire it and to measure the cooldown from.
+        // Not unique: consumed rows are kept, so a user accumulates one per reset request.
+        modelBuilder.Entity<PasswordResetToken>()
             .HasIndex(t => t.UserId);
 
         // TrailSourceLink → Trail (SetNull; the link outlives the trail, so a deleted

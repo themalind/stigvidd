@@ -23,17 +23,20 @@ public class AccountController : StigViddController
     private readonly IKeycloakAdminRepository _keycloakAdminRepository;
     private readonly IUserService _userService;
     private readonly IEmailVerificationService _emailVerificationService;
+    private readonly IPasswordResetService _passwordResetService;
     private readonly ILogger<AccountController> _logger;
 
     public AccountController(
         IKeycloakAdminRepository keycloakAdminRepository,
         IUserService userService,
         IEmailVerificationService emailVerificationService,
+        IPasswordResetService passwordResetService,
         ILogger<AccountController> logger)
     {
         _keycloakAdminRepository = keycloakAdminRepository;
         _userService = userService;
         _emailVerificationService = emailVerificationService;
+        _passwordResetService = passwordResetService;
         _logger = logger;
     }
 
@@ -153,18 +156,20 @@ public class AccountController : StigViddController
     private string RequestBaseUrl() => $"{Request.Scheme}://{Request.Host}";
 
     /// <summary>
-    /// Triggers a Keycloak "update password" email. Always returns 204 — it never reveals whether
-    /// the email belongs to a registered user.
+    /// Queues a StigVidd password-reset mail carrying a one-time link. Always returns 204 — it
+    /// never reveals whether the email belongs to a registered user, is verified, or is inside
+    /// its cooldown.
     /// </summary>
     [HttpPost]
     [Route("forgot-password")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<ActionResult> ForgotPassword(
         [FromBody] ForgotPasswordRequest request,
         CancellationToken ctoken)
     {
         try
         {
-            await _keycloakAdminRepository.SendPasswordResetEmailAsync(request.Email, ctoken);
+            await _passwordResetService.IssueAndSendAsync(request.Email, RequestBaseUrl(), ctoken);
         }
         catch (Exception ex)
         {
@@ -172,6 +177,117 @@ public class AccountController : StigViddController
         }
 
         return NoContent();
+    }
+
+    /// <summary>
+    /// The link target from the reset mail: the form where a new password is chosen. Returns a
+    /// page rather than JSON, because it is opened by the user's browser from their mail client.
+    /// </summary>
+    /// <remarks>
+    /// Deliberately does NOT consume the token. Mail scanners and corporate link-prefetchers
+    /// follow a GET before the human does, and a reset link that died on that fetch would be
+    /// dead on arrival — the same hazard EmailVerificationOutcome.AlreadyVerified exists for,
+    /// which a password reset cannot answer the same way. Only the POST spends the link.
+    /// </remarks>
+    [HttpGet]
+    [Route("reset-password")]
+    [Produces("text/html")]
+    // Kept out of the OpenAPI document, and so out of the generated web client. Nothing calls
+    // this programmatically -- only a mail client's browser does. Measured: verify-email, which
+    // has only [Produces("text/html")], still reached web/src/api/generated as a Blob fetcher
+    // plus react-query hooks that nothing uses. It does NOT hide the route from
+    // EndpointDataSource, so EndpointAuthorizationTests still pins it.
+    [ApiExplorerSettings(IgnoreApi = true)]
+    public async Task<ActionResult> ResetPasswordForm([FromQuery] string? token, CancellationToken ctoken)
+    {
+        Result<PasswordResetOutcome> result;
+
+        try
+        {
+            result = await _passwordResetService.ValidateAsync(token ?? string.Empty, ctoken);
+        }
+        catch (Exception ex)
+        {
+            // Never let this reach app.UseExceptionHandler: it writes an EMPTY body with a 500,
+            // which in a browser is a literally blank page.
+            _logger.LogError(ex, "Failed to validate a password reset link.");
+            return HtmlPage(StatusCodes.Status500InternalServerError, ResetPasswordPage.Error);
+        }
+
+        if (!result.Success)
+            return HtmlPage(StatusCodes.Status500InternalServerError, ResetPasswordPage.Error);
+
+        return result.Value switch
+        {
+            PasswordResetOutcome.Valid =>
+                HtmlPage(StatusCodes.Status200OK, ResetPasswordPage.Form(token!)),
+            PasswordResetOutcome.Expired =>
+                HtmlPage(StatusCodes.Status410Gone, ResetPasswordPage.Expired),
+            _ =>
+                HtmlPage(StatusCodes.Status400BadRequest, ResetPasswordPage.Invalid),
+        };
+    }
+
+    /// <summary>
+    /// Sets the new password from the form above, and spends the link.
+    /// </summary>
+    /// <remarks>
+    /// The parameters are loose, nullable strings and there is deliberately NO validator for
+    /// this action in Core/Validators/. Validators there are auto-registered by existing, and
+    /// [ApiController]'s automatic model-state response is JSON ProblemDetails — which is the
+    /// wrong thing to hand a browser that asked for a page. So the checking happens here and a
+    /// rejection re-renders the form.
+    /// </remarks>
+    [HttpPost]
+    [Route("reset-password")]
+    [Produces("text/html")]
+    [Consumes("application/x-www-form-urlencoded")]
+    // Out of the document for the same reason as the GET, and one more: NSwag would emit a
+    // urlencoded requestBody, which orval generates differently from JSON and could break
+    // `tsc -b` in web/ -- a package this change otherwise does not touch.
+    [ApiExplorerSettings(IgnoreApi = true)]
+    public async Task<ActionResult> ResetPassword(
+        [FromForm] string? token,
+        [FromForm] string? newPassword,
+        [FromForm] string? confirmPassword,
+        CancellationToken ctoken)
+    {
+        var rawToken = token ?? string.Empty;
+
+        if (string.IsNullOrEmpty(newPassword) || string.IsNullOrEmpty(confirmPassword))
+            return HtmlPage(StatusCodes.Status400BadRequest, ResetPasswordPage.Form(rawToken, ResetPasswordPage.MissingMessage));
+
+        if (!string.Equals(newPassword, confirmPassword, StringComparison.Ordinal))
+            return HtmlPage(StatusCodes.Status400BadRequest, ResetPasswordPage.Form(rawToken, ResetPasswordPage.MismatchMessage));
+
+        Result<PasswordResetOutcome> result;
+
+        try
+        {
+            result = await _passwordResetService.ResetAsync(rawToken, newPassword, ctoken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to reset a password.");
+            return HtmlPage(StatusCodes.Status500InternalServerError, ResetPasswordPage.Error);
+        }
+
+        if (!result.Success)
+            return HtmlPage(StatusCodes.Status500InternalServerError, ResetPasswordPage.Error);
+
+        return result.Value switch
+        {
+            PasswordResetOutcome.Reset =>
+                HtmlPage(StatusCodes.Status200OK, ResetPasswordPage.Done),
+            // The realm refused the password. The link is still live, so send them back to the
+            // form rather than to a dead end.
+            PasswordResetOutcome.WeakPassword =>
+                HtmlPage(StatusCodes.Status400BadRequest, ResetPasswordPage.Form(rawToken, ResetPasswordPage.WeakPasswordMessage)),
+            PasswordResetOutcome.Expired =>
+                HtmlPage(StatusCodes.Status410Gone, ResetPasswordPage.Expired),
+            _ =>
+                HtmlPage(StatusCodes.Status400BadRequest, ResetPasswordPage.Invalid),
+        };
     }
 
     /// <summary>Body of a 400 when the submitted code does not match.</summary>
@@ -254,10 +370,25 @@ public class AccountController : StigViddController
         return NoContent();
     }
 
-    private ContentResult HtmlPage(int statusCode, string html) => new()
+    private ContentResult HtmlPage(int statusCode, string html)
     {
-        StatusCode = statusCode,
-        ContentType = "text/html; charset=utf-8",
-        Content = html,
-    };
+        // These pages carry a one-time token -- in the reset form's hidden field, and in the
+        // URL that reached them. no-store keeps a shared browser or a corporate proxy from
+        // holding on to it; form-action and frame-ancestors stop an injected or clickjacked
+        // submit sending it somewhere else. The pages reference nothing external by design,
+        // so default-src 'none' costs nothing.
+        Response.Headers.CacheControl = "no-store, no-cache, must-revalidate";
+        Response.Headers.Pragma = "no-cache";
+        Response.Headers["Referrer-Policy"] = "no-referrer";
+        Response.Headers["X-Content-Type-Options"] = "nosniff";
+        Response.Headers["Content-Security-Policy"] =
+            "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'";
+
+        return new ContentResult
+        {
+            StatusCode = statusCode,
+            ContentType = "text/html; charset=utf-8",
+            Content = html,
+        };
+    }
 }

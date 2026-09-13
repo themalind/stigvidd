@@ -26,6 +26,27 @@ you get approved.
   `src/api/generated`. Jenkins produces the snapshot in Preflight (the web stage runs in
   parallel with the backend one, so it cannot wait for it) and alone runs
   `git diff --exit-code -- src/api/generated`.
+- [A `Produces("text/html")` attribute does not keep an endpoint out of the typed client — only `ApiExplorerSettings(IgnoreApi = true)` does](produces-html-does-not-keep-an-endpoint-out-of-the-generated-client.md) —
+  adding any endpoint that serves a page to a browser rather than JSON (a mail link, a form
+  post, an HTML landing page): `[Produces("text/html")]` reads like it declares the action out
+  of the contract and does not. Measured: `verify-email` has carried it all along and is still
+  in `web/openapi.json` as `application/octet-stream` / `format: binary`, because NSwag maps a
+  non-generic `ActionResult` to a file download — so orval generated a `Promise<Blob>` fetcher
+  and a full set of `useQuery` hooks nothing calls. `[ApiExplorerSettings(IgnoreApi = true)]` is
+  the lever that works, and it does NOT hide the route from `EndpointDataSource`, so
+  `EndpointAuthorizationTests` still pins it. Matters most for a
+  `[Consumes("application/x-www-form-urlencoded")]` POST, whose generated client can fail
+  `tsc -b` in `web/` — a package the change never touched, caught only by the Jenkins-only gate.
+- [Applying migrations to a hand-started PostGIS fails in a 2026-05 migration unless you match the pinned major](verifying-a-migration-outside-compose-needs-the-pinned-postgis-major.md) —
+  checking a migration for real when the full stack is unavailable (no `.env`, or the host runs
+  podman-compose instead of Docker Compose): one `postgis/postgis:17-3.5` container plus
+  `dotnet ef database update --project Infrastructure --connection "…"` works, and
+  `--connection` is needed or the design-time factory silently migrates whatever Infrastructure's
+  **user secrets** point at. Any other tag dies with `42601: syntax error at or near "COLUMNS"`
+  inside `20260523120007_PostGIS` — a migration from months ago that you did not touch, so it
+  reads as a real defect; it is PostgreSQL **17** syntax on a 16 server. `docker-compose.yml`'s
+  image pin is load-bearing for the migration chain. Carries the `psql` one-liners for checking
+  columns/indexes/FKs and, crucially, that an `InsertData` seed left the identity sequence ahead.
 - [`OpenApiContractTests` used to fail on Windows over CR bytes alone — untracking the snapshot removed it](openapi-snapshot-fails-on-windows-line-endings.md) —
   RESOLVED, and kept for the diagnosis. While `web/openapi.json` was committed, `.gitattributes`
   held it at LF while the served document is CRLF on Windows, so an ordinal comparison failed on
@@ -461,6 +482,18 @@ src/api/generated` then fails with "the generated API client is stale" for reaso
   `InvalidCredentialsError`, a screen testing the broader class first swallows it with every
   test still green. Mail scanners follow the `GET` link before the human, so
   `AlreadyVerified` is a success.
+- [A password reset does not end existing sessions, and the SDK gives you no way to make it](password-reset-does-not-end-existing-sessions.md) —
+  implementing, reviewing or promising anything about password reset, session revocation or
+  signing other devices out: `PasswordResetService.ResetAsync` changes the password in
+  Keycloak but revokes nothing, so an already signed-in session survives it — and the app
+  holds a long-lived **offline** refresh token (`offline_access`), which is deliberately not
+  bound to the SSO session and so does not time out on its own. Checked against the shipped
+  assembly: `IKeycloakUserClient` in Keycloak.AuthServices.Sdk 3.0.0 exposes no logout, no
+  session, no consent member and no generic request seam, so none of the three Admin API
+  routes that would work is reachable without a hand-rolled `HttpClient`. `/users/{id}/logout`
+  alone does NOT kill offline sessions, and the admin service account may lack the
+  `view-clients` role the full three-call form needs — so any attempt must be best-effort and
+  never fatal to the reset itself.
 - [The Keycloak realm came from appsettings.json, not compose — and one `Keycloak:realm` feeds both authentication and the admin client](keycloak-realm-lives-in-appsettings-not-compose.md) —
   changing the Keycloak realm, or pointing a second environment at the same Keycloak:
   `appsettings.json` pins `"realm": "stigvidd"` in BOTH the `Keycloak` and
