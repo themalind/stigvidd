@@ -6,6 +6,8 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { logger, setLogSink, startLogLifecycle, LogRecord } from "./logger";
+import { setEventSink } from "./analytics";
+import { loadConsent } from "./consent";
 
 /**
  * Telemetry bootstrap: one call, safe to make unconditionally.
@@ -20,6 +22,13 @@ import { logger, setLogSink, startLogLifecycle, LogRecord } from "./logger";
 
 const LOGS_URL = process.env.EXPO_PUBLIC_OO_LOGS_URL;
 const LOGS_TOKEN = process.env.EXPO_PUBLIC_OO_LOGS_TOKEN;
+
+// Analytics events go to their OWN stream, because stream is the only erasure granularity
+// OpenObserve has: `stigvidd_app_events` can be dropped wholesale on a policy change without
+// taking the 7-day error logs with it. It reuses LOGS_TOKEN deliberately — same ingest
+// account, both already public in the bundle, and a second credential would be a second thing
+// to rotate for no security gain.
+const EVENTS_URL = process.env.EXPO_PUBLIC_OO_EVENTS_URL;
 
 // Deliberately shorter than the logger's SINK_TIMEOUT_MS watchdog, so a stalled request is
 // normally cancelled here — where the socket can actually be released — and the watchdog stays
@@ -86,6 +95,38 @@ function createHttpSink(url: string, token: string) {
 }
 
 /**
+ * Ships analytics batches, to a different stream than the logs.
+ *
+ * Records arrive already redacted and enveloped by analytics.ts, so this only posts them. Note
+ * there is no retry on the caller's side either: a failed analytics batch is dropped rather
+ * than re-queued, which is the opposite of the log sink's contract and is intentional.
+ */
+function createEventSink(url: string, token: string) {
+  return async (events: Record<string, unknown>[]) => {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        signal: controller.signal,
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Basic ${token}`,
+        },
+        body: JSON.stringify(events),
+      });
+
+      if (!response.ok) {
+        throw new Error(`event shipping failed: HTTP ${response.status}`);
+      }
+    } finally {
+      clearTimeout(timeout);
+    }
+  };
+}
+
+/**
  * Installs the global JS error and unhandled-rejection handlers.
  *
  * Both CHAIN rather than replace: whatever handler is already installed (React Native's red
@@ -137,6 +178,15 @@ export function initTelemetry(): void {
     setLogSink(createHttpSink(LOGS_URL, LOGS_TOKEN));
     startLogLifecycle();
   }
+
+  if (EVENTS_URL && LOGS_TOKEN) {
+    setEventSink(createEventSink(EVENTS_URL, LOGS_TOKEN));
+  }
+
+  // Hydrates the consent cache. Reading it is NOT asking for it — the prompt is a dialog in
+  // the layout tree, gated on this having resolved to "unknown". Until it resolves the gate
+  // in analytics.ts holds events without transmitting, which is the safe direction.
+  void loadConsent();
 
   installGlobalErrorHandlers();
 }

@@ -6,6 +6,7 @@ using Core.Interfaces.Repositories;
 using Core.Interfaces.Services;
 using Core.Repositories;
 using Core.Services;
+using Core.Telemetry;
 using Infrastructure;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
@@ -97,6 +98,13 @@ public static class ServiceCollectionExtensions
         // the dispatcher draining it. Unlike the import queue this one is only a hint — the
         // OutboxEmails table is what survives a restart.
         services.AddSingleton<IMailOutboxQueue, MailOutboxQueue>();
+
+        // Instruments only, and registered unconditionally on purpose: creating a Meter starts no
+        // thread and registers nothing with OpenTelemetry, so this costs a laptop, CI and every
+        // WebApplicationFactory host nothing. EXPORT stays opt-in in TelemetryExtensions, which
+        // registers no providers at all without Otlp:Endpoint. Singleton because a Meter owns its
+        // instruments — one per request would leak.
+        services.AddSingleton<StigviddMetrics>();
 
         // No Smtp:Host means mail is not configured here: local development, the test suite,
         // or a partial stack that runs no mail server. Log it rather than send it. The API

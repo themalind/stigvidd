@@ -4,6 +4,7 @@
 using Core.Factories;
 using Core.Interfaces.Repositories;
 using Core.Interfaces.Services;
+using Core.Telemetry;
 using Infrastructure.Data.Entities;
 using WebDataContracts.ResponseModels.Friend;
 using WebDataContracts.ResponseModels.Review;
@@ -24,6 +25,7 @@ public class UserService : IUserService
     private readonly IReviewService _reviewService;
     private readonly IFriendRepository _friendRepository;
     private readonly IContentReportRepository _contentReportRepository;
+    private readonly StigviddMetrics _metrics;
 
     public UserService(IUserRepository userResponseRepository,
     ITrailObstacleRepository trailObstacleRepository,
@@ -31,7 +33,8 @@ public class UserService : IUserService
     IHikeService hikeService,
     IReviewService reviewService,
     IFriendRepository friendRepository,
-    IContentReportRepository contentReportRepository)
+    IContentReportRepository contentReportRepository,
+    StigviddMetrics metrics)
     {
         _userRepository = userResponseRepository;
         _trailObstacleRepository = trailObstacleRepository;
@@ -40,6 +43,7 @@ public class UserService : IUserService
         _reviewService = reviewService;
         _friendRepository = friendRepository;
         _contentReportRepository = contentReportRepository;
+        _metrics = metrics;
     }
 
     public async Task<Result<UserResponse?>> GetUserBySubjectAsync(string subjectId, CancellationToken ctoken)
@@ -215,6 +219,11 @@ public class UserService : IUserService
                 t.TrailImages!.Select(ti => TrailImageResponse.Create(_userResponseFactory.PresentableBaseUrl, ti.Identifier, ti.ImageUrl)).Take(1).ToList()
             ), ctoken);
 
+        _metrics.RecordCollectionChange(
+            MetricTags.Values.ListFavorites,
+            MetricTags.Values.OperationAdd,
+            MetricOutcome.From(result.Status));
+
         if (result.Status == RepositoryResultStatus.Error)
             return Result.Fail<UserFavoritesTrailResponse?>(new Message(500, "An error occurred while adding trail to favorites."));
 
@@ -245,6 +254,11 @@ public class UserService : IUserService
                  t.TrailImages!.Select(ti => TrailImageResponse.Create(_userResponseFactory.PresentableBaseUrl, ti.Identifier, ti.ImageUrl)).Take(1).ToList()
             ), ctoken);
 
+        _metrics.RecordCollectionChange(
+            MetricTags.Values.ListWishlist,
+            MetricTags.Values.OperationAdd,
+            MetricOutcome.From(result.Status));
+
         if (result.Status == RepositoryResultStatus.Error)
             return Result.Fail<UserWishlistTrailResponse?>(new Message(500, "An error occurred while adding trail to wishlist."));
 
@@ -261,6 +275,11 @@ public class UserService : IUserService
     {
         var result = await _userRepository.RemoveTrailFromUserFavoritesListAsync(userIdentifier, trailIdentifier, ctoken);
 
+        _metrics.RecordCollectionChange(
+            MetricTags.Values.ListFavorites,
+            MetricTags.Values.OperationRemove,
+            MetricOutcome.From(result.Status));
+
         if (result.Status == RepositoryResultStatus.Error)
             return Result.Fail(new Message(500, "An error occurred while removing trail from favorites."));
 
@@ -273,6 +292,11 @@ public class UserService : IUserService
     public async Task<Result> RemoveTrailFromUserWishListAsync(string userIdentifier, string trailIdentifier, CancellationToken ctoken)
     {
         var result = await _userRepository.RemoveTrailFromUserWishListAsync(userIdentifier, trailIdentifier, ctoken);
+
+        _metrics.RecordCollectionChange(
+            MetricTags.Values.ListWishlist,
+            MetricTags.Values.OperationRemove,
+            MetricOutcome.From(result.Status));
 
         if (result.Status == RepositoryResultStatus.Error)
             return Result.Fail(new Message(500, "An error occurred while removing trail from wishlist."));

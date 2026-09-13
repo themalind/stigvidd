@@ -18,6 +18,7 @@ import { Dimensions, Modal, Pressable, StyleSheet, View } from "react-native";
 import { useAuth } from "@/components/auth/auth-provider";
 import { Divider, Drawer, Text, useTheme } from "react-native-paper";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { logger } from "../../services/logger";
 
 interface Props {
   visible: boolean;
@@ -51,7 +52,7 @@ export default function SettingsDrawer({ visible, onDismiss }: Props) {
     try {
       await logout();
     } catch (e) {
-      console.log(e);
+      logger.error("Sign-out failed", { error: String(e) });
       setError(t("auth.couldNotLogout"));
     }
     onDismiss();
@@ -71,6 +72,12 @@ export default function SettingsDrawer({ visible, onDismiss }: Props) {
     setActive("guide");
     onDismiss();
     router.replace("/(tabs)/(settings)/guide");
+  }
+
+  function handlePrivacy() {
+    setActive("privacy");
+    onDismiss();
+    router.replace("/(tabs)/(settings)/privacy");
   }
 
   return (
@@ -120,6 +127,13 @@ export default function SettingsDrawer({ visible, onDismiss }: Props) {
               active={active === "guide"}
               theme={{ roundness: 1 }}
               onPress={handleGuide}
+            />
+            <Drawer.Item
+              label={t("settings.privacy")}
+              icon="shield-account"
+              active={active === "privacy"}
+              theme={{ roundness: 1 }}
+              onPress={handlePrivacy}
             />
             <Drawer.Item
               label={t("settings.about")}

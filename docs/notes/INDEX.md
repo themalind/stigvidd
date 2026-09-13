@@ -208,7 +208,7 @@ src/api/generated` then fails with "the generated API client is stale" for reaso
   denied and the file is never written, while the same sentence without backticks passes — write
   file content with the Write tool. And the hooks `process.exit()` at module scope, so
   `import`-ing one to test its `decide()` kills the importer — spawn it with the event on stdin
-  instead.
+  instead. Also: the gate does NOT check that the ADVICE a hook prints is still true — plan-eval told every session touching `web/` that "there are NO web tests" while `web/src` held 26 of them and CI had a web job, with all 27 self-tests green. Stale guidance fails open and is indistinguishable from correct guidance at every gate.
 - [When the defence is an allowlist, a test asserting "this obfuscated attack is rejected" cannot fail](allowlist-defences-make-obfuscation-tests-tautological.md) —
   Writing a validator or sanitiser that blocks unsafe URLs and markup: `MailHtmlPolicy` and
   `isSafeMailUrl` HTML-decode and strip control characters before checking a `javascript:` /
@@ -315,6 +315,15 @@ src/api/generated` then fails with "the generated API client is stale" for reaso
   uninstalled timer deletes nothing while everything looks healthy, and log options are fixed
   at container _create_ time, so `docker compose restart` never applies the caps. Distinct
   from `OBSERVATORY_RETENTION_DAYS`, which is OpenObserve's genuinely time-based retention.
+- [A metric attribute called trail_name is flagged as personal data, and so is mail_status](metric-attribute-names-trip-the-retention-guard.md) —
+  the GDPR guard at the end of `scripts/observatory-retention.sh` tokenises every metrics stream
+  schema field name on `[^a-z0-9]+` and looks each token up in one flat identifier set. `name`,
+  `mail` and `subject` are in it, so `trail_name`, `area_name`, `template_name`, `mail_status`,
+  `import_session_status` and `user_agent` all warn despite carrying no personal data, while
+  `hostname` and `service_name` pass. Do not widen the guard — rename (`delivery_status`,
+  `template_key`) or carry no dimension. `MetricAttributeVocabularyTests` reproduces the same
+  tokenisation over `Core/Telemetry/MetricTags.Keys` so it fails the build instead of warning on
+  the host after deploy; its token set is copied from the script and must be changed in both.
 - [OpenObserve OSS has no RBAC, so the ingestion token is the only thing a public credential may be](openobserve-oss-has-no-rbac.md) —
   the `Member` role DEPLOYMENT.md told you to give the ingest account is rejected outright
   ("Custom roles not allowed"), `service_account` is accepted and silently stored as `admin`,

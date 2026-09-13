@@ -70,6 +70,27 @@ instance:
   and histograms add `_bucket`/`_count`/`_sum`/`_min`/`_max` variants. That is why
   the retention override is a script rather than a manual UI task.
 
+  Plus the application's own meter, **`Stigvidd`**, declared once in
+  `backend/Core/Telemetry/MetricNames.cs` and registered by the matching `AddMeter`
+  call here. The meter name is an unchecked string in exactly two places, like the
+  `"AdminOnly"` policy: if they ever differ the counters still record and nothing
+  throws, the exporter simply never subscribes. Share the const; never type the
+  literal.
+
+  Its instruments are built in `Core/Telemetry/StigviddMetrics.cs` and reached only
+  through that type's `Record*` methods — the instruments themselves are private, so
+  a call site chooses from the bounded vocabulary in `Core/Telemetry/MetricTags.cs`
+  rather than assembling its own dimensions. Attribute vocabulary is the part with
+  the 730-day retention and the GDPR argument attached, so it is not left to each
+  caller. Today: `stigvidd.trail.favorites.changed`, `stigvidd.review.created`
+  (counters) and `stigvidd.review.rating` (histogram).
+
+  Registering the meter does **not** weaken the opt-in guard. A `Meter` is a BCL
+  type: creating one registers nothing with OpenTelemetry and starts no thread, so
+  `StigviddMetrics` is registered unconditionally in Core while export stays gated on
+  `Otlp:Endpoint`. `Tests/IntegrationTests/Telemetry/TelemetryOptInTests.cs` asserts
+  both halves — instruments resolvable, `MeterProvider` and `TracerProvider` null.
+
 **Not** emitted, deliberately: spans for `/healthz`, `/readyz`, `/swagger`,
 `/openapi` and `OPTIONS` preflights. Health probes alone would otherwise be the
 single largest source of spans, forever.
@@ -241,6 +262,11 @@ deliberate, reviewable code change — so the rule is:
 
 > **Any change that adds a `Meter`, a counter, or a new instrumentation package
 > must be followed by re-running `scripts/observatory-retention.sh` on the host.**
+
+And read the tail of its output, not just its exit code: the GDPR guard prints any
+identifier-shaped metric field it found. The names that trip it are not the ones you
+expect — `trail_name` and `mail_status` both do, while carrying no personal data. See
+[notes/metric-attribute-names-trip-the-retention-guard.md](notes/metric-attribute-names-trip-the-retention-guard.md).
 
 The script is idempotent; re-running it is always safe.
 

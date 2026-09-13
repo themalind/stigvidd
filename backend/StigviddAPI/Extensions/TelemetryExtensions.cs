@@ -1,6 +1,7 @@
 // SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+using Core.Telemetry;
 using System.Text;
 using OpenTelemetry;
 using OpenTelemetry.Exporter;
@@ -103,6 +104,11 @@ public static class TelemetryExtensions
                 // Connection-pool saturation, which is the single most useful number when
                 // someone reports "the API got slow".
                 .AddMeter("Npgsql")
+                // The application's own instruments (Core/Telemetry/StigviddMetrics.cs). This
+                // string and MetricNames.MeterName must be the same literal or the exporter
+                // simply never subscribes: the counters still record, nothing throws, and the
+                // metrics silently never leave the process. Hence the shared const.
+                .AddMeter(MetricNames.MeterName)
                 .AddOtlpExporter(o => Configure(o, endpointUri, "v1/metrics", authHeader, stream: null)));
 
         return builder;

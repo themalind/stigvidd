@@ -5,6 +5,8 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
+import { logger } from "../services/logger";
+
 interface Props {
   data: string;
   identifier: string;
@@ -28,7 +30,7 @@ export default function CoordinateParser({ data, identifier }: Props): GeoJSON.P
     const raw: unknown = JSON.parse(data);
 
     if (!Array.isArray(raw)) {
-      console.warn("Coordinates payload is not an array for " + identifier);
+      logger.warn("Coordinates payload is not an array", { identifier });
       return [];
     }
 
@@ -43,7 +45,7 @@ export default function CoordinateParser({ data, identifier }: Props): GeoJSON.P
 
     return positions;
   } catch (error) {
-    console.warn("Failed to parse coordinates for " + identifier, error);
+    logger.warn("Failed to parse coordinates", { identifier, error: String(error) });
     return [];
   }
 }

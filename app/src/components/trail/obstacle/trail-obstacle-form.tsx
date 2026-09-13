@@ -30,6 +30,7 @@ import { Dimensions, Pressable, StyleSheet, Switch, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { ActivityIndicator, Button, Modal, Portal, Surface, Text, TextInput, useTheme } from "react-native-paper";
 import { z } from "zod";
+import { logger } from "../../../services/logger";
 
 const obstacleFields = z.object({
   description: z
@@ -157,7 +158,7 @@ export default function TrailObstacleForm({ trailIdentifier, visible, onDismiss 
       setValue("incidentLatitude", location.coords.latitude);
       setValue("incidentLongitude", location.coords.longitude);
     } catch (e) {
-      console.log("Kunde inte hämta plats", e);
+      logger.warn("Could not read the current position for an obstacle report", { error: String(e) });
       setLocationError(t("obstacle.locationError"));
     } finally {
       setIsLocating(false);

@@ -10,6 +10,7 @@ import { initMapTiler } from "@/components/map/map-style";
 import { initMapCache } from "@/utils/map-cache";
 import { loadUserTheme, userThemeAtom } from "@/atoms/user-theme-atom";
 import { GlobalSnackbar } from "@/components/global-snackbar";
+import { ConsentDialog } from "@/components/settings/consent-dialog";
 import { useAppState } from "@/hooks/useAppState";
 import { useUserTheme } from "@/hooks/useUserTheme";
 import { loadStoredLanguage } from "@/i18n";
@@ -142,6 +143,7 @@ export default function RootLayout() {
                 <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
               </Stack>
               <GlobalSnackbar />
+              <ConsentDialog />
             </View>
           </GestureHandlerRootView>
         </ThemeProvider>

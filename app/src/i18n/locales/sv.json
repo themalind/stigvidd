@@ -520,7 +520,8 @@
   "settings": {
     "theme": "Tema",
     "guide": "Naturguide",
-    "about": "Om Stigvidd"
+    "about": "Om Stigvidd",
+    "privacy": "Integritet"
   },
   "about": {
     "tagline": "Upptäck leder nära dig",
@@ -532,7 +533,7 @@
     "licenceText": "Stigvidd är fri programvara. Appen är licensierad under Mozilla Public License 2.0 och servern under GNU Affero General Public License version 3. Du har rätt att läsa, ändra och dela källkoden.",
     "licenceLink": "Visa källkoden på GitHub",
     "privacyTitle": "Integritet",
-    "privacyText": "Vi använder inga annonser, analysverktyg eller spårning. Din position spelas bara in medan du registrerar en promenad, och dina promenader är privata tills du själv delar dem.",
+    "privacyText": "Vi visar inga annonser. Användningsstatistik samlas bara in om du samtycker, innehåller aldrig din position och kan stängas av när som helst under Inställningar. Din position spelas bara in medan du registrerar en promenad, och dina promenader är privata tills du själv delar dem.",
     "privacyLink": "Läs integritetspolicyn",
     "termsLink": "Läs användarvillkoren",
     "contactTitle": "Hör av dig",
@@ -705,5 +706,16 @@
       "Misinformation": "Felaktig information",
       "Other": "Annat"
     }
+  },
+  "privacy": {
+    "title": "Integritet",
+    "statsLabel": "Dela användningsstatistik",
+    "statsDescription": "Vilka funktioner som används och om de fungerar. Aldrig din position.",
+    "explanation": "Användningsstatistik hjälper oss se vilka delar av appen som används och var det går fel, så att vi kan göra den bättre. Den innehåller aldrig din position och säljs eller delas aldrig för marknadsföring. Vi sparar den i 7 dagar på våra egna servrar inom EU.",
+    "errorsNote": "Felrapporter samlas in oavsett, eftersom de är det som håller appen igång. De innehåller heller aldrig din position.",
+    "askTitle": "Vill du hjälpa oss förbättra Stigvidd?",
+    "askBody": "Får vi samla in användningsstatistik – vilka funktioner som används och om de fungerar? Den innehåller aldrig din position, vi sparar den i 7 dagar på våra egna servrar inom EU, och du kan ändra dig när som helst under Inställningar.",
+    "accept": "Ja, det går bra",
+    "decline": "Nej tack"
   }
 }

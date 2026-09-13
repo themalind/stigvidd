@@ -917,6 +917,62 @@ obtain the certificate, but nothing is started behind it. On the deploy that
 introduces the service, expect 502s on that subdomain until you run the third
 command above.
 
+### Release steps CI does not do: telemetry
+
+Two changes carry an obligation CI cannot discharge, and both fail **silently** —
+the deploy succeeds, the stack is healthy, and the thing simply does not happen.
+
+**1. A release that adds a metric instrument → re-run the retention override.**
+
+An OpenObserve metrics stream is created the first time that metric is *ingested*,
+and it inherits the **global** retention, which is the short one (7 days). Only
+`scripts/observatory-retention.sh` raises metrics streams to 730 days, and it
+cannot pre-create a stream that does not exist yet. So after the first deploy that
+ships a new instrument name, on the host:
+
+```bash
+cd /opt/stigvidd
+./scripts/observatory-retention.sh --dry-run   # read what it would change
+./scripts/observatory-retention.sh             # apply; idempotent
+```
+
+It needs the **`ops@` password**, not an ingestion token — stream settings is not
+an ingest route and a passcode gets a 401 there.
+
+Then **read the tail of its output, not just its exit code**: it prints any
+identifier-shaped field it found on a metrics stream, and a warning there is a
+release blocker rather than a cleanup task. The names that trip it are not the
+ones you would guess — `trail_name` and `mail_status` both do, while carrying no
+personal data at all. See
+[docs/notes/metric-attribute-names-trip-the-retention-guard.md](docs/notes/metric-attribute-names-trip-the-retention-guard.md).
+
+Note that a histogram is not one stream: OpenObserve adds `_bucket`, `_count`,
+`_sum`, `_min` and `_max` variants, so the stream count moves by more than the
+number of instruments added.
+
+**2. A release that changes an `EXPO_PUBLIC_*` variable → set it on EAS, and rebuild.**
+
+The app is built by **EAS, not by this compose file**, and a cloud build never
+receives `app/.env` — it is gitignored, and the upload drops what git drops. The
+variable has to exist on EAS, per environment:
+
+```bash
+cd app
+npx eas env:list --environment production
+npx eas env:create production --name EXPO_PUBLIC_OO_EVENTS_URL --value '...'
+```
+
+`EXPO_PUBLIC_*` is **inlined at bundle time**, so a name that is not set inlines
+as `undefined` with nothing failing or warning. For the telemetry variables the
+resulting behaviour is the safe direction — no URL means no sink is installed, so
+nothing is buffered and nothing is sent — but that is indistinguishable from
+"analytics are working and nobody has opted in yet". Check the stream, not the
+build log.
+
+An OTA update carries this only if you say which environment it bundles from:
+without `--environment`, `eas update` bundles **your laptop's `.env`**. See
+[docs/notes/eas-env-vars-are-not-your-dotenv.md](docs/notes/eas-env-vars-are-not-your-dotenv.md).
+
 ### Jenkins agent SSH prep
 
 The agent trusts the deploy host via the **jenkins user's** `~/.ssh/known_hosts`.

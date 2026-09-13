@@ -170,8 +170,10 @@ const AREAS = [
   [
     /^web\//i,
     "the admin web",
-    "there are NO web tests. `cd web && npm run build` (tsc -b && vite build) IS the type " +
-      "check, and `npm run lint` the rest.",
+    "`cd web && npm test` is Vitest (`vitest run`, configured in web/vitest.config.ts, NOT " +
+      "vite.config.ts) and it TYPE-CHECKS NOTHING — `cd web && npm run build` (tsc -b && " +
+      "vite build) is the type check, and `npm run lint` the rest. All three run in the " +
+      "GitHub web job; the generated-client staleness gate is Jenkins only.",
   ],
   [
     /^app\//i,

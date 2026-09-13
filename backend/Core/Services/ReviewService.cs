@@ -4,6 +4,7 @@
 using Core.Factories;
 using Core.Interfaces.Repositories;
 using Core.Interfaces.Services;
+using Core.Telemetry;
 using Infrastructure.Data.Entities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
@@ -24,6 +25,7 @@ public class ReviewService : IReviewService
     private readonly ITrailService _trailService;
     private readonly ReviewResponseFactory _reviewResponseFactory;
     private readonly ILogger<ReviewService> _logger;
+    private readonly StigviddMetrics _metrics;
 
     public ReviewService(
         IReviewRepository reviewRepository,
@@ -32,7 +34,8 @@ public class ReviewService : IReviewService
         IUserRepository userRepository,
         ITrailService trailService,
         ReviewResponseFactory reviewResponseFactory,
-        ILogger<ReviewService> logger)
+        ILogger<ReviewService> logger,
+        StigviddMetrics metrics)
     {
         _reviewRepository = reviewRepository;
         _webDavService = webDavService;
@@ -41,6 +44,7 @@ public class ReviewService : IReviewService
         _trailService = trailService;
         _reviewResponseFactory = reviewResponseFactory;
         _logger = logger;
+        _metrics = metrics;
     }
 
     public async Task<Result<PagedReviewResponse>> GetReviewsByTrailIdentifierAsync(
@@ -77,6 +81,30 @@ public class ReviewService : IReviewService
     }
 
     public async Task<Result<ReviewResponse?>> AddReviewAsync(
+        string userIdentifier,
+        string trailIdentifier,
+        string? trailReview,
+        decimal rating,
+        IFormFileCollection? imageUrls,
+        CancellationToken ctoken)
+    {
+        var result = await AddReviewCoreAsync(
+            userIdentifier, trailIdentifier, trailReview, rating, imageUrls, ctoken);
+
+        // Measured out here rather than at each of the seven exits below, so that every path —
+        // including the catch, and including an eighth exit somebody adds next year — is counted
+        // exactly once without anyone having to remember.
+        _metrics.RecordReviewChange(MetricTags.Values.OperationAdd, MetricOutcome.From(result));
+
+        if (result.Success)
+        {
+            _metrics.RecordReviewRating(rating);
+        }
+
+        return result;
+    }
+
+    private async Task<Result<ReviewResponse?>> AddReviewCoreAsync(
         string userIdentifier,
         string trailIdentifier,
         string? trailReview,
@@ -195,6 +223,15 @@ public class ReviewService : IReviewService
     }
 
     public async Task<Result> DeleteReviewAsync(string reviewIdentifier, string userIdentifer, CancellationToken ctoken)
+    {
+        var result = await DeleteReviewCoreAsync(reviewIdentifier, userIdentifer, ctoken);
+
+        _metrics.RecordReviewChange(MetricTags.Values.OperationRemove, MetricOutcome.From(result));
+
+        return result;
+    }
+
+    private async Task<Result> DeleteReviewCoreAsync(string reviewIdentifier, string userIdentifer, CancellationToken ctoken)
     {
         var reviewResult = await _reviewRepository.GetReviewByIdentifierAsync(reviewIdentifier, userIdentifer, ctoken);
 

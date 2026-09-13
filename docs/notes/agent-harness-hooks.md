@@ -188,6 +188,39 @@ the negatives — the ordinary paths and commands it must stay silent on. A guar
 on normal work gets switched off within the hour, which is a worse outcome than not having
 written it.
 
+### What the gate does NOT cover: the prose a hook prints
+
+The gate checks that a hook *runs*, is registered, and behaves on its own cases. Nothing
+checks that the **advice it emits is still true**, nor that the hook itself honours that
+advice — and that advice is the whole product of the SessionStart and Stop rounds.
+
+Measured, the second kind: `guard-long-running.mjs` ended every denial with "Run it with
+`run_in_background: true`", and then denied the call that did exactly that. It only ever read
+`tool_input.command` and never `tool_input.run_in_background`, so the remedy it named could
+not be followed through the same tool — the caller complies, is denied again, and the only
+way forward is to route around the guard. Its own header had described that flag as the
+intended escape since the day it was written. 38 self-test cases passed throughout, because
+every one of them tested `decide(command)` and the flag is read in `main()`.
+
+The general shape: **a guard's self-test usually exercises its decision function, while the
+remedy lives in its message and the escape hatch lives in the plumbing around it.** Those two
+halves are exactly what no test touches. When a guard names a way out, assert the way out.
+
+Measured: `plan-eval.mjs`'s per-area guidance told every session that touched `web/` that
+"there are NO web tests" — while `web/src` held 26 test files, package.json defined a test
+script, and `.github/workflows/ci.yml` had a whole web job lint/test/building it. The string
+was written before any of those existed and nothing aged it out: 27 self-test cases passed,
+`check-hooks` was all green, and the hook confidently told sessions to skip a suite that
+gates their PR. A session that believes it ships a broken web change reporting that nothing
+covered it.
+
+This fails **open**, like the cross-platform traps above: stale advice is indistinguishable
+from correct advice at every gate we have. So treat a hook's advisory strings as
+documentation with the same decay as a doc comment — when an area gains a suite, a CI job or
+a check, grep the hooks for what they say about that area. The per-area table in
+CLAUDE.md and these strings are two copies of one fact, and only one of them is ever read
+during a task.
+
 ## The exit-code contract
 
 | | |

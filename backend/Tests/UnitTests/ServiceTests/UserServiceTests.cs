@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 using Core.Factories;
+using Core.Telemetry;
 using Core.Interfaces.Repositories;
 using Core.Interfaces.Services;
 using Core.Services;
@@ -23,7 +24,8 @@ public class UserServiceTests
         Mock<ITrailObstacleRepository>? trailobstacleRepo = null,
         Mock<IFriendRepository>? friendRepo = null,
         Mock<IReviewService>? reviewService = null,
-        Mock<IContentReportRepository>? contentReportRepo = null)
+        Mock<IContentReportRepository>? contentReportRepo = null,
+        StigviddMetrics? metrics = null)
     {
         var cfg = new Mock<IConfiguration>();
         cfg.Setup(c => c["PresentableBaseUrl"]).Returns("http://stigvidd.se/testing/");
@@ -44,7 +46,7 @@ public class UserServiceTests
                 .ReturnsAsync(Result.Ok());
         }
 
-        return new UserService(repo.Object, trailobstacleRepo.Object, userResponseFactory, hikeService.Object, reviewService.Object, friendRepo.Object, contentReportRepo.Object);
+        return new UserService(repo.Object, trailobstacleRepo.Object, userResponseFactory, hikeService.Object, reviewService.Object, friendRepo.Object, contentReportRepo.Object, metrics ?? new StigviddMetrics());
     }
 
     [Fact]

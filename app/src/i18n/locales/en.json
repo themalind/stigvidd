@@ -520,7 +520,8 @@
   "settings": {
     "theme": "Theme",
     "guide": "Nature guide",
-    "about": "About Stigvidd"
+    "about": "About Stigvidd",
+    "privacy": "Privacy"
   },
   "about": {
     "tagline": "Discover trails near you",
@@ -532,7 +533,7 @@
     "licenceText": "Stigvidd is free software. The app is licensed under the Mozilla Public License 2.0 and the server under the GNU Affero General Public License version 3. You are free to read, modify and share the source.",
     "licenceLink": "View the source on GitHub",
     "privacyTitle": "Privacy",
-    "privacyText": "We use no ads, analytics or tracking. Your location is only recorded while you record a walk, and your walks stay private until you share them yourself.",
+    "privacyText": "We show no ads. Usage statistics are only collected if you agree to them, never include your position, and can be switched off at any time in Settings. Your location is only recorded while you record a walk, and your walks stay private until you share them yourself.",
     "privacyLink": "Read the privacy policy",
     "termsLink": "Read the terms of use",
     "contactTitle": "Get in touch",
@@ -705,5 +706,16 @@
       "Misinformation": "Misinformation",
       "Other": "Other"
     }
+  },
+  "privacy": {
+    "title": "Privacy",
+    "statsLabel": "Share usage statistics",
+    "statsDescription": "Which features are used and whether they work. Never your position.",
+    "explanation": "Usage statistics help us see which parts of the app people use and where it goes wrong, so we can make it better. They never include your position and are never sold or shared for marketing. We keep them for 7 days on our own servers within the EU.",
+    "errorsNote": "Error reports are collected either way, because they are what keeps the app working. They never include your position either.",
+    "askTitle": "Help us improve Stigvidd?",
+    "askBody": "May we collect usage statistics — which features are used and whether they work? They never include your position, we keep them for 7 days on our own servers in the EU, and you can change your mind at any time under Settings.",
+    "accept": "Yes, that's fine",
+    "decline": "No thanks"
   }
 }

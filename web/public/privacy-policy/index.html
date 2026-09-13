@@ -9,6 +9,12 @@
   Sidan är tvåspråkig: svenska först, engelska under samma URL (#english). Ändras
   ett avsnitt måste båda språken följas åt.
 
+  2026-09-13: §2 och §5 ändrade för att beskriva användningsstatistik. Den absoluta
+  "inga analysverktyg"-formuleringen var sann när den skrevs och blir falsk i samma stund
+  som det första händelsen skickas, så texten MÅSTE nå main i samma merge som
+  samtyckesdialogen och app/src/services/analytics.ts — inte före. Motsvarande text i
+  appen: nyckeln about.privacyText i app/src/i18n/locales/{en,sv}.json.
+
   PUBLICERAD 2026-08-30. Båda grindarna som höll sidan tillbaka är klarade:
     1. Alla <span class="todo">-markeringar är ersatta. Den sista satt i §8
        (Hostups teknikeråtkomst) och togs bort i båda språken 2026-08-30.
@@ -222,7 +228,7 @@
     <main id="top">
       <header>
         <h1>Integritetspolicy för Stigvidd</h1>
-        <p class="updated">Senast uppdaterad: 30 augusti 2026</p>
+        <p class="updated">Senast uppdaterad: 13 september 2026</p>
         <p class="lang-nav"><strong>Svenska</strong> · <a href="#english">In English</a></p>
       </header>
 
@@ -314,11 +320,25 @@
       <div class="callout">
         <p>
           <strong
-            >Vi använder inte annonser, analysverktyg, spårning eller profilering. Vi säljer
-            aldrig dina uppgifter och delar dem inte för marknadsföring.</strong
+            >Vi använder inte annonser, spårning för marknadsföring eller profilering. Vi
+            säljer aldrig dina uppgifter och delar dem inte för marknadsföring.</strong
           >
         </p>
       </div>
+
+      <p>
+        Om du samtycker samlar vi in <strong>användningsstatistik</strong> – vilka funktioner
+        som används och om de fungerar – för att kunna förbättra appen. Du får frågan i appen,
+        du kan tacka nej, och du kan när som helst ändra dig under
+        <strong>Inställningar → Integritet</strong>. Statistiken innehåller aldrig din position,
+        lagras i 7 dagar på våra egna servrar inom EU och delas inte med någon tredje part.
+      </p>
+      <p>
+        <strong>Felrapporter</strong> – uppgifter om att något gick fel i appen eller på servern
+        – samlas in även om du tackar nej till statistiken, eftersom de behövs för att hålla
+        tjänsten igång och säker (berättigat intresse, artikel 6.1 f). De innehåller heller
+        aldrig din position och raderas efter 7 dagar.
+      </p>
 
       <p>
         Du styr själv om appen får använda din position, genom behörigheten i telefonens
@@ -416,6 +436,7 @@
           står kvar så att andra vet vad som rapporterats. Har du valt kategorin "Övrigt" behålls
           beskrivningen, eftersom rapporten annars inte betyder något.
         </li>
+        <li><strong>Användningsstatistik och felrapporter:</strong> 7 dagar.</li>
         <li><strong>Serverloggar:</strong> 7 dagar.</li>
         <li><strong>Säkerhetskopior:</strong> skrivs över inom 49 dagar efter radering.</li>
       </ul>
@@ -468,7 +489,7 @@
       <section class="lang-section" id="english" lang="en">
         <header>
           <h1>Privacy Policy for Stigvidd</h1>
-          <p class="updated">Last updated: 30 August 2026</p>
+          <p class="updated">Last updated: 13 September 2026</p>
           <p class="lang-nav"><a href="#top">På svenska</a> · <strong>English</strong></p>
         </header>
 
@@ -557,11 +578,26 @@
         <div class="callout">
           <p>
             <strong
-              >We use no advertising, analytics, tracking or profiling. We never sell your data and
-              we do not share it for marketing purposes.</strong
+              >We use no advertising, marketing tracking or profiling. We never sell your data
+              and we do not share it for marketing purposes.</strong
             >
           </p>
         </div>
+
+        <p>
+          If you agree to it, we collect <strong>usage statistics</strong> – which features are
+          used and whether they work – so that we can improve the app. We ask you in the app, you
+          can decline, and you can change your mind at any time under
+          <strong>Settings → Privacy</strong>. The statistics never include your position, are
+          kept for 7 days on our own servers within the EU, and are not shared with any third
+          party.
+        </p>
+        <p>
+          <strong>Error reports</strong> – records that something went wrong in the app or on the
+          server – are collected even if you decline the statistics, because they are needed to
+          keep the service working and secure (legitimate interest, Article 6(1)(f)). They never
+          include your position either, and are deleted after 7 days.
+        </p>
 
         <p>
           You decide whether the app may use your location, through the permission in your phone
@@ -664,6 +700,7 @@
             you chose the category "Other" the description is kept, since the report would otherwise
             mean nothing.
           </li>
+          <li><strong>Usage statistics and error reports:</strong> 7 days.</li>
           <li><strong>Server logs:</strong> 7 days.</li>
           <li><strong>Backups:</strong> overwritten within 49 days after deletion.</li>
         </ul>
