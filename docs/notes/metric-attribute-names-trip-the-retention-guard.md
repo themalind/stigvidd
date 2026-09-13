@@ -54,6 +54,62 @@ Worth knowing: `container_id` **passes** (`container`, `id` — neither is in th
 so the guard is no help at all against the thing that actually threatens a two-year
 stream there, which is cardinality. That config drops it anyway.
 
+## The case the "rename it" advice cannot solve
+
+Renaming works only for a name **we own**. Measured on the production host, the guard warns on
+~120 fields that come from the OpenTelemetry SDK and its instrumentation packages, where there
+is nothing of ours to rename:
+
+`telemetry_sdk_name` (on every stream the SDK exports), `db_system_name` (`postgresql`),
+`network_protocol_name` (`http`), `db_client_connection_pool_name`, `dns_question_name`, and
+`aspnetcore_user_is_authenticated` — which trips on `user` while holding a boolean.
+
+`MetricAttributeVocabularyTests` cannot see any of them: it tokenises the `const` fields of
+`MetricTags.Keys`, which are exactly `outcome`, `operation` and `list`. So the build stays
+green and the host warns forever.
+
+### The fix is `INTERNAL`, and that is a different thing from `IDENT_TOKENS`
+
+`telemetry_sdk_name`, `telemetry_sdk_language` and `telemetry_sdk_version` are now in the
+script's **`INTERNAL`** set, which is where `service_name` already sat for the same stated
+reason — a field every OTLP metric stream carries. They were **82 of the 114** warnings,
+because the SDK stamps them on every stream.
+
+The distinction that makes this safe, and that the "do not widen the guard" rule above is
+really about:
+
+| | blast radius |
+| --- | --- |
+| a name in **`INTERNAL`** | exactly that one field |
+| a token in **`IDENT_TOKENS`** | every field containing it — `nick_name`, `given_name`, … |
+
+One is a list, the other is a rule. Most of `INTERNAL` does not even trip the token set; it
+describes the transport-added group rather than patching symptoms, which is why all three
+`telemetry_sdk_*` are listed although only `_name` fires.
+
+**This half is NOT duplicated in the test.** `MetricAttributeVocabularyTests` copies
+`IDENT_TOKENS` and checks `MetricTags.Keys` against it directly; it never reads `INTERNAL`. So
+the "change it in both places" rule stated below applies to the token set only — verified by
+reading the test, which has no `INTERNAL` of its own.
+
+Measured on a stream carrying a planted `telemetry_sdk_name` and a planted `user_id`: before,
+31 warnings each; after, **0** and **31**. Quieter, not blinder.
+
+**32 warnings remain** and were left deliberately — `db_client_connection_pool_name` (16),
+`network_protocol_name`, `dns_question_name`, `db_system_name` (5 each) and
+`aspnetcore_user_is_authenticated` (1). Those are semantic-convention *datapoint* attributes
+chosen for their meaning, not transport plumbing; putting them in `INTERNAL` would turn a list
+of what the transport adds into a general amnesty list, which is exactly the slide this note
+warns about. See [docs/observability.md](../observability.md).
+
+### Editing the script at all: mind the apostrophe
+
+The guard is Python embedded in a **single-quoted** `python3 -c '...'` block, so one apostrophe
+anywhere inside it — a comment included — closes the quote. Writing "the SDK's own attributes"
+in a comment there produced a bash syntax error reported at the closing brace of the *next*
+dict, pointing nowhere near the cause. Nothing in GitHub CI or Jenkins runs this script, so
+`bash -n scripts/observatory-retention.sh` after editing is the only thing that catches it.
+
 ## Why the obvious fix is the wrong one
 
 The reflex on seeing the warning is to argue the case — a trail name really is not personal data,

@@ -74,7 +74,7 @@ instance:
   **~70 streams** from one service, since OpenObserve creates one per metric name
   and histograms add `_bucket`/`_count`/`_sum`/`_min`/`_max` variants. That is why
   the retention override is a script rather than a manual UI task. The optional
-  `hostmetrics` collector adds **34 more** (measured, see below), so a host with it
+  `hostmetrics` collector adds **~36 more** (measured, see below), so a host with it
   enabled carries a little over a hundred metrics streams.
 
   Plus the application's own meter, **`Stigvidd`**, declared once in
@@ -160,7 +160,15 @@ config renames instead — `device` → `dev`, `device_major`/`device_minor` →
 `dev_major`/`dev_minor`, `container.name` → `container`, `container.image.name` →
 `container_image` — and labels the host `hostname` rather than `host.name`, because
 `hostname` is a single token and is in no set. With the renames in place the same
-run flags **0 fields**.
+run flags **0 fields**, confirmed again on the production host.
+
+The exact stream count varies with the container runtime and the host: 34 on a podman dev
+box, **36** on the production host, which additionally exposes `container_memory_file` and
+`system_paging_usage`. Do not treat any of these counts as a fixture.
+
+> **A clean run here is not a clean run overall.** A throwaway observatory holding only
+> collector data says nothing about the backend's ~90 streams, which trip the same guard on
+> names nobody here chose — see *The guard's standing false positives* below.
 
 It also **drops** `container.id`, `container.image.id` and `container.hostname`.
 Those are cardinality, not privacy: the first two change on every
@@ -184,9 +192,84 @@ reading the **tail** of its output. See
   root, because otherwise each running container contributes mount points that
   become permanent dimensions.
 
+### The guard's standing false positives — backend streams, not the collector
+
+**Pre-dating the host-metrics work, and partly addressed.** On the production host the guard
+warned on **114** fields across the backend's streams, every one a false positive of the same
+`name` / `user` token rule that catches `trail_name`:
+
+| field | where it comes from | actual value |
+| --- | --- | --- |
+| ~~`telemetry_sdk_name`~~ **(now allowlisted)** | the OTel SDK's own resource attributes, on **every** stream | `opentelemetry` |
+| `db_system_name` | Npgsql instrumentation | `postgresql` |
+| `network_protocol_name` | Kestrel instrumentation | `http` |
+| `db_client_connection_pool_name` | Npgsql instrumentation | a pool name |
+| `dns_question_name` | HttpClient instrumentation | hostnames the API resolves |
+| `aspnetcore_user_is_authenticated` | ASP.NET Core authorization | a boolean |
+
+**The advice that works everywhere else does not work here.** `MetricTags` can forbid a name
+it owns, and `observability/otel-hostmetrics.yaml` can rename one the collector emits — but
+these come from upstream instrumentation packages, so there is nothing of ours to rename.
+`MetricAttributeVocabularyTests` is blind to them by construction: it tokenises the `const`
+fields of `MetricTags.Keys`, which are exactly `outcome`, `operation` and `list`.
+
+### What was done about it
+
+`telemetry_sdk_name`, `telemetry_sdk_language` and `telemetry_sdk_version` were added to the
+script's **`INTERNAL`** set, which is where `service_name` already sat on precisely this
+reasoning — "fields every OTLP metric stream carries". They accounted for **82 of the 114**
+warnings, because the SDK stamps them on every stream it exports.
+
+This is emphatically *not* the move [the note](notes/metric-attribute-names-trip-the-retention-guard.md)
+forbids. The two halves differ in blast radius:
+
+| | effect |
+| --- | --- |
+| adding `telemetry_sdk_name` to **`INTERNAL`** | exempts exactly that one field name |
+| adding `name` to **`IDENT_TOKENS`** | would exempt `nick_name`, `full_name`, `given_name`… |
+
+`INTERNAL` is a list of specific plumbing field names; `IDENT_TOKENS` is a rule. Naming a field
+cannot leak into a field nobody has thought of yet. Note also that most of `INTERNAL` does not
+trip the token set at all — it describes the whole transport-added group rather than patching
+symptoms, which is why all three `telemetry_sdk_*` are listed even though only `_name` fires.
+
+**`MetricAttributeVocabularyTests` needed no change.** It duplicates `IDENT_TOKENS` only, and
+checks the `MetricTags.Keys` consts against it directly — it never consults `INTERNAL`. So the
+"change it in both places" rule that governs the token set does **not** apply here.
+
+Measured, against a stream carrying both a planted `telemetry_sdk_name` and a planted
+`user_id`:
+
+| | `telemetry_sdk_name` | `user_id` |
+| --- | --- | --- |
+| before | 31 warnings | 31 warnings |
+| after | **0** | **31** — still caught |
+
+Quieter, not blinder, which is the only outcome worth having.
+
+### What still warns, and why it was left
+
+**32 warnings across five names remain**, all from instrumentation packages and none personal
+data:
+
+`db_client_connection_pool_name` (16), `network_protocol_name` (5, value `http`),
+`dns_question_name` (5), `db_system_name` (5, value `postgresql`), and
+`aspnetcore_user_is_authenticated` (1, a boolean tripping on `user`).
+
+These were left deliberately. They are semantic-convention **datapoint** attributes chosen by
+the instrumentation for their meaning, not transport plumbing, so `INTERNAL` is the wrong home
+for them — putting them there would turn a list of "what the transport adds" into a general
+amnesty list, which is the slide the note warns about. Thirty-two lines also still read as a
+list; a hundred and fourteen did not.
+
+If they are to go, the honest route is the second option: drop them at the exporter with OTel
+views in `TelemetryExtensions`, which is a code change with real debugging cost —
+`dns_question_name` in particular is the one worth keeping an eye on, since it is the only one
+whose cardinality is not bounded by a small enum.
+
 ### The disk budget is the open question
 
-34 streams at 60s, kept for **730 days**, is the largest sustained write this stack
+36 streams at 60s, kept for **730 days**, is the largest sustained write this stack
 has ever pointed at the `observatory` volume, and it is the one number that was
 **not** established before shipping: OpenObserve computes stream storage stats on an
 hourly background job, so a short verification run reports zeroes rather than a rate.

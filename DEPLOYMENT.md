@@ -604,7 +604,7 @@ exporter is posting to the org root rather than `/v1/metrics`.
 > and is the only way to get per-container figures. It publishes no port, joins only
 > the `public` network, and is reachable from nothing.
 
-Then go straight to **g** — this step creates 34 new metrics streams at once, every
+Then go straight to **g** — this step creates ~36 new metrics streams at once, every
 one of them on the short global retention until the override is applied.
 
 **g. The metrics retention override.** The global default gives logs and traces
@@ -986,7 +986,7 @@ Two changes carry an obligation CI cannot discharge, and both fail **silently** 
 the deploy succeeds, the stack is healthy, and the thing simply does not happen.
 
 **1. A release that adds a metric instrument → re-run the retention override.**
-(Enabling `hostmetrics` counts, and counts large: it creates 34 streams at once.)
+(Enabling `hostmetrics` counts, and counts large: it creates ~36 streams at once.)
 
 An OpenObserve metrics stream is created the first time that metric is *ingested*,
 and it inherits the **global** retention, which is the short one (7 days). Only

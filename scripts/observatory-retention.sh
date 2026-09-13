@@ -163,15 +163,35 @@ fi
 # The stream list omits schemas unless explicitly asked, so this needs its own
 # call with fetchSchema=true.
 schemas_json=$(api GET "/streams?type=metrics&fetchSchema=true" || true)
+# NOTE FOR ANYONE EDITING THE PYTHON BELOW: it is embedded in a SINGLE-QUOTED
+# python3 -c '...' block, so an apostrophe anywhere inside it -- including in a
+# comment -- closes the quote and breaks the whole script. The error bash reports
+# is a syntax error at the closing brace of whatever dict follows, which points
+# nowhere near the apostrophe. Nothing in GitHub CI or Jenkins runs this script,
+# so `bash -n scripts/observatory-retention.sh` after editing is the only check.
 suspect=$(printf '%s' "$schemas_json" | python3 -c '
 import json, re, sys
 
 # Fields every OTLP metric stream carries. Not personal data, never flagged.
+#
+# This is a list of PLUMBING FIELD NAMES, not a relaxation of the rule below. Most entries
+# here do not even trip IDENT_TOKENS; the set describes what the transport adds, so that
+# what remains in a warning is only ever something someone chose to record. Adding a name
+# here is safe in a way that adding a TOKEN to IDENT_TOKENS is not: "service_name" exempts
+# exactly one field, while a token "name" would exempt "nick_name" too.
+#
+# telemetry_sdk_* are resource attributes set by the OpenTelemetry SDK itself, present on every
+# stream any SDK exports — values like "opentelemetry" / "dotnet" / "1.9.0". Only
+# telemetry_sdk_name actually fires (on the token "name"); the other two are listed for the
+# same reason most of this set is, to describe the whole group rather than patch one symptom.
+# Before they were here they accounted for 82 of 114 warnings on the production host, which
+# is the real cost: a guard whose output cannot be read stops being a guard.
 INTERNAL = {
     "__hash__", "__name__", "_timestamp", "value", "flag", "start_time",
     "is_monotonic", "aggregation_temporality", "service_name",
     "instrumentation_library_name", "instrumentation_library_version",
     "exemplars", "span_id", "trace_id",
+    "telemetry_sdk_name", "telemetry_sdk_language", "telemetry_sdk_version",
 }
 # Matched against underscore/dot-separated TOKENS, not substrings, so that
 # "latency" does not trip the "lat" rule.

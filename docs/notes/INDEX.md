@@ -337,7 +337,16 @@ src/api/generated` then fails with "the generated API client is stale" for reaso
   the stock `host_metrics`/`docker_stats` attributes `device`, `device_major`, `device_minor`,
   `container.name`, `container.image.name` and `host.name` produced 39 flagged fields until
   `observability/otel-hostmetrics.yaml` renamed them to `dev`, `container`, `container_image`
-  and a literal `hostname`.
+  and a literal `hostname`. Renaming only works for names we own: ~120 fields from the OTel SDK
+  and its instrumentation (`telemetry_sdk_name`, `db_system_name`, `network_protocol_name`,
+  `dns_question_name`, `db_client_connection_pool_name`, `aspnetcore_user_is_authenticated`)
+  warn on the production host with nothing of ours to rename, and the build-time test cannot
+  see them because it only reads `MetricTags.Keys`. The `telemetry_sdk_*` ones (82 of 114) are
+  now in the script's `INTERNAL` allowlist, which exempts one named field each and is NOT the
+  same as widening `IDENT_TOKENS`, which would exempt every field containing the token;
+  `INTERNAL` is not duplicated in the test. 32 instrumentation warnings are left standing on
+  purpose. Editing the guard needs `bash -n` — it is Python inside a single-quoted
+  `python3 -c` block, where one apostrophe in a comment breaks the whole script.
 - [OpenObserve OSS has no RBAC, so the ingestion token is the only thing a public credential may be](openobserve-oss-has-no-rbac.md) —
   the `Member` role DEPLOYMENT.md told you to give the ingest account is rejected outright
   ("Custom roles not allowed"), `service_account` is accepted and silently stored as `admin`,
