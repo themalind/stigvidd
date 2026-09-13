@@ -102,7 +102,7 @@ public class EmailVerificationServiceTests
 
         // Act
         var result = await Build(tokens, mail: mail)
-            .IssueAndSendAsync(UserId, Email, NickName, BaseUrl, CancellationToken.None);
+            .IssueAndSendAsync(UserId, Email, NickName, BaseUrl, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -134,7 +134,7 @@ public class EmailVerificationServiceTests
 
         // Act
         var result = await Build(mail: mail)
-            .IssueAndSendAsync(UserId, Email, NickName, BaseUrl, CancellationToken.None);
+            .IssueAndSendAsync(UserId, Email, NickName, BaseUrl, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -162,7 +162,7 @@ public class EmailVerificationServiceTests
 
         // Act
         await Build(mail: mail, settings: settings)
-            .IssueAndSendAsync(UserId, Email, NickName, BaseUrl, CancellationToken.None);
+            .IssueAndSendAsync(UserId, Email, NickName, BaseUrl, TestContext.Current.CancellationToken);
 
         // Assert
         model!["VerificationUrl"].Should().StartWith("https://configured.example/api/v1/account/verify-email?token=");
@@ -190,7 +190,7 @@ public class EmailVerificationServiceTests
             .Callback<EmailVerificationToken, CancellationToken>((t, _) => stored = t)
             .ReturnsAsync(RepositoryResult.Success());
 
-        await Build(tokens, mail: mail).IssueAndSendAsync(UserId, Email, NickName, BaseUrl, CancellationToken.None);
+        await Build(tokens, mail: mail).IssueAndSendAsync(UserId, Email, NickName, BaseUrl, TestContext.Current.CancellationToken);
 
         stored!.User = TestUser();
         return (stored, model!["VerificationUrl"]!, model["VerificationCode"]!);
@@ -214,7 +214,7 @@ public class EmailVerificationServiceTests
 
         // Act
         var result = await Build(tokens, keycloak)
-            .VerifyByTokenAsync(TokenFromUrl(url), CancellationToken.None);
+            .VerifyByTokenAsync(TokenFromUrl(url), TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -237,7 +237,7 @@ public class EmailVerificationServiceTests
 
         // Act
         var result = await Build(tokens, keycloak)
-            .VerifyByTokenAsync(TokenFromUrl(url), CancellationToken.None);
+            .VerifyByTokenAsync(TokenFromUrl(url), TestContext.Current.CancellationToken);
 
         // Assert
         result.Value.Should().Be(EmailVerificationOutcome.Expired);
@@ -260,7 +260,7 @@ public class EmailVerificationServiceTests
             .ReturnsAsync(RepositoryResult<EmailVerificationToken>.Success(stored));
 
         // Act
-        var result = await Build(tokens).VerifyByTokenAsync(TokenFromUrl(url), CancellationToken.None);
+        var result = await Build(tokens).VerifyByTokenAsync(TokenFromUrl(url), TestContext.Current.CancellationToken);
 
         // Assert
         result.Value.Should().Be(EmailVerificationOutcome.AlreadyVerified);
@@ -280,7 +280,7 @@ public class EmailVerificationServiceTests
             .ReturnsAsync(RepositoryResult<EmailVerificationToken>.Success(stored));
 
         // Act
-        var result = await Build(tokens).VerifyByTokenAsync(TokenFromUrl(url), CancellationToken.None);
+        var result = await Build(tokens).VerifyByTokenAsync(TokenFromUrl(url), TestContext.Current.CancellationToken);
 
         // Assert
         result.Value.Should().Be(EmailVerificationOutcome.Invalid);
@@ -295,7 +295,7 @@ public class EmailVerificationServiceTests
             .ReturnsAsync(RepositoryResult<EmailVerificationToken>.NotFound());
 
         // Act
-        var result = await Build(tokens).VerifyByTokenAsync("nonsense", CancellationToken.None);
+        var result = await Build(tokens).VerifyByTokenAsync("nonsense", TestContext.Current.CancellationToken);
 
         // Assert
         result.Value.Should().Be(EmailVerificationOutcome.Invalid);
@@ -319,7 +319,7 @@ public class EmailVerificationServiceTests
             .ReturnsAsync(RepositoryResult.Success());
 
         // Act
-        var result = await Build(tokens, keycloak).VerifyByCodeAsync(Email, code, CancellationToken.None);
+        var result = await Build(tokens, keycloak).VerifyByCodeAsync(Email, code, TestContext.Current.CancellationToken);
 
         // Assert
         result.Value.Should().Be(EmailVerificationOutcome.Verified);
@@ -344,7 +344,7 @@ public class EmailVerificationServiceTests
         var wrong = code == "000000" ? "111111" : "000000";
 
         // Act
-        var result = await Build(tokens, keycloak).VerifyByCodeAsync(Email, wrong, CancellationToken.None);
+        var result = await Build(tokens, keycloak).VerifyByCodeAsync(Email, wrong, TestContext.Current.CancellationToken);
 
         // Assert
         result.Value.Should().Be(EmailVerificationOutcome.Invalid);
@@ -368,7 +368,7 @@ public class EmailVerificationServiceTests
             .ReturnsAsync(RepositoryResult<EmailVerificationToken>.Success(stored));
 
         // Act
-        var result = await Build(tokens, keycloak).VerifyByCodeAsync(Email, code, CancellationToken.None);
+        var result = await Build(tokens, keycloak).VerifyByCodeAsync(Email, code, TestContext.Current.CancellationToken);
 
         // Assert
         result.Value.Should().Be(EmailVerificationOutcome.TooManyAttempts);
@@ -384,7 +384,7 @@ public class EmailVerificationServiceTests
             .ReturnsAsync(RepositoryResult<User>.Success(TestUser(verifiedAt: DateTime.UtcNow)));
 
         // Act
-        var result = await Build(tokens).VerifyByCodeAsync(Email, "123456", CancellationToken.None);
+        var result = await Build(tokens).VerifyByCodeAsync(Email, "123456", TestContext.Current.CancellationToken);
 
         // Assert
         result.Value.Should().Be(EmailVerificationOutcome.AlreadyVerified);
@@ -399,7 +399,7 @@ public class EmailVerificationServiceTests
             .ReturnsAsync(RepositoryResult<User>.NotFound());
 
         // Act
-        var result = await Build(tokens).VerifyByCodeAsync("nobody@test.local", "123456", CancellationToken.None);
+        var result = await Build(tokens).VerifyByCodeAsync("nobody@test.local", "123456", TestContext.Current.CancellationToken);
 
         // Assert
         result.Value.Should().Be(EmailVerificationOutcome.Invalid);
@@ -418,7 +418,7 @@ public class EmailVerificationServiceTests
             .ReturnsAsync(RepositoryResult<User>.NotFound());
 
         // Act
-        var result = await Build(tokens, mail: mail).ResendAsync("nobody@test.local", BaseUrl, CancellationToken.None);
+        var result = await Build(tokens, mail: mail).ResendAsync("nobody@test.local", BaseUrl, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -447,7 +447,7 @@ public class EmailVerificationServiceTests
             }));
 
         // Act
-        var result = await Build(tokens, mail: mail).ResendAsync(Email, BaseUrl, CancellationToken.None);
+        var result = await Build(tokens, mail: mail).ResendAsync(Email, BaseUrl, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -476,7 +476,7 @@ public class EmailVerificationServiceTests
             }));
 
         // Act
-        var result = await Build(tokens, mail: mail).ResendAsync(Email, BaseUrl, CancellationToken.None);
+        var result = await Build(tokens, mail: mail).ResendAsync(Email, BaseUrl, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -496,7 +496,7 @@ public class EmailVerificationServiceTests
             .ReturnsAsync(RepositoryResult<User>.Success(TestUser(verifiedAt: DateTime.UtcNow)));
 
         // Act
-        var result = await Build(tokens, mail: mail).ResendAsync(Email, BaseUrl, CancellationToken.None);
+        var result = await Build(tokens, mail: mail).ResendAsync(Email, BaseUrl, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();

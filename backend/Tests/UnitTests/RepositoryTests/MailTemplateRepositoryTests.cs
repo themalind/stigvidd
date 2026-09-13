@@ -41,7 +41,7 @@ public class MailTemplateRepositoryTests : TestBase
         var repo = Build(CreateSeededFactory(SeedTemplates));
 
         // Act
-        var result = await repo.GetByKeyAsync("welcome", "en", CancellationToken.None);
+        var result = await repo.GetByKeyAsync("welcome", "en", TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -56,7 +56,7 @@ public class MailTemplateRepositoryTests : TestBase
         var repo = Build(CreateSeededFactory(SeedTemplates));
 
         // Act
-        var result = await repo.GetByKeyAsync("welcome", "de", CancellationToken.None);
+        var result = await repo.GetByKeyAsync("welcome", "de", TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -70,7 +70,7 @@ public class MailTemplateRepositoryTests : TestBase
         var repo = Build(CreateSeededFactory(SeedTemplates));
 
         // Act
-        var result = await repo.GetByKeyAsync("no-such-template", "sv", CancellationToken.None);
+        var result = await repo.GetByKeyAsync("no-such-template", "sv", TestContext.Current.CancellationToken);
 
         // Assert
         result.Status.Should().Be(RepositoryResultStatus.NotFound);
@@ -86,7 +86,7 @@ public class MailTemplateRepositoryTests : TestBase
             MakeTemplate(3, "welcome", "en"))));
 
         // Act
-        var result = await repo.GetAllAsync(CancellationToken.None);
+        var result = await repo.GetAllAsync(TestContext.Current.CancellationToken);
 
         // Assert - the languages of one template stay together in the list an operator reads.
         result.IsSuccess.Should().BeTrue();
@@ -99,7 +99,7 @@ public class MailTemplateRepositoryTests : TestBase
     {
         var repo = Build(CreateSeededFactory(SeedTemplates));
 
-        var result = await repo.GetByIdentifierAsync("template-2", CancellationToken.None);
+        var result = await repo.GetByIdentifierAsync("template-2", TestContext.Current.CancellationToken);
 
         result.IsSuccess.Should().BeTrue();
         result.Value!.Language.Should().Be("en");
@@ -110,7 +110,7 @@ public class MailTemplateRepositoryTests : TestBase
     {
         var repo = Build(CreateSeededFactory(SeedTemplates));
 
-        var result = await repo.GetByIdentifierAsync("template-404", CancellationToken.None);
+        var result = await repo.GetByIdentifierAsync("template-404", TestContext.Current.CancellationToken);
 
         result.Status.Should().Be(RepositoryResultStatus.NotFound);
     }
@@ -125,15 +125,15 @@ public class MailTemplateRepositoryTests : TestBase
         var repo = Build(factory);
 
         var result = await repo.UpdateAsync(
-            "template-1", "Ny rubrik", "<p>Ny</p>", "Ny", "Uppdaterad.", CancellationToken.None);
+            "template-1", "Ny rubrik", "<p>Ny</p>", "Ny", "Uppdaterad.", TestContext.Current.CancellationToken);
 
         result.IsSuccess.Should().BeTrue();
 
         // Read it back through a NEW context, not the returned entity: the returned object
         // would look updated whether or not anything reached the database.
-        using var context = await factory.CreateDbContextAsync(CancellationToken.None);
+        using var context = await factory.CreateDbContextAsync(TestContext.Current.CancellationToken);
         var reloaded = await context.MailTemplates.AsNoTracking()
-            .FirstAsync(template => template.Identifier == "template-1", CancellationToken.None);
+            .FirstAsync(template => template.Identifier == "template-1", TestContext.Current.CancellationToken);
 
         reloaded.Subject.Should().Be("Ny rubrik");
         reloaded.BodyHtml.Should().Be("<p>Ny</p>");
@@ -149,11 +149,11 @@ public class MailTemplateRepositoryTests : TestBase
         var factory = CreateSeededFactory(SeedTemplates);
 
         await Build(factory).UpdateAsync(
-            "template-1", "Ny rubrik", "<p>Ny</p>", "Ny", null, CancellationToken.None);
+            "template-1", "Ny rubrik", "<p>Ny</p>", "Ny", null, TestContext.Current.CancellationToken);
 
-        using var context = await factory.CreateDbContextAsync(CancellationToken.None);
+        using var context = await factory.CreateDbContextAsync(TestContext.Current.CancellationToken);
         var reloaded = await context.MailTemplates.AsNoTracking()
-            .FirstAsync(template => template.Identifier == "template-1", CancellationToken.None);
+            .FirstAsync(template => template.Identifier == "template-1", TestContext.Current.CancellationToken);
 
         reloaded.Key.Should().Be("welcome");
         reloaded.Language.Should().Be("sv");
@@ -166,11 +166,11 @@ public class MailTemplateRepositoryTests : TestBase
 
         var before = DateTime.UtcNow;
         await Build(factory).UpdateAsync(
-            "template-1", "Ny", "<p>Ny</p>", "Ny", null, CancellationToken.None);
+            "template-1", "Ny", "<p>Ny</p>", "Ny", null, TestContext.Current.CancellationToken);
 
-        using var context = await factory.CreateDbContextAsync(CancellationToken.None);
+        using var context = await factory.CreateDbContextAsync(TestContext.Current.CancellationToken);
         var reloaded = await context.MailTemplates.AsNoTracking()
-            .FirstAsync(template => template.Identifier == "template-1", CancellationToken.None);
+            .FirstAsync(template => template.Identifier == "template-1", TestContext.Current.CancellationToken);
 
         reloaded.LastUpdatedAt.Should().BeOnOrAfter(before);
     }
@@ -181,7 +181,7 @@ public class MailTemplateRepositoryTests : TestBase
         var repo = Build(CreateSeededFactory(SeedTemplates));
 
         var result = await repo.UpdateAsync(
-            "template-404", "x", "<p>x</p>", "x", null, CancellationToken.None);
+            "template-404", "x", "<p>x</p>", "x", null, TestContext.Current.CancellationToken);
 
         result.Status.Should().Be(RepositoryResultStatus.NotFound);
     }

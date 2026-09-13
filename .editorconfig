@@ -10,3 +10,12 @@ end_of_line = lf
 charset = utf-8
 trim_trailing_whitespace = false
 insert_final_newline = false
+
+# xUnit1051: calls that accept a CancellationToken must pass
+# TestContext.Current.CancellationToken, so a cancelled run stops promptly.
+# An error, not a warning, because a warning here is invisible: the backend
+# build reports warning counts only in aggregate and CI does not fail on them.
+# NOTE: this catches an OMITTED token only. An explicit CancellationToken.None
+# is invisible to it - guard-test-cancellation-token.mjs covers that half.
+[backend/Tests/**.cs]
+dotnet_diagnostic.xUnit1051.severity = error

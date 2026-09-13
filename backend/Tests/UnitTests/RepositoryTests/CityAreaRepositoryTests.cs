@@ -58,7 +58,7 @@ public class CityAreaRepositoryTests : TestBase
         var repo = new CityAreaRepository(CreateSeededFactory(SeedLinkedArea), NullLogger<CityAreaRepository>.Instance);
 
         // Act
-        var result = await repo.GetAllAsync(Selector, CancellationToken.None);
+        var result = await repo.GetAllAsync(Selector, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -72,7 +72,7 @@ public class CityAreaRepositoryTests : TestBase
         var repo = new CityAreaRepository(CreateSeededFactory(SeedLinkedArea), NullLogger<CityAreaRepository>.Instance);
 
         // Act
-        var result = await repo.GetByIdentifierAsync(LinkedAreaIdentifier, Selector, CancellationToken.None);
+        var result = await repo.GetByIdentifierAsync(LinkedAreaIdentifier, Selector, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -89,7 +89,7 @@ public class CityAreaRepositoryTests : TestBase
         var repo = new CityAreaRepository(CreateSeededFactory(SeedLinkedArea), NullLogger<CityAreaRepository>.Instance);
 
         // Act
-        var result = await repo.GetByIdentifierAsync("no-such-area", Selector, CancellationToken.None);
+        var result = await repo.GetByIdentifierAsync("no-such-area", Selector, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeFalse();

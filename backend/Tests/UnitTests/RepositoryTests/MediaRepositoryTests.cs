@@ -38,7 +38,7 @@ public class MediaRepositoryTests : TestBase
         var repo = new MediaRepository(CreateSeededFactory(SeedFacilityImage), NullLogger<MediaRepository>.Instance);
 
         // Act
-        var result = await repo.GetAllMediaAsync(CancellationToken.None);
+        var result = await repo.GetAllMediaAsync(TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -54,7 +54,7 @@ public class MediaRepositoryTests : TestBase
         var repo = new MediaRepository(CreateSeededFactory(SeedFacilityImage), NullLogger<MediaRepository>.Instance);
 
         // Act
-        var result = await repo.GetAllMediaAsync(CancellationToken.None);
+        var result = await repo.GetAllMediaAsync(TestContext.Current.CancellationToken);
 
         // Assert — the trail/facility owner name is projected through the navigation.
         result.Value.Should().Contain(m => m.Identifier == SeededTrailImageIdentifier && m.OwnerName == "Tiveden");
@@ -69,12 +69,12 @@ public class MediaRepositoryTests : TestBase
         var repo = new MediaRepository(factory, NullLogger<MediaRepository>.Instance);
 
         // Act
-        var update = await repo.UpdateImageMetadataAsync(SeededTrailImageIdentifier, "updated alt", "updated caption", CancellationToken.None);
+        var update = await repo.UpdateImageMetadataAsync(SeededTrailImageIdentifier, "updated alt", "updated caption", TestContext.Current.CancellationToken);
 
         // Assert
         update.IsSuccess.Should().BeTrue();
 
-        var all = await repo.GetAllMediaAsync(CancellationToken.None);
+        var all = await repo.GetAllMediaAsync(TestContext.Current.CancellationToken);
         all.Value.Should().Contain(m =>
             m.Identifier == SeededTrailImageIdentifier && m.AltText == "updated alt" && m.Caption == "updated caption");
     }
@@ -87,12 +87,12 @@ public class MediaRepositoryTests : TestBase
         var repo = new MediaRepository(factory, NullLogger<MediaRepository>.Instance);
 
         // Act
-        var update = await repo.UpdateImageMetadataAsync(SeededFacilityImageIdentifier, "fac alt", "fac caption", CancellationToken.None);
+        var update = await repo.UpdateImageMetadataAsync(SeededFacilityImageIdentifier, "fac alt", "fac caption", TestContext.Current.CancellationToken);
 
         // Assert
         update.IsSuccess.Should().BeTrue();
 
-        var all = await repo.GetAllMediaAsync(CancellationToken.None);
+        var all = await repo.GetAllMediaAsync(TestContext.Current.CancellationToken);
         all.Value.Should().Contain(m =>
             m.Identifier == SeededFacilityImageIdentifier && m.AltText == "fac alt" && m.Caption == "fac caption");
     }
@@ -104,7 +104,7 @@ public class MediaRepositoryTests : TestBase
         var repo = new MediaRepository(CreateSeededFactory(SeedFacilityImage), NullLogger<MediaRepository>.Instance);
 
         // Act
-        var result = await repo.UpdateImageMetadataAsync("no-such-image", null, null, CancellationToken.None);
+        var result = await repo.UpdateImageMetadataAsync("no-such-image", null, null, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeFalse();

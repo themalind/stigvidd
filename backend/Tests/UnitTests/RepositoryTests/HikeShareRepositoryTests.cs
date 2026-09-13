@@ -29,7 +29,7 @@ public class HikeShareRepositoryTests : TestBase
         var repo = new HikeShareRepository(CreateSeededFactory(), NullLogger<HikeShareRepository>.Instance);
 
         // Act
-        var result = await repo.IsAlreadySharedAsync(1, 2, CancellationToken.None);
+        var result = await repo.IsAlreadySharedAsync(1, 2, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -45,7 +45,7 @@ public class HikeShareRepositoryTests : TestBase
         var repo = new HikeShareRepository(factory, NullLogger<HikeShareRepository>.Instance);
 
         // Act
-        var result = await repo.IsAlreadySharedAsync(2, 1, CancellationToken.None);
+        var result = await repo.IsAlreadySharedAsync(2, 1, TestContext.Current.CancellationToken);
 
         // Assert — pending shares must also block re-sharing
         result.IsSuccess.Should().BeTrue();
@@ -59,7 +59,7 @@ public class HikeShareRepositoryTests : TestBase
         var repo = new HikeShareRepository(CreateSeededFactory(), NullLogger<HikeShareRepository>.Instance);
 
         // Act
-        var result = await repo.IsAlreadySharedAsync(1, 6, CancellationToken.None);
+        var result = await repo.IsAlreadySharedAsync(1, 6, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -75,7 +75,7 @@ public class HikeShareRepositoryTests : TestBase
         var repo = new HikeShareRepository(CreateSeededFactory(), NullLogger<HikeShareRepository>.Instance);
 
         // Act
-        var result = await repo.GetHikeShareCountAsync(User1Identifier, Hike1Identifier, CancellationToken.None);
+        var result = await repo.GetHikeShareCountAsync(User1Identifier, Hike1Identifier, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -89,7 +89,7 @@ public class HikeShareRepositoryTests : TestBase
         var repo = new HikeShareRepository(CreateSeededFactory(), NullLogger<HikeShareRepository>.Instance);
 
         // Act
-        var result = await repo.GetHikeShareCountAsync(User6Identifier, Hike1Identifier, CancellationToken.None);
+        var result = await repo.GetHikeShareCountAsync(User6Identifier, Hike1Identifier, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -103,7 +103,7 @@ public class HikeShareRepositoryTests : TestBase
         var repo = new HikeShareRepository(CreateSeededFactory(), NullLogger<HikeShareRepository>.Instance);
 
         // Act
-        var result = await repo.GetHikeShareCountAsync(User1Identifier, Hike2Identifier, CancellationToken.None);
+        var result = await repo.GetHikeShareCountAsync(User1Identifier, Hike2Identifier, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -118,7 +118,7 @@ public class HikeShareRepositoryTests : TestBase
         var hikeShare = new HikeShare { HikeId = 6, SharedById = 5, SharedWithId = 1 };
 
         // Act
-        var result = await repo.ShareHikeAsync(hikeShare, CancellationToken.None);
+        var result = await repo.ShareHikeAsync(hikeShare, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -136,8 +136,8 @@ public class HikeShareRepositoryTests : TestBase
         var hikeShare = new HikeShare { HikeId = 6, SharedById = 5, SharedWithId = 1 };
 
         // Act
-        await repo.ShareHikeAsync(hikeShare, CancellationToken.None);
-        var count = await repo.GetHikeShareCountAsync(user5Identifier, hike6Identifier, CancellationToken.None);
+        await repo.ShareHikeAsync(hikeShare, TestContext.Current.CancellationToken);
+        var count = await repo.GetHikeShareCountAsync(user5Identifier, hike6Identifier, TestContext.Current.CancellationToken);
 
         // Assert
         count.IsSuccess.Should().BeTrue();

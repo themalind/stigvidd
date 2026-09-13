@@ -216,6 +216,16 @@ against real PostGIS.
   `~/.microsoft/usersecrets`. `KeycloakConfigPreload.cs` now pins the Keycloak keys as
   environment variables (which outrank user secrets) so every box agrees with CI —
   [note](docs/notes/integration-tests-inherit-api-config.md).
+- **Every call in a test that takes a `CancellationToken` gets
+  `TestContext.Current.CancellationToken`** — never `CancellationToken.None`, never the
+  parameter left off. Two things enforce it, and each is blind to the other's half:
+  `.editorconfig` raises **xUnit1051** to an *error* for `backend/Tests/**.cs`, which
+  catches a token left **off**; `guard-test-cancellation-token.mjs` catches an explicit
+  never-cancelled token, which the analyzer reads as clean. That blind spot is why
+  `dotnet build` once reported 0 warnings over 792 `CancellationToken.None` calls
+  ([note](docs/notes/xunit1051-misses-an-explicit-cancellationtoken-none.md)). A Moq setup
+  matches `It.IsAny<CancellationToken>()`; a test *about* cancellation uses a real
+  `CancellationTokenSource` and is not flagged by either.
 - `app` — jest via `jest-expo`.
 - `web` — Vitest + jsdom, config in `web/vitest.config.ts` (deliberately **not**
   `vite.config.ts`, so a broken test config cannot break the bundle). Tests sit beside
@@ -345,6 +355,7 @@ text that is not a symbol), just run the same search again.
 | --- | --- | --- |
 | `session-start.mjs` | SessionStart | tree state, which checkout this is, whether the contract chain is mid-flight, the green commands |
 | `guard-generated-files.mjs` | PreToolUse write | denies edits to generated/EF-owned files |
+| `guard-test-cancellation-token.mjs` | PreToolUse write | an explicit `CancellationToken.None` / `new CancellationToken()` / `default(CancellationToken)` written into `backend/Tests/**.cs` — the half **xUnit1051 cannot see**, since it only flags a token left off entirely. Silent on `CancellationTokenSource` and `It.IsAny<CancellationToken>()`; `// cancellation-token-ok: <why>` opts a line out |
 | `guard-build-commands.mjs` | PreToolUse Bash | `dotnet test` without the connection string, `dotnet ef` without `--project` |
 | `guard-long-running.mjs` | PreToolUse Bash | foreground dev servers, watchers, `compose up`. Vitest counts: `vitest` watches by default, `vitest run` is the one that exits |
 | `guard-symbol-search.mjs` | PreToolUse Grep/Glob/Bash | a search for a single identifier that `codegraph query` proves the index holds **and declares inside the path being searched** — denied **once**, with the `codegraph_explore` call to make instead and every match of that name listed; the identical retry passes. Silent when there is no `.codegraph/` here, and silent on any regex, phrase, count, prose-scoped search (`docs/`, `*.md`) or non-symbol string |

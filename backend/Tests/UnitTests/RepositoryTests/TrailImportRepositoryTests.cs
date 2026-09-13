@@ -57,7 +57,7 @@ public class TrailImportRepositoryTests
 
         // Act
         var result = await new ImmediateRetry(factory.Object)
-            .ReplaceProposalsAsync(12, [Proposal()], CancellationToken.None);
+            .ReplaceProposalsAsync(12, [Proposal()], TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -72,7 +72,7 @@ public class TrailImportRepositoryTests
 
         // Act
         var result = await new ImmediateRetry(factory.Object)
-            .ReplaceProposalsAsync(12, [Proposal()], CancellationToken.None);
+            .ReplaceProposalsAsync(12, [Proposal()], TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -88,7 +88,7 @@ public class TrailImportRepositoryTests
 
         // Act
         var result = await new ImmediateRetry(factory.Object)
-            .ReplaceProposalsAsync(12, [Proposal()], CancellationToken.None);
+            .ReplaceProposalsAsync(12, [Proposal()], TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeFalse();

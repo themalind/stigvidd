@@ -67,6 +67,18 @@ you get approved.
   half no test sees: `docker-compose.yml` overrode only `auth-server-url`, so the deployed API
   had no `KeycloakAdminClient` client secret at all and every Keycloak Admin call — register,
   forgot-password, admin provisioning — was broken with nothing reporting it.
+- [xUnit1051 only flags a token you left OFF, so 792 `CancellationToken.None` calls sat behind a 0-warning build](xunit1051-misses-an-explicit-cancellationtoken-none.md) —
+  the `xunit.analyzers` rule that asks for `TestContext.Current.CancellationToken` fires **only**
+  on an omitted optional parameter. An explicit `CancellationToken.None`, `new CancellationToken()`,
+  `default(CancellationToken)`, or any of those inside a non-`[Fact]` helper, reads as clean — so
+  `dotnet build` said 0 Warning(s) while `backend/Tests` held 792 of them across 37 files. Swept to
+  `TestContext.Current.CancellationToken` (1720 tests still green); a blanket `sed` was safe because
+  none sat in a Moq `Setup`/`Verify` expression tree or a fixture — the `=>` a first grep turns up are
+  selector lambdas. Now enforced by two instruments: `.editorconfig` raises
+  `dotnet_diagnostic.xUnit1051.severity = error` for `[backend/Tests/**.cs]` (verified: the build FAILs),
+  and `guard-test-cancellation-token.mjs` denies the explicit forms the analyzer cannot see. Carries the
+  MSBuild trap: scoping this with a `backend/Tests/Directory.Build.props` would silently drop the parent's
+  `WarningsAsErrors=nullable`, because the nearest one wins and walking stops.
 - [SpatiaLite in the integration tests is set up differently on Windows and on Linux](spatialite-per-os.md) —
   the csproj already splits on `$(OS)`: Windows uses the bundled `e_sqlite3`, Linux binds
   the **system** libsqlite3 via a `[ModuleInitializer]` because the bundle would shadow the

@@ -58,7 +58,7 @@ public class ModerationQueryFilterTests : TestBase
         var service = BuildService(ModerationState.Visible);
 
         // Act
-        var result = await service.GetTrailCardByIdentifierAsync(TrailIdentifier, CancellationToken.None);
+        var result = await service.GetTrailCardByIdentifierAsync(TrailIdentifier, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -72,7 +72,7 @@ public class ModerationQueryFilterTests : TestBase
         var service = BuildService(ModerationState.HiddenPendingReview);
 
         // Act
-        var result = await service.GetTrailCardByIdentifierAsync(TrailIdentifier, CancellationToken.None);
+        var result = await service.GetTrailCardByIdentifierAsync(TrailIdentifier, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -153,7 +153,7 @@ public class ModerationQueryFilterTests : TestBase
         var service = BuildRankingService(ModerationState.Visible);
 
         // Act
-        var result = await service.GetPopularTrailOverviewsAsync(latitude, longitude, CancellationToken.None);
+        var result = await service.GetPopularTrailOverviewsAsync(latitude, longitude, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -172,7 +172,7 @@ public class ModerationQueryFilterTests : TestBase
         var service = BuildRankingService(ModerationState.HiddenPendingReview);
 
         // Act
-        var result = await service.GetPopularTrailOverviewsAsync(latitude, longitude, CancellationToken.None);
+        var result = await service.GetPopularTrailOverviewsAsync(latitude, longitude, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -192,7 +192,7 @@ public class ModerationQueryFilterTests : TestBase
         var service = BuildService(ModerationState.HiddenPendingReview);
 
         // Act
-        var result = await service.GetTrailCardsByIdentifiersAsync([TrailIdentifier], CancellationToken.None);
+        var result = await service.GetTrailCardsByIdentifiersAsync([TrailIdentifier], TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -206,7 +206,7 @@ public class ModerationQueryFilterTests : TestBase
         var service = BuildService(ModerationState.HiddenPendingReview);
 
         // Act
-        var result = await service.GetAllTrailsWithBasicInfoAsync(CancellationToken.None);
+        var result = await service.GetAllTrailsWithBasicInfoAsync(TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -240,7 +240,7 @@ public class ModerationQueryFilterTests : TestBase
         var service = BuildCityAreaService(ModerationState.HiddenPendingReview);
 
         // Act
-        var result = await service.GetByIdentifierAsync(CityAreaIdentifier, CancellationToken.None);
+        var result = await service.GetByIdentifierAsync(CityAreaIdentifier, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -254,7 +254,7 @@ public class ModerationQueryFilterTests : TestBase
         var service = BuildCityAreaService(ModerationState.HiddenPendingReview);
 
         // Act
-        var result = await service.GetAllAsync(CancellationToken.None);
+        var result = await service.GetAllAsync(TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();

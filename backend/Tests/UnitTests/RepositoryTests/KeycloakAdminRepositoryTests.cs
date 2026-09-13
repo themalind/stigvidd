@@ -62,7 +62,7 @@ public class KeycloakAdminRepositoryTests
 
         // Act
         var subjectId = await Build(client).CreateUserAsync(
-            "newbie@test.local", "FreshNick", "Password123!", CancellationToken.None);
+            "newbie@test.local", "FreshNick", "Password123!", TestContext.Current.CancellationToken);
 
         // Assert
         subjectId.Should().Be(SubjectId);
@@ -83,7 +83,7 @@ public class KeycloakAdminRepositoryTests
             .Returns(Task.CompletedTask);
 
         // Act
-        await Build(client).ActivateVerifiedUserAsync(SubjectId, CancellationToken.None);
+        await Build(client).ActivateVerifiedUserAsync(SubjectId, TestContext.Current.CancellationToken);
 
         // Assert
         sent.Should().NotBeNull();

@@ -22,7 +22,7 @@ public class MailTemplateCatalogTests
     private static readonly MailTemplateCatalog Catalog = new();
 
     [Fact]
-    public void VerifyEmail_DeclaresExactlyThePlaceholdersTheRealCallerSupplies()
+    public async Task VerifyEmail_DeclaresExactlyThePlaceholdersTheRealCallerSupplies()
     {
         // Arrange - the real EmailVerificationService, with only the collaborators it needs
         // to get as far as queueing the mail.
@@ -54,9 +54,8 @@ public class MailTemplateCatalogTests
             NullLogger<EmailVerificationService>.Instance);
 
         // Act
-        var result = service
-            .IssueAndSendAsync(1, "vandrare@example.com", "Ralf", "https://stigvidd.test", CancellationToken.None)
-            .GetAwaiter().GetResult();
+        var result = await service
+            .IssueAndSendAsync(1, "vandrare@example.com", "Ralf", "https://stigvidd.test", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();

@@ -90,7 +90,7 @@ public class ContentReportServiceTests
             .ReturnsAsync(RepositoryResult<bool>.Success(true));
 
         // Act
-        var result = await Build(repo).CreateAsync(ReporterIdentifier, ValidRequest(), CancellationToken.None);
+        var result = await Build(repo).CreateAsync(ReporterIdentifier, ValidRequest(), TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -109,7 +109,7 @@ public class ContentReportServiceTests
             .ReturnsAsync(RepositoryResult<ContentReport>.Conflict());
 
         // Act
-        var result = await Build(repo).CreateAsync(ReporterIdentifier, ValidRequest(), CancellationToken.None);
+        var result = await Build(repo).CreateAsync(ReporterIdentifier, ValidRequest(), TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -125,7 +125,7 @@ public class ContentReportServiceTests
             .ReturnsAsync(RepositoryResult<int>.Success(5));
 
         // Act
-        var result = await Build(repo, Config(cap: 5)).CreateAsync(ReporterIdentifier, ValidRequest(), CancellationToken.None);
+        var result = await Build(repo, Config(cap: 5)).CreateAsync(ReporterIdentifier, ValidRequest(), TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -142,7 +142,7 @@ public class ContentReportServiceTests
             .ReturnsAsync(RepositoryResult<int>.Success(4));
 
         // Act
-        var result = await Build(repo, Config(cap: 5)).CreateAsync(ReporterIdentifier, ValidRequest(), CancellationToken.None);
+        var result = await Build(repo, Config(cap: 5)).CreateAsync(ReporterIdentifier, ValidRequest(), TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -160,7 +160,7 @@ public class ContentReportServiceTests
         var service = Build(repo, Config(cap: 0));
         for (var i = 0; i < 20; i++)
         {
-            var result = await service.CreateAsync(ReporterIdentifier, ValidRequest(), CancellationToken.None);
+            var result = await service.CreateAsync(ReporterIdentifier, ValidRequest(), TestContext.Current.CancellationToken);
             result.Success.Should().BeTrue();
         }
 
@@ -181,7 +181,7 @@ public class ContentReportServiceTests
             .ReturnsAsync(RepositoryResult<int>.Success(0));
 
         // Act
-        await Build(repo).CreateAsync(ReporterIdentifier, ValidRequest(), CancellationToken.None);
+        await Build(repo).CreateAsync(ReporterIdentifier, ValidRequest(), TestContext.Current.CancellationToken);
 
         // Assert
         asked.Should().NotBeNull();
@@ -197,7 +197,7 @@ public class ContentReportServiceTests
             .ReturnsAsync(RepositoryResult<int>.Success(3));
 
         // Act
-        var result = await Build(repo, Config(dismissedThreshold: 3)).CreateAsync(ReporterIdentifier, ValidRequest(), CancellationToken.None);
+        var result = await Build(repo, Config(dismissedThreshold: 3)).CreateAsync(ReporterIdentifier, ValidRequest(), TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -214,7 +214,7 @@ public class ContentReportServiceTests
             .ReturnsAsync(RepositoryResult<int>.Success(2));
 
         // Act
-        var result = await Build(repo, Config(dismissedThreshold: 3)).CreateAsync(ReporterIdentifier, ValidRequest(), CancellationToken.None);
+        var result = await Build(repo, Config(dismissedThreshold: 3)).CreateAsync(ReporterIdentifier, ValidRequest(), TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -231,7 +231,7 @@ public class ContentReportServiceTests
             .ReturnsAsync(RepositoryResult<int>.Success(10));
 
         // Act
-        var result = await Build(repo, Config(dismissedThreshold: 0)).CreateAsync(ReporterIdentifier, ValidRequest(), CancellationToken.None);
+        var result = await Build(repo, Config(dismissedThreshold: 0)).CreateAsync(ReporterIdentifier, ValidRequest(), TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -247,7 +247,7 @@ public class ContentReportServiceTests
         var repo = HappyRepository(hidden);
 
         // Act
-        var result = await Build(repo).CreateAsync(ReporterIdentifier, ValidRequest(), CancellationToken.None);
+        var result = await Build(repo).CreateAsync(ReporterIdentifier, ValidRequest(), TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -262,7 +262,7 @@ public class ContentReportServiceTests
         var repo = HappyRepository(VisibleReview(authorUserId: ReporterUserId));
 
         // Act
-        var result = await Build(repo).CreateAsync(ReporterIdentifier, ValidRequest(), CancellationToken.None);
+        var result = await Build(repo).CreateAsync(ReporterIdentifier, ValidRequest(), TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -281,7 +281,7 @@ public class ContentReportServiceTests
             .ReturnsAsync((ContentReport report, bool _, CancellationToken _) => RepositoryResult<ContentReport>.Success(report));
 
         // Act
-        var result = await Build(repo, Config(snapshotMaxLength: 100)).CreateAsync(ReporterIdentifier, ValidRequest(), CancellationToken.None);
+        var result = await Build(repo, Config(snapshotMaxLength: 100)).CreateAsync(ReporterIdentifier, ValidRequest(), TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -297,7 +297,7 @@ public class ContentReportServiceTests
         request.ContentType = nameof(ReportedContentType.Unknown);
 
         // Act
-        var result = await Build(repo).CreateAsync(ReporterIdentifier, request, CancellationToken.None);
+        var result = await Build(repo).CreateAsync(ReporterIdentifier, request, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -314,7 +314,7 @@ public class ContentReportServiceTests
             .ReturnsAsync(RepositoryResult<ReportableContent>.NotFound());
 
         // Act
-        var result = await Build(repo).CreateAsync(ReporterIdentifier, ValidRequest(), CancellationToken.None);
+        var result = await Build(repo).CreateAsync(ReporterIdentifier, ValidRequest(), TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -382,7 +382,7 @@ public class ContentReportServiceTests
         var repo = DecidableRepository();
 
         // Act
-        var result = await Build(repo).DecideAsync(ReportIdentifier, Decide("Maybe"), "moderator", CancellationToken.None);
+        var result = await Build(repo).DecideAsync(ReportIdentifier, Decide("Maybe"), "moderator", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -398,7 +398,7 @@ public class ContentReportServiceTests
             .ReturnsAsync(RepositoryResult<ContentReport>.NotFound());
 
         // Act
-        var result = await Build(repo).DecideAsync(ReportIdentifier, Decide("Uphold"), "moderator", CancellationToken.None);
+        var result = await Build(repo).DecideAsync(ReportIdentifier, Decide("Uphold"), "moderator", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -413,7 +413,7 @@ public class ContentReportServiceTests
         var repo = DecidableRepository(current: ReportStatus.Upheld);
 
         // Act
-        var result = await Build(repo).DecideAsync(ReportIdentifier, Decide("Uphold"), "someone-else", CancellationToken.None);
+        var result = await Build(repo).DecideAsync(ReportIdentifier, Decide("Uphold"), "someone-else", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -430,7 +430,7 @@ public class ContentReportServiceTests
         var repo = DecidableRepository(current: ReportStatus.Upheld);
 
         // Act
-        var result = await Build(repo).DecideAsync(ReportIdentifier, Decide("Dismiss"), "moderator", CancellationToken.None);
+        var result = await Build(repo).DecideAsync(ReportIdentifier, Decide("Dismiss"), "moderator", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -449,7 +449,7 @@ public class ContentReportServiceTests
         var repo = DecidableRepository(current: ReportStatus.ContentExpired);
 
         // Act
-        var result = await Build(repo).DecideAsync(ReportIdentifier, Decide("Uphold"), "moderator", CancellationToken.None);
+        var result = await Build(repo).DecideAsync(ReportIdentifier, Decide("Uphold"), "moderator", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -465,7 +465,7 @@ public class ContentReportServiceTests
         var repo = DecidableRepository(current: ReportStatus.ContentExpired);
 
         // Act
-        var result = await Build(repo).DecideAsync(ReportIdentifier, Decide("Dismiss"), "moderator", CancellationToken.None);
+        var result = await Build(repo).DecideAsync(ReportIdentifier, Decide("Dismiss"), "moderator", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -481,7 +481,7 @@ public class ContentReportServiceTests
         var repo = DecidableRepository(reportsSettled: 3);
 
         // Act
-        var result = await Build(repo).DecideAsync(ReportIdentifier, Decide("Uphold"), "moderator", CancellationToken.None);
+        var result = await Build(repo).DecideAsync(ReportIdentifier, Decide("Uphold"), "moderator", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -501,7 +501,7 @@ public class ContentReportServiceTests
 
         // Act
         var result = await Build(repo, webDav: webDav).DecideAsync(
-            ReportIdentifier, Decide("Uphold"), "moderator", CancellationToken.None);
+            ReportIdentifier, Decide("Uphold"), "moderator", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -519,7 +519,7 @@ public class ContentReportServiceTests
 
         // Act
         var result = await Build(repo, webDav: webDav).DecideAsync(
-            ReportIdentifier, Decide("Uphold"), "moderator", CancellationToken.None);
+            ReportIdentifier, Decide("Uphold"), "moderator", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -533,7 +533,7 @@ public class ContentReportServiceTests
         var repo = DecidableRepository();
 
         // Act
-        var result = await Build(repo).DecideAsync(ReportIdentifier, Decide("Dismiss"), "moderator", CancellationToken.None);
+        var result = await Build(repo).DecideAsync(ReportIdentifier, Decide("Dismiss"), "moderator", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -549,7 +549,7 @@ public class ContentReportServiceTests
         var repo = new Mock<IContentReportRepository>();
 
         // Act
-        var result = await Build(repo).GetQueueAsync("Nonsense", null, null, 1, 25, CancellationToken.None);
+        var result = await Build(repo).GetQueueAsync("Nonsense", null, null, 1, 25, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -571,7 +571,7 @@ public class ContentReportServiceTests
                 new PagedResult<ContentReportSummary>([], 1, false, 0)));
 
         // Act
-        await Build(repo).GetQueueAsync(null, null, null, 0, 5000, CancellationToken.None);
+        await Build(repo).GetQueueAsync(null, null, null, 0, 5000, TestContext.Current.CancellationToken);
 
         // Assert
         repo.Verify(r => r.GetPagedAsync(null, null, null, 1, 100, It.IsAny<CancellationToken>()), Times.Once);

@@ -106,7 +106,7 @@ public class TrailImportAnalysisServiceTests : IDisposable
         var repository = CapturingProposals(Repository(session), p => saved = p);
 
         // Act
-        await Build(repository).AnalyzeAsync(12, CancellationToken.None);
+        await Build(repository).AnalyzeAsync(12, TestContext.Current.CancellationToken);
 
         // Assert
         saved.Should().HaveCount(2);
@@ -123,7 +123,7 @@ public class TrailImportAnalysisServiceTests : IDisposable
         var repository = CapturingProposals(Repository(session, [trail]), p => saved = p);
 
         // Act
-        await Build(repository).AnalyzeAsync(12, CancellationToken.None);
+        await Build(repository).AnalyzeAsync(12, TestContext.Current.CancellationToken);
 
         // Assert
         var matched = saved!.Single(p => p.ExternalId == "100");
@@ -146,7 +146,7 @@ public class TrailImportAnalysisServiceTests : IDisposable
         var repository = CapturingProposals(Repository(session, [trail]), p => saved = p);
 
         // Act
-        await Build(repository).AnalyzeAsync(12, CancellationToken.None);
+        await Build(repository).AnalyzeAsync(12, TestContext.Current.CancellationToken);
 
         // Assert
         saved!.Should().OnlyContain(p => p.Decision == ProposalDecision.Pending);
@@ -164,7 +164,7 @@ public class TrailImportAnalysisServiceTests : IDisposable
         var repository = CapturingProposals(Repository(session, excluded: [fingerprint]), p => saved = p);
 
         // Act
-        await Build(repository).AnalyzeAsync(12, CancellationToken.None);
+        await Build(repository).AnalyzeAsync(12, TestContext.Current.CancellationToken);
 
         // Assert
         var decided = saved!.Single(p => p.ExternalId == "100");
@@ -188,7 +188,7 @@ public class TrailImportAnalysisServiceTests : IDisposable
         var repository = CapturingProposals(Repository(session, [trail], [fingerprint]), p => saved = p);
 
         // Act
-        await Build(repository).AnalyzeAsync(12, CancellationToken.None);
+        await Build(repository).AnalyzeAsync(12, TestContext.Current.CancellationToken);
 
         // Assert
         var decided = saved!.Single(p => p.ExternalId == "100");
@@ -205,7 +205,7 @@ public class TrailImportAnalysisServiceTests : IDisposable
         var repository = Repository(session);
 
         // Act
-        await Build(repository).AnalyzeAsync(12, CancellationToken.None);
+        await Build(repository).AnalyzeAsync(12, TestContext.Current.CancellationToken);
 
         // Assert
         repository.Verify(r => r.GetExcludedFingerprintsAsync("boras-stad", It.IsAny<CancellationToken>()), Times.Once);
@@ -223,7 +223,7 @@ public class TrailImportAnalysisServiceTests : IDisposable
             .ReturnsAsync(RepositoryResult<IReadOnlyCollection<string>>.Error());
 
         // Act
-        await Build(repository).AnalyzeAsync(12, CancellationToken.None);
+        await Build(repository).AnalyzeAsync(12, TestContext.Current.CancellationToken);
 
         // Assert
         session.Status.Should().Be(ImportSessionStatus.Failed);
@@ -239,7 +239,7 @@ public class TrailImportAnalysisServiceTests : IDisposable
         var repository = CapturingProposals(Repository(session), p => saved = p);
 
         // Act
-        await Build(repository).AnalyzeAsync(12, CancellationToken.None);
+        await Build(repository).AnalyzeAsync(12, TestContext.Current.CancellationToken);
 
         // Assert
         var proposal = saved!.Single(p => p.ExternalId == "100");
@@ -255,7 +255,7 @@ public class TrailImportAnalysisServiceTests : IDisposable
         var session = WriteSession(TwoFeatures);
 
         // Act
-        await Build(Repository(session)).AnalyzeAsync(12, CancellationToken.None);
+        await Build(Repository(session)).AnalyzeAsync(12, TestContext.Current.CancellationToken);
 
         // Assert
         session.Status.Should().Be(ImportSessionStatus.AwaitingReview);
@@ -271,7 +271,7 @@ public class TrailImportAnalysisServiceTests : IDisposable
         session.StoredPath = Path.Combine(Path.GetTempPath(), "stigvidd-does-not-exist.json");
 
         // Act
-        await Build(Repository(session)).AnalyzeAsync(12, CancellationToken.None);
+        await Build(Repository(session)).AnalyzeAsync(12, TestContext.Current.CancellationToken);
 
         // Assert
         session.Status.Should().Be(ImportSessionStatus.Failed);
@@ -290,7 +290,7 @@ public class TrailImportAnalysisServiceTests : IDisposable
             .ReturnsAsync(RepositoryResult<IReadOnlyCollection<TrailGeometry>>.Error());
 
         // Act
-        await Build(repository).AnalyzeAsync(12, CancellationToken.None);
+        await Build(repository).AnalyzeAsync(12, TestContext.Current.CancellationToken);
 
         // Assert
         session.Status.Should().Be(ImportSessionStatus.Failed);
@@ -308,7 +308,7 @@ public class TrailImportAnalysisServiceTests : IDisposable
             .ReturnsAsync(RepositoryResult.Error());
 
         // Act
-        await Build(repository).AnalyzeAsync(12, CancellationToken.None);
+        await Build(repository).AnalyzeAsync(12, TestContext.Current.CancellationToken);
 
         // Assert
         session.Status.Should().Be(ImportSessionStatus.Failed);
@@ -323,7 +323,7 @@ public class TrailImportAnalysisServiceTests : IDisposable
             .ReturnsAsync(RepositoryResult<TrailImportSession>.NotFound());
 
         // Act
-        await Build(repository).AnalyzeAsync(99, CancellationToken.None);
+        await Build(repository).AnalyzeAsync(99, TestContext.Current.CancellationToken);
 
         // Assert
         repository.Verify(r => r.UpdateSessionAsync(It.IsAny<TrailImportSession>(), It.IsAny<CancellationToken>()), Times.Never);
@@ -337,8 +337,8 @@ public class TrailImportAnalysisServiceTests : IDisposable
         var repository = Repository(session);
 
         // Act
-        await Build(repository).AnalyzeAsync(12, CancellationToken.None);
-        await Build(repository).AnalyzeAsync(12, CancellationToken.None);
+        await Build(repository).AnalyzeAsync(12, TestContext.Current.CancellationToken);
+        await Build(repository).AnalyzeAsync(12, TestContext.Current.CancellationToken);
 
         // Assert
         repository.Verify(r => r.ReplaceProposalsAsync(12, It.IsAny<IReadOnlyCollection<TrailImportProposal>>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
@@ -357,7 +357,7 @@ public class TrailImportAnalysisServiceTests : IDisposable
             .ReturnsAsync(RepositoryResult<int>.Success(1));
 
         // Act
-        await Build(repository).FailInterruptedSessionsAsync(CancellationToken.None);
+        await Build(repository).FailInterruptedSessionsAsync(TestContext.Current.CancellationToken);
 
         // Assert — the reviewer reads this instead of watching a spinner that never stops.
         message.Should().Contain("restart");
@@ -374,7 +374,7 @@ public class TrailImportAnalysisServiceTests : IDisposable
             .ReturnsAsync(RepositoryResult<int>.Error());
 
         // Act
-        var act = () => Build(repository).FailInterruptedSessionsAsync(CancellationToken.None);
+        var act = () => Build(repository).FailInterruptedSessionsAsync(TestContext.Current.CancellationToken);
 
         // Assert
         await act.Should().NotThrowAsync();

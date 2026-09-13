@@ -101,7 +101,7 @@ public class MailOutboxServiceTests
             });
 
         // Act
-        var result = await Build(outbox: outbox).EnqueueAsync("welcome", Recipient, Model(), CancellationToken.None);
+        var result = await Build(outbox: outbox).EnqueueAsync("welcome", Recipient, Model(), TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -121,7 +121,7 @@ public class MailOutboxServiceTests
         var queue = new RecordingQueue();
 
         // Act
-        await Build(queue: queue).EnqueueAsync("welcome", Recipient, Model(), CancellationToken.None);
+        await Build(queue: queue).EnqueueAsync("welcome", Recipient, Model(), TestContext.Current.CancellationToken);
 
         // Assert
         queue.Enqueued.Should().Equal(42);
@@ -144,7 +144,7 @@ public class MailOutboxServiceTests
             });
 
         // Act
-        await Build(outbox: outbox, queue: queue).EnqueueAsync("welcome", Recipient, Model(), CancellationToken.None);
+        await Build(outbox: outbox, queue: queue).EnqueueAsync("welcome", Recipient, Model(), TestContext.Current.CancellationToken);
 
         // Assert
         queueWasEmptyDuringSave.Should().BeTrue();
@@ -167,7 +167,7 @@ public class MailOutboxServiceTests
 
         // Act
         var result = await Build(outbox: outbox, queue: queue)
-            .EnqueueAsync("welcome", address, Model(), CancellationToken.None);
+            .EnqueueAsync("welcome", address, Model(), TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -186,7 +186,7 @@ public class MailOutboxServiceTests
 
         // Act
         var result = await Build(outbox: outbox, queue: queue)
-            .EnqueueAsync("welcome", Recipient, model, CancellationToken.None);
+            .EnqueueAsync("welcome", Recipient, model, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -206,7 +206,7 @@ public class MailOutboxServiceTests
 
         // Act
         var result = await Build(templates: templates, queue: queue)
-            .EnqueueAsync("no-such-template", Recipient, Model(), CancellationToken.None);
+            .EnqueueAsync("no-such-template", Recipient, Model(), TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -223,7 +223,7 @@ public class MailOutboxServiceTests
             .ReturnsAsync(RepositoryResult<MailTemplate>.Error());
 
         // Act
-        var result = await Build(templates: templates).EnqueueAsync("welcome", Recipient, Model(), CancellationToken.None);
+        var result = await Build(templates: templates).EnqueueAsync("welcome", Recipient, Model(), TestContext.Current.CancellationToken);
 
         // Assert
         result.Message!.StatusCode.Should().Be(500);
@@ -241,7 +241,7 @@ public class MailOutboxServiceTests
 
         // Act
         var result = await Build(templates: templates)
-            .EnqueueAsync("welcome", Recipient, Model(), CancellationToken.None, language: "en");
+            .EnqueueAsync("welcome", Recipient, Model(), TestContext.Current.CancellationToken, language: "en");
 
         // Assert
         result.Success.Should().BeTrue();
@@ -255,7 +255,7 @@ public class MailOutboxServiceTests
         var templates = TemplateRepoReturning(MakeTemplate());
 
         // Act
-        await Build(templates: templates).EnqueueAsync("welcome", Recipient, Model(), CancellationToken.None);
+        await Build(templates: templates).EnqueueAsync("welcome", Recipient, Model(), TestContext.Current.CancellationToken);
 
         // Assert
         templates.Verify(r => r.GetByKeyAsync("welcome", "sv", It.IsAny<CancellationToken>()), Times.Once);
@@ -272,7 +272,7 @@ public class MailOutboxServiceTests
 
         // Act
         var result = await Build(outbox: outbox, queue: queue)
-            .EnqueueAsync("welcome", Recipient, Model(), CancellationToken.None);
+            .EnqueueAsync("welcome", Recipient, Model(), TestContext.Current.CancellationToken);
 
         // Assert
         result.Message!.StatusCode.Should().Be(500);
@@ -294,7 +294,7 @@ public class MailOutboxServiceTests
             });
 
         // Act
-        await Build(outbox: outbox).EnqueueAsync("welcome", Recipient, Model(), CancellationToken.None, toName: "Ralf Lindberg");
+        await Build(outbox: outbox).EnqueueAsync("welcome", Recipient, Model(), TestContext.Current.CancellationToken, toName: "Ralf Lindberg");
 
         // Assert
         saved!.ToName.Should().Be("Ralf Lindberg");

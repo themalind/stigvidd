@@ -28,6 +28,13 @@
     "Raising any of those constants without raising this one buys back the stall — and it fails",
     "OPEN, so the search runs and nothing says why the guard went quiet.",
     "",
+    "guard-test-cancellation-token.mjs looks redundant next to an analyzer and is not.",
+    "xUnit1051 is raised to an ERROR for backend/Tests/**.cs in .editorconfig and catches a",
+    "CancellationToken left OFF a call — at build time, which beats any hook. What it cannot",
+    "see is a token that WAS passed and is simply never cancelled: `CancellationToken.None`",
+    "reads as clean to it. That blind spot hid 792 occurrences across 37 test files behind a",
+    "0-warning build. The hook guards only that half; the analyzer owns the other.",
+    "",
     "Machine-specific overrides belong in .claude/settings.local.json, which .gitignore",
     "already excludes."
   ],
@@ -53,6 +60,14 @@
             "type": "command",
             "command": "node",
             "args": ["${CLAUDE_PROJECT_DIR}/.claude/hooks/guard-generated-files.mjs"],
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "node",
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/.claude/hooks/guard-test-cancellation-token.mjs"
+            ],
             "timeout": 10
           }
         ]

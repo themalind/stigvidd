@@ -69,7 +69,7 @@ public class MailOutboxIntegrationTests : IClassFixture<StigViddWebApplicationFa
         var model = new Dictionary<string, string?> { ["NickName"] = "Ralf" };
 
         // Act
-        var result = await Outbox(scope).EnqueueAsync(TemplateKey, Recipient, model, CancellationToken.None);
+        var result = await Outbox(scope).EnqueueAsync(TemplateKey, Recipient, model, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -101,7 +101,7 @@ public class MailOutboxIntegrationTests : IClassFixture<StigViddWebApplicationFa
 
         // Act
         var result = await Outbox(scope).EnqueueAsync(
-            "no-such-template", Recipient, new Dictionary<string, string?>(), CancellationToken.None);
+            "no-such-template", Recipient, new Dictionary<string, string?>(), TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -122,7 +122,7 @@ public class MailOutboxIntegrationTests : IClassFixture<StigViddWebApplicationFa
 
         // Act
         var result = await Outbox(scope).EnqueueAsync(
-            TemplateKey, Recipient, new Dictionary<string, string?>(), CancellationToken.None);
+            TemplateKey, Recipient, new Dictionary<string, string?>(), TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -141,14 +141,14 @@ public class MailOutboxIntegrationTests : IClassFixture<StigViddWebApplicationFa
         var repository = scope.ServiceProvider.GetRequiredService<Core.Interfaces.Repositories.IMailOutboxRepository>();
         var model = new Dictionary<string, string?> { ["NickName"] = "Ralf" };
 
-        var enqueued = await Outbox(scope).EnqueueAsync(TemplateKey, Recipient, model, CancellationToken.None);
+        var enqueued = await Outbox(scope).EnqueueAsync(TemplateKey, Recipient, model, TestContext.Current.CancellationToken);
 
         using var db = Db(scope);
         var id = db.OutboxEmails.Single(e => e.Identifier == enqueued.Value).Id;
 
         // Act
-        var first = await repository.ClaimAsync(id, CancellationToken.None);
-        var second = await repository.ClaimAsync(id, CancellationToken.None);
+        var first = await repository.ClaimAsync(id, TestContext.Current.CancellationToken);
+        var second = await repository.ClaimAsync(id, TestContext.Current.CancellationToken);
 
         // Assert
         first.IsSuccess.Should().BeTrue();
@@ -165,15 +165,15 @@ public class MailOutboxIntegrationTests : IClassFixture<StigViddWebApplicationFa
         var repository = scope.ServiceProvider.GetRequiredService<Core.Interfaces.Repositories.IMailOutboxRepository>();
         var model = new Dictionary<string, string?> { ["NickName"] = "Ralf" };
 
-        var enqueued = await Outbox(scope).EnqueueAsync(TemplateKey, Recipient, model, CancellationToken.None);
+        var enqueued = await Outbox(scope).EnqueueAsync(TemplateKey, Recipient, model, TestContext.Current.CancellationToken);
 
         using var db = Db(scope);
         var id = db.OutboxEmails.Single(e => e.Identifier == enqueued.Value).Id;
-        await repository.ClaimAsync(id, CancellationToken.None);
+        await repository.ClaimAsync(id, TestContext.Current.CancellationToken);
 
         // Act
-        await repository.ResetInterruptedAsync(CancellationToken.None);
-        var pending = await repository.GetPendingIdsAsync(CancellationToken.None);
+        await repository.ResetInterruptedAsync(TestContext.Current.CancellationToken);
+        var pending = await repository.GetPendingIdsAsync(TestContext.Current.CancellationToken);
 
         // Assert
         pending.IsSuccess.Should().BeTrue();

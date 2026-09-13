@@ -83,7 +83,7 @@ public class HikeShareRecipientServiceTests
         var service = Build(hikeShareRecipientRepositoryMock: repoMock);
 
         // Act
-        var result = await service.GetAllHikesSharedWithUserAsync("user-identifier", CancellationToken.None);
+        var result = await service.GetAllHikesSharedWithUserAsync("user-identifier", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -111,7 +111,7 @@ public class HikeShareRecipientServiceTests
         var service = Build(hikeShareRecipientRepositoryMock: repoMock);
 
         // Act
-        var result = await service.GetAllHikesSharedWithUserAsync("user-identifier", CancellationToken.None);
+        var result = await service.GetAllHikesSharedWithUserAsync("user-identifier", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -146,7 +146,7 @@ public class HikeShareRecipientServiceTests
         var service = Build(hikeShareRecipientRepositoryMock: repoMock);
 
         // Act
-        var result = await service.GetAllHikesSharedWithUserAsync("user-identifier", CancellationToken.None);
+        var result = await service.GetAllHikesSharedWithUserAsync("user-identifier", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -178,7 +178,7 @@ public class HikeShareRecipientServiceTests
         var service = Build(hikeShareRecipientRepositoryMock: repoMock);
 
         // Act
-        await service.GetAllHikesSharedWithUserAsync("user-identifier", CancellationToken.None);
+        await service.GetAllHikesSharedWithUserAsync("user-identifier", TestContext.Current.CancellationToken);
 
         // Assert
         projection.Should().NotBeNull();
@@ -215,7 +215,7 @@ public class HikeShareRecipientServiceTests
         var service = Build(userRepositoryMock: userRepoMock);
 
         // Act
-        var result = await service.ReshareSharedHikeAsync("hike-identifier", "user-identifier", "reshareToName", CancellationToken.None);
+        var result = await service.ReshareSharedHikeAsync("hike-identifier", "user-identifier", "reshareToName", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -235,7 +235,7 @@ public class HikeShareRecipientServiceTests
         var service = Build(userRepositoryMock: userRepoMock);
 
         // Act
-        var result = await service.ReshareSharedHikeAsync("hike-identifier", "user-identifier", "reshareToName", CancellationToken.None);
+        var result = await service.ReshareSharedHikeAsync("hike-identifier", "user-identifier", "reshareToName", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -258,7 +258,7 @@ public class HikeShareRecipientServiceTests
         var service = Build(userRepositoryMock: userRepoMock, hikeRepositoryMock: hikeRepoMock);
 
         // Act
-        var result = await service.ReshareSharedHikeAsync("hike-identifier", "user-identifier", "reshareToName", CancellationToken.None);
+        var result = await service.ReshareSharedHikeAsync("hike-identifier", "user-identifier", "reshareToName", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -282,7 +282,7 @@ public class HikeShareRecipientServiceTests
         var service = Build(userRepositoryMock: userRepoMock, hikeRepositoryMock: hikeRepoMock);
 
         // Act
-        var result = await service.ReshareSharedHikeAsync("hike-identifier", "user-identifier", "reshareToName", CancellationToken.None);
+        var result = await service.ReshareSharedHikeAsync("hike-identifier", "user-identifier", "reshareToName", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -318,7 +318,7 @@ public class HikeShareRecipientServiceTests
         var service = Build(hikeShareRecipientRepositoryMock: repoMock, userRepositoryMock: userRepoMock, hikeRepositoryMock: hikeRepoMock, friendRepositoryMock: friendRepoMock);
 
         // Act
-        var result = await service.ReshareSharedHikeAsync("hike-identifier", "user-identifier", "reshareToName", CancellationToken.None);
+        var result = await service.ReshareSharedHikeAsync("hike-identifier", "user-identifier", "reshareToName", TestContext.Current.CancellationToken);
 
         // Assert — and nothing was written
         result.Success.Should().BeFalse();
@@ -347,7 +347,7 @@ public class HikeShareRecipientServiceTests
         var service = Build(hikeShareRecipientRepositoryMock: repoMock, userRepositoryMock: userRepoMock, hikeRepositoryMock: hikeRepoMock);
 
         // Act
-        var result = await service.ReshareSharedHikeAsync("hike-identifier", "user-identifier", "reshareToName", CancellationToken.None);
+        var result = await service.ReshareSharedHikeAsync("hike-identifier", "user-identifier", "reshareToName", TestContext.Current.CancellationToken);
 
         // Assert — a failed lookup must not be read as "allowed"
         result.Success.Should().BeFalse();
@@ -376,7 +376,7 @@ public class HikeShareRecipientServiceTests
         var service = Build(hikeShareRecipientRepositoryMock: repoMock, userRepositoryMock: userRepoMock, hikeRepositoryMock: hikeRepoMock);
 
         // Act
-        var result = await service.ReshareSharedHikeAsync("hike-identifier", "user-identifier", "reshareToName", CancellationToken.None);
+        var result = await service.ReshareSharedHikeAsync("hike-identifier", "user-identifier", "reshareToName", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -405,7 +405,7 @@ public class HikeShareRecipientServiceTests
         var service = Build(hikeShareRecipientRepositoryMock: repoMock, userRepositoryMock: userRepoMock, hikeRepositoryMock: hikeRepoMock);
 
         // Act
-        var result = await service.ReshareSharedHikeAsync("hike-identifier", "user-identifier", "reshareToName", CancellationToken.None);
+        var result = await service.ReshareSharedHikeAsync("hike-identifier", "user-identifier", "reshareToName", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -437,7 +437,7 @@ public class HikeShareRecipientServiceTests
         var service = Build(hikeShareRecipientRepositoryMock: repoMock, userRepositoryMock: userRepoMock, hikeRepositoryMock: hikeRepoMock, friendRepositoryMock: friendRepoMock);
 
         // Act
-        var result = await service.ReshareSharedHikeAsync("hike-identifier", "user-identifier", "reshareToName", CancellationToken.None);
+        var result = await service.ReshareSharedHikeAsync("hike-identifier", "user-identifier", "reshareToName", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -470,7 +470,7 @@ public class HikeShareRecipientServiceTests
         var service = Build(hikeShareRecipientRepositoryMock: repoMock, userRepositoryMock: userRepoMock, hikeRepositoryMock: hikeRepoMock, friendRepositoryMock: friendRepoMock);
 
         // Act
-        var result = await service.ReshareSharedHikeAsync("hike-identifier", "user-identifier", "reshareToName", CancellationToken.None);
+        var result = await service.ReshareSharedHikeAsync("hike-identifier", "user-identifier", "reshareToName", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -503,7 +503,7 @@ public class HikeShareRecipientServiceTests
         var service = Build(hikeShareRecipientRepositoryMock: repoMock, userRepositoryMock: userRepoMock, hikeRepositoryMock: hikeRepoMock, friendRepositoryMock: friendRepoMock);
 
         // Act
-        var result = await service.ReshareSharedHikeAsync("hike-identifier", "user-identifier", "reshareToName", CancellationToken.None);
+        var result = await service.ReshareSharedHikeAsync("hike-identifier", "user-identifier", "reshareToName", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -539,7 +539,7 @@ public class HikeShareRecipientServiceTests
         var service = Build(hikeShareRecipientRepositoryMock: repoMock, userRepositoryMock: userRepoMock, hikeRepositoryMock: hikeRepoMock, friendRepositoryMock: friendRepoMock);
 
         // Act
-        var result = await service.ReshareSharedHikeAsync("hike-identifier", "user-identifier", "reshareToName", CancellationToken.None);
+        var result = await service.ReshareSharedHikeAsync("hike-identifier", "user-identifier", "reshareToName", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -574,7 +574,7 @@ public class HikeShareRecipientServiceTests
         var service = Build(hikeShareRecipientRepositoryMock: repoMock, userRepositoryMock: userRepoMock, hikeRepositoryMock: hikeRepoMock, friendRepositoryMock: friendRepoMock);
 
         // Act
-        var result = await service.ReshareSharedHikeAsync("hike-identifier", "user-identifier", "reshareToName", CancellationToken.None);
+        var result = await service.ReshareSharedHikeAsync("hike-identifier", "user-identifier", "reshareToName", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -612,7 +612,7 @@ public class HikeShareRecipientServiceTests
         var service = Build(hikeShareRecipientRepositoryMock: repoMock, userRepositoryMock: userRepoMock, hikeRepositoryMock: hikeRepoMock, friendRepositoryMock: friendRepoMock);
 
         // Act
-        var result = await service.ReshareSharedHikeAsync("hike-identifier", "user-identifier", "reshareToName", CancellationToken.None);
+        var result = await service.ReshareSharedHikeAsync("hike-identifier", "user-identifier", "reshareToName", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -650,7 +650,7 @@ public class HikeShareRecipientServiceTests
         var service = Build(hikeShareRecipientRepositoryMock: repoMock, userRepositoryMock: userRepoMock, hikeRepositoryMock: hikeRepoMock, friendRepositoryMock: friendRepoMock);
 
         // Act
-        var result = await service.ReshareSharedHikeAsync("hike-identifier", "user-identifier", "reshareToName", CancellationToken.None);
+        var result = await service.ReshareSharedHikeAsync("hike-identifier", "user-identifier", "reshareToName", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -687,7 +687,7 @@ public class HikeShareRecipientServiceTests
         var service = Build(hikeShareRecipientRepositoryMock: repoMock, userRepositoryMock: userRepoMock, hikeRepositoryMock: hikeRepoMock, friendRepositoryMock: friendRepoMock);
 
         // Act
-        var result = await service.ReshareSharedHikeAsync("hike-identifier", "user-identifier", "reshareToName", CancellationToken.None);
+        var result = await service.ReshareSharedHikeAsync("hike-identifier", "user-identifier", "reshareToName", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -725,7 +725,7 @@ public class HikeShareRecipientServiceTests
         var service = Build(hikeShareRecipientRepositoryMock: repoMock, userRepositoryMock: userRepoMock, hikeRepositoryMock: hikeRepoMock, friendRepositoryMock: friendRepoMock);
 
         // Act
-        var result = await service.ReshareSharedHikeAsync("hike-identifier", "user-identifier", "reshareToName", CancellationToken.None);
+        var result = await service.ReshareSharedHikeAsync("hike-identifier", "user-identifier", "reshareToName", TestContext.Current.CancellationToken);
 
         // Assert — a hike moves at most one hop past its owner: whoever receives it this
         // way cannot pass it on, because only the owner may grant that permission
@@ -747,7 +747,7 @@ public class HikeShareRecipientServiceTests
             pushNotificationServiceMock: pushMock);
 
         // Act
-        await service.ReshareSharedHikeAsync("hike-identifier", "user-identifier", "reshareToName", CancellationToken.None);
+        await service.ReshareSharedHikeAsync("hike-identifier", "user-identifier", "reshareToName", TestContext.Current.CancellationToken);
 
         // Assert — addressed to the recipient, and carrying the "hike_share" type the app
         // routes on. A reshare is indistinguishable from a first-hand share to them.
@@ -776,7 +776,7 @@ public class HikeShareRecipientServiceTests
             pushNotificationServiceMock: pushMock);
 
         // Act
-        var result = await service.ReshareSharedHikeAsync("hike-identifier", "user-identifier", "reshareToName", CancellationToken.None);
+        var result = await service.ReshareSharedHikeAsync("hike-identifier", "user-identifier", "reshareToName", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -797,7 +797,7 @@ public class HikeShareRecipientServiceTests
             pushNotificationServiceMock: pushMock);
 
         // Act
-        await service.ReshareSharedHikeAsync("hike-identifier", "user-identifier", "reshareToName", CancellationToken.None);
+        await service.ReshareSharedHikeAsync("hike-identifier", "user-identifier", "reshareToName", TestContext.Current.CancellationToken);
 
         // Assert — nothing was shared, so nobody should be told it was
         pushMock.Verify(p => p.SendToUserAsync(
@@ -856,7 +856,7 @@ public class HikeShareRecipientServiceTests
         var service = Build(userRepositoryMock: userRepoMock);
 
         // Act
-        var result = await service.RemoveSharedHikeAsync("hike-identifier", "user-identifier", CancellationToken.None);
+        var result = await service.RemoveSharedHikeAsync("hike-identifier", "user-identifier", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -876,7 +876,7 @@ public class HikeShareRecipientServiceTests
         var service = Build(userRepositoryMock: userRepoMock);
 
         // Act
-        var result = await service.RemoveSharedHikeAsync("hike-identifier", "user-identifier", CancellationToken.None);
+        var result = await service.RemoveSharedHikeAsync("hike-identifier", "user-identifier", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -899,7 +899,7 @@ public class HikeShareRecipientServiceTests
         var service = Build(userRepositoryMock: userRepoMock, hikeRepositoryMock: hikeRepoMock);
 
         // Act
-        var result = await service.RemoveSharedHikeAsync("hike-identifier", "user-identifier", CancellationToken.None);
+        var result = await service.RemoveSharedHikeAsync("hike-identifier", "user-identifier", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -923,7 +923,7 @@ public class HikeShareRecipientServiceTests
         var service = Build(userRepositoryMock: userRepoMock, hikeRepositoryMock: hikeRepoMock);
 
         // Act
-        var result = await service.RemoveSharedHikeAsync("hike-identifier", "user-identifier", CancellationToken.None);
+        var result = await service.RemoveSharedHikeAsync("hike-identifier", "user-identifier", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -950,7 +950,7 @@ public class HikeShareRecipientServiceTests
         var service = Build(hikeShareRecipientRepositoryMock: repoMock, userRepositoryMock: userRepoMock, hikeRepositoryMock: hikeRepoMock);
 
         // Act
-        var result = await service.RemoveSharedHikeAsync("hike-identifier", "user-identifier", CancellationToken.None);
+        var result = await service.RemoveSharedHikeAsync("hike-identifier", "user-identifier", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -977,7 +977,7 @@ public class HikeShareRecipientServiceTests
         var service = Build(hikeShareRecipientRepositoryMock: repoMock, userRepositoryMock: userRepoMock, hikeRepositoryMock: hikeRepoMock);
 
         // Act
-        var result = await service.RemoveSharedHikeAsync("hike-identifier", "user-identifier", CancellationToken.None);
+        var result = await service.RemoveSharedHikeAsync("hike-identifier", "user-identifier", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -1008,7 +1008,7 @@ public class HikeShareRecipientServiceTests
             hikeRepositoryMock: hikeRepoMock, hikeServiceMock: hikeServiceMock);
 
         // Act
-        var result = await service.RemoveSharedHikeAsync("hike-identifier", "user-identifier", CancellationToken.None);
+        var result = await service.RemoveSharedHikeAsync("hike-identifier", "user-identifier", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -1037,7 +1037,7 @@ public class HikeShareRecipientServiceTests
             hikeRepositoryMock: hikeRepoMock, hikeServiceMock: hikeServiceMock);
 
         // Act
-        var result = await service.RemoveSharedHikeAsync("hike-identifier", "user-identifier", CancellationToken.None);
+        var result = await service.RemoveSharedHikeAsync("hike-identifier", "user-identifier", TestContext.Current.CancellationToken);
 
         // Assert — nothing was removed, so nothing can have been orphaned
         result.Success.Should().BeFalse();
@@ -1068,7 +1068,7 @@ public class HikeShareRecipientServiceTests
             hikeRepositoryMock: hikeRepoMock, hikeServiceMock: hikeServiceMock);
 
         // Act
-        var result = await service.RejectHikeShareAsync("user-identifier", "hike-identifier", CancellationToken.None);
+        var result = await service.RejectHikeShareAsync("user-identifier", "hike-identifier", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -1088,7 +1088,7 @@ public class HikeShareRecipientServiceTests
         var service = Build(userRepositoryMock: userRepoMock);
 
         // Act
-        var result = await service.GetIncomingPendingSharesAsync("user-identifier", CancellationToken.None);
+        var result = await service.GetIncomingPendingSharesAsync("user-identifier", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -1108,7 +1108,7 @@ public class HikeShareRecipientServiceTests
         var service = Build(userRepositoryMock: userRepoMock);
 
         // Act
-        var result = await service.GetIncomingPendingSharesAsync("user-identifier", CancellationToken.None);
+        var result = await service.GetIncomingPendingSharesAsync("user-identifier", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -1134,7 +1134,7 @@ public class HikeShareRecipientServiceTests
         var service = Build(hikeShareRecipientRepositoryMock: repoMock, userRepositoryMock: userRepoMock);
 
         // Act
-        var result = await service.GetIncomingPendingSharesAsync("user-identifier", CancellationToken.None);
+        var result = await service.GetIncomingPendingSharesAsync("user-identifier", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -1166,7 +1166,7 @@ public class HikeShareRecipientServiceTests
         var service = Build(hikeShareRecipientRepositoryMock: repoMock, userRepositoryMock: userRepoMock);
 
         // Act
-        var result = await service.GetIncomingPendingSharesAsync("user-identifier", CancellationToken.None);
+        var result = await service.GetIncomingPendingSharesAsync("user-identifier", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -1187,7 +1187,7 @@ public class HikeShareRecipientServiceTests
         var service = Build(userRepositoryMock: userRepoMock);
 
         // Act
-        var result = await service.GetIncomingPendingShareAsync("user-identifier", "hike-identifier", CancellationToken.None);
+        var result = await service.GetIncomingPendingShareAsync("user-identifier", "hike-identifier", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -1207,7 +1207,7 @@ public class HikeShareRecipientServiceTests
         var service = Build(userRepositoryMock: userRepoMock);
 
         // Act
-        var result = await service.GetIncomingPendingShareAsync("user-identifier", "hike-identifier", CancellationToken.None);
+        var result = await service.GetIncomingPendingShareAsync("user-identifier", "hike-identifier", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -1233,7 +1233,7 @@ public class HikeShareRecipientServiceTests
         var service = Build(hikeShareRecipientRepositoryMock: repoMock, userRepositoryMock: userRepoMock);
 
         // Act
-        var result = await service.GetIncomingPendingShareAsync("user-identifier", "hike-identifier", CancellationToken.None);
+        var result = await service.GetIncomingPendingShareAsync("user-identifier", "hike-identifier", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -1260,7 +1260,7 @@ public class HikeShareRecipientServiceTests
         var service = Build(hikeShareRecipientRepositoryMock: repoMock, userRepositoryMock: userRepoMock);
 
         // Act
-        var result = await service.GetIncomingPendingShareAsync("user-identifier", "hike-identifier", CancellationToken.None);
+        var result = await service.GetIncomingPendingShareAsync("user-identifier", "hike-identifier", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -1290,7 +1290,7 @@ public class HikeShareRecipientServiceTests
         var service = Build(hikeShareRecipientRepositoryMock: repoMock, userRepositoryMock: userRepoMock);
 
         // Act
-        var result = await service.GetIncomingPendingShareAsync("user-identifier", "hike-identifier", CancellationToken.None);
+        var result = await service.GetIncomingPendingShareAsync("user-identifier", "hike-identifier", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -1313,7 +1313,7 @@ public class HikeShareRecipientServiceTests
         var service = Build(userRepositoryMock: userRepoMock);
 
         // Act
-        var result = await service.AcceptHikeShareAsync("user-identifier", "hike-identifier", CancellationToken.None);
+        var result = await service.AcceptHikeShareAsync("user-identifier", "hike-identifier", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -1333,7 +1333,7 @@ public class HikeShareRecipientServiceTests
         var service = Build(userRepositoryMock: userRepoMock);
 
         // Act
-        var result = await service.AcceptHikeShareAsync("user-identifier", "hike-identifier", CancellationToken.None);
+        var result = await service.AcceptHikeShareAsync("user-identifier", "hike-identifier", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -1356,7 +1356,7 @@ public class HikeShareRecipientServiceTests
         var service = Build(userRepositoryMock: userRepoMock, hikeRepositoryMock: hikeRepoMock);
 
         // Act
-        var result = await service.AcceptHikeShareAsync("user-identifier", "hike-identifier", CancellationToken.None);
+        var result = await service.AcceptHikeShareAsync("user-identifier", "hike-identifier", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -1380,7 +1380,7 @@ public class HikeShareRecipientServiceTests
         var service = Build(userRepositoryMock: userRepoMock, hikeRepositoryMock: hikeRepoMock);
 
         // Act
-        var result = await service.AcceptHikeShareAsync("user-identifier", "hike-identifier", CancellationToken.None);
+        var result = await service.AcceptHikeShareAsync("user-identifier", "hike-identifier", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -1407,7 +1407,7 @@ public class HikeShareRecipientServiceTests
         var service = Build(hikeShareRecipientRepositoryMock: repoMock, userRepositoryMock: userRepoMock, hikeRepositoryMock: hikeRepoMock);
 
         // Act
-        var result = await service.AcceptHikeShareAsync("user-identifier", "hike-identifier", CancellationToken.None);
+        var result = await service.AcceptHikeShareAsync("user-identifier", "hike-identifier", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -1434,7 +1434,7 @@ public class HikeShareRecipientServiceTests
         var service = Build(hikeShareRecipientRepositoryMock: repoMock, userRepositoryMock: userRepoMock, hikeRepositoryMock: hikeRepoMock);
 
         // Act
-        var result = await service.AcceptHikeShareAsync("user-identifier", "hike-identifier", CancellationToken.None);
+        var result = await service.AcceptHikeShareAsync("user-identifier", "hike-identifier", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -1462,7 +1462,7 @@ public class HikeShareRecipientServiceTests
         var service = Build(hikeShareRecipientRepositoryMock: repoMock, userRepositoryMock: userRepoMock, hikeRepositoryMock: hikeRepoMock);
 
         // Act
-        var result = await service.AcceptHikeShareAsync("user-identifier", "hike-identifier", CancellationToken.None);
+        var result = await service.AcceptHikeShareAsync("user-identifier", "hike-identifier", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -1482,7 +1482,7 @@ public class HikeShareRecipientServiceTests
         var service = Build(userRepositoryMock: userRepoMock);
 
         // Act
-        var result = await service.RejectHikeShareAsync("user-identifier", "hike-identifier", CancellationToken.None);
+        var result = await service.RejectHikeShareAsync("user-identifier", "hike-identifier", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -1502,7 +1502,7 @@ public class HikeShareRecipientServiceTests
         var service = Build(userRepositoryMock: userRepoMock);
 
         // Act
-        var result = await service.RejectHikeShareAsync("user-identifier", "hike-identifier", CancellationToken.None);
+        var result = await service.RejectHikeShareAsync("user-identifier", "hike-identifier", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -1525,7 +1525,7 @@ public class HikeShareRecipientServiceTests
         var service = Build(userRepositoryMock: userRepoMock, hikeRepositoryMock: hikeRepoMock);
 
         // Act
-        var result = await service.RejectHikeShareAsync("user-identifier", "hike-identifier", CancellationToken.None);
+        var result = await service.RejectHikeShareAsync("user-identifier", "hike-identifier", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -1549,7 +1549,7 @@ public class HikeShareRecipientServiceTests
         var service = Build(userRepositoryMock: userRepoMock, hikeRepositoryMock: hikeRepoMock);
 
         // Act
-        var result = await service.RejectHikeShareAsync("user-identifier", "hike-identifier", CancellationToken.None);
+        var result = await service.RejectHikeShareAsync("user-identifier", "hike-identifier", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -1576,7 +1576,7 @@ public class HikeShareRecipientServiceTests
         var service = Build(hikeShareRecipientRepositoryMock: repoMock, userRepositoryMock: userRepoMock, hikeRepositoryMock: hikeRepoMock);
 
         // Act
-        var result = await service.RejectHikeShareAsync("user-identifier", "hike-identifier", CancellationToken.None);
+        var result = await service.RejectHikeShareAsync("user-identifier", "hike-identifier", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -1604,7 +1604,7 @@ public class HikeShareRecipientServiceTests
         var service = Build(hikeShareRecipientRepositoryMock: repoMock, userRepositoryMock: userRepoMock, hikeRepositoryMock: hikeRepoMock);
 
         // Act
-        var result = await service.RejectHikeShareAsync("user-identifier", "hike-identifier", CancellationToken.None);
+        var result = await service.RejectHikeShareAsync("user-identifier", "hike-identifier", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -1631,7 +1631,7 @@ public class HikeShareRecipientServiceTests
         var service = Build(hikeShareRecipientRepositoryMock: repoMock, userRepositoryMock: userRepoMock, hikeRepositoryMock: hikeRepoMock);
 
         // Act
-        var result = await service.RejectHikeShareAsync("user-identifier", "hike-identifier", CancellationToken.None);
+        var result = await service.RejectHikeShareAsync("user-identifier", "hike-identifier", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();

@@ -69,7 +69,7 @@ public class TrailImportServiceTests
         var service = CreateService();
 
         // Act
-        var result = await service.CreateSessionAsync(Content(), "leder.zip", null, Reviewer, CancellationToken.None);
+        var result = await service.CreateSessionAsync(Content(), "leder.zip", null, Reviewer, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsFailure.Should().BeTrue();
@@ -93,7 +93,7 @@ public class TrailImportServiceTests
         var service = CreateService();
 
         // Act
-        var result = await service.CreateSessionAsync(Content(), "spar_leder.json", null, Reviewer, CancellationToken.None);
+        var result = await service.CreateSessionAsync(Content(), "spar_leder.json", null, Reviewer, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsFailure.Should().BeTrue();
@@ -117,7 +117,7 @@ public class TrailImportServiceTests
         var service = CreateService();
 
         // Act
-        var result = await service.CreateSessionAsync(Content(), "spar_leder.json", null, Reviewer, CancellationToken.None);
+        var result = await service.CreateSessionAsync(Content(), "spar_leder.json", null, Reviewer, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -133,7 +133,7 @@ public class TrailImportServiceTests
         var service = CreateService();
 
         // Act
-        var result = await service.QueueAnalysisAsync(SessionId, force: false, CancellationToken.None);
+        var result = await service.QueueAnalysisAsync(SessionId, force: false, TestContext.Current.CancellationToken);
 
         // Assert
         result.Message!.StatusCode.Should().Be((int)HttpStatusCode.Conflict);
@@ -148,7 +148,7 @@ public class TrailImportServiceTests
         var service = CreateService();
 
         // Act
-        var result = await service.QueueAnalysisAsync(SessionId, force: false, CancellationToken.None);
+        var result = await service.QueueAnalysisAsync(SessionId, force: false, TestContext.Current.CancellationToken);
 
         // Assert
         result.Message!.StatusCode.Should().Be((int)HttpStatusCode.Conflict);
@@ -163,7 +163,7 @@ public class TrailImportServiceTests
         var service = CreateService();
 
         // Act
-        var result = await service.QueueAnalysisAsync(SessionId, force: false, CancellationToken.None);
+        var result = await service.QueueAnalysisAsync(SessionId, force: false, TestContext.Current.CancellationToken);
 
         // Assert
         result.Message!.StatusCode.Should().Be((int)HttpStatusCode.Conflict);
@@ -191,7 +191,7 @@ public class TrailImportServiceTests
             var service = CreateService();
 
             // Act
-            var result = await service.QueueAnalysisAsync(SessionId, force: false, CancellationToken.None);
+            var result = await service.QueueAnalysisAsync(SessionId, force: false, TestContext.Current.CancellationToken);
 
             // Assert
             result.Success.Should().BeTrue();
@@ -213,7 +213,7 @@ public class TrailImportServiceTests
 
         // Act
         var result = await service.DecideAsync(
-            SessionId, [1], nameof(ProposalDecision.Accept), null, null, null, overrides: null, Reviewer, CancellationToken.None);
+            SessionId, [1], nameof(ProposalDecision.Accept), null, null, null, overrides: null, Reviewer, TestContext.Current.CancellationToken);
 
         // Assert
         result.Message!.StatusCode.Should().Be((int)HttpStatusCode.Conflict);
@@ -234,7 +234,7 @@ public class TrailImportServiceTests
         // Act
         var result = await service.DecideAsync(
             SessionId, [1], nameof(ProposalDecision.Accept), null, null, null,
-            new ProposalOverrides("Bredareds IF Vit", null), Reviewer, CancellationToken.None);
+            new ProposalOverrides("Bredareds IF Vit", null), Reviewer, TestContext.Current.CancellationToken);
 
         // Assert
         result.Message!.StatusCode.Should().Be((int)HttpStatusCode.BadRequest);
@@ -254,7 +254,7 @@ public class TrailImportServiceTests
         // Act
         var result = await service.DecideAsync(
             SessionId, [1], nameof(ProposalDecision.Skip), null, null, null,
-            new ProposalOverrides(null, 12.74m), Reviewer, CancellationToken.None);
+            new ProposalOverrides(null, 12.74m), Reviewer, TestContext.Current.CancellationToken);
 
         // Assert
         result.Message!.StatusCode.Should().Be((int)HttpStatusCode.BadRequest);
@@ -271,7 +271,7 @@ public class TrailImportServiceTests
         // Act
         var result = await service.DecideAsync(
             SessionId, [1], nameof(ProposalDecision.CreateNew), null, null, null,
-            new ProposalOverrides(null, 0m), Reviewer, CancellationToken.None);
+            new ProposalOverrides(null, 0m), Reviewer, TestContext.Current.CancellationToken);
 
         // Assert
         result.Message!.StatusCode.Should().Be((int)HttpStatusCode.BadRequest);
@@ -298,7 +298,7 @@ public class TrailImportServiceTests
         // Act
         var result = await service.DecideAsync(
             SessionId, [1], nameof(ProposalDecision.CreateNew), null, null, null,
-            new ProposalOverrides("  Bredareds IF Vit  ", 12.74m), Reviewer, CancellationToken.None);
+            new ProposalOverrides("  Bredareds IF Vit  ", 12.74m), Reviewer, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -314,7 +314,7 @@ public class TrailImportServiceTests
 
         // Act
         var result = await service.DecideAsync(
-            SessionId, [1], "Godkänn", null, null, null, overrides: null, Reviewer, CancellationToken.None);
+            SessionId, [1], "Godkänn", null, null, null, overrides: null, Reviewer, TestContext.Current.CancellationToken);
 
         // Assert
         result.Message!.StatusCode.Should().Be((int)HttpStatusCode.BadRequest);
@@ -330,7 +330,7 @@ public class TrailImportServiceTests
 
         // Act
         var result = await service.DecideAsync(
-            SessionId, [1], nameof(ProposalDecision.Relink), null, null, null, overrides: null, Reviewer, CancellationToken.None);
+            SessionId, [1], nameof(ProposalDecision.Relink), null, null, null, overrides: null, Reviewer, TestContext.Current.CancellationToken);
 
         // Assert
         result.Message!.StatusCode.Should().Be((int)HttpStatusCode.BadRequest);
@@ -348,7 +348,7 @@ public class TrailImportServiceTests
 
         // Act
         var result = await service.DecideAsync(
-            SessionId, [1], nameof(ProposalDecision.Relink), "okand-led", null, null, overrides: null, Reviewer, CancellationToken.None);
+            SessionId, [1], nameof(ProposalDecision.Relink), "okand-led", null, null, overrides: null, Reviewer, TestContext.Current.CancellationToken);
 
         // Assert
         result.Message!.StatusCode.Should().Be((int)HttpStatusCode.BadRequest);
@@ -366,7 +366,7 @@ public class TrailImportServiceTests
 
         // Act
         var result = await service.DecideAsync(
-            SessionId, [1, 2, 3], nameof(ProposalDecision.Skip), null, null, null, overrides: null, Reviewer, CancellationToken.None);
+            SessionId, [1, 2, 3], nameof(ProposalDecision.Skip), null, null, null, overrides: null, Reviewer, TestContext.Current.CancellationToken);
 
         // Assert
         result.Message!.StatusCode.Should().Be((int)HttpStatusCode.BadRequest);
@@ -386,7 +386,7 @@ public class TrailImportServiceTests
 
         // Act
         var result = await service.DecideAsync(
-            SessionId, [1, 2], nameof(ProposalDecision.Accept), null, null, null, overrides: null, Reviewer, CancellationToken.None);
+            SessionId, [1, 2], nameof(ProposalDecision.Accept), null, null, null, overrides: null, Reviewer, TestContext.Current.CancellationToken);
 
         // Assert
         result.Message!.StatusCode.Should().Be((int)HttpStatusCode.BadRequest);
@@ -408,7 +408,7 @@ public class TrailImportServiceTests
 
         // Act
         var result = await service.DecideAsync(
-            SessionId, [1, 2], "accept", null, null, null, overrides: null, Reviewer, CancellationToken.None);
+            SessionId, [1, 2], "accept", null, null, null, overrides: null, Reviewer, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -432,7 +432,7 @@ public class TrailImportServiceTests
         // Act
         var result = await service.DecideAsync(
             SessionId, [1], nameof(ProposalDecision.Accept), null,
-            nameof(TrailSourceLinkRole.Duplicate), null, overrides: null, Reviewer, CancellationToken.None);
+            nameof(TrailSourceLinkRole.Duplicate), null, overrides: null, Reviewer, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -447,7 +447,7 @@ public class TrailImportServiceTests
 
         // Act
         var result = await service.DecideAsync(
-            SessionId, [1], nameof(ProposalDecision.Accept), null, "Aggregate", null, overrides: null, Reviewer, CancellationToken.None);
+            SessionId, [1], nameof(ProposalDecision.Accept), null, "Aggregate", null, overrides: null, Reviewer, TestContext.Current.CancellationToken);
 
         // Assert
         result.Message!.StatusCode.Should().Be((int)HttpStatusCode.BadRequest);
@@ -475,7 +475,7 @@ public class TrailImportServiceTests
         // Act
         var result = await service.DecideAsync(
             SessionId, [1], nameof(ProposalDecision.Exclude), null,
-            nameof(TrailSourceLinkRole.Segment), "avpublicerad i källan", overrides: null, Reviewer, CancellationToken.None);
+            nameof(TrailSourceLinkRole.Segment), "avpublicerad i källan", overrides: null, Reviewer, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -490,7 +490,7 @@ public class TrailImportServiceTests
 
         // Act
         var result = await service.DecideAsync(
-            SessionId, [], nameof(ProposalDecision.Skip), null, null, null, overrides: null, Reviewer, CancellationToken.None);
+            SessionId, [], nameof(ProposalDecision.Skip), null, null, null, overrides: null, Reviewer, TestContext.Current.CancellationToken);
 
         // Assert
         result.Message!.StatusCode.Should().Be((int)HttpStatusCode.BadRequest);
@@ -503,7 +503,7 @@ public class TrailImportServiceTests
         var service = CreateService();
 
         // Act
-        var result = await service.GetProposalsAsync(SessionId, "Kanske", null, 1, 50, CancellationToken.None);
+        var result = await service.GetProposalsAsync(SessionId, "Kanske", null, 1, 50, TestContext.Current.CancellationToken);
 
         // Assert
         result.Message!.StatusCode.Should().Be((int)HttpStatusCode.BadRequest);
@@ -518,7 +518,7 @@ public class TrailImportServiceTests
         var service = CreateService();
 
         // Act
-        var result = await service.DeleteSessionAsync(SessionId, CancellationToken.None);
+        var result = await service.DeleteSessionAsync(SessionId, TestContext.Current.CancellationToken);
 
         // Assert
         result.Message!.StatusCode.Should().Be((int)HttpStatusCode.Conflict);
@@ -537,7 +537,7 @@ public class TrailImportServiceTests
         var service = CreateService();
 
         // Act
-        var result = await service.DeleteSessionAsync(SessionId, CancellationToken.None);
+        var result = await service.DeleteSessionAsync(SessionId, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -608,7 +608,7 @@ public class TrailImportServiceTests
         var service = CreateService();
 
         // Act
-        var result = await service.GetDiffAsync(SessionId, CancellationToken.None);
+        var result = await service.GetDiffAsync(SessionId, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -639,7 +639,7 @@ public class TrailImportServiceTests
         var service = CreateService();
 
         // Act
-        var result = await service.GetDiffAsync(SessionId, CancellationToken.None);
+        var result = await service.GetDiffAsync(SessionId, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -662,7 +662,7 @@ public class TrailImportServiceTests
         var service = CreateService();
 
         // Act
-        var result = await service.GetDiffAsync(SessionId, CancellationToken.None);
+        var result = await service.GetDiffAsync(SessionId, TestContext.Current.CancellationToken);
 
         // Assert — only the override on a strong match, not the agreement and not the Medium
         result.Value!.AgainstStrongMatch.Should().ContainSingle()
@@ -688,7 +688,7 @@ public class TrailImportServiceTests
         var service = CreateService();
 
         // Act
-        var result = await service.GetDiffAsync(SessionId, CancellationToken.None);
+        var result = await service.GetDiffAsync(SessionId, TestContext.Current.CancellationToken);
 
         // Assert
         result.Value!.WithoutSegment.Should().ContainSingle()
@@ -705,7 +705,7 @@ public class TrailImportServiceTests
         var service = CreateService();
 
         // Act
-        var result = await service.GetDiffAsync(SessionId, CancellationToken.None);
+        var result = await service.GetDiffAsync(SessionId, TestContext.Current.CancellationToken);
 
         // Assert
         result.Value!.CanApply.Should().BeFalse();
@@ -722,7 +722,7 @@ public class TrailImportServiceTests
         var service = CreateService();
 
         // Act
-        var result = await service.GetDiffAsync(SessionId, CancellationToken.None);
+        var result = await service.GetDiffAsync(SessionId, TestContext.Current.CancellationToken);
 
         // Assert
         result.Value!.CanApply.Should().BeFalse();

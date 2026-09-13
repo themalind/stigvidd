@@ -70,7 +70,7 @@ public class TrailServiceTests
             .ReturnsAsync(RepositoryResult<int>.Success(4));
 
         // Act
-        var result = await Build(repo).GetTrailIdByIdentifierAsync(Utilities.Identifiers.Trail4, CancellationToken.None);
+        var result = await Build(repo).GetTrailIdByIdentifierAsync(Utilities.Identifiers.Trail4, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -86,7 +86,7 @@ public class TrailServiceTests
             .ReturnsAsync(RepositoryResult<int>.NotFound());
 
         // Act
-        var result = await Build(repo).GetTrailIdByIdentifierAsync("no-trail", CancellationToken.None);
+        var result = await Build(repo).GetTrailIdByIdentifierAsync("no-trail", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -103,7 +103,7 @@ public class TrailServiceTests
             .ReturnsAsync(RepositoryResult<TrailResponse>.Success(StubTrailResponse()));
 
         // Act
-        var result = await Build(repo).GetTrailByIdentifierWithoutCoordinatesAsync(Utilities.Identifiers.Trail4, CancellationToken.None);
+        var result = await Build(repo).GetTrailByIdentifierWithoutCoordinatesAsync(Utilities.Identifiers.Trail4, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -120,7 +120,7 @@ public class TrailServiceTests
             .ReturnsAsync(RepositoryResult<TrailResponse>.NotFound());
 
         // Act
-        var result = await Build(repo).GetTrailByIdentifierWithoutCoordinatesAsync("no-trail", CancellationToken.None);
+        var result = await Build(repo).GetTrailByIdentifierWithoutCoordinatesAsync("no-trail", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -137,7 +137,7 @@ public class TrailServiceTests
             .ReturnsAsync(RepositoryResult<TrailResponse>.Error());
 
         // Act
-        var result = await Build(repo).GetTrailByIdentifierWithoutCoordinatesAsync(Utilities.Identifiers.Trail4, CancellationToken.None);
+        var result = await Build(repo).GetTrailByIdentifierWithoutCoordinatesAsync(Utilities.Identifiers.Trail4, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -155,7 +155,7 @@ public class TrailServiceTests
             .ReturnsAsync(RepositoryResult<string>.Success(json));
 
         // Act
-        var result = await Build(repo).GetCoordinatesByTrailIdentifierAsync(Utilities.Identifiers.Trail4, CancellationToken.None);
+        var result = await Build(repo).GetCoordinatesByTrailIdentifierAsync(Utilities.Identifiers.Trail4, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -171,7 +171,7 @@ public class TrailServiceTests
             .ReturnsAsync(RepositoryResult<string>.NotFound());
 
         // Act
-        var result = await Build(repo).GetCoordinatesByTrailIdentifierAsync("no-trail", CancellationToken.None);
+        var result = await Build(repo).GetCoordinatesByTrailIdentifierAsync("no-trail", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -188,7 +188,7 @@ public class TrailServiceTests
             .ReturnsAsync((Trail t, CancellationToken _) => RepositoryResult<Trail>.Success(t));
 
         // Act
-        var result = await Build(repo).AddTrailAsync(ValidRequest(), Utilities.Stubs.FakeFile(), Utilities.Stubs.TwoImages(), "user-id", CancellationToken.None);
+        var result = await Build(repo).AddTrailAsync(ValidRequest(), Utilities.Stubs.FakeFile(), Utilities.Stubs.TwoImages(), "user-id", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -208,7 +208,7 @@ public class TrailServiceTests
         var mediaUpload = Utilities.MockFactory.MediaUploadService();
 
         // Act
-        var result = await Build(repo, webDav, mediaUpload).AddTrailAsync(ValidRequest(), Utilities.Stubs.FakeFile(), Utilities.Stubs.TwoImages(), "user-id", CancellationToken.None);
+        var result = await Build(repo, webDav, mediaUpload).AddTrailAsync(ValidRequest(), Utilities.Stubs.FakeFile(), Utilities.Stubs.TwoImages(), "user-id", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -227,7 +227,7 @@ public class TrailServiceTests
         var mediaUpload = Utilities.MockFactory.MediaUploadService();
 
         // Act
-        var result = await Build(mediaUpload: mediaUpload).AddTrailAsync(request, Utilities.Stubs.FakeFile(), Utilities.Stubs.TwoImages(), "user-id", CancellationToken.None);
+        var result = await Build(mediaUpload: mediaUpload).AddTrailAsync(request, Utilities.Stubs.FakeFile(), Utilities.Stubs.TwoImages(), "user-id", TestContext.Current.CancellationToken);
 
         // Assert
         result.Message!.StatusCode.Should().Be(400);
@@ -243,7 +243,7 @@ public class TrailServiceTests
             .ReturnsAsync(Result.Fail<UploadedMedia>(new Message(500, "Upload failed")));
 
         // Act
-        var result = await Build(mediaUpload: mediaUpload).AddTrailAsync(ValidRequest(), Utilities.Stubs.FakeFile(), Utilities.Stubs.TwoImages(), "user-id", CancellationToken.None);
+        var result = await Build(mediaUpload: mediaUpload).AddTrailAsync(ValidRequest(), Utilities.Stubs.FakeFile(), Utilities.Stubs.TwoImages(), "user-id", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -261,7 +261,7 @@ public class TrailServiceTests
             .ThrowsAsync(new Exception("network error"));
 
         // Act
-        var result = await Build(webDav: webDav, mediaUpload: mediaUpload).AddTrailAsync(ValidRequest(), Utilities.Stubs.FakeFile(), Utilities.Stubs.TwoImages(), "user-id", CancellationToken.None);
+        var result = await Build(webDav: webDav, mediaUpload: mediaUpload).AddTrailAsync(ValidRequest(), Utilities.Stubs.FakeFile(), Utilities.Stubs.TwoImages(), "user-id", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -282,7 +282,7 @@ public class TrailServiceTests
             .ThrowsAsync(new Exception("disk full"));
 
         // Act
-        var result = await Build(repo, webDav, mediaUpload).AddTrailAsync(ValidRequest(), Utilities.Stubs.FakeFile(), Utilities.Stubs.TwoImages(), "user-id", CancellationToken.None);
+        var result = await Build(repo, webDav, mediaUpload).AddTrailAsync(ValidRequest(), Utilities.Stubs.FakeFile(), Utilities.Stubs.TwoImages(), "user-id", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -303,7 +303,7 @@ public class TrailServiceTests
             .ReturnsAsync(Result.Fail<UploadedMedia>(new Message(500, "Upload failed")));
 
         // Act
-        var result = await Build(repo, webDav, mediaUpload).AddTrailAsync(ValidRequest(), Utilities.Stubs.FakeFile(), Utilities.Stubs.TwoImages(), "user-id", CancellationToken.None);
+        var result = await Build(repo, webDav, mediaUpload).AddTrailAsync(ValidRequest(), Utilities.Stubs.FakeFile(), Utilities.Stubs.TwoImages(), "user-id", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -320,7 +320,7 @@ public class TrailServiceTests
             .ReturnsAsync(RepositoryResult<Trail>.Error());
 
         // Act
-        var result = await Build(repo).AddTrailAsync(ValidRequest(), null, null, "user-id", CancellationToken.None);
+        var result = await Build(repo).AddTrailAsync(ValidRequest(), null, null, "user-id", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -344,7 +344,7 @@ public class TrailServiceTests
             .ReturnsAsync(Result.Ok(new UploadedMedia("trails/img2.jpg", 800, 600, 3456)));
 
         // Act
-        var result = await Build(repo, webDav, mediaUpload).AddTrailAsync(ValidRequest(), Utilities.Stubs.FakeFile(), Utilities.Stubs.TwoImages(), "user-id", CancellationToken.None);
+        var result = await Build(repo, webDav, mediaUpload).AddTrailAsync(ValidRequest(), Utilities.Stubs.FakeFile(), Utilities.Stubs.TwoImages(), "user-id", TestContext.Current.CancellationToken);
 
         // Assert
         result.Message!.StatusCode.Should().Be(500);
@@ -370,7 +370,7 @@ public class TrailServiceTests
             .ReturnsAsync(Result.Ok(new UploadedMedia("trails/img2.jpg", 800, 600, 3456)));
 
         // Act
-        var result = await Build(repo, mediaUpload: mediaUpload).AddTrailAsync(ValidRequest(), Utilities.Stubs.FakeFile(), Utilities.Stubs.TwoImages(), "user-id", CancellationToken.None);
+        var result = await Build(repo, mediaUpload: mediaUpload).AddTrailAsync(ValidRequest(), Utilities.Stubs.FakeFile(), Utilities.Stubs.TwoImages(), "user-id", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -396,7 +396,7 @@ public class TrailServiceTests
             .ReturnsAsync(Result.Ok(new UploadedMedia("trails/img.jpg", 800, 600, 2345)));
 
         // Act
-        var result = await Build(repo, mediaUpload: mediaUpload).AddTrailAsync(ValidRequest(), null, Utilities.Stubs.TwoImages(), "user-id", CancellationToken.None);
+        var result = await Build(repo, mediaUpload: mediaUpload).AddTrailAsync(ValidRequest(), null, Utilities.Stubs.TwoImages(), "user-id", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -420,7 +420,7 @@ public class TrailServiceTests
             .ReturnsAsync(RepositoryResult<IReadOnlyCollection<TrailOverviewProjection>>.Success(overviews));
 
         // Act
-        var result = await Build(repo).GetPopularTrailOverviewsAsync(null, null, CancellationToken.None);
+        var result = await Build(repo).GetPopularTrailOverviewsAsync(null, null, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -436,7 +436,7 @@ public class TrailServiceTests
             .ReturnsAsync(RepositoryResult<IReadOnlyCollection<TrailOverviewProjection>>.Error());
 
         // Act
-        var result = await Build(repo).GetPopularTrailOverviewsAsync(57.0, 12.0, CancellationToken.None);
+        var result = await Build(repo).GetPopularTrailOverviewsAsync(57.0, 12.0, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -457,7 +457,7 @@ public class TrailServiceTests
             .ReturnsAsync(RepositoryResult<IReadOnlyCollection<TrailShortInfoProjection>>.Success(trails));
 
         // Act
-        var result = await Build(repo).GetAllTrailsWithBasicInfoAsync(CancellationToken.None);
+        var result = await Build(repo).GetAllTrailsWithBasicInfoAsync(TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -474,7 +474,7 @@ public class TrailServiceTests
             .ReturnsAsync(RepositoryResult<IReadOnlyCollection<TrailShortInfoProjection>>.Error());
 
         // Act
-        var result = await Build(repo).GetAllTrailsWithBasicInfoAsync(CancellationToken.None);
+        var result = await Build(repo).GetAllTrailsWithBasicInfoAsync(TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -492,7 +492,7 @@ public class TrailServiceTests
 
         // Act & Assert
         await Build(repo)
-            .Invoking(s => s.GetAllTrailsWithBasicInfoAsync(CancellationToken.None))
+            .Invoking(s => s.GetAllTrailsWithBasicInfoAsync(TestContext.Current.CancellationToken))
             .Should().ThrowAsync<InvalidOperationException>();
     }
 
@@ -509,7 +509,7 @@ public class TrailServiceTests
             .ReturnsAsync(RepositoryResult<IReadOnlyCollection<TrailMarkerProjection>>.Success(markers));
 
         // Act
-        var result = await Build(repo).GetAllTrailMarkersAsync(CancellationToken.None);
+        var result = await Build(repo).GetAllTrailMarkersAsync(TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -525,7 +525,7 @@ public class TrailServiceTests
             .ReturnsAsync(RepositoryResult<IReadOnlyCollection<TrailMarkerProjection>>.Error());
 
         // Act
-        var result = await Build(repo).GetAllTrailMarkersAsync(CancellationToken.None);
+        var result = await Build(repo).GetAllTrailMarkersAsync(TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -543,7 +543,7 @@ public class TrailServiceTests
 
         // Act & Assert
         await Build(repo)
-            .Invoking(s => s.GetAllTrailMarkersAsync(CancellationToken.None))
+            .Invoking(s => s.GetAllTrailMarkersAsync(TestContext.Current.CancellationToken))
             .Should().ThrowAsync<InvalidOperationException>();
     }
 
@@ -559,7 +559,7 @@ public class TrailServiceTests
             .ReturnsAsync(RepositoryResult<TrailCardProjection>.NotFound());
 
         // Act
-        var result = await Build(repo).GetTrailCardByIdentifierAsync("no-trail", CancellationToken.None);
+        var result = await Build(repo).GetTrailCardByIdentifierAsync("no-trail", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -579,7 +579,7 @@ public class TrailServiceTests
             .ReturnsAsync(RepositoryResult<TrailCardProjection>.Error());
 
         // Act
-        var result = await Build(repo).GetTrailCardByIdentifierAsync("any-trail", CancellationToken.None);
+        var result = await Build(repo).GetTrailCardByIdentifierAsync("any-trail", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -602,7 +602,7 @@ public class TrailServiceTests
             .ReturnsAsync(RepositoryResult<TrailCardProjection>.Success(projection));
 
         // Act
-        var result = await Build(repo).GetTrailCardByIdentifierAsync(Utilities.Identifiers.Trail4, CancellationToken.None);
+        var result = await Build(repo).GetTrailCardByIdentifierAsync(Utilities.Identifiers.Trail4, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -628,7 +628,7 @@ public class TrailServiceTests
             .ReturnsAsync(RepositoryResult<TrailCardProjection>.Success(projection));
 
         // Act
-        var result = await Build(repo).GetTrailCardByIdentifierAsync(Utilities.Identifiers.Trail4, CancellationToken.None);
+        var result = await Build(repo).GetTrailCardByIdentifierAsync(Utilities.Identifiers.Trail4, TestContext.Current.CancellationToken);
 
         // Assert
         result.Value.Should().NotBeNull();
@@ -650,7 +650,7 @@ public class TrailServiceTests
             .ReturnsAsync(RepositoryResult<TrailCardProjection>.Success(projection));
 
         // Act
-        var result = await Build(repo).GetTrailCardByIdentifierAsync(Utilities.Identifiers.Trail4, CancellationToken.None);
+        var result = await Build(repo).GetTrailCardByIdentifierAsync(Utilities.Identifiers.Trail4, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -676,7 +676,7 @@ public class TrailServiceTests
 
         // Act
         var result = await Build(repo).GetTrailCardsByIdentifiersAsync(
-            [Utilities.Identifiers.Trail4, "trail-b"], CancellationToken.None);
+            [Utilities.Identifiers.Trail4, "trail-b"], TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -696,7 +696,7 @@ public class TrailServiceTests
             .ReturnsAsync(RepositoryResult<IReadOnlyCollection<TrailCardProjection>>.Error());
 
         // Act
-        var result = await Build(repo).GetTrailCardsByIdentifiersAsync(["any-trail"], CancellationToken.None);
+        var result = await Build(repo).GetTrailCardsByIdentifiersAsync(["any-trail"], TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -716,7 +716,7 @@ public class TrailServiceTests
             .ReturnsAsync(RepositoryResult<IReadOnlyCollection<TrailCardProjection>>.Success([]));
 
         // Act
-        var result = await Build(repo).GetTrailCardsByIdentifiersAsync(["no-trail"], CancellationToken.None);
+        var result = await Build(repo).GetTrailCardsByIdentifiersAsync(["no-trail"], TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -742,7 +742,7 @@ public class TrailServiceTests
 
         // Act
         var result = await Build(repo).GetTrailCardsByIdentifiersAsync(
-            [Utilities.Identifiers.Trail4], CancellationToken.None);
+            [Utilities.Identifiers.Trail4], TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -760,7 +760,7 @@ public class TrailServiceTests
             .ReturnsAsync(RepositoryResult<string>.Error());
 
         // Act
-        var result = await Build(repo).GetCoordinatesByTrailIdentifierAsync(Utilities.Identifiers.Trail4, CancellationToken.None);
+        var result = await Build(repo).GetCoordinatesByTrailIdentifierAsync(Utilities.Identifiers.Trail4, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -783,7 +783,7 @@ public class TrailServiceTests
             .ReturnsAsync(RepositoryResult<Trail>.Success(updatedTrail));
 
         // Act
-        var result = await Build(repo).UpdateTrailAsync(ValidUpdateRequest(), Utilities.Identifiers.Trail4, CancellationToken.None);
+        var result = await Build(repo).UpdateTrailAsync(ValidUpdateRequest(), Utilities.Identifiers.Trail4, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -800,7 +800,7 @@ public class TrailServiceTests
             .ReturnsAsync(RepositoryResult<Trail>.NotFound());
 
         // Act
-        var result = await Build(repo).UpdateTrailAsync(ValidUpdateRequest(), "no-trail", CancellationToken.None);
+        var result = await Build(repo).UpdateTrailAsync(ValidUpdateRequest(), "no-trail", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -817,7 +817,7 @@ public class TrailServiceTests
             .ReturnsAsync(RepositoryResult<Trail>.Error());
 
         // Act
-        var result = await Build(repo).UpdateTrailAsync(ValidUpdateRequest(), Utilities.Identifiers.Trail4, CancellationToken.None);
+        var result = await Build(repo).UpdateTrailAsync(ValidUpdateRequest(), Utilities.Identifiers.Trail4, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -841,7 +841,7 @@ public class TrailServiceTests
             .ReturnsAsync(RepositoryResult<IReadOnlyCollection<TrailImage>>.Success(savedImages));
 
         // Act
-        var result = await Build(repo).AddTrailImagesAsync(Utilities.Identifiers.Trail4, Utilities.Stubs.TwoImages(), new ImageProcessingOptions(), CancellationToken.None);
+        var result = await Build(repo).AddTrailImagesAsync(Utilities.Identifiers.Trail4, Utilities.Stubs.TwoImages(), new ImageProcessingOptions(), TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -859,7 +859,7 @@ public class TrailServiceTests
             .ReturnsAsync(RepositoryResult<int>.NotFound());
 
         // Act
-        var result = await Build(repo).AddTrailImagesAsync("no-trail", Utilities.Stubs.TwoImages(), new ImageProcessingOptions(), CancellationToken.None);
+        var result = await Build(repo).AddTrailImagesAsync("no-trail", Utilities.Stubs.TwoImages(), new ImageProcessingOptions(), TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -879,7 +879,7 @@ public class TrailServiceTests
             .ReturnsAsync(Result.Fail<UploadedMedia>(new Message(500, "Upload failed")));
 
         // Act
-        var result = await Build(repo, mediaUpload: mediaUpload).AddTrailImagesAsync(Utilities.Identifiers.Trail4, Utilities.Stubs.TwoImages(), new ImageProcessingOptions(), CancellationToken.None);
+        var result = await Build(repo, mediaUpload: mediaUpload).AddTrailImagesAsync(Utilities.Identifiers.Trail4, Utilities.Stubs.TwoImages(), new ImageProcessingOptions(), TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -898,7 +898,7 @@ public class TrailServiceTests
             .ReturnsAsync(RepositoryResult<IReadOnlyCollection<TrailImage>>.Error());
 
         // Act
-        var result = await Build(repo).AddTrailImagesAsync(Utilities.Identifiers.Trail4, Utilities.Stubs.TwoImages(), new ImageProcessingOptions(), CancellationToken.None);
+        var result = await Build(repo).AddTrailImagesAsync(Utilities.Identifiers.Trail4, Utilities.Stubs.TwoImages(), new ImageProcessingOptions(), TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -915,7 +915,7 @@ public class TrailServiceTests
             .ReturnsAsync(RepositoryResult.Success());
 
         // Act
-        var result = await Build(repo).DeleteTrailImageAsync("img-aras-1", CancellationToken.None);
+        var result = await Build(repo).DeleteTrailImageAsync("img-aras-1", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -930,7 +930,7 @@ public class TrailServiceTests
             .ReturnsAsync(RepositoryResult.NotFound());
 
         // Act
-        var result = await Build(repo).DeleteTrailImageAsync("no-image", CancellationToken.None);
+        var result = await Build(repo).DeleteTrailImageAsync("no-image", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -947,7 +947,7 @@ public class TrailServiceTests
             .ReturnsAsync(RepositoryResult.Error());
 
         // Act
-        var result = await Build(repo).DeleteTrailImageAsync("img-aras-1", CancellationToken.None);
+        var result = await Build(repo).DeleteTrailImageAsync("img-aras-1", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();

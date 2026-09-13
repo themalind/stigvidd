@@ -58,7 +58,7 @@ public class ReviewServiceTests
             .ReturnsAsync(RepositoryResult<PagedResult<ReviewResponse>>.Success(StubPage(2)));
 
         // Act
-        var result = await Build(repo).GetReviewsByTrailIdentifierAsync(Utilities.Identifiers.Trail7, 0, 10, CancellationToken.None);
+        var result = await Build(repo).GetReviewsByTrailIdentifierAsync(Utilities.Identifiers.Trail7, 0, 10, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -75,7 +75,7 @@ public class ReviewServiceTests
             .ReturnsAsync(RepositoryResult<PagedResult<ReviewResponse>>.Error());
 
         // Act
-        var result = await Build(repo).GetReviewsByTrailIdentifierAsync(Utilities.Identifiers.Trail7, 0, 10, CancellationToken.None);
+        var result = await Build(repo).GetReviewsByTrailIdentifierAsync(Utilities.Identifiers.Trail7, 0, 10, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -92,7 +92,7 @@ public class ReviewServiceTests
             .ReturnsAsync(RepositoryResult<Review>.Success(Utilities.Stubs.Review()));
 
         // Act
-        var result = await Build(repo).AddReviewAsync(Utilities.Identifiers.User, Utilities.Identifiers.Trail7, "Great!", 4.0M, null, CancellationToken.None);
+        var result = await Build(repo).AddReviewAsync(Utilities.Identifiers.User, Utilities.Identifiers.Trail7, "Great!", 4.0M, null, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -106,7 +106,7 @@ public class ReviewServiceTests
         var service = Build();
 
         // Act
-        var result = await service.AddReviewAsync(Utilities.Identifiers.User, Utilities.Identifiers.Trail7, "text", 0.5M, null, CancellationToken.None);
+        var result = await service.AddReviewAsync(Utilities.Identifiers.User, Utilities.Identifiers.Trail7, "text", 0.5M, null, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -121,7 +121,7 @@ public class ReviewServiceTests
         var service = Build();
 
         // Act
-        var result = await service.AddReviewAsync(Utilities.Identifiers.User, Utilities.Identifiers.Trail7, "text", 5.1M, null, CancellationToken.None);
+        var result = await service.AddReviewAsync(Utilities.Identifiers.User, Utilities.Identifiers.Trail7, "text", 5.1M, null, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -138,7 +138,7 @@ public class ReviewServiceTests
             .ReturnsAsync(RepositoryResult<Review>.Success(Utilities.Stubs.Review()));
 
         // Act
-        var result = await Build(repo).AddReviewAsync(Utilities.Identifiers.User, Utilities.Identifiers.Trail7, "text", 1.0M, null, CancellationToken.None);
+        var result = await Build(repo).AddReviewAsync(Utilities.Identifiers.User, Utilities.Identifiers.Trail7, "text", 1.0M, null, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -153,7 +153,7 @@ public class ReviewServiceTests
             .ReturnsAsync(RepositoryResult<Review>.Success(Utilities.Stubs.Review()));
 
         // Act
-        var result = await Build(repo).AddReviewAsync(Utilities.Identifiers.User, Utilities.Identifiers.Trail7, "text", 5.0M, null, CancellationToken.None);
+        var result = await Build(repo).AddReviewAsync(Utilities.Identifiers.User, Utilities.Identifiers.Trail7, "text", 5.0M, null, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -166,7 +166,7 @@ public class ReviewServiceTests
         var service = Build(userRepo: Utilities.MockFactory.UserRepositoryNotFoundById());
 
         // Act
-        var result = await service.AddReviewAsync("invalid", Utilities.Identifiers.Trail7, "text", 4.0M, null, CancellationToken.None);
+        var result = await service.AddReviewAsync("invalid", Utilities.Identifiers.Trail7, "text", 4.0M, null, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -181,7 +181,7 @@ public class ReviewServiceTests
         var service = Build(trailService: Utilities.MockFactory.TrailServiceNotFound());
 
         // Act
-        var result = await service.AddReviewAsync(Utilities.Identifiers.User, "invalid", "text", 4.0M, null, CancellationToken.None);
+        var result = await service.AddReviewAsync(Utilities.Identifiers.User, "invalid", "text", 4.0M, null, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -197,7 +197,7 @@ public class ReviewServiceTests
         var service = Build(userRepo: Utilities.MockFactory.UserRepositoryNotFoundById(), mediaUpload: mediaUpload);
 
         // Act
-        var result = await service.AddReviewAsync("invalid", Utilities.Identifiers.Trail7, "text", 4.0M, Utilities.Stubs.TwoImages(), CancellationToken.None);
+        var result = await service.AddReviewAsync("invalid", Utilities.Identifiers.Trail7, "text", 4.0M, Utilities.Stubs.TwoImages(), TestContext.Current.CancellationToken);
 
         // Assert
         result.Message!.StatusCode.Should().Be(404);
@@ -212,7 +212,7 @@ public class ReviewServiceTests
         var service = Build(trailService: Utilities.MockFactory.TrailServiceNotFound(), mediaUpload: mediaUpload);
 
         // Act
-        var result = await service.AddReviewAsync(Utilities.Identifiers.User, "invalid", "text", 4.0M, Utilities.Stubs.TwoImages(), CancellationToken.None);
+        var result = await service.AddReviewAsync(Utilities.Identifiers.User, "invalid", "text", 4.0M, Utilities.Stubs.TwoImages(), TestContext.Current.CancellationToken);
 
         // Assert
         result.Message!.StatusCode.Should().Be(404);
@@ -231,7 +231,7 @@ public class ReviewServiceTests
         var mediaUpload = Utilities.MockFactory.MediaUploadService();
 
         // Act
-        var result = await Build(repo, webDav, mediaUpload: mediaUpload).AddReviewAsync(Utilities.Identifiers.User, Utilities.Identifiers.Trail7, "text", 4.0M, Utilities.Stubs.TwoImages(), CancellationToken.None);
+        var result = await Build(repo, webDav, mediaUpload: mediaUpload).AddReviewAsync(Utilities.Identifiers.User, Utilities.Identifiers.Trail7, "text", 4.0M, Utilities.Stubs.TwoImages(), TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -254,7 +254,7 @@ public class ReviewServiceTests
             .ReturnsAsync(Result.Ok(new UploadedMedia("reviews/img2.jpg", 800, 600, 2345)));
 
         // Act
-        var result = await Build(repo, webDav, mediaUpload: mediaUpload).AddReviewAsync(Utilities.Identifiers.User, Utilities.Identifiers.Trail7, "text", 4.0M, Utilities.Stubs.TwoImages(), CancellationToken.None);
+        var result = await Build(repo, webDav, mediaUpload: mediaUpload).AddReviewAsync(Utilities.Identifiers.User, Utilities.Identifiers.Trail7, "text", 4.0M, Utilities.Stubs.TwoImages(), TestContext.Current.CancellationToken);
 
         // Assert
         result.Message!.StatusCode.Should().Be(500);
@@ -271,7 +271,7 @@ public class ReviewServiceTests
             .ReturnsAsync(Result.Fail<UploadedMedia>(new Message(500, "Upload failed")));
 
         // Act
-        var result = await Build(mediaUpload: mediaUpload).AddReviewAsync(Utilities.Identifiers.User, Utilities.Identifiers.Trail7, "text", 4.0M, Utilities.Stubs.TwoImages(), CancellationToken.None);
+        var result = await Build(mediaUpload: mediaUpload).AddReviewAsync(Utilities.Identifiers.User, Utilities.Identifiers.Trail7, "text", 4.0M, Utilities.Stubs.TwoImages(), TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -290,7 +290,7 @@ public class ReviewServiceTests
             .ReturnsAsync(Result.Fail<UploadedMedia>(new Message(500, "Upload failed")));
 
         // Act
-        var result = await Build(webDav: webDav, mediaUpload: mediaUpload).AddReviewAsync(Utilities.Identifiers.User, Utilities.Identifiers.Trail7, "text", 4.0M, Utilities.Stubs.TwoImages(), CancellationToken.None);
+        var result = await Build(webDav: webDav, mediaUpload: mediaUpload).AddReviewAsync(Utilities.Identifiers.User, Utilities.Identifiers.Trail7, "text", 4.0M, Utilities.Stubs.TwoImages(), TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -307,7 +307,7 @@ public class ReviewServiceTests
             .ThrowsAsync(new Exception("network error"));
 
         // Act
-        var result = await Build(mediaUpload: mediaUpload).AddReviewAsync(Utilities.Identifiers.User, Utilities.Identifiers.Trail7, "text", 4.0M, Utilities.Stubs.TwoImages(), CancellationToken.None);
+        var result = await Build(mediaUpload: mediaUpload).AddReviewAsync(Utilities.Identifiers.User, Utilities.Identifiers.Trail7, "text", 4.0M, Utilities.Stubs.TwoImages(), TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -324,7 +324,7 @@ public class ReviewServiceTests
             .ReturnsAsync(RepositoryResult<Review>.Success(Utilities.Stubs.Review(withImages: true)));
 
         // Act
-        var result = await Build(repo).AddReviewAsync(Utilities.Identifiers.User, Utilities.Identifiers.Trail7, "text", 4.0M, Utilities.Stubs.TwoImages(), CancellationToken.None);
+        var result = await Build(repo).AddReviewAsync(Utilities.Identifiers.User, Utilities.Identifiers.Trail7, "text", 4.0M, Utilities.Stubs.TwoImages(), TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -344,7 +344,7 @@ public class ReviewServiceTests
             .ReturnsAsync(RepositoryResult<Review>.Success(Utilities.Stubs.Review()));
 
         // Act
-        var result = await Build(repo).AddReviewAsync(Utilities.Identifiers.User, Utilities.Identifiers.Trail7, "text", 4.0M, null, CancellationToken.None);
+        var result = await Build(repo).AddReviewAsync(Utilities.Identifiers.User, Utilities.Identifiers.Trail7, "text", 4.0M, null, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -361,7 +361,7 @@ public class ReviewServiceTests
             .ReturnsAsync(RepositoryResult<Review>.Success(review));
 
         // Act
-        var result = await Build(repo).AddReviewAsync(Utilities.Identifiers.User, Utilities.Identifiers.Trail7, null, 4.0M, null, CancellationToken.None);
+        var result = await Build(repo).AddReviewAsync(Utilities.Identifiers.User, Utilities.Identifiers.Trail7, null, 4.0M, null, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -380,7 +380,7 @@ public class ReviewServiceTests
             .ReturnsAsync(RepositoryResult.Success());
 
         // Act
-        var result = await Build(repo).DeleteReviewAsync(Utilities.Identifiers.Review5, Utilities.Identifiers.User, CancellationToken.None);
+        var result = await Build(repo).DeleteReviewAsync(Utilities.Identifiers.Review5, Utilities.Identifiers.User, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -397,7 +397,7 @@ public class ReviewServiceTests
             .ReturnsAsync(RepositoryResult.Success());
 
         // Act
-        var result = await Build(repo).DeleteReviewAsync(Utilities.Identifiers.Review5, Utilities.Identifiers.User, CancellationToken.None);
+        var result = await Build(repo).DeleteReviewAsync(Utilities.Identifiers.Review5, Utilities.Identifiers.User, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -412,7 +412,7 @@ public class ReviewServiceTests
             .ReturnsAsync(RepositoryResult<Review>.NotFound());
 
         // Act
-        var result = await Build(repo).DeleteReviewAsync("bad-id", Utilities.Identifiers.User, CancellationToken.None);
+        var result = await Build(repo).DeleteReviewAsync("bad-id", Utilities.Identifiers.User, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -438,7 +438,7 @@ public class ReviewServiceTests
             .ReturnsAsync(RepositoryResult.Success());
 
         // Act
-        var result = await Build(repo, webDav).DeleteReviewAsync(Utilities.Identifiers.Review5, Utilities.Identifiers.User, CancellationToken.None);
+        var result = await Build(repo, webDav).DeleteReviewAsync(Utilities.Identifiers.Review5, Utilities.Identifiers.User, TestContext.Current.CancellationToken);
 
         // Assert — the first failure did not stop the second file from being attempted
         result.Success.Should().BeTrue();
@@ -460,7 +460,7 @@ public class ReviewServiceTests
             .ReturnsAsync(RepositoryResult.Success());
 
         // Act
-        var result = await Build(repo, webDav).DeleteReviewAsync(Utilities.Identifiers.Review5, Utilities.Identifiers.User, CancellationToken.None);
+        var result = await Build(repo, webDav).DeleteReviewAsync(Utilities.Identifiers.Review5, Utilities.Identifiers.User, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -478,7 +478,7 @@ public class ReviewServiceTests
             .ReturnsAsync(RepositoryResult<bool>.Success(true));
 
         // Act
-        var result = await service.AddReviewAsync(Utilities.Identifiers.User, Utilities.Identifiers.Trail7, "text", 4.0M, Utilities.Stubs.TwoImages(), CancellationToken.None);
+        var result = await service.AddReviewAsync(Utilities.Identifiers.User, Utilities.Identifiers.Trail7, "text", 4.0M, Utilities.Stubs.TwoImages(), TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -499,7 +499,7 @@ public class ReviewServiceTests
             .ReturnsAsync(RepositoryResult<bool>.Success(true));
 
         // Act
-        var result = await service.HasUserReviewedTrailAsync(Utilities.Identifiers.User, Utilities.Identifiers.Trail7, CancellationToken.None);
+        var result = await service.HasUserReviewedTrailAsync(Utilities.Identifiers.User, Utilities.Identifiers.Trail7, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -513,7 +513,7 @@ public class ReviewServiceTests
         var repo = new Mock<IReviewRepository>();
 
         // Act
-        var result = await Build(repo).HasUserReviewedTrailAsync(Utilities.Identifiers.User, Utilities.Identifiers.Trail7, CancellationToken.None);
+        var result = await Build(repo).HasUserReviewedTrailAsync(Utilities.Identifiers.User, Utilities.Identifiers.Trail7, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -538,7 +538,7 @@ public class ReviewServiceTests
             .Callback<string>(url => callOrder.Add(url));
 
         // Act
-        var result = await Build(repo, webDav).AnonymizeUserReviewsOnUserDeleteAsync(1, CancellationToken.None);
+        var result = await Build(repo, webDav).AnonymizeUserReviewsOnUserDeleteAsync(1, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -560,7 +560,7 @@ public class ReviewServiceTests
             .ThrowsAsync(new Exception("webdav down"));
 
         // Act
-        var result = await Build(repo, webDav).AnonymizeUserReviewsOnUserDeleteAsync(1, CancellationToken.None);
+        var result = await Build(repo, webDav).AnonymizeUserReviewsOnUserDeleteAsync(1, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -579,7 +579,7 @@ public class ReviewServiceTests
         var webDav = Utilities.MockFactory.WebDavService();
 
         // Act
-        var result = await Build(repo, webDav).AnonymizeUserReviewsOnUserDeleteAsync(1, CancellationToken.None);
+        var result = await Build(repo, webDav).AnonymizeUserReviewsOnUserDeleteAsync(1, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();

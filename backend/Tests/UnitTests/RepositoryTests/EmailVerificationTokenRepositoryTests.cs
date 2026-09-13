@@ -50,7 +50,7 @@ public class EmailVerificationTokenRepositoryTests : TestBase
         var factory = CreateSeededFactory();
 
         // Act
-        var result = await Build(factory).GetUserByEmailAsync("NATUR@Example.Local", CancellationToken.None);
+        var result = await Build(factory).GetUserByEmailAsync("NATUR@Example.Local", TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -64,7 +64,7 @@ public class EmailVerificationTokenRepositoryTests : TestBase
         var factory = CreateSeededFactory();
 
         // Act
-        var result = await Build(factory).GetUserByEmailAsync("nobody@test.local", CancellationToken.None);
+        var result = await Build(factory).GetUserByEmailAsync("nobody@test.local", TestContext.Current.CancellationToken);
 
         // Assert
         result.Status.Should().Be(RepositoryResultStatus.NotFound);
@@ -78,12 +78,12 @@ public class EmailVerificationTokenRepositoryTests : TestBase
 
         // Act
         var result = await Build(factory).ReplaceOutstandingAsync(
-            MakeToken(2, "new-hash"), CancellationToken.None);
+            MakeToken(2, "new-hash"), TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
 
-        using var db = await factory.CreateDbContextAsync(CancellationToken.None);
+        using var db = await factory.CreateDbContextAsync(TestContext.Current.CancellationToken);
         db.EmailVerificationTokens.Single(t => t.Id == 1).ConsumedAt.Should().NotBeNull();
         db.EmailVerificationTokens.Single(t => t.Id == 2).ConsumedAt.Should().BeNull();
     }
@@ -96,7 +96,7 @@ public class EmailVerificationTokenRepositoryTests : TestBase
         var factory = CreateSeededFactory(Seed(MakeToken(1, "the-hash")));
 
         // Act
-        var result = await Build(factory).GetByTokenHashAsync("the-hash", CancellationToken.None);
+        var result = await Build(factory).GetByTokenHashAsync("the-hash", TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -111,7 +111,7 @@ public class EmailVerificationTokenRepositoryTests : TestBase
         var factory = CreateSeededFactory(Seed(MakeToken(1, "the-hash", consumedAt: DateTime.UtcNow)));
 
         // Act
-        var result = await Build(factory).GetByTokenHashAsync("the-hash", CancellationToken.None);
+        var result = await Build(factory).GetByTokenHashAsync("the-hash", TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -127,7 +127,7 @@ public class EmailVerificationTokenRepositoryTests : TestBase
         var factory = CreateSeededFactory(Seed(older, newer));
 
         // Act
-        var result = await Build(factory).GetLatestForUserAsync(SeededUserId, CancellationToken.None);
+        var result = await Build(factory).GetLatestForUserAsync(SeededUserId, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -143,12 +143,12 @@ public class EmailVerificationTokenRepositoryTests : TestBase
         var verifiedAt = new DateTime(2026, 9, 12, 10, 0, 0, DateTimeKind.Utc);
 
         // Act
-        var result = await Build(factory).ConsumeAsync(1, verifiedAt, CancellationToken.None);
+        var result = await Build(factory).ConsumeAsync(1, verifiedAt, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
 
-        using var db = await factory.CreateDbContextAsync(CancellationToken.None);
+        using var db = await factory.CreateDbContextAsync(TestContext.Current.CancellationToken);
         db.EmailVerificationTokens.Single(t => t.Id == 1).ConsumedAt.Should().Be(verifiedAt);
         db.Users.Single(u => u.Id == SeededUserId).EmailVerifiedAt.Should().Be(verifiedAt);
     }
@@ -160,7 +160,7 @@ public class EmailVerificationTokenRepositoryTests : TestBase
         var factory = CreateSeededFactory();
 
         // Act
-        var result = await Build(factory).ConsumeAsync(404, DateTime.UtcNow, CancellationToken.None);
+        var result = await Build(factory).ConsumeAsync(404, DateTime.UtcNow, TestContext.Current.CancellationToken);
 
         // Assert
         result.Status.Should().Be(RepositoryResultStatus.NotFound);
@@ -173,13 +173,13 @@ public class EmailVerificationTokenRepositoryTests : TestBase
         var factory = CreateSeededFactory(Seed(MakeToken(1, "the-hash", attempts: 2)));
 
         // Act
-        var result = await Build(factory).IncrementAttemptsAsync(1, CancellationToken.None);
+        var result = await Build(factory).IncrementAttemptsAsync(1, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
         result.Value!.Should().Be(3);
 
-        using var db = await factory.CreateDbContextAsync(CancellationToken.None);
+        using var db = await factory.CreateDbContextAsync(TestContext.Current.CancellationToken);
         db.EmailVerificationTokens.Single(t => t.Id == 1).Attempts.Should().Be(3);
     }
 }

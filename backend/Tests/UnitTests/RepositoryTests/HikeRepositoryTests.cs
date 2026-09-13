@@ -28,7 +28,7 @@ public class HikeRepositoryTests : TestBase
         var repo = new HikeRepository(CreateSeededFactory(), NullLogger<HikeRepository>.Instance);
 
         // Act
-        var result = await repo.GetHikeByIdentifierAsync(HikeIdentifier, CancellationToken.None);
+        var result = await repo.GetHikeByIdentifierAsync(HikeIdentifier, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -44,7 +44,7 @@ public class HikeRepositoryTests : TestBase
         var repo = new HikeRepository(CreateSeededFactory(), NullLogger<HikeRepository>.Instance);
 
         // Act
-        var result = await repo.GetHikeByIdentifierAsync("no-such-hike", CancellationToken.None);
+        var result = await repo.GetHikeByIdentifierAsync("no-such-hike", TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -58,7 +58,7 @@ public class HikeRepositoryTests : TestBase
         var repo = new HikeRepository(CreateSeededFactory(), NullLogger<HikeRepository>.Instance);
 
         // Act
-        var result = await repo.GetHikesAsync(null, h => h.CreatedBy, CancellationToken.None);
+        var result = await repo.GetHikesAsync(null, h => h.CreatedBy, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -72,7 +72,7 @@ public class HikeRepositoryTests : TestBase
         var repo = new HikeRepository(CreateSeededFactory(), NullLogger<HikeRepository>.Instance);
 
         // Act
-        var result = await repo.GetHikesAsync(UserIdWithHikes, h => h.CreatedBy, CancellationToken.None);
+        var result = await repo.GetHikesAsync(UserIdWithHikes, h => h.CreatedBy, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -88,7 +88,7 @@ public class HikeRepositoryTests : TestBase
 
         // Act
         // User 4 (Eremiten) owns no hikes in seed data
-        var result = await repo.GetHikesAsync(UserIdNoHikes, h => h.CreatedBy, CancellationToken.None);
+        var result = await repo.GetHikesAsync(UserIdNoHikes, h => h.CreatedBy, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -113,14 +113,14 @@ public class HikeRepositoryTests : TestBase
         };
 
         // Act
-        var result = await repo.CreateHikeAsync(hike, CancellationToken.None);
+        var result = await repo.CreateHikeAsync(hike, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().NotBeNull();
         result.Value.Name.Should().Be("NewHike");
 
-        var verify = await repo.GetHikeByIdentifierAsync(hike.Identifier, CancellationToken.None);
+        var verify = await repo.GetHikeByIdentifierAsync(hike.Identifier, TestContext.Current.CancellationToken);
         verify.IsSuccess.Should().BeTrue();
     }
 
@@ -131,7 +131,7 @@ public class HikeRepositoryTests : TestBase
         var repo = new HikeRepository(CreateSeededFactory(), NullLogger<HikeRepository>.Instance);
 
         // Act
-        var result = await repo.GetHikeIdByIdentifierAsync(HikeIdentifier, CancellationToken.None);
+        var result = await repo.GetHikeIdByIdentifierAsync(HikeIdentifier, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -145,7 +145,7 @@ public class HikeRepositoryTests : TestBase
         var repo = new HikeRepository(CreateSeededFactory(), NullLogger<HikeRepository>.Instance);
 
         // Act
-        var result = await repo.GetHikeIdByIdentifierAsync("no-such-hike", CancellationToken.None);
+        var result = await repo.GetHikeIdByIdentifierAsync("no-such-hike", TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -157,15 +157,15 @@ public class HikeRepositoryTests : TestBase
     {
         // Arrange — seed already contains HikeShare { HikeId=1, SharedWithId=2 } for Hike 1
         var repo = new HikeRepository(CreateSeededFactory(), NullLogger<HikeRepository>.Instance);
-        var found = await repo.GetHikeByIdentifierAsync(HikeIdentifier, CancellationToken.None);
+        var found = await repo.GetHikeByIdentifierAsync(HikeIdentifier, TestContext.Current.CancellationToken);
         found.IsSuccess.Should().BeTrue();
 
         // Act
-        var deleteResult = await repo.DeleteHikeAsync(found.Value!, CancellationToken.None);
+        var deleteResult = await repo.DeleteHikeAsync(found.Value!, TestContext.Current.CancellationToken);
 
         // Assert — the hike stays for the recipients, but the owner is cleared
         deleteResult.IsSuccess.Should().BeTrue();
-        var verify = await repo.GetHikeByIdentifierAsync(HikeIdentifier, CancellationToken.None);
+        var verify = await repo.GetHikeByIdentifierAsync(HikeIdentifier, TestContext.Current.CancellationToken);
         verify.IsSuccess.Should().BeTrue();
         verify.Value.Should().NotBeNull();
         verify.Value.UserId.Should().BeNull();
@@ -179,7 +179,7 @@ public class HikeRepositoryTests : TestBase
         var repo = new HikeRepository(CreateSeededFactory(SeedHikeImages), NullLogger<HikeRepository>.Instance);
 
         // Act
-        var result = await repo.GetDeletableHikeImageUrlsByUserIdAsync(UserIdWithHikes, CancellationToken.None);
+        var result = await repo.GetDeletableHikeImageUrlsByUserIdAsync(UserIdWithHikes, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -193,7 +193,7 @@ public class HikeRepositoryTests : TestBase
         var repo = new HikeRepository(CreateSeededFactory(SeedHikeImages), NullLogger<HikeRepository>.Instance);
 
         // Act
-        var result = await repo.GetDeletableHikeImageUrlsByUserIdAsync(UserIdNoShares, CancellationToken.None);
+        var result = await repo.GetDeletableHikeImageUrlsByUserIdAsync(UserIdNoShares, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -207,13 +207,13 @@ public class HikeRepositoryTests : TestBase
         var repo = new HikeRepository(CreateSeededFactory(), NullLogger<HikeRepository>.Instance);
 
         // Act
-        var result = await repo.HandleUserHikesOnUserDeleteAsync(UserIdNoShares, CancellationToken.None);
+        var result = await repo.HandleUserHikesOnUserDeleteAsync(UserIdNoShares, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        var deleted = await repo.GetHikeByIdentifierAsync(HikeIdentifierNoShares, CancellationToken.None);
+        var deleted = await repo.GetHikeByIdentifierAsync(HikeIdentifierNoShares, TestContext.Current.CancellationToken);
         deleted.IsSuccess.Should().BeFalse();
-        var kept = await repo.GetHikeByIdentifierAsync(HikeIdentifier, CancellationToken.None);
+        var kept = await repo.GetHikeByIdentifierAsync(HikeIdentifier, TestContext.Current.CancellationToken);
         kept.IsSuccess.Should().BeTrue();
     }
 
@@ -224,7 +224,7 @@ public class HikeRepositoryTests : TestBase
         var repo = new HikeRepository(CreateSeededFactory(), NullLogger<HikeRepository>.Instance);
 
         // Act
-        var result = await repo.HikeHasSharesAsync(1, CancellationToken.None);
+        var result = await repo.HikeHasSharesAsync(1, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -238,7 +238,7 @@ public class HikeRepositoryTests : TestBase
         var repo = new HikeRepository(CreateSeededFactory(), NullLogger<HikeRepository>.Instance);
 
         // Act
-        var result = await repo.HikeHasSharesAsync(6, CancellationToken.None);
+        var result = await repo.HikeHasSharesAsync(6, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -252,7 +252,7 @@ public class HikeRepositoryTests : TestBase
         var repo = new HikeRepository(CreateSeededFactory(SeedHikeImages), NullLogger<HikeRepository>.Instance);
 
         // Act
-        var result = await repo.GetHikeImageUrlsByHikeIdAsync(6, CancellationToken.None);
+        var result = await repo.GetHikeImageUrlsByHikeIdAsync(6, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -267,15 +267,15 @@ public class HikeRepositoryTests : TestBase
         var repo = new HikeRepository(CreateSeededFactory(OrphanHikes), NullLogger<HikeRepository>.Instance);
 
         // Act
-        var result = await repo.DeleteOrphanedHikesAsync(CancellationToken.None);
+        var result = await repo.DeleteOrphanedHikesAsync(TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        var orphan = await repo.GetHikeByIdentifierAsync(HikeIdentifierNoShares, CancellationToken.None);
+        var orphan = await repo.GetHikeByIdentifierAsync(HikeIdentifierNoShares, TestContext.Current.CancellationToken);
         orphan.IsSuccess.Should().BeFalse();
-        var stillShared = await repo.GetHikeByIdentifierAsync(HikeIdentifierSharedNoOwner, CancellationToken.None);
+        var stillShared = await repo.GetHikeByIdentifierAsync(HikeIdentifierSharedNoOwner, TestContext.Current.CancellationToken);
         stillShared.IsSuccess.Should().BeTrue();
-        var stillOwned = await repo.GetHikeByIdentifierAsync(HikeIdentifierOwned, CancellationToken.None);
+        var stillOwned = await repo.GetHikeByIdentifierAsync(HikeIdentifierOwned, TestContext.Current.CancellationToken);
         stillOwned.IsSuccess.Should().BeTrue();
     }
 
@@ -286,7 +286,7 @@ public class HikeRepositoryTests : TestBase
         var repo = new HikeRepository(CreateSeededFactory(db => { OrphanHikes(db); SeedHikeImages(db); }), NullLogger<HikeRepository>.Instance);
 
         // Act
-        var result = await repo.GetOrphanedHikeImageUrlsAsync(CancellationToken.None);
+        var result = await repo.GetOrphanedHikeImageUrlsAsync(TestContext.Current.CancellationToken);
 
         // Assert — hike 2 has an image too, but it still has a share and stays
         result.IsSuccess.Should().BeTrue();
@@ -312,16 +312,16 @@ public class HikeRepositoryTests : TestBase
     {
         // Arrange — Hike 6 has no HikeShares
         var repo = new HikeRepository(CreateSeededFactory(), NullLogger<HikeRepository>.Instance);
-        var found = await repo.GetHikeByIdentifierAsync(HikeIdentifierNoShares, CancellationToken.None);
+        var found = await repo.GetHikeByIdentifierAsync(HikeIdentifierNoShares, TestContext.Current.CancellationToken);
         found.IsSuccess.Should().BeTrue();
 
         // Act
         found.Value.Should().NotBeNull();
-        var deleteResult = await repo.DeleteHikeAsync(found.Value, CancellationToken.None);
+        var deleteResult = await repo.DeleteHikeAsync(found.Value, TestContext.Current.CancellationToken);
 
         // Assert — the row is gone, not hidden
         deleteResult.IsSuccess.Should().BeTrue();
-        var verify = await repo.GetHikeByIdentifierAsync(HikeIdentifierNoShares, CancellationToken.None);
+        var verify = await repo.GetHikeByIdentifierAsync(HikeIdentifierNoShares, TestContext.Current.CancellationToken);
         verify.IsSuccess.Should().BeFalse();
     }
 }

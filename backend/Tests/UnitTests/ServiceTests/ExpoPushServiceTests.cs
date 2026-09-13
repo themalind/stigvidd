@@ -68,7 +68,7 @@ public class ExpoPushServiceTests
 
         var service = Build(userRepoMock: userRepoMock);
 
-        var result = await service.RegisterTokenAsync("identifier", "token", "ios", CancellationToken.None);
+        var result = await service.RegisterTokenAsync("identifier", "token", "ios", TestContext.Current.CancellationToken);
 
         result.Success.Should().BeFalse();
         result.Message.Should().NotBeNull();
@@ -84,7 +84,7 @@ public class ExpoPushServiceTests
 
         var service = Build(userRepoMock: userRepoMock);
 
-        var result = await service.RegisterTokenAsync("identifier", "token", "ios", CancellationToken.None);
+        var result = await service.RegisterTokenAsync("identifier", "token", "ios", TestContext.Current.CancellationToken);
 
         result.Success.Should().BeFalse();
         result.Message.Should().NotBeNull();
@@ -100,7 +100,7 @@ public class ExpoPushServiceTests
 
         var service = Build(tokenRepoMock: tokenRepoMock, userRepoMock: Utilities.MockFactory.UserRepositoryFoundById());
 
-        var result = await service.RegisterTokenAsync("identifier", "token", "ios", CancellationToken.None);
+        var result = await service.RegisterTokenAsync("identifier", "token", "ios", TestContext.Current.CancellationToken);
 
         result.Success.Should().BeFalse();
         result.Message.Should().NotBeNull();
@@ -116,7 +116,7 @@ public class ExpoPushServiceTests
 
         var service = Build(tokenRepoMock: tokenRepoMock, userRepoMock: Utilities.MockFactory.UserRepositoryFoundById());
 
-        var result = await service.RegisterTokenAsync("identifier", "token", "ios", CancellationToken.None);
+        var result = await service.RegisterTokenAsync("identifier", "token", "ios", TestContext.Current.CancellationToken);
 
         result.Success.Should().BeTrue();
         result.Message.Should().BeNull();
@@ -133,7 +133,7 @@ public class ExpoPushServiceTests
 
         var service = Build(userRepoMock: userRepoMock);
 
-        var result = await service.UnregisterTokenAsync("identifier", "token", CancellationToken.None);
+        var result = await service.UnregisterTokenAsync("identifier", "token", TestContext.Current.CancellationToken);
 
         result.Success.Should().BeFalse();
         result.Message.Should().NotBeNull();
@@ -149,7 +149,7 @@ public class ExpoPushServiceTests
 
         var service = Build(userRepoMock: userRepoMock);
 
-        var result = await service.UnregisterTokenAsync("identifier", "token", CancellationToken.None);
+        var result = await service.UnregisterTokenAsync("identifier", "token", TestContext.Current.CancellationToken);
 
         result.Success.Should().BeFalse();
         result.Message.Should().NotBeNull();
@@ -165,7 +165,7 @@ public class ExpoPushServiceTests
 
         var service = Build(tokenRepoMock: tokenRepoMock, userRepoMock: Utilities.MockFactory.UserRepositoryFoundById());
 
-        var result = await service.UnregisterTokenAsync("identifier", "token", CancellationToken.None);
+        var result = await service.UnregisterTokenAsync("identifier", "token", TestContext.Current.CancellationToken);
 
         result.Success.Should().BeFalse();
         result.Message.Should().NotBeNull();
@@ -181,7 +181,7 @@ public class ExpoPushServiceTests
 
         var service = Build(tokenRepoMock: tokenRepoMock, userRepoMock: Utilities.MockFactory.UserRepositoryFoundById());
 
-        var result = await service.UnregisterTokenAsync("identifier", "token", CancellationToken.None);
+        var result = await service.UnregisterTokenAsync("identifier", "token", TestContext.Current.CancellationToken);
 
         result.Success.Should().BeFalse();
         result.Message.Should().NotBeNull();
@@ -201,7 +201,7 @@ public class ExpoPushServiceTests
 
         var service = Build(tokenRepoMock: tokenRepoMock, userRepoMock: Utilities.MockFactory.UserRepositoryFoundById());
 
-        var result = await service.UnregisterTokenAsync("identifier", "token", CancellationToken.None);
+        var result = await service.UnregisterTokenAsync("identifier", "token", TestContext.Current.CancellationToken);
 
         result.Success.Should().BeFalse();
         result.Message.Should().NotBeNull();
@@ -221,7 +221,7 @@ public class ExpoPushServiceTests
 
         var service = Build(tokenRepoMock: tokenRepoMock, userRepoMock: Utilities.MockFactory.UserRepositoryFoundById());
 
-        var result = await service.UnregisterTokenAsync("identifier", "token", CancellationToken.None);
+        var result = await service.UnregisterTokenAsync("identifier", "token", TestContext.Current.CancellationToken);
 
         result.Success.Should().BeTrue();
         result.Message.Should().BeNull();
@@ -238,7 +238,7 @@ public class ExpoPushServiceTests
 
         var service = Build(userRepoMock: userRepoMock);
 
-        var result = await service.SendToUserAsync("identifier", "title", "body", new Dictionary<string, object>(), CancellationToken.None);
+        var result = await service.SendToUserAsync("identifier", "title", "body", new Dictionary<string, object>(), TestContext.Current.CancellationToken);
 
         result.Success.Should().BeFalse();
         result.Message.Should().NotBeNull();
@@ -254,7 +254,7 @@ public class ExpoPushServiceTests
 
         var service = Build(userRepoMock: userRepoMock);
 
-        var result = await service.SendToUserAsync("identifier", "title", "body", new Dictionary<string, object>(), CancellationToken.None);
+        var result = await service.SendToUserAsync("identifier", "title", "body", new Dictionary<string, object>(), TestContext.Current.CancellationToken);
 
         result.Success.Should().BeFalse();
         result.Message.Should().NotBeNull();
@@ -270,7 +270,7 @@ public class ExpoPushServiceTests
 
         var service = Build(tokenRepoMock: tokenRepoMock, userRepoMock: Utilities.MockFactory.UserRepositoryFoundById());
 
-        var result = await service.SendToUserAsync("identifier", "title", "body", new Dictionary<string, object>(), CancellationToken.None);
+        var result = await service.SendToUserAsync("identifier", "title", "body", new Dictionary<string, object>(), TestContext.Current.CancellationToken);
 
         result.Success.Should().BeFalse();
         result.Message.Should().NotBeNull();
@@ -286,7 +286,7 @@ public class ExpoPushServiceTests
 
         var service = Build(tokenRepoMock: tokenRepoMock, userRepoMock: Utilities.MockFactory.UserRepositoryFoundById());
 
-        var result = await service.SendToUserAsync("identifier", "title", "body", new Dictionary<string, object>(), CancellationToken.None);
+        var result = await service.SendToUserAsync("identifier", "title", "body", new Dictionary<string, object>(), TestContext.Current.CancellationToken);
 
         result.Success.Should().BeTrue();
         result.Message.Should().BeNull();
@@ -304,7 +304,7 @@ public class ExpoPushServiceTests
             userRepoMock: Utilities.MockFactory.UserRepositoryFoundById(),
             httpClient: CreateHttpClient(HttpStatusCode.InternalServerError));
 
-        var result = await service.SendToUserAsync("identifier", "title", "body", new Dictionary<string, object>(), CancellationToken.None);
+        var result = await service.SendToUserAsync("identifier", "title", "body", new Dictionary<string, object>(), TestContext.Current.CancellationToken);
 
         result.Success.Should().BeTrue();
         result.Message.Should().BeNull();
@@ -325,7 +325,7 @@ public class ExpoPushServiceTests
             userRepoMock: Utilities.MockFactory.UserRepositoryFoundById(),
             httpClient: CreateHttpClient(HttpStatusCode.OK, okJson));
 
-        var result = await service.SendToUserAsync("identifier", "title", "body", new Dictionary<string, object>(), CancellationToken.None);
+        var result = await service.SendToUserAsync("identifier", "title", "body", new Dictionary<string, object>(), TestContext.Current.CancellationToken);
 
         result.Success.Should().BeTrue();
         tokenRepoMock.Verify(r => r.DeleteByTokenAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
@@ -348,7 +348,7 @@ public class ExpoPushServiceTests
             userRepoMock: Utilities.MockFactory.UserRepositoryFoundById(),
             httpClient: CreateHttpClient(HttpStatusCode.OK, staleJson));
 
-        var result = await service.SendToUserAsync("identifier", "title", "body", new Dictionary<string, object>(), CancellationToken.None);
+        var result = await service.SendToUserAsync("identifier", "title", "body", new Dictionary<string, object>(), TestContext.Current.CancellationToken);
 
         result.Success.Should().BeTrue();
         tokenRepoMock.Verify(r => r.DeleteByTokenAsync(token, It.IsAny<CancellationToken>()), Times.Once);

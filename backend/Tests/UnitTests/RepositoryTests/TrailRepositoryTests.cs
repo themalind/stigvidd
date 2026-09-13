@@ -47,7 +47,7 @@ public class TrailRepositoryTests : TestBase
         var repo = new TrailRepository(CreateSeededFactory(), NullLogger<TrailRepository>.Instance);
 
         // Act
-        var result = await repo.GetTrailIdByIdentifierAsync(TivedenIdentifier, CancellationToken.None);
+        var result = await repo.GetTrailIdByIdentifierAsync(TivedenIdentifier, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -61,7 +61,7 @@ public class TrailRepositoryTests : TestBase
         var repo = new TrailRepository(CreateSeededFactory(), NullLogger<TrailRepository>.Instance);
 
         // Act
-        var result = await repo.GetTrailIdByIdentifierAsync("no-such-trail", CancellationToken.None);
+        var result = await repo.GetTrailIdByIdentifierAsync("no-such-trail", TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -75,7 +75,7 @@ public class TrailRepositoryTests : TestBase
         var repo = new TrailRepository(CreateSeededFactory(), NullLogger<TrailRepository>.Instance);
 
         // Act
-        var result = await repo.GetTrailByIdentifierAsync(TivedenIdentifier, t => t.Identifier, CancellationToken.None);
+        var result = await repo.GetTrailByIdentifierAsync(TivedenIdentifier, t => t.Identifier, TestContext.Current.CancellationToken);
 
         // Assert
         // Tiveden has IsVerified = false in seed data, so it is filtered out
@@ -91,7 +91,7 @@ public class TrailRepositoryTests : TestBase
 
         // Act
         // Storsjöleden has IsVerified = true
-        var result = await repo.GetTrailByIdentifierAsync(StorsjoledenIdentifier, t => t.Identifier, CancellationToken.None);
+        var result = await repo.GetTrailByIdentifierAsync(StorsjoledenIdentifier, t => t.Identifier, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -106,7 +106,7 @@ public class TrailRepositoryTests : TestBase
         var repo = new TrailRepository(CreateSeededFactory(), NullLogger<TrailRepository>.Instance);
 
         // Act
-        var result = await repo.GetTrailByIdentifierAsync("no-such-trail", t => t.Identifier, CancellationToken.None);
+        var result = await repo.GetTrailByIdentifierAsync("no-such-trail", t => t.Identifier, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -120,7 +120,7 @@ public class TrailRepositoryTests : TestBase
         var repo = new TrailRepository(CreateSeededFactory(), NullLogger<TrailRepository>.Instance);
 
         // Act
-        var result = await repo.GetCoordinatesByTrailIdentifierAsync(StorsjoledenIdentifier, CancellationToken.None);
+        var result = await repo.GetCoordinatesByTrailIdentifierAsync(StorsjoledenIdentifier, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -134,7 +134,7 @@ public class TrailRepositoryTests : TestBase
         var repo = new TrailRepository(CreateSeededFactory(), NullLogger<TrailRepository>.Instance);
 
         // Act
-        var result = await repo.GetCoordinatesByTrailIdentifierAsync("no-such-trail", CancellationToken.None);
+        var result = await repo.GetCoordinatesByTrailIdentifierAsync("no-such-trail", TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -170,14 +170,14 @@ public class TrailRepositoryTests : TestBase
         };
 
         // Act
-        var result = await repo.AddTrailAsync(trail, CancellationToken.None);
+        var result = await repo.AddTrailAsync(trail, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().NotBeNull();
         result.Value.Name.Should().Be("NewTestTrail");
 
-        var verify = await repo.GetTrailIdByIdentifierAsync(trail.Identifier, CancellationToken.None);
+        var verify = await repo.GetTrailIdByIdentifierAsync(trail.Identifier, TestContext.Current.CancellationToken);
         verify.IsSuccess.Should().BeTrue();
     }
 
@@ -191,7 +191,7 @@ public class TrailRepositoryTests : TestBase
         var result = await repo.GetTrailsByIdentifiersAsync(
             [Utilities.Identifiers.Trail4, Utilities.Identifiers.Trail7],
             t => t.Identifier,
-            CancellationToken.None);
+            TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -208,7 +208,7 @@ public class TrailRepositoryTests : TestBase
         var result = await repo.GetTrailsByIdentifiersAsync(
             [TivedenIdentifier],
             t => t.Identifier,
-            CancellationToken.None);
+            TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -225,7 +225,7 @@ public class TrailRepositoryTests : TestBase
         var result = await repo.GetTrailsByIdentifiersAsync(
             [Utilities.Identifiers.Trail4, "no-such-trail"],
             t => t.Identifier,
-            CancellationToken.None);
+            TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -242,7 +242,7 @@ public class TrailRepositoryTests : TestBase
         var result = await repo.GetTrailsByIdentifiersAsync(
             [],
             t => t.Identifier,
-            CancellationToken.None);
+            TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -263,7 +263,7 @@ public class TrailRepositoryTests : TestBase
         var result = await repo.GetPopularTrailOverviewsAsync(
             null, null,
             t => new { t.Identifier, Rating = t.Reviews!.Any() ? t.Reviews!.Average(r => r.Rating) : 0m },
-            CancellationToken.None);
+            TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -288,7 +288,7 @@ public class TrailRepositoryTests : TestBase
         var result = await repo.GetPopularTrailOverviewsAsync(
             null, null,
             t => t.Identifier,
-            CancellationToken.None);
+            TestContext.Current.CancellationToken);
 
         // Assert — the unverified trail is excluded despite its higher rating
         result.IsSuccess.Should().BeTrue();
@@ -315,7 +315,7 @@ public class TrailRepositoryTests : TestBase
         var result = await repo.GetPopularTrailOverviewsAsync(
             57.72, 12.94,
             t => t.Identifier,
-            CancellationToken.None);
+            TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -342,7 +342,7 @@ public class TrailRepositoryTests : TestBase
         var result = await repo.GetPopularTrailOverviewsAsync(
             UserLatitude, UserLongitude,
             t => t.Identifier,
-            CancellationToken.None);
+            TestContext.Current.CancellationToken);
 
         // Assert — 2.0 + the full 5.0 boost beats 5.0 + 5.0 / (1 + 111.3 / 5) ≈ 5.2.
         //
@@ -368,7 +368,7 @@ public class TrailRepositoryTests : TestBase
         var result = await repo.GetPopularTrailOverviewsAsync(
             UserLatitude, UserLongitude,
             t => t.Identifier,
-            CancellationToken.None);
+            TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -390,7 +390,7 @@ public class TrailRepositoryTests : TestBase
         var result = await repo.GetPopularTrailOverviewsAsync(
             null, null,
             t => t.Identifier,
-            CancellationToken.None);
+            TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -437,7 +437,7 @@ public class TrailRepositoryTests : TestBase
         // Act
         var result = await repo.GetAllTrailMarkersAsync(
             t => new { t.Identifier, Lat = (double?)t.GeoPath!.StartPoint.Y, Lon = (double?)t.GeoPath!.StartPoint.X },
-            CancellationToken.None);
+            TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -483,7 +483,7 @@ public class TrailRepositoryTests : TestBase
         // Act
         var result = await repo.GetAllTrailsWithBasicInfoAsync(
             t => t.Identifier,
-            CancellationToken.None);
+            TestContext.Current.CancellationToken);
 
         // Assert — verified trail with a GeoPath is included; the unverified one is filtered out
         result.IsSuccess.Should().BeTrue();
@@ -496,7 +496,7 @@ public class TrailRepositoryTests : TestBase
     {
         // Arrange
         var repo = new TrailRepository(CreateSeededFactory(), NullLogger<TrailRepository>.Instance);
-        var trailId = (await repo.GetTrailIdByIdentifierAsync(StorsjoledenIdentifier, CancellationToken.None)).Value;
+        var trailId = (await repo.GetTrailIdByIdentifierAsync(StorsjoledenIdentifier, TestContext.Current.CancellationToken)).Value;
         var images = new List<TrailImage>
         {
             new() { Identifier = "new-img-1", ImageUrl = "trails/new-1.jpg" },
@@ -504,7 +504,7 @@ public class TrailRepositoryTests : TestBase
         };
 
         // Act
-        var result = await repo.AddTrailImagesAsync(trailId, images, CancellationToken.None);
+        var result = await repo.AddTrailImagesAsync(trailId, images, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -520,7 +520,7 @@ public class TrailRepositoryTests : TestBase
         var images = new List<TrailImage> { new() { Identifier = "x", ImageUrl = "trails/x.jpg" } };
 
         // Act
-        var result = await repo.AddTrailImagesAsync(99999, images, CancellationToken.None);
+        var result = await repo.AddTrailImagesAsync(99999, images, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -534,13 +534,13 @@ public class TrailRepositoryTests : TestBase
         var repo = new TrailRepository(CreateSeededFactory(), NullLogger<TrailRepository>.Instance);
 
         // Act
-        var result = await repo.DeleteTrailImageAsync("img-storlsjon-1", CancellationToken.None);
+        var result = await repo.DeleteTrailImageAsync("img-storlsjon-1", TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
 
         // A second delete confirms the image was actually removed
-        var second = await repo.DeleteTrailImageAsync("img-storlsjon-1", CancellationToken.None);
+        var second = await repo.DeleteTrailImageAsync("img-storlsjon-1", TestContext.Current.CancellationToken);
         second.Status.Should().Be(RepositoryResultStatus.NotFound);
     }
 
@@ -551,7 +551,7 @@ public class TrailRepositoryTests : TestBase
         var repo = new TrailRepository(CreateSeededFactory(), NullLogger<TrailRepository>.Instance);
 
         // Act
-        var result = await repo.DeleteTrailImageAsync("no-such-image", CancellationToken.None);
+        var result = await repo.DeleteTrailImageAsync("no-such-image", TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -574,7 +574,7 @@ public class TrailRepositoryTests : TestBase
         };
 
         // Act
-        var result = await repo.UpdateTrailAsync(updated, CancellationToken.None);
+        var result = await repo.UpdateTrailAsync(updated, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -591,7 +591,7 @@ public class TrailRepositoryTests : TestBase
         var updated = new Trail { Identifier = "no-such-trail", Name = "X", TrailLength = 1M };
 
         // Act
-        var result = await repo.UpdateTrailAsync(updated, CancellationToken.None);
+        var result = await repo.UpdateTrailAsync(updated, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -612,7 +612,7 @@ public class TrailRepositoryTests : TestBase
         };
 
         // Act
-        var result = await repo.UpdateTrailAsync(updated, CancellationToken.None);
+        var result = await repo.UpdateTrailAsync(updated, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -645,7 +645,7 @@ public class TrailRepositoryTests : TestBase
         };
 
         // Act
-        var result = await repo.UpdateTrailAsync(updated, CancellationToken.None);
+        var result = await repo.UpdateTrailAsync(updated, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();

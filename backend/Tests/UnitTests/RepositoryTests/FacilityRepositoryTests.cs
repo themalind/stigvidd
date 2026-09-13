@@ -29,7 +29,7 @@ public class FacilityRepositoryTests : TestBase
         };
 
         // Act
-        var result = await repo.CreateFacilityAsync(facility, CancellationToken.None);
+        var result = await repo.CreateFacilityAsync(facility, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -56,10 +56,10 @@ public class FacilityRepositoryTests : TestBase
         };
 
         // Act
-        await repo.CreateFacilityAsync(facility, CancellationToken.None);
+        await repo.CreateFacilityAsync(facility, TestContext.Current.CancellationToken);
 
         // Assert
-        var verify = await repo.GetByIdentifierAsync(identifier, CancellationToken.None);
+        var verify = await repo.GetByIdentifierAsync(identifier, TestContext.Current.CancellationToken);
         verify.IsSuccess.Should().BeTrue();
         verify.Value.Should().NotBeNull();
         verify.Value.Name.Should().Be("Ny Grillplats");
@@ -72,7 +72,7 @@ public class FacilityRepositoryTests : TestBase
         var repo = new FacilityRepository(CreateSeededFactory(), NullLogger<FacilityRepository>.Instance);
 
         // Act
-        var result = await repo.GetAllAsync(CancellationToken.None);
+        var result = await repo.GetAllAsync(TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -86,7 +86,7 @@ public class FacilityRepositoryTests : TestBase
         var repo = new FacilityRepository(CreateSeededFactory(), NullLogger<FacilityRepository>.Instance);
 
         // Act
-        var result = await repo.GetByIdentifierAsync(Facility1Identifier, CancellationToken.None);
+        var result = await repo.GetByIdentifierAsync(Facility1Identifier, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -102,7 +102,7 @@ public class FacilityRepositoryTests : TestBase
         var repo = new FacilityRepository(CreateSeededFactory(), NullLogger<FacilityRepository>.Instance);
 
         // Act
-        var result = await repo.GetByIdentifierAsync("no-such-facility", CancellationToken.None);
+        var result = await repo.GetByIdentifierAsync("no-such-facility", TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -115,7 +115,7 @@ public class FacilityRepositoryTests : TestBase
         // Arrange
         var factory = CreateSeededFactory();
         var repo = new FacilityRepository(factory, NullLogger<FacilityRepository>.Instance);
-        var found = await repo.GetByIdentifierAsync(Facility1Identifier, CancellationToken.None);
+        var found = await repo.GetByIdentifierAsync(Facility1Identifier, TestContext.Current.CancellationToken);
         found.IsSuccess.Should().BeTrue();
         found.Value.Should().NotBeNull();
 
@@ -123,10 +123,10 @@ public class FacilityRepositoryTests : TestBase
         facility.Name = "Updated Name";
 
         // Act
-        await repo.UpdateAsync(facility, CancellationToken.None);
+        await repo.UpdateAsync(facility, TestContext.Current.CancellationToken);
 
         // Assert
-        var verify = await repo.GetByIdentifierAsync(Facility1Identifier, CancellationToken.None);
+        var verify = await repo.GetByIdentifierAsync(Facility1Identifier, TestContext.Current.CancellationToken);
         verify.Value.Should().NotBeNull();
         verify.Value.Name.Should().Be("Updated Name");
     }
@@ -137,18 +137,18 @@ public class FacilityRepositoryTests : TestBase
         // Arrange
         var factory = CreateSeededFactory();
         var repo = new FacilityRepository(factory, NullLogger<FacilityRepository>.Instance);
-        var found = await repo.GetByIdentifierAsync(Facility1Identifier, CancellationToken.None);
+        var found = await repo.GetByIdentifierAsync(Facility1Identifier, TestContext.Current.CancellationToken);
         found.Value.Should().NotBeNull();
 
         var facility = found.Value;
         var before = DateTime.UtcNow;
 
         // Act
-        await repo.UpdateAsync(facility, CancellationToken.None);
+        await repo.UpdateAsync(facility, TestContext.Current.CancellationToken);
         var after = DateTime.UtcNow;
 
         // Assert
-        var persisted = await repo.GetByIdentifierAsync(Facility1Identifier, CancellationToken.None);
+        var persisted = await repo.GetByIdentifierAsync(Facility1Identifier, TestContext.Current.CancellationToken);
         persisted.Value.Should().NotBeNull();
         persisted.Value.LastUpdatedAt.Should().BeOnOrAfter(before).And.BeOnOrBefore(after);
     }
@@ -159,14 +159,14 @@ public class FacilityRepositoryTests : TestBase
         // Arrange
         var factory = CreateSeededFactory();
         var repo = new FacilityRepository(factory, NullLogger<FacilityRepository>.Instance);
-        var found = await repo.GetByIdentifierAsync(Facility1Identifier, CancellationToken.None);
+        var found = await repo.GetByIdentifierAsync(Facility1Identifier, TestContext.Current.CancellationToken);
         found.Value.Should().NotBeNull();
 
         // Act
-        await repo.DeleteAsync(found.Value, CancellationToken.None);
+        await repo.DeleteAsync(found.Value, TestContext.Current.CancellationToken);
 
         // Assert
-        var verify = await repo.GetByIdentifierAsync(Facility1Identifier, CancellationToken.None);
+        var verify = await repo.GetByIdentifierAsync(Facility1Identifier, TestContext.Current.CancellationToken);
         verify.IsSuccess.Should().BeFalse();
         verify.Status.Should().Be(RepositoryResultStatus.NotFound);
     }
@@ -191,7 +191,7 @@ public class FacilityRepositoryTests : TestBase
         var images = new List<FacilityImage> { MakeImage("fac-img-1"), MakeImage("fac-img-2") };
 
         // Act
-        var result = await repo.AddFacilityImagesAsync(1, images, CancellationToken.None);
+        var result = await repo.AddFacilityImagesAsync(1, images, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -208,7 +208,7 @@ public class FacilityRepositoryTests : TestBase
         var images = new List<FacilityImage> { MakeImage("fac-img-1") };
 
         // Act
-        var result = await repo.AddFacilityImagesAsync(9999, images, CancellationToken.None);
+        var result = await repo.AddFacilityImagesAsync(9999, images, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -221,16 +221,16 @@ public class FacilityRepositoryTests : TestBase
         // Arrange
         var factory = CreateSeededFactory();
         var repo = new FacilityRepository(factory, NullLogger<FacilityRepository>.Instance);
-        await repo.AddFacilityImagesAsync(1, new List<FacilityImage> { MakeImage("fac-img-del") }, CancellationToken.None);
+        await repo.AddFacilityImagesAsync(1, new List<FacilityImage> { MakeImage("fac-img-del") }, TestContext.Current.CancellationToken);
 
         // Act
-        var result = await repo.DeleteFacilityImageAsync("fac-img-del", CancellationToken.None);
+        var result = await repo.DeleteFacilityImageAsync("fac-img-del", TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
 
         // Deleting again should now report NotFound, confirming it was removed.
-        var second = await repo.DeleteFacilityImageAsync("fac-img-del", CancellationToken.None);
+        var second = await repo.DeleteFacilityImageAsync("fac-img-del", TestContext.Current.CancellationToken);
         second.Status.Should().Be(RepositoryResultStatus.NotFound);
     }
 
@@ -242,7 +242,7 @@ public class FacilityRepositoryTests : TestBase
         var repo = new FacilityRepository(factory, NullLogger<FacilityRepository>.Instance);
 
         // Act
-        var result = await repo.DeleteFacilityImageAsync("no-such-image", CancellationToken.None);
+        var result = await repo.DeleteFacilityImageAsync("no-such-image", TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeFalse();

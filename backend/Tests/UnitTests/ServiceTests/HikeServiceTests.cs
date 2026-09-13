@@ -52,7 +52,7 @@ public class HikeServiceTests
             .ReturnsAsync(RepositoryResult<Hike>.Success(Utilities.Stubs.Hike()));
 
         // Act
-        var result = await Build(hikeRepo, UserExistsRepo()).CreateHikeAsync(ValidRequest(), Utilities.Identifiers.User, CancellationToken.None);
+        var result = await Build(hikeRepo, UserExistsRepo()).CreateHikeAsync(ValidRequest(), Utilities.Identifiers.User, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -85,7 +85,7 @@ public class HikeServiceTests
         var service = Build(userRepo: userRepo, hikeRepo: hikeRepo);
 
         // Act
-        var result = await service.CreateHikeAsync(ValidRequest(), "unknown", CancellationToken.None);
+        var result = await service.CreateHikeAsync(ValidRequest(), "unknown", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -115,7 +115,7 @@ public class HikeServiceTests
         var request = new CreateHikeRequest { Name = "Hike", HikeLength = 5000, Duration = 1800000, Coordinates = "{not valid json" };
 
         // Act
-        var result = await Build(userRepo: UserExistsRepo()).CreateHikeAsync(request, Utilities.Identifiers.User, CancellationToken.None);
+        var result = await Build(userRepo: UserExistsRepo()).CreateHikeAsync(request, Utilities.Identifiers.User, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -130,7 +130,7 @@ public class HikeServiceTests
         var request = new CreateHikeRequest { Name = "Hike", HikeLength = 5000, Duration = 1800000, Coordinates = "[{\"latitude\":57.6,\"longitude\":12.8}]" };
 
         // Act
-        var result = await Build(userRepo: UserExistsRepo()).CreateHikeAsync(request, Utilities.Identifiers.User, CancellationToken.None);
+        var result = await Build(userRepo: UserExistsRepo()).CreateHikeAsync(request, Utilities.Identifiers.User, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -152,7 +152,7 @@ public class HikeServiceTests
         };
 
         // Act
-        var result = await Build(userRepo: UserExistsRepo()).CreateHikeAsync(request, Utilities.Identifiers.User, CancellationToken.None);
+        var result = await Build(userRepo: UserExistsRepo()).CreateHikeAsync(request, Utilities.Identifiers.User, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -172,7 +172,7 @@ public class HikeServiceTests
         var request = new CreateHikeRequest { Name = "Hike", HikeLength = 5000, Duration = 1800000, Coordinates = coordinates };
 
         // Act
-        var result = await Build(userRepo: UserExistsRepo()).CreateHikeAsync(request, Utilities.Identifiers.User, CancellationToken.None);
+        var result = await Build(userRepo: UserExistsRepo()).CreateHikeAsync(request, Utilities.Identifiers.User, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -189,7 +189,7 @@ public class HikeServiceTests
             .ReturnsAsync(RepositoryResult<Hike>.Error());
 
         // Act
-        var result = await Build(userRepo: UserExistsRepo(), hikeRepo: hikeRepo).CreateHikeAsync(ValidRequest(), Utilities.Identifiers.User, CancellationToken.None);
+        var result = await Build(userRepo: UserExistsRepo(), hikeRepo: hikeRepo).CreateHikeAsync(ValidRequest(), Utilities.Identifiers.User, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -206,7 +206,7 @@ public class HikeServiceTests
             .ReturnsAsync(RepositoryResult<Hike>.Success(Utilities.Stubs.Hike()));
 
         // Act
-        var result = await Build(hikeRepo).GetHikeByIdentifierAsync(Utilities.Identifiers.Hike1, Utilities.Identifiers.User, CancellationToken.None);
+        var result = await Build(hikeRepo).GetHikeByIdentifierAsync(Utilities.Identifiers.Hike1, Utilities.Identifiers.User, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -232,7 +232,7 @@ public class HikeServiceTests
             .ReturnsAsync(RepositoryResult<bool>.Success(false));
 
         // Act — a different user with no share requests someone else's private hike
-        var result = await Build(hikeRepo, userRepo, shareRepo).GetHikeByIdentifierAsync(Utilities.Identifiers.Hike1, "some-other-user", CancellationToken.None);
+        var result = await Build(hikeRepo, userRepo, shareRepo).GetHikeByIdentifierAsync(Utilities.Identifiers.Hike1, "some-other-user", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -253,7 +253,7 @@ public class HikeServiceTests
             .ReturnsAsync(RepositoryResult<int>.Error());
 
         // Act
-        var result = await Build(hikeRepo, userRepo).GetHikeByIdentifierAsync(Utilities.Identifiers.Hike1, "some-other-user", CancellationToken.None);
+        var result = await Build(hikeRepo, userRepo).GetHikeByIdentifierAsync(Utilities.Identifiers.Hike1, "some-other-user", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -278,7 +278,7 @@ public class HikeServiceTests
             .ReturnsAsync(RepositoryResult<bool>.Error());
 
         // Act
-        var result = await Build(hikeRepo, userRepo, shareRepo).GetHikeByIdentifierAsync(Utilities.Identifiers.Hike1, "recipient", CancellationToken.None);
+        var result = await Build(hikeRepo, userRepo, shareRepo).GetHikeByIdentifierAsync(Utilities.Identifiers.Hike1, "recipient", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -299,7 +299,7 @@ public class HikeServiceTests
             .ReturnsAsync(RepositoryResult<int>.NotFound());
 
         // Act
-        var result = await Build(hikeRepo, userRepo).GetHikeByIdentifierAsync(Utilities.Identifiers.Hike1, "stranger", CancellationToken.None);
+        var result = await Build(hikeRepo, userRepo).GetHikeByIdentifierAsync(Utilities.Identifiers.Hike1, "stranger", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -324,7 +324,7 @@ public class HikeServiceTests
             .ReturnsAsync(RepositoryResult<bool>.Success(true));
 
         // Act — a recipient of a shared hike may read it
-        var result = await Build(hikeRepo, userRepo, shareRepo).GetHikeByIdentifierAsync(Utilities.Identifiers.Hike1, "recipient", CancellationToken.None);
+        var result = await Build(hikeRepo, userRepo, shareRepo).GetHikeByIdentifierAsync(Utilities.Identifiers.Hike1, "recipient", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -356,7 +356,7 @@ public class HikeServiceTests
             .ReturnsAsync(RepositoryResult<Hike>.Success(hike));
 
         // Act
-        var result = await Build(hikeRepo).GetHikeByIdentifierAsync(Utilities.Identifiers.Hike1, Utilities.Identifiers.User, CancellationToken.None);
+        var result = await Build(hikeRepo).GetHikeByIdentifierAsync(Utilities.Identifiers.Hike1, Utilities.Identifiers.User, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -375,7 +375,7 @@ public class HikeServiceTests
             .ReturnsAsync(RepositoryResult<Hike>.NotFound());
 
         // Act
-        var result = await Build(hikeRepo).GetHikeByIdentifierAsync("no-such-hike", Utilities.Identifiers.User, CancellationToken.None);
+        var result = await Build(hikeRepo).GetHikeByIdentifierAsync("no-such-hike", Utilities.Identifiers.User, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -398,7 +398,7 @@ public class HikeServiceTests
             .ReturnsAsync(RepositoryResult<IReadOnlyCollection<HikeOverviewResponse>>.Success(list));
 
         // Act
-        var result = await Build(hikeRepo, Utilities.MockFactory.UserRepositoryFoundById(7)).GetHikesAsync(Utilities.Identifiers.User, CancellationToken.None);
+        var result = await Build(hikeRepo, Utilities.MockFactory.UserRepositoryFoundById(7)).GetHikesAsync(Utilities.Identifiers.User, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -417,7 +417,7 @@ public class HikeServiceTests
             .ReturnsAsync(RepositoryResult<IReadOnlyCollection<HikeOverviewResponse>>.Success([]));
 
         // Act
-        var result = await Build(hikeRepo, Utilities.MockFactory.UserRepositoryFoundById(7)).GetHikesAsync(Utilities.Identifiers.User, CancellationToken.None);
+        var result = await Build(hikeRepo, Utilities.MockFactory.UserRepositoryFoundById(7)).GetHikesAsync(Utilities.Identifiers.User, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -431,7 +431,7 @@ public class HikeServiceTests
         var hikeRepo = new Mock<IHikeRepository>();
 
         // Act
-        var result = await Build(hikeRepo, Utilities.MockFactory.UserRepositoryNotFoundById()).GetHikesAsync("gone-user", CancellationToken.None);
+        var result = await Build(hikeRepo, Utilities.MockFactory.UserRepositoryNotFoundById()).GetHikesAsync("gone-user", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -449,7 +449,7 @@ public class HikeServiceTests
             .ReturnsAsync(RepositoryResult<int>.Error());
 
         // Act
-        var result = await Build(userRepo: userRepo).GetHikesAsync(Utilities.Identifiers.User, CancellationToken.None);
+        var result = await Build(userRepo: userRepo).GetHikesAsync(Utilities.Identifiers.User, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -466,7 +466,7 @@ public class HikeServiceTests
             .ReturnsAsync(RepositoryResult<IReadOnlyCollection<HikeOverviewResponse>>.Error());
 
         // Act
-        var result = await Build(hikeRepo, Utilities.MockFactory.UserRepositoryFoundById()).GetHikesAsync(Utilities.Identifiers.User, CancellationToken.None);
+        var result = await Build(hikeRepo, Utilities.MockFactory.UserRepositoryFoundById()).GetHikesAsync(Utilities.Identifiers.User, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -491,7 +491,7 @@ public class HikeServiceTests
         // Act
         var result = await Build(hikeRepo, userRepo).UpdateHikeAsync(
             Utilities.Identifiers.Hike1, Utilities.Identifiers.User,
-            "NewName", "NewDesc", null, null, CancellationToken.None);
+            "NewName", "NewDesc", null, null, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -510,7 +510,7 @@ public class HikeServiceTests
         // Act
         var result = await Build(userRepo: userRepo).UpdateHikeAsync(
             Utilities.Identifiers.Hike1, "unknown-user",
-            "NewName", null, null, null, CancellationToken.None);
+            "NewName", null, null, null, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -528,7 +528,7 @@ public class HikeServiceTests
         // Act
         var result = await Build(userRepo: userRepo).UpdateHikeAsync(
             Utilities.Identifiers.Hike1, Utilities.Identifiers.User,
-            "NewName", null, null, null, CancellationToken.None);
+            "NewName", null, null, null, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -549,7 +549,7 @@ public class HikeServiceTests
         // Act
         var result = await Build(hikeRepo, userRepo).UpdateHikeAsync(
             "no-such-hike", Utilities.Identifiers.User,
-            "NewName", null, null, null, CancellationToken.None);
+            "NewName", null, null, null, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -570,7 +570,7 @@ public class HikeServiceTests
         // Act
         var result = await Build(hikeRepo, userRepo).UpdateHikeAsync(
             Utilities.Identifiers.Hike1, Utilities.Identifiers.User,
-            "NewName", null, null, null, CancellationToken.None);
+            "NewName", null, null, null, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -592,7 +592,7 @@ public class HikeServiceTests
         // Act
         var result = await Build(hikeRepo, userRepo).UpdateHikeAsync(
             Utilities.Identifiers.Hike1, "other-user",
-            "NewName", null, null, null, CancellationToken.None);
+            "NewName", null, null, null, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -616,7 +616,7 @@ public class HikeServiceTests
             .ReturnsAsync(RepositoryResult<IEnumerable<string>>.Success([]));
 
         // Act
-        var result = await Build(hikeRepo, Utilities.MockFactory.UserRepositoryFoundByIdentifier()).DeleteHikeAsync(Utilities.Identifiers.Hike1, Utilities.Identifiers.User, CancellationToken.None);
+        var result = await Build(hikeRepo, Utilities.MockFactory.UserRepositoryFoundByIdentifier()).DeleteHikeAsync(Utilities.Identifiers.Hike1, Utilities.Identifiers.User, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -631,7 +631,7 @@ public class HikeServiceTests
             .ReturnsAsync(RepositoryResult<User>.Error());
 
         // Act
-        var result = await Build(userRepo: userRepo).DeleteHikeAsync(Utilities.Identifiers.Hike1, Utilities.Identifiers.User, CancellationToken.None);
+        var result = await Build(userRepo: userRepo).DeleteHikeAsync(Utilities.Identifiers.Hike1, Utilities.Identifiers.User, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -648,7 +648,7 @@ public class HikeServiceTests
             .ReturnsAsync(RepositoryResult<Hike>.NotFound());
 
         // Act
-        var result = await Build(hikeRepo, Utilities.MockFactory.UserRepositoryFoundByIdentifier()).DeleteHikeAsync("no-such", Utilities.Identifiers.User, CancellationToken.None);
+        var result = await Build(hikeRepo, Utilities.MockFactory.UserRepositoryFoundByIdentifier()).DeleteHikeAsync("no-such", Utilities.Identifiers.User, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -671,7 +671,7 @@ public class HikeServiceTests
             .ReturnsAsync(RepositoryResult<User>.Success(otherUser));
 
         // Act
-        var result = await Build(hikeRepo, userRepo).DeleteHikeAsync(Utilities.Identifiers.Hike1, "other-user", CancellationToken.None);
+        var result = await Build(hikeRepo, userRepo).DeleteHikeAsync(Utilities.Identifiers.Hike1, "other-user", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -696,7 +696,7 @@ public class HikeServiceTests
 
         // Act
         var result = await Build(hikeRepo, Utilities.MockFactory.UserRepositoryFoundByIdentifier(), webDav: webDav)
-            .DeleteHikeAsync(Utilities.Identifiers.Hike1, Utilities.Identifiers.User, CancellationToken.None);
+            .DeleteHikeAsync(Utilities.Identifiers.Hike1, Utilities.Identifiers.User, TestContext.Current.CancellationToken);
 
         // Assert — the URLs are never even fetched for a hike that is not going away
         result.Success.Should().BeTrue();
@@ -723,7 +723,7 @@ public class HikeServiceTests
 
         // Act
         var result = await Build(hikeRepo, Utilities.MockFactory.UserRepositoryFoundByIdentifier(), webDav: webDav)
-            .DeleteHikeAsync(Utilities.Identifiers.Hike1, Utilities.Identifiers.User, CancellationToken.None);
+            .DeleteHikeAsync(Utilities.Identifiers.Hike1, Utilities.Identifiers.User, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -752,7 +752,7 @@ public class HikeServiceTests
 
         // Act
         var result = await Build(hikeRepo, Utilities.MockFactory.UserRepositoryFoundByIdentifier(), webDav: webDav)
-            .DeleteHikeAsync(Utilities.Identifiers.Hike1, Utilities.Identifiers.User, CancellationToken.None);
+            .DeleteHikeAsync(Utilities.Identifiers.Hike1, Utilities.Identifiers.User, TestContext.Current.CancellationToken);
 
         // Assert — the first failure did not stop the second file from being attempted
         result.Success.Should().BeTrue();
@@ -777,7 +777,7 @@ public class HikeServiceTests
             .Callback<string>(url => callOrder.Add(url));
 
         // Act
-        await Build(hikeRepo, webDav: webDav).CleanUpOrphanedHikesAsync(CancellationToken.None);
+        await Build(hikeRepo, webDav: webDav).CleanUpOrphanedHikesAsync(TestContext.Current.CancellationToken);
 
         // Assert
         callOrder.Should().Equal("rows", "hikes/a.jpeg");
@@ -796,7 +796,7 @@ public class HikeServiceTests
         var webDav = Utilities.MockFactory.WebDavService();
 
         // Act
-        await Build(hikeRepo, webDav: webDav).CleanUpOrphanedHikesAsync(CancellationToken.None);
+        await Build(hikeRepo, webDav: webDav).CleanUpOrphanedHikesAsync(TestContext.Current.CancellationToken);
 
         // Assert
         webDav.Verify(w => w.DeleteFileAsync(It.IsAny<string>()), Times.Never);
@@ -815,7 +815,7 @@ public class HikeServiceTests
             .ReturnsAsync(RepositoryResult.Success());
 
         // Act
-        var result = await Build(hikeRepo).DeleteHikeSharesByUserIdAsync(1, CancellationToken.None);
+        var result = await Build(hikeRepo).DeleteHikeSharesByUserIdAsync(1, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -834,7 +834,7 @@ public class HikeServiceTests
             .ReturnsAsync(RepositoryResult<IEnumerable<string>>.Error());
 
         // Act
-        var result = await Build(hikeRepo).DeleteHikeSharesByUserIdAsync(1, CancellationToken.None);
+        var result = await Build(hikeRepo).DeleteHikeSharesByUserIdAsync(1, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -861,7 +861,7 @@ public class HikeServiceTests
             .Callback<string>(url => callOrder.Add(url));
 
         // Act
-        var result = await Build(hikeRepo, webDav: webDav).HandleUserHikesOnUserDeleteAsync(1, CancellationToken.None);
+        var result = await Build(hikeRepo, webDav: webDav).HandleUserHikesOnUserDeleteAsync(1, TestContext.Current.CancellationToken);
 
         // Assert — the anonymisation runs on what the delete left behind, and files come last
         result.Success.Should().BeTrue();
@@ -884,7 +884,7 @@ public class HikeServiceTests
         var webDav = Utilities.MockFactory.WebDavService();
 
         // Act
-        var result = await Build(hikeRepo, webDav: webDav).HandleUserHikesOnUserDeleteAsync(1, CancellationToken.None);
+        var result = await Build(hikeRepo, webDav: webDav).HandleUserHikesOnUserDeleteAsync(1, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -909,7 +909,7 @@ public class HikeServiceTests
             .ThrowsAsync(new Exception("webdav down"));
 
         // Act
-        var result = await Build(hikeRepo, webDav: webDav).HandleUserHikesOnUserDeleteAsync(1, CancellationToken.None);
+        var result = await Build(hikeRepo, webDav: webDav).HandleUserHikesOnUserDeleteAsync(1, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -928,7 +928,7 @@ public class HikeServiceTests
         var webDav = Utilities.MockFactory.WebDavService();
 
         // Act
-        var result = await Build(hikeRepo, webDav: webDav).HandleUserHikesOnUserDeleteAsync(1, CancellationToken.None);
+        var result = await Build(hikeRepo, webDav: webDav).HandleUserHikesOnUserDeleteAsync(1, TestContext.Current.CancellationToken);
 
         // Assert — a failed delete stops the flow before anything else is touched
         result.Success.Should().BeFalse();

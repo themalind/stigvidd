@@ -34,7 +34,7 @@ public class MediaServiceTests
             .ReturnsAsync(RepositoryResult<IReadOnlyCollection<MediaItemProjection>>.Success(media));
 
         // Act
-        var result = await Build(repo).GetAllMediaAsync(CancellationToken.None);
+        var result = await Build(repo).GetAllMediaAsync(TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -53,7 +53,7 @@ public class MediaServiceTests
             .ReturnsAsync(RepositoryResult<IReadOnlyCollection<MediaItemProjection>>.Success([]));
 
         // Act
-        var result = await Build(repo).GetAllMediaAsync(CancellationToken.None);
+        var result = await Build(repo).GetAllMediaAsync(TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -69,7 +69,7 @@ public class MediaServiceTests
             .ReturnsAsync(RepositoryResult<IReadOnlyCollection<MediaItemProjection>>.Error());
 
         // Act
-        var result = await Build(repo).GetAllMediaAsync(CancellationToken.None);
+        var result = await Build(repo).GetAllMediaAsync(TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -86,7 +86,7 @@ public class MediaServiceTests
             .ReturnsAsync(RepositoryResult.Success());
 
         // Act
-        var result = await Build(repo).UpdateImageMetadataAsync(ImageIdentifier, "new alt", "new caption", CancellationToken.None);
+        var result = await Build(repo).UpdateImageMetadataAsync(ImageIdentifier, "new alt", "new caption", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -101,7 +101,7 @@ public class MediaServiceTests
             .ReturnsAsync(RepositoryResult.NotFound());
 
         // Act
-        var result = await Build(repo).UpdateImageMetadataAsync("no-such-image", null, null, CancellationToken.None);
+        var result = await Build(repo).UpdateImageMetadataAsync("no-such-image", null, null, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -118,7 +118,7 @@ public class MediaServiceTests
             .ReturnsAsync(RepositoryResult.Error());
 
         // Act
-        var result = await Build(repo).UpdateImageMetadataAsync(ImageIdentifier, "alt", "caption", CancellationToken.None);
+        var result = await Build(repo).UpdateImageMetadataAsync(ImageIdentifier, "alt", "caption", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();

@@ -49,7 +49,7 @@ public class FriendServiceTests
         var service = Build(userRepositoryMock: userRepoMock);
 
         // Act
-        var result = await service.AcceptFriendRequestAsync("current-user-identifier", "requester-identifier", CancellationToken.None);
+        var result = await service.AcceptFriendRequestAsync("current-user-identifier", "requester-identifier", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -74,7 +74,7 @@ public class FriendServiceTests
         var service = Build(userRepositoryMock: userRepoMock);
 
         // Act
-        var result = await service.AcceptFriendRequestAsync("current-user-identifier", "requester-identifier", CancellationToken.None);
+        var result = await service.AcceptFriendRequestAsync("current-user-identifier", "requester-identifier", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -99,7 +99,7 @@ public class FriendServiceTests
         var service = Build(userRepositoryMock: userRepoMock, friendRepositoryMock: friendsRepoMock);
 
         // Act
-        var result = await service.AcceptFriendRequestAsync("current-user-identifier", "requester-identifier", CancellationToken.None);
+        var result = await service.AcceptFriendRequestAsync("current-user-identifier", "requester-identifier", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -124,7 +124,7 @@ public class FriendServiceTests
         var service = Build(userRepositoryMock: userRepoMock, friendRepositoryMock: friendsRepoMock);
 
         // Act
-        var result = await service.AcceptFriendRequestAsync("current-user-identifier", "requester-identifier", CancellationToken.None);
+        var result = await service.AcceptFriendRequestAsync("current-user-identifier", "requester-identifier", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -142,7 +142,7 @@ public class FriendServiceTests
         var service = Build(userRepositoryMock: userRepoMock);
 
         // Act
-        var result = await service.GetFriendsAsync("current-user-identifier", CancellationToken.None);
+        var result = await service.GetFriendsAsync("current-user-identifier", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -172,7 +172,7 @@ public class FriendServiceTests
         var service = Build(userRepositoryMock: userRepoMock, friendRepositoryMock: friendsRepoMock);
 
         // Act
-        var result = await service.GetFriendsAsync("current-user-identifier", CancellationToken.None);
+        var result = await service.GetFriendsAsync("current-user-identifier", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -195,7 +195,7 @@ public class FriendServiceTests
         var service = Build(userRepositoryMock: userRepoMock, friendRepositoryMock: friendsRepoMock);
 
         // Act
-        var result = await service.GetFriendsAsync("current-user-identifier", CancellationToken.None);
+        var result = await service.GetFriendsAsync("current-user-identifier", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -219,7 +219,7 @@ public class FriendServiceTests
         var service = Build(userRepositoryMock: userRepoMock, friendRepositoryMock: requestsRepoMock);
 
         // Act
-        var result = await service.GetIncomingRequestsAsync("current-user-identifier", CancellationToken.None);
+        var result = await service.GetIncomingRequestsAsync("current-user-identifier", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -249,7 +249,7 @@ public class FriendServiceTests
         var service = Build(userRepositoryMock: userRepoMock, friendRepositoryMock: requestsRepoMock);
 
         // Act
-        var result = await service.GetIncomingRequestsAsync("current-user-identifier", CancellationToken.None);
+        var result = await service.GetIncomingRequestsAsync("current-user-identifier", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -268,7 +268,7 @@ public class FriendServiceTests
         var service = Build(userRepositoryMock: userRepoMock);
 
         // Act
-        var result = await service.GetIncomingRequestsAsync("current-user-identifier", CancellationToken.None);
+        var result = await service.GetIncomingRequestsAsync("current-user-identifier", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -289,7 +289,7 @@ public class FriendServiceTests
 
         // Act
 
-        var result = await service.GetOutgoingRequestsAsync("current-user-identifier", CancellationToken.None);
+        var result = await service.GetOutgoingRequestsAsync("current-user-identifier", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -313,7 +313,7 @@ public class FriendServiceTests
         var service = Build(userRepositoryMock: userRepoMock, friendRepositoryMock: requestsRepoMock);
 
         // Act
-        var result = await service.GetOutgoingRequestsAsync("current-user-identifier", CancellationToken.None);
+        var result = await service.GetOutgoingRequestsAsync("current-user-identifier", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -343,7 +343,7 @@ public class FriendServiceTests
         var service = Build(userRepositoryMock: userRepoMock, friendRepositoryMock: requestsRepoMock);
 
         // Act
-        var result = await service.GetOutgoingRequestsAsync("current-user-identifier", CancellationToken.None);
+        var result = await service.GetOutgoingRequestsAsync("current-user-identifier", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -362,7 +362,7 @@ public class FriendServiceTests
         var service = Build(userRepositoryMock: userRepoMock);
 
         // Act
-        var result = await service.RemoveConnectionAsync("current-user-identifier", "friend-identifier", CancellationToken.None);
+        var result = await service.RemoveConnectionAsync("current-user-identifier", "friend-identifier", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -386,7 +386,7 @@ public class FriendServiceTests
         var service = Build(userRepositoryMock: userRepoMock, friendRepositoryMock: friendRepoMock);
 
         // Act
-        var result = await service.RemoveConnectionAsync("current-user-identifier", "friend-identifier", CancellationToken.None);
+        var result = await service.RemoveConnectionAsync("current-user-identifier", "friend-identifier", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -406,7 +406,7 @@ public class FriendServiceTests
         var service = Build(userRepositoryMock: userRepoMock);
 
         // Act
-        var result = await service.RemoveConnectionAsync("current-user-identifier", "friend-identifier", CancellationToken.None);
+        var result = await service.RemoveConnectionAsync("current-user-identifier", "friend-identifier", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -430,7 +430,7 @@ public class FriendServiceTests
         var service = Build(userRepositoryMock: userRepoMock, friendRepositoryMock: friendRepoMock);
 
         // Act
-        var result = await service.RemoveConnectionAsync("current-user-identifier", "friend-identifier", CancellationToken.None);
+        var result = await service.RemoveConnectionAsync("current-user-identifier", "friend-identifier", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -453,7 +453,7 @@ public class FriendServiceTests
         var service = Build(userRepositoryMock: userRepoMock, friendRepositoryMock: friendRepoMock);
 
         // Act
-        var result = await service.RemoveConnectionAsync("current-user-identifier", "friend-identifier", CancellationToken.None);
+        var result = await service.RemoveConnectionAsync("current-user-identifier", "friend-identifier", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -472,7 +472,7 @@ public class FriendServiceTests
         var service = Build(userRepositoryMock: userRepoMock);
 
         // Act
-        var result = await service.RemoveConnectionAsync("current-user-identifier", "friend-identifier", CancellationToken.None);
+        var result = await service.RemoveConnectionAsync("current-user-identifier", "friend-identifier", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -492,7 +492,7 @@ public class FriendServiceTests
         var service = Build(userRepositoryMock: userRepoMock);
 
         // Act
-        var result = await service.RemoveConnectionAsync("current-user-identifier", "friend-identifier", CancellationToken.None);
+        var result = await service.RemoveConnectionAsync("current-user-identifier", "friend-identifier", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -511,7 +511,7 @@ public class FriendServiceTests
         var service = Build(userRepositoryMock: userRepoMock);
 
         // Act
-        var result = await service.SendFriendRequestAsync("current-user-identifier", "receiver-identifier", CancellationToken.None);
+        var result = await service.SendFriendRequestAsync("current-user-identifier", "receiver-identifier", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -532,7 +532,7 @@ public class FriendServiceTests
         var service = Build(userRepositoryMock: userRepoMock);
 
         // Act
-        var result = await service.SendFriendRequestAsync("current-user-identifier", "receiver-identifier", CancellationToken.None);
+        var result = await service.SendFriendRequestAsync("current-user-identifier", "receiver-identifier", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -560,7 +560,7 @@ public class FriendServiceTests
         var service = Build(userRepositoryMock: userRepoMock, friendRepositoryMock: friendRepoMock);
 
         // Act
-        var result = await service.SendFriendRequestAsync("current-user-identifier", "receiver-identifier", CancellationToken.None);
+        var result = await service.SendFriendRequestAsync("current-user-identifier", "receiver-identifier", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -581,7 +581,7 @@ public class FriendServiceTests
         var service = Build(userRepositoryMock: userRepoMock);
 
         // Act
-        var result = await service.SendFriendRequestAsync("current-user-identifier", "current-user-identifier", CancellationToken.None);
+        var result = await service.SendFriendRequestAsync("current-user-identifier", "current-user-identifier", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -607,7 +607,7 @@ public class FriendServiceTests
         var service = Build(userRepositoryMock: userRepoMock, friendRepositoryMock: friendRepoMock);
 
         // Act
-        var result = await service.SendFriendRequestAsync("current-user-identifier", "receiver-identifier", CancellationToken.None);
+        var result = await service.SendFriendRequestAsync("current-user-identifier", "receiver-identifier", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -635,7 +635,7 @@ public class FriendServiceTests
         var service = Build(userRepositoryMock: userRepoMock, friendRepositoryMock: friendRepoMock);
 
         // Act
-        var result = await service.SendFriendRequestAsync("current-user-identifier", "receiver-identifier", CancellationToken.None);
+        var result = await service.SendFriendRequestAsync("current-user-identifier", "receiver-identifier", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -653,7 +653,7 @@ public class FriendServiceTests
         var service = Build(userRepositoryMock: userRepoMock);
 
         // Act
-        var result = await service.SendFriendRequestAsync("current-user-identifier", "receiver-identifier", CancellationToken.None);
+        var result = await service.SendFriendRequestAsync("current-user-identifier", "receiver-identifier", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -674,7 +674,7 @@ public class FriendServiceTests
         var service = Build(userRepositoryMock: userRepoMock);
 
         // Act
-        var result = await service.SendFriendRequestAsync("current-user-identifier", "receiver-identifier", CancellationToken.None);
+        var result = await service.SendFriendRequestAsync("current-user-identifier", "receiver-identifier", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -699,7 +699,7 @@ public class FriendServiceTests
         var service = Build(userRepositoryMock: userRepoMock, friendRepositoryMock: friendRepoMock);
 
         // Act
-        var result = await service.SendFriendRequestAsync("current-user-identifier", "receiver-identifier", CancellationToken.None);
+        var result = await service.SendFriendRequestAsync("current-user-identifier", "receiver-identifier", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -719,7 +719,7 @@ public class FriendServiceTests
         var service = Build(userRepositoryMock: userRepoMock);
 
         // Act
-        var result = await service.AcceptFriendRequestAsync("current-user-identifier", "requester-identifier", CancellationToken.None);
+        var result = await service.AcceptFriendRequestAsync("current-user-identifier", "requester-identifier", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -740,7 +740,7 @@ public class FriendServiceTests
         var service = Build(userRepositoryMock: userRepoMock);
 
         // Act
-        var result = await service.AcceptFriendRequestAsync("Sauron", "Saruman", CancellationToken.None);
+        var result = await service.AcceptFriendRequestAsync("Sauron", "Saruman", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -765,7 +765,7 @@ public class FriendServiceTests
         var service = Build(userRepositoryMock: userRepoMock, friendRepositoryMock: friendsRepoMock);
 
         // Act
-        var result = await service.AcceptFriendRequestAsync("current-user-identifier", "requester-identifier", CancellationToken.None);
+        var result = await service.AcceptFriendRequestAsync("current-user-identifier", "requester-identifier", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -785,7 +785,7 @@ public class FriendServiceTests
         var service = Build(userRepositoryMock: userRepoMock);
 
         // Act
-        var result = await service.GetFriendsAsync("current-user-identifier", CancellationToken.None);
+        var result = await service.GetFriendsAsync("current-user-identifier", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -804,7 +804,7 @@ public class FriendServiceTests
         var service = Build(userRepositoryMock: userRepoMock);
 
         // Act
-        var result = await service.GetIncomingRequestsAsync("current-user-identifier", CancellationToken.None);
+        var result = await service.GetIncomingRequestsAsync("current-user-identifier", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -823,7 +823,7 @@ public class FriendServiceTests
         var service = Build(userRepositoryMock: userRepoMock);
 
         // Act
-        var result = await service.GetOutgoingRequestsAsync("current-user-identifier", CancellationToken.None);
+        var result = await service.GetOutgoingRequestsAsync("current-user-identifier", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();

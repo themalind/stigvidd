@@ -44,7 +44,7 @@ public class ReviewRepositoryTests : TestBase
         var repo = BuildRepo();
 
         // Act
-        var result = await repo.GetReviewsByTrailIdentifierAsync(NassehultIdentifier, 0, 10, ReviewSelector, CancellationToken.None);
+        var result = await repo.GetReviewsByTrailIdentifierAsync(NassehultIdentifier, 0, 10, ReviewSelector, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -60,7 +60,7 @@ public class ReviewRepositoryTests : TestBase
         var repo = BuildRepo();
 
         // Act
-        var result = await repo.GetReviewsByTrailIdentifierAsync(HultaforsIdentifier, 0, 10, ReviewSelector, CancellationToken.None);
+        var result = await repo.GetReviewsByTrailIdentifierAsync(HultaforsIdentifier, 0, 10, ReviewSelector, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -76,7 +76,7 @@ public class ReviewRepositoryTests : TestBase
         var repo = BuildRepo();
 
         // Act
-        var result = await repo.GetReviewsByTrailIdentifierAsync(NassehultIdentifier, 0, 1, ReviewSelector, CancellationToken.None);
+        var result = await repo.GetReviewsByTrailIdentifierAsync(NassehultIdentifier, 0, 1, ReviewSelector, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -93,7 +93,7 @@ public class ReviewRepositoryTests : TestBase
         var repo = BuildRepo();
 
         // Act
-        var result = await repo.GetReviewsByTrailIdentifierAsync(NassehultIdentifier, 1, 1, ReviewSelector, CancellationToken.None);
+        var result = await repo.GetReviewsByTrailIdentifierAsync(NassehultIdentifier, 1, 1, ReviewSelector, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -109,7 +109,7 @@ public class ReviewRepositoryTests : TestBase
         var repo = BuildRepo();
 
         // Act
-        var result = await repo.GetReviewsByTrailIdentifierAsync(NassehultIdentifier, 10, 10, ReviewSelector, CancellationToken.None);
+        var result = await repo.GetReviewsByTrailIdentifierAsync(NassehultIdentifier, 10, 10, ReviewSelector, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -126,7 +126,7 @@ public class ReviewRepositoryTests : TestBase
         var repo = BuildRepo();
 
         // Act
-        var result = await repo.GetReviewByIdentifierAsync(Review1Identifier, VandrarVennenIdentifier, CancellationToken.None);
+        var result = await repo.GetReviewByIdentifierAsync(Review1Identifier, VandrarVennenIdentifier, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -142,7 +142,7 @@ public class ReviewRepositoryTests : TestBase
 
         // Act
         // Review1 belongs to VandrarVennen, not Kattleten
-        var result = await repo.GetReviewByIdentifierAsync(Review1Identifier, KattletenIdentifier, CancellationToken.None);
+        var result = await repo.GetReviewByIdentifierAsync(Review1Identifier, KattletenIdentifier, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -156,7 +156,7 @@ public class ReviewRepositoryTests : TestBase
         var repo = BuildRepo();
 
         // Act
-        var result = await repo.GetReviewByIdentifierAsync("no-such-review", VandrarVennenIdentifier, CancellationToken.None);
+        var result = await repo.GetReviewByIdentifierAsync("no-such-review", VandrarVennenIdentifier, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -178,7 +178,7 @@ public class ReviewRepositoryTests : TestBase
         };
 
         // Act
-        var result = await repo.AddReviewAsync(review, CancellationToken.None);
+        var result = await repo.AddReviewAsync(review, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -191,17 +191,17 @@ public class ReviewRepositoryTests : TestBase
     {
         // Arrange
         var repo = new ReviewRepository(CreateSeededFactory(), NullLogger<ReviewRepository>.Instance);
-        var found = await repo.GetReviewByIdentifierAsync(Review5Identifier, KattletenIdentifier, CancellationToken.None);
+        var found = await repo.GetReviewByIdentifierAsync(Review5Identifier, KattletenIdentifier, TestContext.Current.CancellationToken);
         found.IsSuccess.Should().BeTrue();
 
         // Act
         found.Value.Should().NotBeNull();
-        var deleteResult = await repo.DeleteReviewAsync(found.Value, CancellationToken.None);
+        var deleteResult = await repo.DeleteReviewAsync(found.Value, TestContext.Current.CancellationToken);
 
         // Assert
         deleteResult.IsSuccess.Should().BeTrue();
 
-        var verify = await repo.GetReviewByIdentifierAsync(Review5Identifier, KattletenIdentifier, CancellationToken.None);
+        var verify = await repo.GetReviewByIdentifierAsync(Review5Identifier, KattletenIdentifier, TestContext.Current.CancellationToken);
         verify.IsSuccess.Should().BeFalse();
     }
 
@@ -212,7 +212,7 @@ public class ReviewRepositoryTests : TestBase
         var repo = new ReviewRepository(CreateSeededFactory(), NullLogger<ReviewRepository>.Instance);
 
         // Act
-        var result = await repo.GetReviewImageUrlsByUserIdAsync(VandrarVennenId, CancellationToken.None);
+        var result = await repo.GetReviewImageUrlsByUserIdAsync(VandrarVennenId, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -228,7 +228,7 @@ public class ReviewRepositoryTests : TestBase
         var repo = new ReviewRepository(CreateSeededFactory(), NullLogger<ReviewRepository>.Instance);
 
         // Act
-        var result = await repo.GetReviewImageUrlsByUserIdAsync(1, CancellationToken.None);
+        var result = await repo.GetReviewImageUrlsByUserIdAsync(1, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -242,7 +242,7 @@ public class ReviewRepositoryTests : TestBase
         var repo = BuildRepo();
 
         // Act
-        var result = await repo.HasUserReviewedTrailAsync(TivedenId, VandrarVennenId, CancellationToken.None);
+        var result = await repo.HasUserReviewedTrailAsync(TivedenId, VandrarVennenId, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -256,7 +256,7 @@ public class ReviewRepositoryTests : TestBase
         var repo = BuildRepo();
 
         // Act
-        var result = await repo.HasUserReviewedTrailAsync(OtherTrailWithReviewsId, VandrarVennenId, CancellationToken.None);
+        var result = await repo.HasUserReviewedTrailAsync(OtherTrailWithReviewsId, VandrarVennenId, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -270,7 +270,7 @@ public class ReviewRepositoryTests : TestBase
         var repo = BuildRepo();
 
         // Act
-        var result = await repo.HasUserReviewedTrailAsync(TivedenId, UserWithoutTivedenReviewId, CancellationToken.None);
+        var result = await repo.HasUserReviewedTrailAsync(TivedenId, UserWithoutTivedenReviewId, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -282,17 +282,17 @@ public class ReviewRepositoryTests : TestBase
     {
         // Arrange — user 2 (VandrarVennen) wrote review 1, the only seeded review with images
         var repo = new ReviewRepository(CreateSeededFactory(), NullLogger<ReviewRepository>.Instance);
-        var before = await repo.GetReviewByIdentifierAsync(Review1Identifier, VandrarVennenIdentifier, CancellationToken.None);
+        var before = await repo.GetReviewByIdentifierAsync(Review1Identifier, VandrarVennenIdentifier, TestContext.Current.CancellationToken);
         before.Value!.TrailReview.Should().NotBeNull();
         before.Value.ReviewImages.Should().NotBeEmpty();
 
         // Act
-        var result = await repo.AnonymizeReviewsByUserIdAsync(VandrarVennenId, CancellationToken.None);
+        var result = await repo.AnonymizeReviewsByUserIdAsync(VandrarVennenId, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
 
-        var after = await repo.GetReviewByIdentifierAsync(Review1Identifier, VandrarVennenIdentifier, CancellationToken.None);
+        var after = await repo.GetReviewByIdentifierAsync(Review1Identifier, VandrarVennenIdentifier, TestContext.Current.CancellationToken);
         after.IsSuccess.Should().BeTrue();
         after.Value!.Rating.Should().Be(before.Value.Rating);
         after.Value.TrailReview.Should().BeNull();
@@ -304,15 +304,15 @@ public class ReviewRepositoryTests : TestBase
     {
         // Arrange
         var repo = new ReviewRepository(CreateSeededFactory(), NullLogger<ReviewRepository>.Instance);
-        var before = await repo.GetReviewByIdentifierAsync(Review5Identifier, KattletenIdentifier, CancellationToken.None);
+        var before = await repo.GetReviewByIdentifierAsync(Review5Identifier, KattletenIdentifier, TestContext.Current.CancellationToken);
 
         // Act
-        var result = await repo.AnonymizeReviewsByUserIdAsync(VandrarVennenId, CancellationToken.None);
+        var result = await repo.AnonymizeReviewsByUserIdAsync(VandrarVennenId, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
 
-        var after = await repo.GetReviewByIdentifierAsync(Review5Identifier, KattletenIdentifier, CancellationToken.None);
+        var after = await repo.GetReviewByIdentifierAsync(Review5Identifier, KattletenIdentifier, TestContext.Current.CancellationToken);
         after.IsSuccess.Should().BeTrue();
         after.Value!.TrailReview.Should().Be(before.Value!.TrailReview);
         after.Value.Rating.Should().Be(before.Value.Rating);

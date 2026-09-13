@@ -61,7 +61,7 @@ public class NotificationsControllerTests
     {
         var controller = BuildController(subjectId: null);
 
-        var result = await controller.RegisterTokenAsync(ValidRegisterRequest(), CancellationToken.None);
+        var result = await controller.RegisterTokenAsync(ValidRegisterRequest(), TestContext.Current.CancellationToken);
 
         result.Should().BeOfType<UnauthorizedResult>();
     }
@@ -75,7 +75,7 @@ public class NotificationsControllerTests
 
         var controller = BuildController(userServiceMock: userServiceMock);
 
-        var result = await controller.RegisterTokenAsync(ValidRegisterRequest(), CancellationToken.None);
+        var result = await controller.RegisterTokenAsync(ValidRegisterRequest(), TestContext.Current.CancellationToken);
 
         result.Should().BeOfType<UnauthorizedResult>();
     }
@@ -89,7 +89,7 @@ public class NotificationsControllerTests
 
         var controller = BuildController(pushServiceMock: pushServiceMock);
 
-        var result = await controller.RegisterTokenAsync(ValidRegisterRequest(), CancellationToken.None);
+        var result = await controller.RegisterTokenAsync(ValidRegisterRequest(), TestContext.Current.CancellationToken);
 
         result.Should().BeAssignableTo<IStatusCodeActionResult>()
             .Which.StatusCode.Should().Be(404);
@@ -104,7 +104,7 @@ public class NotificationsControllerTests
 
         var controller = BuildController(pushServiceMock: pushServiceMock);
 
-        var result = await controller.RegisterTokenAsync(ValidRegisterRequest(), CancellationToken.None);
+        var result = await controller.RegisterTokenAsync(ValidRegisterRequest(), TestContext.Current.CancellationToken);
 
         result.Should().BeAssignableTo<IStatusCodeActionResult>()
             .Which.StatusCode.Should().Be(500);
@@ -119,7 +119,7 @@ public class NotificationsControllerTests
 
         var controller = BuildController(pushServiceMock: pushServiceMock);
 
-        var result = await controller.RegisterTokenAsync(ValidRegisterRequest(), CancellationToken.None);
+        var result = await controller.RegisterTokenAsync(ValidRegisterRequest(), TestContext.Current.CancellationToken);
 
         result.Should().BeOfType<OkResult>();
     }
@@ -131,7 +131,7 @@ public class NotificationsControllerTests
     {
         var controller = BuildController(subjectId: null);
 
-        var result = await controller.DeleteTokenAsync("ExponentPushToken[xxx]", CancellationToken.None);
+        var result = await controller.DeleteTokenAsync("ExponentPushToken[xxx]", TestContext.Current.CancellationToken);
 
         result.Should().BeOfType<UnauthorizedResult>();
     }
@@ -145,7 +145,7 @@ public class NotificationsControllerTests
 
         var controller = BuildController(userServiceMock: userServiceMock);
 
-        var result = await controller.DeleteTokenAsync("ExponentPushToken[xxx]", CancellationToken.None);
+        var result = await controller.DeleteTokenAsync("ExponentPushToken[xxx]", TestContext.Current.CancellationToken);
 
         result.Should().BeOfType<UnauthorizedResult>();
     }
@@ -159,7 +159,7 @@ public class NotificationsControllerTests
 
         var controller = BuildController(pushServiceMock: pushServiceMock);
 
-        var result = await controller.DeleteTokenAsync("ExponentPushToken[xxx]", CancellationToken.None);
+        var result = await controller.DeleteTokenAsync("ExponentPushToken[xxx]", TestContext.Current.CancellationToken);
 
         result.Should().BeAssignableTo<IStatusCodeActionResult>()
             .Which.StatusCode.Should().Be(404);
@@ -174,7 +174,7 @@ public class NotificationsControllerTests
 
         var controller = BuildController(pushServiceMock: pushServiceMock);
 
-        var result = await controller.DeleteTokenAsync("ExponentPushToken[xxx]", CancellationToken.None);
+        var result = await controller.DeleteTokenAsync("ExponentPushToken[xxx]", TestContext.Current.CancellationToken);
 
         result.Should().BeAssignableTo<IStatusCodeActionResult>()
             .Which.StatusCode.Should().Be(500);
@@ -189,7 +189,7 @@ public class NotificationsControllerTests
 
         var controller = BuildController(pushServiceMock: pushServiceMock);
 
-        var result = await controller.DeleteTokenAsync("ExponentPushToken[xxx]", CancellationToken.None);
+        var result = await controller.DeleteTokenAsync("ExponentPushToken[xxx]", TestContext.Current.CancellationToken);
 
         result.Should().BeOfType<OkResult>();
     }

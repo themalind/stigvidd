@@ -27,7 +27,7 @@ public class UserPushTokenRepositoryTests : TestBase
     {
         var repo = BuildRepo(CreateSeededFactoryWithTokens());
 
-        var result = await repo.GetByTokenAndUserAsync(ExistingToken, ExistingUserId, CancellationToken.None);
+        var result = await repo.GetByTokenAndUserAsync(ExistingToken, ExistingUserId, TestContext.Current.CancellationToken);
 
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().NotBeNull();
@@ -39,7 +39,7 @@ public class UserPushTokenRepositoryTests : TestBase
     {
         var repo = BuildRepo(CreateSeededFactoryWithTokens());
 
-        var result = await repo.GetByTokenAndUserAsync("nonexistent-token", ExistingUserId, CancellationToken.None);
+        var result = await repo.GetByTokenAndUserAsync("nonexistent-token", ExistingUserId, TestContext.Current.CancellationToken);
 
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().BeNull();
@@ -50,7 +50,7 @@ public class UserPushTokenRepositoryTests : TestBase
     {
         var repo = BuildRepo(CreateSeededFactoryWithTokens());
 
-        var result = await repo.GetByTokenAndUserAsync(ExistingToken, 999, CancellationToken.None);
+        var result = await repo.GetByTokenAndUserAsync(ExistingToken, 999, TestContext.Current.CancellationToken);
 
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().BeNull();
@@ -61,7 +61,7 @@ public class UserPushTokenRepositoryTests : TestBase
     {
         var repo = BuildRepo(CreateSeededFactoryWithTokens());
 
-        var result = await repo.GetTokensForUserAsync(ExistingUserId, CancellationToken.None);
+        var result = await repo.GetTokensForUserAsync(ExistingUserId, TestContext.Current.CancellationToken);
 
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().HaveCount(1);
@@ -72,7 +72,7 @@ public class UserPushTokenRepositoryTests : TestBase
     {
         var repo = BuildRepo(CreateSeededFactoryWithTokens());
 
-        var result = await repo.GetTokensForUserAsync(999, CancellationToken.None);
+        var result = await repo.GetTokensForUserAsync(999, TestContext.Current.CancellationToken);
 
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().BeEmpty();
@@ -84,11 +84,11 @@ public class UserPushTokenRepositoryTests : TestBase
         const string newToken = "ExponentPushToken[new-token]";
         var repo = BuildRepo(CreateSeededFactory());
 
-        var result = await repo.UpsertAsync(ExistingUserId, newToken, "android", CancellationToken.None);
+        var result = await repo.UpsertAsync(ExistingUserId, newToken, "android", TestContext.Current.CancellationToken);
 
         result.IsSuccess.Should().BeTrue();
 
-        var verify = await repo.GetByTokenAndUserAsync(newToken, ExistingUserId, CancellationToken.None);
+        var verify = await repo.GetByTokenAndUserAsync(newToken, ExistingUserId, TestContext.Current.CancellationToken);
         verify.IsSuccess.Should().BeTrue();
         verify.Value.Should().NotBeNull();
         verify.Value.Platform.Should().Be("android");
@@ -99,11 +99,11 @@ public class UserPushTokenRepositoryTests : TestBase
     {
         var repo = BuildRepo(CreateSeededFactoryWithTokens());
 
-        var result = await repo.UpsertAsync(ExistingUserId, ExistingToken, "android", CancellationToken.None);
+        var result = await repo.UpsertAsync(ExistingUserId, ExistingToken, "android", TestContext.Current.CancellationToken);
 
         result.IsSuccess.Should().BeTrue();
 
-        var verify = await repo.GetByTokenAndUserAsync(ExistingToken, ExistingUserId, CancellationToken.None);
+        var verify = await repo.GetByTokenAndUserAsync(ExistingToken, ExistingUserId, TestContext.Current.CancellationToken);
         verify.IsSuccess.Should().BeTrue();
         verify.Value.Should().NotBeNull();
         verify.Value.Platform.Should().Be("android");
@@ -114,7 +114,7 @@ public class UserPushTokenRepositoryTests : TestBase
     {
         var repo = BuildRepo(CreateSeededFactoryWithTokens());
 
-        var result = await repo.DeleteByTokenAsync(ExistingToken, CancellationToken.None);
+        var result = await repo.DeleteByTokenAsync(ExistingToken, TestContext.Current.CancellationToken);
 
         result.IsSuccess.Should().BeTrue();
     }
@@ -124,7 +124,7 @@ public class UserPushTokenRepositoryTests : TestBase
     {
         var repo = BuildRepo(CreateSeededFactoryWithTokens());
 
-        var result = await repo.DeleteByTokenAsync("nonexistent-token", CancellationToken.None);
+        var result = await repo.DeleteByTokenAsync("nonexistent-token", TestContext.Current.CancellationToken);
 
         result.IsSuccess.Should().BeFalse();
     }

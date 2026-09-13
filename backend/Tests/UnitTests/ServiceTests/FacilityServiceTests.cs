@@ -52,7 +52,7 @@ public class FacilityServiceTests
             .ReturnsAsync(RepositoryResult<Facility>.Success(MakeFacility()));
 
         // Act
-        var result = await Build(repo).CreateFacilityAsync("Grillplats Tiveden", 1, true, 14.5M, 58.9M, CancellationToken.None);
+        var result = await Build(repo).CreateFacilityAsync("Grillplats Tiveden", 1, true, 14.5M, 58.9M, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -69,7 +69,7 @@ public class FacilityServiceTests
             .ReturnsAsync(RepositoryResult<Facility>.Error());
 
         // Act
-        var result = await Build(repo).CreateFacilityAsync("Grillplats", 1, true, 14.5M, 58.9M, CancellationToken.None);
+        var result = await Build(repo).CreateFacilityAsync("Grillplats", 1, true, 14.5M, 58.9M, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -95,7 +95,7 @@ public class FacilityServiceTests
             .ReturnsAsync(RepositoryResult<Facility>.Success(facility));
 
         // Act
-        await Build(repo).CreateFacilityAsync("Name", input, true, 0M, 0M, CancellationToken.None);
+        await Build(repo).CreateFacilityAsync("Name", input, true, 0M, 0M, TestContext.Current.CancellationToken);
 
         // Assert
         captured.Should().NotBeNull();
@@ -113,7 +113,7 @@ public class FacilityServiceTests
             .ReturnsAsync(RepositoryResult<IReadOnlyCollection<Facility>>.Success(facilities));
 
         // Act
-        var result = await Build(repo).GetAllAsync(CancellationToken.None);
+        var result = await Build(repo).GetAllAsync(TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -129,7 +129,7 @@ public class FacilityServiceTests
             .ReturnsAsync(RepositoryResult<IReadOnlyCollection<Facility>>.Success([]));
 
         // Act
-        var result = await Build(repo).GetAllAsync(CancellationToken.None);
+        var result = await Build(repo).GetAllAsync(TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -145,7 +145,7 @@ public class FacilityServiceTests
             .ReturnsAsync(RepositoryResult<IReadOnlyCollection<Facility>>.Error());
 
         // Act
-        var result = await Build(repo).GetAllAsync(CancellationToken.None);
+        var result = await Build(repo).GetAllAsync(TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -162,7 +162,7 @@ public class FacilityServiceTests
             .ReturnsAsync(RepositoryResult<Facility>.Success(MakeFacility()));
 
         // Act
-        var result = await Build(repo).GetByIdentifierAsync(FacilityIdentifier, CancellationToken.None);
+        var result = await Build(repo).GetByIdentifierAsync(FacilityIdentifier, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -179,7 +179,7 @@ public class FacilityServiceTests
             .ReturnsAsync(RepositoryResult<Facility>.NotFound());
 
         // Act
-        var result = await Build(repo).GetByIdentifierAsync("no-such-id", CancellationToken.None);
+        var result = await Build(repo).GetByIdentifierAsync("no-such-id", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -196,7 +196,7 @@ public class FacilityServiceTests
             .ReturnsAsync(RepositoryResult<Facility>.Error());
 
         // Act
-        var result = await Build(repo).GetByIdentifierAsync("some-id", CancellationToken.None);
+        var result = await Build(repo).GetByIdentifierAsync("some-id", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -215,7 +215,7 @@ public class FacilityServiceTests
             .ReturnsAsync(RepositoryResult<Facility>.Success(MakeFacility()));
 
         // Act
-        var result = await Build(repo).UpdateFacilityAsync(FacilityIdentifier, "New Name", null, null, null, null, CancellationToken.None);
+        var result = await Build(repo).UpdateFacilityAsync(FacilityIdentifier, "New Name", null, null, null, null, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -230,7 +230,7 @@ public class FacilityServiceTests
             .ReturnsAsync(RepositoryResult<Facility>.NotFound());
 
         // Act
-        var result = await Build(repo).UpdateFacilityAsync("no-such-id", "Name", null, null, null, null, CancellationToken.None);
+        var result = await Build(repo).UpdateFacilityAsync("no-such-id", "Name", null, null, null, null, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -247,7 +247,7 @@ public class FacilityServiceTests
             .ReturnsAsync(RepositoryResult<Facility>.Error());
 
         // Act
-        var result = await Build(repo).UpdateFacilityAsync(FacilityIdentifier, "Name", null, null, null, null, CancellationToken.None);
+        var result = await Build(repo).UpdateFacilityAsync(FacilityIdentifier, "Name", null, null, null, null, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -266,7 +266,7 @@ public class FacilityServiceTests
             .ReturnsAsync(RepositoryResult<Facility>.Error());
 
         // Act
-        var result = await Build(repo).UpdateFacilityAsync(FacilityIdentifier, "Name", null, null, null, null, CancellationToken.None);
+        var result = await Build(repo).UpdateFacilityAsync(FacilityIdentifier, "Name", null, null, null, null, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -289,7 +289,7 @@ public class FacilityServiceTests
             .ReturnsAsync(RepositoryResult<Facility>.Success(original));
 
         // Act — only name is provided, all other fields should remain unchanged
-        await Build(repo).UpdateFacilityAsync(FacilityIdentifier, "New Name", null, null, null, null, CancellationToken.None);
+        await Build(repo).UpdateFacilityAsync(FacilityIdentifier, "New Name", null, null, null, null, TestContext.Current.CancellationToken);
 
         // Assert
         captured.Should().NotBeNull();
@@ -311,7 +311,7 @@ public class FacilityServiceTests
             .ReturnsAsync(RepositoryResult.Success());
 
         // Act
-        var result = await Build(repo).DeleteAsync(FacilityIdentifier, CancellationToken.None);
+        var result = await Build(repo).DeleteAsync(FacilityIdentifier, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -326,7 +326,7 @@ public class FacilityServiceTests
             .ReturnsAsync(RepositoryResult<Facility>.NotFound());
 
         // Act
-        var result = await Build(repo).DeleteAsync("no-such-id", CancellationToken.None);
+        var result = await Build(repo).DeleteAsync("no-such-id", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -343,7 +343,7 @@ public class FacilityServiceTests
             .ReturnsAsync(RepositoryResult<Facility>.Error());
 
         // Act
-        var result = await Build(repo).DeleteAsync(FacilityIdentifier, CancellationToken.None);
+        var result = await Build(repo).DeleteAsync(FacilityIdentifier, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -363,7 +363,7 @@ public class FacilityServiceTests
             .ReturnsAsync(RepositoryResult.Error());
 
         // Act
-        var result = await Build(repo).DeleteAsync(FacilityIdentifier, CancellationToken.None);
+        var result = await Build(repo).DeleteAsync(FacilityIdentifier, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -384,7 +384,7 @@ public class FacilityServiceTests
 
         // Act
         var result = await Build(repo).AddFacilityImagesAsync(
-            FacilityIdentifier, Utilities.Stubs.TwoImages(), new ImageProcessingOptions(), CancellationToken.None);
+            FacilityIdentifier, Utilities.Stubs.TwoImages(), new ImageProcessingOptions(), TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -408,7 +408,7 @@ public class FacilityServiceTests
 
         // Act — the mocked media service returns 800x600, 12345 bytes for every upload.
         await Build(repo).AddFacilityImagesAsync(
-            FacilityIdentifier, Utilities.Stubs.TwoImages(), new ImageProcessingOptions(), CancellationToken.None);
+            FacilityIdentifier, Utilities.Stubs.TwoImages(), new ImageProcessingOptions(), TestContext.Current.CancellationToken);
 
         // Assert
         captured.Should().NotBeNull();
@@ -426,7 +426,7 @@ public class FacilityServiceTests
 
         // Act
         var result = await Build(repo).AddFacilityImagesAsync(
-            "no-such-id", Utilities.Stubs.TwoImages(), new ImageProcessingOptions(), CancellationToken.None);
+            "no-such-id", Utilities.Stubs.TwoImages(), new ImageProcessingOptions(), TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -444,7 +444,7 @@ public class FacilityServiceTests
 
         // Act
         var result = await Build(repo).AddFacilityImagesAsync(
-            FacilityIdentifier, Utilities.Stubs.TwoImages(), new ImageProcessingOptions(), CancellationToken.None);
+            FacilityIdentifier, Utilities.Stubs.TwoImages(), new ImageProcessingOptions(), TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -466,7 +466,7 @@ public class FacilityServiceTests
 
         // Act
         var result = await Build(repo, media).AddFacilityImagesAsync(
-            FacilityIdentifier, Utilities.Stubs.TwoImages(), new ImageProcessingOptions(), CancellationToken.None);
+            FacilityIdentifier, Utilities.Stubs.TwoImages(), new ImageProcessingOptions(), TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -486,7 +486,7 @@ public class FacilityServiceTests
 
         // Act
         var result = await Build(repo).AddFacilityImagesAsync(
-            FacilityIdentifier, Utilities.Stubs.TwoImages(), new ImageProcessingOptions(), CancellationToken.None);
+            FacilityIdentifier, Utilities.Stubs.TwoImages(), new ImageProcessingOptions(), TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -508,7 +508,7 @@ public class FacilityServiceTests
 
         // Act — two images are uploaded before the save throws.
         var result = await Build(repo, webDav: webDav).AddFacilityImagesAsync(
-            FacilityIdentifier, Utilities.Stubs.TwoImages(), new ImageProcessingOptions(), CancellationToken.None);
+            FacilityIdentifier, Utilities.Stubs.TwoImages(), new ImageProcessingOptions(), TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -527,7 +527,7 @@ public class FacilityServiceTests
             .ReturnsAsync(RepositoryResult.Success());
 
         // Act
-        var result = await Build(repo).DeleteFacilityImageAsync("img-1", CancellationToken.None);
+        var result = await Build(repo).DeleteFacilityImageAsync("img-1", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -542,7 +542,7 @@ public class FacilityServiceTests
             .ReturnsAsync(RepositoryResult.NotFound());
 
         // Act
-        var result = await Build(repo).DeleteFacilityImageAsync("no-such-img", CancellationToken.None);
+        var result = await Build(repo).DeleteFacilityImageAsync("no-such-img", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -559,7 +559,7 @@ public class FacilityServiceTests
             .ReturnsAsync(RepositoryResult.Error());
 
         // Act
-        var result = await Build(repo).DeleteFacilityImageAsync("img-1", CancellationToken.None);
+        var result = await Build(repo).DeleteFacilityImageAsync("img-1", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -579,7 +579,7 @@ public class FacilityServiceTests
             .ReturnsAsync(RepositoryResult<Facility>.Success(MakeFacility()));
 
         // Act
-        await Build(repo).CreateFacilityAsync("Grillplats", 1, true, 14.5M, 58.9M, CancellationToken.None);
+        await Build(repo).CreateFacilityAsync("Grillplats", 1, true, 14.5M, 58.9M, TestContext.Current.CancellationToken);
 
         // Assert
         captured.Should().NotBeNull();
@@ -606,7 +606,7 @@ public class FacilityServiceTests
             .ReturnsAsync(RepositoryResult<Facility>.Success(original));
 
         // Act — longitude only
-        await Build(repo).UpdateFacilityAsync(FacilityIdentifier, null, null, null, 99.9M, null, CancellationToken.None);
+        await Build(repo).UpdateFacilityAsync(FacilityIdentifier, null, null, null, 99.9M, null, TestContext.Current.CancellationToken);
 
         // Assert
         captured.Should().NotBeNull();

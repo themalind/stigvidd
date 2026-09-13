@@ -39,7 +39,7 @@ public class TrailObstaclesServiceTests
             .ReturnsAsync(RepositoryResult<IReadOnlyCollection<TrailObstacle>>.Success(obstacles));
 
         // Act
-        var result = await Build(repo).GetTrailObstaclesByTrailIdentifierAsync(Utilities.Identifiers.Trail1, CancellationToken.None);
+        var result = await Build(repo).GetTrailObstaclesByTrailIdentifierAsync(Utilities.Identifiers.Trail1, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -55,7 +55,7 @@ public class TrailObstaclesServiceTests
             .ReturnsAsync(RepositoryResult<IReadOnlyCollection<TrailObstacle>>.Success([]));
 
         // Act
-        var result = await Build(repo).GetTrailObstaclesByTrailIdentifierAsync(Utilities.Identifiers.Trail1, CancellationToken.None);
+        var result = await Build(repo).GetTrailObstaclesByTrailIdentifierAsync(Utilities.Identifiers.Trail1, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -71,7 +71,7 @@ public class TrailObstaclesServiceTests
             .ReturnsAsync(RepositoryResult<IReadOnlyCollection<TrailObstacle>>.Error());
 
         // Act
-        var result = await Build(repo).GetTrailObstaclesByTrailIdentifierAsync(Utilities.Identifiers.Trail1, CancellationToken.None);
+        var result = await Build(repo).GetTrailObstaclesByTrailIdentifierAsync(Utilities.Identifiers.Trail1, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -88,7 +88,7 @@ public class TrailObstaclesServiceTests
             .ReturnsAsync(RepositoryResult<TrailObstacle>.Success(Utilities.Stubs.Obstacle()));
 
         // Act
-        var result = await Build(repo).AddTrailObstacle(Utilities.Identifiers.User, Utilities.Identifiers.Trail1, "Big tree", "FallenTree", null, null, CancellationToken.None);
+        var result = await Build(repo).AddTrailObstacle(Utilities.Identifiers.User, Utilities.Identifiers.Trail1, "Big tree", "FallenTree", null, null, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -102,7 +102,7 @@ public class TrailObstaclesServiceTests
         var service = Build(userService: Utilities.MockFactory.UserServiceNotFoundById());
 
         // Act
-        var result = await service.AddTrailObstacle("invalid", Utilities.Identifiers.Trail1, "Desc", "FallenTree", null, null, CancellationToken.None);
+        var result = await service.AddTrailObstacle("invalid", Utilities.Identifiers.Trail1, "Desc", "FallenTree", null, null, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -117,7 +117,7 @@ public class TrailObstaclesServiceTests
         var service = Build(trailService: Utilities.MockFactory.TrailServiceNotFound());
 
         // Act
-        var result = await service.AddTrailObstacle(Utilities.Identifiers.User, "invalid", "Desc", "FallenTree", null, null, CancellationToken.None);
+        var result = await service.AddTrailObstacle(Utilities.Identifiers.User, "invalid", "Desc", "FallenTree", null, null, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -136,7 +136,7 @@ public class TrailObstaclesServiceTests
             .ReturnsAsync(RepositoryResult<TrailObstacle>.Success(Utilities.Stubs.Obstacle()));
 
         // Act
-        await Build(repo).AddTrailObstacle(Utilities.Identifiers.User, Utilities.Identifiers.Trail1, "Desc", "TotallyUnknown", null, null, CancellationToken.None);
+        await Build(repo).AddTrailObstacle(Utilities.Identifiers.User, Utilities.Identifiers.Trail1, "Desc", "TotallyUnknown", null, null, TestContext.Current.CancellationToken);
 
         // Assert
         captured.Should().NotBeNull();
@@ -152,7 +152,7 @@ public class TrailObstaclesServiceTests
             .ReturnsAsync(RepositoryResult<TrailObstacle>.Error());
 
         // Act
-        var result = await Build(repo).AddTrailObstacle(Utilities.Identifiers.User, Utilities.Identifiers.Trail1, "Big tree", "FallenTree", null, null, CancellationToken.None);
+        var result = await Build(repo).AddTrailObstacle(Utilities.Identifiers.User, Utilities.Identifiers.Trail1, "Big tree", "FallenTree", null, null, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -172,7 +172,7 @@ public class TrailObstaclesServiceTests
             .ReturnsAsync(RepositoryResult.Success());
 
         // Act
-        var result = await Build(repo).AddSolvedVoteAsync(Utilities.Identifiers.User, Utilities.Identifiers.Obstacle1, CancellationToken.None);
+        var result = await Build(repo).AddSolvedVoteAsync(Utilities.Identifiers.User, Utilities.Identifiers.Obstacle1, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -185,7 +185,7 @@ public class TrailObstaclesServiceTests
         var service = Build(userService: Utilities.MockFactory.UserServiceNotFoundById());
 
         // Act
-        var result = await service.AddSolvedVoteAsync("invalid", Utilities.Identifiers.Obstacle1, CancellationToken.None);
+        var result = await service.AddSolvedVoteAsync("invalid", Utilities.Identifiers.Obstacle1, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -202,7 +202,7 @@ public class TrailObstaclesServiceTests
             .ReturnsAsync(RepositoryResult<TrailObstacle>.NotFound());
 
         // Act
-        var result = await Build(repo).AddSolvedVoteAsync(Utilities.Identifiers.User, "invalid-obstacle", CancellationToken.None);
+        var result = await Build(repo).AddSolvedVoteAsync(Utilities.Identifiers.User, "invalid-obstacle", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -220,7 +220,7 @@ public class TrailObstaclesServiceTests
             .ReturnsAsync(RepositoryResult<TrailObstacle>.Success(obstacle));
 
         // Act
-        var result = await Build(repo).AddSolvedVoteAsync(Utilities.Identifiers.User, Utilities.Identifiers.Obstacle1, CancellationToken.None);
+        var result = await Build(repo).AddSolvedVoteAsync(Utilities.Identifiers.User, Utilities.Identifiers.Obstacle1, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -239,7 +239,7 @@ public class TrailObstaclesServiceTests
             .ReturnsAsync(RepositoryResult.Error());
 
         // Act
-        var result = await Build(repo).AddSolvedVoteAsync(Utilities.Identifiers.User, Utilities.Identifiers.Obstacle1, CancellationToken.None);
+        var result = await Build(repo).AddSolvedVoteAsync(Utilities.Identifiers.User, Utilities.Identifiers.Obstacle1, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -266,7 +266,7 @@ public class TrailObstaclesServiceTests
             .ReturnsAsync(RepositoryResult.Success());
 
         // Act
-        var result = await Build(repo, userService).DeleteSolvedVoteByUserIdentifierAsync(Utilities.Identifiers.User, Utilities.Identifiers.Obstacle1, CancellationToken.None);
+        var result = await Build(repo, userService).DeleteSolvedVoteByUserIdentifierAsync(Utilities.Identifiers.User, Utilities.Identifiers.Obstacle1, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -279,7 +279,7 @@ public class TrailObstaclesServiceTests
         var service = Build(userService: Utilities.MockFactory.UserServiceNotFoundById());
 
         // Act
-        var result = await service.DeleteSolvedVoteByUserIdentifierAsync("invalid", Utilities.Identifiers.Obstacle1, CancellationToken.None);
+        var result = await service.DeleteSolvedVoteByUserIdentifierAsync("invalid", Utilities.Identifiers.Obstacle1, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -296,7 +296,7 @@ public class TrailObstaclesServiceTests
             .ReturnsAsync(RepositoryResult<TrailObstacle>.NotFound());
 
         // Act
-        var result = await Build(repo).DeleteSolvedVoteByUserIdentifierAsync(Utilities.Identifiers.User, "invalid-obs", CancellationToken.None);
+        var result = await Build(repo).DeleteSolvedVoteByUserIdentifierAsync(Utilities.Identifiers.User, "invalid-obs", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -315,7 +315,7 @@ public class TrailObstaclesServiceTests
             .ReturnsAsync(RepositoryResult<TrailObstacleSolvedVote>.NotFound());
 
         // Act
-        var result = await Build(repo).DeleteSolvedVoteByUserIdentifierAsync(Utilities.Identifiers.User, Utilities.Identifiers.Obstacle1, CancellationToken.None);
+        var result = await Build(repo).DeleteSolvedVoteByUserIdentifierAsync(Utilities.Identifiers.User, Utilities.Identifiers.Obstacle1, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -337,7 +337,7 @@ public class TrailObstaclesServiceTests
             .ReturnsAsync(RepositoryResult.Error());
 
         // Act
-        var result = await Build(repo).DeleteSolvedVoteByUserIdentifierAsync(Utilities.Identifiers.User, Utilities.Identifiers.Obstacle1, CancellationToken.None);
+        var result = await Build(repo).DeleteSolvedVoteByUserIdentifierAsync(Utilities.Identifiers.User, Utilities.Identifiers.Obstacle1, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -356,7 +356,7 @@ public class TrailObstaclesServiceTests
             .ReturnsAsync(RepositoryResult<TrailObstacle>.Success(Utilities.Stubs.Obstacle()));
 
         // Act
-        var result = await Build(repo).UpdateTrailObstacleAsync(Utilities.Identifiers.User, Utilities.Identifiers.Obstacle1, "New description", "Mud", CancellationToken.None);
+        var result = await Build(repo).UpdateTrailObstacleAsync(Utilities.Identifiers.User, Utilities.Identifiers.Obstacle1, "New description", "Mud", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -369,7 +369,7 @@ public class TrailObstaclesServiceTests
         var service = Build(userService: Utilities.MockFactory.UserServiceNotFoundById());
 
         // Act
-        var result = await service.UpdateTrailObstacleAsync("invalid", Utilities.Identifiers.Obstacle1, "desc", "Mud", CancellationToken.None);
+        var result = await service.UpdateTrailObstacleAsync("invalid", Utilities.Identifiers.Obstacle1, "desc", "Mud", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -386,7 +386,7 @@ public class TrailObstaclesServiceTests
             .ReturnsAsync(RepositoryResult<TrailObstacle>.NotFound());
 
         // Act
-        var result = await Build(repo).UpdateTrailObstacleAsync(Utilities.Identifiers.User, "invalid-obs", "desc", "Mud", CancellationToken.None);
+        var result = await Build(repo).UpdateTrailObstacleAsync(Utilities.Identifiers.User, "invalid-obs", "desc", "Mud", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -408,7 +408,7 @@ public class TrailObstaclesServiceTests
             .ReturnsAsync(RepositoryResult<TrailObstacle>.Success(obstacle));
 
         // Act
-        await Build(repo).UpdateTrailObstacleAsync(Utilities.Identifiers.User, Utilities.Identifiers.Obstacle1, "New desc", "TotallyUnknown", CancellationToken.None);
+        await Build(repo).UpdateTrailObstacleAsync(Utilities.Identifiers.User, Utilities.Identifiers.Obstacle1, "New desc", "TotallyUnknown", TestContext.Current.CancellationToken);
 
         // Assert
         captured.Should().NotBeNull();
@@ -426,7 +426,7 @@ public class TrailObstaclesServiceTests
             .ReturnsAsync(RepositoryResult<TrailObstacle>.Error());
 
         // Act
-        var result = await Build(repo).UpdateTrailObstacleAsync(Utilities.Identifiers.User, Utilities.Identifiers.Obstacle1, "New desc", "Mud", CancellationToken.None);
+        var result = await Build(repo).UpdateTrailObstacleAsync(Utilities.Identifiers.User, Utilities.Identifiers.Obstacle1, "New desc", "Mud", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -446,7 +446,7 @@ public class TrailObstaclesServiceTests
             .ReturnsAsync(RepositoryResult.Success());
 
         // Act
-        var result = await Build(repo).DeleteTrailObstacleAsync(Utilities.Identifiers.User, Utilities.Identifiers.Obstacle1, CancellationToken.None);
+        var result = await Build(repo).DeleteTrailObstacleAsync(Utilities.Identifiers.User, Utilities.Identifiers.Obstacle1, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -459,7 +459,7 @@ public class TrailObstaclesServiceTests
         var service = Build(userService: Utilities.MockFactory.UserServiceNotFoundById());
 
         // Act
-        var result = await service.DeleteTrailObstacleAsync("invalid", Utilities.Identifiers.Obstacle1, CancellationToken.None);
+        var result = await service.DeleteTrailObstacleAsync("invalid", Utilities.Identifiers.Obstacle1, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -476,7 +476,7 @@ public class TrailObstaclesServiceTests
             .ReturnsAsync(RepositoryResult<TrailObstacle>.NotFound());
 
         // Act
-        var result = await Build(repo).DeleteTrailObstacleAsync(Utilities.Identifiers.User, "invalid-obs", CancellationToken.None);
+        var result = await Build(repo).DeleteTrailObstacleAsync(Utilities.Identifiers.User, "invalid-obs", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -496,7 +496,7 @@ public class TrailObstaclesServiceTests
             .ReturnsAsync(RepositoryResult.Error());
 
         // Act
-        var result = await Build(repo).DeleteTrailObstacleAsync(Utilities.Identifiers.User, Utilities.Identifiers.Obstacle1, CancellationToken.None);
+        var result = await Build(repo).DeleteTrailObstacleAsync(Utilities.Identifiers.User, Utilities.Identifiers.Obstacle1, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();

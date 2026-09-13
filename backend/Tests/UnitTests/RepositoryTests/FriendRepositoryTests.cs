@@ -23,7 +23,7 @@ public class FriendRepositoryTests : TestBase
         var repo = new FriendRepository(CreateSeededFactory(), NullLogger<FriendRepository>.Instance);
 
         // Act
-        var result = await repo.GetFriendsAsync(UserIdWithFriend, u => FriendResponse.Create(u.Identifier, u.NickName), CancellationToken.None);
+        var result = await repo.GetFriendsAsync(UserIdWithFriend, u => FriendResponse.Create(u.Identifier, u.NickName), TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -37,7 +37,7 @@ public class FriendRepositoryTests : TestBase
         var repo = new FriendRepository(CreateSeededFactory(), NullLogger<FriendRepository>.Instance);
 
         // Act
-        var result = await repo.GetFriendsAsync(UserIdWithNoFriends, u => FriendResponse.Create(u.Identifier, u.NickName), CancellationToken.None);
+        var result = await repo.GetFriendsAsync(UserIdWithNoFriends, u => FriendResponse.Create(u.Identifier, u.NickName), TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -51,7 +51,7 @@ public class FriendRepositoryTests : TestBase
         var repo = new FriendRepository(CreateSeededFactory(), NullLogger<FriendRepository>.Instance);
 
         // Act
-        var result = await repo.FriendshipExistsAsync(UserIdWithFriend, FriendUserId, CancellationToken.None);
+        var result = await repo.FriendshipExistsAsync(UserIdWithFriend, FriendUserId, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -65,7 +65,7 @@ public class FriendRepositoryTests : TestBase
         var repo = new FriendRepository(CreateSeededFactory(), NullLogger<FriendRepository>.Instance);
 
         // Act
-        var result = await repo.FriendshipExistsAsync(UserIdWithNoFriends, FriendUserId, CancellationToken.None);
+        var result = await repo.FriendshipExistsAsync(UserIdWithNoFriends, FriendUserId, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -79,7 +79,7 @@ public class FriendRepositoryTests : TestBase
         var repo = new FriendRepository(CreateSeededFactory(), NullLogger<FriendRepository>.Instance);
 
         // Act
-        var result = await repo.FriendshipExistsAsync(UserIdWithFriend, RequesterUserId, CancellationToken.None);
+        var result = await repo.FriendshipExistsAsync(UserIdWithFriend, RequesterUserId, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -93,7 +93,7 @@ public class FriendRepositoryTests : TestBase
         var repo = new FriendRepository(CreateSeededFactory(), NullLogger<FriendRepository>.Instance);
 
         // Act
-        var result = await repo.FriendshipExistsAsync(UserIdWithFriend, 4, CancellationToken.None);
+        var result = await repo.FriendshipExistsAsync(UserIdWithFriend, 4, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -107,7 +107,7 @@ public class FriendRepositoryTests : TestBase
         var repo = new FriendRepository(CreateSeededFactory(), NullLogger<FriendRepository>.Instance);
 
         // Act
-        var result = await repo.GetIncomingRequestsAsync(RequesterUserId, u => FriendResponse.Create(u.Requester!.Identifier, u.Requester.NickName), CancellationToken.None);
+        var result = await repo.GetIncomingRequestsAsync(RequesterUserId, u => FriendResponse.Create(u.Requester!.Identifier, u.Requester.NickName), TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -123,7 +123,7 @@ public class FriendRepositoryTests : TestBase
         // Act
         var result = await repo.GetIncomingRequestsAsync(
             UserWithNoIncomingRequestsUserId,
-            u => FriendResponse.Create(u.Receiver!.Identifier, u.Receiver.NickName), CancellationToken.None);
+            u => FriendResponse.Create(u.Receiver!.Identifier, u.Receiver.NickName), TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -137,7 +137,7 @@ public class FriendRepositoryTests : TestBase
         var repo = new FriendRepository(CreateSeededFactory(), NullLogger<FriendRepository>.Instance);
 
         // Act
-        var result = await repo.GetOutgoingRequestsAsync(UserIdWithFriend, u => FriendResponse.Create(u.Receiver!.Identifier, u.Receiver.NickName), CancellationToken.None);
+        var result = await repo.GetOutgoingRequestsAsync(UserIdWithFriend, u => FriendResponse.Create(u.Receiver!.Identifier, u.Receiver.NickName), TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -151,7 +151,7 @@ public class FriendRepositoryTests : TestBase
         var repo = new FriendRepository(CreateSeededFactory(), NullLogger<FriendRepository>.Instance);
 
         // Act
-        var result = await repo.GetOutgoingRequestsAsync(UserIdWithNoFriends, u => FriendResponse.Create(u.Receiver!.Identifier, u.Receiver.NickName), CancellationToken.None);
+        var result = await repo.GetOutgoingRequestsAsync(UserIdWithNoFriends, u => FriendResponse.Create(u.Receiver!.Identifier, u.Receiver.NickName), TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -165,13 +165,13 @@ public class FriendRepositoryTests : TestBase
         var repo = new FriendRepository(CreateSeededFactory(), NullLogger<FriendRepository>.Instance);
 
         // Act
-        var result = await repo.RemoveFriendShipOrFriendRequestAsync(UserIdWithFriend, FriendUserId, CancellationToken.None);
+        var result = await repo.RemoveFriendShipOrFriendRequestAsync(UserIdWithFriend, FriendUserId, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
 
         // Verify that the friendship/request is removed
-        var verify = await repo.FriendshipExistsAsync(UserIdWithFriend, FriendUserId, CancellationToken.None);
+        var verify = await repo.FriendshipExistsAsync(UserIdWithFriend, FriendUserId, TestContext.Current.CancellationToken);
         verify.IsSuccess.Should().BeTrue();
         verify.Value.Should().BeFalse();
     }
@@ -183,7 +183,7 @@ public class FriendRepositoryTests : TestBase
         var repo = new FriendRepository(CreateSeededFactory(), NullLogger<FriendRepository>.Instance);
 
         // Act
-        var result = await repo.RemoveFriendShipOrFriendRequestAsync(UserIdWithNoFriends, FriendUserId, CancellationToken.None);
+        var result = await repo.RemoveFriendShipOrFriendRequestAsync(UserIdWithNoFriends, FriendUserId, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -197,7 +197,7 @@ public class FriendRepositoryTests : TestBase
         var repo = new FriendRepository(CreateSeededFactory(), NullLogger<FriendRepository>.Instance);
 
         // Act
-        var result = await repo.AcceptRequestAsync(RequesterUserId, UserWithNoIncomingRequestsUserId, CancellationToken.None);
+        var result = await repo.AcceptRequestAsync(RequesterUserId, UserWithNoIncomingRequestsUserId, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -211,13 +211,13 @@ public class FriendRepositoryTests : TestBase
         var repo = new FriendRepository(CreateSeededFactory(), NullLogger<FriendRepository>.Instance);
 
         // Act
-        var result = await repo.AcceptRequestAsync(UserIdWithFriend, RequesterUserId, CancellationToken.None);
+        var result = await repo.AcceptRequestAsync(UserIdWithFriend, RequesterUserId, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
 
         // Verify that the friendship is now accepted
-        var verify = await repo.FriendshipExistsAsync(UserIdWithFriend, RequesterUserId, CancellationToken.None);
+        var verify = await repo.FriendshipExistsAsync(UserIdWithFriend, RequesterUserId, TestContext.Current.CancellationToken);
         verify.IsSuccess.Should().BeTrue();
         verify.Value.Should().BeTrue();
     }
@@ -229,7 +229,7 @@ public class FriendRepositoryTests : TestBase
         var repo = new FriendRepository(CreateSeededFactory(), NullLogger<FriendRepository>.Instance);
 
         // Act
-        var result = await repo.RejectRequestAsync(RequesterUserId, UserWithNoIncomingRequestsUserId, CancellationToken.None);
+        var result = await repo.RejectRequestAsync(RequesterUserId, UserWithNoIncomingRequestsUserId, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -243,13 +243,13 @@ public class FriendRepositoryTests : TestBase
         var repo = new FriendRepository(CreateSeededFactory(), NullLogger<FriendRepository>.Instance);
 
         // Act
-        var result = await repo.RejectRequestAsync(UserIdWithFriend, RequesterUserId, CancellationToken.None);
+        var result = await repo.RejectRequestAsync(UserIdWithFriend, RequesterUserId, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
 
         // Verify that the friendship is now rejected (not accepted)
-        var verify = await repo.FriendshipExistsAsync(UserIdWithFriend, RequesterUserId, CancellationToken.None);
+        var verify = await repo.FriendshipExistsAsync(UserIdWithFriend, RequesterUserId, TestContext.Current.CancellationToken);
         verify.IsSuccess.Should().BeTrue();
         verify.Value.Should().BeFalse();
     }
@@ -261,7 +261,7 @@ public class FriendRepositoryTests : TestBase
         var repo = new FriendRepository(CreateSeededFactory(), NullLogger<FriendRepository>.Instance);
 
         // Act
-        var result = await repo.DeleteAllFriendRequestsByUserIdAsync(UserIdWithFriend, CancellationToken.None);
+        var result = await repo.DeleteAllFriendRequestsByUserIdAsync(UserIdWithFriend, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -274,7 +274,7 @@ public class FriendRepositoryTests : TestBase
         var repo = new FriendRepository(CreateSeededFactory(), NullLogger<FriendRepository>.Instance);
 
         // Act
-        var result = await repo.DeleteAllFriendRequestsByUserIdAsync(UserIdWithNoFriends, CancellationToken.None);
+        var result = await repo.DeleteAllFriendRequestsByUserIdAsync(UserIdWithNoFriends, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -287,7 +287,7 @@ public class FriendRepositoryTests : TestBase
         var repo = new FriendRepository(CreateSeededFactory(), NullLogger<FriendRepository>.Instance);
 
         // Act
-        var result = await repo.SendRequestAsync(UserIdWithNoFriends, FriendUserId, CancellationToken.None);
+        var result = await repo.SendRequestAsync(UserIdWithNoFriends, FriendUserId, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -300,7 +300,7 @@ public class FriendRepositoryTests : TestBase
         var repo = new FriendRepository(CreateSeededFactory(), NullLogger<FriendRepository>.Instance);
 
         // Act
-        var result = await repo.SendRequestAsync(UserIdWithFriend, FriendUserId, CancellationToken.None);
+        var result = await repo.SendRequestAsync(UserIdWithFriend, FriendUserId, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -314,7 +314,7 @@ public class FriendRepositoryTests : TestBase
         var repo = new FriendRepository(CreateSeededFactory(), NullLogger<FriendRepository>.Instance);
 
         // Act
-        var result = await repo.FriendshipExistsAsync(FriendUserId, UserIdWithFriend, CancellationToken.None);
+        var result = await repo.FriendshipExistsAsync(FriendUserId, UserIdWithFriend, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -328,7 +328,7 @@ public class FriendRepositoryTests : TestBase
         var repo = new FriendRepository(CreateSeededFactory(), NullLogger<FriendRepository>.Instance);
 
         // Act
-        var result = await repo.GetFriendsAsync(FriendUserId, u => FriendResponse.Create(u.Identifier, u.NickName), CancellationToken.None);
+        var result = await repo.GetFriendsAsync(FriendUserId, u => FriendResponse.Create(u.Identifier, u.NickName), TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -342,13 +342,13 @@ public class FriendRepositoryTests : TestBase
         var repo = new FriendRepository(CreateSeededFactory(), NullLogger<FriendRepository>.Instance);
 
         // Act
-        var result = await repo.RemoveFriendShipOrFriendRequestAsync(UserIdWithFriend, RequesterUserId, CancellationToken.None);
+        var result = await repo.RemoveFriendShipOrFriendRequestAsync(UserIdWithFriend, RequesterUserId, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
 
         // Verify the pending request is gone
-        var outgoing = await repo.GetOutgoingRequestsAsync(UserIdWithFriend, u => FriendResponse.Create(u.Receiver!.Identifier, u.Receiver.NickName), CancellationToken.None);
+        var outgoing = await repo.GetOutgoingRequestsAsync(UserIdWithFriend, u => FriendResponse.Create(u.Receiver!.Identifier, u.Receiver.NickName), TestContext.Current.CancellationToken);
         outgoing.IsSuccess.Should().BeTrue();
         outgoing.Value.Should().HaveCount(0);
     }
@@ -360,7 +360,7 @@ public class FriendRepositoryTests : TestBase
         var repo = new FriendRepository(CreateSeededFactory(), NullLogger<FriendRepository>.Instance);
 
         // Act
-        var result = await repo.AcceptRequestAsync(UserIdWithFriend, FriendUserId, CancellationToken.None);
+        var result = await repo.AcceptRequestAsync(UserIdWithFriend, FriendUserId, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -374,15 +374,15 @@ public class FriendRepositoryTests : TestBase
         var repo = new FriendRepository(CreateSeededFactory(), NullLogger<FriendRepository>.Instance);
 
         // Act
-        var result = await repo.DeleteAllFriendRequestsByUserIdAsync(UserIdWithFriend, CancellationToken.None);
+        var result = await repo.DeleteAllFriendRequestsByUserIdAsync(UserIdWithFriend, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
 
-        var friends = await repo.GetFriendsAsync(UserIdWithFriend, u => FriendResponse.Create(u.Identifier, u.NickName), CancellationToken.None);
+        var friends = await repo.GetFriendsAsync(UserIdWithFriend, u => FriendResponse.Create(u.Identifier, u.NickName), TestContext.Current.CancellationToken);
         friends.Value.Should().HaveCount(0);
 
-        var outgoing = await repo.GetOutgoingRequestsAsync(UserIdWithFriend, u => FriendResponse.Create(u.Receiver!.Identifier, u.Receiver.NickName), CancellationToken.None);
+        var outgoing = await repo.GetOutgoingRequestsAsync(UserIdWithFriend, u => FriendResponse.Create(u.Receiver!.Identifier, u.Receiver.NickName), TestContext.Current.CancellationToken);
         outgoing.Value.Should().HaveCount(0);
     }
 }

@@ -30,7 +30,7 @@ public class UserRepositoryTests : TestBase
         var repo = BuildRepo();
 
         // Act
-        var result = await repo.GetUserBySubjectAsync(ExistingSubjectId, u => u.Identifier, CancellationToken.None);
+        var result = await repo.GetUserBySubjectAsync(ExistingSubjectId, u => u.Identifier, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -44,7 +44,7 @@ public class UserRepositoryTests : TestBase
         var repo = BuildRepo();
 
         // Act
-        var result = await repo.GetUserBySubjectAsync("no-such-uid", u => u.Identifier, CancellationToken.None);
+        var result = await repo.GetUserBySubjectAsync("no-such-uid", u => u.Identifier, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -58,7 +58,7 @@ public class UserRepositoryTests : TestBase
         var repo = BuildRepo();
 
         // Act
-        var result = await repo.GetUserIdByIdentifierAsync(NaturElskarenIdentifier, CancellationToken.None);
+        var result = await repo.GetUserIdByIdentifierAsync(NaturElskarenIdentifier, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -72,7 +72,7 @@ public class UserRepositoryTests : TestBase
         var repo = BuildRepo();
 
         // Act
-        var result = await repo.GetUserIdByIdentifierAsync("no-such-user", CancellationToken.None);
+        var result = await repo.GetUserIdByIdentifierAsync("no-such-user", TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -86,7 +86,7 @@ public class UserRepositoryTests : TestBase
         var repo = BuildRepo();
 
         // Act
-        var result = await repo.GetUserByIdentifierAsync(NaturElskarenIdentifier, u => u.Identifier, CancellationToken.None);
+        var result = await repo.GetUserByIdentifierAsync(NaturElskarenIdentifier, u => u.Identifier, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -101,7 +101,7 @@ public class UserRepositoryTests : TestBase
         var repo = BuildRepo();
 
         // Act
-        var result = await repo.GetUserByIdentifierAsync("no-such-user", u => u.Identifier, CancellationToken.None);
+        var result = await repo.GetUserByIdentifierAsync("no-such-user", u => u.Identifier, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -116,7 +116,7 @@ public class UserRepositoryTests : TestBase
 
         // Act
         // VandrarVennen has 2 favorites (Tiveden + Storsjöleden)
-        var result = await repo.GetFavoritesByUserIdentifierAsync(VandrarVennenIdentifier, t => t.Identifier, CancellationToken.None);
+        var result = await repo.GetFavoritesByUserIdentifierAsync(VandrarVennenIdentifier, t => t.Identifier, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -131,7 +131,7 @@ public class UserRepositoryTests : TestBase
 
         // Act
         // NaturElskaren has no favorites set
-        var result = await repo.GetFavoritesByUserIdentifierAsync(NaturElskarenIdentifier, t => t.Identifier, CancellationToken.None);
+        var result = await repo.GetFavoritesByUserIdentifierAsync(NaturElskarenIdentifier, t => t.Identifier, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -146,7 +146,7 @@ public class UserRepositoryTests : TestBase
 
         // Act
         // NaturElskaren has 2 wishlist items (Vildmarksleden + Nässehult)
-        var result = await repo.GetWishListByUserIdentifierAsync(NaturElskarenIdentifier, t => t.Identifier, CancellationToken.None);
+        var result = await repo.GetWishListByUserIdentifierAsync(NaturElskarenIdentifier, t => t.Identifier, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -161,7 +161,7 @@ public class UserRepositoryTests : TestBase
 
         // Act
         // VandrarVennen has no wishlist
-        var result = await repo.GetWishListByUserIdentifierAsync(VandrarVennenIdentifier, t => t.Identifier, CancellationToken.None);
+        var result = await repo.GetWishListByUserIdentifierAsync(VandrarVennenIdentifier, t => t.Identifier, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -185,14 +185,14 @@ public class UserRepositoryTests : TestBase
         };
 
         // Act
-        var result = await repo.CreateUserAsync(newUser, CancellationToken.None);
+        var result = await repo.CreateUserAsync(newUser, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().NotBeNull();
         result.Value.NickName.Should().Be("Glenn");
 
-        var verify = await repo.GetUserBySubjectAsync("brand-new-firebase-uid", u => u.Identifier, CancellationToken.None);
+        var verify = await repo.GetUserBySubjectAsync("brand-new-firebase-uid", u => u.Identifier, TestContext.Current.CancellationToken);
         verify.IsSuccess.Should().BeTrue();
     }
 
@@ -204,7 +204,7 @@ public class UserRepositoryTests : TestBase
 
         // Act
         // NaturElskaren has no favorites yet; add Nässehult
-        var result = await repo.AddTrailToUserFavoritesListAsync(NaturElskarenIdentifier, NassehultIdentifier, t => t.Identifier, CancellationToken.None);
+        var result = await repo.AddTrailToUserFavoritesListAsync(NaturElskarenIdentifier, NassehultIdentifier, t => t.Identifier, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -219,7 +219,7 @@ public class UserRepositoryTests : TestBase
         var repo = BuildRepo();
 
         // Act
-        var result = await repo.AddTrailToUserFavoritesListAsync("no-such-user", TivedenIdentifier, t => t.Identifier, CancellationToken.None);
+        var result = await repo.AddTrailToUserFavoritesListAsync("no-such-user", TivedenIdentifier, t => t.Identifier, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -233,7 +233,7 @@ public class UserRepositoryTests : TestBase
         var repo = BuildRepo();
 
         // Act
-        var result = await repo.AddTrailToUserFavoritesListAsync(NaturElskarenIdentifier, "no-such-trail", t => t.Identifier, CancellationToken.None);
+        var result = await repo.AddTrailToUserFavoritesListAsync(NaturElskarenIdentifier, "no-such-trail", t => t.Identifier, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -248,7 +248,7 @@ public class UserRepositoryTests : TestBase
 
         // Act
         // VandrarVennen already has Tiveden in favorites
-        var result = await repo.AddTrailToUserFavoritesListAsync(VandrarVennenIdentifier, TivedenIdentifier, t => t.Identifier, CancellationToken.None);
+        var result = await repo.AddTrailToUserFavoritesListAsync(VandrarVennenIdentifier, TivedenIdentifier, t => t.Identifier, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -263,7 +263,7 @@ public class UserRepositoryTests : TestBase
 
         // Act
         // VandrarVennen has no wishlist; add Tiveden
-        var result = await repo.AddTrailToUserWishListAsync(VandrarVennenIdentifier, TivedenIdentifier, t => t.Identifier, CancellationToken.None);
+        var result = await repo.AddTrailToUserWishListAsync(VandrarVennenIdentifier, TivedenIdentifier, t => t.Identifier, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -278,7 +278,7 @@ public class UserRepositoryTests : TestBase
         var repo = BuildRepo();
 
         // Act
-        var result = await repo.AddTrailToUserWishListAsync("no-such-user", TivedenIdentifier, t => t.Identifier, CancellationToken.None);
+        var result = await repo.AddTrailToUserWishListAsync("no-such-user", TivedenIdentifier, t => t.Identifier, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -293,7 +293,7 @@ public class UserRepositoryTests : TestBase
 
         // Act
         // NaturElskaren already has Nässehult in wishlist
-        var result = await repo.AddTrailToUserWishListAsync(NaturElskarenIdentifier, NassehultIdentifier, t => t.Identifier, CancellationToken.None);
+        var result = await repo.AddTrailToUserWishListAsync(NaturElskarenIdentifier, NassehultIdentifier, t => t.Identifier, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -307,7 +307,7 @@ public class UserRepositoryTests : TestBase
         var repo = BuildRepo();
 
         // Act
-        var result = await repo.RemoveTrailFromUserFavoritesListAsync(VandrarVennenIdentifier, TivedenIdentifier, CancellationToken.None);
+        var result = await repo.RemoveTrailFromUserFavoritesListAsync(VandrarVennenIdentifier, TivedenIdentifier, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -320,7 +320,7 @@ public class UserRepositoryTests : TestBase
         var repo = BuildRepo();
 
         // Act
-        var result = await repo.RemoveTrailFromUserFavoritesListAsync("no-such-user", TivedenIdentifier, CancellationToken.None);
+        var result = await repo.RemoveTrailFromUserFavoritesListAsync("no-such-user", TivedenIdentifier, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -335,7 +335,7 @@ public class UserRepositoryTests : TestBase
 
         // Act
         // NaturElskaren has no favorites
-        var result = await repo.RemoveTrailFromUserFavoritesListAsync(NaturElskarenIdentifier, TivedenIdentifier, CancellationToken.None);
+        var result = await repo.RemoveTrailFromUserFavoritesListAsync(NaturElskarenIdentifier, TivedenIdentifier, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -349,7 +349,7 @@ public class UserRepositoryTests : TestBase
         var repo = BuildRepo();
 
         // Act
-        var result = await repo.RemoveTrailFromUserWishListAsync(NaturElskarenIdentifier, NassehultIdentifier, CancellationToken.None);
+        var result = await repo.RemoveTrailFromUserWishListAsync(NaturElskarenIdentifier, NassehultIdentifier, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -362,7 +362,7 @@ public class UserRepositoryTests : TestBase
         var repo = BuildRepo();
 
         // Act
-        var result = await repo.RemoveTrailFromUserWishListAsync("no-such-user", NassehultIdentifier, CancellationToken.None);
+        var result = await repo.RemoveTrailFromUserWishListAsync("no-such-user", NassehultIdentifier, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -376,7 +376,7 @@ public class UserRepositoryTests : TestBase
         var repo = BuildRepo();
 
         // Act
-        var result = await repo.GetUserByNickNameAsync("NaturElskaren", u => u.Id, CancellationToken.None);
+        var result = await repo.GetUserByNickNameAsync("NaturElskaren", u => u.Id, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -390,7 +390,7 @@ public class UserRepositoryTests : TestBase
         var repo = BuildRepo();
 
         // Act
-        var result = await repo.GetUserByNickNameAsync("NoSuchNickname", u => u.Id, CancellationToken.None);
+        var result = await repo.GetUserByNickNameAsync("NoSuchNickname", u => u.Id, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -404,7 +404,7 @@ public class UserRepositoryTests : TestBase
         var repo = BuildRepo();
 
         // Act
-        var result = await repo.CheckUserNicknameAvaliability("BrandNewNickname", CancellationToken.None);
+        var result = await repo.CheckUserNicknameAvaliability("BrandNewNickname", TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -417,7 +417,7 @@ public class UserRepositoryTests : TestBase
         var repo = BuildRepo();
 
         // Act
-        var result = await repo.CheckUserNicknameAvaliability("NaturElskaren", CancellationToken.None);
+        var result = await repo.CheckUserNicknameAvaliability("NaturElskaren", TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -434,7 +434,7 @@ public class UserRepositoryTests : TestBase
         var repo = BuildRepo();
 
         // Act
-        var result = await repo.DeleteUserAsync("no-such-user", CancellationToken.None);
+        var result = await repo.DeleteUserAsync("no-such-user", TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeFalse();

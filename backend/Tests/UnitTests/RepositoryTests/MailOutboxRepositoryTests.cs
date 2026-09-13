@@ -49,7 +49,7 @@ public class MailOutboxRepositoryTests : TestBase
         var repo = Build(CreateSeededFactory(Seed(MakeEmail(1))));
 
         // Act
-        var result = await repo.ClaimAsync(1, CancellationToken.None);
+        var result = await repo.ClaimAsync(1, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -62,10 +62,10 @@ public class MailOutboxRepositoryTests : TestBase
         // Arrange - this is the duplicate queue signal. The second claim must find nothing to
         // do, which is what stops the same mail being sent twice.
         var repo = Build(CreateSeededFactory(Seed(MakeEmail(1))));
-        await repo.ClaimAsync(1, CancellationToken.None);
+        await repo.ClaimAsync(1, TestContext.Current.CancellationToken);
 
         // Act
-        var second = await repo.ClaimAsync(1, CancellationToken.None);
+        var second = await repo.ClaimAsync(1, TestContext.Current.CancellationToken);
 
         // Assert
         second.IsSuccess.Should().BeFalse();
@@ -79,7 +79,7 @@ public class MailOutboxRepositoryTests : TestBase
         var repo = Build(CreateSeededFactory(Seed(MakeEmail(1, OutboxEmailStatus.Sent))));
 
         // Act
-        var result = await repo.ClaimAsync(1, CancellationToken.None);
+        var result = await repo.ClaimAsync(1, TestContext.Current.CancellationToken);
 
         // Assert
         result.Status.Should().Be(RepositoryResultStatus.Conflict);
@@ -92,7 +92,7 @@ public class MailOutboxRepositoryTests : TestBase
         var repo = Build(CreateSeededFactory());
 
         // Act
-        var result = await repo.ClaimAsync(404, CancellationToken.None);
+        var result = await repo.ClaimAsync(404, TestContext.Current.CancellationToken);
 
         // Assert
         result.Status.Should().Be(RepositoryResultStatus.NotFound);
@@ -106,11 +106,11 @@ public class MailOutboxRepositoryTests : TestBase
         var repo = Build(factory);
 
         // Act
-        var result = await repo.MarkSentAsync(1, CancellationToken.None);
+        var result = await repo.MarkSentAsync(1, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        using var db = await factory.CreateDbContextAsync();
+        using var db = await factory.CreateDbContextAsync(TestContext.Current.CancellationToken);
         var stored = db.OutboxEmails.Single(e => e.Id == 1);
         stored.Status.Should().Be(OutboxEmailStatus.Sent);
         stored.SentAt.Should().NotBeNull();
@@ -131,7 +131,7 @@ public class MailOutboxRepositoryTests : TestBase
         var before = DateTime.UtcNow;
 
         // Act
-        var result = await repo.MarkFailedAsync(1, "connection refused", permanent: false, MaxAttempts, CancellationToken.None);
+        var result = await repo.MarkFailedAsync(1, "connection refused", permanent: false, MaxAttempts, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -148,7 +148,7 @@ public class MailOutboxRepositoryTests : TestBase
         var repo = Build(factory);
 
         // Act
-        var result = await repo.MarkFailedAsync(1, "still refused", permanent: false, MaxAttempts, CancellationToken.None);
+        var result = await repo.MarkFailedAsync(1, "still refused", permanent: false, MaxAttempts, TestContext.Current.CancellationToken);
 
         // Assert
         result.Value!.Status.Should().Be(OutboxEmailStatus.Failed);
@@ -165,7 +165,7 @@ public class MailOutboxRepositoryTests : TestBase
         var repo = Build(factory);
 
         // Act
-        var result = await repo.MarkFailedAsync(1, "550: no such mailbox", permanent: true, MaxAttempts, CancellationToken.None);
+        var result = await repo.MarkFailedAsync(1, "550: no such mailbox", permanent: true, MaxAttempts, TestContext.Current.CancellationToken);
 
         // Assert
         result.Value!.Status.Should().Be(OutboxEmailStatus.Failed);
@@ -182,11 +182,11 @@ public class MailOutboxRepositoryTests : TestBase
         var repo = Build(factory);
 
         // Act
-        var result = await repo.ReleaseAsync(1, CancellationToken.None);
+        var result = await repo.ReleaseAsync(1, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        using var db = await factory.CreateDbContextAsync();
+        using var db = await factory.CreateDbContextAsync(TestContext.Current.CancellationToken);
         var stored = db.OutboxEmails.Single(e => e.Id == 1);
         stored.Status.Should().Be(OutboxEmailStatus.Pending);
         stored.Attempts.Should().Be(2);
@@ -206,13 +206,13 @@ public class MailOutboxRepositoryTests : TestBase
         var repo = Build(factory);
 
         // Act
-        var result = await repo.ResetInterruptedAsync(CancellationToken.None);
+        var result = await repo.ResetInterruptedAsync(TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().Be(1);
 
-        using var db = await factory.CreateDbContextAsync();
+        using var db = await factory.CreateDbContextAsync(TestContext.Current.CancellationToken);
         db.OutboxEmails.Single(e => e.Id == 1).Status.Should().Be(OutboxEmailStatus.Pending);
         db.OutboxEmails.Single(e => e.Id == 2).Status.Should().Be(OutboxEmailStatus.Sent);
         db.OutboxEmails.Single(e => e.Id == 3).Status.Should().Be(OutboxEmailStatus.Failed);
@@ -231,7 +231,7 @@ public class MailOutboxRepositoryTests : TestBase
         var repo = Build(factory);
 
         // Act
-        var result = await repo.GetPendingIdsAsync(CancellationToken.None);
+        var result = await repo.GetPendingIdsAsync(TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -246,11 +246,11 @@ public class MailOutboxRepositoryTests : TestBase
         var repo = Build(factory);
 
         // Act
-        var result = await repo.AddAsync(MakeEmail(0), CancellationToken.None);
+        var result = await repo.AddAsync(MakeEmail(0), TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        using var db = await factory.CreateDbContextAsync();
+        using var db = await factory.CreateDbContextAsync(TestContext.Current.CancellationToken);
         db.OutboxEmails.Should().ContainSingle(e => e.Status == OutboxEmailStatus.Pending);
     }
 }

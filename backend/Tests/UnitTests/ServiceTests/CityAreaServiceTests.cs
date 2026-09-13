@@ -40,7 +40,7 @@ public class CityAreaServiceTests
             .ReturnsAsync(RepositoryResult<IReadOnlyCollection<CityAreaProjection>>.Success(cityAreas));
 
         // Act
-        var result = await Build(repo).GetAllAsync(CancellationToken.None);
+        var result = await Build(repo).GetAllAsync(TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -56,7 +56,7 @@ public class CityAreaServiceTests
             .ReturnsAsync(RepositoryResult<IReadOnlyCollection<CityAreaProjection>>.Success([]));
 
         // Act
-        var result = await Build(repo).GetAllAsync(CancellationToken.None);
+        var result = await Build(repo).GetAllAsync(TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -72,7 +72,7 @@ public class CityAreaServiceTests
             .ReturnsAsync(RepositoryResult<IReadOnlyCollection<CityAreaProjection>>.Error());
 
         // Act
-        var result = await Build(repo).GetAllAsync(CancellationToken.None);
+        var result = await Build(repo).GetAllAsync(TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -89,7 +89,7 @@ public class CityAreaServiceTests
             .ReturnsAsync(RepositoryResult<CityAreaProjection>.Success(MakeCityArea()));
 
         // Act
-        var result = await Build(repo).GetByIdentifierAsync(CityAreaIdentifier, CancellationToken.None);
+        var result = await Build(repo).GetByIdentifierAsync(CityAreaIdentifier, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -106,7 +106,7 @@ public class CityAreaServiceTests
             .ReturnsAsync(RepositoryResult<CityAreaProjection>.NotFound());
 
         // Act
-        var result = await Build(repo).GetByIdentifierAsync("no-such-id", CancellationToken.None);
+        var result = await Build(repo).GetByIdentifierAsync("no-such-id", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -123,7 +123,7 @@ public class CityAreaServiceTests
             .ReturnsAsync(RepositoryResult<CityAreaProjection>.Error());
 
         // Act
-        var result = await Build(repo).GetByIdentifierAsync("some-id", CancellationToken.None);
+        var result = await Build(repo).GetByIdentifierAsync("some-id", TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
