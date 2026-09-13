@@ -479,7 +479,12 @@
     "shelters": "Wind shelters",
     "fishing": "Fishing",
     "swimming": "Swimming spots",
-    "natureReserve": "Nature reserv"
+    "natureReserve": "Nature reserv",
+    "firePitCount_one": "{{count}} fire pit",
+    "firePitCount_other": "{{count}} fire pits",
+    "shelterCount_one": "{{count}} wind shelter",
+    "shelterCount_other": "{{count}} wind shelters",
+    "facilitiesOnMapHint": "Turn on Fire pits and Wind shelters in the map filter to see where they are."
   },
   "home": {
     "popularNearYou": "Popular walks near you",

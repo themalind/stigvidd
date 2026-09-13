@@ -304,42 +304,79 @@ it("hides the facility section for an area that has none", async () => {
   expect(screen.queryByText("Faciliteter")).toBeNull();
 });
 
-it("groups the facilities under the kind they are", async () => {
+it("groups the named facilities under the kind they are", async () => {
   await show({
     facilities: [
-      facility({ identifier: "f-1", name: "Grillplatsen", facilityType: FacilityType.FirePit }),
-      facility({ identifier: "f-2", name: "Vindskyddet", facilityType: FacilityType.Shelter }),
-      facility({ identifier: "f-3", name: "Bryggan", facilityType: FacilityType.SwimmingArea }),
+      facility({ identifier: "f-1", name: "Bryggan", facilityType: FacilityType.SwimmingArea }),
+      facility({ identifier: "f-2", name: "Ryasjön", facilityType: FacilityType.FishingArea }),
+      facility({ identifier: "f-3", name: "Rya åsar naturreservat", facilityType: FacilityType.NatureReserve }),
     ],
   });
 
   expect(screen.getByText("Faciliteter")).toBeTruthy();
-  expect(within(screen.getByTestId("facility-section-outdoor-grill")).getByText("Grillplatsen")).toBeTruthy();
-  expect(within(screen.getByTestId("facility-section-cabin")).getByText("Vindskyddet")).toBeTruthy();
   expect(within(screen.getByTestId("facility-section-pool")).getByText("Bryggan")).toBeTruthy();
+  expect(within(screen.getByTestId("facility-section-set-meal")).getByText("Ryasjön")).toBeTruthy();
+  expect(within(screen.getByTestId("facility-section-park")).getByText("Rya åsar naturreservat")).toBeTruthy();
 });
 
-// facilityType is a [Flags] bitmask: a fire pit under a shelter is 3 and belongs in both lists.
-it("lists a combined facility under every kind it carries", async () => {
+// The imported names are near-identical ("Rya åsar - grillplats"), so fire pits and shelters are counted instead.
+it("counts fire pits and shelters instead of listing their names", async () => {
   await show({
     facilities: [
-      facility({
-        identifier: "f-1",
-        name: "Grillplats under tak",
-        facilityType: FacilityType.FirePit | FacilityType.Shelter,
-      }),
+      facility({ identifier: "f-1", name: "Rya åsar - grillplats", facilityType: FacilityType.FirePit }),
+      facility({ identifier: "f-2", name: "Rya åsar - Grillplats ", facilityType: FacilityType.FirePit }),
+      facility({ identifier: "f-3", name: "Rya åsar - vindskydd", facilityType: FacilityType.Shelter }),
     ],
   });
 
-  expect(within(screen.getByTestId("facility-section-outdoor-grill")).getByText("Grillplats under tak")).toBeTruthy();
-  expect(within(screen.getByTestId("facility-section-cabin")).getByText("Grillplats under tak")).toBeTruthy();
+  expect(within(screen.getByTestId("facility-count-outdoor-grill")).getByText("2 grillplatser")).toBeTruthy();
+  expect(within(screen.getByTestId("facility-count-cabin")).getByText("1 vindskydd")).toBeTruthy();
+  expect(screen.queryByText(/Rya åsar -/)).toBeNull();
+  expect(screen.queryByTestId("facility-section-outdoor-grill")).toBeNull();
+  expect(screen.queryByTestId("facility-section-cabin")).toBeNull();
+});
+
+it("uses the singular for a single fire pit", async () => {
+  await show({ facilities: [facility({ facilityType: FacilityType.FirePit })] });
+
+  expect(screen.getByText("1 grillplats")).toBeTruthy();
+});
+
+// facilityType is a [Flags] bitmask: a fire pit under a shelter is 3 and counts as both.
+it("counts a combined facility under every kind it carries", async () => {
+  await show({
+    facilities: [
+      facility({ identifier: "f-1", facilityType: FacilityType.FirePit | FacilityType.Shelter }),
+      facility({ identifier: "f-2", facilityType: FacilityType.FirePit }),
+    ],
+  });
+
+  expect(within(screen.getByTestId("facility-count-outdoor-grill")).getByText("2 grillplatser")).toBeTruthy();
+  expect(within(screen.getByTestId("facility-count-cabin")).getByText("1 vindskydd")).toBeTruthy();
+});
+
+// Fire pits and shelters are off by default on the map tab, so the hint says to turn them on.
+it("points to the map filter under the counts", async () => {
+  await show({ facilities: [facility({ facilityType: FacilityType.Shelter })] });
+
+  expect(screen.getByTestId("facility-count-hint")).toHaveTextContent(
+    "Slå på Grillplatser och Vindskydd i kartans filter för att se var de ligger.",
+  );
+});
+
+it("leaves out the counts and the hint for an area with neither fire pits nor shelters", async () => {
+  await show({ facilities: [facility({ facilityType: FacilityType.SwimmingArea })] });
+
+  expect(screen.queryByTestId("facility-count-outdoor-grill")).toBeNull();
+  expect(screen.queryByTestId("facility-count-cabin")).toBeNull();
+  expect(screen.queryByTestId("facility-count-hint")).toBeNull();
 });
 
 it("leaves out the groups nothing falls into", async () => {
   await show({ facilities: [facility({ facilityType: FacilityType.FirePit })] });
 
-  expect(screen.getByTestId("facility-section-outdoor-grill")).toBeTruthy();
-  expect(screen.queryByTestId("facility-section-cabin")).toBeNull();
+  expect(screen.getByTestId("facility-count-outdoor-grill")).toBeTruthy();
+  expect(screen.queryByTestId("facility-count-cabin")).toBeNull();
   expect(screen.queryByTestId("facility-section-set-meal")).toBeNull();
   expect(screen.queryByTestId("facility-section-pool")).toBeNull();
   expect(screen.queryByTestId("facility-section-park")).toBeNull();
@@ -354,7 +391,6 @@ it("names each group and heads it with its own icon", async () => {
     ],
   });
 
-  expect(screen.getByText("Grillplatser")).toBeTruthy();
   expect(screen.getByText("Fiske")).toBeTruthy();
   expect(screen.getByText("Naturreservat")).toBeTruthy();
   expect(screen.getByTestId("icon-outdoor-grill")).toBeTruthy();
@@ -364,16 +400,24 @@ it("names each group and heads it with its own icon", async () => {
 
 it("shows a facility's place and description when it has them", async () => {
   await show({
-    facilities: [facility({ location: "Vid norra parkeringen", description: "Ved finns på plats." })],
+    facilities: [
+      facility({
+        facilityType: FacilityType.FishingArea,
+        location: "Vid norra parkeringen",
+        description: "Fiskekort krävs.",
+      }),
+    ],
   });
 
   expect(screen.getByText("Vid norra parkeringen")).toBeTruthy();
-  expect(screen.getByText("Ved finns på plats.")).toBeTruthy();
+  expect(screen.getByText("Fiskekort krävs.")).toBeTruthy();
   expect(screen.getByTestId("icon-place")).toBeTruthy();
 });
 
 it("leaves out the place row for a facility with no place", async () => {
-  await show({ facilities: [facility({ location: undefined, description: undefined })] });
+  await show({
+    facilities: [facility({ facilityType: FacilityType.FishingArea, location: undefined, description: undefined })],
+  });
 
   expect(screen.getByText("Grillplatsen vid sjön")).toBeTruthy();
   expect(screen.queryByTestId("icon-place")).toBeNull();

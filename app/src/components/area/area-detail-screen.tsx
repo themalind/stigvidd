@@ -23,6 +23,7 @@ import { Icon, Text, useTheme } from "react-native-paper";
 import ErrorView from "../error-view";
 import LoadingIndicator from "../loading-indicator";
 import AreaTrailSection from "./area-trail-section";
+import FacilityCountRow from "./facility-count-row";
 import FacilitySection from "./facility-section";
 
 const HERO_HEIGHT = 260;
@@ -30,9 +31,13 @@ const HERO_HEIGHT = 260;
 // Facility groups, driven by the [Flags] FacilityType enum. Membership is tested
 // bitwise via hasFacilityType, so a combined facility (e.g. FirePit | Shelter)
 // correctly surfaces under every kind it carries.
+// Fire pits and shelters are shown as a count; their positions are on the map tab.
+const COUNTED_FACILITY_GROUPS = [
+  { type: FacilityType.FirePit, countKey: "area.firePitCount", icon: "outdoor-grill" },
+  { type: FacilityType.Shelter, countKey: "area.shelterCount", icon: "cabin" },
+] as const;
+
 const FACILITY_GROUPS = [
-  { type: FacilityType.FirePit, titleKey: "area.firePits", icon: "outdoor-grill" },
-  { type: FacilityType.Shelter, titleKey: "area.shelters", icon: "cabin" },
   { type: FacilityType.FishingArea, titleKey: "area.fishing", icon: "set-meal" },
   { type: FacilityType.SwimmingArea, titleKey: "area.swimming", icon: "pool" },
   { type: FacilityType.NatureReserve, titleKey: "area.natureReserve", icon: "park" },
@@ -65,6 +70,10 @@ export default function AreaDetailScreen() {
 
   const trailCount = area.trails.length;
   const totalKm = Math.round(area.trails.reduce((sum, tr) => sum + (tr.trailLength ?? 0), 0));
+  const countedGroups = COUNTED_FACILITY_GROUPS.map((group) => ({
+    ...group,
+    count: area.facilities.filter((f) => hasFacilityType(f.facilityType, group.type)).length,
+  })).filter((group) => group.count > 0);
 
   return (
     <View testID="area-screen" style={[s.screen, { backgroundColor: theme.colors.background }]}>
@@ -140,6 +149,20 @@ export default function AreaDetailScreen() {
         {area.facilities.length > 0 && (
           <View style={s.section}>
             <Text style={[s.sectionHeading, { color: theme.colors.onBackground }]}>{t("area.facilities")}</Text>
+            {countedGroups.length > 0 && (
+              <View style={s.countRows}>
+                {countedGroups.map((group) => (
+                  <FacilityCountRow
+                    key={group.type}
+                    icon={group.icon}
+                    label={t(group.countKey, { count: group.count })}
+                  />
+                ))}
+                <Text testID="facility-count-hint" style={[s.hint, { color: theme.colors.onSurfaceVariant }]}>
+                  {t("area.facilitiesOnMapHint")}
+                </Text>
+              </View>
+            )}
             {FACILITY_GROUPS.map((group) => (
               <FacilitySection
                 key={group.type}
@@ -224,6 +247,14 @@ const s = StyleSheet.create({
   },
   section: {
     gap: 12,
+  },
+  countRows: {
+    paddingHorizontal: SCREEN_PADDING,
+    gap: 8,
+  },
+  hint: {
+    fontSize: 13,
+    paddingHorizontal: 4,
   },
   sectionHeading: {
     paddingHorizontal: SCREEN_PADDING + 4,

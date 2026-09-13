@@ -479,7 +479,12 @@
     "shelters": "Vindskydd",
     "fishing": "Fiske",
     "swimming": "Badplatser",
-    "natureReserve": "Naturreservat"
+    "natureReserve": "Naturreservat",
+    "firePitCount_one": "{{count}} grillplats",
+    "firePitCount_other": "{{count}} grillplatser",
+    "shelterCount_one": "{{count}} vindskydd",
+    "shelterCount_other": "{{count}} vindskydd",
+    "facilitiesOnMapHint": "Slå på Grillplatser och Vindskydd i kartans filter för att se var de ligger."
   },
   "home": {
     "popularNearYou": "Populära promenader nära dig",
