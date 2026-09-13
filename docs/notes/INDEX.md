@@ -287,6 +287,15 @@ src/api/generated` then fails with "the generated API client is stale" for reaso
   git. It lints the working tree, uncommitted files included. Do not hardcode the file
   count: CLAUDE.md said 1011, the tree measured 1252 on 2026-09-12, and `Missing licenses: 0`
   is the actual check.
+- [reuse lint says "not compliant" on an indexed checkout, and licensing is not the reason](reuse-lint-reports-non-compliant-because-of-the-codegraph-socket.md) —
+  the container form lints the whole working tree, which on a CodeGraph-indexed checkout
+  includes `.codegraph/daemon.sock`. A unix socket cannot be read, `reuse` counts a read error
+  as non-compliance, and the run ends in "Unfortunately, your project is not compliant" with
+  `Bad licenses: 0`, `Missing licenses: 0` and every file covered. `.codegraph/` is gitignored,
+  so GitHub's `licensing` job never sees it and is green — the red is local only. Read the
+  `Read errors:` and `Missing licenses:` counters, not the verdict, and to get a real answer
+  lint a copy built from `git ls-files` plus `git ls-files --others --exclude-standard`, which
+  is exactly the set CI checks out.
 - [FluentAssertions 8.x is not free software, and nothing in the build says so](fluentassertions-8-is-not-free-software.md) —
   version 8.0.0 onward is the Xceed Community License, non-commercial only and revocable;
   7.2.0 was the last Apache-2.0 release. `dotnet build` and `dotnet test` say nothing about
@@ -324,6 +333,11 @@ src/api/generated` then fails with "the generated API client is stale" for reaso
   `template_key`) or carry no dimension. `MetricAttributeVocabularyTests` reproduces the same
   tokenisation over `Core/Telemetry/MetricTags.Keys` so it fails the build instead of warning on
   the host after deploy; its token set is copied from the script and must be changed in both.
+  The same trap bites an OpenTelemetry Collector harder and with nothing checking it at all:
+  the stock `host_metrics`/`docker_stats` attributes `device`, `device_major`, `device_minor`,
+  `container.name`, `container.image.name` and `host.name` produced 39 flagged fields until
+  `observability/otel-hostmetrics.yaml` renamed them to `dev`, `container`, `container_image`
+  and a literal `hostname`.
 - [OpenObserve OSS has no RBAC, so the ingestion token is the only thing a public credential may be](openobserve-oss-has-no-rbac.md) —
   the `Member` role DEPLOYMENT.md told you to give the ingest account is rejected outright
   ("Custom roles not allowed"), `service_account` is accepted and silently stored as `admin`,
@@ -337,6 +351,16 @@ src/api/generated` then fails with "the generated API client is stale" for reaso
   work on stream-settings routes, which is why `scripts/observatory-retention.sh` needs
   `OBSERVATORY_OPS_*`. Reproducing it: `localhost:5080` fails on rootless podman (IPv4 only,
   use `127.0.0.1`), and `_search` wants microsecond times or returns `invalid time range`.
+- [Deleting an OpenObserve stream does not reset it — later ingest never recreates it, and the producer reports success](deleting-an-openobserve-stream-stops-it-being-recreated.md) —
+  a metrics stream is created on first ingest, so deleting one reads as reversible. It is not:
+  measured on v0.92.2, `DELETE /api/{org}/streams/{name}?type=metrics` returned 200 and the
+  name never came back, while the OpenTelemetry Collector still pushing it on a 60s interval
+  logged nothing at all and its other 33 streams kept ingesting. Deleting streams to get a
+  clean verification run therefore looks exactly like a broken exporter or a bad config —
+  recreate the container and its data volume instead. Compounding it, a collector's first
+  scrape lands one full `collection_interval` after start, so an empty stream list twenty
+  seconds in is normal. Also makes `scripts/observatory-retention.sh` unable to restore what
+  was deleted, since it cannot pre-create a stream.
 - [An EAS build never sees `app/.env`, and `eas.json` does not say which variables it does see](eas-env-vars-are-not-your-dotenv.md) —
   EAS Build uploads the working tree — uncommitted and untracked files included, since
   `requireCommit` defaults to false — but drops what `.gitignore` drops, and `app/.env` is

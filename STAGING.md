@@ -252,6 +252,12 @@ PRESENTABLE_BASE_URL=https://staging.media.stigvidd.se/
 OTLP_ENDPOINT=https://observatory.stigvidd.se/api/<staging-org-id>
 OTLP_TOKEN=<the staging org's api@ INGESTION TOKEN>
 OTLP_LOG_STREAM=stigvidd_api_logs
+# Host metrics stay OFF here. COMPOSE_PROFILES is unset, so the `hostmetrics`
+# service does not exist for compose and the five-service `up` below is unaffected.
+# If you ever do want them, note that HOST_METRICS_OTLP_ENDPOINT must NOT be
+# reached via staging's own OBSERVATORY_DOMAIN: the proxy aliases that name onto
+# itself, so the request would never leave this host. Point it at production's
+# name directly, the same way OTLP_ENDPOINT above does.
 
 # ---- Backend -------------------------------------------------------------
 ASPNETCORE_ENVIRONMENT=Production   # staging runs the production config path

@@ -1,0 +1,161 @@
+# OpenTelemetry Collector — host and per-container resource metrics.
+#
+# The stack has always had APPLICATION metrics (the API exports ASP.NET Core,
+# runtime and Npgsql instrumentation over OTLP) and never had any signal about the
+# machine underneath. This collects CPU, memory, load, paging, disk, filesystem and
+# network for the host, plus per-container CPU/memory/IO from the Docker daemon, and
+# pushes them to the same OpenObserve the API already writes to — in-stack, plaintext,
+# no proxy hop.
+#
+# It is OPT-IN: the `hostmetrics` service in docker-compose.yml carries
+# `profiles: [hostmetrics]`, so nothing here runs until COMPOSE_PROFILES says so.
+#
+# THE TRAP THIS FILE MOSTLY EXISTS TO AVOID. Metrics streams are kept for 730 days,
+# which is lawful only while they carry no personal data, and
+# scripts/observatory-retention.sh enforces that by TOKENISING every metrics field
+# name against a flat identifier set — a warning there is a release blocker. Both
+# receivers emit names that trip it out of the box:
+#
+#     device / device_major / device_minor   -> token `device`
+#     container.name -> container_name       -> token `name`
+#     container.image.name                   -> token `name`
+#     host.name      -> host_name            -> token `name`
+#
+# None of them carry personal data. The guard cannot tell, and widening its allowlist
+# for `device` would also widen it for the names it exists to catch, so the renames
+# below are the fix instead. `hostname` survives as one token and is in no set, which
+# is why the host label is spelled that way rather than as `host.name`.
+# See docs/notes/metric-attribute-names-trip-the-retention-guard.md.
+#
+# NO SECRETS IN THIS FILE. It is committed to git and scp'd to the host by the
+# Jenkins deploy; the ingestion token reaches it through the environment only.
+
+receivers:
+  host_metrics:
+    # Paired with the `/:/hostfs:ro` bind in docker-compose.yml. Without it every
+    # scraper reports the CONTAINER's view — which for cpu/memory is the host's
+    # anyway, but for filesystem is the image layer, i.e. the wrong disk entirely.
+    root_path: /hostfs
+    # 60s is a deliberate floor, not a default. Every datapoint here sits for two
+    # years; at 10s this would be six times the disk for no operational gain, since
+    # nothing acts on host CPU at ten-second resolution.
+    # Note the first scrape lands one FULL interval after start, not at start: an
+    # empty stream list twenty seconds after `up -d` is normal and means nothing.
+    # See docs/notes/deleting-an-openobserve-stream-stops-it-being-recreated.md,
+    # which also explains why you must not "clean up" streams to re-run a test.
+    collection_interval: 60s
+    scrapers:
+      cpu:
+      load:
+      memory:
+      paging:
+      disk:
+      network:
+      filesystem:
+        # Cardinality control, and the reason it matters more here than usual: every
+        # running container contributes an `overlay` mount and several `tmpfs` ones,
+        # so without this the filesystem streams grow a dimension per container
+        # recreate and never shrink for 730 days.
+        exclude_fs_types:
+          fs_types: [overlay, tmpfs, devtmpfs, squashfs, autofs, proc, sysfs, cgroup2, nsfs, mqueue, tracefs, debugfs, bpf, configfs, pstore, securityfs, hugetlbfs, fusectl, ramfs, binfmt_misc]
+          match_type: strict
+        exclude_mount_points:
+          mount_points: ["/var/lib/docker/*", "/var/lib/containers/*", "/run/*", "/sys/*", "/proc/*", "/dev/*"]
+          match_type: regexp
+
+  docker_stats:
+    # Root-equivalent access — see the comment on the socket mount in
+    # docker-compose.yml. This is what answers "which container ate the box",
+    # which host-level metrics alone cannot.
+    endpoint: unix:///var/run/docker.sock
+    collection_interval: 60s
+
+processors:
+  # The openobserve service caps its memory through its own env rather than a cgroup
+  # limit, because an OOM kill mid-flush is worse than spilling. Same reasoning here:
+  # the collector sheds load and says so, instead of being killed by the kernel.
+  memory_limiter:
+    check_interval: 5s
+    limit_mib: 128
+    spike_limit_mib: 32
+
+  # RESOURCE-level attribute hygiene. See the header: the renames are what keep the
+  # 730-day retention guard quiet, and the deletions are cardinality control.
+  resource:
+    attributes:
+      - key: service.name
+        value: stigvidd-host
+        action: upsert
+      # `hostname`, NOT `host.name` — the latter flattens to host_name and trips the
+      # guard on the token `name`.
+      - key: hostname
+        value: ${env:HOST_METRICS_HOSTNAME}
+        action: upsert
+      - key: container
+        from_attribute: container.name
+        action: insert
+      - key: container_image
+        from_attribute: container.image.name
+        action: insert
+      - key: container.name
+        action: delete
+      - key: container.image.name
+        action: delete
+      # Unbounded cardinality: both change on every `docker compose up -d`, and a new
+      # value would sit in a two-year stream for each recreate the stack ever does.
+      - key: container.id
+        action: delete
+      - key: container.image.id
+        action: delete
+      - key: container.hostname
+        action: delete
+
+  # DATAPOINT-level attributes. A separate processor from `resource` above because
+  # these live on the datapoints, not on the resource: `device` is emitted by the
+  # disk/filesystem/network/paging scrapers, `device_major`/`device_minor` by
+  # docker_stats' blockio metrics.
+  attributes:
+    actions:
+      - key: dev
+        from_attribute: device
+        action: insert
+      - key: dev_major
+        from_attribute: device_major
+        action: insert
+      - key: dev_minor
+        from_attribute: device_minor
+        action: insert
+      - key: device
+        action: delete
+      - key: device_major
+        action: delete
+      - key: device_minor
+        action: delete
+
+  batch:
+
+exporters:
+  otlp_http:
+    # The COMPLETE URL, signal path included. Same trap the .NET exporter documents in
+    # StigviddAPI/Extensions/TelemetryExtensions.cs: OTLP SDKs only append `/v1/metrics`
+    # for the OTEL_EXPORTER_OTLP_ENDPOINT *environment variable*, never for an endpoint
+    # set explicitly. HOST_METRICS_OTLP_ENDPOINT holds the org base — matching
+    # OTLP_ENDPOINT's convention — and the signal path is appended here.
+    # Get it wrong and every batch POSTs to the org root, OpenObserve answers 404, and
+    # the only symptom is no data.
+    metrics_endpoint: ${env:HOST_METRICS_OTLP_ENDPOINT}/v1/metrics
+    headers:
+      # An INGESTION TOKEN (already base64("user:passcode")), never a login password:
+      # OpenObserve OSS has no RBAC, so a password here would be full admin over every
+      # stream. See docs/notes/openobserve-oss-has-no-rbac.md.
+      Authorization: Basic ${env:HOST_METRICS_OTLP_TOKEN}
+    retry_on_failure:
+      enabled: true
+      max_elapsed_time: 300s
+
+service:
+  pipelines:
+    metrics:
+      receivers: [host_metrics, docker_stats]
+      processors: [memory_limiter, resource, attributes, batch]
+      exporters: [otlp_http]

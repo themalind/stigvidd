@@ -295,6 +295,13 @@ uncommitted files — see
 [docs/notes/reuse-lint-needs-no-install-it-runs-as-a-container.md](docs/notes/reuse-lint-needs-no-install-it-runs-as-a-container.md)
 for why the `safe.directory` env vars are not optional.
 
+"Whole working tree" is also why the verdict line lies on a CodeGraph-indexed checkout: it
+walks `.codegraph/daemon.sock`, cannot read a socket, and ends in "not compliant" with
+`Missing licenses: 0` and every file covered. `.codegraph/` is gitignored so CI is green.
+Read the counters, not the verdict —
+[docs/notes/reuse-lint-reports-non-compliant-because-of-the-codegraph-socket.md](docs/notes/reuse-lint-reports-non-compliant-because-of-the-codegraph-socket.md)
+has the clean-copy recipe that gives a trustworthy answer.
+
 Two mechanical traps when adding headers in bulk: **196 of the 402 `.cs` files carry a UTF-8
 BOM**, which must stay the first bytes (header goes *after* it), and everything is LF per
 `.gitattributes`.

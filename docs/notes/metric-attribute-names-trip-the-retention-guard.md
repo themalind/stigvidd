@@ -28,6 +28,32 @@ Two that pass and look like they should not: `hostname` is a single token and is
 `service_name` is in the script's own `INTERNAL` allowlist of fields every OTLP stream carries,
 so it is never flagged despite ending in `name`.
 
+## The same trap, from an OpenTelemetry Collector
+
+The tokeniser does not care who produced the field, and the **stock** attribute names
+of the `host_metrics` and `docker_stats` receivers are worse offenders than anything
+hand-written here. Measured with collector 0.160.0 against OpenObserve v0.92.2, an
+un-renamed config produced **39 flagged fields across 26 streams** — with the renames
+in `observability/otel-hostmetrics.yaml`, **0**:
+
+| stock attribute | flattens to | token that fires |
+| --- | --- | --- |
+| `device` — disk, filesystem, network, paging scrapers | `device` | `device` |
+| `device_major`, `device_minor` — docker blockio | same | `device` |
+| `container.name` | `container_name` | `name` |
+| `container.image.name` | `container_image_name` | `name` |
+| `host.name` — what `resourcedetection` adds | `host_name` | `name` |
+
+`device` is the surprising one, because it reads as hardware rather than identity;
+it is in `IDENT_TOKENS` for `deviceid`'s sake. The renames chosen, all in the
+collector's `resource` and `attributes` processors: `dev`, `dev_major`, `dev_minor`,
+`container`, `container_image`, and a literal `hostname` resource attribute instead
+of `host.name` — `hostname` being one token and in no set, exactly as recorded above.
+
+Worth knowing: `container_id` **passes** (`container`, `id` — neither is in the set),
+so the guard is no help at all against the thing that actually threatens a two-year
+stream there, which is cardinality. That config drops it anyway.
+
 ## Why the obvious fix is the wrong one
 
 The reflex on seeing the warning is to argue the case — a trail name really is not personal data,
@@ -64,6 +90,11 @@ case a reviewer would otherwise wave through.
 - A metrics stream is created on **first ingest** and inherits the 7-day global retention until
   the script is re-run. So adding any instrument obliges re-running it on the host after deploy,
   and reading the tail of its output.
+
+And a third blind spot on top of the two above: a **collector** config is checked by
+nothing at all. `MetricAttributeVocabularyTests` reads the backend's `MetricTags.Keys`
+consts; it cannot see `observability/otel-hostmetrics.yaml`. The only signal there is
+running the script itself and reading the tail.
 
 Related: [[openobserve-oss-has-no-rbac]] for why the script needs an account password rather than
 an ingestion token, and [docs/observability.md](../observability.md) for the retention split this

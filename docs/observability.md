@@ -18,6 +18,7 @@ wrong is "we retained precise location data about identifiable users for two yea
 | Service definition, retention + memory caps    | `docker-compose.yml` → `openobserve`     |
 | Public routing, ingest/UI split, body cap      | `proxy/Caddyfile`                        |
 | Metrics retention override + PII guard         | `scripts/observatory-retention.sh`       |
+| Host + container metrics collector             | `observability/otel-hostmetrics.yaml`, `docker-compose.yml` → `hostmetrics` |
 | Host container log retention (a separate 7 days) | `scripts/container-log-retention.sh`, `x-logging` in `docker-compose.yml` |
 | Operational runbook (first boot, troubleshooting) | `DEPLOYMENT.md` Part 1 step 8         |
 | Deployment variables                           | `.env.example`                           |
@@ -47,6 +48,10 @@ wrong is "we retained precise location data about identifiable users for two yea
   into a bundle served publicly from the web domain, so extracting it needs a
   single `curl` rather than an APK. `ZO_CORS_ALLOWED_ORIGINS` already permits the
   web domain, which is what makes a browser-side POST possible at all.
+- **The host itself** is reported by an optional OpenTelemetry Collector, the
+  `hostmetrics` service, over the same in-stack OTLP/HTTP path the backend uses.
+  Everything above measures the *application*; this is the only thing that measures
+  the *machine*. See **Host and container metrics** below.
 - Telemetry is **opt-in everywhere**: with the config absent, the backend
   registers no OpenTelemetry providers at all and the app initialises no SDK.
   Nothing breaks when observability is unconfigured, or down.
@@ -68,7 +73,9 @@ instance:
 - **Metrics** — ASP.NET Core, HttpClient, .NET runtime and Npgsql. Note this is
   **~70 streams** from one service, since OpenObserve creates one per metric name
   and histograms add `_bucket`/`_count`/`_sum`/`_min`/`_max` variants. That is why
-  the retention override is a script rather than a manual UI task.
+  the retention override is a script rather than a manual UI task. The optional
+  `hostmetrics` collector adds **34 more** (measured, see below), so a host with it
+  enabled carries a little over a hundred metrics streams.
 
   Plus the application's own meter, **`Stigvidd`**, declared once in
   `backend/Core/Telemetry/MetricNames.cs` and registered by the matching `AddMeter`
@@ -100,6 +107,115 @@ probabilistic sampling, and sampling away spans would destroy the mobile-RUM-to-
 server correlation this exists to provide. Volume is controlled by *filtering*
 instead. If a head sampler is ever added, it must be `ParentBasedSampler`, or a
 sampled mobile request gets dropped server-side.
+
+## Host and container metrics
+
+Everything above is about the application. The `hostmetrics` service — an
+OpenTelemetry Collector running the `host_metrics` and `docker_stats` receivers —
+is the only thing in the stack that reports on the **machine**: CPU, memory, load,
+paging, disk, filesystem and network for the box, plus per-container CPU, memory
+and IO from the Docker daemon. It exports OTLP/HTTP to the same
+`http://openobserve:5080/api/<org>` the API uses, in-stack and in plaintext.
+
+Config: [`observability/otel-hostmetrics.yaml`](../observability/otel-hostmetrics.yaml),
+bind-mounted (not baked into an image), and `scp`'d to the host by the Jenkins deploy
+alongside `scripts/`.
+
+**Opt-in, via a compose profile.** The service carries `profiles: [hostmetrics]`, so
+with `COMPOSE_PROFILES` unset it does not exist as far as compose is concerned and
+`docker compose up -d` skips it. That is what keeps a host with no ingestion token
+from running a collector that loops on 401s, and it is why every variable it reads
+is `${VAR:-}`-shaped: compose interpolates the **whole file** before selecting
+services, so a `${VAR:?}` here would become mandatory for the staging partial stack
+too. It has its own OpenObserve identity, `host@` — a sixth producer, holding an
+ingestion token like the others.
+
+**CI never starts it.** The Jenkins deploy acts on a hardcoded list of five
+services, so — like `db`, `mailserver` and `openobserve` — this is a manual
+`docker compose up -d hostmetrics` on the host.
+
+### Attribute names: why this config renames six things
+
+This is the part to read before editing the config, because the failure is a
+**release blocker that appears days later on a different machine**.
+
+Metrics streams are kept for 730 days, which is lawful only while they carry no
+personal data, and `scripts/observatory-retention.sh` enforces that by tokenising
+every metrics field name against a flat identifier set (`device` and `name` are both
+in it). The stock receivers emit exactly those names. Measured against
+v0.92.2 with collector 0.160.0, the un-renamed config produced **39 flagged fields**
+across 26 streams:
+
+| stock name | flattens to | the offending token |
+| --- | --- | --- |
+| `device` (disk, filesystem, network scrapers) | `device` | `device` |
+| `device_major`, `device_minor` (docker blockio) | same | `device` |
+| `container.name` | `container_name` | `name` |
+| `container.image.name` | `container_image_name` | `name` |
+| `host.name` (if `resourcedetection` is added) | `host_name` | `name` |
+
+None of them carry personal data; the tokeniser cannot tell, and widening its
+allowlist for `device` would also widen it for the names it exists to catch. So the
+config renames instead — `device` → `dev`, `device_major`/`device_minor` →
+`dev_major`/`dev_minor`, `container.name` → `container`, `container.image.name` →
+`container_image` — and labels the host `hostname` rather than `host.name`, because
+`hostname` is a single token and is in no set. With the renames in place the same
+run flags **0 fields**.
+
+It also **drops** `container.id`, `container.image.id` and `container.hostname`.
+Those are cardinality, not privacy: the first two change on every
+`docker compose up -d`, so each recreate would add a new dimension value to a stream
+that lives for two years.
+
+Nothing in the repo checks this. `MetricAttributeVocabularyTests` reads the
+backend's `MetricTags.Keys` consts and knows nothing about a collector config, so
+the only signal is running `scripts/observatory-retention.sh` on the host and
+reading the **tail** of its output. See
+[notes/metric-attribute-names-trip-the-retention-guard.md](notes/metric-attribute-names-trip-the-retention-guard.md).
+
+### Two more things the config is deliberate about
+
+- **`root_path: /hostfs`, paired with the `/:/hostfs:ro` bind.** Without it the
+  filesystem scraper measures the container's image layer — the wrong disk — while
+  still reporting entirely plausible numbers. Nothing errors.
+- **`collection_interval: 60s` is a floor, not a default.** Every datapoint here
+  sits for two years; at 10s this would be six times the disk for no operational
+  gain. The filesystem scraper also excludes `overlay`/`tmpfs` and the Docker data
+  root, because otherwise each running container contributes mount points that
+  become permanent dimensions.
+
+### The disk budget is the open question
+
+34 streams at 60s, kept for **730 days**, is the largest sustained write this stack
+has ever pointed at the `observatory` volume, and it is the one number that was
+**not** established before shipping: OpenObserve computes stream storage stats on an
+hourly background job, so a short verification run reports zeroes rather than a rate.
+
+So measure it on the host, an hour or so after enabling, before assuming the two-year
+window is affordable:
+
+```bash
+docker system df -v | grep observatory        # volume size, sampled twice an hour apart
+```
+
+If it is uncomfortable, raise `collection_interval` or drop scrapers in
+`observability/otel-hostmetrics.yaml`. Do **not** shorten the metrics retention to
+compensate — the 730-day window is what the whole no-personal-data argument is built
+around, and the split is deliberately fail-safe in the other direction.
+
+### Privileges
+
+This service holds two that nothing else in the stack does, both read-only:
+
+| mount | why | risk |
+| --- | --- | --- |
+| `/:/hostfs:ro` | the only way to measure the host's real filesystems | read access to the host tree from inside a container |
+| `/var/run/docker.sock:ro` | the only way to get per-container CPU/memory | **root-equivalent** on the host |
+
+What bounds them: the collector publishes no port, joins only the `public` network,
+is reachable from nothing, and runs a config with no receiver that listens. It is a
+pure outbound pusher. The docker socket is the price of answering "which container
+ate the box", which host-level metrics alone cannot.
 
 ## Health endpoints
 
@@ -448,11 +564,13 @@ stolen credential buys, and that is entirely decided by item 1 below.
    scoped ingest credential, it is full control of the observatory — which is
    what the app shipped before this was measured.
 
-   **Five identities**, one per producer so that a token extracted from a public
+   **Six identities**, one per producer so that a token extracted from a public
    bundle is not also another producer's, and so one can be rotated alone:
    root (first boot only, and unrotatable), `api@` (server-side), `app@` and
-   `web@` (both public, ingest-only), and `ops@` (a password, because stream
-   management is not an ingest route and a passcode gets a 401 there).
+   `web@` (both public, ingest-only), `host@` (server-side, the host-metrics
+   collector, and optional — it exists only where that profile is enabled), and
+   `ops@` (a password, because stream management is not an ingest route and a
+   passcode gets a 401 there).
 
    Rotation is asymmetric and worth remembering: the API takes a restart, while
    `app@` and `web@` are compiled in and take a rebuild and a release.
@@ -460,13 +578,21 @@ stolen credential buys, and that is entirely decided by item 1 below.
 2. **Retention as blast-radius cap.** An abuser cannot fill the disk forever, only
    up to `retention × their rate`. Note that garbage written into a *metrics*
    stream would sit for two years — if the token is ever abused, look for junk
-   metric streams specifically and delete them rather than waiting for retention.
-3. **`request_body max_size 10MB`** in the Caddyfile caps a single request.
-4. **`ZO_INGEST_ALLOWED_UPTO` / `_IN_FUTURE`** bound timestamp spoofing, so nobody
+   metric streams specifically and delete them rather than waiting for retention — but note
+   that this is **one-way**: a deleted stream is never recreated by later ingest, and the
+   producer still sending it is told nothing
+   ([notes/deleting-an-openobserve-stream-stops-it-being-recreated.md](notes/deleting-an-openobserve-stream-stops-it-being-recreated.md)).
+3. **The host-metrics collector's two host privileges** — a read-only bind of `/`
+   and a read-only Docker socket — are the largest privileges granted anywhere in
+   this stack, and they are granted to a container that listens on nothing. It runs
+   only where the `hostmetrics` compose profile is enabled, so most of the reason
+   it is defensible is that it is absent by default. See **Privileges** above.
+4. **`request_body max_size 10MB`** in the Caddyfile caps a single request.
+5. **`ZO_INGEST_ALLOWED_UPTO` / `_IN_FUTURE`** bound timestamp spoofing, so nobody
    can plant events years out to evade retention or pollute dashboards.
-5. **No Caddy access log on the ingest paths** — beyond the disk cost,
+6. **No Caddy access log on the ingest paths** — beyond the disk cost,
    access-logging a write endpoint an attacker controls is a log-injection surface.
-6. **Rate limiting is the honest gap.** Caddy OSS has no built-in `rate_limit`; it
+7. **Rate limiting is the honest gap.** Caddy OSS has no built-in `rate_limit`; it
    is the third-party `mholt/caddy-ratelimit`, which means converting
    `proxy/Dockerfile` to an `xcaddy` build stage — a Go build in a currently-instant
    image build, and a third-party module in the TLS-terminating path. Not worth it

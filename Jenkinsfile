@@ -323,7 +323,7 @@ pipeline {
               # fingerprint against the deploy host before trusting it:
               #   sudo -u jenkins ssh-keygen -R stigvidd.se -f /var/lib/jenkins/.ssh/known_hosts
               #   sudo -u jenkins sh -c 'ssh-keyscan -H stigvidd.se >> /var/lib/jenkins/.ssh/known_hosts'
-              ssh -o BatchMode=yes "${DEPLOY_HOST}" "mkdir -p ${DEPLOY_PATH}/db/init ${DEPLOY_PATH}/scripts"
+              ssh -o BatchMode=yes "${DEPLOY_HOST}" "mkdir -p ${DEPLOY_PATH}/db/init ${DEPLOY_PATH}/scripts ${DEPLOY_PATH}/observability"
               scp docker-compose.yml "${DEPLOY_HOST}:${DEPLOY_PATH}/docker-compose.yml"
               # The host's operational scripts. DEPLOYMENT.md invokes all of these
               # as ./scripts/<name>.sh from the compose directory, and
@@ -340,6 +340,13 @@ pipeline {
               # against an EMPTY pgdata, so this is inert on a live host; it keeps
               # a future rebuild from coming up without Keycloak's database.
               scp db/init/*.sql "${DEPLOY_HOST}:${DEPLOY_PATH}/db/init/"
+              # The hostmetrics collector's config. It is a BIND MOUNT in
+              # docker-compose.yml, not baked into an image, so a host without this
+              # file gets a container that will not start — and because the service
+              # sits behind a compose profile and is absent from the up-set below,
+              # that would surface whenever someone next ran it by hand rather than
+              # on the deploy that broke it.
+              scp observability/*.yaml "${DEPLOY_HOST}:${DEPLOY_PATH}/observability/"
 
               # Authenticate the deploy host to the private registry so it can
               # pull. Password is piped over ssh stdin (never in argv/logs).
