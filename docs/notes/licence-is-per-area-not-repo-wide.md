@@ -40,7 +40,9 @@ Three groups deliberately carry **no** header and are declared in
 [`REUSE.toml`](../../REUSE.toml) instead, because `guard-generated-files.mjs` denies the
 edit and is right to — each accepts a header and discards it later:
 
-- `web/src/api/generated/**` and `web/openapi.json` (orval / the test suite rewrite them),
+- `web/src/api/generated/**` and `web/openapi.json` (orval / the test suite rewrite them;
+  the latter is gitignored, but `reuse lint` runs over the working tree, so it still needs
+  an entry wherever it exists),
 - `backend/Infrastructure/Migrations/**` (EF owns the Designer and snapshot files; the 20
   migration bodies are all applied),
 - every binary asset.

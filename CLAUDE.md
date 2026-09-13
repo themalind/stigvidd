@@ -33,7 +33,7 @@ Use `run_in_background: true`, or `-d`. `.claude/hooks/guard-long-running.mjs` d
 | | |
 | --- | --- |
 | .NET | 10 SDK. `global.json` selects the **Microsoft.Testing.Platform** test runner. |
-| Node | >= 22 (orval wants >= 22.18); the shipped web bundle is built on `node:24`. npm only prints `EBADENGINE` and carries on, so nothing else will tell you the version is wrong. |
+| Node | >= 22 (orval wants >= 22.18) **and not 26** — the shipped web bundle and both CI jobs are `node:24`. npm only prints `EBADENGINE` and carries on, so nothing else will tell you the version is wrong. On Node 26 every web test fails in shared setup for a reason that has nothing to do with your change; run the suite in a `node:24` container ([note](docs/notes/node-26-shadows-jsdom-localstorage.md)). |
 | SpatiaLite | Linux only, and required for the geometry integration tests: `libsqlite3-mod-spatialite` on Debian 13, `dev-db/spatialite` on Gentoo. Windows needs nothing — the csproj pulls the bundled `e_sqlite3` instead. See [docs/notes/spatialite-per-os.md](docs/notes/spatialite-per-os.md). |
 
 ## Which signal answers which question
@@ -44,7 +44,7 @@ Use `run_in_background: true`, or `-d`. `.claude/hooks/guard-long-running.mjs` d
 | do the web types check? | `cd web && npm run build` — `tsc -b && vite build` **is** the type check | `npm test`, which is Vitest and type-checks nothing |
 | is the web logic still right? | `cd web && npm test` — Vitest over `src/**/*.test.ts` | assuming a green backend covers it; nothing outside `web/` runs this suite |
 | do the app types check? | `cd app && npx tsc --noEmit`, deliberately | CI — it runs prettier, eslint and jest, and type-checks **nothing** |
-| is the API contract still in step? | the backend test run, then `cd web && npm run generate:api` | assuming a green backend means the web client is current |
+| is the API contract still in step? | the backend test run (it writes the gitignored `web/openapi.json`), then `cd web && npm run generate:api` | assuming a green backend means the web client is current |
 | is the generated client current? | `cd web && npm run generate:api && git diff --exit-code -- src/api/generated` | GitHub Actions — only **Jenkins** runs this check, even now that a web job exists |
 | does a migration apply? | `docker compose up -d` and let `DbMigrationRunner` run it against real PostGIS | any test — the suites are SQLite in-memory and apply no migration |
 | does the stack come up? | `docker compose up -d`, then `/healthz` (liveness) and `/readyz` (readiness, which is the one that checks the database) | GitHub CI, which builds no image and never runs compose; Jenkins does, and only on `main` |
@@ -81,7 +81,7 @@ that needs it.
 | file | owned by | regenerate with |
 | --- | --- | --- |
 | `web/src/api/generated/**` | orval ([web/orval.config.ts](web/orval.config.ts)) | `cd web && npm run generate:api` |
-| `web/openapi.json` | `OpenApiContractTests` — it **rewrites the file itself** and then fails once | run the backend tests, review the rewrite |
+| `web/openapi.json` | `OpenApiContractTests` — it **writes the file itself**; **gitignored**, so it exists only where the backend tests have run | run the backend tests |
 | `backend/Infrastructure/Migrations/*ModelSnapshot.cs`, `*.Designer.cs` | EF Core | `dotnet ef migrations add/remove` |
 
 A migration's own `.cs` body **is** editable — the `*PostGIS*` migrations carry
@@ -98,11 +98,22 @@ a moment far from the edit, so the tests in between are testing the old content.
 Controllers + WebDataContracts  --NSwag-->  web/openapi.json  --orval-->  web/src/api/generated
 ```
 
-Change the API surface and the **first backend test run fails by design**:
-`OpenApiContractTests` overwrites `web/openapi.json` with the current document and calls
-`Assert.Fail`. That is not a bug in your change. Read the snapshot diff to confirm the
-contract changed the way you meant, run `cd web && npm run generate:api`, commit **both**
-files, and the next run is green.
+The middle link is **not committed** — `web/openapi.json` is gitignored and
+`OpenApiContractTests` writes it on every backend test run. So a fresh clone has no
+snapshot, and that run produces one and stays green. Only the **typed client** is
+committed, and it is the thing review and CI look at.
+
+Where a snapshot already exists and the surface has moved under it, that run rewrites it
+and fails **once**, by design — that is not a bug in your change. Run
+`cd web && npm run generate:api` and commit `web/src/api/generated`; the next run is green.
+
+Two consequences worth holding on to:
+
+- `cd web && npm run generate:api` on a checkout that has never run the backend tests
+  fails on a missing `./openapi.json`. Run the backend tests first, or point
+  `ORVAL_API_URL` at a running API.
+- Jenkins produces the snapshot in **Preflight**, not in the backend stage — the backend
+  and web stages run in parallel in one workspace, so the web stage cannot wait for it.
 
 ## Layering
 
@@ -137,9 +148,16 @@ Infrastructure/Migrations/     EF migrations; DbMigrationRunner applies them on 
   is silently never called.
 - **Ordering and scoring are repository concerns.** A repository takes a `selector` so it
   never builds a response model; see `TrailRepository.GetPopularTrailOverviewsAsync`.
-- **Authorization.** `Program.cs` registers an `"Admin"` policy
-  (`RequireRole(adminRole)`), with Keycloak realm roles mapped in
-  `Authorization/KeycloakRealmRolesTransformation.cs`.
+- **Authorization.** `Program.cs` registers exactly one policy, `"AdminOnly"`
+  (`RequireRole(adminRole)`, where `adminRole` is `Authorization:AdminRole`, default
+  `stigvidd-admin`), with Keycloak realm roles mapped in
+  `Authorization/KeycloakRealmRolesTransformation.cs`. Admin-only controllers live in
+  `StigviddAPI/Controllers/Admin/` and carry it at the class. The policy name is a
+  **string in two places** — the registration and every attribute — and an attribute
+  naming a policy that is not registered is a 500 at request time, not a startup error.
+  `Tests/IntegrationTests/Authorization/EndpointAuthorizationTests.cs` pins that string
+  and the complete list of routes behind it, so renaming the policy means editing it too
+  ([note](docs/notes/authorize-policy-names-are-unchecked-strings.md)).
 - **Nullable warnings are build ERRORS** under `backend/`
   ([Directory.Build.props](backend/Directory.Build.props) sets
   `WarningsAsErrors=nullable`), so CS8602/CS8618 fail the build rather than warning.
@@ -185,7 +203,10 @@ against real PostGIS.
 ## Testing
 
 - `backend/Tests/UnitTests` — services, repositories, factories, validators, importers.
-  EF InMemory provider, xunit.v3 + FluentAssertions + Moq.
+  EF InMemory provider, xunit.v3 + AwesomeAssertions + Moq. **Not** FluentAssertions —
+  8.x is non-free and was swapped out; the namespace is `AwesomeAssertions`, so a
+  `using FluentAssertions;` in a new test file is a build error
+  ([note](docs/notes/fluentassertions-8-is-not-free-software.md)).
 - `backend/Tests/IntegrationTests` — one folder per controller, booting the real host
   through `StigViddWebApplicationFactory` against SQLite + SpatiaLite in-memory. It boots the
   real `Program.Main`, so it inherits **StigviddAPI's whole configuration stack** —

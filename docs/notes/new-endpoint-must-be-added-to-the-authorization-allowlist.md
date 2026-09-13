@@ -1,7 +1,7 @@
 # Adding an anonymous or admin endpoint fails a test that names neither your endpoint nor your file
 
 `Tests/IntegrationTests/Authorization/EndpointAuthorizationTests.cs` pins the **complete** list
-of endpoints that are reachable without a token, and the complete list behind the `"Admin"`
+of endpoints that are reachable without a token, and the complete list behind the `"AdminOnly"`
 policy, as two `string[]` literals. It then enumerates the running host's endpoint data source
 and asserts equality.
 
@@ -16,9 +16,16 @@ The fix is one line in the right array:
 "GET /api/v1/Account/verify-email",
 ```
 
-Format is `"<METHOD> <route template>"`, with the controller name cased as the class is
-(`Account`, not `account`), regardless of what casing the `[Route]` attribute or your test URLs
-use. `*` is the method for an endpoint mapped outside MVC (`* /healthz`).
+Format is `"<METHOD> <route template>"`, taken from the route template as written: where the
+route is conventional the controller name is cased as the **class** is (`Account`, not
+`account`), and where the controller sets an explicit `[Route("api/v1/admin/trails")]` it is
+that string verbatim. `*` is the method for an endpoint mapped outside MVC (`* /healthz`).
+
+The policy name is a literal in that file too — `data.Policy == "AdminOnly"`. **Renaming the
+policy means editing this test**, and the way it fails if you forget is maximally unhelpful:
+the filter matches nothing and the assertion reports an empty collection, naming no controller
+and no policy. Do not guess the route strings; run the test and read them off its own output,
+or dump `admin` directly.
 
 ## Why the list is worth the friction
 

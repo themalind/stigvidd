@@ -154,9 +154,10 @@ const AREAS = [
   [
     /^backend\/(?:StigviddAPI\/Controllers|WebDataContracts)\//i,
     "the API surface",
-    "changing it drifts the contract: OpenApiContractTests rewrites web/openapi.json and " +
-      "fails once, and the typed client is stale until `cd web && npm run generate:api`. " +
-      "The Jenkinsfile web stage fails on `git diff --exit-code -- src/api/generated`.",
+    "changing it drifts the contract: OpenApiContractTests writes web/openapi.json (gitignored, " +
+      "so the backend test run is what produces it), and the typed client is stale until " +
+      "`cd web && npm run generate:api`. The typed client IS committed, and the Jenkinsfile " +
+      "web stage fails on `git diff --exit-code -- src/api/generated`.",
   ],
   [
     /^backend\/Infrastructure\/Migrations\//i,

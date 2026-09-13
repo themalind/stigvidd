@@ -11,7 +11,8 @@
 //     docs/notes/git-worktree-repo-root.md), and `.codegraph/` is per-checkout, so a
 //     fresh worktree has NO index and `codegraph` silently has nothing to say.
 //   * THE CONTRACT CHAIN.  Controller -> web/openapi.json -> web/src/api/generated is a
-//     one-way pipeline with a test in the middle that REWRITES the snapshot and fails.
+//     one-way pipeline. The middle link is GITIGNORED — the backend test run writes it —
+//     so the only end of it `git status` can see is the typed client, which IS committed.
 //     Whether you are mid-chain is decidable from the working tree, and it is the single
 //     most common way a green-looking backend change breaks the web build.
 //   * THE GREEN COMMANDS, verbatim, including the environment variable without which
@@ -50,24 +51,20 @@ export function parsePorcelainZ(out) {
 export function classify(entries) {
   const touched = (re) => entries.some((e) => re.test(e.p));
   const api = touched(/^backend\/(?:StigviddAPI\/Controllers|WebDataContracts)\//i);
-  const snapshot = touched(/^web\/openapi\.json$/i);
+  // web/openapi.json is gitignored, so it never appears here however stale it is. The
+  // typed client is the committed end of the chain and the only one worth watching.
   const client = touched(/^web\/src\/api\/generated\//i);
   const model = touched(/Migrations\/StigViddDbContextModelSnapshot\.cs$/i);
   const migration = entries.some(
     (e) => /^backend\/Infrastructure\/Migrations\/\d+_.*\.cs$/i.test(e.p) && (e.x === "?" || e.x === "A"),
   );
   const notes = [];
-  if (api && !snapshot)
+  if (api && !client)
     notes.push(
-      "The API surface is modified but web/openapi.json is not: the next backend test " +
-        "run will rewrite that snapshot and FAIL ONCE telling you so. That failure is " +
-        "expected — review the rewrite, then `cd web && npm run generate:api`.",
-    );
-  if (snapshot && !client)
-    notes.push(
-      "web/openapi.json is modified but web/src/api/generated is not — the typed client " +
-        "is stale. `cd web && npm run generate:api` and commit both; the Jenkinsfile web " +
-        "stage regenerates and fails on `git diff --exit-code -- src/api/generated`.",
+      "The API surface is modified but web/src/api/generated is not — the typed client " +
+        "is stale. Run the backend tests to refresh web/openapi.json (gitignored; that " +
+        "run writes it), then `cd web && npm run generate:api` and commit the client. " +
+        "The Jenkinsfile web stage fails on `git diff --exit-code -- src/api/generated`.",
     );
   if (model && !migration)
     notes.push(
@@ -215,14 +212,16 @@ function selfTest() {
   // -- the contract chain, in each state it can be in -----------------------------
   const st = (...ps) => ps.map((p) => ({ x: " ", y: "M", p }));
   ok(classify(st("backend/StigviddAPI/Controllers/FacilitiesController.cs")).length === 1,
-     "a controller change with no snapshot rewrite went unmentioned");
+     "a controller change with no regenerated client went unmentioned");
   ok(classify(st("backend/WebDataContracts/FacilityResponse.cs")).length === 1,
      "a WebDataContracts change went unmentioned");
-  ok(classify(st("backend/StigviddAPI/Controllers/X.cs", "web/openapi.json")).length === 1,
-     "snapshot present but stale client should still be flagged");
-  ok(classify(st("backend/StigviddAPI/Controllers/X.cs", "web/openapi.json",
+  ok(classify(st("backend/StigviddAPI/Controllers/X.cs",
                  "web/src/api/generated/x.ts")).length === 0,
      "a fully regenerated chain must be silent");
+  // The snapshot is gitignored, so it cannot appear in porcelain output — but if one
+  // ever did, it must not be read as evidence the client was regenerated.
+  ok(classify(st("backend/StigviddAPI/Controllers/X.cs", "web/openapi.json")).length === 1,
+     "a stale client must be flagged even when the snapshot shows up somehow");
   ok(classify(st("backend/Core/Services/FacilityService.cs")).length === 0,
      "a service-only change must not claim the contract drifted");
   n += 5;

@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using WebDataContracts.RequestModels.MailTemplate;
 using WebDataContracts.ResponseModels.MailTemplate;
 
-namespace StigviddAPI.Controllers;
+namespace StigviddAPI.Controllers.Admin;
 
 /// <summary>
 /// Editing the copy the API mails out. The rows live in the database rather than the
@@ -16,7 +16,7 @@ namespace StigviddAPI.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/v1/admin/mail-templates")]
-[Authorize(Policy = "Admin")]
+[Authorize(Policy = "AdminOnly")]
 public class MailTemplatesController : StigViddController
 {
     private readonly IMailTemplateAdminService _mailTemplates;

@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 using Core.Interfaces.Services;
 using Core.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -11,6 +14,8 @@ namespace StigviddAPI.Controllers.Admin;
 /// <summary>
 /// Trail content management for the admin dashboard. Admin-only.
 /// The read endpoints and user-submitted trail creation live in <see cref="TrailsController"/>.
+/// Every action here is resolved by the "AdminOnly" policy alone — none of them needs
+/// the caller's app-side user row, and the admin dashboard never provisions one.
 /// </summary>
 [ApiController]
 [Route("api/v1/admin/trails")]
@@ -26,10 +31,6 @@ public class AdminTrailsController : StigViddController
         _logger = logger;
     }
 
-    /// <summary>
-    /// Every action here is resolved by the "AdminOnly" policy alone — none of them needs
-    /// the caller's app-side user row, and the admin dashboard never provisions one.
-    /// </summary>
     [HttpPut("{identifier}")]
     public async Task<ActionResult<TrailResponse?>> UpdateTrail(
         string identifier,

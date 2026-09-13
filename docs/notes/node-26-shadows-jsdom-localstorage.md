@@ -51,7 +51,18 @@ jsdom's is per-environment. Measured, the shared store leaks state between files
 value another file wrote. Cross-file pollution is a worse failure than the honest one,
 because it is order-dependent.
 
-Run the web suite on Node 24 instead. If a suite-wide failure ever names a method on
-`undefined`, check the Node version before reading any test.
+Run the web suite on Node 24 instead. No version manager needed — the container is enough,
+and it reuses the `node_modules` already on disk:
+
+```sh
+cd web && docker run --rm -v "$PWD":/app -w /app -e CI=1 node:24 npm test
+```
+
+`npm run lint` and `npm run build` work the same way. Re-measured 2026-09-13 on Node
+v26.3.0: **26 of 26 files, 527 of 527 tests** failed on the host and all 527 passed in that
+container, same working tree.
+
+If a suite-wide failure ever names a method on `undefined`, check the Node version before
+reading any test.
 
 Related: [[web-vitest-environment]].

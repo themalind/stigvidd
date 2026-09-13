@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using WebDataContracts.RequestModels.ContentReport;
 using WebDataContracts.ResponseModels.ContentReport;
 
-namespace StigviddAPI.Controllers;
+namespace StigviddAPI.Controllers.Admin;
 
 /// <summary>
 /// The moderation queue. Reported content is already hidden by the time it appears here;
@@ -16,7 +16,7 @@ namespace StigviddAPI.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/v1/admin/content-reports")]
-[Authorize(Policy = "Admin")]
+[Authorize(Policy = "AdminOnly")]
 public class AdminContentReportsController : StigViddController
 {
     private readonly IContentReportService _reportService;

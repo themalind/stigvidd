@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
+﻿// SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 using System.Diagnostics;
@@ -78,7 +78,13 @@ public class Program
         {
             // The realm has one role. Everything else an endpoint can ask for is
             // "signed in", which is a bare [Authorize] and needs no policy.
-            options.AddPolicy("Admin", policy => policy.RequireRole(adminRole));
+            //
+            // This name is an UNCHECKED STRING: nothing resolves [Authorize(Policy = "...")]
+            // against it until a request arrives, and a miss is a 500 rather than a startup
+            // error. Renaming it means editing every attribute AND the literal in
+            // EndpointAuthorizationTests - see
+            // docs/notes/authorize-policy-names-are-unchecked-strings.md.
+            options.AddPolicy("AdminOnly", policy => policy.RequireRole(adminRole));
 
             // Endpoints without any authorization metadata require a signed-in caller,
             // so a forgotten attribute fails closed. Public endpoints opt out with

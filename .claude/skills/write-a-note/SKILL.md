@@ -49,6 +49,12 @@ a summary under 40 characters for that reason, and 40 is a floor, not a target.
 Title the note as a **claim**: "In a linked worktree `.git` is a FILE" beats "Worktrees".
 The title's tokens are weighted triple in matching.
 
+**No square brackets in the link text.** Markdown link text does not nest them, so a title
+like `An [Authorize(Policy = "...")] name that ...` breaks the index line's parse: the note
+is written, the line is there, and `--check-notes` still reports it "is in no INDEX.md line
+— it is unreachable", naming nothing about brackets. Write the attribute without them
+(`An Authorize policy name that ...`) in both the title and the index line.
+
 ## The file
 
 Keep one fact per file. Say what was measured and where, cite the source with a relative

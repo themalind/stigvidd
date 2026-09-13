@@ -60,21 +60,28 @@ public class EndpointAuthorizationTests : IClassFixture<StigViddWebApplicationFa
     private static readonly string[] ApprovedAdminEndpoints =
     [
         // Curated content: trails and facilities are ours to write, and their images
-        // with them. Reading any of it is anonymous, so only the writes appear here.
-        "DELETE /api/v1/Facilities/images/{imageIdentifier}",
-        "DELETE /api/v1/Facilities/{identifier}",
-        "DELETE /api/v1/Trails/images/{imageIdentifier}",
-        "POST /api/v1/Facilities",
-        "POST /api/v1/Facilities/{identifier}/images",
+        // with them. Reading any of it is anonymous, so only the writes appear here —
+        // and since the admin split they all sit under api/v1/admin, on
+        // AdminTrailsController and AdminFacilitiesController.
+        "DELETE /api/v1/admin/facilities/images/{imageIdentifier}",
+        "DELETE /api/v1/admin/facilities/{identifier}",
+        "DELETE /api/v1/admin/trails/images/{imageIdentifier}",
+        "POST /api/v1/admin/facilities",
+        "POST /api/v1/admin/facilities/{identifier}/images",
+        "POST /api/v1/admin/trails/{identifier}/images",
+        "POST /api/v1/admin/trails/{identifier}/symbol",
+        "PUT /api/v1/admin/facilities/{identifier}",
+        "PUT /api/v1/admin/trails/{identifier}",
+
+        // The one write that stayed on the public controller. It is admin-gated like the
+        // rest, but it is also the only admin route that needs the caller's StigVidd user
+        // row, because the service records the trail's CreatedBy — which is why it could
+        // not move to AdminTrailsController with the others.
         "POST /api/v1/Trails/create",
-        "POST /api/v1/Trails/{identifier}/images",
-        "POST /api/v1/Trails/{identifier}/symbol",
-        "PUT /api/v1/Facilities/update/{identifier}",
-        "PUT /api/v1/Trails/{identifier}",
 
         // The media library is the whole upload store, reads included.
-        "GET /api/v1/Media",
-        "PATCH /api/v1/Media/{imageIdentifier}",
+        "GET /api/v1/admin/media",
+        "PATCH /api/v1/admin/media/{imageIdentifier}",
 
         // export hands out the database, the media volume and the Keycloak realm;
         // import replaces this host's data.
@@ -153,12 +160,17 @@ public class EndpointAuthorizationTests : IClassFixture<StigViddWebApplicationFa
     [Fact]
     public void AdminEndpoints_ShouldBeExactlyTheApprovedOnes()
     {
-        // Act — "Admin" is the only policy left, so the set of endpoints naming one is
+        // Act — "AdminOnly" is the only policy left, so the set of endpoints naming one is
         // the set gated on the realm's only role. Pinning it means an attribute lost in
         // an edit shows up here rather than in production.
+        //
+        // This literal has to track Program.cs's AddPolicy. If it does not, the filter
+        // matches nothing and the assertion below reports an empty collection, naming no
+        // policy and no route — see
+        // docs/notes/authorize-policy-names-are-unchecked-strings.md.
         var admin = Endpoints()
             .Where(endpoint => endpoint.Metadata.GetOrderedMetadata<IAuthorizeData>()
-                .Any(data => data.Policy == "Admin"))
+                .Any(data => data.Policy == "AdminOnly"))
             .Select(Describe)
             .OrderBy(description => description, StringComparer.Ordinal);
 

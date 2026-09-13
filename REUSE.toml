@@ -4,7 +4,8 @@
 # file covers the rest, and there are only three reasons a file lands here:
 #
 #   1. It is GENERATED or TOOL-OWNED. orval rewrites web/src/api/generated/**,
-#      the backend test suite rewrites web/openapi.json, and EF Core owns
+#      the backend test suite writes web/openapi.json (gitignored, but `reuse lint` runs
+#      over the working tree, so it still needs covering), and EF Core owns
 #      backend/Infrastructure/Migrations/**. Each of those accepts a hand-edited
 #      header and then discards it at a moment far from the edit, so
 #      .claude/hooks/guard-generated-files.mjs refuses the edit outright.

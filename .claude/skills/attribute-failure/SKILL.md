@@ -25,9 +25,11 @@ git log -1 --stat
 
 Two red signals in this repo are expected and are not bugs:
 
-- **`OpenApiContractTests` failed and `web/openapi.json` is now modified.** That is the
-  contract test rewriting the snapshot after an API change. Regenerate the client and
-  re-run — see [openapi-contract-snapshot](../../../docs/notes/openapi-contract-snapshot.md).
+- **`OpenApiContractTests` failed.** That is the contract test rewriting `web/openapi.json`
+  after an API change. Regenerate the client and re-run — see
+  [openapi-contract-snapshot](../../../docs/notes/openapi-contract-snapshot.md). The file is
+  gitignored, so `git status` will not show it; a *missing* snapshot is written silently and
+  does not fail, so a failure here always means the surface really moved.
 - **Jenkins: "the generated API client is stale".** Someone changed the API surface without
   running `npm run generate:api`. Nothing about the pipeline is broken.
 

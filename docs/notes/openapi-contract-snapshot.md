@@ -1,4 +1,4 @@
-# The API contract is a one-way pipeline, and the test in the middle rewrites a file
+# The API contract is a one-way pipeline, and the file in the middle is not committed
 
 The typed client the admin web uses is not written by hand. Three artifacts are chained,
 and the arrow only points one way:
@@ -8,7 +8,7 @@ backend/StigviddAPI/Controllers/*.cs        the source of truth
 backend/WebDataContracts/*.cs
         |  NSwag, at runtime, on /swagger/v1/swagger.json
         v
-web/openapi.json                            a committed SNAPSHOT
+web/openapi.json                            a GITIGNORED snapshot, written by the tests
         |  orval, `npm run generate:api` (web/orval.config.ts)
         v
 web/src/api/generated/**                    react-query hooks + models
@@ -17,29 +17,47 @@ web/src/api/generated/**                    react-query hooks + models
 ## The part that surprises a session
 
 [`OpenApiContractTests`](../../backend/Tests/IntegrationTests/OpenApiContract/OpenApiContractTests.cs)
-does not merely compare the live document against `web/openapi.json`. On a mismatch it
-**overwrites the snapshot with the current document and then calls `Assert.Fail`**. So the
-first backend test run after any API change:
+does not merely compare the live document against `web/openapi.json` — it **writes the
+file**. `web/openapi.json` is gitignored, so that test run is the only thing that produces
+it, and the two cases behave differently on purpose:
 
-- fails, with a message naming the file it just rewrote, and
-- leaves `web/openapi.json` modified in your working tree.
+| state of `web/openapi.json` | what the test does |
+| --- | --- |
+| absent (fresh clone, or cleaned) | writes it, **passes** — there is nothing it could have drifted from |
+| present and equal | passes, writes nothing |
+| present and different | rewrites it and **fails once** |
 
-That failure is **expected and is not a bug in your change**. The sequence is: run the
-tests, read the diff of the rewritten snapshot to confirm the contract changed the way you
-meant, then `cd web && npm run generate:api`, then commit *both* files. Running the tests a
-second time is green because the snapshot now matches.
+Only the third case is a signal. It is **expected and is not a bug in your change**: the
+committed typed client was generated from the old document, so it is the thing that is now
+stale. Run the tests, read the rewritten file, then `cd web && npm run generate:api`, then
+commit `web/src/api/generated`. Running the tests a second time is green.
+
+`git status` will never show the snapshot, so there is no diff to read for it. To see what
+changed in the contract, read the operation you touched, or keep a copy of the previous
+file before the run.
 
 ## The second gate, in Jenkins only
 
-The Jenkinsfile `web` stage regenerates the client from the committed snapshot and then
-runs `git diff --exit-code -- src/api/generated`. A stale client — or a hand edit under
+The Jenkinsfile `web` stage regenerates the client and then runs
+`git diff --exit-code -- src/api/generated`. A stale client — or a hand edit under
 `web/src/api/generated/` — fails the build with a message about staleness, which reads
 like an infrastructure problem and is not. GitHub Actions does **not** run this check;
 only Jenkins does.
 
+Because the snapshot is gitignored, that stage has no input on a fresh Jenkins checkout —
+and it **cannot** wait for the backend stage, because the two run in parallel in one
+shared workspace. So the Jenkinsfile produces the snapshot in **Preflight**, which is
+sequential and precedes both, by running `OpenApiContractTests` alone. Move that step and
+the web stage fails on a missing `./openapi.json`.
+
+The same trap catches a developer: `cd web && npm run generate:api` on a checkout that has
+never run the backend tests fails on the missing file. Run the backend tests first, or set
+`ORVAL_API_URL` to a live API.
+
 `.claude/hooks/guard-generated-files.mjs` denies edits to both the snapshot and the
 generated client, and `.claude/hooks/session-start.mjs` reports when the working tree is
-mid-chain (API modified, snapshot not; or snapshot modified, client not).
+mid-chain — which it now decides from the **client** alone (API modified, client not),
+since the snapshot can never appear in `git status`.
 
 ## A change to `info.description` alone rewrites all 88 generated files
 
@@ -57,8 +75,9 @@ The chain is not only about endpoints and schemas. orval copies the OpenAPI docu
 ```
 
 Measured: adding a one-line `config.Description` to `AddOpenApiDocument` in `Program.cs`
-produced a **one-line** diff in `web/openapi.json` and a **one-line diff in each of 88
-files** under `web/src/api/generated/`. Nothing about the client's behaviour changed.
+produced a one-line change in `web/openapi.json` and a **one-line diff in each of 88
+files** under `web/src/api/generated/`. Nothing about the client's behaviour changed. Now
+that the snapshot is not committed, the 88 files are the *whole* visible diff.
 
 So a purely documentational edit to the API description still runs the whole chain and still
 obliges an 88-file commit. Worth knowing before assuming a description-only change is free,

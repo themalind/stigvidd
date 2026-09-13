@@ -199,12 +199,18 @@ API means any mobile app user. Everything that manages content or moves data
 therefore lives under `Controllers/Admin/` and carries
 `[Authorize(Policy = "AdminOnly")]`:
 
-| Controller                  | Routes                            | What it does                          |
-| --------------------------- | --------------------------------- | ------------------------------------- |
-| `AdminController`           | `api/v1/admin/{export,import}`    | Whole-environment migration archive   |
-| `AdminTrailsController`     | `api/v1/admin/trails/…`           | Trail edits, images, symbol           |
-| `AdminFacilitiesController` | `api/v1/admin/facilities/…`       | Facility CRUD + images                |
-| `AdminMediaController`      | `api/v1/admin/media/…`            | Media library + image metadata        |
+| Controller                      | Routes                             | What it does                        |
+| ------------------------------- | ---------------------------------- | ----------------------------------- |
+| `AdminController`               | `api/v1/admin/{export,import}`     | Whole-environment migration archive |
+| `AdminTrailsController`         | `api/v1/admin/trails/…`            | Trail edits, images, symbol         |
+| `AdminFacilitiesController`     | `api/v1/admin/facilities/…`        | Facility CRUD + images              |
+| `AdminMediaController`          | `api/v1/admin/media/…`             | Media library + image metadata      |
+| `AdminContentReportsController` | `api/v1/admin/content-reports/…`   | The moderation queue                |
+| `MailTemplatesController`       | `api/v1/admin/mail-templates/…`    | Mail copy every recipient reads     |
+| `TrailImportController`         | `api/v1/admin/trail-import/…`      | The Borås sync                      |
+
+`EndpointAuthorizationTests` pins that policy name and the complete list of routes behind
+it, so an attribute lost in an edit fails there rather than in production.
 
 The policy requires one realm role, `stigvidd-admin` by default — configurable via
 `Authorization:AdminRole` (env `Authorization__AdminRole`). The same role gates

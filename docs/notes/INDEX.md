@@ -18,20 +18,21 @@ node .claude/hooks/plan-eval.mjs --match "what you are about to do"
 Referenced from [CLAUDE.md](../../CLAUDE.md), and matched automatically against any plan
 you get approved.
 
-- [The API contract is a one-way pipeline, and the test in the middle rewrites a file](openapi-contract-snapshot.md) —
+- [The API contract is a one-way pipeline, and the file in the middle is not committed](openapi-contract-snapshot.md) —
   Controllers/WebDataContracts to `web/openapi.json` to `web/src/api/generated` flows one
-  way only. `OpenApiContractTests` does not just compare the snapshot, it **overwrites it
-  and then fails**, so the first backend test run after any API change fails by design and
-  leaves the file modified; the fix is `npm run generate:api` in web/ and commit both.
-  Jenkins alone runs `git diff --exit-code -- src/api/generated`, so a stale or
-  hand-edited client is a red build talking about staleness rather than about your change.
-- [On Windows `OpenApiContractTests` fails on a clean checkout, and the "contract change" is only CR bytes](openapi-snapshot-fails-on-windows-line-endings.md) —
-  The test compares the served `/swagger/v1/swagger.json` against `web/openapi.json` with
-  `StringComparison.Ordinal`, but `.gitattributes` keeps the snapshot at LF while the served
-  document is CRLF on Windows — so it fails, rewrites the file, passes on the second run, and
-  fails again after `git checkout -- web/openapi.json`. `git status` says modified while
-  `git diff` prints only a CRLF warning. Strip CR from both and diff before hunting for an API
-  change that is not there. Linux and CI are unaffected, which is why nothing catches it.
+  way only. `web/openapi.json` is **gitignored** and `OpenApiContractTests` writes it: absent
+  it is created and the run passes, present-but-different it is rewritten and the run **fails
+  once**, which means the committed client is stale — `npm run generate:api` in web/ and commit
+  `src/api/generated`. Jenkins produces the snapshot in Preflight (the web stage runs in
+  parallel with the backend one, so it cannot wait for it) and alone runs
+  `git diff --exit-code -- src/api/generated`.
+- [`OpenApiContractTests` used to fail on Windows over CR bytes alone — untracking the snapshot removed it](openapi-snapshot-fails-on-windows-line-endings.md) —
+  RESOLVED, and kept for the diagnosis. While `web/openapi.json` was committed, `.gitattributes`
+  held it at LF while the served document is CRLF on Windows, so an ordinal comparison failed on
+  every clean checkout with zero content difference. Now that the file is gitignored nothing
+  forces LF and a missing snapshot is simply written, so the failure mode is gone. The technique
+  survives: against any byte-exact comparison of a file git may normalise, strip CR from both
+  sides and diff before hunting for a change that is not there.
 - [In a linked worktree `.git` is a FILE, and code that tests for a directory walks past it](git-worktree-repo-root.md) —
   `Directory.Exists(".git")` is false at a worktree root, which made
   `OpenApiContractTests.FindRepositoryRoot` run off the top of the filesystem and throw,
@@ -375,6 +376,15 @@ src/api/generated` then fails with "the generated API client is stale" for reaso
   `./db-certs`. Includes what to run instead for a migration: a bare `postgis/postgis` container
   plus `dotnet ef database update --connection …`, and a rollback/re-apply to exercise a
   backfill `migrationBuilder.Sql`, which no test reaches because the suites use `EnsureCreated`.
+- [An Authorize policy name that `AddPolicy` never registered is a 500 at request time, not a startup error](authorize-policy-names-are-unchecked-strings.md) —
+  Policy names are unchecked strings resolved per request, so `Authorize(Policy = "X")` naming a
+  policy `Program.cs` never registered throws `InvalidOperationException` in
+  `AuthorizationMiddleware` and returns **500 instead of 401/403**, with nothing failing at build
+  or startup. Renaming a policy is a three-place edit: `AddPolicy`, every `Authorize` attribute,
+  and the `data.Policy == "..."` literal in `EndpointAuthorizationTests` — which on a miss reports
+  only "expected a collection with 37 item(s), but found an empty collection". Assert **403** for
+  a signed-in non-admin, not merely "not 200": an unregistered policy fails to return 200 too.
+  A test project that does not compile hides all of it.
 - [Adding an anonymous or admin endpoint fails a test that names neither your endpoint nor your file](new-endpoint-must-be-added-to-the-authorization-allowlist.md) —
   adding a controller action with `[AllowAnonymous]` or the `"Admin"` policy, or debugging a
   red `EndpointAuthorizationTests` / `AnonymousEndpoints_ShouldBeExactlyTheApprovedOnes` /

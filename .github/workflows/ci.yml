@@ -73,12 +73,17 @@ jobs:
         cache-dependency-path: web/package-lock.json
     - name: Install dependencies
       run: npm ci
+    - name: Lint
+      run: npm run lint
+    # `vitest run` — configured in vitest.config.ts, NOT vite.config.ts. It needs no
+    # server and no backend. Without this step a stale mock over the generated client
+    # passes CI and only shows up in the Jenkins web stage, which gates the deploy.
+    - name: Test
+      run: npm test
     # `build` is `tsc -b && vite build`, so this type-checks the admin dashboard —
     # including the hand-written wrappers over the generated API client.
     - name: Build
       run: npm run build
-    - name: Lint
-      run: npm run lint
   app:
     runs-on: ubuntu-latest
     defaults:

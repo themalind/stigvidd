@@ -10,14 +10,27 @@ const customFetch = vi.hoisted(() => vi.fn());
 vi.mock("./mutator", () => ({ customFetch }));
 
 const generated = vi.hoisted(() => ({
-  getTrailsAddTrailImagesUrl: vi.fn((id: string) => `/api/v1/trails/${id}/images`),
-  getTrailsDeleteTrailImageUrl: vi.fn((id: string) => `/api/v1/trails/images/${id}`),
-  getTrailsSetTrailSymbolUrl: vi.fn((id: string) => `/api/v1/trails/${id}/symbol`),
   trailsGetAllTrails: vi.fn(),
   trailsGetTrailByIdentifier: vi.fn(),
-  trailsUpdateTrail: vi.fn(),
 }));
 vi.mock("./generated/trails/trails", () => generated);
+
+// Editing a trail is admin-only, so these four moved to api/v1/admin/trails and are
+// generated into their own module. Mocking only the public one would leave the real
+// admin module in play and the URL assertions below would silently test nothing.
+const generatedAdmin = vi.hoisted(() => ({
+  adminTrailsUpdateTrail: vi.fn(),
+  getAdminTrailsAddTrailImagesUrl: vi.fn(
+    (id: string) => `/api/v1/admin/trails/${id}/images`,
+  ),
+  getAdminTrailsDeleteTrailImageUrl: vi.fn(
+    (id: string) => `/api/v1/admin/trails/images/${id}`,
+  ),
+  getAdminTrailsSetTrailSymbolUrl: vi.fn(
+    (id: string) => `/api/v1/admin/trails/${id}/symbol`,
+  ),
+}));
+vi.mock("./generated/admin-trails/admin-trails", () => generatedAdmin);
 
 import {
   addTrailImages,
@@ -51,7 +64,7 @@ describe("addTrailImages", () => {
     await addTrailImages("abc", [png("a.png")]);
 
     expect(customFetch).toHaveBeenCalledWith(
-      "/api/v1/trails/abc/images",
+      "/api/v1/admin/trails/abc/images",
       expect.objectContaining({ method: "POST" }),
     );
   });
@@ -93,7 +106,7 @@ describe("setTrailSymbol", () => {
     await setTrailSymbol("abc", png("symbol.png"));
 
     expect(customFetch).toHaveBeenCalledWith(
-      "/api/v1/trails/abc/symbol",
+      "/api/v1/admin/trails/abc/symbol",
       expect.objectContaining({ method: "POST" }),
     );
     expect(sentBody().get("symbol")).toBeInstanceOf(File);
@@ -119,7 +132,7 @@ describe("deleteTrailImage", () => {
 
     await deleteTrailImage("img-9");
 
-    expect(customFetch).toHaveBeenCalledWith("/api/v1/trails/images/img-9", {
+    expect(customFetch).toHaveBeenCalledWith("/api/v1/admin/trails/images/img-9", {
       method: "DELETE",
     });
   });

@@ -8,7 +8,11 @@ using System.Net;
 namespace IntegrationTests.OpenApiContract;
 
 // The web admin client under web/src/api/generated is generated from this document.
-// Keeping a copy in the repo lets CI regenerate without a running API.
+// web/openapi.json is NOT committed (it is gitignored): this test is what produces it, so
+// `npm run generate:api` has an input without a running API. A checkout that has never run
+// the backend tests therefore has no snapshot, and that is not a failure - it is written
+// and the test passes. Only a snapshot that exists and DISAGREES fails, because then the
+// committed client under web/src/api/generated is the thing that has gone stale.
 public class OpenApiContractTests : IClassFixture<StigViddWebApplicationFactory<Program>>
 {
     private const string SnapshotRelativePath = "web/openapi.json";
@@ -21,7 +25,7 @@ public class OpenApiContractTests : IClassFixture<StigViddWebApplicationFactory<
     }
 
     [Fact]
-    public async Task OpenApiDocument_MatchesTheCommittedSnapshot()
+    public async Task OpenApiDocument_MatchesTheGeneratedSnapshot()
     {
         // Arrange
         var client = _factory.CreateClient();
@@ -34,21 +38,28 @@ public class OpenApiContractTests : IClassFixture<StigViddWebApplicationFactory<
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
         var snapshotPath = Path.Combine(FindRepositoryRoot(), SnapshotRelativePath);
-        var committed = File.Exists(snapshotPath)
+        var existing = File.Exists(snapshotPath)
             ? await File.ReadAllTextAsync(snapshotPath, TestContext.Current.CancellationToken)
             : null;
 
         // Ordinal, so line endings count: on Windows this always fails against the LF snapshot.
         // See docs/notes/openapi-snapshot-fails-on-windows-line-endings.md.
-        if (string.Equals(committed, current, StringComparison.Ordinal))
+        if (string.Equals(existing, current, StringComparison.Ordinal))
             return;
 
-        // Written on mismatch so the fix locally is to rerun generation and commit both files.
         await File.WriteAllTextAsync(snapshotPath, current, TestContext.Current.CancellationToken);
 
+        // No snapshot yet - a fresh clone, or one that has just been cleaned. There is
+        // nothing to have drifted from, so writing it IS the job and the run stays green.
+        if (existing is null)
+            return;
+
+        // A snapshot that exists and disagrees means the surface moved under a client that
+        // was generated from the old document. That client IS committed, so it has to be
+        // regenerated; this is the one case worth stopping for.
         Assert.Fail(
             $"The API contract changed and {SnapshotRelativePath} has been rewritten. " +
-            "Review it, run `npm run generate:api` in web/, and commit both.");
+            "Run `npm run generate:api` in web/ and commit web/src/api/generated.");
     }
 
     private static string FindRepositoryRoot()

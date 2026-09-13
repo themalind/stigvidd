@@ -55,12 +55,15 @@ assembly is silently never called. There is no error; the request simply is not 
 Any change to `Controllers/` or `WebDataContracts/` changes the OpenAPI document, and:
 
 1. `cd backend && ConnectionStrings__StigVidd="DataSource=:memory:" dotnet test --no-build`
-2. **It fails, once, by design.** `OpenApiContractTests` overwrites `web/openapi.json` with
-   the new document and calls `Assert.Fail`.
-3. Read the diff of `web/openapi.json`. This is the moment to notice that a DTO you thought
-   was internal is now on the wire, or that a nullable slipped.
+2. `OpenApiContractTests` writes `web/openapi.json` from the new document. The file is
+   **gitignored**, so on a checkout that had none it is simply created and the run stays
+   green; where one already existed and disagrees, the run **fails once, by design**.
+3. Read the file. This is the moment to notice that a DTO you thought was internal is now
+   on the wire, or that a nullable slipped. (`git diff` will not show it — it is not
+   tracked. Compare against the previous run, or just read the operation you added.)
 4. `cd web && npm run generate:api`
-5. Re-run the backend tests (green now) and commit **both** files.
+5. Re-run the backend tests (green now) and commit `web/src/api/generated` — the typed
+   client is the only half of this that is committed.
 
 Skipping 4 leaves the typed client stale. GitHub Actions will not catch it — only the
 Jenkinsfile `web` stage runs `git diff --exit-code -- src/api/generated`, and it reports it

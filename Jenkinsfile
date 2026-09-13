@@ -160,6 +160,31 @@ pipeline {
         // it spends minutes on dotnet and npm.
         sh 'node scripts/check-hooks.mjs'
 
+        // web/openapi.json is gitignored, so a fresh checkout has none — and the web
+        // stage's `npm run generate:api` needs it as input. It cannot wait for the
+        // backend stage: the two run in PARALLEL in this shared workspace. So produce
+        // it here, in the sequential stage that precedes both, by running the one test
+        // that writes it. The backend build this warms is reused by that stage.
+        dir('backend') {
+          withEnv(['ConnectionStrings__StigVidd=DataSource=:memory:']) {
+            sh '''
+              set -e
+              dotnet restore
+              dotnet build --no-restore
+              dotnet test --project Tests/IntegrationTests/IntegrationTests.csproj \
+                --no-build -- --filter-class "IntegrationTests.OpenApiContract.OpenApiContractTests"
+            '''
+          }
+        }
+        sh '''
+          set -e
+          if [ ! -s web/openapi.json ]; then
+            echo "ERROR: web/openapi.json was not produced by OpenApiContractTests." >&2
+            echo "       The web stage cannot run generate:api without it." >&2
+            exit 1
+          fi
+        '''
+
         // Immutable per-commit tag; keeps deploys traceable and rollbacks easy.
         // Resolved once here, after checkout, so every later stage agrees.
         script {
@@ -199,10 +224,11 @@ pipeline {
               // check, and it fails fast on PRs that never reach the image
               // build below.
               //
-              // generate:api reads the committed web/openapi.json, so no backend
-              // has to run here. OpenApiContractTests in the backend stage is
-              // what keeps that file honest; this step only catches a contract
-              // change that was never regenerated into the client.
+              // generate:api reads web/openapi.json, which is NOT committed —
+              // Preflight produced it by running OpenApiContractTests, because
+              // this stage runs in parallel with the backend one and so cannot
+              // wait for it. This step only catches a contract change that was
+              // never regenerated into the client, which IS committed.
               //
               // `npm test` is `vitest run` — vitest.config.ts, not vite.config.ts,
               // and it needs no server and no backend. GitHub Actions runs the same
