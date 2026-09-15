@@ -32,7 +32,7 @@ to the internet.
 | `web`        | `stigvidd-web` (nginx)    | React admin SPA.                                 |
 | `api`        | `stigvidd-api` (.NET 10)  | Backend API. Runs EF migrations on startup.     |
 | `media`      | `stigvidd-media` (nginx)  | WebDAV media server (authed writes, public reads). |
-| `keycloak`   | `stigvidd-keycloak`       | Identity provider. Sends the password-reset emails. |
+| `keycloak`   | `stigvidd-keycloak`       | Identity provider. Owns every password; sends no user-facing mail. |
 | `openobserve`| `openobserve` v0.92.2     | Telemetry at observatory.<domain>: logs, traces, metrics and mobile RUM. Ingests from the API (in-stack OTLP) and from the apps (public HTTPS). Upstream image — **not** built by CI. |
 | `mailserver` | `docker-mailserver` 15.1.0 | Mail for the domain: inbound on 25, submission on 465/587, IMAPS on 993. Upstream image — **not** built by CI. |
 | `db`         | `postgis/postgis:17-3.5`  | PostgreSQL + PostGIS. Holds **both** the app database and Keycloak's. |
@@ -258,15 +258,18 @@ the authoritative relay details.
 
 ### 1. Get the deploy files onto the host
 
-You need `docker-compose.yml`, the `db/` directory, `scripts/`, and a `.env`.
-Create a working directory (the compose "project" dir), e.g. `/opt/stigvidd`:
+You need `docker-compose.yml`, the `db/` directory, `scripts/`, `observability/`,
+and a `.env`. Create a working directory (the compose "project" dir), e.g.
+`/opt/stigvidd`:
 
 ```bash
 mkdir -p /opt/stigvidd && cd /opt/stigvidd
-# copy docker-compose.yml, db/ and scripts/ here (git checkout, scp, or Jenkins deploy)
+# copy docker-compose.yml, db/, scripts/ and observability/ here
+# (git checkout, scp, or Jenkins deploy)
 cp /path/to/repo/docker-compose.yml .
 cp -r /path/to/repo/db .
 cp -r /path/to/repo/scripts .
+cp -r /path/to/repo/observability .
 chmod +x scripts/*.sh
 cp /path/to/repo/.env.example .env
 # The mail server's config dir. Empty is fine — it is filled in step 6.
@@ -279,6 +282,11 @@ mkdir -p mail-config
 > alongside `docker-compose.yml` (Part 3), so once the stack is live they stay
 > current on their own — but on a brand-new host, before the first deploy, they
 > only get here because you put them here.
+
+> **`observability/` is the same story with a louder failure.**
+> `observability/otel-hostmetrics.yaml` is bind-mounted by the optional
+> `hostmetrics` service (step 8), so if it is missing that container will not
+> start at all. It is `scp`'d by the Jenkins deploy alongside `scripts/`.
 
 ### 2. Fill in `.env`
 
@@ -406,12 +414,19 @@ Then check the rest of the [mail DNS records](#mail-dns-records) are in place �
 `docker compose exec mailserver setup debug show-mail-logs` will show relay
 rejections if SPF or the `_hostup` record is wrong.
 
-### 7. Keycloak email settings (first deploy only)
+### 7. Keycloak email settings (first deploy only, and now optional)
 
 Keycloak's SMTP configuration is **realm config stored in its database**, not
-environment variables — so there is nothing in `.env` for it. Without this step
-`POST /api/v1/account/forgot-password` silently does nothing (it always returns
-204, whether or not the mail was sent).
+environment variables — so there is nothing in `.env` for it.
+
+**No user-facing flow depends on this any more.** Password reset used to be Keycloak's
+own `UPDATE_PASSWORD` action mail; it is now StigVidd's, sent through the API's outbox
+from the operator-editable `reset-password` template (see [docs/mail.md](docs/mail.md)),
+and email verification always was. What the API needs is `Smtp__*`, not this.
+
+Configure it anyway if you want Keycloak's admin-console flows (an admin sending a
+recovery mail by hand from the Users screen) to work. Skip it and those are simply
+unavailable; nothing a user can reach is affected.
 
 In the admin console → realm `stigvidd` → **Realm settings → Email**:
 
@@ -460,7 +475,7 @@ A fresh OpenObserve has the `default` organisation and the root user from
 > account password into `.env`, `app/.env` or a build arg. See
 > [docs/notes/openobserve-oss-has-no-rbac.md](docs/notes/openobserve-oss-has-no-rbac.md).
 
-**a. Create four accounts.** *IAM → Users → Add*, role `Admin` (the only option),
+**a. Create five accounts.** *IAM → Users → Add*, role `Admin` (the only option),
 one per producer — separate accounts so that a token extracted from a public
 bundle is not also the backend's, and so one can be rotated without disturbing
 the others:
@@ -470,7 +485,10 @@ the others:
 | `api@stigvidd.se` | the backend API | ingestion token |
 | `app@stigvidd.se` | the mobile app | ingestion token — **public** |
 | `web@stigvidd.se` | the admin web | ingestion token — **public** |
+| `host@stigvidd.se` | the `hostmetrics` collector (see **f**) | ingestion token |
 | `ops@stigvidd.se` | `scripts/observatory-retention.sh` | password (see **d**) |
+
+`host@` is optional — skip it if you are not enabling host metrics.
 
 **b. The backend's ingestion token.** Sign in **as `api@stigvidd.se`**, open
 *Ingestion*, and copy the Authorization value — it is already
@@ -552,7 +570,51 @@ application*, named `stigvidd-app`. It produces an `applicationId` and a
 > only `/rum/v1/<org>/{rum,logs,replay}`. It is public for the same reason as **c**.
 > They must **never** be the same credentials the backend uses.
 
-**f. The metrics retention override.** The global default gives logs and traces
+**f. Host and container metrics (optional).** Everything above reports on the
+*application*. This is the only thing that reports on the *machine* — CPU, memory,
+load, paging, disk, filesystem and network for the box, plus per-container
+CPU/memory/IO from the Docker daemon. Without it, "the box is out of RAM" and "the
+API is slow" look identical from the observatory.
+
+Sign in **as `host@stigvidd.se`**, copy its Authorization value from *Ingestion*
+exactly as in **b**, and put it in `.env` together with the profile switch:
+
+```bash
+COMPOSE_PROFILES=hostmetrics
+HOST_METRICS_OTLP_TOKEN=<the value copied while signed in as host@>
+```
+
+> `COMPOSE_PROFILES` **is the on/off switch**, and it is off by default on purpose:
+> without it the `hostmetrics` service does not exist as far as compose is
+> concerned, so `docker compose up -d` skips it rather than starting a collector
+> that would loop on 401s. If you already use `COMPOSE_PROFILES` for something
+> else, it is a comma-separated list — append, do not replace.
+
+Then start it. **CI never will** — the Jenkins deploy acts on a hardcoded list of
+five services, so this is a manual `up` exactly like `openobserve` (Part 3):
+
+```bash
+cd /opt/stigvidd && docker compose up -d hostmetrics
+docker compose logs --tail=50 hostmetrics     # expect no error lines
+```
+
+The first scrape lands one `collection_interval` (60s) after start, not
+immediately — an empty *Streams* list twenty seconds in is normal. After a minute,
+*Streams* filtered to type `metrics` should show `system_cpu_*`, `system_memory_*`,
+`system_filesystem_*` and `container_*`. If they appear under **logs** instead, the
+exporter is posting to the org root rather than `/v1/metrics`.
+
+> **This service reads the host, so it holds two privileges nothing else in this
+> stack has:** a read-only bind of `/` (paired with `root_path: /hostfs`, without
+> which the filesystem scraper measures the image layer and still reports plausible
+> numbers), and a read-only mount of the Docker socket, which is root-equivalent
+> and is the only way to get per-container figures. It publishes no port, joins only
+> the `public` network, and is reachable from nothing.
+
+Then go straight to **g** — this step creates ~36 new metrics streams at once, every
+one of them on the short global retention until the override is applied.
+
+**g. The metrics retention override.** The global default gives logs and traces
 their 7 days. Metrics are kept for two years, which OpenObserve can only express
 as a per-stream override:
 
@@ -880,8 +942,8 @@ deploy-host prep).
 images it builds — `api web media proxy keycloak` — and passes `--no-deps` so
 compose never acts on `db`, `mailserver` or `openobserve`.
 
-Left alone: the `db`, `mailserver` and `openobserve` services, and every named
-volume (`pgdata`, `media`, `trail_imports`, `observatory`, `maildata`,
+Left alone: the `db`, `mailserver`, `openobserve` and `hostmetrics` services, and
+every named volume (`pgdata`, `media`, `trail_imports`, `observatory`, `maildata`,
 `mailstate`, `maillogs`, `caddy_data`, `caddy_config`). Recreating the five app containers does not disturb uploads,
 mailboxes or issued certificates, and Keycloak's realm — including its SMTP
 settings — survives because it lives in the untouched database.
@@ -895,10 +957,18 @@ change, then on the host:
 cd /opt/stigvidd && docker compose up -d db
 cd /opt/stigvidd && docker compose up -d mailserver
 cd /opt/stigvidd && docker compose up -d openobserve
+cd /opt/stigvidd && docker compose up -d hostmetrics   # only where the profile is enabled
 ```
 
-Any change to the `mailserver`, `openobserve` **or `db`** service blocks needs its
-command too; a normal CI deploy will not pick it up. This is the whole reason the
+Any change to the `mailserver`, `openobserve`, `hostmetrics` **or `db`** service
+blocks needs its command too; a normal CI deploy will not pick it up.
+
+`hostmetrics` is excluded for a second reason on top of the shared one: it sits
+behind a compose profile, so on a host that has not set `COMPOSE_PROFILES` the
+service does not exist at all and naming it would fail the deploy. Note the deploy
+**does** `scp` its config — `observability/otel-hostmetrics.yaml` is a bind mount,
+not baked into an image — so an edit to that file reaches the host on the next
+deploy and takes effect at the next manual `up`. This is the whole reason the
 published 5432 needs a one-time manual step: the deploy **does** `scp` the new
 `docker-compose.yml`, so the `ports:` and `command:` lines are permanent in the
 file and every later deploy keeps them — but the *running* `db` container is only
@@ -916,6 +986,63 @@ so a CI deploy *does* ship the `observatory.<domain>` site block and Caddy *will
 obtain the certificate, but nothing is started behind it. On the deploy that
 introduces the service, expect 502s on that subdomain until you run the third
 command above.
+
+### Release steps CI does not do: telemetry
+
+Two changes carry an obligation CI cannot discharge, and both fail **silently** —
+the deploy succeeds, the stack is healthy, and the thing simply does not happen.
+
+**1. A release that adds a metric instrument → re-run the retention override.**
+(Enabling `hostmetrics` counts, and counts large: it creates ~36 streams at once.)
+
+An OpenObserve metrics stream is created the first time that metric is *ingested*,
+and it inherits the **global** retention, which is the short one (7 days). Only
+`scripts/observatory-retention.sh` raises metrics streams to 730 days, and it
+cannot pre-create a stream that does not exist yet. So after the first deploy that
+ships a new instrument name, on the host:
+
+```bash
+cd /opt/stigvidd
+./scripts/observatory-retention.sh --dry-run   # read what it would change
+./scripts/observatory-retention.sh             # apply; idempotent
+```
+
+It needs the **`ops@` password**, not an ingestion token — stream settings is not
+an ingest route and a passcode gets a 401 there.
+
+Then **read the tail of its output, not just its exit code**: it prints any
+identifier-shaped field it found on a metrics stream, and a warning there is a
+release blocker rather than a cleanup task. The names that trip it are not the
+ones you would guess — `trail_name` and `mail_status` both do, while carrying no
+personal data at all. See
+[docs/notes/metric-attribute-names-trip-the-retention-guard.md](docs/notes/metric-attribute-names-trip-the-retention-guard.md).
+
+Note that a histogram is not one stream: OpenObserve adds `_bucket`, `_count`,
+`_sum`, `_min` and `_max` variants, so the stream count moves by more than the
+number of instruments added.
+
+**2. A release that changes an `EXPO_PUBLIC_*` variable → set it on EAS, and rebuild.**
+
+The app is built by **EAS, not by this compose file**, and a cloud build never
+receives `app/.env` — it is gitignored, and the upload drops what git drops. The
+variable has to exist on EAS, per environment:
+
+```bash
+cd app
+npx eas env:list --environment production
+npx eas env:create production --name EXPO_PUBLIC_OO_EVENTS_URL --value '...'
+```
+
+`EXPO_PUBLIC_*` is **inlined at bundle time**, so a name that is not set inlines
+as `undefined` with nothing failing or warning. For the telemetry variables the
+resulting behaviour is the safe direction — no URL means no sink is installed, so
+nothing is buffered and nothing is sent — but that is indistinguishable from
+"analytics are working and nobody has opted in yet". Check the stream, not the
+build log.
+
+An OTA update carries this only if you say which environment it bundles from:
+without `--environment`, `eas update` bundles **your laptop's `.env`**. See
+[docs/notes/eas-env-vars-are-not-your-dotenv.md](docs/notes/eas-env-vars-are-not-your-dotenv.md).
 
 ### Jenkins agent SSH prep
 
@@ -1109,8 +1236,15 @@ docker compose logs mailserver | grep -E 'relay=|status='   # expect status=sent
 Then send a mail *to* `info@stigvidd.se` from an outside account and check
 `docker compose exec mailserver setup debug show-mail-logs` for
 `status=sent (delivered to maildir)`. Finally, trigger the real path — the
-**Forgot password** flow in the web admin — and confirm the message arrives;
-the API returns 204 either way, so the mail log is the only evidence.
+**Forgot password** flow in the app — and confirm the message arrives; the API
+returns 204 either way, so the mail log is the only evidence. The mail now comes
+from the API's own outbox, so `dbo."OutboxEmails"` is a second place to look: a row
+with `Status = 3` (Failed) and a `LastError` says the send failed rather than the
+request; `Status = 2` is Sent.
+
+Note that an account with **no StigVidd user row** cannot use that flow — the mail
+needs the nickname that row carries, so an admin who exists only in Keycloak gets a
+204 and no mail. Reset those in the Keycloak admin console.
 
 ---
 

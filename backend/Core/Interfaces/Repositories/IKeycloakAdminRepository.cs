@@ -5,7 +5,7 @@ namespace Core.Interfaces.Repositories;
 
 /// <summary>
 /// Wraps the Keycloak Admin API for the identity-provider operations StigVidd needs:
-/// provisioning users at registration, deleting them, and triggering password resets.
+/// provisioning users at registration, deleting them, and setting passwords.
 /// Replaces the previous Firebase Admin integration.
 /// </summary>
 public interface IKeycloakAdminRepository
@@ -33,10 +33,16 @@ public interface IKeycloakAdminRepository
     Task DeleteUserAsync(string subjectId, CancellationToken ctoken);
 
     /// <summary>
-    /// Sends a Keycloak "update password" action email to the user with the given email.
-    /// Silently does nothing if no such user exists (so callers don't leak which emails are registered).
+    /// Sets the user's password. Returns false when Keycloak refuses it for violating the
+    /// realm's password policy, true when it is accepted.
     /// </summary>
-    Task SendPasswordResetEmailAsync(string email, CancellationToken ctoken);
+    /// <remarks>
+    /// The realm password policy is the only policy there is -- it lives in Keycloak's own
+    /// database and not in this repository, so it cannot be mirrored in a validator here.
+    /// That is why a refusal is an ordinary return value rather than an exception: it is an
+    /// expected answer to a user typing a weak password, not a fault.
+    /// </remarks>
+    Task<bool> SetPasswordAsync(string subjectId, string newPassword, CancellationToken ctoken);
 }
 
 /// <summary>Thrown when Keycloak rejects user creation because the user already exists.</summary>

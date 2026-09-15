@@ -146,6 +146,10 @@ services:
       # container alias. Unset, the API falls back to the origin of the request that
       # triggered the mail, which is what makes local dev work unconfigured.
       EmailVerification__BaseUrl: https://${API_DOMAIN:?API_DOMAIN must be set}
+      # Same requirement, and required for a second reason: there is no forwarded-headers
+      # middleware in Program.cs, so the request-origin fallback yields http:// behind the
+      # proxy. A password-reset link is the last place to send a downgraded URL.
+      PasswordReset__BaseUrl: https://${API_DOMAIN:?API_DOMAIN must be set}
       # ---- Telemetry (OpenObserve) ----------------------------------------
       # OPT-IN. Leave OTLP_ENDPOINT unset and the API registers no OpenTelemetry
       # providers at all — identical behaviour to before this block existed. The
@@ -364,6 +368,74 @@ services:
     # networks so it already resolves this name — adding `internal` buys nothing.
     # Internal-only would be actively wrong: `internal: true` means no egress,
     # cutting off Caddy and any outbound alert delivery.
+    networks:
+      - public
+
+  hostmetrics:
+    # Host and per-container resource metrics: CPU, memory, load, paging, disk,
+    # filesystem and network for the BOX, plus per-container CPU/memory/IO from the
+    # Docker daemon. Everything else in this stack reports on the application; this
+    # is the only thing that reports on the machine it runs on.
+    #
+    # OPT-IN, and the profile is the whole mechanism: with COMPOSE_PROFILES unset
+    # this service does not exist as far as compose is concerned, so `docker compose
+    # up -d` on a host that has not minted an ingestion token yet simply skips it
+    # rather than starting a collector that loops on 401s. Enable with
+    # COMPOSE_PROFILES=hostmetrics in .env (see .env.example) — the staging partial
+    # stack deliberately leaves it off.
+    #
+    # Upstream image, so the same rule as db/mailserver/openobserve applies: it is
+    # NOT in Jenkins' build/push set and NOT in its pull/up set, and bumping the tag
+    # below is a deliberate manual `docker compose up -d hostmetrics` on the host.
+    # See DEPLOYMENT.md Part 3.
+    image: otel/opentelemetry-collector-contrib:0.160.0
+    profiles: [hostmetrics]
+    restart: unless-stopped
+    logging: *default-logging
+    # The image ships USER 10001, which can read neither the docker socket
+    # (root:docker, 0660) nor several /proc entries. Both receivers need root.
+    user: "0:0"
+    environment:
+      # A label, not a lookup — nothing resolves this name. It is spelled `hostname`
+      # rather than the OTel-conventional `host.name` on purpose: OpenObserve
+      # flattens that to `host_name`, whose `name` token trips the 730-day retention
+      # guard in scripts/observatory-retention.sh. `hostname` is one token and is in
+      # no set. See the header of observability/otel-hostmetrics.yaml.
+      HOST_METRICS_HOSTNAME: ${HOST_METRICS_HOSTNAME:-stigvidd}
+      # The org BASE, with no signal path — `/v1/metrics` is appended in the config,
+      # exactly as TelemetryExtensions does for the API. In-stack plaintext to
+      # openobserve:5080: no proxy hop, no certificate, no hairpin. A stack pointed
+      # at ANOTHER environment's observatory must set this to a name that is not its
+      # own OBSERVATORY_DOMAIN, or the proxy's network alias swallows the request
+      # (docs/notes/proxy-aliases-shadow-public-hostnames.md).
+      HOST_METRICS_OTLP_ENDPOINT: ${HOST_METRICS_OTLP_ENDPOINT:-http://openobserve:5080/api/${OBSERVATORY_ORG:-default}}
+      # An INGESTION TOKEN, never a login password — OpenObserve OSS has no RBAC, so
+      # a password here would be full read/admin over every stream of personal data.
+      # Soft default on purpose: compose interpolates the WHOLE file before selecting
+      # services, so a `:?` here would become mandatory for every stack, including
+      # the five-service staging one that never starts this.
+      HOST_METRICS_OTLP_TOKEN: ${HOST_METRICS_OTLP_TOKEN:-}
+      TZ: ${TZ:-Europe/Stockholm}
+    volumes:
+      # Committed config, carried to the host by the Jenkins deploy alongside
+      # scripts/ — it is a bind mount, so a host missing this file gets a collector
+      # that will not start.
+      - ./observability/otel-hostmetrics.yaml:/etc/otelcol-contrib/config.yaml:ro
+      # Read-only view of the host root, paired with `root_path: /hostfs` in the
+      # config. Without it the filesystem scraper measures the image layer — the
+      # wrong disk — while still reporting plausible numbers.
+      - /:/hostfs:ro
+      # Root-equivalent, and the first docker socket mount in this stack. It is what
+      # answers "which container ate the box", which host-level metrics alone cannot.
+      # Read-only, and this service publishes no port and is reachable from nothing.
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    # No named volume, deliberately: the collector holds no state, so there is
+    # nothing for scripts/migrate.sh's VOLUMES=(...) list to carry. Adding one here
+    # without adding it there loses the data silently
+    # (docs/notes/compose-volume-needs-migrate-sh.md).
+    #
+    # `public` only, same as openobserve — that is where the sink is, and
+    # `internal: true` would cut egress.
     networks:
       - public
 

@@ -36,7 +36,13 @@ describe("CoordinateParser", () => {
   it("returns an empty array and warns on invalid JSON", () => {
     const result = CoordinateParser({ data: "not-json", identifier: "trail-1" });
     expect(result).toEqual([]);
-    expect(console.warn).toHaveBeenCalledWith(expect.stringContaining("trail-1"), expect.anything());
+    // The identifier moved out of the message and into the log context when this call site
+    // migrated from console.warn to logger.warn. That is the point of the move: OpenObserve
+    // gets `identifier` as a queryable field instead of a value baked into a sentence.
+    expect(console.warn).toHaveBeenCalledWith(
+      expect.stringContaining("Failed to parse coordinates"),
+      expect.objectContaining({ identifier: "trail-1" }),
+    );
   });
 
   it("returns an empty array and warns on empty string", () => {
@@ -48,7 +54,10 @@ describe("CoordinateParser", () => {
   it("returns an empty array and warns when the payload is not an array", () => {
     const result = CoordinateParser({ data: JSON.stringify({ latitude: 57.7, longitude: 12.0 }), identifier: "t" });
     expect(result).toEqual([]);
-    expect(console.warn).toHaveBeenCalledWith(expect.stringContaining("t"));
+    expect(console.warn).toHaveBeenCalledWith(
+      expect.stringContaining("not an array"),
+      expect.objectContaining({ identifier: "t" }),
+    );
   });
 
   it("drops points with missing or non-finite coordinates instead of emitting NaN", () => {

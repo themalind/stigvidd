@@ -7,6 +7,7 @@
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { atom } from "jotai";
+import { logger } from "../services/logger";
 
 export const userThemeAtom = atom<"dark" | "light" | "auto">("auto");
 
@@ -15,7 +16,7 @@ export const loadUserTheme = async () => {
     const theme = await AsyncStorage.getItem("my-theme");
     return (theme as "dark" | "light" | "auto") ?? "auto";
   } catch (e) {
-    console.log(e);
+    logger.warn("Could not read the stored theme; falling back to auto", { error: String(e) });
     return "auto";
   }
 };

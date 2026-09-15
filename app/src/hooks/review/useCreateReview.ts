@@ -10,6 +10,7 @@ import { showErrorAtom, showSuccessAtom } from "@/atoms/snackbar-atoms";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSetAtom } from "jotai";
 import { useTranslation } from "react-i18next";
+import { logger } from "../../services/logger";
 
 export function useCreateReview(onSuccess: () => void) {
   const { t } = useTranslation();
@@ -50,12 +51,12 @@ export function useCreateReview(onSuccess: () => void) {
         setSuccess(t("review.added"));
         onSuccess();
       } else {
-        console.error("Error creating review");
+        logger.error("Create review returned no review");
         setError(t("review.saveError"));
       }
     },
     onError: (error) => {
-      console.error("Error creating review: ", error);
+      logger.error("Create review failed", { error: String(error) });
       setError(t("review.saveError"));
     },
   });

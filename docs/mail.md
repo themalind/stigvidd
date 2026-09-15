@@ -8,12 +8,14 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 How the API sends email: a **template store** and an **outbox**, both database tables, drained
 by a background service that is triggered by an in-memory queue rather than a poll.
 
-This is the API's own mail. Keycloak's password-reset mail is a separate path entirely —
-Keycloak templates and sends it from realm configuration that is not in this repository
-(see [DEPLOYMENT.md](../DEPLOYMENT.md), "Keycloak email settings").
+Every user-facing mail the product sends now goes through here. Keycloak's own templates and
+its realm SMTP settings are no longer in any user-facing path: password reset used to be
+Keycloak's `UPDATE_PASSWORD` action mail and is now `reset-password` below, which means the
+wording of every mail a user receives is editable by an operator without a deploy.
 
-Its first caller is **registration**: `verify-email` carries the link and code that stand
-between signing up and being able to log in. See [auth](auth.md).
+Its callers are **registration** — `verify-email` carries the link and code that stand between
+signing up and being able to log in — and **forgotten passwords**, where `reset-password`
+carries the only link that can set a new one. See [auth](auth.md).
 
 ## Sending one
 
@@ -133,9 +135,11 @@ the rows part of the EF model, and a later migration would then revert an operat
 the wording, which is the whole reason the copy lives in the database. See
 [docs/notes/mail-templates-seeded-with-insertdata.md](notes/mail-templates-seeded-with-insertdata.md).
 
-`20260912103250_AddMailOutbox` seeds `welcome`/`sv` that way as a worked example, and
-`20260912125829_AddEmailVerification` seeds `verify-email`/`sv` the same way. The latter takes
-three placeholders — `{{NickName}}`, `{{VerificationUrl}}` and `{{VerificationCode}}`.
+`20260912103250_AddMailOutbox` seeds `welcome`/`sv` that way as a worked example,
+`20260912125829_AddEmailVerification` seeds `verify-email`/`sv` the same way (three
+placeholders — `{{NickName}}`, `{{VerificationUrl}}`, `{{VerificationCode}}`), and
+`20260913141730_AddPasswordReset` seeds `reset-password`/`sv` (two — `{{NickName}}` and
+`{{ResetUrl}}`).
 
 No test applies a migration, so a test needing a template seeds its own — see
 `Tests/IntegrationTests/Mail/MailOutboxIntegrationTests.cs`.
@@ -171,6 +175,12 @@ A catalogue that can drift from the call site would be no better than the prose 
 so `MailTemplateCatalogTests` drives the real caller, captures the model dictionary it passes,
 and asserts the two agree. **Adding a placeholder to a mail means adding it in both places**,
 or that test fails.
+
+**But that test is per-key and hand-written, not a sweep.** Nothing enumerates callers, so a
+*new* template key gets none of this for free: adding one means writing its own
+`…_DeclaresExactlyThePlaceholdersTheRealCallerSupplies` alongside the existing ones and adding
+it to `EveryTemplateKeyThatCodeSends_IsDescribed`. Skip that and the catalogue can drift from
+day one with the suite green.
 
 A key the catalogue does not describe is not an error: nothing in C# sends it, so nothing can
 be said about what its caller supplies, and the editor reports rather than condemns it.

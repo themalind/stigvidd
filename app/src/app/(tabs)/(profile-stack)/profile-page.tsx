@@ -23,6 +23,7 @@ import React, { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { Text, useTheme } from "react-native-paper";
+import { logger } from "../../../services/logger";
 
 export default function ProfilePageScreen() {
   const { t } = useTranslation();
@@ -56,7 +57,7 @@ export default function ProfilePageScreen() {
     try {
       await logout();
     } catch (e) {
-      console.log(e);
+      logger.error("Sign-out failed", { error: String(e) });
       setError(t("auth.couldNotLogout"));
     }
     // No navigation needed: logout() flips userAtom → the (profile-stack) guard

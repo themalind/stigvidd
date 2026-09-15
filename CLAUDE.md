@@ -310,6 +310,13 @@ uncommitted files — see
 [docs/notes/reuse-lint-needs-no-install-it-runs-as-a-container.md](docs/notes/reuse-lint-needs-no-install-it-runs-as-a-container.md)
 for why the `safe.directory` env vars are not optional.
 
+"Whole working tree" is also why the verdict line lies on a CodeGraph-indexed checkout: it
+walks `.codegraph/daemon.sock`, cannot read a socket, and ends in "not compliant" with
+`Missing licenses: 0` and every file covered. `.codegraph/` is gitignored so CI is green.
+Read the counters, not the verdict —
+[docs/notes/reuse-lint-reports-non-compliant-because-of-the-codegraph-socket.md](docs/notes/reuse-lint-reports-non-compliant-because-of-the-codegraph-socket.md)
+has the clean-copy recipe that gives a trustworthy answer.
+
 Two mechanical traps when adding headers in bulk: **196 of the 402 `.cs` files carry a UTF-8
 BOM**, which must stay the first bytes (header goes *after* it), and everything is LF per
 `.gitattributes`.
@@ -372,7 +379,7 @@ text that is not a symbol), just run the same search again.
 | `guard-generated-files.mjs` | PreToolUse write | denies edits to generated/EF-owned files |
 | `guard-test-cancellation-token.mjs` | PreToolUse write | an explicit `CancellationToken.None` / `new CancellationToken()` / `default(CancellationToken)` written into `backend/Tests/**.cs` — the half **xUnit1051 cannot see**, since it only flags a token left off entirely. Silent on `CancellationTokenSource` and `It.IsAny<CancellationToken>()`; `// cancellation-token-ok: <why>` opts a line out |
 | `guard-build-commands.mjs` | PreToolUse Bash | `dotnet test` without the connection string, `dotnet ef` without `--project` |
-| `guard-long-running.mjs` | PreToolUse Bash | foreground dev servers, watchers, `compose up`. Vitest counts: `vitest` watches by default, `vitest run` is the one that exits |
+| `guard-long-running.mjs` | PreToolUse Bash | foreground dev servers, watchers, `compose up`. Vitest counts: `vitest` watches by default, `vitest run` is the one that exits. **Passes a call that already sets `run_in_background: true`** — that flag is the remedy every denial names, and denying it too made the advice unfollowable |
 | `guard-symbol-search.mjs` | PreToolUse Grep/Glob/Bash | a search for a single identifier that `codegraph query` proves the index holds **and declares inside the path being searched** — denied **once**, with the `codegraph_explore` call to make instead and every match of that name listed; the identical retry passes. Silent when there is no `.codegraph/` here, and silent on any regex, phrase, count, prose-scoped search (`docs/`, `*.md`) or non-symbol string |
 | `check-dotnet-build.mjs` | PostToolUse edit | builds the project owning the edited `.cs` and reports that file's errors |
 | `check-lint.mjs` | PostToolUse edit | eslint on the edited TS/JS, differenced against HEAD |

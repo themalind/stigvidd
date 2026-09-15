@@ -72,6 +72,16 @@ function main() {
   if (process.argv.includes("--self-test")) return selfTest();
   const ev = readEvent();
   if (String(ev.tool_name ?? "") !== "Bash") return 0;
+
+  // Already backgrounded: nothing to guard against. A backgrounded call returns immediately
+  // and cannot wedge the turn, which is the entire harm this hook exists to prevent.
+  //
+  // Without this the guard denied the very thing its own message asks for — every deny said
+  // "run it with run_in_background: true", the caller did exactly that, and the guard denied
+  // it again because it only ever read tool_input.command. An unfollowable remedy costs a
+  // turn and teaches the session to route around the guard, which is worse than no guard.
+  if (ev.tool_input?.run_in_background === true) return 0;
+
   const d = decide(String(ev.tool_input?.command ?? ""));
   if (!d) return 0;
   const [what, is, how] = d;
@@ -84,6 +94,11 @@ function main() {
 
 function selfTest() {
   const { ok, done } = checker("guard-long-running");
+
+  // The backgrounded path is tested through main()'s own gate rather than decide(), because
+  // that is where the flag is read; decide() never sees it and must keep matching.
+  ok(decide("npx expo start") !== null, "decide() must still match a backgrounded command");
+
   const cases = [
     ["cd app && npx expo start", true],
     ["CI=1 npx expo start", true],                       // bash prefix

@@ -9,6 +9,7 @@ import { userThemeAtom } from "@/atoms/user-theme-atom";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useAtom } from "jotai";
 import { useColorScheme } from "react-native";
+import { logger } from "../services/logger";
 
 export function useThemeToggle() {
   const [userTheme, setUserTheme] = useAtom(userThemeAtom);
@@ -25,7 +26,7 @@ export function useThemeToggle() {
     try {
       await AsyncStorage.setItem("my-theme", newTheme);
     } catch (e) {
-      console.log(e);
+      logger.warn("Could not persist the theme choice", { error: String(e) });
     }
   }
 

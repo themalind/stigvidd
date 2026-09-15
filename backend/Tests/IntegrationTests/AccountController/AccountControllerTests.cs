@@ -49,8 +49,8 @@ public class AccountControllerTests : IClassFixture<StigViddWebApplicationFactor
             .Setup(k => k.DeleteUserAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
         _factory.KeycloakAdminMock
-            .Setup(k => k.SendPasswordResetEmailAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-            .Returns(Task.CompletedTask);
+            .Setup(k => k.SetPasswordAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
         _factory.KeycloakAdminMock
             .Setup(k => k.ActivateVerifiedUserAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
@@ -224,13 +224,12 @@ public class AccountControllerTests : IClassFixture<StigViddWebApplicationFactor
     }
 
     [Fact]
-    public async Task ForgotPassword_WhenKeycloakThrows_StillReturnsNoContent()
+    public async Task ForgotPassword_ForAnUnknownEmail_StillReturnsNoContent()
     {
-        // Arrange: the endpoint must never leak whether the email is registered, so it swallows
-        // Keycloak failures and always responds 204.
-        _factory.KeycloakAdminMock
-            .Setup(k => k.SendPasswordResetEmailAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-            .ThrowsAsync(new Exception("Keycloak unavailable"));
+        // Arrange: the endpoint must never leak whether the email is registered, so an address
+        // with no user behind it gets the same 204 as a real one. Since the reset mail is now
+        // StigVidd's own, this no longer goes near Keycloak at all -- the old version of this
+        // test made SendPasswordResetEmailAsync throw, and there is no such call any more.
         var client = _factory.CreateClient();
         var request = new ForgotPasswordRequest { Email = "unknown@test.local" };
 

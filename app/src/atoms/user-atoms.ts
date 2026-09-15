@@ -18,6 +18,7 @@ import { UserFavoritesTrail, UserWishlistTrail } from "@/data/types";
 import { atomWithMutation, atomWithQuery, queryClientAtom } from "jotai-tanstack-query";
 import { CURRENT_USER_STALE_TIME, USER_LIST_STALE_TIME } from "@/constants/cache";
 import { userAtom } from "./auth-atoms";
+import { logger } from "../services/logger";
 
 export const stigviddUserAtom = atomWithQuery((get) => {
   const user = get(userAtom);
@@ -184,7 +185,7 @@ export const removeFromWishlistAtom = atomWithMutation((get) => {
       if (context?.previousWishlist) {
         queryClient.setQueryData<UserWishlistTrail[]>(["userWishlist", uid], context?.previousWishlist);
       }
-      console.error("Failed to remove from wishlist", error);
+      logger.error("Failed to remove trail from wishlist", { error: String(error) });
     },
     onSettled: () => {
       // Hämta om på nytt
@@ -223,7 +224,7 @@ export const removeFromFavoritesAtom = atomWithMutation((get) => {
       if (context?.previousFavoritesList) {
         queryClient.setQueryData(["userFavorites", uid], context.previousFavoritesList);
       }
-      console.error("Failed to remove trail from favorites", error);
+      logger.error("Failed to remove trail from favorites", { error: String(error) });
     },
     onSettled: () => {
       queryClient.invalidateQueries({

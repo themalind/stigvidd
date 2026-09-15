@@ -41,11 +41,15 @@ public class EndpointAuthorizationTests : IClassFixture<StigViddWebApplicationFa
 
         // Signing up and recovering a password happen before there is a token. So does
         // proving the address afterwards: until that is done the Keycloak user is disabled,
-        // so there is no token to present and these three cannot require one.
+        // so there is no token to present and none of these can require one. The two
+        // reset-password routes are a browser's, not the app's -- they are opened from a mail
+        // client, and the one-time token in the link is the whole credential.
+        "GET /api/v1/Account/reset-password",
         "GET /api/v1/Account/verify-email",
         "POST /api/v1/Account/forgot-password",
         "POST /api/v1/Account/register",
         "POST /api/v1/Account/resend-verification",
+        "POST /api/v1/Account/reset-password",
         "POST /api/v1/Account/verify-email",
 
         // Probes. Reached before anything is signed in and by design: healthz answers

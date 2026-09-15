@@ -92,7 +92,13 @@ it("survives a device that cannot open mail", async () => {
 it("links to the privacy policy and the terms of use", async () => {
   show();
 
-  expect(screen.getByText(/inga annonser, analysverktyg eller spårning/)).toBeTruthy();
+  // Pins the promise the app makes about analytics. It used to read "inga annonser,
+  // analysverktyg eller spårning" — an absolute no-analytics claim that became false the
+  // moment usage statistics were added. What replaces it is conditional, so the two halves
+  // that carry the legal weight are asserted separately: collection is opt-in, and a
+  // position is never part of it.
+  expect(screen.getByText(/samlas bara in om du samtycker/)).toBeTruthy();
+  expect(screen.getByText(/innehåller aldrig din position/)).toBeTruthy();
 
   await press("Läs integritetspolicyn");
   expect(Linking.openURL).toHaveBeenCalledWith(PRIVACY_POLICY_URL);

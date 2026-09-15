@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 using Core.Factories;
+using Core.Telemetry;
 using Core.Interfaces.Repositories;
 using Core.Interfaces.Services;
 using Core.Services;
@@ -22,7 +23,8 @@ public class ReviewServiceTests
         Mock<IWebDavService>? webDav = null,
         Mock<IUserRepository>? userRepo = null,
         Mock<ITrailService>? trailService = null,
-        Mock<IMediaUploadService>? mediaUpload = null)
+        Mock<IMediaUploadService>? mediaUpload = null,
+        StigviddMetrics? metrics = null)
     {
         var cfg = new Mock<IConfiguration>();
         cfg.Setup(c => c["PresentableBaseUrl"]).Returns("http://stigvidd.se/testing/");
@@ -40,7 +42,8 @@ public class ReviewServiceTests
             (userRepo ?? Utilities.MockFactory.UserRepositoryFoundById()).Object,
             (trailService ?? Utilities.MockFactory.TrailServiceFound()).Object,
             new ReviewResponseFactory(cfg.Object),
-            new Mock<ILogger<ReviewService>>().Object);
+            new Mock<ILogger<ReviewService>>().Object,
+            metrics ?? new StigviddMetrics());
     }
 
     private static PagedResult<ReviewResponse> StubPage(int count = 2) =>

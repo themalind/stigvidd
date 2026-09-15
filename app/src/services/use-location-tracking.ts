@@ -33,6 +33,7 @@ import {
   startLiveLocation,
   stopLiveLocation,
 } from "./live-location";
+import { track } from "./analytics";
 
 // How often the background task samples GPS (ms). Android-only — on iOS the
 // sampling cadence is driven purely by distanceInterval (see startTracking).
@@ -305,6 +306,13 @@ export function useLocationTracking() {
       currentSegment: newSegment,
     }));
 
+    // Which engine is in use and whether background permission was granted together explain
+    // most "my track has holes" reports, and neither is derivable from the saved hike.
+    track("hike.recording_started", {
+      engine: useNativeRef.current ? "native_ios" : "expo_task",
+      backgroundPermission: bgPermission === "granted" ? "granted" : "denied",
+    });
+
     // Each new segment starts with an empty live tail so it never carries points
     // from the previous (now finalized) segment.
     setLive([]);
@@ -420,6 +428,17 @@ export function useLocationTracking() {
       });
 
       applyState(newState);
+
+      // The SHAPE of the track, never the track. Emitted here rather than from the background
+      // task: that task can be relaunched in a fresh JS runtime mid-hike, and its consent
+      // cache may be unhydrated, so the foreground is the only place this can be both correct
+      // and consent-gated.
+      track("hike.recording_stopped", {
+        reason: "user",
+        durationSeconds: Math.round(newState.hike.totalTime / 1000),
+        distanceMeters: newState.hike.totalDistance,
+        pointCount: newState.hike.segments.reduce((n, seg) => n + seg.coordinates.length, 0),
+      });
     } catch {
       // Surface the failure instead of leaving an unhandled rejection and a UI that
       // silently disagrees with the (possibly still-running) background task.

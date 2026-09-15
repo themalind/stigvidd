@@ -15,6 +15,7 @@ failure mode of getting it subtly wrong is "every user gets silently logged out.
 | Auth atoms (`userAtom`, `authLoadingAtom`)             | `app/src/atoms/auth-atoms.ts`                                           |
 | Account provisioning + password reset + verification   | `app/src/api/auth.ts`                                                   |
 | Email verification (backend)                           | `backend/Core/Services/EmailVerificationService.cs`                     |
+| Password reset (backend)                              | `backend/Core/Services/PasswordResetService.cs`                         |
 | The gate itself: create disabled, enable on verify     | `backend/Core/Repositories/KeycloakAdminRepository.cs`                  |
 | Access-token accessor for the API layer                | `app/src/api/users.ts` → `getUserToken`                                 |
 | API base URL                                           | `app/src/api/api-config.ts`                                             |
@@ -77,6 +78,52 @@ Configuration is `EmailVerification:*` in `appsettings.json` (lifetime 24 h, res
 attempt cap 5). `EmailVerification:BaseUrl` is deliberately **not** there — like `Smtp:*` it comes
 from `docker-compose.yml`, and when it is absent the API falls back to the origin of the request
 that triggered the mail, which is what makes local development work unconfigured.
+
+## Forgotten passwords
+
+The reset mail is **StigVidd's own**, not Keycloak's. `POST /account/forgot-password` issues a
+256-bit token, stores only its SHA-256, and queues `reset-password` through the mail outbox; the
+link lands on a page this API serves.
+
+```
+forgot-password ──> PasswordResetTokens row + mail via the outbox
+                                   │
+   GET  /account/reset-password?token=…  ──> the form.  CONSUMES NOTHING
+                                   │
+   POST /account/reset-password          ──> KeycloakAdminRepository.SetPasswordAsync
+                                             then ConsumedAt
+```
+
+Keycloak still owns the password — this API stores no hash — so the change itself is one Admin
+API call, and the **realm password policy** is the only policy there is. Keycloak answers a
+violation with 400, which the page reports by re-rendering the form rather than as an error.
+
+Three properties are deliberate and each has a test:
+
+- **The GET consumes nothing.** Mail scanners and corporate link-prefetchers follow a link
+  before the human does. Email verification can answer that with `AlreadyVerified`; a password
+  reset cannot, so the link must simply survive being fetched. Only the POST spends it.
+- **A refused password leaves the link alive.** The user is in front of the form and must be
+  able to try a stronger one without asking for another mail.
+- **Issuing retires the previous link**, in one save, so a second request cannot leave two live.
+
+The token lifetime is **2 hours** (`PasswordReset:TokenLifetimeHours`), not one: the outbox backs
+off 1, 2, 4, 8, 16 minutes and the mail server greylists, so a shorter window can expire in
+transit. `PasswordReset:BaseUrl` is absent from `appsettings.json` and comes from
+`docker-compose.yml`, like `EmailVerification:BaseUrl` — and it is **required** there, because
+there is no forwarded-headers middleware, so the request-origin fallback would build an `http://`
+link behind the proxy.
+
+Both routes are excluded from tracing in `TelemetryExtensions.IsWorthTracing`: the ASP.NET Core
+instrumentation records `url.query`, and the token rides there.
+
+**What a reset does not do: it does not end existing sessions.** The app holds a long-lived
+offline refresh token, and revoking it is not reachable through the Keycloak SDK — see
+[docs/notes/password-reset-does-not-end-existing-sessions.md](notes/password-reset-does-not-end-existing-sessions.md).
+
+An account with no StigVidd `Users` row — which admins routinely are, since the dashboard never
+provisions one — cannot use this flow at all, because the mail needs the nickname that row
+carries. Those passwords are reset in the Keycloak admin console.
 
 ## Tokens: what's stored and where
 
@@ -180,7 +227,7 @@ same reason: `useAuth()` runs in `RootLayout`, which sits _above_ the
 Note register/reset live in `api/auth.ts` and hit the **backend** (which calls the
 Keycloak Admin API), not Keycloak directly — the device never holds admin
 credentials. Password reset always resolves 2xx (the backend won't reveal whether an
-email exists).
+email exists, is verified, or is inside its cooldown).
 
 ## Backend: validating the token & roles
 
@@ -248,6 +295,10 @@ covers the `realm_access` parsing that the header deliberately bypasses.
 | Refresh token genuinely rejected (`invalid_grant`) | Tokens cleared, `onSessionExpired` → login screen.                 |
 | Network blip during refresh                        | Tokens **kept**; retried later. User not logged out.               |
 | Wrong password on login / delete                   | `InvalidCredentialsError` surfaced to the screen.                  |
+| Password-reset link prefetched by a mail scanner   | Form is served; the link stays usable. Only the POST spends it.    |
+| Password-reset link used twice                     | 410 — the second POST changes nothing.                             |
+| New password refused by the realm policy           | Form re-rendered with a message; the link is still usable.         |
+| Password reset while signed in elsewhere           | That session survives — the reset revokes nothing. See the note.   |
 | Register succeeds                                  | Account exists but is **disabled**; user goes to the verification screen. |
 | Login before verifying                             | Keycloak 400 `Account disabled` → `AccountNotVerifiedError` → verification screen with a resend, **not** "wrong password". |
 | Verification link followed twice (or prefetched)   | Reported as success — a mail scanner must not burn the user's link. |

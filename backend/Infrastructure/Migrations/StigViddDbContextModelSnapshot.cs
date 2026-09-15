@@ -95,54 +95,6 @@ namespace Infrastructure.Migrations
                     b.ToTable("CityAreas", "dbo");
                 });
 
-            modelBuilder.Entity("Infrastructure.Data.Entities.EmailVerificationToken", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("Attempts")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("CodeHash")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTime?>("ConsumedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime>("ExpiresAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Identifier")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("LastUpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("TokenHash")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("TokenHash")
-                        .IsUnique();
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("EmailVerificationTokens", "dbo");
-                });
-
             modelBuilder.Entity("Infrastructure.Data.Entities.ContentReport", b =>
                 {
                     b.Property<int>("Id")
@@ -224,6 +176,54 @@ namespace Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("ContentReports", "dbo");
+                });
+
+            modelBuilder.Entity("Infrastructure.Data.Entities.EmailVerificationToken", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("Attempts")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("CodeHash")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("ConsumedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Identifier")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("LastUpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TokenHash")
+                        .IsUnique();
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("EmailVerificationTokens", "dbo");
                 });
 
             modelBuilder.Entity("Infrastructure.Data.Entities.Facility", b =>
@@ -576,6 +576,47 @@ namespace Infrastructure.Migrations
                     b.HasIndex("Status", "NextAttemptAt");
 
                     b.ToTable("OutboxEmails", "dbo");
+                });
+
+            modelBuilder.Entity("Infrastructure.Data.Entities.PasswordResetToken", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime?>("ConsumedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Identifier")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("LastUpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TokenHash")
+                        .IsUnique();
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("PasswordResetTokens", "dbo");
                 });
 
             modelBuilder.Entity("Infrastructure.Data.Entities.Review", b =>
@@ -1363,6 +1404,16 @@ namespace Infrastructure.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Infrastructure.Data.Entities.ContentReport", b =>
+                {
+                    b.HasOne("Infrastructure.Data.Entities.User", "Reporter")
+                        .WithMany()
+                        .HasForeignKey("ReporterUserId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Reporter");
+                });
+
             modelBuilder.Entity("Infrastructure.Data.Entities.EmailVerificationToken", b =>
                 {
                     b.HasOne("Infrastructure.Data.Entities.User", "User")
@@ -1372,16 +1423,6 @@ namespace Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("Infrastructure.Data.Entities.ContentReport", b =>
-                {
-                    b.HasOne("Infrastructure.Data.Entities.User", "Reporter")
-                        .WithMany()
-                        .HasForeignKey("ReporterUserId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.Navigation("Reporter");
                 });
 
             modelBuilder.Entity("Infrastructure.Data.Entities.FacilityImage", b =>
@@ -1459,6 +1500,17 @@ namespace Infrastructure.Migrations
                     b.Navigation("SharedBy");
 
                     b.Navigation("SharedWith");
+                });
+
+            modelBuilder.Entity("Infrastructure.Data.Entities.PasswordResetToken", b =>
+                {
+                    b.HasOne("Infrastructure.Data.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Infrastructure.Data.Entities.Review", b =>

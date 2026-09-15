@@ -1,6 +1,7 @@
 // SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+using Core.Telemetry;
 using System.Text;
 using OpenTelemetry;
 using OpenTelemetry.Exporter;
@@ -103,6 +104,11 @@ public static class TelemetryExtensions
                 // Connection-pool saturation, which is the single most useful number when
                 // someone reports "the API got slow".
                 .AddMeter("Npgsql")
+                // The application's own instruments (Core/Telemetry/StigviddMetrics.cs). This
+                // string and MetricNames.MeterName must be the same literal or the exporter
+                // simply never subscribes: the counters still record, nothing throws, and the
+                // metrics silently never leave the process. Hence the shared const.
+                .AddMeter(MetricNames.MeterName)
                 .AddOtlpExporter(o => Configure(o, endpointUri, "v1/metrics", authHeader, stream: null)));
 
         return builder;
@@ -150,6 +156,13 @@ public static class TelemetryExtensions
     /// Swagger/OpenAPI is dev-only browsing that emits a burst of spans per page load, and
     /// CORS preflights double the span count for every mutating call from the app (the
     /// AllowFrontend policy reflects any origin in Development).
+    ///
+    /// The two account links are dropped for a different reason, and it is not noise: the
+    /// ASP.NET Core instrumentation records <c>url.query</c>, and both of these carry their
+    /// one-time token THERE. Tracing them ships a live credential into OpenObserve, where it
+    /// outlives the link -- and a mail scanner prefetching the link sends it before the human
+    /// does. reset-password is account takeover; verify-email is the same shape at lower
+    /// stakes. Neither is worth a span.
     /// </summary>
     private static bool IsWorthTracing(HttpContext context)
     {
@@ -163,7 +176,9 @@ public static class TelemetryExtensions
         return !path.StartsWithSegments("/healthz")
             && !path.StartsWithSegments("/readyz")
             && !path.StartsWithSegments("/swagger")
-            && !path.StartsWithSegments("/openapi");
+            && !path.StartsWithSegments("/openapi")
+            && !path.StartsWithSegments("/api/v1/account/reset-password")
+            && !path.StartsWithSegments("/api/v1/account/verify-email");
     }
 
     /// <summary>

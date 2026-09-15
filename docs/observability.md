@@ -18,6 +18,7 @@ wrong is "we retained precise location data about identifiable users for two yea
 | Service definition, retention + memory caps    | `docker-compose.yml` → `openobserve`     |
 | Public routing, ingest/UI split, body cap      | `proxy/Caddyfile`                        |
 | Metrics retention override + PII guard         | `scripts/observatory-retention.sh`       |
+| Host + container metrics collector             | `observability/otel-hostmetrics.yaml`, `docker-compose.yml` → `hostmetrics` |
 | Host container log retention (a separate 7 days) | `scripts/container-log-retention.sh`, `x-logging` in `docker-compose.yml` |
 | Operational runbook (first boot, troubleshooting) | `DEPLOYMENT.md` Part 1 step 8         |
 | Deployment variables                           | `.env.example`                           |
@@ -48,6 +49,10 @@ wrong is "we retained precise location data about identifiable users for two yea
   into a bundle served publicly from the web domain, so extracting it needs a
   single `curl` rather than an APK. `ZO_CORS_ALLOWED_ORIGINS` already permits the
   web domain, which is what makes a browser-side POST possible at all.
+- **The host itself** is reported by an optional OpenTelemetry Collector, the
+  `hostmetrics` service, over the same in-stack OTLP/HTTP path the backend uses.
+  Everything above measures the *application*; this is the only thing that measures
+  the *machine*. See **Host and container metrics** below.
 - Telemetry is **opt-in everywhere**: with the config absent, the backend
   registers no OpenTelemetry providers at all and the app registers no log sink.
   Nothing breaks when observability is unconfigured, or down.
@@ -69,7 +74,30 @@ instance:
 - **Metrics** — ASP.NET Core, HttpClient, .NET runtime and Npgsql. Note this is
   **~70 streams** from one service, since OpenObserve creates one per metric name
   and histograms add `_bucket`/`_count`/`_sum`/`_min`/`_max` variants. That is why
-  the retention override is a script rather than a manual UI task.
+  the retention override is a script rather than a manual UI task. The optional
+  `hostmetrics` collector adds **~36 more** (measured, see below), so a host with it
+  enabled carries a little over a hundred metrics streams.
+
+  Plus the application's own meter, **`Stigvidd`**, declared once in
+  `backend/Core/Telemetry/MetricNames.cs` and registered by the matching `AddMeter`
+  call here. The meter name is an unchecked string in exactly two places, like the
+  `"AdminOnly"` policy: if they ever differ the counters still record and nothing
+  throws, the exporter simply never subscribes. Share the const; never type the
+  literal.
+
+  Its instruments are built in `Core/Telemetry/StigviddMetrics.cs` and reached only
+  through that type's `Record*` methods — the instruments themselves are private, so
+  a call site chooses from the bounded vocabulary in `Core/Telemetry/MetricTags.cs`
+  rather than assembling its own dimensions. Attribute vocabulary is the part with
+  the 730-day retention and the GDPR argument attached, so it is not left to each
+  caller. Today: `stigvidd.trail.favorites.changed`, `stigvidd.review.created`
+  (counters) and `stigvidd.review.rating` (histogram).
+
+  Registering the meter does **not** weaken the opt-in guard. A `Meter` is a BCL
+  type: creating one registers nothing with OpenTelemetry and starts no thread, so
+  `StigviddMetrics` is registered unconditionally in Core while export stays gated on
+  `Otlp:Endpoint`. `Tests/IntegrationTests/Telemetry/TelemetryOptInTests.cs` asserts
+  both halves — instruments resolvable, `MeterProvider` and `TracerProvider` null.
 
 **Not** emitted, deliberately: spans for `/healthz`, `/readyz`, `/swagger`,
 `/openapi` and `OPTIONS` preflights. Health probes alone would otherwise be the
@@ -80,6 +108,198 @@ probabilistic sampling, and sampling away spans would destroy the mobile-RUM-to-
 server correlation this exists to provide. Volume is controlled by *filtering*
 instead. If a head sampler is ever added, it must be `ParentBasedSampler`, or a
 sampled mobile request gets dropped server-side.
+
+## Host and container metrics
+
+Everything above is about the application. The `hostmetrics` service — an
+OpenTelemetry Collector running the `host_metrics` and `docker_stats` receivers —
+is the only thing in the stack that reports on the **machine**: CPU, memory, load,
+paging, disk, filesystem and network for the box, plus per-container CPU, memory
+and IO from the Docker daemon. It exports OTLP/HTTP to the same
+`http://openobserve:5080/api/<org>` the API uses, in-stack and in plaintext.
+
+Config: [`observability/otel-hostmetrics.yaml`](../observability/otel-hostmetrics.yaml),
+bind-mounted (not baked into an image), and `scp`'d to the host by the Jenkins deploy
+alongside `scripts/`.
+
+**Opt-in, via a compose profile.** The service carries `profiles: [hostmetrics]`, so
+with `COMPOSE_PROFILES` unset it does not exist as far as compose is concerned and
+`docker compose up -d` skips it. That is what keeps a host with no ingestion token
+from running a collector that loops on 401s, and it is why every variable it reads
+is `${VAR:-}`-shaped: compose interpolates the **whole file** before selecting
+services, so a `${VAR:?}` here would become mandatory for the staging partial stack
+too. It has its own OpenObserve identity, `host@` — a sixth producer, holding an
+ingestion token like the others.
+
+**CI never starts it.** The Jenkins deploy acts on a hardcoded list of five
+services, so — like `db`, `mailserver` and `openobserve` — this is a manual
+`docker compose up -d hostmetrics` on the host.
+
+### Attribute names: why this config renames six things
+
+This is the part to read before editing the config, because the failure is a
+**release blocker that appears days later on a different machine**.
+
+Metrics streams are kept for 730 days, which is lawful only while they carry no
+personal data, and `scripts/observatory-retention.sh` enforces that by tokenising
+every metrics field name against a flat identifier set (`device` and `name` are both
+in it). The stock receivers emit exactly those names. Measured against
+v0.92.2 with collector 0.160.0, the un-renamed config produced **39 flagged fields**
+across 26 streams:
+
+| stock name | flattens to | the offending token |
+| --- | --- | --- |
+| `device` (disk, filesystem, network scrapers) | `device` | `device` |
+| `device_major`, `device_minor` (docker blockio) | same | `device` |
+| `container.name` | `container_name` | `name` |
+| `container.image.name` | `container_image_name` | `name` |
+| `host.name` (if `resourcedetection` is added) | `host_name` | `name` |
+
+None of them carry personal data; the tokeniser cannot tell, and widening its
+allowlist for `device` would also widen it for the names it exists to catch. So the
+config renames instead — `device` → `dev`, `device_major`/`device_minor` →
+`dev_major`/`dev_minor`, `container.name` → `container`, `container.image.name` →
+`container_image` — and labels the host `hostname` rather than `host.name`, because
+`hostname` is a single token and is in no set. With the renames in place the same
+run flags **0 fields**, confirmed again on the production host.
+
+The exact stream count varies with the container runtime and the host: 34 on a podman dev
+box, **36** on the production host, which additionally exposes `container_memory_file` and
+`system_paging_usage`. Do not treat any of these counts as a fixture.
+
+> **A clean run here is not a clean run overall.** A throwaway observatory holding only
+> collector data says nothing about the backend's ~90 streams, which trip the same guard on
+> names nobody here chose — see *The guard's standing false positives* below.
+
+It also **drops** `container.id`, `container.image.id` and `container.hostname`.
+Those are cardinality, not privacy: the first two change on every
+`docker compose up -d`, so each recreate would add a new dimension value to a stream
+that lives for two years.
+
+Nothing in the repo checks this. `MetricAttributeVocabularyTests` reads the
+backend's `MetricTags.Keys` consts and knows nothing about a collector config, so
+the only signal is running `scripts/observatory-retention.sh` on the host and
+reading the **tail** of its output. See
+[notes/metric-attribute-names-trip-the-retention-guard.md](notes/metric-attribute-names-trip-the-retention-guard.md).
+
+### Two more things the config is deliberate about
+
+- **`root_path: /hostfs`, paired with the `/:/hostfs:ro` bind.** Without it the
+  filesystem scraper measures the container's image layer — the wrong disk — while
+  still reporting entirely plausible numbers. Nothing errors.
+- **`collection_interval: 60s` is a floor, not a default.** Every datapoint here
+  sits for two years; at 10s this would be six times the disk for no operational
+  gain. The filesystem scraper also excludes `overlay`/`tmpfs` and the Docker data
+  root, because otherwise each running container contributes mount points that
+  become permanent dimensions.
+
+### The guard's standing false positives — backend streams, not the collector
+
+**Pre-dating the host-metrics work, and partly addressed.** On the production host the guard
+warned on **114** fields across the backend's streams, every one a false positive of the same
+`name` / `user` token rule that catches `trail_name`:
+
+| field | where it comes from | actual value |
+| --- | --- | --- |
+| ~~`telemetry_sdk_name`~~ **(now allowlisted)** | the OTel SDK's own resource attributes, on **every** stream | `opentelemetry` |
+| `db_system_name` | Npgsql instrumentation | `postgresql` |
+| `network_protocol_name` | Kestrel instrumentation | `http` |
+| `db_client_connection_pool_name` | Npgsql instrumentation | a pool name |
+| `dns_question_name` | HttpClient instrumentation | hostnames the API resolves |
+| `aspnetcore_user_is_authenticated` | ASP.NET Core authorization | a boolean |
+
+**The advice that works everywhere else does not work here.** `MetricTags` can forbid a name
+it owns, and `observability/otel-hostmetrics.yaml` can rename one the collector emits — but
+these come from upstream instrumentation packages, so there is nothing of ours to rename.
+`MetricAttributeVocabularyTests` is blind to them by construction: it tokenises the `const`
+fields of `MetricTags.Keys`, which are exactly `outcome`, `operation` and `list`.
+
+### What was done about it
+
+`telemetry_sdk_name`, `telemetry_sdk_language` and `telemetry_sdk_version` were added to the
+script's **`INTERNAL`** set, which is where `service_name` already sat on precisely this
+reasoning — "fields every OTLP metric stream carries". They accounted for **82 of the 114**
+warnings, because the SDK stamps them on every stream it exports.
+
+This is emphatically *not* the move [the note](notes/metric-attribute-names-trip-the-retention-guard.md)
+forbids. The two halves differ in blast radius:
+
+| | effect |
+| --- | --- |
+| adding `telemetry_sdk_name` to **`INTERNAL`** | exempts exactly that one field name |
+| adding `name` to **`IDENT_TOKENS`** | would exempt `nick_name`, `full_name`, `given_name`… |
+
+`INTERNAL` is a list of specific plumbing field names; `IDENT_TOKENS` is a rule. Naming a field
+cannot leak into a field nobody has thought of yet. Note also that most of `INTERNAL` does not
+trip the token set at all — it describes the whole transport-added group rather than patching
+symptoms, which is why all three `telemetry_sdk_*` are listed even though only `_name` fires.
+
+**`MetricAttributeVocabularyTests` needed no change.** It duplicates `IDENT_TOKENS` only, and
+checks the `MetricTags.Keys` consts against it directly — it never consults `INTERNAL`. So the
+"change it in both places" rule that governs the token set does **not** apply here.
+
+Measured, against a stream carrying both a planted `telemetry_sdk_name` and a planted
+`user_id`:
+
+| | `telemetry_sdk_name` | `user_id` |
+| --- | --- | --- |
+| before | 31 warnings | 31 warnings |
+| after | **0** | **31** — still caught |
+
+Quieter, not blinder, which is the only outcome worth having.
+
+### What still warns, and why it was left
+
+**32 warnings across five names remain**, all from instrumentation packages and none personal
+data:
+
+`db_client_connection_pool_name` (16), `network_protocol_name` (5, value `http`),
+`dns_question_name` (5), `db_system_name` (5, value `postgresql`), and
+`aspnetcore_user_is_authenticated` (1, a boolean tripping on `user`).
+
+These were left deliberately. They are semantic-convention **datapoint** attributes chosen by
+the instrumentation for their meaning, not transport plumbing, so `INTERNAL` is the wrong home
+for them — putting them there would turn a list of "what the transport adds" into a general
+amnesty list, which is the slide the note warns about. Thirty-two lines also still read as a
+list; a hundred and fourteen did not.
+
+If they are to go, the honest route is the second option: drop them at the exporter with OTel
+views in `TelemetryExtensions`, which is a code change with real debugging cost —
+`dns_question_name` in particular is the one worth keeping an eye on, since it is the only one
+whose cardinality is not bounded by a small enum.
+
+### The disk budget is the open question
+
+36 streams at 60s, kept for **730 days**, is the largest sustained write this stack
+has ever pointed at the `observatory` volume, and it is the one number that was
+**not** established before shipping: OpenObserve computes stream storage stats on an
+hourly background job, so a short verification run reports zeroes rather than a rate.
+
+So measure it on the host, an hour or so after enabling, before assuming the two-year
+window is affordable:
+
+```bash
+docker system df -v | grep observatory        # volume size, sampled twice an hour apart
+```
+
+If it is uncomfortable, raise `collection_interval` or drop scrapers in
+`observability/otel-hostmetrics.yaml`. Do **not** shorten the metrics retention to
+compensate — the 730-day window is what the whole no-personal-data argument is built
+around, and the split is deliberately fail-safe in the other direction.
+
+### Privileges
+
+This service holds two that nothing else in the stack does, both read-only:
+
+| mount | why | risk |
+| --- | --- | --- |
+| `/:/hostfs:ro` | the only way to measure the host's real filesystems | read access to the host tree from inside a container |
+| `/var/run/docker.sock:ro` | the only way to get per-container CPU/memory | **root-equivalent** on the host |
+
+What bounds them: the collector publishes no port, joins only the `public` network,
+is reachable from nothing, and runs a config with no receiver that listens. It is a
+pure outbound pusher. The docker socket is the price of answering "which container
+ate the box", which host-level metrics alone cannot.
 
 ## Health endpoints
 
@@ -242,6 +462,11 @@ deliberate, reviewable code change — so the rule is:
 
 > **Any change that adds a `Meter`, a counter, or a new instrumentation package
 > must be followed by re-running `scripts/observatory-retention.sh` on the host.**
+
+And read the tail of its output, not just its exit code: the GDPR guard prints any
+identifier-shaped metric field it found. The names that trip it are not the ones you
+expect — `trail_name` and `mail_status` both do, while carrying no personal data. See
+[notes/metric-attribute-names-trip-the-retention-guard.md](notes/metric-attribute-names-trip-the-retention-guard.md).
 
 The script is idempotent; re-running it is always safe.
 
@@ -423,11 +648,13 @@ stolen credential buys, and that is entirely decided by item 1 below.
    scoped ingest credential, it is full control of the observatory — which is
    what the app shipped before this was measured.
 
-   **Five identities**, one per producer so that a token extracted from a public
+   **Six identities**, one per producer so that a token extracted from a public
    bundle is not also another producer's, and so one can be rotated alone:
    root (first boot only, and unrotatable), `api@` (server-side), `app@` and
-   `web@` (both public, ingest-only), and `ops@` (a password, because stream
-   management is not an ingest route and a passcode gets a 401 there).
+   `web@` (both public, ingest-only), `host@` (server-side, the host-metrics
+   collector, and optional — it exists only where that profile is enabled), and
+   `ops@` (a password, because stream management is not an ingest route and a
+   passcode gets a 401 there).
 
    Rotation is asymmetric and worth remembering: the API takes a restart, while
    `app@` and `web@` are compiled in and take a rebuild and a release.
@@ -435,13 +662,21 @@ stolen credential buys, and that is entirely decided by item 1 below.
 2. **Retention as blast-radius cap.** An abuser cannot fill the disk forever, only
    up to `retention × their rate`. Note that garbage written into a *metrics*
    stream would sit for two years — if the token is ever abused, look for junk
-   metric streams specifically and delete them rather than waiting for retention.
-3. **`request_body max_size 10MB`** in the Caddyfile caps a single request.
-4. **`ZO_INGEST_ALLOWED_UPTO` / `_IN_FUTURE`** bound timestamp spoofing, so nobody
+   metric streams specifically and delete them rather than waiting for retention — but note
+   that this is **one-way**: a deleted stream is never recreated by later ingest, and the
+   producer still sending it is told nothing
+   ([notes/deleting-an-openobserve-stream-stops-it-being-recreated.md](notes/deleting-an-openobserve-stream-stops-it-being-recreated.md)).
+3. **The host-metrics collector's two host privileges** — a read-only bind of `/`
+   and a read-only Docker socket — are the largest privileges granted anywhere in
+   this stack, and they are granted to a container that listens on nothing. It runs
+   only where the `hostmetrics` compose profile is enabled, so most of the reason
+   it is defensible is that it is absent by default. See **Privileges** above.
+4. **`request_body max_size 10MB`** in the Caddyfile caps a single request.
+5. **`ZO_INGEST_ALLOWED_UPTO` / `_IN_FUTURE`** bound timestamp spoofing, so nobody
    can plant events years out to evade retention or pollute dashboards.
-5. **No Caddy access log on the ingest paths** — beyond the disk cost,
+6. **No Caddy access log on the ingest paths** — beyond the disk cost,
    access-logging a write endpoint an attacker controls is a log-injection surface.
-6. **Rate limiting is the honest gap.** Caddy OSS has no built-in `rate_limit`; it
+7. **Rate limiting is the honest gap.** Caddy OSS has no built-in `rate_limit`; it
    is the third-party `mholt/caddy-ratelimit`, which means converting
    `proxy/Dockerfile` to an `xcaddy` build stage — a Go build in a currently-instant
    image build, and a third-party module in the TLS-terminating path. Not worth it

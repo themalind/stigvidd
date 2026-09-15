@@ -26,6 +26,27 @@ you get approved.
   `src/api/generated`. Jenkins produces the snapshot in Preflight (the web stage runs in
   parallel with the backend one, so it cannot wait for it) and alone runs
   `git diff --exit-code -- src/api/generated`.
+- [A `Produces("text/html")` attribute does not keep an endpoint out of the typed client — only `ApiExplorerSettings(IgnoreApi = true)` does](produces-html-does-not-keep-an-endpoint-out-of-the-generated-client.md) —
+  adding any endpoint that serves a page to a browser rather than JSON (a mail link, a form
+  post, an HTML landing page): `[Produces("text/html")]` reads like it declares the action out
+  of the contract and does not. Measured: `verify-email` has carried it all along and is still
+  in `web/openapi.json` as `application/octet-stream` / `format: binary`, because NSwag maps a
+  non-generic `ActionResult` to a file download — so orval generated a `Promise<Blob>` fetcher
+  and a full set of `useQuery` hooks nothing calls. `[ApiExplorerSettings(IgnoreApi = true)]` is
+  the lever that works, and it does NOT hide the route from `EndpointDataSource`, so
+  `EndpointAuthorizationTests` still pins it. Matters most for a
+  `[Consumes("application/x-www-form-urlencoded")]` POST, whose generated client can fail
+  `tsc -b` in `web/` — a package the change never touched, caught only by the Jenkins-only gate.
+- [Applying migrations to a hand-started PostGIS fails in a 2026-05 migration unless you match the pinned major](verifying-a-migration-outside-compose-needs-the-pinned-postgis-major.md) —
+  checking a migration for real when the full stack is unavailable (no `.env`, or the host runs
+  podman-compose instead of Docker Compose): one `postgis/postgis:17-3.5` container plus
+  `dotnet ef database update --project Infrastructure --connection "…"` works, and
+  `--connection` is needed or the design-time factory silently migrates whatever Infrastructure's
+  **user secrets** point at. Any other tag dies with `42601: syntax error at or near "COLUMNS"`
+  inside `20260523120007_PostGIS` — a migration from months ago that you did not touch, so it
+  reads as a real defect; it is PostgreSQL **17** syntax on a 16 server. `docker-compose.yml`'s
+  image pin is load-bearing for the migration chain. Carries the `psql` one-liners for checking
+  columns/indexes/FKs and, crucially, that an `InsertData` seed left the identity sequence ahead.
 - [`OpenApiContractTests` used to fail on Windows over CR bytes alone — untracking the snapshot removed it](openapi-snapshot-fails-on-windows-line-endings.md) —
   RESOLVED, and kept for the diagnosis. While `web/openapi.json` was committed, `.gitattributes`
   held it at LF while the served document is CRLF on Windows, so an ordinal comparison failed on
@@ -208,7 +229,7 @@ src/api/generated` then fails with "the generated API client is stale" for reaso
   denied and the file is never written, while the same sentence without backticks passes — write
   file content with the Write tool. And the hooks `process.exit()` at module scope, so
   `import`-ing one to test its `decide()` kills the importer — spawn it with the event on stdin
-  instead.
+  instead. Also: the gate does NOT check that the ADVICE a hook prints is still true — plan-eval told every session touching `web/` that "there are NO web tests" while `web/src` held 26 of them and CI had a web job, with all 27 self-tests green. Stale guidance fails open and is indistinguishable from correct guidance at every gate.
 - [When the defence is an allowlist, a test asserting "this obfuscated attack is rejected" cannot fail](allowlist-defences-make-obfuscation-tests-tautological.md) —
   Writing a validator or sanitiser that blocks unsafe URLs and markup: `MailHtmlPolicy` and
   `isSafeMailUrl` HTML-decode and strip control characters before checking a `javascript:` /
@@ -287,6 +308,15 @@ src/api/generated` then fails with "the generated API client is stale" for reaso
   git. It lints the working tree, uncommitted files included. Do not hardcode the file
   count: CLAUDE.md said 1011, the tree measured 1252 on 2026-09-12, and `Missing licenses: 0`
   is the actual check.
+- [reuse lint says "not compliant" on an indexed checkout, and licensing is not the reason](reuse-lint-reports-non-compliant-because-of-the-codegraph-socket.md) —
+  the container form lints the whole working tree, which on a CodeGraph-indexed checkout
+  includes `.codegraph/daemon.sock`. A unix socket cannot be read, `reuse` counts a read error
+  as non-compliance, and the run ends in "Unfortunately, your project is not compliant" with
+  `Bad licenses: 0`, `Missing licenses: 0` and every file covered. `.codegraph/` is gitignored,
+  so GitHub's `licensing` job never sees it and is green — the red is local only. Read the
+  `Read errors:` and `Missing licenses:` counters, not the verdict, and to get a real answer
+  lint a copy built from `git ls-files` plus `git ls-files --others --exclude-standard`, which
+  is exactly the set CI checks out.
 - [FluentAssertions 8.x is not free software, and nothing in the build says so](fluentassertions-8-is-not-free-software.md) —
   version 8.0.0 onward is the Xceed Community License, non-commercial only and revocable;
   7.2.0 was the last Apache-2.0 release. `dotnet build` and `dotnet test` say nothing about
@@ -315,6 +345,29 @@ src/api/generated` then fails with "the generated API client is stale" for reaso
   uninstalled timer deletes nothing while everything looks healthy, and log options are fixed
   at container _create_ time, so `docker compose restart` never applies the caps. Distinct
   from `OBSERVATORY_RETENTION_DAYS`, which is OpenObserve's genuinely time-based retention.
+- [A metric attribute called trail_name is flagged as personal data, and so is mail_status](metric-attribute-names-trip-the-retention-guard.md) —
+  the GDPR guard at the end of `scripts/observatory-retention.sh` tokenises every metrics stream
+  schema field name on `[^a-z0-9]+` and looks each token up in one flat identifier set. `name`,
+  `mail` and `subject` are in it, so `trail_name`, `area_name`, `template_name`, `mail_status`,
+  `import_session_status` and `user_agent` all warn despite carrying no personal data, while
+  `hostname` and `service_name` pass. Do not widen the guard — rename (`delivery_status`,
+  `template_key`) or carry no dimension. `MetricAttributeVocabularyTests` reproduces the same
+  tokenisation over `Core/Telemetry/MetricTags.Keys` so it fails the build instead of warning on
+  the host after deploy; its token set is copied from the script and must be changed in both.
+  The same trap bites an OpenTelemetry Collector harder and with nothing checking it at all:
+  the stock `host_metrics`/`docker_stats` attributes `device`, `device_major`, `device_minor`,
+  `container.name`, `container.image.name` and `host.name` produced 39 flagged fields until
+  `observability/otel-hostmetrics.yaml` renamed them to `dev`, `container`, `container_image`
+  and a literal `hostname`. Renaming only works for names we own: ~120 fields from the OTel SDK
+  and its instrumentation (`telemetry_sdk_name`, `db_system_name`, `network_protocol_name`,
+  `dns_question_name`, `db_client_connection_pool_name`, `aspnetcore_user_is_authenticated`)
+  warn on the production host with nothing of ours to rename, and the build-time test cannot
+  see them because it only reads `MetricTags.Keys`. The `telemetry_sdk_*` ones (82 of 114) are
+  now in the script's `INTERNAL` allowlist, which exempts one named field each and is NOT the
+  same as widening `IDENT_TOKENS`, which would exempt every field containing the token;
+  `INTERNAL` is not duplicated in the test. 32 instrumentation warnings are left standing on
+  purpose. Editing the guard needs `bash -n` — it is Python inside a single-quoted
+  `python3 -c` block, where one apostrophe in a comment breaks the whole script.
 - [OpenObserve OSS has no RBAC, so the ingestion token is the only thing a public credential may be](openobserve-oss-has-no-rbac.md) —
   the `Member` role DEPLOYMENT.md told you to give the ingest account is rejected outright
   ("Custom roles not allowed"), `service_account` is accepted and silently stored as `admin`,
@@ -328,6 +381,16 @@ src/api/generated` then fails with "the generated API client is stale" for reaso
   work on stream-settings routes, which is why `scripts/observatory-retention.sh` needs
   `OBSERVATORY_OPS_*`. Reproducing it: `localhost:5080` fails on rootless podman (IPv4 only,
   use `127.0.0.1`), and `_search` wants microsecond times or returns `invalid time range`.
+- [Deleting an OpenObserve stream does not reset it — later ingest never recreates it, and the producer reports success](deleting-an-openobserve-stream-stops-it-being-recreated.md) —
+  a metrics stream is created on first ingest, so deleting one reads as reversible. It is not:
+  measured on v0.92.2, `DELETE /api/{org}/streams/{name}?type=metrics` returned 200 and the
+  name never came back, while the OpenTelemetry Collector still pushing it on a 60s interval
+  logged nothing at all and its other 33 streams kept ingesting. Deleting streams to get a
+  clean verification run therefore looks exactly like a broken exporter or a bad config —
+  recreate the container and its data volume instead. Compounding it, a collector's first
+  scrape lands one full `collection_interval` after start, so an empty stream list twenty
+  seconds in is normal. Also makes `scripts/observatory-retention.sh` unable to restore what
+  was deleted, since it cannot pre-create a stream.
 - [An EAS build never sees `app/.env`, and `eas.json` does not say which variables it does see](eas-env-vars-are-not-your-dotenv.md) —
   EAS Build uploads the working tree — uncommitted and untracked files included, since
   `requireCommit` defaults to false — but drops what `.gitignore` drops, and `app/.env` is
@@ -419,6 +482,18 @@ src/api/generated` then fails with "the generated API client is stale" for reaso
   `InvalidCredentialsError`, a screen testing the broader class first swallows it with every
   test still green. Mail scanners follow the `GET` link before the human, so
   `AlreadyVerified` is a success.
+- [A password reset does not end existing sessions, and the SDK gives you no way to make it](password-reset-does-not-end-existing-sessions.md) —
+  implementing, reviewing or promising anything about password reset, session revocation or
+  signing other devices out: `PasswordResetService.ResetAsync` changes the password in
+  Keycloak but revokes nothing, so an already signed-in session survives it — and the app
+  holds a long-lived **offline** refresh token (`offline_access`), which is deliberately not
+  bound to the SSO session and so does not time out on its own. Checked against the shipped
+  assembly: `IKeycloakUserClient` in Keycloak.AuthServices.Sdk 3.0.0 exposes no logout, no
+  session, no consent member and no generic request seam, so none of the three Admin API
+  routes that would work is reachable without a hand-rolled `HttpClient`. `/users/{id}/logout`
+  alone does NOT kill offline sessions, and the admin service account may lack the
+  `view-clients` role the full three-call form needs — so any attempt must be best-effort and
+  never fatal to the reset itself.
 - [The Keycloak realm came from appsettings.json, not compose — and one `Keycloak:realm` feeds both authentication and the admin client](keycloak-realm-lives-in-appsettings-not-compose.md) —
   changing the Keycloak realm, or pointing a second environment at the same Keycloak:
   `appsettings.json` pins `"realm": "stigvidd"` in BOTH the `Keycloak` and

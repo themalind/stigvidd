@@ -17,6 +17,8 @@ import { NativeModule, requireNativeModule } from "expo";
 import type { EventSubscription } from "expo-modules-core";
 import { Platform } from "react-native";
 
+import { logger } from "./logger";
+
 // A raw GPS fix delivered by the native iOS 18+ background engine. Deliberately the
 // minimal shape needed to run through the JS evaluatePoint filter — no app types
 // leak into the native layer.
@@ -51,7 +53,19 @@ const nativeModule: ExpoLiveLocationNativeModule | null = (() => {
   if (Platform.OS !== "ios") return null;
   try {
     return requireNativeModule<ExpoLiveLocationNativeModule>("ExpoLiveLocation");
-  } catch {
+  } catch (e) {
+    // On iOS the module is supposed to be there, so reaching this is a real degradation:
+    // the app silently drops to expo-location and the user gets worse background tracking
+    // with nothing anywhere saying why. Android never gets here — it returns above — so
+    // this does not fire on every launch of the platform that legitimately lacks it.
+    //
+    // A logger.warn and not an analytics event, deliberately: this has to keep working when
+    // a user declines analytics consent. See docs/observability.md.
+    logger.warn("Native live-location module failed to load on iOS; using expo-location", {
+      reason: "module_load_failed",
+      error: String(e),
+    });
+
     return null;
   }
 })();

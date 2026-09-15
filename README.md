@@ -263,6 +263,20 @@ blocks cleartext by default, and production is HTTPS through the proxy.
 Tear down with `docker rm -f stigvidd-observatory` (add
 `docker volume rm stigvidd-observatory-dev` to discard the data too).
 
+**Host and container metrics** are a separate, opt-in piece: the `hostmetrics`
+service in `docker-compose.yml` runs an OpenTelemetry Collector that reports the
+machine's CPU, memory, load, disk, filesystem and network, plus per-container
+CPU/memory from the Docker daemon. It sits behind a compose profile, so it stays
+absent until `COMPOSE_PROFILES=hostmetrics` is set — see
+[DEPLOYMENT.md](DEPLOYMENT.md) Part 1 step 8f. To try it locally against the
+container above, add a `host@` user, copy its ingestion token, and:
+
+```bash
+COMPOSE_PROFILES=hostmetrics docker compose up -d hostmetrics
+```
+
+The first scrape lands 60 seconds after start, not immediately.
+
 **Before adding any instrumentation**, read
 [docs/observability.md](docs/observability.md) — metrics must contain no personal
 data, and GPS positions must never be logged. Those are hard constraints, not

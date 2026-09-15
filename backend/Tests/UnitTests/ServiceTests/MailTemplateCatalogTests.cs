@@ -73,11 +73,76 @@ public class MailTemplateCatalogTests
     }
 
     [Fact]
+    public async Task ResetPassword_DeclaresExactlyThePlaceholdersTheRealCallerSupplies()
+    {
+        // Arrange - the real PasswordResetService, with only the collaborators it needs to get
+        // as far as queueing the mail. Hand-written on purpose: nothing enumerates callers, so
+        // adding a template key does NOT get this coverage for free.
+        var user = new Infrastructure.Data.Entities.User
+        {
+            Id = 1,
+            Email = "vandrare@example.com",
+            NickName = "Ralf",
+            SubjectId = "kc-subject-id",
+        };
+
+        var tokens = new Mock<IPasswordResetTokenRepository>();
+        tokens
+            .Setup(repo => repo.GetUserByEmailAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<Infrastructure.Data.Entities.User>.Success(user));
+        tokens
+            .Setup(repo => repo.GetLatestForUserAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<Infrastructure.Data.Entities.PasswordResetToken>.NotFound());
+        tokens
+            .Setup(repo => repo.ReplaceOutstandingAsync(It.IsAny<Infrastructure.Data.Entities.PasswordResetToken>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult.Success());
+
+        // What the service passed to the outbox, which is the thing under test.
+        IReadOnlyDictionary<string, string?>? model = null;
+
+        var outbox = new Mock<IMailOutboxService>();
+        outbox
+            .Setup(service => service.EnqueueAsync(
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<IReadOnlyDictionary<string, string?>>(),
+                It.IsAny<CancellationToken>(),
+                It.IsAny<string?>(),
+                It.IsAny<string?>()))
+            .Callback((string _, string _, IReadOnlyDictionary<string, string?> passed, CancellationToken _, string? _, string? _) => model = passed)
+            .ReturnsAsync(Result.Ok("queued"));
+
+        var service = new PasswordResetService(
+            tokens.Object,
+            Mock.Of<IKeycloakAdminRepository>(),
+            outbox.Object,
+            new ConfigurationBuilder().Build(),
+            NullLogger<PasswordResetService>.Instance);
+
+        // Act
+        var result = await service
+            .IssueAndSendAsync("vandrare@example.com", "https://stigvidd.test", TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Success.Should().BeTrue();
+        model.Should().NotBeNull("the reset mail must have been queued for this test to mean anything");
+
+        var declared = Catalog.Find(PasswordResetService.TemplateKey)!.Tokens.Select(token => token.Name);
+
+        model.Keys.Should().BeEquivalentTo(
+            declared,
+            "the catalogue is what the editor offers and validates against -- a name here that "
+                + "the caller does not pass is a placeholder the editor would allow into a "
+                + "template, and every one of those mails then fails to render");
+    }
+
+    [Fact]
     public void EveryTemplateKeyThatCodeSends_IsDescribed()
     {
-        // The one key with a production caller. "welcome" is deliberately not asserted here:
+        // The keys with a production caller. "welcome" is deliberately not asserted here:
         // nothing sends it, which is a fact the catalogue states rather than hides.
         Catalog.Find(EmailVerificationService.TemplateKey).Should().NotBeNull();
+        Catalog.Find(PasswordResetService.TemplateKey).Should().NotBeNull();
     }
 
     [Fact]
