@@ -203,7 +203,8 @@ public class ReviewServiceTests
         var result = await service.AddReviewAsync("invalid", Utilities.Identifiers.Trail7, "text", 4.0M, Utilities.Stubs.TwoImages(), TestContext.Current.CancellationToken);
 
         // Assert
-        result.Message!.StatusCode.Should().Be(404);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(404);
         mediaUpload.Verify(m => m.ProcessAndUploadAsync(It.IsAny<Stream>(), It.IsAny<string>(), It.IsAny<ImageProcessingOptions>()), Times.Never);
     }
 
@@ -218,7 +219,8 @@ public class ReviewServiceTests
         var result = await service.AddReviewAsync(Utilities.Identifiers.User, "invalid", "text", 4.0M, Utilities.Stubs.TwoImages(), TestContext.Current.CancellationToken);
 
         // Assert
-        result.Message!.StatusCode.Should().Be(404);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(404);
         mediaUpload.Verify(m => m.ProcessAndUploadAsync(It.IsAny<Stream>(), It.IsAny<string>(), It.IsAny<ImageProcessingOptions>()), Times.Never);
     }
 
@@ -260,7 +262,8 @@ public class ReviewServiceTests
         var result = await Build(repo, webDav, mediaUpload: mediaUpload).AddReviewAsync(Utilities.Identifiers.User, Utilities.Identifiers.Trail7, "text", 4.0M, Utilities.Stubs.TwoImages(), TestContext.Current.CancellationToken);
 
         // Assert
-        result.Message!.StatusCode.Should().Be(500);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(500);
         webDav.Verify(w => w.DeleteFileAsync("reviews/img1.jpg"), Times.Once);
         webDav.Verify(w => w.DeleteFileAsync("reviews/img2.jpg"), Times.Once);
     }
@@ -297,7 +300,8 @@ public class ReviewServiceTests
 
         // Assert
         result.Success.Should().BeFalse();
-        result.Message!.StatusCode.Should().Be(500);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(500);
         webDav.Verify(w => w.DeleteFileAsync("reviews/img1.jpg"), Times.Once);
     }
 
@@ -433,7 +437,8 @@ public class ReviewServiceTests
         webDav.Setup(w => w.DeleteFileAsync(It.IsAny<string>()))
             .ReturnsAsync(Result.Fail<bool>(new Message(500, "Delete failed")));
         var review = Utilities.Stubs.Review(withImages: true);
-        review.ReviewImages = [.. review.ReviewImages!, new ReviewImage { Id = 2, Identifier = "img-2", ImageUrl = "reviews/img2.jpg" }];
+        review.ReviewImages.Should().NotBeNull();
+        review.ReviewImages = [.. review.ReviewImages, new ReviewImage { Id = 2, Identifier = "img-2", ImageUrl = "reviews/img2.jpg" }];
         var repo = new Mock<IReviewRepository>();
         repo.Setup(r => r.GetReviewByIdentifierAsync(Utilities.Identifiers.Review5, Utilities.Identifiers.User, It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<Review>.Success(review));
@@ -485,7 +490,8 @@ public class ReviewServiceTests
 
         // Assert
         result.Success.Should().BeFalse();
-        result.Message!.StatusCode.Should().Be(409);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(409);
 
         // Nothing was uploaded before the rejection
         mediaUpload.Verify(m => m.ProcessAndUploadAsync(It.IsAny<Stream>(), It.IsAny<string>(), It.IsAny<ImageProcessingOptions>()), Times.Never);
@@ -586,7 +592,8 @@ public class ReviewServiceTests
 
         // Assert
         result.Success.Should().BeFalse();
-        result.Message!.StatusCode.Should().Be(500);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(500);
         webDav.Verify(w => w.DeleteFileAsync(It.IsAny<string>()), Times.Never);
     }
 }

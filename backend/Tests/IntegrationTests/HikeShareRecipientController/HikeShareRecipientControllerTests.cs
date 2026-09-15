@@ -264,7 +264,8 @@ public class HikeShareRecipientControllerTests : IClassFixture<StigViddWebApplic
             $"{BASE_URL}/incoming/{Hike4Identifier}", TestContext.Current.CancellationToken);
 
         // Assert
-        share!.HikeIdentifier.Should().Be(Hike4Identifier);
+        share.Should().NotBeNull();
+        share.HikeIdentifier.Should().Be(Hike4Identifier);
     }
 
     [Fact]

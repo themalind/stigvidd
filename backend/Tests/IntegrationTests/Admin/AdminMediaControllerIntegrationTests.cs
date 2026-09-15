@@ -69,7 +69,7 @@ public class AdminMediaControllerIntegrationTests : IClassFixture<StigViddWebApp
         var images = await response.Content.ReadFromJsonAsync<List<TrailImageResponse>>(
             TestContext.Current.CancellationToken);
         images.Should().NotBeNull();
-        images!.Should().HaveCount(1);
+        images.Should().HaveCount(1);
         images[0].Width.Should().Be(100);
         images[0].Height.Should().Be(75);
         images[0].SizeBytes.Should().BeGreaterThan(0);
@@ -96,7 +96,7 @@ public class AdminMediaControllerIntegrationTests : IClassFixture<StigViddWebApp
         var media = await response.Content.ReadFromJsonAsync<List<MediaItemResponse>>(
             TestContext.Current.CancellationToken);
         media.Should().NotBeNull();
-        media!.Should().Contain(m => m.OwnerType == "Trail");
+        media.Should().Contain(m => m.OwnerType == "Trail");
     }
 
     [Fact]
@@ -114,7 +114,8 @@ public class AdminMediaControllerIntegrationTests : IClassFixture<StigViddWebApp
 
         var uploaded = await upload.Content.ReadFromJsonAsync<List<TrailImageResponse>>(
             TestContext.Current.CancellationToken);
-        var imageIdentifier = uploaded!.Single().Identifier;
+        uploaded.Should().NotBeNull();
+        var imageIdentifier = uploaded.Single().Identifier;
 
         var request = new UpdateImageMetadataRequest
         {
@@ -131,7 +132,8 @@ public class AdminMediaControllerIntegrationTests : IClassFixture<StigViddWebApp
 
         var media = await client.GetFromJsonAsync<List<MediaItemResponse>>(
             "/api/v1/admin/media", TestContext.Current.CancellationToken);
-        var item = media!.Single(m => m.Identifier == imageIdentifier);
+        media.Should().NotBeNull();
+        var item = media.Single(m => m.Identifier == imageIdentifier);
         item.AltText.Should().Be("Utsikt över Storsjön");
         item.Caption.Should().Be("Leden vid vattnet");
     }

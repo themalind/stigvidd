@@ -21,7 +21,7 @@ built on them.
 | Trail read/write + spatial ranking       | `backend/Core/Services/TrailService.cs`, `backend/Core/Repositories/TrailRepository.cs` |
 | Hike write + validation                  | `backend/Core/Services/HikeService.cs`                                                  |
 | PostGIS enablement + backfill migrations | `backend/Infrastructure/Migrations/*PostGIS*.cs`                                        |
-| NetTopologySuite provider config         | `backend/Infrastructure/Data/DesignTimeDbContextFactory.cs`                             |
+| NetTopologySuite provider config         | `backend/Core/ServiceCollectionExtensions.cs` (runtime), `backend/Infrastructure/Data/DesignTimeDbContextFactory.cs` (`dotnet ef`) |
 | Wire JSON → GeoJSON positions (client)   | `app/src/utils/coordinate-parser.ts`                                                    |
 | Marker fetch (client)                    | `app/src/api/map-markers.ts`                                                            |
 

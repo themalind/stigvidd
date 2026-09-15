@@ -1,50 +1,41 @@
-# Welcome to your Expo app 👋
+# Stigvidd — mobile app
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+The Android and iOS app, built with Expo (SDK 54), Expo Router and MapLibre. Licensed
+**MPL-2.0** — see [LICENSE.md](LICENSE.md).
 
-## Get started
-
-1. Install dependencies
-
-   ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+Setup, the `.env` variables and the EAS build/update workflow are in the
+[root README](../README.md#mobile-app). The short version:
 
 ```bash
-npm run reset-project
+npm ci
+npx expo run:android        # or run:ios — builds and installs a development build
+npx expo start              # the dev server; keeps running
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+Expo Go does **not** work: MapLibre and push notifications need native modules, so the app
+only runs as a development build.
 
-## Learn more
+## Checks
 
-To learn more about developing your project with Expo, look at the following resources:
+```bash
+npm run format:check        # prettier
+npm run lint                # eslint
+npm test -- --watchAll=false
+npx tsc --noEmit            # CI does not type-check the app, so run this yourself
+```
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+## Layout
 
-## Join the community
+|                   |                                                                   |
+| ----------------- | ----------------------------------------------------------------- |
+| `src/app/`        | Expo Router routes — one stack per tab under `(tabs)/`            |
+| `src/components/` | Screens and UI, grouped by feature (`map/`, `trail/`, `auth/`, …) |
+| `src/api/`        | Backend calls                                                     |
+| `src/services/`   | Auth, location tracking, notifications, logging                   |
+| `src/i18n/`       | Swedish and English strings                                       |
+| `src/test/`       | Shared test harness                                               |
+| `modules/`        | Local native modules (the iOS background-location engine)         |
 
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+Behaviour that is easy to break is documented in [docs/](../docs/) — in particular
+[map.md](../docs/map.md), [record-hike.md](../docs/record-hike.md) and
+[auth.md](../docs/auth.md).

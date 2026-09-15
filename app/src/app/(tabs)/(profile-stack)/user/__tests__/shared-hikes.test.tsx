@@ -137,6 +137,14 @@ it("says the shelf is empty rather than showing an empty card", async () => {
   expect(screen.queryByText("Mottagna promenader")).toBeNull();
 });
 
+it("hides the search and filter controls while nothing is received", async () => {
+  mockGetSharedHikes.mockResolvedValue([]);
+  await show();
+
+  expect(screen.queryByTestId("icon-search")).toBeNull();
+  expect(screen.queryByTestId("icon-filter-list")).toBeNull();
+});
+
 // Two different empty states again: nothing received, and a search that matched nothing.
 it("tells an empty shelf apart from a search that matched nothing", async () => {
   await show();

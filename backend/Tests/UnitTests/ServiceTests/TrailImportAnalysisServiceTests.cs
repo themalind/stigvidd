@@ -126,11 +126,12 @@ public class TrailImportAnalysisServiceTests : IDisposable
         await Build(repository).AnalyzeAsync(12, TestContext.Current.CancellationToken);
 
         // Assert
-        var matched = saved!.Single(p => p.ExternalId == "100");
+        saved.Should().NotBeNull();
+        var matched = saved.Single(p => p.ExternalId == "100");
         matched.Confidence.Should().Be(MatchConfidence.Certain);
         matched.SuggestedTrailId.Should().Be(7);
 
-        var unmatched = saved!.Single(p => p.ExternalId == "200");
+        var unmatched = saved.Single(p => p.ExternalId == "200");
         unmatched.Confidence.Should().Be(MatchConfidence.Unmatched);
         unmatched.SuggestedTrailId.Should().BeNull();
     }
@@ -149,8 +150,9 @@ public class TrailImportAnalysisServiceTests : IDisposable
         await Build(repository).AnalyzeAsync(12, TestContext.Current.CancellationToken);
 
         // Assert
-        saved!.Should().OnlyContain(p => p.Decision == ProposalDecision.Pending);
-        saved!.Should().OnlyContain(p => p.DecidedTrailId == null && p.CreatedTrailId == null);
+        saved.Should().NotBeNull();
+        saved.Should().OnlyContain(p => p.Decision == ProposalDecision.Pending);
+        saved.Should().OnlyContain(p => p.DecidedTrailId == null && p.CreatedTrailId == null);
     }
 
     [Fact]
@@ -167,13 +169,14 @@ public class TrailImportAnalysisServiceTests : IDisposable
         await Build(repository).AnalyzeAsync(12, TestContext.Current.CancellationToken);
 
         // Assert
-        var decided = saved!.Single(p => p.ExternalId == "100");
+        saved.Should().NotBeNull();
+        var decided = saved.Single(p => p.ExternalId == "100");
         decided.Decision.Should().Be(ProposalDecision.Exclude);
         decided.DecidedRole.Should().Be(TrailSourceLinkRole.Excluded);
         decided.DecidedAt.Should().NotBeNull();
         decided.MatchReason.Should().Contain("excluded");
 
-        saved!.Single(p => p.ExternalId == "200").Decision.Should().Be(ProposalDecision.Pending);
+        saved.Single(p => p.ExternalId == "200").Decision.Should().Be(ProposalDecision.Pending);
     }
 
     [Fact]
@@ -191,7 +194,8 @@ public class TrailImportAnalysisServiceTests : IDisposable
         await Build(repository).AnalyzeAsync(12, TestContext.Current.CancellationToken);
 
         // Assert
-        var decided = saved!.Single(p => p.ExternalId == "100");
+        saved.Should().NotBeNull();
+        var decided = saved.Single(p => p.ExternalId == "100");
         decided.SuggestedTrailId.Should().BeNull();
         decided.NearestTrailId.Should().BeNull();
         decided.Confidence.Should().Be(MatchConfidence.Unmatched);
@@ -242,7 +246,8 @@ public class TrailImportAnalysisServiceTests : IDisposable
         await Build(repository).AnalyzeAsync(12, TestContext.Current.CancellationToken);
 
         // Assert
-        var proposal = saved!.Single(p => p.ExternalId == "100");
+        saved.Should().NotBeNull();
+        var proposal = saved.Single(p => p.ExternalId == "100");
         proposal.FeatureProperties.Should().Contain("namn");
         proposal.FeatureGeometry.Should().NotBeNull();
         proposal.GeometryFingerprint.Should().HaveLength(64);

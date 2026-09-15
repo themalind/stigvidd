@@ -94,7 +94,8 @@ public class ContentReportServiceTests
 
         // Assert
         result.Success.Should().BeFalse();
-        result.Message!.StatusCode.Should().Be(409);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(409);
         repo.Verify(r => r.AddReportAsync(It.IsAny<ContentReport>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -113,7 +114,8 @@ public class ContentReportServiceTests
 
         // Assert
         result.Success.Should().BeFalse();
-        result.Message!.StatusCode.Should().Be(409);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(409);
     }
 
     [Fact]
@@ -129,7 +131,8 @@ public class ContentReportServiceTests
 
         // Assert
         result.Success.Should().BeFalse();
-        result.Message!.StatusCode.Should().Be(429);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(429);
         repo.Verify(r => r.AddReportAsync(It.IsAny<ContentReport>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -185,7 +188,7 @@ public class ContentReportServiceTests
 
         // Assert
         asked.Should().NotBeNull();
-        asked!.Value.Should().BeCloseTo(DateTime.UtcNow.AddHours(-24), TimeSpan.FromMinutes(1));
+        asked.Value.Should().BeCloseTo(DateTime.UtcNow.AddHours(-24), TimeSpan.FromMinutes(1));
     }
 
     [Fact]
@@ -201,7 +204,8 @@ public class ContentReportServiceTests
 
         // Assert
         result.Success.Should().BeTrue();
-        result.Value!.HideOutcome.Should().Be(nameof(ReportHideOutcome.WithheldReporterDismissed));
+        result.Value.Should().NotBeNull();
+        result.Value.HideOutcome.Should().Be(nameof(ReportHideOutcome.WithheldReporterDismissed));
         repo.Verify(r => r.AddReportAsync(It.IsAny<ContentReport>(), false, It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -218,7 +222,8 @@ public class ContentReportServiceTests
 
         // Assert
         result.Success.Should().BeTrue();
-        result.Value!.HideOutcome.Should().Be(nameof(ReportHideOutcome.Hidden));
+        result.Value.Should().NotBeNull();
+        result.Value.HideOutcome.Should().Be(nameof(ReportHideOutcome.Hidden));
         repo.Verify(r => r.AddReportAsync(It.IsAny<ContentReport>(), true, It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -235,7 +240,8 @@ public class ContentReportServiceTests
 
         // Assert
         result.Success.Should().BeTrue();
-        result.Value!.HideOutcome.Should().Be(nameof(ReportHideOutcome.Hidden));
+        result.Value.Should().NotBeNull();
+        result.Value.HideOutcome.Should().Be(nameof(ReportHideOutcome.Hidden));
         repo.Verify(r => r.CountDismissedReportsByReporterAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -251,7 +257,8 @@ public class ContentReportServiceTests
 
         // Assert
         result.Success.Should().BeTrue();
-        result.Value!.HideOutcome.Should().Be(nameof(ReportHideOutcome.AlreadyHidden));
+        result.Value.Should().NotBeNull();
+        result.Value.HideOutcome.Should().Be(nameof(ReportHideOutcome.AlreadyHidden));
         repo.Verify(r => r.AddReportAsync(It.IsAny<ContentReport>(), false, It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -266,7 +273,8 @@ public class ContentReportServiceTests
 
         // Assert
         result.Success.Should().BeFalse();
-        result.Message!.StatusCode.Should().Be(400);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(400);
         repo.Verify(r => r.AddReportAsync(It.IsAny<ContentReport>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -285,7 +293,8 @@ public class ContentReportServiceTests
 
         // Assert
         result.Success.Should().BeTrue();
-        written!.ContentSnapshot.Should().HaveLength(100);
+        written.Should().NotBeNull();
+        written.ContentSnapshot.Should().HaveLength(100);
     }
 
     [Fact]
@@ -301,7 +310,8 @@ public class ContentReportServiceTests
 
         // Assert
         result.Success.Should().BeFalse();
-        result.Message!.StatusCode.Should().Be(400);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(400);
         repo.Verify(r => r.GetReportableContentAsync(It.IsAny<ReportedContentType>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -318,7 +328,8 @@ public class ContentReportServiceTests
 
         // Assert
         result.Success.Should().BeFalse();
-        result.Message!.StatusCode.Should().Be(404);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(404);
     }
 
     // --- Decisions ---
@@ -386,7 +397,8 @@ public class ContentReportServiceTests
 
         // Assert
         result.Success.Should().BeFalse();
-        result.Message!.StatusCode.Should().Be(400);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(400);
     }
 
     [Fact]
@@ -402,7 +414,8 @@ public class ContentReportServiceTests
 
         // Assert
         result.Success.Should().BeFalse();
-        result.Message!.StatusCode.Should().Be(404);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(404);
     }
 
     // Idempotent: the same decision again must not rewrite who decided it or when.
@@ -434,7 +447,8 @@ public class ContentReportServiceTests
 
         // Assert
         result.Success.Should().BeFalse();
-        result.Message!.StatusCode.Should().Be(409);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(409);
         repo.Verify(r => r.ApplyDecisionAsync(
             It.IsAny<ReportedContentType>(), It.IsAny<int>(), It.IsAny<ReportStatus>(),
             It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()), Times.Never);
@@ -469,7 +483,8 @@ public class ContentReportServiceTests
 
         // Assert
         result.Success.Should().BeFalse();
-        result.Message!.StatusCode.Should().Be(409);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(409);
     }
 
     // A decision is about the content, so every pending report on it is settled together.
@@ -537,7 +552,8 @@ public class ContentReportServiceTests
 
         // Assert
         result.Success.Should().BeTrue();
-        result.Value!.AuthorStrikes.Should().Be(1);
+        result.Value.Should().NotBeNull();
+        result.Value.AuthorStrikes.Should().Be(1);
         result.Value.ReporterTotal.Should().Be(4);
         result.Value.ReporterDismissed.Should().Be(2);
     }
@@ -553,7 +569,8 @@ public class ContentReportServiceTests
 
         // Assert
         result.Success.Should().BeFalse();
-        result.Message!.StatusCode.Should().Be(400);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(400);
         repo.Verify(r => r.GetPagedAsync(
             It.IsAny<ReportStatus?>(), It.IsAny<ReportedContentType?>(), It.IsAny<ReportHideOutcome?>(),
             It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Never);
@@ -608,7 +625,8 @@ public class ContentReportServiceTests
 
         // Assert
         result.Success.Should().BeTrue();
-        result.Value!.Items.Should().ContainSingle().Which.ReportsAreWithheld.Should().Be(expected);
+        result.Value.Should().NotBeNull();
+        result.Value.Items.Should().ContainSingle().Which.ReportsAreWithheld.Should().Be(expected);
     }
 
     [Fact]
@@ -622,7 +640,8 @@ public class ContentReportServiceTests
         var result = await service.GetReporterStatisticsAsync(1, 20, TestContext.Current.CancellationToken);
 
         // Assert
-        result.Value!.Items.Should().ContainSingle().Which.ReportsAreWithheld.Should().BeTrue();
+        result.Value.Should().NotBeNull();
+        result.Value.Items.Should().ContainSingle().Which.ReportsAreWithheld.Should().BeTrue();
     }
 
     [Fact]
@@ -636,7 +655,8 @@ public class ContentReportServiceTests
         var result = await service.GetReporterStatisticsAsync(1, 20, TestContext.Current.CancellationToken);
 
         // Assert
-        var row = result.Value!.Items.Should().ContainSingle().Subject;
+        result.Value.Should().NotBeNull();
+        var row = result.Value.Items.Should().ContainSingle().Subject;
         row.NickName.Should().Be("Reporter7");
         row.Total.Should().Be(6);
         row.Pending.Should().Be(1);
@@ -673,7 +693,8 @@ public class ContentReportServiceTests
 
         // Assert
         result.Success.Should().BeFalse();
-        result.Message!.StatusCode.Should().Be(500);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(500);
     }
 
     [Fact]
@@ -689,10 +710,11 @@ public class ContentReportServiceTests
         var result = await Build(repo).GetAuthorStatisticsAsync(2, 20, TestContext.Current.CancellationToken);
 
         // Assert
-        result.Value!.Page.Should().Be(2);
-        result.Value!.HasMore.Should().BeTrue();
-        result.Value!.TotalCount.Should().Be(40);
-        var author = result.Value!.Items.Should().ContainSingle().Subject;
+        result.Value.Should().NotBeNull();
+        result.Value.Page.Should().Be(2);
+        result.Value.HasMore.Should().BeTrue();
+        result.Value.TotalCount.Should().Be(40);
+        var author = result.Value.Items.Should().ContainSingle().Subject;
         author.NickName.Should().Be("SkogsGreven");
         author.Strikes.Should().Be(2);
     }
@@ -710,6 +732,7 @@ public class ContentReportServiceTests
 
         // Assert
         result.Success.Should().BeFalse();
-        result.Message!.StatusCode.Should().Be(500);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(500);
     }
 }

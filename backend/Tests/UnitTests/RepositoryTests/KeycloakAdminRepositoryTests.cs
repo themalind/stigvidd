@@ -87,7 +87,7 @@ public class KeycloakAdminRepositoryTests
 
         // Assert
         sent.Should().NotBeNull();
-        sent!.Enabled.Should().BeTrue();
+        sent.Enabled.Should().BeTrue();
         sent.EmailVerified.Should().BeTrue();
     }
 }

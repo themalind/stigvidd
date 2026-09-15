@@ -83,7 +83,9 @@ public class KeycloakRealmRolesTransformationTests
 
         // Assert
         result.FindAll(ClaimTypes.Role).Should().BeEmpty();
-        result.FindFirst(ClaimTypes.NameIdentifier)!.Value.Should().Be("keycloak-sub");
+        var nameIdentifier = result.FindFirst(ClaimTypes.NameIdentifier);
+        nameIdentifier.Should().NotBeNull();
+        nameIdentifier.Value.Should().Be("keycloak-sub");
     }
 
     [Fact]

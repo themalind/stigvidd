@@ -105,7 +105,8 @@ public class MailOutboxIntegrationTests : IClassFixture<StigViddWebApplicationFa
 
         // Assert
         result.Success.Should().BeFalse();
-        result.Message!.StatusCode.Should().Be(404);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(404);
 
         using var after = Db(scope);
         after.OutboxEmails.Count().Should().Be(countBefore);
@@ -126,7 +127,8 @@ public class MailOutboxIntegrationTests : IClassFixture<StigViddWebApplicationFa
 
         // Assert
         result.Success.Should().BeFalse();
-        result.Message!.ResultMessage.Should().Contain("NickName");
+        result.Message.Should().NotBeNull();
+        result.Message.ResultMessage.Should().Contain("NickName");
 
         using var after = Db(scope);
         after.OutboxEmails.Count().Should().Be(countBefore);
@@ -152,7 +154,8 @@ public class MailOutboxIntegrationTests : IClassFixture<StigViddWebApplicationFa
 
         // Assert
         first.IsSuccess.Should().BeTrue();
-        first.Value!.Status.Should().Be(OutboxEmailStatus.Sending);
+        first.Value.Should().NotBeNull();
+        first.Value.Status.Should().Be(OutboxEmailStatus.Sending);
         second.Status.Should().Be(RepositoryResultStatus.Conflict);
     }
 

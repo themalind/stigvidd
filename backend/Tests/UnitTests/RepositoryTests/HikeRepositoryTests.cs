@@ -161,7 +161,8 @@ public class HikeRepositoryTests : TestBase
         found.IsSuccess.Should().BeTrue();
 
         // Act
-        var deleteResult = await repo.DeleteHikeAsync(found.Value!, TestContext.Current.CancellationToken);
+        found.Value.Should().NotBeNull();
+        var deleteResult = await repo.DeleteHikeAsync(found.Value, TestContext.Current.CancellationToken);
 
         // Assert — the hike stays for the recipients, but the owner is cleared
         deleteResult.IsSuccess.Should().BeTrue();

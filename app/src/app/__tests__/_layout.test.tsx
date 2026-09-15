@@ -15,7 +15,9 @@ import * as NavigationBar from "expo-navigation-bar";
 import { StatusBar } from "expo-status-bar";
 import { getDefaultStore } from "jotai";
 import { queryClientAtom } from "jotai-tanstack-query";
-import { AppState, AppStateStatus, Platform } from "react-native";
+import { AppState, AppStateStatus, Platform, View } from "react-native";
+import { Modal, Portal, Text } from "react-native-paper";
+import { SafeAreaInsetsContext } from "react-native-safe-area-context";
 import RootLayout from "../_layout";
 
 const mockInitAuth = jest.fn();
@@ -36,6 +38,8 @@ let mockFontsLoaded: boolean;
 // The notification the app was opened by, and the listener for ones arriving while it is open.
 let mockLastResponse: unknown;
 let mockReceived: ((notification: unknown) => void) | undefined;
+// Drawn inside the navigator, standing in for the screen that is open.
+let mockScreenContent: unknown;
 // The app-state handler the query cache follows the foreground with.
 let appStateChanged: ((status: AppStateStatus) => void) | undefined;
 
@@ -72,7 +76,7 @@ jest.mock("expo-router", () => {
   const { View } = require("react-native");
   const router = { push: (...args: unknown[]) => mockPush(...args) };
   const Stack = ({ children }: { children: React.ReactNode }) =>
-    React.createElement(View, { testID: "root-stack" }, children);
+    React.createElement(View, { testID: "root-stack" }, children, mockScreenContent);
   Stack.Screen = function StackScreen() {
     return null;
   };
@@ -118,16 +122,23 @@ jest.mock("@/utils/map-cache", () => ({ initMapCache: () => mockInitMapCache() }
 const { telemetryCalls } = jest.requireMock("@/services/telemetry");
 
 const USER = { id: "user-1" };
+const INSETS = { top: 47, left: 0, right: 0, bottom: 34 };
 const store = getDefaultStore();
 
 function tap(type: string | undefined, identifier = "notif-1") {
   mockLastResponse = { notification: { request: { identifier, content: { data: type ? { type } : {} } } } };
 }
 
-// The layout mounts the app's providers itself, so it is rendered bare. The flush is part of
-// mounting: the startup effects resolve a tick later, and a late promise sets an atom outside act().
+// The layout mounts the app's providers itself, so it gets only the insets expo-router's
+// SafeAreaProvider hands it — not the provider, a native view that would show up in the empty
+// tree the gate draws. The flush is part of mounting: the startup effects resolve a tick later,
+// and a late promise sets an atom outside act().
 async function show() {
-  const rendered = render(<RootLayout />);
+  const rendered = render(
+    <SafeAreaInsetsContext.Provider value={INSETS}>
+      <RootLayout />
+    </SafeAreaInsetsContext.Provider>,
+  );
   await settle();
   return rendered;
 }
@@ -145,6 +156,7 @@ beforeEach(() => {
   mockFontsLoaded = true;
   mockLastResponse = null;
   mockReceived = undefined;
+  mockScreenContent = null;
   mockLoadUserTheme.mockResolvedValue("auto");
   mockRegisterPush.mockResolvedValue(undefined);
   store.set(userThemeAtom, "auto");
@@ -432,6 +444,44 @@ it("carries the snackbar above the whole app", async () => {
   });
 
   expect(screen.getByText("Sparat")).toBeTruthy();
+});
+
+// React Native draws later siblings over earlier ones, so among views that do not contain each
+// other, the order of a depth-first walk is the order they are stacked in.
+function drawOrder(testIds: string[]) {
+  const order: string[] = [];
+  const walk = (node: unknown) => {
+    if (Array.isArray(node)) return node.forEach(walk);
+    if (node === null || typeof node !== "object") return;
+    const { props, children } = node as { props?: { testID?: string }; children?: unknown[] };
+    if (props?.testID && testIds.includes(props.testID)) order.push(props.testID);
+    children?.forEach(walk);
+  };
+  walk(screen.toJSON());
+  return order;
+}
+
+// Paper portals stack in mount order, and a modal is one. A message raised while a modal is open —
+// a report sent from the obstacle list — has to land on top of it.
+it("draws the snackbar over a modal that is open on the screen", async () => {
+  mockScreenContent = (
+    <Portal>
+      <Modal visible onDismiss={() => {}}>
+        <View testID="open-modal">
+          <Text>Hinder</Text>
+        </View>
+      </Modal>
+    </Portal>
+  );
+  await show();
+  await settle();
+
+  await act(async () => {
+    store.set(snackbarAtom, { visible: true, message: "Rapporten är skickad", type: "success" });
+  });
+
+  expect(screen.getByTestId("open-modal")).not.toContainElement(screen.getByText("Rapporten är skickad"));
+  expect(drawOrder(["open-modal", "snackbar-message"])).toEqual(["open-modal", "snackbar-message"]);
 });
 
 // React Query refetches on window focus, and a phone has no window: the return from background says so.

@@ -60,11 +60,17 @@ stigvidd/
 ├── app/          # Mobile app (React Native / Expo)
 ├── web/          # Admin dashboard (React / Vite)
 ├── backend/      # REST API + domain logic (ASP.NET Core / C#)
-│   ├── StigviddAPI/        # Controllers, middleware, startup
-│   ├── Core/               # Services, validators, factories
+│   ├── StigviddAPI/        # Controllers (admin ones under Controllers/Admin), background services, startup
+│   ├── Core/               # Services, repositories, validators, factories, spatial helpers,
+│   │                       #   and TrailImport/ (the Borås trail sync)
 │   ├── Infrastructure/     # EF Core entities, DbContext, migrations
 │   ├── WebDataContracts/   # Request/response DTOs
 │   └── Tests/              # Unit and integration tests
+├── docs/         # Behavioural references (see Documentation below)
+├── db/ keycloak/ media/ proxy/ scripts/   # The docker compose stack and its host scripts
+├── docker-compose.yml
+├── DEPLOYMENT.md # Production host runbook
+└── STAGING.md    # Staging host runbook
 ```
 
 ---
@@ -88,7 +94,11 @@ stigvidd/
 - React 19 with Vite
 - TypeScript
 - React Router v7
-- Tailwind CSS v4
+- TanStack Query + TanStack Table
+- Tailwind CSS v4 + Radix UI
+- TipTap (mail template editor)
+- orval (API client generated from the backend's OpenAPI spec)
+- Vitest + Testing Library
 - Keycloak (JWT / OpenID Connect)
 
 ### Backend
@@ -98,9 +108,10 @@ stigvidd/
 - Entity Framework Core 10 with PostgreSQL + PostGIS
 - Keycloak (JWT / OpenID Connect)
 - FluentValidation with auto-validation middleware
-- WebDAV for image file storage
+- Magick.NET for image processing, WebDAV for image file storage
+- MailKit, behind a database-backed mail outbox
 - NSwag / Swagger for API docs
-- OpenTelemetry → self-hosted OpenObserve (logs, traces, metrics, RUM)
+- OpenTelemetry → self-hosted OpenObserve (logs, traces, metrics); the app and admin web ship logs to it too
 
 ---
 
@@ -112,10 +123,13 @@ stigvidd/
 - Trail reviews with star ratings and photos
 - Favorites and wishlist with optimistic UI updates
 - Report trail obstacles/hazards with a voting system
-- Share completed hikes with other users
+- Report offensive or incorrect reviews and obstacles for moderation
+- Share completed hikes with friends, who can follow the route on the map
 - Push notifications
+- Email verification on registration
 - User profiles with hike history
-- Admin dashboard for trail management
+- Admin dashboard: trails, facilities and media, the Borås trail-import review, the
+  moderation queue, editable mail templates, and whole-environment export/import
 
 > **In progress:** Swedish/English language support (i18n) is being built but not yet user-facing.
 
@@ -125,12 +139,14 @@ stigvidd/
 
 ### Prerequisites
 
-- Node.js 20+
+- Node.js 22 or 24 (**not** 26 — the web test suite fails on it; CI and the web image use Node 24)
 - .NET 10 SDK
 - PostgreSQL with the PostGIS extension (local or remote)
 - A Keycloak realm (for backend, mobile app and admin dashboard authentication)
 - A MapTiler API key and style id (for map tiles in the mobile app)
-- Expo Go app or Android/iOS emulator
+- An Android/iOS device or emulator with a **development build** of the app — Expo Go is not
+  supported, because MapLibre and push notifications need native modules
+- Docker, if you want to run the whole stack (`docker compose up -d`) — see [DEPLOYMENT.md](DEPLOYMENT.md)
 
 ---
 
@@ -171,15 +187,27 @@ stigvidd/
    dotnet run
    ```
 
-The API will be available at `https://localhost:7xxx`. Swagger UI is available at `/swagger`.
+The API listens on `http://localhost:5265` (the default `http` launch profile; use
+`dotnet run --launch-profile https` for `https://localhost:7059` as well). In the Development
+environment Swagger UI is available at `/swagger`. `/healthz` (liveness) and `/readyz`
+(readiness, checks the database) are always on.
+
+To run the backend tests, the connection string must be set even though the tests use SQLite
+in memory — see [CLAUDE.md](CLAUDE.md) for the PowerShell and cmd forms:
+
+```bash
+cd backend
+dotnet build
+ConnectionStrings__StigVidd="DataSource=:memory:" dotnet test --no-build
+```
 
 ---
 
 ### Telemetry (optional)
 
-The backend and the app both emit OpenTelemetry, but **only when it is
-configured** — with the variables below unset, no exporter is registered, no SDK
-is initialised, and nothing changes. To see your own traces and logs locally, run
+The backend emits OpenTelemetry, and the app and admin web ship their logs to the same
+place, but **only when it is configured** — with the variables below unset, no exporter
+is registered, no log sink is installed, and nothing changes. To see your own traces and logs locally, run
 the same OpenObserve image production uses:
 
 ```bash
@@ -227,9 +255,9 @@ That is why nothing public may ever carry a password. See
 The endpoint takes **no signal path** — the exporter appends `/v1/logs`,
 `/v1/traces` and `/v1/metrics` itself.
 
-For the app, add your machine's **LAN IP** (not `localhost` — a phone or emulator
-resolves that to itself) to `app/.env`, along with the RUM application id and
-client token from *Ingestion → RUM* in the UI. Plain HTTP is dev-only: Android
+For the app, point `EXPO_PUBLIC_OO_LOGS_URL` in `app/.env` at your machine's **LAN IP**
+(not `localhost` — a phone or emulator resolves that to itself) and set
+`EXPO_PUBLIC_OO_LOGS_TOKEN` to an ingestion token from the *Ingestion* page. Plain HTTP is dev-only: Android
 blocks cleartext by default, and production is HTTPS through the proxy.
 
 Tear down with `docker rm -f stigvidd-observatory` (add
@@ -292,9 +320,19 @@ style preferences.
    EXPO_PUBLIC_LOG_LEVEL=debug
    ```
 
-4. Start the development server:
+4. Install a development build on your device or emulator — either build locally with
+   `npx expo run:android` / `npx expo run:ios`, or install one made with
+   `npx eas build --profile development`.
+
+5. Start the development server (in its own terminal — it keeps running):
    ```bash
    npx expo start
+   ```
+
+6. Run the checks CI runs, plus the type check it does not:
+   ```bash
+   npm run format:check && npm run lint && npm test -- --watchAll=false
+   npx tsc --noEmit
    ```
 
 #### Builds and OTA updates read a different set of variables
@@ -333,9 +371,11 @@ testers over the air. See
    npm install
    ```
 
-3. Create a `.env` file with your Keycloak config:
+3. Create a `.env` file with your API and Keycloak config:
 
    ```
+   # The API origin only — the generated client appends /api/v1/... itself.
+   VITE_API_URL=http://localhost:5265
    VITE_OIDC_URL=https://your-keycloak-host/auth
    VITE_OIDC_REALM=stigvidd
    VITE_CLIENT_ID=...
@@ -356,9 +396,15 @@ testers over the air. See
    real token here cannot leak into the suite. See
    [docs/notes/web-vitest-environment.md](docs/notes/web-vitest-environment.md).
 
-4. Start the development server:
+4. Start the development server (in its own terminal — it keeps running):
    ```bash
    npm run dev
+   ```
+
+5. Lint, test and build. `npm test` is Vitest and type-checks nothing; `npm run build`
+   (`tsc -b && vite build`) is the type check:
+   ```bash
+   npm run lint && npm test && npm run build
    ```
 
 The API client under `src/api/generated` is generated by orval and must not be edited by hand.
@@ -370,7 +416,8 @@ the client:
 npm run generate:api
 ```
 
-CI runs the same command and fails if the committed client differs. Generation reads that local
+Jenkins runs the same command and fails if the committed client differs — GitHub Actions does
+not, so a stale client passes a pull request and breaks on deploy. Generation reads that local
 spec, so no backend needs to be running — but a checkout that has never run the backend tests has
 no spec to read. Set `ORVAL_API_URL` to `http://localhost:5265/swagger/v1/swagger.json` to read
 from a live API instead.
@@ -386,6 +433,29 @@ Authentication is handled by Keycloak. The mobile app and admin dashboard obtain
 ## Data Source
 
 Trail and facility data (grill sites, wind shelters) for the Borås area is sourced from [Borås Stad's open data portal](https://www.boras.se). Trails are kept in step through the trail-import review in the admin dashboard; see [docs/notes](docs/notes/) and `backend/Core/TrailImport/`.
+
+---
+
+## Documentation
+
+Behavioural references — the *why* behind code that is easy to break:
+
+| | |
+| --- | --- |
+| [docs/auth.md](docs/auth.md) | Sign-in, token refresh, email verification, the `AdminOnly` policy |
+| [docs/map.md](docs/map.md) | MapLibre maps, location sources, every map screen |
+| [docs/record-hike.md](docs/record-hike.md) | Recording a hike: segments, the GPS filter, background engines |
+| [docs/spatial-data.md](docs/spatial-data.md) | PostGIS storage, SRID 4326, the wire format |
+| [docs/media-upload.md](docs/media-upload.md) | Image processing and WebDAV storage |
+| [docs/push-notifications.md](docs/push-notifications.md) | Expo push, registration and delivery |
+| [docs/mail.md](docs/mail.md) | Mail templates and the outbox |
+| [docs/moderation.md](docs/moderation.md) | Content reports and the moderation queue |
+| [docs/observability.md](docs/observability.md) | Telemetry, retention and GDPR constraints |
+| [DEPLOYMENT.md](DEPLOYMENT.md), [STAGING.md](STAGING.md) | Running the stack on a host |
+
+[docs/notes/](docs/notes/INDEX.md) holds shorter, measured facts — one gotcha per file.
+[CLAUDE.md](CLAUDE.md) is the contributor guide: which command answers which question, and
+what CI does and does not check.
 
 ---
 

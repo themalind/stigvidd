@@ -299,6 +299,30 @@ public class HikesControllerIntegrationTests : IClassFixture<StigViddWebApplicat
     }
 
     [Fact]
+    public async Task UpdateHikeAsync_ShouldClearParkingInfo_WhenItIsLeftOut()
+    {
+        // Arrange
+        var client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", AUTHENTICATED_USER);
+        var url = $"{BASE_URL}{TestHike1Identifier}";
+
+        var setResponse = await client.PutAsJsonAsync(url, new UpdateHikeRequest { ParkingInfo = "Grusplanen" }, TestContext.Current.CancellationToken);
+        setResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        // Act
+        var clearResponse = await client.PutAsJsonAsync(url, new UpdateHikeRequest { GettingThere = "Följ skyltarna" }, TestContext.Current.CancellationToken);
+        var getResponse = await client.GetAsync(url, TestContext.Current.CancellationToken);
+
+        // Assert
+        clearResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+        var stored = await getResponse.Content.ReadFromJsonAsync<HikeResponse>(TestContext.Current.CancellationToken);
+        stored.Should().NotBeNull();
+        stored.ParkingInfo.Should().BeNull();
+        stored.GettingThere.Should().Be("Följ skyltarna");
+    }
+
+    [Fact]
     public async Task UpdateHikeAsync_ShouldReturnNotFound_WhenHikeNotFound()
     {
         // Arrange

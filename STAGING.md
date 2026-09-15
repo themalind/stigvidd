@@ -424,8 +424,8 @@ one. Install the timer either way; it costs nothing.
 ## Refreshing staging from production data
 
 > **Copying production data to staging is a GDPR decision before it is a technical one.**
-> The processing record in [docs/registerforteckning.md](docs/registerforteckning.md)
-> describes production. A staging host holding real user data is a second copy of that
+> The processing record (`docs/registerforteckning.md`, gitignored and kept out of this
+> public repository) describes production. A staging host holding real user data is a second copy of that
 > personal data, on a host with different access, different retention and — as configured
 > above — a published 5432. Prefer synthetic or anonymised data. If you do copy, the staging
 > host inherits every obligation the production host has.

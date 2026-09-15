@@ -214,9 +214,9 @@ public class TrailsControllerIntegrationTests : IClassFixture<StigViddWebApplica
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         var trail = await response.Content.ReadFromJsonAsync<TrailResponse>(TestContext.Current.CancellationToken);
         trail.Should().NotBeNull();
-        trail!.Identifier.Should().Be(StorsjoledenIdentifier);
-        trail!.Name.Should().Be("Storsjöleden");
-        trail!.City.Should().Be("Viskafors");
+        trail.Identifier.Should().Be(StorsjoledenIdentifier);
+        trail.Name.Should().Be("Storsjöleden");
+        trail.City.Should().Be("Viskafors");
     }
 
     [Fact]
@@ -272,11 +272,11 @@ public class TrailsControllerIntegrationTests : IClassFixture<StigViddWebApplica
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         var card = await response.Content.ReadFromJsonAsync<TrailCardResponse>(TestContext.Current.CancellationToken);
         card.Should().NotBeNull();
-        card!.Identifier.Should().Be(StorsjoledenIdentifier);
-        card!.Name.Should().Be("Storsjöleden");
-        card!.AverageRating.Should().Be(3.5M);
-        card!.Image.Should().NotBeNull();
-        card!.Image!.Identifier.Should().Be("img-storlsjon-1");
+        card.Identifier.Should().Be(StorsjoledenIdentifier);
+        card.Name.Should().Be("Storsjöleden");
+        card.AverageRating.Should().Be(3.5M);
+        card.Image.Should().NotBeNull();
+        card.Image.Identifier.Should().Be("img-storlsjon-1");
     }
 
     [Fact]
@@ -305,8 +305,8 @@ public class TrailsControllerIntegrationTests : IClassFixture<StigViddWebApplica
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         var card = await response.Content.ReadFromJsonAsync<TrailCardResponse>(TestContext.Current.CancellationToken);
         card.Should().NotBeNull();
-        card!.Image.Should().NotBeNull();
-        card!.Image!.ImageUrl.Should().NotBeNullOrEmpty();
+        card.Image.Should().NotBeNull();
+        card.Image.ImageUrl.Should().NotBeNullOrEmpty();
     }
 
     [Fact]
@@ -399,7 +399,7 @@ public class TrailsControllerIntegrationTests : IClassFixture<StigViddWebApplica
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         var cards = await response.Content.ReadFromJsonAsync<List<TrailCardResponse>>(TestContext.Current.CancellationToken);
         cards.Should().NotBeNull();
-        cards!.Should().ContainSingle(c => c.Identifier == StorsjoledenIdentifier);
+        cards.Should().ContainSingle(c => c.Identifier == StorsjoledenIdentifier);
     }
 
     [Fact]
@@ -416,8 +416,8 @@ public class TrailsControllerIntegrationTests : IClassFixture<StigViddWebApplica
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         var cards = await response.Content.ReadFromJsonAsync<List<TrailCardResponse>>(TestContext.Current.CancellationToken);
         cards.Should().NotBeNull();
-        cards!.Should().ContainSingle();
-        cards![0].Identifier.Should().Be(StorsjoledenIdentifier);
+        cards.Should().ContainSingle();
+        cards[0].Identifier.Should().Be(StorsjoledenIdentifier);
     }
 
     [Fact]
@@ -447,7 +447,8 @@ public class TrailsControllerIntegrationTests : IClassFixture<StigViddWebApplica
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         var trails = await response.Content.ReadFromJsonAsync<List<TrailShortInfoResponse>>(TestContext.Current.CancellationToken);
         trails.Should().NotBeNullOrEmpty();
-        trails!.Should().Contain(t => t.Identifier == StorsjoledenIdentifier);
+        trails.Should().NotBeNull();
+        trails.Should().Contain(t => t.Identifier == StorsjoledenIdentifier);
     }
 
     [Fact]
@@ -462,7 +463,8 @@ public class TrailsControllerIntegrationTests : IClassFixture<StigViddWebApplica
         // Assert — the average is projected in the query, so this proves it translates to SQL.
         // Storsjoleden carries a single 3.5 review; an unreviewed trail reads 0.
         var trails = await response.Content.ReadFromJsonAsync<List<TrailShortInfoResponse>>(TestContext.Current.CancellationToken);
-        trails!.Single(t => t.Identifier == StorsjoledenIdentifier).AverageRating.Should().Be(3.5M);
+        trails.Should().NotBeNull();
+        trails.Single(t => t.Identifier == StorsjoledenIdentifier).AverageRating.Should().Be(3.5M);
         trails.Should().Contain(t => t.AverageRating == 0M);
     }
 
@@ -479,7 +481,8 @@ public class TrailsControllerIntegrationTests : IClassFixture<StigViddWebApplica
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         var markers = await response.Content.ReadFromJsonAsync<List<TrailMarkerResponse>>(TestContext.Current.CancellationToken);
         markers.Should().NotBeNullOrEmpty();
-        markers!.Should().Contain(m => m.Identifier == StorsjoledenIdentifier && m.StartLatitude != null && m.StartLongitude != null);
+        markers.Should().NotBeNull();
+        markers.Should().Contain(m => m.Identifier == StorsjoledenIdentifier && m.StartLatitude != null && m.StartLongitude != null);
     }
 
     [Fact]
@@ -578,6 +581,6 @@ public class TrailsControllerIntegrationTests : IClassFixture<StigViddWebApplica
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         var card = await response.Content.ReadFromJsonAsync<TrailCardResponse>(TestContext.Current.CancellationToken);
         card.Should().NotBeNull();
-        card!.AverageRating.Should().Be(5.0M);
+        card.AverageRating.Should().Be(5.0M);
     }
 }

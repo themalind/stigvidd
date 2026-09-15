@@ -62,7 +62,8 @@ public class ModerationQueryFilterTests : TestBase
 
         // Assert
         result.Success.Should().BeTrue();
-        result.Value!.AverageRating.Should().Be(3M);
+        result.Value.Should().NotBeNull();
+        result.Value.AverageRating.Should().Be(3M);
     }
 
     [Fact]
@@ -76,7 +77,8 @@ public class ModerationQueryFilterTests : TestBase
 
         // Assert
         result.Success.Should().BeTrue();
-        result.Value!.AverageRating.Should().Be(5M);
+        result.Value.Should().NotBeNull();
+        result.Value.AverageRating.Should().Be(5M);
     }
 
     // The design's escape hatch: every path that must see hidden content drops this filter
@@ -157,7 +159,8 @@ public class ModerationQueryFilterTests : TestBase
 
         // Assert
         result.Success.Should().BeTrue();
-        var (high, low) = PositionsIn(result.Value!);
+        result.Value.Should().NotBeNull();
+        var (high, low) = PositionsIn(result.Value);
         high.Should().BeGreaterThanOrEqualTo(0);
         low.Should().BeGreaterThanOrEqualTo(0);
         high.Should().BeLessThan(low);
@@ -176,11 +179,14 @@ public class ModerationQueryFilterTests : TestBase
 
         // Assert
         result.Success.Should().BeTrue();
-        var (high, low) = PositionsIn(result.Value!);
+        result.Value.Should().NotBeNull();
+        var (high, low) = PositionsIn(result.Value);
         high.Should().BeGreaterThanOrEqualTo(0);
         low.Should().BeGreaterThanOrEqualTo(0);
         low.Should().BeLessThan(high);
-        result.Value!.Single(o => o!.Identifier == HighTrailIdentifier)!.AverageRating.Should().Be(0M);
+        var highTrail = result.Value.Single(o => o!.Identifier == HighTrailIdentifier);
+        highTrail.Should().NotBeNull();
+        highTrail.AverageRating.Should().Be(0M);
     }
 
     // The remaining aggregate sites. All build their own average and hand it down as an
@@ -196,7 +202,8 @@ public class ModerationQueryFilterTests : TestBase
 
         // Assert
         result.Success.Should().BeTrue();
-        result.Value!.Single().AverageRating.Should().Be(5M);
+        result.Value.Should().NotBeNull();
+        result.Value.Single().AverageRating.Should().Be(5M);
     }
 
     [Fact]
@@ -210,7 +217,8 @@ public class ModerationQueryFilterTests : TestBase
 
         // Assert
         result.Success.Should().BeTrue();
-        result.Value!.Single(t => t.Identifier == TrailIdentifier).AverageRating.Should().Be(5M);
+        result.Value.Should().NotBeNull();
+        result.Value.Single(t => t.Identifier == TrailIdentifier).AverageRating.Should().Be(5M);
     }
 
     // The city area page builds the same average twice, once per projection.
@@ -244,7 +252,8 @@ public class ModerationQueryFilterTests : TestBase
 
         // Assert
         result.Success.Should().BeTrue();
-        result.Value!.Trails.Single(t => t.Identifier == TrailIdentifier).AverageRating.Should().Be(5M);
+        result.Value.Should().NotBeNull();
+        result.Value.Trails.Single(t => t.Identifier == TrailIdentifier).AverageRating.Should().Be(5M);
     }
 
     [Fact]
@@ -258,7 +267,8 @@ public class ModerationQueryFilterTests : TestBase
 
         // Assert
         result.Success.Should().BeTrue();
-        result.Value!
+        result.Value.Should().NotBeNull();
+        result.Value
             .Single(a => a.Identifier == CityAreaIdentifier).Trails
             .Single(t => t.Identifier == TrailIdentifier).AverageRating.Should().Be(5M);
     }

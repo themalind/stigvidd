@@ -141,7 +141,8 @@ public class ReviewsControllerIntegrationsTests : IClassFixture<StigViddWebAppli
         // The first review is untouched
         var getResponse = await client.GetAsync($"/api/v1/reviews/trail/{TivedenIdentifier}?page=0&limit=20", TestContext.Current.CancellationToken);
         var paged = await getResponse.Content.ReadFromJsonAsync<PagedReviewResponse>(TestContext.Current.CancellationToken);
-        paged!.Reviews.Should().ContainSingle(r => r.Identifier == Review1Identifier);
+        paged.Should().NotBeNull();
+        paged.Reviews.Should().ContainSingle(r => r.Identifier == Review1Identifier);
     }
 
     [Fact]

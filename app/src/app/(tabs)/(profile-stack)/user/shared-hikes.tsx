@@ -138,6 +138,7 @@ export default function SharedHikesScreen() {
           activeFilterCount={activeFilterCount}
           showingLabel={t("hike.showing", { count: totalCount, shown: filteredCount })}
           onClearFilters={clearFilters}
+          showActions={totalCount > 0}
         >
           <BackButton />
           <Icon source="hiking" size={24} color={theme.colors.onSurfaceVariant} />

@@ -152,7 +152,8 @@ Infrastructure/Migrations/     EF migrations; DbMigrationRunner applies them on 
   (`RequireRole(adminRole)`, where `adminRole` is `Authorization:AdminRole`, default
   `stigvidd-admin`), with Keycloak realm roles mapped in
   `Authorization/KeycloakRealmRolesTransformation.cs`. Admin-only controllers live in
-  `StigviddAPI/Controllers/Admin/` and carry it at the class. The policy name is a
+  `StigviddAPI/Controllers/Admin/` and carry it at the class (`TrailImportController` is the
+  one still in `Controllers/`, with the same class-level policy). The policy name is a
   **string in two places** — the registration and every attribute — and an attribute
   naming a policy that is not registered is a 500 at request time, not a startup error.
   `Tests/IntegrationTests/Authorization/EndpointAuthorizationTests.cs` pins that string
@@ -161,6 +162,19 @@ Infrastructure/Migrations/     EF migrations; DbMigrationRunner applies them on 
 - **Nullable warnings are build ERRORS** under `backend/`
   ([Directory.Build.props](backend/Directory.Build.props) sets
   `WarningsAsErrors=nullable`), so CS8602/CS8618 fail the build rather than warning.
+- **Never use the null-forgiving operator — check for null instead.** This goes for tests
+  and production code, in C# (`value!`) and TypeScript (`value!`) alike. `!` only silences
+  the compiler; a null still throws, just later and with a worse message.
+  - **C# tests:** assert first, then use the value. AwesomeAssertions' `NotBeNull()` is
+    annotated so the compiler knows it is non-null afterwards:
+    ```csharp
+    mail.Should().NotBeNull();
+    mail.TemplateKey.Should().Be("verify-email");      // not mail!.TemplateKey
+    ```
+  - **TypeScript tests:** `expect(x).not.toBeNull()` does not narrow the type, so guard
+    explicitly: `if (!x) throw new Error("expected x");`.
+  - **Production code:** handle the null — return a `Result.Fail`, an early return, or a
+    fallback — rather than asserting it away.
 
 ## Spatial data
 
@@ -254,9 +268,10 @@ skill before citing a new assertion.
 ## Docs
 
 [docs/](docs/) holds behavioural references: [auth](docs/auth.md),
-[map](docs/map.md), [media-upload](docs/media-upload.md),
-[observability](docs/observability.md), [push-notifications](docs/push-notifications.md),
-[record-hike](docs/record-hike.md), [spatial-data](docs/spatial-data.md).
+[mail](docs/mail.md), [map](docs/map.md), [media-upload](docs/media-upload.md),
+[moderation](docs/moderation.md), [observability](docs/observability.md),
+[push-notifications](docs/push-notifications.md), [record-hike](docs/record-hike.md),
+[spatial-data](docs/spatial-data.md).
 [DEPLOYMENT.md](DEPLOYMENT.md) is the host runbook; [STAGING.md](STAGING.md) is the
 staging one — a **partial stack** (db/api/web/media/proxy) that borrows production's
 Keycloak realm, mail server and OpenObserve org, which is why it is a separate document.

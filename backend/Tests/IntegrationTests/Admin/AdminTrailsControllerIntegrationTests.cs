@@ -91,11 +91,12 @@ public class AdminTrailsControllerIntegrationTests : IClassFixture<StigViddWebAp
 
         var trail = await response.Content.ReadFromJsonAsync<TrailResponse>(TestContext.Current.CancellationToken);
         trail.Should().NotBeNull();
-        trail!.Name.Should().Be("Uppdaterat ledsnamn");
+        trail.Name.Should().Be("Uppdaterat ledsnamn");
 
         var reread = await client.GetFromJsonAsync<TrailResponse>(
             $"/api/v1/trails/{StorsjoledenIdentifier}", TestContext.Current.CancellationToken);
-        reread!.Name.Should().Be("Uppdaterat ledsnamn");
+        reread.Should().NotBeNull();
+        reread.Name.Should().Be("Uppdaterat ledsnamn");
     }
 
     /// <summary>
@@ -161,7 +162,7 @@ public class AdminTrailsControllerIntegrationTests : IClassFixture<StigViddWebAp
 
         var body = await response.Content.ReadFromJsonAsync<SymbolUrlResponse>(TestContext.Current.CancellationToken);
         body.Should().NotBeNull();
-        body!.SymbolUrl.Should().NotBeNullOrWhiteSpace();
+        body.SymbolUrl.Should().NotBeNullOrWhiteSpace();
     }
 
     [Fact]

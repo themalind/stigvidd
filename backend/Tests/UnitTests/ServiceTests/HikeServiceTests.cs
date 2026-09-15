@@ -61,7 +61,7 @@ public class HikeServiceTests
         // The creator's nickname is copied onto the hike at creation so the recipient view
         // can still name the author after the owner's user row is gone.
         saved.Should().NotBeNull();
-        saved!.CreatedBy.Should().Be(Utilities.Identifiers.User);
+        saved.CreatedBy.Should().Be(Utilities.Identifiers.User);
         saved.CreatedByNickName.Should().Be("TestUser");
         // The path is persisted, so it has to carry the schema's SRID, not the NTS default of 0.
         saved.GeoPath.SRID.Should().Be(GeoPointFactory.Wgs84Srid);
@@ -495,8 +495,43 @@ public class HikeServiceTests
 
         // Assert
         result.Success.Should().BeTrue();
-        result.Value!.Name.Should().Be("NewName");
+        result.Value.Should().NotBeNull();
+        result.Value.Name.Should().Be("NewName");
         result.Value.Description.Should().Be("NewDesc");
+    }
+
+    [Fact]
+    public async Task UpdateHike_WithoutOptionalFields_ClearsThemAndKeepsName()
+    {
+        // Arrange
+        var hike = Utilities.Stubs.Hike();
+        hike.Description = "Old description";
+        hike.GettingThere = "Old directions";
+        hike.ParkingInfo = "Old parking";
+        var userRepo = new Mock<IUserRepository>();
+        userRepo.Setup(r => r.GetUserByIdentifierAsync(It.IsAny<string>(), It.IsAny<Expression<Func<User, int>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<int>.Success(1));
+        var hikeRepo = new Mock<IHikeRepository>();
+        hikeRepo.Setup(r => r.GetHikeByIdentifierAsync(Utilities.Identifiers.Hike1, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<Hike>.Success(hike));
+        hikeRepo.Setup(r => r.UpdateHikeAsync(It.IsAny<Hike>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<Hike>.Success(hike));
+
+        // Act
+        var result = await Build(hikeRepo, userRepo).UpdateHikeAsync(
+            Utilities.Identifiers.Hike1, Utilities.Identifiers.User,
+            null, null, "", "   ", TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Success.Should().BeTrue();
+        result.Value.Should().NotBeNull();
+        result.Value.Name.Should().Be("TestHike1");
+        result.Value.Description.Should().BeNull();
+        result.Value.GettingThere.Should().BeNull();
+        result.Value.ParkingInfo.Should().BeNull();
+        hikeRepo.Verify(r => r.UpdateHikeAsync(
+            It.Is<Hike>(h => h.Description == null && h.GettingThere == null && h.ParkingInfo == null),
+            It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -514,7 +549,8 @@ public class HikeServiceTests
 
         // Assert
         result.Success.Should().BeFalse();
-        result.Message!.StatusCode.Should().Be(404);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(404);
     }
 
     [Fact]
@@ -532,7 +568,8 @@ public class HikeServiceTests
 
         // Assert
         result.Success.Should().BeFalse();
-        result.Message!.StatusCode.Should().Be(500);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(500);
     }
 
     [Fact]
@@ -553,7 +590,8 @@ public class HikeServiceTests
 
         // Assert
         result.Success.Should().BeFalse();
-        result.Message!.StatusCode.Should().Be(404);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(404);
     }
 
     [Fact]
@@ -574,7 +612,8 @@ public class HikeServiceTests
 
         // Assert
         result.Success.Should().BeFalse();
-        result.Message!.StatusCode.Should().Be(500);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(500);
     }
 
     [Fact]
@@ -727,7 +766,8 @@ public class HikeServiceTests
 
         // Assert
         result.Success.Should().BeFalse();
-        result.Message!.StatusCode.Should().Be(500);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(500);
         webDav.Verify(w => w.DeleteFileAsync(It.IsAny<string>()), Times.Never);
     }
 
@@ -888,7 +928,8 @@ public class HikeServiceTests
 
         // Assert
         result.Success.Should().BeFalse();
-        result.Message!.StatusCode.Should().Be(500);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(500);
         webDav.Verify(w => w.DeleteFileAsync(It.IsAny<string>()), Times.Never);
     }
 
@@ -932,7 +973,8 @@ public class HikeServiceTests
 
         // Assert — a failed delete stops the flow before anything else is touched
         result.Success.Should().BeFalse();
-        result.Message!.StatusCode.Should().Be(500);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(500);
         hikeRepo.Verify(r => r.AnonymizeSharedHikesOnUserDeleteAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Never);
         webDav.Verify(w => w.DeleteFileAsync(It.IsAny<string>()), Times.Never);
     }

@@ -639,7 +639,8 @@ public class UsersControllerIntegrationTests : IClassFixture<StigViddWebApplicat
         var obstacles = await getResponse.Content
             .ReadFromJsonAsync<List<TrailObstacleResponse>>(TestContext.Current.CancellationToken);
 
-        var obstacle3 = obstacles!.Single(o => o.Identifier == Obstacle3Identifier);
+        obstacles.Should().NotBeNull();
+        var obstacle3 = obstacles.Single(o => o.Identifier == Obstacle3Identifier);
 
         // Assert — VandrarVennen's vote is gone; NaturElskaren's and SkogsGreven's remain
         obstacle3.SolvedVotes.Should().HaveCount(2);
@@ -717,7 +718,8 @@ public class UsersControllerIntegrationTests : IClassFixture<StigViddWebApplicat
             TestContext.Current.CancellationToken);
         var before = await beforeResponse.Content
             .ReadFromJsonAsync<PagedReviewResponse>(TestContext.Current.CancellationToken);
-        var ratingBefore = before!.Reviews.Single(r => r.Identifier == Review1Identifier).Rating;
+        before.Should().NotBeNull();
+        var ratingBefore = before.Reviews.Single(r => r.Identifier == Review1Identifier).Rating;
 
         var deleteRequest = new HttpRequestMessage(HttpMethod.Delete, "/api/v1/users/delete");
         await client.SendAsync(deleteRequest, TestContext.Current.CancellationToken);
@@ -732,7 +734,8 @@ public class UsersControllerIntegrationTests : IClassFixture<StigViddWebApplicat
 
         // Assert
         getResponse.StatusCode.Should().Be(HttpStatusCode.OK);
-        var review = paged!.Reviews.Single(r => r.Identifier == Review1Identifier);
+        paged.Should().NotBeNull();
+        var review = paged.Reviews.Single(r => r.Identifier == Review1Identifier);
         review.Rating.Should().Be(ratingBefore);
         review.TrailReview.Should().BeNull();
         review.ReviewImages.Should().BeNullOrEmpty();
@@ -760,7 +763,8 @@ public class UsersControllerIntegrationTests : IClassFixture<StigViddWebApplicat
 
         // Assert — 200, not 500: the list tolerates a report without a user
         getResponse.StatusCode.Should().Be(HttpStatusCode.OK);
-        var obstacle = obstacles!.Single(o => o.Identifier == Obstacle2Identifier);
+        obstacles.Should().NotBeNull();
+        var obstacle = obstacles.Single(o => o.Identifier == Obstacle2Identifier);
         obstacle.IssueType.Should().Be(Infrastructure.Enums.TrailIssueType.Flooding.ToString());
         obstacle.Description.Should().BeEmpty();
         obstacle.UserIdentifier.Should().BeNull();
@@ -790,7 +794,8 @@ public class UsersControllerIntegrationTests : IClassFixture<StigViddWebApplicat
         var sharedHikes = await getResponse.Content
             .ReadFromJsonAsync<IReadOnlyCollection<HikeShareRecipientResponse>>(TestContext.Current.CancellationToken);
 
-        var hike3 = sharedHikes!.Single(h => h.HikeIdentifier == SharedHikeIdentifier);
+        sharedHikes.Should().NotBeNull();
+        var hike3 = sharedHikes.Single(h => h.HikeIdentifier == SharedHikeIdentifier);
 
         // Assert
         getResponse.StatusCode.Should().Be(HttpStatusCode.OK);

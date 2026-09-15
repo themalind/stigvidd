@@ -256,6 +256,9 @@ therefore lives under `Controllers/Admin/` and carries
 | `MailTemplatesController`       | `api/v1/admin/mail-templates/…`    | Mail copy every recipient reads     |
 | `TrailImportController`         | `api/v1/admin/trail-import/…`      | The Borås sync                      |
 
+`TrailImportController` is the exception to the folder: it still lives in `Controllers/`
+(namespace `StigviddAPI.Controllers`), but carries the same class-level policy and route prefix.
+
 `EndpointAuthorizationTests` pins that policy name and the complete list of routes behind
 it, so an attribute lost in an edit fails there rather than in production.
 

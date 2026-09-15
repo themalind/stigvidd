@@ -2,10 +2,10 @@
 
 How maps work across the app: the shared MapLibre base map, the rendering
 primitives every screen reuses, the two location sources, and each of the
-places a map appears — the fullscreen browse map, the fullscreen follow view,
-and the small embedded previews on trail-detail, record-hike and hike-detail
-screens. This is a behavioral reference: it explains _why_ the code is shaped
-this way so future changes don't quietly undo a fix.
+places a map appears — the fullscreen browse map, the fullscreen follow view
+(for a trail or a recorded hike), and the small embedded maps on the trail-detail,
+record-hike, save-hike, hike-detail and home screens. This is a behavioral reference:
+it explains _why_ the code is shaped this way so future changes don't quietly undo a fix.
 
 Related: recording the live track that some of these maps draw is documented
 separately in [`record-hike.md`](./record-hike.md).
@@ -14,7 +14,7 @@ separately in [`record-hike.md`](./record-hike.md).
 
 | Concern                                                            | File                                                            |
 | ------------------------------------------------------------------ | --------------------------------------------------------------- |
-| Shared base map (style, puck, attribution, safe-area)              | `src/components/map/map.tsx`                                    |
+| Shared base map (style, puck, attribution)                         | `src/components/map/map.tsx`                                    |
 | Basemap style URL + MapTiler setup                                 | `src/components/map/map-style.ts`                               |
 | Ambient tile-cache health                                          | `src/utils/map-cache.ts`                                        |
 | Trailhead "start" marker (GeoJSON layers)                          | `src/components/map/start-marker.tsx`                           |
@@ -25,12 +25,17 @@ separately in [`record-hike.md`](./record-hike.md).
 | **Fullscreen browse map** (clusters, facilities, filter, carousel) | `src/components/map/trail-markers-map.tsx`                      |
 | Browse-map screen (camera memory, carousel, filters)               | `src/app/(tabs)/(map)/index.tsx`                                |
 | Cluster tap decision (zoom vs open carousel)                       | `src/utils/cluster-action.ts`, `src/utils/cluster-zoom-band.ts` |
-| **Fullscreen follow view** (single trail + live puck)              | `src/components/map/trail-follow-screen.tsx`                    |
+| **Fullscreen follow view** (one route + live puck, shared)         | `src/components/map/route-follow-view.tsx`                      |
+| Follow view data path for a trail                                  | `src/components/map/trail-follow-screen.tsx`                    |
+| Follow view data path for a recorded / shared hike                 | `src/components/map/hike-follow-screen.tsx`                     |
 | Live puck data source                                              | `src/hooks/useLiveUserLocation.ts`                              |
-| One-shot user location (open-on-user, recenter)                    | `src/hooks/useUserLocation.ts`                                  |
+| One-shot user location (open-on-user, recenter)                    | `src/hooks/useUserLocation.tsx`                                 |
 | **Embedded** trail-detail preview                                  | `src/components/trail/trail-map.tsx`                            |
+| Preview-as-button chrome ("show on map" badge + directions pill)   | `src/components/map/map-preview-overlay.tsx`                    |
 | **Embedded** record-hike map                                       | `src/components/trail/trail-creator/trail-creator.tsx`          |
-| **Embedded** saved-hike map                                        | `src/components/trail/trail-creator/hike-details.tsx`           |
+| **Embedded** save-hike trim map                                    | `src/components/trail/trail-creator/save-hike-form.tsx`         |
+| **Embedded** recorded-hike preview (shared by the hike maps below) | `src/components/map/route-preview-map.tsx`                      |
+| Hike / shared-hike detail modals, home "latest hike" card          | `hike-details.tsx`, `shared-hike-details.tsx`, `home/latest-hike-card.tsx` |
 
 ## The stack at a glance
 
@@ -48,9 +53,10 @@ component wraps `MapLibreMap` and every screen composes its own `<Camera>`,
                          │  attribution, no logo/compass│
                          └───────────────────────────┘
              ┌──────────────────┬───────────┴───────────┬──────────────────┐
-   TrailMarkersMap        TrailFollowScreen         TrailMap /          HikeDetails
-   (browse, clusters)     (one trail + puck)        TrailCreator        (saved hike)
-                                                     (preview / record)
+   TrailMarkersMap        RouteFollowView           TrailMap /          RoutePreviewMap
+   (browse, clusters)     (one route + puck;        TrailCreator /      (hike details,
+                           trail or hike)           SaveHikeForm        shared hike,
+                                                    (preview / record)  latest-hike card)
 ```
 
 ## The shared base map (`map.tsx`)
@@ -66,8 +72,10 @@ decisions every map must share, so no screen re-derives them:
   controls. **Attribution stays on** and is not opt-in: the MapTiler + OpenStreetMap
   credit is required by the data licence on every screen, so it defaults on here.
   It sits bottom-left (the one corner no custom control uses — recenter is
-  bottom-right, filter top-right, back top-left) and is nudged clear of the safe
-  area / tab bar via `useSafeAreaInsets`.
+  bottom-right, filter top-right, back top-left), inset by `SCREEN_PADDING`. There is
+  **no safe-area offset**: fullscreen maps live inside the tab navigator, whose tab bar
+  already clears the home indicator. The embedded previews override
+  `attributionPosition` to top-left, because their bottom corners hold the overlay pills.
 - All other `MapProps` pass through, so callers still set `onPress`,
   `onDidFinishLoadingMap`, `onRegionDidChange`, gesture toggles, etc.
 
@@ -141,7 +149,7 @@ The app deliberately uses different location engines for different jobs:
 | --------------------------------- | --------------------------------------------------- | -------------------------------------------------------------------- | ------------------- |
 | `useUserLocation()`               | open-on-user, recenter target, "locating…" gate     | one-shot fix; reports `isFallback` (→ Borås) when denied/unavailable | —                   |
 | `useCurrentPosition()` (MapLibre) | detect when the passive puck has a fix (browse map) | MapLibre's shared native GPS singleton                               | —                   |
-| `useLiveUserLocation()`           | the **live follow puck** on the follow screen       | app's own `expo-location` watcher                                    | `BestForNavigation` |
+| `useLiveUserLocation()`           | the **live follow puck** on the follow views        | app's own `expo-location` watcher                                    | `BestForNavigation` |
 | MapLibre `<UserLocation>`         | passive puck on browse / preview / record maps      | MapLibre built-in                                                    | —                   |
 
 **Why the follow puck has its own watcher (`useLiveUserLocation`):** MapLibre's
@@ -243,26 +251,43 @@ denied (no fix will ever come).
 - Carousel actions route out: **"Show on map"** → the follow view; **"Read more"** →
   the trail detail screen (both via `guardedNavigate`).
 
-## Screen 2 — Fullscreen follow view (`trail-follow-screen.tsx`)
+## Screen 2 — Fullscreen follow view (`route-follow-view.tsx`)
 
-One trail drawn cleanly with the live user puck — no clusters, other trails, or
-facility pins. Reached from the carousel's "Show on map" and by tapping the embedded
-preview on a trail's detail screen. It's a route file (`follow/[identifier].tsx` in
-each tab stack) that simply re-exports the shared component, so it's pushed within
-the current stack and **back returns where you came from**.
+One route drawn cleanly with the live user puck — no clusters, other trails, or
+facility pins. `RouteFollowView` owns all of the presentation and is shared by two thin
+data-path screens, so the trail and hike variants cannot drift apart visually:
 
-- Coordinates come from `getCoordinatesByTrailIdentifier` (React Query, keyed on the
-  identifier) → parsed via `CoordinateParser` → `lineStringFromPositions`.
+- **`TrailFollowScreen`** — reached from the carousel's "Show on map" and by tapping the
+  embedded preview on a trail's detail screen. Coordinates come from
+  `getCoordinatesByTrailIdentifier` (React Query, keyed on the identifier) → parsed via
+  `CoordinateParser`. Route file `follow/[identifier].tsx` in the home, map, trails and
+  profile stacks.
+- **`HikeFollowScreen`** — a recorded hike, your own or one a friend shared with you
+  (the API authorises both through the same endpoint), which is what makes a shared hike
+  walkable. The coordinates are fetched by identifier under `hikeRouteQueryKey`, so the
+  screen survives a deep link or cold start; in practice the detail modal that opens it
+  has already primed that cache. A failed fetch, or coordinates that parse to nothing,
+  shows a centred message rather than a blank map. Route file
+  `hike-follow/[identifier].tsx` in the home and profile stacks.
+
+Both route files simply re-export the component, so the view is pushed within the
+current stack and **back returns where you came from**.
+
 - **Fit-to-trail race:** the camera fits the trail's bounds once _both_ the map and
   the coordinates are ready — whichever arrives last triggers the fit (the map-ready
   callback sets `mapReadyRef`, and a `useEffect` on `bounds` covers the other order).
   `FIT_PADDING` leaves room for the top bar and recenter button.
-- The **live puck** is `UserLocationMarker` driven by `useLiveUserLocation`, drawn
-  `aboveLayerId` the trail line so it can never hide under it. `showsUserLocation` on
+- **Single-point route:** a zero-area bounding box would fit to maximum zoom, so a
+  one-point route is centred at `SINGLE_POINT_ZOOM` (15) instead.
+- The **live puck** is `UserLocationMarker` driven by `useLiveUserLocation`, pinned
+  `aboveLayerId` the start marker's **label** (its topmost layer) — not the route line,
+  which would bury the puck under the trailhead circle exactly where you set off. The
+  anchor is only named once the route exists (the GPS fix usually lands first), and the
+  marker is remounted rather than mutated when it appears. `showsUserLocation` on
   `<Map>` is **false** here — this screen supplies its own puck instead of the passive
   built-in one.
-- Chrome: a back button + trail-name title pill (top), a loading spinner while
-  coordinates fetch, and `CenterOnUserButton`. The recenter button is passed the
+- Chrome: one back chip carrying the route name (top-left, no safe-area offset — the
+  app header already clears it), a loading spinner while coordinates fetch, and `CenterOnUserButton`. The recenter button is passed the
   puck's live position so it flies exactly to the dot rather than taking its own
   one-shot fix. Tapping the trailhead hands off to the device maps app for directions
   (`openDirectionsToStart`).
@@ -274,10 +299,10 @@ screen. All gestures are disabled (`dragPan`, `touchZoom`, `touchRotate`,
 `touchPitch`, `doubleTapZoom` all off) — **the whole surface is a button** that opens
 the fullscreen follow view (`handleOpenFollowMap`). It draws the route line + the
 `StartMarker`, and on `onDidFinishLoadingMap` fits the trail bounds (`duration: 0`,
-no animation). Two corner pills float on top:
+no animation). The corner pills come from the shared `MapPreviewOverlay`:
 
 - **"Show on map"** (bottom-right) — visual affordance; the tap is actually handled by
-  the full-surface overlay `Pressable`.
+  the overlay's full-surface `Pressable`.
 - **Directions** (bottom-left) — rendered _last_ so its tap wins in its corner and
   opens directions instead of the follow view. On narrow phones (`< 380 px`) it drops
   its label to just the icon.
@@ -311,14 +336,30 @@ Recording internals (segments, GPS filter, background engines) are documented in
   already started moving, in which case the route drives the camera. A "locating…"
   pill shows during that refine.
 
-## Screen 5 — Embedded saved-hike map (`hike-details.tsx`)
+## Screen 5 — Embedded save-hike trim map (`save-hike-form.tsx`)
 
-The read-only map of a completed hike, shown in the hike-detail modal (40% height,
-inside a `BlurView`). `showsUserLocation={false}` (a saved hike isn't about _now_).
-It draws the recorded route line + a tappable `StartMarker` (opens directions), and
-fits the recorded bounds on `onDidFinishLoadingMap`. The shared-hike view
-(`shared-hike-details.tsx`) follows the same pattern for a hike someone shared with
-you.
+A 200 px map in the save form after recording stops. The full recorded route is drawn
+faded for context and the portion that survives trimming solid on top, so the user sees
+what will actually be saved. `showsUserLocation={false}`; fits the full route's bounds
+on map-ready. Trimming itself is documented in [`record-hike.md`](./record-hike.md).
+
+## Screen 6 — Recorded-hike previews (`route-preview-map.tsx`)
+
+`RoutePreviewMap` is the small route map of a completed hike: the recorded line plus its
+`StartMarker`, with `showsUserLocation={false}` (a saved hike isn't about _now_). It
+fits the bounds on map-ready (or centres a single point at zoom 15). One component serves
+three places:
+
+| Where | `onOpen` | Behaviour |
+| ----- | -------- | --------- |
+| Hike-detail modal (`hike-details.tsx`, 30% height) | opens the hike follow view | static; badge + directions pill via `MapPreviewOverlay` |
+| Shared-hike modal (`shared-hike-details.tsx`), accepted share | opens the hike follow view | as above |
+| Shared-hike modal, share **awaiting accept/reject** | none | plain **pannable** preview; tapping the start marker opens directions |
+| Home "latest hike" card (`latest-hike-card.tsx`) | opens the hike-detail modal | `showBadge={false}`: no chrome, just a full-cover `Pressable` so the card still receives the tap |
+
+Passing `onOpen` disables every gesture, since the full-cover `Pressable` would swallow a
+drag anyway. The shared-hikes screen mounts two modals at once, so their `idPrefix`es
+differ to keep the map source/layer ids apart.
 
 ## Colours: the always-light palette
 
@@ -343,7 +384,7 @@ theme.
 
 | Pattern                 | Where                               | How                                                                                                                             |
 | ----------------------- | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| Fit a whole trail/hike  | follow, trail preview, hike-details | `cameraRef.fitBounds(getBoundsFromTrail(...), { padding })`, `duration: 0`, on map-ready (+ effect on bounds for the load race) |
+| Fit a whole trail/hike  | follow, trail preview, hike previews | `cameraRef.fitBounds(getBoundsFromTrail(...), { padding })`, `duration: 0`, on map-ready (+ effect on bounds for the load race) |
 | Open on the user        | browse map                          | one-time `flyTo` once a real (non-fallback) fix arrives                                                                         |
 | Recenter on the puck    | follow, record                      | `CenterOnUserButton` `flyTo(zoom: 14)`; follow passes the live puck position, record re-enables auto-follow                     |
 | Follow a growing route  | record                              | `easeTo(latest point)` on each new point, until a user gesture disables it                                                      |
@@ -378,6 +419,7 @@ theme.
 | Cluster radii                 | 16 / 20 / 26 px | `trail-markers-map.tsx`   | Circle size at ≥ 10 / ≥ 50 members.                          |
 | `RING_GAP`                    | 5 px            | `trail-markers-map.tsx`   | Gap between a marker edge and its selection ring.            |
 | `HEADING_MIN_SPEED`           | ~0.6 m/s        | `useLiveUserLocation.ts`  | Below this, course-over-ground is treated as noise.          |
-| `MAP_AMBIENT_CACHE_MAX_BYTES` | 50 MB           | `constants/cache`         | Ambient tile-cache cap.                                      |
+| `MAP_AMBIENT_CACHE_MAX_BYTES` | 50 MB           | `constants/cache.ts`      | Ambient tile-cache cap.                                      |
 | `MAP_USER_AGENT`              | `"stigvidd"`    | `map-style.ts`            | Must match the MapTiler key's allowed User-Agent.            |
-| `FIT_PADDING`                 | 100/60/120/60   | `trail-follow-screen.tsx` | Fit padding leaving room for chrome.                         |
+| `FIT_PADDING`                 | 100/60/120/60   | `route-follow-view.tsx`   | Fit padding leaving room for chrome.                         |
+| `SINGLE_POINT_ZOOM`           | 15              | `route-follow-view.tsx`, `route-preview-map.tsx` | Zoom for a one-point route (zero-area bounds). |

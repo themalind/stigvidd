@@ -91,7 +91,7 @@ public class TrailServiceTests
         // Assert
         result.Success.Should().BeFalse();
         result.Message.Should().NotBeNull();
-        result.Message!.StatusCode.Should().Be(404);
+        result.Message.StatusCode.Should().Be(404);
     }
 
     [Fact]
@@ -108,7 +108,7 @@ public class TrailServiceTests
         // Assert
         result.Success.Should().BeTrue();
         result.Value.Should().NotBeNull();
-        result.Value!.Identifier.Should().Be(Utilities.Identifiers.Trail4);
+        result.Value.Identifier.Should().Be(Utilities.Identifiers.Trail4);
     }
 
     [Fact]
@@ -125,7 +125,7 @@ public class TrailServiceTests
         // Assert
         result.Success.Should().BeFalse();
         result.Message.Should().NotBeNull();
-        result.Message!.StatusCode.Should().Be(404);
+        result.Message.StatusCode.Should().Be(404);
     }
 
     [Fact]
@@ -142,7 +142,7 @@ public class TrailServiceTests
         // Assert
         result.Success.Should().BeFalse();
         result.Message.Should().NotBeNull();
-        result.Message!.StatusCode.Should().Be(500);
+        result.Message.StatusCode.Should().Be(500);
     }
 
     [Fact]
@@ -176,7 +176,7 @@ public class TrailServiceTests
         // Assert
         result.Success.Should().BeFalse();
         result.Message.Should().NotBeNull();
-        result.Message!.StatusCode.Should().Be(404);
+        result.Message.StatusCode.Should().Be(404);
     }
 
     [Fact]
@@ -193,7 +193,7 @@ public class TrailServiceTests
         // Assert
         result.Success.Should().BeTrue();
         result.Value.Should().NotBeNull();
-        result.Value!.Name.Should().Be("Test Trail");
+        result.Value.Name.Should().Be("Test Trail");
     }
 
     [Fact]
@@ -230,7 +230,8 @@ public class TrailServiceTests
         var result = await Build(mediaUpload: mediaUpload).AddTrailAsync(request, Utilities.Stubs.FakeFile(), Utilities.Stubs.TwoImages(), "user-id", TestContext.Current.CancellationToken);
 
         // Assert
-        result.Message!.StatusCode.Should().Be(400);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(400);
         mediaUpload.Verify(m => m.ProcessAndUploadAsync(It.IsAny<Stream>(), It.IsAny<string>(), It.IsAny<ImageProcessingOptions>()), Times.Never);
     }
 
@@ -248,7 +249,7 @@ public class TrailServiceTests
         // Assert
         result.Success.Should().BeFalse();
         result.Message.Should().NotBeNull();
-        result.Message!.StatusCode.Should().Be(500);
+        result.Message.StatusCode.Should().Be(500);
     }
 
     [Fact]
@@ -266,7 +267,7 @@ public class TrailServiceTests
         // Assert
         result.Success.Should().BeFalse();
         result.Message.Should().NotBeNull();
-        result.Message!.StatusCode.Should().Be(500);
+        result.Message.StatusCode.Should().Be(500);
         webDav.Verify(w => w.DeleteFileAsync(It.IsAny<string>()), Times.Never);
     }
 
@@ -287,7 +288,7 @@ public class TrailServiceTests
         // Assert
         result.Success.Should().BeFalse();
         result.Message.Should().NotBeNull();
-        result.Message!.StatusCode.Should().Be(500);
+        result.Message.StatusCode.Should().Be(500);
         webDav.Verify(w => w.DeleteFileAsync("symbols/symbol.jpg"), Times.Once);
     }
 
@@ -307,7 +308,8 @@ public class TrailServiceTests
 
         // Assert
         result.Success.Should().BeFalse();
-        result.Message!.StatusCode.Should().Be(500);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(500);
         webDav.Verify(w => w.DeleteFileAsync("symbols/symbol.jpg"), Times.Once);
     }
 
@@ -325,7 +327,7 @@ public class TrailServiceTests
         // Assert
         result.Success.Should().BeFalse();
         result.Message.Should().NotBeNull();
-        result.Message!.StatusCode.Should().Be(500);
+        result.Message.StatusCode.Should().Be(500);
     }
 
     [Fact]
@@ -347,7 +349,8 @@ public class TrailServiceTests
         var result = await Build(repo, webDav, mediaUpload).AddTrailAsync(ValidRequest(), Utilities.Stubs.FakeFile(), Utilities.Stubs.TwoImages(), "user-id", TestContext.Current.CancellationToken);
 
         // Assert
-        result.Message!.StatusCode.Should().Be(500);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(500);
         webDav.Verify(w => w.DeleteFileAsync("symbols/symbol.jpg"), Times.Once);
         webDav.Verify(w => w.DeleteFileAsync("trails/img1.jpg"), Times.Once);
         webDav.Verify(w => w.DeleteFileAsync("trails/img2.jpg"), Times.Once);
@@ -380,7 +383,8 @@ public class TrailServiceTests
         capturedTrail.TrailImages.Should().HaveCount(2);
         capturedTrail.TrailImages.Select(i => i.ImageUrl).Should().NotContain("symbols/symbol.jpg");
         // The path is persisted, so it has to carry the schema's SRID, not the NTS default of 0.
-        capturedTrail.GeoPath!.SRID.Should().Be(GeoPointFactory.Wgs84Srid);
+        capturedTrail.GeoPath.Should().NotBeNull();
+        capturedTrail.GeoPath.SRID.Should().Be(GeoPointFactory.Wgs84Srid);
     }
 
     [Fact]
@@ -441,7 +445,7 @@ public class TrailServiceTests
         // Assert
         result.Success.Should().BeFalse();
         result.Message.Should().NotBeNull();
-        result.Message!.StatusCode.Should().Be(500);
+        result.Message.StatusCode.Should().Be(500);
     }
 
     [Fact]
@@ -479,7 +483,7 @@ public class TrailServiceTests
         // Assert
         result.Success.Should().BeFalse();
         result.Message.Should().NotBeNull();
-        result.Message!.StatusCode.Should().Be(500);
+        result.Message.StatusCode.Should().Be(500);
     }
 
     [Fact]
@@ -747,8 +751,9 @@ public class TrailServiceTests
         // Assert
         result.Success.Should().BeTrue();
         result.Value.Should().ContainSingle();
-        result.Value.First().Image.Should().NotBeNull();
-        result.Value.First().Image!.ImageUrl.Should().Be("http://stigvidd.se/testing/trails/img.jpg");
+        var image = result.Value.First().Image;
+        image.Should().NotBeNull();
+        image.ImageUrl.Should().Be("http://stigvidd.se/testing/trails/img.jpg");
     }
 
     [Fact]

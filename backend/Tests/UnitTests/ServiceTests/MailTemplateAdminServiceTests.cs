@@ -90,7 +90,8 @@ public class MailTemplateAdminServiceTests
         // Assert - refused, because this template would fail to render and the mail would
         // simply never arrive. For verify-email that is nobody being able to register.
         result.IsFailure.Should().BeTrue();
-        result.Message!.StatusCode.Should().Be(400);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(400);
         result.Message.ResultMessage.Should().Contain("{{NickNmae}}");
 
         repo.Verify(r => r.UpdateAsync(
@@ -117,7 +118,8 @@ public class MailTemplateAdminServiceTests
 
         // Assert
         result.Success.Should().BeTrue();
-        result.Value!.MissingTokens.Should().Contain("VerificationUrl");
+        result.Value.Should().NotBeNull();
+        result.Value.MissingTokens.Should().Contain("VerificationUrl");
         result.Value.UnknownTokens.Should().BeEmpty();
     }
 
@@ -148,7 +150,8 @@ public class MailTemplateAdminServiceTests
         var result = await Build(repo).UpdateAsync(Identifier, request, TestContext.Current.CancellationToken);
 
         result.IsFailure.Should().BeTrue();
-        result.Message!.ResultMessage.Should().Contain("{{Nonsense}}");
+        result.Message.Should().NotBeNull();
+        result.Message.ResultMessage.Should().Contain("{{Nonsense}}");
     }
 
     [Fact]
@@ -166,7 +169,8 @@ public class MailTemplateAdminServiceTests
         var result = await Build(repo).UpdateAsync(Identifier, request, TestContext.Current.CancellationToken);
 
         result.Success.Should().BeTrue();
-        result.Value!.Purpose.Should().BeNull();
+        result.Value.Should().NotBeNull();
+        result.Value.Purpose.Should().BeNull();
         result.Value.UnknownTokens.Should().BeEmpty();
 
         // The distinction the editor needs: no token list because nothing declares this key,
@@ -198,7 +202,8 @@ public class MailTemplateAdminServiceTests
 
         // Key and Language identify the calling code. The repository signature does not even
         // accept them, which is the point.
-        result.Value!.Key.Should().Be("verify-email");
+        result.Value.Should().NotBeNull();
+        result.Value.Key.Should().Be("verify-email");
         result.Value.Language.Should().Be("sv");
     }
 
@@ -212,7 +217,8 @@ public class MailTemplateAdminServiceTests
         var result = await Build(repo).UpdateAsync("nope", Update("s", "<p>h</p>", "t"), TestContext.Current.CancellationToken);
 
         result.IsFailure.Should().BeTrue();
-        result.Message!.StatusCode.Should().Be(404);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(404);
     }
 
     [Fact]
@@ -230,7 +236,8 @@ public class MailTemplateAdminServiceTests
         var result = await Build(repo).PreviewAsync(Identifier, request, TestContext.Current.CancellationToken);
 
         result.Success.Should().BeTrue();
-        result.Value!.Subject.Should().Be("Hej Ralf");
+        result.Value.Should().NotBeNull();
+        result.Value.Subject.Should().Be("Hej Ralf");
         result.Value.BodyHtml.Should().Contain("Hej Ralf");
         result.Value.BodyHtml.Should().Contain("https://stigvidd.se/api/v1/Account/verify-email?token=");
         result.Value.BodyText.Should().Contain("402913");
@@ -257,7 +264,8 @@ public class MailTemplateAdminServiceTests
         var result = await Build(repo).PreviewAsync(Identifier, request, TestContext.Current.CancellationToken);
 
         result.IsFailure.Should().BeTrue();
-        result.Message!.StatusCode.Should().Be(400);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(400);
         result.Message.ResultMessage.Should().Contain("NickNmae");
     }
 
@@ -273,7 +281,8 @@ public class MailTemplateAdminServiceTests
 
         result.Success.Should().BeTrue();
 
-        var tokens = result.Value!.Tokens.ToDictionary(token => token.Name, token => token.IsUsed);
+        result.Value.Should().NotBeNull();
+        var tokens = result.Value.Tokens.ToDictionary(token => token.Name, token => token.IsUsed);
         tokens["NickName"].Should().BeTrue();
         tokens["VerificationUrl"].Should().BeFalse();
         tokens["VerificationCode"].Should().BeFalse();

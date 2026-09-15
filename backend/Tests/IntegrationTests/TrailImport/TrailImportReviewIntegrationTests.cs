@@ -112,7 +112,8 @@ public class TrailImportReviewIntegrationTests : IClassFixture<StigViddWebApplic
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        result.Value!.TotalCount.Should().Be(3);
+        result.Value.Should().NotBeNull();
+        result.Value.TotalCount.Should().Be(3);
         result.Value.HasMore.Should().BeFalse();
 
         result.Value.Items.Select(p => p.Confidence).Should()
@@ -139,7 +140,8 @@ public class TrailImportReviewIntegrationTests : IClassFixture<StigViddWebApplic
         var result = await repository.GetProposalsAsync(sessionId, null, null, 1, 50, TestContext.Current.CancellationToken);
 
         // Assert
-        var proposal = result.Value!.Items.Single();
+        result.Value.Should().NotBeNull();
+        var proposal = result.Value.Items.Single();
 
         proposal.NearestTrailName.Should().Be("Tiveden");
         proposal.NearestTrailId.Should().Be(TivedenId);
@@ -165,7 +167,8 @@ public class TrailImportReviewIntegrationTests : IClassFixture<StigViddWebApplic
             sessionId, MatchConfidence.Certain, null, 1, 50, TestContext.Current.CancellationToken);
 
         // Assert
-        result.Value!.Items.Select(p => p.FeatureName).Should()
+        result.Value.Should().NotBeNull();
+        result.Value.Items.Select(p => p.FeatureName).Should()
             .ContainInOrder("Brämhult", "Kröcklings hage", "Vänga mosse");
     }
 
@@ -185,7 +188,8 @@ public class TrailImportReviewIntegrationTests : IClassFixture<StigViddWebApplic
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        result.Value!.Items.Should().ContainSingle().Which.FeatureName.Should().Be("Osäker");
+        result.Value.Should().NotBeNull();
+        result.Value.Items.Should().ContainSingle().Which.FeatureName.Should().Be("Osäker");
     }
 
     [Fact]
@@ -203,9 +207,11 @@ public class TrailImportReviewIntegrationTests : IClassFixture<StigViddWebApplic
         var second = await repository.GetProposalsAsync(sessionId, null, null, 2, 2, TestContext.Current.CancellationToken);
 
         // Assert
-        first.Value!.Items.Should().HaveCount(2);
+        first.Value.Should().NotBeNull();
+        first.Value.Items.Should().HaveCount(2);
         first.Value.HasMore.Should().BeTrue();
-        second.Value!.Items.Should().HaveCount(1);
+        second.Value.Should().NotBeNull();
+        second.Value.Items.Should().HaveCount(1);
         second.Value.HasMore.Should().BeFalse();
     }
 
@@ -225,7 +231,8 @@ public class TrailImportReviewIntegrationTests : IClassFixture<StigViddWebApplic
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        result.Value!.Total.Should().Be(3);
+        result.Value.Should().NotBeNull();
+        result.Value.Total.Should().Be(3);
         result.Value.Certain.Should().Be(2);
         result.Value.Unmatched.Should().Be(1);
         result.Value.Medium.Should().Be(0);
@@ -554,7 +561,8 @@ public class TrailImportReviewIntegrationTests : IClassFixture<StigViddWebApplic
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        result.Value!.Found.Should().Be(2);
+        result.Value.Should().NotBeNull();
+        result.Value.Found.Should().Be(2);
         result.Value.WithoutSuggestion.Should().Be(1);
     }
 
@@ -633,7 +641,8 @@ public class TrailImportReviewIntegrationTests : IClassFixture<StigViddWebApplic
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        result.Value!.Name.Should().Be("Tiveden");
+        result.Value.Should().NotBeNull();
+        result.Value.Name.Should().Be("Tiveden");
         result.Value.GeoPath.Should().NotBeNull();
         result.Value.TrailLength.Should().BeGreaterThan(0);
     }

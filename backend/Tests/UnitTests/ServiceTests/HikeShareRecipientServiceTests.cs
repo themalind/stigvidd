@@ -182,7 +182,7 @@ public class HikeShareRecipientServiceTests
 
         // Assert
         projection.Should().NotBeNull();
-        var response = projection!.Compile().Invoke(SharedHikeRow(allowResharing));
+        var response = projection.Compile().Invoke(SharedHikeRow(allowResharing));
         response.AllowResharing.Should().Be(allowResharing);
     }
 
@@ -731,7 +731,7 @@ public class HikeShareRecipientServiceTests
         // way cannot pass it on, because only the owner may grant that permission
         result.Success.Should().BeTrue();
         saved.Should().NotBeNull();
-        saved!.AllowResharing.Should().BeFalse();
+        saved.AllowResharing.Should().BeFalse();
     }
 
     [Fact]
@@ -1295,7 +1295,8 @@ public class HikeShareRecipientServiceTests
         // Assert
         result.Success.Should().BeTrue();
         result.Message.Should().BeNull();
-        result.Value!.HikeIdentifier.Should().Be("hike-1");
+        result.Value.Should().NotBeNull();
+        result.Value.HikeIdentifier.Should().Be("hike-1");
         result.Value.Description.Should().Be("A lovely hike");
         result.Value.AllowResharing.Should().BeTrue();
     }

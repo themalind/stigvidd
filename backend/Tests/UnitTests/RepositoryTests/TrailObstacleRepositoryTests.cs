@@ -490,13 +490,16 @@ public class TrailObstacleRepositoryTests : TestBase
 
         var categorized = await repo.GetTrailObstacleByIdentifierAsync(Obstacle1Identifier, TestContext.Current.CancellationToken);
         categorized.IsSuccess.Should().BeTrue();
-        categorized.Value!.Description.Should().BeEmpty();
+        categorized.Value.Should().NotBeNull();
+        categorized.Value.Description.Should().BeEmpty();
         categorized.Value.IssueType.Should().Be(TrailIssueType.FallenTree);
 
         // Other keeps its description
         var other = await repo.GetTrailObstacleByIdentifierAsync(OtherObstacleIdentifier, TestContext.Current.CancellationToken);
         other.IsSuccess.Should().BeTrue();
-        other.Value!.Description.Should().Be(otherBefore.Value!.Description);
+        other.Value.Should().NotBeNull();
+        otherBefore.Value.Should().NotBeNull();
+        other.Value.Description.Should().Be(otherBefore.Value.Description);
     }
 
     [Fact]
@@ -514,7 +517,9 @@ public class TrailObstacleRepositoryTests : TestBase
         result.IsSuccess.Should().BeTrue();
 
         var untouched = await repo.GetTrailObstacleByIdentifierAsync(Obstacle2Identifier, TestContext.Current.CancellationToken);
-        untouched.Value!.Description.Should().Be(before.Value!.Description);
+        untouched.Value.Should().NotBeNull();
+        before.Value.Should().NotBeNull();
+        untouched.Value.Description.Should().Be(before.Value.Description);
 
         var vote = await repo.GetSolvedVoteByObstacleIdAndUserIdAsync(ObstacleId2, UserId1, TestContext.Current.CancellationToken);
         vote.IsSuccess.Should().BeTrue();

@@ -211,25 +211,15 @@ public class HikeService : IHikeService
             return Result.Fail<HikeResponse>(new Message(403, "Hike does not belong to the user"));
 
 
+        // A missing name keeps the current one; the optional fields are replaced, so null clears them.
         if (!string.IsNullOrEmpty(name))
         {
             hikeResult.Value.Name = name;
         }
 
-        if (!string.IsNullOrEmpty(description))
-        {
-            hikeResult.Value.Description = description;
-        }
-
-        if (!string.IsNullOrEmpty(gettingThere))
-        {
-            hikeResult.Value.GettingThere = gettingThere;
-        }
-
-        if (!string.IsNullOrEmpty(parkingInfo))
-        {
-            hikeResult.Value.ParkingInfo = parkingInfo;
-        }
+        hikeResult.Value.Description = string.IsNullOrWhiteSpace(description) ? null : description;
+        hikeResult.Value.GettingThere = string.IsNullOrWhiteSpace(gettingThere) ? null : gettingThere;
+        hikeResult.Value.ParkingInfo = string.IsNullOrWhiteSpace(parkingInfo) ? null : parkingInfo;
 
         await _hikeRepository.UpdateHikeAsync(hikeResult.Value, ctoken);
 

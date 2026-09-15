@@ -214,7 +214,8 @@ public class TrailObstaclesControllerIntegrationTests : IClassFixture<StigViddWe
         var obstacles = await client.GetFromJsonAsync<List<TrailObstacleResponse>>(
             $"/api/v1/trailobstacles/trail/{TivedenIdentifier}", TestContext.Current.CancellationToken);
 
-        var created = obstacles!.Single(o => o.Description == obstacle.Description);
+        obstacles.Should().NotBeNull();
+        var created = obstacles.Single(o => o.Description == obstacle.Description);
         created.IncidentLatitude.Should().Be(57.7291353665m);
         created.IncidentLongitude.Should().Be(12.8382551042m);
     }

@@ -240,7 +240,7 @@ public class HikeSharesControllerTests : IClassFixture<StigViddWebApplicationFac
         // Assert — the choice belongs to this one share and reaches the recipient unchanged
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         pending.Should().NotBeNull();
-        pending!.AllowResharing.Should().Be(allowResharing);
+        pending.AllowResharing.Should().Be(allowResharing);
     }
 
     #endregion

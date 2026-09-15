@@ -223,17 +223,18 @@ export default function SharedHikeDetails({
             </ScrollView>
             {onAccept && onReject ? (
               <View style={s.buttonGroup}>
-                <Button style={s.button} mode="contained" onPress={onAccept} disabled={isPending} loading={isPending}>
-                  <View style={s.buttonContent}>
-                    <Icon color={theme.colors.onPrimary} size={20} source="check" />
-                    <Text style={{ color: theme.colors.onPrimary }}>{t("hike.accept")}</Text>
-                  </View>
+                <Button
+                  style={s.button}
+                  mode="contained"
+                  icon="check"
+                  onPress={onAccept}
+                  disabled={isPending}
+                  loading={isPending}
+                >
+                  {t("hike.accept")}
                 </Button>
-                <Button style={s.button} mode="outlined" onPress={onReject} disabled={isPending}>
-                  <View style={s.buttonContent}>
-                    <Icon size={20} source="close" />
-                    <Text>{t("hike.reject")}</Text>
-                  </View>
+                <Button style={s.button} mode="outlined" icon="close" onPress={onReject} disabled={isPending}>
+                  {t("hike.reject")}
                 </Button>
               </View>
             ) : (
@@ -245,22 +246,17 @@ export default function SharedHikeDetails({
                 )}
                 <View style={s.buttonGroup}>
                   {sharedHike.allowResharing && (
-                    <Button style={s.button} mode="contained" onPress={() => setShowShareModal(true)}>
-                      <View style={s.buttonContent}>
-                        <Icon color={theme.colors.onPrimary} size={20} source="share" />
-                        <Text style={{ color: theme.colors.onPrimary }}>{t("common.share")}</Text>
-                      </View>
+                    <Button style={s.button} mode="contained" icon="share" onPress={() => setShowShareModal(true)}>
+                      {t("common.share")}
                     </Button>
                   )}
                   <Button
                     style={sharedHike.allowResharing ? s.button : s.singleButton}
                     mode="outlined"
+                    icon="delete"
                     onPress={handeleDelete}
                   >
-                    <View style={s.buttonContent}>
-                      <Icon size={20} source="delete" />
-                      <Text>{t("common.delete")}</Text>
-                    </View>
+                    {t("common.delete")}
                   </Button>
                 </View>
               </>
@@ -412,10 +408,6 @@ const s = StyleSheet.create({
   button: {
     flex: 1,
     borderRadius: BORDER_RADIUS,
-  },
-  buttonContent: {
-    gap: 5,
-    flexDirection: "row",
   },
   loadingContainer: {
     minHeight: HEIGHT * 0.5,

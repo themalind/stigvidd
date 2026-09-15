@@ -137,7 +137,7 @@ public class MailTemplatesControllerIntegrationTests : IClassFixture<StigViddWeb
             TestContext.Current.CancellationToken);
 
         templates.Should().NotBeNull();
-        templates!.Should().Contain(template => template.Identifier == VerifyEmailIdentifier);
+        templates.Should().Contain(template => template.Identifier == VerifyEmailIdentifier);
         templates.Single(template => template.Identifier == VerifyEmailIdentifier)
             .IsKnown.Should().BeTrue("verify-email is declared in the catalogue");
     }
@@ -154,7 +154,7 @@ public class MailTemplatesControllerIntegrationTests : IClassFixture<StigViddWeb
             TestContext.Current.CancellationToken);
 
         template.Should().NotBeNull();
-        template!.Key.Should().Be("verify-email");
+        template.Key.Should().Be("verify-email");
         template.Purpose.Should().NotBeNullOrWhiteSpace();
         template.Tokens.Select(token => token.Name)
             .Should().BeEquivalentTo(["NickName", "VerificationUrl", "VerificationCode"]);
@@ -186,7 +186,8 @@ public class MailTemplatesControllerIntegrationTests : IClassFixture<StigViddWeb
         var reread = await AdminClient().GetFromJsonAsync<MailTemplateResponse>(
             $"{Route}/{VerifyEmailIdentifier}", TestContext.Current.CancellationToken);
 
-        reread!.Subject.Should().Be("Bekräfta din e-postadress, {{NickName}}");
+        reread.Should().NotBeNull();
+        reread.Subject.Should().Be("Bekräfta din e-postadress, {{NickName}}");
 
         SeedTemplate();
     }
@@ -211,7 +212,8 @@ public class MailTemplatesControllerIntegrationTests : IClassFixture<StigViddWeb
         var reread = await AdminClient().GetFromJsonAsync<MailTemplateResponse>(
             $"{Route}/{VerifyEmailIdentifier}", TestContext.Current.CancellationToken);
 
-        reread!.BodyHtml.Should().NotContain("NickNmae");
+        reread.Should().NotBeNull();
+        reread.BodyHtml.Should().NotContain("NickNmae");
     }
 
     [Fact]
@@ -231,7 +233,8 @@ public class MailTemplatesControllerIntegrationTests : IClassFixture<StigViddWeb
         var updated = await response.Content.ReadFromJsonAsync<MailTemplateResponse>(
             TestContext.Current.CancellationToken);
 
-        updated!.MissingTokens.Should().Contain("VerificationUrl");
+        updated.Should().NotBeNull();
+        updated.MissingTokens.Should().Contain("VerificationUrl");
 
         SeedTemplate();
     }
@@ -280,12 +283,14 @@ public class MailTemplatesControllerIntegrationTests : IClassFixture<StigViddWeb
         var preview = await response.Content.ReadFromJsonAsync<MailTemplatePreviewResponse>(
             TestContext.Current.CancellationToken);
 
-        preview!.Subject.Should().Be("Hej Ralf");
+        preview.Should().NotBeNull();
+        preview.Subject.Should().Be("Hej Ralf");
 
         var reread = await AdminClient().GetFromJsonAsync<MailTemplateResponse>(
             $"{Route}/{VerifyEmailIdentifier}", TestContext.Current.CancellationToken);
 
-        reread!.Subject.Should().Be("Bekräfta din e-postadress hos Stigvidd");
+        reread.Should().NotBeNull();
+        reread.Subject.Should().Be("Bekräfta din e-postadress hos Stigvidd");
     }
 
     [Fact]

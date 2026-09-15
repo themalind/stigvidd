@@ -64,7 +64,8 @@ public class AdminContentReportsControllerIntegrationTests : IClassFixture<StigV
 
         response.StatusCode.Should().Be(HttpStatusCode.Created);
         var created = await response.Content.ReadFromJsonAsync<ContentReportResponse>(TestContext.Current.CancellationToken);
-        return created!.Identifier;
+        created.Should().NotBeNull();
+        return created.Identifier;
     }
 
     // limit=0 means Take(0) further down, so the paging has to be explicit or the list comes
@@ -97,7 +98,8 @@ public class AdminContentReportsControllerIntegrationTests : IClassFixture<StigV
             "/api/v1/admin/content-reports/reports", TestContext.Current.CancellationToken);
 
         // Assert
-        queue!.TotalCount.Should().Be(1);
+        queue.Should().NotBeNull();
+        queue.TotalCount.Should().Be(1);
         var row = queue.Items.Single();
         row.Status.Should().Be(nameof(ReportStatus.Pending));
         row.HideOutcome.Should().Be(nameof(ReportHideOutcome.Hidden));
@@ -126,7 +128,8 @@ public class AdminContentReportsControllerIntegrationTests : IClassFixture<StigV
         // Arrange
         var reportIdentifier = await ReportAsync(OtherReviewOnTiveden);
         var hidden = await PublicReviewsAsync();
-        hidden!.Reviews.Should().NotContain(r => r.Identifier == OtherReviewOnTiveden);
+        hidden.Should().NotBeNull();
+        hidden.Reviews.Should().NotContain(r => r.Identifier == OtherReviewOnTiveden);
 
         // Act
         var response = await Admin().PostAsJsonAsync(
@@ -138,7 +141,8 @@ public class AdminContentReportsControllerIntegrationTests : IClassFixture<StigV
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
         var restored = await PublicReviewsAsync();
-        restored!.Reviews.Should().Contain(r => r.Identifier == OtherReviewOnTiveden);
+        restored.Should().NotBeNull();
+        restored.Reviews.Should().Contain(r => r.Identifier == OtherReviewOnTiveden);
     }
 
     [Fact]
@@ -156,7 +160,8 @@ public class AdminContentReportsControllerIntegrationTests : IClassFixture<StigV
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         var detail = await response.Content.ReadFromJsonAsync<ContentReportDetailResponse>(TestContext.Current.CancellationToken);
-        detail!.Report.Status.Should().Be(nameof(ReportStatus.Upheld));
+        detail.Should().NotBeNull();
+        detail.Report.Status.Should().Be(nameof(ReportStatus.Upheld));
         detail.Report.DecisionNote.Should().Be("Breaks the rules");
         detail.AuthorStrikes.Should().Be(1);
         detail.Report.ContentStillExists.Should().BeFalse();
@@ -212,8 +217,10 @@ public class AdminContentReportsControllerIntegrationTests : IClassFixture<StigV
             "/api/v1/admin/content-reports/counts", TestContext.Current.CancellationToken);
 
         // Assert
-        before!.Pending.Should().Be(1);
-        after!.Pending.Should().Be(0);
+        before.Should().NotBeNull();
+        before.Pending.Should().Be(1);
+        after.Should().NotBeNull();
+        after.Pending.Should().Be(0);
         after.Dismissed.Should().Be(1);
     }
 
@@ -293,7 +300,8 @@ public class AdminContentReportsControllerIntegrationTests : IClassFixture<StigV
             "/api/v1/admin/content-reports/authors", TestContext.Current.CancellationToken);
 
         // Assert
-        var author = authors!.Items.Should().ContainSingle().Subject;
+        authors.Should().NotBeNull();
+        var author = authors.Items.Should().ContainSingle().Subject;
         author.NickName.Should().Be("SkogsGreven");
         author.Strikes.Should().Be(1);
     }
@@ -318,8 +326,10 @@ public class AdminContentReportsControllerIntegrationTests : IClassFixture<StigV
             "/api/v1/admin/content-reports/authors", TestContext.Current.CancellationToken);
 
         // Assert
-        beforeDecision!.Items.Should().BeEmpty();
-        afterDismissal!.Items.Should().BeEmpty();
+        beforeDecision.Should().NotBeNull();
+        beforeDecision.Items.Should().BeEmpty();
+        afterDismissal.Should().NotBeNull();
+        afterDismissal.Items.Should().BeEmpty();
     }
 
     [Fact]
@@ -338,7 +348,8 @@ public class AdminContentReportsControllerIntegrationTests : IClassFixture<StigV
             "/api/v1/admin/content-reports/reporters", TestContext.Current.CancellationToken);
 
         // Assert
-        var reporter = reporters!.Items.Should().ContainSingle().Subject;
+        reporters.Should().NotBeNull();
+        var reporter = reporters.Items.Should().ContainSingle().Subject;
         reporter.NickName.Should().Be("VandrarVennen");
         reporter.Total.Should().Be(1);
         reporter.Dismissed.Should().Be(1);

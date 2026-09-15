@@ -54,7 +54,8 @@ public class EmailVerificationTokenRepositoryTests : TestBase
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        result.Value!.Id.Should().Be(SeededUserId);
+        result.Value.Should().NotBeNull();
+        result.Value.Id.Should().Be(SeededUserId);
     }
 
     [Fact]
@@ -100,8 +101,9 @@ public class EmailVerificationTokenRepositoryTests : TestBase
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        result.Value!.User.Should().NotBeNull();
-        result.Value!.User!.Id.Should().Be(SeededUserId);
+        result.Value.Should().NotBeNull();
+        result.Value.User.Should().NotBeNull();
+        result.Value.User.Id.Should().Be(SeededUserId);
     }
 
     [Fact]
@@ -115,7 +117,8 @@ public class EmailVerificationTokenRepositoryTests : TestBase
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        result.Value!.ConsumedAt.Should().NotBeNull();
+        result.Value.Should().NotBeNull();
+        result.Value.ConsumedAt.Should().NotBeNull();
     }
 
     [Fact]
@@ -131,7 +134,8 @@ public class EmailVerificationTokenRepositoryTests : TestBase
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        result.Value!.Id.Should().Be(2);
+        result.Value.Should().NotBeNull();
+        result.Value.Id.Should().Be(2);
     }
 
     [Fact]
@@ -177,7 +181,7 @@ public class EmailVerificationTokenRepositoryTests : TestBase
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        result.Value!.Should().Be(3);
+        result.Value.Should().Be(3);
 
         using var db = await factory.CreateDbContextAsync(TestContext.Current.CancellationToken);
         db.EmailVerificationTokens.Single(t => t.Id == 1).Attempts.Should().Be(3);

@@ -44,8 +44,9 @@ public class ContentReportRepositoryTests : TestBase
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        result.Value!.ModerationState.Should().Be(ModerationState.HiddenPendingReview);
-        result.Value!.ContentIdentifier.Should().Be(HiddenReviewIdentifier);
+        result.Value.Should().NotBeNull();
+        result.Value.ModerationState.Should().Be(ModerationState.HiddenPendingReview);
+        result.Value.ContentIdentifier.Should().Be(HiddenReviewIdentifier);
     }
 
     [Fact]
@@ -72,8 +73,9 @@ public class ContentReportRepositoryTests : TestBase
             ReportedContentType.Review, VisibleReviewIdentifier, TestContext.Current.CancellationToken);
 
         // Act
+        content.Value.Should().NotBeNull();
         var result = await repository.AddReportAsync(
-            ReportFor(content.Value!.ContentId, VisibleReviewIdentifier), hideContent: true, TestContext.Current.CancellationToken);
+            ReportFor(content.Value.ContentId, VisibleReviewIdentifier), hideContent: true, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -96,8 +98,9 @@ public class ContentReportRepositoryTests : TestBase
             ReportedContentType.Review, VisibleReviewIdentifier, TestContext.Current.CancellationToken);
 
         // Act
+        content.Value.Should().NotBeNull();
         var result = await repository.AddReportAsync(
-            ReportFor(content.Value!.ContentId, VisibleReviewIdentifier), hideContent: false, TestContext.Current.CancellationToken);
+            ReportFor(content.Value.ContentId, VisibleReviewIdentifier), hideContent: false, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -273,7 +276,8 @@ public class ContentReportRepositoryTests : TestBase
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        result.Value!.ReportsSettled.Should().Be(3);
+        result.Value.Should().NotBeNull();
+        result.Value.ReportsSettled.Should().Be(3);
 
         using var context = await factory.CreateDbContextAsync(TestContext.Current.CancellationToken);
         var reports = await context.ContentReports.ToListAsync(TestContext.Current.CancellationToken);
@@ -299,7 +303,8 @@ public class ContentReportRepositoryTests : TestBase
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        result.Value!.DeletedImageUrls.Should().BeEquivalentTo([
+        result.Value.Should().NotBeNull();
+        result.Value.DeletedImageUrls.Should().BeEquivalentTo([
             "https://inkaben.se/stigvidd/mock/review-tiveden-1.jpg",
             "https://inkaben.se/stigvidd/mock/review-tiveden-2.jpg",
         ]);
@@ -324,7 +329,8 @@ public class ContentReportRepositoryTests : TestBase
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        result.Value!.DeletedImageUrls.Should().BeEmpty();
+        result.Value.Should().NotBeNull();
+        result.Value.DeletedImageUrls.Should().BeEmpty();
 
         using var context = await factory.CreateDbContextAsync(TestContext.Current.CancellationToken);
         var obstacleGone = !await context.TrailObstacles
@@ -350,7 +356,8 @@ public class ContentReportRepositoryTests : TestBase
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        result.Value!.AppliedStatus.Should().Be(ReportStatus.Dismissed);
+        result.Value.Should().NotBeNull();
+        result.Value.AppliedStatus.Should().Be(ReportStatus.Dismissed);
 
         using var context = await factory.CreateDbContextAsync(TestContext.Current.CancellationToken);
         var review = await context.Reviews
@@ -385,7 +392,8 @@ public class ContentReportRepositoryTests : TestBase
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        result.Value!.AppliedStatus.Should().Be(ReportStatus.ContentExpired);
+        result.Value.Should().NotBeNull();
+        result.Value.AppliedStatus.Should().Be(ReportStatus.ContentExpired);
 
         using var context = await factory.CreateDbContextAsync(TestContext.Current.CancellationToken);
         var report = await context.ContentReports.SingleAsync(TestContext.Current.CancellationToken);
@@ -475,7 +483,8 @@ public class ContentReportRepositoryTests : TestBase
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        result.Value!.Items.Should().ContainSingle()
+        result.Value.Should().NotBeNull();
+        result.Value.Items.Should().ContainSingle()
             .Which.ContentStillExists.Should().BeTrue();
     }
 
@@ -492,8 +501,10 @@ public class ContentReportRepositoryTests : TestBase
             ReportStatus.Upheld, null, null, 1, 25, TestContext.Current.CancellationToken);
 
         // Assert
-        pending.Value!.TotalCount.Should().Be(2);
-        upheld.Value!.TotalCount.Should().Be(0);
+        pending.Value.Should().NotBeNull();
+        pending.Value.TotalCount.Should().Be(2);
+        upheld.Value.Should().NotBeNull();
+        upheld.Value.TotalCount.Should().Be(0);
     }
 
     // The nickname is read off the id where the user is still there, so a rename does not
@@ -520,7 +531,8 @@ public class ContentReportRepositoryTests : TestBase
         var result = await Build(factory).GetPagedAsync(null, null, null, 1, 25, TestContext.Current.CancellationToken);
 
         // Assert — user 3 is SkogsGreven in the seed
-        result.Value!.Items.Should().ContainSingle()
+        result.Value.Should().NotBeNull();
+        result.Value.Items.Should().ContainSingle()
             .Which.AuthorNickName.Should().Be("SkogsGreven");
     }
 
@@ -535,7 +547,8 @@ public class ContentReportRepositoryTests : TestBase
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        result.Value![ReportStatus.Pending].Should().Be(2);
+        result.Value.Should().NotBeNull();
+        result.Value[ReportStatus.Pending].Should().Be(2);
         result.Value[ReportStatus.Upheld].Should().Be(0);
     }
 
@@ -579,7 +592,8 @@ public class ContentReportRepositoryTests : TestBase
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        var reporter = result.Value!.Items.Should().ContainSingle().Subject;
+        result.Value.Should().NotBeNull();
+        var reporter = result.Value.Items.Should().ContainSingle().Subject;
         reporter.NickName.Should().Be("VandrarVennen");
         reporter.Total.Should().Be(3);
         reporter.Pending.Should().Be(1);
@@ -604,7 +618,8 @@ public class ContentReportRepositoryTests : TestBase
         var result = await Build(factory).GetReporterStatisticsAsync(1, 20, TestContext.Current.CancellationToken);
 
         // Assert
-        result.Value!.Items.Select(r => r.ReporterUserId).Should().ContainInOrder(3, 2, 4);
+        result.Value.Should().NotBeNull();
+        result.Value.Items.Select(r => r.ReporterUserId).Should().ContainInOrder(3, 2, 4);
     }
 
     // A deleted account has ReporterUserId nulled by the FK, and a row nobody is behind
@@ -622,10 +637,11 @@ public class ContentReportRepositoryTests : TestBase
         var result = await Build(factory).GetReporterStatisticsAsync(1, 20, TestContext.Current.CancellationToken);
 
         // Assert
-        var reporter = result.Value!.Items.Should().ContainSingle().Subject;
+        result.Value.Should().NotBeNull();
+        var reporter = result.Value.Items.Should().ContainSingle().Subject;
         reporter.ReporterUserId.Should().Be(2);
         reporter.Total.Should().Be(1);
-        result.Value!.TotalCount.Should().Be(1);
+        result.Value.TotalCount.Should().Be(1);
     }
 
     [Fact]
@@ -641,9 +657,10 @@ public class ContentReportRepositoryTests : TestBase
         var result = await Build(factory).GetReporterStatisticsAsync(1, 1, TestContext.Current.CancellationToken);
 
         // Assert
-        result.Value!.Items.Should().ContainSingle();
-        result.Value!.TotalCount.Should().Be(3);
-        result.Value!.HasMore.Should().BeTrue();
+        result.Value.Should().NotBeNull();
+        result.Value.Items.Should().ContainSingle();
+        result.Value.TotalCount.Should().Be(3);
+        result.Value.HasMore.Should().BeTrue();
     }
 
     // The rule the strike count rests on: one decision settles every report on the same
@@ -661,7 +678,8 @@ public class ContentReportRepositoryTests : TestBase
         var result = await Build(factory).GetAuthorStatisticsAsync(1, 20, TestContext.Current.CancellationToken);
 
         // Assert
-        var author = result.Value!.Items.Should().ContainSingle().Subject;
+        result.Value.Should().NotBeNull();
+        var author = result.Value.Items.Should().ContainSingle().Subject;
         author.NickName.Should().Be("SkogsGreven");
         author.Strikes.Should().Be(1);
     }
@@ -680,7 +698,8 @@ public class ContentReportRepositoryTests : TestBase
         var result = await Build(factory).GetAuthorStatisticsAsync(1, 20, TestContext.Current.CancellationToken);
 
         // Assert
-        result.Value!.Items.Should().ContainSingle().Which.Strikes.Should().Be(2);
+        result.Value.Should().NotBeNull();
+        result.Value.Items.Should().ContainSingle().Which.Strikes.Should().Be(2);
     }
 
     [Fact]
@@ -697,7 +716,8 @@ public class ContentReportRepositoryTests : TestBase
         var result = await Build(factory).GetAuthorStatisticsAsync(1, 20, TestContext.Current.CancellationToken);
 
         // Assert
-        result.Value!.Items.Should().ContainSingle().Which.Strikes.Should().Be(1);
+        result.Value.Should().NotBeNull();
+        result.Value.Items.Should().ContainSingle().Which.Strikes.Should().Be(1);
     }
 
     [Fact]
@@ -714,8 +734,9 @@ public class ContentReportRepositoryTests : TestBase
         var result = await Build(factory).GetAuthorStatisticsAsync(1, 20, TestContext.Current.CancellationToken);
 
         // Assert
-        result.Value!.Items.Select(a => a.Strikes).Should().ContainInOrder(3, 1);
-        result.Value!.Items.First().AuthorUserId.Should().Be(4);
+        result.Value.Should().NotBeNull();
+        result.Value.Items.Select(a => a.Strikes).Should().ContainInOrder(3, 1);
+        result.Value.Items.First().AuthorUserId.Should().Be(4);
     }
 
     // Reading the snapshot alone would show the name the author had when the report was
@@ -731,7 +752,8 @@ public class ContentReportRepositoryTests : TestBase
         var result = await Build(factory).GetAuthorStatisticsAsync(1, 20, TestContext.Current.CancellationToken);
 
         // Assert
-        result.Value!.Items.Should().ContainSingle().Which.NickName.Should().Be("SkogsGreven");
+        result.Value.Should().NotBeNull();
+        result.Value.Items.Should().ContainSingle().Which.NickName.Should().Be("SkogsGreven");
     }
 
     [Fact]
@@ -745,6 +767,7 @@ public class ContentReportRepositoryTests : TestBase
         var result = await Build(factory).GetAuthorStatisticsAsync(1, 20, TestContext.Current.CancellationToken);
 
         // Assert
-        result.Value!.Items.Should().ContainSingle().Which.NickName.Should().Be("GoneAuthor");
+        result.Value.Should().NotBeNull();
+        result.Value.Items.Should().ContainSingle().Which.NickName.Should().Be("GoneAuthor");
     }
 }

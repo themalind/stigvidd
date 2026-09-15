@@ -191,17 +191,9 @@ export default function LoginScreen({ showBackButton = false }: { showBackButton
                   {loginError}
                 </Text>
               ) : null}
-              <Pressable style={{ flexDirection: "row" }} hitSlop={12} onPress={() => setVisible(true)}>
-                <Text style={[s.linkText, { color: theme.colors.onSurface }]}>{t("auth.forgotPassword")} </Text>
-                <Text
-                  style={[
-                    s.linkText,
-                    {
-                      color: theme.colors.tertiary,
-                    },
-                  ]}
-                >
-                  {t("auth.resetHere")}
+              <Pressable hitSlop={12} onPress={() => setVisible(true)}>
+                <Text style={[s.linkText, { color: theme.colors.onSurface }]}>
+                  {t("auth.forgotPassword")} <Text style={{ color: theme.colors.tertiary }}>{t("auth.resetHere")}</Text>
                 </Text>
               </Pressable>
               <Link style={[s.linkText, { color: theme.colors.onSurface }]} replace href="./register">
@@ -272,6 +264,7 @@ const s = StyleSheet.create({
   linkText: {
     fontWeight: 600,
     fontSize: 15,
+    textAlign: "center",
   },
   text: {
     fontWeight: 400,
