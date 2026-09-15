@@ -138,7 +138,8 @@ public class TrailImportControllerIntegrationTests : IClassFixture<StigViddWebAp
 
         // Assert
         created.StatusCode.Should().Be(HttpStatusCode.Created);
-        session!.Status.Should().Be(nameof(ImportSessionStatus.Uploaded));
+        session.Should().NotBeNull();
+        session.Status.Should().Be(nameof(ImportSessionStatus.Uploaded));
         session.FileName.Should().Be("spar_leder.json");
         session.FileHash.Should().HaveLength(64);
         session.FileSizeBytes.Should().BeGreaterThan(0);
@@ -147,7 +148,8 @@ public class TrailImportControllerIntegrationTests : IClassFixture<StigViddWebAp
         var listed = await client.GetFromJsonAsync<IReadOnlyCollection<TrailImportSessionResponse>>(
             $"{Base}/sessions", TestContext.Current.CancellationToken);
 
-        listed!.Select(s => s.Id).Should().Contain(session.Id);
+        listed.Should().NotBeNull();
+        listed.Select(s => s.Id).Should().Contain(session.Id);
 
         // The upload wrote a real file; deleting the session is what removes it.
         var deleted = await client.DeleteAsync($"{Base}/sessions/{session.Id}", TestContext.Current.CancellationToken);
@@ -170,7 +172,9 @@ public class TrailImportControllerIntegrationTests : IClassFixture<StigViddWebAp
 
         // Assert
         second.StatusCode.Should().Be(HttpStatusCode.Created);
-        secondSession!.DuplicateOf.Should().Contain(firstSession!.Identifier);
+        secondSession.Should().NotBeNull();
+        firstSession.Should().NotBeNull();
+        secondSession.DuplicateOf.Should().Contain(firstSession.Identifier);
 
         await client.DeleteAsync($"{Base}/sessions/{firstSession.Id}", TestContext.Current.CancellationToken);
         await client.DeleteAsync($"{Base}/sessions/{secondSession.Id}", TestContext.Current.CancellationToken);
@@ -199,7 +203,8 @@ public class TrailImportControllerIntegrationTests : IClassFixture<StigViddWebAp
         var session = await created.Content.ReadFromJsonAsync<TrailImportSessionResponse>(TestContext.Current.CancellationToken);
 
         // Act
-        var first = await client.PostAsync($"{Base}/sessions/{session!.Id}/analyze", null, TestContext.Current.CancellationToken);
+        session.Should().NotBeNull();
+        var first = await client.PostAsync($"{Base}/sessions/{session.Id}/analyze", null, TestContext.Current.CancellationToken);
         var second = await client.PostAsync($"{Base}/sessions/{session.Id}/analyze", null, TestContext.Current.CancellationToken);
 
         // Assert
@@ -223,8 +228,9 @@ public class TrailImportControllerIntegrationTests : IClassFixture<StigViddWebAp
             $"{Base}/sessions/{sessionId}", TestContext.Current.CancellationToken);
 
         // Assert
-        session!.Counts.Should().NotBeNull();
-        session.Counts!.Total.Should().Be(1);
+        session.Should().NotBeNull();
+        session.Counts.Should().NotBeNull();
+        session.Counts.Total.Should().Be(1);
         session.Counts.Medium.Should().Be(1);
         session.Counts.Pending.Should().Be(1);
     }
@@ -284,7 +290,8 @@ public class TrailImportControllerIntegrationTests : IClassFixture<StigViddWebAp
             $"{Base}/sessions/{sessionId}/proposals/{proposalId}/preview", TestContext.Current.CancellationToken);
 
         // Assert
-        preview!.FeatureCoordinates.Should().HaveCount(2);
+        preview.Should().NotBeNull();
+        preview.FeatureCoordinates.Should().HaveCount(2);
         preview.FeatureCoordinates[0].Should().Equal(12.805, 57.621);
         preview.FeatureLengthKm.Should().BeGreaterThan(0);
 
@@ -314,7 +321,8 @@ public class TrailImportControllerIntegrationTests : IClassFixture<StigViddWebAp
 
         // Assert — the line is there to place the feature against, and the flag is what
         // stops the view reading it as a match the reviewer may accept.
-        preview!.TrailId.Should().Be(TivedenId);
+        preview.Should().NotBeNull();
+        preview.TrailId.Should().Be(TivedenId);
         preview.TrailCoordinates.Should().NotBeEmpty();
         preview.TrailIsNearestOnly.Should().BeTrue();
     }

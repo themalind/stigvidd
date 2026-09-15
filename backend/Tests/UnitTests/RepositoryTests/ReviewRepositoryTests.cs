@@ -283,7 +283,8 @@ public class ReviewRepositoryTests : TestBase
         // Arrange — user 2 (VandrarVennen) wrote review 1, the only seeded review with images
         var repo = new ReviewRepository(CreateSeededFactory(), NullLogger<ReviewRepository>.Instance);
         var before = await repo.GetReviewByIdentifierAsync(Review1Identifier, VandrarVennenIdentifier, TestContext.Current.CancellationToken);
-        before.Value!.TrailReview.Should().NotBeNull();
+        before.Value.Should().NotBeNull();
+        before.Value.TrailReview.Should().NotBeNull();
         before.Value.ReviewImages.Should().NotBeEmpty();
 
         // Act
@@ -294,7 +295,8 @@ public class ReviewRepositoryTests : TestBase
 
         var after = await repo.GetReviewByIdentifierAsync(Review1Identifier, VandrarVennenIdentifier, TestContext.Current.CancellationToken);
         after.IsSuccess.Should().BeTrue();
-        after.Value!.Rating.Should().Be(before.Value.Rating);
+        after.Value.Should().NotBeNull();
+        after.Value.Rating.Should().Be(before.Value.Rating);
         after.Value.TrailReview.Should().BeNull();
         after.Value.ReviewImages.Should().BeNullOrEmpty();
     }
@@ -314,7 +316,9 @@ public class ReviewRepositoryTests : TestBase
 
         var after = await repo.GetReviewByIdentifierAsync(Review5Identifier, KattletenIdentifier, TestContext.Current.CancellationToken);
         after.IsSuccess.Should().BeTrue();
-        after.Value!.TrailReview.Should().Be(before.Value!.TrailReview);
+        after.Value.Should().NotBeNull();
+        before.Value.Should().NotBeNull();
+        after.Value.TrailReview.Should().Be(before.Value.TrailReview);
         after.Value.Rating.Should().Be(before.Value.Rating);
     }
 }

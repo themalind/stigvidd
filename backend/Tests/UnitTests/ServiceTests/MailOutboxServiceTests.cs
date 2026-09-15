@@ -171,7 +171,8 @@ public class MailOutboxServiceTests
 
         // Assert
         result.Success.Should().BeFalse();
-        result.Message!.StatusCode.Should().Be(400);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(400);
         outbox.Verify(r => r.AddAsync(It.IsAny<OutboxEmail>(), It.IsAny<CancellationToken>()), Times.Never);
         queue.Enqueued.Should().BeEmpty();
     }
@@ -190,7 +191,8 @@ public class MailOutboxServiceTests
 
         // Assert
         result.Success.Should().BeFalse();
-        result.Message!.ResultMessage.Should().Contain("NickName");
+        result.Message.Should().NotBeNull();
+        result.Message.ResultMessage.Should().Contain("NickName");
         outbox.Verify(r => r.AddAsync(It.IsAny<OutboxEmail>(), It.IsAny<CancellationToken>()), Times.Never);
         queue.Enqueued.Should().BeEmpty();
     }
@@ -210,7 +212,8 @@ public class MailOutboxServiceTests
 
         // Assert
         result.Success.Should().BeFalse();
-        result.Message!.StatusCode.Should().Be(404);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(404);
         queue.Enqueued.Should().BeEmpty();
     }
 
@@ -226,7 +229,8 @@ public class MailOutboxServiceTests
         var result = await Build(templates: templates).EnqueueAsync("welcome", Recipient, Model(), TestContext.Current.CancellationToken);
 
         // Assert
-        result.Message!.StatusCode.Should().Be(500);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(500);
     }
 
     [Fact]
@@ -275,7 +279,8 @@ public class MailOutboxServiceTests
             .EnqueueAsync("welcome", Recipient, Model(), TestContext.Current.CancellationToken);
 
         // Assert
-        result.Message!.StatusCode.Should().Be(500);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(500);
         queue.Enqueued.Should().BeEmpty();
     }
 
@@ -297,6 +302,7 @@ public class MailOutboxServiceTests
         await Build(outbox: outbox).EnqueueAsync("welcome", Recipient, Model(), TestContext.Current.CancellationToken, toName: "Ralf Lindberg");
 
         // Assert
-        saved!.ToName.Should().Be("Ralf Lindberg");
+        saved.Should().NotBeNull();
+        saved.ToName.Should().Be("Ralf Lindberg");
     }
 }

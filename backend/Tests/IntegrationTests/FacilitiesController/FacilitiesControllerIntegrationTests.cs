@@ -76,7 +76,7 @@ public class FacilitiesControllerIntegrationTests : IClassFixture<StigViddWebApp
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         facility.Should().NotBeNull();
-        facility!.Identifier.Should().Be(Facility1Identifier);
+        facility.Identifier.Should().Be(Facility1Identifier);
         facility.Name.Should().Be("Grillplats Tiveden");
     }
 

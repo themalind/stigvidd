@@ -66,7 +66,8 @@ public class ModerationVisibilityRepositoryTests : TestBase
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        result.Value!.Items.Should().Contain([Review1Identifier, Review8Identifier]);
+        result.Value.Should().NotBeNull();
+        result.Value.Items.Should().Contain([Review1Identifier, Review8Identifier]);
         result.Value.TotalCount.Should().Be(2);
     }
 
@@ -82,7 +83,8 @@ public class ModerationVisibilityRepositoryTests : TestBase
 
         // Assert — both, or the paging lies about how many pages there are
         result.IsSuccess.Should().BeTrue();
-        result.Value!.Items.Should().NotContain(Review1Identifier);
+        result.Value.Should().NotBeNull();
+        result.Value.Items.Should().NotContain(Review1Identifier);
         result.Value.Items.Should().Contain(Review8Identifier);
         result.Value.TotalCount.Should().Be(1);
     }
@@ -261,6 +263,7 @@ public class ModerationVisibilityRepositoryTests : TestBase
             .SingleAsync(o => o.Identifier == Obstacle3Identifier, TestContext.Current.CancellationToken);
 
         // Assert
-        obstacle.Trail!.Identifier.Should().Be(TangaledenIdentifier);
+        obstacle.Trail.Should().NotBeNull();
+        obstacle.Trail.Identifier.Should().Be(TangaledenIdentifier);
     }
 }

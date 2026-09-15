@@ -53,7 +53,8 @@ public class MailOutboxRepositoryTests : TestBase
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        result.Value!.Status.Should().Be(OutboxEmailStatus.Sending);
+        result.Value.Should().NotBeNull();
+        result.Value.Status.Should().Be(OutboxEmailStatus.Sending);
     }
 
     [Fact]
@@ -135,7 +136,8 @@ public class MailOutboxRepositoryTests : TestBase
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        result.Value!.Status.Should().Be(OutboxEmailStatus.Pending);
+        result.Value.Should().NotBeNull();
+        result.Value.Status.Should().Be(OutboxEmailStatus.Pending);
         result.Value.Attempts.Should().Be(attemptsSoFar + 1);
         result.Value.NextAttemptAt.Should().BeCloseTo(before.AddMinutes(expectedMinutes), TimeSpan.FromSeconds(30));
     }
@@ -151,7 +153,8 @@ public class MailOutboxRepositoryTests : TestBase
         var result = await repo.MarkFailedAsync(1, "still refused", permanent: false, MaxAttempts, TestContext.Current.CancellationToken);
 
         // Assert
-        result.Value!.Status.Should().Be(OutboxEmailStatus.Failed);
+        result.Value.Should().NotBeNull();
+        result.Value.Status.Should().Be(OutboxEmailStatus.Failed);
         result.Value.Attempts.Should().Be(MaxAttempts);
         result.Value.LastError.Should().Be("still refused");
     }
@@ -168,7 +171,8 @@ public class MailOutboxRepositoryTests : TestBase
         var result = await repo.MarkFailedAsync(1, "550: no such mailbox", permanent: true, MaxAttempts, TestContext.Current.CancellationToken);
 
         // Assert
-        result.Value!.Status.Should().Be(OutboxEmailStatus.Failed);
+        result.Value.Should().NotBeNull();
+        result.Value.Status.Should().Be(OutboxEmailStatus.Failed);
         result.Value.Attempts.Should().Be(1);
     }
 

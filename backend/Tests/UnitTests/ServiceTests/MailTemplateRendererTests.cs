@@ -53,7 +53,8 @@ public class MailTemplateRendererTests
         var result = Build().Render(template, model);
 
         // Assert
-        result.Value!.BodyText.Should().Be("Hej Ralf. Vi ses, Ralf!");
+        result.Value.Should().NotBeNull();
+        result.Value.BodyText.Should().Be("Hej Ralf. Vi ses, Ralf!");
     }
 
     [Fact]
@@ -67,7 +68,8 @@ public class MailTemplateRendererTests
         var result = Build().Render(template, model);
 
         // Assert
-        result.Value!.BodyText.Should().Be("Hej Ralf");
+        result.Value.Should().NotBeNull();
+        result.Value.BodyText.Should().Be("Hej Ralf");
     }
 
     [Fact]
@@ -81,7 +83,8 @@ public class MailTemplateRendererTests
         var result = Build().Render(template, model);
 
         // Assert
-        result.Value!.BodyText.Should().Be("Hej Ralf");
+        result.Value.Should().NotBeNull();
+        result.Value.BodyText.Should().Be("Hej Ralf");
     }
 
     [Fact]
@@ -113,7 +116,8 @@ public class MailTemplateRendererTests
 
         // Assert
         result.Success.Should().BeTrue();
-        result.Value!.BodyText.Should().Be("Hej !");
+        result.Value.Should().NotBeNull();
+        result.Value.BodyText.Should().Be("Hej !");
     }
 
     [Fact]
@@ -131,7 +135,8 @@ public class MailTemplateRendererTests
         var result = Build().Render(template, model);
 
         // Assert
-        result.Value!.BodyHtml.Should().NotContain("<script>");
+        result.Value.Should().NotBeNull();
+        result.Value.BodyHtml.Should().NotContain("<script>");
         result.Value.BodyHtml.Should().Be("<p>Hej &lt;script&gt;alert(&#39;x&#39;)&lt;/script&gt;</p>");
         result.Value.BodyText.Should().Be("Hej <script>alert('x')</script>");
     }
@@ -150,7 +155,8 @@ public class MailTemplateRendererTests
         var result = Build().Render(template, model);
 
         // Assert
-        result.Value!.Subject.Should().NotContain("\r").And.NotContain("\n");
+        result.Value.Should().NotBeNull();
+        result.Value.Subject.Should().NotContain("\r").And.NotContain("\n");
         result.Value.Subject.Should().Be("Hej Ralf  Bcc: someone@example.com");
         result.Value.BodyText.Should().Contain("\r\n");
     }
@@ -167,7 +173,8 @@ public class MailTemplateRendererTests
 
         // Assert
         result.Success.Should().BeTrue();
-        result.Value!.BodyText.Should().Be("Hej Ralf");
+        result.Value.Should().NotBeNull();
+        result.Value.BodyText.Should().Be("Hej Ralf");
     }
 
     [Fact]

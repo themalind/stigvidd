@@ -48,14 +48,16 @@ public class GeometrySridIntegrationTests : IClassFixture<StigViddWebApplication
 
         // Act
         var trailPath = (await context.Trails.AsNoTracking()
-            .FirstAsync(t => t.GeoPath != null, ct)).GeoPath!;
+            .FirstAsync(t => t.GeoPath != null, ct)).GeoPath;
         var hikePath = (await context.Hikes.AsNoTracking().FirstAsync(ct)).GeoPath;
         var facilityPoint = (await context.Facilities.AsNoTracking()
-            .FirstAsync(f => f.Coordinates != null, ct)).Coordinates!;
+            .FirstAsync(f => f.Coordinates != null, ct)).Coordinates;
 
         // Assert
+        trailPath.Should().NotBeNull();
         trailPath.SRID.Should().Be(GeoPointFactory.Wgs84Srid);
         hikePath.SRID.Should().Be(GeoPointFactory.Wgs84Srid);
+        facilityPoint.Should().NotBeNull();
         facilityPoint.SRID.Should().Be(GeoPointFactory.Wgs84Srid);
     }
 

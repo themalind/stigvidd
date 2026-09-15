@@ -570,6 +570,6 @@ public class HikeShareServiceTests
         // Assert
         result.Success.Should().BeTrue();
         saved.Should().NotBeNull();
-        saved!.AllowResharing.Should().Be(allowResharing);
+        saved.AllowResharing.Should().Be(allowResharing);
     }
 }

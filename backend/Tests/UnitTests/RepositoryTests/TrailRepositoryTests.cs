@@ -267,8 +267,9 @@ public class TrailRepositoryTests : TestBase
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        result.Value!.First().Identifier.Should().Be("pop-high");
-        result.Value!.Select(x => x.Rating).Should().BeInDescendingOrder();
+        result.Value.Should().NotBeNull();
+        result.Value.First().Identifier.Should().Be("pop-high");
+        result.Value.Select(x => x.Rating).Should().BeInDescendingOrder();
     }
 
     [Fact]
@@ -351,7 +352,8 @@ public class TrailRepositoryTests : TestBase
         // near-constant for anything in the country, which made the ranking rating-only and put
         // "pop-far-great" first.
         result.IsSuccess.Should().BeTrue();
-        result.Value!.First().Should().Be("pop-near-poor");
+        result.Value.Should().NotBeNull();
+        result.Value.First().Should().Be("pop-near-poor");
     }
 
     [Fact]
@@ -372,7 +374,8 @@ public class TrailRepositoryTests : TestBase
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        result.Value!.First().Should().Be("pop-same-great");
+        result.Value.Should().NotBeNull();
+        result.Value.First().Should().Be("pop-same-great");
     }
 
     [Fact]
@@ -445,8 +448,8 @@ public class TrailRepositoryTests : TestBase
         var marker = result.Value.Should().ContainSingle(m => m.Identifier == "geo-trail").Which;
         marker.Lat.Should().NotBeNull();
         marker.Lon.Should().NotBeNull();
-        marker.Lat!.Value.Should().BeApproximately(startLat, 0.0001);
-        marker.Lon!.Value.Should().BeApproximately(startLon, 0.0001);
+        marker.Lat.Value.Should().BeApproximately(startLat, 0.0001);
+        marker.Lon.Value.Should().BeApproximately(startLon, 0.0001);
     }
 
     [Fact]
@@ -578,7 +581,8 @@ public class TrailRepositoryTests : TestBase
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        result.Value!.Name.Should().Be("Renamed Trail");
+        result.Value.Should().NotBeNull();
+        result.Value.Name.Should().Be("Renamed Trail");
         result.Value.TrailLength.Should().Be(42M);
         result.Value.City.Should().Be("NewCity");
     }
@@ -616,9 +620,10 @@ public class TrailRepositoryTests : TestBase
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        result.Value!.VisitorInformation.Should().NotBeNull();
-        result.Value.VisitorInformation!.GettingThere.Should().Be("By bus");
-        result.Value.VisitorInformation!.Parking.Should().Be("Free");
+        result.Value.Should().NotBeNull();
+        result.Value.VisitorInformation.Should().NotBeNull();
+        result.Value.VisitorInformation.GettingThere.Should().Be("By bus");
+        result.Value.VisitorInformation.Parking.Should().Be("Free");
     }
 
     [Fact]
@@ -649,8 +654,9 @@ public class TrailRepositoryTests : TestBase
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        result.Value!.VisitorInformation.Should().NotBeNull();
-        result.Value.VisitorInformation!.GettingThere.Should().Be("Updated");
-        result.Value.VisitorInformation!.WinterMaintenance.Should().BeTrue();
+        result.Value.Should().NotBeNull();
+        result.Value.VisitorInformation.Should().NotBeNull();
+        result.Value.VisitorInformation.GettingThere.Should().Be("Updated");
+        result.Value.VisitorInformation.WinterMaintenance.Should().BeTrue();
     }
 }

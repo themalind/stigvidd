@@ -76,11 +76,13 @@ public class ContentReportsControllerIntegrationTests : IClassFixture<StigViddWe
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Created);
         var report = await response.Content.ReadFromJsonAsync<ContentReportResponse>(TestContext.Current.CancellationToken);
-        report!.HideOutcome.Should().Be(nameof(ReportHideOutcome.Hidden));
+        report.Should().NotBeNull();
+        report.HideOutcome.Should().Be(nameof(ReportHideOutcome.Hidden));
 
         var list = await client.GetFromJsonAsync<PagedReviewResponse>(
             $"/api/v1/Reviews/trail/{TivedenIdentifier}", TestContext.Current.CancellationToken);
-        list!.Reviews.Should().NotContain(r => r.Identifier == OtherReviewOnTivedenIdentifier);
+        list.Should().NotBeNull();
+        list.Reviews.Should().NotContain(r => r.Identifier == OtherReviewOnTivedenIdentifier);
         list.Total.Should().Be(1);
     }
 
@@ -155,7 +157,8 @@ public class ContentReportsControllerIntegrationTests : IClassFixture<StigViddWe
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Created);
         var report = await response.Content.ReadFromJsonAsync<ContentReportResponse>(TestContext.Current.CancellationToken);
-        report!.HideOutcome.Should().Be(nameof(ReportHideOutcome.AlreadyHidden));
+        report.Should().NotBeNull();
+        report.HideOutcome.Should().Be(nameof(ReportHideOutcome.AlreadyHidden));
     }
 
     [Fact]

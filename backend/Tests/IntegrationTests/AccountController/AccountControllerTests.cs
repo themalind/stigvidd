@@ -263,7 +263,7 @@ public class AccountControllerTests : IClassFixture<StigViddWebApplicationFactor
         var mail = db.OutboxEmails.SingleOrDefault(e => e.ToAddress == request.Email);
 
         mail.Should().NotBeNull();
-        mail!.TemplateKey.Should().Be("verify-email");
+        mail.TemplateKey.Should().Be("verify-email");
         mail.Status.Should().Be(OutboxEmailStatus.Pending);
         mail.BodyText.Should().Contain("/api/v1/account/verify-email?token=");
     }
@@ -297,7 +297,8 @@ public class AccountControllerTests : IClassFixture<StigViddWebApplicationFactor
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        response.Content.Headers.ContentType!.MediaType.Should().Be("text/html");
+        response.Content.Headers.ContentType.Should().NotBeNull();
+        response.Content.Headers.ContentType.MediaType.Should().Be("text/html");
 
         _factory.KeycloakAdminMock.Verify(
             k => k.ActivateVerifiedUserAsync(KeycloakSubjectId, It.IsAny<CancellationToken>()),

@@ -61,7 +61,9 @@ public class MailTemplateCatalogTests
         result.Success.Should().BeTrue();
         model.Should().NotBeNull("the verification mail must have been queued for this test to mean anything");
 
-        var declared = Catalog.Find(EmailVerificationService.TemplateKey)!.Tokens.Select(token => token.Name);
+        var template = Catalog.Find(EmailVerificationService.TemplateKey);
+        template.Should().NotBeNull();
+        var declared = template.Tokens.Select(token => token.Name);
 
         model.Keys.Should().BeEquivalentTo(
             declared,

@@ -73,7 +73,8 @@ public class TrailImportServiceTests
 
         // Assert
         result.IsFailure.Should().BeTrue();
-        result.Message!.StatusCode.Should().Be((int)HttpStatusCode.BadRequest);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be((int)HttpStatusCode.BadRequest);
         _fileStore.Verify(f => f.SaveAsync(It.IsAny<Stream>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -121,7 +122,8 @@ public class TrailImportServiceTests
 
         // Assert
         result.Success.Should().BeTrue();
-        result.Value!.DuplicateOf.Should().HaveCount(1);
+        result.Value.Should().NotBeNull();
+        result.Value.DuplicateOf.Should().HaveCount(1);
         result.Value.Status.Should().Be(nameof(ImportSessionStatus.Uploaded));
     }
 
@@ -136,7 +138,8 @@ public class TrailImportServiceTests
         var result = await service.QueueAnalysisAsync(SessionId, force: false, TestContext.Current.CancellationToken);
 
         // Assert
-        result.Message!.StatusCode.Should().Be((int)HttpStatusCode.Conflict);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be((int)HttpStatusCode.Conflict);
         _queue.Verify(q => q.Enqueue(It.IsAny<int>()), Times.Never);
     }
 
@@ -151,7 +154,8 @@ public class TrailImportServiceTests
         var result = await service.QueueAnalysisAsync(SessionId, force: false, TestContext.Current.CancellationToken);
 
         // Assert
-        result.Message!.StatusCode.Should().Be((int)HttpStatusCode.Conflict);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be((int)HttpStatusCode.Conflict);
         _queue.Verify(q => q.Enqueue(It.IsAny<int>()), Times.Never);
     }
 
@@ -166,7 +170,8 @@ public class TrailImportServiceTests
         var result = await service.QueueAnalysisAsync(SessionId, force: false, TestContext.Current.CancellationToken);
 
         // Assert
-        result.Message!.StatusCode.Should().Be((int)HttpStatusCode.Conflict);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be((int)HttpStatusCode.Conflict);
         result.Message.ResultMessage.Should().Contain("no longer on disk");
         _queue.Verify(q => q.Enqueue(It.IsAny<int>()), Times.Never);
     }
@@ -195,7 +200,8 @@ public class TrailImportServiceTests
 
             // Assert
             result.Success.Should().BeTrue();
-            saved!.Status.Should().Be(ImportSessionStatus.Analyzing);
+            saved.Should().NotBeNull();
+            saved.Status.Should().Be(ImportSessionStatus.Analyzing);
             _queue.Verify(q => q.Enqueue(SessionId), Times.Once);
         }
         finally
@@ -216,7 +222,8 @@ public class TrailImportServiceTests
             SessionId, [1], nameof(ProposalDecision.Accept), null, null, null, overrides: null, Reviewer, TestContext.Current.CancellationToken);
 
         // Assert
-        result.Message!.StatusCode.Should().Be((int)HttpStatusCode.Conflict);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be((int)HttpStatusCode.Conflict);
         _repository.Verify(r => r.SetDecisionAsync(It.IsAny<int>(), It.IsAny<IReadOnlyCollection<int>>(),
             It.IsAny<ProposalDecision>(), It.IsAny<int?>(), It.IsAny<TrailSourceLinkRole>(),
             It.IsAny<string>(), It.IsAny<ProposalOverrides?>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
@@ -237,7 +244,8 @@ public class TrailImportServiceTests
             new ProposalOverrides("Bredareds IF Vit", null), Reviewer, TestContext.Current.CancellationToken);
 
         // Assert
-        result.Message!.StatusCode.Should().Be((int)HttpStatusCode.BadRequest);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be((int)HttpStatusCode.BadRequest);
         _repository.Verify(r => r.SetDecisionAsync(It.IsAny<int>(), It.IsAny<IReadOnlyCollection<int>>(),
             It.IsAny<ProposalDecision>(), It.IsAny<int?>(), It.IsAny<TrailSourceLinkRole>(),
             It.IsAny<string>(), It.IsAny<ProposalOverrides?>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
@@ -257,7 +265,8 @@ public class TrailImportServiceTests
             new ProposalOverrides(null, 12.74m), Reviewer, TestContext.Current.CancellationToken);
 
         // Assert
-        result.Message!.StatusCode.Should().Be((int)HttpStatusCode.BadRequest);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be((int)HttpStatusCode.BadRequest);
     }
 
     [Fact]
@@ -274,7 +283,8 @@ public class TrailImportServiceTests
             new ProposalOverrides(null, 0m), Reviewer, TestContext.Current.CancellationToken);
 
         // Assert
-        result.Message!.StatusCode.Should().Be((int)HttpStatusCode.BadRequest);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be((int)HttpStatusCode.BadRequest);
     }
 
     [Fact]
@@ -302,7 +312,8 @@ public class TrailImportServiceTests
 
         // Assert
         result.Success.Should().BeTrue();
-        stored!.Name.Should().Be("Bredareds IF Vit");
+        stored.Should().NotBeNull();
+        stored.Name.Should().Be("Bredareds IF Vit");
         stored.LengthKm.Should().Be(12.74m);
     }
 
@@ -317,7 +328,8 @@ public class TrailImportServiceTests
             SessionId, [1], "Godkänn", null, null, null, overrides: null, Reviewer, TestContext.Current.CancellationToken);
 
         // Assert
-        result.Message!.StatusCode.Should().Be((int)HttpStatusCode.BadRequest);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be((int)HttpStatusCode.BadRequest);
         result.Message.ResultMessage.Should().Contain(nameof(ProposalDecision.Relink));
     }
 
@@ -333,7 +345,8 @@ public class TrailImportServiceTests
             SessionId, [1], nameof(ProposalDecision.Relink), null, null, null, overrides: null, Reviewer, TestContext.Current.CancellationToken);
 
         // Assert
-        result.Message!.StatusCode.Should().Be((int)HttpStatusCode.BadRequest);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be((int)HttpStatusCode.BadRequest);
     }
 
     [Fact]
@@ -351,7 +364,8 @@ public class TrailImportServiceTests
             SessionId, [1], nameof(ProposalDecision.Relink), "okand-led", null, null, overrides: null, Reviewer, TestContext.Current.CancellationToken);
 
         // Assert
-        result.Message!.StatusCode.Should().Be((int)HttpStatusCode.BadRequest);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be((int)HttpStatusCode.BadRequest);
         result.Message.ResultMessage.Should().Contain("okand-led");
     }
 
@@ -369,7 +383,8 @@ public class TrailImportServiceTests
             SessionId, [1, 2, 3], nameof(ProposalDecision.Skip), null, null, null, overrides: null, Reviewer, TestContext.Current.CancellationToken);
 
         // Assert
-        result.Message!.StatusCode.Should().Be((int)HttpStatusCode.BadRequest);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be((int)HttpStatusCode.BadRequest);
         _repository.Verify(r => r.SetDecisionAsync(It.IsAny<int>(), It.IsAny<IReadOnlyCollection<int>>(),
             It.IsAny<ProposalDecision>(), It.IsAny<int?>(), It.IsAny<TrailSourceLinkRole>(),
             It.IsAny<string>(), It.IsAny<ProposalOverrides?>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
@@ -389,7 +404,8 @@ public class TrailImportServiceTests
             SessionId, [1, 2], nameof(ProposalDecision.Accept), null, null, null, overrides: null, Reviewer, TestContext.Current.CancellationToken);
 
         // Assert
-        result.Message!.StatusCode.Should().Be((int)HttpStatusCode.BadRequest);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be((int)HttpStatusCode.BadRequest);
         result.Message.ResultMessage.Should().Contain("no suggested trail");
     }
 
@@ -450,7 +466,8 @@ public class TrailImportServiceTests
             SessionId, [1], nameof(ProposalDecision.Accept), null, "Aggregate", null, overrides: null, Reviewer, TestContext.Current.CancellationToken);
 
         // Assert
-        result.Message!.StatusCode.Should().Be((int)HttpStatusCode.BadRequest);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be((int)HttpStatusCode.BadRequest);
         result.Message.ResultMessage.Should().Contain(nameof(TrailSourceLinkRole.Segment))
             .And.Contain(nameof(TrailSourceLinkRole.Duplicate));
     }
@@ -493,7 +510,8 @@ public class TrailImportServiceTests
             SessionId, [], nameof(ProposalDecision.Skip), null, null, null, overrides: null, Reviewer, TestContext.Current.CancellationToken);
 
         // Assert
-        result.Message!.StatusCode.Should().Be((int)HttpStatusCode.BadRequest);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be((int)HttpStatusCode.BadRequest);
     }
 
     [Fact]
@@ -506,7 +524,8 @@ public class TrailImportServiceTests
         var result = await service.GetProposalsAsync(SessionId, "Kanske", null, 1, 50, TestContext.Current.CancellationToken);
 
         // Assert
-        result.Message!.StatusCode.Should().Be((int)HttpStatusCode.BadRequest);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be((int)HttpStatusCode.BadRequest);
         _repository.Verify(r => r.GetSessionAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -521,7 +540,8 @@ public class TrailImportServiceTests
         var result = await service.DeleteSessionAsync(SessionId, TestContext.Current.CancellationToken);
 
         // Assert
-        result.Message!.StatusCode.Should().Be((int)HttpStatusCode.Conflict);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be((int)HttpStatusCode.Conflict);
         _repository.Verify(r => r.DeleteSessionAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Never);
         _fileStore.Verify(f => f.Delete(It.IsAny<string>()), Times.Never);
     }
@@ -612,7 +632,8 @@ public class TrailImportServiceTests
 
         // Assert
         result.Success.Should().BeTrue();
-        result.Value!.TrailsLinked.Should().Be(1);
+        result.Value.Should().NotBeNull();
+        result.Value.TrailsLinked.Should().Be(1);
         // Linked is not updated: with no stored snapshot the merge may write no field.
         result.Value.TrailsToUpdate.Should().Be(0);
         result.Value.TrailsToCreate.Should().Be(1);
@@ -643,7 +664,8 @@ public class TrailImportServiceTests
 
         // Assert
         result.Success.Should().BeTrue();
-        result.Value!.TrailsLinked.Should().Be(1);
+        result.Value.Should().NotBeNull();
+        result.Value.TrailsLinked.Should().Be(1);
         result.Value.TrailsToUpdate.Should().Be(1);
     }
 
@@ -665,7 +687,8 @@ public class TrailImportServiceTests
         var result = await service.GetDiffAsync(SessionId, TestContext.Current.CancellationToken);
 
         // Assert — only the override on a strong match, not the agreement and not the Medium
-        result.Value!.AgainstStrongMatch.Should().ContainSingle()
+        result.Value.Should().NotBeNull();
+        result.Value.AgainstStrongMatch.Should().ContainSingle()
             .Which.ProposalId.Should().Be(1);
     }
 
@@ -691,7 +714,8 @@ public class TrailImportServiceTests
         var result = await service.GetDiffAsync(SessionId, TestContext.Current.CancellationToken);
 
         // Assert
-        result.Value!.WithoutSegment.Should().ContainSingle()
+        result.Value.Should().NotBeNull();
+        result.Value.WithoutSegment.Should().ContainSingle()
             .Which.TrailId.Should().Be(400);
     }
 
@@ -708,7 +732,8 @@ public class TrailImportServiceTests
         var result = await service.GetDiffAsync(SessionId, TestContext.Current.CancellationToken);
 
         // Assert
-        result.Value!.CanApply.Should().BeFalse();
+        result.Value.Should().NotBeNull();
+        result.Value.CanApply.Should().BeFalse();
         result.Value.BlockedReason.Should().Contain("decided");
     }
 
@@ -725,7 +750,8 @@ public class TrailImportServiceTests
         var result = await service.GetDiffAsync(SessionId, TestContext.Current.CancellationToken);
 
         // Assert
-        result.Value!.CanApply.Should().BeFalse();
+        result.Value.Should().NotBeNull();
+        result.Value.CanApply.Should().BeFalse();
         result.Value.BlockedReason.Should().Contain("already been applied");
     }
 }

@@ -142,7 +142,8 @@ public class TrailImportApplyIntegrationTests : IClassFixture<StigViddWebApplica
 
         // Assert
         result.Success.Should().BeTrue();
-        result.Value!.LinksWritten.Should().Be(1);
+        result.Value.Should().NotBeNull();
+        result.Value.LinksWritten.Should().Be(1);
         result.Value.TrailsUpdated.Should().Be(0);
 
         var after = await context.Trails.AsNoTracking().SingleAsync(t => t.Id == TivedenId, TestContext.Current.CancellationToken);
@@ -176,7 +177,8 @@ public class TrailImportApplyIntegrationTests : IClassFixture<StigViddWebApplica
 
         // Assert
         result.Success.Should().BeTrue();
-        result.Value!.TrailsUpdated.Should().Be(1);
+        result.Value.Should().NotBeNull();
+        result.Value.TrailsUpdated.Should().Be(1);
         result.Value.Conflicts.Should().BeEmpty();
 
         var trail = await context.Trails.AsNoTracking().SingleAsync(t => t.Id == TivedenId, TestContext.Current.CancellationToken);
@@ -207,7 +209,8 @@ public class TrailImportApplyIntegrationTests : IClassFixture<StigViddWebApplica
         var result = await service.ApplyAsync(sessionId, TestContext.Current.CancellationToken);
 
         // Assert
-        var conflict = result.Value!.Conflicts.Should().ContainSingle().Subject;
+        result.Value.Should().NotBeNull();
+        var conflict = result.Value.Conflicts.Should().ContainSingle().Subject;
         conflict.Field.Should().Be("TrailSymbol");
         conflict.Ours.Should().Be("Röd markering");
         conflict.Theirs.Should().Be("Blå markering");
@@ -231,7 +234,8 @@ public class TrailImportApplyIntegrationTests : IClassFixture<StigViddWebApplica
 
         // Assert
         result.Success.Should().BeTrue();
-        result.Value!.TrailsCreated.Should().Be(1);
+        result.Value.Should().NotBeNull();
+        result.Value.TrailsCreated.Should().Be(1);
 
         var trail = await context.Trails.AsNoTracking()
             .SingleAsync(t => t.Name == "Bredareds IF Vit", TestContext.Current.CancellationToken);
@@ -289,7 +293,9 @@ public class TrailImportApplyIntegrationTests : IClassFixture<StigViddWebApplica
 
         // Assert
         second.Success.Should().BeTrue();
-        second.Value!.LinksWritten.Should().Be(first.Value!.LinksWritten);
+        second.Value.Should().NotBeNull();
+        first.Value.Should().NotBeNull();
+        second.Value.LinksWritten.Should().Be(first.Value.LinksWritten);
 
         var links = await context.TrailSourceLinks.AsNoTracking()
             .Where(l => l.Source == Source).ToListAsync(TestContext.Current.CancellationToken);
@@ -311,7 +317,8 @@ public class TrailImportApplyIntegrationTests : IClassFixture<StigViddWebApplica
 
         // Assert
         result.Success.Should().BeFalse();
-        result.Message!.StatusCode.Should().Be(409);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(409);
 
         var session = await context.TrailImportSessions.AsNoTracking()
             .SingleAsync(s => s.Id == sessionId, TestContext.Current.CancellationToken);
@@ -369,7 +376,8 @@ public class TrailImportApplyIntegrationTests : IClassFixture<StigViddWebApplica
 
             // Assert
             refused.Success.Should().BeFalse();
-            refused.Message!.StatusCode.Should().Be(409);
+            refused.Message.Should().NotBeNull();
+            refused.Message.StatusCode.Should().Be(409);
             refused.Message.ResultMessage.Should().Contain("1 decision");
 
             forced.Success.Should().BeTrue();

@@ -584,7 +584,7 @@ public class FacilityServiceTests
         // Assert
         captured.Should().NotBeNull();
         captured.Coordinates.Should().NotBeNull();
-        captured.Coordinates!.X.Should().Be(14.5);
+        captured.Coordinates.X.Should().Be(14.5);
         captured.Coordinates.Y.Should().Be(58.9);
         captured.Coordinates.SRID.Should().Be(4326);
     }

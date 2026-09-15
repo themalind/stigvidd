@@ -54,7 +54,7 @@ public class AdminFacilitiesControllerIntegrationTests : IClassFixture<StigViddW
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         facility.Should().NotBeNull();
-        facility!.Name.Should().Be("Ny grillplats");
+        facility.Name.Should().Be("Ny grillplats");
         facility.FacilityType.Should().Be(1);
     }
 
@@ -174,7 +174,7 @@ public class AdminFacilitiesControllerIntegrationTests : IClassFixture<StigViddW
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         var facility = await response.Content.ReadFromJsonAsync<FacilityResponse>(TestContext.Current.CancellationToken);
         facility.Should().NotBeNull();
-        facility!.Name.Should().Be("Uppdaterat namn");
+        facility.Name.Should().Be("Uppdaterat namn");
     }
 
     [Fact]

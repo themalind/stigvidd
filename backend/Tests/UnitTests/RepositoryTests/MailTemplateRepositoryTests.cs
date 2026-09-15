@@ -45,7 +45,8 @@ public class MailTemplateRepositoryTests : TestBase
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        result.Value!.Language.Should().Be("en");
+        result.Value.Should().NotBeNull();
+        result.Value.Language.Should().Be("en");
         result.Value.Subject.Should().Be("welcome (en)");
     }
 
@@ -90,7 +91,8 @@ public class MailTemplateRepositoryTests : TestBase
 
         // Assert - the languages of one template stay together in the list an operator reads.
         result.IsSuccess.Should().BeTrue();
-        result.Value!.Select(template => $"{template.Key}/{template.Language}")
+        result.Value.Should().NotBeNull();
+        result.Value.Select(template => $"{template.Key}/{template.Language}")
             .Should().Equal("verify-email/sv", "welcome/en", "welcome/sv");
     }
 
@@ -102,7 +104,8 @@ public class MailTemplateRepositoryTests : TestBase
         var result = await repo.GetByIdentifierAsync("template-2", TestContext.Current.CancellationToken);
 
         result.IsSuccess.Should().BeTrue();
-        result.Value!.Language.Should().Be("en");
+        result.Value.Should().NotBeNull();
+        result.Value.Language.Should().Be("en");
     }
 
     [Fact]

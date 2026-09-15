@@ -109,14 +109,14 @@ public class EmailVerificationServiceTests
         stored.Should().NotBeNull();
         model.Should().NotBeNull();
 
-        var rawCode = model!["VerificationCode"];
+        var rawCode = model["VerificationCode"];
         var rawUrl = model["VerificationUrl"];
 
         rawCode.Should().MatchRegex("^[0-9]{6}$");
         rawUrl.Should().StartWith($"{BaseUrl}/api/v1/account/verify-email?token=");
 
         // The point of the design: what is mailed is never what is stored.
-        stored!.CodeHash.Should().NotBe(rawCode);
+        stored.CodeHash.Should().NotBe(rawCode);
         stored.TokenHash.Should().NotBeEmpty();
         rawUrl.Should().NotContain(stored.TokenHash);
     }
@@ -138,7 +138,8 @@ public class EmailVerificationServiceTests
 
         // Assert
         result.Success.Should().BeFalse();
-        result.Message!.StatusCode.Should().Be(500);
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(500);
     }
 
     [Fact]
@@ -165,7 +166,8 @@ public class EmailVerificationServiceTests
             .IssueAndSendAsync(UserId, Email, NickName, BaseUrl, TestContext.Current.CancellationToken);
 
         // Assert
-        model!["VerificationUrl"].Should().StartWith("https://configured.example/api/v1/account/verify-email?token=");
+        model.Should().NotBeNull();
+        model["VerificationUrl"].Should().StartWith("https://configured.example/api/v1/account/verify-email?token=");
     }
 
     // ---- Verifying by link ----------------------------------------------------------
@@ -192,8 +194,14 @@ public class EmailVerificationServiceTests
 
         await Build(tokens, mail: mail).IssueAndSendAsync(UserId, Email, NickName, BaseUrl, TestContext.Current.CancellationToken);
 
-        stored!.User = TestUser();
-        return (stored, model!["VerificationUrl"]!, model["VerificationCode"]!);
+        stored.Should().NotBeNull();
+        stored.User = TestUser();
+        model.Should().NotBeNull();
+        var url = model["VerificationUrl"];
+        var code = model["VerificationCode"];
+        url.Should().NotBeNull();
+        code.Should().NotBeNull();
+        return (stored, url, code);
     }
 
     private static string TokenFromUrl(string url) =>

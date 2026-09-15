@@ -77,7 +77,7 @@ public class CityAreasControllerIntegrationTests : IClassFixture<StigViddWebAppl
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         area.Should().NotBeNull();
-        area!.Identifier.Should().Be(LinkedAreaIdentifier);
+        area.Identifier.Should().Be(LinkedAreaIdentifier);
         area.Name.Should().Be("Dalsjöfors");
         area.Facilities.Should().HaveCount(2);
         area.Trails.Should().ContainSingle(t => t.Name == "Tiveden");
@@ -96,7 +96,7 @@ public class CityAreasControllerIntegrationTests : IClassFixture<StigViddWebAppl
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         area.Should().NotBeNull();
-        area!.Facilities.Should().BeEmpty();
+        area.Facilities.Should().BeEmpty();
         area.Trails.Should().BeEmpty();
     }
 
