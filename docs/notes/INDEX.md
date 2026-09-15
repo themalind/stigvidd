@@ -418,7 +418,8 @@ src/api/generated` then fails with "the generated API client is stale" for reaso
   JPEG symbols `Magick.Native-Q8-x64.dll.so` exports but links statically — so the integration
   suite dies as `Wrong JPEG library version: library is 80, caller expects 62`, as
   `JPEG parameter struct mismatch: library thinks size is 101, caller expects 0`, or as a
-  `double free or corruption (fasttop)` SIGABRT (exit 134) reporting 0 failed tests. It is not
+  `double free or corruption (fasttop)` SIGABRT (exit 134) reporting 0 failed tests (that
+  abort has a second, racy cause — see mod-spatialite-unload-race). The JPEG collision is not
   a race; it reproduces deterministically in `mcr.microsoft.com/dotnet/sdk:10.0`. The fix is
   `Tests/IntegrationTests/MagickPreload.cs`, a `[ModuleInitializer]` that binds the symbols
   before any `SqliteConnection` opens — but binding is lazy and **per-symbol**, so an
@@ -426,6 +427,15 @@ src/api/generated` then fails with "the generated API client is stale" for reaso
   encode -> EXIF APP1 marker (`jpeg_write_marker`, via `TestImages.JpegWithGps`) -> decode
   (`ImageProcessingService.Process`, which is why an imageless AddTrail test 500s). Production
   on PostGIS/Npgsql never loads the extension and is unaffected.
+- [Closing the last SQLite connection unloads mod_spatialite, and a parallel test class loading it again aborts the process](mod-spatialite-unload-race.md) —
+  on Linux the integration suite intermittently dies as `double free or corruption (fasttop)`,
+  exit 134, 0 failed tests, a few seconds in. Every test class's `SeedDatabase()` calls
+  `EnsureDeleted()`, which on in-memory SQLite closes and reopens the connection; the close's
+  `sqlite3_close_v2` dlcloses mod_spatialite, and when the refcount hits zero it races another
+  class's `sqlite3_load_extension` (both threads seen in a `dotnet-dump` of the crash). Fixed in
+  `Tests/IntegrationTests/SqliteProvider.cs` by a never-freed `NativeLibrary.TryLoad("mod_spatialite.so")`
+  that pins it for the process. 3/6 aborts before, 0/10 after, in `mcr.microsoft.com/dotnet/sdk:10.0`
+  at 4 CPUs with solution-level `dotnet test --no-build`; the integration project alone rarely hits it.
 - [The proxy publishes every `*_DOMAIN` as a network alias, so a stack pointed at another environment's service swallows its own request](proxy-aliases-shadow-public-hostnames.md) —
   deploying a partial/staging stack, or any compose stack that borrows another environment's
   Keycloak, OpenObserve or mail server: `docker-compose.yml`'s `proxy` service aliases

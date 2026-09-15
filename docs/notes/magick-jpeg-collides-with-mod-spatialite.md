@@ -37,6 +37,9 @@ which **is** Ubuntu 24.04 — the same distro as CI's `ubuntu-latest`), with
 
 The run-to-run wobble is only which test reaches the bad binding first, not flakiness.
 
+A `double free or corruption (fasttop)` that still appears **with** this preload in place is
+a different cause, and that one is a race: [[mod-spatialite-unload-race]].
+
 ## Binding is lazy and per-symbol, so a preload has to walk every path
 
 [`MagickPreload.cs`](../../backend/Tests/IntegrationTests/MagickPreload.cs) is a Linux-only

@@ -26,15 +26,15 @@ npx tsc --noEmit            # CI does not type-check the app, so run this yourse
 
 ## Layout
 
-| | |
-| --- | --- |
-| `src/app/` | Expo Router routes — one stack per tab under `(tabs)/` |
+|                   |                                                                   |
+| ----------------- | ----------------------------------------------------------------- |
+| `src/app/`        | Expo Router routes — one stack per tab under `(tabs)/`            |
 | `src/components/` | Screens and UI, grouped by feature (`map/`, `trail/`, `auth/`, …) |
-| `src/api/` | Backend calls |
-| `src/services/` | Auth, location tracking, notifications, logging |
-| `src/i18n/` | Swedish and English strings |
-| `src/test/` | Shared test harness |
-| `modules/` | Local native modules (the iOS background-location engine) |
+| `src/api/`        | Backend calls                                                     |
+| `src/services/`   | Auth, location tracking, notifications, logging                   |
+| `src/i18n/`       | Swedish and English strings                                       |
+| `src/test/`       | Shared test harness                                               |
+| `modules/`        | Local native modules (the iOS background-location engine)         |
 
 Behaviour that is easy to break is documented in [docs/](../docs/) — in particular
 [map.md](../docs/map.md), [record-hike.md](../docs/record-hike.md) and
