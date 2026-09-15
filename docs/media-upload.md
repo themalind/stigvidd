@@ -15,7 +15,12 @@ decisions that are easy to break.
 | Request DTO → processing options        | `backend/Core/Services/ImageProcessingOptionsMapper.cs` |
 | WebDAV storage (upload/delete/download) | `backend/Core/Services/WebDavService.cs`                |
 | Media records + presentable URLs        | `backend/Core/Services/MediaService.cs`                 |
-| HTTP endpoints                          | `backend/StigviddAPI/Controllers/MediaController.cs`    |
+| Upload endpoints (trail/facility/symbol) | `backend/StigviddAPI/Controllers/Admin/AdminTrailsController.cs`, `AdminFacilitiesController.cs` |
+| Upload endpoint (review photos)         | `backend/StigviddAPI/Controllers/ReviewsController.cs` (`POST api/v1/reviews`) |
+| Media library + image metadata          | `backend/StigviddAPI/Controllers/Admin/AdminMediaController.cs` |
+| Admin web upload panel                  | `web/src/components/media/media-upload.tsx`, `web/src/pages/media/media-page.tsx` |
+| Admin web upload rules (tested)         | `web/src/lib/media-upload.ts`                           |
+| Admin web staged files across a refresh | `web/src/lib/staged-media.ts`                           |
 
 ## The pipeline at a glance
 
@@ -32,12 +37,50 @@ Two-stage size reduction on purpose: the **client** shrinks first to cut upload
 bandwidth; the **server** re-processes to a canonical, metadata-stripped form it
 controls (never trusting the client's output).
 
+## Where uploads come from
+
+| Caller | Route | WebDAV subdirectory |
+| ------ | ----- | ------------------- |
+| Mobile app, review photos | `POST api/v1/reviews` (multipart) | `reviews` |
+| Admin web, trail gallery | `POST api/v1/admin/trails/{identifier}/images` | `trails` |
+| Admin web, trail symbol | `POST api/v1/admin/trails/{identifier}/symbol` | `symbols` |
+| Admin web, facility gallery | `POST api/v1/admin/facilities/{identifier}/images` | `facilities` |
+
+All four go through `MediaUploadService.ProcessAndUploadAsync`. The admin routes are
+behind the `AdminOnly` policy (see [auth](auth.md)); gallery images are deleted through
+`DELETE api/v1/admin/{trails|facilities}/images/{imageIdentifier}`, and the symbol has no
+delete endpoint.
+
 ## Client: `resizeImage`
 
 Before upload, `resizeImage(uri)` runs an `expo-image-manipulator` pipeline: resize to
 **max width 1080px** (height scales to preserve aspect ratio) and re-encode to **JPEG
 at 0.6 compression**, writing a new file and returning its uri. This is purely a
 bandwidth optimization — the server does the authoritative processing.
+
+## Admin web: the upload panel
+
+Review photos from the app are processed with fixed server-side options
+(`ImageProcessingOptions.StripMetadataOnly` — the app has already resized them); the admin
+dashboard's *Media* page lets the operator choose the options per upload. The panel's decisions live in `web/src/lib/media-upload.ts` so
+they are tested without a file picker:
+
+- **`buildImageOptions`** turns the resolution / quality / format / crop choices into the
+  request's `ImageProcessingOptions`. These are **destructive** — the server resizes,
+  re-encodes and crops before storing, and the original is not kept.
+- **`acceptImages`** drops anything that is not `image/*`; a single-file target (the
+  trail symbol) keeps only the newest file. Cropping is offered only for a single staged
+  file.
+- **`attachedTo`** matches the library's images to the chosen target on owner identifier
+  **and** owner type — a trail symbol carries its trail's identifier, so matching on the
+  id alone would list the symbol among the gallery images with a delete button that has
+  no endpoint.
+
+**Staged files survive a page refresh** (`web/src/lib/staged-media.ts`): the picked bytes
+are copied into IndexedDB (`stigvidd-media`) and the chosen target into localStorage. The
+bytes are stored as an owned `Blob`, not the picked `File` — a `File` is only a reference,
+and after a refresh the upload would stall rather than fail. All of it is best-effort: a
+failing store resolves to "nothing staged" and never blocks an upload.
 
 ## Server: `ImageProcessingService.Process`
 

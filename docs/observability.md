@@ -36,7 +36,8 @@ wrong is "we retained precise location data about identifiable users for two yea
   URL". Get it wrong and every batch POSTs to the org root and OpenObserve
   answers 404 — silently, because export failures never surface as app errors.
   The symptom is simply no data, with a healthy-looking application.
-- **Mobile apps** post logs and RUM **straight from devices** over public HTTPS.
+- **Mobile apps** post logs **straight from devices** over public HTTPS (RUM is designed
+  but not enabled — see below).
   This makes `observatory.<domain>` the first write endpoint in the stack that
   accepts effectively-unauthenticated traffic from the open internet — `media`
   takes public reads but authed writes, `api` requires a Keycloak token, and
@@ -48,7 +49,7 @@ wrong is "we retained precise location data about identifiable users for two yea
   single `curl` rather than an APK. `ZO_CORS_ALLOWED_ORIGINS` already permits the
   web domain, which is what makes a browser-side POST possible at all.
 - Telemetry is **opt-in everywhere**: with the config absent, the backend
-  registers no OpenTelemetry providers at all and the app initialises no SDK.
+  registers no OpenTelemetry providers at all and the app registers no log sink.
   Nothing breaks when observability is unconfigured, or down.
 
 ## What the backend emits
@@ -394,7 +395,7 @@ Worth recording, because it is a real advantage over a SaaS APM:
 
 ## Security posture
 
-The app's RUM client token is **public**: it ships in every APK/IPA and can be
+The app's ingestion token is **public**: it ships in every APK/IPA and can be
 extracted in minutes, and the admin web's ingestion token is more exposed still —
 served in a JS bundle, readable without unpacking anything. There is no way to make
 direct-from-client telemetry not have this property; the question is only how much a

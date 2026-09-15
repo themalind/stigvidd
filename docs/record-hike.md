@@ -403,6 +403,11 @@ than a transient snackbar, while still letting the recording start provisionally
 | `ACCURACY_STALL_MS`    | 12 s                    | No accepted point for this long ⇒ the relaxed gate applies.    |
 | `MOVING_SPEED`         | 0.5 m/s                 | Reported speed above which the halved noise floor applies.     |
 | `MAX_SPEED`            | 10 m/s                  | Plausibility gate between two fixes.                           |
+| `MAX_SPEED_BURST`      | 7 m/s                   | Tighter speed cap for fixes within `BURST_WINDOW`.             |
+| `BURST_WINDOW`         | 5 s                     | Gap below which the burst cap applies instead of `MAX_SPEED`.  |
+| `MAX_FIX_AGE`          | 15 s                    | A fix stamped this long before the start is a stale cached one. |
+| `ANCHOR_ACCURACY`      | 20 m                    | Accuracy a segment's first point needs during warm-up.         |
+| `WARMUP_MS`            | 15 s                    | How long a segment waits for a converged anchor.               |
 | `INACTIVITY_TIMEOUT`   | 60 min                  | Auto-finalize after no movement.                               |
 | `MAX_DURATION`         | 12 h                    | Absolute recording ceiling.                                    |
 | `SAMPLE_INTERVAL`      | 3 s                     | Android-only task cadence (iOS uses `distanceInterval`).       |
