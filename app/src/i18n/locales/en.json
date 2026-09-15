@@ -309,6 +309,8 @@
     "trimRoute": "Trim route",
     "trimHint": "Drag the handles to cut unwanted points from the start or end.",
     "share": "Share",
+    "edit": "Edit",
+    "editTitle": "Edit walk",
     "delete": "Delete",
     "deleteTitle": "Delete walk",
     "deleteConfirm": "Do you want to delete the walk?",

@@ -122,6 +122,14 @@ it("tells an empty list apart from a search that matched nothing", async () => {
   expect(screen.getByText("Prova att ändra dina filter")).toBeTruthy();
 });
 
+it("hides the search and filter controls while there are no walks", async () => {
+  mockGetHikes.mockResolvedValue([]);
+  await show();
+
+  expect(screen.queryByTestId("icon-search")).toBeNull();
+  expect(screen.queryByTestId("icon-filter-list")).toBeNull();
+});
+
 it("searches the walks by name", async () => {
   await show();
 

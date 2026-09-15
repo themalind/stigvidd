@@ -32,7 +32,7 @@ import { Inter_600SemiBold, useFonts } from "@expo-google-fonts/inter";
 import React, { useEffect, useMemo, useRef } from "react";
 import { StyleSheet, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { PaperProvider } from "react-native-paper";
+import { PaperProvider, ThemeProvider as PaperThemeProvider } from "react-native-paper";
 import "react-native-reanimated";
 import { useAuth, useInitAuth } from "@/components/auth/auth-provider";
 
@@ -132,20 +132,23 @@ export default function RootLayout() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <PaperProvider theme={theme}>
-        <ThemeProvider value={theme}>
-          <StatusBar style={statusBarStyle} />
-          <GestureHandlerRootView>
-            <View testID="root-container" style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <ThemeProvider value={theme}>
+        <StatusBar style={statusBarStyle} />
+        <GestureHandlerRootView>
+          <View testID="root-container" style={[styles.container, { backgroundColor: theme.colors.background }]}>
+            <PaperProvider theme={theme}>
               <NotificationHandler />
               <Stack>
                 <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
               </Stack>
+            </PaperProvider>
+            {/* After the portal host, so it is drawn over every modal and dialog. */}
+            <PaperThemeProvider theme={theme}>
               <GlobalSnackbar />
-            </View>
-          </GestureHandlerRootView>
-        </ThemeProvider>
-      </PaperProvider>
+            </PaperThemeProvider>
+          </View>
+        </GestureHandlerRootView>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }

@@ -43,13 +43,16 @@ const s = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    gap: 8,
   },
   rowGap: {
+    flex: 1,
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
   },
   bold: {
+    flexShrink: 1,
     fontWeight: "700",
   },
 });

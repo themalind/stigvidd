@@ -27,6 +27,7 @@ import { useTranslation } from "react-i18next";
 import { Dimensions, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { Button, Divider, Icon, Modal, Portal, Text, useTheme } from "react-native-paper";
 import RoutePreviewMap from "../../map/route-preview-map";
+import EditHikeModal, { EditHikeFormFields } from "./edit-hike-modal";
 
 // The modal opens from more than one tab stack. Each caller passes the follow route in
 // its own stack, so the map opens there and back returns to the screen that opened it —
@@ -44,11 +45,16 @@ interface Props {
 
 const HEIGHT = Dimensions.get("screen").height;
 
-export default function HikeDetails({ visible, hike, onDismiss, hikeFollowRoute }: Props) {
+export default function HikeDetails({ visible, hike: hikeProp, onDismiss, hikeFollowRoute }: Props) {
   const setErrorMsg = useSetAtom(showErrorAtom);
   const setSuccessMsg = useSetAtom(showSuccessAtom);
   const [showOnDeleteDialog, setOnDeleteDialog] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  // The caller's hike can be a stale snapshot (my-hikes keeps the selected one in state),
+  // so the modal shows the API's answer to the last update until the caller passes another hike.
+  const [updatedHike, setUpdatedHike] = useState<Hike | null>(null);
+  const hike = updatedHike?.identifier === hikeProp.identifier ? updatedHike : hikeProp;
 
   const theme = useTheme();
   const { t } = useTranslation();
@@ -80,7 +86,8 @@ export default function HikeDetails({ visible, hike, onDismiss, hikeFollowRoute 
 
   const updateHikeMutation = useMutation({
     mutationFn: (request: UpdateHikeRequest) => updateHike(request),
-    onSuccess: () => {
+    onSuccess: (updated) => {
+      setUpdatedHike(updated);
       queryClient.invalidateQueries({ queryKey: ["hikes", user.data?.identifier] });
     },
     onError: () => {
@@ -122,6 +129,19 @@ export default function HikeDetails({ visible, hike, onDismiss, hikeFollowRoute 
     setOnDeleteDialog(true);
   };
 
+  const handleEdit = (data: EditHikeFormFields) => {
+    updateHikeMutation.mutate(
+      {
+        hikeIdentifier: hike.identifier,
+        name: data.name,
+        gettingThere: data.gettingThere || null,
+        parkingInfo: data.parkingInfo || null,
+        description: data.description || null,
+      },
+      { onSuccess: () => setShowEditModal(false) },
+    );
+  };
+
   return (
     <Portal>
       {visible && <BlurView intensity={100} tint="dark" style={StyleSheet.absoluteFill} />}
@@ -130,9 +150,20 @@ export default function HikeDetails({ visible, hike, onDismiss, hikeFollowRoute 
         onDismiss={onDismiss}
         contentContainerStyle={[s.contentContainerStyle, { backgroundColor: theme.colors.surface }]}
       >
-        <Pressable style={s.closeButton} hitSlop={12} onPress={onDismiss}>
-          <Icon size={24} source="close" color={theme.colors.onSurface} />
-        </Pressable>
+        <View testID="hike-header-actions" style={s.headerActions}>
+          <Pressable
+            testID="hike-edit"
+            hitSlop={12}
+            onPress={() => setShowEditModal(true)}
+            accessibilityRole="button"
+            accessibilityLabel={t("hike.edit")}
+          >
+            <Icon size={24} source="pencil" color={theme.colors.onSurface} />
+          </Pressable>
+          <Pressable hitSlop={12} onPress={onDismiss}>
+            <Icon size={24} source="close" color={theme.colors.onSurface} />
+          </Pressable>
+        </View>
         <View style={s.hikeNameContainer}>
           <View style={s.hikeTitleColumn}>
             <View style={s.hikeTitleRow}>
@@ -145,7 +176,7 @@ export default function HikeDetails({ visible, hike, onDismiss, hikeFollowRoute 
               {t("hike.createdAt")} {formatDate(hike.createdAt)}
             </Text>
           </View>
-          <View style={s.closeButtonSpacer} />
+          <View style={s.headerActionsSpacer} />
         </View>
         <RoutePreviewMap idPrefix="hike-details" path={coordinates} onOpen={openFollowMap} style={s.mapContainer} />
         <View testID="hike-stats" style={[s.statsCard, { backgroundColor: theme.colors.outlineVariant }]}>
@@ -246,20 +277,31 @@ export default function HikeDetails({ visible, hike, onDismiss, hikeFollowRoute 
           }}
           isPending={shareMutation.isPending || updateHikeMutation.isPending}
         />
+        {showEditModal && (
+          <EditHikeModal
+            hike={hike}
+            onDismiss={() => setShowEditModal(false)}
+            onSave={handleEdit}
+            isPending={updateHikeMutation.isPending}
+          />
+        )}
       </Modal>
     </Portal>
   );
 }
 
 const s = StyleSheet.create({
-  closeButton: {
+  headerActions: {
     position: "absolute",
     top: 15,
     right: 15,
     zIndex: 1,
+    flexDirection: "row",
+    gap: 24,
   },
-  closeButtonSpacer: {
-    width: 24,
+  // Two 24px icons and the 24px gap between them.
+  headerActionsSpacer: {
+    width: 72,
   },
   contentContainerStyle: {
     justifyContent: "flex-start",

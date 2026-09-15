@@ -10,15 +10,16 @@ import { AppDefaultTheme } from "@/constants/theme";
 import { Hike } from "@/data/types";
 import { renderWithProviders } from "@/test/render";
 import HikeDetails from "@/components/trail/trail-creator/hike-details";
-import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
+import { act, fireEvent, screen, waitFor, within } from "@testing-library/react-native";
 
 const mockDeleteHike = jest.fn();
+const mockUpdateHike = jest.fn();
 const mockNavigate = jest.fn();
 
 jest.mock("@/api/hikes", () => ({
   deleteHike: (...args: unknown[]) => mockDeleteHike(...args),
   shareHike: jest.fn(),
-  updateHike: jest.fn(),
+  updateHike: (...args: unknown[]) => mockUpdateHike(...args),
   hikeRouteQueryKey: (identifier: string) => ["hike-route", identifier],
 }));
 
@@ -99,6 +100,54 @@ it("deletes only after the walk has been confirmed", async () => {
   await waitFor(() => expect(mockDeleteHike).toHaveBeenCalledWith("hike-1"));
 });
 
+it("renames the walk from the edit form and shows the saved name", async () => {
+  mockUpdateHike.mockImplementation(async (request) => hike({ name: request.name, parkingInfo: request.parkingInfo }));
+  show({ parkingInfo: "Grusplan" });
+
+  fireEvent.press(screen.getByTestId("hike-edit"));
+  expect(screen.getByTestId("edit-name").props.value).toBe("Kvällspromenad");
+  expect(screen.getByTestId("edit-parkingInfo").props.value).toBe("Grusplan");
+
+  fireEvent.changeText(screen.getByTestId("edit-name"), "Morgonrundan");
+  fireEvent.press(screen.getByTestId("edit-hike-save"));
+
+  await waitFor(() =>
+    expect(mockUpdateHike).toHaveBeenCalledWith({
+      hikeIdentifier: "hike-1",
+      name: "Morgonrundan",
+      gettingThere: null,
+      parkingInfo: "Grusplan",
+      description: null,
+    }),
+  );
+  await waitFor(() => expect(screen.queryByTestId("edit-name")).toBeNull());
+  expect(screen.getByText("Morgonrundan")).toBeTruthy();
+});
+
+it("does not save a name shorter than three characters", async () => {
+  show();
+
+  fireEvent.press(screen.getByTestId("hike-edit"));
+  fireEvent.changeText(screen.getByTestId("edit-name"), "Ab");
+  fireEvent.press(screen.getByTestId("edit-hike-save"));
+
+  expect(await screen.findByText("Namnet är för kort. Minst 3 tecken")).toBeTruthy();
+  expect(mockUpdateHike).not.toHaveBeenCalled();
+});
+
+it("keeps the edit form open when the update fails", async () => {
+  mockUpdateHike.mockRejectedValue(new Error("boom"));
+  show();
+
+  fireEvent.press(screen.getByTestId("hike-edit"));
+  fireEvent.changeText(screen.getByTestId("edit-name"), "Morgonrundan");
+  fireEvent.press(screen.getByTestId("edit-hike-save"));
+
+  await waitFor(() => expect(mockUpdateHike).toHaveBeenCalled());
+  expect(screen.getByTestId("edit-name")).toBeTruthy();
+  expect(screen.getByText("Kvällspromenad")).toBeTruthy();
+});
+
 it("keeps the walk when the confirmation is dismissed", () => {
   show();
 
@@ -139,6 +188,15 @@ it("splits the action row evenly and truncates a long name", () => {
   for (const id of ["hike-share", "hike-delete"]) {
     expect(screen.getByTestId(`${id}-container-outer-layer`)).toHaveStyle({ flex: 1 });
   }
+});
+
+// Edit sits beside close in a fixed corner, far enough apart that their 12px hit slops do not overlap.
+it("places the edit button in the header corner, not after the name", () => {
+  show();
+
+  const actions = screen.getByTestId("hike-header-actions");
+  expect(actions).toHaveStyle({ position: "absolute", flexDirection: "row", gap: 24 });
+  expect(within(actions).getByTestId("hike-edit")).toBeTruthy();
 });
 
 it("draws the stats card on the theme's outline colour", () => {

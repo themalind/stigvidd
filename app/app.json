@@ -17,14 +17,16 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.stigvidd.app",
-      "buildNumber": "3",
+      "buildNumber": "4",
       "infoPlist": {
-        "UIBackgroundModes": ["location"],
+        "UIBackgroundModes": [
+          "location"
+        ],
         "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
-      "versionCode": 4,
+      "versionCode": 5,
       "softwareKeyboardLayoutMode": "pan",
       "adaptiveIcon": {
         "backgroundColor": "#68AE82",
@@ -95,7 +97,8 @@
         {
           "photosPermission": "$(PRODUCT_NAME) behöver komma åt dina bilder så att du kan lägga till foton i dina recensioner."
         }
-      ]
+      ],
+      "./plugins/with-transparent-autofill-highlight"
     ],
     "experiments": {
       "typedRoutes": true,
