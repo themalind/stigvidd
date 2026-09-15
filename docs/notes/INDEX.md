@@ -623,3 +623,9 @@ src/api/generated` then fails with "the generated API client is stale" for reaso
   `IgnoreQueryFilters` applies to a **query**, not an entity, which matters where
   `ReviewRepository.UserReviews` is a subquery feeding `Contains` against `ReviewImages` —
   miss it and account deletion silently stops cleaning hidden reviews' files off WebDAV.
+- [The app type check is green locally only because the gitignored expo-env.d.ts pulls in Node's types](app-typecheck-green-locally-because-of-expo-env.md) —
+  `app/tsconfig.json` includes `expo-env.d.ts` and `.expo/types`, which Expo generates and git
+  ignores; `expo/types` brings Node's typings, so `npm run typecheck` / `tsc --noEmit` passes on a
+  dev box and fails on CI's fresh checkout with `TS2304: Cannot find name 'global'` and a `TS2345`
+  on `setImmediate(resolve)` in `logger.test.ts`. Fixed by adding `"node"` to `compilerOptions.types`;
+  to reproduce CI, type-check without those two gitignored files.

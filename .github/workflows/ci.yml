@@ -80,6 +80,7 @@ jobs:
     - name: Type check
       # eslint and jest both type-check nothing, so without this a change that does
       # not compile is green here and red only on the next device build.
+      # A local green tsc is not evidence: see docs/notes/app-typecheck-green-locally-because-of-expo-env.md.
       run: npm run typecheck
     - name: Test
       run: npm test -- --watchAll=false
