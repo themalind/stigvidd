@@ -42,6 +42,280 @@ public class MailOutboxRepositoryTests : TestBase
     private static Action<StigViddDbContext> Seed(params OutboxEmail[] emails) =>
         db => db.OutboxEmails.AddRange(emails);
 
+    // ---- The admin surface ----
+
+    [Theory]
+    [InlineData(OutboxEmailStatus.Failed)]
+    [InlineData(OutboxEmailStatus.Cancelled)]
+    public async Task RequeueAsync_FromASettledStatus_MakesItPendingAndDueNow(OutboxEmailStatus from)
+    {
+        // Arrange
+        var repo = Build(CreateSeededFactory(Seed(
+            MakeEmail(1, from, nextAttemptAt: DateTime.UtcNow.AddHours(3), attempts: MaxAttempts))));
+
+        // Act
+        var result = await repo.RequeueAsync("mail-1", TestContext.Current.CancellationToken);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().NotBeNull();
+        result.Value.Status.Should().Be(OutboxEmailStatus.Pending);
+        result.Value.NextAttemptAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(5));
+    }
+
+    [Fact]
+    public async Task RequeueAsync_ResetsTheAttemptLadder()
+    {
+        // A Failed row sits AT the cap. Leaving Attempts there means the retry buys exactly one
+        // more attempt -- Pending -> Sending -> Failed with no backoff at all -- which is not
+        // what retry means to an operator who has just fixed the mail server.
+        // Arrange
+        var repo = Build(CreateSeededFactory(Seed(
+            MakeEmail(1, OutboxEmailStatus.Failed, attempts: MaxAttempts))));
+
+        // Act
+        var result = await repo.RequeueAsync("mail-1", TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Value.Should().NotBeNull();
+        result.Value.Attempts.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task RequeueAsync_KeepsLastError()
+    {
+        // It is the only record of WHY this failed, and the retry has not produced a new one
+        // yet. MarkSentAsync nulls it on success; MarkFailedAsync overwrites it on the next
+        // failure. Clearing it here destroys the diagnosis for no gain.
+        // Arrange
+        var email = MakeEmail(1, OutboxEmailStatus.Failed, attempts: MaxAttempts);
+        email.LastError = "Connection refused";
+        var repo = Build(CreateSeededFactory(Seed(email)));
+
+        // Act
+        var result = await repo.RequeueAsync("mail-1", TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Value.Should().NotBeNull();
+        result.Value.LastError.Should().Be("Connection refused");
+    }
+
+    [Theory]
+    [InlineData(OutboxEmailStatus.Pending)]
+    [InlineData(OutboxEmailStatus.Sending)]
+    [InlineData(OutboxEmailStatus.Sent)]
+    public async Task RequeueAsync_FromAnyOtherStatus_IsAConflict(OutboxEmailStatus from)
+    {
+        // Sending is the one that matters: a worker holds that row right now, and moving it
+        // back to Pending would make it claimable while it is still being sent -- the same mail
+        // delivered twice, which is exactly what claiming in the database exists to prevent.
+        // Arrange
+        var repo = Build(CreateSeededFactory(Seed(MakeEmail(1, from))));
+
+        // Act
+        var result = await repo.RequeueAsync("mail-1", TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Status.Should().Be(RepositoryResultStatus.Conflict);
+    }
+
+    [Fact]
+    public async Task RequeueAsync_ForAnUnknownIdentifier_IsNotFound()
+    {
+        // Arrange
+        var repo = Build(CreateSeededFactory(Seed(MakeEmail(1, OutboxEmailStatus.Failed))));
+
+        // Act
+        var result = await repo.RequeueAsync("no-such-mail", TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Status.Should().Be(RepositoryResultStatus.NotFound);
+    }
+
+    [Fact]
+    public async Task CancelAsync_WhenPending_StopsIt()
+    {
+        // Arrange
+        var repo = Build(CreateSeededFactory(Seed(MakeEmail(1))));
+
+        // Act
+        var result = await repo.CancelAsync("mail-1", TestContext.Current.CancellationToken);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().NotBeNull();
+        result.Value.Status.Should().Be(OutboxEmailStatus.Cancelled);
+    }
+
+    [Theory]
+    [InlineData(OutboxEmailStatus.Sending)]
+    [InlineData(OutboxEmailStatus.Sent)]
+    [InlineData(OutboxEmailStatus.Failed)]
+    [InlineData(OutboxEmailStatus.Cancelled)]
+    public async Task CancelAsync_FromAnyOtherStatus_IsAConflict(OutboxEmailStatus from)
+    {
+        // Sending especially: the mail may already be on the wire, cancelling cannot un-send it,
+        // and MarkSentAsync has no status guard -- so the dispatcher would overwrite the
+        // cancellation a moment later and the operator would have been told a lie.
+        // Arrange
+        var repo = Build(CreateSeededFactory(Seed(MakeEmail(1, from))));
+
+        // Act
+        var result = await repo.CancelAsync("mail-1", TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Status.Should().Be(RepositoryResultStatus.Conflict);
+    }
+
+    [Fact]
+    public async Task GetPendingIdsAsync_IgnoresACancelledRow()
+    {
+        // The whole reason Cancelled is its own enum value. Modelled as "Pending plus a flag",
+        // the boot re-signal would resurrect every cancelled mail on every restart -- and no
+        // test on a process that never dies would ever show it.
+        // Arrange
+        var repo = Build(CreateSeededFactory(Seed(
+            MakeEmail(1, OutboxEmailStatus.Cancelled),
+            MakeEmail(2, OutboxEmailStatus.Pending))));
+
+        // Act
+        var result = await repo.GetPendingIdsAsync(TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Value.Should().NotBeNull();
+        result.Value.Should().BeEquivalentTo([2]);
+    }
+
+    [Fact]
+    public async Task ResetInterruptedAsync_IgnoresACancelledRow()
+    {
+        // Arrange
+        var repo = Build(CreateSeededFactory(Seed(
+            MakeEmail(1, OutboxEmailStatus.Cancelled),
+            MakeEmail(2, OutboxEmailStatus.Sending))));
+
+        // Act
+        var result = await repo.ResetInterruptedAsync(TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Value.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task GetPagedAsync_OrdersNewestFirstAndReportsTheTotal()
+    {
+        // Arrange
+        var older = MakeEmail(1);
+        older.CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        var newer = MakeEmail(2);
+        newer.CreatedAt = new DateTime(2026, 6, 1, 0, 0, 0, DateTimeKind.Utc);
+        var repo = Build(CreateSeededFactory(Seed(older, newer)));
+
+        // Act
+        var result = await repo.GetPagedAsync(
+            null, null, null, 1, 25, TestContext.Current.CancellationToken);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().NotBeNull();
+        result.Value.TotalCount.Should().Be(2);
+        result.Value.Items.Select(i => i.Identifier).Should().ContainInOrder("mail-2", "mail-1");
+    }
+
+    [Fact]
+    public async Task GetPagedAsync_FiltersByStatus()
+    {
+        // Arrange
+        var repo = Build(CreateSeededFactory(Seed(
+            MakeEmail(1, OutboxEmailStatus.Failed),
+            MakeEmail(2, OutboxEmailStatus.Sent))));
+
+        // Act
+        var result = await repo.GetPagedAsync(
+            OutboxEmailStatus.Failed, null, null, 1, 25, TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Value.Should().NotBeNull();
+        result.Value.Items.Select(i => i.Identifier).Should().BeEquivalentTo(["mail-1"]);
+    }
+
+    [Fact]
+    public async Task GetPagedAsync_MatchesTheRecipientCaseInsensitively()
+    {
+        // LIKE is case-sensitive on Postgres and case-insensitive on SQLite, so a bare Contains
+        // would behave one way here and another in production.
+        // Arrange
+        var email = MakeEmail(1);
+        email.ToAddress = "Vandrare@Example.com";
+        var other = MakeEmail(2);
+        other.ToAddress = "nagon.annan@example.com";
+        var repo = Build(CreateSeededFactory(Seed(email, other)));
+
+        // Act
+        var result = await repo.GetPagedAsync(
+            null, null, "VANDRARE@EXAMPLE", 1, 25, TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Value.Should().NotBeNull();
+        result.Value.Items.Select(i => i.Identifier).Should().BeEquivalentTo(["mail-1"]);
+    }
+
+    [Fact]
+    public async Task GetCountsByStatusAsync_CountsEachStatusSeparately()
+    {
+        // Arrange
+        var repo = Build(CreateSeededFactory(Seed(
+            MakeEmail(1, OutboxEmailStatus.Pending),
+            MakeEmail(2, OutboxEmailStatus.Failed),
+            MakeEmail(3, OutboxEmailStatus.Failed),
+            MakeEmail(4, OutboxEmailStatus.Cancelled))));
+
+        // Act
+        var result = await repo.GetCountsByStatusAsync(TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Value.Should().NotBeNull();
+        result.Value[OutboxEmailStatus.Failed].Should().Be(2);
+        result.Value[OutboxEmailStatus.Pending].Should().Be(1);
+        result.Value[OutboxEmailStatus.Cancelled].Should().Be(1);
+    }
+
+    [Fact]
+    public void Purgeable_MatchesOnlySentRowsOlderThanTheCutoff()
+    {
+        // The delete itself uses ExecuteDeleteAsync, which the EF InMemory provider this suite
+        // runs on does not support -- so the RULE is what is tested here, and the integration
+        // suite proves the delete. This goes red if someone swaps SentAt for CreatedAt or drops
+        // the status check.
+        // Arrange
+        var cutoff = new DateTime(2026, 6, 1, 0, 0, 0, DateTimeKind.Utc);
+
+        OutboxEmail Sent(int id, DateTime? sentAt, OutboxEmailStatus status = OutboxEmailStatus.Sent)
+        {
+            var email = MakeEmail(id, status);
+            email.SentAt = sentAt;
+            // Old enough to be caught if CreatedAt were ever used as the clock by mistake.
+            email.CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+            return email;
+        }
+
+        var rows = new[]
+        {
+            Sent(1, cutoff.AddDays(-1)),                                  // old and sent
+            Sent(2, cutoff.AddDays(1)),                                   // sent, but recent
+            Sent(3, null, OutboxEmailStatus.Pending),                     // never sent
+            Sent(4, cutoff.AddDays(-1), OutboxEmailStatus.Failed),        // failed, keep it
+            Sent(5, cutoff.AddDays(-1), OutboxEmailStatus.Cancelled),     // cancelled, keep it
+            Sent(6, null),                                                // Sent with no SentAt
+        };
+
+        // Act
+        var matched = rows.AsQueryable().Where(MailOutboxRepository.Purgeable(cutoff)).ToList();
+
+        // Assert
+        matched.Select(e => e.Identifier).Should().BeEquivalentTo(["mail-1"]);
+    }
+
     [Fact]
     public async Task ClaimAsync_WhenPending_MovesItToSending()
     {

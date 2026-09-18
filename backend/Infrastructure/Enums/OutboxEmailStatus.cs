@@ -11,6 +11,13 @@ public enum OutboxEmailStatus
     Sending = 1,
     Sent = 2,
     Failed = 3,
+
+    // Stopped by an operator from the admin outbox before it was ever claimed. A distinct value
+    // rather than a flag on Pending: GetPendingIdsAsync and ResetInterruptedAsync both select on
+    // an exact status, so a cancelled row is invisible to the boot re-signal for free. Modelled
+    // as "Pending plus a CancelledAt" it would be resurrected on every restart, and no test on a
+    // process that never dies would show it.
+    Cancelled = 4,
 }
 
 // Do not change the values of the enum as they are used in the database and changing them would break existing data.

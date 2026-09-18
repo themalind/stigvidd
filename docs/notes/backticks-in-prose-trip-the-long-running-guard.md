@@ -53,6 +53,34 @@ The same applies to any guarded command name in prose — `dotnet watch`, `npm r
 and skill files most of all, since those are precisely the files that *have* to name the
 commands they warn about.
 
+## It is not only `guard-long-running` — every Bash guard shares the splitter
+
+`commandsIn()` is library code, so **every** PreToolUse Bash guard is handed the same
+segments. The hazard is therefore as wide as the union of their vocabularies, not just the
+dev-server one above.
+
+Measured while appending to a **plan file** — not a note, not source — whose prose read:
+
+    8. The new enum value needs no migration at all. Scaffolding one produces an empty file,
+       which should be reverted rather than committed with `dotnet ef migrations
+       remove` it if one is created by reflex.
+
+The backtick opened a segment, the inline code happened to wrap across a line break, and
+[`guard-build-commands.mjs`](../../.claude/hooks/guard-build-commands.mjs) denied the write
+for `dotnet ef` without `--project`. So add to the list of names that cannot appear in
+backticked prose written through a heredoc:
+
+- **`dotnet ef …`** without `--project Infrastructure`
+- **`dotnet test`** without `ConnectionStrings__StigVidd` set
+
+This one is *harder* to recognise than the long-running case, because the denial is a
+helpful paragraph about the design-time factory and `--project` — advice about a command you
+were never running. The tell is unchanged and is the only reliable one: **the quoted
+"command" contains prose**, and you were writing a file rather than running anything.
+
+Same fix, for the same reason: write the file with the **Write** or **Edit** tool. Neither
+goes through a shell, so no splitter ever sees the text.
+
 It is **not only documentation files**. Measured again while writing
 `Tests/IntegrationTests/MailTemplatesController/EditedCopyReachesTheOutboxTests.cs`: a `///`
 comment explaining that the test exists *because* the stack cannot be brought up on a plain

@@ -2,8 +2,31 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 using Infrastructure.Data.Entities;
+using Infrastructure.Enums;
 
 namespace Core.Interfaces.Repositories;
+
+/// <summary>
+/// One row of the outbox as the admin list sees it.
+/// </summary>
+/// <remarks>
+/// Carries no BodyHtml/BodyText on purpose. A page of rendered mail bodies is megabytes on the
+/// wire and megabytes in the change tracker, and the only way to guarantee they are never read
+/// is to project without them.
+/// </remarks>
+public record OutboxEmailSummary(
+    string Identifier,
+    string ToAddress,
+    string? ToName,
+    string Subject,
+    string? TemplateKey,
+    OutboxEmailStatus Status,
+    int Attempts,
+    DateTime NextAttemptAt,
+    DateTime? SentAt,
+    string? LastError,
+    DateTime CreatedAt,
+    DateTime LastUpdatedAt);
 
 public interface IMailOutboxRepository
 {
@@ -47,4 +70,53 @@ public interface IMailOutboxRepository
     /// dispatcher re-checks NextAttemptAt and reschedules those rather than sending them.
     /// </summary>
     Task<RepositoryResult<IReadOnlyCollection<int>>> GetPendingIdsAsync(CancellationToken ctoken);
+
+    // ---- The admin surface. Everything above is the dispatcher's and keys on Id; everything
+    // ---- below is an operator's and keys on Identifier, like every other admin surface.
+
+    /// <summary>
+    /// A page of the outbox, newest first, without the mail bodies.
+    /// </summary>
+    /// <remarks>
+    /// Newest-first on purpose, unlike the moderation queue: a queue is worked oldest-first, but
+    /// an outbox is a log an operator reads backwards from the incident they are chasing.
+    /// </remarks>
+    Task<RepositoryResult<PagedResult<OutboxEmailSummary>>> GetPagedAsync(
+        OutboxEmailStatus? status,
+        string? templateKey,
+        string? recipient,
+        int page,
+        int pageSize,
+        CancellationToken ctoken);
+
+    Task<RepositoryResult<OutboxEmail>> GetByIdentifierAsync(string identifier, CancellationToken ctoken);
+
+    Task<RepositoryResult<IReadOnlyDictionary<OutboxEmailStatus, int>>> GetCountsByStatusAsync(
+        CancellationToken ctoken);
+
+    /// <summary>
+    /// Failed or Cancelled -> Pending, due now, with the attempt ladder reset. Conflict on any
+    /// other status. Returns the row so the caller can signal the dispatcher with its Id.
+    /// </summary>
+    /// <remarks>
+    /// Never touches a Sending row. That row is claimed by the dispatcher right now, and moving
+    /// it back to Pending would make it claimable while a worker still holds it — the same mail
+    /// sent twice, which is exactly what claiming in the database exists to prevent.
+    /// </remarks>
+    Task<RepositoryResult<OutboxEmail>> RequeueAsync(string identifier, CancellationToken ctoken);
+
+    /// <summary>
+    /// Pending -> Cancelled. Conflict on any other status.
+    /// </summary>
+    /// <remarks>
+    /// Refuses a Sending row because MarkSentAsync has no status guard: the dispatcher would
+    /// overwrite the cancellation moments later, and the operator would have been told the mail
+    /// was stopped when it was already on its way.
+    /// </remarks>
+    Task<RepositoryResult<OutboxEmail>> CancelAsync(string identifier, CancellationToken ctoken);
+
+    /// <summary>
+    /// Deletes Sent rows whose SentAt is strictly older than the cutoff. Returns the row count.
+    /// </summary>
+    Task<RepositoryResult<int>> PurgeSentBeforeAsync(DateTime cutoffUtc, CancellationToken ctoken);
 }

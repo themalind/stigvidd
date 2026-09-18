@@ -178,6 +178,17 @@ src/api/generated` then fails with "the generated API client is stale" for reaso
   coordinate — the `VerifiedGeoTrail` default — hands all six the full 5.0 proximity boost, up
   to 9.75, and any `.First()` assertion is silently competing with trails it never mentions.
   Put the user location somewhere the seed cannot rank, and say so in the test.
+- [A repository method using ExecuteDeleteAsync cannot be unit-tested here, because Tests/UnitTests is EF InMemory](executedelete-cannot-be-unit-tested-here.md) —
+  `ExecuteDeleteAsync` and `ExecuteUpdateAsync` are relational-only and throw on the EF
+  InMemory provider, which is what `Tests/UnitTests/TestBase.cs` builds every context with
+  (`UseInMemoryDatabase`) — there is no SQLite under `Tests/UnitTests` at all. So a bulk
+  delete in a repository cannot have a unit test beside its neighbours in `RepositoryTests/`,
+  and that is why `TrailImportRepository.DeleteSessionAsync` has none. Do not switch the unit
+  suite to SQLite to fix it. Extract the eligibility rule as a static
+  `Expression<Func<T, bool>>` (see `MailOutboxRepository.Purgeable`), unit-test it with
+  `AsQueryable().Where(...)` over a hand-built array, and prove the delete itself in the
+  SQLite integration suite — the predicate is where an irreversible purge deleting the wrong
+  rows would actually come from.
 - [SQLite enforces no foreign key unless the pragma is on, and Linux and Windows disagree](sqlite-foreign-keys-off-on-linux.md) —
   SQLite ignores every `FOREIGN KEY` clause, `ON DELETE CASCADE` included, unless
   per-connection `PRAGMA foreign_keys` is on. Windows' bundled `e_sqlite3` defaults it to 1,
@@ -527,7 +538,12 @@ src/api/generated` then fails with "the generated API client is stale" for reaso
   "command" in the denial contains prose. Quoting does not help the way the hook's own
   self-test (`echo 'do not docker compose up here'` is allowed) suggests: that passes only
   because quoted spans are consumed first, and `<<'EOF'` quotes the body for bash, not for
-  the splitter. Write the file with the Write tool instead of a heredoc.
+  the splitter. Write the file with the Write tool instead of a heredoc. Not only
+  guard-long-running: `commandsIn` is shared library code, so every Bash guard sees the same
+  segments — measured, a plan file whose prose named `dotnet ef migrations remove` in inline
+  code was denied by guard-build-commands.mjs for `dotnet ef` without `--project`, and
+  `dotnet test` without ConnectionStrings__StigVidd is deniable from prose the same way. That
+  denial is harder to spot, because it reads as helpful advice about a command you never ran.
 - [A jotai-tanstack-query atom builds its own QueryClient unless `queryClientAtom` is seeded](jotai-query-atom-builds-its-own-queryclient.md) —
   a jest suite in `app/` that mounts anything reading `stigviddUserAtom` (via `ShareHikeModal`,
   `HikeDetails`) passes and then refuses to exit: "Jest did not exit one second after the test

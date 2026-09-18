@@ -24,6 +24,7 @@ public class AccountController : StigViddController
     private readonly IUserService _userService;
     private readonly IEmailVerificationService _emailVerificationService;
     private readonly IPasswordResetService _passwordResetService;
+    private readonly IWelcomeMailService _welcomeMailService;
     private readonly ILogger<AccountController> _logger;
 
     public AccountController(
@@ -31,12 +32,14 @@ public class AccountController : StigViddController
         IUserService userService,
         IEmailVerificationService emailVerificationService,
         IPasswordResetService passwordResetService,
+        IWelcomeMailService welcomeMailService,
         ILogger<AccountController> logger)
     {
         _keycloakAdminRepository = keycloakAdminRepository;
         _userService = userService;
         _emailVerificationService = emailVerificationService;
         _passwordResetService = passwordResetService;
+        _welcomeMailService = welcomeMailService;
         _logger = logger;
     }
 
@@ -118,6 +121,11 @@ public class AccountController : StigViddController
             await RollBackRegistrationAsync(result.Value.Identifier, subjectId, ctoken);
             return StatusCode(500);
         }
+
+        // Only once the account is certain to be usable. Best effort by design: unlike the
+        // verification mail above, a greeting that cannot be queued is not worth undoing a
+        // registration for, so this never fails the request.
+        await _welcomeMailService.SendAsync(request.Email, request.NickName, ctoken);
 
         return Created($"{result.Value.Identifier}", result.Value);
     }

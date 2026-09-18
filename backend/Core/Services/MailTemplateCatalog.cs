@@ -23,8 +23,10 @@ public class MailTemplateCatalog : IMailTemplateCatalog
     [
         new MailTemplateDefinition(
             "welcome",
-            "A greeting for a new account. Nothing in the API sends this yet -- it is the "
-                + "worked example the outbox was built against, so editing it is safe.",
+            "Sent once a registration has succeeded and the verification mail is safely "
+                + "queued. It carries nothing the user has to act on -- the verify-email mail "
+                + "is the one that does -- so it is the one mail here that can fail to send "
+                + "without costing anybody access to their account.",
             [NickName]),
 
         new MailTemplateDefinition(

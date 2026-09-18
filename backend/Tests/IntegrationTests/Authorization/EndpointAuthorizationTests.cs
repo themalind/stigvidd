@@ -124,6 +124,16 @@ public class EndpointAuthorizationTests : IClassFixture<StigViddWebApplicationFa
         "GET /api/v1/admin/mail-templates/{identifier}",
         "POST /api/v1/admin/mail-templates/{identifier}/preview",
         "PUT /api/v1/admin/mail-templates/{identifier}",
+
+        // The outbox itself. Reading it exposes every address the API has mailed and the
+        // rendered body of each -- including a live password-reset link -- and purging it
+        // deletes rows for good, so none of this may ever be anything but admin-only.
+        "GET /api/v1/admin/mail-outbox",
+        "GET /api/v1/admin/mail-outbox/counts",
+        "GET /api/v1/admin/mail-outbox/{identifier}",
+        "POST /api/v1/admin/mail-outbox/purge",
+        "POST /api/v1/admin/mail-outbox/{identifier}/cancel",
+        "POST /api/v1/admin/mail-outbox/{identifier}/retry",
     ];
 
     public EndpointAuthorizationTests(StigViddWebApplicationFactory<Program> factory)

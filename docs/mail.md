@@ -14,8 +14,11 @@ Keycloak's `UPDATE_PASSWORD` action mail and is now `reset-password` below, whic
 wording of every mail a user receives is editable by an operator without a deploy.
 
 Its callers are **registration** — `verify-email` carries the link and code that stand between
-signing up and being able to log in — and **forgotten passwords**, where `reset-password`
-carries the only link that can set a new one. See [auth](auth.md).
+signing up and being able to log in, and `welcome` follows it once the account exists — and
+**forgotten passwords**, where `reset-password` carries the only link that can set a new one.
+See [auth](auth.md).
+
+The queue itself is visible and manageable in the web admin: *Mail Outbox* in the sidebar.
 
 ## Sending one
 
@@ -85,10 +88,17 @@ A lost signal therefore costs latency and never a mail.
 
 ```
 Pending ──claim──> Sending ──sent────> Sent
-   ^                  │
+   ^  │               │
+   │  └──cancelled────┴──> Cancelled          (operator, from the admin outbox)
+   │                  │
    └──failed, under ──┘
       the attempt cap        ──permanent, or cap reached──> Failed
 ```
+
+`Cancelled` is an operator stopping a mail that has not been claimed yet. It is a status
+rather than a deleted row for two reasons: the journal has to keep the evidence that a mail
+was queued and then stopped, and a delete would race the dispatcher — a row can be claimed
+between the read and the delete, and `MarkSentAsync` has no status guard.
 
 Retries are **scheduled, not polled**: a transient failure puts the row back to `Pending` with
 `NextAttemptAt` set, and the dispatcher starts a `Task.Delay` that re-signals the id when the
@@ -126,6 +136,43 @@ rather than accumulating rows that were never going to be sent. Adding an empty 
 would defeat that. The API must never fail to start over mail, so there is no fail-fast here.
 
 `MailOutbox:*` is in `appsettings.json`: `MaxAttempts` (5) and `DefaultLanguage` (`sv`).
+
+## The outbox in the web admin
+
+*Mail Outbox* in the sidebar lists the table, newest first, filtered by status and recipient,
+with the rendered bodies behind each row — in the same sandboxed iframe the template editor
+uses, because a body is operator-authored markup and a row can also have been written straight
+into Postgres by hand. Three things can be done to a row, and each is a guarded status
+transition in the database rather than anything done to the queue:
+
+| action | allowed from | what it does |
+| --- | --- | --- |
+| **Retry** | `Failed`, `Cancelled` | back to `Pending`, due now, `Attempts` reset to 0, `LastError` kept — *then* the dispatcher is signalled |
+| **Cancel** | `Pending` | to `Cancelled`. No signal: a signal already in the channel is harmless, because claiming guards on `Pending` |
+| **Purge** | `Sent` only | deletes sent mail older than a cutoff. Refused without an explicit confirm |
+
+**`Sending` is refused by both retry and cancel**, and that is the point rather than an
+oversight. The dispatcher holds that row: requeueing it would let it be claimed while a worker
+still has it and the mail would go out twice, and cancelling it would be overwritten by
+`MarkSentAsync` — which has no status guard — a moment later, so the operator would have been
+told the mail was stopped when it was already on its way.
+
+Retry resets `Attempts` because a `Failed` row sits *at* the cap: leave it there and the retry
+buys exactly one attempt with no backoff ladder at all, which is not what retry means to
+somebody who has just fixed DNS. It keeps `LastError` because that is still the only record of
+why the mail failed and the retry has not produced a new one yet — a `Pending` row carrying a
+`LastError` is what a retried mail looks like, not a contradiction.
+
+Purge takes **`Sent` rows only**, and dates them by `SentAt` rather than `CreatedAt`: a row
+created six weeks ago but sent five minutes ago — after an outage, which is exactly when
+somebody reaches for a purge — is recent mail. `Failed` rows are the diagnostic record *and*
+the retryable ones, so they are never deleted; neither are `Pending`, `Sending` or `Cancelled`.
+
+**Retention is manual on purpose.** There is no background sweep, because nobody has measured
+how fast this table actually grows, and the rendered bodies contain a nickname and — for
+`reset-password` — a live link. If one is ever wanted it is a `BackgroundService` calling the
+same `PurgeSentBeforeAsync`, a `MailOutbox:SentRetentionDays` key, and a fourth entry in
+`StigViddWebApplicationFactory`'s hosted-service removal list.
 
 ## Adding a template
 

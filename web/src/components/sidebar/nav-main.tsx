@@ -8,6 +8,7 @@ import {
   Images,
   Mail,
   Route,
+  Send,
   Settings2,
   Users,
 } from "lucide-react";
@@ -78,6 +79,14 @@ export default function NavMain() {
               <NavLink to={"/mail-templates"}>
                 <Mail />
                 <span>Mail Templates</span>
+              </NavLink>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild>
+              <NavLink to={"/mail-outbox"}>
+                <Send />
+                <span>Mail Outbox</span>
               </NavLink>
             </SidebarMenuButton>
           </SidebarMenuItem>
