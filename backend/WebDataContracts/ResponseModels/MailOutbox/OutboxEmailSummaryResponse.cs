@@ -25,6 +25,14 @@ public class OutboxEmailSummaryResponse
     // retry has not produced a new one yet.
     public string? LastError { get; set; }
 
+    // When the row reached Failed or Cancelled. Null while it is still moving.
+    public DateTime? SettledAt { get; set; }
+
+    // When the rendered bodies were cleared. Non-null means there is no body to fetch and the
+    // mail can no longer be retried -- both of which the admin UI has to say rather than
+    // present an empty preview.
+    public DateTime? RedactedAt { get; set; }
+
     public DateTime CreatedAt { get; set; }
     public DateTime LastUpdatedAt { get; set; }
 
@@ -39,6 +47,8 @@ public class OutboxEmailSummaryResponse
         DateTime nextAttemptAt,
         DateTime? sentAt,
         string? lastError,
+        DateTime? settledAt,
+        DateTime? redactedAt,
         DateTime createdAt,
         DateTime lastUpdatedAt) => new()
         {
@@ -52,6 +62,8 @@ public class OutboxEmailSummaryResponse
             NextAttemptAt = nextAttemptAt,
             SentAt = sentAt,
             LastError = lastError,
+            SettledAt = settledAt,
+            RedactedAt = redactedAt,
             CreatedAt = createdAt,
             LastUpdatedAt = lastUpdatedAt,
         };

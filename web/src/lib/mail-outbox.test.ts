@@ -95,7 +95,18 @@ describe("describePurge", () => {
 
     expect(text).toContain("30 days");
     expect(text).toContain("failed");
-    expect(text).toContain("never touched");
+    expect(text).toContain("left alone by this action");
+  });
+
+  it("does not claim mail is kept forever, because the sweep deletes it anyway", () => {
+    // The copy used to promise that failed and cancelled mail "is never touched". That was
+    // true when this button was the only thing that deleted anything. MailOutboxRetentionService
+    // now deletes settled mail on its own clock, and an operator reading the old sentence at an
+    // irreversible dialog would conclude their failed mail is being kept for them when it is not.
+    const text = describePurge(30, 12);
+
+    expect(text).not.toContain("never touched");
+    expect(text).toContain("retention period");
   });
 
   it("agrees with itself about singulars", () => {

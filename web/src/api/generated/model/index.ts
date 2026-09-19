@@ -44,6 +44,7 @@ export * from './mailTemplatePreviewResponse';
 export * from './mailTemplateResponse';
 export * from './mailTemplateTokenResponse';
 export * from './mediaItemResponse';
+export * from './outboxEmailBodyResponse';
 export * from './outboxEmailDetailResponse';
 export * from './outboxEmailSummaryResponse';
 export * from './outgoingFriendRequestResponse';

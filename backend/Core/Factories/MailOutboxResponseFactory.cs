@@ -9,7 +9,8 @@ using WebDataContracts.ResponseModels.MailOutbox;
 namespace Core.Factories;
 
 /// <summary>
-/// Outbox rows to their wire shape. The only place that reads a mail body.
+/// Outbox rows to their wire shape. The only place that reads a mail body — and it does so
+/// only in CreateBody, which serves the one route that logs the read.
 /// </summary>
 public class MailOutboxResponseFactory
 {
@@ -25,6 +26,8 @@ public class MailOutboxResponseFactory
             summary.NextAttemptAt,
             summary.SentAt,
             summary.LastError,
+            summary.SettledAt,
+            summary.RedactedAt,
             summary.CreatedAt,
             summary.LastUpdatedAt);
 
@@ -45,11 +48,20 @@ public class MailOutboxResponseFactory
             email.NextAttemptAt,
             email.SentAt,
             email.LastError,
+            email.SettledAt,
+            email.RedactedAt,
             email.CreatedAt,
             email.LastUpdatedAt);
 
     public OutboxEmailDetailResponse Create(OutboxEmail email) =>
-        OutboxEmailDetailResponse.Create(CreateSummary(email), email.BodyHtml, email.BodyText);
+        OutboxEmailDetailResponse.Create(CreateSummary(email));
+
+    /// <summary>
+    /// The bodies, on their own. Separate from Create so that reading them is a distinct call
+    /// a controller has to choose to make — and can log.
+    /// </summary>
+    public OutboxEmailBodyResponse CreateBody(OutboxEmail email) =>
+        OutboxEmailBodyResponse.Create(email.Identifier, email.BodyHtml, email.BodyText);
 
     public MailOutboxCountsResponse Create(IReadOnlyDictionary<OutboxEmailStatus, int> counts)
     {

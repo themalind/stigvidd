@@ -57,12 +57,41 @@ public class AdminMailOutboxController : StigViddController
             : Ok(result.Value);
     }
 
-    /// <summary>One mail, with the bodies that were rendered for it when it was queued.</summary>
+    /// <summary>
+    /// One mail, without its rendered bodies. Those are at {identifier}/body.
+    /// </summary>
     [HttpGet("{identifier}")]
     public async Task<ActionResult<OutboxEmailDetailResponse>> GetByIdentifier(
         [FromRoute] string identifier, CancellationToken ctoken)
     {
         var result = await _outbox.GetDetailAsync(identifier, ctoken);
+
+        return result.IsFailure && result.Message is not null
+            ? ToActionResult(result.Message)
+            : Ok(result.Value);
+    }
+
+    /// <summary>
+    /// The rendered bodies of one mail. 404 once they have been cleared under the retention
+    /// policy.
+    /// </summary>
+    /// <remarks>
+    /// A route of its own rather than part of the detail response, because this is where the
+    /// personal data in the outbox actually is: the copy carries a nickname, and a verify-email
+    /// or reset-password body carries a working token URL. Retry, cancel and purge have always
+    /// logged the operator who did them; reading a body is at least as worth recording, and
+    /// until this split it happened to every row anyone clicked.
+    /// </remarks>
+    [HttpGet("{identifier}/body")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<OutboxEmailBodyResponse>> GetBody(
+        [FromRoute] string identifier, CancellationToken ctoken)
+    {
+        _logger.LogInformation(
+            "Mail body {identifier} read by {user}", identifier, User.Identity?.Name ?? "unknown");
+
+        var result = await _outbox.GetBodyAsync(identifier, ctoken);
 
         return result.IsFailure && result.Message is not null
             ? ToActionResult(result.Message)

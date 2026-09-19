@@ -152,7 +152,8 @@ public class StigViddWebApplicationFactory<TProgram>
                 d.ServiceType == typeof(IHostedService) &&
                 (d.ImplementationType == typeof(ExpiredObstacleCleanupService) ||
                  d.ImplementationType == typeof(TrailImportAnalysisWorker) ||
-                 d.ImplementationType == typeof(MailOutboxDispatcher)))
+                 d.ImplementationType == typeof(MailOutboxDispatcher) ||
+                 d.ImplementationType == typeof(MailOutboxRetentionService)))
                 .ToList();
 
             foreach (var startupService in startupServices)

@@ -50,15 +50,18 @@ you get approved.
   `[Consumes("application/x-www-form-urlencoded")]` POST, whose generated client can fail
   `tsc -b` in `web/` — a package the change never touched, caught only by the Jenkins-only gate.
 - [Applying migrations to a hand-started PostGIS fails in a 2026-05 migration unless you match the pinned major](verifying-a-migration-outside-compose-needs-the-pinned-postgis-major.md) —
-  checking a migration for real when the full stack is unavailable (no `.env`, or the host runs
-  podman-compose instead of Docker Compose): one `postgis/postgis:17-3.5` container plus
-  `dotnet ef database update --project Infrastructure --connection "…"` works, and
-  `--connection` is needed or the design-time factory silently migrates whatever Infrastructure's
-  **user secrets** point at. Any other tag dies with `42601: syntax error at or near "COLUMNS"`
-  inside `20260523120007_PostGIS` — a migration from months ago that you did not touch, so it
-  reads as a real defect; it is PostgreSQL **17** syntax on a 16 server. `docker-compose.yml`'s
-  image pin is load-bearing for the migration chain. Carries the `psql` one-liners for checking
-  columns/indexes/FKs and, crucially, that an `InsertData` seed left the identity sequence ahead.
+  No test applies a migration, so checking one means a real PostgreSQL; when the stack is not
+  available (no `.env`, or podman-compose) that is one container plus
+  `dotnet ef database update --project Infrastructure --connection "..."` — `--connection`
+  rather than a user secret, which `DesignTimeDbContextFactory` reads and the integration
+  suite inherits. The tag must be the pinned `postgis/postgis:17-3.5`: any other major dies
+  inside `20260523120007_PostGIS` with `42601: syntax error at or near "COLUMNS"`, naming a
+  months-old migration you did not touch. Also here: a `migrationBuilder.Sql` **backfill is
+  invisible** unless you stop at the PREVIOUS migration id and seed rows the way production's
+  already look, because a fresh database has none of the rows it targets and it reports
+  success having updated zero; the `psql` checks for whether `IS NULL` spares a row and
+  `lower()` folds case, which SQLite cannot settle; and that `pg_isready` goes true before
+  `POSTGRES_DB` exists, so wait on a real `SELECT 1` instead.
 - [The OpenAPI document's line endings were a Windows trap twice, and are now pinned to LF](openapi-snapshot-fails-on-windows-line-endings.md) —
   RESOLVED, and kept for the diagnosis. While `web/openapi.json` was committed, `.gitattributes`
   held it at LF while the served document is CRLF on Windows, so an ordinal comparison failed on
@@ -612,6 +615,18 @@ src/api/generated` then fails with "the generated API client is stale" for reaso
   `StyleSheet.create` resolves at import, so flipping `Platform.OS` later cannot reach it; and
   `getByTestId(x).parent` is a composite fiber, which `toHaveStyle` refuses — give the wrapper
   its own `testID`.
+- [A retention clock must not be a column that everything writes, or redaction resets it](a-retention-clock-must-not-be-a-column-everything-writes.md) —
+  `MailOutboxRetentionService` clears a settled row's body after 24 hours and deletes the row
+  after 30 days, and both rules need "when did this settle". `LastUpdatedAt` is the wrong
+  answer in a way nothing reports: seven methods in `MailOutboxRepository` already write it,
+  so a redaction keyed on it pushes that row's own delete date out by the full retention
+  period every time it fires — redacted on schedule, then never deleted, the two rules
+  fighting over one column. Hence `SettledAt`, with three obligations that are each a
+  separate bug: stamp it only on `MarkFailedAsync`'s parking branch and never the transient
+  one, null it in `RequeueAsync` beside `SentAt` or a re-failed row is deleted early, and
+  **backfill it in the migration** or every row that already existed matches nothing and
+  lives forever — which no test catches, because no suite applies a migration. Generally: a
+  timestamp that is a retention clock must be written by exactly the transition it names.
 - [An in-memory queue is safe in front of a database journal only if you write-then-signal, re-signal on boot, and claim in the database](in-memory-queue-in-front-of-a-database-journal.md) —
   The mail outbox triggers on a `Channel<int>` but keeps `OutboxEmails` as the truth, so a
   lost signal costs latency and never a mail. Three rules make that safe and each has a

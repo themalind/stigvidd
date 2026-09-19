@@ -3,23 +3,27 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { ChevronLeft, ChevronRight, Loader2, TriangleAlert } from "lucide-react";
+import { ChevronLeft, ChevronRight, Eye, Loader2, TriangleAlert } from "lucide-react";
 import {
   cancelOutboxMail,
   getOutboxCounts,
   getOutboxMail,
+  getOutboxMailBody,
   getOutboxMails,
   purgeOutbox,
   retryOutboxMail,
   type OutboxCounts,
+  type OutboxMailBody,
   type OutboxMailDetail,
   type OutboxMailSummary,
 } from "@/api/mail-outbox";
 import {
   canCancel,
   canRetry,
+  canRevealBody,
   describeNextAttempt,
   describePurge,
+  describeRedaction,
   isValidPurgeCutoff,
   statusTone,
   OUTBOX_STATUS_FILTERS,
@@ -50,7 +54,9 @@ import {
 
 const PageSize = 25;
 
-const DefaultPurgeDays = 30;
+// Below the sweep's own SentRetentionDays, or the dialog could never find a row: the automatic
+// retention run has already deleted everything older than that.
+const DefaultPurgeDays = 3;
 
 // Same reading as the trail-import badges: green is done, blue is in flight, red went wrong,
 // grey is inert.
@@ -78,6 +84,11 @@ export default function MailOutboxPage() {
   const [mails, setMails] = useState<OutboxMailSummary[] | null>(null);
   const [counts, setCounts] = useState<OutboxCounts | null>(null);
   const [detail, setDetail] = useState<OutboxMailDetail | null>(null);
+  // Held separately from `detail` and fetched only on request. Opening a mail must not pull its
+  // body down: that is where the recipient's name and, for a password reset, a working link are,
+  // and the API logs every read of one.
+  const [body, setBody] = useState<OutboxMailBody | null>(null);
+  const [revealing, setRevealing] = useState(false);
   const [status, setStatus] = useState<string>("All");
   const [recipient, setRecipient] = useState("");
   const [recipientInput, setRecipientInput] = useState("");
@@ -126,9 +137,22 @@ export default function MailOutboxPage() {
 
   async function openDetail(identifier: string) {
     try {
+      setBody(null);
       setDetail(await getOutboxMail(identifier));
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "The mail could not be read.");
+    }
+  }
+
+  async function revealBody(identifier: string) {
+    setRevealing(true);
+
+    try {
+      setBody(await getOutboxMailBody(identifier));
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "The body could not be read.");
+    } finally {
+      setRevealing(false);
     }
   }
 
@@ -143,6 +167,7 @@ export default function MailOutboxPage() {
       await action(identifier);
       toast.success(done);
       setDetail(null);
+      setBody(null);
       await load();
     } catch (error) {
       // The API refuses a mail that has moved on since the page was rendered — most often one
@@ -350,7 +375,15 @@ export default function MailOutboxPage() {
         </div>
       </div>
 
-      <Sheet open={detail !== null} onOpenChange={(open) => !open && setDetail(null)}>
+      <Sheet
+        open={detail !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setDetail(null);
+            setBody(null);
+          }
+        }}
+      >
         <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-2xl">
           {detail && (
             <>
@@ -378,16 +411,48 @@ export default function MailOutboxPage() {
               </SheetHeader>
 
               <div className="px-4">
-                {/* The same sandboxed renderer the template editor uses: a mail body is
-                    operator-authored markup, and a row can also have been written straight
-                    into Postgres by hand. */}
-                <MailPreview
-                  preview={{
-                    subject: detail.email.subject,
-                    bodyHtml: detail.bodyHtml,
-                    bodyText: detail.bodyText,
-                  }}
-                />
+                {/* Three states, and the split matters. A body is not fetched with the mail:
+                    it carries the recipient's name and, for a password reset, a live link, so
+                    reading one is a deliberate act the API records against the operator. */}
+                {!canRevealBody(detail.email) ? (
+                  <p
+                    className="text-sm text-muted-foreground"
+                    data-testid="body-redacted"
+                  >
+                    {describeRedaction(detail.email)}
+                  </p>
+                ) : body ? (
+                  /* The same sandboxed renderer the template editor uses: a mail body is
+                     operator-authored markup, and a row can also have been written straight
+                     into Postgres by hand. */
+                  <MailPreview
+                    preview={{
+                      subject: detail.email.subject,
+                      bodyHtml: body.bodyHtml,
+                      bodyText: body.bodyText,
+                    }}
+                  />
+                ) : (
+                  <div className="space-y-2">
+                    <Button
+                      variant="outline"
+                      disabled={revealing}
+                      onClick={() => void revealBody(detail.email.identifier)}
+                      data-testid="reveal-body"
+                    >
+                      {revealing ? (
+                        <Loader2 className="size-4 animate-spin" />
+                      ) : (
+                        <Eye className="size-4" />
+                      )}
+                      Show the mail body
+                    </Button>
+                    <p className="text-sm text-muted-foreground">
+                      The body is not loaded with the mail. It contains the recipient&apos;s name
+                      and, for a password reset, a working link — so opening it is recorded.
+                    </p>
+                  </div>
+                )}
               </div>
 
               <SheetFooter>
@@ -422,7 +487,9 @@ export default function MailOutboxPage() {
                   <p className="text-sm text-muted-foreground">
                     {detail.email.status === "Sending"
                       ? "This mail is being sent right now, so it can be neither retried nor cancelled."
-                      : "Nothing to do — this mail has already been sent."}
+                      : detail.email.status === "Sent"
+                        ? "Nothing to do — this mail has already been sent."
+                        : "Nothing to do — this mail can no longer be sent, because its rendered body has been cleared under the retention policy."}
                   </p>
                 )}
               </SheetFooter>

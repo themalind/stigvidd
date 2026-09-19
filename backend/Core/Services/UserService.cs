@@ -25,6 +25,9 @@ public class UserService : IUserService
     private readonly IReviewService _reviewService;
     private readonly IFriendRepository _friendRepository;
     private readonly IContentReportRepository _contentReportRepository;
+    // The outbox has no foreign key to Users -- it keys on the address -- so nothing about a
+    // deleted account reaches it unless this service says so.
+    private readonly IMailOutboxRepository _mailOutboxRepository;
     private readonly StigviddMetrics _metrics;
 
     public UserService(IUserRepository userResponseRepository,
@@ -34,6 +37,7 @@ public class UserService : IUserService
     IReviewService reviewService,
     IFriendRepository friendRepository,
     IContentReportRepository contentReportRepository,
+    IMailOutboxRepository mailOutboxRepository,
     StigviddMetrics metrics)
     {
         _userRepository = userResponseRepository;
@@ -43,6 +47,7 @@ public class UserService : IUserService
         _reviewService = reviewService;
         _friendRepository = friendRepository;
         _contentReportRepository = contentReportRepository;
+        _mailOutboxRepository = mailOutboxRepository;
         _metrics = metrics;
     }
 
@@ -354,6 +359,23 @@ public class UserService : IUserService
 
         if (friendRequestsResult.Status == RepositoryResultStatus.Error)
             return Result.Fail(new Message(500, $"Error deleting user with identifier {identifier}"));
+
+        // Must run before the user row goes: the outbox has no foreign key to Users and is
+        // matched on the address, so once the Users row is gone there is nothing left to look
+        // the address up by. Those rows carry the address, the nickname in four places, and --
+        // for verify-email and reset-password -- a token URL.
+        var emailResult = await _userRepository.GetUserByIdentifierAsync(identifier, u => u.Email, ctoken);
+
+        if (emailResult.Status == RepositoryResultStatus.Error)
+            return Result.Fail(new Message(500, $"Error deleting user with identifier {identifier}"));
+
+        if (emailResult.IsSuccess)
+        {
+            var mailResult = await _mailOutboxRepository.EraseByRecipientAsync(emailResult.Value, ctoken);
+
+            if (mailResult.Status == RepositoryResultStatus.Error)
+                return Result.Fail(new Message(500, $"Error deleting user with identifier {identifier}"));
+        }
 
         var result = await _userRepository.DeleteUserAsync(identifier, ctoken);
 

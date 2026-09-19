@@ -22,7 +22,9 @@ public class MailOutboxRepositoryTests : TestBase
         int id,
         OutboxEmailStatus status = OutboxEmailStatus.Pending,
         DateTime? nextAttemptAt = null,
-        int attempts = 0) =>
+        int attempts = 0,
+        DateTime? settledAt = null,
+        DateTime? redactedAt = null) =>
         new()
         {
             Id = id,
@@ -35,6 +37,8 @@ public class MailOutboxRepositoryTests : TestBase
             Status = status,
             Attempts = attempts,
             NextAttemptAt = nextAttemptAt ?? DateTime.UtcNow.AddMinutes(-1),
+            SettledAt = settledAt,
+            RedactedAt = redactedAt,
             CreatedAt = Utilities.SeedDates.Created,
             LastUpdatedAt = Utilities.SeedDates.Updated,
         };
@@ -61,6 +65,46 @@ public class MailOutboxRepositoryTests : TestBase
         result.Value.Should().NotBeNull();
         result.Value.Status.Should().Be(OutboxEmailStatus.Pending);
         result.Value.NextAttemptAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(5));
+    }
+
+    [Fact]
+    public async Task RequeueAsync_ClearsTheSettleTime()
+    {
+        // The row is leaving the terminal state, so the moment it settled is no longer true.
+        // Leave it and a row that fails again keeps its FIRST settle time -- and the retention
+        // sweep deletes it early, counting from a failure the operator has already answered.
+        // Arrange
+        var repo = Build(CreateSeededFactory(Seed(
+            MakeEmail(1, OutboxEmailStatus.Failed, settledAt: DateTime.UtcNow.AddDays(-20)))));
+
+        // Act
+        var result = await repo.RequeueAsync("mail-1", TestContext.Current.CancellationToken);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().NotBeNull();
+        result.Value.SettledAt.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task RequeueAsync_WhenTheBodyHasBeenRedacted_IsAConflict()
+    {
+        // The body is gone, so there is nothing left to send. This is the ONLY path by which a
+        // redacted row could reach a recipient, and delivering a blank mail to someone who asked
+        // for a password reset is worse than refusing to try.
+        // Arrange
+        var repo = Build(CreateSeededFactory(Seed(
+            MakeEmail(
+                1,
+                OutboxEmailStatus.Failed,
+                settledAt: DateTime.UtcNow.AddDays(-2),
+                redactedAt: DateTime.UtcNow.AddDays(-1)))));
+
+        // Act
+        var result = await repo.RequeueAsync("mail-1", TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Status.Should().Be(RepositoryResultStatus.Conflict);
     }
 
     [Fact]
@@ -317,6 +361,78 @@ public class MailOutboxRepositoryTests : TestBase
     }
 
     [Fact]
+    public void PurgeableSettled_MatchesOnlyFailedAndCancelledRowsSettledBeforeTheCutoff()
+    {
+        // Same shape as Purgeable and for the same reason: ExecuteDeleteAsync cannot run on the
+        // InMemory provider, so the RULE is what is held to account here and the integration
+        // suite proves the delete.
+        //
+        // SettledAt is the clock and not LastUpdatedAt. Every row below carries a LastUpdatedAt
+        // far older than the cutoff, so a predicate that reached for it would match nearly all
+        // of them.
+        // Arrange
+        var cutoff = new DateTime(2026, 6, 1, 0, 0, 0, DateTimeKind.Utc);
+
+        OutboxEmail Row(int id, OutboxEmailStatus status, DateTime? settledAt)
+        {
+            var email = MakeEmail(id, status, settledAt: settledAt);
+            email.LastUpdatedAt = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+            email.CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+            return email;
+        }
+
+        var rows = new[]
+        {
+            Row(1, OutboxEmailStatus.Failed, cutoff.AddDays(-1)),       // settled long ago
+            Row(2, OutboxEmailStatus.Cancelled, cutoff.AddDays(-1)),    // ditto
+            Row(3, OutboxEmailStatus.Failed, cutoff.AddDays(1)),        // settled recently
+            Row(4, OutboxEmailStatus.Failed, null),                     // no settle time: spared
+            Row(5, OutboxEmailStatus.Sent, cutoff.AddDays(-1)),         // Purgeable's business
+            Row(6, OutboxEmailStatus.Pending, cutoff.AddDays(-1)),      // still going out
+            Row(7, OutboxEmailStatus.Sending, cutoff.AddDays(-1)),      // on the wire right now
+        };
+
+        // Act
+        var matched = rows.AsQueryable()
+            .Where(MailOutboxRepository.PurgeableSettled(cutoff)).ToList();
+
+        // Assert
+        matched.Select(e => e.Identifier).Should().BeEquivalentTo(["mail-1", "mail-2"]);
+    }
+
+    [Fact]
+    public void RedactableBody_SkipsRowsAlreadyRedactedAndRowsStillSendable()
+    {
+        // Arrange
+        var cutoff = new DateTime(2026, 6, 1, 0, 0, 0, DateTimeKind.Utc);
+
+        var rows = new[]
+        {
+            MakeEmail(1, OutboxEmailStatus.Failed, settledAt: cutoff.AddDays(-1)),
+            MakeEmail(2, OutboxEmailStatus.Cancelled, settledAt: cutoff.AddDays(-1)),
+            // Already done. Without this clause the sweep rewrites the same rows every hour and
+            // reports work it did not do.
+            MakeEmail(3, OutboxEmailStatus.Failed, settledAt: cutoff.AddDays(-1),
+                redactedAt: cutoff.AddDays(-1)),
+            // Inside the window: an operator who has just fixed DNS can still retry this.
+            MakeEmail(4, OutboxEmailStatus.Failed, settledAt: cutoff.AddDays(1)),
+            MakeEmail(5, OutboxEmailStatus.Failed, settledAt: null),
+            // Pending and Sending still have to go out, so their bodies are untouchable.
+            MakeEmail(6, OutboxEmailStatus.Pending, settledAt: cutoff.AddDays(-1)),
+            MakeEmail(7, OutboxEmailStatus.Sending, settledAt: cutoff.AddDays(-1)),
+            // Sent rows are redacted by MarkSentAsync as they are marked, not here.
+            MakeEmail(8, OutboxEmailStatus.Sent, settledAt: cutoff.AddDays(-1)),
+        };
+
+        // Act
+        var matched = rows.AsQueryable()
+            .Where(MailOutboxRepository.RedactableBody(cutoff)).ToList();
+
+        // Assert
+        matched.Select(e => e.Identifier).Should().BeEquivalentTo(["mail-1", "mail-2"]);
+    }
+
+    [Fact]
     public async Task ClaimAsync_WhenPending_MovesItToSending()
     {
         // Arrange
@@ -390,6 +506,83 @@ public class MailOutboxRepositoryTests : TestBase
         stored.Status.Should().Be(OutboxEmailStatus.Sent);
         stored.SentAt.Should().NotBeNull();
         stored.LastError.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task MarkSentAsync_ClearsTheRenderedBodies()
+    {
+        // A sent mail can never be retried, so nothing needs its body -- while the body still
+        // holds a nickname and, for reset-password, a working link. Clearing it here rather than
+        // on a timer means there is no window where a delivered mail's body sits in the table.
+        // Arrange
+        var factory = CreateSeededFactory(Seed(MakeEmail(1, OutboxEmailStatus.Sending)));
+        var repo = Build(factory);
+
+        // Act
+        var result = await repo.MarkSentAsync(1, TestContext.Current.CancellationToken);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        using var db = await factory.CreateDbContextAsync(TestContext.Current.CancellationToken);
+        var stored = db.OutboxEmails.Single(e => e.Id == 1);
+        stored.BodyHtml.Should().BeEmpty();
+        stored.BodyText.Should().BeEmpty();
+        // RedactedAt, not the emptiness, is what every reader branches on.
+        stored.RedactedAt.Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task MarkFailedAsync_WhenParked_RecordsWhenItSettled()
+    {
+        // Arrange
+        var factory = CreateSeededFactory(Seed(MakeEmail(1, OutboxEmailStatus.Sending)));
+        var repo = Build(factory);
+
+        // Act
+        var result = await repo.MarkFailedAsync(
+            1, "550: no such mailbox", permanent: true, MaxAttempts, TestContext.Current.CancellationToken);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().NotBeNull();
+        result.Value.Status.Should().Be(OutboxEmailStatus.Failed);
+        result.Value.SettledAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(5));
+    }
+
+    [Fact]
+    public async Task MarkFailedAsync_WhenItWillBeRetried_DoesNotRecordASettleTime()
+    {
+        // The retention clock must not start on a mail that is still going to be sent. This is
+        // the half of the SettledAt rule that a test on the parking branch alone would miss.
+        // Arrange
+        var factory = CreateSeededFactory(Seed(MakeEmail(1, OutboxEmailStatus.Sending)));
+        var repo = Build(factory);
+
+        // Act
+        var result = await repo.MarkFailedAsync(
+            1, "connection refused", permanent: false, MaxAttempts, TestContext.Current.CancellationToken);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().NotBeNull();
+        result.Value.Status.Should().Be(OutboxEmailStatus.Pending);
+        result.Value.SettledAt.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task CancelAsync_RecordsWhenItSettled()
+    {
+        // Arrange
+        var factory = CreateSeededFactory(Seed(MakeEmail(1, OutboxEmailStatus.Pending)));
+        var repo = Build(factory);
+
+        // Act
+        var result = await repo.CancelAsync("mail-1", TestContext.Current.CancellationToken);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().NotBeNull();
+        result.Value.SettledAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(5));
     }
 
     [Theory]

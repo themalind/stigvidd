@@ -28,16 +28,19 @@ public class MailOutboxAdminServiceTests
             throw new NotSupportedException();
     }
 
-    private static OutboxEmail MakeEmail(OutboxEmailStatus status = OutboxEmailStatus.Pending) => new()
+    private static OutboxEmail MakeEmail(
+        OutboxEmailStatus status = OutboxEmailStatus.Pending,
+        DateTime? redactedAt = null) => new()
     {
         Id = 42,
         Identifier = "mail-42",
         ToAddress = "vandrare@example.com",
         Subject = "Hej",
-        BodyHtml = "<p>Hej</p>",
-        BodyText = "Hej",
+        BodyHtml = redactedAt is null ? "<p>Hej</p>" : string.Empty,
+        BodyText = redactedAt is null ? "Hej" : string.Empty,
         TemplateKey = "welcome",
         Status = status,
+        RedactedAt = redactedAt,
     };
 
     private static MailOutboxAdminService Build(
@@ -111,6 +114,75 @@ public class MailOutboxAdminServiceTests
         result.Message.Should().NotBeNull();
         result.Message.StatusCode.Should().Be(expectedStatusCode);
         queue.Enqueued.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task GetBodyAsync_ReturnsTheRenderedBodies()
+    {
+        // Arrange
+        var repository = new Mock<IMailOutboxRepository>();
+        repository
+            .Setup(r => r.GetByIdentifierAsync("mail-42", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<OutboxEmail>.Success(MakeEmail()));
+
+        var service = Build(repository, new RecordingQueue());
+
+        // Act
+        var result = await service.GetBodyAsync("mail-42", TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Success.Should().BeTrue();
+        result.Value.Should().NotBeNull();
+        result.Value.BodyHtml.Should().Be("<p>Hej</p>");
+    }
+
+    [Fact]
+    public async Task GetBodyAsync_ForARedactedMail_IsANotFoundThatSaysWhy()
+    {
+        // 404 rather than an empty body. An empty body is indistinguishable from a render that
+        // went wrong, and would send the operator looking for a bug instead of reading the rule.
+        // Arrange
+        var repository = new Mock<IMailOutboxRepository>();
+        repository
+            .Setup(r => r.GetByIdentifierAsync("mail-42", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<OutboxEmail>.Success(
+                MakeEmail(OutboxEmailStatus.Failed, redactedAt: DateTime.UtcNow)));
+
+        var service = Build(repository, new RecordingQueue());
+
+        // Act
+        var result = await service.GetBodyAsync("mail-42", TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Success.Should().BeFalse();
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(404);
+        result.Message.ResultMessage.Should().Contain("retention");
+    }
+
+    [Fact]
+    public async Task RetryAsync_WhenRefused_SaysBothReasonsRatherThanOnlyTheTemporaryOne()
+    {
+        // RepositoryResultStatus has five values and no way to say "conflict because redacted",
+        // so retry and redaction come back as the same Conflict. If the message only mentions
+        // mail that is being sent right now, an operator whose mail was redacted is told to try
+        // again in a moment -- when the answer is never. The status code alone cannot catch
+        // this, which is why the text is asserted.
+        // Arrange
+        var repository = new Mock<IMailOutboxRepository>();
+        repository
+            .Setup(r => r.RequeueAsync("mail-42", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<OutboxEmail>.Conflict());
+
+        var service = Build(repository, new RecordingQueue());
+
+        // Act
+        var result = await service.RetryAsync("mail-42", TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(409);
+        result.Message.ResultMessage.Should().Contain("retention");
     }
 
     [Fact]

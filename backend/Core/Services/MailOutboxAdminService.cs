@@ -69,6 +69,29 @@ public class MailOutboxAdminService : IMailOutboxAdminService
         return Result.Ok(_factory.Create(result.Value));
     }
 
+    public async Task<Result<OutboxEmailBodyResponse>> GetBodyAsync(
+        string identifier, CancellationToken ctoken)
+    {
+        var result = await _repository.GetByIdentifierAsync(identifier, ctoken);
+
+        if (result.Status == RepositoryResultStatus.NotFound)
+            return NotFound<OutboxEmailBodyResponse>();
+
+        if (!result.IsSuccess)
+            return Result.Fail<OutboxEmailBodyResponse>(new Message(500, "The mail could not be read."));
+
+        // A redacted row has no body to serve. 404 rather than an empty one: an empty body is
+        // indistinguishable from a broken render, and the summary's RedactedAt already tells the
+        // UI this will happen, so reaching here at all is the unusual path.
+        if (result.Value.RedactedAt is not null)
+            return Result.Fail<OutboxEmailBodyResponse>(new Message(
+                404,
+                "The rendered body of this mail has been cleared under the retention policy. "
+                    + "The mail itself is kept until its own retention period ends."));
+
+        return Result.Ok(_factory.CreateBody(result.Value));
+    }
+
     public async Task<Result<MailOutboxCountsResponse>> GetCountsAsync(CancellationToken ctoken)
     {
         var result = await _repository.GetCountsByStatusAsync(ctoken);
@@ -90,8 +113,10 @@ public class MailOutboxAdminService : IMailOutboxAdminService
         if (result.Status == RepositoryResultStatus.Conflict)
             return Result.Fail<OutboxEmailDetailResponse>(new Message(
                 409,
-                "Only mail that has failed or been cancelled can be retried. Mail that is being "
-                    + "sent right now cannot — try again in a moment."));
+                "This mail cannot be retried. Only mail that has failed or been cancelled can "
+                    + "be, and only while its rendered body is still held: mail that is being "
+                    + "sent right now has to finish first, and mail whose body has been cleared "
+                    + "under the retention policy can no longer be sent at all."));
 
         if (!result.IsSuccess)
             return Result.Fail<OutboxEmailDetailResponse>(new Message(500, "The mail could not be retried."));

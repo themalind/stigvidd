@@ -23,7 +23,7 @@ export type OutboxStatus = (typeof OUTBOX_STATUSES)[number];
 /** "All" is the page's sentinel for "do not send this filter at all". */
 export const OUTBOX_STATUS_FILTERS = ["All", ...OUTBOX_STATUSES] as const;
 
-type Row = { status?: string | null };
+type Row = { status?: string | null; redactedAt?: string | null };
 
 /**
  * Only a settled, unsent mail can be put back in the queue.
@@ -34,7 +34,38 @@ type Row = { status?: string | null };
  * cannot work.
  */
 export function canRetry(row: Row): boolean {
+  if (row.redactedAt) return false;
   return row.status === "Failed" || row.status === "Cancelled";
+}
+
+/**
+ * Whether this mail still has a body to fetch.
+ *
+ * A body is held only while the mail can still usefully be sent: cleared the moment it is sent,
+ * and cleared on the retention clock once it has failed or been cancelled. The API answers 404
+ * after that, so this is what stops the page offering a button that only produces an error.
+ */
+export function canRevealBody(row: Row): boolean {
+  return !row.redactedAt;
+}
+
+/**
+ * Why there is no body to show, for the panel that replaces the preview.
+ *
+ * Worth saying rather than rendering an empty frame: an empty preview reads as a render that
+ * went wrong, and sends the operator looking for a bug instead of reading the rule.
+ */
+export function describeRedaction(row: Row): string {
+  const cleared =
+    row.status === "Sent"
+      ? "was cleared when the mail was sent"
+      : "has been cleared under the retention policy";
+
+  return (
+    `The rendered body ${cleared}. A body is kept only while the mail can still be sent — ` +
+    `it carries the recipient's name and, for a password reset, a working link. ` +
+    `The mail itself is kept until its own retention period ends.`
+  );
 }
 
 /** Only a mail that has not been claimed yet can be stopped. Cancelling cannot un-send. */
@@ -94,16 +125,23 @@ export function describeNextAttempt(
 /**
  * What a purge is about to do, spelled out before it is irreversible.
  *
- * It names the statuses that are spared as well as the one that is deleted, because the
- * question an operator actually has at this dialog is "will this lose my failed mail?".
+ * It names the statuses THIS action spares as well as the one it deletes, because the question
+ * an operator actually has at this dialog is "will this lose my failed mail?".
+ *
+ * And then it says what the automatic sweep does anyway, which is the half that would otherwise
+ * mislead. "Failed mail is never touched" was true when this button was the only thing that
+ * deleted anything; MailOutboxRetentionService now deletes settled mail on its own clock, and
+ * an operator reading the old sentence at an irreversible dialog would draw the wrong
+ * conclusion about what is being kept for them.
  */
 export function describePurge(olderThanDays: number, sentCount: number): string {
   const days = `${olderThanDays} day${olderThanDays === 1 ? "" : "s"}`;
 
   return (
-    `Permanently deletes sent mail older than ${days}. ` +
-    `Pending, sending, failed and cancelled mail is never touched. ` +
-    `There ${sentCount === 1 ? "is" : "are"} ${sentCount} sent mail${sentCount === 1 ? "" : "s"} in total.`
+    `Permanently deletes sent mail older than ${days}, and nothing else — ` +
+    `pending, sending, failed and cancelled mail is left alone by this action. ` +
+    `There ${sentCount === 1 ? "is" : "are"} ${sentCount} sent mail${sentCount === 1 ? "" : "s"} in total. ` +
+    `Mail is deleted automatically once it is past its retention period; this is for clearing it sooner.`
   );
 }
 

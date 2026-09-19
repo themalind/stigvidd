@@ -4,6 +4,7 @@
 import {
   adminMailOutboxCancel,
   adminMailOutboxGetAll,
+  adminMailOutboxGetBody,
   adminMailOutboxGetByIdentifier,
   adminMailOutboxGetCounts,
   adminMailOutboxPurge,
@@ -12,6 +13,7 @@ import {
 import type {
   MailOutboxCountsResponse,
   MailOutboxPurgeResponse,
+  OutboxEmailBodyResponse,
   OutboxEmailDetailResponse,
   OutboxEmailSummaryResponse,
   PagedResultOfOutboxEmailSummaryResponse,
@@ -22,6 +24,7 @@ import type {
 
 export type OutboxMailSummary = OutboxEmailSummaryResponse;
 export type OutboxMailDetail = OutboxEmailDetailResponse;
+export type OutboxMailBody = OutboxEmailBodyResponse;
 export type OutboxCounts = MailOutboxCountsResponse;
 export type OutboxPurgeResult = MailOutboxPurgeResponse;
 
@@ -39,9 +42,21 @@ export async function getOutboxMails(
   return adminMailOutboxGetAll(filters);
 }
 
-/** The one call that returns the rendered bodies. The list deliberately does not. */
+/** One mail, without its bodies. Neither the list nor this carries them any more. */
 export async function getOutboxMail(identifier: string): Promise<OutboxMailDetail> {
   return adminMailOutboxGetByIdentifier(identifier);
+}
+
+/**
+ * The one call that returns the rendered bodies, and the reason it is separate: a body carries
+ * a nickname and, for reset-password, a live link, so the API logs who asked for it. Opening a
+ * mail must therefore NOT call this — only an explicit reveal does.
+ *
+ * 404 once the body has been cleared under the retention policy; `redactedAt` on the summary
+ * says so in advance, so the page can explain rather than ask and fail.
+ */
+export async function getOutboxMailBody(identifier: string): Promise<OutboxMailBody> {
+  return adminMailOutboxGetBody(identifier);
 }
 
 export async function getOutboxCounts(): Promise<OutboxCounts> {

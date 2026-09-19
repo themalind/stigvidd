@@ -22,6 +22,16 @@ public interface IMailOutboxAdminService
 
     Task<Result<OutboxEmailDetailResponse>> GetDetailAsync(string identifier, CancellationToken ctoken);
 
+    /// <summary>
+    /// The rendered bodies of one mail. 404 once they have been cleared under the retention rule.
+    /// </summary>
+    /// <remarks>
+    /// Separate from GetDetailAsync so that reading a body — a nickname, and for verify-email
+    /// and reset-password a live token URL — is a request in its own right, which the controller
+    /// logs against the operator who made it. Browsing the outbox no longer fetches them.
+    /// </remarks>
+    Task<Result<OutboxEmailBodyResponse>> GetBodyAsync(string identifier, CancellationToken ctoken);
+
     Task<Result<MailOutboxCountsResponse>> GetCountsAsync(CancellationToken ctoken);
 
     /// <summary>

@@ -63,7 +63,9 @@ public class AdminMailOutboxControllerIntegrationTests
         string? toAddress = null,
         DateTime? sentAt = null,
         int attempts = 0,
-        string? lastError = null)
+        string? lastError = null,
+        DateTime? settledAt = null,
+        DateTime? redactedAt = null)
     {
         var identifier = Guid.NewGuid().ToString();
 
@@ -82,6 +84,8 @@ public class AdminMailOutboxControllerIntegrationTests
             NextAttemptAt = DateTime.UtcNow,
             SentAt = sentAt,
             LastError = lastError,
+            SettledAt = settledAt,
+            RedactedAt = redactedAt,
             CreatedAt = DateTime.UtcNow,
             LastUpdatedAt = DateTime.UtcNow,
         });
@@ -148,8 +152,11 @@ public class AdminMailOutboxControllerIntegrationTests
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
 
+    // The bodies are no longer part of the detail response. This pins the half that matters for
+    // privacy: an operator browsing the outbox does not pull a nickname and, for a reset-password
+    // row, a live token URL down to their browser for every mail they click.
     [Fact]
-    public async Task GetByIdentifier_ReturnsTheRenderedBodies()
+    public async Task GetByIdentifier_DoesNotReturnTheRenderedBodies()
     {
         // Arrange
         var identifier = SeedMail();
@@ -165,8 +172,53 @@ public class AdminMailOutboxControllerIntegrationTests
             TestContext.Current.CancellationToken);
 
         detail.Should().NotBeNull();
-        detail.BodyHtml.Should().Be("<p>Hej</p>");
         detail.Email.Identifier.Should().Be(identifier);
+
+        // Asserted on the wire, not the DTO: a body that reached the browser would do so as
+        // JSON whatever the C# type says.
+        var body = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+        body.Should().NotContain("<p>Hej</p>");
+    }
+
+    [Fact]
+    public async Task GetBody_ReturnsTheRenderedBodies()
+    {
+        // Arrange
+        var identifier = SeedMail();
+
+        // Act
+        var response = await AdminClient().GetAsync(
+            $"{Route}/{identifier}/body", TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var body = await response.Content.ReadFromJsonAsync<OutboxEmailBodyResponse>(
+            TestContext.Current.CancellationToken);
+
+        body.Should().NotBeNull();
+        body.Identifier.Should().Be(identifier);
+        body.BodyHtml.Should().Be("<p>Hej</p>");
+        body.BodyText.Should().Be("Hej");
+    }
+
+    [Fact]
+    public async Task GetBody_ForARedactedMail_ShouldReturnNotFound()
+    {
+        // Arrange
+        var identifier = SeedMail(
+            OutboxEmailStatus.Failed,
+            settledAt: DateTime.UtcNow.AddDays(-2),
+            redactedAt: DateTime.UtcNow.AddDays(-1));
+
+        // Act
+        var response = await AdminClient().GetAsync(
+            $"{Route}/{identifier}/body", TestContext.Current.CancellationToken);
+
+        // Assert
+        // 404 rather than an empty body: an empty body is indistinguishable from a render that
+        // went wrong, and the operator would go looking for a bug instead of reading the rule.
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
 
     [Fact]

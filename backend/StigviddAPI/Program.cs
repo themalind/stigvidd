@@ -151,6 +151,10 @@ public class Program
         // OutboxEmails table on every start.
         builder.Services.AddHostedService<StigviddAPI.BackgroundServices.MailOutboxDispatcher>();
 
+// Holds OutboxEmails to its retention rule: clears settled bodies, then deletes sent and
+// settled rows past their windows. Configured under MailOutbox in appsettings.json.
+builder.Services.AddHostedService<StigviddAPI.BackgroundServices.MailOutboxRetentionService>();
+
         // Swagger auth
         builder.Services.AddOpenApiDocument(config =>
         {

@@ -6,9 +6,12 @@ import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+// A FULL module replacement -- every function the page imports from here must appear, or it
+// arrives as undefined and every test that opens the sheet dies, not just the ones that use it.
 const api = vi.hoisted(() => ({
   getOutboxMails: vi.fn(),
   getOutboxMail: vi.fn(),
+  getOutboxMailBody: vi.fn(),
   getOutboxCounts: vi.fn(),
   retryOutboxMail: vi.fn(),
   cancelOutboxMail: vi.fn(),
@@ -32,6 +35,8 @@ type Summary = {
   nextAttemptAt: string;
   sentAt: string | null;
   lastError: string | null;
+  settledAt: string | null;
+  redactedAt: string | null;
   createdAt: string;
   lastUpdatedAt: string;
 };
@@ -48,6 +53,8 @@ function summary(overrides: Partial<Summary> = {}): Summary {
     nextAttemptAt: "2026-09-18T12:00:00Z",
     sentAt: null,
     lastError: "Connection refused",
+    settledAt: "2026-09-18T11:30:00Z",
+    redactedAt: null,
     createdAt: "2026-09-18T11:00:00Z",
     lastUpdatedAt: "2026-09-18T11:30:00Z",
     ...overrides,
@@ -55,11 +62,11 @@ function summary(overrides: Partial<Summary> = {}): Summary {
 }
 
 function detail(overrides: Partial<Summary> = {}) {
-  return {
-    email: summary(overrides),
-    bodyHtml: "<p>Hej</p>",
-    bodyText: "Hej",
-  };
+  return { email: summary(overrides) };
+}
+
+function body() {
+  return { identifier: "mail-1", bodyHtml: "<p>Hej</p>", bodyText: "Hej" };
 }
 
 function counts(overrides: Partial<Record<string, number>> = {}) {
@@ -84,6 +91,7 @@ beforeEach(() => {
   });
   api.getOutboxCounts.mockResolvedValue(counts());
   api.getOutboxMail.mockResolvedValue(detail());
+  api.getOutboxMailBody.mockResolvedValue(body());
 });
 
 describe("MailOutboxPage", () => {
@@ -202,6 +210,58 @@ describe("MailOutboxPage", () => {
 
     await user.click(await screen.findByTestId("open-purge"));
 
-    expect(await screen.findByText(/never touched/i)).toBeInTheDocument();
+    expect(await screen.findByText(/left alone by this action/i)).toBeInTheDocument();
+    // And that it says the sweep deletes settled mail regardless, so the dialog is not read
+    // as a promise that failed mail is kept.
+    expect(await screen.findByText(/retention period/i)).toBeInTheDocument();
+  });
+
+  it("does not fetch the mail body just because the mail was opened", async () => {
+    // The body is where the recipient's name and, for a password reset, a live link are, and
+    // the API logs every read of one. Opening a mail to see why it failed must not trigger that.
+    const user = userEvent.setup();
+    renderPage();
+
+    await user.click(await screen.findByTestId("open-mail-1"));
+
+    expect(await screen.findByTestId("reveal-body")).toBeInTheDocument();
+    expect(api.getOutboxMailBody).not.toHaveBeenCalled();
+  });
+
+  it("fetches the body only when the operator asks for it", async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    await user.click(await screen.findByTestId("open-mail-1"));
+    await user.click(await screen.findByTestId("reveal-body"));
+
+    await waitFor(() => expect(api.getOutboxMailBody).toHaveBeenCalledWith("mail-1"));
+  });
+
+  it("explains a cleared body instead of offering a reveal that would 404", async () => {
+    const user = userEvent.setup();
+    api.getOutboxMail.mockResolvedValue(
+      detail({ status: "Sent", redactedAt: "2026-09-18T12:00:00Z" }),
+    );
+    renderPage();
+
+    await user.click(await screen.findByTestId("open-mail-1"));
+
+    expect(await screen.findByTestId("body-redacted")).toBeInTheDocument();
+    expect(screen.queryByTestId("reveal-body")).not.toBeInTheDocument();
+  });
+
+  it("offers no retry for a mail whose body has been cleared", async () => {
+    // Re-sending an empty body is worse than refusing, so the API returns 409. The page should
+    // not offer a button that cannot work.
+    const user = userEvent.setup();
+    api.getOutboxMail.mockResolvedValue(
+      detail({ status: "Failed", redactedAt: "2026-09-18T12:00:00Z" }),
+    );
+    renderPage();
+
+    await user.click(await screen.findByTestId("open-mail-1"));
+
+    await waitFor(() => expect(screen.queryByTestId("retry")).not.toBeInTheDocument());
   });
 });

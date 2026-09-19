@@ -21,6 +21,10 @@ export interface OutboxEmailSummaryResponse {
   sentAt?: string | null;
   /** @nullable */
   lastError?: string | null;
+  /** @nullable */
+  settledAt?: string | null;
+  /** @nullable */
+  redactedAt?: string | null;
   createdAt?: string;
   lastUpdatedAt?: string;
 }

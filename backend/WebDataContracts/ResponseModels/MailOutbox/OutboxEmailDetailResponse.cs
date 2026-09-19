@@ -4,26 +4,22 @@
 namespace WebDataContracts.ResponseModels.MailOutbox;
 
 /// <summary>
-/// One mail with the bodies that were rendered for it at enqueue time.
+/// One mail, without its rendered bodies.
 /// </summary>
 /// <remarks>
-/// The bodies live here and not on the summary so a list page never carries them. BodyHtml is
-/// operator-authored markup: values were HTML-encoded when it was rendered, so a nickname
-/// cannot inject, but the surrounding markup came from a template row that can also have been
-/// written straight into Postgres by hand. It belongs in a sandboxed iframe, not in an
-/// innerHTML sink.
+/// The bodies used to be here, and are now behind their own route. They are where the personal
+/// data actually is — a nickname in the copy, and for verify-email and reset-password a live
+/// token URL — so fetching one is a deliberate act that gets logged, rather than something that
+/// happens to every row an operator clicks while browsing.
+///
+/// See OutboxEmailBodyResponse.
 /// </remarks>
 public class OutboxEmailDetailResponse
 {
     public required OutboxEmailSummaryResponse Email { get; set; }
-    public required string BodyHtml { get; set; }
-    public required string BodyText { get; set; }
 
-    public static OutboxEmailDetailResponse Create(
-        OutboxEmailSummaryResponse email, string bodyHtml, string bodyText) => new()
-        {
-            Email = email,
-            BodyHtml = bodyHtml,
-            BodyText = bodyText,
-        };
+    public static OutboxEmailDetailResponse Create(OutboxEmailSummaryResponse email) => new()
+    {
+        Email = email,
+    };
 }

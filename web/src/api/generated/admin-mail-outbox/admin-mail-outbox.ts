@@ -28,6 +28,7 @@ import type {
   AdminMailOutboxGetAllParams,
   MailOutboxCountsResponse,
   MailOutboxPurgeResponse,
+  OutboxEmailBodyResponse,
   OutboxEmailDetailResponse,
   PagedResultOfOutboxEmailSummaryResponse,
   ProblemDetails,
@@ -254,6 +255,70 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
         TContext
       > => {
       return useMutation(getAdminMailOutboxGetByIdentifierMutationOptions(options), queryClient);
+    }
+    export const getAdminMailOutboxGetBodyUrl = (identifier: string,) => {
+
+
+
+
+  return `/api/v1/admin/mail-outbox/${identifier}/body`
+}
+
+export const adminMailOutboxGetBody = async (identifier: string, options?: RequestInit): Promise<OutboxEmailBodyResponse> => {
+
+  return customFetch<OutboxEmailBodyResponse>(getAdminMailOutboxGetBodyUrl(identifier),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getAdminMailOutboxGetBodyMutationOptions = <TError = ProblemDetails,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminMailOutboxGetBody>>, TError,{identifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof adminMailOutboxGetBody>>, TError,{identifier: string}, TContext> => {
+
+const mutationKey = ['adminMailOutboxGetBody'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminMailOutboxGetBody>>, {identifier: string}> = (props) => {
+          const {identifier} = props ?? {};
+
+          return  adminMailOutboxGetBody(identifier,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AdminMailOutboxGetBodyMutationResult = NonNullable<Awaited<ReturnType<typeof adminMailOutboxGetBody>>>
+
+    export type AdminMailOutboxGetBodyMutationError = ProblemDetails
+
+    export const useAdminMailOutboxGetBody = <TError = ProblemDetails,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminMailOutboxGetBody>>, TError,{identifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof adminMailOutboxGetBody>>,
+        TError,
+        {identifier: string},
+        TContext
+      > => {
+      return useMutation(getAdminMailOutboxGetBodyMutationOptions(options), queryClient);
     }
     export const getAdminMailOutboxRetryUrl = (identifier: string,) => {
 

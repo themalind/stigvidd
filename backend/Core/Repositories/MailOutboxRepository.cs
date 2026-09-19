@@ -114,6 +114,17 @@ public class MailOutboxRepository : IMailOutboxRepository
             email.Status = OutboxEmailStatus.Sent;
             email.SentAt = DateTime.UtcNow;
             email.LastError = null;
+
+            // A sent mail can never be retried -- RequeueAsync takes Failed and Cancelled only --
+            // so nothing needs the body from here on, while it still holds a nickname and, for
+            // verify-email and reset-password, a live token URL. Clearing it here rather than in
+            // the sweep means there is never a window in which a delivered mail's body is sitting
+            // in the table waiting for a timer.
+            //
+            // Plain assignments, not ExecuteUpdateAsync: this method is unit-tested against the EF
+            // InMemory provider, which has no ExecuteUpdate. It is still the one UPDATE it was.
+            Redact(email);
+
             email.LastUpdatedAt = DateTime.UtcNow;
 
             await context.SaveChangesAsync(ctoken);
@@ -147,6 +158,11 @@ public class MailOutboxRepository : IMailOutboxRepository
                 // Park it. A 5xx reply means the server has told us the message itself is
                 // unacceptable, so further attempts buy the same answer more slowly.
                 email.Status = OutboxEmailStatus.Failed;
+
+                // Only on this branch. The row below is going back to Pending and has not
+                // settled at all; stamping it there would start a retention clock on a mail
+                // that is still going to be sent.
+                email.SettledAt = DateTime.UtcNow;
             }
             else
             {
@@ -262,6 +278,8 @@ public class MailOutboxRepository : IMailOutboxRepository
                     e.NextAttemptAt,
                     e.SentAt,
                     e.LastError,
+                    e.SettledAt,
+                    e.RedactedAt,
                     e.CreatedAt,
                     e.LastUpdatedAt))
                 .ToListAsync(ctoken);
@@ -338,6 +356,12 @@ public class MailOutboxRepository : IMailOutboxRepository
             if (email.Status is not (OutboxEmailStatus.Failed or OutboxEmailStatus.Cancelled))
                 return RepositoryResult<OutboxEmail>.Conflict();
 
+            // The body has been cleared under the retention rule, so there is nothing left to
+            // send. This is the only path by which a redacted row could reach a recipient, and
+            // delivering a blank mail is worse than refusing to try.
+            if (email.RedactedAt is not null)
+                return RepositoryResult<OutboxEmail>.Conflict();
+
             email.Status = OutboxEmailStatus.Pending;
 
             // The operator clicking retry IS the decision that now is the time. Leaving a spent
@@ -351,6 +375,12 @@ public class MailOutboxRepository : IMailOutboxRepository
             email.Attempts = 0;
 
             email.SentAt = null;
+
+            // Cleared for the same reason as SentAt: the row is leaving the terminal state, so
+            // the moment it settled is no longer true. Leave it and a row that fails again keeps
+            // its FIRST settle time, and the sweep deletes it early -- counting from a failure
+            // the operator has already responded to.
+            email.SettledAt = null;
 
             // LastError is deliberately KEPT. It is the only record of why this failed, the
             // retry has not produced a new one yet, and the field is self-cleaning:
@@ -387,6 +417,7 @@ public class MailOutboxRepository : IMailOutboxRepository
                 return RepositoryResult<OutboxEmail>.Conflict();
 
             email.Status = OutboxEmailStatus.Cancelled;
+            email.SettledAt = DateTime.UtcNow;
             email.LastUpdatedAt = DateTime.UtcNow;
 
             await context.SaveChangesAsync(ctoken);
@@ -437,6 +468,147 @@ public class MailOutboxRepository : IMailOutboxRepository
             _logger.LogError(ex, "MailOutboxRepository: PurgeSentBeforeAsync -> Something went wrong when purging sent mail.");
             return RepositoryResult<int>.Error();
         }
+    }
+
+    /// <summary>
+    /// Settled rows -- Failed or Cancelled -- that stopped moving before the cutoff.
+    /// </summary>
+    /// <remarks>
+    /// Dated by SettledAt and never by LastUpdatedAt. Seven methods in this file write
+    /// LastUpdatedAt and RedactBodiesBeforeAsync would be an eighth, so a rule keyed on it
+    /// would push a row's deletion date forward every time the sweep cleared its body -- the
+    /// two rules would fight, and the redacted row would outlive them both.
+    ///
+    /// Same null rule as Purgeable, for the same reason: a row with no SettledAt is spared
+    /// rather than swept by accident.
+    /// </remarks>
+    public static System.Linq.Expressions.Expression<Func<OutboxEmail, bool>> PurgeableSettled(DateTime cutoffUtc) =>
+        e => (e.Status == OutboxEmailStatus.Failed || e.Status == OutboxEmailStatus.Cancelled)
+             && e.SettledAt != null && e.SettledAt < cutoffUtc;
+
+    /// <summary>
+    /// Settled rows whose bodies are past the body-retention window and have not been cleared yet.
+    /// </summary>
+    /// <remarks>
+    /// Only Failed and Cancelled: a Sent row is redacted the moment it is marked sent, and a
+    /// Pending or Sending one still has to go out. RedactedAt == null keeps the sweep from
+    /// rewriting rows it has already done, which is what stops it reporting work every run.
+    /// </remarks>
+    public static System.Linq.Expressions.Expression<Func<OutboxEmail, bool>> RedactableBody(DateTime cutoffUtc) =>
+        e => (e.Status == OutboxEmailStatus.Failed || e.Status == OutboxEmailStatus.Cancelled)
+             && e.RedactedAt == null
+             && e.SettledAt != null && e.SettledAt < cutoffUtc;
+
+    public async Task<RepositoryResult<int>> PurgeSettledBeforeAsync(DateTime cutoffUtc, CancellationToken ctoken)
+    {
+        try
+        {
+            using var context = await _dbContextFactory.CreateDbContextAsync(ctoken);
+
+            var deleted = await context.OutboxEmails
+                .Where(PurgeableSettled(cutoffUtc))
+                .ExecuteDeleteAsync(ctoken);
+
+            return RepositoryResult<int>.Success(deleted);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "MailOutboxRepository: PurgeSettledBeforeAsync -> Something went wrong when purging settled mail.");
+            return RepositoryResult<int>.Error();
+        }
+    }
+
+    public async Task<RepositoryResult<int>> RedactBodiesBeforeAsync(DateTime cutoffUtc, CancellationToken ctoken)
+    {
+        try
+        {
+            using var context = await _dbContextFactory.CreateDbContextAsync(ctoken);
+
+            var now = DateTime.UtcNow;
+
+            // LastUpdatedAt is deliberately NOT touched. It is not this row's retention clock --
+            // SettledAt is -- but leaving it alone keeps "when did a human or the dispatcher
+            // last act on this" answerable, which is the question it exists for.
+            var redacted = await context.OutboxEmails
+                .Where(RedactableBody(cutoffUtc))
+                .ExecuteUpdateAsync(
+                    setters => setters
+                        .SetProperty(e => e.BodyHtml, string.Empty)
+                        .SetProperty(e => e.BodyText, string.Empty)
+                        .SetProperty(e => e.RedactedAt, now),
+                    ctoken);
+
+            return RepositoryResult<int>.Success(redacted);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "MailOutboxRepository: RedactBodiesBeforeAsync -> Something went wrong when redacting settled mail.");
+            return RepositoryResult<int>.Error();
+        }
+    }
+
+    public async Task<RepositoryResult<int>> EraseByRecipientAsync(string emailAddress, CancellationToken ctoken)
+    {
+        try
+        {
+            using var context = await _dbContextFactory.CreateDbContextAsync(ctoken);
+
+            // ToLower on both sides, for the reason GetPagedAsync gives above: LIKE and equality
+            // differ in case sensitivity between Postgres and SQLite, and EF.Functions.ILike
+            // would fix Postgres and throw on SQLite.
+            var needle = emailAddress.Trim().ToLower();
+
+            // Step 1: take anything still queued out of the dispatcher's reach BEFORE deleting
+            // it. Claiming guards on Pending, so a row moved to Cancelled can no longer be
+            // picked up, and a signal already sitting in the channel becomes a no-op.
+            //
+            // Without this, the delete below races the claim: the dispatcher can move a row
+            // Pending -> Sending in between, and step 2 then SPARES it as on-the-wire. The mail
+            // goes to the deleted account and the row survives the erasure -- both halves wrong.
+            // That is the same race that is the stated reason cancel is a status transition
+            // rather than a delete.
+            //
+            // NOTHING TESTS THIS. Both orderings leave the same rows behind unless a claim lands
+            // in the window, and this suite has no way to make one. It is here on the argument
+            // above, not on a green test -- so do not remove it because nothing went red.
+            var queued = await context.OutboxEmails
+                .Where(e => e.ToAddress.ToLower() == needle && e.Status == OutboxEmailStatus.Pending)
+                .ToListAsync(ctoken);
+
+            foreach (var email in queued)
+            {
+                email.Status = OutboxEmailStatus.Cancelled;
+                email.SettledAt = DateTime.UtcNow;
+                email.LastUpdatedAt = DateTime.UtcNow;
+            }
+
+            if (queued.Count > 0)
+                await context.SaveChangesAsync(ctoken);
+
+            // Step 2: delete everything except the row the dispatcher is holding right now.
+            // Nothing can recall a message already on the wire, and deleting it under the worker
+            // would make MarkSentAsync's NotFound the only trace that it went out. It settles
+            // within seconds and the sweep collects it.
+            var deleted = await context.OutboxEmails
+                .Where(e => e.ToAddress.ToLower() == needle && e.Status != OutboxEmailStatus.Sending)
+                .ExecuteDeleteAsync(ctoken);
+
+            return RepositoryResult<int>.Success(deleted);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "MailOutboxRepository: EraseByRecipientAsync -> Something went wrong when erasing mail for a deleted account.");
+            return RepositoryResult<int>.Error();
+        }
+    }
+
+    // Clears the rendered bodies in place and records that it happened. RedactedAt, not the
+    // emptiness of the two strings, is what every reader branches on.
+    private static void Redact(OutboxEmail email)
+    {
+        email.BodyHtml = string.Empty;
+        email.BodyText = string.Empty;
+        email.RedactedAt = DateTime.UtcNow;
     }
 
     // Attempt 1 -> 1 min, 2 -> 2, 3 -> 4, 4 -> 8, 5 -> 16.

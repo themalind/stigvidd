@@ -25,6 +25,7 @@ public class UserServiceTests
         Mock<IFriendRepository>? friendRepo = null,
         Mock<IReviewService>? reviewService = null,
         Mock<IContentReportRepository>? contentReportRepo = null,
+        Mock<IMailOutboxRepository>? mailOutboxRepo = null,
         StigviddMetrics? metrics = null)
     {
         var cfg = new Mock<IConfiguration>();
@@ -38,6 +39,19 @@ public class UserServiceTests
         contentReportRepo ??= new Mock<IContentReportRepository>();
         contentReportRepo.Setup(r => r.HandleUserDeletionAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult.Success());
+        // The address is read on the way to every user deletion, to erase that person's mail --
+        // the outbox has no foreign key to Users, so the address is the only handle on it. The
+        // <string> overload is distinct from the <UserResponse> one the read tests set up.
+        repo.Setup(r => r.GetUserByIdentifierAsync(
+                It.IsAny<string>(),
+                It.IsAny<Expression<Func<User, string>>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<string>.Success("vandrare@example.com"));
+
+        // Queued mail is erased on the way to every user deletion; tests that care pass their own
+        mailOutboxRepo ??= new Mock<IMailOutboxRepository>();
+        mailOutboxRepo.Setup(r => r.EraseByRecipientAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<int>.Success(0));
         if (reviewService is null)
         {
             // Reviews are anonymized on the way to every user deletion; tests that care pass their own
@@ -46,7 +60,7 @@ public class UserServiceTests
                 .ReturnsAsync(Result.Ok());
         }
 
-        return new UserService(repo.Object, trailobstacleRepo.Object, userResponseFactory, hikeService.Object, reviewService.Object, friendRepo.Object, contentReportRepo.Object, metrics ?? new StigviddMetrics());
+        return new UserService(repo.Object, trailobstacleRepo.Object, userResponseFactory, hikeService.Object, reviewService.Object, friendRepo.Object, contentReportRepo.Object, mailOutboxRepo.Object, metrics ?? new StigviddMetrics());
     }
 
     [Fact]

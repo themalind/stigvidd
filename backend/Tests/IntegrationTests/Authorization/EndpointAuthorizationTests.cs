@@ -131,6 +131,7 @@ public class EndpointAuthorizationTests : IClassFixture<StigViddWebApplicationFa
         "GET /api/v1/admin/mail-outbox",
         "GET /api/v1/admin/mail-outbox/counts",
         "GET /api/v1/admin/mail-outbox/{identifier}",
+        "GET /api/v1/admin/mail-outbox/{identifier}/body",
         "POST /api/v1/admin/mail-outbox/purge",
         "POST /api/v1/admin/mail-outbox/{identifier}/cancel",
         "POST /api/v1/admin/mail-outbox/{identifier}/retry",

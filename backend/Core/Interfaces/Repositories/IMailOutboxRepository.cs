@@ -25,6 +25,8 @@ public record OutboxEmailSummary(
     DateTime NextAttemptAt,
     DateTime? SentAt,
     string? LastError,
+    DateTime? SettledAt,
+    DateTime? RedactedAt,
     DateTime CreatedAt,
     DateTime LastUpdatedAt);
 
@@ -119,4 +121,36 @@ public interface IMailOutboxRepository
     /// Deletes Sent rows whose SentAt is strictly older than the cutoff. Returns the row count.
     /// </summary>
     Task<RepositoryResult<int>> PurgeSentBeforeAsync(DateTime cutoffUtc, CancellationToken ctoken);
+
+    // ---- Retention. Driven by MailOutboxRetentionService, on a timer rather than by an
+    // operator, because storage limitation is not something anyone should have to remember.
+
+    /// <summary>
+    /// Deletes Failed and Cancelled rows that settled strictly before the cutoff, dated by
+    /// SettledAt. Returns the row count.
+    /// </summary>
+    Task<RepositoryResult<int>> PurgeSettledBeforeAsync(DateTime cutoffUtc, CancellationToken ctoken);
+
+    /// <summary>
+    /// Clears the rendered bodies of Failed and Cancelled rows that settled before the cutoff
+    /// and have not been cleared already, stamping RedactedAt. Returns the row count.
+    /// </summary>
+    /// <remarks>
+    /// Sent rows are not here: MarkSentAsync clears those as it marks them, since they can
+    /// never be retried. These can, which is the whole reason their bodies get a window at all
+    /// -- and why RequeueAsync refuses once the window has closed.
+    /// </remarks>
+    Task<RepositoryResult<int>> RedactBodiesBeforeAsync(DateTime cutoffUtc, CancellationToken ctoken);
+
+    /// <summary>
+    /// Erases every row for a recipient, for Art. 17 on account deletion. Returns the row count.
+    /// </summary>
+    /// <remarks>
+    /// Rows still queued are moved to Cancelled first, so the dispatcher cannot claim one
+    /// between the read and the delete. A row already Sending is left alone: nothing can recall
+    /// a message on the wire, and the sweep collects it once it settles. Matching is on the
+    /// address, because the outbox has no foreign key to Users -- so mail queued to an address
+    /// the account no longer uses is not reached by this.
+    /// </remarks>
+    Task<RepositoryResult<int>> EraseByRecipientAsync(string emailAddress, CancellationToken ctoken);
 }
