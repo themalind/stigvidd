@@ -44,10 +44,12 @@ function fixMultipartSchemas(spec: OpenApiDocument): OpenApiDocument {
  * Generates the typed API client (react-query hooks + types) from the backend's
  * OpenAPI document. Run with `npm run generate:api`.
  *
- * Reads ./openapi.json, which is NOT committed — OpenApiContractTests writes it on every
- * backend test run. A checkout that has never run those tests has no file here and this
- * fails; run them first, or point `ORVAL_API_URL` at a running backend
- * (`http://localhost:5265/swagger/v1/swagger.json`) to bypass the file entirely.
+ * Reads ./openapi.json, which is NOT committed — the StigviddAPI build exports it, so
+ * `cd backend && dotnet build` is what produces it. A checkout that has never built the
+ * backend has no file here and this fails; build it first, or point `ORVAL_API_URL` at a
+ * running backend (`http://localhost:5265/swagger/v1/swagger.json`) to bypass the file.
+ *
+ * `npm run dev` and `npm run build` do both steps for you — see scripts/codegen.mjs.
  */
 export default defineConfig({
   stigvidd: {

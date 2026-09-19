@@ -15,6 +15,7 @@ using Keycloak.AuthServices.Common;
 using Keycloak.AuthServices.Sdk;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using NSwag.Generation;
 using SharpGrip.FluentValidation.AutoValidation.Mvc.Extensions;
 using StigviddAPI.Extensions;
 
@@ -158,9 +159,10 @@ public class Program
             // AGPL section 13: everyone who interacts with this server over a network
             // is entitled to its Corresponding Source. Putting the offer in the OpenAPI
             // description means it reaches API consumers, who never see the app's or the
-            // admin web's About screen. Editing this text changes the API contract, so
-            // OpenApiContractTests will rewrite web/openapi.json and fail once - review
-            // the diff, then `cd web && npm run generate:api` and commit both.
+            // admin web's About screen. Editing this text changes the API contract: orval
+            // copies info.description into the header of EVERY file it emits, so the next
+            // `dotnet build` rewrites web/openapi.json and the whole generated client then
+            // differs. Run `cd web && npm run generate:api` and commit src/api/generated.
             config.Description =
                 "Stigvidd API. This is free software, licensed under the GNU Affero General "
                 + "Public License version 3 or later. Under section 13 of that licence you "
@@ -183,6 +185,44 @@ public class Program
         });
 
         var app = builder.Build();
+
+        // --export-openapi <path> writes the OpenAPI document and exits, serving nothing.
+        //
+        // This is what produces web/openapi.json, which is gitignored and is orval's input
+        // for the committed client under web/src/api/generated. It is driven by
+        // scripts/generate-openapi.mjs, which the StigviddAPI build runs after every Debug
+        // build, so the document is refreshed by an ordinary `dotnet build`.
+        //
+        // It has to sit HERE, between Build() and the migration loop below, and that
+        // position is the whole reason this is a switch rather than an external tool:
+        // NSwag's own CLI (aspnetcore2openapi) reaches the service provider through
+        // HostFactoryResolver, which runs Main straight past this point into
+        // RunMigrationsAsync and then dies on a database it has no reason to need.
+        // Measured, and it is why that approach was abandoned.
+        //
+        // The generator resolved here is the same one the /swagger/v1/swagger.json endpoint
+        // uses, so the two documents agree by construction rather than by luck.
+        var openApiExportPath = ReadOpenApiExportPath(args);
+        if (openApiExportPath is not null)
+        {
+            var generator = app.Services.GetRequiredService<IOpenApiDocumentGenerator>();
+            var document = await generator.GenerateAsync("v1");
+
+            var directory = Path.GetDirectoryName(openApiExportPath);
+            if (!string.IsNullOrEmpty(directory))
+                Directory.CreateDirectory(directory);
+
+            // Newtonsoft indents with Environment.NewLine, so ToJson() is CRLF on Windows and
+            // LF everywhere else. Normalising means a Windows box and a Linux box produce the
+            // same bytes from the same API - which matters because the CLIENT generated from
+            // this file IS committed and Jenkins diffs it.
+            // See docs/notes/openapi-snapshot-fails-on-windows-line-endings.md.
+            var json = document.ToJson().Replace("\r\n", "\n");
+            await File.WriteAllTextAsync(openApiExportPath, json);
+
+            Console.WriteLine($"Wrote {json.Length} characters of OpenAPI document to {openApiExportPath}");
+            return;
+        }
 
         // Run database migrations at startup
         foreach (var migrationRunner in app.Services.GetServices<IDbMigrationRunner>())
@@ -252,6 +292,28 @@ public class Program
         app.MapControllers();
 
         app.Run();
+    }
+
+    // Reads the path out of `--export-openapi <path>`, or null when the switch is absent —
+    // which is every invocation except the build's document export, so the serving path is
+    // untouched. An absolute path is returned because the caller's working directory is
+    // StigviddAPI/ while the file belongs at the repository root.
+    private static string? ReadOpenApiExportPath(string[] args)
+    {
+        const string exportSwitch = "--export-openapi";
+
+        for (var index = 0; index < args.Length; index++)
+        {
+            if (!string.Equals(args[index], exportSwitch, StringComparison.Ordinal))
+                continue;
+
+            if (index + 1 >= args.Length || string.IsNullOrWhiteSpace(args[index + 1]))
+                throw new ArgumentException($"{exportSwitch} requires a file path after it.", nameof(args));
+
+            return Path.GetFullPath(args[index + 1]);
+        }
+
+        return null;
     }
 
     private static bool IsProbePath(PathString path) =>

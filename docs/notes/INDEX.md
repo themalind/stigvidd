@@ -20,12 +20,24 @@ you get approved.
 
 - [The API contract is a one-way pipeline, and the file in the middle is not committed](openapi-contract-snapshot.md) —
   Controllers/WebDataContracts to `web/openapi.json` to `web/src/api/generated` flows one
-  way only. `web/openapi.json` is **gitignored** and `OpenApiContractTests` writes it: absent
-  it is created and the run passes, present-but-different it is rewritten and the run **fails
-  once**, which means the committed client is stale — `npm run generate:api` in web/ and commit
-  `src/api/generated`. Jenkins produces the snapshot in Preflight (the web stage runs in
-  parallel with the backend one, so it cannot wait for it) and alone runs
-  `git diff --exit-code -- src/api/generated`.
+  way only. `web/openapi.json` is **gitignored** and the **StigviddAPI build exports it**
+  (the `--export-openapi` switch in Program.cs, driven by scripts/generate-openapi.mjs), so
+  `dotnet build` is what produces it. It used to be a test that wrote the file and failed
+  once, which fired on Jenkins over a leftover snapshot while nothing was actually wrong.
+  NSwag's own CLI cannot replace it: HostFactoryResolver runs Main past Build() into the
+  migration loop. Jenkins produces the document in Preflight (the web stage runs in parallel
+  with the backend one, so it cannot wait for it) and alone runs
+  `git diff --exit-code -- src/api/generated`. A description-only change still rewrites all
+  **125** generated files.
+- [Code generation runs on an ordinary build — and the four places it deliberately does not](codegen-runs-on-build-except-where-it-cannot.md) —
+  a backend build refreshes `web/openapi.json` (also the VS Code build task and F5); in web/,
+  the dev server and the production build refresh the document and the client through
+  `web/scripts/codegen.mjs`. Four environments must not: both Dockerfiles are excluded
+  **structurally** (the files are not in the build context), while GitHub CI's web job and
+  Jenkins' web stage need `STIGVIDD_SKIP_API_CODEGEN` — the GitHub one because it has a full
+  checkout but **no .NET SDK**, so the structural check passes and `dotnet` is then missing.
+  Also: why `DesignTimeBuild` is in the MSBuild condition, why the script always rewrites the
+  file, and why the csproj comment cannot contain a double dash.
 - [A `Produces("text/html")` attribute does not keep an endpoint out of the typed client — only `ApiExplorerSettings(IgnoreApi = true)` does](produces-html-does-not-keep-an-endpoint-out-of-the-generated-client.md) —
   adding any endpoint that serves a page to a browser rather than JSON (a mail link, a form
   post, an HTML landing page): `[Produces("text/html")]` reads like it declares the action out
@@ -47,18 +59,20 @@ you get approved.
   reads as a real defect; it is PostgreSQL **17** syntax on a 16 server. `docker-compose.yml`'s
   image pin is load-bearing for the migration chain. Carries the `psql` one-liners for checking
   columns/indexes/FKs and, crucially, that an `InsertData` seed left the identity sequence ahead.
-- [`OpenApiContractTests` used to fail on Windows over CR bytes alone — untracking the snapshot removed it](openapi-snapshot-fails-on-windows-line-endings.md) —
+- [The OpenAPI document's line endings were a Windows trap twice, and are now pinned to LF](openapi-snapshot-fails-on-windows-line-endings.md) —
   RESOLVED, and kept for the diagnosis. While `web/openapi.json` was committed, `.gitattributes`
   held it at LF while the served document is CRLF on Windows, so an ordinal comparison failed on
-  every clean checkout with zero content difference. Now that the file is gitignored nothing
-  forces LF and a missing snapshot is simply written, so the failure mode is gone. The technique
-  survives: against any byte-exact comparison of a file git may normalise, strip CR from both
-  sides and diff before hunting for a change that is not there.
+  every clean checkout with zero content difference. Untracking the file and then deleting the
+  test removed both halves, and the export now normalises CRLF to LF itself — Newtonsoft indents
+  with `Environment.NewLine`, and the CLIENT generated from the document IS committed. The
+  technique survives: against any byte-exact comparison of a file git may normalise, strip CR
+  from both sides and diff before hunting for a change that is not there.
 - [In a linked worktree `.git` is a FILE, and code that tests for a directory walks past it](git-worktree-repo-root.md) —
-  `Directory.Exists(".git")` is false at a worktree root, which made
+  `Directory.Exists(".git")` is false at a worktree root, which made the old
   `OpenApiContractTests.FindRepositoryRoot` run off the top of the filesystem and throw,
   so the whole integration suite was unrunnable in the checkout the work happens in. Use an
-  exists-either-kind test. Also: `.codegraph/` is per-checkout and uncommitted, so a fresh
+  exists-either-kind test — or resolve the root from the script's own location, which is
+  what scripts/generate-openapi.mjs does. Also: `.codegraph/` is per-checkout and uncommitted, so a fresh
   worktree has no index and codegraph silently knows nothing about the tree.
 - [`dotnet test` needs ConnectionStrings\_\_StigVidd, or every integration test fails at startup](dotnet-test-connection-string.md) —
   `Program.cs` throws on the missing connection string before any code under test runs, and

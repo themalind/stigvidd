@@ -9,11 +9,11 @@
 //     wholesale, and the Jenkinsfile web stage regenerates and then runs
 //     `git diff --exit-code -- src/api/generated`, so a hand edit is a red build with a
 //     message about staleness rather than about your change.
-//   * web/openapi.json is a SNAPSHOT THE TEST SUITE WRITES, and it is gitignored -- the
-//     backend test run is the only thing that produces it.  When the API drifts,
-//     OpenApiContractTests rewrites this file itself and then fails once, telling you to
-//     regenerate the client.  Editing it by hand to "fix" the mismatch inverts the
-//     direction the data flows: the API is the source, the file is the record.
+//   * web/openapi.json is EXPORTED BY THE BUILD, and it is gitignored -- StigviddAPI.csproj
+//     runs scripts/generate-openapi.mjs after every Debug build, so `dotnet build` is the
+//     only thing that produces it and the next one discards whatever you wrote here.
+//     Editing it by hand to "fix" a mismatch inverts the direction the data flows: the API
+//     is the source, the file is the record.
 //   * *ModelSnapshot.cs and *.Designer.cs are EF Core's model, not source.  A hand edit
 //     desynchronises the recorded model from the schema, and the next
 //     `dotnet ef migrations add` scaffolds a diff against your edit instead of against
@@ -67,10 +67,10 @@ export function classify(keyIn) {
   if (key === "web/openapi.json")
     return [
       "deny",
-      "web/openapi.json is a snapshot the test suite writes, not a file to edit.\n" +
-        "It is gitignored: OpenApiContractTests writes it on every backend test run, and " +
-        "fails once when it had to change. The fix is to run the backend tests, read the " +
-        "result, then:\n" +
+      "web/openapi.json is exported by the build, not a file to edit.\n" +
+        "It is gitignored, and StigviddAPI.csproj rewrites it after every Debug build. " +
+        "Change the API, then:\n" +
+        "  cd backend && dotnet build          # rewrites web/openapi.json\n" +
         "  cd web && npm run generate:api      # and commit web/src/api/generated\n" +
         "Editing it by hand reverses the direction the data flows.",
     ];

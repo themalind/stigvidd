@@ -15,7 +15,7 @@ $ cd web
 $ git diff --exit-code -- web/src/api/generated ; echo $?   # no such path from here
 0                                                           # <- PASS, and meaningless
 $ git diff --exit-code -- src/api/generated ; echo $?        # the real check
-1                                                           # <- 88 files actually differ
+1                                                           # <- 88 files actually differ (125 today)
 $ git diff --exit-code -- totally/made/up/path ; echo $?
 0
 ```
@@ -26,7 +26,8 @@ prose elsewhere) turns the gate into a no-op that reports success. Nothing warns
 from git's point of view nothing is wrong.
 
 This bit for real: a session regenerated the client, ran the gate from the wrong directory,
-saw exit 0 and reported "no change to the generated client". All 88 files had changed.
+saw exit 0 and reported "no change to the generated client". All 88 files had changed
+(there are 125 of them as of 2026-09-19).
 
 ## How to not be fooled
 

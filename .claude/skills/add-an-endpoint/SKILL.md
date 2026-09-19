@@ -52,22 +52,26 @@ assembly is silently never called. There is no error; the request simply is not 
 
 ## Step 2 — the contract chain, which you have now obliged
 
-Any change to `Controllers/` or `WebDataContracts/` changes the OpenAPI document, and:
+Any change to `Controllers/` or `WebDataContracts/` changes the OpenAPI document, and the
+build now does most of this for you:
 
-1. `cd backend && ConnectionStrings__StigVidd="DataSource=:memory:" dotnet test --no-build`
-2. `OpenApiContractTests` writes `web/openapi.json` from the new document. The file is
-   **gitignored**, so on a checkout that had none it is simply created and the run stays
-   green; where one already existed and disagrees, the run **fails once, by design**.
-3. Read the file. This is the moment to notice that a DTO you thought was internal is now
+1. `cd backend && dotnet build`. The `GenerateOpenApiSpec` target exports the new document
+   to `web/openapi.json`, which is **gitignored**. If the document moved, the build prints
+   `generate-openapi : warning SV0001` telling you the client is now stale. It is a
+   warning: the build stays green.
+2. Read the file. This is the moment to notice that a DTO you thought was internal is now
    on the wire, or that a nullable slipped. (`git diff` will not show it — it is not
-   tracked. Compare against the previous run, or just read the operation you added.)
-4. `cd web && npm run generate:api`
-5. Re-run the backend tests (green now) and commit `web/src/api/generated` — the typed
-   client is the only half of this that is committed.
+   tracked. Read the operation you added.)
+3. `cd web && npm run generate:api`, then commit `web/src/api/generated` — the typed client
+   is the only half of this that is committed.
 
-Skipping 4 leaves the typed client stale. GitHub Actions will not catch it — only the
-Jenkinsfile `web` stage runs `git diff --exit-code -- src/api/generated`, and it reports it
-as "the generated API client is stale", which reads like an infrastructure problem.
+Steps 1 and 3 both happen automatically if you build the web app instead: `codegen.mjs`
+runs as its `prebuild`. Either way the client ends up in `git status`, which is the point.
+
+Skipping the regeneration leaves the typed client stale. GitHub Actions will not catch it —
+only the Jenkinsfile `web` stage runs `git diff --exit-code -- src/api/generated`, and it
+reports it as "the generated API client is stale", which reads like an infrastructure
+problem.
 Full detail: [openapi-contract-snapshot](../../../docs/notes/openapi-contract-snapshot.md).
 
 ## Step 3 — authorization, deliberately

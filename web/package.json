@@ -5,7 +5,9 @@
   "license": "AGPL-3.0-or-later",
   "type": "module",
   "scripts": {
+    "predev": "node ./scripts/codegen.mjs",
     "dev": "vite",
+    "prebuild": "node ./scripts/codegen.mjs",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "test": "vitest run",

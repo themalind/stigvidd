@@ -162,25 +162,32 @@ pipeline {
 
         // web/openapi.json is gitignored, so a fresh checkout has none — and the web
         // stage's `npm run generate:api` needs it as input. It cannot wait for the
-        // backend stage: the two run in PARALLEL in this shared workspace. So produce
-        // it here, in the sequential stage that precedes both, by running the one test
-        // that writes it. The backend build this warms is reused by that stage.
+        // backend stage: the two run in PARALLEL in this shared workspace. So it is
+        // produced here, in the sequential stage that precedes both. The backend build
+        // this warms is reused by that stage.
+        //
+        // Nothing extra is run to get it: StigviddAPI.csproj's GenerateOpenApiSpec target
+        // exports the document after every Debug build, so `dotnet build` IS the step.
+        // It used to be `dotnet test --filter-class OpenApiContractTests`, which wrote the
+        // file as a side effect and FAILED whenever it had to change — and because this
+        // workspace persists between builds, a leftover snapshot from the previous commit
+        // was enough to fail it while nothing was actually wrong.
         dir('backend') {
-          withEnv(['ConnectionStrings__StigVidd=DataSource=:memory:']) {
-            sh '''
-              set -e
-              dotnet restore
-              dotnet build --no-restore
-              dotnet test --project Tests/IntegrationTests/IntegrationTests.csproj \
-                --no-build -- --filter-class "IntegrationTests.OpenApiContract.OpenApiContractTests"
-            '''
-          }
+          sh '''
+            set -e
+            dotnet restore
+            dotnet build --no-restore
+          '''
         }
+        // The target is ContinueOnError, so a failure to generate only warns. This is the
+        // one place it becomes a red build, and it has to be: the web stage cannot run
+        // without the file.
         sh '''
           set -e
           if [ ! -s web/openapi.json ]; then
-            echo "ERROR: web/openapi.json was not produced by OpenApiContractTests." >&2
+            echo "ERROR: web/openapi.json was not produced by the StigviddAPI build." >&2
             echo "       The web stage cannot run generate:api without it." >&2
+            echo "       Look for 'generate-openapi : error' earlier in this log." >&2
             exit 1
           fi
         '''
@@ -225,28 +232,36 @@ pipeline {
               // build below.
               //
               // generate:api reads web/openapi.json, which is NOT committed —
-              // Preflight produced it by running OpenApiContractTests, because
-              // this stage runs in parallel with the backend one and so cannot
-              // wait for it. This step only catches a contract change that was
-              // never regenerated into the client, which IS committed.
+              // Preflight produced it, because this stage runs in parallel with
+              // the backend one and so cannot wait for it. This step only catches
+              // a contract change that was never regenerated into the client,
+              // which IS committed.
+              //
+              // STIGVIDD_SKIP_API_CODEGEN switches off the predev/prebuild hook in
+              // web/package.json. Without it `npm run build` below would regenerate
+              // the client a second time — after the gate, so it could not hide a
+              // stale one, but it is a wasted API host boot. The explicit sequence
+              // here is the one that gates the deploy, so it stays explicit.
               //
               // `npm test` is `vitest run` — vitest.config.ts, not vite.config.ts,
               // and it needs no server and no backend. GitHub Actions runs the same
               // three steps in its own web job; this stage is what gates the DEPLOY,
               // and it is the only place the staleness check above runs.
-              sh '''
-                set -e
-                npm ci
-                npm run lint
-                npm run generate:api
-                if ! git diff --exit-code -- src/api/generated; then
-                  echo "ERROR: the generated API client is stale." >&2
-                  echo "       Run 'npm run generate:api' in web/ and commit the result." >&2
-                  exit 1
-                fi
-                npm test
-                npm run build
-              '''
+              withEnv(['STIGVIDD_SKIP_API_CODEGEN=true']) {
+                sh '''
+                  set -e
+                  npm ci
+                  npm run lint
+                  npm run generate:api
+                  if ! git diff --exit-code -- src/api/generated; then
+                    echo "ERROR: the generated API client is stale." >&2
+                    echo "       Run 'npm run generate:api' in web/ and commit the result." >&2
+                    exit 1
+                  fi
+                  npm test
+                  npm run build
+                '''
+              }
             }
           }
         }
