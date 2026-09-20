@@ -9,6 +9,7 @@ import React from "react";
 import { Button, Dialog, Portal, Text } from "react-native-paper";
 import { useTranslation } from "react-i18next";
 
+import { DIALOG_BORDER_RADIUS } from "@/constants/constants";
 import { track } from "@/services/analytics";
 import { getConsentSync, isConsentHydrated, setConsent, subscribeConsent, type ConsentState } from "@/services/consent";
 
@@ -55,7 +56,7 @@ export function ConsentDialog() {
 
   return (
     <Portal>
-      <Dialog visible dismissable={false} testID="consent-dialog">
+      <Dialog style={{ borderRadius: DIALOG_BORDER_RADIUS }} visible dismissable={false} testID="consent-dialog">
         <Dialog.Title>{t("privacy.askTitle")}</Dialog.Title>
         <Dialog.Content>
           <Text variant="bodyMedium">{t("privacy.askBody")}</Text>
