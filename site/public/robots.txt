@@ -1,0 +1,5 @@
+# The public site is meant to be found.
+User-agent: *
+Allow: /
+
+Sitemap: https://stigvidd.se/sitemap.xml

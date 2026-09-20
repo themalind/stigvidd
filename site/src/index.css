@@ -1,0 +1,110 @@
+/*
+ * SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ *
+ * The palette is the one already published by the legal pages in public/
+ * (privacy-policy, terms-of-use, delete-account). Those are hand-written HTML with
+ * their own <style> block, so the values live in two places by necessity — keep them
+ * in step, or the footer links lead somewhere that looks like a different site.
+ *
+ * Dark mode follows prefers-color-scheme only. There is no toggle here, because the
+ * legal pages have none either and a toggle that works on one page and not the next
+ * is worse than no toggle.
+ */
+
+@import "tailwindcss";
+
+/*
+ * ONE radius, and it is the app's.
+ *
+ * app/src/constants/constants.ts declares `BORDER_RADIUS = 5`, with
+ * SURFACE_BORDER_RADIUS and DIALOG_BORDER_RADIUS both aliased to it — one small value
+ * used in 261 places across the app, not a scale. The site follows it, or the two halves
+ * of the same product look like different products.
+ *
+ * `--radius-*: initial` DELETES Tailwind's default scale, deliberately. Without that,
+ * `rounded-2xl` and `rounded-full` stay available and a pill button drifts back in
+ * looking plausible. With it, they generate no CSS at all and the corner comes out
+ * square — visibly wrong in review rather than quietly soft. `--radius-full` is defined
+ * back because a genuine circle (a status dot, an avatar) is still a circle.
+ *
+ * The two files are not checked against each other. If BORDER_RADIUS changes, change it
+ * here too.
+ */
+@theme {
+  --radius-*: initial;
+  --radius-base: 5px;
+  --radius-full: 9999px;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-text: var(--text);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-accent: var(--accent);
+  --color-accent-contrast: var(--accent-contrast);
+  --color-todo-bg: var(--todo-bg);
+  --color-todo-text: var(--todo-text);
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+    Arial, sans-serif;
+}
+
+:root {
+  --bg: #ffffff;
+  --surface: #f4f6f4;
+  --text: #1b1c1b;
+  --muted: #55605a;
+  --border: #dde2de;
+  --accent: #2f6d48;
+  --accent-contrast: #ffffff;
+  --todo-bg: #ffe8e4;
+  --todo-text: #8a2113;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #121412;
+    --surface: #1c201d;
+    --text: #e8ebe8;
+    --muted: #a3ada7;
+    --border: #2d332f;
+    --accent: #7fc79a;
+    --accent-contrast: #10231a;
+    --todo-bg: #4a1a13;
+    --todo-text: #ffbdb1;
+  }
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  -webkit-text-size-adjust: 100%;
+}
+
+/*
+ * An unfinished item renders as a red block on the live page. Copied deliberately from
+ * the legal pages: the comment above a draft is not a deploy gate, a visibly broken
+ * element is. See docs/notes/web-public-is-already-live.md — everything under public/
+ * and everything built from src/ ships on the next merge, with no opt-in.
+ */
+.todo {
+  background: var(--todo-bg);
+  color: var(--todo-text);
+  padding: 0.1em 0.4em;
+  border-radius: var(--radius-base);
+  font-weight: 600;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

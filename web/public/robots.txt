@@ -1,0 +1,3 @@
+# The admin UI. Nothing here is for a search engine, and the login page least of all.
+User-agent: *
+Disallow: /

@@ -1,0 +1,125 @@
+<!doctype html>
+<!--
+  SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
+  SPDX-License-Identifier: AGPL-3.0-or-later
+
+  Served with status 404 by error_page in site/nginx.conf. Self-contained on purpose:
+  it has to render when the bundle is the thing that could not be found.
+-->
+<html lang="sv">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sidan finns inte – Stigvidd</title>
+    <meta name="robots" content="noindex" />
+    <link rel="icon" href="/icon.png" />
+    <style>
+      :root {
+        --bg: #ffffff;
+        --text: #1b1c1b;
+        --muted: #55605a;
+        --border: #dde2de;
+        --accent: #2f6d48;
+        --accent-contrast: #ffffff;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #121412;
+          --text: #e8ebe8;
+          --muted: #a3ada7;
+          --border: #2d332f;
+          --accent: #7fc79a;
+          --accent-contrast: #10231a;
+        }
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        padding: 0 1.25rem;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--bg);
+        color: var(--text);
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        font-size: 17px;
+        line-height: 1.65;
+        -webkit-text-size-adjust: 100%;
+      }
+
+      main {
+        max-width: 32rem;
+        padding: 4rem 0;
+      }
+
+      .code {
+        color: var(--muted);
+        font-size: 0.9rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        margin: 0 0 0.75rem;
+      }
+
+      h1 {
+        font-size: 1.9rem;
+        line-height: 1.2;
+        letter-spacing: -0.01em;
+        margin: 0 0 0.75rem;
+      }
+
+      p {
+        margin: 0 0 1.5rem;
+        color: var(--muted);
+      }
+
+      .home {
+        display: inline-block;
+        padding: 0.7rem 1.25rem;
+        border-radius: 5px;
+        background: var(--accent);
+        color: var(--accent-contrast);
+        font-weight: 600;
+        text-decoration: none;
+      }
+
+      .legal {
+        margin: 2.5rem 0 0;
+        padding-top: 1.5rem;
+        border-top: 1px solid var(--border);
+        font-size: 0.95rem;
+      }
+
+      .legal a {
+        color: var(--accent);
+        text-underline-offset: 2px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <main>
+      <p class="code">404</p>
+      <h1>Sidan finns inte</h1>
+      <p>
+        Adressen leder ingenstans. Den kan vara felstavad, eller peka på något som har
+        flyttat.
+      </p>
+
+      <a class="home" href="/">Till startsidan</a>
+
+      <p class="legal">
+        Letade du efter
+        <a href="/privacy-policy/">integritetspolicyn</a>,
+        <a href="/terms-of-use/">användarvillkoren</a> eller
+        <a href="/delete-account/">radera konto</a>?
+      </p>
+    </main>
+  </body>
+</html>
