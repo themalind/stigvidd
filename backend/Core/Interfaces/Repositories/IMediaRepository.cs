@@ -7,7 +7,13 @@ public interface IMediaRepository
 {
     Task<RepositoryResult<IReadOnlyCollection<MediaItemProjection>>> GetAllMediaAsync(CancellationToken ctoken);
     Task<RepositoryResult> UpdateImageMetadataAsync(string imageIdentifier, string? altText, string? caption, CancellationToken ctoken);
+
+    // Only matches TrailImages/FacilityImages; a trail symbol identifier is never returned.
+    Task<RepositoryResult<IReadOnlyCollection<MediaLookupProjection>>> GetByIdentifiersAsync(
+        IReadOnlyCollection<string> identifiers, CancellationToken ctoken);
 }
+
+public record MediaLookupProjection(string Identifier, string OwnerType, string ImageUrl);
 
 public record MediaItemProjection(
     string Identifier,

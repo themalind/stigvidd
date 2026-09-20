@@ -8,12 +8,17 @@ or, worse, finds an unrelated repository above.
 
 ## Where this actually bit
 
-[`OpenApiContractTests.FindRepositoryRoot`](../../backend/Tests/IntegrationTests/OpenApiContract/OpenApiContractTests.cs)
-used `Directory.Exists(Path.Combine(directory.FullName, ".git"))`. In a linked worktree
-that is false at the real root, the walk ran off the top, and the test threw
+`OpenApiContractTests.FindRepositoryRoot` used
+`Directory.Exists(Path.Combine(directory.FullName, ".git"))`. In a linked worktree that is
+false at the real root, the walk ran off the top, and the test threw
 `InvalidOperationException: Could not locate the repository root from ...` — so the whole
 integration suite was unrunnable in exactly the checkout the work happens in. Fixed by
 accepting a file as well as a directory.
+
+That test has since been deleted (see [[openapi-contract-snapshot]]), so there is no file
+to link to — but the predicate outlived it. `scripts/generate-openapi.mjs` resolves the
+repository root from its own location instead, which sidesteps the question entirely, and
+that is the better pattern where it is available.
 
 The same predicate is the right one everywhere else, including in hooks:
 `.claude/hooks/lib.mjs` `repoRoot()` uses `existsSync`, deliberately, for this reason.

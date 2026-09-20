@@ -14,8 +14,11 @@ Keycloak's `UPDATE_PASSWORD` action mail and is now `reset-password` below, whic
 wording of every mail a user receives is editable by an operator without a deploy.
 
 Its callers are **registration** — `verify-email` carries the link and code that stand between
-signing up and being able to log in — and **forgotten passwords**, where `reset-password`
-carries the only link that can set a new one. See [auth](auth.md).
+signing up and being able to log in, and `welcome` follows it once the account exists — and
+**forgotten passwords**, where `reset-password` carries the only link that can set a new one.
+See [auth](auth.md).
+
+The queue itself is visible and manageable in the web admin: *Mail Outbox* in the sidebar.
 
 ## Sending one
 
@@ -85,10 +88,26 @@ A lost signal therefore costs latency and never a mail.
 
 ```
 Pending ──claim──> Sending ──sent────> Sent
-   ^                  │
+   ^  │               │
+   │  └──cancelled────┴──> Cancelled          (operator, from the admin outbox)
+   │                  │
    └──failed, under ──┘
       the attempt cap        ──permanent, or cap reached──> Failed
 ```
+
+`Cancelled` is an operator stopping a mail that has not been claimed yet. It is a status
+rather than a deleted row for two reasons: the journal has to keep the evidence that a mail
+was queued and then stopped, and a delete would race the dispatcher — a row can be claimed
+between the read and the delete, and `MarkSentAsync` has no status guard.
+
+**Erasure is the one exception, and it respects that race rather than ignoring it.** When an
+account is deleted, `EraseByRecipientAsync` removes that address's mail outright — the outbox
+has no foreign key to `Users`, so nothing cascades and the rows would otherwise outlive the
+account. It moves `Pending` rows to `Cancelled` *first*, which puts them out of the
+dispatcher's reach because claiming guards on `Pending`, and only then deletes. A `Sending`
+row it leaves alone: nothing can recall a message already handed to SMTP, and deleting it
+under the worker would make `MarkSentAsync`'s `NotFound` the only trace that it went out. It
+settles within seconds and the retention sweep collects it.
 
 Retries are **scheduled, not polled**: a transient failure puts the row back to `Pending` with
 `NextAttemptAt` set, and the dispatcher starts a `Task.Delay` that re-signals the id when the
@@ -125,7 +144,122 @@ partial stack that runs no mail server log the mail at warning level and drain t
 rather than accumulating rows that were never going to be sent. Adding an empty `Smtp` block
 would defeat that. The API must never fail to start over mail, so there is no fail-fast here.
 
-`MailOutbox:*` is in `appsettings.json`: `MaxAttempts` (5) and `DefaultLanguage` (`sv`).
+`MailOutbox:*` is in `appsettings.json`: `MaxAttempts` (5), `DefaultLanguage` (`sv`) and the
+four retention keys — `SentRetentionDays`, `SettledRetentionDays`, `BodyRetentionHours` and
+`CleanupIntervalHours`. See [Retention](#retention).
+
+## The outbox in the web admin
+
+*Mail Outbox* in the sidebar lists the table, newest first, filtered by status and recipient.
+A row's rendered body is **not** loaded with it: it sits behind a *Show the mail body* button
+that calls a route of its own and is logged, because that is where the recipient's name and —
+for `reset-password` — a live link are. When it is shown it is shown in the same sandboxed
+iframe the template editor uses, because a body is operator-authored markup and a row can also
+have been written straight into Postgres by hand. A row whose body has been cleared under the
+retention rule says so instead of rendering an empty frame.
+
+Three things can be done to a row, and each is a guarded status transition in the database
+rather than anything done to the queue:
+
+| action | allowed from | what it does |
+| --- | --- | --- |
+| **Retry** | `Failed`, `Cancelled`, and only while the body is still held | back to `Pending`, due now, `Attempts` reset to 0, `SettledAt` cleared, `LastError` kept — *then* the dispatcher is signalled. A **redacted** row is refused: there is nothing left to send |
+| **Cancel** | `Pending` | to `Cancelled`. No signal: a signal already in the channel is harmless, because claiming guards on `Pending` |
+| **Purge** | `Sent` only | deletes sent mail older than a cutoff. Refused without an explicit confirm |
+
+**`Sending` is refused by both retry and cancel**, and that is the point rather than an
+oversight. The dispatcher holds that row: requeueing it would let it be claimed while a worker
+still has it and the mail would go out twice, and cancelling it would be overwritten by
+`MarkSentAsync` — which has no status guard — a moment later, so the operator would have been
+told the mail was stopped when it was already on its way.
+
+Retry resets `Attempts` because a `Failed` row sits *at* the cap: leave it there and the retry
+buys exactly one attempt with no backoff ladder at all, which is not what retry means to
+somebody who has just fixed DNS. It keeps `LastError` because that is still the only record of
+why the mail failed and the retry has not produced a new one yet — a `Pending` row carrying a
+`LastError` is what a retried mail looks like, not a contradiction.
+
+Purge takes **`Sent` rows only**, and dates them by `SentAt` rather than `CreatedAt`: a row
+created six weeks ago but sent five minutes ago — after an outage, which is exactly when
+somebody reaches for a purge — is recent mail. `Failed` rows are the diagnostic record *and*
+the retryable ones, so they are never deleted; neither are `Pending`, `Sending` or `Cancelled`.
+
+## Retention
+
+Retention used to be manual, and the argument for that was that nobody had measured how fast
+the table grows. The reason it is no longer manual is a different one: the rows are personal
+data — an address, a nickname in four places, and for `verify-email` and `reset-password` a
+**live token URL** — and "an operator will remember to click purge" is not a storage-limitation
+policy. `MailOutboxRetentionService` now holds the table to a rule on a timer, and
+§6 of the processing record (`docs/registerforteckning.md` — gitignored and kept out of the
+repo, like `.env`) states that rule as a promise, so the two move together.
+
+Three windows, all under `MailOutbox` in `appsettings.json`:
+
+| key | default | what |
+| --- | --- | --- |
+| `SentRetentionDays` | 7 | `Sent` rows are deleted, dated by `SentAt`. A delivered mail is a receipt |
+| `SettledRetentionDays` | 30 | `Failed` and `Cancelled` rows are deleted, dated by `SettledAt`. Longer, because they are the diagnostic record *and* the retryable one |
+| `BodyRetentionHours` | 24 | the **bodies** of settled rows are cleared, long before the row itself goes |
+| `CleanupIntervalHours` | 1 | how often the sweep runs |
+
+**A body lives only while the mail can still usefully be sent.** That is the whole rule:
+
+- `Pending` and `Sending` keep theirs — the mail still has to go out.
+- `Sent` loses its body **immediately**, inside `MarkSentAsync`. A sent mail can never be
+  retried, so nothing needs it; clearing it there rather than on a timer means there is no
+  window where a delivered mail's body sits in the table waiting.
+- `Failed` and `Cancelled` keep theirs for `BodyRetentionHours`, then the sweep clears them.
+  24 hours is the longest token lifetime in the system (`EmailVerification:TokenLifetimeHours`
+  is 24, `PasswordReset:TokenLifetimeHours` is 2), so past it a re-sent link is dead anyway.
+
+Clearing writes empty strings and stamps **`RedactedAt`**, and `RedactedAt` — not the
+emptiness — is what every reader branches on. A redacted row **cannot be retried**:
+`RequeueAsync` refuses it, because re-sending an empty body is the one way a cleared body
+could still reach a recipient, and delivering a blank mail to someone who asked for a password
+reset is worse than refusing to try. So the undo window on a cancel is no longer unbounded —
+it is `BodyRetentionHours`.
+
+The interval is an hour rather than the obstacle sweep's day because it is the error bar on
+every window above: at a daily tick a 24-hour body window would really mean up to 48, and the
+number would stop tracking the thing it was chosen to track. The real bound is **≤ 25 h**.
+
+### `SettledAt`, and why not `LastUpdatedAt`
+
+The settled sweep dates rows by `SettledAt`, stamped when a row reaches `Failed` or
+`Cancelled` exactly as `SentAt` is stamped for `Sent`. It is a column rather than a reuse of
+`LastUpdatedAt` for a reason worth keeping: **seven methods in `MailOutboxRepository` already
+write `LastUpdatedAt`**, and redaction would be an eighth — so a sweep keyed on it would push
+a row's deletion date forward by the whole retention period every time it cleared that row's
+body. The row would be redacted, then never deleted, and the two rules would be fighting.
+`RequeueAsync` clears `SettledAt` alongside `SentAt`, because a row leaving the terminal state
+no longer has a moment at which it settled.
+
+### What the manual purge is for now
+
+The purge button stays, as the "sooner than the sweep" tool — its default is 3 days, below
+`SentRetentionDays`, or it could never find a row. Its copy had to change with it:
+`describePurge` used to promise that *"pending, sending, failed and cancelled mail is never
+touched"*, which was true while that button was the only thing that deleted anything. It now
+says what **this action** spares and then that mail is deleted automatically anyway — an
+operator reading the old sentence at an irreversible dialog would have concluded their failed
+mail was being kept for them.
+
+### Reading a body is a logged act
+
+`GET /api/v1/admin/mail-outbox/{identifier}` no longer returns the bodies. They are behind
+`GET .../{identifier}/body`, which logs the operator and the identifier the way retry, cancel
+and purge always have — and answers **404** for a redacted row rather than an empty body,
+which would be indistinguishable from a render that went wrong. The admin page shows metadata
+and a **Show the mail body** button; it does not fetch one just because a row was opened.
+
+### On a dev box every body is already gone
+
+Locally and in the test suite `Smtp:Host` is unset, so `LoggingMailSender` is registered and
+returns `Ok` without sending. Rows therefore reach `Sent` instantly and are redacted instantly
+— so the Reveal button only ever shows a body for a `Pending`, `Sending`, `Failed` or
+`Cancelled` row on a developer's machine. Staging borrows production's mail server and behaves
+like production. This is an artifact of the transport, not a bug in the retention rule.
 
 ## Adding a template
 
@@ -224,8 +358,14 @@ moment the page opened. See
 | `Core/Services/MailOutboxQueue.cs` | the `Channel<int>` trigger |
 | `Core/Services/SmtpMailSender.cs` | MailKit; STARTTLS on 587 |
 | `Core/Services/LoggingMailSender.cs` | the no-op used when `Smtp:Host` is absent |
-| `Core/Repositories/MailOutboxRepository.cs` | claim, mark, release, recover, and the backoff |
+| `Core/Repositories/MailOutboxRepository.cs` | claim, mark, release, recover, the backoff, the retention predicates and the erasure |
 | `StigviddAPI/BackgroundServices/MailOutboxDispatcher.cs` | the drain loop and the startup sweep |
+| `StigviddAPI/BackgroundServices/MailOutboxRetentionService.cs` | the retention run: clear settled bodies, then delete past-window rows |
+| `Core/Services/MailOutboxAdminService.cs` | the admin read/retry/cancel/purge, and the body route's redaction refusal |
+| `StigviddAPI/Controllers/Admin/AdminMailOutboxController.cs` | `api/v1/admin/mail-outbox`, admin-only; logs retry, cancel, purge and every body read |
+| `web/src/lib/mail-outbox.ts` | the outbox page's pure rules: what may be retried, revealed, and what a purge says |
 
 Related: [observability](observability.md) for where the logs go,
-[push-notifications](push-notifications.md) for the other notification channel.
+[push-notifications](push-notifications.md) for the other notification channel, and
+`docs/registerforteckning.md` §6 — gitignored, carried by hand — for the retention windows
+stated as a promise to the data subject.

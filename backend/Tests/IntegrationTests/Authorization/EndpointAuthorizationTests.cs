@@ -87,6 +87,12 @@ public class EndpointAuthorizationTests : IClassFixture<StigViddWebApplicationFa
         "GET /api/v1/admin/media",
         "PATCH /api/v1/admin/media/{imageIdentifier}",
 
+        // Batch reprocessing (resize/re-encode already-stored images) is the same store.
+        "POST /api/v1/admin/media/reprocess",
+        "GET /api/v1/admin/media/reprocess",
+        "GET /api/v1/admin/media/reprocess/{identifier}",
+        "POST /api/v1/admin/media/reprocess/{identifier}/cancel",
+
         // export hands out the database, the media volume and the Keycloak realm;
         // import replaces this host's data.
         "GET /api/v1/admin/export",
@@ -124,6 +130,17 @@ public class EndpointAuthorizationTests : IClassFixture<StigViddWebApplicationFa
         "GET /api/v1/admin/mail-templates/{identifier}",
         "POST /api/v1/admin/mail-templates/{identifier}/preview",
         "PUT /api/v1/admin/mail-templates/{identifier}",
+
+        // The outbox itself. Reading it exposes every address the API has mailed and the
+        // rendered body of each -- including a live password-reset link -- and purging it
+        // deletes rows for good, so none of this may ever be anything but admin-only.
+        "GET /api/v1/admin/mail-outbox",
+        "GET /api/v1/admin/mail-outbox/counts",
+        "GET /api/v1/admin/mail-outbox/{identifier}",
+        "GET /api/v1/admin/mail-outbox/{identifier}/body",
+        "POST /api/v1/admin/mail-outbox/purge",
+        "POST /api/v1/admin/mail-outbox/{identifier}/cancel",
+        "POST /api/v1/admin/mail-outbox/{identifier}/retry",
     ];
 
     public EndpointAuthorizationTests(StigViddWebApplicationFactory<Program> factory)

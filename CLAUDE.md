@@ -44,7 +44,7 @@ Use `run_in_background: true`, or `-d`. `.claude/hooks/guard-long-running.mjs` d
 | do the web types check? | `cd web && npm run build` — `tsc -b && vite build` **is** the type check | `npm test`, which is Vitest and type-checks nothing |
 | is the web logic still right? | `cd web && npm test` — Vitest over `src/**/*.test.ts` | assuming a green backend covers it; nothing outside `web/` runs this suite |
 | do the app types check? | `cd app && npx tsc --noEmit`, deliberately | CI — it runs prettier, eslint and jest, and type-checks **nothing** |
-| is the API contract still in step? | the backend test run (it writes the gitignored `web/openapi.json`), then `cd web && npm run generate:api` | assuming a green backend means the web client is current |
+| is the API contract still in step? | `cd backend && dotnet build` (the build exports the gitignored `web/openapi.json`), then `cd web && npm run generate:api` | assuming a green backend means the web client is current |
 | is the generated client current? | `cd web && npm run generate:api && git diff --exit-code -- src/api/generated` | GitHub Actions — only **Jenkins** runs this check, even now that a web job exists |
 | does a migration apply? | `docker compose up -d` and let `DbMigrationRunner` run it against real PostGIS | any test — the suites are SQLite in-memory and apply no migration |
 | does the stack come up? | `docker compose up -d`, then `/healthz` (liveness) and `/readyz` (readiness, which is the one that checks the database) | GitHub CI, which builds no image and never runs compose; Jenkins does, and only on `main` |
@@ -81,7 +81,7 @@ that needs it.
 | file | owned by | regenerate with |
 | --- | --- | --- |
 | `web/src/api/generated/**` | orval ([web/orval.config.ts](web/orval.config.ts)) | `cd web && npm run generate:api` |
-| `web/openapi.json` | `OpenApiContractTests` — it **writes the file itself**; **gitignored**, so it exists only where the backend tests have run | run the backend tests |
+| `web/openapi.json` | the StigviddAPI build — `GenerateOpenApiSpec` runs [scripts/generate-openapi.mjs](scripts/generate-openapi.mjs); **gitignored**, so it exists only where the backend has been built | `cd backend && dotnet build` |
 | `backend/Infrastructure/Migrations/*ModelSnapshot.cs`, `*.Designer.cs` | EF Core | `dotnet ef migrations add/remove` |
 
 A migration's own `.cs` body **is** editable — the `*PostGIS*` migrations carry
@@ -98,21 +98,35 @@ a moment far from the edit, so the tests in between are testing the old content.
 Controllers + WebDataContracts  --NSwag-->  web/openapi.json  --orval-->  web/src/api/generated
 ```
 
-The middle link is **not committed** — `web/openapi.json` is gitignored and
-`OpenApiContractTests` writes it on every backend test run. So a fresh clone has no
-snapshot, and that run produces one and stays green. Only the **typed client** is
-committed, and it is the thing review and CI look at.
+The middle link is **not committed** — `web/openapi.json` is gitignored, and the
+**StigviddAPI build exports it**: `StigviddAPI.csproj`'s `GenerateOpenApiSpec` target runs
+[scripts/generate-openapi.mjs](scripts/generate-openapi.mjs) after every Debug build, which
+runs the built assembly with `Program.cs`'s `--export-openapi` switch. Only the **typed
+client** is committed, and it is the thing review and CI look at.
 
-Where a snapshot already exists and the surface has moved under it, that run rewrites it
-and fails **once**, by design — that is not a bug in your change. Run
-`cd web && npm run generate:api` and commit `web/src/api/generated`; the next run is green.
+**Generation happens on ordinary build commands.** Nothing has to be remembered:
+
+| you run | what regenerates |
+| --- | --- |
+| `cd backend && dotnet build`, the VS Code **build api** task, or F5 | `web/openapi.json` |
+| in `web/`, the dev server or the production build | the document, then `src/api/generated` |
+| `cd web && npm run generate:api` | `src/api/generated` only — still the explicit form |
+
+So after changing a controller or a DTO, build, then commit whatever appeared under
+`web/src/api/generated`. The backend build prints a `generate-openapi : warning SV0001`
+when the document moved and the client has not been regenerated.
+
+Four environments deliberately do **not** generate — both image builds (structurally: the
+files are not in the build context), and GitHub CI's web job and Jenkins' web stage, which
+set `STIGVIDD_SKIP_API_CODEGEN`. The GitHub one matters: it has the whole checkout but **no
+.NET SDK** ([note](docs/notes/codegen-runs-on-build-except-where-it-cannot.md)).
 
 Two consequences worth holding on to:
 
-- `cd web && npm run generate:api` on a checkout that has never run the backend tests
-  fails on a missing `./openapi.json`. Run the backend tests first, or point
-  `ORVAL_API_URL` at a running API.
-- Jenkins produces the snapshot in **Preflight**, not in the backend stage — the backend
+- `cd web && npm run generate:api` on a checkout that has never built the backend fails on
+  a missing `./openapi.json`. Build the backend first, use `npm run build` (whose prebuild
+  hook does both), or point `ORVAL_API_URL` at a running API.
+- Jenkins produces the document in **Preflight**, not in the backend stage — the backend
   and web stages run in parallel in one workspace, so the web stage cannot wait for it.
 
 ## Layering
@@ -378,6 +392,8 @@ text that is not a symbol), just run the same search again.
 | `session-start.mjs` | SessionStart | tree state, which checkout this is, whether the contract chain is mid-flight, the green commands |
 | `guard-generated-files.mjs` | PreToolUse write | denies edits to generated/EF-owned files |
 | `guard-test-cancellation-token.mjs` | PreToolUse write | an explicit `CancellationToken.None` / `new CancellationToken()` / `default(CancellationToken)` written into `backend/Tests/**.cs` — the half **xUnit1051 cannot see**, since it only flags a token left off entirely. Silent on `CancellationTokenSource` and `It.IsAny<CancellationToken>()`; `// cancellation-token-ok: <why>` opts a line out |
+| `guard-new-comments.mjs` | PreToolUse write | a comment line added to `.cs`/`.ts`/`.tsx` source (outside generated/docs/.claude) that wasn't there before. Silent on SPDX headers, Arrange/Act/Assert test markers, and a line marked `keep-comment: <why>` |
+| `guard-commit-message.mjs` | PreToolUse Bash | a `git commit` message mentioning Claude/Anthropic authorship, or over 72 characters |
 | `guard-build-commands.mjs` | PreToolUse Bash | `dotnet test` without the connection string, `dotnet ef` without `--project` |
 | `guard-long-running.mjs` | PreToolUse Bash | foreground dev servers, watchers, `compose up`. Vitest counts: `vitest` watches by default, `vitest run` is the one that exits. **Passes a call that already sets `run_in_background: true`** — that flag is the remedy every denial names, and denying it too made the advice unfollowable |
 | `guard-symbol-search.mjs` | PreToolUse Grep/Glob/Bash | a search for a single identifier that `codegraph query` proves the index holds **and declares inside the path being searched** — denied **once**, with the `codegraph_explore` call to make instead and every match of that name listed; the identical retry passes. Silent when there is no `.codegraph/` here, and silent on any regex, phrase, count, prose-scoped search (`docs/`, `*.md`) or non-symbol string |

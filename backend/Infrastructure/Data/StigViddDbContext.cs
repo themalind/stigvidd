@@ -35,6 +35,8 @@ public class StigViddDbContext(DbContextOptions<StigViddDbContext> options) : Db
     public DbSet<EmailVerificationToken> EmailVerificationTokens { get; set; }
     public DbSet<PasswordResetToken> PasswordResetTokens { get; set; }
     public DbSet<ContentReport> ContentReports { get; set; }
+    public DbSet<MediaReprocessJob> MediaReprocessJobs { get; set; }
+    public DbSet<MediaReprocessItem> MediaReprocessItems { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -364,6 +366,15 @@ public class StigViddDbContext(DbContextOptions<StigViddDbContext> options) : Db
             .HasQueryFilter("Moderation", r => r.ModerationState == ModerationState.Visible);
         modelBuilder.Entity<TrailObstacle>()
             .HasQueryFilter("Moderation", to => to.ModerationState == ModerationState.Visible);
+
+        modelBuilder.Entity<MediaReprocessItem>()
+            .HasOne(i => i.Job)
+            .WithMany(j => j.Items)
+            .HasForeignKey(i => i.JobId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<MediaReprocessItem>()
+            .HasIndex(i => i.Status);
 
         // EF logs PossibleIncorrectRequiredNavigationWithQueryFilterInteractionWarning for
         // ReviewImage and TrailObstacleSolvedVote because of those two filters. Deliberate:

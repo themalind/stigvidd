@@ -20,12 +20,24 @@ you get approved.
 
 - [The API contract is a one-way pipeline, and the file in the middle is not committed](openapi-contract-snapshot.md) —
   Controllers/WebDataContracts to `web/openapi.json` to `web/src/api/generated` flows one
-  way only. `web/openapi.json` is **gitignored** and `OpenApiContractTests` writes it: absent
-  it is created and the run passes, present-but-different it is rewritten and the run **fails
-  once**, which means the committed client is stale — `npm run generate:api` in web/ and commit
-  `src/api/generated`. Jenkins produces the snapshot in Preflight (the web stage runs in
-  parallel with the backend one, so it cannot wait for it) and alone runs
-  `git diff --exit-code -- src/api/generated`.
+  way only. `web/openapi.json` is **gitignored** and the **StigviddAPI build exports it**
+  (the `--export-openapi` switch in Program.cs, driven by scripts/generate-openapi.mjs), so
+  `dotnet build` is what produces it. It used to be a test that wrote the file and failed
+  once, which fired on Jenkins over a leftover snapshot while nothing was actually wrong.
+  NSwag's own CLI cannot replace it: HostFactoryResolver runs Main past Build() into the
+  migration loop. Jenkins produces the document in Preflight (the web stage runs in parallel
+  with the backend one, so it cannot wait for it) and alone runs
+  `git diff --exit-code -- src/api/generated`. A description-only change still rewrites all
+  **125** generated files.
+- [Code generation runs on an ordinary build — and the four places it deliberately does not](codegen-runs-on-build-except-where-it-cannot.md) —
+  a backend build refreshes `web/openapi.json` (also the VS Code build task and F5); in web/,
+  the dev server and the production build refresh the document and the client through
+  `web/scripts/codegen.mjs`. Four environments must not: both Dockerfiles are excluded
+  **structurally** (the files are not in the build context), while GitHub CI's web job and
+  Jenkins' web stage need `STIGVIDD_SKIP_API_CODEGEN` — the GitHub one because it has a full
+  checkout but **no .NET SDK**, so the structural check passes and `dotnet` is then missing.
+  Also: why `DesignTimeBuild` is in the MSBuild condition, why the script always rewrites the
+  file, and why the csproj comment cannot contain a double dash.
 - [A `Produces("text/html")` attribute does not keep an endpoint out of the typed client — only `ApiExplorerSettings(IgnoreApi = true)` does](produces-html-does-not-keep-an-endpoint-out-of-the-generated-client.md) —
   adding any endpoint that serves a page to a browser rather than JSON (a mail link, a form
   post, an HTML landing page): `[Produces("text/html")]` reads like it declares the action out
@@ -38,27 +50,32 @@ you get approved.
   `[Consumes("application/x-www-form-urlencoded")]` POST, whose generated client can fail
   `tsc -b` in `web/` — a package the change never touched, caught only by the Jenkins-only gate.
 - [Applying migrations to a hand-started PostGIS fails in a 2026-05 migration unless you match the pinned major](verifying-a-migration-outside-compose-needs-the-pinned-postgis-major.md) —
-  checking a migration for real when the full stack is unavailable (no `.env`, or the host runs
-  podman-compose instead of Docker Compose): one `postgis/postgis:17-3.5` container plus
-  `dotnet ef database update --project Infrastructure --connection "…"` works, and
-  `--connection` is needed or the design-time factory silently migrates whatever Infrastructure's
-  **user secrets** point at. Any other tag dies with `42601: syntax error at or near "COLUMNS"`
-  inside `20260523120007_PostGIS` — a migration from months ago that you did not touch, so it
-  reads as a real defect; it is PostgreSQL **17** syntax on a 16 server. `docker-compose.yml`'s
-  image pin is load-bearing for the migration chain. Carries the `psql` one-liners for checking
-  columns/indexes/FKs and, crucially, that an `InsertData` seed left the identity sequence ahead.
-- [`OpenApiContractTests` used to fail on Windows over CR bytes alone — untracking the snapshot removed it](openapi-snapshot-fails-on-windows-line-endings.md) —
+  No test applies a migration, so checking one means a real PostgreSQL; when the stack is not
+  available (no `.env`, or podman-compose) that is one container plus
+  `dotnet ef database update --project Infrastructure --connection "..."` — `--connection`
+  rather than a user secret, which `DesignTimeDbContextFactory` reads and the integration
+  suite inherits. The tag must be the pinned `postgis/postgis:17-3.5`: any other major dies
+  inside `20260523120007_PostGIS` with `42601: syntax error at or near "COLUMNS"`, naming a
+  months-old migration you did not touch. Also here: a `migrationBuilder.Sql` **backfill is
+  invisible** unless you stop at the PREVIOUS migration id and seed rows the way production's
+  already look, because a fresh database has none of the rows it targets and it reports
+  success having updated zero; the `psql` checks for whether `IS NULL` spares a row and
+  `lower()` folds case, which SQLite cannot settle; and that `pg_isready` goes true before
+  `POSTGRES_DB` exists, so wait on a real `SELECT 1` instead.
+- [The OpenAPI document's line endings were a Windows trap twice, and are now pinned to LF](openapi-snapshot-fails-on-windows-line-endings.md) —
   RESOLVED, and kept for the diagnosis. While `web/openapi.json` was committed, `.gitattributes`
   held it at LF while the served document is CRLF on Windows, so an ordinal comparison failed on
-  every clean checkout with zero content difference. Now that the file is gitignored nothing
-  forces LF and a missing snapshot is simply written, so the failure mode is gone. The technique
-  survives: against any byte-exact comparison of a file git may normalise, strip CR from both
-  sides and diff before hunting for a change that is not there.
+  every clean checkout with zero content difference. Untracking the file and then deleting the
+  test removed both halves, and the export now normalises CRLF to LF itself — Newtonsoft indents
+  with `Environment.NewLine`, and the CLIENT generated from the document IS committed. The
+  technique survives: against any byte-exact comparison of a file git may normalise, strip CR
+  from both sides and diff before hunting for a change that is not there.
 - [In a linked worktree `.git` is a FILE, and code that tests for a directory walks past it](git-worktree-repo-root.md) —
-  `Directory.Exists(".git")` is false at a worktree root, which made
+  `Directory.Exists(".git")` is false at a worktree root, which made the old
   `OpenApiContractTests.FindRepositoryRoot` run off the top of the filesystem and throw,
   so the whole integration suite was unrunnable in the checkout the work happens in. Use an
-  exists-either-kind test. Also: `.codegraph/` is per-checkout and uncommitted, so a fresh
+  exists-either-kind test — or resolve the root from the script's own location, which is
+  what scripts/generate-openapi.mjs does. Also: `.codegraph/` is per-checkout and uncommitted, so a fresh
   worktree has no index and codegraph silently knows nothing about the tree.
 - [`dotnet test` needs ConnectionStrings\_\_StigVidd, or every integration test fails at startup](dotnet-test-connection-string.md) —
   `Program.cs` throws on the missing connection string before any code under test runs, and
@@ -178,6 +195,17 @@ src/api/generated` then fails with "the generated API client is stale" for reaso
   coordinate — the `VerifiedGeoTrail` default — hands all six the full 5.0 proximity boost, up
   to 9.75, and any `.First()` assertion is silently competing with trails it never mentions.
   Put the user location somewhere the seed cannot rank, and say so in the test.
+- [A repository method using ExecuteDeleteAsync cannot be unit-tested here, because Tests/UnitTests is EF InMemory](executedelete-cannot-be-unit-tested-here.md) —
+  `ExecuteDeleteAsync` and `ExecuteUpdateAsync` are relational-only and throw on the EF
+  InMemory provider, which is what `Tests/UnitTests/TestBase.cs` builds every context with
+  (`UseInMemoryDatabase`) — there is no SQLite under `Tests/UnitTests` at all. So a bulk
+  delete in a repository cannot have a unit test beside its neighbours in `RepositoryTests/`,
+  and that is why `TrailImportRepository.DeleteSessionAsync` has none. Do not switch the unit
+  suite to SQLite to fix it. Extract the eligibility rule as a static
+  `Expression<Func<T, bool>>` (see `MailOutboxRepository.Purgeable`), unit-test it with
+  `AsQueryable().Where(...)` over a hand-built array, and prove the delete itself in the
+  SQLite integration suite — the predicate is where an irreversible purge deleting the wrong
+  rows would actually come from.
 - [SQLite enforces no foreign key unless the pragma is on, and Linux and Windows disagree](sqlite-foreign-keys-off-on-linux.md) —
   SQLite ignores every `FOREIGN KEY` clause, `ON DELETE CASCADE` included, unless
   per-connection `PRAGMA foreign_keys` is on. Windows' bundled `e_sqlite3` defaults it to 1,
@@ -527,7 +555,12 @@ src/api/generated` then fails with "the generated API client is stale" for reaso
   "command" in the denial contains prose. Quoting does not help the way the hook's own
   self-test (`echo 'do not docker compose up here'` is allowed) suggests: that passes only
   because quoted spans are consumed first, and `<<'EOF'` quotes the body for bash, not for
-  the splitter. Write the file with the Write tool instead of a heredoc.
+  the splitter. Write the file with the Write tool instead of a heredoc. Not only
+  guard-long-running: `commandsIn` is shared library code, so every Bash guard sees the same
+  segments — measured, a plan file whose prose named `dotnet ef migrations remove` in inline
+  code was denied by guard-build-commands.mjs for `dotnet ef` without `--project`, and
+  `dotnet test` without ConnectionStrings__StigVidd is deniable from prose the same way. That
+  denial is harder to spot, because it reads as helpful advice about a command you never ran.
 - [A jotai-tanstack-query atom builds its own QueryClient unless `queryClientAtom` is seeded](jotai-query-atom-builds-its-own-queryclient.md) —
   a jest suite in `app/` that mounts anything reading `stigviddUserAtom` (via `ShareHikeModal`,
   `HikeDetails`) passes and then refuses to exit: "Jest did not exit one second after the test
@@ -582,6 +615,18 @@ src/api/generated` then fails with "the generated API client is stale" for reaso
   `StyleSheet.create` resolves at import, so flipping `Platform.OS` later cannot reach it; and
   `getByTestId(x).parent` is a composite fiber, which `toHaveStyle` refuses — give the wrapper
   its own `testID`.
+- [A retention clock must not be a column that everything writes, or redaction resets it](a-retention-clock-must-not-be-a-column-everything-writes.md) —
+  `MailOutboxRetentionService` clears a settled row's body after 24 hours and deletes the row
+  after 30 days, and both rules need "when did this settle". `LastUpdatedAt` is the wrong
+  answer in a way nothing reports: seven methods in `MailOutboxRepository` already write it,
+  so a redaction keyed on it pushes that row's own delete date out by the full retention
+  period every time it fires — redacted on schedule, then never deleted, the two rules
+  fighting over one column. Hence `SettledAt`, with three obligations that are each a
+  separate bug: stamp it only on `MarkFailedAsync`'s parking branch and never the transient
+  one, null it in `RequeueAsync` beside `SentAt` or a re-failed row is deleted early, and
+  **backfill it in the migration** or every row that already existed matches nothing and
+  lives forever — which no test catches, because no suite applies a migration. Generally: a
+  timestamp that is a retention clock must be written by exactly the transition it names.
 - [An in-memory queue is safe in front of a database journal only if you write-then-signal, re-signal on boot, and claim in the database](in-memory-queue-in-front-of-a-database-journal.md) —
   The mail outbox triggers on a `Channel<int>` but keeps `OutboxEmails` as the truth, so a
   lost signal costs latency and never a mail. Three rules make that safe and each has a
@@ -629,3 +674,14 @@ src/api/generated` then fails with "the generated API client is stale" for reaso
   dev box and fails on CI's fresh checkout with `TS2304: Cannot find name 'global'` and a `TS2345`
   on `setImmediate(resolve)` in `logger.test.ts`. Fixed by adding `"node"` to `compilerOptions.types`;
   to reproduce CI, type-check without those two gitignored files.
+- [A new BackgroundService not added to WebApplicationFactory.cs's exclusion list races SeedDatabase, and the failures land on unrelated tests](background-service-races-seeddatabase.md) —
+  Adding `MediaReprocessDispatcher`/`MediaReprocessRetentionService` as `AddHostedService<...>()`
+  in `Program.cs` made `dotnet test` fail 45–59 tests with a **different set each run**
+  (`AccountControllerTests` one run, `FriendsControllerTests`/`HikesControllerIntegrationTests`
+  another) — a clean worktree of the same commit was fully green. Root cause, found via
+  `SQLite Error 1: 'no such table: MediaReprocessItems'` in the log: the new services' startup
+  sweeps query `StigViddDbContext` immediately, racing `StigViddWebApplicationFactory.SeedDatabase()`'s
+  `EnsureDeleted()`/`EnsureCreated()` on the shared in-memory SQLite connection. Fix: add the new
+  service's `typeof(...)` to the `startupServices` filter in
+  `Tests/IntegrationTests/WebApplicationFactory.cs`, the same list `MailOutboxDispatcher` and
+  `ExpiredObstacleCleanupService` are already in — it is hand-maintained, not automatic.

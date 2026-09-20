@@ -18,7 +18,19 @@ cd backend && dotnet ef database update --project Infrastructure \
 ```
 
 `--connection` matters too: `DesignTimeDbContextFactory` otherwise reads Infrastructure's **user
-secrets**, which on most boxes point at something you did not mean to migrate.
+secrets**, which on most boxes point at something you did not mean to migrate. It also writes
+nothing to the machine, which the user-secrets route does — and the integration suite inherits
+that same store, so a value left there changes the suite's behaviour on your box and nowhere
+else ([[integration-tests-inherit-api-config]]).
+
+**Do not gate the wait on `pg_isready`.** The postgres entrypoint runs `initdb` and serves a
+temporary local server *before* it creates `POSTGRES_DB`, so `pg_isready -d stigvidd` returns
+ready and the next command still dies with `FATAL: database "stigvidd" does not exist`.
+Measured 2026-09-19. Wait on a real query instead:
+
+```sh
+until docker exec pg psql -U postgres -d stigvidd -tAc 'SELECT 1' >/dev/null 2>&1; do sleep 1; done
+```
 
 ## The failure that looks like a broken migration and is not
 
@@ -55,6 +67,52 @@ That sequence check is the one worth remembering: it is how you confirm a
 whole reason [[mail-templates-seeded-with-insertdata]] says to omit `Id`. Rolling back one step
 (`dotnet ef database update <PreviousMigration> --project Infrastructure --connection …`) also
 exercises `Down`, which nothing else ever runs.
+
+## A backfill is invisible unless you seed the OLD schema first
+
+Everything above applies the whole chain to an empty database. That proves the DDL and says
+**nothing** about a `migrationBuilder.Sql` backfill, because a backfill only ever touches rows
+that predate it — and a fresh database has none. Run it that way and it reports success having
+updated zero rows, which looks identical to working.
+
+Stop one migration short, seed rows shaped the way production's already are, then apply the one
+under test:
+
+```sh
+dotnet ef database update <PreviousMigrationId> --project Infrastructure --connection "$CONN"
+docker exec pg psql -U postgres -d stigvidd -c 'INSERT INTO dbo."<Table>" (...) VALUES (...);'
+dotnet ef database update --project Infrastructure --connection "$CONN"
+```
+
+Measured 2026-09-19 for `20260919110806_AddMailOutboxRetention`, whose `Up` ends in
+`UPDATE dbo."OutboxEmails" SET "SettledAt" = "LastUpdatedAt" WHERE "Status" IN (3, 4)`: four
+seeded rows, and afterwards the two settled ones carried `SettledAt` while the `Pending` and
+`Sent` ones were untouched. Without that seed the migration was green and the assertion did not
+exist. The stakes are that a retention sweep spares a row whose timestamp is null, so a backfill
+that silently did nothing would leave every pre-existing row immortal — the exact rows the rule
+was written for.
+
+## Two semantics only a real Postgres can settle
+
+Both suites are SQLite, and these are where the engines differ, so a predicate meant for
+production is worth one `psql` round here:
+
+Quote these with **double** quotes outside and backslash-escaped double quotes inside. The
+SQL contains single quotes, so the single-quoted form the examples above use will not close;
+and Postgres' own `$$` dollar-quoting is not available here either, because `$$` is the
+shell's PID before `psql` ever sees it.
+
+```sh
+# NULL in a comparison is neither true nor false: a 90-day-old row with a null timestamp
+# must be SPARED by "< cutoff", not matched. Expect zero rows.
+docker exec pg psql -U postgres -d stigvidd -c \
+  "SELECT \"Identifier\" FROM dbo.\"OutboxEmails\" WHERE \"SettledAt\" < now() - interval '30 days';"
+
+# Postgres lower() is locale-aware, SQLite's is ASCII-only -- so a case-folded match that
+# passes the suite can still miss in production. Keep fixtures ASCII either way.
+docker exec pg psql -U postgres -d stigvidd -c \
+  "SELECT \"Identifier\" FROM dbo.\"OutboxEmails\" WHERE lower(\"ToAddress\") = 'e@example.com';"
+```
 
 Related: the `attribute-failure` skill is the general form of the trap here — a red signal that
 names something far from its cause. See also `verify-in-docker` for when the whole stack is the

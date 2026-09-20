@@ -36,6 +36,7 @@ public class AdminAuthorizationIntegrationTests : IClassFixture<StigViddWebAppli
         { "GET", "/api/v1/admin/media" },                                        // AdminMediaController
         { "DELETE", "/api/v1/admin/trails/images/any-image-identifier" },        // AdminTrailsController
         { "DELETE", $"/api/v1/admin/facilities/{Facility1Identifier}" },         // AdminFacilitiesController
+        { "GET", "/api/v1/admin/mail-outbox/counts" },                           // AdminMailOutboxController
     };
 
     /// <summary>Authenticated as a real user who simply lacks the admin realm role.</summary>

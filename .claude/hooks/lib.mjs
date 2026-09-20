@@ -46,7 +46,7 @@ export function readEvent() {
  * The repo root, walking up for `.git`.
  *
  * `existsSync`, not a directory test: in a LINKED WORKTREE `.git` is a FILE. That
- * distinction is the same one that broke OpenApiContractTests
+ * distinction is the same one that broke the old OpenApiContractTests
  * (docs/notes/git-worktree-repo-root.md), and every session here runs in a worktree.
  */
 export function repoRoot(ev = {}) {

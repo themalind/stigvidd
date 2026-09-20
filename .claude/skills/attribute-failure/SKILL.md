@@ -23,15 +23,18 @@ git log -1 --stat
 
 ## Step 1 — the failures that are BY DESIGN
 
-Two red signals in this repo are expected and are not bugs:
+One red signal in this repo is expected and is not a bug:
 
-- **`OpenApiContractTests` failed.** That is the contract test rewriting `web/openapi.json`
-  after an API change. Regenerate the client and re-run — see
-  [openapi-contract-snapshot](../../../docs/notes/openapi-contract-snapshot.md). The file is
-  gitignored, so `git status` will not show it; a *missing* snapshot is written silently and
-  does not fail, so a failure here always means the surface really moved.
 - **Jenkins: "the generated API client is stale".** Someone changed the API surface without
-  running `npm run generate:api`. Nothing about the pipeline is broken.
+  running `npm run generate:api`. Nothing about the pipeline is broken. See
+  [openapi-contract-snapshot](../../../docs/notes/openapi-contract-snapshot.md).
+
+`OpenApiContractTests` used to belong on this list, and its absence is worth a sentence: it
+wrote `web/openapi.json` as a side effect and failed once whenever the document had to
+change. On Jenkins, whose workspace persists between builds, a snapshot left by the previous
+commit was enough to fail it while the committed client was perfectly current — a red build
+that meant nothing. The document is now exported by the build, and that test is gone. If you
+find a reference to it, the reference is stale.
 
 ## Step 2 — the failures that are CONFIGURATION, not code
 

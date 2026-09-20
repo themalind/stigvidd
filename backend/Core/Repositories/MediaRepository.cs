@@ -58,6 +58,36 @@ public class MediaRepository : IMediaRepository
         }
     }
 
+    public async Task<RepositoryResult<IReadOnlyCollection<MediaLookupProjection>>> GetByIdentifiersAsync(
+        IReadOnlyCollection<string> identifiers, CancellationToken ctoken)
+    {
+        try
+        {
+            using var context = await _context.CreateDbContextAsync(ctoken);
+
+            var trailImages = await context.TrailImages
+                .AsNoTracking()
+                .Where(ti => identifiers.Contains(ti.Identifier))
+                .Select(ti => new MediaLookupProjection(ti.Identifier, "Trail", ti.ImageUrl))
+                .ToListAsync(ctoken);
+
+            var facilityImages = await context.FacilityImages
+                .AsNoTracking()
+                .Where(fi => identifiers.Contains(fi.Identifier))
+                .Select(fi => new MediaLookupProjection(fi.Identifier, "Facility", fi.ImageUrl))
+                .ToListAsync(ctoken);
+
+            var all = trailImages.Concat(facilityImages).ToList();
+
+            return RepositoryResult<IReadOnlyCollection<MediaLookupProjection>>.Success(all);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "MediaRepository: GetByIdentifiersAsync -> Something went wrong when looking up media by identifier.");
+            return RepositoryResult<IReadOnlyCollection<MediaLookupProjection>>.Error();
+        }
+    }
+
     public async Task<RepositoryResult> UpdateImageMetadataAsync(string imageIdentifier, string? altText, string? caption, CancellationToken ctoken)
     {
         try

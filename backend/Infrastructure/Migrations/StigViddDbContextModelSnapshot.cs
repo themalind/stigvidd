@@ -516,6 +516,77 @@ namespace Infrastructure.Migrations
                     b.ToTable("MailTemplates", "dbo");
                 });
 
+            modelBuilder.Entity("Infrastructure.Data.Entities.MediaReprocessItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Identifier")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("JobId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("LastError")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("LastUpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("MediaIdentifier")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("OwnerType")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("JobId");
+
+                    b.HasIndex("Status");
+
+                    b.ToTable("MediaReprocessItems", "dbo");
+                });
+
+            modelBuilder.Entity("Infrastructure.Data.Entities.MediaReprocessJob", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Identifier")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("LastUpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("OptionsJson")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("MediaReprocessJobs", "dbo");
+                });
+
             modelBuilder.Entity("Infrastructure.Data.Entities.OutboxEmail", b =>
                 {
                     b.Property<int>("Id")
@@ -551,7 +622,13 @@ namespace Infrastructure.Migrations
                     b.Property<DateTime>("NextAttemptAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<DateTime?>("RedactedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<DateTime?>("SentAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("SettledAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("Status")
@@ -1502,6 +1579,17 @@ namespace Infrastructure.Migrations
                     b.Navigation("SharedWith");
                 });
 
+            modelBuilder.Entity("Infrastructure.Data.Entities.MediaReprocessItem", b =>
+                {
+                    b.HasOne("Infrastructure.Data.Entities.MediaReprocessJob", "Job")
+                        .WithMany("Items")
+                        .HasForeignKey("JobId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Job");
+                });
+
             modelBuilder.Entity("Infrastructure.Data.Entities.PasswordResetToken", b =>
                 {
                     b.HasOne("Infrastructure.Data.Entities.User", "User")
@@ -1698,6 +1786,11 @@ namespace Infrastructure.Migrations
             modelBuilder.Entity("Infrastructure.Data.Entities.Hike", b =>
                 {
                     b.Navigation("Images");
+                });
+
+            modelBuilder.Entity("Infrastructure.Data.Entities.MediaReprocessJob", b =>
+                {
+                    b.Navigation("Items");
                 });
 
             modelBuilder.Entity("Infrastructure.Data.Entities.Review", b =>

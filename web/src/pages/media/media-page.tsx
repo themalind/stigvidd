@@ -5,15 +5,22 @@ import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import MediaUpload from "@/components/media/media-upload";
 import MediaBrowse from "@/components/media/media-browse";
+import MediaReprocessJobs from "@/components/media/media-reprocess-jobs";
 
 export default function MediaPage() {
   const [tab, setTab] = useState("upload");
   const [refreshKey, setRefreshKey] = useState(0);
+  const [jobsRefreshKey, setJobsRefreshKey] = useState(0);
 
   // Keep Browse in sync, but stay on Upload — that tab now shows the target's
   // images itself, so jumping away would hide the result of the change.
   function handleMediaChanged() {
     setRefreshKey((k) => k + 1);
+  }
+
+  function handleBatchStarted() {
+    setJobsRefreshKey((k) => k + 1);
+    setTab("jobs");
   }
 
   return (
@@ -23,12 +30,16 @@ export default function MediaPage() {
           <TabsList className="mb-6">
             <TabsTrigger value="upload">Upload</TabsTrigger>
             <TabsTrigger value="browse">Browse</TabsTrigger>
+            <TabsTrigger value="jobs">Batch jobs</TabsTrigger>
           </TabsList>
           <TabsContent value="upload">
             <MediaUpload onMediaChanged={handleMediaChanged} />
           </TabsContent>
           <TabsContent value="browse">
-            <MediaBrowse refreshKey={refreshKey} />
+            <MediaBrowse refreshKey={refreshKey} onBatchStarted={handleBatchStarted} />
+          </TabsContent>
+          <TabsContent value="jobs">
+            <MediaReprocessJobs refreshKey={jobsRefreshKey} />
           </TabsContent>
         </Tabs>
       </div>

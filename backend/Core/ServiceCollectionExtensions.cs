@@ -54,6 +54,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IFriendRepository, FriendRepository>();
         services.AddTransient<IUserPushTokenRepository, UserPushTokenRepository>();
         services.AddTransient<IMediaRepository, MediaRepository>();
+        services.AddTransient<IMediaReprocessRepository, MediaReprocessRepository>();
         services.AddTransient<ICityAreaRepository, CityAreaRepository>();
         services.AddTransient<ITrailImportRepository, TrailImportRepository>();
         services.AddTransient<IMailTemplateRepository, MailTemplateRepository>();
@@ -70,6 +71,8 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IImageProcessingService, ImageProcessingService>();
         services.AddTransient<IMediaUploadService, MediaUploadService>();
         services.AddTransient<IMediaService, MediaService>();
+        services.AddTransient<IMediaReprocessService, MediaReprocessService>();
+        services.AddSingleton<IMediaReprocessQueue, MediaReprocessQueue>();
         services.AddTransient<IDataTransferService, DataTransferService>();
         services.AddTransient<IHikeService, HikeService>();
         services.AddTransient<ITrailObstaclesService, TrailObstaclesService>();
@@ -90,11 +93,16 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IMailOutboxService, MailOutboxService>();
         services.AddTransient<IEmailVerificationService, EmailVerificationService>();
         services.AddTransient<IPasswordResetService, PasswordResetService>();
+        services.AddTransient<IWelcomeMailService, WelcomeMailService>();
 
         // The admin editor. The catalogue is the declared set of placeholders per
         // template key; MailTemplateCatalogTests keeps it honest against the call sites.
         services.AddTransient<IMailTemplateCatalog, MailTemplateCatalog>();
         services.AddTransient<IMailTemplateAdminService, MailTemplateAdminService>();
+
+        // Reading and managing the queue itself. Separate from IMailOutboxService, which is the
+        // send path every caller depends on.
+        services.AddTransient<IMailOutboxAdminService, MailOutboxAdminService>();
 
         // Singleton for the same reason: the handover point between a caller queueing mail and
         // the dispatcher draining it. Unlike the import queue this one is only a hint — the
@@ -153,6 +161,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<TrailImportResponseFactory>();
         services.AddTransient<ContentReportResponseFactory>();
         services.AddTransient<MailTemplateResponseFactory>();
+        services.AddTransient<MailOutboxResponseFactory>();
 
         services.AddTransient<IDbMigrationRunner, DbMigrationRunner>();
     }

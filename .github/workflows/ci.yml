@@ -96,6 +96,15 @@ jobs:
     defaults:
       run:
         working-directory: ./web
+    env:
+      # Switches off web/package.json's predev/prebuild hook, which otherwise refreshes
+      # web/openapi.json from the backend before building. This runner has the whole
+      # checkout but NO .NET SDK, so the hook's structural "is the monorepo here" check
+      # passes and the generation then fails on a missing `dotnet` -- turning every web
+      # build red for a reason that has nothing to do with the diff under test.
+      # The committed client under web/src/api/generated is what this job builds, which
+      # is the same thing it has always built.
+      STIGVIDD_SKIP_API_CODEGEN: "true"
     steps:
     - uses: actions/checkout@v4
     - name: Setup Node

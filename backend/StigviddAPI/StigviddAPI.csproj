@@ -44,4 +44,46 @@
     </AssemblyAttribute>
   </ItemGroup>
 
+  <!--
+    Refreshes web/openapi.json after every Debug build, by running the freshly built
+    assembly with the export-openapi switch Program.cs handles (ReadOpenApiExportPath).
+
+    This is what makes the API contract current on an ORDINARY build - `dotnet build`, the
+    VS Code "build api" task, and F5 (which runs that task first). Before this, the document
+    was written by an integration test, so it only moved when someone ran the backend suite,
+    and the first sign of a stale client was a red Jenkins build.
+
+    Every condition below is load-bearing:
+
+      Configuration == Debug   backend/Dockerfile publishes in Release with build context
+                               ./backend, where neither ../web nor ../scripts exists.
+      DesignTimeBuild          the C# Dev Kit runs design-time builds constantly while you
+                               type. Without this the editor would boot the API host on
+                               every one of them.
+      Exists(...)              any other context holding only backend/.
+      StigviddSkipApiCodegen   the explicit escape hatch: -p:StigviddSkipApiCodegen=true.
+
+    Inputs/Outputs make it incremental: MSBuild skips the target entirely while
+    web/openapi.json is newer than the assembly, so a no-op rebuild costs nothing. The
+    script always writes the file for exactly this reason.
+
+    ContinueOnError="true" is MSBuild's synonym for WarnAndContinue, spelled the way the
+    editor's schema recognises. It is deliberate: failing to produce a document must never
+    fail the build - that would turn a backend compile into a red build over the other
+    area's artifact. The Jenkinsfile Preflight asserts the file exists instead, which is
+    where it matters.
+  -->
+  <Target Name="GenerateOpenApiSpec"
+          AfterTargets="Build"
+          Condition="'$(Configuration)' == 'Debug'
+                 And '$(DesignTimeBuild)' != 'true'
+                 And '$(StigviddSkipApiCodegen)' != 'true'
+                 And Exists('$(MSBuildProjectDirectory)/../../scripts/generate-openapi.mjs')"
+          Inputs="$(TargetPath)"
+          Outputs="$(MSBuildProjectDirectory)/../../web/openapi.json">
+    <Exec Command="node &quot;$(MSBuildProjectDirectory)/../../scripts/generate-openapi.mjs&quot; --quiet"
+          WorkingDirectory="$(MSBuildProjectDirectory)"
+          ContinueOnError="true" />
+  </Target>
+
 </Project>

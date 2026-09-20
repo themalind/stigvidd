@@ -7,11 +7,11 @@
 //     indistinguishable from your own the moment you run `git status` an hour later.
 //     This repo is routinely dirty on arrival.
 //   * WHICH CHECKOUT THIS IS.  Work here happens in linked worktrees, and two things
-//     differ in one: `.git` is a FILE (which is what broke OpenApiContractTests — see
+//     differ in one: `.git` is a FILE (which is what broke the old contract test — see
 //     docs/notes/git-worktree-repo-root.md), and `.codegraph/` is per-checkout, so a
 //     fresh worktree has NO index and `codegraph` silently has nothing to say.
 //   * THE CONTRACT CHAIN.  Controller -> web/openapi.json -> web/src/api/generated is a
-//     one-way pipeline. The middle link is GITIGNORED — the backend test run writes it —
+//     one-way pipeline. The middle link is GITIGNORED — the StigviddAPI build exports it —
 //     so the only end of it `git status` can see is the typed client, which IS committed.
 //     Whether you are mid-chain is decidable from the working tree, and it is the single
 //     most common way a green-looking backend change breaks the web build.
@@ -62,8 +62,9 @@ export function classify(entries) {
   if (api && !client)
     notes.push(
       "The API surface is modified but web/src/api/generated is not — the typed client " +
-        "is stale. Run the backend tests to refresh web/openapi.json (gitignored; that " +
-        "run writes it), then `cd web && npm run generate:api` and commit the client. " +
+        "is stale. `cd backend && dotnet build` refreshes web/openapi.json (gitignored; the " +
+        "build exports it), then `cd web && npm run generate:api` and commit the client — " +
+        "or just `cd web && npm run build`, whose prebuild hook does both. " +
         "The Jenkinsfile web stage fails on `git diff --exit-code -- src/api/generated`.",
     );
   if (model && !migration)

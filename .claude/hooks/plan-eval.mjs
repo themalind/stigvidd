@@ -154,10 +154,11 @@ const AREAS = [
   [
     /^backend\/(?:StigviddAPI\/Controllers|WebDataContracts)\//i,
     "the API surface",
-    "changing it drifts the contract: OpenApiContractTests writes web/openapi.json (gitignored, " +
-      "so the backend test run is what produces it), and the typed client is stale until " +
-      "`cd web && npm run generate:api`. The typed client IS committed, and the Jenkinsfile " +
-      "web stage fails on `git diff --exit-code -- src/api/generated`.",
+    "changing it drifts the contract: the StigviddAPI build exports web/openapi.json " +
+      "(gitignored, so `dotnet build` is what produces it), and the typed client is stale " +
+      "until `cd web && npm run generate:api` — which `cd web && npm run build` now does " +
+      "for you. The typed client IS committed, and the Jenkinsfile web stage fails on " +
+      "`git diff --exit-code -- src/api/generated`.",
   ],
   [
     /^backend\/Infrastructure\/Migrations\//i,
@@ -564,8 +565,8 @@ function main() {
 const FIXTURE_INDEX = `# Agent notes
 
 - [The API contract is a one-way pipeline](openapi-contract-snapshot.md) —
-  OpenApiContractTests rewrites web/openapi.json itself when the surface drifts and then
-  fails once; the client under web/src/api/generated is orval output and stale until
+  the StigviddAPI build exports web/openapi.json when the surface drifts; the client under
+  web/src/api/generated is orval output and stale until
   \`npm run generate:api\`.
 - [.git is a file in a linked worktree](git-worktree-repo-root.md) — repo-root discovery
   that tests for a directory walks straight past the root and throws.

@@ -35,4 +35,20 @@ public class OutboxEmail : BaseEntity
 
     // The last transport error, kept on a Failed row so there is something to diagnose from.
     public string? LastError { get; set; }
+
+    // When this row reached Failed or Cancelled, exactly as SentAt records reaching Sent.
+    //
+    // The retention sweep dates settled rows by THIS and never by LastUpdatedAt, which seven
+    // methods here already write. Redaction would be an eighth, so a sweep keyed on
+    // LastUpdatedAt would restart a row's own deletion clock every time it cleared its body,
+    // and a redacted row would then never be deleted at all. LastUpdatedAt answers "when was
+    // this last touched"; this answers "when did it stop moving".
+    public DateTime? SettledAt { get; set; }
+
+    // When the bodies were cleared. A body is only needed while the mail can still be sent, and
+    // for verify-email and reset-password it holds a live token URL — so it does not outlive
+    // that need. This, not the emptiness of the two strings, is the signal: it is what the
+    // admin UI branches on to explain itself, and what RequeueAsync checks before it will put
+    // a row back on the queue.
+    public DateTime? RedactedAt { get; set; }
 }

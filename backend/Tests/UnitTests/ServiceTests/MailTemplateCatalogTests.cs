@@ -137,12 +137,50 @@ public class MailTemplateCatalogTests
     }
 
     [Fact]
+    public async Task Welcome_DeclaresExactlyThePlaceholdersTheRealCallerSupplies()
+    {
+        // Arrange
+        IReadOnlyDictionary<string, string?>? model = null;
+
+        var outbox = new Mock<IMailOutboxService>();
+        outbox
+            .Setup(service => service.EnqueueAsync(
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<IReadOnlyDictionary<string, string?>>(),
+                It.IsAny<CancellationToken>(),
+                It.IsAny<string?>(),
+                It.IsAny<string?>()))
+            .Callback((string _, string _, IReadOnlyDictionary<string, string?> passed, CancellationToken _, string? _, string? _) => model = passed)
+            .ReturnsAsync(Result.Ok("queued"));
+
+        var service = new WelcomeMailService(outbox.Object, NullLogger<WelcomeMailService>.Instance);
+
+        // Act
+        await service.SendAsync(
+            "vandrare@example.com", "Ralf", TestContext.Current.CancellationToken);
+
+        // Assert
+        model.Should().NotBeNull("the welcome mail must have been queued for this test to mean anything");
+
+        var definition = Catalog.Find(WelcomeMailService.TemplateKey);
+        definition.Should().NotBeNull();
+
+        model.Keys.Should().BeEquivalentTo(
+            definition.Tokens.Select(token => token.Name),
+            "the catalogue is what the editor offers and validates against -- a name here that "
+                + "the caller does not pass is a placeholder the editor would allow into a "
+                + "template, and every one of those mails then fails to render");
+    }
+
+    [Fact]
     public void EveryTemplateKeyThatCodeSends_IsDescribed()
     {
-        // The keys with a production caller. "welcome" is deliberately not asserted here:
-        // nothing sends it, which is a fact the catalogue states rather than hides.
+        // The keys with a production caller. All three have one now: "welcome" stopped being
+        // the outbox's worked example when registration started sending it.
         Catalog.Find(EmailVerificationService.TemplateKey).Should().NotBeNull();
         Catalog.Find(PasswordResetService.TemplateKey).Should().NotBeNull();
+        Catalog.Find(WelcomeMailService.TemplateKey).Should().NotBeNull();
     }
 
     [Fact]

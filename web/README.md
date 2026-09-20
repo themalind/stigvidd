@@ -30,16 +30,22 @@ never from your `.env`.
 ## The generated API client
 
 `src/api/generated/` is produced by orval from `openapi.json` and must not be edited by hand.
-`openapi.json` is gitignored — the backend test run writes it — so run the backend tests
-first, then:
+`openapi.json` is gitignored — the StigviddAPI build exports it — so build the backend first.
+
+You normally do not have to think about either step: `scripts/codegen.mjs` runs as this
+package's `predev`/`prebuild`, refreshing the document and regenerating the client before the
+dev server or the production build starts. Just commit what shows up under `src/api/generated`.
+
+To do it explicitly:
 
 ```bash
 npm run generate:api
 git diff --exit-code -- src/api/generated
 ```
 
-Commit the result. Only Jenkins checks that the committed client is current; GitHub Actions
-does not. To generate from a running API instead, set `ORVAL_API_URL`.
+Only Jenkins checks that the committed client is current; GitHub Actions does not — it sets
+`STIGVIDD_SKIP_API_CODEGEN`, because its runner has no .NET SDK. Set that variable yourself to
+switch the automatic step off; set `ORVAL_API_URL` to generate from a running API instead.
 
 ## Layout
 

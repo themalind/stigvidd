@@ -21,6 +21,8 @@ decisions that are easy to break.
 | Admin web upload panel                  | `web/src/components/media/media-upload.tsx`, `web/src/pages/media/media-page.tsx` |
 | Admin web upload rules (tested)         | `web/src/lib/media-upload.ts`                           |
 | Admin web staged files across a refresh | `web/src/lib/staged-media.ts`                           |
+| Batch reprocess job + dispatcher        | `backend/Core/Services/MediaReprocessService.cs`, `backend/StigviddAPI/BackgroundServices/MediaReprocessDispatcher.cs` |
+| Admin web batch dialog + jobs list      | `web/src/components/media/media-reprocess-dialog.tsx`, `web/src/components/media/media-reprocess-jobs.tsx` |
 
 ## The pipeline at a glance
 
@@ -147,6 +149,31 @@ fully-qualified, servable URL (the DB stores the relative WebDAV path;
 `PresentableBaseUrl` is the public host that serves it). It also updates alt-text /
 caption metadata. `PresentableBaseUrl` is required config — the service throws at
 construction if it's missing.
+
+## Batch reprocessing already-stored images
+
+The admin Media page's Browse tab can select existing Trail/Facility images and resize/
+re-encode them in the background, using the same `ImageProcessingService`/`WebDavService`
+pipeline above rather than a second one. Trail symbols are excluded — they carry no stored
+width/height/size to update.
+
+```
+ web (Browse)              MediaReprocessService          MediaReprocessDispatcher
+ ──────────────            ────────────────────           ─────────────────────────
+ select images  ── POST ──►  validate + create job   ──►   claim item (Pending→Processing)
+ + options         /reprocess  (MediaReprocessJobs/Items)    download → Process → upload
+                                                              MarkSucceeded/Failed, delete old file
+```
+
+Same claim-based dispatch as `MailOutboxDispatcher` (`Pending → Processing`, `Conflict`
+ignored, a startup sweep re-signals every `Pending` item), but with no retry/backoff ladder:
+`WebDavService` already retries its own transient failures, so an item gets one attempt here.
+A job has no stored status/counters — `MediaReprocessJobSummaryResponse.Create` computes
+`Pending`/`Processing`/`Completed` from the live item counts on every read.
+
+`MediaReprocessDispatcher` and `MediaReprocessRetentionService` are removed from the
+integration test factory (`WebApplicationFactory.cs`), the same way the mail outbox pair is,
+so those tests only prove the HTTP surface and journal, not that a job completes.
 
 ## Edge cases — quick reference
 
