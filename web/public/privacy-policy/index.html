@@ -31,6 +31,9 @@
   Och siffran i §5 är nu bunden till CONTAINER_LOG_RETENTION_DAYS i .env: ändras
   den ena måste den andra följa med, i BÅDA språken.
 
+  §4:s "fyra decimaler" är bundet till toFixed(4) i app/src/hooks/useWeather.ts, och
+  Expo-raden om appuppdateringar till expo.updates.url i app/app.json.
+
   Kodändringarna som texten vilade på har landat (se docs/gdpr-analys.md):
     §3  vidaredelning kräver ägarens tillstånd  → AllowResharing per delning (steg 1-2)
     §3  e-postadressen visas aldrig             → Email borttagen ur FriendResponse
@@ -228,7 +231,7 @@
     <main id="top">
       <header>
         <h1>Integritetspolicy för Stigvidd</h1>
-        <p class="updated">Senast uppdaterad: 13 september 2026</p>
+        <p class="updated">Senast uppdaterad: 20 september 2026</p>
         <p class="lang-nav"><strong>Svenska</strong> · <a href="#english">In English</a></p>
       </header>
 
@@ -280,10 +283,13 @@
               <td>Positionsdata</td>
               <td>
                 GPS-koordinater som spelas in medan du registrerar en vandring – även när skärmen
-                är släckt eller appen ligger i bakgrunden. Din nuvarande position när du visar
-                kartan eller filtrerar på ”nära mig”
+                är släckt eller appen ligger i bakgrunden. Din nuvarande position när du öppnar
+                startsidan, visar kartan eller filtrerar på ”nära mig”
               </td>
-              <td>Rita din vandringsrutt, visa var du är på kartan, sortera leder efter avstånd</td>
+              <td>
+                Rita din vandringsrutt, visa var du är på kartan, sortera leder efter avstånd, visa
+                väder och ortsnamn på startsidan
+              </td>
               <td>Avtal (art. 6.1 b)</td>
             </tr>
             <tr>
@@ -346,6 +352,11 @@
         till. Positionen spelas bara in medan du aktivt registrerar en vandring.
       </p>
       <p>
+        På startsidan lämnar din position telefonen för två uppslagningar: vädret hämtas från SMHI,
+        och ortsnamnet slås upp av telefonens egen karttjänst (Apple på iPhone, Google på Android).
+        Positionen avrundas innan den skickas till SMHI, och den sparas inte hos oss. Se avsnitt 4.
+      </p>
+      <p>
         När du sparar en vandring kan du trimma bort början och slutet av rutten innan den lagras –
         till exempel om du startade inspelningen hemma.
       </p>
@@ -396,14 +407,29 @@
           kartan laddas.
         </li>
         <li>
+          <strong>SMHI</strong>, servrar i Sverige – levererar vädret på startsidan. Din position
+          skickas dit, avrundad till fyra decimaler (cirka tio meter).
+        </li>
+        <li>
+          <strong>Apple respektive Google</strong> – översätter din position till ett ortsnamn på
+          startsidan. Uppslagningen görs av telefonens egen karttjänst: Apple på iPhone, Google på
+          Android.
+        </li>
+        <li>
           <strong>Apple Push Notification service, Google Firebase Cloud Messaging och Expo</strong>
           – levererar push-notiser till din enhet, om du har tillåtit notiser.
         </li>
+        <li>
+          <strong>Expo</strong> – levererar också appuppdateringar. Appen frågar Expos servrar efter
+          uppdateringar när den startar, och din IP-adress skickas då dit. Det sker oavsett om du
+          har tillåtit notiser.
+        </li>
       </ul>
       <p>
-        Dina uppgifter lagras i Sverige. Två av mottagarna ovan ligger utanför Sverige: kartbilder
-        levereras av MapTiler, som är etablerat i Schweiz, ett land som EU-kommissionen har beslutat
-        har en adekvat skyddsnivå. Push-notiser går via Apple, Google och Expo, som behandlar
+        Dina uppgifter lagras i Sverige, och vädret hämtas från SMHI:s svenska servrar. Övriga
+        mottagare ovan ligger utanför Sverige: kartbilder levereras av MapTiler, som är etablerat i
+        Schweiz, ett land som EU-kommissionen har beslutat har en adekvat skyddsnivå. Push-notiser,
+        appuppdateringar och uppslagningen av ortsnamn går via Apple, Google och Expo, som behandlar
         uppgifter i USA – för dem sker överföringen med stöd av EU-kommissionens beslut om adekvat
         skyddsnivå (EU–US Data Privacy Framework) för de leverantörer som är anslutna till ramverket,
         och i övriga fall med standardavtalsklausuler. Push-notiser skickas bara om du har tillåtit
@@ -489,7 +515,7 @@
       <section class="lang-section" id="english" lang="en">
         <header>
           <h1>Privacy Policy for Stigvidd</h1>
-          <p class="updated">Last updated: 13 September 2026</p>
+          <p class="updated">Last updated: 20 September 2026</p>
           <p class="lang-nav"><a href="#top">På svenska</a> · <strong>English</strong></p>
         </header>
 
@@ -538,10 +564,13 @@
                 <td>Location data</td>
                 <td>
                   GPS coordinates recorded while you register a walk – including when the screen is
-                  off or the app is in the background. Your current position when you view the map
-                  or filter by “near me”
+                  off or the app is in the background. Your current position when you open the home
+                  screen, view the map or filter by “near me”
                 </td>
-                <td>Draw your route, show where you are on the map, sort trails by distance</td>
+                <td>
+                  Draw your route, show where you are on the map, sort trails by distance, show the
+                  weather and the name of the place you are in on the home screen
+                </td>
                 <td>Contract (Art. 6(1)(b))</td>
               </tr>
               <tr>
@@ -605,6 +634,12 @@
           Your position is only recorded while you are actively registering a walk.
         </p>
         <p>
+          On the home screen your position leaves the phone for two lookups: the weather is fetched
+          from SMHI, and the name of the place you are in is looked up by the phone's own map
+          service (Apple on iPhone, Google on Android). The position is rounded before it is sent
+          to SMHI, and it is not stored by us. See section 4.
+        </p>
+        <p>
           When you save a walk you can trim away the beginning and the end of the route before it is
           stored – for example if you started recording at home.
         </p>
@@ -657,18 +692,33 @@
             when the map loads.
           </li>
           <li>
+            <strong>SMHI</strong>, servers in Sweden – delivers the weather on the home screen. Your
+            position is sent there, rounded to four decimals (about ten metres).
+          </li>
+          <li>
+            <strong>Apple and Google respectively</strong> – translate your position into a place
+            name on the home screen. The lookup is made by the phone's own map service: Apple on
+            iPhone, Google on Android.
+          </li>
+          <li>
             <strong>Apple Push Notification service, Google Firebase Cloud Messaging and Expo</strong>
             – deliver push notifications to your device, if you have allowed notifications.
           </li>
+          <li>
+            <strong>Expo</strong> – also delivers app updates. The app asks Expo's servers for
+            updates when it starts, and your IP address is sent there when it does. This happens
+            whether or not you have allowed notifications.
+          </li>
         </ul>
         <p>
-          Your data is stored in Sweden. Two of the recipients above are located elsewhere: map
-          imagery is delivered by MapTiler, established in Switzerland, a country the European
-          Commission has found to provide an adequate level of protection. Push notifications go via
-          Apple, Google and Expo, which process data in the United States – for them the transfer
-          relies on the European Commission's adequacy decision (EU–US Data Privacy Framework) for
-          those providers certified under the framework, and otherwise on standard contractual
-          clauses. Push notifications are only sent if you have allowed them.
+          Your data is stored in Sweden, and the weather is fetched from SMHI's Swedish servers. The
+          other recipients above are located elsewhere: map imagery is delivered by MapTiler,
+          established in Switzerland, a country the European Commission has found to provide an
+          adequate level of protection. Push notifications, app updates and the place-name lookup go
+          via Apple, Google and Expo, which process data in the United States – for them the
+          transfer relies on the European Commission's adequacy decision (EU–US Data Privacy
+          Framework) for those providers certified under the framework, and otherwise on standard
+          contractual clauses. Push notifications are only sent if you have allowed them.
         </p>
 
         <h2>5. How long we keep the data</h2>
