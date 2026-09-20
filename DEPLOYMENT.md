@@ -70,7 +70,9 @@ Each subdomain needs a public DNS record pointing at the host:
 
 | Domain (default)      | → service  |
 |-----------------------|------------|
-| `stigvidd.se`         | web        |
+| `stigvidd.se`         | site       |
+| `www.stigvidd.se`     | 301 to the apex |
+| `admin.stigvidd.se`   | web        |
 | `api.stigvidd.se`     | api        |
 | `media.stigvidd.se`   | media      |
 | `auth.stigvidd.se`    | keycloak   |
@@ -79,6 +81,26 @@ Each subdomain needs a public DNS record pointing at the host:
 
 Mail additionally needs MX, SPF, DKIM, DMARC and a Hostup authorisation record —
 see [Mail DNS records](#mail-dns-records).
+
+`www` is a site block of its own in `proxy/Caddyfile` and takes its own certificate, so
+the record has to exist before Caddy can answer there.
+
+> **The apex serves the public site, not the admin.** `stigvidd.se` is the `site`
+> container, because the three legal-page URLs (`/privacy-policy/`, `/terms-of-use/`,
+> `/delete-account/`) are compiled into the shipped mobile app and those files live in
+> `site/public/`. The admin moved to `admin.stigvidd.se`.
+>
+> Changing `WEB_DOMAIN` is **not** a config-only change. Two allow-lists must name the new
+> origin, and neither is checked by anything:
+>
+> 1. The `stigvidd-admin` Keycloak client's **Web Origins** — not its redirect URIs. The
+>    admin logs in with the Direct Access Grant (a cross-origin `fetch` POST to the token
+>    endpoint, no redirect flow), so what breaks is CORS on that POST: a console error and
+>    a login that never completes. This lives only in the running Keycloak.
+> 2. The API's CORS origin list in `backend/StigviddAPI/Program.cs`, which no test covers.
+>
+> See
+> [docs/notes/moving-the-admin-off-the-apex.md](docs/notes/moving-the-admin-off-the-apex.md).
 
 ---
 

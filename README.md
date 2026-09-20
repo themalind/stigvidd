@@ -2,7 +2,7 @@
 
 Stigvidd is a full-stack hiking and trail discovery application built as a thesis project. It lets users explore hiking trails in the Borås area, record their own hikes with GPS tracking, rate and review trails, and report obstacles along the way.
 
-The project consists of three parts: a cross-platform mobile app, a web-based admin dashboard, and a REST API backend.
+The project consists of four parts: a cross-platform mobile app, a public website, a web-based admin dashboard, and a REST API backend.
 
 <figure>
   <img src="app/src/assets/images/mammaapp.png">
@@ -58,7 +58,8 @@ The project consists of three parts: a cross-platform mobile app, a web-based ad
 ```
 stigvidd/
 ├── app/          # Mobile app (React Native / Expo)
-├── web/          # Admin dashboard (React / Vite)
+├── site/         # Public website + legal pages (React / Vite), on stigvidd.se
+├── web/          # Admin dashboard (React / Vite), on admin.stigvidd.se
 ├── backend/      # REST API + domain logic (ASP.NET Core / C#)
 │   ├── StigviddAPI/        # Controllers (admin ones under Controllers/Admin), background services, startup
 │   ├── Core/               # Services, repositories, validators, factories, spatial helpers,
@@ -472,6 +473,7 @@ kind.
 | --- | --- | --- |
 | `backend/` — REST API | **AGPL-3.0-or-later** | [text](LICENSES/AGPL-3.0-or-later.txt) |
 | `web/` — admin dashboard | **AGPL-3.0-or-later** | [text](LICENSES/AGPL-3.0-or-later.txt) |
+| `site/` — public website | **AGPL-3.0-or-later** | [text](LICENSES/AGPL-3.0-or-later.txt) |
 | `app/` — mobile app (Android + iOS) | **MPL-2.0**, Exhibit B not applied | [text](LICENSES/MPL-2.0.txt) · [why](app/LICENSE.md) |
 
 Every file says which of the two it is under, as an `SPDX-License-Identifier` header. Files

@@ -1,6 +1,8 @@
-# Anything in `web/public/` is already live — an HTML comment never gated it
+# Anything in a `public/` folder is already live — an HTML comment never gated it
 
-Three hand-written legal pages sit in `web/public/{privacy-policy,terms-of-use,delete-account}/index.html`.
+Three hand-written legal pages sit in `site/public/{privacy-policy,terms-of-use,delete-account}/index.html`.
+They lived in `web/public/` until the public site was split out of the admin into `site/`;
+the served URLs never changed, only which image carries them.
 Each opened with a block like:
 
 ```html
@@ -11,9 +13,10 @@ Each opened with a block like:
 ```
 
 Read as an instruction to a human that is fine. Read as a deploy gate it is nothing at all:
-**every file under `web/public/` reaches production on the next merge to `main`, with no
-route, no config and no opt-in.** The bundler copies `publicDir` verbatim into `dist/`,
-`web/Dockerfile` copies `dist/` into `/usr/share/nginx/html`, and Jenkins pushes the image.
+**every file under a project's `public/` reaches production on the next merge to `main`, with
+no route, no config and no opt-in.** The bundler copies `publicDir` verbatim into `dist/`,
+that project's `Dockerfile` copies `dist/` into `/usr/share/nginx/html`, and Jenkins pushes
+the image. This is true of `site/public/` and `web/public/` alike.
 A draft legal document parked there is published the moment the branch merges — and the
 comment saying otherwise travels with it, inside the served HTML.
 
@@ -29,18 +32,20 @@ whole search follows — `.dockerignore`, the bundler's `publicDir` setting, the
 already contained all three. The pages were shipping the entire time; only the *comments*
 and the absence of any link to them said otherwise.
 
-So the question to ask of a `web/public/` file is never "how do I deploy this" but "is this
+So the question to ask of a `public/` file is never "how do I deploy this" but "is this
 fit to be public right now".
 
 ## They are files, not routes, and that changes three things
 
-`web/src/router/router.tsx` knows nothing about them. Verified by building the real image
-(`podman build -f web/Dockerfile web/`) and curling it:
+No router knows anything about them. Verified by building the real image
+(`podman build -f web/Dockerfile web/`, back when the admin still served them) and curling it:
 
 1. **Link with a plain `<a href>`, never react-router's `<Link>`.** `Link` handles the click
    client-side, matches no route, and renders `NotFoundPage` — the server is never asked for
-   the file. See the comment in `web/src/pages/login/login-page.tsx`, which is where the
-   three links now live (`/` is the login page; the coming-soon page is gone).
+   the file. `site/src/components/site-footer.tsx` links them relatively, because the site
+   serves them. `web/src/pages/login/login-page.tsx` links the same three as **absolute**
+   URLs on `https://stigvidd.se`, because the admin no longer serves them and a relative
+   href there would 404.
 2. **The trailing slash is load-bearing.** These are *directories*. `/privacy-policy/` is
    200; `/privacy-policy` is a 301 to the slashed form. `app/src/constants/constants.ts` and
    the Play Console entries use the slashed form and never pay for it; a human typing the URL
@@ -48,7 +53,8 @@ fit to be public right now".
 3. **That 301's `Location` was absolute and built from the scheme *inside* the container** —
    `http://`, port 80 — so a visitor arriving over TLS got bounced back to plain http and
    through Caddy's redirect again. nginx's default is `absolute_redirect on`, and it is wrong
-   behind any TLS-terminating proxy. `web/nginx.conf` now sets `absolute_redirect off;`, which
+   behind any TLS-terminating proxy. Both `site/nginx.conf` and `web/nginx.conf` set
+   `absolute_redirect off;`, which
    makes the redirect relative and preserves whatever scheme, host and port the client used.
    Nothing surfaces this: the SPA fallback (`try_files ... /index.html`) means no path 404s,
    so the only way to see it is to curl a directory path against the built image.

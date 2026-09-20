@@ -204,8 +204,8 @@ pipeline {
     }
 
     stage('Test') {
-      // No per-stage agents: both branches run concurrently in the shared
-      // workspace. backend/ and web/ are disjoint, so they cannot collide.
+      // No per-stage agents: all three branches run concurrently in the shared
+      // workspace. backend/, web/ and site/ are disjoint, so they cannot collide.
       parallel {
         stage('backend') {
           steps {
@@ -265,6 +265,23 @@ pipeline {
             }
           }
         }
+
+        stage('site') {
+          steps {
+            dir('site') {
+              // The public landing page. No generate:api and no staleness gate: the
+              // site has no API client at all, which is what makes it independent of
+              // Preflight's openapi.json and safe to run in parallel with everything.
+              sh '''
+                set -e
+                npm ci
+                npm run lint
+                npm test
+                npm run build
+              '''
+            }
+          }
+        }
       }
     }
 
@@ -284,20 +301,20 @@ pipeline {
             echo "$REG_PASS" | docker login "${REGISTRY%%/*}" -u "$REG_USER" --password-stdin
             trap 'docker logout "${REGISTRY%%/*}" >/dev/null 2>&1 || true' EXIT
 
-            # Parallelises the five image builds via buildx bake. Drop this line
+            # Parallelises the six image builds via buildx bake. Drop this line
             # if the agent's Docker has no buildx plugin.
             export COMPOSE_BAKE=true
 
-            docker compose --env-file ci/build.env build api web media proxy keycloak
-            docker compose --env-file ci/build.env push api web media proxy keycloak
+            docker compose --env-file ci/build.env build api web site media proxy keycloak
+            docker compose --env-file ci/build.env push api web site media proxy keycloak
 
             # Also publish a moving `latest` so a deploy host can pin
             # IMAGE_TAG=latest once instead of editing .env for every commit.
             # This stage only runs on main, so `latest` always means current main.
             # The per-commit tags stay immutable, for pinning and rollback.
             # Assumes the compose image names stay ${REGISTRY}/stigvidd-<service>,
-            # which is how all five are declared in docker-compose.yml.
-            for svc in api web media proxy keycloak; do
+            # which is how all six are declared in docker-compose.yml.
+            for svc in api web site media proxy keycloak; do
               docker tag  "${REGISTRY}/stigvidd-${svc}:${IMAGE_TAG}" "${REGISTRY}/stigvidd-${svc}:latest"
               docker push --quiet "${REGISTRY}/stigvidd-${svc}:latest"
             done
@@ -307,7 +324,7 @@ pipeline {
       post {
         always {
           // The agent's Docker daemon is long-lived and every main build tags
-          // five new per-commit images — without this the disk fills up.
+          // six new per-commit images — without this the disk fills up.
           // Keeps the current build's tags so their layers stay cached.
           sh '''
             [ -n "${IMAGE_TAG:-}" ] || exit 0
@@ -371,7 +388,7 @@ pipeline {
               # REGISTRY/IMAGE_TAG override the host .env; POSTGRES_PASSWORD etc.
               # come from the persistent .env already on the host.
               #
-              # Scoped to the five images this pipeline builds, deliberately NOT
+              # Scoped to the six images this pipeline builds, deliberately NOT
               # `db`. An unscoped `pull` would re-pull postgis/postgis:17-3.5 and
               # `up -d` would then recreate the live database container whenever
               # upstream moves that tag. --no-deps stops compose from touching db
@@ -380,11 +397,11 @@ pipeline {
               # operation, on purpose (see DEPLOYMENT.md Part 3).
               #
               # No --remove-orphans: paired with a scoped `up` it can remove
-              # containers outside the named set. Recreating these five keeps all
+              # containers outside the named set. Recreating these six keeps all
               # named volumes (pgdata, media, caddy_data, caddy_config) intact.
               ssh -o BatchMode=yes "${DEPLOY_HOST}" "cd ${DEPLOY_PATH} && \
-                REGISTRY=${REGISTRY} IMAGE_TAG=${IMAGE_TAG} docker compose pull api web media proxy keycloak && \
-                REGISTRY=${REGISTRY} IMAGE_TAG=${IMAGE_TAG} docker compose up -d --no-deps api web media proxy keycloak && \
+                REGISTRY=${REGISTRY} IMAGE_TAG=${IMAGE_TAG} docker compose pull api web site media proxy keycloak && \
+                REGISTRY=${REGISTRY} IMAGE_TAG=${IMAGE_TAG} docker compose up -d --no-deps api web site media proxy keycloak && \
                 docker image prune -f"
             '''
           }

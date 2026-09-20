@@ -23,13 +23,14 @@ this document does not repeat; read that first if you have never deployed this s
 
 ## 1. What staging is, and what it is not
 
-Staging is a **partial stack**. It runs five of the eight services on its own host and
+Staging is a **partial stack**. It runs six of the nine services on its own host and
 borrows the other three from production:
 
 | service | where | note |
 | --- | --- | --- |
 | `db` | **staging host** | its own PostGIS, its own `pgdata`. No production data unless you put it there. |
 | `api` | **staging host** | built from the same source, its own image tag |
+| `site` | **staging host** | the public site. Static, no build args, so any tag works |
 | `web` | **staging host** | needs its **own image** — see the warning below |
 | `media` | **staging host** | its own uploads, its own `media` volume |
 | `proxy` | **staging host** | Caddy, running the **slim** `Caddyfile.app` |
@@ -140,8 +141,12 @@ clients production uses:
 
 Then:
 
-- Set `stigvidd-admin`'s **valid redirect URIs** and **web origins** to the staging web
-  domain (`https://staging.stigvidd.se/*`), not production's.
+- Set `stigvidd-admin`'s **web origins** to the staging web domain
+  (`https://staging.stigvidd.se`), not production's. **Web origins is the one that
+  matters**: the admin logs in with the Direct Access Grant — a cross-origin `fetch` POST
+  to the token endpoint — and never redirects, so redirect URIs change nothing and a
+  missing web origin is a CORS error with a login that never completes. Setting the
+  redirect URIs too is harmless, but do not expect them to fix a failing login.
 - Create the realm role **`admin`** and grant it to whoever needs the migration page.
 - **Generate a new secret for `stigvidd-admin-api`.** Do not reuse production's.
 - Configure **Realm settings → Email** for this realm if you want Keycloak's own admin-console
@@ -214,14 +219,17 @@ placeholders that exist only to satisfy interpolation.
 REGISTRY=inkaben.se
 IMAGE_TAG=<commit-sha>            # see Step 4 for the web image caveat
 
-# ---- Staging's own domains (three DNS records) ---------------------------
+# ---- Staging's own domains (four DNS records) ----------------------------
+# Caddyfile.app also serves www.{$SITE_DOMAIN} as a redirect to the apex. Without a
+# www.staging.site record that one block fails ACME and logs; the others are unaffected.
+SITE_DOMAIN=staging.site.stigvidd.se
 WEB_DOMAIN=staging.stigvidd.se
 API_DOMAIN=staging.api.stigvidd.se
 MEDIA_DOMAIN=staging.media.stigvidd.se
 ACME_EMAIL=admin@stigvidd.se
 
 # ---- Partial-stack switch ------------------------------------------------
-# Serves web/api/media only. Without this, Caddy also tries to obtain certs for
+# Serves site/web/api/media only. Without this, Caddy also tries to obtain certs for
 # AUTH/OBSERVATORY/MAIL_DOMAIN and route them to containers that do not exist.
 CADDYFILE=/etc/caddy/Caddyfile.app
 
@@ -313,10 +321,10 @@ docker login inkaben.se
 
 # proxy first: it must be up before anything needs a certificate
 docker compose up -d proxy
-docker compose up -d db api web media
+docker compose up -d db api web site media
 ```
 
-Name the five services explicitly. A bare `docker compose up -d` would also start
+Name the six services explicitly. A bare `docker compose up -d` would also start
 `keycloak`, `openobserve` and `mailserver`, which is exactly what this environment is
 avoiding.
 

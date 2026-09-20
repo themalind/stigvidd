@@ -1,8 +1,8 @@
 # Stigvidd — Project Conventions
 
-A .NET 10 API with PostGIS, an Expo mobile app, and a React admin web whose API client is
-generated. Three areas, three toolchains, and **nothing checks another area's work** —
-which is the single most useful thing to know before starting.
+A .NET 10 API with PostGIS, an Expo mobile app, a React admin web whose API client is
+generated, and a static public site. Four areas, four toolchains, and **nothing checks
+another area's work** — which is the single most useful thing to know before starting.
 
 Developed on Windows, Gentoo and Debian 13. Anything added here has to work on all three;
 where a command differs per shell, all the forms are given.
@@ -13,14 +13,17 @@ where a command differs per shell, all the forms are given.
 # backend  (.NET 10; solution is backend/backend.sln — there is nothing to build at the repo root)
 cd backend && dotnet tool restore && dotnet restore && dotnet build
 
-# web  (Vite + React 19 + TS)
+# web  (Vite + React 19 + TS) — the ADMIN UI, on admin.stigvidd.se
 cd web && npm ci && npm test && npm run build   # vitest run; then tsc -b && vite build
+
+# site (Vite + React 19 + TS) — the PUBLIC site, on the apex stigvidd.se
+cd site && npm ci && npm test && npm run build  # no API client, no auth, no VITE_* args
 
 # app  (Expo)
 cd app && npm ci && npm test -- --watchAll=false
 
 # the whole stack
-docker compose up -d                       # db, api, web, media, keycloak, openobserve, proxy, mailserver
+docker compose up -d                       # db, api, web, site, media, keycloak, openobserve, proxy, mailserver
 ```
 
 **Never run a dev server, watcher or `docker compose up` in the foreground.** `expo start`,
@@ -43,6 +46,7 @@ Use `run_in_background: true`, or `-d`. `.claude/hooks/guard-long-running.mjs` d
 | is the backend green? | `cd backend && dotnet build && dotnet test --no-build`, **with `ConnectionStrings__StigVidd` set** | `dotnet test` bare — it fails at host startup on the missing connection string, and the output never names it ([note](docs/notes/dotnet-test-connection-string.md)) |
 | do the web types check? | `cd web && npm run build` — `tsc -b && vite build` **is** the type check | `npm test`, which is Vitest and type-checks nothing |
 | is the web logic still right? | `cd web && npm test` — Vitest over `src/**/*.test.ts` | assuming a green backend covers it; nothing outside `web/` runs this suite |
+| does the public site build? | `cd site && npm run build` — same `tsc -b && vite build` | the web job; `site/` is a separate project with its own job and its own lockfile |
 | do the app types check? | `cd app && npx tsc --noEmit`, deliberately | CI — it runs prettier, eslint and jest, and type-checks **nothing** |
 | is the API contract still in step? | `cd backend && dotnet build` (the build exports the gitignored `web/openapi.json`), then `cd web && npm run generate:api` | assuming a green backend means the web client is current |
 | is the generated client current? | `cd web && npm run generate:api && git diff --exit-code -- src/api/generated` | GitHub Actions — only **Jenkins** runs this check, even now that a web job exists |
@@ -52,8 +56,8 @@ Use `run_in_background: true`, or `-d`. `.claude/hooks/guard-long-running.mjs` d
 | is the licensing still declared? | `reuse lint` — every file needs an SPDX header or a `REUSE.toml` entry | assuming the root `LICENSE` covers everything; `app/` is MPL-2.0, not AGPL |
 | what did an earlier session learn? | `node .claude/hooks/plan-eval.mjs --match "<what you are about to do>"` | re-deriving it |
 
-**What CI actually covers.** [.github/workflows/ci.yml](.github/workflows/ci.yml) has five
-jobs: `harness`, `backend`, `app`, `web` and `licensing`. The web job lints, tests and builds `web/`, so
+**What CI actually covers.** [.github/workflows/ci.yml](.github/workflows/ci.yml) has six
+jobs: `harness`, `backend`, `app`, `web`, `site` and `licensing`. The web job lints, tests and builds `web/`, so
 a broken web change no longer passes a PR unnoticed. What GitHub still does **not** do is
 the generated-client staleness gate or the image builds — both are the
 [Jenkinsfile](Jenkinsfile)’s alone, and Jenkins pushes and deploys only from `main`. So a
@@ -128,6 +132,34 @@ Two consequences worth holding on to:
   hook does both), or point `ORVAL_API_URL` at a running API.
 - Jenkins produces the document in **Preflight**, not in the backend stage — the backend
   and web stages run in parallel in one workspace, so the web stage cannot wait for it.
+
+## Two web projects, split by hostname
+
+| project | domain | what it is |
+| --- | --- | --- |
+| `site/` | `${SITE_DOMAIN}` — the apex, `stigvidd.se` | the public landing page and the three legal pages. **No API client, no auth, no `VITE_*` build args.** Static files. |
+| `web/` | `${WEB_DOMAIN}` — `admin.stigvidd.se` | the admin UI. Keycloak, the orval client, the whole contract chain. |
+
+The split is by **hostname**, which is what makes it real — the apex used to serve the
+admin, so a visitor who typed the domain got a login form. Three consequences that nothing
+in a diff or a test will remind you of:
+
+- **The API's CORS list is literal and untested.** `Program.cs` names the allowed browser
+  origins; the integration suite boots as `Development` and takes the reflect-any-origin
+  branch, so the production list runs on no machine anywhere. A missing origin is green in
+  CI and a blocked request in production.
+- **Keycloak's Web Origins are not in this repo.** `keycloak/` has no realm export, so the
+  `stigvidd-admin` client's settings live only in the running Keycloak. Changing
+  `WEB_DOMAIN` means editing them by hand, per environment — and it is **Web Origins, not
+  redirect URIs**: the admin logs in with the Direct Access Grant (`keycloak-auth.ts` POSTs
+  credentials to the token endpoint with `fetch`), so there is no redirect flow, and what
+  breaks is CORS on that cross-origin POST.
+- **The apex is load-bearing for the app.** `app/src/constants/constants.ts` compiles
+  `https://stigvidd.se/privacy-policy/` and two siblings into the shipped app, and those
+  files are `site/public/`. That is why the site takes the apex, not the admin.
+
+Both `proxy/Caddyfile` and `proxy/Caddyfile.app` need every site block, and nothing checks
+that they agree. See [docs/notes/moving-the-admin-off-the-apex.md](docs/notes/moving-the-admin-off-the-apex.md).
 
 ## Layering
 
@@ -297,7 +329,7 @@ licence of **two of the three areas**:
 
 | area | licence |
 | --- | --- |
-| `backend/`, `web/` | AGPL-3.0-or-later |
+| `backend/`, `web/`, `site/` | AGPL-3.0-or-later |
 | `app/` | **MPL-2.0**, Exhibit B deliberately omitted |
 
 `app/` differs because Android and iOS are one codebase and Apple's App Store terms conflict

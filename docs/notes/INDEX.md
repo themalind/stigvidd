@@ -430,16 +430,33 @@ src/api/generated` then fails with "the generated API client is stale" for reaso
   the real trap: without `--environment` it bundles from your **local `.env`** and pushes a
   laptop's LAN address over the air, and it prompts only from SDK 55 up. Locally `.env.local`
   beats `.env`, and a variable marked SENSITIVE on EAS is still inlined into the APK/IPA.
-- [Anything in `web/public/` is already live — an HTML comment never gated it](web-public-is-already-live.md) —
-  the bundler copies `publicDir` verbatim into `dist/`, `web/Dockerfile` copies `dist/` into nginx
-  and Jenkins pushes it, so a draft parked in `web/public/` is published by the next merge to
+- [Moving the admin off the apex touches four couplings, and only two are in this repo](moving-the-admin-off-the-apex.md) —
+  the public site (`site/`) owns `${SITE_DOMAIN}` (the apex) and the admin (`web/`) moved to
+  `${WEB_DOMAIN}` = `admin.stigvidd.se`. What breaks is not the split but the hostname: the
+  API's CORS `WithOrigins` list in `Program.cs` is literal and **no test covers it** (the
+  integration suite boots as Development, which reflects any origin, so the production branch
+  runs nowhere); Keycloak's `stigvidd-admin` **Web Origins** exist only in the running
+  Keycloak, since `keycloak/` has no realm export — and it is Web Origins, NOT redirect URIs,
+  because the admin logs in with the Direct Access Grant (a cross-origin `fetch` POST to the
+  token endpoint, no redirect flow at all), so a stale one is a CORS error and a login that
+  never completes, never `invalid_redirect_uri`; the three legal-page URLs are compiled
+  into the app (`app/src/constants/constants.ts`), which is why the SITE takes the apex; and
+  both `proxy/Caddyfile` and `proxy/Caddyfile.app` need the block, with `${SITE_DOMAIN:?}`
+  required because an empty Caddy site address makes Caddy refuse its whole config. DNS, then
+  Keycloak, then deploy.
+- [Anything in a `public/` folder is already live — an HTML comment never gated it](web-public-is-already-live.md) —
+  the bundler copies `publicDir` verbatim into `dist/`, that project's `Dockerfile` copies `dist/`
+  into nginx and Jenkins pushes it, so a draft parked in `site/public/` or `web/public/` is
+  published by the next merge to
   `main` with no route, no config and nothing excluding it — the `FÅR INTE DEPLOYAS FÖRRÄN`
   comments on the legal pages gated nothing and shipped inside the served HTML. Do not go looking
   in `.dockerignore`, the build config, the `Jenkinsfile` or `proxy/Caddyfile` for the thing
   holding a public/ page back; there isn't one. They are files, not routes: link them with a plain
   `<a>` (react-router `<Link>` renders `NotFoundPage`), the trailing slash matters because they
   are directories, and nginx's default `absolute_redirect on` made that 301 downgrade TLS
-  visitors to http until `web/nginx.conf` set `absolute_redirect off`.
+  visitors to http until both `site/nginx.conf` and `web/nginx.conf` set `absolute_redirect off`.
+  The three legal pages now live in `site/public/`, served by the apex domain; the admin links
+  them as absolute URLs.
 - [Loading mod_spatialite puts the system libjpeg 8 under Magick.NET, and only a full round-trip preload pins it](magick-jpeg-collides-with-mod-spatialite.md) —
   on Linux `sqlite3_load_extension` dlopens `mod_spatialite` with **RTLD_GLOBAL**, pulling
   libgeotiff -> libtiff -> `libjpeg.so.8` into the global namespace, where it interposes the

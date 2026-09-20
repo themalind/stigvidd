@@ -68,6 +68,12 @@ web/dist
 web/dist-ssr
 web/*.local
 
+# site (vite) — the public landing page
+site/node_modules
+site/dist
+site/dist-ssr
+site/*.local
+
 .vs/
 .vscode/
 obj/

@@ -65,9 +65,10 @@ it("lists every feature, each with its bullet", () => {
   show();
 
   expect(screen.getByText("Det här kan du göra")).toBeTruthy();
-  expect(screen.getAllByText("•")).toHaveLength(7);
+  expect(screen.getAllByText("•")).toHaveLength(10);
   expect(screen.getByText("Spela in dina vandringar med GPS och se hur långt du går")).toBeTruthy();
   expect(screen.getByText("Dela dina inspelade vandringar med vänner")).toBeTruthy();
+  expect(screen.getByText("Låt Stigvidd slumpa fram en promenad när du inte kan bestämma dig")).toBeTruthy();
 });
 
 it("offers a way to get in touch", async () => {

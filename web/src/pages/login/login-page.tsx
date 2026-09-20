@@ -4,15 +4,19 @@
 import { DarkModeToggle } from "@/components/dark-mode-toggle";
 import { LoginCard } from "@/components/login/login-card";
 
-// Static files in web/public/, not routes — so they need a plain <a>: react-router's
-// <Link> would match no route and render NotFoundPage instead of asking the server.
-// The trailing slash avoids nginx's 301, and the paths are registered in Play Console,
-// App Store Connect and app/src/constants/constants.ts, so they are permanent.
+// The three legal pages are static files served by the PUBLIC site (site/public/), not
+// by this image and not by any route here — so they need a plain <a> with an absolute
+// URL. A relative href would 404 once the admin moves off the apex domain, and
+// react-router's <Link> would match no route and render NotFoundPage without ever
+// asking a server. The trailing slash avoids nginx's 301, and the paths are permanent:
+// app/src/constants/constants.ts hardcodes them into the shipped app.
 // See docs/notes/web-public-is-already-live.md.
+const SITE_URL = "https://stigvidd.se";
+
 const LEGAL_LINKS = [
-  { href: "/privacy-policy/", label: "Integritetspolicy" },
-  { href: "/terms-of-use/", label: "Användarvillkor" },
-  { href: "/delete-account/", label: "Radera konto" },
+  { href: `${SITE_URL}/privacy-policy/`, label: "Integritetspolicy" },
+  { href: `${SITE_URL}/terms-of-use/`, label: "Användarvillkor" },
+  { href: `${SITE_URL}/delete-account/`, label: "Radera konto" },
 ];
 
 export default function LoginPage() {

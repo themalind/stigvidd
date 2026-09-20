@@ -130,6 +130,35 @@ jobs:
     - name: Build
       run: npm run build
 
+  # site/ is the public landing page: static, no API client, no VITE_* build args. It
+  # therefore has no generated-client gate and no contract chain -- the entire reason it
+  # is a separate project from web/. It DOES own the three legal pages under
+  # site/public/, whose URLs are hardcoded in app/src/constants/constants.ts, so a build
+  # failure here is a build failure for pages the shipped app links to.
+  site:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./site
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup Node
+      uses: actions/setup-node@v4
+      with:
+        # Keep in step with site/Dockerfile's build stage and with the web job.
+        node-version: 24
+        cache: 'npm'
+        cache-dependency-path: site/package-lock.json
+    - name: Install dependencies
+      run: npm ci
+    - name: Lint
+      run: npm run lint
+    - name: Test
+      run: npm test
+    # "tsc -b && vite build" IS the type check here too -- Vitest type-checks nothing.
+    - name: Build
+      run: npm run build
+
   # Licensing. Every source file must declare its licence with an SPDX header, and the
   # files that cannot carry one -- generated code, EF migrations, binaries -- must be
   # covered by REUSE.toml. Without a gate this decays silently: a new file simply arrives

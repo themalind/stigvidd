@@ -10,7 +10,25 @@
 	acme_ca {$ACME_CA:https://acme-v02.api.letsencrypt.org/directory}
 }
 
-# Web frontend.
+# Public site (landing page + the legal pages). This is the APEX domain: the privacy
+# policy, terms and delete-account URLs are baked into the shipped app, so this block
+# is what makes them answer.
+{$SITE_DOMAIN} {
+	encode zstd gzip
+	reverse_proxy site:80
+}
+
+# www redirects to the apex; it is its own site address and gets its own certificate.
+www.{$SITE_DOMAIN} {
+	redir https://{$SITE_DOMAIN}{uri} permanent
+}
+
+# Admin web frontend. Moved off the apex to its own name so a visitor who types
+# stigvidd.se reaches the site above rather than an admin login form. Changing this
+# name means adding it to the Keycloak client's WEB ORIGINS (not its redirect URIs —
+# the admin uses the Direct Access Grant and never redirects). That is configured in
+# the running Keycloak, not in this repo, so nothing here will tell you when they
+# disagree. The symptom is a CORS error on the token POST and a login that hangs.
 {$WEB_DOMAIN} {
 	encode zstd gzip
 	reverse_proxy web:80

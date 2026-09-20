@@ -27,7 +27,18 @@
 	acme_ca {$ACME_CA:https://acme-v02.api.letsencrypt.org/directory}
 }
 
-# Web frontend.
+# Public site (landing page + the legal pages), on the apex domain.
+{$SITE_DOMAIN} {
+	encode zstd gzip
+	reverse_proxy site:80
+}
+
+# www redirects to the apex; needs a resolving www record or ACME fails for this block alone.
+www.{$SITE_DOMAIN} {
+	redir https://{$SITE_DOMAIN}{uri} permanent
+}
+
+# Admin web frontend, on its own name. See Caddyfile for the Keycloak coupling.
 {$WEB_DOMAIN} {
 	encode zstd gzip
 	reverse_proxy web:80

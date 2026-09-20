@@ -33,7 +33,9 @@ SPDX-License-Identifier = "MPL-2.0"
 
 # --- Everything else: AGPL-3.0-or-later --------------------------------------
 # The backend and the admin web are two halves of one network service, which is
-# the case the AGPL exists for.
+# the case the AGPL exists for. site/ (the public website) joins them under the
+# same licence — it is a separate project only so the admin is not what a visitor
+# to the apex domain gets.
 [[annotations]]
 path = "**"
 SPDX-FileCopyrightText = "2025-2026 The Stigvidd Authors"

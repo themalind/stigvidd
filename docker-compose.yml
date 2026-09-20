@@ -229,6 +229,22 @@ services:
     networks:
       - public
 
+  # The public site (landing page + the three legal pages). Deliberately the opposite
+  # of `web` above in every way that matters: no build args, because nothing on the
+  # page reads the API, Keycloak or media; and no depends_on, because it serves static
+  # files and is useful even when the API is down. It owns the APEX domain — the three
+  # legal-page URLs are hardcoded into the shipped app (app/src/constants/constants.ts),
+  # so whichever image answers ${SITE_DOMAIN} must be the one carrying site/public/.
+  site:
+    image: ${REGISTRY:-stigvidd}/stigvidd-site:${IMAGE_TAG:-latest}
+    build:
+      context: ./site
+    restart: unless-stopped
+    logging: *default-logging
+    # Served by the proxy as `site:80` on the `public` network.
+    networks:
+      - public
+
   media:
     # WebDAV media server (nginx). API writes here (basic auth); browsers read
     # (public). Data lives in the `media` volume — part of the migration path.
@@ -460,9 +476,13 @@ services:
     # Keycloak it does not want. web/api/media stay: those it always fronts.
     depends_on:
       - web
+      - site
       - api
       - media
     environment:
+      # The apex. Same :? treatment as the rest — an unset value interpolates to an
+      # EMPTY site address, which makes Caddy refuse its whole config.
+      SITE_DOMAIN: ${SITE_DOMAIN:?SITE_DOMAIN must be set}
       WEB_DOMAIN: ${WEB_DOMAIN:?WEB_DOMAIN must be set}
       API_DOMAIN: ${API_DOMAIN:?API_DOMAIN must be set}
       MEDIA_DOMAIN: ${MEDIA_DOMAIN:?MEDIA_DOMAIN must be set}
@@ -502,6 +522,7 @@ services:
         # works because the host is not on this network.
         # See docs/notes/proxy-aliases-shadow-public-hostnames.md and STAGING.md.
         aliases:
+          - ${SITE_DOMAIN}
           - ${WEB_DOMAIN}
           - ${API_DOMAIN}
           - ${MEDIA_DOMAIN}

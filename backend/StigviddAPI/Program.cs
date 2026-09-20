@@ -60,8 +60,21 @@ public class Program
                     }
                     else
                     {
+                        // The browser origins that call this API. THIS LIST IS THE ONLY
+                        // THING THAT ALLOWS THEM, and nothing tests it: the integration
+                        // suite boots as Development and takes the branch above, which
+                        // reflects any origin. So a missing entry here is green on every
+                        // test run and a blocked request in production only.
+                        //
+                        // https://stigvidd.se is the public site (site/), which makes no
+                        // API calls today but is the apex a browser may arrive from.
+                        // https://admin.stigvidd.se is the admin UI (web/) — it moved off
+                        // the apex when the public site took it over.
                         policy
-                            .WithOrigins("https://stigvidd.se", "https://api.stigvidd.se")
+                            .WithOrigins(
+                                "https://stigvidd.se",
+                                "https://admin.stigvidd.se",
+                                "https://api.stigvidd.se")
                             .AllowAnyHeader()
                             .AllowAnyMethod();
                     }
