@@ -7,12 +7,14 @@ import { toast } from "sonner";
 import { Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { getAllMedia, updateImageMetadata } from "@/api/media";
+import { getAllMedia, updateImageMetadata, type ReprocessJobSummary } from "@/api/media";
 import { deleteTrailImage } from "@/api/trail";
 import { deleteFacilityImage } from "@/api/facility";
+import MediaReprocessDialog from "./media-reprocess-dialog";
 import type { MediaItemResponse } from "@/types/types";
 
 function formatBytes(bytes: number): string {
@@ -23,9 +25,10 @@ function formatBytes(bytes: number): string {
 
 interface Props {
   refreshKey: number;
+  onBatchStarted?: (job: ReprocessJobSummary) => void;
 }
 
-export default function MediaBrowse({ refreshKey }: Props) {
+export default function MediaBrowse({ refreshKey, onBatchStarted }: Props) {
   const [items, setItems] = useState<MediaItemResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [enlarged, setEnlarged] = useState<MediaItemResponse | null>(null);
@@ -33,6 +36,8 @@ export default function MediaBrowse({ refreshKey }: Props) {
   const [altText, setAltText] = useState("");
   const [caption, setCaption] = useState("");
   const [saving, setSaving] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [reprocessOpen, setReprocessOpen] = useState(false);
 
   async function load() {
     setLoading(true);
@@ -74,6 +79,28 @@ export default function MediaBrowse({ refreshKey }: Props) {
     }
   }
 
+  function toggleSelected(identifier: string, checked: boolean) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (checked) next.add(identifier);
+      else next.delete(identifier);
+      return next;
+    });
+  }
+
+  const selectable = items.filter((i) => i.ownerType !== "TrailSymbol");
+  const allSelected =
+    selectable.length > 0 && selectable.every((i) => selected.has(i.identifier));
+
+  function toggleSelectAll(checked: boolean) {
+    setSelected(checked ? new Set(selectable.map((i) => i.identifier)) : new Set());
+  }
+
+  function handleBatchSubmitted(job: ReprocessJobSummary) {
+    setSelected(new Set());
+    onBatchStarted?.(job);
+  }
+
   async function handleDelete(item: MediaItemResponse) {
     if (item.ownerType === "TrailSymbol") return;
     if (!confirm("Delete this image?")) return;
@@ -102,7 +129,29 @@ export default function MediaBrowse({ refreshKey }: Props) {
 
   return (
     <>
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+      <div className="flex items-center justify-between gap-4">
+        <label className="flex items-center gap-2 text-sm">
+          <Checkbox
+            checked={allSelected}
+            onCheckedChange={(c) => toggleSelectAll(c === true)}
+            disabled={selectable.length === 0}
+          />
+          Select all
+          {selected.size > 0 && (
+            <span className="text-muted-foreground">({selected.size})</span>
+          )}
+        </label>
+        <Button
+          size="sm"
+          disabled={selected.size === 0}
+          onClick={() => setReprocessOpen(true)}
+        >
+          Optimize selected
+          {selected.size > 0 ? ` (${selected.size})` : ""}
+        </Button>
+      </div>
+
+      <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
         {items.map((item) => {
           const editable = item.ownerType !== "TrailSymbol";
           return (
@@ -117,6 +166,15 @@ export default function MediaBrowse({ refreshKey }: Props) {
                   className="h-full w-full cursor-pointer object-cover"
                   onClick={() => setEnlarged(item)}
                 />
+                {editable && (
+                  <div className="absolute top-1 left-1">
+                    <Checkbox
+                      checked={selected.has(item.identifier)}
+                      onCheckedChange={(c) => toggleSelected(item.identifier, c === true)}
+                      className="bg-background/80"
+                    />
+                  </div>
+                )}
                 <div className="absolute top-1 right-1 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
                   {editable && (
                     <button
@@ -220,6 +278,13 @@ export default function MediaBrowse({ refreshKey }: Props) {
           </Dialog.Portal>
         </Dialog.Root>
       )}
+
+      <MediaReprocessDialog
+        open={reprocessOpen}
+        onOpenChange={setReprocessOpen}
+        mediaIdentifiers={[...selected]}
+        onSubmitted={handleBatchSubmitted}
+      />
     </>
   );
 }

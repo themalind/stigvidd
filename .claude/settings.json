@@ -35,6 +35,14 @@
     "reads as clean to it. That blind spot hid 792 occurrences across 37 test files behind a",
     "0-warning build. The hook guards only that half; the analyzer owns the other.",
     "",
+    "guard-new-comments.mjs denies a comment line added to backend/web/app source that was",
+    "not there before, unless it is an SPDX header, an Arrange/Act/Assert test marker, or",
+    "marked `keep-comment: <why>` on that line. Scoped to .cs/.ts/.tsx outside generated/",
+    "docs/.claude, so it never touches this file's own prose or a hook's own commentary.",
+    "",
+    "guard-commit-message.mjs denies a `git commit` whose message mentions Claude/Anthropic",
+    "authorship, or runs past 72 characters. Extracts the message from -m or a heredoc.",
+    "",
     "Machine-specific overrides belong in .claude/settings.local.json, which .gitignore",
     "already excludes."
   ],
@@ -69,6 +77,12 @@
               "${CLAUDE_PROJECT_DIR}/.claude/hooks/guard-test-cancellation-token.mjs"
             ],
             "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "node",
+            "args": ["${CLAUDE_PROJECT_DIR}/.claude/hooks/guard-new-comments.mjs"],
+            "timeout": 10
           }
         ]
       },
@@ -85,6 +99,12 @@
             "type": "command",
             "command": "node",
             "args": ["${CLAUDE_PROJECT_DIR}/.claude/hooks/guard-long-running.mjs"],
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "node",
+            "args": ["${CLAUDE_PROJECT_DIR}/.claude/hooks/guard-commit-message.mjs"],
             "timeout": 10
           }
         ]

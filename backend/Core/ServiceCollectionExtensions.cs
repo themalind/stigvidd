@@ -54,6 +54,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IFriendRepository, FriendRepository>();
         services.AddTransient<IUserPushTokenRepository, UserPushTokenRepository>();
         services.AddTransient<IMediaRepository, MediaRepository>();
+        services.AddTransient<IMediaReprocessRepository, MediaReprocessRepository>();
         services.AddTransient<ICityAreaRepository, CityAreaRepository>();
         services.AddTransient<ITrailImportRepository, TrailImportRepository>();
         services.AddTransient<IMailTemplateRepository, MailTemplateRepository>();
@@ -70,6 +71,8 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IImageProcessingService, ImageProcessingService>();
         services.AddTransient<IMediaUploadService, MediaUploadService>();
         services.AddTransient<IMediaService, MediaService>();
+        services.AddTransient<IMediaReprocessService, MediaReprocessService>();
+        services.AddSingleton<IMediaReprocessQueue, MediaReprocessQueue>();
         services.AddTransient<IDataTransferService, DataTransferService>();
         services.AddTransient<IHikeService, HikeService>();
         services.AddTransient<ITrailObstaclesService, TrailObstaclesService>();

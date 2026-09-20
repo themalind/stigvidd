@@ -153,7 +153,9 @@ public class StigViddWebApplicationFactory<TProgram>
                 (d.ImplementationType == typeof(ExpiredObstacleCleanupService) ||
                  d.ImplementationType == typeof(TrailImportAnalysisWorker) ||
                  d.ImplementationType == typeof(MailOutboxDispatcher) ||
-                 d.ImplementationType == typeof(MailOutboxRetentionService)))
+                 d.ImplementationType == typeof(MailOutboxRetentionService) ||
+                 d.ImplementationType == typeof(MediaReprocessDispatcher) ||
+                 d.ImplementationType == typeof(MediaReprocessRetentionService)))
                 .ToList();
 
             foreach (var startupService in startupServices)

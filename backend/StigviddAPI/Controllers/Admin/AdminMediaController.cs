@@ -19,10 +19,12 @@ namespace StigviddAPI.Controllers.Admin;
 public class AdminMediaController : StigViddController
 {
     private readonly IMediaService _mediaService;
+    private readonly IMediaReprocessService _reprocessService;
 
-    public AdminMediaController(IMediaService mediaService)
+    public AdminMediaController(IMediaService mediaService, IMediaReprocessService reprocessService)
     {
         _mediaService = mediaService;
+        _reprocessService = reprocessService;
     }
 
     [HttpGet]
@@ -48,5 +50,59 @@ public class AdminMediaController : StigViddController
             return ToActionResult(result.Message);
 
         return NoContent();
+    }
+
+    [HttpPost("reprocess")]
+    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<MediaReprocessJobSummaryResponse>> CreateReprocessJob(
+        [FromBody] CreateMediaReprocessJobRequest request, CancellationToken ctoken)
+    {
+        var result = await _reprocessService.EnqueueBatchAsync(request.MediaIdentifiers, request.Options, ctoken);
+
+        if (!result.Success && result.Message != null)
+            return ToActionResult(result.Message);
+
+        return CreatedAtAction(nameof(GetReprocessJob), new { identifier = result.Value!.Identifier }, result.Value);
+    }
+
+    [HttpGet("reprocess")]
+    public async Task<ActionResult<PagedResult<MediaReprocessJobSummaryResponse>>> GetReprocessJobs(
+        [FromQuery] int page, [FromQuery] int pageSize, CancellationToken ctoken)
+    {
+        var result = await _reprocessService.GetJobsPagedAsync(page, pageSize, ctoken);
+
+        if (!result.Success && result.Message != null)
+            return ToActionResult(result.Message);
+
+        return Ok(result.Value);
+    }
+
+    [HttpGet("reprocess/{identifier}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<MediaReprocessJobDetailResponse>> GetReprocessJob(
+        [FromRoute] string identifier, CancellationToken ctoken)
+    {
+        var result = await _reprocessService.GetJobDetailAsync(identifier, ctoken);
+
+        if (!result.Success && result.Message != null)
+            return ToActionResult(result.Message);
+
+        return Ok(result.Value);
+    }
+
+    [HttpPost("reprocess/{identifier}/cancel")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<MediaReprocessJobSummaryResponse>> CancelReprocessJob(
+        [FromRoute] string identifier, CancellationToken ctoken)
+    {
+        var result = await _reprocessService.CancelJobAsync(identifier, ctoken);
+
+        if (!result.Success && result.Message != null)
+            return ToActionResult(result.Message);
+
+        return Ok(result.Value);
     }
 }

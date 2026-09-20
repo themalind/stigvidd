@@ -674,3 +674,14 @@ src/api/generated` then fails with "the generated API client is stale" for reaso
   dev box and fails on CI's fresh checkout with `TS2304: Cannot find name 'global'` and a `TS2345`
   on `setImmediate(resolve)` in `logger.test.ts`. Fixed by adding `"node"` to `compilerOptions.types`;
   to reproduce CI, type-check without those two gitignored files.
+- [A new BackgroundService not added to WebApplicationFactory.cs's exclusion list races SeedDatabase, and the failures land on unrelated tests](background-service-races-seeddatabase.md) —
+  Adding `MediaReprocessDispatcher`/`MediaReprocessRetentionService` as `AddHostedService<...>()`
+  in `Program.cs` made `dotnet test` fail 45–59 tests with a **different set each run**
+  (`AccountControllerTests` one run, `FriendsControllerTests`/`HikesControllerIntegrationTests`
+  another) — a clean worktree of the same commit was fully green. Root cause, found via
+  `SQLite Error 1: 'no such table: MediaReprocessItems'` in the log: the new services' startup
+  sweeps query `StigViddDbContext` immediately, racing `StigViddWebApplicationFactory.SeedDatabase()`'s
+  `EnsureDeleted()`/`EnsureCreated()` on the shared in-memory SQLite connection. Fix: add the new
+  service's `typeof(...)` to the `startupServices` filter in
+  `Tests/IntegrationTests/WebApplicationFactory.cs`, the same list `MailOutboxDispatcher` and
+  `ExpiredObstacleCleanupService` are already in — it is hand-maintained, not automatic.

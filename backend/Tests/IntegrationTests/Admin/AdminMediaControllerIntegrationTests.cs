@@ -181,4 +181,184 @@ public class AdminMediaControllerIntegrationTests : IClassFixture<StigViddWebApp
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
     }
+
+    // keep-comment: MediaReprocessDispatcher is removed for this factory, so these prove the HTTP surface and journal only, not that a job ever completes.
+    private async Task<HttpClient> AdminClientAsync()
+    {
+        var client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", AuthenticatedUser);
+        client.DefaultRequestHeaders.Add(TestAuthHandler.RolesHeader, TestAuthHandler.AdminRole);
+        return client;
+    }
+
+    private async Task<string> UploadATrailImageAsync(HttpClient client)
+    {
+        var upload = await client.PostAsync(
+            $"/api/v1/admin/trails/{StorsjoledenIdentifier}/images", BuildImageUpload(MakePng(200, 200)),
+            TestContext.Current.CancellationToken);
+        upload.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var uploaded = await upload.Content.ReadFromJsonAsync<List<TrailImageResponse>>(TestContext.Current.CancellationToken);
+        uploaded.Should().NotBeNull();
+        return uploaded.Single().Identifier;
+    }
+
+    [Fact]
+    public async Task CreateReprocessJob_WithAnUploadedTrailImage_ReturnsCreatedWithAPendingJob()
+    {
+        // Arrange
+        var client = await AdminClientAsync();
+        var imageIdentifier = await UploadATrailImageAsync(client);
+
+        var request = new CreateMediaReprocessJobRequest
+        {
+            MediaIdentifiers = [imageIdentifier],
+            Options = new ImageProcessingOptionsRequest { MaxWidth = 100 },
+        };
+
+        // Act
+        var response = await client.PostAsJsonAsync("/api/v1/admin/media/reprocess", request, TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.Created);
+        var job = await response.Content.ReadFromJsonAsync<MediaReprocessJobSummaryResponse>(TestContext.Current.CancellationToken);
+        job.Should().NotBeNull();
+        job.Status.Should().Be("Pending");
+        job.TotalCount.Should().Be(1);
+        job.PendingCount.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task CreateReprocessJob_WithAnUnknownIdentifier_ReturnsBadRequest()
+    {
+        // Arrange
+        var client = await AdminClientAsync();
+        var request = new CreateMediaReprocessJobRequest
+        {
+            MediaIdentifiers = ["00000000-0000-0000-0000-000000000000"],
+            Options = new ImageProcessingOptionsRequest { MaxWidth = 100 },
+        };
+
+        // Act
+        var response = await client.PostAsJsonAsync("/api/v1/admin/media/reprocess", request, TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task CreateReprocessJob_WithoutAdminRole_ReturnsForbidden()
+    {
+        // Arrange
+        var client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", AuthenticatedUser);
+        var request = new CreateMediaReprocessJobRequest
+        {
+            MediaIdentifiers = ["00000000-0000-0000-0000-000000000000"],
+            Options = new ImageProcessingOptionsRequest(),
+        };
+
+        // Act
+        var response = await client.PostAsJsonAsync("/api/v1/admin/media/reprocess", request, TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+    }
+
+    [Fact]
+    public async Task GetReprocessJobs_AfterCreatingAJob_ListsIt()
+    {
+        // Arrange
+        var client = await AdminClientAsync();
+        var imageIdentifier = await UploadATrailImageAsync(client);
+        var created = await client.PostAsJsonAsync(
+            "/api/v1/admin/media/reprocess",
+            new CreateMediaReprocessJobRequest { MediaIdentifiers = [imageIdentifier], Options = new ImageProcessingOptionsRequest() },
+            TestContext.Current.CancellationToken);
+        var job = await created.Content.ReadFromJsonAsync<MediaReprocessJobSummaryResponse>(TestContext.Current.CancellationToken);
+        job.Should().NotBeNull();
+
+        // Act
+        var response = await client.GetAsync("/api/v1/admin/media/reprocess?page=1&pageSize=20", TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var page = await response.Content.ReadFromJsonAsync<PagedResult<MediaReprocessJobSummaryResponse>>(TestContext.Current.CancellationToken);
+        page.Should().NotBeNull();
+        page.Items.Should().Contain(j => j.Identifier == job.Identifier);
+    }
+
+    [Fact]
+    public async Task GetReprocessJob_ForAnUnknownIdentifier_ReturnsNotFound()
+    {
+        // Arrange
+        var client = await AdminClientAsync();
+
+        // Act
+        var response = await client.GetAsync("/api/v1/admin/media/reprocess/no-such-job", TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task GetReprocessJob_AfterCreatingAJob_ReturnsItsPendingItem()
+    {
+        // Arrange
+        var client = await AdminClientAsync();
+        var imageIdentifier = await UploadATrailImageAsync(client);
+        var created = await client.PostAsJsonAsync(
+            "/api/v1/admin/media/reprocess",
+            new CreateMediaReprocessJobRequest { MediaIdentifiers = [imageIdentifier], Options = new ImageProcessingOptionsRequest() },
+            TestContext.Current.CancellationToken);
+        var job = await created.Content.ReadFromJsonAsync<MediaReprocessJobSummaryResponse>(TestContext.Current.CancellationToken);
+        job.Should().NotBeNull();
+
+        // Act
+        var response = await client.GetAsync($"/api/v1/admin/media/reprocess/{job.Identifier}", TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var detail = await response.Content.ReadFromJsonAsync<MediaReprocessJobDetailResponse>(TestContext.Current.CancellationToken);
+        detail.Should().NotBeNull();
+        detail.Items.Should().ContainSingle(i => i.MediaIdentifier == imageIdentifier && i.Status == "Pending");
+    }
+
+    [Fact]
+    public async Task CancelReprocessJob_ForAPendingJob_CancelsItsItems()
+    {
+        // Arrange
+        var client = await AdminClientAsync();
+        var imageIdentifier = await UploadATrailImageAsync(client);
+        var created = await client.PostAsJsonAsync(
+            "/api/v1/admin/media/reprocess",
+            new CreateMediaReprocessJobRequest { MediaIdentifiers = [imageIdentifier], Options = new ImageProcessingOptionsRequest() },
+            TestContext.Current.CancellationToken);
+        var job = await created.Content.ReadFromJsonAsync<MediaReprocessJobSummaryResponse>(TestContext.Current.CancellationToken);
+        job.Should().NotBeNull();
+
+        // Act
+        var response = await client.PostAsync($"/api/v1/admin/media/reprocess/{job.Identifier}/cancel", null, TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var cancelled = await response.Content.ReadFromJsonAsync<MediaReprocessJobSummaryResponse>(TestContext.Current.CancellationToken);
+        cancelled.Should().NotBeNull();
+        cancelled.CancelledCount.Should().Be(1);
+        cancelled.PendingCount.Should().Be(0);
+        cancelled.Status.Should().Be("Completed");
+    }
+
+    [Fact]
+    public async Task CancelReprocessJob_ForAnUnknownIdentifier_ReturnsNotFound()
+    {
+        // Arrange
+        var client = await AdminClientAsync();
+
+        // Act
+        var response = await client.PostAsync("/api/v1/admin/media/reprocess/no-such-job/cancel", null, TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
 }

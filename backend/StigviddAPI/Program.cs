@@ -155,6 +155,9 @@ public class Program
 // settled rows past their windows. Configured under MailOutbox in appsettings.json.
 builder.Services.AddHostedService<StigviddAPI.BackgroundServices.MailOutboxRetentionService>();
 
+        builder.Services.AddHostedService<StigviddAPI.BackgroundServices.MediaReprocessDispatcher>();
+        builder.Services.AddHostedService<StigviddAPI.BackgroundServices.MediaReprocessRetentionService>();
+
         // Swagger auth
         builder.Services.AddOpenApiDocument(config =>
         {

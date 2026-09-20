@@ -87,6 +87,12 @@ public class EndpointAuthorizationTests : IClassFixture<StigViddWebApplicationFa
         "GET /api/v1/admin/media",
         "PATCH /api/v1/admin/media/{imageIdentifier}",
 
+        // Batch reprocessing (resize/re-encode already-stored images) is the same store.
+        "POST /api/v1/admin/media/reprocess",
+        "GET /api/v1/admin/media/reprocess",
+        "GET /api/v1/admin/media/reprocess/{identifier}",
+        "POST /api/v1/admin/media/reprocess/{identifier}/cancel",
+
         // export hands out the database, the media volume and the Keycloak realm;
         // import replaces this host's data.
         "GET /api/v1/admin/export",
