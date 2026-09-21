@@ -323,6 +323,9 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("FacilityId");
 
+                    b.HasIndex("Identifier")
+                        .IsUnique();
+
                     b.ToTable("FacilityImages", "dbo");
                 });
 
@@ -843,6 +846,9 @@ namespace Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Identifier")
+                        .IsUnique();
+
                     b.ToTable("Trails", "dbo");
                 });
 
@@ -890,6 +896,9 @@ namespace Infrastructure.Migrations
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Identifier")
+                        .IsUnique();
 
                     b.HasIndex("TrailId");
 

@@ -362,14 +362,14 @@ public static class Utilities
                     new TrailImage
                     {
                         Id = 8,
-                        Identifier = "img-asdfasdf-1",
+                        Identifier = "img-qwerqwer-1",
                         ImageUrl = "https://inkaben.se/stigvidd/mock/image.jpg",
                         TrailId = 7
                     },
                     new TrailImage
                     {
                         Id = 9,
-                        Identifier = "img-asdfasdf-2",
+                        Identifier = "img-qwerqwer-2",
                         ImageUrl = "https://inkaben.se/stigvidd/mock/image.jpg",
                         TrailId = 7
                     }

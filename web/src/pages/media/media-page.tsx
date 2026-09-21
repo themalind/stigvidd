@@ -1,6 +1,8 @@
 // SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import { toast } from "sonner";
+import type { ReprocessJobSummary } from "@/api/media";
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import MediaUpload from "@/components/media/media-upload";
@@ -18,7 +20,9 @@ export default function MediaPage() {
     setRefreshKey((k) => k + 1);
   }
 
-  function handleBatchStarted() {
+  // keep-comment: the job's own totalCount, not the dialog's - in filter mode the dialog only knows what the listing last counted, while the server expanded the filter again when the job was created
+  function handleBatchStarted(job: ReprocessJobSummary) {
+    toast.success(`Batch started for ${job.totalCount ?? 0} image(s).`);
     setJobsRefreshKey((k) => k + 1);
     setTab("jobs");
   }

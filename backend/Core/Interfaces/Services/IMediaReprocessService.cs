@@ -9,8 +9,7 @@ namespace Core.Interfaces.Services;
 public interface IMediaReprocessService
 {
     Task<Result<MediaReprocessJobSummaryResponse>> EnqueueBatchAsync(
-        IReadOnlyCollection<string> mediaIdentifiers,
-        ImageProcessingOptionsRequest options,
+        CreateMediaReprocessJobRequest request,
         CancellationToken ctoken);
 
     Task<Result<PagedResult<MediaReprocessJobSummaryResponse>>> GetJobsPagedAsync(

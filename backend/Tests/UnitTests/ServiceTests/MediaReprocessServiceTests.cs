@@ -83,6 +83,28 @@ public class MediaReprocessServiceTests
 
     private static ImageProcessingOptionsRequest Options() => new() { MaxWidth = 800 };
 
+    private static CreateMediaReprocessJobRequest Request(string[] identifiers) =>
+        new() { MediaIdentifiers = identifiers, Options = Options() };
+
+    private static CreateMediaReprocessJobRequest FilterRequest(MediaFilter? filter = null) =>
+        new() { Filter = filter ?? new MediaFilter { TargetMaxWidth = 800, TargetFormat = "webp" }, Options = Options() };
+
+    private static Mock<IMediaRepository> MediaRepoMatching(int count)
+    {
+        var repo = MediaRepoResolving();
+        repo.Setup(r => r.GetMatchingAsync(It.IsAny<MediaFilter>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((MediaFilter _, int limit, CancellationToken __) =>
+            {
+                IReadOnlyCollection<MediaLookupProjection> matches = Enumerable.Range(1, Math.Min(count, limit))
+                    .Select(i => new MediaLookupProjection($"trail-{i}", "Trail", $"trails/{i}.jpg"))
+                    .ToList();
+
+                return RepositoryResult<IReadOnlyCollection<MediaLookupProjection>>.Success(matches);
+            });
+
+        return repo;
+    }
+
     [Fact]
     public async Task EnqueueBatchAsync_WithAllKnownTrailAndFacilityImages_CreatesTheJob()
     {
@@ -92,7 +114,7 @@ public class MediaReprocessServiceTests
 
         // Act
         var result = await Build(reprocess, media).EnqueueBatchAsync(
-            ["trail-1", "facility-1"], Options(), TestContext.Current.CancellationToken);
+            Request(["trail-1", "facility-1"]), TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -110,7 +132,7 @@ public class MediaReprocessServiceTests
 
         // Act
         var result = await Build(reprocess, media).EnqueueBatchAsync(
-            ["trail-1", "symbol-1"], Options(), TestContext.Current.CancellationToken);
+            Request(["trail-1", "symbol-1"]), TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -131,7 +153,7 @@ public class MediaReprocessServiceTests
 
         // Act
         var result = await Build(reprocess).EnqueueBatchAsync(
-            ["trail-1", "trail-1"], Options(), TestContext.Current.CancellationToken);
+            Request(["trail-1", "trail-1"]), TestContext.Current.CancellationToken);
 
         // Assert
         result.Value.Should().NotBeNull();
@@ -147,7 +169,7 @@ public class MediaReprocessServiceTests
 
         // Act
         await Build(reprocess, queue: queue).EnqueueBatchAsync(
-            ["trail-1", "trail-2"], Options(), TestContext.Current.CancellationToken);
+            Request(["trail-1", "trail-2"]), TestContext.Current.CancellationToken);
 
         // Assert
         queue.Enqueued.Should().Equal(100, 101);
@@ -177,11 +199,128 @@ public class MediaReprocessServiceTests
             });
 
         // Act
-        await Build(reprocess, queue: queue).EnqueueBatchAsync(["trail-1"], Options(), TestContext.Current.CancellationToken);
+        await Build(reprocess, queue: queue).EnqueueBatchAsync(Request(["trail-1"]), TestContext.Current.CancellationToken);
 
         // Assert
         queueWasEmptyDuringCreate.Should().BeTrue();
         queue.Enqueued.Should().Equal(100);
+    }
+
+    [Fact]
+    public async Task EnqueueBatchAsync_FromAFilter_CreatesAJobForEveryMatch()
+    {
+        // Arrange
+        var reprocess = ReprocessRepoThatSaves();
+        var media = MediaRepoMatching(3);
+
+        // Act
+        var result = await Build(reprocess, media).EnqueueBatchAsync(
+            FilterRequest(), TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Success.Should().BeTrue();
+        result.Value.Should().NotBeNull();
+        result.Value.TotalCount.Should().Be(3);
+
+        media.Verify(
+            r => r.GetByIdentifiersAsync(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task EnqueueBatchAsync_FromAFilterMatchingNothing_FailsWithoutCreatingAJob()
+    {
+        // Arrange
+        var reprocess = ReprocessRepoThatSaves();
+        var media = MediaRepoMatching(0);
+
+        // Act
+        var result = await Build(reprocess, media).EnqueueBatchAsync(
+            FilterRequest(), TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Success.Should().BeFalse();
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(400);
+
+        reprocess.Verify(
+            r => r.CreateJobAsync(It.IsAny<string>(), It.IsAny<IReadOnlyCollection<(string, string)>>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task EnqueueBatchAsync_FromAFilterOverTheCap_IsRefusedRatherThanTruncated()
+    {
+        // Arrange
+        var reprocess = ReprocessRepoThatSaves();
+        var media = MediaRepoMatching(MediaReprocessLimits.MaxFilterBatchSize + 1);
+
+        // Act
+        var result = await Build(reprocess, media).EnqueueBatchAsync(
+            FilterRequest(), TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Success.Should().BeFalse();
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(400);
+        result.Message.ResultMessage.Should().Contain(MediaReprocessLimits.MaxFilterBatchSize.ToString());
+
+        reprocess.Verify(
+            r => r.CreateJobAsync(It.IsAny<string>(), It.IsAny<IReadOnlyCollection<(string, string)>>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task EnqueueBatchAsync_FromAFilterExactlyAtTheCap_IsAccepted()
+    {
+        // Arrange
+        var reprocess = ReprocessRepoThatSaves();
+        var media = MediaRepoMatching(MediaReprocessLimits.MaxFilterBatchSize);
+
+        // Act
+        var result = await Build(reprocess, media).EnqueueBatchAsync(
+            FilterRequest(), TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Success.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task EnqueueBatchAsync_WithNeitherIdentifiersNorFilter_IsRefused()
+    {
+        // Arrange
+        var reprocess = ReprocessRepoThatSaves();
+
+        // Act
+        var result = await Build(reprocess).EnqueueBatchAsync(
+            new CreateMediaReprocessJobRequest { Options = Options() }, TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Success.Should().BeFalse();
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(400);
+    }
+
+    [Fact]
+    public async Task EnqueueBatchAsync_WithBothIdentifiersAndFilter_IsRefused()
+    {
+        // Arrange
+        var reprocess = ReprocessRepoThatSaves();
+
+        // Act
+        var result = await Build(reprocess).EnqueueBatchAsync(
+            new CreateMediaReprocessJobRequest
+            {
+                MediaIdentifiers = ["trail-1"],
+                Filter = new MediaFilter { TargetMaxWidth = 800 },
+                Options = Options()
+            },
+            TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Success.Should().BeFalse();
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(400);
     }
 
     [Fact]

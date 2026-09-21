@@ -3,7 +3,7 @@
 
 namespace Infrastructure.Data.Entities;
 
-public class FacilityImage : BaseEntity
+public class FacilityImage : BaseEntity, IMediaImage
 {
     public required string ImageUrl { get; set; }
     public int FacilityId { get; set; }

@@ -25,16 +25,12 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
+import { formatBytes } from "@/lib/format";
 
 // A session left analysing has a worker holding it, so the list refreshes itself until
 // nothing is in flight. Analysing the full export takes tens of seconds.
 const PollIntervalMs = 4000;
 
-function formatBytes(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} kB`;
-  return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
-}
 
 function formatMoment(value?: string | null): string {
   return value ? new Date(value).toLocaleString() : "—";

@@ -31,8 +31,14 @@ export function addedComments(oldText, newText) {
   const before = new Set(lines(oldText ?? "").map((l) => l.trim()).filter(Boolean));
   const added = [];
   lines(newText ?? "").forEach((line, i) => {
-    if (!isCommentLine(line) || isExempt(line)) return;
+    if (!isCommentLine(line)) return;
     const trimmed = line.trim();
+    // Exemptions are tested against the TRIMMED line: EXEMPT_LINE anchors at ^// and every
+    // real Arrange/Act/Assert marker is indented inside a method, so matching the raw line
+    // exempted none of them. It only looked like it worked because a comment already present
+    // in oldText is skipped below - which is the whole file for Write but just old_string for
+    // Edit, so the same test methods were allowed one way and denied the other.
+    if (isExempt(trimmed)) return;
     if (before.has(trimmed)) return;
     added.push({ line: i + 1, text: trimmed });
   });
@@ -122,6 +128,14 @@ function selfTest() {
     [CS, "", "// Arrange\nvar x = 1;", null],
     [CS, "", "// Act\nvar x = 1;", null],
     [CS, "", "// Assert\nvar x = 1;", null],
+    // Indented, which is where every real marker sits. A flush-left fixture never reaches
+    // the ^ anchor these exemptions are written with.
+    [CS, "", "        // Arrange\n        var x = 1;", null],
+    [CS, "", "        // Act\n        var x = 1;", null],
+    [CS, "", "        // Assert\n        x.Should().Be(1);", null],
+    [CS, "", "\t// Arrange\n\tvar x = 1;", null],
+    [CS, "", "        // a narrative comment that happens to be indented\n        var x = 1;", "deny"],
+    [CS, "", "        // indented but escaped keep-comment: the order matters\n        var x = 1;", null],
     [CS, "", "var url = \"https://example.com\"; // not a comment start", null],
     [CS, "", "// a necessary workaround keep-comment: EF requires this exact order\nvar x = 1;", null],
     ["docs/notes/some-note.md", "", "// a comment inside prose docs", null],

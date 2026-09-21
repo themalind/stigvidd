@@ -11,7 +11,8 @@
  * and cropped before it is stored, and the original is not kept.
  */
 
-import type { ImageProcessingOptions, MediaItemResponse } from "@/types/types";
+import type { MediaItemResponse } from "@/api/generated/model";
+import type { ImageProcessingOptions } from "@/types/types";
 
 export type TargetType = "trail-gallery" | "trail-symbol" | "facility";
 
@@ -94,10 +95,4 @@ export function attachedTo(
       item.ownerIdentifier === targetId &&
       item.ownerType === OWNER_TYPE[targetType],
   );
-}
-
-export function formatBytes(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }

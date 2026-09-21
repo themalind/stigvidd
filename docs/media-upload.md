@@ -175,6 +175,68 @@ A job has no stored status/counters — `MediaReprocessJobSummaryResponse.Create
 integration test factory (`WebApplicationFactory.cs`), the same way the mail outbox pair is,
 so those tests only prove the HTTP surface and journal, not that a job completes.
 
+### Finding the images that need it
+
+`GET /api/v1/admin/media` is paged and filterable (`MediaLibraryQuery`), and every filter is
+one expression — `MediaRepository.Matches<T>`, over the `IMediaImage` the two image entities
+share. Filters: owner type and owner identifier, format, width/height/size bounds, an upload
+date range, and the **target pair** `TargetMaxWidth`/`TargetFormat`, which keeps only the
+images a reprocess to that target would change.
+
+Five rules that no diff will remind you of:
+
+- **`CreatedTo` is exclusive.** The web sends the day *after* the date the operator picked,
+  or every image uploaded on that day drops out of a filter that names it.
+- **A trail symbol is dropped from any query carrying a metadata filter** (format, dimension,
+  size, target). It stores `0/0/0` rather than measurements, so `0 ≤ maxWidth` would match
+  every "smaller than" bound. `ReprocessableCount` in the response is the count without them
+  — `TotalCount` would overstate what a batch can touch.
+- **Width or height of 0 means unknown, not small.** `TrailService` stores images from a URL
+  list with no measurements at all, so the target filter *keeps* those rows rather than
+  ruling them already-compact.
+- **`OwnerType` is accepted in any casing and consumed canonically.** The validator matches
+  `OrdinalIgnoreCase`, so `?ownerType=trail` is valid; `MediaRepository.Sources` branches on
+  `MediaOwnerTypes.Canonical(...)` rather than on the raw string. When it compared the raw
+  string, a lower-case owner type was a 200 with an empty library — the one wrong answer an
+  operator cannot see is wrong. An owner type that canonicalises to nothing yields **no
+  sources at all**, never every source.
+- **`Page` is capped, and the offset is computed in `long`.** Unbounded,
+  `?page=20000000&pageSize=200` overflowed `(page - 1) * pageSize` to a negative, `Skip`
+  clamped it to zero, and the endpoint served page 1 under the page number asked for with
+  `hasMore: true` — which the web’s next button follows forever.
+
+Sorting is `sort=newest|oldest|largest|widest` (`MediaSorts`), applied in memory after the
+merge. The browse toolbar has a control for it; changing it rewinds to page 1 and keeps the
+selection, because the same images are still matched.
+
+### Two ways to name a batch
+
+`POST /reprocess` takes **either** `mediaIdentifiers` (capped at
+`MediaReprocessLimits.MaxExplicitBatchSize`, 2000) **or** a `filter`, which the server expands
+itself (capped at `MaxFilterBatchSize`, 5000). Exactly one; neither and both are a 400. That
+is what lets the admin start a job over more images than fit in a request body — the web's
+"Select all N matching this filter" sends the filter, never a list.
+
+A filter matching more than the cap is **refused, not truncated**: a silently shortened batch
+leaves the operator believing the library is done, with no record of what was left out.
+
+`MediaIdentifiers` must not be `required` — System.Text.Json enforces that on
+deserialization, so a filter-only body would be rejected by the JSON binder before any
+validator ran.
+
+The **same** `MediaFilterValidator` runs over the filter on both routes. It was two rulesets,
+and the query one allow-listed `OwnerType`/`Format`/`TargetFormat` while the body one did not
+— so `format=wepb` was a clear 400 on `GET` and `"No images match that filter."` on `POST`.
+`MediaFormats` names the three lists that differ on purpose: `Filterable` (what the library
+may hold, including `gif`), `Output` (what `Options.Format` accepts, including `original`),
+and `ReprocessTarget` (`Output` without `original` — a `TargetFormat` naming something no
+reprocess can produce would count images for a batch that cannot run).
+
+**Quality is not stored anywhere**, so "already optimized" can only ever mean "already within
+the target size and already that format". Re-running the 800px/q50/WebP preset over an
+already-compact image still re-encodes it. The dialog says so rather than implying the filter
+is exact.
+
 ## Edge cases — quick reference
 
 | Scenario                               | Behavior                                                      |

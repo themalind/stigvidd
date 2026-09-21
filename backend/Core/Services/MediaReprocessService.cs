@@ -31,35 +31,31 @@ public class MediaReprocessService : IMediaReprocessService
     }
 
     public async Task<Result<MediaReprocessJobSummaryResponse>> EnqueueBatchAsync(
-        IReadOnlyCollection<string> mediaIdentifiers,
-        ImageProcessingOptionsRequest options,
+        CreateMediaReprocessJobRequest request,
         CancellationToken ctoken)
     {
-        var requested = mediaIdentifiers.Distinct().ToList();
+        var hasIdentifiers = request.MediaIdentifiers is { Count: > 0 };
 
-        var lookup = await _mediaRepository.GetByIdentifiersAsync(requested, ctoken);
-        if (!lookup.IsSuccess)
+        if (hasIdentifiers == (request.Filter is not null))
         {
-            _logger.LogError("MediaReprocessService: EnqueueBatchAsync -> Failed to resolve the requested media identifiers.");
-            return Result.Fail<MediaReprocessJobSummaryResponse>(
-                new Message((int)HttpStatusCode.InternalServerError, "An error occurred while validating the batch."));
-        }
-
-        var resolved = lookup.Value.ToDictionary(m => m.Identifier, m => m.OwnerType);
-        var unresolved = requested.Where(id => !resolved.ContainsKey(id)).ToList();
-
-        if (unresolved.Count > 0)
-        {
-            _logger.LogWarning(
-                "MediaReprocessService: EnqueueBatchAsync -> Refused a batch with {count} unresolved identifier(s).", unresolved.Count);
+            _logger.LogWarning("MediaReprocessService: EnqueueBatchAsync -> Refused a batch that named neither or both of identifiers and filter.");
             return Result.Fail<MediaReprocessJobSummaryResponse>(new Message(
                 (int)HttpStatusCode.BadRequest,
-                $"These identifiers are not a Trail or Facility image and cannot be batch-reprocessed: {string.Join(", ", unresolved)}"));
+                "Send either mediaIdentifiers or filter - exactly one, not both and not neither."));
         }
 
-        var processingOptions = options.ToOptions();
+        var resolution = request.Filter is not null
+            ? await ResolveByFilterAsync(request.Filter, ctoken)
+            : await ResolveByIdentifiersAsync(request.MediaIdentifiers ?? [], ctoken);
+
+        if (!resolution.Success)
+            return Result.Fail<MediaReprocessJobSummaryResponse>(
+                resolution.Message ?? new Message((int)HttpStatusCode.InternalServerError, "An error occurred while validating the batch."));
+
+        var targets = resolution.Value ?? [];
+
+        var processingOptions = request.Options.ToOptions();
         var optionsJson = JsonSerializer.Serialize(processingOptions);
-        var targets = requested.Select(id => (MediaIdentifier: id, OwnerType: resolved[id])).ToList();
 
         var created = await _reprocessRepository.CreateJobAsync(optionsJson, targets, ctoken);
         if (!created.IsSuccess)
@@ -76,6 +72,75 @@ public class MediaReprocessService : IMediaReprocessService
 
         return Result.Ok(MediaReprocessJobSummaryResponse.Create(
             job.Identifier, job.Items.Count, job.Items.Count, 0, 0, 0, 0, job.CreatedAt, job.LastUpdatedAt));
+    }
+
+    private async Task<Result<IReadOnlyCollection<(string MediaIdentifier, string OwnerType)>>> ResolveByIdentifiersAsync(
+        IReadOnlyCollection<string> mediaIdentifiers, CancellationToken ctoken)
+    {
+        var requested = mediaIdentifiers.Distinct().ToList();
+
+        var lookup = await _mediaRepository.GetByIdentifiersAsync(requested, ctoken);
+        if (!lookup.IsSuccess)
+        {
+            _logger.LogError("MediaReprocessService: ResolveByIdentifiersAsync -> Failed to resolve the requested media identifiers.");
+            return Result.Fail<IReadOnlyCollection<(string, string)>>(
+                new Message((int)HttpStatusCode.InternalServerError, "An error occurred while validating the batch."));
+        }
+
+        var resolved = lookup.Value.ToDictionary(m => m.Identifier, m => m.OwnerType);
+        var unresolved = requested.Where(id => !resolved.ContainsKey(id)).ToList();
+
+        if (unresolved.Count > 0)
+        {
+            _logger.LogWarning(
+                "MediaReprocessService: ResolveByIdentifiersAsync -> Refused a batch with {count} unresolved identifier(s).", unresolved.Count);
+            return Result.Fail<IReadOnlyCollection<(string, string)>>(new Message(
+                (int)HttpStatusCode.BadRequest,
+                $"These identifiers are not a Trail or Facility image and cannot be batch-reprocessed: {string.Join(", ", unresolved)}"));
+        }
+
+        IReadOnlyCollection<(string, string)> targets = requested
+            .Select(id => (MediaIdentifier: id, OwnerType: resolved[id]))
+            .ToList();
+
+        return Result.Ok(targets);
+    }
+
+    private async Task<Result<IReadOnlyCollection<(string MediaIdentifier, string OwnerType)>>> ResolveByFilterAsync(
+        MediaFilter filter, CancellationToken ctoken)
+    {
+        var matching = await _mediaRepository.GetMatchingAsync(
+            filter, MediaReprocessLimits.MaxFilterBatchSize + 1, ctoken);
+
+        if (!matching.IsSuccess)
+        {
+            _logger.LogError("MediaReprocessService: ResolveByFilterAsync -> Failed to expand the filter.");
+            return Result.Fail<IReadOnlyCollection<(string, string)>>(
+                new Message((int)HttpStatusCode.InternalServerError, "An error occurred while validating the batch."));
+        }
+
+        if (matching.Value.Count == 0)
+        {
+            return Result.Fail<IReadOnlyCollection<(string, string)>>(new Message(
+                (int)HttpStatusCode.BadRequest, "No images match that filter."));
+        }
+
+        // keep-comment: refused rather than truncated - a silently shortened batch leaves the operator believing the library is done, and no record of which images were left out
+        if (matching.Value.Count > MediaReprocessLimits.MaxFilterBatchSize)
+        {
+            _logger.LogWarning(
+                "MediaReprocessService: ResolveByFilterAsync -> Refused a filter matching more than {cap} images.",
+                MediaReprocessLimits.MaxFilterBatchSize);
+            return Result.Fail<IReadOnlyCollection<(string, string)>>(new Message(
+                (int)HttpStatusCode.BadRequest,
+                $"That filter matches more than {MediaReprocessLimits.MaxFilterBatchSize} images. Narrow it - the browse page shows the count before you submit."));
+        }
+
+        IReadOnlyCollection<(string, string)> targets = matching.Value
+            .Select(m => (MediaIdentifier: m.Identifier, OwnerType: m.OwnerType))
+            .ToList();
+
+        return Result.Ok(targets);
     }
 
     public async Task<Result<PagedResult<MediaReprocessJobSummaryResponse>>> GetJobsPagedAsync(

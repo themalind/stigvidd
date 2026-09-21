@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -21,11 +21,11 @@ import {
   acceptImages,
   attachedTo,
   buildImageOptions,
-  formatBytes,
   OWNER_TYPE,
   type CropRect,
   type TargetType,
 } from "@/lib/media-upload";
+import { formatBytes } from "@/lib/format";
 import {
   getAllTrails,
   addTrailImages,
@@ -37,17 +37,17 @@ import {
   uploadFacilityImages,
   deleteFacilityImage,
 } from "@/api/facility";
-import { getAllMedia } from "@/api/media";
+import { getMediaForOwner } from "@/api/media";
 import {
   loadStagedFiles,
   loadStagedTarget,
   saveStagedFiles,
   saveStagedTarget,
 } from "@/lib/staged-media";
+import type { MediaItemResponse } from "@/api/generated/model";
 import {
   CLASSIFICATION,
   type FacilityResponse,
-  type MediaItemResponse,
   type TrailShortInfoResponse,
 } from "@/types/types";
 
@@ -97,16 +97,22 @@ export default function MediaUpload({ onMediaChanged }: Props) {
   const isSymbol = targetType === "trail-symbol";
   const allowMultiple = !isSymbol;
 
-  async function loadMedia() {
+  const loadMedia = useCallback(async () => {
+    if (!targetId) {
+      setMedia([]);
+      setMediaLoading(false);
+      return;
+    }
+
     setMediaLoading(true);
     try {
-      setMedia(await getAllMedia());
-    } catch {
-      toast.error("Failed to load existing images.");
+      setMedia(await getMediaForOwner(targetId));
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to load existing images.");
     } finally {
       setMediaLoading(false);
     }
-  }
+  }, [targetId]);
 
   useEffect(() => {
     getAllTrails()
@@ -125,8 +131,11 @@ export default function MediaUpload({ onMediaChanged }: Props) {
         setFacilities(f.sort((a, b) => a.name.localeCompare(b.name))),
       )
       .catch(() => toast.error("Failed to load facilities."));
-    loadMedia();
   }, []);
+
+  useEffect(() => {
+    void loadMedia();
+  }, [loadMedia]);
 
   const selectedTrail = useMemo(
     () => trails.find((t) => t.identifier === targetId),
@@ -383,10 +392,10 @@ export default function MediaUpload({ onMediaChanged }: Props) {
                         <Trash2 className="size-3.5" />
                       </button>
                     )}
-                    {item.width > 0 && item.height > 0 && (
+                    {(item.width ?? 0) > 0 && (item.height ?? 0) > 0 && (
                       <span className="bg-background/80 absolute right-0 bottom-0 left-0 truncate px-1 py-0.5 text-[10px]">
                         {item.width}×{item.height} ·{" "}
-                        {formatBytes(item.sizeBytes)}
+                        {formatBytes(item.sizeBytes ?? 0)}
                       </span>
                     )}
                   </div>

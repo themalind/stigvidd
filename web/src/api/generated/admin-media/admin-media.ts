@@ -25,9 +25,10 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  AdminMediaGetAllParams,
   AdminMediaGetReprocessJobsParams,
   CreateMediaReprocessJobRequest,
-  MediaItemResponse,
+  MediaLibraryPageResponse,
   MediaReprocessJobDetailResponse,
   MediaReprocessJobSummaryResponse,
   PagedResultOfMediaReprocessJobSummaryResponse,
@@ -57,17 +58,24 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   return result;
 };
 
-export const getAdminMediaGetAllUrl = () => {
+export const getAdminMediaGetAllUrl = (params?: AdminMediaGetAllParams,) => {
+  const normalizedParams = new URLSearchParams();
 
+  Object.entries(params || {}).forEach(([key, value]) => {
 
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
 
+  const stringifiedParams = normalizedParams.toString();
 
-  return `/api/v1/admin/media`
+  return stringifiedParams.length > 0 ? `/api/v1/admin/media?${stringifiedParams}` : `/api/v1/admin/media`
 }
 
-export const adminMediaGetAll = async ( options?: RequestInit): Promise<MediaItemResponse[]> => {
+export const adminMediaGetAll = async (params?: AdminMediaGetAllParams, options?: RequestInit): Promise<MediaLibraryPageResponse> => {
 
-  return customFetch<MediaItemResponse[]>(getAdminMediaGetAllUrl(),
+  return customFetch<MediaLibraryPageResponse>(getAdminMediaGetAllUrl(params),
   {
     ...options,
     method: 'GET'
@@ -80,9 +88,9 @@ export const adminMediaGetAll = async ( options?: RequestInit): Promise<MediaIte
 
 
 
-export const getAdminMediaGetAllMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminMediaGetAll>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof adminMediaGetAll>>, TError,void, TContext> => {
+export const getAdminMediaGetAllMutationOptions = <TError = ProblemDetails,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminMediaGetAll>>, TError,{params?: AdminMediaGetAllParams}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof adminMediaGetAll>>, TError,{params?: AdminMediaGetAllParams}, TContext> => {
 
 const mutationKey = ['adminMediaGetAll'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
@@ -94,10 +102,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminMediaGetAll>>, void> = () => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminMediaGetAll>>, {params?: AdminMediaGetAllParams}> = (props) => {
+          const {params} = props ?? {};
 
-
-          return  adminMediaGetAll(requestOptions)
+          return  adminMediaGetAll(params,requestOptions)
         }
 
 
@@ -109,14 +117,14 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type AdminMediaGetAllMutationResult = NonNullable<Awaited<ReturnType<typeof adminMediaGetAll>>>
 
-    export type AdminMediaGetAllMutationError = unknown
+    export type AdminMediaGetAllMutationError = ProblemDetails
 
-    export const useAdminMediaGetAll = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminMediaGetAll>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+    export const useAdminMediaGetAll = <TError = ProblemDetails,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminMediaGetAll>>, TError,{params?: AdminMediaGetAllParams}, TContext>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof adminMediaGetAll>>,
         TError,
-        void,
+        {params?: AdminMediaGetAllParams},
         TContext
       > => {
       return useMutation(getAdminMediaGetAllMutationOptions(options), queryClient);

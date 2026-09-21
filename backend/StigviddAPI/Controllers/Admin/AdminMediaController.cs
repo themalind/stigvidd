@@ -28,9 +28,12 @@ public class AdminMediaController : StigViddController
     }
 
     [HttpGet]
-    public async Task<ActionResult<IReadOnlyCollection<MediaItemResponse>>> GetAll(CancellationToken ctoken)
+    [ProducesResponseType(typeof(MediaLibraryPageResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<MediaLibraryPageResponse>> GetAll(
+        [FromQuery] MediaLibraryQuery query, CancellationToken ctoken)
     {
-        var result = await _mediaService.GetAllMediaAsync(ctoken);
+        var result = await _mediaService.GetMediaAsync(query, ctoken);
 
         if (!result.Success && result.Message != null)
             return ToActionResult(result.Message);
@@ -58,12 +61,15 @@ public class AdminMediaController : StigViddController
     public async Task<ActionResult<MediaReprocessJobSummaryResponse>> CreateReprocessJob(
         [FromBody] CreateMediaReprocessJobRequest request, CancellationToken ctoken)
     {
-        var result = await _reprocessService.EnqueueBatchAsync(request.MediaIdentifiers, request.Options, ctoken);
+        var result = await _reprocessService.EnqueueBatchAsync(request, ctoken);
 
         if (!result.Success && result.Message != null)
             return ToActionResult(result.Message);
 
-        return CreatedAtAction(nameof(GetReprocessJob), new { identifier = result.Value!.Identifier }, result.Value);
+        if (result.Value is null)
+            return ToActionResult(new Message(StatusCodes.Status500InternalServerError, "An error occurred while creating the batch."));
+
+        return CreatedAtAction(nameof(GetReprocessJob), new { identifier = result.Value.Identifier }, result.Value);
     }
 
     [HttpGet("reprocess")]

@@ -17,35 +17,44 @@ import {
 } from "@/components/ui/select";
 import { buildImageOptions } from "@/lib/media-upload";
 import {
+  matchPreset,
+  NEEDS_WORK_PRESET,
   presetByKey,
   REPROCESS_PRESETS,
   type ReprocessPresetKey,
 } from "@/lib/media-reprocess";
-import { enqueueMediaReprocessJob, type ReprocessJobSummary } from "@/api/media";
+import { targetCount, type ReprocessTarget } from "@/lib/media-reprocess-target";
+import {
+  enqueueMediaReprocessJob,
+  enqueueMediaReprocessJobForFilter,
+  type ReprocessJobSummary,
+} from "@/api/media";
 
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  mediaIdentifiers: string[];
+  target: ReprocessTarget;
   onSubmitted: (job: ReprocessJobSummary) => void;
 }
 
 export default function MediaReprocessDialog({
   open,
   onOpenChange,
-  mediaIdentifiers,
+  target,
   onSubmitted,
 }: Props) {
-  const [preset, setPreset] = useState<ReprocessPresetKey>("web");
-  const [resolution, setResolution] = useState("1600");
+  const defaults = presetByKey(NEEDS_WORK_PRESET);
+  const [resolution, setResolution] = useState(defaults.resolution);
   const [customWidth, setCustomWidth] = useState("");
   const [customHeight, setCustomHeight] = useState("");
-  const [quality, setQuality] = useState(80);
-  const [format, setFormat] = useState("webp");
+  const [quality, setQuality] = useState(defaults.quality);
+  const [format, setFormat] = useState(defaults.format);
   const [submitting, setSubmitting] = useState(false);
 
+  const preset = matchPreset(resolution, quality, format);
+  const count = targetCount(target);
+
   function choosePreset(key: ReprocessPresetKey) {
-    setPreset(key);
     const chosen = presetByKey(key);
     setResolution(chosen.resolution);
     setQuality(chosen.quality);
@@ -63,12 +72,16 @@ export default function MediaReprocessDialog({
         format,
         canCrop: false,
       });
-      const job = await enqueueMediaReprocessJob(mediaIdentifiers, options);
-      toast.success(`Batch started for ${mediaIdentifiers.length} image(s).`);
+
+      const job =
+        target.kind === "ids"
+          ? await enqueueMediaReprocessJob(target.mediaIdentifiers, options)
+          : await enqueueMediaReprocessJobForFilter(target.filter, options);
+
       onSubmitted(job);
       onOpenChange(false);
-    } catch {
-      toast.error("Failed to start the batch.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "The batch could not be started.");
     } finally {
       setSubmitting(false);
     }
@@ -80,12 +93,24 @@ export default function MediaReprocessDialog({
         <Dialog.Overlay className="fixed inset-0 z-50 bg-black/50" />
         <Dialog.Content className="bg-background fixed top-1/2 left-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 space-y-4 rounded-xs border p-6 shadow-lg">
           <Dialog.Title className="font-semibold">
-            Optimize {mediaIdentifiers.length} image
-            {mediaIdentifiers.length === 1 ? "" : "s"}
+            {target.kind === "filter"
+              ? `Optimize all ${count} matching image${count === 1 ? "" : "s"}`
+              : `Optimize ${count} image${count === 1 ? "" : "s"}`}
           </Dialog.Title>
           <Dialog.Description className="text-muted-foreground text-sm">
-            Resizes, re-encodes and replaces the selected images in the background. The
-            originals are not kept.
+            {target.kind === "filter" ? (
+              <>
+                Every image matching <strong>{target.summary}</strong> — about {count} right
+                now. The filter is expanded again when the job starts, so the final count may
+                differ. Resizes, re-encodes and replaces them in the background; the originals
+                are not kept.
+              </>
+            ) : (
+              <>
+                Resizes, re-encodes and replaces the selected images in the background. The
+                originals are not kept.
+              </>
+            )}
           </Dialog.Description>
 
           <div className="space-y-1.5">
@@ -176,8 +201,8 @@ export default function MediaReprocessDialog({
             <Dialog.Close asChild>
               <Button variant="outline">Cancel</Button>
             </Dialog.Close>
-            <Button onClick={handleSubmit} disabled={submitting}>
-              {submitting ? "Starting…" : "Start batch"}
+            <Button onClick={handleSubmit} disabled={submitting || count === 0}>
+              {submitting ? "Starting…" : `Start batch for ${count} image${count === 1 ? "" : "s"}`}
             </Button>
           </div>
         </Dialog.Content>

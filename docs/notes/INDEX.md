@@ -257,7 +257,14 @@ src/api/generated` then fails with "the generated API client is stale" for reaso
   denied and the file is never written, while the same sentence without backticks passes — write
   file content with the Write tool. And the hooks `process.exit()` at module scope, so
   `import`-ing one to test its `decide()` kills the importer — spawn it with the event on stdin
-  instead. Also: the gate does NOT check that the ADVICE a hook prints is still true — plan-eval told every session touching `web/` that "there are NO web tests" while `web/src` held 26 of them and CI had a web job, with all 27 self-tests green. Stale guidance fails open and is indistinguishable from correct guidance at every gate.
+  instead. Also: the gate does NOT check that the ADVICE a hook prints is still true — plan-eval told every session touching `web/` that "there are NO web tests" while `web/src` held 26 of them and CI had a web job, with all 27 self-tests green. Stale guidance fails open and is indistinguishable from correct guidance at every gate. Third shape of the same failure: `guard-new-comments.mjs` anchors its Arrange/Act/Assert
+  exemption at `^//` and tests the RAW line, so an **indented** `// Arrange` — i.e. every real
+  C# test — never matches it; it survives only because the guard also skips comments already
+  present in `oldText`, which is the whole file for `Write` but only `old_string` for `Edit`.
+  So the same test methods are allowed via Write and denied via Edit (measured: 32 A/A/A lines
+  refused in one edit), and CLAUDE.md's "silent on Arrange/Act/Assert" is true by accident on
+  one tool and false on the other. All 22 self-tests pass because every fixture is flush-left:
+  when a rule mentions position, a fixture must carry the whitespace real code has.
 - [When the defence is an allowlist, a test asserting "this obfuscated attack is rejected" cannot fail](allowlist-defences-make-obfuscation-tests-tautological.md) —
   Writing a validator or sanitiser that blocks unsafe URLs and markup: `MailHtmlPolicy` and
   `isSafeMailUrl` HTML-decode and strip control characters before checking a `javascript:` /
@@ -702,3 +709,36 @@ src/api/generated` then fails with "the generated API client is stale" for reaso
   service's `typeof(...)` to the `startupServices` filter in
   `Tests/IntegrationTests/WebApplicationFactory.cs`, the same list `MailOutboxDispatcher` and
   `ExpiredObstacleCleanupService` are already in — it is hand-maintained, not automatic.
+- [EF cannot Concat, OrderBy or aggregate through a constructor projection, and EF InMemory hides all three](ef-cannot-filter-or-order-through-a-constructor-projection.md) —
+  Projecting three sources into one shared record and then filtering/paging that record fails
+  on real SQL in three separate ways, each hidden behind the previous one's fix: `Concat` gives
+  `Unable to translate set operation after client projection has been applied`, `Sum` and
+  `OrderBy` over a projected member do not translate (EF does **not** simplify
+  `new Record(...).SizeBytes` to the column), and `Where` translates for `m.Width >= 800` but
+  **not** for `m.ImageUrl.ToLower().EndsWith(x)` — so a dimension filter works and the format
+  filter beside it does not. `Tests/UnitTests` is EF InMemory and passes all six forms, and the
+  repository's own catch turns the failure into a 500 with an empty `Value`, so 13 green unit
+  tests sat on an endpoint that could not serve one filtered request. Fix: filter the **entity**
+  through a shared `IMediaImage` interface (a generic `Expression<Func<T,bool>>` over it does
+  translate), project afterwards, merge/order/page in memory. Also here: why `format=jpeg` must
+  match both `.jpeg` and `.jpg`, and why adding `[ProducesResponseType(400)]` silently deletes
+  the 200 response — and its schemas — from the OpenAPI document.
+  Re-measured since: moving one OrderBy onto the projection leaves **1491 unit tests green and
+  30 integration tests red**. Also records why the SQL-side rewrite was declined (3 round trips
+  become 8; needs a Page cap and a Postgres `SUM(bigint) -> numeric` check first), and two
+  filters of the same shape — an OwnerType validated `OrdinalIgnoreCase` but consumed
+  case-sensitively (200 with an empty library), and an unbounded `Page` whose `int` arithmetic
+  wraps so every page number serves page 1 with `hasMore` true.
+- [Attaching a child validator to a nullable property has no clean form here, and the two obvious ones each fail differently](fluentvalidation-child-validator-on-a-nullable-property.md) —
+  Sharing one FluentValidation ruleset between a `[FromQuery]` model and a nullable body
+  property, the way `MediaFilterValidator` serves both `MediaLibraryQuery` and
+  `CreateMediaReprocessJobRequest.Filter`. `Include` works across inheritance because
+  `IValidator<in T>` is contravariant, but `SetValidator` on a `MediaFilter?` wants
+  `IValidator<MediaFilter?>` and fails with **CS8620 ... due to differences in the nullability
+  of reference types**. All three obvious fixes are closed: the null-forgiving operator is
+  banned by CLAUDE.md, `AbstractValidator<MediaFilter?>` trips `WarningsAsErrors=nullable`, and
+  `Transform` gives **CS0103: The name 'Transform' does not exist** because it was removed in
+  FluentValidation 12 (Core.csproj pins 12.1.1) while most guidance online still recommends it.
+  What works is forwarding the child's failures from a `Custom` rule with `context.AddFailure`.
+  Also why the ruleset is shared at all: `format=wepb` used to be a precise 400 on GET
+  /api/v1/admin/media and "No images match that filter." on POST /api/v1/admin/media/reprocess.
