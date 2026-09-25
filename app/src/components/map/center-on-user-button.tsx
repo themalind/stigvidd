@@ -5,12 +5,17 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
+import { showWarningAtom } from "@/atoms/snackbar-atoms";
 import { AppDefaultTheme } from "@/constants/theme";
-import { useUserLocation } from "@/hooks/useUserLocation";
+import { USER_LOCATION_KEY, useUserLocation } from "@/hooks/useUserLocation";
 import { Ionicons } from "@expo/vector-icons";
 import { type CameraRef } from "@maplibre/maplibre-react-native";
+import { useQueryClient } from "@tanstack/react-query";
+import * as Location from "expo-location";
+import { useSetAtom } from "jotai";
 import { RefObject } from "react";
-import { Pressable, StyleSheet } from "react-native";
+import { useTranslation } from "react-i18next";
+import { Linking, Pressable, StyleSheet } from "react-native";
 
 interface Props {
   cameraRef: RefObject<CameraRef | null>;
@@ -29,27 +34,66 @@ const CONTROL_COLORS = AppDefaultTheme.colors;
 
 export default function CenterOnUserButton({ cameraRef, onPress, position }: Props) {
   const { data: fetched } = useUserLocation();
+  const queryClient = useQueryClient();
+  const showWarning = useSetAtom(showWarningAtom);
+  const { t } = useTranslation();
 
   // Prefer a live position passed by the caller; otherwise fall back to this
   // button's own one-shot fix (ignoring the Borås fallback, which isn't the user).
   const center: GeoJSON.Position | null =
     position ?? (fetched && !fetched.isFallback ? [fetched.longitude, fetched.latitude] : null);
 
+  // With no position to fly to, the press asks for the permission instead.
+  const recover = async () => {
+    const current = await Location.getForegroundPermissionsAsync();
+    if (current.granted) {
+      // Permitted but no fix yet; a refetch is all this can usefully do.
+      await queryClient.invalidateQueries({ queryKey: USER_LOCATION_KEY });
+      return;
+    }
+
+    // Requesting is safe here because the press is user-initiated, not AppState-driven.
+    if (current.canAskAgain) {
+      const requested = await Location.requestForegroundPermissionsAsync();
+      if (requested.granted) await queryClient.invalidateQueries({ queryKey: USER_LOCATION_KEY });
+      return;
+    }
+
+    // Refused for good; only the settings app can undo it, so say why before going there.
+    showWarning(t("map.locationBlocked"));
+    Linking.openSettings().catch(() => undefined);
+  };
+
   const centerOnUser = () => {
     onPress?.();
-    if (!center) return;
+    if (!center) {
+      void recover();
+      return;
+    }
     cameraRef.current?.flyTo({ center: [center[0], center[1]], zoom: 14, duration: 800 });
   };
 
-  if (!center) return null;
+  const noPosition = center === null;
 
   return (
     <Pressable
       testID="center-on-user"
-      style={[s.center, { backgroundColor: CONTROL_COLORS.primary, borderColor: CONTROL_COLORS.onPrimary }]}
+      accessibilityRole="button"
+      accessibilityLabel={t("map.centerOnUser")}
+      style={[
+        s.center,
+        {
+          backgroundColor: noPosition ? CONTROL_COLORS.surface : CONTROL_COLORS.primary,
+          borderColor: noPosition ? CONTROL_COLORS.outline : CONTROL_COLORS.onPrimary,
+        },
+      ]}
       onPress={centerOnUser}
     >
-      <Ionicons name="locate" size={24} color={CONTROL_COLORS.onPrimary} />
+      <Ionicons
+        name={noPosition ? "locate-outline" : "locate"}
+        size={24}
+        color={noPosition ? CONTROL_COLORS.outline : CONTROL_COLORS.onPrimary}
+      />
     </Pressable>
   );
 }

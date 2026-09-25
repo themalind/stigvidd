@@ -7,6 +7,8 @@
 
 import { START_COORDINATE_BORAS } from "@/constants/constants";
 import { QueryClient, useQuery, useQueryClient } from "@tanstack/react-query";
+import { getConsentSync, isConsentHydrated, subscribeConsent } from "@/services/consent";
+import { useEffect } from "react";
 import * as Location from "expo-location";
 
 export interface UserLocation {
@@ -42,6 +44,11 @@ async function refinePreciseLocation(queryClient: QueryClient): Promise<void> {
   }
 }
 
+// True while the startup consent dialog is on screen, hydration included.
+function startupDialogIsUp(): boolean {
+  return !isConsentHydrated() || getConsentSync() === "unknown";
+}
+
 // Whether we've already put the system dialog in front of the user this launch.
 // Module-level, so it survives the query being refetched or the hook remounting.
 let permissionAsked = false;
@@ -54,6 +61,8 @@ let permissionAsked = false;
 async function ensureLocationPermission(): Promise<boolean> {
   const current = await Location.getForegroundPermissionsAsync();
   if (current.granted) return true;
+  // useReleaseOnConsent refetches once the dialog is gone, and that pass is what asks.
+  if (startupDialogIsUp()) return false;
   if (permissionAsked || !current.canAskAgain) return false;
   permissionAsked = true;
   const requested = await Location.requestForegroundPermissionsAsync();
@@ -82,12 +91,28 @@ async function fetchUserLocation(queryClient: QueryClient): Promise<UserLocation
 
 const FRESH_FIX_MS = 1000 * 60 * 10;
 
+// Refetches once the startup dialog is answered, which is the pass that gets to prompt.
+function useReleaseOnConsent(queryClient: QueryClient): void {
+  useEffect(() => {
+    if (!startupDialogIsUp()) return;
+
+    const unsubscribe = subscribeConsent(() => {
+      if (startupDialogIsUp()) return;
+      unsubscribe();
+      void queryClient.invalidateQueries({ queryKey: USER_LOCATION_KEY });
+    });
+
+    return unsubscribe;
+  }, [queryClient]);
+}
+
 // The app's single source of truth for "where is the user". Screens that need a
 // coordinate no matter what (the map, which must point its camera somewhere) read
 // this directly and check isFallback; screens that show a distance or a place name
 // want useRealUserLocation below instead.
 export function useUserLocation() {
   const queryClient = useQueryClient();
+  useReleaseOnConsent(queryClient);
   return useQuery<UserLocation>({
     queryKey: USER_LOCATION_KEY,
     queryFn: () => fetchUserLocation(queryClient),

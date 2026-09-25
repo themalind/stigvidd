@@ -5,14 +5,16 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-// The one prompt a launch gets, accepted. The launch in which it is refused is
-// useUserLocation-permission.test.tsx; a Jest module registry is per file, so each of the
-// two files is its own launch.
+// The launch that starts before the stored consent answer has been read back — the first
+// moments of a cold start, while loadConsent is still out at storage. Its own file because
+// "prompt at most once" is module state and a Jest module registry is per file.
 
 import { useUserLocation } from "@/hooks/useUserLocation";
 import { loadConsent, resetConsent, setConsent } from "@/services/consent";
 import { flushUntil } from "@/test/flush";
 import { renderWithProviders } from "@/test/render";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { act } from "@testing-library/react-native";
 
 const mockGetPermissions = jest.fn();
 const mockRequestPermissions = jest.fn();
@@ -29,27 +31,37 @@ jest.mock("expo-location", () => ({
 
 const FIX = { coords: { latitude: 57.5, longitude: 12.5, accuracy: 12 }, timestamp: 0 };
 
-// Every test here is a launch in which the startup consent dialog has been answered.
-beforeEach(async () => {
+// Hydration has not landed yet, which counts as "the dialog is up".
+it("waits for the answer, then asks without waiting for anything else", async () => {
+  await AsyncStorage.clear();
   resetConsent();
-  await loadConsent();
-  await setConsent("denied");
-});
-
-it("goes on to fetch a position once the user accepts at the dialog", async () => {
   mockGetPermissions.mockResolvedValue({ granted: false, canAskAgain: true });
   mockRequestPermissions.mockResolvedValue({ granted: true, canAskAgain: false });
   mockLastKnown.mockResolvedValue(FIX);
   mockCurrentPosition.mockResolvedValue(FIX);
 
-  let query!: ReturnType<typeof useUserLocation>;
+  let rendered: ReturnType<typeof useUserLocation> | undefined;
   function Probe() {
-    query = useUserLocation();
+    rendered = useUserLocation();
     return null;
   }
+  function query() {
+    if (!rendered) throw new Error("expected the probe to have rendered");
+    return rendered;
+  }
   renderWithProviders(<Probe />);
-  await flushUntil(() => query.isSuccess || query.isError);
+  await flushUntil(() => query().isSuccess || query().isError);
+
+  expect(mockRequestPermissions).not.toHaveBeenCalled();
+  expect(query().data?.isFallback).toBe(true);
+
+  // The answer lands, with no foreground return and no remount behind it.
+  await act(async () => {
+    await loadConsent();
+    await setConsent("denied");
+  });
+  await flushUntil(() => query().data?.isFallback === false);
 
   expect(mockRequestPermissions).toHaveBeenCalledTimes(1);
-  expect(query.data).toEqual({ latitude: 57.5, longitude: 12.5, isFallback: false });
+  expect(query().data).toEqual({ latitude: 57.5, longitude: 12.5, isFallback: false });
 });

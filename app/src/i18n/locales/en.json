@@ -150,7 +150,9 @@
     "directionsTitle": "Directions",
     "directionsMessage": "Open directions to the trailhead in your maps app?",
     "directionsConfirm": "Open in Maps",
-    "locating": "Finding your location…"
+    "locating": "Finding your location…",
+    "centerOnUser": "Show my location",
+    "locationBlocked": "Stigvidd is not allowed to use your location. Turn on location access in your phone settings."
   },
   "review": {
     "added": "Review added",
@@ -720,6 +722,7 @@
     "errorsNote": "Error reports are collected either way, because they are what keeps the app working. They never include your position either.",
     "askTitle": "Help us improve Stigvidd?",
     "askBody": "May we collect usage statistics — which features are used and whether they work? They never include your position, we keep them for 7 days on our own servers in the EU, and you can change your mind at any time under Settings.",
+    "askLocationNote": "Your phone will also ask whether Stigvidd may use your location. It is used for the weather, the name of the place you are in, and trails near you. You can say no, the app still works and starts from Borås instead.",
     "accept": "Yes, that's fine",
     "decline": "No thanks"
   }

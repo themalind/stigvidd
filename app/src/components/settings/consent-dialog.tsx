@@ -6,6 +6,7 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import React from "react";
+import { StyleSheet } from "react-native";
 import { Button, Dialog, Portal, Text } from "react-native-paper";
 import { useTranslation } from "react-i18next";
 
@@ -25,6 +26,10 @@ import { getConsentSync, isConsentHydrated, setConsent, subscribeConsent, type C
  * It is also not dismissible by tapping outside: an accidental dismissal is not a decision,
  * and treating it as one in either direction would be wrong. Unanswered stays "unknown", which
  * holds events without transmitting them.
+ *
+ * It also discloses what the position is used for, before the phone asks. That is
+ * information, not a second consent: the buttons decide analytics and nothing else, and
+ * useUserLocation holds the system prompt back until this is answered.
  *
  * Rendered inside the layout's provider tree beside GlobalSnackbar. It waits for hydration —
  * without that, a returning user who already answered would be asked again on every launch,
@@ -58,8 +63,11 @@ export function ConsentDialog() {
     <Portal>
       <Dialog style={{ borderRadius: DIALOG_BORDER_RADIUS }} visible dismissable={false} testID="consent-dialog">
         <Dialog.Title>{t("privacy.askTitle")}</Dialog.Title>
-        <Dialog.Content>
+        <Dialog.Content style={s.content}>
           <Text variant="bodyMedium">{t("privacy.askBody")}</Text>
+          <Text testID="consent-location-note" variant="bodyMedium">
+            {t("privacy.askLocationNote")}
+          </Text>
         </Dialog.Content>
         <Dialog.Actions>
           <Button testID="consent-accept" onPress={() => void choose(true)}>
@@ -73,3 +81,9 @@ export function ConsentDialog() {
     </Portal>
   );
 }
+
+const s = StyleSheet.create({
+  content: {
+    gap: 12,
+  },
+});

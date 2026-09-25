@@ -11,7 +11,9 @@
 // only observable as the difference between them. The launch in which the user accepts is
 // useUserLocation-permission-granted.test.tsx. See docs/notes/android-permission-dialog-loop.md.
 
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { USER_LOCATION_KEY, useUserLocation } from "@/hooks/useUserLocation";
+import { loadConsent, resetConsent, setConsent } from "@/services/consent";
 import { flushUntil } from "@/test/flush";
 import { act } from "@testing-library/react-native";
 import { renderWithProviders } from "@/test/render";
@@ -47,10 +49,43 @@ function renderHook() {
   };
 }
 
-beforeEach(() => {
+// Answered everywhere but the first describe, which is about the unanswered state.
+beforeEach(async () => {
   jest.clearAllMocks();
   mockLastKnown.mockResolvedValue(FIX);
   mockCurrentPosition.mockResolvedValue(FIX);
+  resetConsent();
+  await loadConsent();
+  await setConsent("denied");
+});
+
+describe("while the startup consent dialog is still up", () => {
+  // The outer setup already answered, so an unanswered dialog means clearing storage first.
+  beforeEach(async () => {
+    await AsyncStorage.clear();
+    resetConsent();
+  });
+
+  // The dialog is not dismissable, so the system prompt would land on top of it.
+  it("does not ask, and reports the fallback meanwhile", async () => {
+    await loadConsent();
+    mockGetPermissions.mockResolvedValue({ granted: false, canAskAgain: true });
+    const harness = renderHook();
+    await harness.settled();
+
+    expect(mockRequestPermissions).not.toHaveBeenCalled();
+    expect(harness.query().data?.isFallback).toBe(true);
+  });
+
+  // A permission the user already granted needs no dialog, so nothing has to wait for one.
+  it("still reports a position that is already permitted", async () => {
+    await loadConsent();
+    mockGetPermissions.mockResolvedValue({ granted: true, canAskAgain: false });
+    const harness = renderHook();
+    await harness.settled();
+
+    expect(harness.query().data).toEqual({ latitude: 57.5, longitude: 12.5, isFallback: false });
+  });
 });
 
 describe("before the dialog has ever been shown", () => {

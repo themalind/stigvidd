@@ -150,7 +150,9 @@
     "directionsTitle": "Vägbeskrivning",
     "directionsMessage": "Vill du öppna vägbeskrivning till ledens start i din kartapp?",
     "directionsConfirm": "Öppna i Kartor",
-    "locating": "Hittar din position…"
+    "locating": "Hittar din position…",
+    "centerOnUser": "Visa min position",
+    "locationBlocked": "Stigvidd får inte använda din position. Slå på platsåtkomst i telefonens inställningar."
   },
   "review": {
     "added": "Recensionen har lagts till",
@@ -720,6 +722,7 @@
     "errorsNote": "Felrapporter samlas in oavsett, eftersom de är det som håller appen igång. De innehåller heller aldrig din position.",
     "askTitle": "Vill du hjälpa oss förbättra Stigvidd?",
     "askBody": "Får vi samla in användningsstatistik – vilka funktioner som används och om de fungerar? Den innehåller aldrig din position, vi sparar den i 7 dagar på våra egna servrar inom EU, och du kan ändra dig när som helst under Inställningar.",
+    "askLocationNote": "Strax frågar telefonen också om Stigvidd får använda din position. Den används för vädret, ortsnamnet och leder nära dig. Du kan svara nej, appen fungerar ändå och utgår då från Borås.",
     "accept": "Ja, det går bra",
     "decline": "Nej tack"
   }

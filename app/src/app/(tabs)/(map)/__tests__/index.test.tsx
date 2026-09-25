@@ -681,12 +681,15 @@ describe("MapScreen — the locate button", () => {
     expect(screen.getByTestId("center-on-user")).toBeOnTheScreen();
   });
 
-  // Borås is the fallback, not the user, so no centre-on-me button is offered for it.
-  it("stays away while the position is only the fallback", async () => {
+  // Borås is the fallback, not the user, so the button goes muted rather than flying.
+  it("goes muted while the position is only the fallback", async () => {
     mockLocation = BORAS_FALLBACK;
     await show();
 
-    expect(screen.queryByTestId("center-on-user")).toBeNull();
+    expect(screen.getByTestId("center-on-user")).toHaveStyle({
+      backgroundColor: AppDefaultTheme.colors.surface,
+      borderColor: AppDefaultTheme.colors.outline,
+    });
   });
 
   it("flies to the user, closer in than the opening glide", async () => {
