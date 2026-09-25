@@ -60,17 +60,34 @@ import path from "node:path";
 import process from "node:process";
 import { readEvent, repoRoot, git, stateDir, lines, speak, checker } from "./lib.mjs";
 
-const MAX_NOTES = 4;
+// Every note a match names is one the session goes and reads, so a weak match is not free:
+// at most 3, each within half the top score, each on >= 2 distinct tokens.
+const MAX_NOTES = 3;
+const MIN_RELATIVE_SCORE = 0.5;
 const FALLBACK_PLAN_AGE_MS = 10 * 60 * 1000;
 
 // ---------------------------------------------------------------------------
 // Matching
 // ---------------------------------------------------------------------------
 
+// Words any plan contains. The document-frequency ceiling below misses them because the
+// index is small; measured, "this", "before" and "session" alone matched four notes.
+const STOPWORDS = new Set(
+  ("the and for with this that these those from into onto than then when what which who why how " +
+    "was were are been being has have had not but its they them their there here also " +
+    "only just once twice same such each every any all both either other another more most less " +
+    "very much many some one two three first last new old add adds added fix fixed get set use " +
+    "used uses using make made run runs ran see says said per plus via before after already about " +
+    "must can could should would will may might does did done thing things way ways part case " +
+    "keep kept line lines name names change changes changed step steps plan note notes session " +
+    "claude repo project measured rule rules because instead still even back out off over under " +
+    "update updates code file files path paths form").split(" "),
+);
+
 export function tokenize(text) {
   const out = [];
   for (const t of String(text ?? "").toLowerCase().split(/[^a-z0-9]+/))
-    if (t.length >= 3) out.push(t);
+    if (t.length >= 3 && !STOPWORDS.has(t)) out.push(t);
   return out;
 }
 
@@ -116,6 +133,7 @@ export function scoreEntries(entries, query) {
   const df = new Map();
   for (const e of entries) for (const t of e.tokens) df.set(t, (df.get(t) ?? 0) + 1);
   const ceiling = entries.length / 3;
+  const minHits = Math.min(2, qs.size);
   const scored = [];
   for (const e of entries) {
     let score = 0;
@@ -128,7 +146,7 @@ export function scoreEntries(entries, query) {
       score += weight * (e.titleTokens.has(t) ? 3 : 1);
       hits.push(t);
     }
-    if (score > 0) scored.push({ entry: e, score: score / Math.sqrt(Math.max(e.size, 1)), hits });
+    if (hits.length >= minHits) scored.push({ entry: e, score: score / Math.sqrt(Math.max(e.size, 1)), hits });
   }
   return scored.sort((a, b) => b.score - a.score || a.entry.file.localeCompare(b.entry.file));
 }
@@ -142,7 +160,9 @@ export function loadIndex(root) {
 }
 
 export function matchNotes(root, text, limit = MAX_NOTES) {
-  return scoreEntries(loadIndex(root), text).slice(0, limit);
+  const scored = scoreEntries(loadIndex(root), text);
+  const floor = (scored[0]?.score ?? 0) * MIN_RELATIVE_SCORE;
+  return scored.filter((s) => s.score >= floor).slice(0, limit);
 }
 
 // ---------------------------------------------------------------------------
@@ -389,7 +409,7 @@ export function renderBefore(root, plan, notes, areas) {
   const out = [];
   if (notes.length)
     out.push(
-      "docs/notes/ has entries that match this plan — read them before starting, they are " +
+      "docs/notes/ has entries that match this plan — read the ones that bear on it; they are " +
         "what earlier sessions had to learn the hard way:\n" +
         notes
           .map(
@@ -583,8 +603,11 @@ function selfTest() {
 
   // -- tokenizing and whole-token matching (defect 4) -----------------------------
   ok(!tokenize("refactoring").includes("actor"), "tokenize produced a substring token");
-  ok(tokenize("a of the SRID 4326").join(",") === "the,srid,4326", `tokenize: ${tokenize("a of the SRID 4326")}`);
-  n += 2;
+  ok(tokenize("a of the SRID 4326").join(",") === "srid,4326", `tokenize: ${tokenize("a of the SRID 4326")}`);
+  ok(tokenize("this session was measured before").length === 0, "stopwords reached the scorer");
+  ok(scoreEntries(parseIndex(FIXTURE_INDEX), "openapi quantum").length === 0,
+     "a single shared token matched a multi-token query");
+  n += 4;
 
   // -- index parsing, including a wrapped summary --------------------------------
   const entries = parseIndex(FIXTURE_INDEX);

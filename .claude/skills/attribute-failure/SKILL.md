@@ -1,6 +1,6 @@
 ---
 name: attribute-failure
-description: Decide whether a failure — a red test, a build error, a broken web build, a service that will not start — was caused by the current change, was already there, or is an artifact of this machine. Use BEFORE debugging any red signal in this repo, and whenever tempted to call something "pre-existing" or "a platform thing".
+description: Decide whether a red test, build error or failing service was caused by this change, was already there, or is this machine. Use BEFORE debugging any failure, and before calling one "pre-existing".
 ---
 
 # Is this mine, pre-existing, or just this box?

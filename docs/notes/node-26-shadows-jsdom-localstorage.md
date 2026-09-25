@@ -65,4 +65,8 @@ container, same working tree.
 If a suite-wide failure ever names a method on `undefined`, check the Node version before
 reading any test.
 
+Since 2026-09-25, `web/src/test/global-setup.ts` checks for that undefined global once and stops
+the run with one error that names this note. Before that, the per-file wall of failures was
+**272 KB** of output on Node 26, against 5 KB for a green run on Node 24.
+
 Related: [[web-vitest-environment]].

@@ -1,6 +1,6 @@
 ---
 name: add-an-endpoint
-description: Add or change a backend HTTP endpoint (StigviddAPI/Controllers) — a new route, a changed request/response shape, a new service or repository behind one. Use BEFORE writing the controller action, and whenever an endpoint you added returns 500 at runtime, is missing from the web client, or its validator never runs. Covers the two silent registration points and the contract chain the change obliges.
+description: Add or change a backend HTTP endpoint, DTO, or the service/repository behind one. Use BEFORE writing the action, and when an endpoint 500s, is missing from the web client, or its validator never runs.
 ---
 
 # Adding an endpoint

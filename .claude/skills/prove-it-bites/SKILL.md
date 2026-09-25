@@ -1,6 +1,6 @@
 ---
 name: prove-it-bites
-description: Prove that a test, assertion or guard you just wrote actually fails when the thing it guards is broken. Use AFTER writing any new xunit test, jest test, validator rule or hook self-test in this repo, and BEFORE citing it as evidence that a change works — and whenever something went green on the first try.
+description: Prove a new test, assertion, validator rule or hook self-test actually fails when what it guards breaks. Use AFTER writing one and BEFORE citing it, and whenever something is green on the first try.
 ---
 
 # A test that has never failed is not evidence

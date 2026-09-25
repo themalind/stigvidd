@@ -1,6 +1,6 @@
 ---
 name: verify-in-docker
-description: Verify a change by actually running the stack under docker compose — a migration, a deployment/config change, anything touching docker-compose.yml, proxy/, db/, keycloak/, a Dockerfile or scripts/. Use AFTER changing any of those and BEFORE calling that work done, because no GitHub CI job builds an image or brings the stack up.
+description: Verify a change by running the stack under docker compose. Use AFTER touching a migration, docker-compose.yml, proxy/, db/, keycloak/, a Dockerfile or scripts/, before calling it done.
 ---
 
 # Nothing in GitHub CI runs this stack

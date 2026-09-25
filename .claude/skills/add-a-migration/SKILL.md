@@ -1,6 +1,6 @@
 ---
 name: add-a-migration
-description: Add, change or remove an EF Core migration in backend/Infrastructure/Migrations. Use BEFORE running `dotnet ef`, and whenever a migration you scaffolded is empty, contains changes you did not make, or fails to apply. Covers the invocation that works, the file EF owns, and the fact that no test applies a migration.
+description: Add, change or remove an EF Core migration. Use BEFORE running `dotnet ef`, and when a scaffolded migration is empty, has changes you did not make, or fails to apply.
 ---
 
 # Adding a migration

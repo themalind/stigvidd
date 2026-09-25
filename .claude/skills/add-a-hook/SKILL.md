@@ -1,6 +1,6 @@
 ---
 name: add-a-hook
-description: Add or change a Claude Code hook in .claude/hooks/ — a PreToolUse guard, a PostToolUse check, a SessionStart or Stop round. Use BEFORE writing the script, and whenever a hook you added seems not to fire, fires on the wrong events, or passes its own self-test while guarding nothing. Covers the registration points that fail silently, the cross-platform rules, and the exit-code contract.
+description: Add or change a Claude Code hook in .claude/hooks/. Use BEFORE writing the script, and when a hook does not fire, fires on the wrong events, or passes its self-test while guarding nothing.
 ---
 
 # Adding a hook to this repo
@@ -114,5 +114,5 @@ budget, **narrow or downgrade it** rather than keeping something that taxes ever
 
 ## Step 7 — document it
 
-Add the hook to the table in [CLAUDE.md](../../../CLAUDE.md), and if you learned something
-non-obvious making it work, write it down ([write-a-note](../write-a-note/SKILL.md)).
+Describe the hook in the `$comment` block of `.claude/settings.json` (not loaded into context,
+so keep CLAUDE.md to a pointer), and if you learned something non-obvious, write it down ([write-a-note](../write-a-note/SKILL.md)).

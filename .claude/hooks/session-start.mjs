@@ -15,8 +15,9 @@
 //     so the only end of it `git status` can see is the typed client, which IS committed.
 //     Whether you are mid-chain is decidable from the working tree, and it is the single
 //     most common way a green-looking backend change breaks the web build.
-//   * THE GREEN COMMANDS, verbatim, including the environment variable without which
-//     every integration test fails for a reason unrelated to your change.
+//
+// Static facts (the green commands, the CodeGraph rules) live in CLAUDE.md, which every
+// session already loads; repeating them here only doubled the context.
 //
 // Reads only `git status`/`rev-parse` and a few directory listings — no build, no network.
 // Fails silent: no orientation beats a wrong one.
@@ -27,8 +28,6 @@ import { existsSync, readdirSync } from "node:fs";
 import path from "node:path";
 import process from "node:process";
 import { readEvent, repoRoot, git, run, inject, checker, lines } from "./lib.mjs";
-
-const CONN = "ConnectionStrings__StigVidd";
 
 /** Parse `git status --porcelain -z -uall` into [{x, y, p}], rename sources skipped. */
 export function parsePorcelainZ(out) {
@@ -101,18 +100,9 @@ export function compose(root) {
   // leave a session guessing why its greps are being denied in one checkout and not another.
   out.push(
     existsSync(path.join(root, ".codegraph"))
-      ? "CodeGraph: this checkout IS indexed, so reach for `codegraph explore` / the " +
-          "codegraph_explore MCP tool before grep — one call gives verbatim source, call " +
-          "paths and blast radius. guard-symbol-search.mjs enforces it: a search for a " +
-          "single identifier the index holds AND declares inside the path you are searching " +
-          "is DENIED once, with the call to make instead; re-running the identical search is " +
-          "allowed through. Never touched: any regex, phrase, count (-c, | wc -l, " +
-          "output_mode=count), non-symbol string, or a search scoped to prose or to callers " +
-          "— grepping docs/ or *.md for a symbol name is ordinary work and always passes."
-      : "CodeGraph: this checkout has NO .codegraph/ index (it is per-checkout and is not " +
-          "committed), so `codegraph explore` and the codegraph MCP tool have nothing to " +
-          "read here. Use grep/Read, or index this tree first — and guard-symbol-search.mjs " +
-          "stays silent, so every search passes.",
+      ? "CodeGraph: indexed — codegraph_explore before grep (see CLAUDE.md)."
+      : "CodeGraph: NO .codegraph/ index in this checkout — use grep/Read; " +
+          "guard-symbol-search.mjs stays silent.",
   );
 
   // --- the contract chain and the EF model ---------------------------------------
@@ -127,10 +117,7 @@ export function compose(root) {
       .sort();
     if (names.length)
       out.push(
-        `Migrations: ${names.length}, newest ${names[names.length - 1].replace(/\.cs$/, "")}. ` +
-          "Scaffold with `cd backend && dotnet ef migrations add <Name> --project " +
-          "Infrastructure` (the design-time factory is in Infrastructure, so no " +
-          "--startup-project); DbMigrationRunner applies them on API startup.",
+        `Migrations: ${names.length}, newest ${names[names.length - 1].replace(/\.cs$/, "")}.`,
       );
   } catch {
     /* not a checkout of this repo */
@@ -145,22 +132,6 @@ export function compose(root) {
         "prints EBADENGINE and carries on, so nothing else will tell you.",
     );
 
-  // --- the green commands ---------------------------------------------------------
-  out.push(
-    "Green means, per area (nothing checks another area's):\n" +
-      `  backend  cd backend && dotnet build && ${CONN}="DataSource=:memory:" dotnet test --no-build\n` +
-      "  web      cd web && npm run lint && npm run generate:api && git diff --exit-code -- src/api/generated && npm test && npm run build\n" +
-      "  app      cd app && npm run format:check && npm run lint && npm test -- --watchAll=false\n" +
-      "  harness  node scripts/check-hooks.mjs\n" +
-      `  ${CONN} is required or every integration test fails at host startup; on ` +
-      `PowerShell it is \`$env:${CONN}="DataSource=:memory:"; dotnet test --no-build\`.\n` +
-      "  web tests are Vitest — `npm test` is `vitest run`, configured in " +
-      "web/vitest.config.ts and NOT in vite.config.ts, and it type-checks nothing: " +
-      "`npm run build` (tsc -b && vite build) is still the web type check. Both run in " +
-      "GitHub CI and in Jenkins; the generated-client staleness gate is Jenkins ONLY. " +
-      "Nothing in GitHub CI builds an image or runs docker compose.",
-  );
-
   // --- memory ----------------------------------------------------------------------
   try {
     const n = readdirSync(path.join(root, "docs", "notes")).filter(
@@ -168,10 +139,8 @@ export function compose(root) {
     ).length;
     if (n)
       out.push(
-        `Memory: ${n} note(s) in docs/notes/ — this repo's durable, project-specific ` +
-          "knowledge. Search it before re-deriving anything (`node " +
-          '.claude/hooks/plan-eval.mjs --match "<what you are about to do>"`), and add ' +
-          "to it with the write-a-note skill.",
+        `Notes: ${n} in docs/notes/ — search before re-deriving: ` +
+          '`node .claude/hooks/plan-eval.mjs --match "<task>"`.',
       );
   } catch {
     /* no notes yet */
@@ -244,9 +213,7 @@ function selfTest() {
     const text = compose(root);
     for (const [want, why] of [
       ["Tree:", "the tree/dirty fact"],
-      [CONN, "the connection-string variable"],
-      ["Green means", "the green commands"],
-      ["npm run generate:api", "the regeneration command"],
+      ["Migrations:", "the newest migration"],
       ["CodeGraph:", "the CodeGraph state — the guard's behaviour depends on it"],
     ]) {
       ok(text.includes(want), `orientation is missing ${why}`);

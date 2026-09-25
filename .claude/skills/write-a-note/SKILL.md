@@ -1,6 +1,6 @@
 ---
 name: write-a-note
-description: Record what a session learned as a docs/notes/ entry that will actually be found again — the file, its INDEX.md line, and the citation that makes it reachable. Use when plan-eval's round 2 asks what surprised you, when a doc comment or a skill turned out to be wrong, and whenever you are about to end a session holding a measured fact that exists nowhere but this context.
+description: Record a session's learning as a findable docs/notes/ entry (file + INDEX.md line + citation). Use when plan-eval asks what surprised you, when a doc or skill was wrong, or before ending with an unrecorded fact.
 ---
 
 # Writing a note that gets read
