@@ -5,9 +5,9 @@ import { Blob as NodeBlob, File as NodeFile } from "node:buffer";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import type { MediaItemResponse } from "@/api/generated/model";
 import type {
   FacilityResponse,
-  MediaItemResponse,
   TrailShortInfoResponse,
 } from "@/types/types";
 import { saveStagedFiles, saveStagedTarget } from "@/lib/staged-media";
@@ -34,7 +34,7 @@ const facilityApi = vi.hoisted(() => ({
 }));
 vi.mock("@/api/facility", () => facilityApi);
 
-const mediaApi = vi.hoisted(() => ({ getAllMedia: vi.fn() }));
+const mediaApi = vi.hoisted(() => ({ getMediaForOwner: vi.fn() }));
 vi.mock("@/api/media", () => mediaApi);
 
 const toasted = vi.hoisted(() => ({ error: vi.fn(), success: vi.fn() }));
@@ -93,7 +93,7 @@ const uploadButton = () => screen.getByRole("button", { name: /upload/i });
 
 // The panel is quiet only once all three of its opening requests have landed.
 const settled = () =>
-  waitFor(() => expect(mediaApi.getAllMedia).toHaveBeenCalled());
+  waitFor(() => expect(facilityApi.getAllFacilities).toHaveBeenCalled());
 
 const storedTarget = () =>
   JSON.parse(localStorage.getItem("stigvidd:media-upload-target") ?? "null");
@@ -117,7 +117,7 @@ beforeEach(async () => {
   facilityApi.getAllFacilities.mockResolvedValue([facility("f-1", "Vindskydd")]);
   facilityApi.uploadFacilityImages.mockResolvedValue([{}]);
   facilityApi.deleteFacilityImage.mockResolvedValue(undefined);
-  mediaApi.getAllMedia.mockResolvedValue([]);
+  mediaApi.getMediaForOwner.mockResolvedValue([]);
 });
 
 describe("the target that was chosen last time", () => {
@@ -354,7 +354,7 @@ describe("the symbol, which takes a single image", () => {
 
 describe("the images already attached", () => {
   beforeEach(() => {
-    mediaApi.getAllMedia.mockResolvedValue([
+    mediaApi.getMediaForOwner.mockResolvedValue([
       item("m1", "t-1", "Trail"),
       item("m2", "t-1", "TrailSymbol"),
       item("m3", "f-1", "Facility"),

@@ -406,6 +406,21 @@ public class StigViddDbContext(DbContextOptions<StigViddDbContext> options) : Db
         modelBuilder.Entity<MediaReprocessItem>()
             .HasIndex(i => i.Status);
 
+        // Identifier is the public handle for all three of these, and the admin media library
+        // looks images up by it on every metadata edit and every batch it resolves by id.
+        // Plain columns, so the SQLite the integration tests build this schema on takes them.
+        modelBuilder.Entity<TrailImage>()
+            .HasIndex(ti => ti.Identifier)
+            .IsUnique();
+
+        modelBuilder.Entity<FacilityImage>()
+            .HasIndex(fi => fi.Identifier)
+            .IsUnique();
+
+        modelBuilder.Entity<Trail>()
+            .HasIndex(t => t.Identifier)
+            .IsUnique();
+
         // EF logs PossibleIncorrectRequiredNavigationWithQueryFilterInteractionWarning for
         // ReviewImage and TrailObstacleSolvedVote because of those two filters. Deliberate:
         // filtering ReviewImage as well would drop hidden reviews' images out of the backup

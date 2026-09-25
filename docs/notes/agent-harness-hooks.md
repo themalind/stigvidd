@@ -221,6 +221,57 @@ a check, grep the hooks for what they say about that area. The per-area table in
 CLAUDE.md and these strings are two copies of one fact, and only one of them is ever read
 during a task.
 
+### The third shape: a self-test whose fixtures are not the shape of real input
+
+`guard-new-comments.mjs` exempts the Arrange/Act/Assert markers with
+
+```js
+const EXEMPT_LINE = [..., /^\/\/\s*(Arrange|Act|Assert)\b/i];
+```
+
+and calls `isExempt(line)` on the **raw** line, while `isCommentLine(line)` trims first. The
+regex is anchored at `^`, so the exemption matches only an **unindented** `// Arrange` — and
+no C# test method has one. Every real marker is indented four or eight spaces and misses it.
+
+It looks like it works because `addedComments` has a second escape: it builds `before` from
+the *trimmed* lines of `oldText` and skips any comment already present there. So the outcome
+depends entirely on what the tool passes as `oldText`:
+
+| tool | `oldText` the guard sees | indented `// Arrange` |
+| --- | --- | --- |
+| `Write` | the whole previous file | already in `before` → **allowed** |
+| `Edit` | only `old_string` | absent unless the replaced snippet had one → **denied** |
+
+Measured: one `Edit` appending six test methods to `MediaRepositoryTests.cs` was denied for
+"32 comment line(s)", every one of them `// Arrange`, `// Act` or `// Assert`. The identical
+content written with `Write` passed. The workaround that session used was to include an
+existing A/A/A block inside `old_string` so the markers land in `before` — which is a way of
+saying the escape has nothing to do with the exemption that was written for it.
+
+All 22 self-test cases pass throughout, because every fixture is written flush-left
+(`[CS, "", "// Arrange\nvar x = 1;", null]`). The fixtures are valid C# comments but not
+C# comments *in the position they actually occur*, so the anchor is never exercised.
+
+CLAUDE.md's hook table says the guard is "Silent on ... Arrange/Act/Assert test markers".
+That is true by accident on `Write` and false on `Edit`.
+
+**Fixed.** `addedComments` now tests `isExempt(trimmed)`, and six fixtures carry the
+whitespace real code has — three indented markers, a tab-indented one, an indented narrative
+comment that must still be denied, and an indented `keep-comment:` escape. The self-test went
+from 22 cases to 28, and reverting the one-word fix turns 4 of them red, so the gate now
+holds the behaviour rather than describing it.
+
+It was found the way the note predicts: writing a new `.cs` test file of ordinary
+Arrange/Act/Assert methods was denied for 27 comment lines, because a **new** file has no
+`oldText` for the second escape to work from. After the fix the same file was denied for 3 —
+the continuation lines of a multi-line `keep-comment:` block, only the first line of which
+carries the marker. That is worth knowing on its own: **the escape is per line, not per
+comment block.**
+
+The general lesson is the same as the two above and worth more than the fix: **when a
+guard's rule mentions position (an anchor, a prefix, a column), at least one fixture has to
+carry the whitespace real code puts there.**
+
 ## The exit-code contract
 
 | | |

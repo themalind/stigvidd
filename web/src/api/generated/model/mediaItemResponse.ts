@@ -16,6 +16,8 @@ export interface MediaItemResponse {
   width?: number;
   height?: number;
   sizeBytes?: number;
+  createdAt?: string;
+  format: string;
   ownerType: string;
   /** @nullable */
   ownerIdentifier?: string | null;

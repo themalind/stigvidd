@@ -6,8 +6,11 @@
  * OpenAPI spec version: 1.0.0
  */
 import type { ImageProcessingOptionsRequest } from './imageProcessingOptionsRequest';
+import type { MediaFilter } from './mediaFilter';
 
 export interface CreateMediaReprocessJobRequest {
-  mediaIdentifiers: string[];
+  /** @nullable */
+  mediaIdentifiers?: string[] | null;
+  filter?: MediaFilter | null;
   options: ImageProcessingOptionsRequest;
 }

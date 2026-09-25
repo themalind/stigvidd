@@ -58,21 +58,6 @@ export type FacilityResponse = {
   longitude: number;
 };
 
-/** An item in the media library — a processed image plus the object it is attached to. */
-export type MediaItemResponse = {
-  identifier: string;
-  imageUrl: string;
-  altText?: string | null;
-  caption?: string | null;
-  width: number;
-  height: number;
-  sizeBytes: number;
-  /** "Trail" | "Facility" | "TrailSymbol" */
-  ownerType: string;
-  ownerIdentifier?: string | null;
-  ownerName?: string | null;
-};
-
 /** Server-side processing knobs sent as multipart form fields alongside an upload. */
 export type ImageProcessingOptions = {
   maxWidth?: number;

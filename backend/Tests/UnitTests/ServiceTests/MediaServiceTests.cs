@@ -3,6 +3,7 @@
 
 using Core.Interfaces.Repositories;
 using Core.Services;
+using WebDataContracts.RequestModels.Media;
 using AwesomeAssertions;
 using Microsoft.Extensions.Configuration;
 using Moq;
@@ -22,54 +23,56 @@ public class MediaServiceTests
     }
 
     private static MediaItemProjection MakeProjection() =>
-        new(ImageIdentifier, "trails/tiveden.jpg", "Alt", "Caption", 800, 600, 12345, "Trail", "trail-id", "Tiveden");
+        new(1, ImageIdentifier, "trails/tiveden.jpg", "Alt", "Caption", 800, 600, 12345, new DateTime(2026, 3, 12, 0, 0, 0, DateTimeKind.Utc), "Trail", "trail-id", "Tiveden");
 
     [Fact]
-    public async Task GetAllMediaAsync_WhenMediaExists_ReturnsWithPresentableUrl()
+    public async Task GetMediaAsync_WhenMediaExists_ReturnsWithPresentableUrl()
     {
         // Arrange
         IReadOnlyCollection<MediaItemProjection> media = [MakeProjection()];
         var repo = new Mock<IMediaRepository>();
-        repo.Setup(r => r.GetAllMediaAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(RepositoryResult<IReadOnlyCollection<MediaItemProjection>>.Success(media));
+        repo.Setup(r => r.GetMediaPagedAsync(It.IsAny<MediaLibraryQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<MediaLibraryPage>.Success(new MediaLibraryPage(media, 1, false, 1, 1, 12345)));
 
         // Act
-        var result = await Build(repo).GetAllMediaAsync(TestContext.Current.CancellationToken);
+        var result = await Build(repo).GetMediaAsync(new MediaLibraryQuery(), TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
-        result.Value.Should().HaveCount(1);
+        result.Value.Should().NotBeNull();
+        result.Value.Items.Should().HaveCount(1);
         // The stored path is prefixed with the configured presentable base url.
-        result.Value.Should().OnlyContain(m => m.ImageUrl == "http://stigvidd.se/testing/trails/tiveden.jpg");
-        result.Value.Should().OnlyContain(m => m.OwnerType == "Trail");
+        result.Value.Items.Should().OnlyContain(m => m.ImageUrl == "http://stigvidd.se/testing/trails/tiveden.jpg");
+        result.Value.Items.Should().OnlyContain(m => m.OwnerType == "Trail");
     }
 
     [Fact]
-    public async Task GetAllMediaAsync_WhenNoneExist_ReturnsEmptyCollection()
+    public async Task GetMediaAsync_WhenNoneExist_ReturnsEmptyCollection()
     {
         // Arrange
         var repo = new Mock<IMediaRepository>();
-        repo.Setup(r => r.GetAllMediaAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(RepositoryResult<IReadOnlyCollection<MediaItemProjection>>.Success([]));
+        repo.Setup(r => r.GetMediaPagedAsync(It.IsAny<MediaLibraryQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<MediaLibraryPage>.Success(new MediaLibraryPage([], 1, false, 0, 0, 0)));
 
         // Act
-        var result = await Build(repo).GetAllMediaAsync(TestContext.Current.CancellationToken);
+        var result = await Build(repo).GetMediaAsync(new MediaLibraryQuery(), TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
-        result.Value.Should().BeEmpty();
+        result.Value.Should().NotBeNull();
+        result.Value.Items.Should().BeEmpty();
     }
 
     [Fact]
-    public async Task GetAllMediaAsync_WhenRepositoryFails_Returns500()
+    public async Task GetMediaAsync_WhenRepositoryFails_Returns500()
     {
         // Arrange
         var repo = new Mock<IMediaRepository>();
-        repo.Setup(r => r.GetAllMediaAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(RepositoryResult<IReadOnlyCollection<MediaItemProjection>>.Error());
+        repo.Setup(r => r.GetMediaPagedAsync(It.IsAny<MediaLibraryQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<MediaLibraryPage>.Error());
 
         // Act
-        var result = await Build(repo).GetAllMediaAsync(TestContext.Current.CancellationToken);
+        var result = await Build(repo).GetMediaAsync(new MediaLibraryQuery(), TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();

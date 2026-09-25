@@ -2,12 +2,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, expect, it } from "vitest";
-import type { MediaItemResponse } from "@/types/types";
+import type { MediaItemResponse } from "@/api/generated/model";
 import {
   acceptImages,
   attachedTo,
   buildImageOptions,
-  formatBytes,
   OWNER_TYPE,
 } from "./media-upload";
 
@@ -210,14 +209,5 @@ describe("attachedTo", () => {
       "TrailSymbol",
       "Facility",
     ]);
-  });
-});
-
-describe("formatBytes", () => {
-  it("switches unit at each threshold", () => {
-    expect(formatBytes(512)).toBe("512 B");
-    expect(formatBytes(1024)).toBe("1 KB");
-    expect(formatBytes(1024 * 1024)).toBe("1.0 MB");
-    expect(formatBytes(2.5 * 1024 * 1024)).toBe("2.5 MB");
   });
 });
