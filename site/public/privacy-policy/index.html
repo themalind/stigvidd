@@ -34,7 +34,7 @@
   §4:s "fyra decimaler" är bundet till toFixed(4) i app/src/hooks/useWeather.ts, och
   Expo-raden om appuppdateringar till expo.updates.url i app/app.json.
 
-  Kodändringarna som texten vilade på har landat (se docs/gdpr-analys.md):
+  Kodändringarna som texten vilade på har landat:
     §3  vidaredelning kräver ägarens tillstånd  → AllowResharing per delning (steg 1-2)
     §3  e-postadressen visas aldrig             → Email borttagen ur FriendResponse
     §5  borttaget raderas på riktigt            → hard delete + filradering (steg 3-4)
@@ -231,7 +231,7 @@
     <main id="top">
       <header>
         <h1>Integritetspolicy för Stigvidd</h1>
-        <p class="updated">Senast uppdaterad: 20 september 2026</p>
+        <p class="updated">Senast uppdaterad: 25 september 2026</p>
         <p class="lang-nav"><strong>Svenska</strong> · <a href="#english">In English</a></p>
       </header>
 
@@ -309,7 +309,7 @@
             </tr>
             <tr>
               <td>Push-token</td>
-              <td>En anonym enhetsidentifierare från Apple/Google om du tillåter notiser</td>
+              <td>En pseudonym enhetsidentifierare från Apple/Google om du tillåter notiser</td>
               <td>Skicka notiser om vänförfrågningar och delade vandringar</td>
               <td>Ditt samtycke (kan stängas av i telefonens inställningar)</td>
             </tr>
@@ -349,7 +349,7 @@
       <p>
         Du styr själv om appen får använda din position, genom behörigheten i telefonens
         inställningar. Innan vi frågar första gången förklarar vi i appen vad positionen används
-        till. Positionen spelas bara in medan du aktivt registrerar en vandring.
+        till. Positionen sparas hos oss bara medan du aktivt registrerar en vandring.
       </p>
       <p>
         På startsidan lämnar din position telefonen för två uppslagningar: vädret hämtas från SMHI,
@@ -387,8 +387,26 @@
           vidaredelning kan inte dela den vidare i sin tur.
         </li>
         <li>
-          <strong>Recensioner, betyg och hinderrapporter</strong> du skriver är synliga för alla
-          användare av appen.
+          <strong>Recensioner, betyg och hinderrapporter</strong> du skriver är synliga för alla,
+          även för den som inte har något konto. Användarnamnet följer med recensioner och betyg;
+          hinderrapporter visas utan namn.
+        </li>
+        <li>
+          <strong>Anmäler du en recension eller en hinderrapport</strong> sparar vi anmälan:
+          anledningen du valt, det du skrivit, en kopia av det anmälda innehållet och namnet på
+          den som skrev det. Det behövs för att vi ska kunna bedöma anmälan, och bara vi ser den.
+          Avslutar du kontot lossas anmälan från dig – avslutar den anmälde sitt, tas kopian och
+          namnet bort.
+        </li>
+        <li>
+          <strong>Blockerar du någon</strong> sparar vi vem du har blockerat och när. Den du
+          blockerar får aldrig veta det. Uppgiften tas bort om någon av er avslutar sitt konto.
+        </li>
+        <li>
+          <strong>Stängs ditt konto av från att skriva</strong> sparar vi när det skedde, vilken
+          moderator som gjorde det och varför, och när och av vem avstängningen hävdes. Vi sparar
+          även hävda avstängningar, så att vi kan se om det har hänt förut. Bara vi ser dem, och de
+          tas bort när du avslutar ditt konto.
         </li>
       </ul>
       <p>
@@ -400,7 +418,8 @@
       <h2>4. Vem mer behandlar uppgifterna</h2>
       <ul>
         <li>
-          <strong>Hostup</strong>, servrar i Sverige – drift av databas, API och bildlagring.
+          <strong>Hostup</strong>, servrar i Sverige – drift av databas, API, bildlagring och
+          utgående e-post. Mejlen från Stigvidd skickas via Hostups e-postrelä.
         </li>
         <li>
           <strong>MapTiler</strong> – levererar kartbilder. Din IP-adress skickas till MapTiler när
@@ -515,7 +534,7 @@
       <section class="lang-section" id="english" lang="en">
         <header>
           <h1>Privacy Policy for Stigvidd</h1>
-          <p class="updated">Last updated: 20 September 2026</p>
+          <p class="updated">Last updated: 25 September 2026</p>
           <p class="lang-nav"><a href="#top">På svenska</a> · <strong>English</strong></p>
         </header>
 
@@ -590,7 +609,7 @@
               </tr>
               <tr>
                 <td>Push token</td>
-                <td>An anonymous device identifier from Apple/Google if you allow notifications</td>
+                <td>A pseudonymous device identifier from Apple/Google if you allow notifications</td>
                 <td>Send notifications about friend requests and shared walks</td>
                 <td>Your consent (can be turned off in your phone settings)</td>
               </tr>
@@ -631,7 +650,7 @@
         <p>
           You decide whether the app may use your location, through the permission in your phone
           settings. Before we ask the first time, the app explains what the location is used for.
-          Your position is only recorded while you are actively registering a walk.
+          Your position is only stored by us while you are actively registering a walk.
         </p>
         <p>
           On the home screen your position leaves the phone for two lookups: the weather is fetched
@@ -671,8 +690,26 @@
             reshare cannot share it onwards in turn.
           </li>
           <li>
-            <strong>Reviews, ratings and obstacle reports</strong> you write are visible to all
-            users of the app.
+            <strong>Reviews, ratings and obstacle reports</strong> you write are visible to
+            everyone, including people without an account. Your username goes with reviews and
+            ratings; obstacle reports are shown without a name.
+          </li>
+          <li>
+            <strong>If you report a review or an obstacle report</strong> we keep the report: the
+            reason you chose, what you wrote, a copy of the reported content and the name of the
+            person who wrote it. We need it to judge the report, and only we see it. If you close
+            your account the report is detached from you – if the reported person closes theirs,
+            the copy and the name are removed.
+          </li>
+          <li>
+            <strong>If you block someone</strong> we keep who you blocked and when. The person you
+            block is never told. The record is removed if either of you closes your account.
+          </li>
+          <li>
+            <strong>If your account is barred from writing</strong> we keep when it happened, which
+            moderator did it and why, and when and by whom the restriction was lifted. We keep
+            lifted restrictions too, so we can see whether it has happened before. Only we see
+            them, and they are removed when you close your account.
           </li>
         </ul>
         <p>
@@ -684,8 +721,8 @@
         <h2>4. Who else processes the data</h2>
         <ul>
           <li>
-            <strong>Hostup</strong>, servers in Sweden – hosting of the database, API and image
-            storage.
+            <strong>Hostup</strong>, servers in Sweden – hosting of the database, API, image
+            storage and outgoing email. Mail from Stigvidd is sent through Hostup's mail relay.
           </li>
           <li>
             <strong>MapTiler</strong> – delivers map imagery. Your IP address is sent to MapTiler
