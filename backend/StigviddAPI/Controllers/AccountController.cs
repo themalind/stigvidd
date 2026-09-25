@@ -15,6 +15,7 @@ namespace StigviddAPI.Controllers;
 /// the Keycloak Direct Access Grant directly against Keycloak's token endpoint. This controller
 /// covers the operations that require Keycloak admin privileges (provisioning, password reset).
 /// </summary>
+[AllowWhenBanned]
 [ApiController]
 [Route("api/v1/[controller]")]
 [AllowAnonymous]
@@ -209,10 +210,11 @@ public class AccountController : StigViddController
     public async Task<ActionResult> ResetPasswordForm([FromQuery] string? token, CancellationToken ctoken)
     {
         Result<PasswordResetOutcome> result;
+        var suppliedToken = token ?? string.Empty;
 
         try
         {
-            result = await _passwordResetService.ValidateAsync(token ?? string.Empty, ctoken);
+            result = await _passwordResetService.ValidateAsync(suppliedToken, ctoken);
         }
         catch (Exception ex)
         {
@@ -228,7 +230,7 @@ public class AccountController : StigViddController
         return result.Value switch
         {
             PasswordResetOutcome.Valid =>
-                HtmlPage(StatusCodes.Status200OK, ResetPasswordPage.Form(token!)),
+                HtmlPage(StatusCodes.Status200OK, ResetPasswordPage.Form(suppliedToken)),
             PasswordResetOutcome.Expired =>
                 HtmlPage(StatusCodes.Status410Gone, ResetPasswordPage.Expired),
             _ =>

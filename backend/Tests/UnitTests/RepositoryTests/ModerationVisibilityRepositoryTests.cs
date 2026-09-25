@@ -62,7 +62,7 @@ public class ModerationVisibilityRepositoryTests : TestBase
 
         // Act
         var result = await repository.GetReviewsByTrailIdentifierAsync(
-            TivedenIdentifier, 0, 20, r => r.Identifier, TestContext.Current.CancellationToken);
+            TivedenIdentifier, 0, 20, [], r => r.Identifier, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -79,7 +79,7 @@ public class ModerationVisibilityRepositoryTests : TestBase
 
         // Act
         var result = await repository.GetReviewsByTrailIdentifierAsync(
-            TivedenIdentifier, 0, 20, r => r.Identifier, TestContext.Current.CancellationToken);
+            TivedenIdentifier, 0, 20, [], r => r.Identifier, TestContext.Current.CancellationToken);
 
         // Assert — both, or the paging lies about how many pages there are
         result.IsSuccess.Should().BeTrue();
@@ -169,7 +169,7 @@ public class ModerationVisibilityRepositoryTests : TestBase
 
         // Act
         var result = await repository.GetTrailObstaclesByTrailIdentifierAsync(
-            TivedenIdentifier, o => o.Identifier, TestContext.Current.CancellationToken);
+            TivedenIdentifier, [], o => o.Identifier, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();

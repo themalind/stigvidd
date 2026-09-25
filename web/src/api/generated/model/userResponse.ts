@@ -13,6 +13,8 @@ export interface UserResponse {
   nickName: string;
   email: string;
   /** @nullable */
+  bannedAt?: string | null;
+  /** @nullable */
   myWishList?: UserWishlistTrailResponse[] | null;
   /** @nullable */
   myFavorites?: UserFavoritesTrailResponse[] | null;

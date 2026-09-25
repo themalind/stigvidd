@@ -353,10 +353,12 @@ public class ContentReportServiceTests
             HideOutcome = ReportHideOutcome.Hidden,
         };
 
+    private static readonly DateTime BarredAt = new(2026, 3, 4, 10, 0, 0, DateTimeKind.Utc);
+
     private static ContentReportSummary StoredSummary(ReportStatus status = ReportStatus.Pending) =>
         new(ReportIdentifier, ReportedContentType.Review, ReviewIdentifier, "trail-identifier",
             ReportReason.Offensive, null, status, ReportHideOutcome.Hidden,
-            "Reporter", "Author", "Content", true, null, null, null, DateTime.UtcNow);
+            "Reporter", "Author", "author-identifier", null, "Content", true, null, null, null, DateTime.UtcNow);
 
     private static Mock<IContentReportRepository> DecidableRepository(
         ReportStatus current = ReportStatus.Pending,
@@ -704,7 +706,8 @@ public class ContentReportServiceTests
         var repo = new Mock<IContentReportRepository>();
         repo.Setup(r => r.GetAuthorStatisticsAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<PagedResult<AuthorStatistic>>.Success(
-                new PagedResult<AuthorStatistic>([new AuthorStatistic(3, "SkogsGreven", 2)], 2, true, 40)));
+                new PagedResult<AuthorStatistic>(
+                    [new AuthorStatistic(3, "author-identifier", "SkogsGreven", 2, BarredAt, 2)], 2, true, 40)));
 
         // Act
         var result = await Build(repo).GetAuthorStatisticsAsync(2, 20, TestContext.Current.CancellationToken);
@@ -717,6 +720,8 @@ public class ContentReportServiceTests
         var author = result.Value.Items.Should().ContainSingle().Subject;
         author.NickName.Should().Be("SkogsGreven");
         author.Strikes.Should().Be(2);
+        author.BannedAt.Should().Be(BarredAt);
+        author.BanCount.Should().Be(2);
     }
 
     [Fact]

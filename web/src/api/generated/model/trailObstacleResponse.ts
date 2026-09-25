@@ -20,4 +20,5 @@ export interface TrailObstacleResponse {
   createdAt?: string;
   /** @nullable */
   solvedVotes?: TrailObstacleSolvedVoteResponse[] | null;
+  solvedVoteCount?: number;
 }

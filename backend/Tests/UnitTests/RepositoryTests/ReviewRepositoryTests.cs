@@ -44,7 +44,7 @@ public class ReviewRepositoryTests : TestBase
         var repo = BuildRepo();
 
         // Act
-        var result = await repo.GetReviewsByTrailIdentifierAsync(NassehultIdentifier, 0, 10, ReviewSelector, TestContext.Current.CancellationToken);
+        var result = await repo.GetReviewsByTrailIdentifierAsync(NassehultIdentifier, 0, 10, [], ReviewSelector, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -60,7 +60,7 @@ public class ReviewRepositoryTests : TestBase
         var repo = BuildRepo();
 
         // Act
-        var result = await repo.GetReviewsByTrailIdentifierAsync(HultaforsIdentifier, 0, 10, ReviewSelector, TestContext.Current.CancellationToken);
+        var result = await repo.GetReviewsByTrailIdentifierAsync(HultaforsIdentifier, 0, 10, [], ReviewSelector, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -76,7 +76,7 @@ public class ReviewRepositoryTests : TestBase
         var repo = BuildRepo();
 
         // Act
-        var result = await repo.GetReviewsByTrailIdentifierAsync(NassehultIdentifier, 0, 1, ReviewSelector, TestContext.Current.CancellationToken);
+        var result = await repo.GetReviewsByTrailIdentifierAsync(NassehultIdentifier, 0, 1, [], ReviewSelector, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -93,7 +93,7 @@ public class ReviewRepositoryTests : TestBase
         var repo = BuildRepo();
 
         // Act
-        var result = await repo.GetReviewsByTrailIdentifierAsync(NassehultIdentifier, 1, 1, ReviewSelector, TestContext.Current.CancellationToken);
+        var result = await repo.GetReviewsByTrailIdentifierAsync(NassehultIdentifier, 1, 1, [], ReviewSelector, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -109,7 +109,7 @@ public class ReviewRepositoryTests : TestBase
         var repo = BuildRepo();
 
         // Act
-        var result = await repo.GetReviewsByTrailIdentifierAsync(NassehultIdentifier, 10, 10, ReviewSelector, TestContext.Current.CancellationToken);
+        var result = await repo.GetReviewsByTrailIdentifierAsync(NassehultIdentifier, 10, 10, [], ReviewSelector, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();

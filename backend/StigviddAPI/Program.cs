@@ -128,7 +128,7 @@ public class Program
             .AddKeycloakAdminHttpClient(options)
             .AddClientCredentialsTokenHandler(ClientCredentialsClientName.Parse("KeycloakAdminTokenClient"));
 
-        builder.Services.AddControllers()
+        builder.Services.AddControllers(options => options.Filters.Add<BannedUserWriteFilter>())
         .AddJsonOptions(options =>
         {
             options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
@@ -164,9 +164,9 @@ public class Program
         // OutboxEmails table on every start.
         builder.Services.AddHostedService<StigviddAPI.BackgroundServices.MailOutboxDispatcher>();
 
-// Holds OutboxEmails to its retention rule: clears settled bodies, then deletes sent and
-// settled rows past their windows. Configured under MailOutbox in appsettings.json.
-builder.Services.AddHostedService<StigviddAPI.BackgroundServices.MailOutboxRetentionService>();
+        // Holds OutboxEmails to its retention rule: clears settled bodies, then deletes sent
+        // and settled rows past their windows. Configured under MailOutbox in appsettings.json.
+        builder.Services.AddHostedService<StigviddAPI.BackgroundServices.MailOutboxRetentionService>();
 
         builder.Services.AddHostedService<StigviddAPI.BackgroundServices.MediaReprocessDispatcher>();
         builder.Services.AddHostedService<StigviddAPI.BackgroundServices.MediaReprocessRetentionService>();

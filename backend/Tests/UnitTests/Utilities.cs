@@ -808,6 +808,14 @@ public static class Utilities
             return mock;
         }
 
+        public static Mock<IUserBlockService> UserBlockServiceHiding(params int[] hiddenUserIds)
+        {
+            var mock = new Mock<IUserBlockService>();
+            mock.Setup(s => s.GetHiddenUserIdsForReadAsync(It.IsAny<string?>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(hiddenUserIds);
+            return mock;
+        }
+
         public static Mock<IUserRepository> UserRepositoryFoundById(int id = 1)
         {
             var mock = new Mock<IUserRepository>();

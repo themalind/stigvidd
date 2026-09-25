@@ -69,7 +69,7 @@ public class TrailObstacleRepositoryTests : TestBase
         var repo = BuildRepo(CreateSeededFactory());
 
         // Act
-        var result = await repo.GetTrailObstaclesByTrailIdentifierAsync(TivedenIdentifier, to => to.Identifier, TestContext.Current.CancellationToken);
+        var result = await repo.GetTrailObstaclesByTrailIdentifierAsync(TivedenIdentifier, [], to => to.Identifier, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -83,7 +83,7 @@ public class TrailObstacleRepositoryTests : TestBase
         var repo = BuildRepo(CreateSeededFactory());
 
         // Act
-        var result = await repo.GetTrailObstaclesByTrailIdentifierAsync(GesebolIdentifier, to => to.Identifier, TestContext.Current.CancellationToken);
+        var result = await repo.GetTrailObstaclesByTrailIdentifierAsync(GesebolIdentifier, [], to => to.Identifier, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -97,7 +97,7 @@ public class TrailObstacleRepositoryTests : TestBase
         var repo = BuildRepo(CreateSeededFactory());
 
         // Act
-        var result = await repo.GetTrailObstaclesByTrailIdentifierAsync(TivedenIdentifier, to => to.Identifier, TestContext.Current.CancellationToken);
+        var result = await repo.GetTrailObstaclesByTrailIdentifierAsync(TivedenIdentifier, [], to => to.Identifier, TestContext.Current.CancellationToken);
 
         // Assert
         result.Value.Should().NotContain(Obstacle4Identifier);
@@ -111,7 +111,7 @@ public class TrailObstacleRepositoryTests : TestBase
 
         // Act
         // Obstacle3 on Tångaleden has exactly 3 solved votes
-        var result = await repo.GetTrailObstaclesByTrailIdentifierAsync(TangaledenIdentifier, to => to.Identifier, TestContext.Current.CancellationToken);
+        var result = await repo.GetTrailObstaclesByTrailIdentifierAsync(TangaledenIdentifier, [], to => to.Identifier, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -125,7 +125,7 @@ public class TrailObstacleRepositoryTests : TestBase
         var repo = BuildRepo(CreateFactoryWithObstacleAt(DateTime.UtcNow.AddDays(-30)));
 
         // Act
-        var result = await repo.GetTrailObstaclesByTrailIdentifierAsync(TivedenIdentifier, to => to.Identifier, TestContext.Current.CancellationToken);
+        var result = await repo.GetTrailObstaclesByTrailIdentifierAsync(TivedenIdentifier, [], to => to.Identifier, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -139,7 +139,7 @@ public class TrailObstacleRepositoryTests : TestBase
         var repo = BuildRepo(CreateFactoryWithObstacleAt(DateTime.UtcNow.AddDays(-29)));
 
         // Act
-        var result = await repo.GetTrailObstaclesByTrailIdentifierAsync(TivedenIdentifier, to => to.Identifier, TestContext.Current.CancellationToken);
+        var result = await repo.GetTrailObstaclesByTrailIdentifierAsync(TivedenIdentifier, [], to => to.Identifier, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -454,7 +454,7 @@ public class TrailObstacleRepositoryTests : TestBase
         // Arrange — an obstacle exactly at the boundary must be hidden and deleted the same day
         var factory = CreateFactoryWithObstacleAt(DateTime.UtcNow.AddDays(-30));
         var repo = BuildRepo(factory);
-        var shown = await repo.GetTrailObstaclesByTrailIdentifierAsync(TivedenIdentifier, to => to.Identifier, TestContext.Current.CancellationToken);
+        var shown = await repo.GetTrailObstaclesByTrailIdentifierAsync(TivedenIdentifier, [], to => to.Identifier, TestContext.Current.CancellationToken);
         shown.Value.Should().BeEmpty();
 
         // Act

@@ -43,18 +43,20 @@ public class TrailObstacleRepository : ITrailObstacleRepository
             to.CreatedAt <= DateTime.UtcNow.AddDays(-_retentionDays) ||
             to.SolvedVotes.Count >= _solvedVotesToHide);
 
-    public async Task<RepositoryResult<IReadOnlyCollection<T>>> GetTrailObstaclesByTrailIdentifierAsync<T>(string identifier, Expression<Func<TrailObstacle, T>> selector, CancellationToken ctoken)
+    public async Task<RepositoryResult<IReadOnlyCollection<T>>> GetTrailObstaclesByTrailIdentifierAsync<T>(string identifier, int[] hiddenUserIds, Expression<Func<TrailObstacle, T>> selector, CancellationToken ctoken)
     {
         try
         {
             using var context = await _context.CreateDbContextAsync(ctoken);
 
+            // keep-comment: unfiltered on purpose; the factory hides blocked voters but must count them.
             var obstacles = await ActiveObstacles(context)
                 .AsNoTracking()
                 .Include(to => to.User)
                 .Include(to => to.SolvedVotes)
                     .ThenInclude(sv => sv.User)
                 .Where(to => to.Trail != null && to.Trail.Identifier == identifier)
+                .Where(to => to.UserId == null || !hiddenUserIds.Contains(to.UserId.Value))
                 .Select(selector)
                 .ToListAsync(ctoken);
 

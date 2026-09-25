@@ -11,17 +11,20 @@ namespace Core.Services;
 public class FriendService : IFriendService
 {
     private readonly IFriendRepository _friendRepository;
+    private readonly IUserBlockService _userBlockService;
     private readonly IUserRepository _userRepository;
     private readonly IPushNotificationService _pushNotificationService;
     private readonly ILogger _logger;
 
     public FriendService(
         IFriendRepository friendRepository,
+        IUserBlockService userBlockService,
         IUserRepository userRepository,
         IPushNotificationService pushNotificationService,
         ILogger<FriendService> logger)
     {
         _friendRepository = friendRepository;
+        _userBlockService = userBlockService;
         _userRepository = userRepository;
         _pushNotificationService = pushNotificationService;
         _logger = logger;
@@ -61,7 +64,8 @@ public class FriendService : IFriendService
             "Vänförfrågan accepterad",
             "Din vänförfrågan har accepterats",
             new Dictionary<string, object> { ["type"] = "friend_request_accepted" },
-            ctoken);
+            ctoken,
+            fromUserIdentifier: currentUserIdentifier);
 
         return Result.Ok();
     }
@@ -77,8 +81,11 @@ public class FriendService : IFriendService
             return Result.Fail<IEnumerable<FriendResponse>>(new Message(500, "An error occurred while retrieving the user."));
         }
 
+        var hiddenUserIds = await _userBlockService.GetHiddenUserIdsForReadAsync(currentUserIdentifier, ctoken);
+
         var result = await _friendRepository.GetFriendsAsync(
             userIdResult.Value,
+            hiddenUserIds,
             u => FriendResponse.Create(u.Identifier, u.NickName),
             ctoken);
 
@@ -99,8 +106,11 @@ public class FriendService : IFriendService
             return Result.Fail<IEnumerable<FriendRequestResponse>>(new Message(500, "An error occurred while retrieving the user."));
         }
 
+        var hiddenUserIds = await _userBlockService.GetHiddenUserIdsForReadAsync(currentUserIdentifier, ctoken);
+
         var result = await _friendRepository.GetIncomingRequestsAsync(
             userIdResult.Value,
+            hiddenUserIds,
             u => FriendRequestResponse.Create(u.Requester!.Identifier, u.Requester.NickName, u.CreatedAt),
             ctoken);
 
@@ -121,8 +131,11 @@ public class FriendService : IFriendService
             return Result.Fail<IEnumerable<OutgoingFriendRequestResponse>>(new Message(500, "An error occurred while retrieving the user."));
         }
 
+        var hiddenUserIds = await _userBlockService.GetHiddenUserIdsForReadAsync(currentUserIdentifier, ctoken);
+
         var result = await _friendRepository.GetOutgoingRequestsAsync(
             userIdResult.Value,
+            hiddenUserIds,
             u => OutgoingFriendRequestResponse.Create(u.Receiver!.Identifier, u.Receiver.NickName, u.CreatedAt),
             ctoken);
 
@@ -207,7 +220,8 @@ public class FriendService : IFriendService
             // Send push notification to the receiver about the new friend request
             var notificationResult = await _pushNotificationService.SendToUserAsync(
             receiverResult.Value.Identifier, "Ny vänförfrågan", $"{currentUserIdResult.Value.NickName} vill bli vän med dig",
-            new Dictionary<string, object> { ["type"] = "friend_request" }, ctoken);
+            new Dictionary<string, object> { ["type"] = "friend_request" }, ctoken,
+            fromUserIdentifier: currentUserIdentifier);
 
             return Result.Ok();
         }

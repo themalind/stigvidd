@@ -40,14 +40,20 @@ public class ExpoPushServiceTests
         Mock<IUserPushTokenRepository>? tokenRepoMock = null,
         Mock<IUserRepository>? userRepoMock = null,
         HttpClient? httpClient = null,
-        Mock<IConfiguration>? configMock = null)
+        Mock<IConfiguration>? configMock = null,
+        Mock<IUserBlockRepository>? blockRepoMock = null)
     {
         var defaultConfig = new Mock<IConfiguration>();
         defaultConfig.Setup(c => c[It.IsAny<string>()]).Returns((string?)null);
 
+        var defaultBlockRepo = new Mock<IUserBlockRepository>();
+        defaultBlockRepo.Setup(r => r.HasBlockedAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<bool>.Success(false));
+
         return new ExpoPushService(
             tokenRepoMock?.Object ?? new Mock<IUserPushTokenRepository>().Object,
             userRepoMock?.Object ?? new Mock<IUserRepository>().Object,
+            blockRepoMock?.Object ?? defaultBlockRepo.Object,
             httpClient ?? CreateHttpClient(),
             configMock?.Object ?? defaultConfig.Object,
             new Mock<ILogger<ExpoPushService>>().Object
@@ -290,6 +296,55 @@ public class ExpoPushServiceTests
 
         result.Success.Should().BeTrue();
         result.Message.Should().BeNull();
+    }
+
+    // The whole point of a silent block: the sender is told nothing, so the send still reports Ok.
+    [Fact]
+    public async Task SendToUserAsync_WhenTheRecipientHasBlockedTheSender_SendsNothing()
+    {
+        var tokenRepoMock = new Mock<IUserPushTokenRepository>();
+        tokenRepoMock.Setup(r => r.GetTokensForUserAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<IEnumerable<UserPushToken>>.Success(SingleToken()));
+
+        var blockRepoMock = new Mock<IUserBlockRepository>();
+        blockRepoMock.Setup(r => r.HasBlockedAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<bool>.Success(true));
+
+        var service = Build(
+            tokenRepoMock: tokenRepoMock,
+            userRepoMock: Utilities.MockFactory.UserRepositoryFoundById(),
+            blockRepoMock: blockRepoMock);
+
+        var result = await service.SendToUserAsync(
+            "identifier", "title", "body", new Dictionary<string, object>(),
+            TestContext.Current.CancellationToken, fromUserIdentifier: "blocked-sender");
+
+        result.Success.Should().BeTrue();
+        tokenRepoMock.Verify(r => r.GetTokensForUserAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    // Without a sender there is nobody to check, so a system notification is never suppressed.
+    [Fact]
+    public async Task SendToUserAsync_WithNoSenderNamed_IsNeverSuppressed()
+    {
+        var tokenRepoMock = new Mock<IUserPushTokenRepository>();
+        tokenRepoMock.Setup(r => r.GetTokensForUserAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<IEnumerable<UserPushToken>>.Success(SingleToken()));
+
+        var blockRepoMock = new Mock<IUserBlockRepository>();
+        blockRepoMock.Setup(r => r.HasBlockedAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<bool>.Success(true));
+
+        var service = Build(
+            tokenRepoMock: tokenRepoMock,
+            userRepoMock: Utilities.MockFactory.UserRepositoryFoundById(),
+            blockRepoMock: blockRepoMock);
+
+        var result = await service.SendToUserAsync(
+            "identifier", "title", "body", new Dictionary<string, object>(), TestContext.Current.CancellationToken);
+
+        result.Success.Should().BeTrue();
+        tokenRepoMock.Verify(r => r.GetTokensForUserAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]

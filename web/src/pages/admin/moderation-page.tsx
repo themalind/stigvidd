@@ -24,6 +24,8 @@ import {
   upholdEnabled,
 } from "@/lib/moderation-review";
 import { Badge } from "@/components/ui/badge";
+import { unbanUser } from "@/api/users";
+import { BanSheet } from "@/components/ban-sheet";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
@@ -77,6 +79,8 @@ export default function ModerationPage() {
   const [confirming, setConfirming] = useState(false);
   const [decisionNote, setDecisionNote] = useState("");
   const [saving, setSaving] = useState(false);
+  const [banOpen, setBanOpen] = useState(false);
+  const [lifting, setLifting] = useState(false);
 
   const filters = useMemo(
     () => ({
@@ -160,6 +164,33 @@ export default function ModerationPage() {
   );
 
   const report = detail?.report ?? null;
+
+  const reloadReport = useCallback(async (identifier: string) => {
+    try {
+      const reloaded = await getReport(identifier);
+      setDetail((current) =>
+        current?.report?.identifier === reloaded.report?.identifier ? reloaded : current,
+      );
+    } catch {
+      toast.error("The report could not be reloaded.");
+    }
+  }, []);
+
+  const unban = useCallback(async () => {
+    if (!report?.authorIdentifier) return;
+
+    setLifting(true);
+
+    try {
+      await unbanUser(report.authorIdentifier);
+      toast.success("The account can write again.");
+      await reloadReport(report.identifier);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "The ban could not be lifted.");
+    } finally {
+      setLifting(false);
+    }
+  }, [report, reloadReport]);
 
   const decide = useCallback(
     async (decision: "Dismiss" | "Uphold") => {
@@ -385,6 +416,50 @@ export default function ModerationPage() {
                     {detail?.authorStrikes ?? 0} strike
                     {detail?.authorStrikes === 1 ? "" : "s"}
                   </p>
+
+                  {report.authorIdentifier && report.authorBannedAt && (
+                    <>
+                      <p data-testid="author-banned-since" className="text-muted-foreground">
+                        Banned {new Date(report.authorBannedAt).toLocaleDateString()}
+                      </p>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="mt-3"
+                        data-testid="unban-author"
+                        disabled={lifting}
+                        onClick={() => void unban()}
+                      >
+                        {lifting && <Loader2 className="size-4 animate-spin" />}
+                        Lift the ban
+                      </Button>
+                    </>
+                  )}
+
+                  {report.authorIdentifier && !report.authorBannedAt && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="mt-3"
+                      data-testid="ban-author"
+                      onClick={() => setBanOpen(true)}
+                    >
+                      Ban this account
+                    </Button>
+                  )}
+
+                  {banOpen && report.authorIdentifier && (
+                    <BanSheet
+                      target={{
+                        identifier: report.authorIdentifier,
+                        nickName: report.authorNickName,
+                        strikes: detail?.authorStrikes,
+                      }}
+                      initialReason={`Moderation: ${report.identifier}`}
+                      onClose={() => setBanOpen(false)}
+                      onBanned={() => void reloadReport(report.identifier)}
+                    />
+                  )}
                 </article>
 
                 <article className="rounded-md border p-4 text-sm">

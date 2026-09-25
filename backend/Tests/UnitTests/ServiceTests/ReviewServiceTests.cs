@@ -22,6 +22,7 @@ public class ReviewServiceTests
         Mock<IReviewRepository>? reviewRepo = null,
         Mock<IWebDavService>? webDav = null,
         Mock<IUserRepository>? userRepo = null,
+        Mock<IUserBlockService>? userBlockService = null,
         Mock<ITrailService>? trailService = null,
         Mock<IMediaUploadService>? mediaUpload = null,
         StigviddMetrics? metrics = null)
@@ -40,6 +41,7 @@ public class ReviewServiceTests
             (webDav ?? Utilities.MockFactory.WebDavService()).Object,
             (mediaUpload ?? Utilities.MockFactory.MediaUploadService()).Object,
             (userRepo ?? Utilities.MockFactory.UserRepositoryFoundById()).Object,
+            (userBlockService ?? Utilities.MockFactory.UserBlockServiceHiding()).Object,
             (trailService ?? Utilities.MockFactory.TrailServiceFound()).Object,
             new ReviewResponseFactory(cfg.Object),
             new Mock<ILogger<ReviewService>>().Object,
@@ -57,11 +59,11 @@ public class ReviewServiceTests
     {
         // Arrange
         var repo = new Mock<IReviewRepository>();
-        repo.Setup(r => r.GetReviewsByTrailIdentifierAsync(Utilities.Identifiers.Trail7, 0, 10, It.IsAny<Expression<Func<Review, ReviewResponse>>>(), It.IsAny<CancellationToken>()))
+        repo.Setup(r => r.GetReviewsByTrailIdentifierAsync(Utilities.Identifiers.Trail7, 0, 10, It.IsAny<int[]>(), It.IsAny<Expression<Func<Review, ReviewResponse>>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<PagedResult<ReviewResponse>>.Success(StubPage(2)));
 
         // Act
-        var result = await Build(repo).GetReviewsByTrailIdentifierAsync(Utilities.Identifiers.Trail7, 0, 10, TestContext.Current.CancellationToken);
+        var result = await Build(repo).GetReviewsByTrailIdentifierAsync(Utilities.Identifiers.Trail7, 0, 10, null, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -74,11 +76,11 @@ public class ReviewServiceTests
     {
         // Arrange
         var repo = new Mock<IReviewRepository>();
-        repo.Setup(r => r.GetReviewsByTrailIdentifierAsync(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>(), It.IsAny<Expression<Func<Review, ReviewResponse>>>(), It.IsAny<CancellationToken>()))
+        repo.Setup(r => r.GetReviewsByTrailIdentifierAsync(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>(), It.IsAny<int[]>(), It.IsAny<Expression<Func<Review, ReviewResponse>>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<PagedResult<ReviewResponse>>.Error());
 
         // Act
-        var result = await Build(repo).GetReviewsByTrailIdentifierAsync(Utilities.Identifiers.Trail7, 0, 10, TestContext.Current.CancellationToken);
+        var result = await Build(repo).GetReviewsByTrailIdentifierAsync(Utilities.Identifiers.Trail7, 0, 10, null, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();

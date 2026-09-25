@@ -28,6 +28,8 @@ public class ContentReportsController : StigViddController
         _logger = logger;
     }
 
+    // Reporting stays open to a banned account: it reaches a moderator, not the public.
+    [AllowWhenBanned]
     [Authorize]
     [HttpPost]
     [Route("")]

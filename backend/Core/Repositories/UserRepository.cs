@@ -115,7 +115,7 @@ public class UserRepository : IUserRepository
         }
     }
 
-    public async Task<RepositoryResult<IReadOnlyCollection<T>>> FindUsersByNickNameAsync<T>(string nickName, string excludeUserIdentifier, Expression<Func<User, T>> selector, CancellationToken ctoken)
+    public async Task<RepositoryResult<IReadOnlyCollection<T>>> FindUsersByNickNameAsync<T>(string nickName, string excludeUserIdentifier, int[] hiddenUserIds, Expression<Func<User, T>> selector, CancellationToken ctoken)
     {
         try
         {
@@ -124,6 +124,7 @@ public class UserRepository : IUserRepository
             var results = await context.Users
                 .AsNoTracking()
                 .Where(u => u.Identifier != excludeUserIdentifier && EF.Functions.ILike(u.NickName, $"%{nickName}%"))
+                .Where(u => !hiddenUserIds.Contains(u.Id))
                 .Select(selector)
                 .ToListAsync(ctoken);
 
@@ -405,6 +406,84 @@ public class UserRepository : IUserRepository
         }
     }
 
+    public async Task<RepositoryResult> BanUserAsync(string identifier, string bannedBy, string? bannedReason, CancellationToken ctoken)
+    {
+        try
+        {
+            using var context = await _context.CreateDbContextAsync(ctoken);
+
+            var user = await context.Users
+                .Where(u => u.Identifier == identifier)
+                .Select(u => new { u.Id, IsBanned = u.Bans.Any(b => b.LiftedAt == null) })
+                .FirstOrDefaultAsync(ctoken);
+
+            if (user is null)
+                return RepositoryResult.NotFound();
+
+            if (user.IsBanned)
+                return RepositoryResult.Conflict();
+
+            context.UserBans.Add(new UserBan
+            {
+                UserId = user.Id,
+                BannedBy = bannedBy,
+                Reason = bannedReason,
+            });
+
+            await context.SaveChangesAsync(ctoken);
+
+            return RepositoryResult.Success();
+        }
+        catch (DbUpdateException ex)
+        {
+            using var context = await _context.CreateDbContextAsync(ctoken);
+
+            if (await context.UserBans.AnyAsync(b => b.User != null && b.User.Identifier == identifier && b.LiftedAt == null, ctoken))
+                return RepositoryResult.Conflict();
+
+            _logger.LogError(ex, "UserRepository: BanUserAsync -> Something went wrong when banning user with identifier {identifier}.", identifier);
+            return RepositoryResult.Error();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "UserRepository: BanUserAsync -> Something went wrong when banning user with identifier {identifier}.", identifier);
+            return RepositoryResult.Error();
+        }
+    }
+
+    public async Task<RepositoryResult> UnbanUserAsync(string identifier, string liftedBy, CancellationToken ctoken)
+    {
+        try
+        {
+            using var context = await _context.CreateDbContextAsync(ctoken);
+
+            var user = await context.Users
+                .Include(u => u.Bans.Where(b => b.LiftedAt == null))
+                .FirstOrDefaultAsync(u => u.Identifier == identifier, ctoken);
+
+            if (user is null)
+                return RepositoryResult.NotFound();
+
+            if (user.Bans.Count == 0)
+                return RepositoryResult.Conflict();
+
+            foreach (var ban in user.Bans)
+            {
+                ban.LiftedAt = DateTime.UtcNow;
+                ban.LiftedBy = liftedBy;
+            }
+
+            await context.SaveChangesAsync(ctoken);
+
+            return RepositoryResult.Success();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "UserRepository: UnbanUserAsync -> Something went wrong when lifting the ban for user with identifier {identifier}.", identifier);
+            return RepositoryResult.Error();
+        }
+    }
+
     public async Task<RepositoryResult> DeleteUserAsync(string identifier, CancellationToken ctoken)
     {
         try
@@ -421,6 +500,11 @@ public class UserRepository : IUserRepository
             // Both deletions must succeed together — a partial delete would leave the systems out of sync.
             using var transaction = await context.Database.BeginTransactionAsync(ctoken);
 
+            var blocks = await context.UserBlocks
+                .Where(ub => ub.BlockerUserId == user.Id || ub.BlockedUserId == user.Id)
+                .ToListAsync(ctoken);
+
+            context.UserBlocks.RemoveRange(blocks);
             context.Users.Remove(user);
 #if !WINDOWS
             // In-memory SQLite EF provider on Linux doesn't support cascade deletes, so we have to manually delete related entities.

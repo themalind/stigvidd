@@ -9,6 +9,9 @@ public class UserResponse
     public required string NickName { get; set; }
     public required string Email { get; set; }
 
+    // Set means the account is read-only; the app hides what it may no longer do.
+    public DateTime? BannedAt { get; set; }
+
     public ICollection<UserWishlistTrailResponse>? MyWishList { get; set; }
     public ICollection<UserFavoritesTrailResponse>? MyFavorites { get; set; }
 
@@ -17,13 +20,15 @@ public class UserResponse
         string nickName,
         string email,
         ICollection<UserWishlistTrailResponse>? myWishList = null,
-        ICollection<UserFavoritesTrailResponse>? myFavorites = null)
+        ICollection<UserFavoritesTrailResponse>? myFavorites = null,
+        DateTime? bannedAt = null)
     {
         return new UserResponse
         {
             Identifier = identifier,
             NickName = nickName,
             Email = email,
+            BannedAt = bannedAt,
             MyWishList = myWishList?.ToList(),
             MyFavorites = myFavorites?.ToList(),
         };

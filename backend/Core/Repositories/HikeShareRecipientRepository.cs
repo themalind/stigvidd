@@ -22,7 +22,10 @@ public class HikeShareRecipientRepository : IHikeShareRecipientRepository
         _logger = logger;
     }
 
-    public async Task<RepositoryResult<IReadOnlyCollection<T>>> GetAllHikesSharedWithUserAsync<T>(string identifier, Expression<Func<HikeShare, T>> selector, CancellationToken ctoken)
+    private static Expression<Func<HikeShare, bool>> NotFromHiddenUser(int[] hiddenUserIds) =>
+        hs => hs.SharedById == null || !hiddenUserIds.Contains(hs.SharedById.Value);
+
+    public async Task<RepositoryResult<IReadOnlyCollection<T>>> GetAllHikesSharedWithUserAsync<T>(string identifier, int[] hiddenUserIds, Expression<Func<HikeShare, T>> selector, CancellationToken ctoken)
     {
         try
         {
@@ -31,6 +34,7 @@ public class HikeShareRecipientRepository : IHikeShareRecipientRepository
             var hikes = await context.HikeShares
                 .Include(hs => hs.Hike)
                 .Where(hs => hs.SharedWith!.Identifier == identifier && hs.Status == HikeShareStatus.Accepted)
+                .Where(NotFromHiddenUser(hiddenUserIds))
                 .OrderBy(hs => hs.Hike!.Name)
                 .Select(selector)
                 .ToListAsync(ctoken);
@@ -128,7 +132,7 @@ public class HikeShareRecipientRepository : IHikeShareRecipientRepository
         }
     }
 
-    public async Task<RepositoryResult<IReadOnlyCollection<T>>> GetPendingSharesForUserAsync<T>(int sharedWithId, Expression<Func<HikeShare, T>> selector, CancellationToken ctoken)
+    public async Task<RepositoryResult<IReadOnlyCollection<T>>> GetPendingSharesForUserAsync<T>(int sharedWithId, int[] hiddenUserIds, Expression<Func<HikeShare, T>> selector, CancellationToken ctoken)
     {
         try
         {
@@ -139,6 +143,7 @@ public class HikeShareRecipientRepository : IHikeShareRecipientRepository
                 .Include(hs => hs.Hike) // exclude coordinates?
                 .Include(hs => hs.SharedBy)
                 .Where(hs => hs.SharedWithId == sharedWithId && hs.Status == HikeShareStatus.Pending)
+                .Where(NotFromHiddenUser(hiddenUserIds))
                 .OrderByDescending(hs => hs.CreatedAt)
                 .Select(selector)
                 .ToListAsync(ctoken);
@@ -154,7 +159,7 @@ public class HikeShareRecipientRepository : IHikeShareRecipientRepository
         }
     }
 
-    public async Task<RepositoryResult<T>> GetPendingShareByIdentifierAsync<T>(int sharedWithId, string hikeIdentifier, Expression<Func<HikeShare, T>> selector, CancellationToken ctoken)
+    public async Task<RepositoryResult<T>> GetPendingShareByIdentifierAsync<T>(int sharedWithId, string hikeIdentifier, int[] hiddenUserIds, Expression<Func<HikeShare, T>> selector, CancellationToken ctoken)
     {
         try
         {
@@ -165,6 +170,7 @@ public class HikeShareRecipientRepository : IHikeShareRecipientRepository
                 .Include(hs => hs.Hike)
                 .Include(hs => hs.SharedBy)
                 .Where(hs => hs.SharedWithId == sharedWithId && hs.Hike!.Identifier == hikeIdentifier && hs.Status == HikeShareStatus.Pending)
+                .Where(NotFromHiddenUser(hiddenUserIds))
                 .Select(selector)
                 .FirstOrDefaultAsync(ctoken);
 

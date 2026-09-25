@@ -412,6 +412,7 @@ public class ContentReportRepository : IContentReportRepository
 
             var ids = rows.Select(r => r.AuthorUserId).ToList();
             var names = await NickNamesByIdAsync(context, ids, ctoken);
+            var accounts = await AccountStatesByIdAsync(context, ids, ctoken);
 
             // The snapshot only covers the window between a rename and the lookup above
             // failing; once the author deletes their account it is nulled too, and the row
@@ -427,8 +428,11 @@ public class ContentReportRepository : IContentReportRepository
             var items = rows
                 .Select(r => new AuthorStatistic(
                     r.AuthorUserId,
+                    accounts.GetValueOrDefault(r.AuthorUserId)?.Identifier,
                     names.GetValueOrDefault(r.AuthorUserId) ?? snapshots.GetValueOrDefault(r.AuthorUserId),
-                    r.Strikes))
+                    r.Strikes,
+                    accounts.GetValueOrDefault(r.AuthorUserId)?.BannedAt,
+                    accounts.GetValueOrDefault(r.AuthorUserId)?.BanCount ?? 0))
                 .ToList();
 
             return RepositoryResult<PagedResult<AuthorStatistic>>.Success(
@@ -453,6 +457,24 @@ public class ContentReportRepository : IContentReportRepository
             .Where(u => ids.Contains(u.Id))
             .Select(u => new { u.Id, u.NickName })
             .ToDictionaryAsync(u => u.Id, u => (string?)u.NickName, ctoken);
+    }
+
+    // What the Authors tab needs about the account behind a row: who it is, and whether it is banned.
+    private record AccountState(string Identifier, DateTime? BannedAt, int BanCount);
+
+    // Absent for an account that is gone, which is also when there is nothing to ban.
+    private static async Task<Dictionary<int, AccountState>> AccountStatesByIdAsync(
+        StigViddDbContext context, IEnumerable<int> userIds, CancellationToken ctoken)
+    {
+        var ids = userIds.ToList();
+
+        if (ids.Count == 0)
+            return [];
+
+        return await context.Users
+            .Where(u => ids.Contains(u.Id))
+            .Select(u => new { u.Id, u.Identifier, BannedAt = u.Bans.Where(b => b.LiftedAt == null).Select(b => (DateTime?)b.BannedAt).FirstOrDefault(), BanCount = u.Bans.Count })
+            .ToDictionaryAsync(u => u.Id, u => new AccountState(u.Identifier, u.BannedAt, u.BanCount), ctoken);
     }
 
     // The decision applies to the CONTENT, not the row: every pending report on the same
@@ -536,6 +558,8 @@ public class ContentReportRepository : IContentReportRepository
             r.Reporter != null ? r.Reporter.NickName : null,
             context.Users.Where(u => u.Id == r.ContentAuthorUserId).Select(u => u.NickName).FirstOrDefault()
                 ?? r.AuthorNickNameSnapshot,
+            context.Users.Where(u => u.Id == r.ContentAuthorUserId).Select(u => u.Identifier).FirstOrDefault(),
+            context.UserBans.Where(b => b.UserId == r.ContentAuthorUserId && b.LiftedAt == null).Select(b => (DateTime?)b.BannedAt).FirstOrDefault(),
             r.ContentSnapshot,
             r.ContentType == ReportedContentType.Review
                 ? context.Reviews.Any(x => x.Id == r.ContentId)

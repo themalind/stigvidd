@@ -13,30 +13,35 @@ namespace Core.Services;
 public class TrailObstaclesService : ITrailObstaclesService
 {
     private readonly ITrailObstacleRepository _obstacleRepository;
+    private readonly IUserBlockService _userBlockService;
     private readonly TrailObstaclesResponseFactory _responseFactory;
     private readonly IUserService _userService;
     private readonly ITrailService _trailService;
 
     public TrailObstaclesService(
         ITrailObstacleRepository obstacleResponseRepository,
+        IUserBlockService userBlockService,
         TrailObstaclesResponseFactory responseFactory,
         IUserService userService,
         ITrailService trailService)
     {
         _obstacleRepository = obstacleResponseRepository;
+        _userBlockService = userBlockService;
         _responseFactory = responseFactory;
         _userService = userService;
         _trailService = trailService;
     }
 
-    public async Task<Result<IReadOnlyCollection<TrailObstacleResponse>>> GetTrailObstaclesByTrailIdentifierAsync(string identifier, CancellationToken ctoken)
+    public async Task<Result<IReadOnlyCollection<TrailObstacleResponse>>> GetTrailObstaclesByTrailIdentifierAsync(string identifier, string? viewerIdentifier, CancellationToken ctoken)
     {
-        var result = await _obstacleRepository.GetTrailObstaclesByTrailIdentifierAsync(identifier, to => to, ctoken);
+        var hiddenUserIds = await _userBlockService.GetHiddenUserIdsForReadAsync(viewerIdentifier, ctoken);
+
+        var result = await _obstacleRepository.GetTrailObstaclesByTrailIdentifierAsync(identifier, hiddenUserIds, to => to, ctoken);
 
         if (!result.IsSuccess)
             return Result.Fail<IReadOnlyCollection<TrailObstacleResponse>>(new Message(500, "An error occurred while fetching trail obstacles."));
 
-        return Result.Ok(_responseFactory.Create(result.Value));
+        return Result.Ok(_responseFactory.Create(result.Value, hiddenUserIds));
     }
 
     public async Task<Result<TrailObstacleResponse?>> AddTrailObstacle(string userIdentifier, string trailIdentifier, string description, string issueType, decimal? longitude, decimal? latitude, CancellationToken ctoken)

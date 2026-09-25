@@ -14,6 +14,8 @@ public class User : BaseEntity
     // user being disabled, because the app's password grant never passes through this API.
     public DateTime? EmailVerifiedAt { get; set; }
 
+    public ICollection<UserBan> Bans { get; set; } = [];
+
     public ICollection<Trail>? MyWishList { get; set; }
     public ICollection<Trail>? MyFavorites { get; set; }
 }

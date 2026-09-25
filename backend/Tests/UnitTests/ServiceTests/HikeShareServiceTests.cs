@@ -25,7 +25,7 @@ public class HikeShareServiceTests
         var defaultPushMock = new Mock<IPushNotificationService>();
         defaultPushMock.Setup(p => p.SendToUserAsync(
                 It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(),
-                It.IsAny<IReadOnlyDictionary<string, object>>(), It.IsAny<CancellationToken>()))
+                It.IsAny<IReadOnlyDictionary<string, object>>(), It.IsAny<CancellationToken>(), It.IsAny<string?>()))
             .ReturnsAsync(Result.Ok());
 
         return new HikeShareService(
@@ -509,7 +509,7 @@ public class HikeShareServiceTests
         var pushMock = new Mock<IPushNotificationService>();
         pushMock.Setup(p => p.SendToUserAsync(
                 It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(),
-                It.IsAny<IReadOnlyDictionary<string, object>>(), It.IsAny<CancellationToken>()))
+                It.IsAny<IReadOnlyDictionary<string, object>>(), It.IsAny<CancellationToken>(), It.IsAny<string?>()))
             .ReturnsAsync(Result.Ok());
 
         var service = Build(
@@ -526,7 +526,7 @@ public class HikeShareServiceTests
             It.IsAny<string>(),
             It.IsAny<string>(),
             It.Is<IReadOnlyDictionary<string, object>>(d => d.ContainsKey("type") && d["type"].ToString() == "hike_share"),
-            It.IsAny<CancellationToken>()), Times.Once);
+            It.IsAny<CancellationToken>(), It.IsAny<string?>()), Times.Once);
     }
 
     [Theory]

@@ -52,6 +52,117 @@ public class UserRepositoryTests : TestBase
     }
 
     [Fact]
+    public async Task UnbanUser_LiftsTheBanAndKeepsItInTheHistory()
+    {
+        // Arrange
+        var repo = BuildRepo();
+        await repo.BanUserAsync(NaturElskarenIdentifier, "moderator", "spam", TestContext.Current.CancellationToken);
+
+        // Act
+        var result = await repo.UnbanUserAsync(NaturElskarenIdentifier, "second-moderator", TestContext.Current.CancellationToken);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        var bans = await repo.GetUserByIdentifierAsync(
+            NaturElskarenIdentifier, u => u.Bans.ToList(), TestContext.Current.CancellationToken);
+        bans.Value.Should().NotBeNull();
+        var ban = bans.Value.Should().ContainSingle().Subject;
+        ban.BannedBy.Should().Be("moderator");
+        ban.Reason.Should().Be("spam");
+        ban.LiftedAt.Should().NotBeNull();
+        ban.LiftedBy.Should().Be("second-moderator");
+    }
+
+    [Fact]
+    public async Task UnbanUser_WhenNotBanned_ReturnsConflictAndWritesNothing()
+    {
+        // Arrange
+        var repo = BuildRepo();
+
+        // Act
+        var result = await repo.UnbanUserAsync(NaturElskarenIdentifier, "moderator", TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Status.Should().Be(RepositoryResultStatus.Conflict);
+        var bans = await repo.GetUserByIdentifierAsync(
+            NaturElskarenIdentifier, u => u.Bans.ToList(), TestContext.Current.CancellationToken);
+        bans.Value.Should().NotBeNull();
+        bans.Value.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task UnbanUser_WhenTheBanIsAlreadyLifted_ReturnsConflictAndKeepsTheFirstLift()
+    {
+        // Arrange
+        var repo = BuildRepo();
+        await repo.BanUserAsync(NaturElskarenIdentifier, "moderator", "spam", TestContext.Current.CancellationToken);
+        await repo.UnbanUserAsync(NaturElskarenIdentifier, "first-moderator", TestContext.Current.CancellationToken);
+
+        // Act
+        var result = await repo.UnbanUserAsync(NaturElskarenIdentifier, "second-moderator", TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Status.Should().Be(RepositoryResultStatus.Conflict);
+        var bans = await repo.GetUserByIdentifierAsync(
+            NaturElskarenIdentifier, u => u.Bans.ToList(), TestContext.Current.CancellationToken);
+        bans.Value.Should().NotBeNull();
+        bans.Value.Should().ContainSingle().Which.LiftedBy.Should().Be("first-moderator");
+    }
+
+    [Fact]
+    public async Task BanUser_WhenAlreadyBanned_ReturnsConflictAndKeepsTheFirstBan()
+    {
+        // Arrange
+        var repo = BuildRepo();
+        await repo.BanUserAsync(NaturElskarenIdentifier, "moderator", "spam", TestContext.Current.CancellationToken);
+
+        // Act
+        var result = await repo.BanUserAsync(NaturElskarenIdentifier, "second-moderator", "other", TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Status.Should().Be(RepositoryResultStatus.Conflict);
+        var bans = await repo.GetUserByIdentifierAsync(
+            NaturElskarenIdentifier, u => u.Bans.ToList(), TestContext.Current.CancellationToken);
+        bans.Value.Should().NotBeNull();
+        var ban = bans.Value.Should().ContainSingle().Subject;
+        ban.BannedBy.Should().Be("moderator");
+        ban.Reason.Should().Be("spam");
+    }
+
+    [Fact]
+    public async Task BanUser_AfterALiftedBan_AddsASecondBan()
+    {
+        // Arrange
+        var repo = BuildRepo();
+        await repo.BanUserAsync(NaturElskarenIdentifier, "moderator", "spam", TestContext.Current.CancellationToken);
+        await repo.UnbanUserAsync(NaturElskarenIdentifier, "moderator", TestContext.Current.CancellationToken);
+
+        // Act
+        var result = await repo.BanUserAsync(NaturElskarenIdentifier, "second-moderator", "again", TestContext.Current.CancellationToken);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        var bans = await repo.GetUserByIdentifierAsync(
+            NaturElskarenIdentifier, u => u.Bans.ToList(), TestContext.Current.CancellationToken);
+        bans.Value.Should().NotBeNull();
+        bans.Value.Should().HaveCount(2);
+        bans.Value.Should().ContainSingle(b => b.LiftedAt == null).Which.Reason.Should().Be("again");
+    }
+
+    [Fact]
+    public async Task BanUser_WhenNotFound_ReturnsNotFound()
+    {
+        // Arrange
+        var repo = BuildRepo();
+
+        // Act
+        var result = await repo.BanUserAsync("no-such-user", "moderator", null, TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Status.Should().Be(RepositoryResultStatus.NotFound);
+    }
+
+    [Fact]
     public async Task GetUserIdByIdentifier_WhenFound_ReturnsId()
     {
         // Arrange

@@ -141,6 +141,11 @@ public class EndpointAuthorizationTests : IClassFixture<StigViddWebApplicationFa
         "POST /api/v1/admin/mail-outbox/purge",
         "POST /api/v1/admin/mail-outbox/{identifier}/cancel",
         "POST /api/v1/admin/mail-outbox/{identifier}/retry",
+
+        // Banning an account. A caller who reached these without the role could silence anyone
+        // in the app, or lift a ban a moderator set.
+        "DELETE /api/v1/admin/users/{identifier}/ban",
+        "POST /api/v1/admin/users/{identifier}/ban",
     ];
 
     public EndpointAuthorizationTests(StigViddWebApplicationFactory<Program> factory)

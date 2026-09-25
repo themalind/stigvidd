@@ -1327,6 +1327,60 @@ namespace Infrastructure.Migrations
                     b.ToTable("Users", "dbo");
                 });
 
+            modelBuilder.Entity("Infrastructure.Data.Entities.UserBan", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("BannedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("BannedBy")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("LiftedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("LiftedBy")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Reason")
+                        .HasColumnType("text");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .IsUnique()
+                        .HasFilter("\"LiftedAt\" IS NULL");
+
+                    b.ToTable("UserBans", "dbo");
+                });
+
+            modelBuilder.Entity("Infrastructure.Data.Entities.UserBlock", b =>
+                {
+                    b.Property<int>("BlockerUserId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("BlockedUserId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("BlockerUserId", "BlockedUserId");
+
+                    b.HasIndex("BlockedUserId");
+
+                    b.ToTable("UserBlocks", "dbo");
+                });
+
             modelBuilder.Entity("Infrastructure.Data.Entities.UserPushToken", b =>
                 {
                     b.Property<int>("Id")
@@ -1729,6 +1783,36 @@ namespace Infrastructure.Migrations
                     b.Navigation("Trail");
                 });
 
+            modelBuilder.Entity("Infrastructure.Data.Entities.UserBan", b =>
+                {
+                    b.HasOne("Infrastructure.Data.Entities.User", "User")
+                        .WithMany("Bans")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Infrastructure.Data.Entities.UserBlock", b =>
+                {
+                    b.HasOne("Infrastructure.Data.Entities.User", "Blocked")
+                        .WithMany()
+                        .HasForeignKey("BlockedUserId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("Infrastructure.Data.Entities.User", "Blocker")
+                        .WithMany()
+                        .HasForeignKey("BlockerUserId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Blocked");
+
+                    b.Navigation("Blocker");
+                });
+
             modelBuilder.Entity("Infrastructure.Data.Entities.UserPushToken", b =>
                 {
                     b.HasOne("Infrastructure.Data.Entities.User", "User")
@@ -1821,6 +1905,11 @@ namespace Infrastructure.Migrations
             modelBuilder.Entity("Infrastructure.Data.Entities.TrailObstacle", b =>
                 {
                     b.Navigation("SolvedVotes");
+                });
+
+            modelBuilder.Entity("Infrastructure.Data.Entities.User", b =>
+                {
+                    b.Navigation("Bans");
                 });
 #pragma warning restore 612, 618
         }

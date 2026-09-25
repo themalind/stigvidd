@@ -46,7 +46,7 @@ public class HikeShareRecipientRepositoryTests : TestBase
         var repo = new HikeShareRecipientRepository(CreateSeededFactory(), NullLogger<HikeShareRecipientRepository>.Instance);
 
         // Act
-        var result = await repo.GetAllHikesSharedWithUserAsync(User1Identifier, hs => hs.HikeId, TestContext.Current.CancellationToken);
+        var result = await repo.GetAllHikesSharedWithUserAsync(User1Identifier, [], hs => hs.HikeId, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -60,7 +60,7 @@ public class HikeShareRecipientRepositoryTests : TestBase
         var repo = new HikeShareRecipientRepository(CreateSeededFactory(), NullLogger<HikeShareRecipientRepository>.Instance);
 
         // Act
-        var result = await repo.GetAllHikesSharedWithUserAsync(User6Identifier, hs => hs.HikeId, TestContext.Current.CancellationToken);
+        var result = await repo.GetAllHikesSharedWithUserAsync(User6Identifier, [], hs => hs.HikeId, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -242,7 +242,7 @@ public class HikeShareRecipientRepositoryTests : TestBase
 
         // Act
         await repo.ReshareSharedHikeAsync(hikeShare, TestContext.Current.CancellationToken);
-        var verify = await repo.GetPendingSharesForUserAsync(User2Id, hs => hs.HikeId, TestContext.Current.CancellationToken);
+        var verify = await repo.GetPendingSharesForUserAsync(User2Id, [], hs => hs.HikeId, TestContext.Current.CancellationToken);
 
         // Assert
         verify.IsSuccess.Should().BeTrue();
@@ -260,7 +260,7 @@ public class HikeShareRecipientRepositoryTests : TestBase
         var repo = new HikeShareRecipientRepository(factory, NullLogger<HikeShareRecipientRepository>.Instance);
 
         // Act
-        var result = await repo.GetPendingSharesForUserAsync(User1Id, hs => hs.HikeId, TestContext.Current.CancellationToken);
+        var result = await repo.GetPendingSharesForUserAsync(User1Id, [], hs => hs.HikeId, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -275,7 +275,7 @@ public class HikeShareRecipientRepositoryTests : TestBase
         var repo = new HikeShareRecipientRepository(CreateSeededFactory(), NullLogger<HikeShareRecipientRepository>.Instance);
 
         // Act
-        var result = await repo.GetPendingSharesForUserAsync(User6Id, hs => hs.HikeId, TestContext.Current.CancellationToken);
+        var result = await repo.GetPendingSharesForUserAsync(User6Id, [], hs => hs.HikeId, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -289,7 +289,7 @@ public class HikeShareRecipientRepositoryTests : TestBase
         var repo = new HikeShareRecipientRepository(CreateSeededFactory(), NullLogger<HikeShareRecipientRepository>.Instance);
 
         // Act
-        var result = await repo.GetPendingSharesForUserAsync(User1Id, hs => hs.HikeId, TestContext.Current.CancellationToken);
+        var result = await repo.GetPendingSharesForUserAsync(User1Id, [], hs => hs.HikeId, TestContext.Current.CancellationToken);
 
         // Assert — Hike3 (Accepted) must not appear in pending results
         result.IsSuccess.Should().BeTrue();
@@ -308,7 +308,7 @@ public class HikeShareRecipientRepositoryTests : TestBase
         var repo = new HikeShareRecipientRepository(factory, NullLogger<HikeShareRecipientRepository>.Instance);
 
         // Act
-        var result = await repo.GetPendingShareByIdentifierAsync(User1Id, Hike2Identifier, hs => hs.Hike!.Identifier, TestContext.Current.CancellationToken);
+        var result = await repo.GetPendingShareByIdentifierAsync(User1Id, Hike2Identifier, [], hs => hs.Hike!.Identifier, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -322,7 +322,7 @@ public class HikeShareRecipientRepositoryTests : TestBase
         var repo = new HikeShareRecipientRepository(CreateSeededFactory(), NullLogger<HikeShareRecipientRepository>.Instance);
 
         // Act
-        var result = await repo.GetPendingShareByIdentifierAsync(User6Id, Hike2Identifier, hs => hs.Hike!.Identifier, TestContext.Current.CancellationToken);
+        var result = await repo.GetPendingShareByIdentifierAsync(User6Id, Hike2Identifier, [], hs => hs.Hike!.Identifier, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -336,7 +336,7 @@ public class HikeShareRecipientRepositoryTests : TestBase
         var repo = new HikeShareRecipientRepository(CreateSeededFactory(), NullLogger<HikeShareRecipientRepository>.Instance);
 
         // Act
-        var result = await repo.GetPendingShareByIdentifierAsync(User1Id, Hike3Identifier, hs => hs.Hike!.Identifier, TestContext.Current.CancellationToken);
+        var result = await repo.GetPendingShareByIdentifierAsync(User1Id, Hike3Identifier, [], hs => hs.Hike!.Identifier, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -418,7 +418,7 @@ public class HikeShareRecipientRepositoryTests : TestBase
 
         // Act
         await repo.RejectHikeShareAsync(Hike2Id, User1Id, TestContext.Current.CancellationToken);
-        var verify = await repo.GetPendingSharesForUserAsync(User1Id, hs => hs.HikeId, TestContext.Current.CancellationToken);
+        var verify = await repo.GetPendingSharesForUserAsync(User1Id, [], hs => hs.HikeId, TestContext.Current.CancellationToken);
 
         // Assert
         verify.IsSuccess.Should().BeTrue();

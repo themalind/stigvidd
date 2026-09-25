@@ -22,6 +22,7 @@ public class ReviewService : IReviewService
     // service to clean up a deleted user's reviews, and taking IUserService here would make
     // the two services a resolve-time cycle.
     private readonly IUserRepository _userRepository;
+    private readonly IUserBlockService _userBlockService;
     private readonly ITrailService _trailService;
     private readonly ReviewResponseFactory _reviewResponseFactory;
     private readonly ILogger<ReviewService> _logger;
@@ -32,6 +33,7 @@ public class ReviewService : IReviewService
         IWebDavService webDavService,
         IMediaUploadService mediaUploadService,
         IUserRepository userRepository,
+        IUserBlockService userBlockService,
         ITrailService trailService,
         ReviewResponseFactory reviewResponseFactory,
         ILogger<ReviewService> logger,
@@ -41,6 +43,7 @@ public class ReviewService : IReviewService
         _webDavService = webDavService;
         _mediaUploadService = mediaUploadService;
         _userRepository = userRepository;
+        _userBlockService = userBlockService;
         _trailService = trailService;
         _reviewResponseFactory = reviewResponseFactory;
         _logger = logger;
@@ -51,12 +54,14 @@ public class ReviewService : IReviewService
         string trailIdentifier,
         int page,
         int limit,
+        string? viewerIdentifier,
         CancellationToken ctoken)
     {
         var baseUrl = _reviewResponseFactory.PresentableBaseUrl;
+        var hiddenUserIds = await _userBlockService.GetHiddenUserIdsForReadAsync(viewerIdentifier, ctoken);
 
         var result = await _reviewRepository.GetReviewsByTrailIdentifierAsync(
-            trailIdentifier, page, limit,
+            trailIdentifier, page, limit, hiddenUserIds,
             r => ReviewResponse.Create(
                 r.Identifier,
                 r.TrailReview,

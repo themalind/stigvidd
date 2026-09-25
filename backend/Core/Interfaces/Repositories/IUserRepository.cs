@@ -12,7 +12,7 @@ public interface IUserRepository
     Task<RepositoryResult<int>> GetUserIdByIdentifierAsync(string identifier, CancellationToken ctoken);
     Task<RepositoryResult<T>> GetUserByIdentifierAsync<T>(string identifier, Expression<Func<User, T>> selector, CancellationToken ctoken);
     Task<RepositoryResult<T>> GetUserByNickNameAsync<T>(string nickName, Expression<Func<User, T>> selector, CancellationToken ctoken);
-    Task<RepositoryResult<IReadOnlyCollection<T>>> FindUsersByNickNameAsync<T>(string nickName, string excludeUserIdentifier, Expression<Func<User, T>> selector, CancellationToken ctoken);
+    Task<RepositoryResult<IReadOnlyCollection<T>>> FindUsersByNickNameAsync<T>(string nickName, string excludeUserIdentifier, int[] hiddenUserIds, Expression<Func<User, T>> selector, CancellationToken ctoken);
     Task<RepositoryResult> CheckUserNicknameAvaliability(string nickname, CancellationToken ctoken);
     Task<RepositoryResult<IReadOnlyCollection<T>>> GetFavoritesByUserIdentifierAsync<T>(string userIdentifier, Expression<Func<Trail, T>> selector, CancellationToken ctoken);
     Task<RepositoryResult<IReadOnlyCollection<T>>> GetWishListByUserIdentifierAsync<T>(string userIdentifier, Expression<Func<Trail, T>> selector, CancellationToken ctoken);
@@ -22,5 +22,8 @@ public interface IUserRepository
     Task<RepositoryResult<T>> AddTrailToUserWishListAsync<T>(string userIdentifier, string trailIdentifier, Expression<Func<Trail, T>> selector, CancellationToken ctoken);
     Task<RepositoryResult> RemoveTrailFromUserFavoritesListAsync(string userIdentifier, string trailIdentifier, CancellationToken ctoken);
     Task<RepositoryResult> RemoveTrailFromUserWishListAsync(string userIdentifier, string trailIdentifier, CancellationToken ctoken);
+    Task<RepositoryResult> BanUserAsync(string identifier, string bannedBy, string? bannedReason, CancellationToken ctoken);
+    Task<RepositoryResult> UnbanUserAsync(string identifier, string liftedBy, CancellationToken ctoken);
+
     Task<RepositoryResult> DeleteUserAsync(string identifier, CancellationToken ctoken);
 }

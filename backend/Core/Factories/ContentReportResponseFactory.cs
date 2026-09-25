@@ -36,6 +36,8 @@ public class ContentReportResponseFactory
             summary.HideOutcome.ToString(),
             summary.ReporterNickName,
             summary.AuthorNickName,
+            summary.AuthorIdentifier,
+            summary.AuthorBannedAt,
             summary.ContentSnapshot,
             summary.ContentStillExists,
             summary.DecidedBy,
@@ -73,7 +75,7 @@ public class ContentReportResponseFactory
     }
 
     public AuthorStatisticResponse Create(AuthorStatistic author) =>
-        AuthorStatisticResponse.Create(author.NickName, author.Strikes);
+        AuthorStatisticResponse.Create(author.Identifier, author.NickName, author.Strikes, author.BannedAt, author.BanCount);
 
     public IReadOnlyCollection<AuthorStatisticResponse> Create(IReadOnlyCollection<AuthorStatistic> authors) =>
         authors.Select(Create).ToList();

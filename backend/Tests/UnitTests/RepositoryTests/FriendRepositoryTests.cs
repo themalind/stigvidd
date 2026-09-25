@@ -23,7 +23,7 @@ public class FriendRepositoryTests : TestBase
         var repo = new FriendRepository(CreateSeededFactory(), NullLogger<FriendRepository>.Instance);
 
         // Act
-        var result = await repo.GetFriendsAsync(UserIdWithFriend, u => FriendResponse.Create(u.Identifier, u.NickName), TestContext.Current.CancellationToken);
+        var result = await repo.GetFriendsAsync(UserIdWithFriend, [], u => FriendResponse.Create(u.Identifier, u.NickName), TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -37,7 +37,7 @@ public class FriendRepositoryTests : TestBase
         var repo = new FriendRepository(CreateSeededFactory(), NullLogger<FriendRepository>.Instance);
 
         // Act
-        var result = await repo.GetFriendsAsync(UserIdWithNoFriends, u => FriendResponse.Create(u.Identifier, u.NickName), TestContext.Current.CancellationToken);
+        var result = await repo.GetFriendsAsync(UserIdWithNoFriends, [], u => FriendResponse.Create(u.Identifier, u.NickName), TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -107,7 +107,7 @@ public class FriendRepositoryTests : TestBase
         var repo = new FriendRepository(CreateSeededFactory(), NullLogger<FriendRepository>.Instance);
 
         // Act
-        var result = await repo.GetIncomingRequestsAsync(RequesterUserId, u => FriendResponse.Create(u.Requester!.Identifier, u.Requester.NickName), TestContext.Current.CancellationToken);
+        var result = await repo.GetIncomingRequestsAsync(RequesterUserId, [], u => FriendResponse.Create(u.Requester!.Identifier, u.Requester.NickName), TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -123,7 +123,7 @@ public class FriendRepositoryTests : TestBase
         // Act
         var result = await repo.GetIncomingRequestsAsync(
             UserWithNoIncomingRequestsUserId,
-            u => FriendResponse.Create(u.Receiver!.Identifier, u.Receiver.NickName), TestContext.Current.CancellationToken);
+            [], u => FriendResponse.Create(u.Receiver!.Identifier, u.Receiver.NickName), TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -137,7 +137,7 @@ public class FriendRepositoryTests : TestBase
         var repo = new FriendRepository(CreateSeededFactory(), NullLogger<FriendRepository>.Instance);
 
         // Act
-        var result = await repo.GetOutgoingRequestsAsync(UserIdWithFriend, u => FriendResponse.Create(u.Receiver!.Identifier, u.Receiver.NickName), TestContext.Current.CancellationToken);
+        var result = await repo.GetOutgoingRequestsAsync(UserIdWithFriend, [], u => FriendResponse.Create(u.Receiver!.Identifier, u.Receiver.NickName), TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -151,7 +151,7 @@ public class FriendRepositoryTests : TestBase
         var repo = new FriendRepository(CreateSeededFactory(), NullLogger<FriendRepository>.Instance);
 
         // Act
-        var result = await repo.GetOutgoingRequestsAsync(UserIdWithNoFriends, u => FriendResponse.Create(u.Receiver!.Identifier, u.Receiver.NickName), TestContext.Current.CancellationToken);
+        var result = await repo.GetOutgoingRequestsAsync(UserIdWithNoFriends, [], u => FriendResponse.Create(u.Receiver!.Identifier, u.Receiver.NickName), TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -328,7 +328,7 @@ public class FriendRepositoryTests : TestBase
         var repo = new FriendRepository(CreateSeededFactory(), NullLogger<FriendRepository>.Instance);
 
         // Act
-        var result = await repo.GetFriendsAsync(FriendUserId, u => FriendResponse.Create(u.Identifier, u.NickName), TestContext.Current.CancellationToken);
+        var result = await repo.GetFriendsAsync(FriendUserId, [], u => FriendResponse.Create(u.Identifier, u.NickName), TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -348,7 +348,7 @@ public class FriendRepositoryTests : TestBase
         result.IsSuccess.Should().BeTrue();
 
         // Verify the pending request is gone
-        var outgoing = await repo.GetOutgoingRequestsAsync(UserIdWithFriend, u => FriendResponse.Create(u.Receiver!.Identifier, u.Receiver.NickName), TestContext.Current.CancellationToken);
+        var outgoing = await repo.GetOutgoingRequestsAsync(UserIdWithFriend, [], u => FriendResponse.Create(u.Receiver!.Identifier, u.Receiver.NickName), TestContext.Current.CancellationToken);
         outgoing.IsSuccess.Should().BeTrue();
         outgoing.Value.Should().HaveCount(0);
     }
@@ -379,10 +379,10 @@ public class FriendRepositoryTests : TestBase
         // Assert
         result.IsSuccess.Should().BeTrue();
 
-        var friends = await repo.GetFriendsAsync(UserIdWithFriend, u => FriendResponse.Create(u.Identifier, u.NickName), TestContext.Current.CancellationToken);
+        var friends = await repo.GetFriendsAsync(UserIdWithFriend, [], u => FriendResponse.Create(u.Identifier, u.NickName), TestContext.Current.CancellationToken);
         friends.Value.Should().HaveCount(0);
 
-        var outgoing = await repo.GetOutgoingRequestsAsync(UserIdWithFriend, u => FriendResponse.Create(u.Receiver!.Identifier, u.Receiver.NickName), TestContext.Current.CancellationToken);
+        var outgoing = await repo.GetOutgoingRequestsAsync(UserIdWithFriend, [], u => FriendResponse.Create(u.Receiver!.Identifier, u.Receiver.NickName), TestContext.Current.CancellationToken);
         outgoing.Value.Should().HaveCount(0);
     }
 }

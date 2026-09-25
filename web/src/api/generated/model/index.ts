@@ -18,6 +18,8 @@ export * from './adminMediaGetReprocessJobsParams';
 export * from './adminTrailsAddTrailImagesBody';
 export * from './adminTrailsSetTrailSymbolBody';
 export * from './authorStatisticResponse';
+export * from './banUserRequest';
+export * from './blockedUserResponse';
 export * from './contentReportCountsResponse';
 export * from './contentReportDetailResponse';
 export * from './contentReportResponse';

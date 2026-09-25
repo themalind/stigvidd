@@ -33,7 +33,11 @@ public class TrailObstaclesController : StigViddController
          [FromRoute] string trailIdentifier,
         CancellationToken ctoken)
     {
-        var result = await _obstaclesService.GetTrailObstaclesByTrailIdentifierAsync(trailIdentifier, ctoken);
+        // AllowAnonymous skips authorization, not authentication, so a signed-in reader is
+        // still known here and gets their blocks applied.
+        var viewer = await GetAuthenticatedUserAsync(_userService, ctoken);
+
+        var result = await _obstaclesService.GetTrailObstaclesByTrailIdentifierAsync(trailIdentifier, viewer?.Identifier, ctoken);
 
         if (!result.Success && result.Message != null)
         {
@@ -142,6 +146,7 @@ public class TrailObstaclesController : StigViddController
     }
 
     [Authorize]
+    [AllowWhenBanned]
     [HttpDelete]
     [Route("solve/{trailObstacleIdentifier}")]
     public async Task<ActionResult> DeleteSolvedVoteByUserIdentifier([FromRoute] string trailObstacleIdentifier, CancellationToken ctoken)
@@ -166,6 +171,7 @@ public class TrailObstaclesController : StigViddController
     }
 
     [Authorize]
+    [AllowWhenBanned]
     [HttpDelete]
     [Route("{trailObstacleIdentifier}")]
     public async Task<ActionResult> DeleteTrailObstacle([FromRoute] string trailObstacleIdentifier, CancellationToken ctoken)

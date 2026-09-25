@@ -14,6 +14,7 @@ public class TrailObstacleResponse
     public decimal? IncidentLatitude { get; set; }
     public DateTime CreatedAt { get; set; }
     public List<TrailObstacleSolvedVoteResponse>? SolvedVotes { get; set; }
+    public int SolvedVoteCount { get; set; }
 
     public static TrailObstacleResponse Create(
         string identifier,
@@ -23,7 +24,8 @@ public class TrailObstacleResponse
         decimal? incidentLongitude,
         decimal? incidentLatitude,
         DateTime createdAt,
-        List<TrailObstacleSolvedVoteResponse> solvedVotes)
+        List<TrailObstacleSolvedVoteResponse> solvedVotes,
+        int solvedVoteCount)
     {
         return new TrailObstacleResponse
         {
@@ -34,7 +36,8 @@ public class TrailObstacleResponse
             IncidentLongitude = incidentLongitude,
             IncidentLatitude = incidentLatitude,
             CreatedAt = createdAt,
-            SolvedVotes = solvedVotes?.ToList()
+            SolvedVotes = solvedVotes?.ToList(),
+            SolvedVoteCount = solvedVoteCount
         };
     }
 }

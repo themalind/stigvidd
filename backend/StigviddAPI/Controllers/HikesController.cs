@@ -78,6 +78,7 @@ public class HikesController : StigViddController
     }
 
     [Authorize]
+    [AllowWhenBanned]
     [HttpPost]
     public async Task<ActionResult<HikeResponse>> CreateHike(
         [FromBody] CreateHikeRequest request,
@@ -134,6 +135,7 @@ public class HikesController : StigViddController
     }
 
     [Authorize]
+    [AllowWhenBanned]
     [HttpDelete]
     [Route("{hikeIdentifier}")]
     public async Task<ActionResult> DeleteHike(

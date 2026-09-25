@@ -21,9 +21,11 @@ public class TrailObstaclesServiceTests
     private TrailObstaclesService Build(
         Mock<ITrailObstacleRepository>? obstacleRepo = null,
         Mock<IUserService>? userService = null,
-        Mock<ITrailService>? trailService = null) =>
+        Mock<ITrailService>? trailService = null,
+        Mock<IUserBlockService>? userBlockService = null) =>
         new(
             (obstacleRepo ?? new Mock<ITrailObstacleRepository>()).Object,
+            (userBlockService ?? Utilities.MockFactory.UserBlockServiceHiding()).Object,
             new TrailObstaclesResponseFactory(),
             (userService ?? Utilities.MockFactory.UserServiceFoundById(UserId)).Object,
             (trailService ?? Utilities.MockFactory.TrailServiceFound(TrailId)).Object);
@@ -35,11 +37,11 @@ public class TrailObstaclesServiceTests
         // Arrange
         IReadOnlyCollection<TrailObstacle> obstacles = [Utilities.Stubs.Obstacle()];
         var repo = new Mock<ITrailObstacleRepository>();
-        repo.Setup(r => r.GetTrailObstaclesByTrailIdentifierAsync(Utilities.Identifiers.Trail1, It.IsAny<Expression<Func<TrailObstacle, TrailObstacle>>>(), It.IsAny<CancellationToken>()))
+        repo.Setup(r => r.GetTrailObstaclesByTrailIdentifierAsync(Utilities.Identifiers.Trail1, It.IsAny<int[]>(), It.IsAny<Expression<Func<TrailObstacle, TrailObstacle>>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<IReadOnlyCollection<TrailObstacle>>.Success(obstacles));
 
         // Act
-        var result = await Build(repo).GetTrailObstaclesByTrailIdentifierAsync(Utilities.Identifiers.Trail1, TestContext.Current.CancellationToken);
+        var result = await Build(repo).GetTrailObstaclesByTrailIdentifierAsync(Utilities.Identifiers.Trail1, null, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -51,11 +53,11 @@ public class TrailObstaclesServiceTests
     {
         // Arrange
         var repo = new Mock<ITrailObstacleRepository>();
-        repo.Setup(r => r.GetTrailObstaclesByTrailIdentifierAsync(It.IsAny<string>(), It.IsAny<Expression<Func<TrailObstacle, TrailObstacle>>>(), It.IsAny<CancellationToken>()))
+        repo.Setup(r => r.GetTrailObstaclesByTrailIdentifierAsync(It.IsAny<string>(), It.IsAny<int[]>(), It.IsAny<Expression<Func<TrailObstacle, TrailObstacle>>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<IReadOnlyCollection<TrailObstacle>>.Success([]));
 
         // Act
-        var result = await Build(repo).GetTrailObstaclesByTrailIdentifierAsync(Utilities.Identifiers.Trail1, TestContext.Current.CancellationToken);
+        var result = await Build(repo).GetTrailObstaclesByTrailIdentifierAsync(Utilities.Identifiers.Trail1, null, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -67,11 +69,11 @@ public class TrailObstaclesServiceTests
     {
         // Arrange
         var repo = new Mock<ITrailObstacleRepository>();
-        repo.Setup(r => r.GetTrailObstaclesByTrailIdentifierAsync(It.IsAny<string>(), It.IsAny<Expression<Func<TrailObstacle, TrailObstacle>>>(), It.IsAny<CancellationToken>()))
+        repo.Setup(r => r.GetTrailObstaclesByTrailIdentifierAsync(It.IsAny<string>(), It.IsAny<int[]>(), It.IsAny<Expression<Func<TrailObstacle, TrailObstacle>>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<IReadOnlyCollection<TrailObstacle>>.Error());
 
         // Act
-        var result = await Build(repo).GetTrailObstaclesByTrailIdentifierAsync(Utilities.Identifiers.Trail1, TestContext.Current.CancellationToken);
+        var result = await Build(repo).GetTrailObstaclesByTrailIdentifierAsync(Utilities.Identifiers.Trail1, null, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();

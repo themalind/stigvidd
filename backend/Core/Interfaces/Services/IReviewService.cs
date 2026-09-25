@@ -8,7 +8,7 @@ namespace Core.Interfaces.Services;
 
 public interface IReviewService
 {
-    Task<Result<PagedReviewResponse>> GetReviewsByTrailIdentifierAsync(string trailIdentifier, int page, int limit, CancellationToken ctoken);
+    Task<Result<PagedReviewResponse>> GetReviewsByTrailIdentifierAsync(string trailIdentifier, int page, int limit, string? viewerIdentifier, CancellationToken ctoken);
     Task<Result<ReviewResponse?>> AddReviewAsync(string UserIdentifier, string trailIdentifier, string? trailReview, decimal rating, IFormFileCollection? imageUrls, CancellationToken ctoken);
     Task<Result> DeleteReviewAsync(string reviewIdentifier, string userIdentifer, CancellationToken ctoken);
     Task<Result<bool>> HasUserReviewedTrailAsync(string userIdentifier, string trailIdentifier, CancellationToken ctoken);

@@ -20,6 +20,9 @@ vi.mock("@/api/content-reports", () => api);
 const toasts = vi.hoisted(() => ({ success: vi.fn(), error: vi.fn() }));
 vi.mock("sonner", () => ({ toast: toasts }));
 
+const users = vi.hoisted(() => ({ banUser: vi.fn(), unbanUser: vi.fn() }));
+vi.mock("@/api/users", () => users);
+
 function summary(overrides: Partial<ReportSummary> = {}): ReportSummary {
   return {
     identifier: "report-1",
@@ -30,6 +33,7 @@ function summary(overrides: Partial<ReportSummary> = {}): ReportSummary {
     hideOutcome: "Hidden",
     reporterNickName: "VandrarVennen",
     authorNickName: "SkogsGreven",
+    authorIdentifier: "author-1",
     contentSnapshot: "Something unpleasant",
     contentStillExists: true,
     createdAt: "2026-05-01T10:00:00Z",
@@ -200,4 +204,76 @@ it("explains an empty queue in terms of the filters that narrowed it", async () 
   renderPage([]);
 
   expect(await screen.findByText(/Nothing matches status Pending/)).toBeInTheDocument();
+});
+
+// The queue covers reviews and obstacle reports alike, so this is the one place a moderator
+// can ban the author of either without leaving the item they are looking at.
+it("bans the author of whatever is open, only after the moderator confirms", async () => {
+  const user = userEvent.setup();
+  users.banUser.mockResolvedValue(undefined);
+  renderPage([summary({ contentType: "TrailObstacle" })]);
+
+  await user.click(await screen.findByTestId("ban-author"));
+  expect(users.banUser).not.toHaveBeenCalled();
+  await user.click(screen.getByTestId("confirm-ban"));
+
+  await waitFor(() => expect(users.banUser).toHaveBeenCalledWith("author-1", expect.stringContaining("report-1")));
+});
+
+it("offers to lift the ban straight after banning, without reselecting the report", async () => {
+  const user = userEvent.setup();
+  users.banUser.mockResolvedValue(undefined);
+  renderPage([summary()]);
+
+  const banButton = await screen.findByTestId("ban-author");
+  api.getReport.mockResolvedValue(detail(summary({ authorBannedAt: "2026-03-04T10:00:00Z" })));
+  await user.click(banButton);
+  await user.click(screen.getByTestId("confirm-ban"));
+
+  expect(await screen.findByTestId("unban-author")).toHaveTextContent("Lift the ban");
+  expect(screen.queryByTestId("ban-author")).toBeNull();
+});
+
+// A deleted author has no identifier left, so there is no account to ban.
+it("offers no ban once the author is gone", async () => {
+  renderPage([summary({ authorIdentifier: null, authorNickName: null })]);
+
+  await screen.findByTestId("content-snapshot");
+
+  expect(screen.queryByTestId("ban-author")).toBeNull();
+});
+
+// The card reads BannedAt back and offers Unban instead.
+it("offers to lift the ban on an author who is already banned", async () => {
+  const user = userEvent.setup();
+  users.unbanUser.mockResolvedValue(undefined);
+  renderPage([summary({ authorBannedAt: "2026-03-04T10:00:00Z" })]);
+
+  expect(await screen.findByTestId("author-banned-since")).toHaveTextContent("Banned");
+  expect(screen.queryByTestId("ban-author")).toBeNull();
+
+  await user.click(screen.getByTestId("unban-author"));
+
+  await waitFor(() => expect(users.unbanUser).toHaveBeenCalledWith("author-1"));
+});
+
+it("says why when the bar cannot be lifted", async () => {
+  const user = userEvent.setup();
+  users.unbanUser.mockRejectedValue(new Error("the server said no"));
+  renderPage([summary({ authorBannedAt: "2026-03-04T10:00:00Z" })]);
+
+  await user.click(await screen.findByTestId("unban-author"));
+
+  await waitFor(() => expect(toasts.error).toHaveBeenCalledWith("the server said no"));
+});
+
+it("says why when the ban fails, and leaves the queue alone", async () => {
+  const user = userEvent.setup();
+  users.banUser.mockRejectedValue(new Error("the server said no"));
+  renderPage([summary()]);
+
+  await user.click(await screen.findByTestId("ban-author"));
+  await user.click(screen.getByTestId("confirm-ban"));
+
+  await waitFor(() => expect(toasts.error).toHaveBeenCalledWith("the server said no"));
 });

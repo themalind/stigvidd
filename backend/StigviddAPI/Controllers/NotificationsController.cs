@@ -9,6 +9,7 @@ using WebDataContracts.RequestModels.PushToken;
 namespace StigviddAPI.Controllers;
 
 [Authorize]
+[AllowWhenBanned]
 [ApiController]
 [Route("api/v1/[controller]")]
 public class NotificationsController : StigViddController

@@ -26,7 +26,8 @@ public class UserServiceTests
         Mock<IReviewService>? reviewService = null,
         Mock<IContentReportRepository>? contentReportRepo = null,
         Mock<IMailOutboxRepository>? mailOutboxRepo = null,
-        StigviddMetrics? metrics = null)
+        StigviddMetrics? metrics = null,
+        Mock<IUserBlockService>? userBlockService = null)
     {
         var cfg = new Mock<IConfiguration>();
         cfg.Setup(c => c["PresentableBaseUrl"]).Returns("http://stigvidd.se/testing/");
@@ -60,7 +61,7 @@ public class UserServiceTests
                 .ReturnsAsync(Result.Ok());
         }
 
-        return new UserService(repo.Object, trailobstacleRepo.Object, userResponseFactory, hikeService.Object, reviewService.Object, friendRepo.Object, contentReportRepo.Object, mailOutboxRepo.Object, metrics ?? new StigviddMetrics());
+        return new UserService(repo.Object, trailobstacleRepo.Object, userResponseFactory, hikeService.Object, reviewService.Object, friendRepo.Object, (userBlockService ?? Utilities.MockFactory.UserBlockServiceHiding()).Object, contentReportRepo.Object, mailOutboxRepo.Object, metrics ?? new StigviddMetrics());
     }
 
     [Fact]
@@ -69,7 +70,8 @@ public class UserServiceTests
         // Arrange
         var repo = new Mock<IUserRepository>();
         repo.Setup(r => r.GetUserBySubjectAsync(Utilities.Identifiers.UserSubjectId, It.IsAny<Expression<Func<User, UserResponse>>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(RepositoryResult<UserResponse>.Success(Utilities.Stubs.UserResponse()));
+            .ReturnsAsync(RepositoryResult<UserResponse>.Success(
+                UserResponse.Create(Utilities.Identifiers.User, "Nick", "nick@test.com")));
 
         // Act
         var result = await Build(repo).GetUserBySubjectAsync(Utilities.Identifiers.UserSubjectId, TestContext.Current.CancellationToken);
@@ -77,6 +79,30 @@ public class UserServiceTests
         // Assert
         result.Success.Should().BeTrue();
         result.Value.Should().NotBeNull();
+    }
+
+    // A ban is read-only, so the lookup every authenticated route goes through must still
+    // succeed -- it is BannedAt riding along that the write filter and the app act on.
+    [Fact]
+    public async Task GetUserBySubjectId_WhenTheAccountIsBanned_StillReturnsTheUserWithTheBan()
+    {
+        // Arrange
+        var bannedAt = new DateTime(2026, 2, 3, 4, 5, 6, DateTimeKind.Utc);
+        var repo = new Mock<IUserRepository>();
+        var entity = new User { NickName = "Nick", Email = "nick@test.com", SubjectId = "subject" };
+        entity.Bans.Add(new UserBan { BannedBy = "moderator", BannedAt = bannedAt, LiftedAt = bannedAt.AddDays(-30) });
+        entity.Bans.Add(new UserBan { BannedBy = "moderator", BannedAt = bannedAt });
+        repo.Setup(r => r.GetUserBySubjectAsync(It.IsAny<string>(), It.IsAny<Expression<Func<User, UserResponse>>>(), It.IsAny<CancellationToken>()))
+            .Returns((string _, Expression<Func<User, UserResponse>> selector, CancellationToken _) =>
+                Task.FromResult(RepositoryResult<UserResponse>.Success(selector.Compile()(entity))));
+
+        // Act
+        var result = await Build(repo).GetUserBySubjectAsync(Utilities.Identifiers.UserSubjectId, TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Success.Should().BeTrue();
+        result.Value.Should().NotBeNull();
+        result.Value.BannedAt.Should().Be(bannedAt);
     }
 
     [Fact]
@@ -682,6 +708,114 @@ public class UserServiceTests
     }
 
     [Fact]
+    public async Task DeleteUser_ErasesTheMailQueuedToThatAddress()
+    {
+        // Arrange
+        var repo = new Mock<IUserRepository>();
+        repo.Setup(r => r.GetUserIdByIdentifierAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<int>.Success(1));
+        repo.Setup(r => r.DeleteUserAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult.Success());
+        var hikeService = new Mock<IHikeService>();
+        hikeService.Setup(s => s.HandleUserHikesOnUserDeleteAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Ok());
+        hikeService.Setup(s => s.DeleteHikeSharesByUserIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Ok());
+        var trailObstacleRepo = new Mock<ITrailObstacleRepository>();
+        trailObstacleRepo.Setup(r => r.AnonymizeObstaclesByUserIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult.Success());
+        var friendRepo = new Mock<IFriendRepository>();
+        friendRepo.Setup(r => r.DeleteAllFriendRequestsByUserIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult.Success());
+        var mailOutboxRepo = new Mock<IMailOutboxRepository>();
+
+        // Act
+        var result = await Build(repo, hikeService, trailObstacleRepo, friendRepo, mailOutboxRepo: mailOutboxRepo)
+            .DeleteUserAsync(Utilities.Identifiers.User, TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Success.Should().BeTrue();
+        mailOutboxRepo.Verify(
+            r => r.EraseByRecipientAsync("vandrare@example.com", It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    // The outbox has no foreign key to Users and is matched on the address, so the order is what
+    // makes the erase possible at all: after the Users row goes there is no address to match on.
+    [Fact]
+    public async Task DeleteUser_ErasesTheMailBeforeTheUserRowGoes()
+    {
+        // Arrange
+        var order = new List<string>();
+        var repo = new Mock<IUserRepository>();
+        repo.Setup(r => r.GetUserIdByIdentifierAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<int>.Success(1));
+        repo.Setup(r => r.DeleteUserAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .Callback(() => order.Add("delete user"))
+            .ReturnsAsync(RepositoryResult.Success());
+        var hikeService = new Mock<IHikeService>();
+        hikeService.Setup(s => s.HandleUserHikesOnUserDeleteAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Ok());
+        hikeService.Setup(s => s.DeleteHikeSharesByUserIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Ok());
+        var trailObstacleRepo = new Mock<ITrailObstacleRepository>();
+        trailObstacleRepo.Setup(r => r.AnonymizeObstaclesByUserIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult.Success());
+        var friendRepo = new Mock<IFriendRepository>();
+        friendRepo.Setup(r => r.DeleteAllFriendRequestsByUserIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult.Success());
+        var mailOutboxRepo = new Mock<IMailOutboxRepository>();
+        var service = Build(repo, hikeService, trailObstacleRepo, friendRepo, mailOutboxRepo: mailOutboxRepo);
+        // After Build, which sets its own erase stub over anything passed in.
+        mailOutboxRepo.Setup(r => r.EraseByRecipientAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .Callback(() => order.Add("erase mail"))
+            .ReturnsAsync(RepositoryResult<int>.Success(2));
+
+        // Act
+        var result = await service.DeleteUserAsync(Utilities.Identifiers.User, TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Success.Should().BeTrue();
+        order.Should().Equal("erase mail", "delete user");
+    }
+
+    [Fact]
+    public async Task DeleteUser_WhenErasingMailFails_ReturnsInternalServerError()
+    {
+        // Arrange
+        var repo = new Mock<IUserRepository>();
+        repo.Setup(r => r.GetUserIdByIdentifierAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<int>.Success(1));
+        repo.Setup(r => r.DeleteUserAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult.Success());
+        var hikeService = new Mock<IHikeService>();
+        hikeService.Setup(s => s.HandleUserHikesOnUserDeleteAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Ok());
+        hikeService.Setup(s => s.DeleteHikeSharesByUserIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Ok());
+        var trailObstacleRepo = new Mock<ITrailObstacleRepository>();
+        trailObstacleRepo.Setup(r => r.AnonymizeObstaclesByUserIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult.Success());
+        var friendRepo = new Mock<IFriendRepository>();
+        friendRepo.Setup(r => r.DeleteAllFriendRequestsByUserIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult.Success());
+        var mailOutboxRepo = new Mock<IMailOutboxRepository>();
+        var service = Build(repo, hikeService, trailObstacleRepo, friendRepo, mailOutboxRepo: mailOutboxRepo);
+        // After Build, which sets its own erase stub over anything passed in.
+        mailOutboxRepo.Setup(r => r.EraseByRecipientAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<int>.Error());
+
+        // Act
+        var result = await service.DeleteUserAsync(Utilities.Identifiers.User, TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Success.Should().BeFalse();
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(500);
+        repo.Verify(r => r.DeleteUserAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
     public async Task FindUsersByNickName_WhenMatchesFound_ReturnsList()
     {
         // Arrange
@@ -694,6 +828,7 @@ public class UserServiceTests
         repo.Setup(r => r.FindUsersByNickNameAsync(
                 It.IsAny<string>(),
                 It.IsAny<string>(),
+                It.IsAny<int[]>(),
                 It.IsAny<Expression<Func<User, SearchFriendResultResponse>>>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<IReadOnlyCollection<SearchFriendResultResponse>>.Success(matches));
@@ -714,6 +849,7 @@ public class UserServiceTests
         repo.Setup(r => r.FindUsersByNickNameAsync(
                 It.IsAny<string>(),
                 It.IsAny<string>(),
+                It.IsAny<int[]>(),
                 It.IsAny<Expression<Func<User, SearchFriendResultResponse>>>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<IReadOnlyCollection<SearchFriendResultResponse>>.NotFound());
@@ -735,6 +871,7 @@ public class UserServiceTests
         repo.Setup(r => r.FindUsersByNickNameAsync(
                 It.IsAny<string>(),
                 It.IsAny<string>(),
+                It.IsAny<int[]>(),
                 It.IsAny<Expression<Func<User, SearchFriendResultResponse>>>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<IReadOnlyCollection<SearchFriendResultResponse>>.Error());
@@ -746,5 +883,34 @@ public class UserServiceTests
         result.Success.Should().BeFalse();
         result.Message.Should().NotBeNull();
         result.Message.StatusCode.Should().Be(500);
+    }
+
+    // The block hides the person from search too, so the only way back to them is unblocking.
+    [Fact]
+    public async Task FindUsersByNickName_PassesTheBlockedIdsToTheQuery()
+    {
+        // Arrange
+        var repo = new Mock<IUserRepository>();
+        repo.Setup(r => r.FindUsersByNickNameAsync(
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<int[]>(),
+                It.IsAny<Expression<Func<User, SearchFriendResultResponse>>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<IReadOnlyCollection<SearchFriendResultResponse>>.Success([]));
+
+        var blocks = Utilities.MockFactory.UserBlockServiceHiding(7, 9);
+
+        // Act
+        await Build(repo, userBlockService: blocks).FindUsersByNickNameAsync(
+            "ali", Utilities.Identifiers.User, TestContext.Current.CancellationToken);
+
+        // Assert
+        repo.Verify(r => r.FindUsersByNickNameAsync(
+            "ali",
+            Utilities.Identifiers.User,
+            It.Is<int[]>(ids => ids.Contains(7) && ids.Contains(9)),
+            It.IsAny<Expression<Func<User, SearchFriendResultResponse>>>(),
+            It.IsAny<CancellationToken>()), Times.Once);
     }
 }

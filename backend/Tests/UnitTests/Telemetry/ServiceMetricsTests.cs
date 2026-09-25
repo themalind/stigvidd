@@ -37,6 +37,7 @@ public class ServiceMetricsTests
             new Mock<IHikeService>().Object,
             new Mock<IReviewService>().Object,
             new Mock<IFriendRepository>().Object,
+            new Mock<IUserBlockService>().Object,
             new Mock<IContentReportRepository>().Object,
             new Mock<IMailOutboxRepository>().Object,
             metrics);

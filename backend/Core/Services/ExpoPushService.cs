@@ -18,6 +18,7 @@ public class ExpoPushService : IPushNotificationService
 
     private readonly IUserPushTokenRepository _userPushTokenRepository;
     private readonly IUserRepository _userRepository;
+    private readonly IUserBlockRepository _userBlockRepository;
     private readonly HttpClient _httpClient;
     private readonly IConfiguration _configuration;
     private readonly ILogger _logger;
@@ -26,12 +27,14 @@ public class ExpoPushService : IPushNotificationService
     public ExpoPushService(
         IUserPushTokenRepository userPushTokenRepository,
         IUserRepository userRepository,
+        IUserBlockRepository userBlockRepository,
         HttpClient httpClient,
         IConfiguration configuration,
         ILogger<ExpoPushService> logger)
     {
         _userPushTokenRepository = userPushTokenRepository;
         _userRepository = userRepository;
+        _userBlockRepository = userBlockRepository;
         _httpClient = httpClient;
         _configuration = configuration;
         _logger = logger;
@@ -67,7 +70,7 @@ public class ExpoPushService : IPushNotificationService
         return Result.Ok();
     }
 
-    public async Task<Result> SendToUserAsync(string userIdentifier, string title, string body, IReadOnlyDictionary<string, object> data, CancellationToken ctoken)
+    public async Task<Result> SendToUserAsync(string userIdentifier, string title, string body, IReadOnlyDictionary<string, object> data, CancellationToken ctoken, string? fromUserIdentifier = null)
     {
         try
         {
@@ -81,6 +84,9 @@ public class ExpoPushService : IPushNotificationService
 
                 return Result.Fail(new Message(404, "User not found"));
             }
+
+            if (await RecipientHasBlockedSenderAsync(userResult.Value, fromUserIdentifier, ctoken))
+                return Result.Ok();
 
             // Step 2: Get Expo push tokens for the user
             var tokensResult = await _userPushTokenRepository.GetTokensForUserAsync(userResult.Value, ctoken);
@@ -151,6 +157,22 @@ public class ExpoPushService : IPushNotificationService
             _logger.LogError(ex, "ExpoPushService: SendToUserAsync -> An unexpected error occurred while sending push notifications to user {Identifier}.", userIdentifier);
             return Result.Fail(new Message(500, "An error occurred while sending push notifications."));
         }
+    }
+
+    // Fails open: a failed lookup still sends.
+    private async Task<bool> RecipientHasBlockedSenderAsync(int recipientUserId, string? fromUserIdentifier, CancellationToken ctoken)
+    {
+        if (string.IsNullOrWhiteSpace(fromUserIdentifier))
+            return false;
+
+        var senderIdResult = await _userRepository.GetUserIdByIdentifierAsync(fromUserIdentifier, ctoken);
+
+        if (!senderIdResult.IsSuccess)
+            return false;
+
+        var blockedResult = await _userBlockRepository.HasBlockedAsync(recipientUserId, senderIdResult.Value, ctoken);
+
+        return blockedResult.IsSuccess && blockedResult.Value;
     }
 
     public async Task<Result> UnregisterTokenAsync(string userIdentifier, string expoToken, CancellationToken ctoken)

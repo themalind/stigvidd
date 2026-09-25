@@ -18,16 +18,19 @@ public class FriendServiceTests
     public static FriendService Build(
         Mock<IFriendRepository>? friendRepositoryMock = null,
         Mock<IUserRepository>? userRepositoryMock = null,
-        Mock<IPushNotificationService>? pushNotificationServiceMock = null)
+        Mock<IPushNotificationService>? pushNotificationServiceMock = null,
+        Mock<IUserBlockService>? userBlockServiceMock = null)
     {
         var defaultPushMock = new Mock<IPushNotificationService>();
         defaultPushMock.Setup(p => p.SendToUserAsync(
             It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(),
-            It.IsAny<IReadOnlyDictionary<string, object>>(), It.IsAny<CancellationToken>()))
+            It.IsAny<IReadOnlyDictionary<string, object>>(), It.IsAny<CancellationToken>(),
+            It.IsAny<string?>()))
             .ReturnsAsync(Result.Ok());
 
         return new FriendService(
             friendRepositoryMock?.Object ?? new Mock<IFriendRepository>().Object,
+            (userBlockServiceMock ?? Utilities.MockFactory.UserBlockServiceHiding()).Object,
             userRepositoryMock?.Object ?? new Mock<IUserRepository>().Object,
             pushNotificationServiceMock?.Object ?? defaultPushMock.Object,
             new Mock<ILogger<FriendService>>().Object
@@ -166,7 +169,7 @@ public class FriendServiceTests
             .ReturnsAsync(RepositoryResult<int>.Success(1));
 
         var friendsRepoMock = new Mock<IFriendRepository>();
-        friendsRepoMock.Setup(r => r.GetFriendsAsync(It.IsAny<int>(), It.IsAny<Expression<Func<User, FriendResponse>>>(), It.IsAny<CancellationToken>()))
+        friendsRepoMock.Setup(r => r.GetFriendsAsync(It.IsAny<int>(), It.IsAny<int[]>(), It.IsAny<Expression<Func<User, FriendResponse>>>(), It.IsAny<CancellationToken>()))
            .ReturnsAsync(RepositoryResult<IEnumerable<FriendResponse>>.Success(friends));
 
         var service = Build(userRepositoryMock: userRepoMock, friendRepositoryMock: friendsRepoMock);
@@ -189,7 +192,7 @@ public class FriendServiceTests
             .ReturnsAsync(RepositoryResult<int>.Success(1));
 
         var friendsRepoMock = new Mock<IFriendRepository>();
-        friendsRepoMock.Setup(r => r.GetFriendsAsync(It.IsAny<int>(), It.IsAny<Expression<Func<User, FriendResponse>>>(), It.IsAny<CancellationToken>()))
+        friendsRepoMock.Setup(r => r.GetFriendsAsync(It.IsAny<int>(), It.IsAny<int[]>(), It.IsAny<Expression<Func<User, FriendResponse>>>(), It.IsAny<CancellationToken>()))
            .ReturnsAsync(RepositoryResult<IEnumerable<FriendResponse>>.Error());
 
         var service = Build(userRepositoryMock: userRepoMock, friendRepositoryMock: friendsRepoMock);
@@ -213,7 +216,7 @@ public class FriendServiceTests
             .ReturnsAsync(RepositoryResult<int>.Success(1));
 
         var requestsRepoMock = new Mock<IFriendRepository>();
-        requestsRepoMock.Setup(r => r.GetIncomingRequestsAsync(It.IsAny<int>(), It.IsAny<Expression<Func<FriendRequest, FriendRequestResponse>>>(), It.IsAny<CancellationToken>()))
+        requestsRepoMock.Setup(r => r.GetIncomingRequestsAsync(It.IsAny<int>(), It.IsAny<int[]>(), It.IsAny<Expression<Func<FriendRequest, FriendRequestResponse>>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<IEnumerable<FriendRequestResponse>>.Error());
 
         var service = Build(userRepositoryMock: userRepoMock, friendRepositoryMock: requestsRepoMock);
@@ -243,7 +246,7 @@ public class FriendServiceTests
             .ReturnsAsync(RepositoryResult<int>.Success(1));
 
         var requestsRepoMock = new Mock<IFriendRepository>();
-        requestsRepoMock.Setup(r => r.GetIncomingRequestsAsync(It.IsAny<int>(), It.IsAny<Expression<Func<FriendRequest, FriendRequestResponse>>>(), It.IsAny<CancellationToken>()))
+        requestsRepoMock.Setup(r => r.GetIncomingRequestsAsync(It.IsAny<int>(), It.IsAny<int[]>(), It.IsAny<Expression<Func<FriendRequest, FriendRequestResponse>>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<IEnumerable<FriendRequestResponse>>.Success(requests));
 
         var service = Build(userRepositoryMock: userRepoMock, friendRepositoryMock: requestsRepoMock);
@@ -307,7 +310,7 @@ public class FriendServiceTests
             .ReturnsAsync(RepositoryResult<int>.Success(1));
 
         var requestsRepoMock = new Mock<IFriendRepository>();
-        requestsRepoMock.Setup(r => r.GetOutgoingRequestsAsync(It.IsAny<int>(), It.IsAny<Expression<Func<FriendRequest, OutgoingFriendRequestResponse>>>(), It.IsAny<CancellationToken>()))
+        requestsRepoMock.Setup(r => r.GetOutgoingRequestsAsync(It.IsAny<int>(), It.IsAny<int[]>(), It.IsAny<Expression<Func<FriendRequest, OutgoingFriendRequestResponse>>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<IEnumerable<OutgoingFriendRequestResponse>>.Error());
 
         var service = Build(userRepositoryMock: userRepoMock, friendRepositoryMock: requestsRepoMock);
@@ -337,7 +340,7 @@ public class FriendServiceTests
             .ReturnsAsync(RepositoryResult<int>.Success(1));
 
         var requestsRepoMock = new Mock<IFriendRepository>();
-        requestsRepoMock.Setup(r => r.GetOutgoingRequestsAsync(It.IsAny<int>(), It.IsAny<Expression<Func<FriendRequest, OutgoingFriendRequestResponse>>>(), It.IsAny<CancellationToken>()))
+        requestsRepoMock.Setup(r => r.GetOutgoingRequestsAsync(It.IsAny<int>(), It.IsAny<int[]>(), It.IsAny<Expression<Func<FriendRequest, OutgoingFriendRequestResponse>>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<IEnumerable<OutgoingFriendRequestResponse>>.Success(requests));
 
         var service = Build(userRepositoryMock: userRepoMock, friendRepositoryMock: requestsRepoMock);
@@ -614,6 +617,70 @@ public class FriendServiceTests
         result.Message.Should().NotBeNull();
         result.Message.StatusCode.Should().Be(409);
         result.Message.ResultMessage.Should().Be("A friend request or friendship already exists.");
+    }
+
+    // Not refused: a refusal would tell the sender they were blocked.
+    [Fact]
+    public async Task SendFriendRequestAsync_ShouldStillBeRecorded_WhenTheReceiverHasBlockedTheSender()
+    {
+        // Arrange
+        var userRepoMock = new Mock<IUserRepository>();
+        userRepoMock.Setup(r => r.GetUserByIdentifierAsync(It.IsAny<string>(), It.IsAny<Expression<Func<User, FriendService.SenderProjection>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<FriendService.SenderProjection>.Success(new FriendService.SenderProjection(1, "TestUser")));
+        userRepoMock.Setup(r => r.GetUserByNickNameAsync(It.IsAny<string>(), It.IsAny<Expression<Func<User, FriendService.ReceiverProjection>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<FriendService.ReceiverProjection>.Success(new FriendService.ReceiverProjection(2, "receiver-id")));
+
+        var friendRepoMock = new Mock<IFriendRepository>();
+        friendRepoMock.Setup(r => r.FriendshipExistsAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<bool>.Success(false));
+        friendRepoMock.Setup(r => r.SendRequestAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult.Success());
+
+        var blocks = Utilities.MockFactory.UserBlockServiceHiding(1, 2);
+
+        var service = Build(userRepositoryMock: userRepoMock, friendRepositoryMock: friendRepoMock, userBlockServiceMock: blocks);
+
+        // Act
+        var result = await service.SendFriendRequestAsync("current-user-identifier", "receiver-identifier", TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Success.Should().BeTrue();
+        friendRepoMock.Verify(r => r.SendRequestAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    // The push layer needs the sender to check for a block.
+    [Fact]
+    public async Task SendFriendRequestAsync_ShouldNameTheSender_SoTheNotificationCanBeSuppressed()
+    {
+        // Arrange
+        var userRepoMock = new Mock<IUserRepository>();
+        userRepoMock.Setup(r => r.GetUserByIdentifierAsync(It.IsAny<string>(), It.IsAny<Expression<Func<User, FriendService.SenderProjection>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<FriendService.SenderProjection>.Success(new FriendService.SenderProjection(1, "TestUser")));
+        userRepoMock.Setup(r => r.GetUserByNickNameAsync(It.IsAny<string>(), It.IsAny<Expression<Func<User, FriendService.ReceiverProjection>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<FriendService.ReceiverProjection>.Success(new FriendService.ReceiverProjection(2, "receiver-id")));
+
+        var friendRepoMock = new Mock<IFriendRepository>();
+        friendRepoMock.Setup(r => r.FriendshipExistsAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<bool>.Success(false));
+        friendRepoMock.Setup(r => r.SendRequestAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult.Success());
+
+        var pushMock = new Mock<IPushNotificationService>();
+        pushMock.Setup(p => p.SendToUserAsync(
+            It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(),
+            It.IsAny<IReadOnlyDictionary<string, object>>(), It.IsAny<CancellationToken>(), It.IsAny<string?>()))
+            .ReturnsAsync(Result.Ok());
+
+        var service = Build(userRepositoryMock: userRepoMock, friendRepositoryMock: friendRepoMock, pushNotificationServiceMock: pushMock);
+
+        // Act
+        await service.SendFriendRequestAsync("current-user-identifier", "receiver-identifier", TestContext.Current.CancellationToken);
+
+        // Assert
+        pushMock.Verify(p => p.SendToUserAsync(
+            "receiver-id", It.IsAny<string>(), It.IsAny<string>(),
+            It.IsAny<IReadOnlyDictionary<string, object>>(), It.IsAny<CancellationToken>(),
+            "current-user-identifier"), Times.Once);
     }
 
     [Fact]

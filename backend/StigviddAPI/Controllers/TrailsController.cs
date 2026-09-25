@@ -117,6 +117,7 @@ public class TrailsController : StigViddController
     }
 
     [AllowAnonymous]
+    [AllowWhenBanned]
     [HttpPost("cards")]
     public async Task<ActionResult<IReadOnlyCollection<TrailCardResponse>>> GetTrailCards(
         [FromBody] GetTrailCardsRequest request,

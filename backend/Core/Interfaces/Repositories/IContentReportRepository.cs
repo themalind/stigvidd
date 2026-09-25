@@ -32,6 +32,10 @@ public record ContentReportSummary(
     ReportHideOutcome HideOutcome,
     string? ReporterNickName,
     string? AuthorNickName,
+    // Null once the author deletes their account, which is also when there is nothing to ban.
+    string? AuthorIdentifier,
+    // Set while the account is banned, so the queue can offer to lift it.
+    DateTime? AuthorBannedAt,
     string? ContentSnapshot,
     bool ContentStillExists,
     string? DecidedBy,
@@ -58,8 +62,12 @@ public record ReporterStatistic(
 // people reported is one strike; this is the list an account removal is decided from.
 public record AuthorStatistic(
     int AuthorUserId,
+    string? Identifier,
     string? NickName,
-    int Strikes);
+    int Strikes,
+    // Null while the account can still write; the row offers Ban or Unban on it.
+    DateTime? BannedAt,
+    int BanCount);
 
 // What applying a decision actually did. The image URLs come back so the caller can clear
 // them off WebDAV after the row is gone.

@@ -161,7 +161,7 @@ public class ReviewRepository : IReviewRepository
         }
     }
 
-    public async Task<RepositoryResult<PagedResult<T>>> GetReviewsByTrailIdentifierAsync<T>(string trailIdentifier, int page, int limit, Expression<Func<Review, T>> selector, CancellationToken ctoken)
+    public async Task<RepositoryResult<PagedResult<T>>> GetReviewsByTrailIdentifierAsync<T>(string trailIdentifier, int page, int limit, int[] hiddenUserIds, Expression<Func<Review, T>> selector, CancellationToken ctoken)
     {
         try
         {
@@ -172,11 +172,13 @@ public class ReviewRepository : IReviewRepository
             var totalCount = await context.Reviews
                 .AsNoTracking()
                 .Where(r => r.Trail != null && r.Trail.Identifier == trailIdentifier)
+                .Where(r => r.UserId == null || !hiddenUserIds.Contains(r.UserId.Value))
                 .CountAsync(ctoken);
 
             var items = await context.Reviews
                 .AsNoTracking()
                 .Where(r => r.Trail != null && r.Trail.Identifier == trailIdentifier)
+                .Where(r => r.UserId == null || !hiddenUserIds.Contains(r.UserId.Value))
                 .OrderByDescending(r => r.CreatedAt)
                 .Skip(offset)
                 .Take(limit + 1)

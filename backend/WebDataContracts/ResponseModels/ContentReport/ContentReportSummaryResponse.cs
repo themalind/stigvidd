@@ -18,6 +18,12 @@ public class ContentReportSummaryResponse
     public required string HideOutcome { get; set; }
     public string? ReporterNickName { get; set; }
     public string? AuthorNickName { get; set; }
+
+    // Null once the account is deleted, which is also when there is nothing left to ban.
+    public string? AuthorIdentifier { get; set; }
+
+    // Set while the account is banned, so the queue offers to lift it rather than ban it twice.
+    public DateTime? AuthorBannedAt { get; set; }
     public string? ContentSnapshot { get; set; }
 
     // False once retention or an account deletion has taken the content. Upholding is still
@@ -39,6 +45,8 @@ public class ContentReportSummaryResponse
         string hideOutcome,
         string? reporterNickName,
         string? authorNickName,
+        string? authorIdentifier,
+        DateTime? authorBannedAt,
         string? contentSnapshot,
         bool contentStillExists,
         string? decidedBy,
@@ -58,6 +66,8 @@ public class ContentReportSummaryResponse
             HideOutcome = hideOutcome,
             ReporterNickName = reporterNickName,
             AuthorNickName = authorNickName,
+            AuthorIdentifier = authorIdentifier,
+            AuthorBannedAt = authorBannedAt,
             ContentSnapshot = contentSnapshot,
             ContentStillExists = contentStillExists,
             DecidedBy = decidedBy,

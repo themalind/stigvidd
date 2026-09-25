@@ -24,6 +24,7 @@ public class UserService : IUserService
     // Same reason for reviews: their image files live in WebDAV, not the database.
     private readonly IReviewService _reviewService;
     private readonly IFriendRepository _friendRepository;
+    private readonly IUserBlockService _userBlockService;
     private readonly IContentReportRepository _contentReportRepository;
     // The outbox has no foreign key to Users -- it keys on the address -- so nothing about a
     // deleted account reaches it unless this service says so.
@@ -36,6 +37,7 @@ public class UserService : IUserService
     IHikeService hikeService,
     IReviewService reviewService,
     IFriendRepository friendRepository,
+    IUserBlockService userBlockService,
     IContentReportRepository contentReportRepository,
     IMailOutboxRepository mailOutboxRepository,
     StigviddMetrics metrics)
@@ -46,6 +48,7 @@ public class UserService : IUserService
         _hikeService = hikeService;
         _reviewService = reviewService;
         _friendRepository = friendRepository;
+        _userBlockService = userBlockService;
         _contentReportRepository = contentReportRepository;
         _mailOutboxRepository = mailOutboxRepository;
         _metrics = metrics;
@@ -55,7 +58,7 @@ public class UserService : IUserService
     {
         var result = await _userRepository.GetUserBySubjectAsync(
             subjectId,
-            u => UserResponse.Create(u.Identifier, u.NickName, u.Email),
+            u => UserResponse.Create(u.Identifier, u.NickName, u.Email, null, null, u.Bans.Where(b => b.LiftedAt == null).Select(b => (DateTime?)b.BannedAt).FirstOrDefault()),
             ctoken);
 
         if (result.Status == RepositoryResultStatus.Error)
@@ -144,9 +147,12 @@ public class UserService : IUserService
 
     public async Task<Result<IReadOnlyCollection<SearchFriendResultResponse>>> FindUsersByNickNameAsync(string username, string currentUserIdentifier, CancellationToken ctoken)
     {
+        var hiddenUserIds = await _userBlockService.GetHiddenUserIdsForReadAsync(currentUserIdentifier, ctoken);
+
         var result = await _userRepository.FindUsersByNickNameAsync(
             username,
             currentUserIdentifier,
+            hiddenUserIds,
             u => SearchFriendResultResponse.Create(u.Identifier, u.NickName),
             ctoken);
 

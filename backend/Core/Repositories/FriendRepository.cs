@@ -44,7 +44,7 @@ public class FriendRepository : IFriendRepository
 
     }
 
-    public async Task<RepositoryResult<IEnumerable<T>>> GetFriendsAsync<T>(int userId, Expression<Func<User, T>> selector, CancellationToken ctoken)
+    public async Task<RepositoryResult<IEnumerable<T>>> GetFriendsAsync<T>(int userId, int[] hiddenUserIds, Expression<Func<User, T>> selector, CancellationToken ctoken)
     {
         try
         {
@@ -56,6 +56,7 @@ public class FriendRepository : IFriendRepository
                     fr.Status == FriendRequestStatus.Accepted &&
                     ((fr.RequesterId == userId && fr.ReceiverId == u.Id) ||
                     (fr.ReceiverId == userId && fr.RequesterId == u.Id))))
+                .Where(u => !hiddenUserIds.Contains(u.Id))
                 .Select(selector)
                 .ToListAsync(ctoken);
 
@@ -68,7 +69,7 @@ public class FriendRepository : IFriendRepository
         }
     }
 
-    public async Task<RepositoryResult<IEnumerable<T>>> GetIncomingRequestsAsync<T>(int userId, Expression<Func<FriendRequest, T>> selector, CancellationToken ctoken)
+    public async Task<RepositoryResult<IEnumerable<T>>> GetIncomingRequestsAsync<T>(int userId, int[] hiddenUserIds, Expression<Func<FriendRequest, T>> selector, CancellationToken ctoken)
     {
         try
         {
@@ -77,6 +78,7 @@ public class FriendRepository : IFriendRepository
             var incomingRequests = await context.FriendRequests
                 .AsNoTracking()
                 .Where(fr => fr.ReceiverId == userId && fr.Status == FriendRequestStatus.Pending)
+                .Where(fr => !hiddenUserIds.Contains(fr.RequesterId))
                 .OrderByDescending(fr => fr.CreatedAt)
                 .Select(selector)
                 .ToListAsync(ctoken);
@@ -91,7 +93,7 @@ public class FriendRepository : IFriendRepository
         }
     }
 
-    public async Task<RepositoryResult<IEnumerable<T>>> GetOutgoingRequestsAsync<T>(int userId, Expression<Func<FriendRequest, T>> selector, CancellationToken ctoken)
+    public async Task<RepositoryResult<IEnumerable<T>>> GetOutgoingRequestsAsync<T>(int userId, int[] hiddenUserIds, Expression<Func<FriendRequest, T>> selector, CancellationToken ctoken)
     {
         try
         {
@@ -100,6 +102,7 @@ public class FriendRepository : IFriendRepository
             var outgoingRequests = await context.FriendRequests
                 .AsNoTracking()
                 .Where(fr => fr.RequesterId == userId && fr.Status == FriendRequestStatus.Pending)
+                .Where(fr => !hiddenUserIds.Contains(fr.ReceiverId))
                 .Select(selector)
                 .ToListAsync(ctoken);
             return RepositoryResult<IEnumerable<T>>.Success(outgoingRequests);

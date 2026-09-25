@@ -15,12 +15,79 @@ namespace StigviddAPI.Controllers;
 public class FriendsController : StigViddController
 {
     private readonly IFriendService _friendService;
+    private readonly IUserBlockService _userBlockService;
     private readonly IUserService _userService;
 
-    public FriendsController(IFriendService friendService, IUserService userService)
+    public FriendsController(IFriendService friendService, IUserBlockService userBlockService, IUserService userService)
     {
         _friendService = friendService;
+        _userBlockService = userBlockService;
         _userService = userService;
+    }
+
+    [HttpGet]
+    [Route("blocks")]
+    public async Task<ActionResult<IReadOnlyCollection<BlockedUserResponse>>> GetBlockedUsers(CancellationToken ctoken)
+    {
+        var userResponse = await GetAuthenticatedUserAsync(_userService, ctoken);
+
+        if (userResponse == null)
+        {
+            return Unauthorized("User not found");
+        }
+
+        var result = await _userBlockService.GetBlockedUsersAsync(userResponse.Identifier, ctoken);
+
+        if (!result.Success && result.Message != null)
+        {
+            return ToActionResult(result.Message);
+        }
+
+        return Ok(result.Value);
+    }
+
+    [AllowWhenBanned]
+    [HttpPost]
+    [Route("blocks/{identifier}")]
+    public async Task<ActionResult> BlockUser([FromRoute] string identifier, CancellationToken ctoken)
+    {
+        var userResponse = await GetAuthenticatedUserAsync(_userService, ctoken);
+
+        if (userResponse == null)
+        {
+            return Unauthorized("User not found");
+        }
+
+        var result = await _userBlockService.BlockUserAsync(userResponse.Identifier, identifier, ctoken);
+
+        if (!result.Success && result.Message != null)
+        {
+            return ToActionResult(result.Message);
+        }
+
+        return NoContent();
+    }
+
+    [AllowWhenBanned]
+    [HttpDelete]
+    [Route("blocks/{identifier}")]
+    public async Task<ActionResult> UnblockUser([FromRoute] string identifier, CancellationToken ctoken)
+    {
+        var userResponse = await GetAuthenticatedUserAsync(_userService, ctoken);
+
+        if (userResponse == null)
+        {
+            return Unauthorized("User not found");
+        }
+
+        var result = await _userBlockService.UnblockUserAsync(userResponse.Identifier, identifier, ctoken);
+
+        if (!result.Success && result.Message != null)
+        {
+            return ToActionResult(result.Message);
+        }
+
+        return NoContent();
     }
 
     [HttpGet]
@@ -124,6 +191,7 @@ public class FriendsController : StigViddController
         return Ok(result);
     }
 
+    [AllowWhenBanned]
     [HttpDelete]
     [Route("reject/{otherIdentifier}")]
     public async Task<ActionResult> RemoveConnection(string otherIdentifier, CancellationToken ctoken)
@@ -141,6 +209,7 @@ public class FriendsController : StigViddController
         return Ok(result);
     }
 
+    [AllowWhenBanned]
     [HttpDelete]
     [Route("{friendIdentifier}")]
     public async Task<ActionResult> RemoveFriend(string friendIdentifier, CancellationToken ctoken)

@@ -1,9 +1,9 @@
 // SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
-import { ChevronLeft, ChevronRight, Users } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2, Users } from "lucide-react";
 import {
   getAuthors,
   getReporters,
@@ -19,6 +19,8 @@ import {
   withheldNote,
   withheldReporters,
 } from "@/lib/moderation-statistics";
+import { unbanUser } from "@/api/users";
+import { BanSheet, type BanTarget } from "@/components/ban-sheet";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -81,6 +83,7 @@ function usePagedStatistics<T>(
   const [rows, setRows] = useState<T[] | null>(null);
   const [total, setTotal] = useState(0);
   const [hasMore, setHasMore] = useState(false);
+  const [reloads, setReloads] = useState(0);
 
   useEffect(() => {
     let current = true;
@@ -102,9 +105,12 @@ function usePagedStatistics<T>(
     return () => {
       current = false;
     };
-  }, [fetchPage, page, failureMessage]);
+  }, [fetchPage, page, failureMessage, reloads]);
 
-  return { rows, total, hasMore };
+  // Bumped after a ban or a lifted ban; the row's buttons are read off the response.
+  const reload = useCallback(() => setReloads((count) => count + 1), []);
+
+  return { rows, total, hasMore, reload };
 }
 
 function ReportersTab() {
@@ -189,11 +195,29 @@ function ReportersTab() {
 
 function AuthorsTab() {
   const [page, setPage] = useState(1);
-  const { rows, total, hasMore } = usePagedStatistics<AuthorStatistic>(
+  const [banning, setBanning] = useState<BanTarget | null>(null);
+  const [lifting, setLifting] = useState<string | null>(null);
+  const { rows, total, hasMore, reload } = usePagedStatistics<AuthorStatistic>(
     getAuthors,
     page,
     "The authors could not be loaded.",
   );
+
+  async function unban(author: AuthorStatistic) {
+    if (!author.identifier) return;
+
+    setLifting(author.identifier);
+
+    try {
+      await unbanUser(author.identifier);
+      toast.success(`${displayName(author.nickName)} can write again.`);
+      reload();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "The ban could not be lifted.");
+    } finally {
+      setLifting(null);
+    }
+  }
 
   if (rows === null) return <LoadingRows />;
 
@@ -212,6 +236,8 @@ function AuthorsTab() {
           <TableRow>
             <TableHead>Nickname</TableHead>
             <TableHead className="text-right">Strikes</TableHead>
+            <TableHead className="text-right">Bans</TableHead>
+            <TableHead className="text-right">Account</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -224,6 +250,46 @@ function AuthorsTab() {
               >
                 {row.strikes ?? 0}
               </TableCell>
+              <TableCell data-testid="author-bans" className="text-right">
+                {row.banCount ?? 0}
+              </TableCell>
+              <TableCell className="text-right">
+                {row.bannedAt ? (
+                  <span className="flex items-center justify-end gap-2">
+                    <span data-testid="banned-since" className="text-muted-foreground text-xs">
+                      Banned {new Date(row.bannedAt).toLocaleDateString()}
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      data-testid="unban-author"
+                      disabled={lifting === row.identifier}
+                      onClick={() => void unban(row)}
+                    >
+                      {lifting === row.identifier && <Loader2 className="size-4 animate-spin" />}
+                      Lift ban
+                    </Button>
+                  </span>
+                ) : (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    data-testid="ban-author"
+                    disabled={!row.identifier}
+                    title={row.identifier ? undefined : "This account is already deleted."}
+                    onClick={() =>
+                      row.identifier &&
+                      setBanning({
+                        identifier: row.identifier,
+                        nickName: row.nickName,
+                        strikes: row.strikes,
+                      })
+                    }
+                  >
+                    Ban
+                  </Button>
+                )}
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>
@@ -235,6 +301,10 @@ function AuthorsTab() {
         onChange={setPage}
         label={`${total} author${total === 1 ? "" : "s"}`}
       />
+
+      {banning && (
+        <BanSheet target={banning} onClose={() => setBanning(null)} onBanned={reload} />
+      )}
     </div>
   );
 }

@@ -14,6 +14,7 @@ public class HikeShareRecipientService : IHikeShareRecipientService
     private readonly IUserRepository _userRepository;
     private readonly IHikeRepository _hikeRepository;
     private readonly IFriendRepository _friendRepository;
+    private readonly IUserBlockService _userBlockService;
     private readonly IPushNotificationService _pushNotificationService;
     // Dropping a share can leave a hike with no owner and no recipients. Cleaning that up owns
     // image files as well as rows, which is HikeService's job, so it is delegated rather than
@@ -25,6 +26,7 @@ public class HikeShareRecipientService : IHikeShareRecipientService
         IUserRepository userRepository,
         IHikeRepository hikeRepository,
         IFriendRepository friendRepository,
+        IUserBlockService userBlockService,
         IPushNotificationService pushNotificationService,
         IHikeService hikeService)
     {
@@ -32,13 +34,16 @@ public class HikeShareRecipientService : IHikeShareRecipientService
         _userRepository = userRepository;
         _hikeRepository = hikeRepository;
         _friendRepository = friendRepository;
+        _userBlockService = userBlockService;
         _pushNotificationService = pushNotificationService;
         _hikeService = hikeService;
     }
 
     public async Task<Result<IReadOnlyCollection<HikeShareRecipientResponse>>> GetAllHikesSharedWithUserAsync(string identifier, CancellationToken ctoken)
     {
-        var result = await _hikeShareRecipientRepository.GetAllHikesSharedWithUserAsync(identifier, hs => new HikeShareRecipientResponse
+        var hiddenUserIds = await _userBlockService.GetHiddenUserIdsForReadAsync(identifier, ctoken);
+
+        var result = await _hikeShareRecipientRepository.GetAllHikesSharedWithUserAsync(identifier, hiddenUserIds, hs => new HikeShareRecipientResponse
         {
             HikeIdentifier = hs.Hike!.Identifier,
             HikeName = hs.Hike.Name,
@@ -142,7 +147,8 @@ public class HikeShareRecipientService : IHikeShareRecipientService
         await _pushNotificationService.SendToUserAsync(
             recipientResult.Value.Identifier, "Ny delad vandring",
             $"{senderResult.Value.NickName} vill dela en vandring med dig",
-             new Dictionary<string, object> { ["type"] = "hike_share" }, ctoken);
+             new Dictionary<string, object> { ["type"] = "hike_share" }, ctoken,
+             fromUserIdentifier: userIdentifier);
 
         return Result.Ok();
     }
@@ -189,7 +195,10 @@ public class HikeShareRecipientService : IHikeShareRecipientService
             return Result.Fail<IReadOnlyCollection<IncomingHikeShareResponse>>(new Message(500, "Something went wrong when fetching user ID."));
         }
 
+        var hiddenUserIds = await _userBlockService.GetHiddenUserIdsForReadAsync(identifier, ctoken);
+
         var pendingSharesResult = await _hikeShareRecipientRepository.GetPendingSharesForUserAsync(userIdResult.Value,
+            hiddenUserIds,
             hs => IncomingHikeShareResponse.Create(
                 hs.Hike!.Identifier,
                 hs.Hike.Name,
@@ -218,7 +227,9 @@ public class HikeShareRecipientService : IHikeShareRecipientService
             return Result.Fail<HikeShareRecipientResponse>(new Message(500, "Something went wrong when fetching user ID."));
         }
 
-        var result = await _hikeShareRecipientRepository.GetPendingShareByIdentifierAsync(userIdResult.Value, hikeIdentifier, hs => HikeShareRecipientResponse.Create(
+        var hiddenUserIds = await _userBlockService.GetHiddenUserIdsForReadAsync(userIdentifier, ctoken);
+
+        var result = await _hikeShareRecipientRepository.GetPendingShareByIdentifierAsync(userIdResult.Value, hikeIdentifier, hiddenUserIds, hs => HikeShareRecipientResponse.Create(
             hs.Hike!.Identifier,
             hs.Hike.Name,
             hs.Hike.HikeLength,

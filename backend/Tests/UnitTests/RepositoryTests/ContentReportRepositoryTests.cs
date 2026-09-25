@@ -756,6 +756,118 @@ public class ContentReportRepositoryTests : TestBase
         result.Value.Items.Should().ContainSingle().Which.NickName.Should().Be("SkogsGreven");
     }
 
+    // The Authors tab picks Ban or Lift ban off this field, so a wrong value offers the wrong button.
+    [Fact]
+    public async Task GetAuthorStatistics_SaysWhenTheAccountIsAlreadyBanned()
+    {
+        // Arrange
+        var bannedAt = new DateTime(2026, 3, 4, 10, 0, 0, DateTimeKind.Utc);
+        var factory = CreateSeededFactory(db =>
+        {
+            db.UserBans.Add(new UserBan { UserId = 3, BannedBy = "moderator", BannedAt = bannedAt });
+            db.ContentReports.Add(StatRow(2, 3, ReportStatus.Upheld, contentId: 1));
+        });
+
+        // Act
+        var result = await Build(factory).GetAuthorStatisticsAsync(1, 20, TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Value.Should().NotBeNull();
+        result.Value.Items.Should().ContainSingle().Which.BannedAt.Should().Be(bannedAt);
+    }
+
+    [Fact]
+    public async Task GetAuthorStatistics_LeavesTheBarEmptyForAnAccountThatCanStillSignIn()
+    {
+        // Arrange
+        var factory = CreateSeededFactory(db => db.ContentReports.Add(
+            StatRow(2, 3, ReportStatus.Upheld, contentId: 1)));
+
+        // Act
+        var result = await Build(factory).GetAuthorStatisticsAsync(1, 20, TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Value.Should().NotBeNull();
+        result.Value.Items.Should().ContainSingle().Which.BannedAt.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task GetAuthorStatistics_CountsEveryBanIncludingLiftedOnes()
+    {
+        // Arrange
+        var bannedAt = new DateTime(2026, 3, 4, 10, 0, 0, DateTimeKind.Utc);
+        var factory = CreateSeededFactory(db =>
+        {
+            db.UserBans.Add(new UserBan { UserId = 3, BannedBy = "moderator", BannedAt = bannedAt.AddDays(-60), LiftedAt = bannedAt.AddDays(-30) });
+            db.UserBans.Add(new UserBan { UserId = 3, BannedBy = "moderator", BannedAt = bannedAt });
+            db.UserBans.Add(new UserBan { UserId = 2, BannedBy = "moderator", BannedAt = bannedAt });
+            db.ContentReports.Add(StatRow(2, 3, ReportStatus.Upheld, contentId: 1));
+        });
+
+        // Act
+        var result = await Build(factory).GetAuthorStatisticsAsync(1, 20, TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Value.Should().NotBeNull();
+        var author = result.Value.Items.Should().ContainSingle().Subject;
+        author.BanCount.Should().Be(2);
+        author.BannedAt.Should().Be(bannedAt);
+    }
+
+    [Fact]
+    public async Task GetAuthorStatistics_CountsNoBansForAnAccountNeverBanned()
+    {
+        // Arrange
+        var factory = CreateSeededFactory(db => db.ContentReports.Add(
+            StatRow(2, 3, ReportStatus.Upheld, contentId: 1)));
+
+        // Act
+        var result = await Build(factory).GetAuthorStatisticsAsync(1, 20, TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Value.Should().NotBeNull();
+        result.Value.Items.Should().ContainSingle().Which.BanCount.Should().Be(0);
+    }
+
+    // The queue's Author card reads both: the identifier to act on, and the ban to pick the button.
+    [Fact]
+    public async Task GetSummaryByIdentifier_NamesTheAuthorAndWhetherTheyAreBanned()
+    {
+        // Arrange
+        var bannedAt = new DateTime(2026, 3, 4, 10, 0, 0, DateTimeKind.Utc);
+        var row = StatRow(2, 3, ReportStatus.Pending, contentId: 1);
+        var factory = CreateSeededFactory(db =>
+        {
+            db.UserBans.Add(new UserBan { UserId = 3, BannedBy = "moderator", BannedAt = bannedAt });
+            db.ContentReports.Add(row);
+        });
+
+        // Act
+        var result = await Build(factory).GetSummaryByIdentifierAsync(
+            row.Identifier, TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Value.Should().NotBeNull();
+        result.Value.AuthorIdentifier.Should().Be("b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d67");
+        result.Value.AuthorBannedAt.Should().Be(bannedAt);
+    }
+
+    [Fact]
+    public async Task GetSummaryByIdentifier_LeavesTheBarEmptyForAnAuthorWhoCanStillSignIn()
+    {
+        // Arrange
+        var row = StatRow(2, 3, ReportStatus.Pending, contentId: 1);
+        var factory = CreateSeededFactory(db => db.ContentReports.Add(row));
+
+        // Act
+        var result = await Build(factory).GetSummaryByIdentifierAsync(
+            row.Identifier, TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Value.Should().NotBeNull();
+        result.Value.AuthorBannedAt.Should().BeNull();
+    }
+
     [Fact]
     public async Task GetAuthorStatistics_FallsBackToTheSnapshotWhenNoUserRowIsLeft()
     {

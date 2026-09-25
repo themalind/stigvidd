@@ -12,6 +12,7 @@ using WebDataContracts.ResponseModels.User;
 namespace StigviddAPI.Controllers;
 
 [Authorize]
+[AllowWhenBanned]
 [ApiController]
 [Route("/api/v1/[controller]")]
 public class UsersController : StigViddController

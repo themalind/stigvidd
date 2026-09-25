@@ -83,6 +83,7 @@ public class HikeShareRecipientController : StigViddController
         return Ok(result.Value);
     }
 
+    [AllowWhenBanned]
     [HttpPut]
     [Route("accept/{hikeIdentifier}")]
     public async Task<ActionResult> AcceptSharedHike([FromRoute] string hikeIdentifier, CancellationToken ctoken)
@@ -123,6 +124,7 @@ public class HikeShareRecipientController : StigViddController
         return Ok();
     }
 
+    [AllowWhenBanned]
     [HttpDelete]
     [Route("reject/{hikeIdentifier}")]
     public async Task<ActionResult> RejectSharedHike([FromRoute] string hikeIdentifier, CancellationToken ctoken)
@@ -143,6 +145,7 @@ public class HikeShareRecipientController : StigViddController
         return Ok();
     }
 
+    [AllowWhenBanned]
     [HttpDelete]
     [Route("{hikeIdentifier}")]
     public async Task<ActionResult> RemoveSharedHike([FromRoute] string hikeIdentifier, CancellationToken ctoken)

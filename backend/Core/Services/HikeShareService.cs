@@ -113,7 +113,8 @@ public class HikeShareService : IHikeShareService
             await _pushNotificationService.SendToUserAsync(
                  recipientResult.Value.Identifier, "Ny delad vandring",
                  $"{senderResult.Value.NickName} vill dela en vandring med dig",
-                  new Dictionary<string, object> { ["type"] = "hike_share" }, ctoken);
+                  new Dictionary<string, object> { ["type"] = "hike_share" }, ctoken,
+                  fromUserIdentifier: identifier);
 
             return Result.Ok();
         }

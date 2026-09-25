@@ -109,6 +109,64 @@ The admin page also lists reporters and authors (`GET …/reporters`, `GET …/a
 - **As a reporter:** only their free-text note is removed. The reports still point at content
   that exists and still need a decision.
 
+## Banning and blocking — the other half, and not this queue
+
+Deciding a report settles *content*. The two things that act on a *person* are separate from it
+and from each other, and they are not the same word:
+
+| | who does it | what it does |
+| --- | --- | --- |
+| **ban** | a moderator, from the Author card in this queue or from **Users → Authors** | the account keeps reading the app and can no longer write to it |
+| **block** | any user, from their own friends list | that person disappears for them, and is never told |
+
+A ban is **read-only, not a lockout**. The account signs in as before, browses trails, reads
+reviews and keeps its own hike log; what it loses is everything that reaches someone else — a
+review, an obstacle report, a solved vote, a friend request, a share, an edit to a hike that
+recipients already see. An unlifted row in `UserBans` is the
+gate itself, and `StigviddAPI/Authorization/BannedUserWriteFilter.cs` is what enforces it:
+every non-GET is refused unless the endpoint carries `[AllowWhenBanned]`. Keycloak is
+deliberately not involved — disabling the user there would bar sign-in, which is the one thing
+a ban must not do.
+
+Deleting is never taken away. A banned user can still remove their own reviews and obstacle
+reports, block someone, leave a friendship, and delete their account.
+
+`UserBans` is the history: one row per ban, with `BannedBy` and `Reason` for who and why, and
+`LiftedAt`/`LiftedBy` once it is lifted. Lifting stamps the row rather than deleting it, and a
+new ban adds a row, so every earlier ban survives. A partial unique index allows at most one
+unlifted row per user, and banning an account that is already banned is a **409** that leaves
+the first ban untouched — two moderators acting on the same author from stale pages cannot
+overwrite each other. The rows cascade with the account when it is deleted. **Users →
+Authors** shows the count as **Bans**, lifted ones included. The
+`strikeSeverity` grading in `web/src/lib/moderation-statistics.ts` (one or two is *watch*,
+three or more is *serious*) is the list that decision is made from.
+
+Banning from the Author card works for a review and an obstacle report alike, and records the
+report's identifier as the reason. It leaves the content where it is: what stays published is
+decided per item, above. Both places read the active ban's `BannedAt` back, so an account already banned
+shows **Banned** with the date and offers to lift it in place of the Ban button, and the queue
+and the Authors list are re-read afterwards — the buttons are chosen from the response, so a
+stale list would offer the action just taken.
+
+A **user** block is one-way and silent. It hides that person's reviews, obstacle reports,
+solved votes, search entry, friends-list row, friend requests and shared walks from the reader
+who blocked them — a walk a mutual friend reshares still arrives, in that friend's name — and
+suppresses the notifications they would have triggered. Nothing is refused and nothing is
+deleted: the friendship and the shared walks stay in place, and the blocked person's own view of
+the app is untouched, so they are never able to tell. A refusal would give it away outright,
+since they know they did not block anyone.
+
+Unpleasant content is reported, not blocked: the report is what reaches a moderator, and a
+reader who never wants to see that person again blocks them from the friends list. So the
+report sheet in the app offers no block — for an obstacle report it could not even name who,
+since those are shown without a name.
+
+A block is undone from the same screen: the friends list grows a **Blockerade** section, shown
+only when there is someone in it. There is nowhere else to undo it — a block is silent to the
+person blocked, so no notification or request carries it.
+
+See [notes/ban-is-read-only-block-is-per-viewer.md](notes/ban-is-read-only-block-is-per-viewer.md).
+
 ## Configuration
 
 `ContentReports:*` in `appsettings.json`:

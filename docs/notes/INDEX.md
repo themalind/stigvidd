@@ -702,3 +702,25 @@ src/api/generated` then fails with "the generated API client is stale" for reaso
   service's `typeof(...)` to the `startupServices` filter in
   `Tests/IntegrationTests/WebApplicationFactory.cs`, the same list `MailOutboxDispatcher` and
   `ExpiredObstacleCleanupService` are already in — it is hand-maintained, not automatic.
+- [A ban is read-only and global; a block is one-way and silent. Two features, one word](ban-is-read-only-block-is-per-viewer.md) —
+  A **ban** is a moderator's: an unlifted `UserBan` row **is** the
+  gate (one row per ban, so the history survives; a second active ban is a 409), Keycloak is deliberately untouched (disabling the user bars sign-in, and is what
+  Keycloak also answers for an unverified account, so the app would send a banned user to the
+  verify-email dead end). It is enforced by one global filter, `BannedUserWriteFilter`, which
+  refuses every non-GET unless the endpoint carries `[AllowWhenBanned]` — the default is
+  refusal, so a new write endpoint fails closed, and `BannedUserWriteTests` pins the marked
+  list. A **block** is a user's, and it is **one-way and silent**: `UserBlock` hides the blocked
+  person from the blocker only, nothing is refused and nothing is deleted — the friendship and
+  the shared walks stay, because removing them is what the blocked person would notice. A
+  one-way block with a visible refusal would tell them outright, so silence is forced, not
+  decorative. It is applied in seven of the blocker's reads (trail reviews, trail obstacles,
+  solved votes, friend search, friends list, incoming and outgoing requests, shared walks — the
+  share filter checks the **sharer** only, so a mutual friend's reshare of a blocked owner's walk
+  still arrives, matching its push) plus one chokepoint: `SendToUserAsync` takes `fromUserIdentifier` and `ExpoPushService`
+  drops the push when the recipient blocked that sender, failing open on a lookup error.
+  `GetHiddenUserIdsForReadAsync` is the single source, empty for a signed-out reader
+  and empty on failure. Rating averages deliberately do not move and solved votes still count
+  towards the three that close a report. The trap: `[AllowAnonymous]` still authenticates when a
+  token is sent, so `getReviewsByTrailIdentifier` and `getTrailObstaclesByTrailIdentifier` in
+  `app/src/api/` must send one or the filter silently does nothing; `endpoint-contract.test.ts`
+  pins that with a third auth kind, `"optional"`.

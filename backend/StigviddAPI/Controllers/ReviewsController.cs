@@ -31,7 +31,11 @@ public class ReviewsController : StigViddController
         [FromQuery] int limit, // Hur många per omgång
         CancellationToken ctoken)
     {
-        var result = await _reviewService.GetReviewsByTrailIdentifierAsync(trailIdentifier, page, limit, ctoken);
+        // AllowAnonymous skips authorization, not authentication, so a signed-in reader is still
+        // known here and gets their blocks applied. A signed-out one resolves to null and sees all.
+        var viewer = await GetAuthenticatedUserAsync(_userService, ctoken);
+
+        var result = await _reviewService.GetReviewsByTrailIdentifierAsync(trailIdentifier, page, limit, viewer?.Identifier, ctoken);
 
         if (!result.Success && result.Message != null)
         {
@@ -96,6 +100,7 @@ public class ReviewsController : StigViddController
     }
 
     [Authorize]
+    [AllowWhenBanned]
     [HttpDelete]
     [Route("{reviewIdentifier}")]
     public async Task<ActionResult> DeleteReview(

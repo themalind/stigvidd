@@ -24,6 +24,8 @@ public class StigViddDbContext(DbContextOptions<StigViddDbContext> options) : Db
     public DbSet<HikeShare> HikeShares { get; set; }
     public DbSet<HikeImage> HikeImages { get; set; }
     public DbSet<FriendRequest> FriendRequests { get; set; }
+    public DbSet<UserBlock> UserBlocks { get; set; }
+    public DbSet<UserBan> UserBans { get; set; }
     public DbSet<UserPushToken> UserPushTokens { get; set; }
     public DbSet<CityArea> CityAreas { get; set; }
     public DbSet<TrailSourceLink> TrailSourceLinks { get; set; }
@@ -205,6 +207,34 @@ public class StigViddDbContext(DbContextOptions<StigViddDbContext> options) : Db
             .WithMany()
             .HasForeignKey(fr => fr.ReceiverId)
             .OnDelete(DeleteBehavior.NoAction);
+
+        // NoAction on both: two cascade paths into Users is an EF error. Rows are cleared by
+        // UserRepository.DeleteUserAsync on account deletion. keep-comment: the delete path is invisible from the model
+        modelBuilder.Entity<UserBlock>()
+            .HasKey(ub => new { ub.BlockerUserId, ub.BlockedUserId });
+
+        modelBuilder.Entity<UserBlock>()
+            .HasOne(ub => ub.Blocker)
+            .WithMany()
+            .HasForeignKey(ub => ub.BlockerUserId)
+            .OnDelete(DeleteBehavior.NoAction);
+
+        modelBuilder.Entity<UserBlock>()
+            .HasOne(ub => ub.Blocked)
+            .WithMany()
+            .HasForeignKey(ub => ub.BlockedUserId)
+            .OnDelete(DeleteBehavior.NoAction);
+
+        modelBuilder.Entity<UserBan>()
+            .HasOne(ub => ub.User)
+            .WithMany(u => u.Bans)
+            .HasForeignKey(ub => ub.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<UserBan>()
+            .HasIndex(ub => ub.UserId)
+            .IsUnique()
+            .HasFilter("\"LiftedAt\" IS NULL");
 
         modelBuilder.Entity<UserPushToken>()
             .HasOne(upt => upt.User)

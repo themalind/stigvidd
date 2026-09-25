@@ -52,6 +52,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IHikeShareRepository, HikeShareRepository>();
         services.AddTransient<IHikeShareRecipientRepository, HikeShareRecipientRepository>();
         services.AddTransient<IFriendRepository, FriendRepository>();
+        services.AddTransient<IUserBlockRepository, UserBlockRepository>();
         services.AddTransient<IUserPushTokenRepository, UserPushTokenRepository>();
         services.AddTransient<IMediaRepository, MediaRepository>();
         services.AddTransient<IMediaReprocessRepository, MediaReprocessRepository>();
@@ -80,6 +81,8 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IHikeShareService, HikeShareService>();
         services.AddTransient<IHikeShareRecipientService, HikeShareRecipientService>();
         services.AddTransient<IFriendService, FriendService>();
+        services.AddTransient<IUserBlockService, UserBlockService>();
+        services.AddTransient<IAdminUserService, AdminUserService>();
         services.AddTransient<ICityAreaService, CityAreaService>();
         services.AddTransient<ITrailImportAnalysisService, TrailImportAnalysisService>();
         services.AddTransient<ITrailImportService, TrailImportService>();

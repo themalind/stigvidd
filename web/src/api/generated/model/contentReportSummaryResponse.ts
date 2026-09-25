@@ -22,6 +22,10 @@ export interface ContentReportSummaryResponse {
   /** @nullable */
   authorNickName?: string | null;
   /** @nullable */
+  authorIdentifier?: string | null;
+  /** @nullable */
+  authorBannedAt?: string | null;
+  /** @nullable */
   contentSnapshot?: string | null;
   contentStillExists?: boolean;
   /** @nullable */
