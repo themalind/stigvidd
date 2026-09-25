@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // PreToolUse(Write|Edit|MultiEdit): denies a code edit that adds a comment line, unless the
-// line is marked essential or falls under a small fixed allowlist (SPDX headers, the
-// Arrange/Act/Assert test markers). Scoped to backend/web/app source files only.
+// line is marked essential or falls under a small fixed allowlist (SPDX headers, app/'s
+// MPL-2.0 notice, the Arrange/Act/Assert test markers). Scoped to backend/web/app source files only.
 //
 // Escape hatch: `keep-comment:` anywhere on the line.
 //
@@ -13,7 +13,21 @@ import { readEvent, repoRoot, relKey, under, deny, checker, lines } from "./lib.
 const SOURCE_EXT = /\.(cs|ts|tsx)$/;
 const EXCLUDE_DIRS = ["web/src/api/generated/", ".claude/", "docs/"];
 
-const EXEMPT_LINE = [/SPDX-FileCopyrightText/, /SPDX-License-Identifier/, /^\/\/\s*(Arrange|Act|Assert)\b/i];
+// The MPL-2.0 notice every app/ file carries under its SPDX lines, matched verbatim so a
+// narrative comment cannot borrow the exemption.
+const MPL_NOTICE = [
+  "//",
+  "// This Source Code Form is subject to the terms of the Mozilla Public License,",
+  "// v. 2.0. If a copy of the MPL was not distributed with this file, You can",
+  "// obtain one at https://mozilla.org/MPL/2.0/.",
+];
+
+const EXEMPT_LINE = [
+  /SPDX-FileCopyrightText/,
+  /SPDX-License-Identifier/,
+  /^\/\/\s*(Arrange|Act|Assert)\b/i,
+  ...MPL_NOTICE.map((l) => new RegExp(`^${l.replace(/[.*+?^${}()|[\]\\/]/g, "\\$&")}$`)),
+];
 const ESCAPE = /keep-comment:/i;
 
 function isCommentLine(line) {
@@ -23,7 +37,7 @@ function isCommentLine(line) {
 }
 
 function isExempt(line) {
-  return ESCAPE.test(line) || EXEMPT_LINE.some((re) => re.test(line));
+  return ESCAPE.test(line) || EXEMPT_LINE.some((re) => re.test(line.trim()));
 }
 
 /** Comment lines present in `newText` but not (verbatim, trimmed) in `oldText`. */
@@ -107,6 +121,14 @@ function selfTest() {
   const CS = "backend/Core/Services/MediaReprocessService.cs";
   const CS_WIN = "backend\\Core\\Services\\MediaReprocessService.cs";
   const TS = "web/src/lib/media-reprocess.ts";
+  const APP = "app/src/components/auth/new-thing.tsx";
+  const APP_HEADER =
+    "// SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors\n" +
+    "// SPDX-License-Identifier: MPL-2.0\n" +
+    "//\n" +
+    "// This Source Code Form is subject to the terms of the Mozilla Public License,\n" +
+    "// v. 2.0. If a copy of the MPL was not distributed with this file, You can\n" +
+    "// obtain one at https://mozilla.org/MPL/2.0/.\n";
 
   // classify(key, oldText, newText) cases -----------------------------------
   const classifyCases = [
@@ -114,14 +136,19 @@ function selfTest() {
     [CS, "var x = 1;", "// this explains what the line below does\nvar x = 1;", "deny"],
     [CS_WIN, "", "// a brand new narrative comment\nclass X {}", "deny"],
     [TS, "", "/** JSDoc-style narrative */\nexport const x = 1;", "deny"],
+    [APP, "", `${APP_HEADER}\n// narrative after the notice\nexport const x = 1;`, "deny"],
+    [APP, "", "// This Source Code Form is subject to the terms of the Mozilla Public License, and more\nexport const x = 1;", "deny"], // near-miss of a notice line
     // stays silent
     [CS, "// same comment\nvar x = 1;", "// same comment\nvar x = 2;", null], // unchanged comment
     [CS, "var x = 1;", "var x = 2;", null], // no comment at all
     [CS, "var x = 1;\n// old note\n", "var x = 2;\n", null], // comment REMOVED
     [CS, "", "// SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors\n// SPDX-License-Identifier: AGPL-3.0-or-later\n", null],
+    [APP, "", `${APP_HEADER}\nexport const x = 1;`, null], // the full MPL notice of a new app file
+    [APP, "", APP_HEADER.replace(/\n/g, "\r\n") + "\r\nexport const x = 1;", null], // CRLF, as Windows writes it
     [CS, "", "// Arrange\nvar x = 1;", null],
     [CS, "", "// Act\nvar x = 1;", null],
     [CS, "", "// Assert\nvar x = 1;", null],
+    [CS, "", "        // Arrange\n        var x = 1;", null], // indented, as every real test marker is
     [CS, "", "var url = \"https://example.com\"; // not a comment start", null],
     [CS, "", "// a necessary workaround keep-comment: EF requires this exact order\nvar x = 1;", null],
     ["docs/notes/some-note.md", "", "// a comment inside prose docs", null],
@@ -161,8 +188,12 @@ function selfTest() {
     decide("Write", { file_path: CS, content: "// SPDX-FileCopyrightText: x\n// SPDX-License-Identifier: y\nclass X {}" }, "/does/not/exist") === null,
     "a new file with only the SPDX header was denied",
   );
+  ok(
+    decide("Write", { file_path: APP, content: `${APP_HEADER}\nexport const x = 1;` }, "/does/not/exist") === null,
+    "a new app file with the SPDX header and MPL notice was denied",
+  );
 
-  return done(classifyCases.length + 6);
+  return done(classifyCases.length + 7);
 }
 
 process.exit(main());
