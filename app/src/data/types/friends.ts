@@ -26,3 +26,9 @@ export interface OutgoingFriendRequest {
   receiverNickName: string;
   createdAt: string;
 }
+
+export interface BlockedUser {
+  identifier: string;
+  nickName: string;
+  blockedAt: string;
+}

@@ -1,4 +1,9 @@
 {
+  "ban": {
+    "title": "Your account is limited",
+    "body": "You can use Stigvidd as before, but you can no longer write reviews, report obstacles, send friend requests or share walks.",
+    "contact": "Get in touch with us if you think this is a mistake."
+  },
   "common": {
     "save": "Save",
     "saving": "Saving...",
@@ -460,7 +465,21 @@
     "requestSent": "Request sent!",
     "sendError": "Could not send request, please try again!",
     "friendRemoved": "Friend removed",
-    "removeError": "Could not remove friend, please try again later!"
+    "removeError": "Could not remove friend, please try again later!",
+    "block": "Block",
+    "blockTitle": "Block {{name}}?",
+    "blockInfo": "You stop seeing this person. Their reviews, obstacle reports, friend requests and shared walks are hidden from you.",
+    "blockContinue": "They are not told, and you can undo this at any time.",
+    "blocked": "User blocked",
+    "blockError": "Could not block the user, please try again later!",
+    "unblock": "Unblock",
+    "unblocked": "User unblocked",
+    "unblockError": "Could not unblock the user, please try again later!",
+    "blockedTitle": "Blocked",
+    "blockedCount_one": "Blocked ({{count}})",
+    "blockedCount_other": "Blocked ({{count}})",
+    "blockedError": "Could not load blocked users",
+    "blockedSince": "Blocked {{date}}"
   },
   "collection": {
     "tapInfo": "Tap a walk to see more information or delete it.",

@@ -17,8 +17,10 @@ import UserBar from "@/components/trail/user-action-bar/user-bar";
 import { TRAIL_DETAIL_STALE_TIME } from "@/constants/cache";
 import { Review } from "@/data/types";
 import CoordinateParser from "@/utils/coordinate-parser";
+import { userAtom } from "@/atoms/auth-atoms";
 import { guardedNavigate } from "@/utils/navigation";
 import { useQuery } from "@tanstack/react-query";
+import { useAtomValue } from "jotai";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { startTransition, useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -45,6 +47,7 @@ export default function TrailDetailsScreen({ followRoute }: { followRoute: Follo
   const theme = useTheme();
   const { t } = useTranslation();
   const router = useRouter();
+  const user = useAtomValue(userAtom);
   const { identifier } = useLocalSearchParams<{ identifier: string }>();
   const normalizedIdentifier: string = Array.isArray(identifier) ? identifier[0] : identifier;
   const scrollViewRef = useRef<ScrollView>(null);
@@ -77,7 +80,7 @@ export default function TrailDetailsScreen({ followRoute }: { followRoute: Follo
   });
 
   const { data: obstacles } = useQuery({
-    queryKey: ["obstacles", normalizedIdentifier],
+    queryKey: ["obstacles", normalizedIdentifier, user?.id],
     queryFn: () => getTrailObstaclesByTrailIdentifier(normalizedIdentifier),
     enabled: !!normalizedIdentifier,
     staleTime: TRAIL_DETAIL_STALE_TIME,

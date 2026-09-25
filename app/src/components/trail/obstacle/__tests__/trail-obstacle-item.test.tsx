@@ -158,6 +158,17 @@ it("counts the votes towards the three that clear the warning", () => {
   expect(screen.getByText("2/3")).toBeTruthy();
 });
 
+it("counts the votes of people this reader blocked, which the server leaves out of the list", () => {
+  show(
+    obstacle({
+      solvedVotes: [{ userIdentifier: "a", trailObstacleIdentifier: OBSTACLE_ID }],
+      solvedVoteCount: 2,
+    }),
+  );
+
+  expect(screen.getByText("2/3")).toBeTruthy();
+});
+
 it("counts an obstacle nobody has voted on as zero", () => {
   show(obstacle({ solvedVotes: undefined }));
 

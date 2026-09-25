@@ -6,17 +6,20 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { CreateTrailObstacleRequest, TrailObstacle, UpdateTrailObstacleRequest } from "@/data/types";
-import { BASE_URL } from "./api-config";
-import { getUserToken } from "./users";
-import { ApiError } from "./api-error";
 import { logger } from "@/services/logger";
+import { BASE_URL } from "./api-config";
+import { ApiError } from "./api-error";
+import { getUserToken } from "./users";
 
 export async function getTrailObstaclesByTrailIdentifier(trailIdentifier: string): Promise<TrailObstacle[]> {
   try {
+    const token = await getUserToken();
+
     const response = await fetch(`${BASE_URL}/trailobstacles/trail/${trailIdentifier}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
     });
 

@@ -89,7 +89,9 @@ function mockFetch(ok: boolean, status = ok ? 200 : 500, body: unknown = {}) {
 // How an endpoint treats a missing token:
 //  - "required"  refuses to call the network at all
 //  - "none"      is public and sends no Authorization header
-type Auth = "required" | "none";
+//  - "optional"  is public, but sends the token when there is one, so the server can leave
+//                out content from people this reader has blocked
+type Auth = "required" | "none" | "optional";
 
 interface Endpoint {
   name: string;
@@ -184,7 +186,7 @@ const endpoints: Endpoint[] = [
     call: () => getReviewsByTrailIdentifier("t1", 2, 5),
     method: "GET",
     path: "/reviews/trail/t1?page=2&limit=5",
-    auth: "none",
+    auth: "optional",
     carriesStatus: true,
   },
   {
@@ -218,7 +220,7 @@ const endpoints: Endpoint[] = [
     call: () => getTrailObstaclesByTrailIdentifier("t1"),
     method: "GET",
     path: "/trailobstacles/trail/t1",
-    auth: "none",
+    auth: "optional",
     carriesStatus: true,
   },
   {
@@ -630,6 +632,27 @@ describe("api endpoint contract", () => {
         await endpoint.call();
 
         const headers = (fetchMock.mock.calls[0][1]?.headers ?? {}) as Record<string, string>;
+        expect(headers.Authorization).toBeUndefined();
+      });
+    }
+
+    if (endpoint.auth === "optional") {
+      it("sends the bearer token when there is one", async () => {
+        const fetchMock = mockFetch(true, 200, { reviews: [] });
+        await endpoint.call();
+
+        const headers = (fetchMock.mock.calls[0][1]?.headers ?? {}) as Record<string, string>;
+        expect(headers.Authorization).toBe("Bearer bearer-token");
+      });
+
+      it("still reaches the network without one, since a signed-out reader has no blocks", async () => {
+        mockToken.mockResolvedValue(null);
+        const fetchMock = mockFetch(true, 200, { reviews: [] });
+
+        await endpoint.call();
+
+        const headers = (fetchMock.mock.calls[0][1]?.headers ?? {}) as Record<string, string>;
+        expect(fetchMock).toHaveBeenCalledTimes(1);
         expect(headers.Authorization).toBeUndefined();
       });
     }

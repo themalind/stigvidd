@@ -30,7 +30,7 @@ interface ReviewWrapperProps {
 }
 
 export default function TrailReviewsContainer({ trail, surfaceToScrollToRef, onReviewsLoaded }: ReviewWrapperProps) {
-  const { isAuthenticated } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const [isReviewModalVisible, setIsReviewModalVisible] = useState(false);
   const [isAuthDialogVisible, setIsAuthDialogVisible] = useState(false);
   const theme = useTheme();
@@ -46,7 +46,7 @@ export default function TrailReviewsContainer({ trail, surfaceToScrollToRef, onR
     isError,
     error,
   } = useInfiniteQuery({
-    queryKey: ["reviews", trail.identifier],
+    queryKey: ["reviews", trail.identifier, user?.id],
     queryFn: ({ pageParam }) => getReviewsByTrailIdentifier(trail.identifier, pageParam, 5), // pageParam är vilken omgång av hämtningar
     getNextPageParam: (lastPage, allPages) => (lastPage.hasMore ? allPages.length : undefined),
     initialPageParam: 0, // Startparamvärde

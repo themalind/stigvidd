@@ -12,7 +12,8 @@ import { useTranslation } from "react-i18next";
 import { Pressable, StyleSheet, View } from "react-native";
 import { Text, useTheme } from "react-native-paper";
 import TrailObstacleForm from "../obstacle/trail-obstacle-form";
-import { useAuth } from "@/components/auth/auth-provider";
+import AccountBannedDialog from "@/components/auth/account-banned-dialog";
+import { useCanWrite } from "@/hooks/useCanWrite";
 
 interface Props {
   trailIdentifier: string;
@@ -21,13 +22,15 @@ interface Props {
 export default function UserReportIssue({ trailIdentifier }: Props) {
   const { t } = useTranslation();
   const theme = useTheme();
-  const { isAuthenticated } = useAuth();
+  const { canWrite, reason } = useCanWrite();
   const [showForm, setShowForm] = useState(false);
   const [showAuthDialog, setAuthDialog] = useState(false);
+  const [showBannedDialog, setBannedDialog] = useState(false);
 
   function handlePress() {
-    if (!isAuthenticated) {
-      setAuthDialog(true);
+    if (!canWrite) {
+      if (reason === "banned") setBannedDialog(true);
+      else setAuthDialog(true);
       return;
     }
     setShowForm(true);
@@ -46,6 +49,7 @@ export default function UserReportIssue({ trailIdentifier }: Props) {
         <Text style={[s.text, { color: theme.colors.onSurface }]}>{t("obstacle.report")}</Text>
       </Pressable>
       <TrailObstacleForm trailIdentifier={trailIdentifier} visible={showForm} onDismiss={handleReportAdded} />
+      <AccountBannedDialog visible={showBannedDialog} onDismiss={() => setBannedDialog(false)} />
       <NotAuthenticatedDialog
         visible={showAuthDialog}
         onDissmiss={() => setAuthDialog(false)}

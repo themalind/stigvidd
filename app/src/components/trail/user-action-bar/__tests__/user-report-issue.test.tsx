@@ -17,6 +17,12 @@ jest.mock("@/components/auth/auth-provider", () => ({
   useAuth: () => ({ isAuthenticated: mockIsAuthenticated }),
 }));
 
+let mockUser: { bannedAt?: string | null } | undefined = {};
+jest.mock("@/atoms/user-atoms", () => {
+  const { atom } = jest.requireActual("jotai");
+  return { stigviddUserAtom: atom(() => ({ data: mockUser })) };
+});
+
 // The obstacle form is a modal with its own suite; this button only decides when it opens.
 jest.mock("@/components/trail/obstacle/trail-obstacle-form", () => {
   const { Text } = jest.requireActual("react-native");
@@ -41,6 +47,7 @@ jest.mock("@/components/trail/obstacle/trail-obstacle-form", () => {
 beforeEach(() => {
   jest.clearAllMocks();
   mockIsAuthenticated = true;
+  mockUser = {};
 });
 
 describe("UserReportIssue", () => {
@@ -71,6 +78,17 @@ describe("UserReportIssue", () => {
     await settle();
 
     expect(screen.getByText("Du behöver vara inloggad för att rapportera en händelse.")).toBeTruthy();
+    expect(screen.queryByTestId("obstacle-form")).toBeNull();
+  });
+
+  // A ban leaves the screen alone, so the button names the ban rather than the login screen.
+  it("tells a banned user why, instead of opening the form", async () => {
+    mockUser = { bannedAt: "2026-03-04T10:00:00Z" };
+    renderWithProviders(<UserReportIssue trailIdentifier={TRAIL_ID} />);
+    fireEvent.press(screen.getByText("Rapportera"));
+    await settle();
+
+    expect(screen.getByText("Ditt konto är begränsat")).toBeTruthy();
     expect(screen.queryByTestId("obstacle-form")).toBeNull();
   });
 

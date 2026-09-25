@@ -9,6 +9,7 @@ import { pruneTrailCardCache } from "@/hooks/useTrailCard";
 import { initMapTiler } from "@/components/map/map-style";
 import { initMapCache } from "@/utils/map-cache";
 import { loadUserTheme, userThemeAtom } from "@/atoms/user-theme-atom";
+import { BannedWriteDialog } from "@/components/auth/banned-write-dialog";
 import { GlobalSnackbar } from "@/components/global-snackbar";
 import { ConsentDialog } from "@/components/settings/consent-dialog";
 import { useAppState } from "@/hooks/useAppState";
@@ -144,6 +145,7 @@ export default function RootLayout() {
               </Stack>
               {/* A Portal, so it must stay inside PaperProvider's portal host. */}
               <ConsentDialog />
+              <BannedWriteDialog />
             </PaperProvider>
             {/* After the portal host, so it is drawn over every modal and dialog. */}
             <PaperThemeProvider theme={theme}>

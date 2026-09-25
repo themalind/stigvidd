@@ -7,6 +7,8 @@
 
 import { showWarningAtom } from "@/atoms/snackbar-atoms";
 import NotAuthenticatedDialog from "@/components/auth/not-authenticated-msg-dialog";
+import AccountBannedDialog from "@/components/auth/account-banned-dialog";
+import { useCanWrite } from "@/hooks/useCanWrite";
 import AddReview from "@/components/review/add/add-review-modal";
 import { Trail } from "@/data/types";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -14,7 +16,6 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useSetAtom } from "jotai";
 import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { useAuth } from "@/components/auth/auth-provider";
 import { useTheme } from "react-native-paper";
 import { useTranslation } from "react-i18next";
 import { useHasReviewedTrail } from "@/hooks/review/useHasReviewedTrail";
@@ -25,17 +26,19 @@ interface UserRatingProps {
 
 export default function UserRating({ trail }: UserRatingProps) {
   const theme = useTheme();
-  const { isAuthenticated } = useAuth();
+  const { canWrite, reason } = useCanWrite();
   const { t } = useTranslation();
   const [showAuthDialog, setAuthDialog] = useState(false);
+  const [showBannedDialog, setBannedDialog] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const queryClient = useQueryClient();
   const setWarning = useSetAtom(showWarningAtom);
   const { data: hasReviewed } = useHasReviewedTrail(trail.identifier);
 
   const onPress = () => {
-    if (!isAuthenticated) {
-      setAuthDialog(true);
+    if (!canWrite) {
+      if (reason === "banned") setBannedDialog(true);
+      else setAuthDialog(true);
       return;
     }
     // Editing an existing review is not built yet.
@@ -70,6 +73,7 @@ export default function UserRating({ trail }: UserRatingProps) {
         visible={showModal}
         onDismiss={handleReviewAdded}
       />
+      <AccountBannedDialog visible={showBannedDialog} onDismiss={() => setBannedDialog(false)} />
       <NotAuthenticatedDialog
         visible={showAuthDialog}
         onDissmiss={() => setAuthDialog(false)}

@@ -18,10 +18,13 @@ export async function getReviewsByTrailIdentifier(
   limit: number,
 ): Promise<PagedReviewResponse> {
   try {
+    const token = await getUserToken();
+
     const response = await fetch(`${BASE_URL}/reviews/trail/${trailIdentifier}?page=${page}&limit=${limit}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
     });
 

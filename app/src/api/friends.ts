@@ -5,7 +5,7 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import { FriendRequest, FriendResponse, OutgoingFriendRequest, SearchFriendResult } from "@/data/types";
+import { BlockedUser, FriendRequest, FriendResponse, OutgoingFriendRequest, SearchFriendResult } from "@/data/types";
 import { BASE_URL } from "./api-config";
 import { ApiError } from "./api-error";
 import { getUserToken } from "./users";
@@ -249,6 +249,96 @@ export async function searchUsers(query: string): Promise<SearchFriendResult[]> 
   } catch (error) {
     logger.error("Search users failed", {
       endpoint: "GET /users/search",
+      errorMessage: String(error),
+    });
+    throw error;
+  }
+}
+
+export async function blockUser(otherIdentifier: string): Promise<{ success: boolean }> {
+  try {
+    const token = await getUserToken();
+
+    if (!token) {
+      throw new Error("User not authenticated");
+    }
+
+    const response = await fetch(`${BASE_URL}/friends/blocks/${otherIdentifier}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new ApiError(`HTTP error: blockUser: ${response.status}`, response.status);
+    }
+
+    return { success: true };
+  } catch (error) {
+    logger.error("Block user failed", {
+      endpoint: "POST /friends/blocks/{param}",
+      errorMessage: String(error),
+    });
+    throw error;
+  }
+}
+
+export async function unblockUser(otherIdentifier: string): Promise<{ success: boolean }> {
+  try {
+    const token = await getUserToken();
+
+    if (!token) {
+      throw new Error("User not authenticated");
+    }
+
+    const response = await fetch(`${BASE_URL}/friends/blocks/${otherIdentifier}`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new ApiError(`HTTP error: unblockUser: ${response.status}`, response.status);
+    }
+
+    return { success: true };
+  } catch (error) {
+    logger.error("Unblock user failed", {
+      endpoint: "DELETE /friends/blocks/{param}",
+      errorMessage: String(error),
+    });
+    throw error;
+  }
+}
+
+export async function getBlockedUsers(): Promise<BlockedUser[]> {
+  try {
+    const token = await getUserToken();
+
+    if (!token) {
+      throw new Error("User not authenticated");
+    }
+
+    const response = await fetch(`${BASE_URL}/friends/blocks`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new ApiError(`HTTP error: getBlockedUsers: ${response.status}`, response.status);
+    }
+
+    return await response.json();
+  } catch (error) {
+    logger.error("Get blocked users failed", {
+      endpoint: "GET /friends/blocks",
       errorMessage: String(error),
     });
     throw error;

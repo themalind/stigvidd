@@ -149,7 +149,7 @@ export default function TrailObstacleItem({ obstacle, trailIdentifier, onCloseMo
             </Pressable>
           )}
           <View style={s.voteGroup}>
-            <Text style={s.voteCount}>{obstacle.solvedVotes?.length ?? 0}/3</Text>
+            <Text style={s.voteCount}>{obstacle.solvedVoteCount ?? obstacle.solvedVotes?.length ?? 0}/3</Text>
             {!isOwner && (
               <Pressable
                 testID="vote-button"

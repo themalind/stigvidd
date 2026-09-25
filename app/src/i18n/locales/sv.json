@@ -1,4 +1,9 @@
 {
+  "ban": {
+    "title": "Ditt konto är begränsat",
+    "body": "Du kan använda Stigvidd som vanligt, men inte längre skriva recensioner, rapportera hinder, skicka vänförfrågningar eller dela vandringar.",
+    "contact": "Hör av dig till oss om du tror att det är fel."
+  },
   "common": {
     "save": "Spara",
     "saving": "Sparar...",
@@ -460,7 +465,21 @@
     "requestSent": "Förfrågan skickad!",
     "sendError": "Kunde inte skicka förfrågan, försök igen!",
     "friendRemoved": "Vän borttagen",
-    "removeError": "Kunde inte ta bort vän, försök igen senare!"
+    "removeError": "Kunde inte ta bort vän, försök igen senare!",
+    "block": "Blockera",
+    "blockTitle": "Blockera {{name}}?",
+    "blockInfo": "Du slutar se personen. Deras recensioner, hinderrapporter, vänförfrågningar och delade vandringar döljs för dig.",
+    "blockContinue": "Personen får inget veta, och du kan häva blockeringen när som helst.",
+    "blocked": "Användaren är blockerad",
+    "blockError": "Kunde inte blockera användaren, försök igen senare!",
+    "unblock": "Häv blockering",
+    "unblocked": "Blockeringen är hävd",
+    "unblockError": "Kunde inte häva blockeringen, försök igen senare!",
+    "blockedTitle": "Blockerade",
+    "blockedCount_one": "Blockerad ({{count}})",
+    "blockedCount_other": "Blockerade ({{count}})",
+    "blockedError": "Kunde inte hämta blockerade användare",
+    "blockedSince": "Blockerad {{date}}"
   },
   "collection": {
     "tapInfo": "Tryck på en promenad för att se detaljer ",

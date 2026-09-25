@@ -5,7 +5,7 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import { getOutgoingRequests } from "@/api/friends";
+import { getBlockedUsers, getOutgoingRequests } from "@/api/friends";
 import { friendsAtom, incomingRequestsAtom, userSearchAtomFamily } from "@/atoms/friends-atoms";
 import AlertDialog from "@/components/alert-dialog";
 import BackButton from "@/components/back-button";
@@ -18,19 +18,23 @@ import React, { useState } from "react";
 import { Platform, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { ActivityIndicator, Avatar, Button, IconButton, Searchbar, Surface, Text, useTheme } from "react-native-paper";
 import { useTranslation } from "react-i18next";
+import { useBlockMutations } from "@/hooks/friends/useBlockMutations";
 
 const PREVIEW_COUNT = 5;
 
 export default function FriendsScreen() {
   const [query, setQuery] = useState("");
   const { acceptMutation, rejectMutation, sendRequestMutation, removeFriendMutation } = useFriendMutations();
+  const { blockMutation, unblockMutation } = useBlockMutations();
   const theme = useTheme();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [friendToRemoveId, setFriendToRemoveId] = useState<string | null>(null);
+  const [userToBlock, setUserToBlock] = useState<{ identifier: string; nickName: string } | null>(null);
   const [friendsExpanded, setFriendsExpanded] = useState(false);
   const [incomingExpanded, setIncomingExpanded] = useState(false);
   const [outgoingExpanded, setOutgoingExpanded] = useState(false);
   const [searchExpanded, setSearchExpanded] = useState(false);
+  const [blockedExpanded, setBlockedExpanded] = useState(false);
 
   const [{ data: incomingRequests, isPending: incomingPending, isError: incomingError, refetch: refetchIncoming }] =
     useAtom(incomingRequestsAtom);
@@ -48,6 +52,16 @@ export default function FriendsScreen() {
   } = useQuery({
     queryKey: ["friends", "outgoing"],
     queryFn: () => getOutgoingRequests(),
+  });
+
+  const {
+    data: blocked,
+    isPending: blockedPending,
+    isError: blockedError,
+    refetch: refetchBlocked,
+  } = useQuery({
+    queryKey: ["blocks"],
+    queryFn: () => getBlockedUsers(),
   });
 
   const showSearchResults = query.trim().length >= 3;
@@ -185,6 +199,22 @@ export default function FriendsScreen() {
                               iconColor={theme.colors.error}
                               onPress={() => rejectMutation.mutate(req.requesterIdentifier)}
                               disabled={acceptMutation.isPending || rejectMutation.isPending}
+                              style={s.actionButton}
+                            />
+                            <IconButton
+                              testID="block-requester"
+                              hitSlop={16}
+                              accessibilityLabel={t("friends.block")}
+                              icon="cancel"
+                              size={25}
+                              iconColor={theme.colors.outline}
+                              onPress={() =>
+                                setUserToBlock({
+                                  identifier: req.requesterIdentifier,
+                                  nickName: req.requesterNickName,
+                                })
+                              }
+                              disabled={blockMutation.isPending}
                               style={s.actionButton}
                             />
                           </View>
@@ -335,6 +365,17 @@ export default function FriendsScreen() {
                             disabled={removeFriendMutation.isPending}
                             style={s.actionButton}
                           />
+                          <IconButton
+                            testID="block-friend"
+                            hitSlop={16}
+                            accessibilityLabel={t("friends.block")}
+                            icon="cancel"
+                            size={25}
+                            iconColor={theme.colors.outline}
+                            onPress={() => setUserToBlock(friend)}
+                            disabled={blockMutation.isPending}
+                            style={s.actionButton}
+                          />
                         </View>
                         {i < arr.length - 1 && (
                           <View style={[s.divider, { backgroundColor: theme.colors.outlineVariant }]} />
@@ -369,7 +410,87 @@ export default function FriendsScreen() {
               backgroundColor={theme.colors.surface}
               textColor={theme.colors.onSurface}
             />
+            <AlertDialog
+              visible={userToBlock !== null}
+              onDismiss={() => setUserToBlock(null)}
+              onConfirm={() => {
+                if (userToBlock) blockMutation.mutate(userToBlock.identifier);
+                setUserToBlock(null);
+              }}
+              title={t("friends.blockTitle", { name: userToBlock?.nickName ?? "" })}
+              infoText={[t("friends.blockInfo"), t("friends.blockContinue")]}
+              cancelText={t("common.cancel")}
+              confirmText={t("friends.block")}
+              backgroundColor={theme.colors.surface}
+              textColor={theme.colors.onSurface}
+            />
           </View>
+
+          {!blockedPending && !blockedError && (blocked?.length ?? 0) > 0 && (
+            <View style={s.section}>
+              <SectionHeader
+                icon="cancel"
+                label={t("friends.blockedCount", { count: blocked?.length })}
+                color={theme.colors.onSurfaceVariant}
+              />
+              <Surface style={[s.card, { backgroundColor: theme.colors.surface }]} elevation={0}>
+                <View style={s.cardInner}>
+                  {(blockedExpanded ? blocked : blocked?.slice(0, PREVIEW_COUNT))?.map((user, i, arr) => (
+                    <View key={user.identifier}>
+                      <View testID="blocked-row" style={s.row}>
+                        <Avatar.Text
+                          size={40}
+                          label={getInitials(user.nickName)}
+                          style={{ backgroundColor: theme.colors.surfaceVariant }}
+                          labelStyle={{ color: theme.colors.onSurfaceVariant, fontSize: 14 }}
+                        />
+                        <View style={s.rowText}>
+                          <Text variant="bodyLarge" numberOfLines={1} style={s.blockedName}>
+                            {user.nickName}
+                          </Text>
+                          <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
+                            {t("friends.blockedSince", {
+                              date: new Date(user.blockedAt).toLocaleDateString(i18n.language),
+                            })}
+                          </Text>
+                        </View>
+                        <Button
+                          testID="unblock-user"
+                          mode="text"
+                          compact
+                          onPress={() => unblockMutation.mutate(user.identifier)}
+                          disabled={unblockMutation.isPending}
+                        >
+                          {t("friends.unblock")}
+                        </Button>
+                      </View>
+                      {i < arr.length - 1 && (
+                        <View style={[s.divider, { backgroundColor: theme.colors.outlineVariant }]} />
+                      )}
+                    </View>
+                  ))}
+                  {(blocked?.length ?? 0) > PREVIEW_COUNT && (
+                    <Button mode="text" onPress={() => setBlockedExpanded((v) => !v)} style={s.retryButton}>
+                      {blockedExpanded ? t("friends.showLess") : t("friends.showAll", { count: blocked?.length })}
+                    </Button>
+                  )}
+                </View>
+              </Surface>
+            </View>
+          )}
+          {blockedError && (
+            <View style={s.section}>
+              <SectionHeader icon="cancel" label={t("friends.blockedTitle")} color={theme.colors.onSurfaceVariant} />
+              <Surface style={[s.card, { backgroundColor: theme.colors.surface }]} elevation={0}>
+                <View style={s.cardInner}>
+                  <EmptyState text={t("friends.blockedError")} />
+                  <Button mode="text" onPress={() => refetchBlocked()} style={s.retryButton}>
+                    {t("friends.retry")}
+                  </Button>
+                </View>
+              </Surface>
+            </View>
+          )}
         </View>
       </ScrollView>
     </View>
@@ -455,6 +576,12 @@ const s = StyleSheet.create({
   },
   rowName: {
     flex: 1,
+    fontWeight: "500",
+  },
+  rowText: {
+    flex: 1,
+  },
+  blockedName: {
     fontWeight: "500",
   },
   rowActions: {

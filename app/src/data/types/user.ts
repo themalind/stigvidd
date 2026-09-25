@@ -38,6 +38,8 @@ export interface User {
   identifier: string;
   nickName: string;
   email: string;
+  // Set by a moderator: the account reads as before and may no longer write.
+  bannedAt?: string | null;
   myWishList: UserWishlistTrail[];
   myFavorites: UserFavoritesTrail[];
 }

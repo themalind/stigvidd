@@ -28,6 +28,7 @@ export interface TrailObstacle {
   incidentLatitude?: number;
   createdAt: string;
   solvedVotes?: TrailObstacleSolvedVote[];
+  solvedVoteCount?: number;
 }
 
 export interface TrailObstacleSolvedVote {
