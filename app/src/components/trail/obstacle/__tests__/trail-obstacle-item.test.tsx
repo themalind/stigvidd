@@ -58,6 +58,11 @@ jest.mock("expo-router", () => ({
   router: { navigate: (...args: unknown[]) => mockNavigate(...args) },
 }));
 
+let mockWriteBlocked: "banned" | null = null;
+jest.mock("@/hooks/useCanWrite", () => ({
+  useCanWrite: () => ({ canWrite: mockWriteBlocked === null, reason: mockWriteBlocked }),
+}));
+
 // The update form is a modal with its own suite; what this item decides is what it opens with.
 jest.mock("@/components/trail/obstacle/trail-obstacle-update-form", () => {
   const { Text } = jest.requireActual("react-native");
@@ -119,6 +124,7 @@ async function press(testID: string) {
 beforeEach(() => {
   jest.clearAllMocks();
   mockIsAuthenticated = true;
+  mockWriteBlocked = null;
   mockAddVote.mockResolvedValue({ success: true });
   mockDeleteVote.mockResolvedValue({ success: true });
   mockDeleteObstacle.mockResolvedValue({ success: true });
@@ -319,6 +325,38 @@ it("deletes nothing when the confirmation is cancelled, and closes the dialog", 
 
   expect(mockDeleteObstacle).not.toHaveBeenCalled();
   expect(screen.queryByText("Åtgärden kan inte ångras.")).toBeNull();
+});
+
+describe("a banned account", () => {
+  beforeEach(() => {
+    mockWriteBlocked = "banned";
+  });
+
+  it("is told why instead of being asked to confirm a vote", async () => {
+    show();
+
+    await press("icon-radio-button-unchecked");
+
+    expect(screen.getByText("Du har blivit avstängd")).toBeTruthy();
+    expect(screen.queryByText("Hinder åtgärdat")).toBeNull();
+  });
+
+  it("can still take back a vote it already cast", async () => {
+    show(obstacle({ solvedVotes: [{ userIdentifier: "me", trailObstacleIdentifier: OBSTACLE_ID }] }));
+
+    await press("icon-check-circle");
+
+    expect(screen.getByText("Ta bort markering")).toBeTruthy();
+  });
+
+  it("is told why instead of opening the edit form", async () => {
+    show(obstacle({ userIdentifier: "me" }));
+
+    await press("icon-edit");
+
+    expect(screen.getByText("Du har blivit avstängd")).toBeTruthy();
+    expect(screen.queryByTestId("update-form")).toBeNull();
+  });
 });
 
 it("opens the edit form on this report, filled in with what it says now", async () => {

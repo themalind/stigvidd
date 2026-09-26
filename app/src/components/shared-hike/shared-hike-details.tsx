@@ -11,9 +11,11 @@ import { removeSharedHike, reshareHike } from "@/api/shared-hikes";
 import { showErrorAtom, showSuccessAtom } from "@/atoms/snackbar-atoms";
 import { stigviddUserAtom } from "@/atoms/user-atoms";
 import AlertDialog from "@/components/alert-dialog";
+import AccountBannedDialog from "@/components/auth/account-banned-dialog";
 import ReshareHikeModal from "@/components/shared-hike/reshare-hike-modal";
 import { BORDER_RADIUS, SURFACE_BORDER_RADIUS } from "@/constants/constants";
 import { ReshareSharedHikeRequest, SharedHike } from "@/data/types";
+import { useCanWrite } from "@/hooks/useCanWrite";
 import CoordinateParser from "@/utils/coordinate-parser";
 import { formatDate } from "@/utils/format-date";
 import FormattedTime from "@/utils/format-time-from-ms";
@@ -56,6 +58,8 @@ export default function SharedHikeDetails({
   const setSuccessMsg = useSetAtom(showSuccessAtom);
   const [showOnDeleteDialog, setOnDeleteDialog] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [showBannedDialog, setBannedDialog] = useState(false);
+  const { reason } = useCanWrite();
 
   const theme = useTheme();
   const { t } = useTranslation();
@@ -246,7 +250,12 @@ export default function SharedHikeDetails({
                 )}
                 <View style={s.buttonGroup}>
                   {sharedHike.allowResharing && (
-                    <Button style={s.button} mode="contained" icon="share" onPress={() => setShowShareModal(true)}>
+                    <Button
+                      style={s.button}
+                      mode="contained"
+                      icon="share"
+                      onPress={() => (reason === "banned" ? setBannedDialog(true) : setShowShareModal(true))}
+                    >
                       {t("common.share")}
                     </Button>
                   )}
@@ -277,6 +286,7 @@ export default function SharedHikeDetails({
               onConfirm={() => deleteMutation.mutate(sharedHike.hikeIdentifier)}
               backgroundColor={theme.colors.surface}
             />
+            <AccountBannedDialog visible={showBannedDialog} onDismiss={() => setBannedDialog(false)} />
             <ReshareHikeModal
               visible={showShareModal}
               onDismiss={() => setShowShareModal(false)}

@@ -14,6 +14,7 @@ import DeleteAccountModal from "@/components/auth/delete-account-modal";
 import ErrorView from "@/components/error-view";
 import LoadingIndicator from "@/components/loading-indicator";
 import ThemeToggle from "@/components/theme-toggle";
+import AccountBannedNotice from "@/components/user/profile-page/account-banned-notice";
 import ProfileMenuItem from "@/components/user/profile-page/profile-menu-item";
 import { Fontisto, MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
 import { Image } from "expo-image";
@@ -89,6 +90,7 @@ export default function ProfilePageScreen() {
           <ThemeToggle />
         </View>
       </View>
+      {user?.bannedAt && <AccountBannedNotice bannedAt={user.bannedAt} />}
       <View style={s.pressableChoicesContainer}>
         <ProfileMenuItem
           text={t("profile.friends")}

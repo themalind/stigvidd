@@ -5,10 +5,11 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import { View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { useTheme } from "react-native-paper";
 import { useTranslation } from "react-i18next";
 import AlertDialog from "../alert-dialog";
+import BanContactText from "./ban-contact-text";
 
 interface DialogProps {
   visible: boolean;
@@ -24,13 +25,20 @@ export default function AccountBannedDialog({ visible, onDismiss }: DialogProps)
       <AlertDialog
         visible={visible}
         onDismiss={onDismiss}
-        onConfirm={onDismiss}
         title={t("ban.title")}
-        infoText={[t("ban.body"), t("ban.contact")]}
-        confirmText={t("common.ok")}
+        infoText={[t("ban.body")]}
         backgroundColor={theme.colors.surface}
         textColor={theme.colors.onSurface}
-      />
+      >
+        <BanContactText style={[s.contact, { color: theme.colors.onSurface }]} linkColor={theme.colors.primary} />
+      </AlertDialog>
     </View>
   );
 }
+
+const s = StyleSheet.create({
+  contact: {
+    fontSize: 15,
+    lineHeight: 24,
+  },
+});

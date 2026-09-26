@@ -1,8 +1,9 @@
 {
   "ban": {
-    "title": "Ditt konto är begränsat",
-    "body": "Du kan använda Stigvidd som vanligt, men inte längre skriva recensioner, rapportera hinder, skicka vänförfrågningar eller dela vandringar.",
-    "contact": "Hör av dig till oss om du tror att det är fel."
+    "title": "Du har blivit avstängd",
+    "body": "Ditt konto har bedömts bryta mot våra användarvillkor och är därför begränsat. Du kan använda Stigvidd som vanligt, men inte längre skriva recensioner, rapportera hinder, skicka vänförfrågningar eller dela vandringar.",
+    "contact": "Om du tror att det är ett misstag kan du mejla oss på",
+    "since": "Avstängd sedan {{date}}"
   },
   "common": {
     "save": "Spara",

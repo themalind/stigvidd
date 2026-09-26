@@ -120,6 +120,23 @@ it("names the signed-in user", () => {
   expect(screen.getByText("stig@example.com")).toBeTruthy();
 });
 
+it("says nothing about a ban on an ordinary account", () => {
+  show();
+
+  expect(screen.queryByTestId("account-banned-notice")).toBeNull();
+});
+
+it("says the account is banned, since when, and how to get in touch", () => {
+  mockUserQuery = { data: { ...USER, bannedAt: "2026-09-26T10:56:20Z" }, isLoading: false, isError: false };
+  show();
+
+  expect(screen.getByTestId("account-banned-notice")).toBeTruthy();
+  expect(screen.getByText("Du har blivit avstängd")).toBeTruthy();
+  expect(screen.getByText("Avstängd sedan 2026-09-26")).toBeTruthy();
+  expect(screen.getByText("info@stigvidd.se")).toBeTruthy();
+  for (const item of MENU) expect(screen.getByText(item)).toBeTruthy();
+});
+
 it("lists every part of the profile", () => {
   show();
 

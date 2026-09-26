@@ -68,6 +68,11 @@ jest.mock("@/api/friends", () => ({
   getBlockedUsers: () => mockGetBlocked(),
 }));
 
+let mockWriteBlocked: "banned" | null = null;
+jest.mock("@/hooks/useCanWrite", () => ({
+  useCanWrite: () => ({ canWrite: mockWriteBlocked === null, reason: mockWriteBlocked }),
+}));
+
 jest.mock("expo-router", () => ({
   router: { back: jest.fn(), navigate: jest.fn() },
   useRouter: () => ({ back: jest.fn(), navigate: jest.fn() }),
@@ -115,6 +120,7 @@ beforeEach(() => {
   mockSearchQueries = [];
   mockSearchAtoms.clear();
   mockRemovePending = false;
+  mockWriteBlocked = null;
   mockFriends = { data: [friend("bertil"), friend("cissi")], isPending: false, isError: false };
   mockIncoming = { data: [], isPending: false, isError: false };
   mockSearch = { data: [], isPending: false, isError: false };
@@ -183,6 +189,33 @@ it("answers an incoming request with the requester's own identifier", async () =
 
   fireEvent.press(actionButton("Avvisa vänförfrågan", 0));
   expect(mockReject).toHaveBeenCalledWith("id-erik");
+});
+
+describe("a banned account", () => {
+  it("is told why instead of sending a request", async () => {
+    mockWriteBlocked = "banned";
+    mockSearch = { data: [friend("bengt")], isPending: false, isError: false };
+    await show();
+    searchFor("ber");
+
+    fireEvent.press(actionButton("Skicka vänförfrågan"));
+
+    expect(mockSendRequest).not.toHaveBeenCalled();
+    expect(screen.getByText("Du har blivit avstängd")).toBeTruthy();
+  });
+
+  it("is told why instead of accepting, but can still reject", async () => {
+    mockWriteBlocked = "banned";
+    mockIncoming = { data: [incomingRequest("erik")], isPending: false, isError: false };
+    await show();
+
+    fireEvent.press(actionButton("Acceptera vänförfrågan"));
+    expect(mockAccept).not.toHaveBeenCalled();
+    expect(screen.getByText("Du har blivit avstängd")).toBeTruthy();
+
+    fireEvent.press(actionButton("Avvisa vänförfrågan"));
+    expect(mockReject).toHaveBeenCalledWith("id-erik");
+  });
 });
 
 // Removing a friend is confirmed, and the dialog names the person being removed.

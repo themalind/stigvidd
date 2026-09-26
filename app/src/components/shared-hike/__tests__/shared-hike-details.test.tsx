@@ -38,6 +38,11 @@ jest.mock("@/atoms/user-atoms", () => {
   return { stigviddUserAtom: atom({ data: { identifier: "me", nickName: "jag" } }) };
 });
 
+let mockWriteBlocked: "banned" | null = null;
+jest.mock("@/hooks/useCanWrite", () => ({
+  useCanWrite: () => ({ canWrite: mockWriteBlocked === null, reason: mockWriteBlocked }),
+}));
+
 const onDismiss = jest.fn();
 const onAccept = jest.fn();
 const onReject = jest.fn();
@@ -87,6 +92,7 @@ async function openReshare(nickName: string) {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockWriteBlocked = null;
   mockRemove.mockResolvedValue(undefined);
   mockReshare.mockResolvedValue(undefined);
   mockGetFriends.mockResolvedValue([{ identifier: "f1", nickName: "cissi" }]);
@@ -107,6 +113,17 @@ it("shows who shared the walk, when, and its figures", () => {
   expect(screen.getByText("2026-05-04")).toBeTruthy();
   expect(screen.getByText("4.2 km")).toBeTruthy();
   expect(screen.getByText("01:30:00")).toBeTruthy();
+});
+
+it("explains the ban instead of opening the reshare list", () => {
+  mockWriteBlocked = "banned";
+  showAccepted();
+
+  fireEvent.press(screen.getByText("Dela"));
+
+  expect(screen.getByText("Du har blivit avstängd")).toBeTruthy();
+  expect(screen.queryByText("Dela med en vän")).toBeNull();
+  expect(mockGetFriends).not.toHaveBeenCalled();
 });
 
 it("waits with the spinner until the walk arrives, and says so when it cannot", () => {

@@ -1,8 +1,9 @@
 {
   "ban": {
-    "title": "Your account is limited",
-    "body": "You can use Stigvidd as before, but you can no longer write reviews, report obstacles, send friend requests or share walks.",
-    "contact": "Get in touch with us if you think this is a mistake."
+    "title": "You have been suspended",
+    "body": "Your account has been found to breach our terms of use and is therefore limited. You can use Stigvidd as before, but you can no longer write reviews, report obstacles, send friend requests or share walks.",
+    "contact": "If you think this is a mistake, email us at",
+    "since": "Suspended since {{date}}"
   },
   "common": {
     "save": "Save",

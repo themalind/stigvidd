@@ -88,7 +88,7 @@ describe("UserReportIssue", () => {
     fireEvent.press(screen.getByText("Rapportera"));
     await settle();
 
-    expect(screen.getByText("Ditt konto är begränsat")).toBeTruthy();
+    expect(screen.getByText("Du har blivit avstängd")).toBeTruthy();
     expect(screen.queryByTestId("obstacle-form")).toBeNull();
   });
 

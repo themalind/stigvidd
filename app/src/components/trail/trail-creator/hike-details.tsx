@@ -10,9 +10,11 @@ import { deleteHike, hikeRouteQueryKey, shareHike, updateHike } from "@/api/hike
 import { showErrorAtom, showSuccessAtom } from "@/atoms/snackbar-atoms";
 import { stigviddUserAtom } from "@/atoms/user-atoms";
 import AlertDialog from "@/components/alert-dialog";
+import AccountBannedDialog from "@/components/auth/account-banned-dialog";
 import ShareHikeModal, { ShareHikeFormFields } from "@/components/shared-hike/share-hike-modal";
 import { BORDER_RADIUS, SURFACE_BORDER_RADIUS } from "@/constants/constants";
 import { Hike, ShareHikeRequest, UpdateHikeRequest } from "@/data/types";
+import { useCanWrite } from "@/hooks/useCanWrite";
 import CoordinateParser from "@/utils/coordinate-parser";
 import { formatDate } from "@/utils/format-date";
 import FormattedTime from "@/utils/format-time-from-ms";
@@ -51,6 +53,8 @@ export default function HikeDetails({ visible, hike: hikeProp, onDismiss, hikeFo
   const [showOnDeleteDialog, setOnDeleteDialog] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showBannedDialog, setBannedDialog] = useState(false);
+  const { reason } = useCanWrite();
   // The caller's hike can be a stale snapshot (my-hikes keeps the selected one in state),
   // so the modal shows the API's answer to the last update until the caller passes another hike.
   const [updatedHike, setUpdatedHike] = useState<Hike | null>(null);
@@ -129,6 +133,8 @@ export default function HikeDetails({ visible, hike: hikeProp, onDismiss, hikeFo
     setOnDeleteDialog(true);
   };
 
+  const unlessBanned = (open: () => void) => () => (reason === "banned" ? setBannedDialog(true) : open());
+
   const handleEdit = (data: EditHikeFormFields) => {
     updateHikeMutation.mutate(
       {
@@ -154,7 +160,7 @@ export default function HikeDetails({ visible, hike: hikeProp, onDismiss, hikeFo
           <Pressable
             testID="hike-edit"
             hitSlop={12}
-            onPress={() => setShowEditModal(true)}
+            onPress={unlessBanned(() => setShowEditModal(true))}
             accessibilityRole="button"
             accessibilityLabel={t("hike.edit")}
           >
@@ -235,7 +241,7 @@ export default function HikeDetails({ visible, hike: hikeProp, onDismiss, hikeFo
             style={s.button}
             mode="contained"
             icon="share"
-            onPress={() => setShowShareModal(true)}
+            onPress={unlessBanned(() => setShowShareModal(true))}
           >
             {t("hike.share")}
           </Button>
@@ -254,6 +260,7 @@ export default function HikeDetails({ visible, hike: hikeProp, onDismiss, hikeFo
           onConfirm={() => deleteMutation.mutate(hike.identifier)}
           backgroundColor={theme.colors.surface}
         />
+        <AccountBannedDialog visible={showBannedDialog} onDismiss={() => setBannedDialog(false)} />
         <ShareHikeModal
           visible={showShareModal}
           onDismiss={() => setShowShareModal(false)}

@@ -8,9 +8,11 @@
 import { getBlockedUsers, getOutgoingRequests } from "@/api/friends";
 import { friendsAtom, incomingRequestsAtom, userSearchAtomFamily } from "@/atoms/friends-atoms";
 import AlertDialog from "@/components/alert-dialog";
+import AccountBannedDialog from "@/components/auth/account-banned-dialog";
 import BackButton from "@/components/back-button";
 import { BORDER_RADIUS, SCREEN_PADDING } from "@/constants/constants";
 import { useFriendMutations } from "@/hooks/friends/useFriendMutations";
+import { useCanWrite } from "@/hooks/useCanWrite";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
 import { useAtom } from "jotai";
@@ -35,6 +37,9 @@ export default function FriendsScreen() {
   const [outgoingExpanded, setOutgoingExpanded] = useState(false);
   const [searchExpanded, setSearchExpanded] = useState(false);
   const [blockedExpanded, setBlockedExpanded] = useState(false);
+  const [showBannedDialog, setBannedDialog] = useState(false);
+  const { reason } = useCanWrite();
+  const unlessBanned = (write: () => void) => (reason === "banned" ? setBannedDialog(true) : write());
 
   const [{ data: incomingRequests, isPending: incomingPending, isError: incomingError, refetch: refetchIncoming }] =
     useAtom(incomingRequestsAtom);
@@ -132,7 +137,7 @@ export default function FriendsScreen() {
                                     accessibilityLabel={t("friends.sendRequest")}
                                     icon="account-plus"
                                     size={25}
-                                    onPress={() => sendRequestMutation.mutate(user.nickName)}
+                                    onPress={() => unlessBanned(() => sendRequestMutation.mutate(user.nickName))}
                                     style={s.actionButton}
                                   />
                                 )}
@@ -187,7 +192,7 @@ export default function FriendsScreen() {
                               icon="check-circle-outline"
                               size={30}
                               iconColor={theme.colors.primary}
-                              onPress={() => acceptMutation.mutate(req.requesterIdentifier)}
+                              onPress={() => unlessBanned(() => acceptMutation.mutate(req.requesterIdentifier))}
                               disabled={acceptMutation.isPending || rejectMutation.isPending}
                               style={s.actionButton}
                             />
@@ -493,6 +498,7 @@ export default function FriendsScreen() {
           )}
         </View>
       </ScrollView>
+      <AccountBannedDialog visible={showBannedDialog} onDismiss={() => setBannedDialog(false)} />
     </View>
   );
 }

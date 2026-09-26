@@ -21,6 +21,7 @@ interface AlertDialogProps {
   confirmText?: string;
   onConfirm?: () => void;
   cancelText?: string;
+  children?: React.ReactNode;
 }
 
 export default function AlertDialog({
@@ -33,6 +34,7 @@ export default function AlertDialog({
   confirmText,
   onConfirm,
   cancelText,
+  children,
 }: AlertDialogProps) {
   const { t } = useTranslation();
   const theme = useTheme();
@@ -54,6 +56,7 @@ export default function AlertDialog({
                 {infoText[index]}
               </Text>
             ))}
+            {children}
           </View>
         </Dialog.Content>
         <Dialog.Actions>

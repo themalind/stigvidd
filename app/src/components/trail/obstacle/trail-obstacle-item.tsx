@@ -8,10 +8,12 @@
 import { addSolvedVote, deleteSolvedVote, deleteTrailObstacle } from "@/api/trail-obstacles";
 import { stigviddUserAtom } from "@/atoms/user-atoms";
 import AlertDialog from "@/components/alert-dialog";
+import AccountBannedDialog from "@/components/auth/account-banned-dialog";
 import NotAuthenticatedDialog from "@/components/auth/not-authenticated-msg-dialog";
 import ReportContentForm from "@/components/report/report-content-form";
 import { BORDER_RADIUS } from "@/constants/constants";
 import { TrailObstacle } from "@/data/types";
+import { useCanWrite } from "@/hooks/useCanWrite";
 import { formatDate } from "@/utils/format-date";
 import issueTypeParser from "@/utils/issue-type-parser";
 import { MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
@@ -41,6 +43,8 @@ export default function TrailObstacleItem({ obstacle, trailIdentifier, onCloseMo
   const [showUpdateForm, setShowUpdateForm] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showReportForm, setShowReportForm] = useState(false);
+  const [showBannedDialog, setBannedDialog] = useState(false);
+  const { reason } = useCanWrite();
   const queryClient = useQueryClient();
   const hasVoted = obstacle.solvedVotes?.some((v) => v.userIdentifier === stigviddUser?.identifier);
   const isOwner = !!obstacle.userIdentifier && stigviddUser?.identifier === obstacle.userIdentifier;
@@ -74,6 +78,8 @@ export default function TrailObstacleItem({ obstacle, trailIdentifier, onCloseMo
 
     if (hasVoted) {
       setShowUndoDialog(true);
+    } else if (reason === "banned") {
+      setBannedDialog(true);
     } else {
       setShowVoteDialog(true);
     }
@@ -82,6 +88,10 @@ export default function TrailObstacleItem({ obstacle, trailIdentifier, onCloseMo
   function handleEdit() {
     if (!isAuthenticated) {
       setAuthDialog(true);
+      return;
+    }
+    if (reason === "banned") {
+      setBannedDialog(true);
       return;
     }
     setShowUpdateForm(true);
@@ -193,6 +203,7 @@ export default function TrailObstacleItem({ obstacle, trailIdentifier, onCloseMo
         invalidateQueryKey={["obstacles", trailIdentifier]}
         onDismiss={() => setShowReportForm(false)}
       />
+      <AccountBannedDialog visible={showBannedDialog} onDismiss={() => setBannedDialog(false)} />
       <NotAuthenticatedDialog
         visible={showAuthDialog}
         onDissmiss={() => setAuthDialog(false)}

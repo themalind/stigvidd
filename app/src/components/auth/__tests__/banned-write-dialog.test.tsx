@@ -14,7 +14,7 @@ import { flushUntil, settle } from "@/test/flush";
 import { renderWithProviders } from "@/test/render";
 import { useMutation } from "@tanstack/react-query";
 import { fireEvent, screen } from "@testing-library/react-native";
-import { Pressable, Text } from "react-native";
+import { Linking, Pressable, Text } from "react-native";
 
 jest.mock("@/api/users", () => ({ getStigViddUser: jest.fn() }));
 
@@ -58,6 +58,19 @@ it("names the ban when a write is refused and the profile now says banned", asyn
   await flushUntil(() => screen.queryByText(sv.ban.title));
 
   expect(screen.getByText(sv.ban.title)).toBeTruthy();
+  expect(screen.getAllByText(sv.common.ok)).toHaveLength(1);
+});
+
+it("opens a mail to the contact address from the dialog", async () => {
+  const openURL = jest.spyOn(Linking, "openURL").mockResolvedValue(true);
+  mockGetUser.mockResolvedValue(profile("2026-09-25T10:00:00Z"));
+
+  await show(new ApiError("refused", 403));
+  await flushUntil(() => screen.queryByText(sv.about.contactEmail));
+  fireEvent.press(screen.getByText(sv.about.contactEmail));
+
+  expect(openURL).toHaveBeenCalledWith("mailto:info@stigvidd.se");
+  openURL.mockRestore();
 });
 
 it("stays quiet on a 403 that is not a ban", async () => {

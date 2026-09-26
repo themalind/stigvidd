@@ -27,6 +27,11 @@ jest.mock("expo-router", () => ({
   useRouter: () => ({ navigate: mockNavigate, back: jest.fn() }),
 }));
 
+let mockWriteBlocked: "banned" | null = null;
+jest.mock("@/hooks/useCanWrite", () => ({
+  useCanWrite: () => ({ canWrite: mockWriteBlocked === null, reason: mockWriteBlocked }),
+}));
+
 const onDismiss = jest.fn();
 
 function hike(overrides: Partial<Hike> = {}): Hike {
@@ -58,6 +63,7 @@ function show(overrides: Partial<Hike> = {}) {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockWriteBlocked = null;
   mockDeleteHike.mockResolvedValue(undefined);
   // guardedNavigate debounces on module state, so each call moves the clock a second on.
   let clock = 2_000_000;
@@ -146,6 +152,26 @@ it("keeps the edit form open when the update fails", async () => {
   await waitFor(() => expect(mockUpdateHike).toHaveBeenCalled());
   expect(screen.getByTestId("edit-name")).toBeTruthy();
   expect(screen.getByText("Kvällspromenad")).toBeTruthy();
+});
+
+it("opens the share form for an account that may write", () => {
+  show();
+
+  fireEvent.press(screen.getByTestId("hike-share"));
+
+  expect(screen.getByText("Dela med en vän")).toBeTruthy();
+  expect(screen.queryByText("Du har blivit avstängd")).toBeNull();
+});
+
+it.each(["hike-share", "hike-edit"])("explains the ban instead of opening %s", (testID) => {
+  mockWriteBlocked = "banned";
+  show();
+
+  fireEvent.press(screen.getByTestId(testID));
+
+  expect(screen.getByText("Du har blivit avstängd")).toBeTruthy();
+  expect(screen.queryByText("Dela med en vän")).toBeNull();
+  expect(screen.queryByTestId("edit-name")).toBeNull();
 });
 
 it("keeps the walk when the confirmation is dismissed", () => {
