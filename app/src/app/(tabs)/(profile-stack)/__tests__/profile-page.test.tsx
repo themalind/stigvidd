@@ -6,11 +6,9 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { snackbarAtom } from "@/atoms/snackbar-atoms";
-import { userThemeAtom } from "@/atoms/user-theme-atom";
 import { AppDarkTheme, AppDefaultTheme } from "@/constants/theme";
 import { flushUntil, settle } from "@/test/flush";
 import { renderWithProviders } from "@/test/render";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { fireEvent, screen } from "@testing-library/react-native";
 import { ActivityIndicator, StyleSheet } from "react-native";
 import ProfilePageScreen from "../profile-page";
@@ -74,11 +72,8 @@ const MENU = [
   "Om Stigvidd",
 ];
 
-function show({
-  theme = AppDefaultTheme,
-  userTheme = "light",
-}: { theme?: typeof AppDefaultTheme | typeof AppDarkTheme; userTheme?: "light" | "dark" } = {}) {
-  return renderWithProviders(<ProfilePageScreen />, { theme, initialAtoms: [[userThemeAtom, userTheme]] });
+function show({ theme = AppDefaultTheme }: { theme?: typeof AppDefaultTheme | typeof AppDarkTheme } = {}) {
+  return renderWithProviders(<ProfilePageScreen />, { theme });
 }
 
 beforeEach(() => {
@@ -228,22 +223,20 @@ it("closes the delete modal again without deleting anything", async () => {
   expect(mockDeleteAccount).not.toHaveBeenCalled();
 });
 
-it("toggles the theme from the profile header", async () => {
-  show({ userTheme: "light" });
+// The picker lives in the settings drawer now.
+it("has no theme toggle of its own", () => {
+  show();
 
-  fireEvent.press(screen.getByTestId("icon-dark-mode"));
-  await settle();
-
-  expect(AsyncStorage.setItem).toHaveBeenCalledWith("my-theme", "dark");
+  expect(screen.queryByTestId("profile-theme-toggle")).toBeNull();
 });
 
 // The avatar is drawn for a light background; on the dark theme it is a different file.
-it("uses the wizard that matches the chosen theme", () => {
-  show({ userTheme: "light" });
+it("uses the wizard that matches the theme on screen", () => {
+  show();
   const light = screen.getByTestId("profile-avatar").props.source;
 
   screen.unmount();
-  show({ userTheme: "dark", theme: AppDarkTheme });
+  show({ theme: AppDarkTheme });
 
   expect(screen.getByTestId("profile-avatar").props.source).not.toEqual(light);
 });
@@ -260,7 +253,7 @@ it("fills the screen with the theme's background", () => {
 });
 
 it("fills the screen with the dark theme's background too", () => {
-  show({ theme: AppDarkTheme, userTheme: "dark" });
+  show({ theme: AppDarkTheme });
 
   expect(StyleSheet.flatten(screen.getByTestId("profile-scroll").props.contentContainerStyle)).toMatchObject({
     backgroundColor: AppDarkTheme.colors.background,
@@ -277,13 +270,6 @@ it("draws the avatar as a bordered circle", () => {
     borderWidth: 1,
     borderColor: AppDefaultTheme.colors.outline,
   });
-});
-
-// The toggle belongs at the far edge of the header row, away from the name beside it.
-it("pushes the theme toggle to the end of the header row", () => {
-  show();
-
-  expect(screen.getByTestId("profile-theme-toggle")).toHaveStyle({ marginLeft: "auto" });
 });
 
 // Logging out and deleting the account sit below the menu, not among it.

@@ -6,7 +6,6 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import TrailsScreen from "@/app/(tabs)/(trails-tab)/index";
-import { userThemeAtom } from "@/atoms/user-theme-atom";
 import { AppDarkTheme, AppDefaultTheme } from "@/constants/theme";
 import { TrailShortInfoResponse } from "@/data/types";
 import { UserLocation } from "@/hooks/useUserLocation";
@@ -84,16 +83,10 @@ const TRAILS: TrailShortInfoResponse[] = [
 
 async function show(
   trails: TrailShortInfoResponse[] = TRAILS,
-  {
-    theme = AppDefaultTheme,
-    userTheme,
-  }: { theme?: typeof AppDefaultTheme | typeof AppDarkTheme; userTheme?: string } = {},
+  { theme = AppDefaultTheme }: { theme?: typeof AppDefaultTheme | typeof AppDarkTheme } = {},
 ) {
   mockGetAllTrails.mockResolvedValue(trails);
-  const rendered = renderWithProviders(<TrailsScreen />, {
-    theme,
-    initialAtoms: userTheme ? [[userThemeAtom, userTheme]] : [],
-  });
+  const rendered = renderWithProviders(<TrailsScreen />, { theme });
   await flushUntil(() => screen.queryByTestId("trails-screen"));
   return rendered;
 }
@@ -434,13 +427,13 @@ it("marks the clear-filters link with the tertiary accent", async () => {
 });
 
 // The hiker is a dark drawing on light and a light one on dark, so the asset itself changes.
-it("swaps the hiker drawing for the user's chosen theme", async () => {
-  await show(TRAILS, { userTheme: "light" });
+it("swaps the hiker drawing for the theme on screen", async () => {
+  await show(TRAILS);
   const light = screen.UNSAFE_getAllByType(Image)[0].props.source;
 
   screen.unmount();
 
-  await show(TRAILS, { userTheme: "dark" });
+  await show(TRAILS, { theme: AppDarkTheme });
   const dark = screen.UNSAFE_getAllByType(Image)[0].props.source;
 
   expect(dark).not.toEqual(light);

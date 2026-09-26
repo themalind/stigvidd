@@ -6,7 +6,7 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { showErrorAtom } from "@/atoms/snackbar-atoms";
-import { useThemeToggle } from "@/hooks/useThemeToggle";
+import { useThemeChoice } from "@/hooks/useThemeChoice";
 import { MaterialIcons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import { Image } from "expo-image";
@@ -29,16 +29,17 @@ const width = Dimensions.get("screen").width;
 
 export default function SettingsDrawer({ visible, onDismiss }: Props) {
   const { isAuthenticated, logout } = useAuth();
-  const { userTheme, toggleTheme } = useThemeToggle();
+  const { choice } = useThemeChoice();
   const theme = useTheme();
   const { t } = useTranslation();
   const setError = useSetAtom(showErrorAtom);
   const [active, setActive] = React.useState("");
   const insets = useSafeAreaInsets();
 
-  async function handleThemeToggle() {
+  function handleTheme() {
     setActive("theme");
-    await toggleTheme();
+    onDismiss();
+    router.replace("/(tabs)/(settings)/theme");
   }
 
   function handleAbout() {
@@ -113,13 +114,16 @@ export default function SettingsDrawer({ visible, onDismiss }: Props) {
               active={active === "theme"}
               theme={{ roundness: 1 }}
               right={() => (
-                <MaterialIcons
-                  name={userTheme === "light" ? "dark-mode" : "light-mode"}
-                  size={24}
-                  color={active === "theme" ? theme.colors.onSecondaryContainer : theme.colors.onSurfaceVariant}
-                />
+                <Text
+                  testID="drawer-theme-name"
+                  style={{
+                    color: active === "theme" ? theme.colors.onSecondaryContainer : theme.colors.onSurfaceVariant,
+                  }}
+                >
+                  {t(choice === "auto" ? "themes.system" : `themes.${choice}`)}
+                </Text>
               )}
-              onPress={handleThemeToggle}
+              onPress={handleTheme}
             />
             <Drawer.Item
               label={t("settings.guide")}

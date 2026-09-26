@@ -5,7 +5,6 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import { userThemeAtom } from "@/atoms/user-theme-atom";
 import ErrorView from "@/components/error-view";
 import LoadingIndicator from "@/components/loading-indicator";
 import { TrailFilterModal } from "@/components/trail/trail-list/trail-filter-modal";
@@ -19,9 +18,8 @@ import { guardedNavigate } from "@/utils/navigation";
 import { MaterialIcons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { router } from "expo-router";
-import { useAtom } from "jotai";
 import React, { useCallback, useRef, useState } from "react";
-import { Appearance, FlatList, Pressable, RefreshControl, StyleSheet, View } from "react-native";
+import { FlatList, Pressable, RefreshControl, StyleSheet, View } from "react-native";
 import { Text, TextInput, useTheme } from "react-native-paper";
 import { useTranslation } from "react-i18next";
 
@@ -29,16 +27,12 @@ export default function TrailsScreen() {
   const theme = useTheme();
   const { t } = useTranslation();
   const listRef = useRef<FlatList>(null);
-  const [userTheme] = useAtom(userThemeAtom);
   // Null without a real fix, which hides the distance sort and the "near me" filter.
   const userLocation = useRealUserLocation();
-  const colorScheme = Appearance.getColorScheme();
-  const finalTheme = userTheme === "auto" ? (colorScheme ?? "light") : userTheme;
 
-  const hikers =
-    finalTheme === "dark"
-      ? require("../../../assets/images/mrHike-light.png")
-      : require("../../../assets/images/mrHike-dark.png");
+  const hikers = theme.dark
+    ? require("../../../assets/images/mrHike-light.png")
+    : require("../../../assets/images/mrHike-dark.png");
 
   const { data: trails, isLoading, isError, refetch, isFetching } = useTrails();
   const onRefresh = () => {

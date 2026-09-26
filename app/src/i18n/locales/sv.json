@@ -547,6 +547,23 @@
     "about": "Om Stigvidd",
     "privacy": "Integritet"
   },
+  "themes": {
+    "title": "Tema",
+    "system": "Följ systemet",
+    "systemDescription": "Ljust eller mörkt efter telefonens inställning",
+    "light": "Ljusa",
+    "dark": "Mörka",
+    "petroleum": "Petroleum",
+    "havsbris": "Havsbris",
+    "midsommar": "Midsommar",
+    "lingonris": "Lingonris",
+    "bergsdimma": "Bergsdimma",
+    "bivack": "Bivack",
+    "norrsken": "Norrsken",
+    "stjarnhimmel": "Stjärnhimmel",
+    "ljungnatt": "Ljungnatt",
+    "skifferkvall": "Skifferkväll"
+  },
   "about": {
     "tagline": "Upptäck leder nära dig",
     "description": "Stigvidd är en vandringsapp skapad som ett hobbyprojekt, av kärlek till naturen. Utforska vandringsleder i Boråsområdet, spela in egna vandringar med GPS, betygsätt lederna du gillar och hjälp andra vandrare genom att rapportera hinder längs vägen.",

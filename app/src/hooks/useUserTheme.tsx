@@ -6,25 +6,16 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { userThemeAtom } from "@/atoms/user-theme-atom";
-import { AppDarkTheme, AppDefaultTheme } from "@/constants/theme";
+import { resolveTheme } from "@/constants/theme";
 import * as NavigationBar from "expo-navigation-bar";
-import { useAtom } from "jotai";
+import { useAtomValue } from "jotai";
 import { useEffect } from "react";
 import { Platform, useColorScheme } from "react-native";
 
 export function useUserTheme() {
-  const [userTheme] = useAtom(userThemeAtom);
+  const userTheme = useAtomValue(userThemeAtom);
   const colorScheme = useColorScheme();
-
-  // Bestäm tema baserat på userTheme eller systemets colorScheme
-  const theme =
-    userTheme !== "auto"
-      ? userTheme === "dark"
-        ? AppDarkTheme
-        : AppDefaultTheme
-      : colorScheme === "dark"
-        ? AppDarkTheme
-        : AppDefaultTheme;
+  const theme = resolveTheme(userTheme, colorScheme);
 
   // Uppdatera navigation bar på Android
   useEffect(() => {

@@ -8,12 +8,10 @@
 import { incomingRequestsAtom, incomingSharedHikesAtom } from "@/atoms/friends-atoms";
 import { showErrorAtom } from "@/atoms/snackbar-atoms";
 import { stigviddUserAtom } from "@/atoms/user-atoms";
-import { userThemeAtom } from "@/atoms/user-theme-atom";
 import { useAuth } from "@/components/auth/auth-provider";
 import DeleteAccountModal from "@/components/auth/delete-account-modal";
 import ErrorView from "@/components/error-view";
 import LoadingIndicator from "@/components/loading-indicator";
-import ThemeToggle from "@/components/theme-toggle";
 import AccountBannedNotice from "@/components/user/profile-page/account-banned-notice";
 import ProfileMenuItem from "@/components/user/profile-page/profile-menu-item";
 import { Fontisto, MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
@@ -31,7 +29,6 @@ export default function ProfilePageScreen() {
   const [{ data: user, isLoading, isError, error }] = useAtom(stigviddUserAtom);
   const setError = useSetAtom(showErrorAtom);
   const scrollViewRef = useRef<ScrollView>(null);
-  const userTheme = useAtomValue(userThemeAtom);
   const theme = useTheme();
   const [visible, setVisible] = useState(false);
   const { data: incomingFriendRequests } = useAtomValue(incomingRequestsAtom);
@@ -75,7 +72,7 @@ export default function ProfilePageScreen() {
       <View style={s.userInfoContainer}>
         <Image
           source={
-            userTheme === "dark"
+            theme.dark
               ? require("../../../assets/images/wizard-darkmode.png")
               : require("../../../assets/images/wizard-lightmode.png")
           }
@@ -85,9 +82,6 @@ export default function ProfilePageScreen() {
         <View style={s.userProfileInfoText}>
           <Text>{user?.nickName}</Text>
           <Text>{user?.email}</Text>
-        </View>
-        <View testID="profile-theme-toggle" style={s.themeToggleContainer}>
-          <ThemeToggle />
         </View>
       </View>
       {user?.bannedAt && <AccountBannedNotice bannedAt={user.bannedAt} />}
@@ -169,11 +163,6 @@ const s = StyleSheet.create({
   userProfileInfoText: {
     flexDirection: "column",
     justifyContent: "center",
-  },
-  themeToggleContainer: {
-    justifyContent: "space-around",
-    marginLeft: "auto",
-    padding: 5,
   },
   pressableChoicesContainer: {
     flexDirection: "column",

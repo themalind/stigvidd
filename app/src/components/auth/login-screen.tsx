@@ -7,18 +7,16 @@
 
 import { asTranslationKey } from "@/i18n";
 import { AccountNotVerifiedError, InvalidCredentialsError } from "@/services/keycloak-auth";
-import { userThemeAtom } from "@/atoms/user-theme-atom";
 import PasswordInputField from "@/components/auth/password-input-field";
 import BackButton from "@/components/back-button";
 import { BORDER_RADIUS, SURFACE_BORDER_RADIUS } from "@/constants/constants";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Image } from "expo-image";
 import { Link, router } from "expo-router";
-import { useAtom } from "jotai";
 import { useState } from "react";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { Appearance, Dimensions, ImageBackground, Pressable, StyleSheet, Text, View } from "react-native";
+import { Dimensions, ImageBackground, Pressable, StyleSheet, Text, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { Button, TextInput, useTheme } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -47,13 +45,9 @@ export default function LoginScreen({ showBackButton = false }: { showBackButton
   const theme = useTheme();
   const [visible, setVisible] = useState(false);
   const [loginError, setLoginError] = useState("");
-  const [userTheme] = useAtom(userThemeAtom);
-  const colorScheme = Appearance.getColorScheme();
-  const finalTheme = userTheme === "auto" ? (colorScheme ?? "light") : userTheme;
-  const background =
-    finalTheme === "dark"
-      ? require("../../assets/images/darkmode_login.jpg")
-      : require("../../assets/images/lightmode_login.jpg");
+  const background = theme.dark
+    ? require("../../assets/images/darkmode_login.jpg")
+    : require("../../assets/images/lightmode_login.jpg");
   const { login } = useAuth();
 
   const {

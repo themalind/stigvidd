@@ -8,18 +8,17 @@
 import { ApiError } from "@/api/api-error";
 import { asTranslationKey } from "@/i18n";
 import { showSuccessAtom } from "@/atoms/snackbar-atoms";
-import { userThemeAtom } from "@/atoms/user-theme-atom";
 import PasswordInputField from "@/components/auth/password-input-field";
 import BackButton from "@/components/back-button";
 import { BORDER_RADIUS, PRIVACY_POLICY_URL, SURFACE_BORDER_RADIUS, TERMS_OF_USE_URL } from "@/constants/constants";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Image } from "expo-image";
 import { Link, router } from "expo-router";
-import { useAtom, useSetAtom } from "jotai";
+import { useSetAtom } from "jotai";
 import React, { useState } from "react";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { Appearance, Dimensions, ImageBackground, Linking, StyleSheet, Text, View } from "react-native";
+import { Dimensions, ImageBackground, Linking, StyleSheet, Text, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { Button, TextInput, useTheme } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -65,17 +64,12 @@ export default function RegisterScreen() {
   const { t } = useTranslation();
   const theme = useTheme();
   const [registerError, setRegisterError] = useState("");
-  const [userTheme] = useAtom(userThemeAtom);
-  const colorScheme = Appearance.getColorScheme();
   const { register } = useAuth();
   const showSuccess = useSetAtom(showSuccessAtom);
 
-  const finalTheme = userTheme === "auto" ? (colorScheme ?? "light") : userTheme;
-
-  const background =
-    finalTheme === "dark"
-      ? require("../../../assets/images/register-dark-background-2.jpg")
-      : require("../../../assets/images/lightmode_register.jpg");
+  const background = theme.dark
+    ? require("../../../assets/images/register-dark-background-2.jpg")
+    : require("../../../assets/images/lightmode_register.jpg");
 
   const {
     control,

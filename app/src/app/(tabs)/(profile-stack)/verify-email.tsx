@@ -9,16 +9,15 @@ import { ApiError } from "@/api/api-error";
 import { resendVerification, verifyEmailCode } from "@/api/auth";
 import { asTranslationKey } from "@/i18n";
 import { showSuccessAtom } from "@/atoms/snackbar-atoms";
-import { userThemeAtom } from "@/atoms/user-theme-atom";
 import BackButton from "@/components/back-button";
 import { BORDER_RADIUS, SURFACE_BORDER_RADIUS } from "@/constants/constants";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Link, router, useLocalSearchParams } from "expo-router";
-import { useAtom, useSetAtom } from "jotai";
+import { useSetAtom } from "jotai";
 import React, { useEffect, useState } from "react";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { Appearance, Dimensions, ImageBackground, StyleSheet, Text, View } from "react-native";
+import { Dimensions, ImageBackground, StyleSheet, Text, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { Button, TextInput, useTheme } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -54,20 +53,15 @@ export default function VerifyEmailScreen() {
   const { t } = useTranslation();
   const theme = useTheme();
   const { email } = useLocalSearchParams<{ email?: string }>();
-  const [userTheme] = useAtom(userThemeAtom);
-  const colorScheme = Appearance.getColorScheme();
   const showSuccess = useSetAtom(showSuccessAtom);
 
   const [verifyError, setVerifyError] = useState("");
   const [cooldown, setCooldown] = useState(0);
   const [resending, setResending] = useState(false);
 
-  const finalTheme = userTheme === "auto" ? (colorScheme ?? "light") : userTheme;
-
-  const background =
-    finalTheme === "dark"
-      ? require("../../../assets/images/register-dark-background-2.jpg")
-      : require("../../../assets/images/lightmode_register.jpg");
+  const background = theme.dark
+    ? require("../../../assets/images/register-dark-background-2.jpg")
+    : require("../../../assets/images/lightmode_register.jpg");
 
   const {
     control,

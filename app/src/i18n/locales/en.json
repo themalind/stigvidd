@@ -547,6 +547,23 @@
     "about": "About Stigvidd",
     "privacy": "Privacy"
   },
+  "themes": {
+    "title": "Theme",
+    "system": "Match system",
+    "systemDescription": "Light or dark, following your phone's setting",
+    "light": "Light",
+    "dark": "Dark",
+    "petroleum": "Petroleum",
+    "havsbris": "Sea Breeze",
+    "midsommar": "Midsummer",
+    "lingonris": "Lingonberry",
+    "bergsdimma": "Mountain Mist",
+    "bivack": "Bivouac",
+    "norrsken": "Northern Lights",
+    "stjarnhimmel": "Starry Sky",
+    "ljungnatt": "Heather Night",
+    "skifferkvall": "Slate Evening"
+  },
   "about": {
     "tagline": "Discover trails near you",
     "description": "Stigvidd is a hiking app made as a hobby project, for the love of the outdoors. Explore trails in the Borås area, record your own walks with GPS, rate the trails you enjoy and help other hikers by reporting obstacles along the way.",

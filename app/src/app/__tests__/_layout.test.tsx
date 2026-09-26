@@ -7,7 +7,7 @@
 
 import { userThemeAtom } from "@/atoms/user-theme-atom";
 import { snackbarAtom } from "@/atoms/snackbar-atoms";
-import { AppDarkTheme, AppDefaultTheme } from "@/constants/theme";
+import { APP_THEMES, AppDarkTheme, AppDefaultTheme, type ThemeChoice } from "@/constants/theme";
 import { settle } from "@/test/flush";
 import { focusManager, QueryClient } from "@tanstack/react-query";
 import { act, render, screen } from "@testing-library/react-native";
@@ -144,7 +144,7 @@ async function show() {
 }
 
 // A theme change re-renders the layout without remounting it.
-async function rerender(theme: "light" | "dark" = "dark") {
+async function rerender(theme: ThemeChoice = "bivack") {
   await act(async () => {
     store.set(userThemeAtom, theme);
   });
@@ -235,9 +235,20 @@ it("dresses the app in the light theme", async () => {
 // A dark status bar over a dark app is invisible, so the two have to move together.
 it("dresses the app in the dark theme, status bar and all", async () => {
   await show();
-  await rerender("dark");
+  await rerender("bivack");
 
   expect(screen.getByTestId("root-container")).toHaveStyle({ backgroundColor: AppDarkTheme.colors.background });
+  expect(screen.UNSAFE_getByType(StatusBar).props.style).toBe("light");
+});
+
+// Every theme in the picker has to reach the app, not just the two that "auto" switches between.
+it("dresses the app in a picked theme beyond light and dark", async () => {
+  const norrsken = APP_THEMES.find((t) => t.id === "norrsken")?.theme;
+  if (!norrsken) throw new Error("expected norrsken");
+  await show();
+  await rerender("norrsken");
+
+  expect(screen.getByTestId("root-container")).toHaveStyle({ backgroundColor: norrsken.colors.background });
   expect(screen.UNSAFE_getByType(StatusBar).props.style).toBe("light");
 });
 
@@ -245,25 +256,25 @@ it("dresses the app in the dark theme, status bar and all", async () => {
 it("tells Android's navigation bar which theme it is on", async () => {
   Platform.OS = "android";
   await show();
-  await rerender("dark");
+  await rerender("bivack");
 
   expect(NavigationBar.setButtonStyleAsync).toHaveBeenCalledWith("light");
 });
 
 it("leaves the navigation bar alone on iOS, which has none", async () => {
   await show();
-  await rerender("dark");
+  await rerender("bivack");
 
   expect(NavigationBar.setButtonStyleAsync).not.toHaveBeenCalled();
 });
 
 // The choice is stored on the device, so the app has to come back up in it.
 it("restores the stored theme at startup", async () => {
-  mockLoadUserTheme.mockResolvedValue("dark");
+  mockLoadUserTheme.mockResolvedValue("bivack");
   await show();
   await settle();
 
-  expect(store.get(userThemeAtom)).toBe("dark");
+  expect(store.get(userThemeAtom)).toBe("bivack");
   expect(screen.getByTestId("root-container")).toHaveStyle({ backgroundColor: AppDarkTheme.colors.background });
 });
 
@@ -308,7 +319,7 @@ it("prepares them once, however often the app re-renders", async () => {
   await show();
   await settle();
   await rerender();
-  await rerender("light");
+  await rerender("petroleum");
 
   expect(mockInitMapCache).toHaveBeenCalledTimes(1);
   expect(mockPruneTrailCardCache).toHaveBeenCalledTimes(1);
@@ -407,7 +418,7 @@ it("acts on the same tap only once", async () => {
   // A token refresh hands out a new user object, which is what the effect watches.
   mockAuth = { user: { ...USER }, isLoading: false };
   await rerender();
-  await rerender("light");
+  await rerender("petroleum");
 
   expect(mockPush).toHaveBeenCalledTimes(1);
 });

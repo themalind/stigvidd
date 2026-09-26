@@ -8,7 +8,7 @@
 import { snackbarAtom } from "@/atoms/snackbar-atoms";
 import { userThemeAtom } from "@/atoms/user-theme-atom";
 import SettingsDrawer from "@/components/settings/drawer";
-import { AppDarkTheme, AppDefaultTheme } from "@/constants/theme";
+import { AppDarkTheme, AppDefaultTheme, type ThemeChoice } from "@/constants/theme";
 import { settle } from "@/test/flush";
 import { renderWithProviders } from "@/test/render";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -42,7 +42,7 @@ function show({
 }: {
   visible?: boolean;
   theme?: typeof AppDefaultTheme | typeof AppDarkTheme;
-  userTheme?: "light" | "dark" | "auto";
+  userTheme?: ThemeChoice;
 } = {}) {
   return renderWithProviders(<SettingsDrawer visible={visible} onDismiss={onDismiss} />, {
     theme,
@@ -165,57 +165,36 @@ it("says so when the logout fails, and still closes", async () => {
   expect(onDismiss).toHaveBeenCalled();
 });
 
-// The icon is the theme you get by pressing, not the one you are on.
-it("offers the dark theme while the light one is on", () => {
-  show({ userTheme: "light" });
+it("names the theme that is on", () => {
+  show({ userTheme: "norrsken", theme: AppDarkTheme });
 
-  expect(screen.getByTestId("icon-dark-mode")).toBeTruthy();
-  expect(screen.queryByTestId("icon-light-mode")).toBeNull();
+  expect(screen.getByTestId("drawer-theme-name")).toHaveTextContent("Norrsken");
 });
 
-it("offers the light theme while the dark one is on", () => {
-  show({ userTheme: "dark", theme: AppDarkTheme });
+it("names the system choice when no theme has been picked", () => {
+  show({ userTheme: "auto" });
 
-  expect(screen.getByTestId("icon-light-mode")).toBeTruthy();
-  expect(screen.queryByTestId("icon-dark-mode")).toBeNull();
+  expect(screen.getByTestId("drawer-theme-name")).toHaveTextContent("Följ systemet");
 });
 
-it("stores the chosen theme so it survives a restart", async () => {
-  show({ userTheme: "light" });
+it("opens the theme picker and closes behind itself", async () => {
+  show();
 
   await press("Tema");
 
-  expect(AsyncStorage.setItem).toHaveBeenCalledWith("my-theme", "dark");
-  expect(screen.getByTestId("icon-light-mode")).toBeTruthy();
-});
-
-it("toggles back to the light theme", async () => {
-  show({ userTheme: "dark", theme: AppDarkTheme });
-
-  await press("Tema");
-
-  expect(AsyncStorage.setItem).toHaveBeenCalledWith("my-theme", "light");
-  expect(screen.getByTestId("icon-dark-mode")).toBeTruthy();
-});
-
-// Every other row leaves; the theme is the one thing you want to see change behind the menu.
-it("stays open after a theme change", async () => {
-  show({ userTheme: "light" });
-
-  await press("Tema");
-
-  expect(onDismiss).not.toHaveBeenCalled();
-  expect(screen.getByTestId("drawer-panel")).toBeTruthy();
+  expect(mockReplace).toHaveBeenCalledWith("/(tabs)/(settings)/theme");
+  expect(onDismiss).toHaveBeenCalled();
+  expect(AsyncStorage.setItem).not.toHaveBeenCalled();
 });
 
 it("marks the theme row as the active one once it has been used", async () => {
-  show({ userTheme: "light" });
+  show({ userTheme: "auto" });
 
-  expect(screen.getByTestId("icon-dark-mode").props.color).toBe(AppDefaultTheme.colors.onSurfaceVariant);
+  expect(screen.getByTestId("drawer-theme-name")).toHaveStyle({ color: AppDefaultTheme.colors.onSurfaceVariant });
 
   await press("Tema");
 
-  expect(screen.getByTestId("icon-light-mode").props.color).toBe(AppDefaultTheme.colors.onSecondaryContainer);
+  expect(screen.getByTestId("drawer-theme-name")).toHaveStyle({ color: AppDefaultTheme.colors.onSecondaryContainer });
 });
 
 it("hangs the panel off the right edge, over the full height of the screen", () => {

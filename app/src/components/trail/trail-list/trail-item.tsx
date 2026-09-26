@@ -5,16 +5,14 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import { userThemeAtom } from "@/atoms/user-theme-atom";
 import { BORDER_RADIUS } from "@/constants/constants";
 import { TrailShortInfoResponse } from "@/data/types";
 import { classificationParser } from "@/utils/classification-parser";
 import { getDifficultyIcon } from "@/utils/getDifficultyIcon";
 import { MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
 import { Image } from "expo-image";
-import { useAtom } from "jotai";
 import React, { memo } from "react";
-import { Appearance, Pressable, StyleSheet, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import { Text, useTheme } from "react-native-paper";
 
 interface TrailItemProps {
@@ -24,13 +22,9 @@ interface TrailItemProps {
 
 function TrailItem({ item, handlePress }: TrailItemProps) {
   const theme = useTheme();
-  const [userTheme] = useAtom(userThemeAtom);
-  const colorScheme = Appearance.getColorScheme();
-  const finalTheme = userTheme === "auto" ? (colorScheme ?? "light") : userTheme;
-  const wizardPin =
-    finalTheme === "dark"
-      ? require("../../../assets/map/marker/vandringsled-dark-90-143.png")
-      : require("../../../assets/map/marker/vandringsled-90-143.png");
+  const wizardPin = theme.dark
+    ? require("../../../assets/map/marker/vandringsled-dark-90-143.png")
+    : require("../../../assets/map/marker/vandringsled-90-143.png");
 
   return (
     <Pressable
