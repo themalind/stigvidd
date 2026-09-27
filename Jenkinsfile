@@ -84,7 +84,7 @@ pipeline {
     // Private registry served at inkaben.se/v2/ (Docker's root API endpoint),
     // so `inkaben.se` is both login host and namespace ->
     // images: inkaben.se/stigvidd-{api,web}:<tag>.
-    REGISTRY       = 'inkaben.se'                       // registry host
+    REGISTRY       = 'lingonberg.se'                       // registry host
     DEPLOY_HOST    = 'stigvidd@stigvidd.se'    // ssh target
     DEPLOY_PATH    = '/opt/stigvidd'                    // compose dir on host
 
