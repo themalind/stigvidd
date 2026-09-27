@@ -8,6 +8,7 @@
 import { BORDER_RADIUS } from "@/constants/constants";
 import { APP_THEMES, AppDarkTheme, AppDefaultTheme, type AppTheme, type ThemeChoice } from "@/constants/theme";
 import { useThemeChoice } from "@/hooks/useThemeChoice";
+import ThemePreview from "@/components/settings/theme-preview";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
@@ -71,29 +72,35 @@ export default function ThemeScreen() {
   };
 
   return (
-    <ScrollView
-      testID="theme-screen"
-      contentContainerStyle={[s.content, { paddingTop: insets.top + 16, paddingBottom: insets.bottom + 32 }]}
-      style={{ backgroundColor: theme.colors.background }}
-    >
-      <Text variant="headlineSmall" style={[s.title, { color: theme.colors.onBackground }]}>
-        {t("themes.title")}
-      </Text>
-
-      <View accessibilityRole="radiogroup" style={s.list}>
-        {renderOption("auto", t("themes.system"), systemColors, t("themes.systemDescription"))}
-
-        <Text variant="labelLarge" style={[s.groupLabel, { color: theme.colors.onSurfaceVariant }]}>
-          {t("themes.light")}
+    <View style={[s.screen, { paddingTop: insets.top + 16, backgroundColor: theme.colors.background }]}>
+      <View style={[s.header, { borderBottomColor: theme.colors.outlineVariant }]}>
+        <Text variant="headlineSmall" style={[s.title, { color: theme.colors.onBackground }]}>
+          {t("themes.title")}
         </Text>
-        {lightThemes.map((item) => renderOption(item.id, t(`themes.${item.id}`), themeColors(item.theme)))}
-
-        <Text variant="labelLarge" style={[s.groupLabel, { color: theme.colors.onSurfaceVariant }]}>
-          {t("themes.dark")}
-        </Text>
-        {darkThemes.map((item) => renderOption(item.id, t(`themes.${item.id}`), themeColors(item.theme)))}
+        <View style={s.previewSection}>
+          <Text variant="labelLarge" style={{ color: theme.colors.onSurfaceVariant }}>
+            {t("themes.preview.heading")}
+          </Text>
+          <ThemePreview choice={choice} />
+        </View>
       </View>
-    </ScrollView>
+
+      <ScrollView testID="theme-screen" contentContainerStyle={[s.content, { paddingBottom: insets.bottom + 32 }]}>
+        <View accessibilityRole="radiogroup" style={s.list}>
+          {renderOption("auto", t("themes.system"), systemColors, t("themes.systemDescription"))}
+
+          <Text variant="labelLarge" style={[s.groupLabel, { color: theme.colors.onSurfaceVariant }]}>
+            {t("themes.light")}
+          </Text>
+          {lightThemes.map((item) => renderOption(item.id, t(`themes.${item.id}`), themeColors(item.theme)))}
+
+          <Text variant="labelLarge" style={[s.groupLabel, { color: theme.colors.onSurfaceVariant }]}>
+            {t("themes.dark")}
+          </Text>
+          {darkThemes.map((item) => renderOption(item.id, t(`themes.${item.id}`), themeColors(item.theme)))}
+        </View>
+      </ScrollView>
+    </View>
   );
 }
 
@@ -107,7 +114,10 @@ function themeColors({ colors }: AppTheme): OptionColors {
 }
 
 const s = StyleSheet.create({
-  content: { paddingHorizontal: 16, gap: 16 },
+  screen: { flex: 1 },
+  header: { paddingHorizontal: 16, paddingBottom: 24, gap: 16, borderBottomWidth: StyleSheet.hairlineWidth },
+  previewSection: { gap: 8 },
+  content: { paddingHorizontal: 16, paddingTop: 24 },
   title: { fontWeight: "600" },
   list: { gap: 10 },
   groupLabel: { marginTop: 8 },
@@ -120,7 +130,7 @@ const s = StyleSheet.create({
     borderRadius: BORDER_RADIUS,
     overflow: "hidden",
   },
-  stripes: { flexDirection: "row", alignSelf: "stretch" },
-  stripe: { width: 8 },
+  stripes: { flexDirection: "row", alignSelf: "stretch", width: 96 },
+  stripe: { flex: 1 },
   optionText: { flex: 1, gap: 2, paddingVertical: 12 },
 });

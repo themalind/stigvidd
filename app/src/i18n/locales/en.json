@@ -564,7 +564,17 @@
     "norrsken": "Northern Lights",
     "stjarnhimmel": "Starry Sky",
     "ljungnatt": "Heather Night",
-    "skifferkvall": "Slate Evening"
+    "skifferkvall": "Slate Evening",
+    "preview": {
+      "heading": "Preview",
+      "label": "Theme preview",
+      "title": "Sample trail",
+      "details": "5.2 km · Easy · Forest path",
+      "forest": "Forest",
+      "view": "Viewpoint",
+      "start": "Start hike",
+      "save": "Save"
+    }
   },
   "about": {
     "tagline": "Discover trails near you",

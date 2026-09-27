@@ -564,7 +564,17 @@
     "norrsken": "Norrsken",
     "stjarnhimmel": "Stjärnhimmel",
     "ljungnatt": "Ljungnatt",
-    "skifferkvall": "Skifferkväll"
+    "skifferkvall": "Skifferkväll",
+    "preview": {
+      "heading": "Förhandsvisning",
+      "label": "Förhandsvisning av temat",
+      "title": "Exempelleden",
+      "details": "5,2 km · Lätt · Skogsstig",
+      "forest": "Skog",
+      "view": "Utsikt",
+      "start": "Starta vandring",
+      "save": "Spara"
+    }
   },
   "about": {
     "tagline": "Upptäck leder nära dig",

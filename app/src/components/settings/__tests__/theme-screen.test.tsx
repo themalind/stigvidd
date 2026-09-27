@@ -103,3 +103,28 @@ it("shows the system choice as one light and one dark stripe", () => {
   expect(screen.getByTestId("theme-stripe-auto-1")).toHaveStyle({ backgroundColor: AppDarkTheme.colors.background });
   expect(screen.queryByTestId("theme-stripe-auto-2")).toBeNull();
 });
+
+function themeOf(id: ThemeChoice) {
+  const theme = APP_THEMES.find((t) => t.id === id)?.theme;
+  if (!theme) throw new Error(`expected ${id}`);
+  return theme;
+}
+
+it("previews the chosen theme", () => {
+  show("lingonris");
+  const lingonris = themeOf("lingonris");
+
+  expect(screen.getByTestId("theme-preview")).toHaveStyle({ backgroundColor: lingonris.colors.elevation.level2 });
+  expect(screen.getByText("Exempelleden")).toHaveStyle({ color: lingonris.colors.onSurface });
+});
+
+it("switches the preview as soon as another theme is picked", async () => {
+  show("lingonris");
+
+  fireEvent.press(screen.getByTestId("theme-option-norrsken"));
+  await settle();
+
+  expect(screen.getByTestId("theme-preview")).toHaveStyle({
+    backgroundColor: themeOf("norrsken").colors.elevation.level2,
+  });
+});
