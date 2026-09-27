@@ -9,11 +9,12 @@ import { BORDER_RADIUS } from "@/constants/constants";
 import { APP_THEMES, AppDarkTheme, AppDefaultTheme, type AppTheme, type ThemeChoice } from "@/constants/theme";
 import { useThemeChoice } from "@/hooks/useThemeChoice";
 import { MaterialIcons } from "@expo/vector-icons";
-import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { Text, useTheme } from "react-native-paper";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+
+type OptionColors = { background: string; text: string; subtext: string; stripes: string[] };
 
 export default function ThemeScreen() {
   const theme = useTheme();
@@ -24,7 +25,7 @@ export default function ThemeScreen() {
   const lightThemes = APP_THEMES.filter((item) => !item.theme.dark);
   const darkThemes = APP_THEMES.filter((item) => item.theme.dark);
 
-  function renderOption(id: ThemeChoice, label: string, preview: ReactNode, description?: string) {
+  function renderOption(id: ThemeChoice, label: string, colors: OptionColors, description?: string) {
     const selected = choice === id;
     return (
       <Pressable
@@ -36,27 +37,38 @@ export default function ThemeScreen() {
         style={[
           s.option,
           {
-            backgroundColor: theme.colors.surface,
+            backgroundColor: colors.background,
             borderColor: selected ? theme.colors.primary : theme.colors.outlineVariant,
             borderWidth: selected ? 2 : 1,
           },
         ]}
       >
-        {preview}
+        <View style={s.stripes}>
+          {colors.stripes.map((color, index) => (
+            <View key={index} testID={`theme-stripe-${id}-${index}`} style={[s.stripe, { backgroundColor: color }]} />
+          ))}
+        </View>
         <View style={s.optionText}>
-          <Text variant="titleSmall" style={{ color: theme.colors.onSurface }}>
+          <Text variant="titleSmall" style={{ color: colors.text }}>
             {label}
           </Text>
           {description && (
-            <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
+            <Text variant="bodySmall" style={{ color: colors.subtext }}>
               {description}
             </Text>
           )}
         </View>
-        {selected && <MaterialIcons name="check" size={24} color={theme.colors.primary} />}
+        {selected && <MaterialIcons name="check" size={24} color={colors.text} />}
       </Pressable>
     );
   }
+
+  const systemColors: OptionColors = {
+    background: theme.colors.surface,
+    text: theme.colors.onSurface,
+    subtext: theme.colors.onSurfaceVariant,
+    stripes: [AppDefaultTheme.colors.background, AppDarkTheme.colors.background],
+  };
 
   return (
     <ScrollView
@@ -69,61 +81,29 @@ export default function ThemeScreen() {
       </Text>
 
       <View accessibilityRole="radiogroup" style={s.list}>
-        {renderOption("auto", t("themes.system"), <SystemPreview />, t("themes.systemDescription"))}
+        {renderOption("auto", t("themes.system"), systemColors, t("themes.systemDescription"))}
 
         <Text variant="labelLarge" style={[s.groupLabel, { color: theme.colors.onSurfaceVariant }]}>
           {t("themes.light")}
         </Text>
-        {lightThemes.map((item) =>
-          renderOption(
-            item.id,
-            t(`themes.${item.id}`),
-            <ThemePreview testID={`theme-preview-${item.id}`} theme={item.theme} />,
-          ),
-        )}
+        {lightThemes.map((item) => renderOption(item.id, t(`themes.${item.id}`), themeColors(item.theme)))}
 
         <Text variant="labelLarge" style={[s.groupLabel, { color: theme.colors.onSurfaceVariant }]}>
           {t("themes.dark")}
         </Text>
-        {darkThemes.map((item) =>
-          renderOption(
-            item.id,
-            t(`themes.${item.id}`),
-            <ThemePreview testID={`theme-preview-${item.id}`} theme={item.theme} />,
-          ),
-        )}
+        {darkThemes.map((item) => renderOption(item.id, t(`themes.${item.id}`), themeColors(item.theme)))}
       </View>
     </ScrollView>
   );
 }
 
-function ThemePreview({ theme, testID }: { theme: AppTheme; testID: string }) {
-  const { colors } = theme;
-  return (
-    <View
-      testID={testID}
-      style={[s.preview, { backgroundColor: colors.background, borderColor: colors.outlineVariant }]}
-    >
-      <View style={[s.previewSurface, { backgroundColor: colors.surface }]}>
-        {(["primary", "secondary", "tertiary"] as const).map((role) => (
-          <View key={role} style={[s.dot, { backgroundColor: colors[role] }]} />
-        ))}
-      </View>
-    </View>
-  );
-}
-
-function SystemPreview() {
-  return (
-    <View style={[s.preview, s.systemPreview, { borderColor: AppDefaultTheme.colors.outlineVariant }]}>
-      <View style={[s.half, { backgroundColor: AppDefaultTheme.colors.background }]}>
-        <View style={[s.dot, { backgroundColor: AppDefaultTheme.colors.primary }]} />
-      </View>
-      <View style={[s.half, { backgroundColor: AppDarkTheme.colors.background }]}>
-        <View style={[s.dot, { backgroundColor: AppDarkTheme.colors.primary }]} />
-      </View>
-    </View>
-  );
+function themeColors({ colors }: AppTheme): OptionColors {
+  return {
+    background: colors.background,
+    text: colors.onBackground,
+    subtext: colors.onSurfaceVariant,
+    stripes: [colors.primary, colors.secondary, colors.tertiary],
+  };
 }
 
 const s = StyleSheet.create({
@@ -135,27 +115,12 @@ const s = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 14,
-    padding: 12,
+    minHeight: 56,
+    paddingRight: 12,
     borderRadius: BORDER_RADIUS,
-  },
-  optionText: { flex: 1, gap: 2 },
-  preview: {
-    width: 64,
-    height: 44,
-    borderRadius: BORDER_RADIUS,
-    borderWidth: 1,
-    padding: 6,
     overflow: "hidden",
   },
-  previewSurface: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 4,
-    borderRadius: BORDER_RADIUS,
-  },
-  systemPreview: { flexDirection: "row", padding: 0 },
-  half: { flex: 1, alignItems: "center", justifyContent: "center" },
-  dot: { width: 10, height: 10, borderRadius: 5 },
+  stripes: { flexDirection: "row", alignSelf: "stretch" },
+  stripe: { width: 8 },
+  optionText: { flex: 1, gap: 2, paddingVertical: 12 },
 });

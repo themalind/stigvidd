@@ -15,6 +15,7 @@ import {
   removeUserWishlist,
 } from "@/api/users";
 import { UserFavoritesTrail, UserWishlistTrail } from "@/data/types";
+import { retryUnlessAuthFailure } from "@/api/unauthorized";
 import { atomWithMutation, atomWithQuery, queryClientAtom } from "jotai-tanstack-query";
 import { CURRENT_USER_STALE_TIME, USER_LIST_STALE_TIME } from "@/constants/cache";
 import { userAtom } from "./auth-atoms";
@@ -30,7 +31,7 @@ export const stigviddUserAtom = atomWithQuery((get) => {
       return await getStigViddUser();
     },
     enabled: !!subjectId,
-    retry: 3,
+    retry: retryUnlessAuthFailure,
     staleTime: CURRENT_USER_STALE_TIME,
   };
 });

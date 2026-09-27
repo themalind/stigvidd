@@ -5,9 +5,11 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
+import { ApiError } from "@/api/api-error";
 import { snackbarAtom } from "@/atoms/snackbar-atoms";
 import SaveHikeForm from "@/components/trail/trail-creator/save-hike-form";
 import { ActiveHike, Segment } from "@/data/types";
+import { handleUnauthorized } from "@/services/keycloak-auth";
 import { settle } from "@/test/flush";
 import { renderWithProviders } from "@/test/render";
 import { Slider } from "@miblanchard/react-native-slider";
@@ -24,10 +26,12 @@ jest.mock("expo-router", () => ({
   router: { replace: (...args: unknown[]) => mockReplace(...args) },
 }));
 
-jest.mock("@/atoms/user-atoms", () => {
-  const { atom } = jest.requireActual("jotai");
-  return { stigviddUserAtom: atom({ data: { identifier: "me" } }) };
-});
+jest.mock("@/services/keycloak-auth", () => ({
+  ...jest.requireActual("@/services/keycloak-auth"),
+  handleUnauthorized: jest.fn(),
+}));
+
+const mockHandleUnauthorized = handleUnauthorized as jest.MockedFunction<typeof handleUnauthorized>;
 
 const onDismiss = jest.fn();
 const onSaveSuccess = jest.fn();
@@ -112,8 +116,39 @@ it("keeps the form open and says so when the save fails", async () => {
   fireEvent.changeText(nameField(), "Kvällspromenad");
   await save();
 
-  expect(store.get(snackbarAtom)).toMatchObject({ type: "error", message: "Något gick fel försök igen senare." });
+  expect(store.get(snackbarAtom)).toMatchObject({
+    type: "error",
+    message: "Turen kunde inte sparas just nu. Den ligger kvar i telefonen – försök igen.",
+  });
   expect(mockReplace).not.toHaveBeenCalled();
+  expect(onSaveSuccess).not.toHaveBeenCalled();
+});
+
+it("saves on a second try when the first is refused with 401 and the token refreshes", async () => {
+  mockCreateHike.mockRejectedValueOnce(new ApiError("expired", 401)).mockResolvedValue(undefined);
+  mockHandleUnauthorized.mockResolvedValue("refreshed");
+  show();
+
+  fireEvent.changeText(nameField(), "Kvällspromenad");
+  await save();
+
+  expect(mockCreateHike).toHaveBeenCalledTimes(2);
+  expect(onSaveSuccess).toHaveBeenCalled();
+});
+
+it("keeps the recording and asks for a new login when the 401 cannot be refreshed away", async () => {
+  mockCreateHike.mockRejectedValue(new ApiError("expired", 401));
+  mockHandleUnauthorized.mockResolvedValue("expired");
+  const { store } = show();
+
+  fireEvent.changeText(nameField(), "Kvällspromenad");
+  await save();
+
+  expect(store.get(snackbarAtom)).toMatchObject({
+    type: "error",
+    message: "Du behöver logga in igen för att spara. Turen ligger kvar i telefonen.",
+  });
+  expect(onSaveSuccess).not.toHaveBeenCalled();
 });
 
 // The figures shown are the trimmed ones, and they are what is saved.

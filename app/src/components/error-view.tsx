@@ -6,6 +6,8 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { ApiError } from "@/api/api-error";
+import { isUnauthorized } from "@/api/unauthorized";
+import { useAuth } from "@/components/auth/auth-provider";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import { StyleSheet, Text, View } from "react-native";
@@ -49,12 +51,18 @@ export default function ErrorView({ error, onRetry }: Props) {
   const { t } = useTranslation();
   const theme = useTheme();
   const { title, message, icon } = useErrorInfo(error);
+  const { isAuthenticated, logout } = useAuth();
 
   return (
     <View style={[s.container, { backgroundColor: theme.colors.background }]}>
       <MaterialIcons name={icon} size={56} color={theme.colors.error} style={s.icon} />
       <Text style={[s.title, { color: theme.colors.onBackground }]}>{title}</Text>
       <Text style={[s.message, { color: theme.colors.onSurfaceVariant }]}>{message}</Text>
+      {isAuthenticated && isUnauthorized(error) && (
+        <Button mode="contained" onPress={() => void logout()} style={s.button}>
+          {t("error.401.relogin")}
+        </Button>
+      )}
       {onRetry && (
         <Button mode="outlined" onPress={onRetry} style={s.button}>
           {t("error.retry")}

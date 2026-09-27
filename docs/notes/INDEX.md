@@ -488,6 +488,25 @@ src/api/generated` then fails with "the generated API client is stale" for reaso
   `Tests/IntegrationTests/SqliteProvider.cs` by a never-freed `NativeLibrary.TryLoad("mod_spatialite.so")`
   that pins it for the process. 3/6 aborts before, 0/10 after, in `mcr.microsoft.com/dotnet/sdk:10.0`
   at 4 CPUs with solution-level `dotnet test --no-build`; the integration project alone rarely hits it.
+  The pin only lowered the rate; the remaining cause is mod-spatialite-close-frees-libxml2.
+- [mod_spatialite frees libxml2's global state on every connection close, so parallel SQLite closes abort the test host](mod-spatialite-close-frees-libxml2.md) —
+  on Linux the integration suite still died as `double free or corruption (fasttop)`, exit 134,
+  Zero tests ran, with the `SqliteProvider.cs` pin in place. gdb shows `sqlite3_close` ->
+  `sqlite3LeaveMutexAndCloseZombie` -> mod_spatialite cleanup -> `xmlCleanupParser()` -> libxml2
+  `free` -> abort, racing another test class's `EnsureDeleted()` close/open. Fixed by
+  `Tests/IntegrationTests/SerializedSqliteConnection.cs`, a `SqliteConnection` whose `Open()`/`Close()`
+  share one lock, and `WebApplicationFactory.cs` disposing every connection it made
+  (`WithWebHostBuilder` reruns `ConfigureWebHost`). Also: `DOTNET_DbgEnableMiniDump` turns this
+  abort into a hang (libproj atfork handler deadlocks the createdump fork); use `gdb -p` with
+  `--cap-add SYS_PTRACE` instead.
+- [Android fetch has no timeout, and a failed Keycloak refresh used to hand out the expired token, so the app showed Inte inloggad while the drawer said Logga ut](android-fetch-no-timeout-stale-token-401.md) —
+  app logged out / session lost / 401 / spinner mid-hike on Android only. RN's `OkHttpClientProvider.kt`
+  sets connect/read/writeTimeout(0), so a hung refresh stalled the shared `refreshPromise` in
+  `app/src/services/keycloak-auth.ts`, and `getValidAccessToken` then returned the stale `accessToken`
+  -> API 401 -> `ErrorView` "Inte inloggad" with `userAtom` still set. Fixed with `withTimeout`,
+  `SessionUnavailableError`, `handleUnauthorized` + `SessionRecovery`, `withUnauthorizedRetry` on the
+  hike save, and a "Logga in igen" button. "Stäng alla" does not kill a recording process; use
+  `dumpsys activity exit-info` when logcat has rolled over.
 - [The proxy publishes every `*_DOMAIN` as a network alias, so a stack pointed at another environment's service swallows its own request](proxy-aliases-shadow-public-hostnames.md) —
   deploying a partial/staging stack, or any compose stack that borrows another environment's
   Keycloak, OpenObserve or mail server: `docker-compose.yml`'s `proxy` service aliases

@@ -312,7 +312,8 @@
     "maxChars200": "Max 200 tecken",
     "maxChars500": "Max 500 tecken",
     "goBack": "Gå tillbaka",
-    "errorSaving": "Något gick fel försök igen senare.",
+    "errorSaving": "Turen kunde inte sparas just nu. Den ligger kvar i telefonen – försök igen.",
+    "errorSavingSignedOut": "Du behöver logga in igen för att spara. Turen ligger kvar i telefonen.",
     "saveTitle": "Spara Promenad",
     "trimRoute": "Trimma rutt",
     "trimHint": "Dra i reglagen för att klippa bort oönskade punkter i början eller slutet.",
@@ -410,7 +411,8 @@
     },
     "401": {
       "title": "Inte inloggad",
-      "message": "Du måste logga in för att fortsätta."
+      "message": "Du måste logga in för att fortsätta.",
+      "relogin": "Logga in igen"
     },
     "403": {
       "title": "Åtkomst nekad",

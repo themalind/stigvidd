@@ -1,5 +1,9 @@
 # Closing the last SQLite connection unloads mod_spatialite, and a parallel test class loading it again aborts the process
 
+> **Incomplete (2026-09-26):** the pin below lowered the abort rate but did not remove it.
+> The crash still reproduced with the pin, and a native backtrace put it in mod_spatialite's
+> close-time `xmlCleanupParser()`. See [[mod-spatialite-close-frees-libxml2]].
+
 On Linux the integration suite can die with
 
 ```

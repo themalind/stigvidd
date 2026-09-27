@@ -27,7 +27,8 @@ namespace IntegrationTests;
 public class StigViddWebApplicationFactory<TProgram>
     : WebApplicationFactory<TProgram> where TProgram : class
 {
-    private SqliteConnection? _connection;
+    // keep-comment: WithWebHostBuilder reruns ConfigureWebHost on this instance, so one factory can own several connections
+    private readonly List<SqliteConnection> _connections = [];
 
     /// <summary>
     /// The Keycloak Admin mock backing the test host. Exposed so tests that exercise
@@ -80,15 +81,15 @@ public class StigViddWebApplicationFactory<TProgram>
             // TrailImportRepository.DeleteSessionAsync uses ExecuteDeleteAsync, which bypasses
             // EF's cascade fix-up and needs the database to do the cascading.
             // Setting it explicitly makes the two platforms agree instead of leaving one green.
-            _connection = new SqliteConnection("DataSource=:memory:;Foreign Keys=True");
-            _connection.Open();
+            var connection = new SerializedSqliteConnection("DataSource=:memory:;Foreign Keys=True");
+            connection.Open();
+            _connections.Add(connection);
 
-            services.AddSingleton<DbConnection>(_connection);
+            services.AddSingleton<DbConnection>(connection);
 
             services.AddDbContextFactory<StigViddDbContext>((container, options) =>
             {
-                var connection = container.GetRequiredService<DbConnection>();
-                options.UseSqlite(_connection, e =>
+                options.UseSqlite(container.GetRequiredService<DbConnection>(), e =>
                 {
                     e.UseNetTopologySuite();
                 });
@@ -190,8 +191,8 @@ public class StigViddWebApplicationFactory<TProgram>
     {
         if (disposing)
         {
-            _connection?.Close();
-            _connection?.Dispose();
+            foreach (var connection in _connections)
+                connection.Dispose();
         }
         base.Dispose(disposing);
     }

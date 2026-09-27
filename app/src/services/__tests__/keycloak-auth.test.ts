@@ -33,8 +33,12 @@ const {
   loadTokens,
   clearTokens,
   setSessionExpiredHandler,
+  handleUnauthorized,
+  resetUnauthorizedCooldown,
   InvalidCredentialsError,
   AccountNotVerifiedError,
+  SessionUnavailableError,
+  TOKEN_REQUEST_TIMEOUT_MS,
 } = require("../keycloak-auth") as typeof KeycloakAuthModule;
 
 const TOKEN_ENDPOINT = "https://kc.test/auth/realms/stigvidd/protocol/openid-connect/token";
@@ -98,9 +102,11 @@ beforeEach(async () => {
   mockGetItem.mockResolvedValue(null);
   mockJwtDecode.mockReturnValue({ sub: "user-1", email: "alice@example.com", preferred_username: "alice" });
   setSessionExpiredHandler(null);
+  resetUnauthorizedCooldown();
 });
 
 afterEach(() => {
+  jest.useRealTimers();
   jest.restoreAllMocks(); // restore any Date.now spies
 });
 
@@ -325,6 +331,89 @@ describe("getValidAccessToken", () => {
     expect(b).toBe("access-2");
     expect(fetch).toHaveBeenCalledTimes(1);
   });
+
+  it("never hands out the expired token when the refresh fails transiently", async () => {
+    jest.spyOn(Date, "now").mockReturnValue(NOW_MS);
+    await seedTokens((NOW_S - 10) * 1000); // already expired
+    global.fetch = jest.fn().mockRejectedValue(new Error("network down"));
+
+    await expect(getValidAccessToken()).rejects.toBeInstanceOf(SessionUnavailableError);
+    expect(mockDeleteItem).not.toHaveBeenCalled();
+  });
+
+  it("returns null once the refresh token is rejected", async () => {
+    jest.spyOn(Date, "now").mockReturnValue(NOW_MS);
+    await seedTokens((NOW_S - 10) * 1000); // already expired
+    mockFetch(400);
+
+    expect(await getValidAccessToken()).toBeNull();
+  });
+
+  it("gives up on a refresh that never answers, and the next call tries again", async () => {
+    jest.useFakeTimers({ now: NOW_MS });
+    await seedTokens((NOW_S - 10) * 1000); // already expired
+    global.fetch = jest.fn().mockReturnValue(new Promise(() => {}));
+
+    const first = getValidAccessToken();
+    const settled = expect(first).rejects.toBeInstanceOf(SessionUnavailableError);
+    await jest.advanceTimersByTimeAsync(TOKEN_REQUEST_TIMEOUT_MS);
+    await settled;
+
+    mockFetch(200, { ...tokenResponse, access_token: "access-2" });
+    expect(await getValidAccessToken()).toBe("access-2");
+  });
+});
+
+describe("handleUnauthorized", () => {
+  it("refreshes even though the cached token still looks valid", async () => {
+    jest.spyOn(Date, "now").mockReturnValue(NOW_MS);
+    await seedTokens((NOW_S + 300) * 1000);
+    mockFetch(200, { ...tokenResponse, access_token: "access-2" });
+
+    expect(await handleUnauthorized()).toBe("refreshed");
+    expect(await getValidAccessToken()).toBe("access-2");
+  });
+
+  it("ends the session when Keycloak rejects the refresh token", async () => {
+    const handler = jest.fn();
+    setSessionExpiredHandler(handler);
+    jest.spyOn(Date, "now").mockReturnValue(NOW_MS);
+    await seedTokens((NOW_S + 300) * 1000);
+    mockFetch(400);
+
+    expect(await handleUnauthorized()).toBe("expired");
+    expect(handler).toHaveBeenCalledTimes(1);
+    expect(mockDeleteItem).toHaveBeenCalledWith(STORAGE_KEYS.refreshToken);
+  });
+
+  it("keeps the session when Keycloak cannot be reached", async () => {
+    const handler = jest.fn();
+    setSessionExpiredHandler(handler);
+    jest.spyOn(Date, "now").mockReturnValue(NOW_MS);
+    await seedTokens((NOW_S + 300) * 1000);
+    global.fetch = jest.fn().mockRejectedValue(new Error("network down"));
+
+    expect(await handleUnauthorized()).toBe("unavailable");
+    expect(handler).not.toHaveBeenCalled();
+    expect(mockDeleteItem).not.toHaveBeenCalled();
+  });
+
+  it("reports a 401 right after a successful refresh as rejected instead of refreshing again", async () => {
+    const now = jest.spyOn(Date, "now").mockReturnValue(NOW_MS);
+    await seedTokens((NOW_S + 300) * 1000);
+    mockFetch(200, { ...tokenResponse, access_token: "access-2" });
+    await handleUnauthorized();
+
+    now.mockReturnValue(NOW_MS + 1000);
+    expect(await handleUnauthorized()).toBe("rejected");
+    expect(fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("reports expired without a network call when there is no refresh token", async () => {
+    global.fetch = jest.fn();
+    expect(await handleUnauthorized()).toBe("expired");
+    expect(fetch).not.toHaveBeenCalled();
+  });
 });
 
 describe("restoreSession", () => {
@@ -353,6 +442,24 @@ describe("restoreSession", () => {
     const user = await restoreSession();
     expect(user).toEqual({ id: "user-1", email: "alice@example.com", username: "alice" });
     expect(fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("stays signed in offline, keeping the tokens, when the refresh cannot reach Keycloak", async () => {
+    jest.spyOn(Date, "now").mockReturnValue(NOW_MS);
+    await seedTokens((NOW_S - 10) * 1000); // expired
+    global.fetch = jest.fn().mockRejectedValue(new Error("network down"));
+
+    const user = await restoreSession();
+    expect(user).toEqual({ id: "user-1", email: "alice@example.com", username: "alice" });
+    expect(mockDeleteItem).not.toHaveBeenCalled();
+  });
+
+  it("returns null when the stored refresh token is rejected", async () => {
+    jest.spyOn(Date, "now").mockReturnValue(NOW_MS);
+    await seedTokens((NOW_S - 10) * 1000); // expired
+    mockFetch(400);
+
+    expect(await restoreSession()).toBeNull();
   });
 });
 

@@ -6,8 +6,8 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { createHike } from "@/api/hikes";
+import { isUnauthorized, withUnauthorizedRetry } from "@/api/unauthorized";
 import { showErrorAtom } from "@/atoms/snackbar-atoms";
-import { stigviddUserAtom } from "@/atoms/user-atoms";
 import Map from "@/components/map/map";
 import { BORDER_RADIUS } from "@/constants/constants";
 import { ActiveHike, CreateHikeRequest } from "@/data/types";
@@ -22,7 +22,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Camera, type CameraRef, GeoJSONSource, Layer } from "@maplibre/maplibre-react-native";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
-import { useAtomValue, useSetAtom } from "jotai";
+import { useSetAtom } from "jotai";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -50,18 +50,17 @@ export default function SaveHikeForm({ hike, onDismiss, onSaveSuccess }: Props) 
   const setErrorMsg = useSetAtom(showErrorAtom);
   const cameraRef = useRef<CameraRef>(null);
   const queryClient = useQueryClient();
-  const user = useAtomValue(stigviddUserAtom);
 
   const { mutate, isPending } = useMutation({
-    mutationFn: (newHike: CreateHikeRequest) => createHike(newHike),
+    mutationFn: (newHike: CreateHikeRequest) => withUnauthorizedRetry(() => createHike(newHike)),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["hikes", user.data?.identifier] });
+      queryClient.invalidateQueries({ queryKey: ["hikes"] });
       onSaveSuccess();
       onDismiss();
       router.replace("/(tabs)/(profile-stack)/user/my-hikes");
     },
-    onError: () => {
-      setErrorMsg(t("hike.errorSaving"));
+    onError: (error) => {
+      setErrorMsg(t(isUnauthorized(error) ? "hike.errorSavingSignedOut" : "hike.errorSaving"));
     },
   });
 

@@ -5,9 +5,7 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import { stigviddUserAtom } from "@/atoms/user-atoms";
 import BackButton from "@/components/back-button";
-import ErrorView from "@/components/error-view";
 import LoadingIndicator from "@/components/loading-indicator";
 import LocationDisclosureDialog from "@/components/trail/trail-creator/location-disclosure-dialog";
 import RecordingInfoDialog from "@/components/trail/trail-creator/recording-info-dialog";
@@ -16,7 +14,6 @@ import { USER_LOCATION_KEY } from "@/hooks/useUserLocation";
 import { useQueryClient } from "@tanstack/react-query";
 import * as Location from "expo-location";
 import { router } from "expo-router";
-import { useAtom } from "jotai";
 import { useCallback, useEffect, useState } from "react";
 import { BORDER_RADIUS, SCREEN_PADDING } from "@/constants/constants";
 import { AppState, Linking, Platform, StyleSheet, View } from "react-native";
@@ -29,7 +26,6 @@ import { useTranslation } from "react-i18next";
 type PermissionPhase = "checking" | "disclosure" | "granted" | "denied";
 
 export default function CreateHikeScreen() {
-  const [{ isLoading, isError, error }] = useAtom(stigviddUserAtom);
   const theme = useTheme();
   const { t } = useTranslation();
   const queryClient = useQueryClient();
@@ -89,7 +85,7 @@ export default function CreateHikeScreen() {
     return () => subscription.remove();
   }, [phase, markGranted]);
 
-  if (isLoading || phase === "checking") {
+  if (phase === "checking") {
     return <LoadingIndicator />;
   }
 
@@ -139,10 +135,6 @@ export default function CreateHikeScreen() {
         </View>
       </View>
     );
-  }
-
-  if (isError) {
-    return <ErrorView error={error} />;
   }
 
   return (

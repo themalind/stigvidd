@@ -37,6 +37,11 @@ const SCOPE = "openid profile email offline_access";
 // Refresh slightly before the token actually expires to avoid races.
 const EXPIRY_SKEW_SECONDS = 30;
 
+// RN's Android fetch (OkHttp) has no timeout; see docs/notes/android-fetch-no-timeout-stale-token-401.md. keep-comment: hidden platform constraint
+export const TOKEN_REQUEST_TIMEOUT_MS = 15_000;
+
+const UNAUTHORIZED_COOLDOWN_MS = 30_000;
+
 const STORAGE_KEYS = {
   accessToken: "kc_access_token",
   refreshToken: "kc_refresh_token",
@@ -80,11 +85,23 @@ export class AccountNotVerifiedError extends InvalidCredentialsError {
   }
 }
 
+export class SessionUnavailableError extends Error {
+  constructor() {
+    super("session-unavailable");
+    this.name = "SessionUnavailableError";
+  }
+}
+
+type RefreshOutcome = "refreshed" | "expired" | "unavailable";
+
+export type UnauthorizedOutcome = RefreshOutcome | "rejected";
+
 // In-memory cache so the hot path (every API call) avoids hitting SecureStore.
 let accessToken: string | null = null;
 let refreshToken: string | null = null;
 let accessExpiresAt = 0; // epoch ms
-let refreshPromise: Promise<string | null> | null = null;
+let refreshPromise: Promise<RefreshOutcome> | null = null;
+let lastForcedRefreshAt = 0; // epoch ms
 
 // Called when a refresh fails and the session is gone, so the auth layer can
 // flip back to the signed-out state. Registered once by useInitAuth.
@@ -152,22 +169,42 @@ export async function clearTokens(): Promise<void> {
   ]);
 }
 
-async function requestToken(body: Record<string, string>): Promise<KeycloakTokenResponse> {
-  const response = await fetch(TOKEN_ENDPOINT, {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams(body).toString(),
+async function withTimeout<T>(request: (signal: AbortSignal) => Promise<T>): Promise<T> {
+  const controller = new AbortController();
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => {
+      controller.abort();
+      reject(new Error("Keycloak request timed out"));
+    }, TOKEN_REQUEST_TIMEOUT_MS);
   });
 
-  if (response.status === 400 || response.status === 401) {
-    throw (await isAccountDisabled(response)) ? new AccountNotVerifiedError() : new InvalidCredentialsError();
+  try {
+    return await Promise.race([request(controller.signal), timeout]);
+  } finally {
+    clearTimeout(timer);
   }
+}
 
-  if (!response.ok) {
-    throw new Error(`Keycloak token request failed: HTTP ${response.status}`);
-  }
+async function requestToken(body: Record<string, string>): Promise<KeycloakTokenResponse> {
+  return withTimeout(async (signal) => {
+    const response = await fetch(TOKEN_ENDPOINT, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams(body).toString(),
+      signal,
+    });
 
-  return (await response.json()) as KeycloakTokenResponse;
+    if (response.status === 400 || response.status === 401) {
+      throw (await isAccountDisabled(response)) ? new AccountNotVerifiedError() : new InvalidCredentialsError();
+    }
+
+    if (!response.ok) {
+      throw new Error(`Keycloak token request failed: HTTP ${response.status}`);
+    }
+
+    return (await response.json()) as KeycloakTokenResponse;
+  });
 }
 
 /** Decode the identity claims from a Keycloak token into the app's AuthUser shape. */
@@ -201,16 +238,13 @@ export async function passwordGrant(email: string, password: string): Promise<Au
 }
 
 /**
- * Exchange the refresh token for a fresh access token. Returns the user, or null
- * if the refresh did not yield a session.
- *
  * Only a genuine rejection of the refresh token (Keycloak `invalid_grant`, surfaced
  * as InvalidCredentialsError) ends the session and signals the auth layer. Transient
  * failures — network errors, timeouts, 5xx — must NOT clear the stored tokens: a
  * momentary blip would otherwise permanently log the user out. Those are left intact
  * so a later call can retry.
  */
-export async function refreshGrant(token: string): Promise<AuthUser | null> {
+async function refresh(token: string): Promise<RefreshOutcome> {
   try {
     const tokens = await requestToken({
       grant_type: "refresh_token",
@@ -218,14 +252,33 @@ export async function refreshGrant(token: string): Promise<AuthUser | null> {
       refresh_token: token,
     });
     await persistTokens(tokens);
-    return decodeUser(tokens.id_token ?? tokens.access_token);
+    return "refreshed";
   } catch (error) {
     if (error instanceof InvalidCredentialsError) {
       await clearTokens();
       onSessionExpired?.();
+      return "expired";
     }
-    return null;
+    return "unavailable";
   }
+}
+
+export async function refreshGrant(token: string): Promise<AuthUser | null> {
+  const outcome = await refresh(token);
+  return outcome === "refreshed" && accessToken ? decodeUser(accessToken) : null;
+}
+
+function refreshOnce(): Promise<RefreshOutcome> {
+  const token = refreshToken;
+  if (!token) {
+    return Promise.resolve("expired");
+  }
+  if (!refreshPromise) {
+    refreshPromise = refresh(token).finally(() => {
+      refreshPromise = null;
+    });
+  }
+  return refreshPromise;
 }
 
 /** Revoke the session at Keycloak and clear stored tokens. */
@@ -233,11 +286,14 @@ export async function logoutKeycloak(): Promise<void> {
   const token = refreshToken;
   if (token) {
     try {
-      await fetch(LOGOUT_ENDPOINT, {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams({ client_id: CLIENT_ID, refresh_token: token }).toString(),
-      });
+      await withTimeout((signal) =>
+        fetch(LOGOUT_ENDPOINT, {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: new URLSearchParams({ client_id: CLIENT_ID, refresh_token: token }).toString(),
+          signal,
+        }),
+      );
     } catch {
       // Best-effort revocation; we clear local tokens regardless.
     }
@@ -245,11 +301,6 @@ export async function logoutKeycloak(): Promise<void> {
   await clearTokens();
 }
 
-/**
- * Returns a valid access token, refreshing transparently when expired.
- * This is the single choke point the API layer calls via getUserToken().
- * Concurrent callers share one in-flight refresh.
- */
 /**
  * Restore the signed-in user on app start. Loads persisted tokens, then obtains a
  * valid access token through the SAME single-flight path the API layer uses, so the
@@ -260,8 +311,16 @@ export async function logoutKeycloak(): Promise<void> {
  */
 export async function restoreSession(): Promise<AuthUser | null> {
   await loadTokens();
-  const token = await getValidAccessToken();
-  return token ? decodeUser(token) : null;
+  try {
+    const token = await getValidAccessToken();
+    return token ? decodeUser(token) : null;
+  } catch (error) {
+    // Offline: keep the stored identity, but never send that token. keep-comment: signing out on a cold start without signal strands a hike
+    if (error instanceof SessionUnavailableError && accessToken) {
+      return decodeUser(accessToken);
+    }
+    throw error;
+  }
 }
 
 export async function getValidAccessToken(): Promise<string | null> {
@@ -278,14 +337,28 @@ export async function getValidAccessToken(): Promise<string | null> {
     return null;
   }
 
-  if (!refreshPromise) {
-    const token = refreshToken;
-    refreshPromise = refreshGrant(token)
-      .then(() => accessToken)
-      .finally(() => {
-        refreshPromise = null;
-      });
+  const outcome = await refreshOnce();
+  if (outcome === "expired") {
+    return null;
   }
+  if (outcome === "unavailable" || !accessToken) {
+    throw new SessionUnavailableError();
+  }
+  return accessToken;
+}
 
-  return refreshPromise;
+export async function handleUnauthorized(): Promise<UnauthorizedOutcome> {
+  // The API refused a token refreshed moments ago; refreshing again would loop. keep-comment: loop guard
+  if (Date.now() - lastForcedRefreshAt < UNAUTHORIZED_COOLDOWN_MS) {
+    return "rejected";
+  }
+  const outcome = await refreshOnce();
+  if (outcome === "refreshed") {
+    lastForcedRefreshAt = Date.now();
+  }
+  return outcome;
+}
+
+export function resetUnauthorizedCooldown(): void {
+  lastForcedRefreshAt = 0;
 }

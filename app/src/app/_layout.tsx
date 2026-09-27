@@ -10,6 +10,8 @@ import { initMapTiler } from "@/components/map/map-style";
 import { initMapCache } from "@/utils/map-cache";
 import { loadUserTheme, userThemeAtom } from "@/atoms/user-theme-atom";
 import { BannedWriteDialog } from "@/components/auth/banned-write-dialog";
+import { SessionRecovery } from "@/components/auth/session-recovery";
+import { retryUnlessAuthFailure } from "@/api/unauthorized";
 import { GlobalSnackbar } from "@/components/global-snackbar";
 import { ConsentDialog } from "@/components/settings/consent-dialog";
 import { useAppState } from "@/hooks/useAppState";
@@ -93,7 +95,10 @@ export default function RootLayout() {
   // queryClient.clear() to drop the signed-out user's cached data from memory.
   // Auth-specific screens reset on login/logout because Stack.Protected unmounts
   // them when the guard flips — no full navigator remount needed.
-  const queryClient = useMemo(() => new QueryClient(), []);
+  const queryClient = useMemo(
+    () => new QueryClient({ defaultOptions: { queries: { retry: retryUnlessAuthFailure } } }),
+    [],
+  );
 
   const setQueryClient = useSetAtom(queryClientAtom);
   useEffect(() => {
@@ -146,6 +151,7 @@ export default function RootLayout() {
               {/* A Portal, so it must stay inside PaperProvider's portal host. */}
               <ConsentDialog />
               <BannedWriteDialog />
+              <SessionRecovery />
             </PaperProvider>
             {/* After the portal host, so it is drawn over every modal and dialog. */}
             <PaperThemeProvider theme={theme}>

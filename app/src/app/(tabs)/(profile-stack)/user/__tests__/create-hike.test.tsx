@@ -143,14 +143,10 @@ it("shows nothing but a spinner while the status is still being read", () => {
   expect(screen.queryByTestId("trail-creator")).toBeNull();
 });
 
-// The creator saves against the signed-in user, so it waits for that user.
-it("waits for the user too, not only for the permission", async () => {
-  mockGetPermissions.mockResolvedValue({ granted: true, canAskAgain: false });
-  renderWithProviders(<CreateHikeScreen />, { initialAtoms: user({ isLoading: true }) });
-  await settle();
+it("does not hold the creator back while the user profile is still loading", async () => {
+  await showGranted(user({ isLoading: true }));
 
-  expect(screen.UNSAFE_getByType(ActivityIndicator)).toBeTruthy();
-  expect(screen.queryByTestId("trail-creator")).toBeNull();
+  expect(screen.getByTestId("trail-creator")).toBeTruthy();
 });
 
 // An already-granted permission is not prompted for again.
@@ -362,15 +358,12 @@ it("drops the listener once the permission comes through", async () => {
 
 // --- the failed user load --------------------------------------------------------------
 
-it("shows the error view when the user could not be loaded", async () => {
-  mockGetPermissions.mockResolvedValue({ granted: true, canAskAgain: false });
-  renderWithProviders(<CreateHikeScreen />, {
-    initialAtoms: user({ isError: true, error: new ApiError("nope", 404) }),
-  });
-  await flushUntil(() => screen.queryByText("Hittades inte"));
+// A recording in progress must stay reachable when the profile cannot be fetched.
+it("keeps the creator when the user profile fails with 401", async () => {
+  await showGranted(user({ isError: true, error: new ApiError("expired", 401) }));
 
-  expect(screen.getByText("Hittades inte")).toBeTruthy();
-  expect(screen.queryByTestId("trail-creator")).toBeNull();
+  expect(screen.getByTestId("trail-creator")).toBeTruthy();
+  expect(screen.queryByText("Inte inloggad")).toBeNull();
 });
 
 // Both are broken, but only one of them is something the user can act on from here.

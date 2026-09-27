@@ -312,7 +312,8 @@
     "maxChars200": "Max 200 characters",
     "maxChars500": "Max 500 characters",
     "goBack": "Go back",
-    "errorSaving": "Something went wrong, please try again later.",
+    "errorSaving": "The hike could not be saved right now. It is kept on your phone – try again.",
+    "errorSavingSignedOut": "You need to log in again to save. The hike is kept on your phone.",
     "saveTitle": "Save Walk",
     "trimRoute": "Trim route",
     "trimHint": "Drag the handles to cut unwanted points from the start or end.",
@@ -410,7 +411,8 @@
     },
     "401": {
       "title": "Not logged in",
-      "message": "You must log in to continue."
+      "message": "You must log in to continue.",
+      "relogin": "Log in again"
     },
     "403": {
       "title": "Access denied",

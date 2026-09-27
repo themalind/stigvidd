@@ -7,7 +7,7 @@
 
 import { userThemeAtom } from "@/atoms/user-theme-atom";
 import ThemeScreen from "@/components/settings/theme-screen";
-import { APP_THEMES, AppDefaultTheme, type ThemeChoice } from "@/constants/theme";
+import { APP_THEMES, AppDarkTheme, AppDefaultTheme, type ThemeChoice } from "@/constants/theme";
 import { settle } from "@/test/flush";
 import { renderWithProviders } from "@/test/render";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -83,10 +83,23 @@ it("goes back to following the system", async () => {
   expect(AsyncStorage.setItem).toHaveBeenCalledWith("my-theme", "auto");
 });
 
-it("draws each preview in its own theme's colours, not the one on screen", () => {
+it("draws each row in its own theme's colours, not the one on screen", () => {
   show();
   const norrsken = APP_THEMES.find((t) => t.id === "norrsken")?.theme;
   if (!norrsken) throw new Error("expected norrsken");
 
-  expect(screen.getByTestId("theme-preview-norrsken")).toHaveStyle({ backgroundColor: norrsken.colors.background });
+  expect(screen.getByTestId("theme-option-norrsken")).toHaveStyle({ backgroundColor: norrsken.colors.background });
+  expect(screen.getByText("Norrsken")).toHaveStyle({ color: norrsken.colors.onBackground });
+  [norrsken.colors.primary, norrsken.colors.secondary, norrsken.colors.tertiary].forEach((color, index) => {
+    expect(screen.getByTestId(`theme-stripe-norrsken-${index}`)).toHaveStyle({ backgroundColor: color });
+  });
+  expect(screen.queryByTestId("theme-stripe-norrsken-3")).toBeNull();
+});
+
+it("shows the system choice as one light and one dark stripe", () => {
+  show();
+
+  expect(screen.getByTestId("theme-stripe-auto-0")).toHaveStyle({ backgroundColor: AppDefaultTheme.colors.background });
+  expect(screen.getByTestId("theme-stripe-auto-1")).toHaveStyle({ backgroundColor: AppDarkTheme.colors.background });
+  expect(screen.queryByTestId("theme-stripe-auto-2")).toBeNull();
 });
