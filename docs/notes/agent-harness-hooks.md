@@ -272,6 +272,16 @@ The general lesson is the same as the two above and worth more than the fix: **w
 guard's rule mentions position (an anchor, a prefix, a column), at least one fixture has to
 carry the whitespace real code puts there.**
 
+### Older comments are swept after the edit, not denied before it
+
+The same hook has a `--after` mode (PostToolUse). It lists the edited file's other unmarked
+comments through exit 2, once per file per session (state in `stateDir()/comment-sweep/`).
+A PreToolUse deny can't do this job. An `Edit` only sees `old_string`, so a "file must be
+clean" rule would deny every one-line change to any of the ~1,000 files that carry ~8,000
+older comment lines. It would also deny the edits that remove those comments one at a time,
+leaving `Write` of the whole file as the only way through. EF migrations are out of scope for
+the sweep, because their scaffolded `/// <inheritdoc />` is not anyone's to review.
+
 ## The exit-code contract
 
 | | |

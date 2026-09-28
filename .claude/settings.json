@@ -39,6 +39,8 @@
     "not there before, unless it is an SPDX header, an Arrange/Act/Assert test marker, or",
     "marked `keep-comment: <why>` on that line. Scoped to .cs/.ts/.tsx outside generated/",
     "docs/.claude, so it never touches this file's own prose or a hook's own commentary.",
+    "Its --after mode (PostToolUse) lists the edited file's older unmarked comments once per",
+    "session, without blocking, so old comments get deleted or marked as files are touched.",
     "",
     "guard-commit-message.mjs denies a `git commit` whose message mentions Claude/Anthropic",
     "authorship, or runs past 72 characters. Extracts the message from -m or a heredoc.",
@@ -150,6 +152,13 @@
             "args": ["${CLAUDE_PROJECT_DIR}/.claude/hooks/check-lint.mjs"],
             "statusMessage": "Linting the file you just edited",
             "timeout": 60
+          },
+          {
+            "type": "command",
+            "command": "node",
+            "args": ["${CLAUDE_PROJECT_DIR}/.claude/hooks/guard-new-comments.mjs", "--after"],
+            "statusMessage": "Reviewing older comments in the file you just edited",
+            "timeout": 10
           }
         ]
       },
