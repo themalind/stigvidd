@@ -27,6 +27,9 @@ public record MediaReprocessItemDetail(
     DateTime CreatedAt,
     DateTime LastUpdatedAt);
 
+// keep-comment: rows share files (placeholders by the hundred), so a success reports how many rows moved and whether the old file may be deleted
+public record MediaReprocessSuccess(int RowsRepointed, bool OldFileStillReferenced);
+
 public interface IMediaReprocessRepository
 {
     Task<RepositoryResult<MediaReprocessJob>> CreateJobAsync(
@@ -36,8 +39,13 @@ public interface IMediaReprocessRepository
 
     Task<RepositoryResult<MediaReprocessItem>> ClaimAsync(int itemId, CancellationToken ctoken);
 
-    Task<RepositoryResult> MarkSucceededAsync(
-        int itemId, string newImageUrl, int width, int height, long sizeBytes, CancellationToken ctoken);
+    /// <summary>
+    /// Moves every Trail/Facility image row that stored <paramref name="oldImageUrl"/> to the new
+    /// file, settles this job's pending items for those rows, and reports whether anything else
+    /// (a hike, review, city area or trail symbol) still points at the old file.
+    /// </summary>
+    Task<RepositoryResult<MediaReprocessSuccess>> MarkSucceededAsync(
+        int itemId, string oldImageUrl, string newImageUrl, int width, int height, long sizeBytes, CancellationToken ctoken);
 
     Task<RepositoryResult> MarkFailedAsync(int itemId, string error, CancellationToken ctoken);
 
@@ -46,6 +54,9 @@ public interface IMediaReprocessRepository
     Task<RepositoryResult<IReadOnlyCollection<int>>> GetPendingItemIdsAsync(CancellationToken ctoken);
 
     Task<RepositoryResult<int>> CancelPendingItemsAsync(string jobIdentifier, CancellationToken ctoken);
+
+    /// <summary>Moves a job's Failed items back to Pending and returns their ids for the queue.</summary>
+    Task<RepositoryResult<IReadOnlyCollection<int>>> RetryFailedItemsAsync(string jobIdentifier, CancellationToken ctoken);
 
     Task<RepositoryResult<PagedResult<MediaReprocessJobCounts>>> GetJobsPagedAsync(
         int page, int pageSize, CancellationToken ctoken);

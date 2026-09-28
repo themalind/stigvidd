@@ -89,7 +89,7 @@ public class WebDavService : IWebDavService
         {
             using var client = _clientFactory();
 
-            var result = await client.Delete(relativePath); // relativePath ex "reviews/guid.jpeg"
+            var result = await client.Delete(relativePath.TrimStart('/')); // relativePath ex "reviews/guid.jpeg"
 
             if (!result.IsSuccessful)
             {
@@ -121,21 +121,32 @@ public class WebDavService : IWebDavService
 
     public async Task<Stream?> DownloadFileAsync(string relativePath)
     {
-        var client = _clientFactory();
-        var response = await client.GetRawFile(relativePath);
+        var result = await DownloadAsync(relativePath);
+        return result.Success ? result.Value : null;
+    }
+
+    public async Task<Result<Stream>> DownloadAsync(string relativePath)
+    {
+        // keep-comment: buffered so the client (and the HttpClient it owns) can be disposed before returning - one leaked per file across a batch of hundreds
+        using var client = _clientFactory();
+        using var response = await client.GetRawFile(relativePath.TrimStart('/'));
 
         if (!response.IsSuccessful)
         {
             _logger.LogWarning("DownloadFileAsync: {Path} -> {Status}", relativePath, response.StatusCode);
-            return null;
+            return Result.Fail<Stream>(new Message(response.StatusCode, $"{response.StatusCode} {response.Description}"));
         }
 
-        return response.Stream;
+        var buffer = new MemoryStream();
+        await response.Stream.CopyToAsync(buffer);
+        buffer.Position = 0;
+
+        return Result.Ok<Stream>(buffer);
     }
 
     public async Task<Result<bool>> UploadToPathAsync(Stream stream, string exactPath)
     {
-        var client = _clientFactory();
+        using var client = _clientFactory();
 
         // Buffer so nginx (create_full_put_path) gets a length-known body and a
         // rewindable source.

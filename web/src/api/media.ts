@@ -8,6 +8,7 @@ import {
   adminMediaGetAll,
   adminMediaGetReprocessJob,
   adminMediaGetReprocessJobs,
+  adminMediaRetryReprocessJob,
   adminMediaUpdateMetadata,
 } from "./generated/admin-media/admin-media";
 import type {
@@ -91,4 +92,8 @@ export async function getMediaReprocessJob(identifier: string): Promise<Reproces
 /** Cancels every item of a job still waiting to be processed. */
 export async function cancelMediaReprocessJob(identifier: string): Promise<ReprocessJobSummary> {
   return adminMediaCancelReprocessJob(identifier);
+}
+
+export async function retryMediaReprocessJob(identifier: string): Promise<ReprocessJobSummary> {
+  return adminMediaRetryReprocessJob(identifier);
 }

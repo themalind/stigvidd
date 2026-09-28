@@ -12,6 +12,7 @@ import {
   selectableMedia,
   toMediaFilter,
   toMediaQuery,
+  mediaLabel,
   togglePageSelection,
   wouldBeChangedBy,
   type MediaFilterState,
@@ -57,6 +58,12 @@ describe("toMediaQuery", () => {
 
   it("converts kilobytes to bytes", () => {
     expect(toMediaQuery(filters({ minSizeKb: "500" })).MinSizeBytes).toBe(512000);
+  });
+
+  it("sends a fractional KB bound as whole bytes, which the API requires", () => {
+    const query = toMediaQuery(filters({ minSizeKb: "0.1", maxSizeKb: "1.5" }));
+    expect(query.MinSizeBytes).toBe(102);
+    expect(query.MaxSizeBytes).toBe(1536);
   });
 
   it("sends the day after the chosen end date, because the bound is exclusive", () => {
@@ -175,5 +182,17 @@ describe("selection", () => {
     expect(canSelectAllMatching(partial, 1204, selected, false)).toBe(false);
     expect(canSelectAllMatching(whole, 2, selected, false)).toBe(false);
     expect(canSelectAllMatching(whole, 1204, selected, true)).toBe(false);
+  });
+});
+
+describe("mediaLabel", () => {
+  it("names the owner and the file, so two images of one trail read differently", () => {
+    expect(
+      mediaLabel({ identifier: "a", ownerName: "Hedared", imageUrl: "https://media.test/trails/one.webp?v=2" }),
+    ).toBe("Hedared (one.webp)");
+  });
+
+  it("falls back to the identifier when there is no owner name", () => {
+    expect(mediaLabel({ identifier: "img-1", ownerName: null, imageUrl: "" })).toBe("img-1");
   });
 });

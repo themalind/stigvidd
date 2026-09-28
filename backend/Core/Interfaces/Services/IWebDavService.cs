@@ -14,5 +14,6 @@ public interface IWebDavService
     // path so DB references stay valid — unlike UploadFileAsync which mints a
     // new GUID name).
     Task<Stream?> DownloadFileAsync(string relativePath);
+    Task<Result<Stream>> DownloadAsync(string relativePath);
     Task<Result<bool>> UploadToPathAsync(Stream stream, string exactPath);
 }

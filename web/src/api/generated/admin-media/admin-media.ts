@@ -138,9 +138,9 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 }
 
 export const adminMediaUpdateMetadata = async (imageIdentifier: string,
-    updateImageMetadataRequest: UpdateImageMetadataRequest, options?: RequestInit): Promise<Blob> => {
+    updateImageMetadataRequest: UpdateImageMetadataRequest, options?: RequestInit): Promise<void> => {
 
-  return customFetch<Blob>(getAdminMediaUpdateMetadataUrl(imageIdentifier),
+  return customFetch<void>(getAdminMediaUpdateMetadataUrl(imageIdentifier),
   {
     ...options,
     method: 'PATCH',
@@ -161,7 +161,7 @@ export const getAdminMediaUpdateMetadataQueryKey = (imageIdentifier: string,
     }
 
 
-export const getAdminMediaUpdateMetadataQueryOptions = <TData = Awaited<ReturnType<typeof adminMediaUpdateMetadata>>, TError = unknown>(imageIdentifier: string,
+export const getAdminMediaUpdateMetadataQueryOptions = <TData = Awaited<ReturnType<typeof adminMediaUpdateMetadata>>, TError = ProblemDetails>(imageIdentifier: string,
     updateImageMetadataRequest: UpdateImageMetadataRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminMediaUpdateMetadata>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
@@ -181,10 +181,10 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 }
 
 export type AdminMediaUpdateMetadataQueryResult = NonNullable<Awaited<ReturnType<typeof adminMediaUpdateMetadata>>>
-export type AdminMediaUpdateMetadataQueryError = unknown
+export type AdminMediaUpdateMetadataQueryError = ProblemDetails
 
 
-export function useAdminMediaUpdateMetadata<TData = Awaited<ReturnType<typeof adminMediaUpdateMetadata>>, TError = unknown>(
+export function useAdminMediaUpdateMetadata<TData = Awaited<ReturnType<typeof adminMediaUpdateMetadata>>, TError = ProblemDetails>(
  imageIdentifier: string,
     updateImageMetadataRequest: UpdateImageMetadataRequest, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminMediaUpdateMetadata>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -195,7 +195,7 @@ export function useAdminMediaUpdateMetadata<TData = Awaited<ReturnType<typeof ad
       >, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAdminMediaUpdateMetadata<TData = Awaited<ReturnType<typeof adminMediaUpdateMetadata>>, TError = unknown>(
+export function useAdminMediaUpdateMetadata<TData = Awaited<ReturnType<typeof adminMediaUpdateMetadata>>, TError = ProblemDetails>(
  imageIdentifier: string,
     updateImageMetadataRequest: UpdateImageMetadataRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminMediaUpdateMetadata>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -206,13 +206,13 @@ export function useAdminMediaUpdateMetadata<TData = Awaited<ReturnType<typeof ad
       >, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAdminMediaUpdateMetadata<TData = Awaited<ReturnType<typeof adminMediaUpdateMetadata>>, TError = unknown>(
+export function useAdminMediaUpdateMetadata<TData = Awaited<ReturnType<typeof adminMediaUpdateMetadata>>, TError = ProblemDetails>(
  imageIdentifier: string,
     updateImageMetadataRequest: UpdateImageMetadataRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminMediaUpdateMetadata>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 
-export function useAdminMediaUpdateMetadata<TData = Awaited<ReturnType<typeof adminMediaUpdateMetadata>>, TError = unknown>(
+export function useAdminMediaUpdateMetadata<TData = Awaited<ReturnType<typeof adminMediaUpdateMetadata>>, TError = ProblemDetails>(
  imageIdentifier: string,
     updateImageMetadataRequest: UpdateImageMetadataRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminMediaUpdateMetadata>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
@@ -542,6 +542,100 @@ export function useAdminMediaCancelReprocessJob<TData = Awaited<ReturnType<typeo
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getAdminMediaCancelReprocessJobQueryOptions(identifier,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export const getAdminMediaRetryReprocessJobUrl = (identifier: string,) => {
+
+
+
+
+  return `/api/v1/admin/media/reprocess/${identifier}/retry`
+}
+
+export const adminMediaRetryReprocessJob = async (identifier: string, options?: RequestInit): Promise<MediaReprocessJobSummaryResponse> => {
+
+  return customFetch<MediaReprocessJobSummaryResponse>(getAdminMediaRetryReprocessJobUrl(identifier),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getAdminMediaRetryReprocessJobQueryKey = (identifier: string,) => {
+    return [
+    'POST', `/api/v1/admin/media/reprocess/${identifier}/retry`
+    ] as const;
+    }
+
+
+export const getAdminMediaRetryReprocessJobQueryOptions = <TData = Awaited<ReturnType<typeof adminMediaRetryReprocessJob>>, TError = ProblemDetails>(identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminMediaRetryReprocessJob>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAdminMediaRetryReprocessJobQueryKey(identifier);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminMediaRetryReprocessJob>>> = ({ signal }) => adminMediaRetryReprocessJob(identifier, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: identifier !== null && identifier !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adminMediaRetryReprocessJob>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AdminMediaRetryReprocessJobQueryResult = NonNullable<Awaited<ReturnType<typeof adminMediaRetryReprocessJob>>>
+export type AdminMediaRetryReprocessJobQueryError = ProblemDetails
+
+
+export function useAdminMediaRetryReprocessJob<TData = Awaited<ReturnType<typeof adminMediaRetryReprocessJob>>, TError = ProblemDetails>(
+ identifier: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminMediaRetryReprocessJob>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminMediaRetryReprocessJob>>,
+          TError,
+          Awaited<ReturnType<typeof adminMediaRetryReprocessJob>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminMediaRetryReprocessJob<TData = Awaited<ReturnType<typeof adminMediaRetryReprocessJob>>, TError = ProblemDetails>(
+ identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminMediaRetryReprocessJob>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminMediaRetryReprocessJob>>,
+          TError,
+          Awaited<ReturnType<typeof adminMediaRetryReprocessJob>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminMediaRetryReprocessJob<TData = Awaited<ReturnType<typeof adminMediaRetryReprocessJob>>, TError = ProblemDetails>(
+ identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminMediaRetryReprocessJob>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useAdminMediaRetryReprocessJob<TData = Awaited<ReturnType<typeof adminMediaRetryReprocessJob>>, TError = ProblemDetails>(
+ identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminMediaRetryReprocessJob>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAdminMediaRetryReprocessJobQueryOptions(identifier,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
+﻿// SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 using AwesomeAssertions;
@@ -376,5 +376,65 @@ public class MediaReprocessServiceTests
         result.Value.Should().NotBeNull();
         result.Value.CancelledCount.Should().Be(2);
         result.Value.Status.Should().Be("Completed");
+    }
+
+    [Fact]
+    public async Task RetryFailedAsync_EnqueuesExactlyTheItemsItReset()
+    {
+        // Arrange
+        var reprocess = new Mock<IMediaReprocessRepository>();
+        reprocess.Setup(r => r.RetryFailedItemsAsync("job-1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<IReadOnlyCollection<int>>.Success([11, 12]));
+        reprocess.Setup(r => r.GetJobCountsAsync("job-1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<MediaReprocessJobCounts>.Success(
+                new MediaReprocessJobCounts("job-1", "{}", 3, 2, 0, 1, 0, 0, DateTime.UtcNow, DateTime.UtcNow)));
+        var queue = new RecordingQueue();
+
+        // Act
+        var result = await Build(reprocess, queue: queue).RetryFailedAsync("job-1", TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Success.Should().BeTrue();
+        result.Value.Should().NotBeNull();
+        result.Value.PendingCount.Should().Be(2);
+        queue.Enqueued.Should().Equal(11, 12);
+    }
+
+    [Fact]
+    public async Task RetryFailedAsync_ForAnUnknownJob_ReturnsNotFound_AndEnqueuesNothing()
+    {
+        // Arrange
+        var reprocess = new Mock<IMediaReprocessRepository>();
+        reprocess.Setup(r => r.RetryFailedItemsAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<IReadOnlyCollection<int>>.NotFound());
+        var queue = new RecordingQueue();
+
+        // Act
+        var result = await Build(reprocess, queue: queue).RetryFailedAsync("no-such-job", TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Success.Should().BeFalse();
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(404);
+        queue.Enqueued.Should().BeEmpty();
+    }
+
+    [Theory]
+    [InlineData(0, 10, 1, 10)]
+    [InlineData(-3, 0, 1, 20)]
+    [InlineData(2, 5000, 2, 20)]
+    public async Task GetJobsPagedAsync_BoundsAnUncheckedPageAndPageSize(int page, int pageSize, int expectedPage, int expectedPageSize)
+    {
+        // Arrange
+        var reprocess = new Mock<IMediaReprocessRepository>();
+        reprocess.Setup(r => r.GetJobsPagedAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<PagedResult<MediaReprocessJobCounts>>.Success(
+                new PagedResult<MediaReprocessJobCounts>([], expectedPage, false, 0)));
+
+        // Act
+        await Build(reprocess).GetJobsPagedAsync(page, pageSize, TestContext.Current.CancellationToken);
+
+        // Assert
+        reprocess.Verify(r => r.GetJobsPagedAsync(expectedPage, expectedPageSize, It.IsAny<CancellationToken>()), Times.Once);
     }
 }

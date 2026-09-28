@@ -2,7 +2,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 using AwesomeAssertions;
+using Core.Interfaces.Repositories;
 using ImageMagick;
+using Infrastructure.Data;
+using Infrastructure.Enums;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using StigviddAPI;
 using System.Net;
 using System.Net.Http.Headers;
@@ -359,6 +364,133 @@ public class AdminMediaControllerIntegrationTests : IClassFixture<StigViddWebApp
         cancelled.CancelledCount.Should().Be(1);
         cancelled.PendingCount.Should().Be(0);
         cancelled.Status.Should().Be("Completed");
+    }
+
+    private async Task<MediaReprocessJobSummaryResponse> CreateJobAsync(HttpClient client, params string[] mediaIdentifiers)
+    {
+        var created = await client.PostAsJsonAsync(
+            "/api/v1/admin/media/reprocess",
+            new CreateMediaReprocessJobRequest { MediaIdentifiers = [.. mediaIdentifiers], Options = new ImageProcessingOptionsRequest() },
+            TestContext.Current.CancellationToken);
+        created.StatusCode.Should().Be(HttpStatusCode.Created);
+
+        var job = await created.Content.ReadFromJsonAsync<MediaReprocessJobSummaryResponse>(TestContext.Current.CancellationToken);
+        job.Should().NotBeNull();
+        return job;
+    }
+
+    private async Task<List<int>> ItemIdsOfAsync(string jobIdentifier)
+    {
+        using var scope = _factory.Services.CreateScope();
+        var contextFactory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<StigViddDbContext>>();
+        using var context = await contextFactory.CreateDbContextAsync(TestContext.Current.CancellationToken);
+
+        return await context.MediaReprocessItems
+            .Where(i => i.Job != null && i.Job.Identifier == jobIdentifier)
+            .OrderBy(i => i.Id)
+            .Select(i => i.Id)
+            .ToListAsync(TestContext.Current.CancellationToken);
+    }
+
+    [Fact]
+    public async Task RetryReprocessJob_WithAFailedItem_PutsItBackInTheQueueWithoutItsError()
+    {
+        // Arrange
+        var client = await AdminClientAsync();
+        var imageIdentifier = await UploadATrailImageAsync(client);
+        var job = await CreateJobAsync(client, imageIdentifier);
+        var itemId = (await ItemIdsOfAsync(job.Identifier)).Single();
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var repository = scope.ServiceProvider.GetRequiredService<IMediaReprocessRepository>();
+            await repository.ClaimAsync(itemId, TestContext.Current.CancellationToken);
+            await repository.MarkFailedAsync(itemId, "Download: 404 Not Found", TestContext.Current.CancellationToken);
+        }
+
+        // Act
+        var response = await client.PostAsync($"/api/v1/admin/media/reprocess/{job.Identifier}/retry", null, TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var retried = await response.Content.ReadFromJsonAsync<MediaReprocessJobSummaryResponse>(TestContext.Current.CancellationToken);
+        retried.Should().NotBeNull();
+        retried.FailedCount.Should().Be(0);
+        retried.PendingCount.Should().Be(1);
+
+        var detail = await client.GetFromJsonAsync<MediaReprocessJobDetailResponse>(
+            $"/api/v1/admin/media/reprocess/{job.Identifier}", TestContext.Current.CancellationToken);
+        detail.Should().NotBeNull();
+        detail.Items.Should().ContainSingle(i => i.Status == "Pending" && i.LastError == null);
+    }
+
+    [Fact]
+    public async Task RetryReprocessJob_ForAnUnknownIdentifier_ReturnsNotFound()
+    {
+        // Arrange
+        var client = await AdminClientAsync();
+
+        // Act
+        var response = await client.PostAsync("/api/v1/admin/media/reprocess/no-such-job/retry", null, TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task MarkSucceeded_OnARealDatabase_RepointsEveryRowSharingTheFile_WhateverItsSpelling()
+    {
+        // Arrange - two trail images on one file, one stored with a leading slash, both in one batch.
+        var client = await AdminClientAsync();
+        var first = await UploadATrailImageAsync(client);
+        var second = await UploadATrailImageAsync(client);
+        var sharedPath = $"mock/shared-{Guid.NewGuid()}.jpg";
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var contextFactory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<StigViddDbContext>>();
+            using var context = await contextFactory.CreateDbContextAsync(TestContext.Current.CancellationToken);
+            var rows = await context.TrailImages
+                .Where(ti => ti.Identifier == first || ti.Identifier == second)
+                .ToListAsync(TestContext.Current.CancellationToken);
+            rows.Single(r => r.Identifier == first).ImageUrl = sharedPath;
+            rows.Single(r => r.Identifier == second).ImageUrl = "/" + sharedPath;
+            await context.SaveChangesAsync(TestContext.Current.CancellationToken);
+        }
+
+        var job = await CreateJobAsync(client, first, second);
+        var itemIds = await ItemIdsOfAsync(job.Identifier);
+
+        // Act
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var repository = scope.ServiceProvider.GetRequiredService<IMediaReprocessRepository>();
+            await repository.ClaimAsync(itemIds[0], TestContext.Current.CancellationToken);
+            var result = await repository.MarkSucceededAsync(
+                itemIds[0], sharedPath, "trails/new.webp", 800, 600, 40_000, TestContext.Current.CancellationToken);
+
+            // Assert
+            result.IsSuccess.Should().BeTrue();
+            result.Value.Should().NotBeNull();
+            result.Value.RowsRepointed.Should().Be(2);
+            result.Value.OldFileStillReferenced.Should().BeFalse();
+        }
+
+        using var verifyScope = _factory.Services.CreateScope();
+        var verifyFactory = verifyScope.ServiceProvider.GetRequiredService<IDbContextFactory<StigViddDbContext>>();
+        using var verify = await verifyFactory.CreateDbContextAsync(TestContext.Current.CancellationToken);
+
+        var urls = await verify.TrailImages
+            .Where(ti => ti.Identifier == first || ti.Identifier == second)
+            .Select(ti => ti.ImageUrl)
+            .ToListAsync(TestContext.Current.CancellationToken);
+        urls.Should().OnlyContain(url => url == "trails/new.webp").And.HaveCount(2);
+
+        var statuses = await verify.MediaReprocessItems
+            .Where(i => itemIds.Contains(i.Id))
+            .Select(i => i.Status)
+            .ToListAsync(TestContext.Current.CancellationToken);
+        statuses.Should().OnlyContain(s => s == MediaReprocessItemStatus.Succeeded);
     }
 
     [Fact]

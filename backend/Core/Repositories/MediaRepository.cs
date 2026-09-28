@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
+﻿// SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 using Core.Interfaces.Repositories;
@@ -276,6 +276,12 @@ public class MediaRepository : IMediaRepository
         }
     }
 
+    // keep-comment: PATCH semantics - null leaves a field as it is, blank clears it; the admin sends "" to clear, other callers may send one field only
+    private static string? Patch(string? current, string? incoming) =>
+        incoming is null ? current
+        : string.IsNullOrWhiteSpace(incoming) ? null
+        : incoming.Trim();
+
     public async Task<RepositoryResult> UpdateImageMetadataAsync(string imageIdentifier, string? altText, string? caption, CancellationToken ctoken)
     {
         try
@@ -287,8 +293,8 @@ public class MediaRepository : IMediaRepository
 
             if (trailImage is not null)
             {
-                trailImage.AltText = altText;
-                trailImage.Caption = caption;
+                trailImage.AltText = Patch(trailImage.AltText, altText);
+                trailImage.Caption = Patch(trailImage.Caption, caption);
                 trailImage.LastUpdatedAt = DateTime.UtcNow;
                 await context.SaveChangesAsync(ctoken);
                 return RepositoryResult.Success();
@@ -299,8 +305,8 @@ public class MediaRepository : IMediaRepository
 
             if (facilityImage is not null)
             {
-                facilityImage.AltText = altText;
-                facilityImage.Caption = caption;
+                facilityImage.AltText = Patch(facilityImage.AltText, altText);
+                facilityImage.Caption = Patch(facilityImage.Caption, caption);
                 facilityImage.LastUpdatedAt = DateTime.UtcNow;
                 await context.SaveChangesAsync(ctoken);
                 return RepositoryResult.Success();

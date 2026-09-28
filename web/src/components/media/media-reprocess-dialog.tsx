@@ -154,7 +154,14 @@ export default function MediaReprocessDialog({ open, onOpenChange, target, onSub
               <Label>Quality</Label>
               <span className="text-muted-foreground text-sm">{quality}</span>
             </div>
-            <Slider min={10} max={100} step={1} value={[quality]} onValueChange={(v) => setQuality(v[0])} />
+            <Slider
+              min={10}
+              max={100}
+              step={1}
+              value={[quality]}
+              onValueChange={(v) => setQuality(v[0])}
+              thumbLabel="Quality"
+            />
           </div>
 
           <div className="space-y-1.5">

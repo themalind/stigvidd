@@ -113,7 +113,7 @@ describe("selecting images for a batch", () => {
     show();
     await loaded();
 
-    await userEvent.click(screen.getByRole("checkbox", { name: "Select Owner trail-1" }));
+    await userEvent.click(screen.getByRole("checkbox", { name: /^Select Owner trail-1 / }));
 
     expect(optimize()).toBeEnabled();
     expect(optimize()).toHaveTextContent("1");
@@ -123,7 +123,7 @@ describe("selecting images for a batch", () => {
     show();
     await loaded();
 
-    expect(screen.queryByRole("checkbox", { name: "Select Owner symbol-1" })).toBeNull();
+    expect(screen.queryByRole("checkbox", { name: /^Select Owner symbol-1 / })).toBeNull();
   });
 
   it("the page checkbox only ever selects Trail/Facility images", async () => {
@@ -140,7 +140,7 @@ describe("selecting images for a batch", () => {
     show();
     await loaded();
 
-    await userEvent.click(screen.getByRole("checkbox", { name: "Select Owner trail-1" }));
+    await userEvent.click(screen.getByRole("checkbox", { name: /^Select Owner trail-1 / }));
     await userEvent.click(optimize());
     await userEvent.click(screen.getByText("fake-submit"));
 
@@ -244,7 +244,7 @@ describe("filtering", () => {
     show();
     await loaded();
 
-    await userEvent.click(screen.getByRole("checkbox", { name: "Select Owner trail-1" }));
+    await userEvent.click(screen.getByRole("checkbox", { name: /^Select Owner trail-1 / }));
     expect(optimize()).toBeEnabled();
 
     await userEvent.click(screen.getByRole("button", { name: /needs work/i }));
@@ -286,7 +286,7 @@ describe("sorting", () => {
     show();
     await loaded();
 
-    await userEvent.click(screen.getByRole("checkbox", { name: "Select Owner trail-1" }));
+    await userEvent.click(screen.getByRole("checkbox", { name: /^Select Owner trail-1 / }));
     await userEvent.click(screen.getByTestId("next-page"));
     await waitFor(() => expect(mediaApi.getMedia).toHaveBeenLastCalledWith(expect.objectContaining({ Page: 2 })));
 
@@ -317,7 +317,7 @@ describe("deleting an image", () => {
     await loaded();
     expect(screen.getByText(/of 2/)).toBeInTheDocument();
 
-    await userEvent.click(screen.getByRole("button", { name: "Delete Owner trail-1" }));
+    await userEvent.click(screen.getByRole("button", { name: /^Delete Owner trail-1 / }));
 
     await waitFor(() => expect(trailApi.deleteTrailImage).toHaveBeenCalledWith("trail-1"));
     await waitFor(() => expect(screen.getByText(/of 1/)).toBeInTheDocument());
@@ -331,7 +331,7 @@ describe("the batch dialog", () => {
 
     expect(dialogProps.mounts).toBe(0);
 
-    await userEvent.click(screen.getByRole("checkbox", { name: "Select Owner trail-1" }));
+    await userEvent.click(screen.getByRole("checkbox", { name: /^Select Owner trail-1 / }));
     await userEvent.click(optimize());
     await waitFor(() => expect(screen.getByTestId("reprocess-target")).toBeInTheDocument());
     expect(dialogProps.mounts).toBe(1);
@@ -339,7 +339,7 @@ describe("the batch dialog", () => {
     await userEvent.click(screen.getByRole("button", { name: "fake-submit" }));
     await waitFor(() => expect(screen.queryByTestId("reprocess-target")).not.toBeInTheDocument());
 
-    await userEvent.click(screen.getByRole("checkbox", { name: "Select Owner trail-1" }));
+    await userEvent.click(screen.getByRole("checkbox", { name: /^Select Owner trail-1 / }));
     await userEvent.click(optimize());
     await waitFor(() => expect(screen.getByTestId("reprocess-target")).toBeInTheDocument());
 
@@ -367,8 +367,32 @@ describe("select all matching", () => {
     show();
     await loaded();
 
-    await userEvent.click(screen.getByRole("checkbox", { name: "Select Owner trail-1" }));
+    await userEvent.click(screen.getByRole("checkbox", { name: /^Select Owner trail-1 / }));
 
     expect(screen.queryByRole("button", { name: /matching this filter/i })).toBeNull();
+  });
+});
+
+describe("loading and keyboard access", () => {
+  it("shows a failed load as an error with a retry, not as an empty library", async () => {
+    mediaApi.getMedia.mockRejectedValueOnce(new Error("boom"));
+    show();
+
+    await userEvent.click(await screen.findByRole("button", { name: "Try again" }));
+
+    expect(screen.queryByText(/no media yet/i)).toBeNull();
+    await loaded();
+    expect(screen.queryByText(/could not be loaded/i)).toBeNull();
+  });
+
+  it("opens the enlarged view from the keyboard", async () => {
+    show();
+    await loaded();
+
+    const enlarge = screen.getByRole("button", { name: /^Enlarge Owner trail-1 / });
+    enlarge.focus();
+    await userEvent.keyboard("{Enter}");
+
+    expect(await screen.findByRole("dialog", { name: "Enlarged image" })).toBeInTheDocument();
   });
 });

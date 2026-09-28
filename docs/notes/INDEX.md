@@ -803,3 +803,18 @@ src/api/generated` then fails with "the generated API client is stale" for reaso
   What works is forwarding the child's failures from a `Custom` rule with `context.AddFailure`.
   Also why the ruleset is shared at all: `format=wepb` used to be a precise 400 on GET
   /api/v1/admin/media and "No images match that filter." on POST /api/v1/admin/media/reprocess.
+- [A media file is shared by many image rows, so deleting the old file of one row breaks the others](media-files-are-shared-by-many-image-rows.md) —
+  ImageUrl is not unique: mock/*.jpg placeholders are shared by ~110 TrailImages rows each, real
+  photos by a few, and HikeImages/ReviewImages/CityAreas/TrailSymbolImage may point at the same
+  path, sometimes with a leading slash. The batch media reprocess (MediaReprocessDispatcher,
+  MarkSucceededAsync, DeleteFileAsync) repointed one row and deleted the shared file:
+  DownloadFileAsync 404, ~700 failed, and broken images on media.stigvidd.se. Check references before
+  any WebDAV delete. A reprocessed placeholder must stay under mock/, or isMockImage drops the
+  "Example image" badge (TargetDirectory).
+- [vi.useFakeTimers() leaves a web component stuck on its first render, so drive polls by capturing setInterval](fake-timers-stall-react-state-in-web-tests.md) —
+  Vitest fake timers plus advanceTimersByTimeAsync left media-reprocess-jobs.tsx on "Loading…"
+  after its mocked getMediaReprocessJobs promise resolved; it looks like mockResolvedValueOnce /
+  mockReturnValue ordering, but it is not. Use vi.spyOn(globalThis, "setInterval") to capture the
+  poll callback and call it by hand after screen.findByText. Also: a negative queryByText
+  assertion after resolving a deferred promise passes vacuously without act(), so race tests
+  need act.

@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
+﻿// SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 using Core.Interfaces.Repositories;
@@ -361,6 +361,44 @@ public class MediaRepositoryTests : TestBase
         all.Value.Should().NotBeNull();
         all.Value.Items.Should().Contain(m =>
             m.Identifier == SeededFacilityImageIdentifier && m.AltText == "fac alt" && m.Caption == "fac caption");
+    }
+
+    [Fact]
+    public async Task UpdateImageMetadataAsync_WithOnlyAltText_KeepsTheCaption()
+    {
+        // Arrange
+        var factory = CreateSeededFactory(SeedFacilityImage);
+        var repo = new MediaRepository(factory, NullLogger<MediaRepository>.Instance);
+        await repo.UpdateImageMetadataAsync(SeededTrailImageIdentifier, "first alt", "kept caption", TestContext.Current.CancellationToken);
+
+        // Act
+        var update = await repo.UpdateImageMetadataAsync(SeededTrailImageIdentifier, "  second alt ", null, TestContext.Current.CancellationToken);
+
+        // Assert
+        update.IsSuccess.Should().BeTrue();
+
+        var all = await repo.GetMediaPagedAsync(new MediaLibraryQuery { PageSize = 200 }, TestContext.Current.CancellationToken);
+        all.Value.Should().NotBeNull();
+        all.Value.Items.Should().Contain(m =>
+            m.Identifier == SeededTrailImageIdentifier && m.AltText == "second alt" && m.Caption == "kept caption");
+    }
+
+    [Fact]
+    public async Task UpdateImageMetadataAsync_WithABlankField_ClearsIt()
+    {
+        // Arrange
+        var factory = CreateSeededFactory(SeedFacilityImage);
+        var repo = new MediaRepository(factory, NullLogger<MediaRepository>.Instance);
+        await repo.UpdateImageMetadataAsync(SeededFacilityImageIdentifier, "alt", "caption", TestContext.Current.CancellationToken);
+
+        // Act
+        await repo.UpdateImageMetadataAsync(SeededFacilityImageIdentifier, "alt", "   ", TestContext.Current.CancellationToken);
+
+        // Assert
+        var all = await repo.GetMediaPagedAsync(new MediaLibraryQuery { PageSize = 200 }, TestContext.Current.CancellationToken);
+        all.Value.Should().NotBeNull();
+        all.Value.Items.Should().Contain(m =>
+            m.Identifier == SeededFacilityImageIdentifier && m.AltText == "alt" && m.Caption == null);
     }
 
     [Fact]

@@ -91,8 +91,9 @@ export function toMediaQuery(
 
   const minKb = numeric(filters.minSizeKb);
   const maxKb = numeric(filters.maxSizeKb);
-  if (minKb !== undefined) query.MinSizeBytes = minKb * 1024;
-  if (maxKb !== undefined) query.MaxSizeBytes = maxKb * 1024;
+  // keep-comment: rounded because the API binds whole bytes - 0.1 KB would send 102.4 and get a 400
+  if (minKb !== undefined) query.MinSizeBytes = Math.round(minKb * 1024);
+  if (maxKb !== undefined) query.MaxSizeBytes = Math.round(maxKb * 1024);
 
   if (filters.needsWork) {
     query.TargetMaxWidth = Number(preset.resolution);
@@ -212,4 +213,11 @@ export function canSelectAllMatching(
   allMatching: boolean,
 ): boolean {
   return page.whole && !allMatching && reprocessableCount > selected.size;
+}
+
+// keep-comment: the owner name alone repeats for every image of one trail, so screen-reader labels ("Select X", "Delete X") also name the file
+export function mediaLabel(item: Pick<MediaItemResponse, "identifier" | "ownerName" | "imageUrl">): string {
+  const name = item.ownerName ?? item.identifier;
+  const file = item.imageUrl?.split("?")[0]?.split("/").pop();
+  return file ? `${name} (${file})` : name;
 }

@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
+﻿// SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 using AwesomeAssertions;
@@ -118,7 +118,7 @@ public class MediaReprocessRepositoryTests : TestBase
         var repo = Build(mock.Object);
 
         // Act
-        await repo.MarkSucceededAsync(1, "trails/new.jpg", 400, 300, 12345, TestContext.Current.CancellationToken);
+        await repo.MarkSucceededAsync(1, "trails/old.jpg", "trails/new.jpg", 400, 300, 12345, TestContext.Current.CancellationToken);
 
         // Assert
         using var verify = new StigViddDbContext(options);
@@ -321,5 +321,196 @@ public class MediaReprocessRepositoryTests : TestBase
         new[] { job }.AsQueryable()
             .Where(MediaReprocessRepository.PurgeableSettled(cutoff))
             .Should().BeEmpty();
+    }
+
+    private static TrailImage MakeTrailImage(int id, string identifier, string imageUrl) =>
+        new() { Id = id, Identifier = identifier, ImageUrl = imageUrl, TrailId = 1, Width = 4000, Height = 3000, SizeBytes = 5_000_000 };
+
+    [Fact]
+    public async Task MarkSucceededAsync_RepointsEveryRowSharingTheOldFile_AndSettlesTheirPendingItems()
+    {
+        // Arrange
+        var job = MakeJob(900,
+            items:
+            [
+                MakeItem(901, 900, "shared-a", "Trail", MediaReprocessItemStatus.Processing),
+                MakeItem(902, 900, "shared-b", "Trail"),
+                MakeItem(903, 900, "shared-c", "Trail"),
+                MakeItem(904, 900, "unrelated", "Trail"),
+            ]);
+        var factory = CreateSeededFactory(db =>
+        {
+            db.TrailImages.Add(MakeTrailImage(9001, "shared-a", "mock/placeholder.jpg"));
+            db.TrailImages.Add(MakeTrailImage(9002, "shared-b", "mock/placeholder.jpg"));
+            db.TrailImages.Add(MakeTrailImage(9003, "shared-c", "/mock/placeholder.jpg"));
+            db.TrailImages.Add(MakeTrailImage(9004, "unrelated", "trails/other.jpg"));
+            db.MediaReprocessJobs.Add(job);
+        });
+        var repo = Build(factory);
+
+        // Act
+        var result = await repo.MarkSucceededAsync(
+            901, "mock/placeholder.jpg", "trails/new.webp", 800, 600, 40_000, TestContext.Current.CancellationToken);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().NotBeNull();
+        result.Value.RowsRepointed.Should().Be(3);
+        result.Value.OldFileStillReferenced.Should().BeFalse();
+
+        using var verify = await factory.CreateDbContextAsync(TestContext.Current.CancellationToken);
+        var urls = await verify.TrailImages
+            .Where(ti => ti.Id >= 9001 && ti.Id <= 9004)
+            .ToDictionaryAsync(ti => ti.Identifier, ti => ti.ImageUrl, TestContext.Current.CancellationToken);
+        urls["shared-a"].Should().Be("trails/new.webp");
+        urls["shared-b"].Should().Be("trails/new.webp");
+        urls["shared-c"].Should().Be("trails/new.webp");
+        urls["unrelated"].Should().Be("trails/other.jpg");
+
+        var items = await repo.GetJobItemsAsync("job-900", TestContext.Current.CancellationToken);
+        items.Value.Should().NotBeNull();
+        items.Value.Where(i => i.MediaIdentifier.StartsWith("shared-"))
+            .Should().OnlyContain(i => i.Status == MediaReprocessItemStatus.Succeeded);
+        items.Value.Should().ContainSingle(i => i.MediaIdentifier == "unrelated" && i.Status == MediaReprocessItemStatus.Pending);
+    }
+
+    [Fact]
+    public async Task MarkSucceededAsync_SettlesAFailedOrCancelledSiblingInTheJob_SoARetryDoesNotReEncodeTheOutput()
+    {
+        // Arrange
+        var failed = MakeItem(932, 930, "shared-failed", "Trail", MediaReprocessItemStatus.Failed);
+        failed.LastError = "Download: 404";
+        var job = MakeJob(930,
+            items:
+            [
+                MakeItem(931, 930, "shared-a", "Trail", MediaReprocessItemStatus.Processing),
+                failed,
+                MakeItem(933, 930, "shared-cancelled", "Trail", MediaReprocessItemStatus.Cancelled),
+            ]);
+        var repo = Build(CreateSeededFactory(db =>
+        {
+            db.TrailImages.Add(MakeTrailImage(9301, "shared-a", "trails/shared.jpg"));
+            db.TrailImages.Add(MakeTrailImage(9302, "shared-failed", "trails/shared.jpg"));
+            db.TrailImages.Add(MakeTrailImage(9303, "shared-cancelled", "/trails/shared.jpg"));
+            db.MediaReprocessJobs.Add(job);
+        }));
+
+        // Act
+        await repo.MarkSucceededAsync(
+            931, "trails/shared.jpg", "trails/new.webp", 800, 600, 40_000, TestContext.Current.CancellationToken);
+
+        // Assert
+        var items = await repo.GetJobItemsAsync("job-930", TestContext.Current.CancellationToken);
+        items.Value.Should().NotBeNull();
+        items.Value.Should().OnlyContain(i => i.Status == MediaReprocessItemStatus.Succeeded && i.LastError == null);
+    }
+
+    [Fact]
+    public async Task MarkSucceededAsync_SettlesAPendingItemInAnotherJobOnTheSameFile_ButLeavesItsFailuresAlone()
+    {
+        // Arrange
+        var otherFailed = MakeItem(943, 942, "shared-c", "Trail", MediaReprocessItemStatus.Failed);
+        otherFailed.LastError = "Upload: 500";
+        var repo = Build(CreateSeededFactory(db =>
+        {
+            db.TrailImages.Add(MakeTrailImage(9401, "shared-a", "trails/shared.jpg"));
+            db.TrailImages.Add(MakeTrailImage(9402, "shared-b", "trails/shared.jpg"));
+            db.TrailImages.Add(MakeTrailImage(9403, "shared-c", "trails/shared.jpg"));
+            db.MediaReprocessJobs.Add(MakeJob(940, items: MakeItem(941, 940, "shared-a", "Trail", MediaReprocessItemStatus.Processing)));
+            db.MediaReprocessJobs.Add(MakeJob(942, items: [MakeItem(944, 942, "shared-b", "Trail"), otherFailed]));
+        }));
+
+        // Act
+        await repo.MarkSucceededAsync(
+            941, "trails/shared.jpg", "trails/new.webp", 800, 600, 40_000, TestContext.Current.CancellationToken);
+
+        // Assert
+        var other = await repo.GetJobItemsAsync("job-942", TestContext.Current.CancellationToken);
+        other.Value.Should().NotBeNull();
+        other.Value.Should().ContainSingle(i => i.MediaIdentifier == "shared-b" && i.Status == MediaReprocessItemStatus.Succeeded);
+        other.Value.Should().ContainSingle(i => i.MediaIdentifier == "shared-c" && i.Status == MediaReprocessItemStatus.Failed);
+    }
+
+    [Fact]
+    public async Task MarkSucceededAsync_WhenTheImageRowIsGone_IsNotFound_AndLeavesTheItemProcessing()
+    {
+        // Arrange
+        var factory = CreateSeededFactory(db =>
+            db.MediaReprocessJobs.Add(MakeJob(950, items: MakeItem(951, 950, "deleted-image", "Trail", MediaReprocessItemStatus.Processing))));
+        var repo = Build(factory);
+
+        // Act
+        var result = await repo.MarkSucceededAsync(
+            951, "trails/gone.jpg", "trails/new.webp", 800, 600, 40_000, TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Status.Should().Be(RepositoryResultStatus.NotFound);
+        var items = await repo.GetJobItemsAsync("job-950", TestContext.Current.CancellationToken);
+        items.Value.Should().NotBeNull();
+        items.Value.Should().ContainSingle(i => i.Status == MediaReprocessItemStatus.Processing);
+    }
+
+    [Fact]
+    public async Task MarkSucceededAsync_WhenAHikeImageStillUsesTheOldFile_SaysItIsStillReferenced()
+    {
+        // Arrange
+        var job = MakeJob(910, items: MakeItem(911, 910, "trail-shared", "Trail", MediaReprocessItemStatus.Processing));
+        var repo = Build(CreateSeededFactory(db =>
+        {
+            db.TrailImages.Add(MakeTrailImage(9101, "trail-shared", "trails/shared.jpg"));
+            db.HikeImages.Add(new HikeImage { Id = 9102, Identifier = "hike-shared", HikeId = 1, ImageUrl = "trails/shared.jpg" });
+            db.MediaReprocessJobs.Add(job);
+        }));
+
+        // Act
+        var result = await repo.MarkSucceededAsync(
+            911, "trails/shared.jpg", "trails/new.webp", 800, 600, 40_000, TestContext.Current.CancellationToken);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().NotBeNull();
+        result.Value.OldFileStillReferenced.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task RetryFailedItemsAsync_MovesOnlyFailedItemsBackToPending_AndReturnsTheirIds()
+    {
+        // Arrange
+        var failed = MakeItem(921, 920, "media-1", "Trail", MediaReprocessItemStatus.Failed);
+        failed.LastError = "Download: 404";
+        var job = MakeJob(920,
+            items:
+            [
+                failed,
+                MakeItem(922, 920, "media-2", "Trail", MediaReprocessItemStatus.Succeeded),
+                MakeItem(923, 920, "media-3", "Trail", MediaReprocessItemStatus.Cancelled),
+            ]);
+        var repo = Build(CreateSeededFactory(db => db.MediaReprocessJobs.Add(job)));
+
+        // Act
+        var result = await repo.RetryFailedItemsAsync("job-920", TestContext.Current.CancellationToken);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().BeEquivalentTo([921]);
+
+        var items = await repo.GetJobItemsAsync("job-920", TestContext.Current.CancellationToken);
+        items.Value.Should().NotBeNull();
+        items.Value.Should().ContainSingle(i => i.MediaIdentifier == "media-1" && i.Status == MediaReprocessItemStatus.Pending && i.LastError == null);
+        items.Value.Should().ContainSingle(i => i.MediaIdentifier == "media-2" && i.Status == MediaReprocessItemStatus.Succeeded);
+        items.Value.Should().ContainSingle(i => i.MediaIdentifier == "media-3" && i.Status == MediaReprocessItemStatus.Cancelled);
+    }
+
+    [Fact]
+    public async Task RetryFailedItemsAsync_ForAnUnknownJob_IsNotFound()
+    {
+        // Arrange
+        var repo = Build(CreateSeededFactory());
+
+        // Act
+        var result = await repo.RetryFailedItemsAsync("no-such-job", TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Status.Should().Be(RepositoryResultStatus.NotFound);
     }
 }

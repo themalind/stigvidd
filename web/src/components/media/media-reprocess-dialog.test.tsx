@@ -66,6 +66,12 @@ describe("MediaReprocessDialog", () => {
     );
   });
 
+  it("names the quality slider for assistive technology", () => {
+    show();
+
+    expect(screen.getByRole("slider", { name: "Quality" })).toBeInTheDocument();
+  });
+
   it("sends custom width/height when Custom resolution is picked", async () => {
     mediaApi.enqueueMediaReprocessJob.mockResolvedValue({ identifier: "job-1" });
     show();

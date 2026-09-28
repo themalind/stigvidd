@@ -18,4 +18,6 @@ public interface IMediaReprocessService
     Task<Result<MediaReprocessJobDetailResponse>> GetJobDetailAsync(string identifier, CancellationToken ctoken);
 
     Task<Result<MediaReprocessJobSummaryResponse>> CancelJobAsync(string identifier, CancellationToken ctoken);
+
+    Task<Result<MediaReprocessJobSummaryResponse>> RetryFailedAsync(string identifier, CancellationToken ctoken);
 }

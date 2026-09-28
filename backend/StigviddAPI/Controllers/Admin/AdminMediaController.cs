@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
+﻿// SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 using Core.Interfaces.Services;
@@ -42,6 +42,9 @@ public class AdminMediaController : StigViddController
     }
 
     [HttpPatch("{imageIdentifier}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult> UpdateMetadata(
         string imageIdentifier,
         [FromBody] UpdateImageMetadataRequest request,
@@ -105,6 +108,20 @@ public class AdminMediaController : StigViddController
         [FromRoute] string identifier, CancellationToken ctoken)
     {
         var result = await _reprocessService.CancelJobAsync(identifier, ctoken);
+
+        if (!result.Success && result.Message != null)
+            return ToActionResult(result.Message);
+
+        return Ok(result.Value);
+    }
+
+    [HttpPost("reprocess/{identifier}/retry")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<MediaReprocessJobSummaryResponse>> RetryReprocessJob(
+        [FromRoute] string identifier, CancellationToken ctoken)
+    {
+        var result = await _reprocessService.RetryFailedAsync(identifier, ctoken);
 
         if (!result.Success && result.Message != null)
             return ToActionResult(result.Message);

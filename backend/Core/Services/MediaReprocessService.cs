@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
+﻿// SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 using Core.Interfaces.Repositories;
@@ -13,6 +13,9 @@ namespace Core.Services;
 
 public class MediaReprocessService : IMediaReprocessService
 {
+    private const int DefaultJobsPageSize = 20;
+    private const int MaxJobsPageSize = 100;
+
     private readonly IMediaReprocessRepository _reprocessRepository;
     private readonly IMediaRepository _mediaRepository;
     private readonly IMediaReprocessQueue _queue;
@@ -146,6 +149,10 @@ public class MediaReprocessService : IMediaReprocessService
     public async Task<Result<PagedResult<MediaReprocessJobSummaryResponse>>> GetJobsPagedAsync(
         int page, int pageSize, CancellationToken ctoken)
     {
+        // keep-comment: the query string is unchecked, and page=0 would reach Skip as a negative offset (500); same bounds as the media library listing
+        page = Math.Clamp(page, 1, MediaLibraryQuery.MaxPage);
+        pageSize = pageSize is < 1 or > MaxJobsPageSize ? DefaultJobsPageSize : pageSize;
+
         var result = await _reprocessRepository.GetJobsPagedAsync(page, pageSize, ctoken);
 
         if (!result.IsSuccess)
@@ -197,6 +204,28 @@ public class MediaReprocessService : IMediaReprocessService
         if (!counts.IsSuccess)
             return Result.Fail<MediaReprocessJobSummaryResponse>(
                 new Message((int)HttpStatusCode.InternalServerError, "An error occurred while reading the batch after cancelling it."));
+
+        return Result.Ok(ToSummary(counts.Value));
+    }
+
+    public async Task<Result<MediaReprocessJobSummaryResponse>> RetryFailedAsync(string identifier, CancellationToken ctoken)
+    {
+        var retried = await _reprocessRepository.RetryFailedItemsAsync(identifier, ctoken);
+        if (retried.Status == RepositoryResultStatus.NotFound)
+            return Result.Fail<MediaReprocessJobSummaryResponse>(
+                new Message((int)HttpStatusCode.NotFound, $"Batch reprocess job {identifier} not found."));
+
+        if (!retried.IsSuccess)
+            return Result.Fail<MediaReprocessJobSummaryResponse>(
+                new Message((int)HttpStatusCode.InternalServerError, "An error occurred while retrying the batch."));
+
+        foreach (var itemId in retried.Value)
+            _queue.Enqueue(itemId);
+
+        var counts = await _reprocessRepository.GetJobCountsAsync(identifier, ctoken);
+        if (!counts.IsSuccess)
+            return Result.Fail<MediaReprocessJobSummaryResponse>(
+                new Message((int)HttpStatusCode.InternalServerError, "An error occurred while reading the batch after retrying it."));
 
         return Result.Ok(ToSummary(counts.Value));
     }

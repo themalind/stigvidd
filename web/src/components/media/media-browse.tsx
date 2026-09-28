@@ -24,6 +24,7 @@ import {
   describeMediaFilters,
   emptyMediaFilters,
   isFiltered,
+  mediaLabel,
   pageSelection,
   selectableMedia,
   toMediaFilter,
@@ -47,6 +48,7 @@ interface Props {
 
 export default function MediaBrowse({ refreshKey, onBatchStarted }: Props) {
   const [items, setItems] = useState<MediaItemResponse[] | null>(null);
+  const [loadFailed, setLoadFailed] = useState(false);
   const [filters, setFilters] = useState<MediaFilterState>(emptyMediaFilters);
   const [draft, setDraft] = useState<MediaFilterState>(emptyMediaFilters);
   const [showMore, setShowMore] = useState(false);
@@ -77,6 +79,7 @@ export default function MediaBrowse({ refreshKey, onBatchStarted }: Props) {
         if (!isCurrent()) return;
 
         setItems(paged.items);
+        setLoadFailed(false);
         setTotal(paged.totalCount ?? 0);
         setReprocessable(paged.reprocessableCount ?? 0);
         setTotalBytes(paged.totalSizeBytes ?? 0);
@@ -85,6 +88,7 @@ export default function MediaBrowse({ refreshKey, onBatchStarted }: Props) {
         if (!isCurrent()) return;
 
         setItems([]);
+        setLoadFailed(true);
         toast.error(error instanceof Error ? error.message : "The media library could not be loaded.");
       }
     },
@@ -388,7 +392,16 @@ export default function MediaBrowse({ refreshKey, onBatchStarted }: Props) {
           </div>
         )}
 
-        {items?.length === 0 && (
+        {loadFailed && (
+          <div className="text-muted-foreground flex items-center gap-3 rounded-md border border-dashed p-6 text-sm">
+            <span>The media library could not be loaded.</span>
+            <Button size="sm" variant="outline" onClick={() => void load(() => true)}>
+              Try again
+            </Button>
+          </div>
+        )}
+
+        {!loadFailed && items?.length === 0 && (
           <div className="text-muted-foreground rounded-md border border-dashed p-6 text-sm">
             {isFiltered(filters)
               ? `No images match ${narrowedBy.join(" · ")}.`
@@ -400,20 +413,27 @@ export default function MediaBrowse({ refreshKey, onBatchStarted }: Props) {
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
             {items.map((item) => {
               const editable = item.ownerType !== "TrailSymbol";
+              const label = mediaLabel(item);
               return (
                 <div key={`${item.ownerType}-${item.identifier}`} className="group overflow-hidden rounded-xs border">
                   <div className="relative aspect-square overflow-hidden">
                     {/* keep-comment: there is no thumbnail anywhere in this system - every cell is the full-resolution original, so a page of 48 is 48 full downloads without these attributes */}
-                    <img
-                      src={item.imageUrl}
-                      alt={item.altText ?? ""}
-                      loading="lazy"
-                      decoding="async"
-                      width={item.width || undefined}
-                      height={item.height || undefined}
-                      className="h-full w-full cursor-pointer object-cover"
+                    <button
+                      type="button"
+                      className="block h-full w-full cursor-pointer"
+                      aria-label={`Enlarge ${label}`}
                       onClick={() => setEnlarged(item)}
-                    />
+                    >
+                      <img
+                        src={item.imageUrl}
+                        alt={item.altText ?? ""}
+                        loading="lazy"
+                        decoding="async"
+                        width={item.width || undefined}
+                        height={item.height || undefined}
+                        className="h-full w-full object-cover"
+                      />
+                    </button>
                     {editable && (
                       <div className="absolute top-1 left-1">
                         <Checkbox
@@ -421,7 +441,7 @@ export default function MediaBrowse({ refreshKey, onBatchStarted }: Props) {
                           disabled={allMatching}
                           onCheckedChange={(c) => toggleSelected(item.identifier, c === true)}
                           className="bg-background/80"
-                          aria-label={`Select ${item.ownerName ?? item.identifier}`}
+                          aria-label={`Select ${label}`}
                         />
                       </div>
                     )}
@@ -441,7 +461,7 @@ export default function MediaBrowse({ refreshKey, onBatchStarted }: Props) {
                           onClick={() => openEdit(item)}
                           className="bg-background/80 hover:bg-background rounded-xs p-1"
                           title="Edit metadata"
-                          aria-label={`Edit metadata for ${item.ownerName ?? item.identifier}`}
+                          aria-label={`Edit metadata for ${label}`}
                         >
                           <Pencil className="size-3.5" />
                         </button>
@@ -451,7 +471,7 @@ export default function MediaBrowse({ refreshKey, onBatchStarted }: Props) {
                           onClick={() => handleDelete(item)}
                           className="bg-background/80 hover:bg-background rounded-xs p-1"
                           title="Delete"
-                          aria-label={`Delete ${item.ownerName ?? item.identifier}`}
+                          aria-label={`Delete ${label}`}
                         >
                           <Trash2 className="size-3.5" />
                         </button>

@@ -3,7 +3,7 @@
 
 using Core.Interfaces.Repositories;
 using Core.Interfaces.Services;
-using System.Text.Json;
+using Core.Services;
 
 namespace StigviddAPI.BackgroundServices;
 
@@ -82,81 +82,8 @@ public class MediaReprocessDispatcher : BackgroundService
     private async Task ProcessAsync(int itemId, CancellationToken stoppingToken)
     {
         using var scope = _scopeFactory.CreateScope();
-        var repository = scope.ServiceProvider.GetRequiredService<IMediaReprocessRepository>();
-        var mediaRepository = scope.ServiceProvider.GetRequiredService<IMediaRepository>();
-        var imageProcessing = scope.ServiceProvider.GetRequiredService<IImageProcessingService>();
-        var webDav = scope.ServiceProvider.GetRequiredService<IWebDavService>();
+        var processor = scope.ServiceProvider.GetRequiredService<MediaReprocessItemProcessor>();
 
-        var claim = await repository.ClaimAsync(itemId, stoppingToken);
-
-        if (claim.Status == RepositoryResultStatus.Conflict)
-            return;
-
-        if (!claim.IsSuccess)
-        {
-            _logger.LogError("MediaReprocessDispatcher: Could not claim item {id}. Status: {status}", itemId, claim.Status);
-            return;
-        }
-
-        var item = claim.Value;
-
-        try
-        {
-            var current = await mediaRepository.GetByIdentifiersAsync([item.MediaIdentifier], stoppingToken);
-            var source = current.IsSuccess ? current.Value.FirstOrDefault(m => m.Identifier == item.MediaIdentifier) : null;
-
-            if (source is null)
-            {
-                await repository.MarkFailedAsync(itemId, "The source image no longer exists.", stoppingToken);
-                return;
-            }
-
-            using var downloaded = await webDav.DownloadFileAsync(source.ImageUrl);
-            if (downloaded is null)
-            {
-                await repository.MarkFailedAsync(itemId, "The source file could not be downloaded from storage.", stoppingToken);
-                return;
-            }
-
-            var options = ParseOptions(item.Job?.OptionsJson);
-            using var processed = imageProcessing.Process(downloaded, options);
-
-            var subDirectory = item.OwnerType == "Trail" ? "trails" : "facilities";
-            var uploaded = await webDav.UploadFileAsync(processed.Stream, subDirectory, processed.Extension);
-
-            if (!uploaded.Success || uploaded.Value is null)
-            {
-                await repository.MarkFailedAsync(itemId, uploaded.Message?.ResultMessage ?? "Upload failed.", stoppingToken);
-                return;
-            }
-
-            var marked = await repository.MarkSucceededAsync(
-                itemId, uploaded.Value, processed.Width, processed.Height, processed.SizeBytes, stoppingToken);
-
-            if (!marked.IsSuccess)
-            {
-                _logger.LogError("MediaReprocessDispatcher: Uploaded {path} but could not record success for item {id}.", uploaded.Value, itemId);
-                return;
-            }
-
-            try
-            {
-                await webDav.DeleteFileAsync(source.ImageUrl);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "MediaReprocessDispatcher: Reprocessed {identifier} but could not delete the old file {path}.", item.MediaIdentifier, source.ImageUrl);
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "MediaReprocessDispatcher: Item {id} ({identifier}) failed.", itemId, item.MediaIdentifier);
-            await repository.MarkFailedAsync(itemId, ex.Message, stoppingToken);
-        }
+        await processor.ProcessAsync(itemId, stoppingToken);
     }
-
-    private static ImageProcessingOptions ParseOptions(string? optionsJson) =>
-        string.IsNullOrWhiteSpace(optionsJson)
-            ? new ImageProcessingOptions()
-            : JsonSerializer.Deserialize<ImageProcessingOptions>(optionsJson) ?? new ImageProcessingOptions();
 }

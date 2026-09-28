@@ -74,6 +74,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IMediaService, MediaService>();
         services.AddTransient<IMediaReprocessService, MediaReprocessService>();
         services.AddSingleton<IMediaReprocessQueue, MediaReprocessQueue>();
+        services.AddTransient<MediaReprocessItemProcessor>();
         services.AddTransient<IDataTransferService, DataTransferService>();
         services.AddTransient<IHikeService, HikeService>();
         services.AddTransient<ITrailObstaclesService, TrailObstaclesService>();

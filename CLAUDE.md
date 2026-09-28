@@ -64,6 +64,10 @@ Core/TrailImport/         own namespaces, NOT global using (Core/Results, Core/S
   files need a matching SPDX header (`The Stigvidd Authors`) or a `REUSE.toml` entry. Keep a `.cs` BOM first; LF.
 - **Hostnames**: the CORS list in `Program.cs` and Keycloak Web Origins are untested and outside the repo; both
   Caddyfiles need every block ([note](docs/notes/moving-the-admin-off-the-apex.md)).
+- **Media files are shared**: one `ImageUrl` can back many image rows, so check references before any WebDAV
+  delete ([note](docs/notes/media-files-are-shared-by-many-image-rows.md)).
+- **Production logs**: the OpenObserve MCP takes `org_id` `3Igh0Ez9tpaLNBgzzVouYA1NyT5`; `default` gives a 401
+  ([note](docs/notes/openobserve-mcp-org-is-not-default.md)).
 - **Secrets**: `.env`, `mail-config/`, `*firebase-adminsdk*.json` and `DEPLOYMENT.md` hold real credentials.
   Never commit or echo them.
 - **CodeGraph**: where `.codegraph/` exists, use `codegraph_explore` before grep. A denied search passes on retry.

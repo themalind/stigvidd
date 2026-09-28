@@ -87,8 +87,8 @@ public class MediaReprocessRepository : IMediaReprocessRepository
         }
     }
 
-    public async Task<RepositoryResult> MarkSucceededAsync(
-        int itemId, string newImageUrl, int width, int height, long sizeBytes, CancellationToken ctoken)
+    public async Task<RepositoryResult<MediaReprocessSuccess>> MarkSucceededAsync(
+        int itemId, string oldImageUrl, string newImageUrl, int width, int height, long sizeBytes, CancellationToken ctoken)
     {
         try
         {
@@ -96,37 +96,62 @@ public class MediaReprocessRepository : IMediaReprocessRepository
 
             var item = await context.MediaReprocessItems.FirstOrDefaultAsync(i => i.Id == itemId, ctoken);
             if (item is null)
-                return RepositoryResult.NotFound();
+                return RepositoryResult<MediaReprocessSuccess>.NotFound();
 
             var now = DateTime.UtcNow;
+            var oldPaths = SpellingsOf(oldImageUrl);
 
-            if (item.OwnerType == "Trail")
+            // keep-comment: every row on the old file moves, not only this item's - repointing one row and then deleting the file it shared broke ~700 images in one production batch
+            // keep-comment: see docs/notes/media-files-are-shared-by-many-image-rows.md
+            var trailImages = await context.TrailImages
+                .Where(ti => oldPaths.Contains(ti.ImageUrl) || (item.OwnerType == "Trail" && ti.Identifier == item.MediaIdentifier))
+                .ToListAsync(ctoken);
+
+            var facilityImages = await context.FacilityImages
+                .Where(fi => oldPaths.Contains(fi.ImageUrl) || (item.OwnerType == "Facility" && fi.Identifier == item.MediaIdentifier))
+                .ToListAsync(ctoken);
+
+            // keep-comment: no row left means the image was deleted mid-batch - NotFound lets the caller drop the upload instead of recording a success that moved nothing
+            if (trailImages.Count + facilityImages.Count == 0)
+                return RepositoryResult<MediaReprocessSuccess>.NotFound();
+
+            foreach (var image in trailImages)
             {
-                var trailImage = await context.TrailImages
-                    .FirstOrDefaultAsync(ti => ti.Identifier == item.MediaIdentifier, ctoken);
-
-                if (trailImage is not null)
-                {
-                    trailImage.ImageUrl = newImageUrl;
-                    trailImage.Width = width;
-                    trailImage.Height = height;
-                    trailImage.SizeBytes = sizeBytes;
-                    trailImage.LastUpdatedAt = now;
-                }
+                image.ImageUrl = newImageUrl;
+                image.Width = width;
+                image.Height = height;
+                image.SizeBytes = sizeBytes;
+                image.LastUpdatedAt = now;
             }
-            else if (item.OwnerType == "Facility")
-            {
-                var facilityImage = await context.FacilityImages
-                    .FirstOrDefaultAsync(fi => fi.Identifier == item.MediaIdentifier, ctoken);
 
-                if (facilityImage is not null)
-                {
-                    facilityImage.ImageUrl = newImageUrl;
-                    facilityImage.Width = width;
-                    facilityImage.Height = height;
-                    facilityImage.SizeBytes = sizeBytes;
-                    facilityImage.LastUpdatedAt = now;
-                }
+            foreach (var image in facilityImages)
+            {
+                image.ImageUrl = newImageUrl;
+                image.Width = width;
+                image.Height = height;
+                image.SizeBytes = sizeBytes;
+                image.LastUpdatedAt = now;
+            }
+
+            var siblingIdentifiers = trailImages.Select(ti => ti.Identifier)
+                .Concat(facilityImages.Select(fi => fi.Identifier))
+                .Where(identifier => identifier != item.MediaIdentifier)
+                .ToList();
+
+            // keep-comment: a sibling's row already points at the new file, so reprocessing it would re-encode the output and delete it - settle it instead: any unsettled item in this job, and Pending items in other jobs (their Failed/Cancelled records are another run's history)
+            var siblingItems = await context.MediaReprocessItems
+                .Where(i => i.Id != item.Id
+                            && siblingIdentifiers.Contains(i.MediaIdentifier)
+                            && (i.JobId == item.JobId
+                                ? i.Status != MediaReprocessItemStatus.Processing && i.Status != MediaReprocessItemStatus.Succeeded
+                                : i.Status == MediaReprocessItemStatus.Pending))
+                .ToListAsync(ctoken);
+
+            foreach (var sibling in siblingItems)
+            {
+                sibling.Status = MediaReprocessItemStatus.Succeeded;
+                sibling.LastError = null;
+                sibling.LastUpdatedAt = now;
             }
 
             item.Status = MediaReprocessItemStatus.Succeeded;
@@ -135,13 +160,27 @@ public class MediaReprocessRepository : IMediaReprocessRepository
 
             await context.SaveChangesAsync(ctoken);
 
-            return RepositoryResult.Success();
+            var stillReferenced =
+                await context.HikeImages.AnyAsync(hi => oldPaths.Contains(hi.ImageUrl), ctoken)
+                || await context.ReviewImages.AnyAsync(ri => oldPaths.Contains(ri.ImageUrl), ctoken)
+                || await context.CityAreas.AnyAsync(ca => ca.ImageUrl != null && oldPaths.Contains(ca.ImageUrl), ctoken)
+                || await context.Trails.AnyAsync(t => oldPaths.Contains(t.TrailSymbolImage), ctoken);
+
+            return RepositoryResult<MediaReprocessSuccess>.Success(
+                new MediaReprocessSuccess(trailImages.Count + facilityImages.Count, stillReferenced));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "MediaReprocessRepository: MarkSucceededAsync -> Something went wrong when marking item {id} succeeded.", itemId);
-            return RepositoryResult.Error();
+            return RepositoryResult<MediaReprocessSuccess>.Error();
         }
+    }
+
+    // keep-comment: production rows store some paths with a leading "/" (e.g. "/trails/hedared_20260524_1.jpg") and others without, so one file can have two spellings
+    private static List<string> SpellingsOf(string path)
+    {
+        var relative = path.TrimStart('/');
+        return [relative, "/" + relative];
     }
 
     public async Task<RepositoryResult> MarkFailedAsync(int itemId, string error, CancellationToken ctoken)
@@ -253,6 +292,43 @@ public class MediaReprocessRepository : IMediaReprocessRepository
         }
     }
 
+    public async Task<RepositoryResult<IReadOnlyCollection<int>>> RetryFailedItemsAsync(string jobIdentifier, CancellationToken ctoken)
+    {
+        try
+        {
+            using var context = await _dbContextFactory.CreateDbContextAsync(ctoken);
+
+            var job = await context.MediaReprocessJobs
+                .AsNoTracking()
+                .FirstOrDefaultAsync(j => j.Identifier == jobIdentifier, ctoken);
+
+            if (job is null)
+                return RepositoryResult<IReadOnlyCollection<int>>.NotFound();
+
+            var failed = await context.MediaReprocessItems
+                .Where(i => i.JobId == job.Id && i.Status == MediaReprocessItemStatus.Failed)
+                .OrderBy(i => i.Id)
+                .ToListAsync(ctoken);
+
+            foreach (var item in failed)
+            {
+                item.Status = MediaReprocessItemStatus.Pending;
+                item.LastError = null;
+                item.LastUpdatedAt = DateTime.UtcNow;
+            }
+
+            if (failed.Count > 0)
+                await context.SaveChangesAsync(ctoken);
+
+            return RepositoryResult<IReadOnlyCollection<int>>.Success(failed.Select(i => i.Id).ToList());
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "MediaReprocessRepository: RetryFailedItemsAsync -> Something went wrong when retrying job {identifier}.", jobIdentifier);
+            return RepositoryResult<IReadOnlyCollection<int>>.Error();
+        }
+    }
+
     public async Task<RepositoryResult<PagedResult<MediaReprocessJobCounts>>> GetJobsPagedAsync(
         int page, int pageSize, CancellationToken ctoken)
     {
@@ -336,8 +412,8 @@ public class MediaReprocessRepository : IMediaReprocessRepository
         }
     }
 
-    // Public so a unit test can assert it directly — ExecuteDeleteAsync below isn't supported
-    // by the EF InMemory provider the unit suite runs on.
+    // keep-comment: Public so a unit test can assert it directly — ExecuteDeleteAsync below isn't supported
+    // keep-comment: by the EF InMemory provider the unit suite runs on.
     public static Expression<Func<MediaReprocessJob, bool>> PurgeableSettled(DateTime cutoffUtc) =>
         j => j.CreatedAt < cutoffUtc
              && j.Items.All(i => i.Status != MediaReprocessItemStatus.Pending
@@ -362,7 +438,7 @@ public class MediaReprocessRepository : IMediaReprocessRepository
         }
     }
 
-    // Expression, not a compiled method, so EF can translate it when passed to .Select().
+    // keep-comment: Expression, not a compiled method, so EF can translate it when passed to .Select().
     private static readonly Expression<Func<MediaReprocessJob, MediaReprocessJobCounts>> ToCounts = j => new MediaReprocessJobCounts(
         j.Identifier,
         j.OptionsJson,

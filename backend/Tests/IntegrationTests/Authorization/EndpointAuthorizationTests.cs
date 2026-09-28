@@ -92,6 +92,7 @@ public class EndpointAuthorizationTests : IClassFixture<StigViddWebApplicationFa
         "GET /api/v1/admin/media/reprocess",
         "GET /api/v1/admin/media/reprocess/{identifier}",
         "POST /api/v1/admin/media/reprocess/{identifier}/cancel",
+        "POST /api/v1/admin/media/reprocess/{identifier}/retry",
 
         // export hands out the database, the media volume and the Keycloak realm;
         // import replaces this host's data.
