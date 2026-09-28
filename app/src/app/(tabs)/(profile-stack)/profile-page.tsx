@@ -26,7 +26,7 @@ import { logger } from "../../../services/logger";
 
 export default function ProfilePageScreen() {
   const { t } = useTranslation();
-  const [{ data: user, isLoading, isError, error }] = useAtom(stigviddUserAtom);
+  const [{ data: user, isLoading, isError, error, refetch }] = useAtom(stigviddUserAtom);
   const setError = useSetAtom(showErrorAtom);
   const scrollViewRef = useRef<ScrollView>(null);
   const theme = useTheme();
@@ -48,7 +48,7 @@ export default function ProfilePageScreen() {
   }
 
   if (isError) {
-    return <ErrorView error={error} />;
+    return <ErrorView error={error} onRetry={refetch} />;
   }
 
   async function handleSignOut() {

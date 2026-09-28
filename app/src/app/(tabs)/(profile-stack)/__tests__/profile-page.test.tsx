@@ -19,7 +19,13 @@ const mockNavigate = jest.fn();
 const mockReplace = jest.fn();
 
 // The screen only reads the query result; the real atoms would fetch.
-let mockUserQuery: { data?: unknown; isLoading: boolean; isError: boolean; error?: unknown };
+let mockUserQuery: {
+  data?: unknown;
+  isLoading: boolean;
+  isError: boolean;
+  error?: unknown;
+  refetch?: () => void;
+};
 let mockIncomingRequests: unknown[];
 let mockIncomingSharedHikes: unknown[];
 
@@ -105,6 +111,16 @@ it("shows the error instead of the menu when the user cannot be loaded", () => {
 
   expect(screen.getByText("Något gick fel")).toBeTruthy();
   expect(screen.queryByText("Mina vänner")).toBeNull();
+});
+
+it("lets the user retry loading the profile after a failure", () => {
+  const refetch = jest.fn();
+  mockUserQuery = { isLoading: false, isError: true, error: new Error("nätverket"), refetch };
+  show();
+
+  fireEvent.press(screen.getByText("Försök igen"));
+
+  expect(refetch).toHaveBeenCalledTimes(1);
 });
 
 it("names the signed-in user", () => {

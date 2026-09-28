@@ -12,6 +12,7 @@ import { TrailCard } from "@/data/types";
 
 const CACHE_PREFIX = "@stigvidd_trail_card";
 const TTL_MS = 60 * 60 * 1000; // 1 hour — ratings and images can change, so don't cache indefinitely
+const OFFLINE_FALLBACK_MS = 30 * 24 * 60 * 60 * 1000; // expired entries are still served when the fetch fails
 
 interface CacheEntry {
   data: TrailCard;
@@ -35,7 +36,7 @@ export async function pruneTrailCardCache(): Promise<void> {
           continue;
         }
         const entry = JSON.parse(raw) as CacheEntry;
-        if (now - entry.cachedAt >= TTL_MS) toDelete.push(key);
+        if (now - entry.cachedAt >= OFFLINE_FALLBACK_MS) toDelete.push(key);
       } catch {
         toDelete.push(key);
       }
@@ -62,8 +63,9 @@ export function useTrailCard(identifier: string | null): { card: TrailCard | nul
     // (e.g. user taps a different trail before the first fetch completes).
     let cancelled = false;
 
-    async function load() {
-      const key = `${CACHE_PREFIX}_${identifier}`;
+    async function load(id: string) {
+      const key = `${CACHE_PREFIX}_${id}`;
+      let expired: TrailCard | null = null;
 
       try {
         const raw = await AsyncStorage.getItem(key);
@@ -76,6 +78,7 @@ export function useTrailCard(identifier: string | null): { card: TrailCard | nul
             setCard(entry.data);
             return;
           }
+          expired = entry.data;
         }
       } catch {
         if (cancelled) return;
@@ -85,18 +88,18 @@ export function useTrailCard(identifier: string | null): { card: TrailCard | nul
       setIsLoading(true);
 
       try {
-        const data = await getTrailCard(identifier!);
+        const data = await getTrailCard(id);
         if (cancelled) return;
         setCard(data);
         await AsyncStorage.setItem(key, JSON.stringify({ data, cachedAt: Date.now() } satisfies CacheEntry));
       } catch {
-        // Keep card as null on error
+        if (!cancelled && expired) setCard(expired);
       } finally {
         if (!cancelled) setIsLoading(false);
       }
     }
 
-    load();
+    load(identifier);
     return () => {
       cancelled = true;
     };
@@ -148,6 +151,7 @@ export function useTrailCards(identifiers: string[]): {
       setIsError(false);
       setNotFound(new Set());
       const resolved: Record<string, TrailCard> = {};
+      const expired: Record<string, TrailCard> = {};
       const missing: string[] = [];
 
       // 1. Serve fresh entries straight from the cache.
@@ -161,6 +165,7 @@ export function useTrailCards(identifiers: string[]): {
                 resolved[id] = entry.data;
                 return;
               }
+              expired[id] = entry.data;
             }
           } catch {
             // fall through to refetch
@@ -195,7 +200,9 @@ export function useTrailCards(identifiers: string[]): {
       } catch {
         // Keep whatever resolved from cache, but flag the failure so the UI can
         // offer a retry instead of spinning forever on the missing cards.
-        if (!cancelled) setIsError(true);
+        if (cancelled) return;
+        if (Object.keys(expired).length > 0) setCards({ ...expired, ...resolved });
+        setIsError(true);
       } finally {
         if (!cancelled) setIsLoading(false);
       }

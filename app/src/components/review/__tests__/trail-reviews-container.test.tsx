@@ -214,6 +214,16 @@ it("shows the error view rather than an empty section when the reviews fail to l
   expect(screen.queryByText("Recensioner")).toBeNull();
 });
 
+it("loads the reviews again when the user retries after a failure", async () => {
+  mockGetReviews.mockRejectedValueOnce(new Error("nätverket"));
+
+  await show();
+  fireEvent.press(screen.getByText("Försök igen"));
+  await flushUntil(() => screen.queryByText("Recensioner"));
+
+  expect(screen.getByTestId("review-section").props.children).toBe("r1");
+});
+
 it("hides the write-review icon once the user has reviewed this trail", async () => {
   mockHasReviewed = true;
 

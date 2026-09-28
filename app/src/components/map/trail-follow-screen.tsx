@@ -13,18 +13,24 @@ import CoordinateParser from "@/utils/coordinate-parser";
 import { useQuery } from "@tanstack/react-query";
 import { useLocalSearchParams } from "expo-router";
 import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 
 // Fullscreen "follow" view for a single trail. Reached from the carousel's "show on
 // map" and by tapping the embedded map on a trail's detail screen. Pushed within the
 // current stack, so back returns where you came from. All presentation lives in
 // RouteFollowView, which hikes share — this file is only the trail's data path.
 export default function TrailFollowScreen() {
+  const { t } = useTranslation();
   const { identifier } = useLocalSearchParams<{ identifier: string }>();
   const normalizedIdentifier: string = Array.isArray(identifier) ? identifier[0] : identifier;
 
   const { card } = useTrailCard(normalizedIdentifier ?? null);
 
-  const { data: coords, isLoading } = useQuery({
+  const {
+    data: coords,
+    isLoading,
+    isError,
+  } = useQuery({
     queryKey: ["cords", normalizedIdentifier],
     queryFn: () => getCoordinatesByTrailIdentifier(normalizedIdentifier),
     enabled: !!normalizedIdentifier,
@@ -36,5 +42,15 @@ export default function TrailFollowScreen() {
     [coords, normalizedIdentifier],
   );
 
-  return <RouteFollowView idPrefix="follow" path={path} title={card?.name} isLoading={isLoading} />;
+  const failed = isError || (!isLoading && coords !== undefined && path.length === 0);
+
+  return (
+    <RouteFollowView
+      idPrefix="follow"
+      path={path}
+      title={card?.name}
+      isLoading={isLoading}
+      errorMessage={failed ? t("map.loadError") : undefined}
+    />
+  );
 }

@@ -178,6 +178,18 @@ describe("useTrailCard", () => {
     expect(result.current.card).toBeNull();
   });
 
+  it("serves the expired cache entry when the refetch fails", async () => {
+    const expiredCard = makeCard("trail-1");
+    mockGetItem.mockResolvedValue(JSON.stringify({ data: expiredCard, cachedAt: Date.now() - 2 * HOUR_MS }));
+    mockGetTrailCard.mockRejectedValue(new Error("network error"));
+
+    const { result } = renderHook(() => useTrailCard("trail-1"));
+
+    await waitFor(() => expect(result.current.card).toEqual(expiredCard));
+    expect(mockGetTrailCard).toHaveBeenCalledWith("trail-1");
+    expect(result.current.isLoading).toBe(false);
+  });
+
   it("falls through to a network fetch when AsyncStorage.getItem throws", async () => {
     mockGetItem.mockRejectedValue(new Error("storage unavailable"));
     const card = makeCard("trail-1");
@@ -271,6 +283,24 @@ describe("useTrailCards", () => {
     expect(result.current.isLoading).toBe(false);
   });
 
+  it("serves expired cache entries alongside fresh ones when the batch fetch fails", async () => {
+    const freshCard = makeCard("t1");
+    const expiredCard = makeCard("t2");
+    mockGetItem.mockImplementation(
+      cacheBackedGetItem({
+        t1: { data: freshCard, cachedAt: Date.now() },
+        t2: { data: expiredCard, cachedAt: Date.now() - 2 * HOUR_MS },
+      }),
+    );
+    mockGetTrailCards.mockRejectedValue(new Error("network error"));
+
+    const { result } = renderHook(() => useTrailCards(["t1", "t2", "t3"]));
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect(result.current.cards).toEqual({ t1: freshCard, t2: expiredCard });
+    expect(mockGetTrailCards).toHaveBeenCalledWith(["t2", "t3"]);
+  });
+
   it("retries the batch fetch and clears the error when refetch is called", async () => {
     const fetched = makeCard("t1");
     mockGetItem.mockResolvedValue(null); // nothing cached
@@ -291,14 +321,22 @@ describe("useTrailCards", () => {
 });
 
 describe("pruneTrailCardCache", () => {
-  it("removes only entries older than the TTL and keeps fresh ones", async () => {
-    mockGetAllKeys.mockResolvedValue([`${CACHE_PREFIX}_fresh`, `${CACHE_PREFIX}_stale`, "unrelated_key"]);
+  it("removes only entries past the offline-fallback window and keeps expired-but-recent ones", async () => {
+    mockGetAllKeys.mockResolvedValue([
+      `${CACHE_PREFIX}_fresh`,
+      `${CACHE_PREFIX}_expired`,
+      `${CACHE_PREFIX}_ancient`,
+      "unrelated_key",
+    ]);
     mockGetItem.mockImplementation((key: string) => {
       if (key === `${CACHE_PREFIX}_fresh`) {
         return Promise.resolve(JSON.stringify({ data: makeCard("fresh"), cachedAt: Date.now() }));
       }
-      if (key === `${CACHE_PREFIX}_stale`) {
-        return Promise.resolve(JSON.stringify({ data: makeCard("stale"), cachedAt: Date.now() - 2 * HOUR_MS }));
+      if (key === `${CACHE_PREFIX}_expired`) {
+        return Promise.resolve(JSON.stringify({ data: makeCard("expired"), cachedAt: Date.now() - 2 * HOUR_MS }));
+      }
+      if (key === `${CACHE_PREFIX}_ancient`) {
+        return Promise.resolve(JSON.stringify({ data: makeCard("ancient"), cachedAt: Date.now() - 31 * 24 * HOUR_MS }));
       }
       return Promise.resolve(null);
     });
@@ -306,7 +344,7 @@ describe("pruneTrailCardCache", () => {
     await pruneTrailCardCache();
 
     // Only the stale card key is removed; the unrelated key is never inspected.
-    expect(mockMultiRemove).toHaveBeenCalledWith([`${CACHE_PREFIX}_stale`]);
+    expect(mockMultiRemove).toHaveBeenCalledWith([`${CACHE_PREFIX}_ancient`]);
   });
 
   it("removes corrupt and empty entries", async () => {

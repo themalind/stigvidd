@@ -11,13 +11,14 @@ import { initMapCache } from "@/utils/map-cache";
 import { loadUserTheme, userThemeAtom } from "@/atoms/user-theme-atom";
 import { BannedWriteDialog } from "@/components/auth/banned-write-dialog";
 import { SessionRecovery } from "@/components/auth/session-recovery";
-import { retryUnlessAuthFailure } from "@/api/unauthorized";
+import { createQueryClient } from "@/api/query-client";
 import { GlobalSnackbar } from "@/components/global-snackbar";
 import { ConsentDialog } from "@/components/settings/consent-dialog";
 import { useAppState } from "@/hooks/useAppState";
 import { useUserTheme } from "@/hooks/useUserTheme";
 import { loadStoredLanguage } from "@/i18n";
 import "@/services/location-task";
+import { initOnlineStatus } from "@/services/online-status";
 import { initTelemetry } from "@/services/telemetry";
 import { logger } from "@/services/logger";
 import {
@@ -25,7 +26,7 @@ import {
   NOTIFICATION_ROUTES,
   registerForPushNotificationsAsync,
 } from "@/services/notifications";
-import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query";
+import { QueryClientProvider, useQueryClient } from "@tanstack/react-query";
 import * as Notifications from "expo-notifications";
 import { ThemeProvider } from "@react-navigation/native";
 import { Stack, useRouter } from "expo-router";
@@ -95,10 +96,7 @@ export default function RootLayout() {
   // queryClient.clear() to drop the signed-out user's cached data from memory.
   // Auth-specific screens reset on login/logout because Stack.Protected unmounts
   // them when the guard flips — no full navigator remount needed.
-  const queryClient = useMemo(
-    () => new QueryClient({ defaultOptions: { queries: { retry: retryUnlessAuthFailure } } }),
-    [],
-  );
+  const queryClient = useMemo(createQueryClient, []);
 
   const setQueryClient = useSetAtom(queryClientAtom);
   useEffect(() => {
@@ -118,6 +116,7 @@ export default function RootLayout() {
   useEffect(() => {
     loadStoredLanguage();
     pruneTrailCardCache();
+    initOnlineStatus();
     initMapTiler();
     initMapCache();
   }, []);

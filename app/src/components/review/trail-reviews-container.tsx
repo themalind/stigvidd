@@ -45,6 +45,7 @@ export default function TrailReviewsContainer({ trail, surfaceToScrollToRef, onR
     isLoading,
     isError,
     error,
+    refetch,
   } = useInfiniteQuery({
     queryKey: ["reviews", trail.identifier, user?.id],
     queryFn: ({ pageParam }) => getReviewsByTrailIdentifier(trail.identifier, pageParam, 5), // pageParam är vilken omgång av hämtningar
@@ -66,7 +67,7 @@ export default function TrailReviewsContainer({ trail, surfaceToScrollToRef, onR
   }, [reviews, totalReviewsCount, onReviewsLoaded]);
 
   if (isError) {
-    return <ErrorView error={error} />;
+    return <ErrorView error={error} onRetry={refetch} />;
   }
 
   if (isLoading || !reviewResponse) {

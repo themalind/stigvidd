@@ -17,7 +17,7 @@ import { useTheme } from "react-native-paper";
 export default function FavoritesScreen() {
   const theme = useTheme();
   const { t } = useTranslation();
-  const [{ data, isLoading, isError, error }] = useAtom(userFavoritesAtom);
+  const [{ data, isLoading, isError, error, refetch }] = useAtom(userFavoritesAtom);
   const [removeFromFavorite] = useAtom(removeFromFavoritesAtom);
 
   if (isLoading) {
@@ -25,7 +25,7 @@ export default function FavoritesScreen() {
   }
 
   if (isError) {
-    return <ErrorView error={error} />;
+    return <ErrorView error={error} onRetry={refetch} />;
   }
 
   const handleDelete = (trailIdentifier: string) => {

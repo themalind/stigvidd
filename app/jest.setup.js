@@ -4,6 +4,8 @@ jest.mock("@react-native-async-storage/async-storage", () =>
   require("@react-native-async-storage/async-storage/jest/async-storage-mock"),
 );
 
+jest.mock("@react-native-community/netinfo", () => require("@react-native-community/netinfo/jest/netinfo-mock.js"));
+
 // MapLibre throws at import time without a native binary; see __mocks__/@maplibre/maplibre-react-native.js.
 jest.mock("@maplibre/maplibre-react-native");
 
