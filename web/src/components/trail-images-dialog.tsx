@@ -3,11 +3,7 @@
 
 import { Dialog } from "radix-ui";
 import { useRef, useState } from "react";
-import {
-  addTrailImages,
-  deleteTrailImage,
-  getTrailByIdentifier,
-} from "@/api/trail";
+import { addTrailImages, deleteTrailImage, getTrailByIdentifier } from "@/api/trail";
 import type { TrailImageResponse, TrailShortInfoResponse } from "@/types/types";
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/button";
@@ -50,9 +46,7 @@ export default function TrailImagesDialog({ data, selected }: Props) {
     try {
       const newImages = await addTrailImages(data.identifier, files);
       setImages((prev) => [...prev, ...newImages]);
-      toast.success(
-        `${newImages.length} image${newImages.length !== 1 ? "s" : ""} uploaded.`,
-      );
+      toast.success(`${newImages.length} image${newImages.length !== 1 ? "s" : ""} uploaded.`);
     } catch {
       toast.error("Failed to upload images.");
     } finally {
@@ -89,9 +83,7 @@ export default function TrailImagesDialog({ data, selected }: Props) {
         <Dialog.Portal>
           <Dialog.Overlay className="data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/50" />
           <Dialog.Content className="bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-1/2 left-1/2 z-50 w-full max-w-2xl -translate-x-1/2 -translate-y-1/2 rounded-xs border p-6 shadow-lg">
-            <Dialog.Title className="text-foreground mb-1 font-semibold">
-              {data.name}
-            </Dialog.Title>
+            <Dialog.Title className="text-foreground mb-1 font-semibold">{data.name}</Dialog.Title>
             <Dialog.Description className="text-muted-foreground mb-4 text-sm">
               Manage images for this trail.
             </Dialog.Description>
@@ -101,10 +93,7 @@ export default function TrailImagesDialog({ data, selected }: Props) {
             ) : (
               <div className="grid grid-cols-3 gap-3">
                 {images.map((img) => (
-                  <div
-                    key={img.identifier}
-                    className="group relative aspect-square overflow-hidden rounded-xs border"
-                  >
+                  <div key={img.identifier} className="group relative aspect-square overflow-hidden rounded-xs border">
                     <img
                       src={img.imageUrl}
                       alt=""
@@ -117,8 +106,7 @@ export default function TrailImagesDialog({ data, selected }: Props) {
                       title="Delete image"
                       className={cn(
                         "bg-background/80 hover:bg-background absolute top-1 right-1 rounded-xs p-0.5 opacity-0 transition-opacity group-hover:opacity-100",
-                        deletingId === img.identifier &&
-                          "cursor-not-allowed opacity-50",
+                        deletingId === img.identifier && "cursor-not-allowed opacity-50",
                       )}
                     >
                       <X className="size-3.5" />
@@ -156,17 +144,12 @@ export default function TrailImagesDialog({ data, selected }: Props) {
       </Dialog.Root>
 
       {enlarged && (
-        <Dialog.Root
-          open={true}
-          onOpenChange={(open) => !open && setEnlarged(null)}
-        >
+        <Dialog.Root open={true} onOpenChange={(open) => !open && setEnlarged(null)}>
           <Dialog.Portal>
             <Dialog.Overlay className="fixed inset-0 z-60 bg-black/80" />
             <Dialog.Content className="fixed top-1/2 left-1/2 z-60 -translate-x-1/2 -translate-y-1/2 outline-none">
               <Dialog.Title className="sr-only">Enlarged image</Dialog.Title>
-              <Dialog.Description className="sr-only">
-                Full-size view of the selected trail image.
-              </Dialog.Description>
+              <Dialog.Description className="sr-only">Full-size view of the selected trail image.</Dialog.Description>
               <img
                 src={enlarged.imageUrl}
                 alt=""

@@ -12,9 +12,7 @@ type RouteHandle = {
 export default function Header() {
   const matches = useMatches() as Array<{ handle: RouteHandle }>;
 
-  const currentTitle =
-    [...matches].reverse().find((match) => match.handle?.title)?.handle
-      ?.title ?? "Stigvidd";
+  const currentTitle = [...matches].reverse().find((match) => match.handle?.title)?.handle?.title ?? "Stigvidd";
 
   return (
     <header className="sticky top-0 z-10 flex justify-between items-center p-2 bg-background border-t-8 border-t-sidebar border-b">

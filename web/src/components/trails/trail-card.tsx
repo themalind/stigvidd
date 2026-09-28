@@ -22,21 +22,11 @@ export default function TrailCard() {
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="length">Längd</Label>
-                <Input
-                  id="length"
-                  type="number"
-                  placeholder="2,5 km"
-                  required
-                />
+                <Input id="length" type="number" placeholder="2,5 km" required />
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="classification">Svårighetsgrad</Label>
-                <Input
-                  id="classification"
-                  type="text"
-                  placeholder="Lätt"
-                  required
-                />
+                <Input id="classification" type="text" placeholder="Lätt" required />
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="description">Kortfattad beskrivning</Label>

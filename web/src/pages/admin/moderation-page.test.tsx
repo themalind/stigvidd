@@ -82,9 +82,7 @@ beforeEach(() => {
 it("lists the queue and opens the first report", async () => {
   renderPage([summary()]);
 
-  expect(await screen.findByTestId("content-snapshot")).toHaveTextContent(
-    "Something unpleasant",
-  );
+  expect(await screen.findByTestId("content-snapshot")).toHaveTextContent("Something unpleasant");
   expect(screen.getByTestId("author-strikes")).toHaveTextContent("1 strike");
   expect(screen.getByTestId("reporter-record")).toHaveTextContent("4 reports, 0 dismissed");
 });
@@ -134,9 +132,7 @@ it("does not delete anything until the confirmation is accepted", async () => {
 
   await user.click(await screen.findByTestId("confirm-uphold"));
 
-  await waitFor(() =>
-    expect(api.decideReport).toHaveBeenCalledWith("report-1", "Uphold", undefined),
-  );
+  await waitFor(() => expect(api.decideReport).toHaveBeenCalledWith("report-1", "Uphold", undefined));
 });
 
 // The dialog has to say the deletion is permanent and which strike this becomes, because
@@ -162,9 +158,7 @@ it("sends the decision note when one was typed", async () => {
   await user.type(await screen.findByTestId("decision-note"), "Personal data");
   await user.click(screen.getByTestId("confirm-uphold"));
 
-  await waitFor(() =>
-    expect(api.decideReport).toHaveBeenCalledWith("report-1", "Uphold", "Personal data"),
-  );
+  await waitFor(() => expect(api.decideReport).toHaveBeenCalledWith("report-1", "Uphold", "Personal data"));
 });
 
 // `u` prepares an uphold, so a keystroke landing in a text field must never touch it.

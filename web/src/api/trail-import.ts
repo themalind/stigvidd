@@ -34,13 +34,7 @@ export type Confidence = "Certain" | "High" | "Medium" | "Unmatched";
 export type Decision = "Pending" | "Accept" | "Relink" | "CreateNew" | "Exclude" | "Skip";
 /** What a linked feature contributes to the trail's route. */
 export type LinkRole = "Segment" | "Duplicate" | "Excluded";
-export type SessionStatus =
-  | "Uploaded"
-  | "Analyzing"
-  | "AwaitingReview"
-  | "Applying"
-  | "Applied"
-  | "Failed";
+export type SessionStatus = "Uploaded" | "Analyzing" | "AwaitingReview" | "Applying" | "Applied" | "Failed";
 
 /** Ascending order of how much a human is needed. Drives sorting and the summary row. */
 export const confidenceOrder: Confidence[] = ["Unmatched", "Medium", "High", "Certain"];
@@ -113,10 +107,7 @@ export async function decideProposal(
   await trailImportDecide(sessionId, proposalId, request);
 }
 
-export async function decideBulk(
-  sessionId: number,
-  request: DecideProposalsBulkRequest,
-): Promise<number> {
+export async function decideBulk(sessionId: number, request: DecideProposalsBulkRequest): Promise<number> {
   const result = await trailImportDecideBulk(sessionId, request);
 
   return result.decided;

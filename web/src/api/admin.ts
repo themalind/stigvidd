@@ -25,8 +25,7 @@ export async function exportData(): Promise<void> {
 
   const blob = await response.blob();
   const disposition = response.headers.get("Content-Disposition") ?? "";
-  const filename =
-    /filename="?([^"]+)"?/.exec(disposition)?.[1] ?? "stigvidd-export.zip";
+  const filename = /filename="?([^"]+)"?/.exec(disposition)?.[1] ?? "stigvidd-export.zip";
 
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement("a");

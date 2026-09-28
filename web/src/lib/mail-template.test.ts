@@ -28,14 +28,14 @@ import {
 // anything in this file stops handling THIS string, the feature is broken for the only
 // template that has a production caller.
 const verifyEmailHtml =
-  '<p>Hej {{NickName}},</p>\n' +
-  '<p>Tack för att du skapade ett konto hos Stigvidd. Klicka på knappen för att bekräfta din e-postadress, så kan du logga in.</p>\n' +
+  "<p>Hej {{NickName}},</p>\n" +
+  "<p>Tack för att du skapade ett konto hos Stigvidd. Klicka på knappen för att bekräfta din e-postadress, så kan du logga in.</p>\n" +
   '<p><a href="{{VerificationUrl}}" style="display:inline-block;padding:12px 20px;border-radius:8px;background:#3f6b43;color:#ffffff;text-decoration:none">Bekräfta e-postadressen</a></p>\n' +
-  '<p>Fungerar inte knappen? Kopiera den här länken till din webbläsare:<br>\n' +
+  "<p>Fungerar inte knappen? Kopiera den här länken till din webbläsare:<br>\n" +
   '<a href="{{VerificationUrl}}">{{VerificationUrl}}</a></p>\n' +
-  '<p>Du kan också skriva in den här koden i appen:</p>\n' +
+  "<p>Du kan också skriva in den här koden i appen:</p>\n" +
   '<p style="font-size:28px;letter-spacing:6px;font-weight:700">{{VerificationCode}}</p>\n' +
-  '<p>Länken och koden gäller i 24 timmar. Om det inte var du som skapade kontot kan du strunta i det här mejlet.</p>';
+  "<p>Länken och koden gäller i 24 timmar. Om det inte var du som skapade kontot kan du strunta i det här mejlet.</p>";
 
 describe("extractTokens", () => {
   it("reads the whole string, attributes included, because the backend does", () => {
@@ -66,11 +66,7 @@ describe("extractTokens", () => {
   });
 
   it("finds all three in the seeded verification body", () => {
-    expect(extractTokens(verifyEmailHtml)).toEqual([
-      "NickName",
-      "VerificationUrl",
-      "VerificationCode",
-    ]);
+    expect(extractTokens(verifyEmailHtml)).toEqual(["NickName", "VerificationUrl", "VerificationCode"]);
   });
 });
 
@@ -106,9 +102,7 @@ describe("embedTokenPlaceholders / unwrapTokenPlaceholders", () => {
   });
 
   it("rewrites a token in text", () => {
-    expect(embedTokenPlaceholders("<p>Hej {{NickName}}</p>")).toBe(
-      '<p>Hej <span data-token="NickName"></span></p>',
-    );
+    expect(embedTokenPlaceholders("<p>Hej {{NickName}}</p>")).toBe('<p>Hej <span data-token="NickName"></span></p>');
   });
 
   it("rewrites the link text but not the href, in the same element", () => {
@@ -118,9 +112,7 @@ describe("embedTokenPlaceholders / unwrapTokenPlaceholders", () => {
   });
 
   it("leaves a token inside a raw-text element alone", () => {
-    expect(embedTokenPlaceholders("<style>a{content:'{{X}}'}</style>")).toBe(
-      "<style>a{content:'{{X}}'}</style>",
-    );
+    expect(embedTokenPlaceholders("<style>a{content:'{{X}}'}</style>")).toBe("<style>a{content:'{{X}}'}</style>");
   });
 
   it("round-trips the seeded verification body exactly", () => {
@@ -159,9 +151,7 @@ describe("embedTokenPlaceholders / unwrapTokenPlaceholders", () => {
   it("still unwraps a chip that carries extra attributes", () => {
     // So a TipTap upgrade that adds a class degrades to "still correct" rather than
     // leaving a stray <span> in somebody's mail.
-    expect(unwrapTokenPlaceholders('<span class="x" data-token="A" data-y="1"></span>')).toBe(
-      "{{A}}",
-    );
+    expect(unwrapTokenPlaceholders('<span class="x" data-token="A" data-y="1"></span>')).toBe("{{A}}");
   });
 
   it("never produces entity-escaped braces", () => {
@@ -192,10 +182,7 @@ describe("detectLoss", () => {
   });
 
   it("reports a dropped attribute", () => {
-    const report = detectLoss(
-      '<a href="https://x.test" style="color:red">x</a>',
-      '<a href="https://x.test">x</a>',
-    );
+    const report = detectLoss('<a href="https://x.test" style="color:red">x</a>', '<a href="https://x.test">x</a>');
 
     expect(report.lossless).toBe(false);
     expect(report.attributesLost).toEqual([{ tag: "a", attr: "style" }]);
@@ -256,9 +243,8 @@ describe("isSafeMailUrl", () => {
     (url) => expect(isSafeMailUrl(url)).toBe(true),
   );
 
-  it.each(["javascript:alert(1)", "data:text/html,x", "vbscript:x", "/relative", ""])(
-    "rejects %s",
-    (url) => expect(isSafeMailUrl(url)).toBe(false),
+  it.each(["javascript:alert(1)", "data:text/html,x", "vbscript:x", "/relative", ""])("rejects %s", (url) =>
+    expect(isSafeMailUrl(url)).toBe(false),
   );
 
   it("rejects a javascript: scheme hidden behind an entity", () => {
@@ -287,7 +273,10 @@ describe("style recognition", () => {
     // Recognition is fuzzy so a hand-written variant still lights the toolbar; rewriting
     // stays explicit, so it is never normalised behind the operator's back.
     const reordered = parseStyle(buttonLinkStyle);
-    const shuffled = [...reordered].reverse().map(([k, v]) => `${k}: ${v}`).join("; ");
+    const shuffled = [...reordered]
+      .reverse()
+      .map(([k, v]) => `${k}: ${v}`)
+      .join("; ");
 
     expect(isButtonLink(shuffled)).toBe(true);
   });
@@ -313,19 +302,13 @@ describe("reviewTokens", () => {
   ];
 
   it("names a token the caller does not supply", () => {
-    const report = reviewTokens(
-      { subject: "Hej", bodyHtml: "<p>{{NickNmae}}</p>", bodyText: "" },
-      known,
-    );
+    const report = reviewTokens({ subject: "Hej", bodyHtml: "<p>{{NickNmae}}</p>", bodyText: "" }, known);
 
     expect(report.unknown).toEqual(["NickNmae"]);
   });
 
   it("names a supplied token the copy does not use", () => {
-    const report = reviewTokens(
-      { subject: "Hej", bodyHtml: "<p>{{NickName}}</p>", bodyText: "{{NickName}}" },
-      known,
-    );
+    const report = reviewTokens({ subject: "Hej", bodyHtml: "<p>{{NickName}}</p>", bodyText: "{{NickName}}" }, known);
 
     expect(report.unknown).toEqual([]);
     expect(report.missing).toEqual(["VerificationUrl"]);
@@ -334,10 +317,7 @@ describe("reviewTokens", () => {
   it("checks the subject too", () => {
     // The seeded "welcome" subject is "Välkommen till Stigvidd, {{NickName}}!", so the
     // subject is a real place for a token and a bad one there stops the mail the same way.
-    const report = reviewTokens(
-      { subject: "Hej {{Nonsense}}", bodyHtml: "", bodyText: "" },
-      known,
-    );
+    const report = reviewTokens({ subject: "Hej {{Nonsense}}", bodyHtml: "", bodyText: "" }, known);
 
     expect(report.unknown).toEqual(["Nonsense"]);
   });

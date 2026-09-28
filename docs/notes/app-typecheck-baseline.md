@@ -46,6 +46,9 @@ navigates to.
 Regenerate before believing a number. The Expo CLI rewrites `.expo/types/router.d.ts` when
 the dev server starts — and that is a foreground-wedging command, so background it
 (`.claude/hooks/guard-long-running.mjs` denies it otherwise). Then re-run `tsc`.
+To know when it is done, wait for the file's mtime to change, not for a route string. The
+file writes routes as template-literal pieces, `${'/(tabs)'}${'/(settings)'}/theme`, so
+grepping for `(settings)/theme` never matches, and a wait loop on it never ends (2026-09-27).
 
 The sequence that means something is: regenerate, run `tsc`, note the count, make the change,
 run `tsc` again. A number carried over from an earlier session, from this note, or from

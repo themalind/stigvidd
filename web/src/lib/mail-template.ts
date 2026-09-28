@@ -298,9 +298,7 @@ function decodeEntities(value: string): string {
   return value.replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (whole, body: string) => {
     if (body[0] === "#") {
       const code =
-        body[1] === "x" || body[1] === "X"
-          ? Number.parseInt(body.slice(2), 16)
-          : Number.parseInt(body.slice(1), 10);
+        body[1] === "x" || body[1] === "X" ? Number.parseInt(body.slice(2), 16) : Number.parseInt(body.slice(1), 10);
 
       return Number.isFinite(code) && code > 0 ? String.fromCodePoint(code) : whole;
     }
@@ -330,8 +328,21 @@ export function normalizeText(html: string): string {
 
 // Blocks that should read as a line break once the markup is gone.
 const blockElements = new Set([
-  "p", "div", "br", "hr", "li", "tr", "table", "blockquote", "pre",
-  "h1", "h2", "h3", "h4", "h5", "h6",
+  "p",
+  "div",
+  "br",
+  "hr",
+  "li",
+  "tr",
+  "table",
+  "blockquote",
+  "pre",
+  "h1",
+  "h2",
+  "h3",
+  "h4",
+  "h5",
+  "h6",
 ]);
 
 /**
@@ -358,12 +369,14 @@ export function htmlToPlainText(html: string): string {
     }
   }
 
-  return decodeEntities(out)
-    // Collapse runs of spaces and tabs, but keep the line structure just built.
-    .replace(/[^\S\n]+/g, " ")
-    .replace(/ *\n */g, "\n")
-    .replace(/\n{3,}/g, "\n\n")
-    .trim();
+  return (
+    decodeEntities(out)
+      // Collapse runs of spaces and tabs, but keep the line structure just built.
+      .replace(/[^\S\n]+/g, " ")
+      .replace(/ *\n */g, "\n")
+      .replace(/\n{3,}/g, "\n\n")
+      .trim()
+  );
 }
 
 // ── loss detection ───────────────────────────────────────────────────────────
@@ -408,9 +421,7 @@ export function detectLoss(stored: string, rendered: string): LossReport {
 
   // Compared case-insensitively, because the renderer matches that way -- but reported in the
   // spelling the operator actually wrote, since this ends up in a sentence shown to them.
-  const tokensLost = extractTokens(stored).filter(
-    (name) => !renderedTokens.has(name.toLowerCase()),
-  );
+  const tokensLost = extractTokens(stored).filter((name) => !renderedTokens.has(name.toLowerCase()));
 
   const before = elementInventory(stored);
   const after = elementInventory(rendered);
@@ -434,11 +445,7 @@ export function detectLoss(stored: string, rendered: string): LossReport {
   const textChanged = normalizeText(stored) !== normalizeText(rendered);
 
   return {
-    lossless:
-      tokensLost.length === 0 &&
-      elementsLost.length === 0 &&
-      attributesLost.length === 0 &&
-      !textChanged,
+    lossless: tokensLost.length === 0 && elementsLost.length === 0 && attributesLost.length === 0 && !textChanged,
     tokensLost,
     elementsLost,
     attributesLost,
@@ -458,11 +465,15 @@ export function describeLoss(report: LossReport): string {
   const parts: string[] = [];
 
   if (report.tokensLost.length > 0) {
-    parts.push(`the placeholder${report.tokensLost.length > 1 ? "s" : ""} ${report.tokensLost.map(tokenText).join(", ")}`);
+    parts.push(
+      `the placeholder${report.tokensLost.length > 1 ? "s" : ""} ${report.tokensLost.map(tokenText).join(", ")}`,
+    );
   }
 
   if (report.elementsLost.length > 0) {
-    parts.push(`the element${report.elementsLost.length > 1 ? "s" : ""} ${report.elementsLost.map((tag) => `<${tag}>`).join(", ")}`);
+    parts.push(
+      `the element${report.elementsLost.length > 1 ? "s" : ""} ${report.elementsLost.map((tag) => `<${tag}>`).join(", ")}`,
+    );
   }
 
   if (report.attributesLost.length > 0) {
@@ -551,7 +562,10 @@ function normalizeDeclarationValue(value: string): string {
   return collapsed.replace(/#([0-9a-f]{3}|[0-9a-f]{6})\b/g, (_, hex: string) => {
     const full =
       hex.length === 3
-        ? hex.split("").map((char) => char + char).join("")
+        ? hex
+            .split("")
+            .map((char) => char + char)
+            .join("")
         : hex;
 
     const [r, g, b] = [0, 2, 4].map((offset) => Number.parseInt(full.slice(offset, offset + 2), 16));
@@ -614,10 +628,7 @@ export type TokenReport = {
  * A `known` list of null means the API does not know this template key either, so nothing in
  * it can honestly be called unknown.
  */
-export function reviewTokens(
-  draft: TemplateDraft,
-  known: readonly MailTemplateToken[] | null,
-): TokenReport {
+export function reviewTokens(draft: TemplateDraft, known: readonly MailTemplateToken[] | null): TokenReport {
   // One pass per part rather than two. The parts are scanned separately and merged, never
   // concatenated: the token grammar tolerates whitespace inside the braces, so joining them
   // would let a "{{" ending the subject pair with a "}}" opening the body.

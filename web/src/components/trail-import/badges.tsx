@@ -21,17 +21,9 @@ const confidenceHint: Record<string, string> = {
   Unmatched: "No trail found",
 };
 
-export function ConfidenceBadge({
-  confidence,
-}: {
-  confidence: Confidence | string;
-}) {
+export function ConfidenceBadge({ confidence }: { confidence: Confidence | string }) {
   return (
-    <Badge
-      variant="outline"
-      className={confidenceStyle[confidence] ?? ""}
-      title={confidenceHint[confidence]}
-    >
+    <Badge variant="outline" className={confidenceStyle[confidence] ?? ""} title={confidenceHint[confidence]}>
       {confidence}
     </Badge>
   );

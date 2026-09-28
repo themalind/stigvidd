@@ -6,7 +6,7 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { BlockedUser, FriendRequest, FriendResponse, OutgoingFriendRequest, SearchFriendResult } from "@/data/types";
-import { BASE_URL } from "./api-config";
+import { apiFetch, BASE_URL } from "./api-config";
 import { ApiError } from "./api-error";
 import { getUserToken } from "./users";
 import { logger } from "@/services/logger";
@@ -19,7 +19,7 @@ export async function sendFriendRequest(receiverNickName: string): Promise<{ suc
       throw new Error("User not authenticated");
     }
 
-    const response = await fetch(`${BASE_URL}/friends/requests`, {
+    const response = await apiFetch(`${BASE_URL}/friends/requests`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -50,7 +50,7 @@ export async function acceptFriendRequest(requesterIdentifier: string): Promise<
       throw new Error("User not authenticated");
     }
 
-    const response = await fetch(`${BASE_URL}/friends/requests/accept/${requesterIdentifier}`, {
+    const response = await apiFetch(`${BASE_URL}/friends/requests/accept/${requesterIdentifier}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -80,7 +80,7 @@ export async function rejectFriendRequest(otherIdentifier: string): Promise<{ su
       throw new Error("User not authenticated");
     }
 
-    const response = await fetch(`${BASE_URL}/friends/reject/${otherIdentifier}`, {
+    const response = await apiFetch(`${BASE_URL}/friends/reject/${otherIdentifier}`, {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",
@@ -110,7 +110,7 @@ export async function getFriends(): Promise<FriendResponse[]> {
       throw new Error("User not authenticated");
     }
 
-    const response = await fetch(`${BASE_URL}/friends`, {
+    const response = await apiFetch(`${BASE_URL}/friends`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -140,7 +140,7 @@ export async function getIncomingRequests(): Promise<FriendRequest[]> {
       throw new Error("User not authenticated");
     }
 
-    const response = await fetch(`${BASE_URL}/friends/requests/incoming`, {
+    const response = await apiFetch(`${BASE_URL}/friends/requests/incoming`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -170,7 +170,7 @@ export async function getOutgoingRequests(): Promise<OutgoingFriendRequest[]> {
       throw new Error("User not authenticated");
     }
 
-    const response = await fetch(`${BASE_URL}/friends/requests/outgoing`, {
+    const response = await apiFetch(`${BASE_URL}/friends/requests/outgoing`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -200,7 +200,7 @@ export async function removeFriend(friendIdentifier: string): Promise<{ success:
       throw new Error("User not authenticated");
     }
 
-    const response = await fetch(`${BASE_URL}/friends/${friendIdentifier}`, {
+    const response = await apiFetch(`${BASE_URL}/friends/${friendIdentifier}`, {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",
@@ -230,7 +230,7 @@ export async function searchUsers(query: string): Promise<SearchFriendResult[]> 
       throw new Error("User not authenticated");
     }
 
-    const response = await fetch(`${BASE_URL}/users/search?username=${encodeURIComponent(query)}`, {
+    const response = await apiFetch(`${BASE_URL}/users/search?username=${encodeURIComponent(query)}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -263,7 +263,7 @@ export async function blockUser(otherIdentifier: string): Promise<{ success: boo
       throw new Error("User not authenticated");
     }
 
-    const response = await fetch(`${BASE_URL}/friends/blocks/${otherIdentifier}`, {
+    const response = await apiFetch(`${BASE_URL}/friends/blocks/${otherIdentifier}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -293,7 +293,7 @@ export async function unblockUser(otherIdentifier: string): Promise<{ success: b
       throw new Error("User not authenticated");
     }
 
-    const response = await fetch(`${BASE_URL}/friends/blocks/${otherIdentifier}`, {
+    const response = await apiFetch(`${BASE_URL}/friends/blocks/${otherIdentifier}`, {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",
@@ -323,7 +323,7 @@ export async function getBlockedUsers(): Promise<BlockedUser[]> {
       throw new Error("User not authenticated");
     }
 
-    const response = await fetch(`${BASE_URL}/friends/blocks`, {
+    const response = await apiFetch(`${BASE_URL}/friends/blocks`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",

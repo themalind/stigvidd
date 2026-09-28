@@ -5,6 +5,7 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
+import { apiFetch } from "@/api/api-config";
 import { START_COORDINATE_BORAS } from "@/constants/constants";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 
@@ -17,7 +18,7 @@ export interface WeatherData {
 
 async function smhiFetch(lat: number, lon: number) {
   const url = `https://opendata-download-metfcst.smhi.se/api/category/snow1g/version/1/geotype/point/lon/${lon.toFixed(4)}/lat/${lat.toFixed(4)}/data.json`;
-  const res = await fetch(url);
+  const res = await apiFetch(url);
   if (res.status === 404) return null;
   if (!res.ok) throw new Error(`SMHI ${res.status}: ${res.statusText}`);
   return res.json();

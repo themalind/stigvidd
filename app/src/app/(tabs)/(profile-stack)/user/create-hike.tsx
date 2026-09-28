@@ -11,6 +11,7 @@ import LocationDisclosureDialog from "@/components/trail/trail-creator/location-
 import RecordingInfoDialog from "@/components/trail/trail-creator/recording-info-dialog";
 import TrailCreator from "@/components/trail/trail-creator/trail-creator";
 import { USER_LOCATION_KEY } from "@/hooks/useUserLocation";
+import { logger } from "@/services/logger";
 import { useQueryClient } from "@tanstack/react-query";
 import * as Location from "expo-location";
 import { router } from "expo-router";
@@ -39,9 +40,12 @@ export default function CreateHikeScreen() {
   // dialog. That is what lets the disclosure come first: Play requires it ahead of the
   // prompt, and users who already granted must not be nagged on every visit.
   useEffect(() => {
-    Location.getForegroundPermissionsAsync().then(({ granted }) => {
-      setPhase(granted ? "granted" : "disclosure");
-    });
+    Location.getForegroundPermissionsAsync()
+      .then(({ granted }) => setPhase(granted ? "granted" : "disclosure"))
+      .catch((error: unknown) => {
+        logger.warn("Reading location permission failed", { errorMessage: String(error) });
+        setPhase("disclosure");
+      });
   }, []);
 
   // The shared userLocation query can't notice a permission granted in-app — it refreshes
@@ -76,10 +80,12 @@ export default function CreateHikeScreen() {
 
     const subscription = AppState.addEventListener("change", (next) => {
       if (next !== "active") return;
-      Location.getForegroundPermissionsAsync().then(({ granted, canAskAgain: mayRetry }) => {
-        setCanAskAgain(mayRetry);
-        if (granted) markGranted();
-      });
+      Location.getForegroundPermissionsAsync()
+        .then(({ granted, canAskAgain: mayRetry }) => {
+          setCanAskAgain(mayRetry);
+          if (granted) markGranted();
+        })
+        .catch((error: unknown) => logger.warn("Reading location permission failed", { errorMessage: String(error) }));
     });
 
     return () => subscription.remove();

@@ -30,10 +30,7 @@ describe("projectDrawing", () => {
 
     const width = drawing!.featurePoints[1].x;
 
-    expect(width).toBeCloseTo(
-      0.1 * 111_320 * Math.cos((lat * Math.PI) / 180),
-      0,
-    );
+    expect(width).toBeCloseTo(0.1 * 111_320 * Math.cos((lat * Math.PI) / 180), 0);
     // The assertion that matters: unscaled, this would be 11 132 m — nearly twice as wide.
     expect(width).toBeLessThan(6500);
   });
@@ -119,10 +116,7 @@ describe("projectDrawing", () => {
       [13.1, 57.7],
     ]);
 
-    expect(drawing!.featureEnds).toEqual([
-      drawing!.featurePoints[0],
-      drawing!.featurePoints[2],
-    ]);
+    expect(drawing!.featureEnds).toEqual([drawing!.featurePoints[0], drawing!.featurePoints[2]]);
   });
 
   it("has nothing to draw when neither line has two points", () => {
@@ -165,10 +159,7 @@ describe("projectDrawing", () => {
   // Sjuhäradsrundan is 59 000 points on its own. Math.min(...points) at that size throws
   // "Maximum call stack size exceeded", which is why the bounds are walked.
   it("survives a line of sixty thousand points", () => {
-    const long = Array.from({ length: 60_000 }, (_, i) => [
-      13 + i * 1e-6,
-      57.7 + i * 1e-6,
-    ]);
+    const long = Array.from({ length: 60_000 }, (_, i) => [13 + i * 1e-6, 57.7 + i * 1e-6]);
 
     expect(() => projectDrawing(long)).not.toThrow();
     expect(projectDrawing(long)!.featurePoints).toHaveLength(60_000);
@@ -249,9 +240,7 @@ describe("pathFor", () => {
   });
 
   it("keeps the first point outside the view, so the line reaches the edge", () => {
-    expect(pathFor(line(0, 100, 200, 300, 400), area, 0)).toBe(
-      "M0.0 0.0L100.0 0.0L200.0 0.0",
-    );
+    expect(pathFor(line(0, 100, 200, 300, 400), area, 0)).toBe("M0.0 0.0L100.0 0.0L200.0 0.0");
   });
 
   // Without the break, the pen would be drawn straight across the picture from one
@@ -270,9 +259,7 @@ describe("pathFor", () => {
     const tight = { x: 0, y: 0, w: 100, h: 100 };
 
     // 110 is outside the view but inside the margin, and it is what keeps 500 on the path.
-    expect(pathFor(line(50, 110, 500, 600), tight, 0)).toBe(
-      "M50.0 0.0L110.0 0.0L500.0 0.0",
-    );
+    expect(pathFor(line(50, 110, 500, 600), tight, 0)).toBe("M50.0 0.0L110.0 0.0L500.0 0.0");
   });
 
   it("keeps nothing when the whole line is elsewhere", () => {
@@ -348,38 +335,26 @@ describe("clampView", () => {
 
 describe("pixelsPerMetre", () => {
   it("fits the view into the box by its tighter side", () => {
-    expect(
-      pixelsPerMetre({ x: 0, y: 0, w: 100, h: 100 }, { w: 200, h: 50 }),
-    ).toBe(0.5);
+    expect(pixelsPerMetre({ x: 0, y: 0, w: 100, h: 100 }, { w: 200, h: 50 })).toBe(0.5);
   });
 
   // The box is measured by a ResizeObserver, so the first render has no size at all.
   it("is zero before the box has been measured", () => {
-    expect(pixelsPerMetre({ x: 0, y: 0, w: 100, h: 100 }, { w: 0, h: 0 })).toBe(
-      0,
-    );
-    expect(
-      pixelsPerMetre({ x: 0, y: 0, w: 100, h: 100 }, { w: 200, h: 0 }),
-    ).toBe(0);
+    expect(pixelsPerMetre({ x: 0, y: 0, w: 100, h: 100 }, { w: 0, h: 0 })).toBe(0);
+    expect(pixelsPerMetre({ x: 0, y: 0, w: 100, h: 100 }, { w: 200, h: 0 })).toBe(0);
   });
 });
 
 describe("paintedArea", () => {
   // "meet" fits the whole view in and shows more than was asked for along the other axis.
   it("widens the world rectangle to the shape of the box", () => {
-    const painted = paintedArea(
-      { x: 0, y: 0, w: 100, h: 100 },
-      { w: 200, h: 100 },
-    );
+    const painted = paintedArea({ x: 0, y: 0, w: 100, h: 100 }, { w: 200, h: 100 });
 
     expect(painted).toEqual({ x: -50, y: 0, w: 200, h: 100 });
   });
 
   it("keeps the centre where the view put it", () => {
-    const painted = paintedArea(
-      { x: 40, y: 40, w: 20, h: 20 },
-      { w: 100, h: 100 },
-    );
+    const painted = paintedArea({ x: 40, y: 40, w: 20, h: 20 }, { w: 100, h: 100 });
 
     expect(painted.x + painted.w / 2).toBe(50);
     expect(painted.y + painted.h / 2).toBe(50);

@@ -24,9 +24,7 @@ import type {
 // while keeping the app's existing signatures. Auth + base URL come from the
 // `customFetch` mutator the generated functions call.
 
-export async function getMedia(
-  params: AdminMediaGetAllParams,
-): Promise<MediaLibraryPageResponse> {
+export async function getMedia(params: AdminMediaGetAllParams): Promise<MediaLibraryPageResponse> {
   return adminMediaGetAll(params);
 }
 
@@ -35,9 +33,7 @@ export async function getMedia(
 const OwnerPageSize = 200;
 const OwnerMaxPages = 20;
 
-export async function getMediaForOwner(
-  ownerIdentifier: string,
-): Promise<MediaItemResponse[]> {
+export async function getMediaForOwner(ownerIdentifier: string): Promise<MediaItemResponse[]> {
   const items: MediaItemResponse[] = [];
 
   // A ceiling rather than a while (hasMore), the same guard collectAllMatching uses: a server

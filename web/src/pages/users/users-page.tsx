@@ -4,12 +4,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { ChevronLeft, ChevronRight, Loader2, Users } from "lucide-react";
-import {
-  getAuthors,
-  getReporters,
-  type AuthorStatistic,
-  type ReporterStatistic,
-} from "@/api/content-reports";
+import { getAuthors, getReporters, type AuthorStatistic, type ReporterStatistic } from "@/api/content-reports";
 import {
   displayName,
   emptyExplanation,
@@ -24,15 +19,7 @@ import { BanSheet, type BanTarget } from "@/components/ban-sheet";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 const PageSize = 25;
 
@@ -174,21 +161,14 @@ function ReportersTab() {
                 <TableCell className="text-right" data-testid="reporter-accuracy">
                   {accuracy === null ? "Nothing decided" : `${accuracy}%`}
                 </TableCell>
-                <TableCell>
-                  {row.lastReportedAt ? new Date(row.lastReportedAt).toLocaleString() : ""}
-                </TableCell>
+                <TableCell>{row.lastReportedAt ? new Date(row.lastReportedAt).toLocaleString() : ""}</TableCell>
               </TableRow>
             );
           })}
         </TableBody>
       </Table>
 
-      <Pager
-        page={page}
-        hasMore={hasMore}
-        onChange={setPage}
-        label={`${total} reporter${total === 1 ? "" : "s"}`}
-      />
+      <Pager page={page} hasMore={hasMore} onChange={setPage} label={`${total} reporter${total === 1 ? "" : "s"}`} />
     </div>
   );
 }
@@ -229,8 +209,8 @@ function AuthorsTab() {
         {/* A strike is one piece of content, however many people reported it. Saying so
             here keeps the list from being read as a report count. */}
         <TableCaption>
-          {totalStrikes(rows)} strikes on this page. One strike is one piece of content
-          removed, however many people reported it.
+          {totalStrikes(rows)} strikes on this page. One strike is one piece of content removed, however many people
+          reported it.
         </TableCaption>
         <TableHeader>
           <TableRow>
@@ -295,16 +275,9 @@ function AuthorsTab() {
         </TableBody>
       </Table>
 
-      <Pager
-        page={page}
-        hasMore={hasMore}
-        onChange={setPage}
-        label={`${total} author${total === 1 ? "" : "s"}`}
-      />
+      <Pager page={page} hasMore={hasMore} onChange={setPage} label={`${total} author${total === 1 ? "" : "s"}`} />
 
-      {banning && (
-        <BanSheet target={banning} onClose={() => setBanning(null)} onBanned={reload} />
-      )}
+      {banning && <BanSheet target={banning} onClose={() => setBanning(null)} onBanned={reload} />}
     </div>
   );
 }
@@ -321,10 +294,7 @@ function LoadingRows() {
 
 function Empty({ children }: { children: React.ReactNode }) {
   return (
-    <div
-      data-testid="empty-tab"
-      className="rounded-md border border-dashed p-6 text-sm text-muted-foreground"
-    >
+    <div data-testid="empty-tab" className="rounded-md border border-dashed p-6 text-sm text-muted-foreground">
       {children}
     </div>
   );

@@ -85,9 +85,7 @@ export default function MediaBrowse({ refreshKey, onBatchStarted }: Props) {
         if (!isCurrent()) return;
 
         setItems([]);
-        toast.error(
-          error instanceof Error ? error.message : "The media library could not be loaded.",
-        );
+        toast.error(error instanceof Error ? error.message : "The media library could not be loaded.");
       }
     },
     [query, sort, page],
@@ -153,9 +151,7 @@ export default function MediaBrowse({ refreshKey, onBatchStarted }: Props) {
     try {
       await updateImageMetadata(editing.identifier, { altText, caption });
       setItems((prev) =>
-        (prev ?? []).map((i) =>
-          i.identifier === editing.identifier ? { ...i, altText, caption } : i,
-        ),
+        (prev ?? []).map((i) => (i.identifier === editing.identifier ? { ...i, altText, caption } : i)),
       );
       setEditing(null);
       toast.success("Metadata saved.");
@@ -350,15 +346,8 @@ export default function MediaBrowse({ refreshKey, onBatchStarted }: Props) {
         <div className="bg-muted/30 flex flex-wrap items-center gap-2 rounded-md border px-2 py-1.5">
           {allMatching ? (
             <>
-              <span className="text-sm">
-                All {reprocessable} image(s) matching this filter are selected.
-              </span>
-              <Button
-                size="sm"
-                variant="link"
-                className="h-auto p-0 text-xs"
-                onClick={() => setAllMatching(false)}
-              >
+              <span className="text-sm">All {reprocessable} image(s) matching this filter are selected.</span>
+              <Button size="sm" variant="link" className="h-auto p-0 text-xs" onClick={() => setAllMatching(false)}>
                 Select just this page instead
               </Button>
             </>
@@ -371,17 +360,10 @@ export default function MediaBrowse({ refreshKey, onBatchStarted }: Props) {
                 aria-label="Select every image on this page"
               />
               <span className="text-muted-foreground text-xs">
-                {selected.size > 0
-                  ? `${selected.size} selected`
-                  : `Select all ${selectableCount} on this page`}
+                {selected.size > 0 ? `${selected.size} selected` : `Select all ${selectableCount} on this page`}
               </span>
               {selectAllOffered && (
-                <Button
-                  size="sm"
-                  variant="link"
-                  className="h-auto p-0 text-xs"
-                  onClick={() => setAllMatching(true)}
-                >
+                <Button size="sm" variant="link" className="h-auto p-0 text-xs" onClick={() => setAllMatching(true)}>
                   Select all {reprocessable} matching this filter
                 </Button>
               )}
@@ -419,10 +401,7 @@ export default function MediaBrowse({ refreshKey, onBatchStarted }: Props) {
             {items.map((item) => {
               const editable = item.ownerType !== "TrailSymbol";
               return (
-                <div
-                  key={`${item.ownerType}-${item.identifier}`}
-                  className="group overflow-hidden rounded-xs border"
-                >
+                <div key={`${item.ownerType}-${item.identifier}`} className="group overflow-hidden rounded-xs border">
                   <div className="relative aspect-square overflow-hidden">
                     {/* keep-comment: there is no thumbnail anywhere in this system - every cell is the full-resolution original, so a page of 48 is 48 full downloads without these attributes */}
                     <img
@@ -484,9 +463,7 @@ export default function MediaBrowse({ refreshKey, onBatchStarted }: Props) {
                       <Badge variant="secondary" className="text-[10px]">
                         {item.ownerType}
                       </Badge>
-                      <span className="text-muted-foreground truncate text-xs">
-                        {item.ownerName}
-                      </span>
+                      <span className="text-muted-foreground truncate text-xs">{item.ownerName}</span>
                     </div>
                     <p className="text-muted-foreground text-[11px]">
                       {item.width && item.height ? `${item.width}×${item.height} · ` : ""}
@@ -539,10 +516,7 @@ export default function MediaBrowse({ refreshKey, onBatchStarted }: Props) {
       </div>
 
       {/* Edit metadata dialog */}
-      <Dialog.Root
-        open={editing !== null}
-        onOpenChange={(open) => !open && setEditing(null)}
-      >
+      <Dialog.Root open={editing !== null} onOpenChange={(open) => !open && setEditing(null)}>
         <Dialog.Portal>
           <Dialog.Overlay className="fixed inset-0 z-50 bg-black/50" />
           <Dialog.Content className="bg-background fixed top-1/2 left-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 space-y-4 rounded-xs border p-6 shadow-lg">
@@ -587,9 +561,7 @@ export default function MediaBrowse({ refreshKey, onBatchStarted }: Props) {
             <Dialog.Overlay className="fixed inset-0 z-60 bg-black/80" />
             <Dialog.Content className="fixed top-1/2 left-1/2 z-60 -translate-x-1/2 -translate-y-1/2 outline-none">
               <Dialog.Title className="sr-only">Enlarged image</Dialog.Title>
-              <Dialog.Description className="sr-only">
-                Full-size view of the selected image.
-              </Dialog.Description>
+              <Dialog.Description className="sr-only">Full-size view of the selected image.</Dialog.Description>
               <img
                 src={enlarged.imageUrl}
                 alt={enlarged.altText ?? ""}
@@ -602,12 +574,7 @@ export default function MediaBrowse({ refreshKey, onBatchStarted }: Props) {
       )}
 
       {reprocessOpen && (
-        <MediaReprocessDialog
-          open
-          onOpenChange={setReprocessOpen}
-          target={target}
-          onSubmitted={handleBatchSubmitted}
-        />
+        <MediaReprocessDialog open onOpenChange={setReprocessOpen} target={target} onSubmitted={handleBatchSubmitted} />
       )}
     </>
   );

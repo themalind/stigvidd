@@ -66,7 +66,7 @@ bilingual, and served as **directories**. Three things follow:
 1. Link them with a plain `<a href>`, never a client-side router.
 2. **The trailing slash is load-bearing.** `/privacy-policy/` is 200; `/privacy-policy` is
    a 301 to the slashed form, which is why `nginx.conf` sets `absolute_redirect off` — the
-   default builds that redirect from the scheme *inside* the container and would bounce a
+   default builds that redirect from the scheme _inside_ the container and would bounce a
    TLS visitor back to plain http.
 3. **The paths are permanent.** `app/src/constants/constants.ts` hardcodes the absolute
    URLs into the shipped app, and `web/src/pages/login/login-page.tsx` links them too.

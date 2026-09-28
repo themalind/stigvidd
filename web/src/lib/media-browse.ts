@@ -188,10 +188,7 @@ export function pageSelection(
   return { onPage, whole: selectable.length > 0 && onPage === selectable.length };
 }
 
-export function togglePageSelection(
-  selected: ReadonlySet<string>,
-  items: readonly MediaItemResponse[],
-): Set<string> {
+export function togglePageSelection(selected: ReadonlySet<string>, items: readonly MediaItemResponse[]): Set<string> {
   const next = new Set(selected);
   const selectable = selectableMedia(items);
   const allOn = selectable.length > 0 && selectable.every((item) => next.has(item.identifier));

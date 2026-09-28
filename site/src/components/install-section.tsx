@@ -23,9 +23,7 @@ export default function InstallSection() {
     <section id="testa" className="border-y border-border bg-surface">
       <div className="mx-auto max-w-6xl px-5 py-16 md:py-24">
         <div className="max-w-2xl">
-          <h2 className="text-3xl font-semibold tracking-tight md:text-4xl">
-            {install.title}
-          </h2>
+          <h2 className="text-3xl font-semibold tracking-tight md:text-4xl">{install.title}</h2>
           <p className="mt-4 text-lg leading-relaxed text-muted">{install.body}</p>
         </div>
 

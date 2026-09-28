@@ -154,8 +154,12 @@ body,
   padding-inline-start: 1.5em;
 }
 
-.prose-mail :where(ul) { list-style: disc; }
-.prose-mail :where(ol) { list-style: decimal; }
+.prose-mail :where(ul) {
+  list-style: disc;
+}
+.prose-mail :where(ol) {
+  list-style: decimal;
+}
 
 .prose-mail :where(a) {
   color: var(--primary);

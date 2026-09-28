@@ -17,8 +17,7 @@ function renderTags(value: string) {
 }
 
 const field = () => screen.getByPlaceholderText("Add tag and press Enter");
-const remove = (tag: string) =>
-  screen.getByText(tag).parentElement!.querySelector("button")!;
+const remove = (tag: string) => screen.getByText(tag).parentElement!.querySelector("button")!;
 
 describe("reading the stored value", () => {
   it("shows the tags in a JSON array", () => {

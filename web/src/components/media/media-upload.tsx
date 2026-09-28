@@ -8,13 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import ImageCrop from "./image-crop";
 import {
@@ -26,30 +20,12 @@ import {
   type TargetType,
 } from "@/lib/media-upload";
 import { formatBytes } from "@/lib/format";
-import {
-  getAllTrails,
-  addTrailImages,
-  deleteTrailImage,
-  setTrailSymbol,
-} from "@/api/trail";
-import {
-  getAllFacilities,
-  uploadFacilityImages,
-  deleteFacilityImage,
-} from "@/api/facility";
+import { getAllTrails, addTrailImages, deleteTrailImage, setTrailSymbol } from "@/api/trail";
+import { getAllFacilities, uploadFacilityImages, deleteFacilityImage } from "@/api/facility";
 import { getMediaForOwner } from "@/api/media";
-import {
-  loadStagedFiles,
-  loadStagedTarget,
-  saveStagedFiles,
-  saveStagedTarget,
-} from "@/lib/staged-media";
+import { loadStagedFiles, loadStagedTarget, saveStagedFiles, saveStagedTarget } from "@/lib/staged-media";
 import type { MediaItemResponse } from "@/api/generated/model";
-import {
-  CLASSIFICATION,
-  type FacilityResponse,
-  type TrailShortInfoResponse,
-} from "@/types/types";
+import { CLASSIFICATION, type FacilityResponse, type TrailShortInfoResponse } from "@/types/types";
 
 // Trails can share a name, so the option label carries length + city to tell
 // same-named trails apart; the panel under the select shows the full details.
@@ -67,13 +43,9 @@ export default function MediaUpload({ onMediaChanged }: Props) {
   // Restored synchronously so the first render already has the previous target.
   const [targetType, setTargetType] = useState<TargetType>(() => {
     const stored = loadStagedTarget()?.targetType;
-    return stored && stored in OWNER_TYPE
-      ? (stored as TargetType)
-      : "trail-gallery";
+    return stored && stored in OWNER_TYPE ? (stored as TargetType) : "trail-gallery";
   });
-  const [targetId, setTargetId] = useState<string>(
-    () => loadStagedTarget()?.targetId ?? "",
-  );
+  const [targetId, setTargetId] = useState<string>(() => loadStagedTarget()?.targetId ?? "");
   const [trails, setTrails] = useState<TrailShortInfoResponse[]>([]);
   const [facilities, setFacilities] = useState<FacilityResponse[]>([]);
 
@@ -119,17 +91,12 @@ export default function MediaUpload({ onMediaChanged }: Props) {
       .then((t) =>
         setTrails(
           // Same-named trails end up next to each other, shortest first.
-          t.sort(
-            (a, b) =>
-              a.name.localeCompare(b.name) || a.trailLength - b.trailLength,
-          ),
+          t.sort((a, b) => a.name.localeCompare(b.name) || a.trailLength - b.trailLength),
         ),
       )
       .catch(() => toast.error("Failed to load trails."));
     getAllFacilities()
-      .then((f) =>
-        setFacilities(f.sort((a, b) => a.name.localeCompare(b.name))),
-      )
+      .then((f) => setFacilities(f.sort((a, b) => a.name.localeCompare(b.name))))
       .catch(() => toast.error("Failed to load facilities."));
   }, []);
 
@@ -137,16 +104,10 @@ export default function MediaUpload({ onMediaChanged }: Props) {
     void loadMedia();
   }, [loadMedia]);
 
-  const selectedTrail = useMemo(
-    () => trails.find((t) => t.identifier === targetId),
-    [trails, targetId],
-  );
+  const selectedTrail = useMemo(() => trails.find((t) => t.identifier === targetId), [trails, targetId]);
 
   // Images already attached to the selected target, from the media library.
-  const existing = useMemo(
-    () => attachedTo(media, targetId, targetType),
-    [media, targetId, targetType],
-  );
+  const existing = useMemo(() => attachedTo(media, targetId, targetType), [media, targetId, targetType]);
 
   // Reset target + crop when switching what we attach to. Driven by the picker
   // rather than an effect, so the target restored on mount survives.
@@ -195,10 +156,7 @@ export default function MediaUpload({ onMediaChanged }: Props) {
     if (isSymbol && files.length > 1) setFiles((prev) => prev.slice(0, 1));
   }, [isSymbol, files.length]);
 
-  const previews = useMemo(
-    () => files.map((f) => ({ file: f, url: URL.createObjectURL(f) })),
-    [files],
-  );
+  const previews = useMemo(() => files.map((f) => ({ file: f, url: URL.createObjectURL(f) })), [files]);
   useEffect(() => {
     return () => previews.forEach((p) => URL.revokeObjectURL(p.url));
   }, [previews]);
@@ -285,10 +243,7 @@ export default function MediaUpload({ onMediaChanged }: Props) {
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-1.5">
             <Label htmlFor="target-type">Attach to</Label>
-            <Select
-              value={targetType}
-              onValueChange={(v) => changeTargetType(v as TargetType)}
-            >
+            <Select value={targetType} onValueChange={(v) => changeTargetType(v as TargetType)}>
               <SelectTrigger id="target-type" className="w-full">
                 <SelectValue />
               </SelectTrigger>
@@ -300,9 +255,7 @@ export default function MediaUpload({ onMediaChanged }: Props) {
             </Select>
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="target">
-              {targetType === "facility" ? "Facility" : "Trail"}
-            </Label>
+            <Label htmlFor="target">{targetType === "facility" ? "Facility" : "Trail"}</Label>
             <Select value={targetId} onValueChange={setTargetId}>
               <SelectTrigger id="target" className="w-full">
                 <SelectValue placeholder="Select…" />
@@ -335,9 +288,7 @@ export default function MediaUpload({ onMediaChanged }: Props) {
               {CLASSIFICATION[selectedTrail.classification] ?? "Unknown"} ·{" "}
               {selectedTrail.accessibility ? "Accessible" : "Not accessible"}
             </p>
-            <p className="text-muted-foreground font-mono text-[10px] break-all">
-              {selectedTrail.identifier}
-            </p>
+            <p className="text-muted-foreground font-mono text-[10px] break-all">{selectedTrail.identifier}</p>
           </div>
         )}
 
@@ -347,18 +298,14 @@ export default function MediaUpload({ onMediaChanged }: Props) {
             <Label>
               {isSymbol ? "Current symbol" : "Existing images"}
               {!mediaLoading && existing.length > 0 && (
-                <span className="text-muted-foreground font-normal">
-                  &nbsp;({existing.length})
-                </span>
+                <span className="text-muted-foreground font-normal">&nbsp;({existing.length})</span>
               )}
             </Label>
             {mediaLoading ? (
               <p className="text-muted-foreground text-xs">Loading…</p>
             ) : existing.length === 0 ? (
               <p className="text-muted-foreground text-xs">
-                {isSymbol
-                  ? "No symbol set yet."
-                  : "No images attached yet — the ones you upload will show up here."}
+                {isSymbol ? "No symbol set yet." : "No images attached yet — the ones you upload will show up here."}
               </p>
             ) : (
               <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
@@ -370,12 +317,7 @@ export default function MediaUpload({ onMediaChanged }: Props) {
                     <img
                       src={item.imageUrl}
                       alt={item.altText ?? ""}
-                      className={cn(
-                        "h-full w-full",
-                        isSymbol
-                          ? "bg-muted object-contain p-2"
-                          : "object-cover",
-                      )}
+                      className={cn("h-full w-full", isSymbol ? "bg-muted object-contain p-2" : "object-cover")}
                     />
                     {!isSymbol && (
                       <button
@@ -385,8 +327,7 @@ export default function MediaUpload({ onMediaChanged }: Props) {
                         title="Delete image"
                         className={cn(
                           "bg-background/80 hover:bg-background absolute top-1 right-1 rounded-xs p-1 opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100",
-                          deletingId === item.identifier &&
-                            "cursor-not-allowed opacity-50",
+                          deletingId === item.identifier && "cursor-not-allowed opacity-50",
                         )}
                       >
                         <Trash2 className="size-3.5" />
@@ -394,8 +335,7 @@ export default function MediaUpload({ onMediaChanged }: Props) {
                     )}
                     {(item.width ?? 0) > 0 && (item.height ?? 0) > 0 && (
                       <span className="bg-background/80 absolute right-0 bottom-0 left-0 truncate px-1 py-0.5 text-[10px]">
-                        {item.width}×{item.height} ·{" "}
-                        {formatBytes(item.sizeBytes ?? 0)}
+                        {item.width}×{item.height} · {formatBytes(item.sizeBytes ?? 0)}
                       </span>
                     )}
                   </div>
@@ -403,9 +343,7 @@ export default function MediaUpload({ onMediaChanged }: Props) {
               </div>
             )}
             {isSymbol && existing.length > 0 && (
-              <p className="text-muted-foreground text-xs">
-                Uploading a new symbol replaces the current one.
-              </p>
+              <p className="text-muted-foreground text-xs">Uploading a new symbol replaces the current one.</p>
             )}
           </div>
         )}
@@ -425,14 +363,10 @@ export default function MediaUpload({ onMediaChanged }: Props) {
           onClick={() => fileInputRef.current?.click()}
           className={cn(
             "flex cursor-pointer flex-col items-center justify-center rounded-xs border-2 border-dashed p-8 text-center transition-colors",
-            dragActive
-              ? "border-primary bg-primary/5"
-              : "border-muted-foreground/40 hover:border-muted-foreground",
+            dragActive ? "border-primary bg-primary/5" : "border-muted-foreground/40 hover:border-muted-foreground",
           )}
         >
-          <p className="text-sm font-medium">
-            Drop image{allowMultiple ? "s" : ""} here or click to browse
-          </p>
+          <p className="text-sm font-medium">Drop image{allowMultiple ? "s" : ""} here or click to browse</p>
           <p className="text-muted-foreground mt-1 text-xs">
             {isSymbol ? "One image for the trail symbol." : "PNG, JPEG, WebP…"}
           </p>
@@ -454,9 +388,7 @@ export default function MediaUpload({ onMediaChanged }: Props) {
           <div className="flex items-center justify-between">
             <Label>
               Staged for upload
-              <span className="text-muted-foreground font-normal">
-                &nbsp;({previews.length})
-              </span>
+              <span className="text-muted-foreground font-normal">&nbsp;({previews.length})</span>
             </Label>
             <Button variant="ghost" size="sm" onClick={() => setFiles([])}>
               Clear
@@ -466,15 +398,8 @@ export default function MediaUpload({ onMediaChanged }: Props) {
         {previews.length > 0 && (
           <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
             {previews.map((p, i) => (
-              <div
-                key={p.url}
-                className="group relative aspect-square overflow-hidden rounded-xs border"
-              >
-                <img
-                  src={p.url}
-                  alt=""
-                  className="h-full w-full object-cover"
-                />
+              <div key={p.url} className="group relative aspect-square overflow-hidden rounded-xs border">
+                <img src={p.url} alt="" className="h-full w-full object-cover" />
                 <span className="bg-background/80 absolute bottom-0 left-0 right-0 truncate px-1 py-0.5 text-[10px]">
                   {formatBytes(p.file.size)}
                 </span>
@@ -500,9 +425,7 @@ export default function MediaUpload({ onMediaChanged }: Props) {
           </div>
         )}
         {files.length > 1 && (
-          <p className="text-muted-foreground text-xs">
-            Cropping is available when a single image is staged.
-          </p>
+          <p className="text-muted-foreground text-xs">Cropping is available when a single image is staged.</p>
         )}
       </div>
 
@@ -552,13 +475,7 @@ export default function MediaUpload({ onMediaChanged }: Props) {
             <Label>Quality</Label>
             <span className="text-muted-foreground text-sm">{quality}</span>
           </div>
-          <Slider
-            min={10}
-            max={100}
-            step={1}
-            value={[quality]}
-            onValueChange={(v) => setQuality(v[0])}
-          />
+          <Slider min={10} max={100} step={1} value={[quality]} onValueChange={(v) => setQuality(v[0])} />
         </div>
 
         <div className="space-y-1.5">

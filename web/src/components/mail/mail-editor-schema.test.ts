@@ -9,30 +9,24 @@
 
 import { describe, expect, it } from "vitest";
 import { roundTripThroughSchema } from "./mail-editor-schema";
-import {
-  detectLoss,
-  extractTokens,
-  isButtonLink,
-  isCodeParagraph,
-  verdictFor,
-} from "@/lib/mail-template";
+import { detectLoss, extractTokens, isButtonLink, isCodeParagraph, verdictFor } from "@/lib/mail-template";
 
 // Byte for byte from 20260912125829_AddEmailVerification.
 const verifyEmailHtml =
-  '<p>Hej {{NickName}},</p>\n' +
-  '<p>Tack för att du skapade ett konto hos Stigvidd. Klicka på knappen för att bekräfta din e-postadress, så kan du logga in.</p>\n' +
+  "<p>Hej {{NickName}},</p>\n" +
+  "<p>Tack för att du skapade ett konto hos Stigvidd. Klicka på knappen för att bekräfta din e-postadress, så kan du logga in.</p>\n" +
   '<p><a href="{{VerificationUrl}}" style="display:inline-block;padding:12px 20px;border-radius:8px;background:#3f6b43;color:#ffffff;text-decoration:none">Bekräfta e-postadressen</a></p>\n' +
-  '<p>Fungerar inte knappen? Kopiera den här länken till din webbläsare:<br>\n' +
+  "<p>Fungerar inte knappen? Kopiera den här länken till din webbläsare:<br>\n" +
   '<a href="{{VerificationUrl}}">{{VerificationUrl}}</a></p>\n' +
-  '<p>Du kan också skriva in den här koden i appen:</p>\n' +
+  "<p>Du kan också skriva in den här koden i appen:</p>\n" +
   '<p style="font-size:28px;letter-spacing:6px;font-weight:700">{{VerificationCode}}</p>\n' +
-  '<p>Länken och koden gäller i 24 timmar. Om det inte var du som skapade kontot kan du strunta i det här mejlet.</p>';
+  "<p>Länken och koden gäller i 24 timmar. Om det inte var du som skapade kontot kan du strunta i det här mejlet.</p>";
 
 // Byte for byte from 20260912103250_AddMailOutbox.
 const welcomeHtml =
-  '<p>Hej {{NickName}},</p>\n' +
-  '<p>Välkommen till Stigvidd. Nu kan du hitta leder, spara dina vandringar och dela dem med dina vänner.</p>\n' +
-  '<p>Trevlig vandring!</p>';
+  "<p>Hej {{NickName}},</p>\n" +
+  "<p>Välkommen till Stigvidd. Nu kan du hitta leder, spara dina vandringar och dela dem med dina vänner.</p>\n" +
+  "<p>Trevlig vandring!</p>";
 
 describe("the seeded verify-email body", () => {
   const rendered = roundTripThroughSchema(verifyEmailHtml);
@@ -53,8 +47,7 @@ describe("the seeded verify-email body", () => {
 
   it("is equivalent rather than identical, because the stored newlines do not survive", () => {
     // Naming the expected difference, so nobody later "fixes" it by loosening the guard.
-    expect(verdictFor(verifyEmailHtml, rendered, detectLoss(verifyEmailHtml, rendered)))
-      .toBe("equivalent");
+    expect(verdictFor(verifyEmailHtml, rendered, detectLoss(verifyEmailHtml, rendered))).toBe("equivalent");
   });
 
   it("keeps all three placeholders", () => {

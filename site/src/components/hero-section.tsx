@@ -10,19 +10,14 @@ export default function HeroSection() {
         <div>
           {phase === "beta" && (
             <p className="mb-5 inline-flex items-center gap-2 rounded-base border border-border bg-surface px-3 py-1 text-sm text-muted">
-              <span
-                aria-hidden="true"
-                className="size-2 rounded-full bg-accent"
-              />
+              <span aria-hidden="true" className="size-2 rounded-full bg-accent" />
               {hero.badge}
             </p>
           )}
 
           <h1 className="text-5xl font-semibold tracking-tight md:text-6xl">{hero.title}</h1>
           <p className="mt-3 text-2xl text-accent md:text-3xl">{hero.tagline}</p>
-          <p className="mt-6 max-w-xl text-lg leading-relaxed text-muted">
-            {hero.description}
-          </p>
+          <p className="mt-6 max-w-xl text-lg leading-relaxed text-muted">{hero.description}</p>
 
           <div className="mt-8 flex flex-wrap gap-3">
             <a

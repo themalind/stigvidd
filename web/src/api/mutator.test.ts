@@ -3,9 +3,7 @@
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const getValidAccessToken = vi.hoisted(() =>
-  vi.fn<() => Promise<string | null>>(),
-);
+const getValidAccessToken = vi.hoisted(() => vi.fn<() => Promise<string | null>>());
 vi.mock("@/services/keycloak-auth", () => ({ getValidAccessToken }));
 
 import { customFetch } from "./mutator";
@@ -70,8 +68,7 @@ describe("customFetch", () => {
   it("returns undefined for a 204, which carries no body", async () => {
     vi.mocked(fetch).mockResolvedValue(reply(null, 204));
 
-    await expect(customFetch("/api/trails/abc", { method: "DELETE" })).resolves
-      .toBeUndefined();
+    await expect(customFetch("/api/trails/abc", { method: "DELETE" })).resolves.toBeUndefined();
   });
 
   it("returns undefined for a 205", async () => {
@@ -91,37 +88,25 @@ describe("customFetch", () => {
 
   describe("the error it throws", () => {
     it("uses a bare JSON string, which is what ToActionResult returns", async () => {
-      vi.mocked(fetch).mockResolvedValue(
-        reply('"Trail is already linked"', 409),
-      );
+      vi.mocked(fetch).mockResolvedValue(reply('"Trail is already linked"', 409));
 
-      await expect(customFetch("/api/x", {})).rejects.toThrow(
-        "Trail is already linked",
-      );
+      await expect(customFetch("/api/x", {})).rejects.toThrow("Trail is already linked");
     });
 
     it("uses ProblemDetails.title when that is the only name present", async () => {
-      vi.mocked(fetch).mockResolvedValue(
-        reply('{"title":"One or more validation errors occurred."}', 400),
-      );
+      vi.mocked(fetch).mockResolvedValue(reply('{"title":"One or more validation errors occurred."}', 400));
 
-      await expect(customFetch("/api/x", {})).rejects.toThrow(
-        "One or more validation errors occurred.",
-      );
+      await expect(customFetch("/api/x", {})).rejects.toThrow("One or more validation errors occurred.");
     });
 
     it("prefers message over detail and title", async () => {
-      vi.mocked(fetch).mockResolvedValue(
-        reply('{"title":"t","detail":"d","message":"m"}', 400),
-      );
+      vi.mocked(fetch).mockResolvedValue(reply('{"title":"t","detail":"d","message":"m"}', 400));
 
       await expect(customFetch("/api/x", {})).rejects.toThrow("m");
     });
 
     it("prefers detail over title", async () => {
-      vi.mocked(fetch).mockResolvedValue(
-        reply('{"title":"t","detail":"d"}', 400),
-      );
+      vi.mocked(fetch).mockResolvedValue(reply('{"title":"t","detail":"d"}', 400));
 
       await expect(customFetch("/api/x", {})).rejects.toThrow("d");
     });
@@ -131,9 +116,7 @@ describe("customFetch", () => {
     it("shows the raw JSON when it parses but names nothing", async () => {
       vi.mocked(fetch).mockResolvedValue(reply('{"errors":{"Name":["req"]}}', 400));
 
-      await expect(customFetch("/api/x", {})).rejects.toThrow(
-        '{"errors":{"Name":["req"]}}',
-      );
+      await expect(customFetch("/api/x", {})).rejects.toThrow('{"errors":{"Name":["req"]}}');
     });
 
     it("falls back to the status on an empty body", async () => {

@@ -82,11 +82,7 @@ export function reporterRisk(counts: ReporterCounts | null): ReporterRisk {
  * Which filters are narrowing the queue, so an empty list can explain itself instead of
  * reading as "nothing was ever reported".
  */
-export function narrowedBy(filters: {
-  status?: string;
-  contentType?: string;
-  hideOutcome?: string;
-}): string[] {
+export function narrowedBy(filters: { status?: string; contentType?: string; hideOutcome?: string }): string[] {
   return [
     filters.status ? `status ${filters.status}` : null,
     filters.contentType ? `type ${filters.contentType}` : null,

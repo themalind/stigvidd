@@ -41,10 +41,7 @@ export default function LoginPage() {
         {LEGAL_LINKS.map((link, index) => (
           <span key={link.href} className="flex items-center gap-x-3">
             {index > 0 && <span aria-hidden="true">·</span>}
-            <a
-              href={link.href}
-              className="underline underline-offset-4 hover:text-foreground"
-            >
+            <a href={link.href} className="underline underline-offset-4 hover:text-foreground">
               {link.label}
             </a>
           </span>

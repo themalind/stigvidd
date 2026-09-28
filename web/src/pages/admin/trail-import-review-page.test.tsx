@@ -126,10 +126,7 @@ describe("the batch accept gate", () => {
 
     await userEvent.click(await screen.findByRole("checkbox", { name: "Select Vinkelleden" }));
 
-    expect(acceptSelected()).toHaveAttribute(
-      "title",
-      expect.stringContaining("only for Certain and High"),
-    );
+    expect(acceptSelected()).toHaveAttribute("title", expect.stringContaining("only for Certain and High"));
   });
 
   it("decides exactly the rows that were selected", async () => {
@@ -170,9 +167,7 @@ describe("select all matching", () => {
   it("is offered once the page is exhausted and the filter holds more", async () => {
     renderPage([certain, high], 203);
 
-    await userEvent.click(
-      await screen.findByRole("checkbox", { name: "Select every proposal on this page" }),
-    );
+    await userEvent.click(await screen.findByRole("checkbox", { name: "Select every proposal on this page" }));
 
     expect(screen.getByRole("button", { name: /Select all 203 matching/ })).toBeInTheDocument();
   });
@@ -180,9 +175,7 @@ describe("select all matching", () => {
   it("is not offered when the page in view is already everything", async () => {
     renderPage([certain, high]);
 
-    await userEvent.click(
-      await screen.findByRole("checkbox", { name: "Select every proposal on this page" }),
-    );
+    await userEvent.click(await screen.findByRole("checkbox", { name: "Select every proposal on this page" }));
 
     expect(screen.queryByRole("button", { name: /Select all/ })).not.toBeInTheDocument();
   });
@@ -191,9 +184,7 @@ describe("select all matching", () => {
   // than present a subset as the whole filter.
   it("leaves the selection untouched when the walk could not finish", async () => {
     renderPage([certain, high], 203);
-    await userEvent.click(
-      await screen.findByRole("checkbox", { name: "Select every proposal on this page" }),
-    );
+    await userEvent.click(await screen.findByRole("checkbox", { name: "Select every proposal on this page" }));
     // Every page claims there is another, so the walk runs into its ceiling.
     api.getProposals.mockResolvedValue({ items: [certain], totalCount: 203, hasMore: true });
 

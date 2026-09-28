@@ -27,14 +27,7 @@ const onOpenChange = vi.fn();
 const onSubmitted = vi.fn();
 
 function show(target: ReprocessTarget = { kind: "ids", mediaIdentifiers: ["media-1", "media-2"] }) {
-  return render(
-    <MediaReprocessDialog
-      open
-      onOpenChange={onOpenChange}
-      target={target}
-      onSubmitted={onSubmitted}
-    />,
-  );
+  return render(<MediaReprocessDialog open onOpenChange={onOpenChange} target={target} onSubmitted={onSubmitted} />);
 }
 
 const startButton = () => screen.getByRole("button", { name: /start batch/i });
@@ -47,10 +40,12 @@ describe("MediaReprocessDialog", () => {
     await userEvent.click(startButton());
 
     await waitFor(() =>
-      expect(mediaApi.enqueueMediaReprocessJob).toHaveBeenCalledWith(
-        ["media-1", "media-2"],
-        { maxWidth: 800, maxHeight: 800, quality: 50, format: "webp" },
-      ),
+      expect(mediaApi.enqueueMediaReprocessJob).toHaveBeenCalledWith(["media-1", "media-2"], {
+        maxWidth: 800,
+        maxHeight: 800,
+        quality: 50,
+        format: "webp",
+      }),
     );
   });
 
@@ -62,10 +57,12 @@ describe("MediaReprocessDialog", () => {
     await userEvent.click(startButton());
 
     await waitFor(() =>
-      expect(mediaApi.enqueueMediaReprocessJob).toHaveBeenCalledWith(
-        ["media-1", "media-2"],
-        { maxWidth: 400, maxHeight: 400, quality: 75, format: "webp" },
-      ),
+      expect(mediaApi.enqueueMediaReprocessJob).toHaveBeenCalledWith(["media-1", "media-2"], {
+        maxWidth: 400,
+        maxHeight: 400,
+        quality: 75,
+        format: "webp",
+      }),
     );
   });
 
@@ -116,10 +113,12 @@ describe("MediaReprocessDialog", () => {
     await userEvent.click(startButton());
 
     await waitFor(() =>
-      expect(mediaApi.enqueueMediaReprocessJob).toHaveBeenCalledWith(
-        ["media-1", "media-2"],
-        { maxWidth: 1600, maxHeight: 1600, quality: 80, format: "webp" },
-      ),
+      expect(mediaApi.enqueueMediaReprocessJob).toHaveBeenCalledWith(["media-1", "media-2"], {
+        maxWidth: 1600,
+        maxHeight: 1600,
+        quality: 80,
+        format: "webp",
+      }),
     );
   });
 
@@ -131,10 +130,12 @@ describe("MediaReprocessDialog", () => {
     await userEvent.click(startButton());
 
     await waitFor(() =>
-      expect(mediaApi.enqueueMediaReprocessJobForFilter).toHaveBeenCalledWith(
-        filter,
-        { maxWidth: 800, maxHeight: 800, quality: 50, format: "webp" },
-      ),
+      expect(mediaApi.enqueueMediaReprocessJobForFilter).toHaveBeenCalledWith(filter, {
+        maxWidth: 800,
+        maxHeight: 800,
+        quality: 50,
+        format: "webp",
+      }),
     );
     expect(mediaApi.enqueueMediaReprocessJob).not.toHaveBeenCalled();
   });

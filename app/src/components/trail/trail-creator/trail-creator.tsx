@@ -160,7 +160,7 @@ export default function TrailCreator() {
       // Foreground permission is already granted (the screen gates on it). Render
       // the map immediately from the cached last-known position (instant, no GPS
       // lock) — or a fallback center — instead of blocking on a cold fix.
-      const last = await Location.getLastKnownPositionAsync();
+      const last = await Location.getLastKnownPositionAsync().catch(() => null);
       if (cancelled) return;
       setInitialCenter(last ? [last.coords.longitude, last.coords.latitude] : FALLBACK_CENTER);
 

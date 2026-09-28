@@ -8,10 +8,7 @@ import type {
   TrailShortInfoResponse,
   UpdateTrailRequest,
 } from "@/types/types";
-import {
-  trailsGetAllTrails,
-  trailsGetTrailByIdentifier,
-} from "./generated/trails/trails";
+import { trailsGetAllTrails, trailsGetTrailByIdentifier } from "./generated/trails/trails";
 // Editing a trail is admin-only and lives under api/v1/admin/trails.
 import {
   adminTrailsUpdateTrail,
@@ -32,22 +29,12 @@ export async function getAllTrails(): Promise<TrailShortInfoResponse[]> {
   return (await trailsGetAllTrails()) as TrailShortInfoResponse[];
 }
 
-export async function getTrailByIdentifier({
-  identifier,
-}: {
-  identifier: string;
-}): Promise<TrailResponse> {
+export async function getTrailByIdentifier({ identifier }: { identifier: string }): Promise<TrailResponse> {
   return (await trailsGetTrailByIdentifier(identifier)) as TrailResponse;
 }
 
-export async function updateTrail(
-  identifier: string,
-  request: UpdateTrailRequest,
-): Promise<TrailResponse> {
-  const result = await adminTrailsUpdateTrail(
-    identifier,
-    request as Parameters<typeof adminTrailsUpdateTrail>[1],
-  );
+export async function updateTrail(identifier: string, request: UpdateTrailRequest): Promise<TrailResponse> {
+  const result = await adminTrailsUpdateTrail(identifier, request as Parameters<typeof adminTrailsUpdateTrail>[1]);
   return result as TrailResponse;
 }
 
@@ -61,10 +48,10 @@ export async function addTrailImages(
   const formData = new FormData();
   images.forEach((file) => formData.append("images", file));
   appendProcessingOptions(formData, options);
-  return customFetch<TrailImageResponse[]>(
-    getAdminTrailsAddTrailImagesUrl(identifier),
-    { method: "POST", body: formData },
-  );
+  return customFetch<TrailImageResponse[]>(getAdminTrailsAddTrailImagesUrl(identifier), {
+    method: "POST",
+    body: formData,
+  });
 }
 
 export async function setTrailSymbol(
@@ -75,10 +62,10 @@ export async function setTrailSymbol(
   const formData = new FormData();
   formData.append("symbol", symbol);
   appendProcessingOptions(formData, options);
-  return customFetch<{ symbolUrl: string }>(
-    getAdminTrailsSetTrailSymbolUrl(identifier),
-    { method: "POST", body: formData },
-  );
+  return customFetch<{ symbolUrl: string }>(getAdminTrailsSetTrailSymbolUrl(identifier), {
+    method: "POST",
+    body: formData,
+  });
 }
 
 export async function deleteTrailImage(imageIdentifier: string): Promise<void> {

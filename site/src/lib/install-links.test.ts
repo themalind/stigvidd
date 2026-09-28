@@ -44,10 +44,7 @@ describe("orderedPlatforms", () => {
   };
 
   it("puts the visitor's own platform first", () => {
-    expect(orderedPlatforms(both, "android").map((p) => p.platform)).toEqual([
-      "android",
-      "ios",
-    ]);
+    expect(orderedPlatforms(both, "android").map((p) => p.platform)).toEqual(["android", "ios"]);
     expect(orderedPlatforms(both, "ios").map((p) => p.platform)).toEqual(["ios", "android"]);
   });
 

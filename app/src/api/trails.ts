@@ -8,7 +8,7 @@
 import { Coordinates, CreateTrailRequest, Trail, TrailCard, TrailOverview, TrailShortInfoResponse } from "@/data/types";
 import uuid from "react-native-uuid";
 import { ApiError } from "./api-error";
-import { BASE_URL } from "./api-config";
+import { apiFetch, BASE_URL, UPLOAD_TIMEOUT_MS } from "./api-config";
 import { getUserToken } from "./users";
 import { logger } from "@/services/logger";
 
@@ -24,7 +24,7 @@ export async function getPopularTrails(latitude?: number, longitude?: number): P
     // och för att undvika att någon kan spamma och döda servern?
     const query = params.toString();
     const url = `${BASE_URL}/trails/popular${query ? `?${query}` : ""}`;
-    const response = await fetch(url);
+    const response = await apiFetch(url);
 
     if (!response.ok) {
       throw new Error(`HTTP error ${response.status}`);
@@ -42,7 +42,7 @@ export async function getPopularTrails(latitude?: number, longitude?: number): P
 
 export async function getAllTrails(): Promise<TrailShortInfoResponse[]> {
   try {
-    const response = await fetch(`${BASE_URL}/trails`);
+    const response = await apiFetch(`${BASE_URL}/trails`);
     if (!response.ok) {
       throw new Error(`HTTP error ${response.status}`);
     }
@@ -59,7 +59,7 @@ export async function getAllTrails(): Promise<TrailShortInfoResponse[]> {
 
 export async function getTrailByIdentifier(identifier: string): Promise<Trail> {
   try {
-    const response = await fetch(`${BASE_URL}/trails/${identifier}`);
+    const response = await apiFetch(`${BASE_URL}/trails/${identifier}`);
 
     if (!response.ok) {
       throw new Error(`HTTP error ${response.status}`);
@@ -78,7 +78,7 @@ export async function getTrailByIdentifier(identifier: string): Promise<Trail> {
 
 export async function getTrailCard(identifier: string): Promise<TrailCard> {
   try {
-    const response = await fetch(`${BASE_URL}/trails/${identifier}/card`);
+    const response = await apiFetch(`${BASE_URL}/trails/${identifier}/card`);
 
     if (!response.ok) {
       throw new Error(`getTrailCard: HTTP error ${response.status}`);
@@ -96,7 +96,7 @@ export async function getTrailCard(identifier: string): Promise<TrailCard> {
 
 export async function getTrailCards(identifiers: string[]): Promise<TrailCard[]> {
   try {
-    const response = await fetch(`${BASE_URL}/trails/cards`, {
+    const response = await apiFetch(`${BASE_URL}/trails/cards`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ identifiers }),
@@ -115,7 +115,7 @@ export async function getTrailCards(identifiers: string[]): Promise<TrailCard[]>
 
 export async function getCoordinatesByTrailIdentifier(identifier: string): Promise<Coordinates> {
   try {
-    const response = await fetch(`${BASE_URL}/trails/${identifier}/coordinates`);
+    const response = await apiFetch(`${BASE_URL}/trails/${identifier}/coordinates`);
 
     if (!response.ok) {
       throw new Error(`getCordsTrailByIdentifier: HTTP error ${response.status}`);
@@ -169,13 +169,17 @@ export async function addTrail(request: CreateTrailRequest): Promise<{ success: 
   formData.append("city", `${request.city}`);
 
   try {
-    const response = await fetch(`${BASE_URL}/trails/create`, {
-      method: "POST",
-      body: formData,
-      headers: {
-        Authorization: `Bearer ${token}`,
+    const response = await apiFetch(
+      `${BASE_URL}/trails/create`,
+      {
+        method: "POST",
+        body: formData,
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       },
-    });
+      UPLOAD_TIMEOUT_MS,
+    );
 
     if (!response.ok) {
       throw new ApiError(`addTrail: HTTP error ${response.status}`, response.status);

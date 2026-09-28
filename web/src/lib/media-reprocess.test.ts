@@ -2,12 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, expect, it } from "vitest";
-import {
-  matchPreset,
-  NEEDS_WORK_PRESET,
-  presetByKey,
-  REPROCESS_PRESETS,
-} from "./media-reprocess";
+import { matchPreset, NEEDS_WORK_PRESET, presetByKey, REPROCESS_PRESETS } from "./media-reprocess";
 
 describe("presetByKey", () => {
   it("finds the web preset", () => {
@@ -37,9 +32,7 @@ describe("presetByKey", () => {
     // TypeScript's ReprocessPresetKey rules this out statically, but a value that reached
     // here some other way (e.g. from stored state) should still resolve to something sane
     // rather than throwing or returning undefined.
-    expect(presetByKey("unknown-preset" as never)).toEqual(
-      REPROCESS_PRESETS[REPROCESS_PRESETS.length - 1],
-    );
+    expect(presetByKey("unknown-preset" as never)).toEqual(REPROCESS_PRESETS[REPROCESS_PRESETS.length - 1]);
   });
 
   it("keeps custom last, which is what the fallback relies on", () => {

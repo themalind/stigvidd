@@ -36,16 +36,10 @@ function Probe() {
   return (
     <div>
       <span data-testid="state">
-        {auth.isLoading
-          ? "loading"
-          : auth.isAuthenticated
-            ? `signed in as ${auth.user?.username}`
-            : "signed out"}
+        {auth.isLoading ? "loading" : auth.isAuthenticated ? `signed in as ${auth.user?.username}` : "signed out"}
       </span>
       <span data-testid="profile">{auth.stigviddUser?.nickName ?? "no profile"}</span>
-      <button onClick={() => void auth.login("admin@example.test", "hunter2")}>
-        Sign in
-      </button>
+      <button onClick={() => void auth.login("admin@example.test", "hunter2")}>Sign in</button>
       <button onClick={() => void auth.logout()}>Sign out</button>
     </div>
   );

@@ -20,24 +20,13 @@ vi.mock("./generated/trails/trails", () => generated);
 // admin module in play and the URL assertions below would silently test nothing.
 const generatedAdmin = vi.hoisted(() => ({
   adminTrailsUpdateTrail: vi.fn(),
-  getAdminTrailsAddTrailImagesUrl: vi.fn(
-    (id: string) => `/api/v1/admin/trails/${id}/images`,
-  ),
-  getAdminTrailsDeleteTrailImageUrl: vi.fn(
-    (id: string) => `/api/v1/admin/trails/images/${id}`,
-  ),
-  getAdminTrailsSetTrailSymbolUrl: vi.fn(
-    (id: string) => `/api/v1/admin/trails/${id}/symbol`,
-  ),
+  getAdminTrailsAddTrailImagesUrl: vi.fn((id: string) => `/api/v1/admin/trails/${id}/images`),
+  getAdminTrailsDeleteTrailImageUrl: vi.fn((id: string) => `/api/v1/admin/trails/images/${id}`),
+  getAdminTrailsSetTrailSymbolUrl: vi.fn((id: string) => `/api/v1/admin/trails/${id}/symbol`),
 }));
 vi.mock("./generated/admin-trails/admin-trails", () => generatedAdmin);
 
-import {
-  addTrailImages,
-  deleteTrailImage,
-  getAllTrails,
-  setTrailSymbol,
-} from "./trail";
+import { addTrailImages, deleteTrailImage, getAllTrails, setTrailSymbol } from "./trail";
 
 function png(name: string) {
   return new File([name], name, { type: "image/png" });

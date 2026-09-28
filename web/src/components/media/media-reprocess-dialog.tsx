@@ -8,13 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { buildImageOptions } from "@/lib/media-upload";
 import {
   matchPreset,
@@ -24,11 +18,7 @@ import {
   type ReprocessPresetKey,
 } from "@/lib/media-reprocess";
 import { targetCount, type ReprocessTarget } from "@/lib/media-reprocess-target";
-import {
-  enqueueMediaReprocessJob,
-  enqueueMediaReprocessJobForFilter,
-  type ReprocessJobSummary,
-} from "@/api/media";
+import { enqueueMediaReprocessJob, enqueueMediaReprocessJobForFilter, type ReprocessJobSummary } from "@/api/media";
 
 interface Props {
   open: boolean;
@@ -37,12 +27,7 @@ interface Props {
   onSubmitted: (job: ReprocessJobSummary) => void;
 }
 
-export default function MediaReprocessDialog({
-  open,
-  onOpenChange,
-  target,
-  onSubmitted,
-}: Props) {
+export default function MediaReprocessDialog({ open, onOpenChange, target, onSubmitted }: Props) {
   const defaults = presetByKey(NEEDS_WORK_PRESET);
   const [resolution, setResolution] = useState(defaults.resolution);
   const [customWidth, setCustomWidth] = useState("");
@@ -100,16 +85,12 @@ export default function MediaReprocessDialog({
           <Dialog.Description className="text-muted-foreground text-sm">
             {target.kind === "filter" ? (
               <>
-                Every image matching <strong>{target.summary}</strong> — about {count} right
-                now. The filter is expanded again when the job starts, so the final count may
-                differ. Resizes, re-encodes and replaces them in the background; the originals
-                are not kept.
+                Every image matching <strong>{target.summary}</strong> — about {count} right now. The filter is expanded
+                again when the job starts, so the final count may differ. Resizes, re-encodes and replaces them in the
+                background; the originals are not kept.
               </>
             ) : (
-              <>
-                Resizes, re-encodes and replaces the selected images in the background. The
-                originals are not kept.
-              </>
+              <>Resizes, re-encodes and replaces the selected images in the background. The originals are not kept.</>
             )}
           </Dialog.Description>
 
@@ -173,13 +154,7 @@ export default function MediaReprocessDialog({
               <Label>Quality</Label>
               <span className="text-muted-foreground text-sm">{quality}</span>
             </div>
-            <Slider
-              min={10}
-              max={100}
-              step={1}
-              value={[quality]}
-              onValueChange={(v) => setQuality(v[0])}
-            />
+            <Slider min={10} max={100} step={1} value={[quality]} onValueChange={(v) => setQuality(v[0])} />
           </div>
 
           <div className="space-y-1.5">

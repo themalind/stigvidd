@@ -9,7 +9,10 @@
 // so the wire contract of all of them is asserted from one table here. Behaviour that is
 // specific to an endpoint (pagination, multipart bodies) stays in the per-module suites.
 
-jest.mock("@/api/api-config", () => ({ BASE_URL: "http://test/api/v1" }));
+jest.mock("@/api/api-config", () => ({
+  ...jest.requireActual("@/api/api-config"),
+  BASE_URL: "http://test/api/v1",
+}));
 
 jest.mock("@/services/logger", () => ({
   logger: { error: jest.fn(), warn: jest.fn(), info: jest.fn(), debug: jest.fn() },

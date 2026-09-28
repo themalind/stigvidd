@@ -3,12 +3,7 @@
 
 import { describe, expect, it } from "vitest";
 import type { MediaItemResponse } from "@/api/generated/model";
-import {
-  acceptImages,
-  attachedTo,
-  buildImageOptions,
-  OWNER_TYPE,
-} from "./media-upload";
+import { acceptImages, attachedTo, buildImageOptions, OWNER_TYPE } from "./media-upload";
 
 const choices = {
   resolution: "1920",
@@ -18,8 +13,7 @@ const choices = {
   format: "webp",
 };
 
-const image = (name = "a.jpg", type = "image/jpeg") =>
-  new File(["bytes"], name, { type });
+const image = (name = "a.jpg", type = "image/jpeg") => new File(["bytes"], name, { type });
 
 /**
  * These options are what the server resizes, recodes and crops by, and the original bytes
@@ -73,9 +67,7 @@ describe("buildImageOptions", () => {
 
   it("names the format to recode to, and says nothing to keep the original", () => {
     expect(buildImageOptions(choices).format).toBe("webp");
-    expect(
-      buildImageOptions({ ...choices, format: "original" }),
-    ).not.toHaveProperty("format");
+    expect(buildImageOptions({ ...choices, format: "original" })).not.toHaveProperty("format");
   });
 
   it("always sends the quality, including the lowest the slider goes", () => {
@@ -86,9 +78,12 @@ describe("buildImageOptions", () => {
   const crop = { x: 10, y: 20, width: 300, height: 400 };
 
   it("passes the crop through when a single file is staged", () => {
-    expect(buildImageOptions({ ...choices, crop, canCrop: true })).toMatchObject(
-      { cropX: 10, cropY: 20, cropWidth: 300, cropHeight: 400 },
-    );
+    expect(buildImageOptions({ ...choices, crop, canCrop: true })).toMatchObject({
+      cropX: 10,
+      cropY: 20,
+      cropWidth: 300,
+      cropHeight: 400,
+    });
   });
 
   // The cropper is drawn against one preview. Applying its rectangle to a batch would
@@ -101,9 +96,7 @@ describe("buildImageOptions", () => {
   });
 
   it("sends no crop when none was drawn", () => {
-    expect(
-      buildImageOptions({ ...choices, crop: null, canCrop: true }),
-    ).not.toHaveProperty("cropX");
+    expect(buildImageOptions({ ...choices, crop: null, canCrop: true })).not.toHaveProperty("cropX");
   });
 });
 
@@ -115,11 +108,7 @@ describe("acceptImages", () => {
   });
 
   it("keeps only the newest file for a target that takes one", () => {
-    const staged = acceptImages(
-      [image("old.jpg")],
-      [image("new.png", "image/png")],
-      false,
-    );
+    const staged = acceptImages([image("old.jpg")], [image("new.png", "image/png")], false);
 
     expect(staged.map((f) => f.name)).toEqual(["new.png"]);
   });
@@ -131,11 +120,7 @@ describe("acceptImages", () => {
   });
 
   it("drops anything that is not an image", () => {
-    const staged = acceptImages(
-      [],
-      [image("doc.pdf", "application/pdf"), image("photo.jpg")],
-      true,
-    );
+    const staged = acceptImages([], [image("doc.pdf", "application/pdf"), image("photo.jpg")], true);
 
     expect(staged.map((f) => f.name)).toEqual(["photo.jpg"]);
   });
@@ -144,9 +129,7 @@ describe("acceptImages", () => {
   it("leaves the staged set alone when nothing dropped was an image", () => {
     const staged = [image("photo.jpg")];
 
-    expect(acceptImages(staged, [image("doc.pdf", "application/pdf")], false)).toBe(
-      staged,
-    );
+    expect(acceptImages(staged, [image("doc.pdf", "application/pdf")], false)).toBe(staged);
   });
 
   it("takes a FileList as readily as an array", () => {
@@ -156,18 +139,13 @@ describe("acceptImages", () => {
       [Symbol.iterator]: Array.prototype[Symbol.iterator],
     } as unknown as FileList;
 
-    expect(acceptImages([], list, true).map((f) => f.name)).toEqual([
-      "from-picker.jpg",
-    ]);
+    expect(acceptImages([], list, true).map((f) => f.name)).toEqual(["from-picker.jpg"]);
   });
 });
 
 describe("attachedTo", () => {
-  const item = (
-    identifier: string,
-    ownerIdentifier: string,
-    ownerType: string,
-  ) => ({ identifier, ownerIdentifier, ownerType }) as MediaItemResponse;
+  const item = (identifier: string, ownerIdentifier: string, ownerType: string) =>
+    ({ identifier, ownerIdentifier, ownerType }) as MediaItemResponse;
 
   const media = [
     item("m1", "trail-1", "Trail"),
@@ -186,28 +164,18 @@ describe("attachedTo", () => {
   // The symbol carries the trail's own identifier, so matching on the id alone would put
   // it in the gallery — with a delete button for something that has no delete endpoint.
   it("keeps a trail's symbol out of its gallery", () => {
-    expect(
-      attachedTo(media, "trail-1", "trail-gallery").map((m) => m.identifier),
-    ).toEqual(["m1"]);
+    expect(attachedTo(media, "trail-1", "trail-gallery").map((m) => m.identifier)).toEqual(["m1"]);
   });
 
   it("shows the symbol, and only the symbol, in symbol mode", () => {
-    expect(
-      attachedTo(media, "trail-1", "trail-symbol").map((m) => m.identifier),
-    ).toEqual(["m2"]);
+    expect(attachedTo(media, "trail-1", "trail-symbol").map((m) => m.identifier)).toEqual(["m2"]);
   });
 
   it("does not mistake a facility's image for a trail's", () => {
-    expect(
-      attachedTo(media, "trail-1", "facility").map((m) => m.identifier),
-    ).toEqual(["m4"]);
+    expect(attachedTo(media, "trail-1", "facility").map((m) => m.identifier)).toEqual(["m4"]);
   });
 
   it("names an owner type for every target the panel offers", () => {
-    expect(Object.values(OWNER_TYPE)).toEqual([
-      "Trail",
-      "TrailSymbol",
-      "Facility",
-    ]);
+    expect(Object.values(OWNER_TYPE)).toEqual(["Trail", "TrailSymbol", "Facility"]);
   });
 });

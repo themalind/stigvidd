@@ -58,6 +58,16 @@ and it reuses the `node_modules` already on disk:
 cd web && docker run --rm -v "$PWD":/app -w /app -e CI=1 node:24 npm test
 ```
 
+Without docker, npm can fetch a Node 24 binary for one run (the `node` package) and run
+vitest's script directly. That skips the npm script, which would run on the host's Node:
+
+```sh
+cd web && npx -y node@24 node_modules/vitest/vitest.mjs run
+```
+
+Measured 2026-09-27 on v26.3.0: 651 of 651 web tests and 10 of 10 in `site/` passed this way.
+The first run downloads about 30 MB, and later runs use the npx cache.
+
 `npm run lint` and `npm run build` work the same way. Re-measured 2026-09-13 on Node
 v26.3.0: **26 of 26 files, 527 of 527 tests** failed on the host and all 527 passed in that
 container, same working tree.

@@ -43,10 +43,7 @@ export function GeometryPreview({ feature, trail, className }: Props) {
   const [view, setView] = useState<View | null>(null);
   const [size, setSize] = useState<Size>({ w: 0, h: 0 });
 
-  const drawing = useMemo(
-    () => projectDrawing(feature, trail),
-    [feature, trail],
-  );
+  const drawing = useMemo(() => projectDrawing(feature, trail), [feature, trail]);
 
   // A different proposal is a different place, so the view drops back to fitted. Done
   // while rendering rather than in an effect: an effect would draw the old view first.
@@ -123,12 +120,7 @@ export function GeometryPreview({ feature, trail, className }: Props) {
     (dx: number, dy: number) => {
       if (!drawing || !active) return;
 
-      setView(
-        clampView(
-          { ...active, x: active.x + dx, y: active.y + dy },
-          drawing.fitAll,
-        ),
-      );
+      setView(clampView({ ...active, x: active.x + dx, y: active.y + dy }, drawing.fitAll));
     },
     [active, drawing],
   );
@@ -155,8 +147,7 @@ export function GeometryPreview({ feature, trail, className }: Props) {
 
   // The zoom controls sit inside the pan surface, and capturing the pointer for a drag
   // would swallow their click.
-  const onAControl = (target: EventTarget | null) =>
-    target instanceof Element && target.closest("button") !== null;
+  const onAControl = (target: EventTarget | null) => target instanceof Element && target.closest("button") !== null;
 
   function onPointerDown(event: React.PointerEvent<HTMLDivElement>) {
     if (event.button !== 0 || onAControl(event.target)) return;
@@ -170,9 +161,7 @@ export function GeometryPreview({ feature, trail, className }: Props) {
     if (!from || !active) return;
 
     const rect = svgRef.current?.getBoundingClientRect();
-    const scale = rect
-      ? pixelsPerMetre(active, { w: rect.width, h: rect.height })
-      : 0;
+    const scale = rect ? pixelsPerMetre(active, { w: rect.width, h: rect.height }) : 0;
     if (!scale) return;
 
     dragRef.current = { x: event.clientX, y: event.clientY };
@@ -218,17 +207,12 @@ export function GeometryPreview({ feature, trail, className }: Props) {
   }
 
   // How far in the view is, in halvings of the fitted extent.
-  const detail = Math.max(
-    0,
-    Math.floor(Math.log2(drawing.fitAll.w / active.w)),
-  );
+  const detail = Math.max(0, Math.floor(Math.log2(drawing.fitAll.w / active.w)));
 
   const painted = paintedArea(active, size);
 
   const featurePath = pathFor(drawing.featurePoints, painted, detail);
-  const trailPath = drawing.trailPoints
-    ? pathFor(drawing.trailPoints, painted, detail)
-    : null;
+  const trailPath = drawing.trailPoints ? pathFor(drawing.trailPoints, painted, detail) : null;
   const markerRadius = Math.max(active.w, active.h) * 0.012;
 
   const scale = pixelsPerMetre(active, size);
@@ -310,9 +294,7 @@ export function GeometryPreview({ feature, trail, className }: Props) {
             aria-pressed={shown.feature}
             title="Show or hide the source feature"
             className={`flex cursor-pointer items-center gap-1.5 rounded px-1 py-0.5 hover:bg-accent ${shown.feature ? "" : "opacity-40"}`}
-            onClick={() =>
-              setShown((current) => ({ ...current, feature: !current.feature }))
-            }
+            onClick={() => setShown((current) => ({ ...current, feature: !current.feature }))}
           >
             <span className={`h-0.5 w-4 rounded ${FeatureSwatch}`} />
             Source feature
@@ -324,9 +306,7 @@ export function GeometryPreview({ feature, trail, className }: Props) {
               aria-pressed={shown.trail}
               title="Show or hide the matched trail"
               className={`flex cursor-pointer items-center gap-1.5 rounded px-1 py-0.5 hover:bg-accent ${shown.trail ? "" : "opacity-40"}`}
-              onClick={() =>
-                setShown((current) => ({ ...current, trail: !current.trail }))
-              }
+              onClick={() => setShown((current) => ({ ...current, trail: !current.trail }))}
             >
               <span className={`h-1.5 w-4 rounded ${TrailSwatch}`} />
               Matched trail
@@ -387,13 +367,8 @@ export function GeometryPreview({ feature, trail, className }: Props) {
         {/* Measured off the current view, so it stays honest at every zoom level. */}
         {scale > 0 && (
           <div className="absolute bottom-2 left-2 space-y-0.5">
-            <span className="text-xs text-muted-foreground tabular-nums">
-              {formatDistance(bar)}
-            </span>
-            <div
-              className="h-1 border-x border-b border-muted-foreground/70"
-              style={{ width: bar * scale }}
-            />
+            <span className="text-xs text-muted-foreground tabular-nums">{formatDistance(bar)}</span>
+            <div className="h-1 border-x border-b border-muted-foreground/70" style={{ width: bar * scale }} />
           </div>
         )}
       </div>

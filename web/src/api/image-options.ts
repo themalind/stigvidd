@@ -8,10 +8,7 @@ import type { ImageProcessingOptions } from "@/types/types";
  * form fields, matching the backend `ImageProcessingOptionsRequest` binder.
  * Only defined values are sent, so omitting a knob leaves the image untouched.
  */
-export function appendProcessingOptions(
-  formData: FormData,
-  options?: ImageProcessingOptions,
-): void {
+export function appendProcessingOptions(formData: FormData, options?: ImageProcessingOptions): void {
   if (!options) return;
   const entries: [string, number | string | undefined][] = [
     ["MaxWidth", options.maxWidth],

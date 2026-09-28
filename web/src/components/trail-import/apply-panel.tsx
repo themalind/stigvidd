@@ -45,8 +45,8 @@ function Conflicts({ conflicts, lead }: { conflicts: Conflict[]; lead: string })
       <ul className="space-y-1 text-xs text-muted-foreground">
         {conflicts.map((conflict, index) => (
           <li key={`${conflict.trailId}-${conflict.field}-${index}`}>
-            <span className="font-medium text-foreground">{conflict.trailName}</span> ·{" "}
-            {conflict.field}: kept “{conflict.ours}”, source said “{conflict.theirs}”
+            <span className="font-medium text-foreground">{conflict.trailName}</span> · {conflict.field}: kept “
+            {conflict.ours}”, source said “{conflict.theirs}”
           </li>
         ))}
       </ul>
@@ -59,32 +59,19 @@ function Conflicts({ conflicts, lead }: { conflicts: Conflict[]; lead: string })
  * against, so it may write no field on any existing trail — which makes a zero the
  * expected result rather than a sign that nothing happened.
  */
-function LinkedWithoutChanges({
-  updated,
-  linked,
-}: {
-  updated: number | undefined;
-  linked: number | undefined | null;
-}) {
+function LinkedWithoutChanges({ updated, linked }: { updated: number | undefined; linked: number | undefined | null }) {
   if (!linked || (updated ?? 0) > 0) return null;
 
   return (
     <p className="text-xs text-muted-foreground">
-      {linked} existing trail(s) were linked without being changed. The source may only
-      overwrite a field it has been recorded against before, so this run stores that
-      baseline and the next one can merge against it.
+      {linked} existing trail(s) were linked without being changed. The source may only overwrite a field it has been
+      recorded against before, so this run stores that baseline and the next one can merge against it.
     </p>
   );
 }
 
 /** The receipt for an applied session. Read from the session, so it survives a reload. */
-function Applied({
-  session,
-  onShowCreated,
-}: {
-  session: Session;
-  onShowCreated: () => void;
-}) {
+function Applied({ session, onShowCreated }: { session: Session; onShowCreated: () => void }) {
   const applied = session.applied;
   const created = applied?.trailsCreated ?? 0;
 
@@ -107,10 +94,7 @@ function Applied({
             <Figure value={applied.featuresExcluded} label="features excluded" />
           </div>
 
-          <LinkedWithoutChanges
-            updated={applied.trailsUpdated}
-            linked={applied.trailsLinked}
-          />
+          <LinkedWithoutChanges updated={applied.trailsUpdated} linked={applied.trailsLinked} />
 
           <Conflicts
             conflicts={applied.conflicts ?? []}
@@ -133,15 +117,14 @@ function Applied({
 
           {created > 0 && (
             <p className="text-xs text-muted-foreground">
-              A new trail is created unverified, so the app does not list it until someone
-              has looked at it.
+              A new trail is created unverified, so the app does not list it until someone has looked at it.
             </p>
           )}
         </>
       ) : (
         <p className="text-sm text-muted-foreground">
-          This session was applied before the run was recorded, so there are no figures for
-          it. Its links are on the trails all the same.
+          This session was applied before the run was recorded, so there are no figures for it. Its links are on the
+          trails all the same.
         </p>
       )}
 
@@ -196,8 +179,7 @@ export function ApplyPanel({ session, onApplied, onShowCreated }: Props) {
     }
   }
 
-  if (session.status === "Applied")
-    return <Applied session={session} onShowCreated={onShowCreated} />;
+  if (session.status === "Applied") return <Applied session={session} onShowCreated={onShowCreated} />;
 
   if (!diff) {
     return (
@@ -206,9 +188,7 @@ export function ApplyPanel({ session, onApplied, onShowCreated }: Props) {
           {loading ? <Loader2 className="animate-spin" /> : null}
           Review what applying would write
         </Button>
-        <span className="text-xs text-muted-foreground">
-          Nothing reaches Trails until this is applied.
-        </span>
+        <span className="text-xs text-muted-foreground">Nothing reaches Trails until this is applied.</span>
       </div>
     );
   }
@@ -232,8 +212,7 @@ export function ApplyPanel({ session, onApplied, onShowCreated }: Props) {
       <LinkedWithoutChanges updated={diff.trailsToUpdate} linked={diff.trailsLinked} />
 
       <p className="text-xs text-muted-foreground">
-        {diff.featuresPending} undecided and {diff.featuresSkipped} skipped are left where
-        they are.
+        {diff.featuresPending} undecided and {diff.featuresSkipped} skipped are left where they are.
       </p>
 
       {diff.againstStrongMatch.length > 0 && (
@@ -245,9 +224,9 @@ export function ApplyPanel({ session, onApplied, onShowCreated }: Props) {
           <ul className="space-y-1 text-xs text-muted-foreground">
             {diff.againstStrongMatch.map((warning) => (
               <li key={warning.proposalId}>
-                <span className="font-medium text-foreground">{warning.featureName}</span>{" "}
-                · {decisionLabel[warning.decision] ?? warning.decision} despite{" "}
-                {warning.confidence} at {Math.round((warning.coverageForward ?? 0) * 100)} %
+                <span className="font-medium text-foreground">{warning.featureName}</span> ·{" "}
+                {decisionLabel[warning.decision] ?? warning.decision} despite {warning.confidence} at{" "}
+                {Math.round((warning.coverageForward ?? 0) * 100)} %
                 {warning.trailName ? ` on ${warning.trailName}` : ""}
               </li>
             ))}
@@ -262,23 +241,21 @@ export function ApplyPanel({ session, onApplied, onShowCreated }: Props) {
             {diff.withoutSegment.length} trail(s) would be left with no segment
           </p>
           <p className="text-xs text-muted-foreground">
-            Right when the route is curated and the source's line is broken; a mistake
-            otherwise. Their geometry stays as it is either way.
+            Right when the route is curated and the source's line is broken; a mistake otherwise. Their geometry stays
+            as it is either way.
           </p>
           <ul className="space-y-1 text-xs text-muted-foreground">
             {diff.withoutSegment.map((trail) => (
               <li key={trail.trailId}>
-                <span className="font-medium text-foreground">{trail.trailName}</span> ·{" "}
-                {trail.duplicateLinks} duplicate link(s)
+                <span className="font-medium text-foreground">{trail.trailName}</span> · {trail.duplicateLinks}{" "}
+                duplicate link(s)
               </li>
             ))}
           </ul>
         </div>
       )}
 
-      {diff.blockedReason && (
-        <p className="text-sm text-muted-foreground">{diff.blockedReason}</p>
-      )}
+      {diff.blockedReason && <p className="text-sm text-muted-foreground">{diff.blockedReason}</p>}
 
       <Button disabled={!diff.canApply || applying} onClick={() => void apply()}>
         {applying ? <Loader2 className="animate-spin" /> : null}

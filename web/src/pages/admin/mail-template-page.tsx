@@ -7,13 +7,7 @@ import { toast } from "sonner";
 import { AlertTriangle, Eye, Loader2, Save, Wand2 } from "lucide-react";
 import type { Editor } from "@tiptap/react";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -22,11 +16,7 @@ import MailBodyEditor from "@/components/mail/mail-body-editor";
 import MailPreview from "@/components/mail/mail-preview";
 import MailSourceTextarea from "@/components/mail/mail-source-textarea";
 import TokenPalette from "@/components/mail/token-palette";
-import {
-  getMailTemplate,
-  previewMailTemplate,
-  updateMailTemplate,
-} from "@/api/mail-templates";
+import { getMailTemplate, previewMailTemplate, updateMailTemplate } from "@/api/mail-templates";
 import {
   detectLoss,
   htmlToPlainText,
@@ -193,9 +183,7 @@ export default function MailTemplatePage() {
         <Card>
           <CardHeader>
             <CardTitle>Template not available</CardTitle>
-            <CardDescription>
-              It could not be loaded, so there is nothing safe to edit here.
-            </CardDescription>
+            <CardDescription>It could not be loaded, so there is nothing safe to edit here.</CardDescription>
           </CardHeader>
           <CardContent>
             <Button asChild variant="outline">
@@ -227,8 +215,7 @@ export default function MailTemplatePage() {
           <CardDescription>
             {template.purpose ?? (
               <>
-                No code declares this template key, so nothing sends it and there is no list of
-                placeholders it may use.
+                No code declares this template key, so nothing sends it and there is no list of placeholders it may use.
               </>
             )}
           </CardDescription>
@@ -236,8 +223,7 @@ export default function MailTemplatePage() {
 
         <CardContent className="space-y-4">
           <p className="text-xs text-muted-foreground">
-            The key and language identify which code sends this mail, so they cannot be changed
-            here.
+            The key and language identify which code sends this mail, so they cannot be changed here.
           </p>
 
           <div className="space-y-1">
@@ -281,9 +267,7 @@ export default function MailTemplatePage() {
         <Card>
           <CardHeader>
             <CardTitle>Content</CardTitle>
-            <CardDescription>
-              Every mail goes out with both an HTML and a plain-text version.
-            </CardDescription>
+            <CardDescription>Every mail goes out with both an HTML and a plain-text version.</CardDescription>
           </CardHeader>
 
           <CardContent>
@@ -337,8 +321,8 @@ export default function MailTemplatePage() {
                 />
 
                 <p className="text-xs text-muted-foreground">
-                  Only rewritten when you press the button — a hand-tuned plain-text version is
-                  never overwritten on save.
+                  Only rewritten when you press the button — a hand-tuned plain-text version is never overwritten on
+                  save.
                 </p>
               </TabsContent>
             </Tabs>
@@ -367,13 +351,12 @@ export default function MailTemplatePage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-amber-600 dark:text-amber-500">
               <AlertTriangle className="size-4" aria-hidden="true" />
-              This mail will not contain{" "}
-              {review.missing.map((name) => tokenText(name)).join(", ")}
+              This mail will not contain {review.missing.map((name) => tokenText(name)).join(", ")}
             </CardTitle>
             <CardDescription>
               That is allowed and the mail will send — but the recipient will not get{" "}
-              {review.missing.length === 1 ? "that value" : "those values"}. For a verification
-              mail, that means no way to verify.
+              {review.missing.length === 1 ? "that value" : "those values"}. For a verification mail, that means no way
+              to verify.
             </CardDescription>
           </CardHeader>
         </Card>
@@ -382,9 +365,7 @@ export default function MailTemplatePage() {
       <Card>
         <CardHeader>
           <CardTitle>Preview and save</CardTitle>
-          <CardDescription>
-            The preview runs the same renderer a real send uses, with sample values.
-          </CardDescription>
+          <CardDescription>The preview runs the same renderer a real send uses, with sample values.</CardDescription>
         </CardHeader>
 
         <CardContent className="space-y-4">
@@ -411,8 +392,8 @@ export default function MailTemplatePage() {
           {blocked && (
             <p className="text-sm text-destructive">
               Saving is blocked: {review.unknown.map((name) => tokenText(name)).join(", ")}{" "}
-              {review.unknown.length === 1 ? "is not supplied" : "are not supplied"} for this
-              template, and a mail using one never sends.
+              {review.unknown.length === 1 ? "is not supplied" : "are not supplied"} for this template, and a mail using
+              one never sends.
             </p>
           )}
 

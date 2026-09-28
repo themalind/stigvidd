@@ -136,9 +136,7 @@ describe("shipping", () => {
     expect(init.method).toBe("POST");
     // Passed through verbatim — the token is ALREADY base64("user:passcode"), and encoding
     // it a second time is a 401 that looks exactly like a wrong credential.
-    expect((init.headers as Record<string, string>).Authorization).toBe(
-      `Basic ${LOGS_TOKEN}`,
-    );
+    expect((init.headers as Record<string, string>).Authorization).toBe(`Basic ${LOGS_TOKEN}`);
   });
 
   it("sends _timestamp in microseconds, which is what OpenObserve stores", async () => {
@@ -229,14 +227,7 @@ describe("redaction", () => {
 
     const [record] = sentRecords(fetchMock) as Record<string, unknown>[];
 
-    for (const key of [
-      "accessToken",
-      "refreshToken",
-      "Authorization",
-      "latitude",
-      "longitude",
-      "geometry",
-    ]) {
+    for (const key of ["accessToken", "refreshToken", "Authorization", "latitude", "longitude", "geometry"]) {
       expect(record[key]).toBe("[redacted]");
     }
 
@@ -248,9 +239,7 @@ describe("redaction", () => {
     const telemetry = await loadTelemetry();
 
     telemetry.initTelemetry();
-    telemetry.logger.error(
-      "failed for admin@stigvidd.se with Bearer eyJhbGciOi.eyJzdWIi.sig at 57.70887,11.97456",
-    );
+    telemetry.logger.error("failed for admin@stigvidd.se with Bearer eyJhbGciOi.eyJzdWIi.sig at 57.70887,11.97456");
     await telemetry.flush();
 
     const [record] = sentRecords(fetchMock) as { message: string }[];

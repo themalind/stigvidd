@@ -35,18 +35,13 @@ export default function FeaturesSection() {
   return (
     <section id="funktioner" className="border-y border-border bg-surface">
       <div className="mx-auto max-w-6xl px-5 py-16 md:py-24">
-        <h2 className="text-3xl font-semibold tracking-tight md:text-4xl">
-          Det här kan du göra
-        </h2>
+        <h2 className="text-3xl font-semibold tracking-tight md:text-4xl">Det här kan du göra</h2>
 
         <ul className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {features.map((feature) => {
             const Icon = ICONS[feature.icon];
             return (
-              <li
-                key={feature.title}
-                className="rounded-base border border-border bg-bg p-6"
-              >
+              <li key={feature.title} className="rounded-base border border-border bg-bg p-6">
                 <Icon aria-hidden="true" className="size-6 text-accent" />
                 <h3 className="mt-4 font-semibold">{feature.title}</h3>
                 <p className="mt-2 text-sm leading-relaxed text-muted">{feature.body}</p>

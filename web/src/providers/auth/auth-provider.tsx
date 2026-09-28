@@ -4,6 +4,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { AuthContext } from "./auth-context";
 import { getStigviddUser } from "@/api/user";
+import { logger } from "@/services/telemetry";
 import type { AuthUser, StigviddUser } from "@/types/types";
 import {
   getValidAccessToken,
@@ -31,11 +32,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const restored = await restoreSession();
-      if (cancelled) return;
-      setUser(restored);
-      if (restored) await loadProfile();
-      setIsLoading(false);
+      try {
+        const restored = await restoreSession();
+        if (cancelled) return;
+        setUser(restored);
+        if (restored) await loadProfile();
+      } catch (error) {
+        logger.warn("Session restore failed", {
+          errorMessage: String(error),
+        });
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
     })();
     return () => {
       cancelled = true;

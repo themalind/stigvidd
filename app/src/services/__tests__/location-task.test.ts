@@ -11,6 +11,7 @@ import * as Location from "expo-location";
 import { getDistance } from "geolib";
 import {
   ACCURACY_STALL_MS,
+  CORRUPT_HIKE_STORAGE_KEY,
   HIKE_STORAGE_KEY,
   INACTIVITY_TIMEOUT,
   MAX_DURATION,
@@ -24,6 +25,7 @@ import {
   finalizeActiveSegment,
   ingestFixes,
   maybeFinalizeStaleHike,
+  mutateHikeState,
   readHikeState,
 } from "../location-task";
 
@@ -109,12 +111,21 @@ describe("readHikeState", () => {
     expect(result).toEqual(activeState);
   });
 
-  it("returns defaultHikeState when stored JSON is corrupt", async () => {
+  it("returns defaultHikeState when stored JSON is corrupt, and sets the value aside", async () => {
     mockGetItem.mockResolvedValue("{ invalid json }}}");
 
     const result = await readHikeState();
 
     expect(result).toEqual(defaultHikeState);
+    expect(mockSetItem).toHaveBeenCalledWith(CORRUPT_HIKE_STORAGE_KEY, "{ invalid json }}}");
+  });
+
+  it("rethrows a failed read, so a mutation leaves the stored hike untouched", async () => {
+    mockGetItem.mockRejectedValue(new Error("database or disk is full"));
+
+    await expect(readHikeState()).rejects.toThrow("database or disk is full");
+    await expect(mutateHikeState((state) => ({ ...state, isTracking: true }))).rejects.toThrow();
+    expect(mockSetItem).not.toHaveBeenCalled();
   });
 });
 

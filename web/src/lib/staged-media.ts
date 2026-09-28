@@ -21,10 +21,7 @@ function openDb(): Promise<IDBDatabase> {
 }
 
 // `close()` waits for the pending transaction, so it is safe in `finally`.
-async function withStore<T>(
-  mode: IDBTransactionMode,
-  run: (store: IDBObjectStore) => IDBRequest<T>,
-): Promise<T> {
+async function withStore<T>(mode: IDBTransactionMode, run: (store: IDBObjectStore) => IDBRequest<T>): Promise<T> {
   const db = await openDb();
   try {
     return await new Promise<T>((resolve, reject) => {
@@ -55,9 +52,7 @@ function isStagedFile(value: unknown): value is StagedFile {
 
 export async function loadStagedFiles(): Promise<File[]> {
   try {
-    const stored = await withStore<unknown>("readonly", (s) =>
-      s.get(FILES_KEY),
-    );
+    const stored = await withStore<unknown>("readonly", (s) => s.get(FILES_KEY));
     if (!Array.isArray(stored)) return [];
     return stored.filter(isStagedFile).map(
       (f) =>

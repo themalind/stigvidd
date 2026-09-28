@@ -1,24 +1,8 @@
 // SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {
-  DatabaseBackup,
-  Flag,
-  Gauge,
-  Images,
-  Mail,
-  Route,
-  Send,
-  Settings2,
-  Users,
-} from "lucide-react";
-import {
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-} from "../ui/sidebar";
+import { DatabaseBackup, Flag, Gauge, Images, Mail, Route, Send, Settings2, Users } from "lucide-react";
+import { SidebarGroup, SidebarGroupContent, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "../ui/sidebar";
 import { NavLink } from "react-router";
 
 export default function NavMain() {

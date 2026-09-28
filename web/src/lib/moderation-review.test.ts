@@ -57,9 +57,7 @@ describe("dismissEnabled", () => {
 
   // There is nothing left to put back.
   it("is off once the content has expired", () => {
-    expect(dismissEnabled(report({ status: "ContentExpired", contentStillExists: false }))).toBe(
-      false,
-    );
+    expect(dismissEnabled(report({ status: "ContentExpired", contentStillExists: false }))).toBe(false);
   });
 });
 
@@ -103,10 +101,7 @@ describe("narrowedBy", () => {
   });
 
   it("names each filter that is narrowing the list", () => {
-    expect(narrowedBy({ status: "Pending", hideOutcome: "Hidden" })).toEqual([
-      "status Pending",
-      "outcome Hidden",
-    ]);
+    expect(narrowedBy({ status: "Pending", hideOutcome: "Hidden" })).toEqual(["status Pending", "outcome Hidden"]);
   });
 });
 

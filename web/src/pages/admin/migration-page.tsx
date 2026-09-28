@@ -5,14 +5,7 @@ import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { AlertTriangle, Download, Loader2, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
@@ -65,18 +58,13 @@ export default function MigrationPage() {
           <CardHeader>
             <CardTitle>Export</CardTitle>
             <CardDescription>
-              Download a complete snapshot of this host — the database, all
-              referenced media, and the Keycloak realm (users, clients) — as a
-              single archive to move to another host.
+              Download a complete snapshot of this host — the database, all referenced media, and the Keycloak realm
+              (users, clients) — as a single archive to move to another host.
             </CardDescription>
           </CardHeader>
           <CardFooter>
             <Button onClick={handleExport} disabled={exporting}>
-              {exporting ? (
-                <Loader2 className="animate-spin" />
-              ) : (
-                <Download />
-              )}
+              {exporting ? <Loader2 className="animate-spin" /> : <Download />}
               {exporting ? "Preparing archive…" : "Export all data"}
             </Button>
           </CardFooter>
@@ -91,12 +79,8 @@ export default function MigrationPage() {
             </CardTitle>
             <CardDescription>
               Restores an archive exported from another host.{" "}
-              <strong>
-                This permanently overwrites ALL data on this host
-              </strong>{" "}
-              (database, media and Keycloak). Run it on a freshly deployed
-              target. Afterwards, restart the <code>api</code> and{" "}
-              <code>keycloak</code> services.
+              <strong>This permanently overwrites ALL data on this host</strong> (database, media and Keycloak). Run it
+              on a freshly deployed target. Afterwards, restart the <code>api</code> and <code>keycloak</code> services.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -116,8 +100,7 @@ export default function MigrationPage() {
 
             <div className="space-y-2">
               <Label htmlFor="confirm">
-                Type <code className="font-mono">{confirmPhrase}</code> to
-                confirm you want to overwrite this host
+                Type <code className="font-mono">{confirmPhrase}</code> to confirm you want to overwrite this host
               </Label>
               <Input
                 id="confirm"
@@ -130,11 +113,7 @@ export default function MigrationPage() {
             </div>
           </CardContent>
           <CardFooter>
-            <Button
-              variant="destructive"
-              onClick={handleImport}
-              disabled={!canImport}
-            >
+            <Button variant="destructive" onClick={handleImport} disabled={!canImport}>
               {importing ? <Loader2 className="animate-spin" /> : <Upload />}
               {importing ? "Importing…" : "Import and replace"}
             </Button>

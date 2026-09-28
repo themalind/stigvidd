@@ -57,24 +57,11 @@ const REQUEST_TIMEOUT_MS = 15_000;
 // carry different licences (AGPL here, MPL there) and share no build, and a redaction rule is
 // exactly the kind of thing that must not silently weaken on one side because the other
 // needed it to.
-const DENIED_KEY_PATTERNS = [
-  "token",
-  "password",
-  "secret",
-  "authorization",
-  "credential",
-  "cookie",
-];
+const DENIED_KEY_PATTERNS = ["token", "password", "secret", "authorization", "credential", "cookie"];
 
 // The admin web renders trail geometry, and a trail's coordinates are the product's data —
 // but a log line carrying them is still an uncontrolled copy outside the database's retention.
-const LOCATION_KEY_PATTERNS = [
-  "latitude",
-  "longitude",
-  "coordinate",
-  "location",
-  "geometry",
-];
+const LOCATION_KEY_PATTERNS = ["latitude", "longitude", "coordinate", "location", "geometry"];
 
 const BEARER_PATTERN = /Bearer\s+[A-Za-z0-9\-._~+/]+=*/gi;
 const JWT_PATTERN = /\beyJ[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]*/g;
@@ -224,8 +211,7 @@ export async function flush(keepalive = false): Promise<void> {
 function emit(level: LogLevel, message: string, context?: LogContext): void {
   // Console output is unconditional, not a fallback: the devtools output developers already
   // read stays exactly as informative as before.
-  const write =
-    level === "error" ? console.error : level === "warn" ? console.warn : console.log;
+  const write = level === "error" ? console.error : level === "warn" ? console.warn : console.log;
 
   if (context) write(message, context);
   else write(message);
@@ -273,8 +259,7 @@ function installGlobalErrorHandlers(): void {
   });
 
   window.addEventListener("unhandledrejection", (event: PromiseRejectionEvent) => {
-    const rejection =
-      event.reason instanceof Error ? event.reason : new Error(String(event.reason));
+    const rejection = event.reason instanceof Error ? event.reason : new Error(String(event.reason));
 
     logger.error("Unhandled promise rejection", {
       errorMessage: rejection.message,

@@ -14,12 +14,7 @@ import { describe, expect, it, vi } from "vitest";
 // break every multipart upload path under test.
 globalThis.Blob = NodeBlob as unknown as typeof Blob;
 globalThis.File = NodeFile as unknown as typeof File;
-import {
-  loadStagedFiles,
-  loadStagedTarget,
-  saveStagedFiles,
-  saveStagedTarget,
-} from "./staged-media";
+import { loadStagedFiles, loadStagedTarget, saveStagedFiles, saveStagedTarget } from "./staged-media";
 
 const TARGET_KEY = "stigvidd:media-upload-target";
 
@@ -163,10 +158,7 @@ function putRaw(value: unknown): Promise<void> {
     const open = indexedDB.open("stigvidd-media", 1);
     open.onsuccess = () => {
       const db = open.result;
-      const request = db
-        .transaction("staged", "readwrite")
-        .objectStore("staged")
-        .put(value, "files");
+      const request = db.transaction("staged", "readwrite").objectStore("staged").put(value, "files");
       request.onsuccess = () => {
         db.close();
         resolve();

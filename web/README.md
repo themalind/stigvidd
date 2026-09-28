@@ -49,11 +49,11 @@ switch the automatic step off; set `ORVAL_API_URL` to generate from a running AP
 
 ## Layout
 
-| | |
-| --- | --- |
-| `src/pages/` | One folder per sidebar section; admin tools under `pages/admin/` |
-| `src/components/` | UI, including the shared `ui/` primitives |
-| `src/lib/` | Logic extracted from large components so it can be tested (`trail-import-review.ts`, `moderation-review.ts`, `mail-template.ts`, `media-upload.ts`, …) |
-| `src/api/` | The generated client plus the hand-written `mutator.ts` and `admin.ts` |
-| `src/services/` | Keycloak sign-in and telemetry |
-| `src/router/` | Routes |
+|                   |                                                                                                                                                        |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `src/pages/`      | One folder per sidebar section; admin tools under `pages/admin/`                                                                                       |
+| `src/components/` | UI, including the shared `ui/` primitives                                                                                                              |
+| `src/lib/`        | Logic extracted from large components so it can be tested (`trail-import-review.ts`, `moderation-review.ts`, `mail-template.ts`, `media-upload.ts`, …) |
+| `src/api/`        | The generated client plus the hand-written `mutator.ts` and `admin.ts`                                                                                 |
+| `src/services/`   | Keycloak sign-in and telemetry                                                                                                                         |
+| `src/router/`     | Routes                                                                                                                                                 |

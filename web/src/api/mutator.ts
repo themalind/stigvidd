@@ -31,9 +31,7 @@ async function errorMessage(response: Response): Promise<string> {
 
     if (body && typeof body === "object") {
       const { message, detail, title } = body as Record<string, unknown>;
-      const named = [message, detail, title].find(
-        (value) => typeof value === "string" && value.length > 0,
-      );
+      const named = [message, detail, title].find((value) => typeof value === "string" && value.length > 0);
       if (named) return named as string;
     }
   } catch {
@@ -43,10 +41,7 @@ async function errorMessage(response: Response): Promise<string> {
   return text.slice(0, 300) || fallback;
 }
 
-export const customFetch = async <T>(
-  url: string,
-  options: RequestInit,
-): Promise<T> => {
+export const customFetch = async <T>(url: string, options: RequestInit): Promise<T> => {
   const token = await getValidAccessToken();
   const requestUrl = `${import.meta.env.VITE_API_URL}${url}`;
 
@@ -63,9 +58,7 @@ export const customFetch = async <T>(
   }
 
   // 204/205/304 carry no body; everything else is JSON from the API.
-  const body = [204, 205, 304].includes(response.status)
-    ? null
-    : await response.text();
+  const body = [204, 205, 304].includes(response.status) ? null : await response.text();
 
   return (body ? JSON.parse(body) : undefined) as T;
 };

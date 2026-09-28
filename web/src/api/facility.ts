@@ -1,11 +1,7 @@
 // SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {
-  FacilityResponse,
-  ImageProcessingOptions,
-  TrailImageResponse,
-} from "@/types/types";
+import type { FacilityResponse, ImageProcessingOptions, TrailImageResponse } from "@/types/types";
 import { getFacilitiesGetAllUrl } from "./generated/facilities/facilities";
 // Facility image management is admin-only and lives under api/v1/admin/facilities.
 import {
@@ -33,15 +29,13 @@ export async function uploadFacilityImages(
   const formData = new FormData();
   images.forEach((file) => formData.append("images", file));
   appendProcessingOptions(formData, options);
-  return customFetch<TrailImageResponse[]>(
-    getAdminFacilitiesAddFacilityImagesUrl(identifier),
-    { method: "POST", body: formData },
-  );
+  return customFetch<TrailImageResponse[]>(getAdminFacilitiesAddFacilityImagesUrl(identifier), {
+    method: "POST",
+    body: formData,
+  });
 }
 
-export async function deleteFacilityImage(
-  imageIdentifier: string,
-): Promise<void> {
+export async function deleteFacilityImage(imageIdentifier: string): Promise<void> {
   await customFetch<void>(getAdminFacilitiesDeleteFacilityImageUrl(imageIdentifier), {
     method: "DELETE",
   });

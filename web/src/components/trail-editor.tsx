@@ -1,23 +1,11 @@
 // SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {
-  CLASSIFICATION,
-  type TrailShortInfoResponse,
-  type UpdateTrailRequest,
-} from "@/types/types";
+import { CLASSIFICATION, type TrailShortInfoResponse, type UpdateTrailRequest } from "@/types/types";
 import { Button } from "./ui/button";
 import { Checkbox } from "./ui/checkbox";
 import { Input } from "./ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from "./ui/select";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "./ui/select";
 import {
   Sheet,
   SheetClose,
@@ -78,25 +66,11 @@ const LIMITS = {
   maintainedBy: 100,
 } as const;
 
-function FieldHeader({
-  label,
-  value,
-  max,
-}: {
-  label: string;
-  value: string;
-  max: number;
-}) {
+function FieldHeader({ label, value, max }: { label: string; value: string; max: number }) {
   return (
     <div className="flex items-baseline justify-between gap-2">
       <p>{label}</p>
-      <span
-        className={
-          value.length === max
-            ? "text-destructive text-xs"
-            : "text-muted-foreground text-xs"
-        }
-      >
+      <span className={value.length === max ? "text-destructive text-xs" : "text-muted-foreground text-xs"}>
         {value.length}/{max}
       </span>
     </div>
@@ -133,8 +107,7 @@ export default function TrailEditor({ data, selected }: Props) {
           illumination: trail.visitorInformation?.illumination ?? false,
           illuminationText: trail.visitorInformation?.illuminationText ?? "",
           maintainedBy: trail.visitorInformation?.maintainedBy ?? "",
-          winterMaintenance:
-            trail.visitorInformation?.winterMaintenance ?? false,
+          winterMaintenance: trail.visitorInformation?.winterMaintenance ?? false,
         },
       });
       setLoaded(true);
@@ -170,9 +143,8 @@ export default function TrailEditor({ data, selected }: Props) {
         <SheetHeader>
           <SheetTitle>Edit Trail</SheetTitle>
           <SheetDescription>
-            All changes you make are permanent and cannot be undone. There is no
-            undo function available. Any modifications will be applied directly
-            to the live database. Please review your changes carefully before
+            All changes you make are permanent and cannot be undone. There is no undo function available. Any
+            modifications will be applied directly to the live database. Please review your changes carefully before
             proceeding.
           </SheetDescription>
         </SheetHeader>
@@ -184,8 +156,7 @@ export default function TrailEditor({ data, selected }: Props) {
         ) : !loaded ? (
           <div className="flex flex-1 items-center justify-center px-4">
             <p className="text-muted-foreground text-sm">
-              This trail could not be loaded, so there is nothing to edit. Close
-              the panel and open it again.
+              This trail could not be loaded, so there is nothing to edit. Close the panel and open it again.
             </p>
           </div>
         ) : (
@@ -193,12 +164,7 @@ export default function TrailEditor({ data, selected }: Props) {
             <div className="grid auto-rows-min gap-4 px-4">
               <div className="flex flex-col gap-2">
                 <p>Name</p>
-                <Input
-                  value={formData.name}
-                  onChange={(e) =>
-                    setFormData({ ...formData, name: e.target.value })
-                  }
-                />
+                <Input value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} />
               </div>
               <div className="flex flex-col gap-2">
                 <p>Trail Length (km)</p>
@@ -216,26 +182,18 @@ export default function TrailEditor({ data, selected }: Props) {
                 />
               </div>
               <div className="flex flex-col gap-2">
-                <FieldHeader
-                  label="City"
-                  value={formData.city ?? ""}
-                  max={LIMITS.city}
-                />
+                <FieldHeader label="City" value={formData.city ?? ""} max={LIMITS.city} />
                 <Input
                   value={formData.city ?? ""}
                   maxLength={LIMITS.city}
-                  onChange={(e) =>
-                    setFormData({ ...formData, city: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, city: e.target.value })}
                 />
               </div>
               <div className="flex flex-col gap-2">
                 <p>Classification</p>
                 <Select
                   value={formData.classification?.toString() ?? "0"}
-                  onValueChange={(v) =>
-                    setFormData({ ...formData, classification: Number(v) })
-                  }
+                  onValueChange={(v) => setFormData({ ...formData, classification: Number(v) })}
                 >
                   <SelectTrigger className="w-full">
                     <SelectValue />
@@ -285,31 +243,19 @@ export default function TrailEditor({ data, selected }: Props) {
                 />
               </div>
               <div className="flex flex-col gap-2">
-                <FieldHeader
-                  label="Trail Symbol"
-                  value={formData.trailSymbol ?? ""}
-                  max={LIMITS.trailSymbol}
-                />
+                <FieldHeader label="Trail Symbol" value={formData.trailSymbol ?? ""} max={LIMITS.trailSymbol} />
                 <Input
                   value={formData.trailSymbol ?? ""}
                   maxLength={LIMITS.trailSymbol}
-                  onChange={(e) =>
-                    setFormData({ ...formData, trailSymbol: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, trailSymbol: e.target.value })}
                 />
               </div>
               <div className="flex flex-col gap-2">
-                <FieldHeader
-                  label="Description"
-                  value={formData.description ?? ""}
-                  max={LIMITS.description}
-                />
+                <FieldHeader label="Description" value={formData.description ?? ""} max={LIMITS.description} />
                 <Textarea
                   value={formData.description ?? ""}
                   maxLength={LIMITS.description}
-                  onChange={(e) =>
-                    setFormData({ ...formData, description: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 />
               </div>
               <div className="flex flex-col gap-2">
@@ -331,10 +277,7 @@ export default function TrailEditor({ data, selected }: Props) {
               </div>
               <div className="flex flex-col gap-2">
                 <p>Tags</p>
-                <TagInput
-                  value={formData.tags ?? ""}
-                  onChange={(tags) => setFormData({ ...formData, tags })}
-                />
+                <TagInput value={formData.tags ?? ""} onChange={(tags) => setFormData({ ...formData, tags })} />
               </div>
 
               <Separator className="mt-3" />
@@ -382,11 +325,7 @@ export default function TrailEditor({ data, selected }: Props) {
                 />
               </div>
               <div className="flex flex-col gap-2">
-                <FieldHeader
-                  label="Parking"
-                  value={formData.visitorInformation?.parking ?? ""}
-                  max={LIMITS.parking}
-                />
+                <FieldHeader label="Parking" value={formData.visitorInformation?.parking ?? ""} max={LIMITS.parking} />
                 <Textarea
                   value={formData.visitorInformation?.parking ?? ""}
                   maxLength={LIMITS.parking}
@@ -460,9 +399,7 @@ export default function TrailEditor({ data, selected }: Props) {
               <div className="flex items-center gap-2">
                 <Checkbox
                   id="winterMaintenance"
-                  checked={
-                    formData.visitorInformation?.winterMaintenance ?? false
-                  }
+                  checked={formData.visitorInformation?.winterMaintenance ?? false}
                   onCheckedChange={(checked) =>
                     setFormData({
                       ...formData,
@@ -480,10 +417,7 @@ export default function TrailEditor({ data, selected }: Props) {
         )}
 
         <SheetFooter>
-          <Button
-            onClick={handleSubmit}
-            disabled={submitting || loading || !loaded}
-          >
+          <Button onClick={handleSubmit} disabled={submitting || loading || !loaded}>
             {submitting ? "Saving..." : "Save changes"}
           </Button>
           <SheetClose asChild>

@@ -36,9 +36,7 @@ export type OutboxFilters = {
   pageSize?: number;
 };
 
-export async function getOutboxMails(
-  filters: OutboxFilters,
-): Promise<PagedResultOfOutboxEmailSummaryResponse> {
+export async function getOutboxMails(filters: OutboxFilters): Promise<PagedResultOfOutboxEmailSummaryResponse> {
   return adminMailOutboxGetAll(filters);
 }
 

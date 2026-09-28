@@ -79,12 +79,27 @@ export const defaultHikeState: StoredHikeState = {
   currentSegment: null,
 };
 
+export const CORRUPT_HIKE_STORAGE_KEY = `${HIKE_STORAGE_KEY}_corrupt`;
+
+// A default on a failed read would be written over the recording by mutateHikeState. keep-comment: hidden data-loss trap
 export async function readHikeState(): Promise<StoredHikeState> {
+  let stored: string | null;
   try {
-    const stored = await AsyncStorage.getItem(HIKE_STORAGE_KEY);
-    if (!stored) return defaultHikeState;
+    stored = await AsyncStorage.getItem(HIKE_STORAGE_KEY);
+  } catch (error) {
+    logger.error("Reading the stored hike failed", { errorMessage: String(error) });
+    throw error;
+  }
+  if (!stored) return defaultHikeState;
+  try {
     return JSON.parse(stored) as StoredHikeState;
-  } catch {
+  } catch (error) {
+    logger.error("Stored hike is corrupt; set aside", { errorMessage: String(error), length: stored.length });
+    try {
+      await AsyncStorage.setItem(CORRUPT_HIKE_STORAGE_KEY, stored);
+    } catch {
+      return defaultHikeState;
+    }
     return defaultHikeState;
   }
 }

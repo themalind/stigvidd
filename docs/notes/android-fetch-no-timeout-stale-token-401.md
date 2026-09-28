@@ -50,4 +50,15 @@ pid ran through the whole incident.
 The recording itself was never at risk. It lives in AsyncStorage (`@stigvidd_active_hike`) and is
 cleared only by `resetTracking()` after a successful save or an explicit discard.
 
-Plain API calls (`app/src/api/*.ts`) still have no timeout; only the token requests do.
+**Follow-up (2026-09-27).**
+- Every call in `app/src/api/*.ts` now goes through `apiFetch` in `app/src/api/api-config.ts`
+  (30 s; 120 s for photo and hike uploads), built on `app/src/services/with-timeout.ts`. The
+  bound covers the response headers, not reading the body.
+- The web admin had the same stale-token bug: `getValidAccessToken` did
+  `refreshGrant(token).then(() => accessToken)`. It now throws `SessionUnavailableError`, and
+  its token requests have a 15 s timeout. Its API calls do not, because they carry image
+  uploads, trail imports and the data export, and a browser times out a dead connection on its
+  own. Its old tests passed only because the stale token equalled the expected one: they reused
+  one `Response`, so every refresh after the first failed on "body already used".
+- A failed refresh is logged on both sides as `Token refresh failed {outcome, reason}`. In the
+  app, repeats are suppressed until a refresh succeeds.

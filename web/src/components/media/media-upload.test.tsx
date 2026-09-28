@@ -6,10 +6,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { MediaItemResponse } from "@/api/generated/model";
-import type {
-  FacilityResponse,
-  TrailShortInfoResponse,
-} from "@/types/types";
+import type { FacilityResponse, TrailShortInfoResponse } from "@/types/types";
 import { saveStagedFiles, saveStagedTarget } from "@/lib/staged-media";
 
 // Real everywhere except the one read whose timing is the thing under test.
@@ -55,14 +52,9 @@ globalThis.File = NodeFile as unknown as typeof File;
 const trail = (identifier: string, name: string): TrailShortInfoResponse =>
   ({ identifier, name, trailLength: 4, classification: 1 }) as TrailShortInfoResponse;
 
-const facility = (identifier: string, name: string): FacilityResponse =>
-  ({ identifier, name }) as FacilityResponse;
+const facility = (identifier: string, name: string): FacilityResponse => ({ identifier, name }) as FacilityResponse;
 
-const item = (
-  identifier: string,
-  ownerIdentifier: string,
-  ownerType: string,
-): MediaItemResponse =>
+const item = (identifier: string, ownerIdentifier: string, ownerType: string): MediaItemResponse =>
   ({
     identifier,
     ownerIdentifier,
@@ -74,8 +66,7 @@ const item = (
     sizeBytes: 2048,
   }) as MediaItemResponse;
 
-const image = (name: string, type = "image/jpeg") =>
-  new File(["bytes"], name, { type });
+const image = (name: string, type = "image/jpeg") => new File(["bytes"], name, { type });
 
 const onMediaChanged = vi.fn();
 const show = () => render(<MediaUpload onMediaChanged={onMediaChanged} />);
@@ -87,30 +78,22 @@ async function pick(label: RegExp | string, option: RegExp | string) {
 }
 
 const dropzone = () => screen.getByText(/Drop image/).closest("div")!;
-const fileInput = () =>
-  dropzone().querySelector<HTMLInputElement>("input[type=file]")!;
+const fileInput = () => dropzone().querySelector<HTMLInputElement>("input[type=file]")!;
 const uploadButton = () => screen.getByRole("button", { name: /upload/i });
 
 // The panel is quiet only once all three of its opening requests have landed.
-const settled = () =>
-  waitFor(() => expect(facilityApi.getAllFacilities).toHaveBeenCalled());
+const settled = () => waitFor(() => expect(facilityApi.getAllFacilities).toHaveBeenCalled());
 
-const storedTarget = () =>
-  JSON.parse(localStorage.getItem("stigvidd:media-upload-target") ?? "null");
+const storedTarget = () => JSON.parse(localStorage.getItem("stigvidd:media-upload-target") ?? "null");
 
 // The real reader, for the tests that check what is actually in IndexedDB.
 let readStore: typeof import("@/lib/staged-media").loadStagedFiles;
 
 beforeEach(async () => {
-  const real = await vi.importActual<typeof import("@/lib/staged-media")>(
-    "@/lib/staged-media",
-  );
+  const real = await vi.importActual<typeof import("@/lib/staged-media")>("@/lib/staged-media");
   readStore = real.loadStagedFiles;
   staged.loadStagedFiles.mockImplementation(real.loadStagedFiles);
-  trailApi.getAllTrails.mockResolvedValue([
-    trail("t-1", "Knalleleden"),
-    trail("t-2", "Sjuhäradsrundan"),
-  ]);
+  trailApi.getAllTrails.mockResolvedValue([trail("t-1", "Knalleleden"), trail("t-2", "Sjuhäradsrundan")]);
   trailApi.addTrailImages.mockResolvedValue([{}]);
   trailApi.setTrailSymbol.mockResolvedValue({});
   trailApi.deleteTrailImage.mockResolvedValue(undefined);
@@ -137,9 +120,7 @@ describe("the target that was chosen last time", () => {
     show();
     await settled();
 
-    expect(screen.getByLabelText("Attach to")).toHaveTextContent(
-      "Trail — gallery",
-    );
+    expect(screen.getByLabelText("Attach to")).toHaveTextContent("Trail — gallery");
   });
 
   it("is remembered when it changes", async () => {
@@ -149,9 +130,10 @@ describe("the target that was chosen last time", () => {
     await pick("Trail", /Sjuhäradsrundan/);
 
     await waitFor(() =>
-      expect(JSON.parse(localStorage.getItem("stigvidd:media-upload-target")!)).toEqual(
-        { targetType: "trail-gallery", targetId: "t-2" },
-      ),
+      expect(JSON.parse(localStorage.getItem("stigvidd:media-upload-target")!)).toEqual({
+        targetType: "trail-gallery",
+        targetId: "t-2",
+      }),
     );
   });
 
@@ -190,9 +172,7 @@ describe("the target that was chosen last time", () => {
     await userEvent.upload(fileInput(), image("photo.jpg"));
     await userEvent.click(uploadButton());
 
-    expect(toasted.error).toHaveBeenCalledWith(
-      "Choose what to attach the image(s) to.",
-    );
+    expect(toasted.error).toHaveBeenCalledWith("Choose what to attach the image(s) to.");
     expect(facilityApi.uploadFacilityImages).not.toHaveBeenCalled();
   });
 
@@ -201,9 +181,7 @@ describe("the target that was chosen last time", () => {
 
     show();
 
-    await waitFor(() =>
-      expect(screen.getByLabelText("Trail")).toHaveTextContent("Select…"),
-    );
+    await waitFor(() => expect(screen.getByLabelText("Trail")).toHaveTextContent("Select…"));
   });
 
   it("is kept when it is still there", async () => {
@@ -212,9 +190,7 @@ describe("the target that was chosen last time", () => {
     show();
     await settled();
 
-    await waitFor(() =>
-      expect(screen.getByLabelText("Trail")).toHaveTextContent("Knalleleden"),
-    );
+    await waitFor(() => expect(screen.getByLabelText("Trail")).toHaveTextContent("Knalleleden"));
   });
 
   // The guard that matters: an empty list means "not loaded yet", not "gone".
@@ -230,14 +206,10 @@ describe("the target that was chosen last time", () => {
     show();
     await settled();
 
-    expect(
-      JSON.parse(localStorage.getItem("stigvidd:media-upload-target")!).targetId,
-    ).toBe("t-1");
+    expect(JSON.parse(localStorage.getItem("stigvidd:media-upload-target")!).targetId).toBe("t-1");
 
     arrive([trail("t-1", "Knalleleden")]);
-    await waitFor(() =>
-      expect(screen.getByLabelText("Trail")).toHaveTextContent("Knalleleden"),
-    );
+    await waitFor(() => expect(screen.getByLabelText("Trail")).toHaveTextContent("Knalleleden"));
   });
 });
 
@@ -284,9 +256,7 @@ describe("files staged before a refresh", () => {
     await userEvent.click(uploadButton());
 
     await waitFor(() => expect(trailApi.addTrailImages).toHaveBeenCalledOnce());
-    expect(
-      trailApi.addTrailImages.mock.calls[0][1].map((f: File) => f.name),
-    ).toEqual(["just-picked.jpg"]);
+    expect(trailApi.addTrailImages.mock.calls[0][1].map((f: File) => f.name)).toEqual(["just-picked.jpg"]);
   });
 
   it("are kept in step with what is staged now", async () => {
@@ -296,9 +266,7 @@ describe("files staged before a refresh", () => {
     await userEvent.upload(fileInput(), image("photo.jpg"));
 
     await waitFor(() => expect(screen.getAllByAltText("")).toHaveLength(1));
-    await waitFor(async () =>
-      expect((await readStore()).map((f) => f.name)).toEqual(["photo.jpg"]),
-    );
+    await waitFor(async () => expect((await readStore()).map((f) => f.name)).toEqual(["photo.jpg"]));
   });
 
   // The persist effect runs on the very first render too, when `files` is still the
@@ -367,12 +335,7 @@ describe("the images already attached", () => {
 
     await pick("Trail", /Knalleleden/);
 
-    await waitFor(() =>
-      expect(screen.getByAltText("alt for m1")).toHaveAttribute(
-        "src",
-        "https://media.test/m1.webp",
-      ),
-    );
+    await waitFor(() => expect(screen.getByAltText("alt for m1")).toHaveAttribute("src", "https://media.test/m1.webp"));
   });
 
   it("shows the symbol, and offers no way to delete it", async () => {
@@ -381,12 +344,7 @@ describe("the images already attached", () => {
     await pick("Attach to", /Trail — symbol/);
     await pick("Trail", /Knalleleden/);
 
-    await waitFor(() =>
-      expect(screen.getByAltText("alt for m2")).toHaveAttribute(
-        "src",
-        "https://media.test/m2.webp",
-      ),
-    );
+    await waitFor(() => expect(screen.getByAltText("alt for m2")).toHaveAttribute("src", "https://media.test/m2.webp"));
     expect(screen.queryByTitle("Delete image")).toBeNull();
   });
 
@@ -400,9 +358,7 @@ describe("the images already attached", () => {
     await userEvent.click(screen.getByTitle("Delete image"));
 
     expect(confirmed).toHaveBeenCalled();
-    await waitFor(() =>
-      expect(trailApi.deleteTrailImage).toHaveBeenCalledWith("m1"),
-    );
+    await waitFor(() => expect(trailApi.deleteTrailImage).toHaveBeenCalledWith("m1"));
     expect(onMediaChanged).toHaveBeenCalled();
   });
 
@@ -428,9 +384,7 @@ describe("the images already attached", () => {
 
     await userEvent.click(screen.getByTitle("Delete image"));
 
-    await waitFor(() =>
-      expect(facilityApi.deleteFacilityImage).toHaveBeenCalledWith("m3"),
-    );
+    await waitFor(() => expect(facilityApi.deleteFacilityImage).toHaveBeenCalledWith("m3"));
     expect(trailApi.deleteTrailImage).not.toHaveBeenCalled();
   });
 });
@@ -443,9 +397,7 @@ describe("uploading", () => {
 
     await userEvent.click(uploadButton());
 
-    expect(toasted.error).toHaveBeenCalledWith(
-      "Choose what to attach the image(s) to.",
-    );
+    expect(toasted.error).toHaveBeenCalledWith("Choose what to attach the image(s) to.");
     expect(trailApi.addTrailImages).not.toHaveBeenCalled();
   });
 
@@ -502,9 +454,7 @@ describe("uploading", () => {
 
     await userEvent.click(uploadButton());
 
-    await waitFor(() =>
-      expect(toasted.error).toHaveBeenCalledWith("Upload failed."),
-    );
+    await waitFor(() => expect(toasted.error).toHaveBeenCalledWith("Upload failed."));
     expect(screen.getAllByAltText("")).toHaveLength(1);
     expect(onMediaChanged).not.toHaveBeenCalled();
   });
@@ -530,9 +480,7 @@ describe("uploading", () => {
 
     await userEvent.click(uploadButton());
 
-    await waitFor(() =>
-      expect(facilityApi.uploadFacilityImages).toHaveBeenCalledOnce(),
-    );
+    await waitFor(() => expect(facilityApi.uploadFacilityImages).toHaveBeenCalledOnce());
     expect(facilityApi.uploadFacilityImages.mock.calls[0][0]).toBe("f-1");
     expect(trailApi.addTrailImages).not.toHaveBeenCalled();
   });
@@ -545,9 +493,7 @@ describe("when a list cannot be loaded", () => {
     show();
     await settled();
 
-    await waitFor(() =>
-      expect(toasted.error).toHaveBeenCalledWith("Failed to load facilities."),
-    );
+    await waitFor(() => expect(toasted.error).toHaveBeenCalledWith("Failed to load facilities."));
     await pick("Trail", /Knalleleden/);
     expect(screen.getByLabelText("Trail")).toHaveTextContent("Knalleleden");
   });

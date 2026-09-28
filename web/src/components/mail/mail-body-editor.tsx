@@ -18,11 +18,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -68,14 +64,7 @@ type Props = {
  * loaded and merely opening a template would rewrite it. Dirtiness is therefore derived from
  * edit EVENTS, and the editor is seeded with `emitUpdate: false`.
  */
-export default function MailBodyEditor({
-  value,
-  onChange,
-  tokens,
-  roundTrip,
-  onEditorReady,
-  onFocus,
-}: Props) {
+export default function MailBodyEditor({ value, onChange, tokens, roundTrip, onEditorReady, onFocus }: Props) {
   const [requestedMode, setRequestedMode] = useState<"visual" | "source">("visual");
   const [overrideLoss, setOverrideLoss] = useState(false);
 
@@ -144,20 +133,13 @@ export default function MailBodyEditor({
           <p className="mt-1 text-muted-foreground">{describeLoss(roundTrip.loss)}</p>
 
           <label className="mt-2 flex items-center gap-2 text-xs">
-            <input
-              type="checkbox"
-              checked={overrideLoss}
-              onChange={(event) => setOverrideLoss(event.target.checked)}
-            />
+            <input type="checkbox" checked={overrideLoss} onChange={(event) => setOverrideLoss(event.target.checked)} />
             I understand the listed markup will be removed
           </label>
         </div>
       )}
 
-      <Tabs
-        value={mode}
-        onValueChange={(next) => (next === "visual" ? toVisual() : setRequestedMode("source"))}
-      >
+      <Tabs value={mode} onValueChange={(next) => (next === "visual" ? toVisual() : setRequestedMode("source"))}>
         <TabsList>
           <TabsTrigger value="visual" disabled={lossy && !overrideLoss}>
             Visual
@@ -215,9 +197,7 @@ export default function MailBodyEditor({
                   icon={<MousePointerClick className="size-4" />}
                   active={isButtonLink(linkAttrs ? (editor.getAttributes("link").style as string) : null)}
                   disabled={!editor.isActive("link")}
-                  onClick={() =>
-                    editor.chain().focus().updateAttributes("link", { style: buttonLinkStyle }).run()
-                  }
+                  onClick={() => editor.chain().focus().updateAttributes("link", { style: buttonLinkStyle }).run()}
                 />
                 <ToolbarButton
                   label="Style as code"
@@ -236,17 +216,15 @@ export default function MailBodyEditor({
                 <ToolbarButton
                   label="Clear paragraph styling"
                   icon={<Pilcrow className="size-4" />}
-                  onClick={() =>
-                    editor.chain().focus().updateAttributes("paragraph", { style: null }).run()
-                  }
+                  onClick={() => editor.chain().focus().updateAttributes("paragraph", { style: null }).run()}
                 />
               </div>
 
               <EditorContent editor={editor} />
 
               <p className="text-xs text-muted-foreground">
-                Placeholders show as chips. They cannot be edited in place — insert or delete
-                them whole, so one can never be half-deleted into something that stops the mail.
+                Placeholders show as chips. They cannot be edited in place — insert or delete them whole, so one can
+                never be half-deleted into something that stops the mail.
               </p>
             </>
           )}

@@ -3,19 +3,20 @@
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const TOKEN_ENDPOINT =
-  "https://oidc.test/realms/test-realm/protocol/openid-connect/token";
-const LOGOUT_ENDPOINT =
-  "https://oidc.test/realms/test-realm/protocol/openid-connect/logout";
+const warn = vi.hoisted(() => vi.fn());
+
+vi.mock("@/services/telemetry", () => ({
+  logger: { debug: vi.fn(), info: vi.fn(), warn, error: vi.fn() },
+}));
+
+const TOKEN_ENDPOINT = "https://oidc.test/realms/test-realm/protocol/openid-connect/token";
+const LOGOUT_ENDPOINT = "https://oidc.test/realms/test-realm/protocol/openid-connect/logout";
 const REFRESH_TOKEN_KEY = "kc_refresh_token";
 
 /** A structurally real JWT — jwt-decode reads the middle segment and ignores the rest. */
 function jwt(claims: Record<string, unknown>): string {
   const segment = (value: unknown) =>
-    btoa(JSON.stringify(value))
-      .replace(/\+/g, "-")
-      .replace(/\//g, "_")
-      .replace(/=+$/, "");
+    btoa(JSON.stringify(value)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 
   return `${segment({ alg: "none", typ: "JWT" })}.${segment(claims)}.signature`;
 }
@@ -24,7 +25,10 @@ const adminToken = jwt({
   sub: "user-1",
   realm_access: { roles: ["default-roles-stigvidd", "stigvidd-admin"] },
 });
-const nonAdminToken = jwt({ sub: "user-2", realm_access: { roles: ["hiker"] } });
+const nonAdminToken = jwt({
+  sub: "user-2",
+  realm_access: { roles: ["hiker"] },
+});
 const idToken = jwt({
   sub: "user-1",
   email: "admin@example.test",
@@ -66,6 +70,7 @@ function formBody(call: number): URLSearchParams {
 describe("keycloak-auth", () => {
   beforeEach(() => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(ok(tokenResponse())));
+    warn.mockClear();
   });
 
   describe("passwordGrant", () => {
@@ -74,10 +79,7 @@ describe("keycloak-auth", () => {
 
       await passwordGrant("admin@example.test", "hunter2");
 
-      const [url, init] = vi.mocked(fetch).mock.calls[0] as [
-        string,
-        RequestInit,
-      ];
+      const [url, init] = vi.mocked(fetch).mock.calls[0] as [string, RequestInit];
       expect(url).toBe(TOKEN_ENDPOINT);
       expect(init.method).toBe("POST");
       expect(Object.fromEntries(formBody(0))).toEqual({
@@ -92,9 +94,7 @@ describe("keycloak-auth", () => {
     it("returns the identity from the id_token", async () => {
       const { passwordGrant } = await loadAuth();
 
-      await expect(
-        passwordGrant("admin@example.test", "hunter2"),
-      ).resolves.toEqual({
+      await expect(passwordGrant("admin@example.test", "hunter2")).resolves.toEqual({
         id: "user-1",
         email: "admin@example.test",
         username: "admin",
@@ -110,44 +110,32 @@ describe("keycloak-auth", () => {
     });
 
     it("rejects a user without the admin realm role, and stores nothing", async () => {
-      vi.mocked(fetch).mockResolvedValue(
-        ok(tokenResponse({ access_token: nonAdminToken })),
-      );
+      vi.mocked(fetch).mockResolvedValue(ok(tokenResponse({ access_token: nonAdminToken })));
       const { passwordGrant, NotAuthorizedError } = await loadAuth();
 
-      await expect(
-        passwordGrant("hiker@example.test", "hunter2"),
-      ).rejects.toBeInstanceOf(NotAuthorizedError);
+      await expect(passwordGrant("hiker@example.test", "hunter2")).rejects.toBeInstanceOf(NotAuthorizedError);
       expect(localStorage.getItem(REFRESH_TOKEN_KEY)).toBeNull();
     });
 
     it("rejects a token with no realm_access claim at all", async () => {
-      vi.mocked(fetch).mockResolvedValue(
-        ok(tokenResponse({ access_token: jwt({ sub: "user-3" }) })),
-      );
+      vi.mocked(fetch).mockResolvedValue(ok(tokenResponse({ access_token: jwt({ sub: "user-3" }) })));
       const { passwordGrant, NotAuthorizedError } = await loadAuth();
 
-      await expect(passwordGrant("x@example.test", "y")).rejects.toBeInstanceOf(
-        NotAuthorizedError,
-      );
+      await expect(passwordGrant("x@example.test", "y")).rejects.toBeInstanceOf(NotAuthorizedError);
     });
 
     it("turns Keycloak's 401 into InvalidCredentialsError", async () => {
       vi.mocked(fetch).mockResolvedValue(new Response("", { status: 401 }));
       const { passwordGrant, InvalidCredentialsError } = await loadAuth();
 
-      await expect(
-        passwordGrant("admin@example.test", "wrong"),
-      ).rejects.toBeInstanceOf(InvalidCredentialsError);
+      await expect(passwordGrant("admin@example.test", "wrong")).rejects.toBeInstanceOf(InvalidCredentialsError);
     });
 
     it("turns Keycloak's 400 into InvalidCredentialsError", async () => {
       vi.mocked(fetch).mockResolvedValue(new Response("", { status: 400 }));
       const { passwordGrant, InvalidCredentialsError } = await loadAuth();
 
-      await expect(
-        passwordGrant("admin@example.test", "wrong"),
-      ).rejects.toBeInstanceOf(InvalidCredentialsError);
+      await expect(passwordGrant("admin@example.test", "wrong")).rejects.toBeInstanceOf(InvalidCredentialsError);
     });
 
     it("does not disguise a 500 as bad credentials", async () => {
@@ -205,6 +193,31 @@ describe("keycloak-auth", () => {
       expect(expired).not.toHaveBeenCalled();
     });
 
+    it("logs a transient failure with its cause, but never the token", async () => {
+      vi.mocked(fetch).mockRejectedValue(new TypeError("Failed to fetch"));
+      const { refreshGrant } = await loadAuth();
+
+      await refreshGrant("refresh-secret");
+
+      expect(warn).toHaveBeenCalledWith("Token refresh failed", {
+        outcome: "unavailable",
+        reason: "TypeError: Failed to fetch",
+      });
+      expect(JSON.stringify(warn.mock.calls)).not.toContain("refresh-secret");
+    });
+
+    it("logs a rejected refresh token as expired", async () => {
+      vi.mocked(fetch).mockResolvedValue(new Response("", { status: 400 }));
+      const { refreshGrant } = await loadAuth();
+
+      await refreshGrant("refresh-0");
+
+      expect(warn).toHaveBeenCalledWith("Token refresh failed", {
+        outcome: "expired",
+        reason: "InvalidCredentialsError",
+      });
+    });
+
     it("keeps the stored token on a 5xx", async () => {
       vi.mocked(fetch).mockResolvedValue(new Response("", { status: 503 }));
       const { refreshGrant } = await loadAuth();
@@ -216,9 +229,7 @@ describe("keycloak-auth", () => {
     });
 
     it("ends the session when the role has been revoked since login", async () => {
-      vi.mocked(fetch).mockResolvedValue(
-        ok(tokenResponse({ access_token: nonAdminToken })),
-      );
+      vi.mocked(fetch).mockResolvedValue(ok(tokenResponse({ access_token: nonAdminToken })));
       const { refreshGrant, setSessionExpiredHandler } = await loadAuth();
       const expired = vi.fn();
       setSessionExpiredHandler(expired);
@@ -267,7 +278,7 @@ describe("keycloak-auth", () => {
 
     // EXPIRY_SKEW_SECONDS is 30, so a token with 10s left is already stale.
     it("refreshes a token that is inside the expiry skew", async () => {
-      vi.mocked(fetch).mockResolvedValue(ok(tokenResponse({ expires_in: 10 })));
+      vi.mocked(fetch).mockImplementation(async () => ok(tokenResponse({ expires_in: 10 })));
       const { passwordGrant, getValidAccessToken } = await loadAuth();
       await passwordGrant("admin@example.test", "hunter2");
       vi.mocked(fetch).mockClear();
@@ -279,23 +290,19 @@ describe("keycloak-auth", () => {
     });
 
     it("shares one refresh between concurrent callers", async () => {
-      vi.mocked(fetch).mockResolvedValue(ok(tokenResponse({ expires_in: 0 })));
+      vi.mocked(fetch).mockImplementation(async () => ok(tokenResponse({ expires_in: 0 })));
       const { passwordGrant, getValidAccessToken } = await loadAuth();
       await passwordGrant("admin@example.test", "hunter2");
       vi.mocked(fetch).mockClear();
 
-      const tokens = await Promise.all([
-        getValidAccessToken(),
-        getValidAccessToken(),
-        getValidAccessToken(),
-      ]);
+      const tokens = await Promise.all([getValidAccessToken(), getValidAccessToken(), getValidAccessToken()]);
 
       expect(fetch).toHaveBeenCalledOnce();
       expect(tokens).toEqual([adminToken, adminToken, adminToken]);
     });
 
     it("refreshes again after the shared refresh has settled", async () => {
-      vi.mocked(fetch).mockResolvedValue(ok(tokenResponse({ expires_in: 0 })));
+      vi.mocked(fetch).mockImplementation(async () => ok(tokenResponse({ expires_in: 0 })));
       const { passwordGrant, getValidAccessToken } = await loadAuth();
       await passwordGrant("admin@example.test", "hunter2");
       vi.mocked(fetch).mockClear();
@@ -304,6 +311,32 @@ describe("keycloak-auth", () => {
       await getValidAccessToken();
 
       expect(fetch).toHaveBeenCalledTimes(2);
+    });
+
+    it("refuses to hand out the expired token when Keycloak cannot be reached", async () => {
+      vi.mocked(fetch).mockImplementation(async () => ok(tokenResponse({ expires_in: 0 })));
+      const { passwordGrant, getValidAccessToken, SessionUnavailableError } = await loadAuth();
+      await passwordGrant("admin@example.test", "hunter2");
+      vi.mocked(fetch).mockRejectedValue(new TypeError("Failed to fetch"));
+
+      await expect(getValidAccessToken()).rejects.toBeInstanceOf(SessionUnavailableError);
+    });
+
+    it("refuses on a cold start too, when the refresh token came from storage", async () => {
+      localStorage.setItem(REFRESH_TOKEN_KEY, "refresh-stored");
+      vi.mocked(fetch).mockRejectedValue(new TypeError("Failed to fetch"));
+      const { getValidAccessToken, SessionUnavailableError } = await loadAuth();
+
+      await expect(getValidAccessToken()).rejects.toBeInstanceOf(SessionUnavailableError);
+      expect(localStorage.getItem(REFRESH_TOKEN_KEY)).toBe("refresh-stored");
+    });
+
+    it("returns null once the refresh token is rejected", async () => {
+      localStorage.setItem(REFRESH_TOKEN_KEY, "refresh-stored");
+      vi.mocked(fetch).mockResolvedValue(new Response("", { status: 400 }));
+      const { getValidAccessToken } = await loadAuth();
+
+      await expect(getValidAccessToken()).resolves.toBeNull();
     });
 
     it("falls back to the persisted refresh token when memory is cold", async () => {

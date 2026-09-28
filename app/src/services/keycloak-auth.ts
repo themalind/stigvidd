@@ -8,6 +8,8 @@
 import * as SecureStore from "expo-secure-store";
 import { jwtDecode } from "jwt-decode";
 import { AuthUser } from "@/data/types";
+import { logger } from "./logger";
+import { withTimeout } from "./with-timeout";
 
 /**
  * Keycloak Direct Access Grant (Resource Owner Password Credentials) service.
@@ -39,6 +41,7 @@ const EXPIRY_SKEW_SECONDS = 30;
 
 // RN's Android fetch (OkHttp) has no timeout; see docs/notes/android-fetch-no-timeout-stale-token-401.md. keep-comment: hidden platform constraint
 export const TOKEN_REQUEST_TIMEOUT_MS = 15_000;
+const TIMEOUT_MESSAGE = "Keycloak request timed out";
 
 const UNAUTHORIZED_COOLDOWN_MS = 30_000;
 
@@ -102,6 +105,8 @@ let refreshToken: string | null = null;
 let accessExpiresAt = 0; // epoch ms
 let refreshPromise: Promise<RefreshOutcome> | null = null;
 let lastForcedRefreshAt = 0; // epoch ms
+// One line per distinct failure: offline, every API call retries the refresh. keep-comment: protects the log buffer
+let lastRefreshFailure: string | null = null;
 
 // Called when a refresh fails and the session is gone, so the auth layer can
 // flip back to the signed-out state. Registered once by useInitAuth.
@@ -161,6 +166,7 @@ export async function clearTokens(): Promise<void> {
   accessToken = null;
   refreshToken = null;
   accessExpiresAt = 0;
+  lastRefreshFailure = null;
 
   await Promise.all([
     SecureStore.deleteItemAsync(STORAGE_KEYS.accessToken),
@@ -169,42 +175,29 @@ export async function clearTokens(): Promise<void> {
   ]);
 }
 
-async function withTimeout<T>(request: (signal: AbortSignal) => Promise<T>): Promise<T> {
-  const controller = new AbortController();
-  let timer: ReturnType<typeof setTimeout> | undefined;
-  const timeout = new Promise<never>((_, reject) => {
-    timer = setTimeout(() => {
-      controller.abort();
-      reject(new Error("Keycloak request timed out"));
-    }, TOKEN_REQUEST_TIMEOUT_MS);
-  });
-
-  try {
-    return await Promise.race([request(controller.signal), timeout]);
-  } finally {
-    clearTimeout(timer);
-  }
-}
-
 async function requestToken(body: Record<string, string>): Promise<KeycloakTokenResponse> {
-  return withTimeout(async (signal) => {
-    const response = await fetch(TOKEN_ENDPOINT, {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams(body).toString(),
-      signal,
-    });
+  return withTimeout(
+    async (signal) => {
+      const response = await fetch(TOKEN_ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams(body).toString(),
+        signal,
+      });
 
-    if (response.status === 400 || response.status === 401) {
-      throw (await isAccountDisabled(response)) ? new AccountNotVerifiedError() : new InvalidCredentialsError();
-    }
+      if (response.status === 400 || response.status === 401) {
+        throw (await isAccountDisabled(response)) ? new AccountNotVerifiedError() : new InvalidCredentialsError();
+      }
 
-    if (!response.ok) {
-      throw new Error(`Keycloak token request failed: HTTP ${response.status}`);
-    }
+      if (!response.ok) {
+        throw new Error(`Keycloak token request failed: HTTP ${response.status}`);
+      }
 
-    return (await response.json()) as KeycloakTokenResponse;
-  });
+      return (await response.json()) as KeycloakTokenResponse;
+    },
+    TOKEN_REQUEST_TIMEOUT_MS,
+    TIMEOUT_MESSAGE,
+  );
 }
 
 /** Decode the identity claims from a Keycloak token into the app's AuthUser shape. */
@@ -252,9 +245,18 @@ async function refresh(token: string): Promise<RefreshOutcome> {
       refresh_token: token,
     });
     await persistTokens(tokens);
+    lastRefreshFailure = null;
     return "refreshed";
   } catch (error) {
-    if (error instanceof InvalidCredentialsError) {
+    const expired = error instanceof InvalidCredentialsError;
+    const outcome = expired ? "expired" : "unavailable";
+    const reason = expired ? error.name : String(error);
+    // Nothing else records a failed refresh: API calls throw before their own logging runs. keep-comment: hidden observability gap
+    if (lastRefreshFailure !== `${outcome}|${reason}`) {
+      lastRefreshFailure = `${outcome}|${reason}`;
+      logger.warn("Token refresh failed", { outcome, reason });
+    }
+    if (expired) {
       await clearTokens();
       onSessionExpired?.();
       return "expired";
@@ -286,13 +288,16 @@ export async function logoutKeycloak(): Promise<void> {
   const token = refreshToken;
   if (token) {
     try {
-      await withTimeout((signal) =>
-        fetch(LOGOUT_ENDPOINT, {
-          method: "POST",
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          body: new URLSearchParams({ client_id: CLIENT_ID, refresh_token: token }).toString(),
-          signal,
-        }),
+      await withTimeout(
+        (signal) =>
+          fetch(LOGOUT_ENDPOINT, {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: new URLSearchParams({ client_id: CLIENT_ID, refresh_token: token }).toString(),
+            signal,
+          }),
+        TOKEN_REQUEST_TIMEOUT_MS,
+        TIMEOUT_MESSAGE,
       );
     } catch {
       // Best-effort revocation; we clear local tokens regardless.

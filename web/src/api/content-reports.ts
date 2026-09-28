@@ -35,9 +35,7 @@ export type QueueFilters = {
   pageSize?: number;
 };
 
-export async function getReports(
-  filters: QueueFilters,
-): Promise<PagedResultOfContentReportSummaryResponse> {
+export async function getReports(filters: QueueFilters): Promise<PagedResultOfContentReportSummaryResponse> {
   return adminContentReportsGetReports(filters);
 }
 
@@ -62,17 +60,11 @@ export type ReporterStatistic = ReporterStatisticResponse;
 export type AuthorStatistic = AuthorStatisticResponse;
 
 /** Who reports, most dismissed first. */
-export async function getReporters(
-  page: number,
-  pageSize: number,
-): Promise<PagedResultOfReporterStatisticResponse> {
+export async function getReporters(page: number, pageSize: number): Promise<PagedResultOfReporterStatisticResponse> {
   return adminContentReportsGetReporters({ page, pageSize });
 }
 
 /** Strikes per author on distinct content, most first. */
-export async function getAuthors(
-  page: number,
-  pageSize: number,
-): Promise<PagedResultOfAuthorStatisticResponse> {
+export async function getAuthors(page: number, pageSize: number): Promise<PagedResultOfAuthorStatisticResponse> {
   return adminContentReportsGetAuthors({ page, pageSize });
 }

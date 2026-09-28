@@ -66,14 +66,8 @@ export function buildImageOptions(choices: ProcessingChoices): ImageProcessingOp
  * The staged set after a drop or a pick. Anything that is not an image is dropped, and a
  * target that takes one file keeps only the newest.
  */
-export function acceptImages(
-  staged: File[],
-  incoming: FileList | File[],
-  allowMultiple: boolean,
-): File[] {
-  const images = Array.from(incoming).filter((file) =>
-    file.type.startsWith("image/"),
-  );
+export function acceptImages(staged: File[], incoming: FileList | File[], allowMultiple: boolean): File[] {
+  const images = Array.from(incoming).filter((file) => file.type.startsWith("image/"));
 
   if (images.length === 0) return staged;
 
@@ -83,16 +77,8 @@ export function acceptImages(
 // Owner type as well as id: a trail's symbol carries the trail's own identifier, so
 // matching on the id alone would show the symbol among the gallery images and offer a
 // delete button for something that has no delete endpoint.
-export function attachedTo(
-  media: MediaItemResponse[],
-  targetId: string,
-  targetType: TargetType,
-): MediaItemResponse[] {
+export function attachedTo(media: MediaItemResponse[], targetId: string, targetType: TargetType): MediaItemResponse[] {
   if (!targetId) return [];
 
-  return media.filter(
-    (item) =>
-      item.ownerIdentifier === targetId &&
-      item.ownerType === OWNER_TYPE[targetType],
-  );
+  return media.filter((item) => item.ownerIdentifier === targetId && item.ownerType === OWNER_TYPE[targetType]);
 }

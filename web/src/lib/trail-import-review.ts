@@ -27,16 +27,10 @@ export const bulkTiers: Confidence[] = ["Certain", "High"];
  * `Medium` in the selection is enough to refuse — those are the ones that wanted a human.
  */
 export function canBulkDecide(checked: CheckedProposals): boolean {
-  return (
-    checked.size > 0 &&
-    [...checked.values()].every((tier) => bulkTiers.includes(tier as Confidence))
-  );
+  return checked.size > 0 && [...checked.values()].every((tier) => bulkTiers.includes(tier as Confidence));
 }
 
-export function toggleProposal(
-  checked: CheckedProposals,
-  proposal: SelectableProposal,
-): Map<number, string> {
+export function toggleProposal(checked: CheckedProposals, proposal: SelectableProposal): Map<number, string> {
   const next = new Map(checked);
 
   if (next.has(proposal.id)) next.delete(proposal.id);
@@ -78,11 +72,7 @@ export function pageSelection(
  * Offered once the page is exhausted and the filter still holds more, the way a mail
  * client does it — otherwise "select all" quietly means "select these fifty".
  */
-export function canSelectAllMatching(
-  page: PageSelection,
-  total: number,
-  checked: CheckedProposals,
-): boolean {
+export function canSelectAllMatching(page: PageSelection, total: number, checked: CheckedProposals): boolean {
   return page.whole && total > checked.size;
 }
 
@@ -93,10 +83,7 @@ export type ConfidenceCounts = {
   unmatched?: number;
 } | null;
 
-export function countFor(
-  counts: ConfidenceCounts | undefined,
-  confidence: Confidence,
-): number {
+export function countFor(counts: ConfidenceCounts | undefined, confidence: Confidence): number {
   if (!counts) return 0;
 
   return (
@@ -137,8 +124,7 @@ export async function collectAllMatching(
   for (let cursor = 1; cursor <= maxPages; cursor++) {
     const paged = await fetchPage(cursor);
 
-    for (const proposal of paged.items ?? [])
-      checked.set(proposal.id, proposal.confidence);
+    for (const proposal of paged.items ?? []) checked.set(proposal.id, proposal.confidence);
 
     if (!paged.hasMore) return { complete: true, checked };
   }

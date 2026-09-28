@@ -39,9 +39,7 @@ async function open(images = [image("img-1"), image("img-2")]) {
   api.getTrailByIdentifier.mockResolvedValue({ trailImagesResponse: images });
   render(<TrailImagesDialog data={trail} selected={true} />);
   await userEvent.click(screen.getByRole("button"));
-  await waitFor(() =>
-    expect(screen.getAllByTitle("Delete image")).toHaveLength(images.length),
-  );
+  await waitFor(() => expect(screen.getAllByTitle("Delete image")).toHaveLength(images.length));
 }
 
 const deleteButtons = () => screen.getAllByTitle("Delete image");
@@ -76,9 +74,7 @@ describe("opening the dialog", () => {
 
     await userEvent.click(screen.getByRole("button"));
 
-    await waitFor(() =>
-      expect(toasts.toast.error).toHaveBeenCalledWith("Failed to load images."),
-    );
+    await waitFor(() => expect(toasts.toast.error).toHaveBeenCalledWith("Failed to load images."));
   });
 });
 
@@ -110,9 +106,7 @@ describe("deleting an image", () => {
 
     await userEvent.click(deleteButtons()[1]);
 
-    await waitFor(() =>
-      expect(api.deleteTrailImage).toHaveBeenCalledWith("img-2"),
-    );
+    await waitFor(() => expect(api.deleteTrailImage).toHaveBeenCalledWith("img-2"));
     expect(api.deleteTrailImage).toHaveBeenCalledOnce();
     await waitFor(() => expect(deleteButtons()).toHaveLength(1));
   });
@@ -124,9 +118,7 @@ describe("deleting an image", () => {
 
     await userEvent.click(deleteButtons()[0]);
 
-    await waitFor(() =>
-      expect(toasts.toast.error).toHaveBeenCalledWith("Failed to delete image."),
-    );
+    await waitFor(() => expect(toasts.toast.error).toHaveBeenCalledWith("Failed to delete image."));
     expect(deleteButtons()).toHaveLength(2);
     expect(toasts.toast.success).not.toHaveBeenCalled();
     // The button is disabled while the request is in flight, so a failure that
@@ -153,15 +145,10 @@ describe("uploading", () => {
     await open();
 
     const input = document.querySelector<HTMLInputElement>("input[type=file]")!;
-    await userEvent.upload(
-      input,
-      new File(["x"], "photo.jpg", { type: "image/jpeg" }),
-    );
+    await userEvent.upload(input, new File(["x"], "photo.jpg", { type: "image/jpeg" }));
 
     await waitFor(() => expect(deleteButtons()).toHaveLength(3));
-    expect(api.addTrailImages).toHaveBeenCalledWith("t-1", [
-      expect.objectContaining({ name: "photo.jpg" }),
-    ]);
+    expect(api.addTrailImages).toHaveBeenCalledWith("t-1", [expect.objectContaining({ name: "photo.jpg" })]);
   });
 
   it("keeps the grid as it was when the upload failed", async () => {
@@ -169,14 +156,9 @@ describe("uploading", () => {
     await open();
 
     const input = document.querySelector<HTMLInputElement>("input[type=file]")!;
-    await userEvent.upload(
-      input,
-      new File(["x"], "photo.jpg", { type: "image/jpeg" }),
-    );
+    await userEvent.upload(input, new File(["x"], "photo.jpg", { type: "image/jpeg" }));
 
-    await waitFor(() =>
-      expect(toasts.toast.error).toHaveBeenCalledWith("Failed to upload images."),
-    );
+    await waitFor(() => expect(toasts.toast.error).toHaveBeenCalledWith("Failed to upload images."));
     expect(deleteButtons()).toHaveLength(2);
   });
 });

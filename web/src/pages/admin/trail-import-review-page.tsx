@@ -17,12 +17,7 @@ import {
 } from "@/api/trail-import";
 import { getAllTrails } from "@/api/trail";
 import type { TrailShortInfoResponse } from "@/types/types";
-import {
-  ConfidenceBadge,
-  DecisionBadge,
-  StatusBadge,
-  decisionLabel,
-} from "@/components/trail-import/badges";
+import { ConfidenceBadge, DecisionBadge, StatusBadge, decisionLabel } from "@/components/trail-import/badges";
 import { ApplyPanel } from "@/components/trail-import/apply-panel";
 import { ProposalDetail } from "@/components/trail-import/proposal-detail";
 import {
@@ -50,15 +45,7 @@ const EditableTargets =
   'input, textarea, select, [contenteditable="true"], [role="textbox"], ' +
   '[role="combobox"], [role="listbox"], [role="searchbox"]';
 
-const decisionFilters: (Decision | "All")[] = [
-  "All",
-  "Pending",
-  "Accept",
-  "Relink",
-  "CreateNew",
-  "Exclude",
-  "Skip",
-];
+const decisionFilters: (Decision | "All")[] = ["All", "Pending", "Accept", "Relink", "CreateNew", "Exclude", "Skip"];
 
 export default function TrailImportReviewPage() {
   const { sessionId: sessionParam } = useParams();
@@ -101,11 +88,7 @@ export default function TrailImportReviewPage() {
       setHasMore(paged.hasMore ?? false);
       setChecked(new Map());
     } catch (error) {
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : "The session could not be loaded.",
-      );
+      toast.error(error instanceof Error ? error.message : "The session could not be loaded.");
     }
   }, [sessionId, confidence, decision, page]);
 
@@ -121,11 +104,7 @@ export default function TrailImportReviewPage() {
   useEffect(() => {
     getAllTrails()
       .then(setTrails)
-      .catch(() =>
-        toast.error(
-          "The trail list could not be loaded; relinking will have nothing to pick from.",
-        ),
-      );
+      .catch(() => toast.error("The trail list could not be loaded; relinking will have nothing to pick from."));
   }, []);
 
   // Keep a row selected as the list changes, so the keyboard never lands on nothing.
@@ -136,9 +115,7 @@ export default function TrailImportReviewPage() {
     }
 
     setSelectedId((current) =>
-      current !== null && proposals.some((p) => p.id === current)
-        ? current
-        : proposals[0].id,
+      current !== null && proposals.some((p) => p.id === current) ? current : proposals[0].id,
     );
   }, [proposals]);
 
@@ -151,9 +128,7 @@ export default function TrailImportReviewPage() {
     (offset: number) => {
       if (!proposals || proposals.length === 0) return;
 
-      const index = proposals.findIndex(
-        (proposal) => proposal.id === selectedId,
-      );
+      const index = proposals.findIndex((proposal) => proposal.id === selectedId);
       const next = Math.min(Math.max(index + offset, 0), proposals.length - 1);
       setSelectedId(proposals[next].id);
     },
@@ -232,11 +207,7 @@ export default function TrailImportReviewPage() {
 
       setChecked(outcome.checked);
     } catch (error) {
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : "The selection could not be built.",
-      );
+      toast.error(error instanceof Error ? error.message : "The selection could not be built.");
     } finally {
       setSelectingAll(false);
     }
@@ -252,11 +223,7 @@ export default function TrailImportReviewPage() {
       toast.success(`${decided} proposal(s) set to ${bulkDecision}.`);
       await load();
     } catch (error) {
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : "The batch could not be decided.",
-      );
+      toast.error(error instanceof Error ? error.message : "The batch could not be decided.");
     } finally {
       setBulkSaving(false);
     }
@@ -317,9 +284,7 @@ export default function TrailImportReviewPage() {
                   confidence === tier ? "border-primary bg-accent" : ""
                 }`}
               >
-                <p className="text-2xl font-semibold tabular-nums">
-                  {countFor(session?.counts, tier)}
-                </p>
+                <p className="text-2xl font-semibold tabular-nums">{countFor(session?.counts, tier)}</p>
                 <ConfidenceBadge confidence={tier} />
               </button>
             ))}
@@ -327,10 +292,8 @@ export default function TrailImportReviewPage() {
 
         {session?.counts && (
           <p className="text-xs text-muted-foreground">
-            {session.counts.pending} undecided · {session.counts.accepted}{" "}
-            accepted · {session.counts.relinked} relinked ·{" "}
-            {session.counts.createNew} new · {session.counts.excluded} excluded
-            · {session.counts.skipped} skipped
+            {session.counts.pending} undecided · {session.counts.accepted} accepted · {session.counts.relinked} relinked
+            · {session.counts.createNew} new · {session.counts.excluded} excluded · {session.counts.skipped} skipped
           </p>
         )}
 
@@ -362,9 +325,7 @@ export default function TrailImportReviewPage() {
 
           {!applied && checked.size > 0 && (
             <div className="ml-auto flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">
-                {checked.size} selected
-              </span>
+              <span className="text-sm text-muted-foreground">{checked.size} selected</span>
               <Button
                 size="sm"
                 disabled={!bulkable || bulkSaving}
@@ -378,11 +339,7 @@ export default function TrailImportReviewPage() {
                 {bulkSaving ? <Loader2 className="animate-spin" /> : null}
                 Accept selected
               </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => setChecked(new Map())}
-              >
+              <Button size="sm" variant="ghost" onClick={() => setChecked(new Map())}>
                 Clear
               </Button>
             </div>
@@ -392,12 +349,7 @@ export default function TrailImportReviewPage() {
         {narrowedBy.length > 0 && (
           <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
             <span>Showing {narrowedBy.join(" · ")}</span>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-6 px-2 text-xs"
-              onClick={showAll}
-            >
+            <Button variant="ghost" size="sm" className="h-6 px-2 text-xs" onClick={showAll}>
               Show all
             </Button>
           </div>
@@ -427,20 +379,12 @@ export default function TrailImportReviewPage() {
             {!applied && proposals !== null && proposals.length > 0 && (
               <div className="flex flex-wrap items-center gap-2 rounded-md border bg-muted/30 px-2 py-1.5">
                 <Checkbox
-                  checked={
-                    selection.whole
-                      ? true
-                      : selection.onPage > 0
-                        ? "indeterminate"
-                        : false
-                  }
+                  checked={selection.whole ? true : selection.onPage > 0 ? "indeterminate" : false}
                   onCheckedChange={togglePage}
                   aria-label="Select every proposal on this page"
                 />
                 <span className="text-xs text-muted-foreground">
-                  {checked.size > 0
-                    ? `${checked.size} selected`
-                    : `Select all ${proposals.length} on this page`}
+                  {checked.size > 0 ? `${checked.size} selected` : `Select all ${proposals.length} on this page`}
                 </span>
 
                 {selectAllOffered && (
@@ -463,9 +407,7 @@ export default function TrailImportReviewPage() {
                 <div
                   key={proposal.id}
                   className={`flex items-start gap-2 p-2 ${
-                    proposal.id === selectedId
-                      ? "bg-accent"
-                      : "hover:bg-accent/50"
+                    proposal.id === selectedId ? "bg-accent" : "hover:bg-accent/50"
                   }`}
                 >
                   {!applied && (
@@ -476,27 +418,17 @@ export default function TrailImportReviewPage() {
                       aria-label={`Select ${proposal.featureName}`}
                     />
                   )}
-                  <button
-                    type="button"
-                    className="min-w-0 flex-1 text-left"
-                    onClick={() => setSelectedId(proposal.id)}
-                  >
-                    <p className="truncate text-sm font-medium">
-                      {proposal.featureName || "(no name in source)"}
-                    </p>
+                  <button type="button" className="min-w-0 flex-1 text-left" onClick={() => setSelectedId(proposal.id)}>
+                    <p className="truncate text-sm font-medium">{proposal.featureName || "(no name in source)"}</p>
                     <p className="truncate text-xs text-muted-foreground">
                       {/* Without a suggestion the coverage numbers say nothing on their own;
                           the nearest trail is what they were measured against. */}
                       {proposal.suggestedTrailName ??
-                        (proposal.nearestTrailName
-                          ? `nearest: ${proposal.nearestTrailName}`
-                          : "no trail suggested")}
+                        (proposal.nearestTrailName ? `nearest: ${proposal.nearestTrailName}` : "no trail suggested")}
                     </p>
                     <div className="mt-1 flex flex-wrap items-center gap-1">
                       <ConfidenceBadge confidence={proposal.confidence} />
-                      {proposal.decision !== "Pending" && (
-                        <DecisionBadge decision={proposal.decision} />
-                      )}
+                      {proposal.decision !== "Pending" && <DecisionBadge decision={proposal.decision} />}
                       <span className="text-xs text-muted-foreground tabular-nums">
                         {Math.round((proposal.coverageForward ?? 0) * 100)}/
                         {Math.round((proposal.coverageBackward ?? 0) * 100)}%
@@ -509,9 +441,7 @@ export default function TrailImportReviewPage() {
 
             <div className="flex items-center justify-between pt-1 text-xs text-muted-foreground">
               <span>
-                {total === 0
-                  ? "0"
-                  : `${(page - 1) * PageSize + 1}–${(page - 1) * PageSize + (proposals?.length ?? 0)}`}{" "}
+                {total === 0 ? "0" : `${(page - 1) * PageSize + 1}–${(page - 1) * PageSize + (proposals?.length ?? 0)}`}{" "}
                 of {total}
               </span>
               <span className="flex gap-1">
@@ -523,28 +453,20 @@ export default function TrailImportReviewPage() {
                 >
                   <ChevronLeft />
                 </Button>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  disabled={!hasMore}
-                  onClick={() => setPage((current) => current + 1)}
-                >
+                <Button size="sm" variant="ghost" disabled={!hasMore} onClick={() => setPage((current) => current + 1)}>
                   <ChevronRight />
                 </Button>
               </span>
             </div>
 
             {!applied && (
-            <p className="pt-2 text-xs text-muted-foreground">
-              <kbd className="rounded border px-1">j</kbd>/
-              <kbd className="rounded border px-1">k</kbd> step ·{" "}
-              <kbd className="rounded border px-1">a</kbd> accept ·{" "}
-              <kbd className="rounded border px-1">r</kbd> relink ·{" "}
-              <kbd className="rounded border px-1">n</kbd> new ·{" "}
-              <kbd className="rounded border px-1">x</kbd> exclude ·{" "}
-              <kbd className="rounded border px-1">s</kbd> skip ·{" "}
-              <kbd className="rounded border px-1">u</kbd> undo
-            </p>
+              <p className="pt-2 text-xs text-muted-foreground">
+                <kbd className="rounded border px-1">j</kbd>/<kbd className="rounded border px-1">k</kbd> step ·{" "}
+                <kbd className="rounded border px-1">a</kbd> accept · <kbd className="rounded border px-1">r</kbd>{" "}
+                relink · <kbd className="rounded border px-1">n</kbd> new · <kbd className="rounded border px-1">x</kbd>{" "}
+                exclude · <kbd className="rounded border px-1">s</kbd> skip ·{" "}
+                <kbd className="rounded border px-1">u</kbd> undo
+              </p>
             )}
           </div>
 
@@ -565,9 +487,7 @@ export default function TrailImportReviewPage() {
                 onShortcutHandled={() => setShortcut(null)}
               />
             ) : (
-              <p className="py-16 text-center text-sm text-muted-foreground">
-                Pick a feature to review it.
-              </p>
+              <p className="py-16 text-center text-sm text-muted-foreground">Pick a feature to review it.</p>
             )}
           </div>
         </div>

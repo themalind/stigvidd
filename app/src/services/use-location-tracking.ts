@@ -34,6 +34,7 @@ import {
   stopLiveLocation,
 } from "./live-location";
 import { track } from "./analytics";
+import { logger } from "./logger";
 
 // How often the background task samples GPS (ms). Android-only — on iOS the
 // sampling cadence is driven purely by distanceInterval (see startTracking).
@@ -158,33 +159,43 @@ export function useLocationTracking() {
     applyState(state);
   }, [applyState, drainNative, stopBackgroundSource]);
 
+  const syncSafely = useCallback(async () => {
+    try {
+      await syncFromStorage();
+    } catch (error) {
+      logger.error("Syncing the hike from storage failed", { errorMessage: String(error) });
+    }
+  }, [syncFromStorage]);
+
   // On mount: recover a killed recording (once per process), restore state, and
   // listen for the app returning from background.
   useEffect(() => {
     (async () => {
       if (!recoveryAttempted) {
         recoveryAttempted = true;
-        await recoverInterruptedHike();
+        await recoverInterruptedHike().catch((error: unknown) =>
+          logger.error("Recovering an interrupted hike failed", { errorMessage: String(error) }),
+        );
       }
-      await syncFromStorage();
+      await syncSafely();
     })();
 
     // Re-sync when the app returns from background so state is never stale
     const appStateSub = AppState.addEventListener("change", (nextState) => {
       if (nextState === "active") {
-        syncFromStorage();
+        void syncSafely();
       }
     });
 
     return () => {
       appStateSub.remove();
     };
-  }, [syncFromStorage, recoverInterruptedHike]);
+  }, [syncSafely, recoverInterruptedHike]);
 
   // Poll AsyncStorage while tracking so the UI stays up to date with background task writes
   useEffect(() => {
     if (isTracking) {
-      pollingRef.current = setInterval(syncFromStorage, POLL_INTERVAL);
+      pollingRef.current = setInterval(syncSafely, POLL_INTERVAL);
     }
     // The cleanup below stops the polling, and React runs it before every re-run of this
     // effect as well as on unmount.
@@ -194,7 +205,7 @@ export function useLocationTracking() {
         pollingRef.current = null;
       }
     };
-  }, [isTracking, syncFromStorage]);
+  }, [isTracking, syncSafely]);
 
   // Foreground GPS watcher: while tracking, append every accepted fix to the live
   // tail so the drawn route follows the user dot smoothly. Runs only while the app

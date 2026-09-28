@@ -33,9 +33,7 @@ const SHOTS = [
   },
   {
     src: "/screenshots/trail-information.webp",
-    alt:
-      "Varning om rapporterade hinder längs leden, och knappar för att spara, dela, " +
-      "betygsätta och rapportera",
+    alt: "Varning om rapporterade hinder längs leden, och knappar för att spara, dela, " + "betygsätta och rapportera",
     caption: "Hinder och omdömen",
   },
 ];

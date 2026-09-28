@@ -48,15 +48,11 @@ describe("canBulkDecide", () => {
 
 describe("toggleProposal", () => {
   it("adds a row with its tier, which is what the batch check reads", () => {
-    expect(toggleProposal(new Map(), proposal(7, "High"))).toEqual(
-      checkedOf([7, "High"]),
-    );
+    expect(toggleProposal(new Map(), proposal(7, "High"))).toEqual(checkedOf([7, "High"]));
   });
 
   it("removes a row that was already selected", () => {
-    expect(toggleProposal(checkedOf([7, "High"]), proposal(7, "High"))).toEqual(
-      new Map(),
-    );
+    expect(toggleProposal(checkedOf([7, "High"]), proposal(7, "High"))).toEqual(new Map());
   });
 
   it("leaves the previous selection alone", () => {
@@ -73,9 +69,7 @@ describe("togglePageSelection", () => {
   const page = [proposal(1, "Certain"), proposal(2, "Medium")];
 
   it("selects the whole page when part of it is selected", () => {
-    expect(togglePageSelection(checkedOf([1, "Certain"]), page)).toEqual(
-      checkedOf([1, "Certain"], [2, "Medium"]),
-    );
+    expect(togglePageSelection(checkedOf([1, "Certain"]), page)).toEqual(checkedOf([1, "Certain"], [2, "Medium"]));
   });
 
   it("clears the page when all of it is selected", () => {
@@ -131,15 +125,11 @@ describe("pageSelection", () => {
 
 describe("canSelectAllMatching", () => {
   it("is offered once the page is exhausted and the filter holds more", () => {
-    expect(
-      canSelectAllMatching({ onPage: 50, whole: true }, 203, checkedOf([1, "Certain"])),
-    ).toBe(true);
+    expect(canSelectAllMatching({ onPage: 50, whole: true }, 203, checkedOf([1, "Certain"]))).toBe(true);
   });
 
   it("is not offered until the page in view is fully selected", () => {
-    expect(canSelectAllMatching({ onPage: 12, whole: false }, 203, new Map())).toBe(
-      false,
-    );
+    expect(canSelectAllMatching({ onPage: 12, whole: false }, 203, new Map())).toBe(false);
   });
 
   it("is not offered when the selection already holds everything", () => {

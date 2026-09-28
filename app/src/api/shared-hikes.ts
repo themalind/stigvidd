@@ -6,7 +6,7 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { IncomingSharedHike, ReshareSharedHikeRequest, SharedHike } from "@/data/types";
-import { BASE_URL } from "./api-config";
+import { apiFetch, BASE_URL } from "./api-config";
 import { getUserToken } from "./users";
 import { ApiError } from "./api-error";
 import { logger } from "@/services/logger";
@@ -19,7 +19,7 @@ export async function getSharedHikes(): Promise<SharedHike[]> {
       throw new Error("User not authenticated");
     }
 
-    const response = await fetch(`${BASE_URL}/hikesharerecipient`, {
+    const response = await apiFetch(`${BASE_URL}/hikesharerecipient`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -49,7 +49,7 @@ export async function reshareHike(request: ReshareSharedHikeRequest): Promise<{ 
       throw new Error("User not authenticated");
     }
 
-    const response = await fetch(`${BASE_URL}/hikesharerecipient/re-share`, {
+    const response = await apiFetch(`${BASE_URL}/hikesharerecipient/re-share`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -80,7 +80,7 @@ export async function removeSharedHike(hikeIdentifier: string): Promise<{ succes
       throw new Error("User not authenticated");
     }
 
-    const response = await fetch(`${BASE_URL}/hikesharerecipient/${hikeIdentifier}`, {
+    const response = await apiFetch(`${BASE_URL}/hikesharerecipient/${hikeIdentifier}`, {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",
@@ -110,7 +110,7 @@ export async function getIncomingSharedHike(hikeIdentifier: string): Promise<Sha
       throw new Error("User not authenticated");
     }
 
-    const response = await fetch(`${BASE_URL}/hikesharerecipient/incoming/${hikeIdentifier}`, {
+    const response = await apiFetch(`${BASE_URL}/hikesharerecipient/incoming/${hikeIdentifier}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -139,7 +139,7 @@ export async function getIncomingSharedHikes(): Promise<IncomingSharedHike[]> {
       throw new Error("User not authenticated");
     }
 
-    const response = await fetch(`${BASE_URL}/hikesharerecipient/incoming`, {
+    const response = await apiFetch(`${BASE_URL}/hikesharerecipient/incoming`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -168,7 +168,7 @@ export async function acceptSharedHike(hikeIdentifier: string): Promise<{ succes
       throw new Error("User not authenticated");
     }
 
-    const response = await fetch(`${BASE_URL}/hikesharerecipient/accept/${hikeIdentifier}`, {
+    const response = await apiFetch(`${BASE_URL}/hikesharerecipient/accept/${hikeIdentifier}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -197,7 +197,7 @@ export async function rejectSharedHike(hikeIdentifier: string): Promise<{ succes
       throw new Error("User not authenticated");
     }
 
-    const response = await fetch(`${BASE_URL}/hikesharerecipient/reject/${hikeIdentifier}`, {
+    const response = await apiFetch(`${BASE_URL}/hikesharerecipient/reject/${hikeIdentifier}`, {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",

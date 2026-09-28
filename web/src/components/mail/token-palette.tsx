@@ -4,13 +4,7 @@
 import { AlertTriangle, Check, Circle, Plus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { tokenText } from "@/lib/mail-template";
 import type { MailTemplateToken } from "@/types/types";
 
@@ -33,13 +27,7 @@ type Props = {
  * placeholders a template could use was a sentence in the Description column that nothing
  * validated, and a mistake in one stops the mail with no feedback to whoever made it.
  */
-export default function TokenPalette({
-  tokens,
-  used,
-  unknown,
-  onInsert,
-  insertTarget,
-}: Props) {
+export default function TokenPalette({ tokens, used, unknown, onInsert, insertTarget }: Props) {
   return (
     <div className="space-y-4">
       {unknown.length > 0 && (
@@ -50,10 +38,9 @@ export default function TokenPalette({
               Not recognised
             </CardTitle>
             <CardDescription>
-              This template does not supply{" "}
-              {unknown.length === 1 ? "this placeholder" : "these placeholders"}. A mail using
-              one fails to render, so it is never sent and nobody is told. Saving is blocked
-              until {unknown.length === 1 ? "it is" : "they are"} removed.
+              This template does not supply {unknown.length === 1 ? "this placeholder" : "these placeholders"}. A mail
+              using one fails to render, so it is never sent and nobody is told. Saving is blocked until{" "}
+              {unknown.length === 1 ? "it is" : "they are"} removed.
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-wrap gap-2">
@@ -78,8 +65,8 @@ export default function TokenPalette({
         <CardContent className="space-y-3">
           {tokens.length === 0 && (
             <p className="text-sm text-muted-foreground">
-              No C# caller declares this template, so there is no list of placeholders it can
-              use. Whatever is already in it is left alone.
+              No C# caller declares this template, so there is no list of placeholders it can use. Whatever is already
+              in it is left alone.
             </p>
           )}
 
@@ -87,16 +74,11 @@ export default function TokenPalette({
             const isUsed = used.has(token.name.toLowerCase());
 
             return (
-              <div
-                key={token.name}
-                className="rounded-xs border border-input p-3 text-sm"
-              >
+              <div key={token.name} className="rounded-xs border border-input p-3 text-sm">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
                     <p className="font-medium">{token.label}</p>
-                    <p className="truncate font-mono text-xs text-muted-foreground">
-                      {tokenText(token.name)}
-                    </p>
+                    <p className="truncate font-mono text-xs text-muted-foreground">{tokenText(token.name)}</p>
                   </div>
 
                   <Button
@@ -115,8 +97,7 @@ export default function TokenPalette({
                 <p className="mt-2 text-muted-foreground">{token.description}</p>
 
                 <p className="mt-1 text-xs text-muted-foreground">
-                  Preview uses:{" "}
-                  <span className="font-mono break-all">{token.sampleValue}</span>
+                  Preview uses: <span className="font-mono break-all">{token.sampleValue}</span>
                 </p>
 
                 {isUsed ? (

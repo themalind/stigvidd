@@ -35,6 +35,7 @@ const mockPush = jest.fn();
 // Read inside the hooks, so a test can sign in or take the fonts away before the render.
 let mockAuth: { user: { id: string } | null; isLoading: boolean };
 let mockFontsLoaded: boolean;
+let mockFontError: Error | null;
 // The notification the app was opened by, and the listener for ones arriving while it is open.
 let mockLastResponse: unknown;
 let mockReceived: ((notification: unknown) => void) | undefined;
@@ -50,7 +51,7 @@ jest.mock("@/components/auth/auth-provider", () => ({
 
 jest.mock("@expo-google-fonts/inter", () => ({
   Inter_600SemiBold: "Inter_600SemiBold",
-  useFonts: () => [mockFontsLoaded],
+  useFonts: () => [mockFontsLoaded, mockFontError],
 }));
 
 jest.mock("expo-notifications", () => ({
@@ -99,7 +100,7 @@ jest.mock("@/services/telemetry", () => {
 });
 
 jest.mock("@/services/logger", () => ({
-  logger: { error: (...args: unknown[]) => mockLogError(...args), info: jest.fn(), debug: jest.fn() },
+  logger: { error: (...args: unknown[]) => mockLogError(...args), warn: jest.fn(), info: jest.fn(), debug: jest.fn() },
 }));
 
 // Registers a background task with TaskManager at import; nothing here needs it.
@@ -154,6 +155,7 @@ beforeEach(() => {
   jest.clearAllMocks();
   mockAuth = { user: null, isLoading: false };
   mockFontsLoaded = true;
+  mockFontError = null;
   mockLastResponse = null;
   mockReceived = undefined;
   mockScreenContent = null;
@@ -192,6 +194,14 @@ it("draws nothing until the app's own font has loaded", async () => {
   await show();
 
   expect(screen.toJSON()).toBeNull();
+});
+
+it("shows the navigator when the font fails to load", async () => {
+  mockFontsLoaded = false;
+  mockFontError = new Error("font missing");
+  await show();
+
+  expect(screen.getByTestId("root-stack")).toBeTruthy();
 });
 
 it("shows the navigator once the session and the font are both in", async () => {

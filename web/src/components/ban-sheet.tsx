@@ -8,14 +8,7 @@ import { banUser } from "@/api/users";
 import { displayName } from "@/lib/moderation-statistics";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 
 export interface BanTarget {
   identifier: string;
@@ -56,10 +49,9 @@ export function BanSheet({ target, initialReason = "", onClose, onBanned }: Prop
         <SheetHeader>
           <SheetTitle>Ban this account?</SheetTitle>
           <SheetDescription data-testid="ban-body">
-            {displayName(target.nickName)} keeps reading the app and stops being able to write to
-            it — no reviews, obstacle reports, friend requests or shares — until you lift this.
-            Their content stays where it is: remove that from the moderation queue instead.
-            They have {strikes} strike
+            {displayName(target.nickName)} keeps reading the app and stops being able to write to it — no reviews,
+            obstacle reports, friend requests or shares — until you lift this. Their content stays where it is: remove
+            that from the moderation queue instead. They have {strikes} strike
             {strikes === 1 ? "" : "s"}.
           </SheetDescription>
         </SheetHeader>
@@ -74,12 +66,7 @@ export function BanSheet({ target, initialReason = "", onClose, onBanned }: Prop
         </div>
 
         <SheetFooter>
-          <Button
-            variant="destructive"
-            data-testid="confirm-ban"
-            disabled={saving}
-            onClick={() => void ban()}
-          >
+          <Button variant="destructive" data-testid="confirm-ban" disabled={saving} onClick={() => void ban()}>
             {saving && <Loader2 className="size-4 animate-spin" />}
             Ban account
           </Button>

@@ -112,10 +112,7 @@ it("shows the strikes on the authors tab", async () => {
 
 it("shows how many times the author has been banned", async () => {
   const user = userEvent.setup();
-  renderPage(
-    [reporter()],
-    [{ identifier: "author-1", nickName: "SkogsGreven", strikes: 2, banCount: 3 }],
-  );
+  renderPage([reporter()], [{ identifier: "author-1", nickName: "SkogsGreven", strikes: 2, banCount: 3 }]);
 
   await screen.findByTestId("reporter-row");
   await user.click(screen.getByRole("tab", { name: "Authors" }));
@@ -153,9 +150,7 @@ it("explains each empty tab in its own terms", async () => {
   const user = userEvent.setup();
   renderPage([], []);
 
-  expect(await screen.findByTestId("empty-tab")).toHaveTextContent(
-    "Nobody has reported anything yet.",
-  );
+  expect(await screen.findByTestId("empty-tab")).toHaveTextContent("Nobody has reported anything yet.");
 
   await user.click(screen.getByRole("tab", { name: "Authors" }));
 

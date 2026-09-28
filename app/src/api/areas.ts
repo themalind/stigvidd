@@ -6,13 +6,13 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { CityArea } from "@/data/types";
-import { BASE_URL } from "./api-config";
+import { apiFetch, BASE_URL } from "./api-config";
 import { ApiError } from "./api-error";
 import { logger } from "@/services/logger";
 
 export async function getAreas(): Promise<CityArea[]> {
   try {
-    const response = await fetch(`${BASE_URL}/cityareas`, {
+    const response = await apiFetch(`${BASE_URL}/cityareas`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -35,7 +35,7 @@ export async function getAreas(): Promise<CityArea[]> {
 
 export async function getAreaByIdentifier(areaIdentifier: string): Promise<CityArea> {
   try {
-    const response = await fetch(`${BASE_URL}/cityareas/${areaIdentifier}`, {
+    const response = await apiFetch(`${BASE_URL}/cityareas/${areaIdentifier}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",

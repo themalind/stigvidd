@@ -6,7 +6,7 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { CreateHikeRequest, Hike, ShareHikeRequest, UpdateHikeRequest } from "@/data/types";
-import { BASE_URL } from "./api-config";
+import { apiFetch, BASE_URL, UPLOAD_TIMEOUT_MS } from "./api-config";
 import { getUserToken } from "./users";
 import { ApiError } from "./api-error";
 import { logger } from "@/services/logger";
@@ -18,23 +18,35 @@ export async function createHike(request: CreateHikeRequest): Promise<{ success:
     throw new Error("User not authenticated");
   }
 
-  const response = await fetch(`${BASE_URL}/hikes`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({
-      ...request,
-      coordinates: JSON.stringify(request.coordinates),
-    }),
-  });
+  try {
+    const response = await apiFetch(
+      `${BASE_URL}/hikes`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          ...request,
+          coordinates: JSON.stringify(request.coordinates),
+        }),
+      },
+      UPLOAD_TIMEOUT_MS,
+    );
 
-  if (!response.ok) {
-    throw new ApiError(`HTTP error: createHike: ${response.status}`, response.status);
+    if (!response.ok) {
+      throw new ApiError(`HTTP error: createHike: ${response.status}`, response.status);
+    }
+
+    return { success: true };
+  } catch (error) {
+    logger.error("Create hike failed", {
+      endpoint: "POST /hikes",
+      errorMessage: String(error),
+    });
+    throw error;
   }
-
-  return { success: true };
 }
 
 export async function updateHike(request: UpdateHikeRequest): Promise<Hike> {
@@ -45,14 +57,18 @@ export async function updateHike(request: UpdateHikeRequest): Promise<Hike> {
   }
 
   try {
-    const response = await fetch(`${BASE_URL}/hikes/${request.hikeIdentifier}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
+    const response = await apiFetch(
+      `${BASE_URL}/hikes/${request.hikeIdentifier}`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(request),
       },
-      body: JSON.stringify(request),
-    });
+      UPLOAD_TIMEOUT_MS,
+    );
 
     if (!response.ok) {
       throw new ApiError(`HTTP error: updateHike: ${response.status}`, response.status);
@@ -85,7 +101,7 @@ export async function getHikeByIdentifier(hikeIdentifier: string): Promise<Hike>
   }
 
   try {
-    const response = await fetch(`${BASE_URL}/hikes/${hikeIdentifier}`, {
+    const response = await apiFetch(`${BASE_URL}/hikes/${hikeIdentifier}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -114,7 +130,7 @@ export async function getAllHikesByUserId(userIdentifier: string): Promise<Hike[
     throw new Error("User not authenticated");
   }
   try {
-    const response = await fetch(`${BASE_URL}/hikes?createdBy=${userIdentifier}`, {
+    const response = await apiFetch(`${BASE_URL}/hikes?createdBy=${userIdentifier}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -144,7 +160,7 @@ export async function shareHike(request: ShareHikeRequest): Promise<{ success: b
   }
 
   try {
-    const response = await fetch(`${BASE_URL}/hikeshares/share`, {
+    const response = await apiFetch(`${BASE_URL}/hikeshares/share`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -175,7 +191,7 @@ export async function deleteHike(hikeIdentifier: string): Promise<{ success: boo
   }
 
   try {
-    const response = await fetch(`${BASE_URL}/hikes/${hikeIdentifier}`, {
+    const response = await apiFetch(`${BASE_URL}/hikes/${hikeIdentifier}`, {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",

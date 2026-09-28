@@ -7,7 +7,7 @@
 
 import { User, UserFavoritesTrail, UserWishlistTrail } from "@/data/types";
 import { getValidAccessToken } from "@/services/keycloak-auth";
-import { BASE_URL } from "./api-config";
+import { apiFetch, BASE_URL } from "./api-config";
 import { ApiError } from "./api-error";
 import { logger } from "@/services/logger";
 
@@ -23,7 +23,7 @@ export async function getStigViddUser(): Promise<User> {
   }
 
   try {
-    const response = await fetch(`${BASE_URL}/users`, {
+    const response = await apiFetch(`${BASE_URL}/users`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -53,7 +53,7 @@ export async function getUserFavorites(): Promise<UserFavoritesTrail[]> {
   }
 
   try {
-    const response = await fetch(`${BASE_URL}/users/favorites`, {
+    const response = await apiFetch(`${BASE_URL}/users/favorites`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -83,7 +83,7 @@ export async function getUserWishlist(): Promise<UserWishlistTrail[]> {
   }
 
   try {
-    const response = await fetch(`${BASE_URL}/users/wishlist`, {
+    const response = await apiFetch(`${BASE_URL}/users/wishlist`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -113,7 +113,7 @@ export async function addToUserFavorite(trailIdentifier: string): Promise<UserFa
   }
 
   try {
-    const response = await fetch(`${BASE_URL}/users/favorites`, {
+    const response = await apiFetch(`${BASE_URL}/users/favorites`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -147,7 +147,7 @@ export async function addToUserWishlist(trailIdentifier: string): Promise<UserFa
   }
 
   try {
-    const response = await fetch(`${BASE_URL}/users/wishlist`, {
+    const response = await apiFetch(`${BASE_URL}/users/wishlist`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -180,7 +180,7 @@ export async function removeUserFavorite(trailIdentifier: string): Promise<void>
   }
 
   try {
-    const response = await fetch(`${BASE_URL}/users/favorites/${trailIdentifier}`, {
+    const response = await apiFetch(`${BASE_URL}/users/favorites/${trailIdentifier}`, {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",
@@ -207,7 +207,7 @@ export async function deleteStigViddUser(): Promise<void> {
     throw new Error("User not authenticated");
   }
 
-  const response = await fetch(`${BASE_URL}/users/delete`, {
+  const response = await apiFetch(`${BASE_URL}/users/delete`, {
     method: "DELETE",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -227,7 +227,7 @@ export async function removeUserWishlist(trailIdentifier: string): Promise<void>
   }
 
   try {
-    const response = await fetch(`${BASE_URL}/users/wishlist/${trailIdentifier}`, {
+    const response = await apiFetch(`${BASE_URL}/users/wishlist/${trailIdentifier}`, {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",

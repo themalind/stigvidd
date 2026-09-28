@@ -44,7 +44,14 @@
     "authorship, or runs past 72 characters. Extracts the message from -m or a heredoc.",
     "",
     "Machine-specific overrides belong in .claude/settings.local.json, which .gitignore",
-    "already excludes."
+    "already excludes.",
+    "",
+    "format-prettier.mjs runs each workspace's own prettier (app/, web/, site/, each with a",
+    ".prettierrc and .prettierignore) on the file an Edit/Write just touched, and again at Stop",
+    "over every changed or untracked file there, because an edit made through Bash fires no",
+    "Edit event. It is the same prettier and config `npm run format:check` uses in CI, so the",
+    "two cannot disagree. It speaks only when it rewrote a file, since the editor's last Read",
+    "is then stale."
   ],
   "hooks": {
     "SessionStart": [
@@ -73,9 +80,7 @@
           {
             "type": "command",
             "command": "node",
-            "args": [
-              "${CLAUDE_PROJECT_DIR}/.claude/hooks/guard-test-cancellation-token.mjs"
-            ],
+            "args": ["${CLAUDE_PROJECT_DIR}/.claude/hooks/guard-test-cancellation-token.mjs"],
             "timeout": 10
           },
           {
@@ -123,8 +128,15 @@
     ],
     "PostToolUse": [
       {
-        "matcher": "Write|Edit",
+        "matcher": "Write|Edit|MultiEdit",
         "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": ["${CLAUDE_PROJECT_DIR}/.claude/hooks/format-prettier.mjs"],
+            "statusMessage": "Formatting the file you just edited with prettier",
+            "timeout": 60
+          },
           {
             "type": "command",
             "command": "node",
@@ -163,6 +175,13 @@
             "args": ["${CLAUDE_PROJECT_DIR}/.claude/hooks/plan-eval.mjs", "--after"],
             "statusMessage": "Evaluating what this plan taught",
             "timeout": 20
+          },
+          {
+            "type": "command",
+            "command": "node",
+            "args": ["${CLAUDE_PROJECT_DIR}/.claude/hooks/format-prettier.mjs"],
+            "statusMessage": "Formatting changed app/web/site files with prettier",
+            "timeout": 60
           }
         ]
       }

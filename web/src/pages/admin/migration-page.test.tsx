@@ -17,8 +17,7 @@ const HOST = window.location.hostname;
 
 // The label becomes "Importing…" while the restore is in flight, so the button has to be
 // found by either of its two names.
-const importButton = () =>
-  screen.getByRole("button", { name: /Import and replace|Importing/ });
+const importButton = () => screen.getByRole("button", { name: /Import and replace|Importing/ });
 const confirmBox = () => screen.getByLabelText(/to confirm you want to overwrite/);
 const archiveBox = () => screen.getByLabelText(/Migration archive/);
 
@@ -47,9 +46,7 @@ describe("export", () => {
 
     await userEvent.click(screen.getByRole("button", { name: /Export all data/ }));
 
-    await waitFor(() =>
-      expect(toasts.error).toHaveBeenCalledWith("Export failed (HTTP 500)"),
-    );
+    await waitFor(() => expect(toasts.error).toHaveBeenCalledWith("Export failed (HTTP 500)"));
     expect(toasts.success).not.toHaveBeenCalled();
   });
 });
@@ -175,12 +172,7 @@ describe("running the import", () => {
 
     await userEvent.click(importButton());
 
-    await waitFor(() =>
-      expect(toasts.success).toHaveBeenCalledWith(
-        "Restored 41 trails.",
-        expect.anything(),
-      ),
-    );
+    await waitFor(() => expect(toasts.success).toHaveBeenCalledWith("Restored 41 trails.", expect.anything()));
   });
 
   it("disarms after a successful run, so a second click cannot repeat it", async () => {
@@ -200,11 +192,7 @@ describe("running the import", () => {
 
     await userEvent.click(importButton());
 
-    await waitFor(() =>
-      expect(toasts.error).toHaveBeenCalledWith(
-        "Archive was produced by a newer version.",
-      ),
-    );
+    await waitFor(() => expect(toasts.error).toHaveBeenCalledWith("Archive was produced by a newer version."));
     expect(toasts.success).not.toHaveBeenCalled();
   });
 

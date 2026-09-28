@@ -5,9 +5,7 @@ import { describe, expect, it } from "vitest";
 import { appendProcessingOptions } from "./image-options";
 
 function fieldsOf(formData: FormData): Record<string, string> {
-  return Object.fromEntries(
-    [...formData.entries()].map(([key, value]) => [key, String(value)]),
-  );
+  return Object.fromEntries([...formData.entries()].map(([key, value]) => [key, String(value)]));
 }
 
 describe("appendProcessingOptions", () => {

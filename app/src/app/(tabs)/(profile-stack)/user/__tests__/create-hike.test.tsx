@@ -492,3 +492,11 @@ it("centres the denied explanation and caps its width", async () => {
   expect(screen.getByText(/Du behöver dela din plats/)).toHaveStyle({ textAlign: "center", maxWidth: 320 });
   expect(screen.getByText("Platsåtkomst behövs")).toHaveStyle({ textAlign: "center", fontSize: 18 });
 });
+
+it("offers the disclosure when the permission status cannot be read", async () => {
+  mockGetPermissions.mockRejectedValue(new Error("location service unavailable"));
+  renderWithProviders(<CreateHikeScreen />, { initialAtoms: user() });
+  await flushUntil(() => screen.queryByText("Stigvidd behöver din plats"));
+
+  expect(screen.getByText("Stigvidd behöver din plats")).toBeTruthy();
+});

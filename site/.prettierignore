@@ -1,0 +1,8 @@
+# Build output and artifacts:
+dist
+coverage
+
+package-lock.json
+
+# Static pages served verbatim (legal text); HTML reformatting can change rendered whitespace.
+public

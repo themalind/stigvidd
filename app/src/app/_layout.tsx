@@ -130,12 +130,16 @@ export default function RootLayout() {
     );
   }, [user]);
 
-  const [fontsLoaded] = useFonts({ Inter_600SemiBold });
+  const [fontsLoaded, fontError] = useFonts({ Inter_600SemiBold });
+
+  useEffect(() => {
+    if (fontError) logger.warn("Font loading failed", { errorMessage: String(fontError) });
+  }, [fontError]);
 
   // Render nothing until the initial session restore has resolved — prevents an
   // auth-resolution blink at startup. Session is restored from the stored refresh
   // token, so this is brief.
-  if (isLoading || !fontsLoaded) return null;
+  if (isLoading || (!fontsLoaded && !fontError)) return null;
 
   return (
     <QueryClientProvider client={queryClient}>

@@ -17,10 +17,7 @@ export function displayName(nickName: string | null | undefined): string {
   return nickName?.trim() ? nickName : "Account deleted";
 }
 
-export type ReporterCounts = Pick<
-  ReporterStatistic,
-  "total" | "pending" | "dismissed" | "upheld"
->;
+export type ReporterCounts = Pick<ReporterStatistic, "total" | "pending" | "dismissed" | "upheld">;
 
 /**
  * How often this reporter turned out to be right, counted over decided reports only.

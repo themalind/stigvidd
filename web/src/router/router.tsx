@@ -17,9 +17,7 @@ const MigrationPage = lazy(() => import("@/pages/admin/migration-page"));
 const ModerationPage = lazy(() => import("@/pages/admin/moderation-page"));
 const NotFoundPage = lazy(() => import("@/pages/NotFoundPage"));
 const TrailImportPage = lazy(() => import("@/pages/admin/trail-import-page"));
-const TrailImportReviewPage = lazy(
-  () => import("@/pages/admin/trail-import-review-page"),
-);
+const TrailImportReviewPage = lazy(() => import("@/pages/admin/trail-import-review-page"));
 const TrailsPage = lazy(() => import("@/pages/trails/trails-page"));
 const UsersPage = lazy(() => import("@/pages/users/users-page"));
 

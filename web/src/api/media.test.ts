@@ -45,10 +45,7 @@ describe("getMediaForOwner", () => {
     const media = await getMediaForOwner("trail-1");
 
     expect(media.map((m) => m.identifier)).toEqual(["a", "b", "c"]);
-    expect(generated.adminMediaGetAll).toHaveBeenNthCalledWith(
-      2,
-      expect.objectContaining({ Page: 2 }),
-    );
+    expect(generated.adminMediaGetAll).toHaveBeenNthCalledWith(2, expect.objectContaining({ Page: 2 }));
   });
 
   it("stops at a ceiling rather than spinning on a server that always says there is more", async () => {

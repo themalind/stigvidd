@@ -10,13 +10,7 @@
  * what it knows how to render — an unrecognised one falls through to a neutral chip rather
  * than vanishing.
  */
-export const OUTBOX_STATUSES = [
-  "Pending",
-  "Sending",
-  "Sent",
-  "Failed",
-  "Cancelled",
-] as const;
+export const OUTBOX_STATUSES = ["Pending", "Sending", "Sent", "Failed", "Cancelled"] as const;
 
 export type OutboxStatus = (typeof OUTBOX_STATUSES)[number];
 
@@ -57,9 +51,7 @@ export function canRevealBody(row: Row): boolean {
  */
 export function describeRedaction(row: Row): string {
   const cleared =
-    row.status === "Sent"
-      ? "was cleared when the mail was sent"
-      : "has been cleared under the retention policy";
+    row.status === "Sent" ? "was cleared when the mail was sent" : "has been cleared under the retention policy";
 
   return (
     `The rendered body ${cleared}. A body is kept only while the mail can still be sent — ` +

@@ -5,11 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  cancelMediaReprocessJob,
-  getMediaReprocessJobs,
-  type ReprocessJobSummary,
-} from "@/api/media";
+import { cancelMediaReprocessJob, getMediaReprocessJobs, type ReprocessJobSummary } from "@/api/media";
 
 const POLL_MS = 3000;
 
@@ -80,10 +76,7 @@ export default function MediaReprocessJobs({ refreshKey }: Props) {
   return (
     <div className="space-y-2">
       {jobs.map((job) => (
-        <div
-          key={job.identifier}
-          className="flex items-center justify-between gap-4 rounded-xs border p-3"
-        >
+        <div key={job.identifier} className="flex items-center justify-between gap-4 rounded-xs border p-3">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               <Badge variant={statusVariant(job.status)}>{job.status}</Badge>
@@ -93,9 +86,7 @@ export default function MediaReprocessJobs({ refreshKey }: Props) {
                 {(job.cancelledCount ?? 0) > 0 ? ` · ${job.cancelledCount} cancelled` : ""}
               </span>
             </div>
-            <p className="text-muted-foreground font-mono text-[10px] break-all">
-              {job.identifier}
-            </p>
+            <p className="text-muted-foreground font-mono text-[10px] break-all">{job.identifier}</p>
           </div>
           {(job.pendingCount ?? 0) > 0 && (
             <Button

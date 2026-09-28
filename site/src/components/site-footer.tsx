@@ -26,12 +26,7 @@ export default function SiteFooter() {
           <a href={`mailto:${contactEmail}`} className="text-muted hover:text-text">
             Kontakt
           </a>
-          <a
-            href={footer.sourceUrl}
-            className="text-muted hover:text-text"
-            rel="noreferrer"
-            target="_blank"
-          >
+          <a href={footer.sourceUrl} className="text-muted hover:text-text" rel="noreferrer" target="_blank">
             Källkod
           </a>
         </nav>

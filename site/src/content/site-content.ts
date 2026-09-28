@@ -138,8 +138,7 @@ export const faq = [
   },
   {
     question: "Vad kostar appen?",
-    answer:
-      "Ingenting. Stigvidd är ett hobbyprojekt, visar inga annonser och säljer inga uppgifter.",
+    answer: "Ingenting. Stigvidd är ett hobbyprojekt, visar inga annonser och säljer inga uppgifter.",
   },
   {
     question: "Spårar appen var jag är?",

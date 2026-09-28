@@ -6,13 +6,7 @@ import { Link } from "react-router";
 import { toast } from "sonner";
 import { AlertTriangle, ChevronRight, Circle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getMailTemplates } from "@/api/mail-templates";
 import type { MailTemplateListItem } from "@/types/types";
@@ -39,9 +33,8 @@ export default function MailTemplatesPage() {
         <CardHeader>
           <CardTitle>Mail templates</CardTitle>
           <CardDescription>
-            The copy the API mails out. It lives in the database rather than in the code so
-            wording can be corrected without a deploy — an edit here takes effect on the next
-            mail sent.
+            The copy the API mails out. It lives in the database rather than in the code so wording can be corrected
+            without a deploy — an edit here takes effect on the next mail sent.
           </CardDescription>
         </CardHeader>
       </Card>
@@ -87,8 +80,8 @@ export default function MailTemplatesPage() {
                   <p className="flex items-center gap-1 text-xs text-destructive">
                     <AlertTriangle className="size-3" aria-hidden="true" />
                     Uses {template.unknownTokenCount} placeholder
-                    {template.unknownTokenCount === 1 ? "" : "s"} this template does not supply —
-                    this mail cannot be sent
+                    {template.unknownTokenCount === 1 ? "" : "s"} this template does not supply — this mail cannot be
+                    sent
                   </p>
                 )}
 

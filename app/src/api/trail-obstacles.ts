@@ -7,7 +7,7 @@
 
 import { CreateTrailObstacleRequest, TrailObstacle, UpdateTrailObstacleRequest } from "@/data/types";
 import { logger } from "@/services/logger";
-import { BASE_URL } from "./api-config";
+import { apiFetch, BASE_URL } from "./api-config";
 import { ApiError } from "./api-error";
 import { getUserToken } from "./users";
 
@@ -15,7 +15,7 @@ export async function getTrailObstaclesByTrailIdentifier(trailIdentifier: string
   try {
     const token = await getUserToken();
 
-    const response = await fetch(`${BASE_URL}/trailobstacles/trail/${trailIdentifier}`, {
+    const response = await apiFetch(`${BASE_URL}/trailobstacles/trail/${trailIdentifier}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -45,7 +45,7 @@ export async function addSolvedVote(obstacleIdentifier: string): Promise<{ succe
       throw new Error("User not authenticated");
     }
 
-    const response = await fetch(`${BASE_URL}/trailobstacles/solve/${obstacleIdentifier}`, {
+    const response = await apiFetch(`${BASE_URL}/trailobstacles/solve/${obstacleIdentifier}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -75,7 +75,7 @@ export async function deleteSolvedVote(obstacleIdentifier: string): Promise<{ su
       throw new Error("User not authenticated");
     }
 
-    const response = await fetch(`${BASE_URL}/trailobstacles/solve/${obstacleIdentifier}`, {
+    const response = await apiFetch(`${BASE_URL}/trailobstacles/solve/${obstacleIdentifier}`, {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",
@@ -105,7 +105,7 @@ export async function createTrailObstacle(request: CreateTrailObstacleRequest): 
   }
 
   try {
-    const response = await fetch(`${BASE_URL}/trailobstacles`, {
+    const response = await apiFetch(`${BASE_URL}/trailobstacles`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -139,7 +139,7 @@ export async function updateTrailObstacle(
   }
 
   try {
-    const response = await fetch(`${BASE_URL}/trailobstacles/${obstacleIdentifier}`, {
+    const response = await apiFetch(`${BASE_URL}/trailobstacles/${obstacleIdentifier}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -164,7 +164,7 @@ export async function updateTrailObstacle(
 
 export async function getObstacleIssueTypes(): Promise<string[]> {
   try {
-    const response = await fetch(`${BASE_URL}/trailobstacles/issue-types`, {
+    const response = await apiFetch(`${BASE_URL}/trailobstacles/issue-types`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -192,7 +192,7 @@ export async function deleteTrailObstacle(trailObstacleIdentifier: string): Prom
     if (!token) {
       throw new Error("User not authenticated");
     }
-    const response = await fetch(`${BASE_URL}/trailobstacles/${trailObstacleIdentifier}`, {
+    const response = await apiFetch(`${BASE_URL}/trailobstacles/${trailObstacleIdentifier}`, {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",

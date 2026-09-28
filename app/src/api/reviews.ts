@@ -7,7 +7,7 @@
 
 import { CreateReviewRequest, PagedReviewResponse } from "@/data/types";
 import uuid from "react-native-uuid";
-import { BASE_URL } from "./api-config";
+import { apiFetch, BASE_URL, UPLOAD_TIMEOUT_MS } from "./api-config";
 import { getUserToken } from "./users";
 import { ApiError } from "./api-error";
 import { logger } from "@/services/logger";
@@ -20,7 +20,7 @@ export async function getReviewsByTrailIdentifier(
   try {
     const token = await getUserToken();
 
-    const response = await fetch(`${BASE_URL}/reviews/trail/${trailIdentifier}?page=${page}&limit=${limit}`, {
+    const response = await apiFetch(`${BASE_URL}/reviews/trail/${trailIdentifier}?page=${page}&limit=${limit}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -50,7 +50,7 @@ export async function hasReviewedTrail(trailIdentifier: string): Promise<boolean
   }
 
   try {
-    const response = await fetch(`${BASE_URL}/reviews/trail/${trailIdentifier}/mine`, {
+    const response = await apiFetch(`${BASE_URL}/reviews/trail/${trailIdentifier}/mine`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -96,13 +96,17 @@ export async function createReview(request: CreateReviewRequest): Promise<{ succ
   formData.append("rating", `${request.rating}`);
 
   try {
-    const response = await fetch(`${BASE_URL}/reviews/create`, {
-      method: "POST",
-      body: formData,
-      headers: {
-        Authorization: `Bearer ${token}`,
+    const response = await apiFetch(
+      `${BASE_URL}/reviews/create`,
+      {
+        method: "POST",
+        body: formData,
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       },
-    });
+      UPLOAD_TIMEOUT_MS,
+    );
 
     if (!response.ok) {
       throw new ApiError(`HTTP error ${response.status}`, response.status);
@@ -126,7 +130,7 @@ export async function deleteReview(reviewIdentifier: string): Promise<{ success:
   }
 
   try {
-    const response = await fetch(`${BASE_URL}/reviews/${reviewIdentifier}`, {
+    const response = await apiFetch(`${BASE_URL}/reviews/${reviewIdentifier}`, {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",

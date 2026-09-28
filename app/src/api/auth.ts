@@ -7,7 +7,7 @@
 
 import i18n from "@/i18n";
 import { RegisterData, UpdateUserResult } from "@/data/types";
-import { BASE_URL } from "./api-config";
+import { apiFetch, BASE_URL } from "./api-config";
 import { ApiError } from "./api-error";
 
 /** Reads the conflict code from a 409 body; an unrecognised body is a generic conflict. */
@@ -27,7 +27,7 @@ async function readConflictCode(response: Response): Promise<string> {
  * A 409 throws ApiError carrying the code for the field that collided.
  */
 export async function registerAccount(data: RegisterData): Promise<void> {
-  const response = await fetch(`${BASE_URL}/account/register`, {
+  const response = await apiFetch(`${BASE_URL}/account/register`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -54,7 +54,7 @@ export async function registerAccount(data: RegisterData): Promise<void> {
  * "too-many-attempts" — so the screen can say which of the three happened.
  */
 export async function verifyEmailCode(email: string, code: string): Promise<void> {
-  const response = await fetch(`${BASE_URL}/account/verify-email`, {
+  const response = await apiFetch(`${BASE_URL}/account/verify-email`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, code }),
@@ -84,7 +84,7 @@ async function readVerificationCode(response: Response): Promise<string> {
  * so this resolves unless the network or server fails.
  */
 export async function resendVerification(email: string): Promise<void> {
-  const response = await fetch(`${BASE_URL}/account/resend-verification`, {
+  const response = await apiFetch(`${BASE_URL}/account/resend-verification`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email }),
@@ -102,7 +102,7 @@ export async function resendVerification(email: string): Promise<void> {
  */
 export async function userPasswordReset(email: string): Promise<UpdateUserResult> {
   try {
-    const response = await fetch(`${BASE_URL}/account/forgot-password`, {
+    const response = await apiFetch(`${BASE_URL}/account/forgot-password`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email }),

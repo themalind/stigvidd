@@ -76,4 +76,4 @@ environment traps, both of which cost time here:
   as `400 [file_list] invalid time range`, which reads like an auth or schema problem and
   is neither.
 
-Related: [[web-vitest-environment]], [[eas-env-vars-are-not-your-dotenv]].
+Related: [[web-vitest-environment]], [[eas-env-vars-are-not-your-dotenv]], [[openobserve-mcp-org-is-not-default]] (a 401 from the MCP tools is the wrong org id, not this).

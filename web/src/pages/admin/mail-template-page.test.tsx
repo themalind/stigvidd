@@ -38,8 +38,20 @@ function template(overrides: Partial<MailTemplate> = {}): MailTemplate {
     isKnown: true,
     tokens: [
       { name: "NickName", label: "Nickname", description: "Their name.", sampleValue: "Ralf", isUsed: true },
-      { name: "VerificationUrl", label: "Verification link", description: "The link.", sampleValue: "https://x.test", isUsed: true },
-      { name: "VerificationCode", label: "Verification code", description: "The code.", sampleValue: "402913", isUsed: true },
+      {
+        name: "VerificationUrl",
+        label: "Verification link",
+        description: "The link.",
+        sampleValue: "https://x.test",
+        isUsed: true,
+      },
+      {
+        name: "VerificationCode",
+        label: "Verification code",
+        description: "The code.",
+        sampleValue: "402913",
+        isUsed: true,
+      },
     ],
     unknownTokens: [],
     missingTokens: [],
@@ -135,15 +147,11 @@ describe("the guard against rewriting a template nobody edited", () => {
     // The visual editor really has to be reseeded from the edit, not merely left showing what
     // it was constructed with -- otherwise a switch back to source would silently restore the
     // old body over the operator's work.
-    await waitFor(() =>
-      expect(document.querySelector(".ProseMirror")?.textContent).toContain("nytt innehåll"),
-    );
+    await waitFor(() => expect(document.querySelector(".ProseMirror")?.textContent).toContain("nytt innehåll"));
 
     await userEvent.click(screen.getByRole("tab", { name: "HTML source" }));
 
-    expect((screen.getByLabelText("HTML source code") as HTMLTextAreaElement).value).toContain(
-      "nytt innehåll",
-    );
+    expect((screen.getByLabelText("HTML source code") as HTMLTextAreaElement).value).toContain("nytt innehåll");
   });
 
   it("becomes saveable once the operator changes something", async () => {
@@ -265,9 +273,7 @@ describe("the plain-text body", () => {
 
     await userEvent.click(screen.getByRole("button", { name: /Generate from HTML/ }));
 
-    expect((screen.getByLabelText("Plain-text version") as HTMLTextAreaElement).value).not.toBe(
-      before,
-    );
+    expect((screen.getByLabelText("Plain-text version") as HTMLTextAreaElement).value).not.toBe(before);
   });
 });
 

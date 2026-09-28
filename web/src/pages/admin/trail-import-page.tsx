@@ -5,23 +5,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { NavLink } from "react-router";
 import { toast } from "sonner";
 import { FileUp, Loader2, Play, RefreshCw, Trash2, Upload } from "lucide-react";
-import {
-  analyzeSession,
-  createSession,
-  deleteSession,
-  getSessions,
-  type Session,
-} from "@/api/trail-import";
+import { analyzeSession, createSession, deleteSession, getSessions, type Session } from "@/api/trail-import";
 import { StatusBadge } from "@/components/trail-import/badges";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -30,7 +17,6 @@ import { formatBytes } from "@/lib/format";
 // A session left analysing has a worker holding it, so the list refreshes itself until
 // nothing is in flight. Analysing the full export takes tens of seconds.
 const PollIntervalMs = 4000;
-
 
 function formatMoment(value?: string | null): string {
   return value ? new Date(value).toLocaleString() : "—";
@@ -98,8 +84,7 @@ export default function TrailImportPage() {
       toast.success("Analysis queued. This page updates itself while it runs.");
       await load();
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "The analysis could not be queued.";
+      const message = error instanceof Error ? error.message : "The analysis could not be queued.";
 
       // The API refuses rather than silently replacing decided proposals, and says how many.
       if (!force && message.includes("discard")) {
@@ -140,9 +125,8 @@ export default function TrailImportPage() {
               Upload a source export
             </CardTitle>
             <CardDescription>
-              A GeoJSON export from the municipality. Uploading only stores the file — nothing is
-              compared against the trails until you run the analysis, and nothing is written to
-              them until the session is applied.
+              A GeoJSON export from the municipality. Uploading only stores the file — nothing is compared against the
+              trails until you run the analysis, and nothing is written to them until the session is applied.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -167,9 +151,8 @@ export default function TrailImportPage() {
                 disabled={uploading}
               />
               <p className="text-xs text-muted-foreground">
-                Which dataset the file comes from. Links are unique per source, so two
-                municipalities can publish the same stretch without colliding. Leave it empty for
-                boras-stad.
+                Which dataset the file comes from. Links are unique per source, so two municipalities can publish the
+                same stretch without colliding. Leave it empty for boras-stad.
               </p>
             </div>
           </CardContent>
@@ -215,9 +198,7 @@ export default function TrailImportPage() {
                   {session.analyzedAt ? ` · analysed ${formatMoment(session.analyzedAt)}` : ""}
                   {session.featureCount ? ` · ${session.featureCount} features` : ""}
                 </CardDescription>
-                {session.errorMessage && (
-                  <p className="text-sm text-destructive">{session.errorMessage}</p>
-                )}
+                {session.errorMessage && <p className="text-sm text-destructive">{session.errorMessage}</p>}
               </CardHeader>
               <CardFooter className="gap-2">
                 {session.status === "AwaitingReview" && (
@@ -237,11 +218,7 @@ export default function TrailImportPage() {
                     session.status === "Applied"
                   }
                 >
-                  {session.status === "Analyzing" ? (
-                    <Loader2 className="animate-spin" />
-                  ) : (
-                    <Play />
-                  )}
+                  {session.status === "Analyzing" ? <Loader2 className="animate-spin" /> : <Play />}
                   {session.analyzedAt ? "Analyse again" : "Analyse"}
                 </Button>
 

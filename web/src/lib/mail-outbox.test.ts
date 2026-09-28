@@ -2,14 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, expect, it } from "vitest";
-import {
-  canCancel,
-  canRetry,
-  describeNextAttempt,
-  describePurge,
-  isValidPurgeCutoff,
-  statusTone,
-} from "./mail-outbox";
+import { canCancel, canRetry, describeNextAttempt, describePurge, isValidPurgeCutoff, statusTone } from "./mail-outbox";
 
 describe("canRetry", () => {
   // Failed is the obvious one; Cancelled matters because an operator changing their mind is
@@ -62,28 +55,20 @@ describe("describeNextAttempt", () => {
   it("counts the failures behind a queued retry", () => {
     // A Pending row with attempts is not a contradiction — it is what a retried mail looks
     // like — and the page has to say so or it reads as a bug.
-    const text = describeNextAttempt(
-      { status: "Pending", nextAttemptAt: "2026-09-18T11:59:00Z", attempts: 2 },
-      now,
-    );
+    const text = describeNextAttempt({ status: "Pending", nextAttemptAt: "2026-09-18T11:59:00Z", attempts: 2 }, now);
 
     expect(text).toContain("2 failed so far");
   });
 
   it("reports the remaining backoff when the mail is not due yet", () => {
-    const text = describeNextAttempt(
-      { status: "Pending", nextAttemptAt: "2026-09-18T12:08:00Z", attempts: 3 },
-      now,
-    );
+    const text = describeNextAttempt({ status: "Pending", nextAttemptAt: "2026-09-18T12:08:00Z", attempts: 3 }, now);
 
     expect(text).toContain("8 minutes");
   });
 
   it("survives a missing or unparseable timestamp", () => {
     expect(describeNextAttempt({ status: "Pending" }, now)).toBe("Waiting to be sent.");
-    expect(describeNextAttempt({ status: "Pending", nextAttemptAt: "nonsense" }, now)).toBe(
-      "Waiting to be sent.",
-    );
+    expect(describeNextAttempt({ status: "Pending", nextAttemptAt: "nonsense" }, now)).toBe("Waiting to be sent.");
   });
 });
 

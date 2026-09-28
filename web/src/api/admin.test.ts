@@ -3,17 +3,12 @@
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const getValidAccessToken = vi.hoisted(() =>
-  vi.fn<() => Promise<string | null>>(),
-);
+const getValidAccessToken = vi.hoisted(() => vi.fn<() => Promise<string | null>>());
 vi.mock("@/services/keycloak-auth", () => ({ getValidAccessToken }));
 
 import { exportData, importData } from "./admin";
 
-function reply(
-  body: string | null,
-  init: { status?: number; headers?: Record<string, string> } = {},
-): Response {
+function reply(body: string | null, init: { status?: number; headers?: Record<string, string> } = {}): Response {
   return new Response(body, { status: init.status ?? 200, headers: init.headers });
 }
 
@@ -23,14 +18,12 @@ function request(call = 0) {
 
 describe("exportData", () => {
   // The download is a real anchor click, which jsdom would try to navigate on.
-  const stubClick = () =>
-    vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
+  const stubClick = () => vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
 
   let clicked: ReturnType<typeof stubClick>;
 
   // `mock.instances` records the `this` each call was made on — the anchor itself.
-  const savedAs = () =>
-    (clicked.mock.instances[0] as unknown as HTMLAnchorElement).download;
+  const savedAs = () => (clicked.mock.instances[0] as unknown as HTMLAnchorElement).download;
 
   beforeEach(() => {
     clicked = stubClick();
@@ -115,8 +108,7 @@ describe("importData", () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(reply('{"message":"Restored."}')));
   });
 
-  const archive = () =>
-    new File(["zip-bytes"], "host.zip", { type: "application/zip" });
+  const archive = () => new File(["zip-bytes"], "host.zip", { type: "application/zip" });
 
   it("posts the archive to the admin import endpoint", async () => {
     await importData(archive());
@@ -153,9 +145,7 @@ describe("importData", () => {
       reply('{"message":"Archive was produced by a newer version."}', { status: 400 }),
     );
 
-    await expect(importData(archive())).rejects.toThrow(
-      "Archive was produced by a newer version.",
-    );
+    await expect(importData(archive())).rejects.toThrow("Archive was produced by a newer version.");
   });
 
   it("throws on a refusal that says nothing at all", async () => {
@@ -166,9 +156,7 @@ describe("importData", () => {
 
   // The one that matters: a 500 whose body happens to parse must not read as done.
   it("does not resolve on a failure that carried a message", async () => {
-    vi.mocked(fetch).mockResolvedValue(
-      reply('{"message":"Restore aborted halfway."}', { status: 500 }),
-    );
+    vi.mocked(fetch).mockResolvedValue(reply('{"message":"Restore aborted halfway."}', { status: 500 }));
 
     await expect(importData(archive())).rejects.toThrow("Restore aborted halfway.");
   });

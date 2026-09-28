@@ -10,6 +10,7 @@ import { deleteStigViddUser } from "@/api/users";
 import { authLoadingAtom, userAtom } from "@/atoms/auth-atoms";
 import { useAuth, useInitAuth } from "@/components/auth/auth-provider";
 import { AuthUser, RegisterData } from "@/data/types";
+import { logger } from "@/services/logger";
 import { logoutKeycloak, passwordGrant, restoreSession, setSessionExpiredHandler } from "@/services/keycloak-auth";
 import { unregisterForPushNotificationsAsync } from "@/services/notifications";
 import { renderWithProviders } from "@/test/render";
@@ -18,6 +19,9 @@ import { act, screen } from "@testing-library/react-native";
 jest.mock("@/api/auth", () => ({ registerAccount: jest.fn() }));
 jest.mock("@/api/users", () => ({ deleteStigViddUser: jest.fn() }));
 jest.mock("@/services/notifications", () => ({ unregisterForPushNotificationsAsync: jest.fn() }));
+jest.mock("@/services/logger", () => ({
+  logger: { debug: jest.fn(), info: jest.fn(), warn: jest.fn(), error: jest.fn() },
+}));
 jest.mock("@/services/keycloak-auth", () => ({
   passwordGrant: jest.fn(),
   logoutKeycloak: jest.fn(),
@@ -239,6 +243,18 @@ it("lets the first paint through when there is no session to restore", async () 
 
   expect(store.get(userAtom)).toBeNull();
   expect(store.get(authLoadingAtom)).toBe(false);
+});
+
+// restoreSession throws when a refresh token is stored without an access token and Keycloak is out of reach.
+it("lets the first paint through, signed out, when restoring the session throws", async () => {
+  restore.mockRejectedValue(new Error("session-unavailable"));
+
+  const { store } = renderWithProviders(<InitProbe />);
+  await act(async () => {});
+
+  expect(store.get(userAtom)).toBeNull();
+  expect(store.get(authLoadingAtom)).toBe(false);
+  expect(logger.warn).toHaveBeenCalledWith("Session restore failed", { errorMessage: "Error: session-unavailable" });
 });
 
 // A failed refresh drops back to the signed-out state, or the guards leave the user where every call 401s.

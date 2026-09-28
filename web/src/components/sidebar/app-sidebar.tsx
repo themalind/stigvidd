@@ -43,16 +43,8 @@ export function AppSidebar() {
             settings page nobody opens. */}
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
-              size="sm"
-              tooltip="Source code — AGPL-3.0-or-later"
-            >
-              <a
-                href="https://github.com/themalind/stigvidd"
-                target="_blank"
-                rel="noreferrer"
-              >
+            <SidebarMenuButton asChild size="sm" tooltip="Source code — AGPL-3.0-or-later">
+              <a href="https://github.com/themalind/stigvidd" target="_blank" rel="noreferrer">
                 <Code2 />
                 <span>Source (AGPL-3.0)</span>
               </a>

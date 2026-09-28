@@ -29,14 +29,7 @@ import { BanSheet } from "@/components/ban-sheet";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 
 const PageSize = 25;
 
@@ -49,12 +42,7 @@ const EditableTargets =
 
 const statusFilters = ["Pending", "Dismissed", "Upheld", "ContentExpired", "All"] as const;
 const contentTypeFilters = ["All", "Review", "TrailObstacle"] as const;
-const hideOutcomeFilters = [
-  "All",
-  "Hidden",
-  "AlreadyHidden",
-  "WithheldReporterDismissed",
-] as const;
+const hideOutcomeFilters = ["All", "Hidden", "AlreadyHidden", "WithheldReporterDismissed"] as const;
 
 const riskLabel: Record<string, string> = {
   unknown: "No history",
@@ -103,9 +91,7 @@ export default function ModerationPage() {
       setHasMore(paged.hasMore ?? false);
       setCounts(loadedCounts);
     } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "The queue could not be loaded.",
-      );
+      toast.error(error instanceof Error ? error.message : "The queue could not be loaded.");
     }
   }, [filters, page]);
 
@@ -121,9 +107,7 @@ export default function ModerationPage() {
     }
 
     setSelected((current) =>
-      current !== null && reports.some((r) => r.identifier === current)
-        ? current
-        : reports[0].identifier,
+      current !== null && reports.some((r) => r.identifier === current) ? current : reports[0].identifier,
     );
   }, [reports]);
 
@@ -168,9 +152,7 @@ export default function ModerationPage() {
   const reloadReport = useCallback(async (identifier: string) => {
     try {
       const reloaded = await getReport(identifier);
-      setDetail((current) =>
-        current?.report?.identifier === reloaded.report?.identifier ? reloaded : current,
-      );
+      setDetail((current) => (current?.report?.identifier === reloaded.report?.identifier ? reloaded : current));
     } catch {
       toast.error("The report could not be reloaded.");
     }
@@ -202,15 +184,11 @@ export default function ModerationPage() {
         await decideReport(selected, decision, decisionNote.trim() || undefined);
         setConfirming(false);
         toast.success(
-          decision === "Uphold"
-            ? "The content was removed and a strike recorded."
-            : "The content is visible again.",
+          decision === "Uphold" ? "The content was removed and a strike recorded." : "The content is visible again.",
         );
         await load();
       } catch (error) {
-        toast.error(
-          error instanceof Error ? error.message : "The decision could not be saved.",
-        );
+        toast.error(error instanceof Error ? error.message : "The decision could not be saved.");
       } finally {
         setSaving(false);
       }
@@ -265,26 +243,16 @@ export default function ModerationPage() {
         <h1 className="text-lg font-semibold">Moderation</h1>
         {counts && (
           <span className="text-sm text-muted-foreground">
-            {counts.pending} pending · {counts.dismissed} dismissed · {counts.upheld} upheld
-            · {counts.contentExpired} expired
+            {counts.pending} pending · {counts.dismissed} dismissed · {counts.upheld} upheld · {counts.contentExpired}{" "}
+            expired
           </span>
         )}
       </header>
 
       <div className="flex flex-wrap gap-4">
         <FilterRow label="Status" options={statusFilters} value={status} onChange={setStatus} />
-        <FilterRow
-          label="Type"
-          options={contentTypeFilters}
-          value={contentType}
-          onChange={setContentType}
-        />
-        <FilterRow
-          label="Outcome"
-          options={hideOutcomeFilters}
-          value={hideOutcome}
-          onChange={setHideOutcome}
-        />
+        <FilterRow label="Type" options={contentTypeFilters} value={contentType} onChange={setContentType} />
+        <FilterRow label="Outcome" options={hideOutcomeFilters} value={hideOutcome} onChange={setHideOutcome} />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,26rem)_minmax(0,1fr)]">
@@ -299,9 +267,7 @@ export default function ModerationPage() {
 
           {reports?.length === 0 && (
             <div className="rounded-md border border-dashed p-6 text-sm text-muted-foreground">
-              {narrowed.length > 0
-                ? `Nothing matches ${narrowed.join(", ")}.`
-                : "Nothing has been reported."}
+              {narrowed.length > 0 ? `Nothing matches ${narrowed.join(", ")}.` : "Nothing has been reported."}
             </div>
           )}
 
@@ -331,8 +297,7 @@ export default function ModerationPage() {
                 )}
               </div>
               <p className="mt-1 text-muted-foreground">
-                {row.reporterNickName ?? "Deleted reporter"} reported{" "}
-                {row.authorNickName ?? "a deleted author"}
+                {row.reporterNickName ?? "Deleted reporter"} reported {row.authorNickName ?? "a deleted author"}
               </p>
               <p className="text-xs text-muted-foreground">
                 {row.createdAt ? new Date(row.createdAt).toLocaleString() : ""}
@@ -341,23 +306,13 @@ export default function ModerationPage() {
           ))}
 
           <nav className="flex items-center justify-between pt-2 text-sm">
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={page <= 1}
-              onClick={() => setPage((p) => Math.max(p - 1, 1))}
-            >
+            <Button size="sm" variant="outline" disabled={page <= 1} onClick={() => setPage((p) => Math.max(p - 1, 1))}>
               <ChevronLeft className="size-4" />
             </Button>
             <span className="text-muted-foreground">
               Page {page} of {total} report{total === 1 ? "" : "s"}
             </span>
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={!hasMore}
-              onClick={() => setPage((p) => p + 1)}
-            >
+            <Button size="sm" variant="outline" disabled={!hasMore} onClick={() => setPage((p) => p + 1)}>
               <ChevronRight className="size-4" />
             </Button>
           </nav>
@@ -377,8 +332,8 @@ export default function ModerationPage() {
                   data-testid="content-gone"
                   className="rounded-md border border-dashed p-4 text-sm text-muted-foreground"
                 >
-                  <TriangleAlert className="mb-1 inline size-4" /> The content is no longer
-                  there, so only this snapshot remains. Upholding still records the strike.
+                  <TriangleAlert className="mb-1 inline size-4" /> The content is no longer there, so only this snapshot
+                  remains. Upholding still records the strike.
                 </div>
               )}
 
@@ -409,9 +364,7 @@ export default function ModerationPage() {
               <div className="grid gap-4 sm:grid-cols-2">
                 <article className="rounded-md border p-4 text-sm">
                   <h2 className="font-semibold">Author</h2>
-                  <p className="text-muted-foreground">
-                    {report.authorNickName ?? "Deleted author"}
-                  </p>
+                  <p className="text-muted-foreground">{report.authorNickName ?? "Deleted author"}</p>
                   <p data-testid="author-strikes">
                     {detail?.authorStrikes ?? 0} strike
                     {detail?.authorStrikes === 1 ? "" : "s"}
@@ -464,19 +417,14 @@ export default function ModerationPage() {
 
                 <article className="rounded-md border p-4 text-sm">
                   <h2 className="font-semibold">Reporter</h2>
-                  <p className="text-muted-foreground">
-                    {report.reporterNickName ?? "Deleted reporter"}
-                  </p>
+                  <p className="text-muted-foreground">{report.reporterNickName ?? "Deleted reporter"}</p>
                   <p data-testid="reporter-record">
-                    {detail?.reporterTotal ?? 0} reports, {detail?.reporterDismissed ?? 0}{" "}
-                    dismissed
+                    {detail?.reporterTotal ?? 0} reports, {detail?.reporterDismissed ?? 0} dismissed
                   </p>
                   <Badge variant="outline" data-testid="reporter-risk">
                     {riskLabel[risk]}
                   </Badge>
-                  {report.reporterNote && (
-                    <p className="mt-2 whitespace-pre-wrap">{report.reporterNote}</p>
-                  )}
+                  {report.reporterNote && <p className="mt-2 whitespace-pre-wrap">{report.reporterNote}</p>}
                 </article>
               </div>
 
@@ -500,9 +448,7 @@ export default function ModerationPage() {
                     Breaks the rules, delete it
                   </Button>
                   {!hasReadContent && (
-                    <span className="text-xs text-muted-foreground">
-                      Read the content before deleting it.
-                    </span>
+                    <span className="text-xs text-muted-foreground">Read the content before deleting it.</span>
                   )}
                 </div>
               ) : (
@@ -523,9 +469,8 @@ export default function ModerationPage() {
             <SheetTitle>Delete this content permanently?</SheetTitle>
             <SheetDescription data-testid="confirm-body">
               This deletes {report?.authorNickName ?? "the author"}
-              {"'"}s {report?.contentType === "Review" ? "review" : "obstacle report"} for
-              good. It cannot be undone. It becomes strike{" "}
-              {strikeAfterUphold(detail?.authorStrikes ?? 0, false)} against them.
+              {"'"}s {report?.contentType === "Review" ? "review" : "obstacle report"} for good. It cannot be undone. It
+              becomes strike {strikeAfterUphold(detail?.authorStrikes ?? 0, false)} against them.
             </SheetDescription>
           </SheetHeader>
 

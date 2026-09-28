@@ -34,23 +34,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
-import {
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 const PageSize = 25;
 
@@ -120,9 +105,7 @@ export default function MailOutboxPage() {
       setCounts(loadedCounts);
     } catch (error) {
       setMails([]);
-      toast.error(
-        error instanceof Error ? error.message : "The outbox could not be loaded.",
-      );
+      toast.error(error instanceof Error ? error.message : "The outbox could not be loaded.");
     }
   }, [filters, page]);
 
@@ -156,11 +139,7 @@ export default function MailOutboxPage() {
     }
   }
 
-  async function act(
-    identifier: string,
-    action: (id: string) => Promise<OutboxMailDetail>,
-    done: string,
-  ) {
+  async function act(identifier: string, action: (id: string) => Promise<OutboxMailDetail>, done: string) {
     setBusy(true);
 
     try {
@@ -190,9 +169,7 @@ export default function MailOutboxPage() {
 
     try {
       const result = await purgeOutbox(days);
-      toast.success(
-        `${result.deleted} sent mail${result.deleted === 1 ? "" : "s"} deleted.`,
-      );
+      toast.success(`${result.deleted} sent mail${result.deleted === 1 ? "" : "s"} deleted.`);
       setPurging(false);
       await load();
     } catch (error) {
@@ -210,9 +187,8 @@ export default function MailOutboxPage() {
         <div className="space-y-1">
           <h1 className="text-xl font-medium">Mail outbox</h1>
           <p className="max-w-2xl text-sm text-muted-foreground">
-            Every mail the API has queued, sent, failed to send or been stopped from sending.
-            This is where a mail that never arrived is diagnosed — and the only place a failed
-            one can be put back in the queue.
+            Every mail the API has queued, sent, failed to send or been stopped from sending. This is where a mail that
+            never arrived is diagnosed — and the only place a failed one can be put back in the queue.
           </p>
         </div>
 
@@ -232,10 +208,7 @@ export default function MailOutboxPage() {
               ["Cancelled", counts.cancelled],
             ] as const
           ).map(([label, count]) => (
-            <span
-              key={label}
-              className="rounded-xs border border-input px-2 py-1 text-muted-foreground"
-            >
+            <span key={label} className="rounded-xs border border-input px-2 py-1 text-muted-foreground">
               {label}: <span className="text-foreground">{count}</span>
             </span>
           ))}
@@ -322,9 +295,7 @@ export default function MailOutboxPage() {
                     </span>
                   )}
                   {describeNextAttempt(mail) && (
-                    <span className="block text-xs text-muted-foreground">
-                      {describeNextAttempt(mail)}
-                    </span>
+                    <span className="block text-xs text-muted-foreground">{describeNextAttempt(mail)}</span>
                   )}
                 </TableCell>
                 <TableCell className="font-mono text-xs">{mail.templateKey ?? "—"}</TableCell>
@@ -399,13 +370,11 @@ export default function MailOutboxPage() {
                       {detail.email.toName ? ` (${detail.email.toName})` : ""}
                     </div>
                     <div>
-                      Queued {formatDate(detail.email.createdAt)} · {detail.email.attempts}{" "}
-                      attempt{detail.email.attempts === 1 ? "" : "s"}
+                      Queued {formatDate(detail.email.createdAt)} · {detail.email.attempts} attempt
+                      {detail.email.attempts === 1 ? "" : "s"}
                       {detail.email.sentAt ? ` · sent ${formatDate(detail.email.sentAt)}` : ""}
                     </div>
-                    {detail.email.lastError && (
-                      <div className="text-destructive">{detail.email.lastError}</div>
-                    )}
+                    {detail.email.lastError && <div className="text-destructive">{detail.email.lastError}</div>}
                   </div>
                 </SheetDescription>
               </SheetHeader>
@@ -415,10 +384,7 @@ export default function MailOutboxPage() {
                     it carries the recipient's name and, for a password reset, a live link, so
                     reading one is a deliberate act the API records against the operator. */}
                 {!canRevealBody(detail.email) ? (
-                  <p
-                    className="text-sm text-muted-foreground"
-                    data-testid="body-redacted"
-                  >
+                  <p className="text-sm text-muted-foreground" data-testid="body-redacted">
                     {describeRedaction(detail.email)}
                   </p>
                 ) : body ? (
@@ -440,16 +406,12 @@ export default function MailOutboxPage() {
                       onClick={() => void revealBody(detail.email.identifier)}
                       data-testid="reveal-body"
                     >
-                      {revealing ? (
-                        <Loader2 className="size-4 animate-spin" />
-                      ) : (
-                        <Eye className="size-4" />
-                      )}
+                      {revealing ? <Loader2 className="size-4 animate-spin" /> : <Eye className="size-4" />}
                       Show the mail body
                     </Button>
                     <p className="text-sm text-muted-foreground">
-                      The body is not loaded with the mail. It contains the recipient&apos;s name
-                      and, for a password reset, a working link — so opening it is recorded.
+                      The body is not loaded with the mail. It contains the recipient&apos;s name and, for a password
+                      reset, a working link — so opening it is recorded.
                     </p>
                   </div>
                 )}
@@ -459,9 +421,7 @@ export default function MailOutboxPage() {
                 {canRetry(detail.email) && (
                   <Button
                     disabled={busy}
-                    onClick={() =>
-                      void act(detail.email.identifier, retryOutboxMail, "Mail queued again.")
-                    }
+                    onClick={() => void act(detail.email.identifier, retryOutboxMail, "Mail queued again.")}
                     data-testid="retry"
                   >
                     {busy && <Loader2 className="size-4 animate-spin" />}
@@ -473,9 +433,7 @@ export default function MailOutboxPage() {
                   <Button
                     variant="destructive"
                     disabled={busy}
-                    onClick={() =>
-                      void act(detail.email.identifier, cancelOutboxMail, "Mail cancelled.")
-                    }
+                    onClick={() => void act(detail.email.identifier, cancelOutboxMail, "Mail cancelled.")}
                     data-testid="cancel"
                   >
                     {busy && <Loader2 className="size-4 animate-spin" />}

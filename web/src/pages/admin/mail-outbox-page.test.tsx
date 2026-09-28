@@ -111,11 +111,7 @@ describe("MailOutboxPage", () => {
     await screen.findByText("vandrare@example.com");
     await user.click(screen.getByRole("button", { name: "Failed" }));
 
-    await waitFor(() =>
-      expect(api.getOutboxMails).toHaveBeenCalledWith(
-        expect.objectContaining({ status: "Failed" }),
-      ),
-    );
+    await waitFor(() => expect(api.getOutboxMails).toHaveBeenCalledWith(expect.objectContaining({ status: "Failed" })));
   });
 
   it("offers a retry for a failed mail and reloads afterwards", async () => {
@@ -165,9 +161,7 @@ describe("MailOutboxPage", () => {
     await user.click(await screen.findByTestId("open-mail-1"));
     await user.click(await screen.findByTestId("retry"));
 
-    await waitFor(() =>
-      expect(toasts.error).toHaveBeenCalledWith("This mail is being sent right now."),
-    );
+    await waitFor(() => expect(toasts.error).toHaveBeenCalledWith("This mail is being sent right now."));
   });
 
   it("refuses to purge without a usable cutoff", async () => {
@@ -240,9 +234,7 @@ describe("MailOutboxPage", () => {
 
   it("explains a cleared body instead of offering a reveal that would 404", async () => {
     const user = userEvent.setup();
-    api.getOutboxMail.mockResolvedValue(
-      detail({ status: "Sent", redactedAt: "2026-09-18T12:00:00Z" }),
-    );
+    api.getOutboxMail.mockResolvedValue(detail({ status: "Sent", redactedAt: "2026-09-18T12:00:00Z" }));
     renderPage();
 
     await user.click(await screen.findByTestId("open-mail-1"));
@@ -255,9 +247,7 @@ describe("MailOutboxPage", () => {
     // Re-sending an empty body is worse than refusing, so the API returns 409. The page should
     // not offer a button that cannot work.
     const user = userEvent.setup();
-    api.getOutboxMail.mockResolvedValue(
-      detail({ status: "Failed", redactedAt: "2026-09-18T12:00:00Z" }),
-    );
+    api.getOutboxMail.mockResolvedValue(detail({ status: "Failed", redactedAt: "2026-09-18T12:00:00Z" }));
     renderPage();
 
     await user.click(await screen.findByTestId("open-mail-1"));

@@ -21,11 +21,7 @@ export default function SiteHeader() {
 
         <nav aria-label="Huvudmeny" className="ml-auto hidden items-center gap-6 md:flex">
           {NAV.map((item) => (
-            <a
-              key={item.href}
-              href={item.href}
-              className="text-sm text-muted transition-colors hover:text-text"
-            >
+            <a key={item.href} href={item.href} className="text-sm text-muted transition-colors hover:text-text">
               {item.label}
             </a>
           ))}

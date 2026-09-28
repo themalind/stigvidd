@@ -65,9 +65,7 @@ describe("MediaReprocessJobs", () => {
 
     render(<MediaReprocessJobs refreshKey={0} />);
 
-    await waitFor(() =>
-      expect(screen.getAllByRole("button", { name: /cancel/i })).toHaveLength(1),
-    );
+    await waitFor(() => expect(screen.getAllByRole("button", { name: /cancel/i })).toHaveLength(1));
   });
 
   it("cancels the job and reloads the list", async () => {

@@ -20,14 +20,10 @@ type MultipartOperation = {
 };
 
 function fixMultipartSchemas(spec: OpenApiDocument): OpenApiDocument {
-  const paths = (spec.paths ?? {}) as unknown as Record<
-    string,
-    Record<string, MultipartOperation>
-  >;
+  const paths = (spec.paths ?? {}) as unknown as Record<string, Record<string, MultipartOperation>>;
   for (const path of Object.values(paths)) {
     for (const operation of Object.values(path)) {
-      const schema =
-        operation?.requestBody?.content?.["multipart/form-data"]?.schema;
+      const schema = operation?.requestBody?.content?.["multipart/form-data"]?.schema;
       if (!schema?.properties) continue;
       schema.type = "object";
       for (const prop of Object.values(schema.properties)) {

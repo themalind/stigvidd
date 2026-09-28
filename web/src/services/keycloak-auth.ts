@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { jwtDecode } from "jwt-decode";
+import { logger } from "@/services/telemetry";
 import type { AuthUser } from "@/types/types";
 
 /**
@@ -29,6 +30,7 @@ const LOGOUT_ENDPOINT = `${REALM_BASE}/logout`;
 const SCOPE = "openid profile email offline_access";
 
 const EXPIRY_SKEW_SECONDS = 30;
+const TOKEN_REQUEST_TIMEOUT_MS = 15_000;
 const REFRESH_TOKEN_KEY = "kc_refresh_token";
 
 // Only Keycloak users holding this realm role may access the admin.
@@ -57,6 +59,14 @@ export class NotAuthorizedError extends Error {
   constructor() {
     super("not_authorized");
     this.name = "NotAuthorizedError";
+  }
+}
+
+// Handing out the expired token instead only earns a 401; see docs/notes/android-fetch-no-timeout-stale-token-401.md. keep-comment: the bug this replaces
+export class SessionUnavailableError extends Error {
+  constructor() {
+    super("The login server could not be reached. Try again.");
+    this.name = "SessionUnavailableError";
   }
 }
 
@@ -97,6 +107,7 @@ async function requestToken(body: Record<string, string>): Promise<KeycloakToken
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams(body).toString(),
+    signal: AbortSignal.timeout(TOKEN_REQUEST_TIMEOUT_MS),
   });
 
   if (response.status === 400 || response.status === 401) {
@@ -173,7 +184,12 @@ export async function refreshGrant(token: string): Promise<AuthUser | null> {
     persistTokens(tokens);
     return decodeUser(tokens.id_token ?? tokens.access_token);
   } catch (error) {
-    if (error instanceof InvalidCredentialsError) {
+    const expired = error instanceof InvalidCredentialsError;
+    logger.warn("Token refresh failed", {
+      outcome: expired ? "expired" : "unavailable",
+      reason: expired ? error.name : String(error),
+    });
+    if (expired) {
       clearTokens();
       onSessionExpired?.();
     }
@@ -189,7 +205,11 @@ export async function logoutKeycloak(): Promise<void> {
       await fetch(LOGOUT_ENDPOINT, {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams({ client_id: CLIENT_ID, refresh_token: token }).toString(),
+        body: new URLSearchParams({
+          client_id: CLIENT_ID,
+          refresh_token: token,
+        }).toString(),
+        signal: AbortSignal.timeout(TOKEN_REQUEST_TIMEOUT_MS),
       });
     } catch {
       // Best-effort revocation; clear local tokens regardless.
@@ -223,7 +243,11 @@ export async function getValidAccessToken(): Promise<string | null> {
 
   if (!refreshPromise) {
     refreshPromise = refreshGrant(token)
-      .then(() => accessToken)
+      .then((user) => {
+        if (user && accessToken) return accessToken;
+        if (!(refreshToken ?? localStorage.getItem(REFRESH_TOKEN_KEY))) return null;
+        throw new SessionUnavailableError();
+      })
       .finally(() => {
         refreshPromise = null;
       });

@@ -39,9 +39,7 @@ export function niceDistance(metres: number): number {
 }
 
 export function formatDistance(metres: number): string {
-  return metres >= 1000
-    ? `${(metres / 1000).toLocaleString()} km`
-    : `${Math.round(metres)} m`;
+  return metres >= 1000 ? `${(metres / 1000).toLocaleString()} km` : `${Math.round(metres)} m`;
 }
 
 export function boundsOf(lines: Point[][], padding: number): View {
@@ -95,11 +93,7 @@ export function pathFor(points: Point[], area: View, detail: number): string {
   const maxY = area.y + area.h + margin;
 
   const inside = (point: Point | undefined) =>
-    point !== undefined &&
-    point.x >= minX &&
-    point.x <= maxX &&
-    point.y >= minY &&
-    point.y <= maxY;
+    point !== undefined && point.x >= minX && point.x <= maxX && point.y >= minY && point.y <= maxY;
 
   const last = points.length - 1;
 
@@ -110,10 +104,7 @@ export function pathFor(points: Point[], area: View, detail: number): string {
     if (i % stride !== 0 && i !== last) continue;
 
     // The neighbours on the drawn skeleton, so a segment entering the view is kept whole.
-    const near =
-      inside(points[i]) ||
-      inside(points[i - stride]) ||
-      inside(points[Math.min(i + stride, last)]);
+    const near = inside(points[i]) || inside(points[i - stride]) || inside(points[Math.min(i + stride, last)]);
 
     if (!near) {
       pen = "M";
@@ -135,14 +126,8 @@ export function clampView(view: View, fit: View): View {
   const width = Math.min(maxWidth, Math.max(minWidth, view.w));
   const height = width * (view.h / view.w);
 
-  const centreX = Math.min(
-    fit.x + fit.w + width / 2,
-    Math.max(fit.x - width / 2, view.x + view.w / 2),
-  );
-  const centreY = Math.min(
-    fit.y + fit.h + height / 2,
-    Math.max(fit.y - height / 2, view.y + view.h / 2),
-  );
+  const centreX = Math.min(fit.x + fit.w + width / 2, Math.max(fit.x - width / 2, view.x + view.w / 2));
+  const centreY = Math.min(fit.y + fit.h + height / 2, Math.max(fit.y - height / 2, view.y + view.h / 2));
 
   return {
     x: centreX - width / 2,
@@ -187,10 +172,7 @@ export type Drawing = {
  * Both lines projected into one metric plane and fitted. Null when there is nothing with
  * two points to draw, which is what the empty state is keyed off.
  */
-export function projectDrawing(
-  feature: Coordinates,
-  trail?: Coordinates | null,
-): Drawing | null {
+export function projectDrawing(feature: Coordinates, trail?: Coordinates | null): Drawing | null {
   const lines = [feature, trail ?? []].filter((line) => line.length >= 2);
   if (lines.length === 0) return null;
 
@@ -210,8 +192,7 @@ export function projectDrawing(
     }
   }
 
-  const metresPerLon =
-    MetresPerDegree * Math.cos((((minLat + maxLat) / 2) * Math.PI) / 180);
+  const metresPerLon = MetresPerDegree * Math.cos((((minLat + maxLat) / 2) * Math.PI) / 180);
 
   const project = (line: Coordinates): Point[] =>
     line.map(([lon, lat]) => ({
@@ -227,9 +208,6 @@ export function projectDrawing(
     trailPoints,
     featureEnds: [featurePoints[0], featurePoints[featurePoints.length - 1]],
     fitFeature: boundsOf([featurePoints], 0.1),
-    fitAll: boundsOf(
-      trailPoints ? [featurePoints, trailPoints] : [featurePoints],
-      0.06,
-    ),
+    fitAll: boundsOf(trailPoints ? [featurePoints, trailPoints] : [featurePoints], 0.06),
   };
 }

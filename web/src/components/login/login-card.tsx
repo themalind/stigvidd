@@ -2,20 +2,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/providers/auth/auth-context";
-import {
-  InvalidCredentialsError,
-  NotAuthorizedError,
-} from "@/services/keycloak-auth";
+import { InvalidCredentialsError, NotAuthorizedError } from "@/services/keycloak-auth";
 import { useState } from "react";
 import { useNavigate } from "react-router";
 
@@ -78,19 +69,12 @@ export function LoginCard() {
                 required
               />
             </div>
-            {error && (
-              <p className="text-sm text-destructive">{error}</p>
-            )}
+            {error && <p className="text-sm text-destructive">{error}</p>}
           </div>
         </form>
       </CardContent>
       <CardFooter className="flex-col gap-2 py-6">
-        <Button
-          type="submit"
-          form="login-form"
-          className="w-full"
-          disabled={loading}
-        >
+        <Button type="submit" form="login-form" className="w-full" disabled={loading}>
           {loading ? "Loggar in..." : "Logga in"}
         </Button>
       </CardFooter>

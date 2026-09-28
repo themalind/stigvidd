@@ -20,9 +20,7 @@ interface Props {
  */
 export default function ImageCrop({ src, onCropChange }: Props) {
   const imgRef = useRef<HTMLImageElement>(null);
-  const [dragStart, setDragStart] = useState<{ x: number; y: number } | null>(
-    null,
-  );
+  const [dragStart, setDragStart] = useState<{ x: number; y: number } | null>(null);
   // Selection in display coordinates relative to the rendered image.
   const [sel, setSel] = useState<{
     x: number;
@@ -106,9 +104,7 @@ export default function ImageCrop({ src, onCropChange }: Props) {
         )}
       </div>
       <div className="flex items-center gap-3">
-        <p className="text-muted-foreground text-xs">
-          Drag on the image to set a crop region.
-        </p>
+        <p className="text-muted-foreground text-xs">Drag on the image to set a crop region.</p>
         {sel && (
           <Button type="button" variant="outline" size="sm" onClick={clear}>
             Clear crop

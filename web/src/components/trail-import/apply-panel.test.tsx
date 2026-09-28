@@ -46,12 +46,7 @@ function renderPanel(props: Partial<Parameters<typeof ApplyPanel>[0]> = {}) {
 
   render(
     <MemoryRouter>
-      <ApplyPanel
-        session={session()}
-        onApplied={onApplied}
-        onShowCreated={vi.fn()}
-        {...props}
-      />
+      <ApplyPanel session={session()} onApplied={onApplied} onShowCreated={vi.fn()} {...props} />
     </MemoryRouter>,
   );
 
@@ -82,9 +77,7 @@ describe("ApplyPanel", () => {
   it("reveals what applying would write once the diff is read", async () => {
     renderPanel();
 
-    await userEvent.click(
-      screen.getByRole("button", { name: /Review what applying would write/ }),
-    );
+    await userEvent.click(screen.getByRole("button", { name: /Review what applying would write/ }));
 
     expect(await screen.findByText("What applying would write")).toBeInTheDocument();
     expect(applyButton()).toBeEnabled();
@@ -99,9 +92,7 @@ describe("ApplyPanel", () => {
   });
 
   it("keeps apply out of reach when the server says the session cannot be applied", async () => {
-    api.getDiff.mockResolvedValue(
-      diff({ canApply: false, blockedReason: "Analysis has not finished." }),
-    );
+    api.getDiff.mockResolvedValue(diff({ canApply: false, blockedReason: "Analysis has not finished." }));
     renderPanel();
 
     await userEvent.click(screen.getByRole("button", { name: /Review what applying/ }));
@@ -178,27 +169,21 @@ describe("ApplyPanel", () => {
 
       await userEvent.click(screen.getByRole("button", { name: /Review what applying/ }));
 
-      expect(
-        await screen.findByText(/1 decision\(s\) go against a strong match/),
-      ).toBeInTheDocument();
+      expect(await screen.findByText(/1 decision\(s\) go against a strong match/)).toBeInTheDocument();
       expect(screen.getByText("Kranslingan")).toBeInTheDocument();
     });
 
     it("shows the trails that would be left with no segment", async () => {
       api.getDiff.mockResolvedValue(
         diff({
-          withoutSegment: [
-            { trailId: 4, trailName: "Sjuhäradsleden", duplicateLinks: 2 },
-          ],
+          withoutSegment: [{ trailId: 4, trailName: "Sjuhäradsleden", duplicateLinks: 2 }],
         } as Partial<Diff>),
       );
       renderPanel();
 
       await userEvent.click(screen.getByRole("button", { name: /Review what applying/ }));
 
-      expect(
-        await screen.findByText(/1 trail\(s\) would be left with no segment/),
-      ).toBeInTheDocument();
+      expect(await screen.findByText(/1 trail\(s\) would be left with no segment/)).toBeInTheDocument();
     });
 
     // A warning must not double as a block: these are for a human to weigh, and the
@@ -206,9 +191,7 @@ describe("ApplyPanel", () => {
     it("still allows apply, because a warning is not a refusal", async () => {
       api.getDiff.mockResolvedValue(
         diff({
-          withoutSegment: [
-            { trailId: 4, trailName: "Sjuhäradsleden", duplicateLinks: 2 },
-          ],
+          withoutSegment: [{ trailId: 4, trailName: "Sjuhäradsleden", duplicateLinks: 2 }],
         } as Partial<Diff>),
       );
       renderPanel();
@@ -238,9 +221,7 @@ describe("ApplyPanel", () => {
       renderPanel({ session: appliedSession });
 
       expect(applyButton()).not.toBeInTheDocument();
-      expect(
-        screen.queryByRole("button", { name: /Review what applying/ }),
-      ).not.toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: /Review what applying/ })).not.toBeInTheDocument();
     });
 
     it("reads back what the run wrote", () => {
@@ -254,9 +235,7 @@ describe("ApplyPanel", () => {
     it("says so plainly when a session was applied before the run was recorded", () => {
       renderPanel({ session: session({ status: "Applied" }) });
 
-      expect(
-        screen.getByText(/applied before the run was recorded/),
-      ).toBeInTheDocument();
+      expect(screen.getByText(/applied before the run was recorded/)).toBeInTheDocument();
       expect(applyButton()).not.toBeInTheDocument();
     });
   });

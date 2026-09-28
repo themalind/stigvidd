@@ -274,6 +274,16 @@ it("centres on Borås when the device has no last known position", async () => {
   });
 });
 
+it("centres on Borås when reading the last known position fails", async () => {
+  mockLastKnown.mockRejectedValue(new Error("location services disabled"));
+  await show();
+
+  expect(screen.getByTestId("maplibre-Camera").props.initialViewState).toEqual({
+    center: [START_COORDINATE_BORAS.longitude, START_COORDINATE_BORAS.latitude],
+    zoom: 16,
+  });
+});
+
 // The precise fix arrives after the map is up, and does not drag the camera off a walk in progress.
 it("refines the centre with a precise fix, unless the walk is already under way", async () => {
   await show();

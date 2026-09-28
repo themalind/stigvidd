@@ -4,11 +4,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import type {
-  TrailResponse,
-  TrailShortInfoResponse,
-  UpdateTrailRequest,
-} from "@/types/types";
+import type { TrailResponse, TrailShortInfoResponse, UpdateTrailRequest } from "@/types/types";
 
 const api = vi.hoisted(() => ({
   getTrailByIdentifier: vi.fn(),
@@ -168,9 +164,7 @@ describe("TrailEditor", () => {
     await screen.findByDisplayValue("Knalleleden");
     await userEvent.click(saveButton());
 
-    await waitFor(() =>
-      expect(toasted.error).toHaveBeenCalledWith("Failed to update trail."),
-    );
+    await waitFor(() => expect(toasted.error).toHaveBeenCalledWith("Failed to update trail."));
     expect(toasted.success).not.toHaveBeenCalled();
   });
 
@@ -270,10 +264,7 @@ describe("TrailEditor", () => {
     await open();
     await screen.findByDisplayValue("Knalleleden");
 
-    await userEvent.type(
-      screen.getByPlaceholderText("Add tag and press Enter"),
-      "moss",
-    );
+    await userEvent.type(screen.getByPlaceholderText("Add tag and press Enter"), "moss");
     await userEvent.click(saveButton());
 
     await waitFor(() => expect(api.updateTrail).toHaveBeenCalled());

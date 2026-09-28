@@ -9,7 +9,10 @@
 // from the table in endpoint-contract.test.ts. What is left is what that table cannot say:
 // what each call hands back.
 
-jest.mock("@/api/api-config", () => ({ BASE_URL: "http://test/api/v1" }));
+jest.mock("@/api/api-config", () => ({
+  ...jest.requireActual("@/api/api-config"),
+  BASE_URL: "http://test/api/v1",
+}));
 
 jest.mock("@/api/users", () => ({ getUserToken: jest.fn() }));
 

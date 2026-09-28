@@ -5,7 +5,7 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import { BASE_URL } from "./api-config";
+import { apiFetch, BASE_URL } from "./api-config";
 import { ApiError } from "./api-error";
 import { getUserToken } from "./users";
 import { logger } from "@/services/logger";
@@ -18,7 +18,7 @@ export async function registerPushToken(expoToken: string, platform: string): Pr
       throw new Error("User not authenticated");
     }
 
-    const response = await fetch(`${BASE_URL}/notifications/tokens`, {
+    const response = await apiFetch(`${BASE_URL}/notifications/tokens`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -47,7 +47,7 @@ export async function unregisterPushToken(expoToken: string): Promise<void> {
       throw new Error("User not authenticated");
     }
 
-    const response = await fetch(`${BASE_URL}/notifications/tokens/${encodeURIComponent(expoToken)}`, {
+    const response = await apiFetch(`${BASE_URL}/notifications/tokens/${encodeURIComponent(expoToken)}`, {
       method: "DELETE",
       headers: {
         Authorization: `Bearer ${token}`,

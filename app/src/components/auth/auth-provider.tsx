@@ -9,6 +9,7 @@ import { authLoadingAtom, userAtom } from "@/atoms/auth-atoms";
 import { registerAccount } from "@/api/auth";
 import { deleteStigViddUser } from "@/api/users";
 import { AuthUser, RegisterData } from "@/data/types";
+import { logger } from "@/services/logger";
 import { unregisterForPushNotificationsAsync } from "@/services/notifications";
 import { logoutKeycloak, passwordGrant, restoreSession, setSessionExpiredHandler } from "@/services/keycloak-auth";
 import { useAtomValue, useSetAtom } from "jotai";
@@ -100,7 +101,10 @@ export function useInitAuth(): void {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const restored = await restoreSession();
+      const restored = await restoreSession().catch((error: unknown) => {
+        logger.warn("Session restore failed", { errorMessage: String(error) });
+        return null;
+      });
       if (!cancelled) {
         setUser(restored);
         setIsLoading(false);

@@ -12,10 +12,7 @@ import { cn } from "@/lib/utils";
  * stretch the page to its full height with no scrollbar. This one has a fixed height, its own
  * scrollbar, and a resize handle.
  */
-export default function MailSourceTextarea({
-  className,
-  ...props
-}: React.ComponentProps<"textarea">) {
+export default function MailSourceTextarea({ className, ...props }: React.ComponentProps<"textarea">) {
   return (
     <textarea
       spellCheck={false}

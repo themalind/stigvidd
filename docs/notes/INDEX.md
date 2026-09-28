@@ -363,7 +363,16 @@ src/api/generated` then fails with "the generated API client is stale" for reaso
   Node 26 defines a global `localStorage` that is undefined without `--localstorage-file`
   and shadows jsdom's, so `src/test/setup.ts`'s `afterEach` throws for every test. The repo
   pins Node 24 in `web/Dockerfile` and CI. Do not work around it with `--localstorage-file`:
-  that store is shared across test files and pollutes `media-upload.test.tsx`.
+  that store is shared across test files and pollutes `media-upload.test.tsx`. Run it on
+  Node 24 instead, with `docker run ... node:24 npm test` or, without docker,
+  `npx -y node@24 node_modules/vitest/vitest.mjs run`.
+- [Prettier run with no workspace config reads the root .editorconfig and reindents whole files to 4 spaces](prettier-outside-a-workspace-reads-editorconfig.md) —
+  `npx prettier --write` or `npx -y prettier` in a place with no `.prettierrc` above it falls
+  back to the root `.editorconfig`, whose `indent_size = 4` is meant for C#, and reindents every
+  line. `--no-editorconfig` still rewraps at printWidth 80. app/, web/ and site/ now each have
+  prettier 3.6.2, a `.prettierrc`, a `.prettierignore` and `npm run format:check` in CI.
+  Run the workspace's own `node_modules/prettier`, as `.claude/hooks/format-prettier.mjs`
+  does, and keep prettier's output.
 - [`git diff --exit-code -- <path>` exits 0 when the path matches NOTHING, so the staleness gate fails open](diff-exit-code-pathspec-fails-open.md) —
   the pathspec is relative to the cwd and git does not complain about one that matches
   nothing, so `git diff --exit-code -- web/src/api/generated` run from inside `web/` passes
@@ -416,6 +425,16 @@ src/api/generated` then fails with "the generated API client is stale" for reaso
   work on stream-settings routes, which is why `scripts/observatory-retention.sh` needs
   `OBSERVATORY_OPS_*`. Reproducing it: `localhost:5080` fails on rootless podman (IPv4 only,
   use `127.0.0.1`), and `_search` wants microsecond times or returns `invalid time range`.
+- [The OpenObserve MCP wants the org id from its URL, not default, and answers 401 when given default](openobserve-mcp-org-is-not-default.md) —
+  `mcp__openobserve__StreamList` / `SearchSQL` with `org_id: "default"` return
+  `401 Unauthorized Access`, which reads as a bad credential. The MCP URL in `~/.claude.json`
+  (`observatory.stigvidd.se/api/3Igh0Ez9tpaLNBgzzVouYA1NyT5/mcp`) fixes the org, so pass
+  `org_id: "3Igh0Ez9tpaLNBgzzVouYA1NyT5"`. `OBSERVATORY_ORG=default` is the ingest org, not
+  this id. Also: how to investigate mobile app 401s / access denied from logs and traces.
+  `output_format: "csv"` returned empty hits, so use JSON. `okhttp/4.12.0` is the Android app,
+  and spans carry no user id. Rule out a restart via `service_service_instance_id` and
+  container `start_time`. JwtBearer 401 reasons show only because of the `Information` level
+  in appsettings.json.
 - [Deleting an OpenObserve stream does not reset it — later ingest never recreates it, and the producer reports success](deleting-an-openobserve-stream-stops-it-being-recreated.md) —
   a metrics stream is created on first ingest, so deleting one reads as reversible. It is not:
   measured on v0.92.2, `DELETE /api/{org}/streams/{name}?type=metrics` returned 200 and the
@@ -506,7 +525,8 @@ src/api/generated` then fails with "the generated API client is stale" for reaso
   -> API 401 -> `ErrorView` "Inte inloggad" with `userAtom` still set. Fixed with `withTimeout`,
   `SessionUnavailableError`, `handleUnauthorized` + `SessionRecovery`, `withUnauthorizedRetry` on the
   hike save, and a "Logga in igen" button. "Stäng alla" does not kill a recording process; use
-  `dumpsys activity exit-info` when logcat has rolled over.
+  `dumpsys activity exit-info` when logcat has rolled over. Follow-up: every app API call goes
+  through `apiFetch` (30 s, uploads 120 s), and the web admin's identical stale-token bug is fixed.
 - [The proxy publishes every `*_DOMAIN` as a network alias, so a stack pointed at another environment's service swallows its own request](proxy-aliases-shadow-public-hostnames.md) —
   deploying a partial/staging stack, or any compose stack that borrows another environment's
   Keycloak, OpenObserve or mail server: `docker-compose.yml`'s `proxy` service aliases

@@ -103,8 +103,7 @@ beforeEach(() => {
 });
 
 describe("the link to the source's own page", () => {
-  const withLink = (properties: string | null) =>
-    show({ preview: { featureProperties: properties } });
+  const withLink = (properties: string | null) => show({ preview: { featureProperties: properties } });
 
   it("offers the municipality's page for the feature", async () => {
     withLink(JSON.stringify({ link: "https://boras.se/leder/knalleleden" }));
@@ -350,10 +349,7 @@ describe("Relink", () => {
     await drawn();
 
     await userEvent.click(button(/^Relink$/));
-    await userEvent.type(
-      screen.getByLabelText("Link to another trail"),
-      "sjuhärad",
-    );
+    await userEvent.type(screen.getByLabelText("Link to another trail"), "sjuhärad");
     await userEvent.click(button(/Sjuhäradsrundan/));
 
     await waitFor(() => expect(api.decideProposal).toHaveBeenCalled());
@@ -681,9 +677,7 @@ describe("when the decision cannot be saved", () => {
 
     await userEvent.click(button(/^Accept$/));
 
-    await waitFor(() =>
-      expect(toasted.error).toHaveBeenCalledWith("Session already applied."),
-    );
+    await waitFor(() => expect(toasted.error).toHaveBeenCalledWith("Session already applied."));
     expect(onDecided).not.toHaveBeenCalled();
   });
 });

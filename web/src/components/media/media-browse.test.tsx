@@ -44,11 +44,7 @@ vi.mock("./media-reprocess-dialog", () => {
             ? props.target.mediaIdentifiers.join(",")
             : `filter:${props.target.matchingCount}`}
         </span>
-        <button
-          onClick={() => props.onSubmitted({ identifier: "job-1" } as ReprocessJobSummary)}
-        >
-          fake-submit
-        </button>
+        <button onClick={() => props.onSubmitted({ identifier: "job-1" } as ReprocessJobSummary)}>fake-submit</button>
       </div>
     );
   }
@@ -92,10 +88,10 @@ const show = () => render(<MediaBrowse refreshKey={0} onBatchStarted={onBatchSta
 beforeEach(() => {
   dialogProps.mounts = 0;
   mediaApi.getMedia.mockResolvedValue(
-    page(
-      [item("trail-1", "Trail"), item("facility-1", "Facility"), item("symbol-1", "TrailSymbol")],
-      { totalCount: 3, reprocessableCount: 2 },
-    ),
+    page([item("trail-1", "Trail"), item("facility-1", "Facility"), item("symbol-1", "TrailSymbol")], {
+      totalCount: 3,
+      reprocessableCount: 2,
+    }),
   );
 });
 
@@ -134,9 +130,7 @@ describe("selecting images for a batch", () => {
     show();
     await loaded();
 
-    await userEvent.click(
-      screen.getByRole("checkbox", { name: "Select every image on this page" }),
-    );
+    await userEvent.click(screen.getByRole("checkbox", { name: "Select every image on this page" }));
     await userEvent.click(optimize());
 
     expect(screen.getByTestId("reprocess-target")).toHaveTextContent("trail-1,facility-1");
@@ -188,15 +182,11 @@ describe("filtering", () => {
     await loaded();
 
     await userEvent.click(screen.getByTestId("next-page"));
-    await waitFor(() =>
-      expect(mediaApi.getMedia).toHaveBeenLastCalledWith(expect.objectContaining({ Page: 2 })),
-    );
+    await waitFor(() => expect(mediaApi.getMedia).toHaveBeenLastCalledWith(expect.objectContaining({ Page: 2 })));
 
     await userEvent.click(screen.getByRole("button", { name: /needs work/i }));
 
-    await waitFor(() =>
-      expect(mediaApi.getMedia).toHaveBeenLastCalledWith(expect.objectContaining({ Page: 1 })),
-    );
+    await waitFor(() => expect(mediaApi.getMedia).toHaveBeenLastCalledWith(expect.objectContaining({ Page: 1 })));
   });
 
   it("makes exactly one request when the filter changes from a later page", async () => {
@@ -207,9 +197,7 @@ describe("filtering", () => {
     await loaded();
 
     await userEvent.click(screen.getByTestId("next-page"));
-    await waitFor(() =>
-      expect(mediaApi.getMedia).toHaveBeenLastCalledWith(expect.objectContaining({ Page: 2 })),
-    );
+    await waitFor(() => expect(mediaApi.getMedia).toHaveBeenLastCalledWith(expect.objectContaining({ Page: 2 })));
     mediaApi.getMedia.mockClear();
 
     await userEvent.click(screen.getByRole("button", { name: /needs work/i }));
@@ -239,9 +227,7 @@ describe("filtering", () => {
     await loaded();
 
     let releaseStale: (value: unknown) => void = () => {};
-    mediaApi.getMedia.mockImplementationOnce(
-      () => new Promise((resolve) => (releaseStale = resolve)),
-    );
+    mediaApi.getMedia.mockImplementationOnce(() => new Promise((resolve) => (releaseStale = resolve)));
 
     await userEvent.click(screen.getByTestId("next-page"));
     mediaApi.getMedia.mockResolvedValue(freshPageOne);
@@ -289,9 +275,7 @@ describe("sorting", () => {
     await userEvent.selectOptions(screen.getByLabelText("Sort"), "largest");
 
     await waitFor(() =>
-      expect(mediaApi.getMedia).toHaveBeenLastCalledWith(
-        expect.objectContaining({ Sort: "largest", Page: 1 }),
-      ),
+      expect(mediaApi.getMedia).toHaveBeenLastCalledWith(expect.objectContaining({ Sort: "largest", Page: 1 })),
     );
   });
 
@@ -304,16 +288,12 @@ describe("sorting", () => {
 
     await userEvent.click(screen.getByRole("checkbox", { name: "Select Owner trail-1" }));
     await userEvent.click(screen.getByTestId("next-page"));
-    await waitFor(() =>
-      expect(mediaApi.getMedia).toHaveBeenLastCalledWith(expect.objectContaining({ Page: 2 })),
-    );
+    await waitFor(() => expect(mediaApi.getMedia).toHaveBeenLastCalledWith(expect.objectContaining({ Page: 2 })));
 
     await userEvent.selectOptions(screen.getByLabelText("Sort"), "oldest");
 
     await waitFor(() =>
-      expect(mediaApi.getMedia).toHaveBeenLastCalledWith(
-        expect.objectContaining({ Sort: "oldest", Page: 1 }),
-      ),
+      expect(mediaApi.getMedia).toHaveBeenLastCalledWith(expect.objectContaining({ Sort: "oldest", Page: 1 })),
     );
     expect(optimize()).toBeEnabled();
   });
@@ -357,9 +337,7 @@ describe("the batch dialog", () => {
     expect(dialogProps.mounts).toBe(1);
 
     await userEvent.click(screen.getByRole("button", { name: "fake-submit" }));
-    await waitFor(() =>
-      expect(screen.queryByTestId("reprocess-target")).not.toBeInTheDocument(),
-    );
+    await waitFor(() => expect(screen.queryByTestId("reprocess-target")).not.toBeInTheDocument());
 
     await userEvent.click(screen.getByRole("checkbox", { name: "Select Owner trail-1" }));
     await userEvent.click(optimize());
@@ -378,9 +356,7 @@ describe("select all matching", () => {
     show();
     await loaded();
 
-    await userEvent.click(
-      screen.getByRole("checkbox", { name: "Select every image on this page" }),
-    );
+    await userEvent.click(screen.getByRole("checkbox", { name: "Select every image on this page" }));
     await userEvent.click(screen.getByRole("button", { name: /select all 1204 matching/i }));
     await userEvent.click(optimize());
 

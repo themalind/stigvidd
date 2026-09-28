@@ -13,8 +13,13 @@ jest.mock("expo-secure-store", () => ({
 
 jest.mock("jwt-decode", () => ({ jwtDecode: jest.fn() }));
 
+jest.mock("../logger", () => ({
+  logger: { debug: jest.fn(), info: jest.fn(), warn: jest.fn(), error: jest.fn() },
+}));
+
 import * as SecureStore from "expo-secure-store";
 import { jwtDecode } from "jwt-decode";
+import { logger } from "../logger";
 import type * as KeycloakAuthModule from "../keycloak-auth";
 
 // The module reads these at load time, so they must be set before the require below.
@@ -54,6 +59,7 @@ const mockSetItem = SecureStore.setItemAsync as jest.Mock;
 const mockGetItem = SecureStore.getItemAsync as jest.Mock;
 const mockDeleteItem = SecureStore.deleteItemAsync as jest.Mock;
 const mockJwtDecode = jwtDecode as jest.Mock;
+const mockWarn = logger.warn as jest.Mock;
 
 const tokenResponse = {
   access_token: "access-1",
@@ -259,6 +265,51 @@ describe("refreshGrant", () => {
     expect(user).toBeNull();
     expect(handler).not.toHaveBeenCalled();
     expect(mockDeleteItem).not.toHaveBeenCalled();
+  });
+
+  it("logs a transient failure as unavailable, with the cause but no token", async () => {
+    global.fetch = jest.fn().mockRejectedValue(new Error("network down"));
+    await refreshGrant("refresh-secret");
+    expect(mockWarn).toHaveBeenCalledWith("Token refresh failed", {
+      outcome: "unavailable",
+      reason: "Error: network down",
+    });
+    expect(JSON.stringify(mockWarn.mock.calls)).not.toContain("refresh-secret");
+  });
+
+  it("logs a rejected refresh token as expired", async () => {
+    mockFetch(400);
+    await refreshGrant("expired-refresh");
+    expect(mockWarn).toHaveBeenCalledWith("Token refresh failed", {
+      outcome: "expired",
+      reason: "InvalidCredentialsError",
+    });
+  });
+
+  it("logs a disabled account apart from a dead refresh token", async () => {
+    mockFetch(400, { error: "invalid_grant", error_description: "Account disabled" });
+    await refreshGrant("refresh-1");
+    expect(mockWarn).toHaveBeenCalledWith("Token refresh failed", {
+      outcome: "expired",
+      reason: "AccountNotVerifiedError",
+    });
+  });
+
+  it("logs a repeated identical failure once", async () => {
+    global.fetch = jest.fn().mockRejectedValue(new Error("network down"));
+    await refreshGrant("refresh-1");
+    await refreshGrant("refresh-1");
+    expect(mockWarn).toHaveBeenCalledTimes(1);
+  });
+
+  it("logs the same failure again once a refresh has succeeded in between", async () => {
+    global.fetch = jest.fn().mockRejectedValue(new Error("network down"));
+    await refreshGrant("refresh-1");
+    mockFetch(200, tokenResponse);
+    await refreshGrant("refresh-1");
+    global.fetch = jest.fn().mockRejectedValue(new Error("network down"));
+    await refreshGrant("refresh-1");
+    expect(mockWarn).toHaveBeenCalledTimes(2);
   });
 
   it("does not invoke the handler after it has been cleared", async () => {

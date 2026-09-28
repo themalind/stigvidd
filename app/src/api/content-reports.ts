@@ -6,7 +6,7 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { ContentReport, CreateContentReportRequest } from "@/data/types";
-import { BASE_URL } from "./api-config";
+import { apiFetch, BASE_URL } from "./api-config";
 import { getUserToken } from "./users";
 import { ApiError } from "./api-error";
 import { logger } from "@/services/logger";
@@ -19,7 +19,7 @@ export async function getReportReasons(): Promise<string[]> {
       throw new Error("User not authenticated");
     }
 
-    const response = await fetch(`${BASE_URL}/contentreports/reasons`, {
+    const response = await apiFetch(`${BASE_URL}/contentreports/reasons`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -51,7 +51,7 @@ export async function createContentReport(report: CreateContentReportRequest): P
       throw new Error("User not authenticated");
     }
 
-    const response = await fetch(`${BASE_URL}/contentreports`, {
+    const response = await apiFetch(`${BASE_URL}/contentreports`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

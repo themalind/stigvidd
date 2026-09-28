@@ -45,11 +45,7 @@ export function TagInput({ value, onChange }: Props) {
         {tags.map((tag) => (
           <Badge key={tag} variant="secondary" className="gap-1">
             {tag}
-            <button
-              type="button"
-              className="hover:text-destructive"
-              onClick={() => removeTag(tag)}
-            >
+            <button type="button" className="hover:text-destructive" onClick={() => removeTag(tag)}>
               <X size={12} />
             </button>
           </Badge>

@@ -35,6 +35,6 @@ export default defineConfig({
     // Sets global test timeout to 30 seconds
     testTimeout: 30000,
     // Optional: Increase hook timeout (beforeEach, afterAll, etc.)
-    hookTimeout: 25000, 
+    hookTimeout: 25000,
   },
 });
