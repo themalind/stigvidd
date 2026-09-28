@@ -5,10 +5,18 @@
 //
 // Escape hatch: `keep-comment:` anywhere on the line.
 //
+// --after  PostToolUse(Write|Edit|MultiEdit): lists the file's OTHER unmarked comments, the
+//          ones already there before this change, so old comments get reviewed as files
+//          are touched. Never blocks (a deny would stop every Edit on comments it never
+//          touched), and reports a file once per session. EF migrations are skipped: their
+//          scaffolded `/// <inheritdoc />` is not anyone's to review.
+//
 // Self-test: `node .claude/hooks/guard-new-comments.mjs --self-test`
 import process from "node:process";
-import { readFileSync } from "node:fs";
-import { readEvent, repoRoot, relKey, under, deny, checker, lines } from "./lib.mjs";
+import path from "node:path";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { readEvent, repoRoot, relKey, under, deny, speak, stateDir, checker, lines } from "./lib.mjs";
 
 const SOURCE_EXT = /\.(cs|ts|tsx)$/;
 const EXCLUDE_DIRS = ["web/src/api/generated/", ".claude/", "docs/"];
@@ -59,10 +67,28 @@ export function addedComments(oldText, newText) {
   return added;
 }
 
+function inScope(key) {
+  return SOURCE_EXT.test(key) && !EXCLUDE_DIRS.some((d) => under(key, d));
+}
+
+export function sweepScope(keyIn) {
+  const key = String(keyIn).replace(/\\/g, "/").toLowerCase();
+  return inScope(key) && !key.includes("/migrations/");
+}
+
+/** Every comment line in `text` that is neither exempt nor marked keep-comment. */
+export function legacyComments(text) {
+  const found = [];
+  lines(text ?? "").forEach((line, i) => {
+    const trimmed = line.trim();
+    if (isCommentLine(line) && !isExempt(trimmed)) found.push({ line: i + 1, text: trimmed });
+  });
+  return found;
+}
+
 export function classify(keyIn, oldText, newText) {
   const key = String(keyIn).toLowerCase();
-  if (!SOURCE_EXT.test(key)) return null;
-  if (EXCLUDE_DIRS.some((d) => under(key, d))) return null;
+  if (!inScope(key)) return null;
 
   const added = addedComments(oldText, newText);
   if (!added.length) return null;
@@ -115,8 +141,68 @@ export function decide(toolName, input, root = repoRoot()) {
   return classify(key, oldAll, newAll);
 }
 
+const SWEEP_SHOWN = 15;
+
+function sweepFile(dir, sessionId) {
+  const safe = String(sessionId || "unknown").replace(/[^A-Za-z0-9_-]/g, "_");
+  return path.join(dir, `${safe}.json`);
+}
+
+function alreadySwept(dir, sessionId) {
+  try {
+    const keys = JSON.parse(readFileSync(sweepFile(dir, sessionId), "utf8"));
+    return new Set(Array.isArray(keys) ? keys : []);
+  } catch {
+    return new Set();
+  }
+}
+
+function markSwept(dir, sessionId, keys) {
+  try {
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(sweepFile(dir, sessionId), JSON.stringify([...keys]));
+  } catch {
+    /* best effort */
+  }
+}
+
+/** The --after message for `key`, or null when there is nothing to say this session. */
+export function sweep(key, text, sessionId, dir = path.join(stateDir(), "comment-sweep")) {
+  if (!key || !sweepScope(key)) return null;
+  const seen = alreadySwept(dir, sessionId);
+  if (seen.has(key)) return null;
+  const found = legacyComments(text);
+  if (!found.length) return null;
+  seen.add(key);
+  markSwept(dir, sessionId, seen);
+
+  const shown = found.slice(0, SWEEP_SHOWN).map((c) => `  line ${c.line}: ${c.text}`).join("\n");
+  const more = found.length > SWEEP_SHOWN ? `\n  ...and ${found.length - SWEEP_SHOWN} more` : "";
+  return (
+    `${key} still has ${found.length} older comment line(s) with no keep-comment marker:\n` +
+    `${shown}${more}\n\n` +
+    "While you are in this file, review them. Delete each one that restates the code or " +
+    "narrates history; keep only what a reader could not get from the code, and mark each " +
+    "kept line with `keep-comment: <why>` (the marker is per line, so every line of a kept " +
+    "block needs it). Leave unrelated code alone. Rewording a comment counts as adding one, " +
+    "so a reworded line needs the marker too. This is not blocking, and this file will not " +
+    "be listed again this session."
+  );
+}
+
+function after() {
+  const ev = readEvent();
+  const root = repoRoot(ev);
+  const raw = ev.tool_input?.file_path;
+  const key = relKey(root, raw);
+  if (!root || !key) return 0;
+  const msg = sweep(key, fileText(root, key), ev.session_id);
+  return msg ? speak(msg) : 0;
+}
+
 function main() {
   if (process.argv.includes("--self-test")) return selfTest();
+  if (process.argv.includes("--after")) return after();
   const ev = readEvent();
   const d = decide(String(ev.tool_name ?? ""), ev.tool_input ?? {}, repoRoot(ev));
   return d ? deny(d[1]) : 0;
@@ -206,7 +292,55 @@ function selfTest() {
     "a new app file with the SPDX header and MPL notice was denied",
   );
 
-  return done(classifyCases.length + 7);
+  // --after: the sweep of older comments ------------------------------------
+  const legacyCases = [
+    ["// narrative\nvar x = 1;", 1],
+    ["/** JSDoc narrative\n * second line\n */\nexport const x = 1;", 3],
+    ["    public void M()\n    {\n        // indented narrative\n    }", 1],
+    ["// SPDX-FileCopyrightText: x\n// SPDX-License-Identifier: AGPL-3.0-or-later\nclass X {}", 0],
+    [`${APP_HEADER}\nexport const x = 1;`, 0],
+    [APP_HEADER.replace(/\n/g, "\r\n") + "\r\nexport const x = 1;", 0],
+    ["        // Arrange\n        // Act\n        // Assert\n", 0],
+    ["        // kept keep-comment: EF needs this order\n", 0],
+    ["var x = 1; // trailing, not a comment line", 0],
+  ];
+  for (const [text, want] of legacyCases) {
+    const got = legacyComments(text).length;
+    ok(got === want, `legacyComments(${JSON.stringify(text.slice(0, 40))}) found ${got}, expected ${want}`);
+  }
+
+  const scopeCases = [
+    [CS, true],
+    [CS_WIN, true],
+    [TS, true],
+    [APP, true],
+    ["docs/notes/x.ts", false],
+    ["web/src/api/generated/model/x.ts", false],
+    [".claude/hooks/x.ts", false],
+    ["backend/Infrastructure/Migrations/20260925113659_AddUserBlocksAndBans.cs", false],
+    ["backend\\Infrastructure\\Migrations\\X.cs", false],
+    ["backend/Core/Services/x.md", false],
+  ];
+  for (const [p, want] of scopeCases) ok(sweepScope(p) === want, `sweepScope(${p}) => ${!want}, expected ${want}`);
+
+  const dir = mkdtempSync(path.join(tmpdir(), "comment-sweep-test-"));
+  try {
+    const text = "// old narrative\nvar x = 1;";
+    const first = sweep(CS, text, "s1", dir);
+    ok(first?.includes("line 1: // old narrative") ?? false, "first sweep of a file did not list its comment");
+    ok(sweep(CS, text, "s1", dir) === null, "the same file was swept twice in one session");
+    ok(sweep(TS, text, "s1", dir) !== null, "a second file in the same session was not swept");
+    ok(sweep(CS, text, "s2", dir) !== null, "a new session did not sweep the file again");
+    ok(sweep(APP, "export const x = 1;", "s3", dir) === null, "a file with no comments was swept");
+    ok(sweep(APP, "// now one\n", "s3", dir) !== null, "a clean file blocked a later sweep in the session");
+    const many = Array.from({ length: 20 }, (_, i) => `// c${i}`).join("\n");
+    ok(sweep(CS, many, "s4", dir)?.includes("...and 5 more") ?? false, "a long listing was not truncated");
+    ok(sweep(null, text, "s5", dir) === null, "a missing path was swept");
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+
+  return done(classifyCases.length + 7 + legacyCases.length + scopeCases.length + 8);
 }
 
 process.exit(main());
