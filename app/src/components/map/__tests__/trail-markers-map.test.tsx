@@ -12,7 +12,8 @@ import { flushUntil, settle } from "@/test/flush";
 import { cameraHandles, resetMapHandles, sourceHandle } from "@/test/maplibre";
 import { renderWithProviders } from "@/test/render";
 import type { CameraRef } from "@maplibre/maplibre-react-native";
-import { fireEvent, screen } from "@testing-library/react-native";
+import { onlineManager } from "@tanstack/react-query";
+import { act, fireEvent, screen } from "@testing-library/react-native";
 import { createRef } from "react";
 
 const mockGetTrailMarkers = jest.fn();
@@ -234,6 +235,44 @@ it("reports a failed fetch without taking the map down", async () => {
 
   expect(store.get(snackbarAtom)).toMatchObject({ type: "error" });
   expect(screen.getByTestId("maplibre-Map")).toBeTruthy();
+});
+
+// Offline the map screen says so itself; a snackbar on top would repeat it.
+it("keeps a failed fetch quiet while offline", async () => {
+  onlineManager.setOnline(false);
+  try {
+    mockGetTrailMarkers.mockRejectedValue(new TypeError("Network request failed"));
+    const { store } = await show();
+    await settle();
+
+    expect(mockGetTrailMarkers).toHaveBeenCalled();
+    expect(store.get(snackbarAtom).visible).toBe(false);
+  } finally {
+    onlineManager.setOnline(true);
+  }
+});
+
+// A failed refetch keeps the markers already shown, so the query stays errored through the
+// reconnect's own refetch; a subscribed online flag would replay the failure right then.
+it("does not replay the offline failure when the connection comes back", async () => {
+  try {
+    mockGetTrailMarkers.mockResolvedValueOnce([]);
+    const { store, queryClient } = await show();
+
+    await act(async () => onlineManager.setOnline(false));
+    mockGetTrailMarkers.mockRejectedValueOnce(new TypeError("Network request failed"));
+    await act(async () => queryClient.refetchQueries({ queryKey: ["trails", "markers"] }));
+    await settle();
+
+    mockGetTrailMarkers.mockReturnValueOnce(new Promise(() => {}));
+    await act(async () => onlineManager.setOnline(true));
+    await settle();
+
+    expect(mockGetTrailMarkers).toHaveBeenCalledTimes(3);
+    expect(store.get(snackbarAtom).visible).toBe(false);
+  } finally {
+    onlineManager.setOnline(true);
+  }
 });
 
 // The ring is the tapped marker's own radius plus a fixed gap, for a single point and a cluster alike.

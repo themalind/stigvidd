@@ -44,8 +44,15 @@ export function renderWithProviders(
   // and reads a stale value with no error. See docs/notes/react-query-tracked-props.md.
   const queryClient = new QueryClient({
     defaultOptions: {
-      queries: { retry: false, gcTime: 0, notifyOnChangeProps: "all" },
-      mutations: { retry: false, gcTime: 0 },
+      queries: {
+        retry: false,
+        gcTime: 0,
+        notifyOnChangeProps: "all",
+        // As src/api/query-client.ts, so an offline test fails the way the app does instead of pausing.
+        networkMode: "always",
+        refetchOnReconnect: true,
+      },
+      mutations: { retry: false, gcTime: 0, networkMode: "always" },
     },
   });
   const store = createStore();

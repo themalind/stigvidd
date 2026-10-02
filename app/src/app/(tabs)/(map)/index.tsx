@@ -9,8 +9,10 @@ import CenterOnUserButton from "@/components/map/center-on-user-button";
 import MapFilterMenu from "@/components/map/map-filter-menu";
 import TrailCardCarousel from "@/components/map/trail-card-carousel";
 import TrailMarkersMap, { type MapHighlight } from "@/components/map/trail-markers-map";
+import OfflineNotice from "@/components/offline-notice";
 import { SCREEN_PADDING } from "@/constants/constants";
 import { MapMarkerFilter } from "@/data/types";
+import { useIsOnline } from "@/hooks/useIsOnline";
 import { useUserLocation } from "@/hooks/useUserLocation";
 import { type ClusterZoomBand, clusterZoomBand, isZoomOutsideBand } from "@/utils/cluster-zoom-band";
 import { guardedNavigate } from "@/utils/navigation";
@@ -19,10 +21,13 @@ import { useFocusEffect, useRouter } from "expo-router";
 import { startTransition, useCallback, useEffect, useRef, useState } from "react";
 import { NativeSyntheticEvent, StyleSheet, View } from "react-native";
 import { useTheme } from "react-native-paper";
+import { useTranslation } from "react-i18next";
 
 export default function MapScreen() {
   const theme = useTheme();
   const router = useRouter();
+  const { t } = useTranslation();
+  const isOnline = useIsOnline();
 
   const cameraRef = useRef<CameraRef>(null);
   // Remembers the camera between mounts: the map unmounts on blur (and so loses its
@@ -169,6 +174,9 @@ export default function MapScreen() {
         <View testID="map-cover" style={[StyleSheet.absoluteFill, { backgroundColor: theme.colors.background }]} />
       )}
 
+      {/* Before the top bar, so the filter panel drops over it. */}
+      {!isOnline && <OfflineNotice testID="map-offline" message={t("map.offline")} style={s.offline} />}
+
       {/* No safe-area offset: the app header sits above the tab navigator and already
           clears it, so the map's top edge starts below the status bar. */}
       <View testID="map-top-bar" style={s.topBar}>
@@ -193,6 +201,13 @@ export default function MapScreen() {
 const s = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  offline: {
+    position: "absolute",
+    top: SCREEN_PADDING,
+    left: SCREEN_PADDING,
+    // Leaves the top-right corner to the filter menu at large font sizes.
+    maxWidth: "55%",
   },
   topBar: {
     position: "absolute",

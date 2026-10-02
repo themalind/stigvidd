@@ -10,6 +10,8 @@ import { Hike } from "@/data/types";
 import { LatestHikeState, useLatestHike } from "@/hooks/hike/useLatestHike";
 import { flushUntil } from "@/test/flush";
 import { renderWithProviders } from "@/test/render";
+import { onlineManager } from "@tanstack/react-query";
+import { act } from "@testing-library/react-native";
 
 const mockGetAllHikesByUserId = jest.fn();
 
@@ -23,9 +25,13 @@ jest.mock("@/components/auth/auth-provider", () => ({
 }));
 
 let mockUser: { identifier: string } | undefined;
+let mockUserError = false;
+const mockRefetchUser = jest.fn();
 jest.mock("@/atoms/user-atoms", () => {
   const { atom } = jest.requireActual("jotai");
-  return { stigviddUserAtom: atom(() => ({ data: mockUser })) };
+  return {
+    stigviddUserAtom: atom(() => ({ data: mockUser, isError: mockUserError, refetch: mockRefetchUser })),
+  };
 });
 
 function hike(identifier: string, createdAt: string): Hike {
@@ -53,7 +59,12 @@ beforeEach(() => {
   jest.clearAllMocks();
   mockIsAuthenticated = true;
   mockUser = { identifier: "me" };
+  mockUserError = false;
   mockGetAllHikesByUserId.mockResolvedValue([]);
+});
+
+afterEach(() => {
+  onlineManager.setOnline(true);
 });
 
 describe("useLatestHike", () => {
@@ -86,6 +97,42 @@ describe("useLatestHike", () => {
 
     expect(harness.state()).toEqual({ kind: "loading" });
     expect(mockGetAllHikesByUserId).not.toHaveBeenCalled();
+  });
+
+  // Offline the query pauses, so "loading" would hold the skeleton forever.
+  it("reports offline instead of loading when there is no connection", async () => {
+    onlineManager.setOnline(false);
+    mockGetAllHikesByUserId.mockRejectedValue(new TypeError("Network request failed"));
+    const harness = render();
+    await flushUntil(() => mockGetAllHikesByUserId.mock.calls.length > 0);
+
+    expect(harness.state()).toEqual({ kind: "offline" });
+  });
+
+  it("keeps showing the cached walk offline", async () => {
+    mockGetAllHikesByUserId.mockResolvedValue([hike("cached", "2026-09-01T10:00:00Z")]);
+    const harness = render();
+    await harness.settled();
+
+    await act(async () => onlineManager.setOnline(false));
+
+    expect(harness.state()).toMatchObject({ kind: "hike", hike: { identifier: "cached" } });
+  });
+
+  it("reports offline while the user is still unknown, too", () => {
+    onlineManager.setOnline(false);
+    mockUser = undefined;
+    const harness = render();
+
+    expect(harness.state()).toEqual({ kind: "offline" });
+  });
+
+  it("still reports signed out offline", () => {
+    onlineManager.setOnline(false);
+    mockIsAuthenticated = false;
+    const harness = render();
+
+    expect(harness.state()).toEqual({ kind: "signedOut" });
   });
 
   it("asks for the signed-in user's hikes", async () => {
@@ -123,11 +170,29 @@ describe("useLatestHike", () => {
     expect(harness.queryClient.getQueryDefaults(["hikes", "me"]).staleTime ?? HIKES_STALE_TIME).toBe(HIKES_STALE_TIME);
   });
 
-  it("reports empty rather than a hike when the request fails", async () => {
-    mockGetAllHikesByUserId.mockRejectedValue(new Error("500"));
+  it("reports an error the user can retry when the request fails", async () => {
+    mockGetAllHikesByUserId.mockRejectedValueOnce(new Error("500"));
     const harness = render();
     await harness.settled();
 
-    expect(harness.state()).toEqual({ kind: "empty" });
+    const state = harness.state();
+    if (state.kind !== "error") throw new Error("expected an error");
+    mockGetAllHikesByUserId.mockResolvedValueOnce([hike("later", "2026-09-01T10:00:00Z")]);
+    await act(async () => state.retry());
+    await flushUntil(() => harness.state().kind === "hike");
+
+    expect(mockGetAllHikesByUserId).toHaveBeenCalledTimes(2);
+  });
+
+  // The hikes query waits for the profile, so a failed profile would hold "loading" forever.
+  it("reports an error when the profile itself fails", () => {
+    mockUser = undefined;
+    mockUserError = true;
+    const harness = render();
+
+    const state = harness.state();
+    if (state.kind !== "error") throw new Error("expected an error");
+    state.retry();
+    expect(mockRefetchUser).toHaveBeenCalledTimes(1);
   });
 });

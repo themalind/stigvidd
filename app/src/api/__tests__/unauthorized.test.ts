@@ -8,6 +8,7 @@
 import { ApiError } from "@/api/api-error";
 import { retryUnlessAuthFailure, withUnauthorizedRetry } from "@/api/unauthorized";
 import { handleUnauthorized, SessionUnavailableError } from "@/services/keycloak-auth";
+import { onlineManager } from "@tanstack/react-query";
 
 jest.mock("@/services/keycloak-auth", () => ({
   ...jest.requireActual("@/services/keycloak-auth"),
@@ -61,5 +62,14 @@ describe("retryUnlessAuthFailure", () => {
     const error = new ApiError("server error", 500);
     expect(retryUnlessAuthFailure(2, error)).toBe(true);
     expect(retryUnlessAuthFailure(3, error)).toBe(false);
+  });
+
+  it("does not retry while offline", () => {
+    onlineManager.setOnline(false);
+    try {
+      expect(retryUnlessAuthFailure(0, new TypeError("Network request failed"))).toBe(false);
+    } finally {
+      onlineManager.setOnline(true);
+    }
   });
 });

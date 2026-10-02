@@ -12,7 +12,8 @@ import PagerCarouselSkeleton from "@/components/skeletons/pager-carousel-skeleto
 import { LatestHikeState } from "@/hooks/hike/useLatestHike";
 import { flushUntil, settle } from "@/test/flush";
 import { renderWithProviders } from "@/test/render";
-import { fireEvent, screen } from "@testing-library/react-native";
+import { onlineManager } from "@tanstack/react-query";
+import { act, fireEvent, screen } from "@testing-library/react-native";
 import { StyleSheet } from "react-native";
 import HomeScreen from "../index";
 
@@ -101,6 +102,7 @@ beforeEach(() => {
 
 afterEach(() => {
   jest.restoreAllMocks();
+  onlineManager.setOnline(true);
 });
 
 it("ranks the popular trails around the user's position", async () => {
@@ -168,6 +170,43 @@ it("loads the trails again when the user retries", async () => {
   expect(mockGetPopularTrails).toHaveBeenCalledTimes(2);
 });
 
+// Offline the query pauses instead of failing, so the skeleton would never give way.
+it("says it is offline instead of holding the skeleton", async () => {
+  onlineManager.setOnline(false);
+  mockGetPopularTrails.mockRejectedValue(new TypeError("Network request failed"));
+  show();
+  await settle();
+
+  expect(screen.getByTestId("home-popular-offline")).toBeTruthy();
+  expect(screen.getByText("Ingen anslutning. Promenaderna visas när du är online igen.")).toBeTruthy();
+  expect(screen.UNSAFE_queryByType(PagerCarouselSkeleton)).toBeNull();
+  expect(screen.queryByTestId("home-popular-error")).toBeNull();
+});
+
+it("loads the trails on its own once the connection is back", async () => {
+  onlineManager.setOnline(false);
+  mockGetPopularTrails.mockRejectedValueOnce(new TypeError("Network request failed"));
+  show();
+  await settle();
+
+  await act(async () => onlineManager.setOnline(true));
+  await flushUntil(() => screen.queryByText("Skogsleden"));
+
+  expect(screen.queryByTestId("home-popular-offline")).toBeNull();
+});
+
+// A retry offline would only pause; the reconnect refetches the failed query by itself.
+it("prefers the offline notice over the error once the connection drops", async () => {
+  mockGetPopularTrails.mockRejectedValueOnce(new Error("nätverket"));
+  show();
+  await flushUntil(() => screen.queryByTestId("home-popular-error"));
+
+  await act(async () => onlineManager.setOnline(false));
+
+  expect(screen.getByTestId("home-popular-offline")).toBeTruthy();
+  expect(screen.queryByTestId("home-popular-error")).toBeNull();
+});
+
 // One personal card at a time: the pitch for a user with no walks, the walk otherwise.
 it("pitches recording to a signed-out visitor", async () => {
   await showLoaded();
@@ -203,6 +242,26 @@ it("holds the walk's place, heading and all, while it is still loading", async (
   expect(screen.getByText("Din senaste promenad")).toBeTruthy();
   expect(screen.queryByText("Kvällspromenad")).toBeNull();
   expect(screen.queryByText("Din nästa promenad börjar här")).toBeNull();
+});
+
+it("says the walk waits for a connection instead of holding the skeleton", async () => {
+  mockLatest = { kind: "offline" };
+  await showLoaded();
+
+  expect(screen.getByTestId("home-latest-offline")).toBeTruthy();
+  expect(screen.getByText("Din senaste promenad")).toBeTruthy();
+  expect(screen.getByText("Ingen anslutning. Promenaden visas när du är online igen.")).toBeTruthy();
+});
+
+it("offers a retry when the walk could not be loaded", async () => {
+  const retry = jest.fn();
+  mockLatest = { kind: "error", retry };
+  await showLoaded();
+
+  expect(screen.getByTestId("home-latest-error")).toBeTruthy();
+  expect(screen.getByText("Kunde inte hämta din senaste promenad just nu.")).toBeTruthy();
+  fireEvent.press(screen.getByText("Försök igen"));
+  expect(retry).toHaveBeenCalledTimes(1);
 });
 
 it("opens the nature guide", async () => {

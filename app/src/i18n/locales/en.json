@@ -149,6 +149,7 @@
     "showOnMap": "Show on map",
     "showMapView": "Show map view",
     "loadError": "Could not load the map data",
+    "offline": "No connection",
     "cardError": "Could not load this trail",
     "cardNotFound": "This trail is no longer available",
     "start": "Start",
@@ -430,6 +431,10 @@
       "title": "Something went wrong",
       "message": "Check your internet connection and try again."
     },
+    "offline": {
+      "title": "No connection",
+      "message": "The content will load once you are back online."
+    },
     "retry": "Try again"
   },
   "friends": {
@@ -516,12 +521,15 @@
     "popularNearYou": "Popular walks near you",
     "popular": "Popular walks",
     "popularError": "Could not load the walks right now.",
+    "popularOffline": "No connection. The walks will show once you are back online.",
     "locationUnknown": "Location unknown",
     "guide": "Nature guide",
     "guideSubtitle": "Right of access · Difficulty levels",
     "explore": "Explore Borås",
     "exploreSubtitle": "Rya åsar · Kype · and more",
     "latestHike": "Your latest walk",
+    "latestHikeOffline": "No connection. The walk will show once you are back online.",
+    "latestHikeError": "Could not load your latest walk right now.",
     "getStartedSignedOutTitle": "Your next walk starts here",
     "getStartedSignedOutBody": "Log in to record your walks with GPS, see the route on the map and save the ones you want to walk again.",
     "getStartedSignedOutAction": "Log in",

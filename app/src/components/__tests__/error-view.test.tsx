@@ -11,6 +11,7 @@ import ErrorView from "@/components/error-view";
 import sv from "@/i18n/locales/sv.json";
 import { SessionUnavailableError } from "@/services/keycloak-auth";
 import { renderWithProviders } from "@/test/render";
+import { onlineManager } from "@tanstack/react-query";
 import { fireEvent, screen } from "@testing-library/react-native";
 
 jest.mock("@/components/auth/auth-provider", () => ({ useAuth: jest.fn() }));
@@ -55,4 +56,28 @@ it("shows an unreachable Keycloak as a connection problem, not as signed out", (
 
   expect(screen.getByText(sv.error.default.title)).toBeTruthy();
   expect(screen.queryByText(sv.error["401"].title)).toBeNull();
+});
+
+describe("offline", () => {
+  afterEach(() => {
+    onlineManager.setOnline(true);
+  });
+
+  it("names the missing connection instead of a generic failure", () => {
+    signedIn(true);
+    onlineManager.setOnline(false);
+    renderWithProviders(<ErrorView error={new TypeError("Network request failed")} />);
+
+    expect(screen.getByText(sv.error.offline.title)).toBeTruthy();
+    expect(screen.getByText(sv.error.offline.message)).toBeTruthy();
+    expect(screen.queryByText(sv.error.default.title)).toBeNull();
+  });
+
+  it("still names a server answer for what it is", () => {
+    signedIn(true);
+    onlineManager.setOnline(false);
+    renderWithProviders(<ErrorView error={new ApiError("nope", 404)} />);
+
+    expect(screen.getByText(sv.error["404"].title)).toBeTruthy();
+  });
 });

@@ -149,6 +149,7 @@
     "showOnMap": "Se på karta",
     "showMapView": "Visa kartvy",
     "loadError": "Kunde inte ladda kartdata",
+    "offline": "Ingen anslutning",
     "cardError": "Kunde inte ladda den här leden",
     "cardNotFound": "Den här leden är inte längre tillgänglig",
     "start": "Start",
@@ -430,6 +431,10 @@
       "title": "Något gick fel",
       "message": "Kontrollera din internetanslutning och försök igen."
     },
+    "offline": {
+      "title": "Ingen anslutning",
+      "message": "Innehållet laddas när du är online igen."
+    },
     "retry": "Försök igen"
   },
   "friends": {
@@ -516,12 +521,15 @@
     "popularNearYou": "Populära promenader nära dig",
     "popular": "Populära promenader",
     "popularError": "Kunde inte hämta promenaderna just nu.",
+    "popularOffline": "Ingen anslutning. Promenaderna visas när du är online igen.",
     "locationUnknown": "Plats okänd",
     "guide": "Naturguide",
     "guideSubtitle": "Allemansrätt · Svårighetsgrader",
     "explore": "Utforska Borås",
     "exploreSubtitle": "Rya åsar · Kype · m.fl.",
     "latestHike": "Din senaste promenad",
+    "latestHikeOffline": "Ingen anslutning. Promenaden visas när du är online igen.",
+    "latestHikeError": "Kunde inte hämta din senaste promenad just nu.",
     "getStartedSignedOutTitle": "Din nästa promenad börjar här",
     "getStartedSignedOutBody": "Logga in för att spela in dina turer med GPS, se rutten på kartan och spara dem du vill gå om.",
     "getStartedSignedOutAction": "Logga in",

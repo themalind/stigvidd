@@ -8,6 +8,7 @@
 import { ApiError } from "@/api/api-error";
 import { isUnauthorized } from "@/api/unauthorized";
 import { useAuth } from "@/components/auth/auth-provider";
+import { useIsOnline } from "@/hooks/useIsOnline";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import { StyleSheet, Text, View } from "react-native";
@@ -23,6 +24,7 @@ type ErrorInfo = {
 
 function useErrorInfo(error: unknown): ErrorInfo {
   const { t } = useTranslation();
+  const isOnline = useIsOnline();
   if (error instanceof ApiError) {
     switch (error.status) {
       case 400:
@@ -39,6 +41,8 @@ function useErrorInfo(error: unknown): ErrorInfo {
         return { title: t("error.500.title"), message: t("error.500.message"), icon: "cloud-off" };
     }
   }
+  // The request never reached the server; the reconnect refetches it.
+  if (!isOnline) return { title: t("error.offline.title"), message: t("error.offline.message"), icon: "cloud-off" };
   return { title: t("error.default.title"), message: t("error.default.message"), icon: "wifi-off" };
 }
 

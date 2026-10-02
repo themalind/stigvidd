@@ -30,7 +30,7 @@ import {
   useCurrentPosition,
   type ViewStateChangeEvent,
 } from "@maplibre/maplibre-react-native";
-import { useQuery } from "@tanstack/react-query";
+import { onlineManager, useQuery } from "@tanstack/react-query";
 import { useSetAtom } from "jotai";
 import { RefObject, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -258,7 +258,8 @@ export default function TrailMarkersMap({
   // Surface load failures without blanking the map: keep whatever tiles/markers
   // are already shown and report the error via the global snackbar.
   useEffect(() => {
-    if (trailMarkersError || facilitiesError) {
+    // Read, not subscribed: a reconnect must not replay a failure the offline notice covered.
+    if ((trailMarkersError || facilitiesError) && onlineManager.isOnline()) {
       showError(t("map.loadError"));
     }
   }, [trailMarkersError, facilitiesError, showError, t]);

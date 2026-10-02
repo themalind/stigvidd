@@ -12,6 +12,7 @@ import { MapMarkerFilter } from "@/data/types";
 import { UserLocation } from "@/hooks/useUserLocation";
 import { settle } from "@/test/flush";
 import { renderWithProviders } from "@/test/render";
+import { onlineManager } from "@tanstack/react-query";
 import { act, fireEvent, screen } from "@testing-library/react-native";
 
 const mockNavigate = jest.fn();
@@ -123,6 +124,7 @@ beforeEach(() => {
 
 afterEach(() => {
   jest.restoreAllMocks();
+  onlineManager.setOnline(true);
 });
 
 async function show(theme: AppTheme = AppDefaultTheme) {
@@ -222,6 +224,52 @@ describe("MapScreen — the map and its cover", () => {
     await show(AppDarkTheme);
 
     expect(screen.getByTestId("map-cover")).toHaveStyle({ backgroundColor: AppDarkTheme.colors.background });
+  });
+});
+
+describe("MapScreen — offline", () => {
+  it("says nothing while online", async () => {
+    await show();
+
+    expect(screen.queryByTestId("map-offline")).toBeNull();
+  });
+
+  // The style and tiles never load offline, so the map stays covered and needs an explanation.
+  it("says there is no connection over the covered map", async () => {
+    onlineManager.setOnline(false);
+    await show();
+
+    expect(screen.getByTestId("map-cover")).toBeOnTheScreen();
+    expect(screen.getByText("Ingen anslutning")).toBeOnTheScreen();
+  });
+
+  it("sits in the top-left corner, clear of the filter menu", async () => {
+    onlineManager.setOnline(false);
+    await show();
+
+    expect(screen.getByTestId("map-offline")).toHaveStyle({
+      position: "absolute",
+      top: SCREEN_PADDING,
+      left: SCREEN_PADDING,
+    });
+    expect(screen.getByTestId("map-filter-trigger")).toBeOnTheScreen();
+  });
+
+  it("goes away once the connection is back", async () => {
+    onlineManager.setOnline(false);
+    await show();
+
+    await act(async () => onlineManager.setOnline(true));
+
+    expect(screen.queryByTestId("map-offline")).toBeNull();
+  });
+
+  it("comes up when the connection drops while the map is open", async () => {
+    await show();
+
+    await act(async () => onlineManager.setOnline(false));
+
+    expect(screen.getByTestId("map-offline")).toBeOnTheScreen();
   });
 });
 

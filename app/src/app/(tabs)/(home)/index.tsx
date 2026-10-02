@@ -10,12 +10,14 @@ import AdventureCard from "@/components/home/adventure-card";
 import GetStartedCard from "@/components/home/get-started-card";
 import HeroBanner from "@/components/home/hero-banner";
 import LatestHikeCard from "@/components/home/latest-hike-card";
+import OfflineNotice from "@/components/offline-notice";
 import LatestHikeSkeleton from "@/components/skeletons/latest-hike-skeleton";
 import PagerCarouselSkeleton from "@/components/skeletons/pager-carousel-skeleton";
 import PagerCarousel from "@/components/trail/pager-carousel";
 import { SCREEN_PADDING, SURFACE_BORDER_RADIUS } from "@/constants/constants";
 import { guardedNavigate } from "@/utils/navigation";
 import { useLatestHike } from "@/hooks/hike/useLatestHike";
+import { useIsOnline } from "@/hooks/useIsOnline";
 import { useUserLocation } from "@/hooks/useUserLocation";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { Image } from "expo-image";
@@ -35,6 +37,7 @@ export default function HomeScreen() {
   const userLocation = location?.isFallback ? undefined : location;
   // Decides which personal card renders, and with it which slot is filled.
   const latest = useLatestHike();
+  const isOnline = useIsOnline();
   const query = useQuery({
     queryKey: ["trails", "popular", userLocation?.latitude, userLocation?.longitude],
     queryFn: () => getPopularTrails(userLocation?.latitude, userLocation?.longitude),
@@ -68,6 +71,9 @@ export default function HomeScreen() {
         </View>
         {query.data ? (
           <PagerCarousel data={query.data} />
+        ) : !isOnline ? (
+          // Before the error: a retry offline only pauses, and the query refetches on reconnect anyway.
+          <OfflineNotice testID="home-popular-offline" message={t("home.popularOffline")} />
         ) : query.isError ? (
           <View testID="home-popular-error" style={[s.errorCard, { backgroundColor: theme.colors.surface }]}>
             <Text style={[s.errorText, { color: theme.colors.onSurfaceVariant }]}>{t("home.popularError")}</Text>
@@ -83,6 +89,23 @@ export default function HomeScreen() {
       {/* Held for the returning user, who is the one this slot is usually for: a first-time
           user resolves to "empty" and gets the get-started card above the carousel. */}
       {latest.kind === "loading" && <LatestHikeSkeleton />}
+      {latest.kind === "offline" && (
+        <View testID="home-latest-offline" style={s.latestSection}>
+          <Text style={[s.sectionTitle, { color: theme.colors.onBackground }]}>{t("home.latestHike")}</Text>
+          <OfflineNotice message={t("home.latestHikeOffline")} />
+        </View>
+      )}
+      {latest.kind === "error" && (
+        <View testID="home-latest-error" style={s.latestSection}>
+          <Text style={[s.sectionTitle, { color: theme.colors.onBackground }]}>{t("home.latestHike")}</Text>
+          <View style={[s.errorCard, { backgroundColor: theme.colors.surface }]}>
+            <Text style={[s.errorText, { color: theme.colors.onSurfaceVariant }]}>{t("home.latestHikeError")}</Text>
+            <Button mode="text" onPress={latest.retry}>
+              {t("common.retry")}
+            </Button>
+          </View>
+        </View>
+      )}
       {latest.kind === "hike" && <LatestHikeCard hike={latest.hike} />}
 
       <View testID="home-card-row" style={s.cardRow}>
@@ -170,6 +193,10 @@ const s = StyleSheet.create({
   errorText: {
     fontSize: 14,
     textAlign: "center",
+  },
+  latestSection: {
+    gap: 8,
+    paddingHorizontal: SCREEN_PADDING,
   },
   cardRow: {
     flexDirection: "row",

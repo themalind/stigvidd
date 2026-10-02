@@ -6,6 +6,7 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { handleUnauthorized, SessionUnavailableError } from "@/services/keycloak-auth";
+import { onlineManager } from "@tanstack/react-query";
 import { ApiError } from "./api-error";
 
 const MAX_RETRIES = 3;
@@ -16,6 +17,8 @@ export function isUnauthorized(error: unknown): boolean {
 
 export function retryUnlessAuthFailure(failureCount: number, error: unknown): boolean {
   if (isUnauthorized(error) || error instanceof SessionUnavailableError) return false;
+  // Offline every attempt fails the same way; the reconnect refetches instead.
+  if (!onlineManager.isOnline()) return false;
   return failureCount < MAX_RETRIES;
 }
 
