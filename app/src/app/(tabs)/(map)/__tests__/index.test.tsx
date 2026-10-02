@@ -231,22 +231,47 @@ describe("MapScreen — offline", () => {
   it("says nothing while online", async () => {
     await show();
 
+    expect(screen.queryByTestId("map-offline-screen")).toBeNull();
     expect(screen.queryByTestId("map-offline")).toBeNull();
   });
 
-  // The style and tiles never load offline, so the map stays covered and needs an explanation.
-  it("says there is no connection over the covered map", async () => {
+  // The style never loads offline, so the screen says so the way every other tab does.
+  it("fills the unloaded map with the offline screen", async () => {
     onlineManager.setOnline(false);
     await show();
 
-    expect(screen.getByTestId("map-cover")).toBeOnTheScreen();
+    expect(screen.getByTestId("map-offline-screen")).toHaveStyle({ position: "absolute" });
     expect(screen.getByText("Ingen anslutning")).toBeOnTheScreen();
+    expect(screen.getByText("Innehållet laddas när du är online igen.")).toBeOnTheScreen();
   });
 
-  it("sits in the top-left corner, clear of the filter menu", async () => {
+  it("drops the filter and the locate button, which have no map to act on", async () => {
     onlineManager.setOnline(false);
     await show();
 
+    expect(screen.queryByTestId("map-top-bar")).toBeNull();
+    expect(screen.queryByTestId("map-filter-trigger")).toBeNull();
+    expect(screen.queryByTestId("center-on-user")).toBeNull();
+  });
+
+  it("gives the map back once the connection returns", async () => {
+    onlineManager.setOnline(false);
+    await show();
+
+    await act(async () => onlineManager.setOnline(true));
+
+    expect(screen.queryByTestId("map-offline-screen")).toBeNull();
+    expect(screen.getByTestId("map-filter-trigger")).toBeOnTheScreen();
+  });
+
+  // A map that already loaded keeps working from its cache, so it only gets the small notice.
+  it("leaves a loaded map usable and marks it in the top-left corner", async () => {
+    await show();
+    await mapReady();
+
+    await act(async () => onlineManager.setOnline(false));
+
+    expect(screen.queryByTestId("map-offline-screen")).toBeNull();
     expect(screen.getByTestId("map-offline")).toHaveStyle({
       position: "absolute",
       top: SCREEN_PADDING,
@@ -255,21 +280,14 @@ describe("MapScreen — offline", () => {
     expect(screen.getByTestId("map-filter-trigger")).toBeOnTheScreen();
   });
 
-  it("goes away once the connection is back", async () => {
-    onlineManager.setOnline(false);
+  it("drops the corner notice once the connection is back", async () => {
     await show();
+    await mapReady();
+    await act(async () => onlineManager.setOnline(false));
 
     await act(async () => onlineManager.setOnline(true));
 
     expect(screen.queryByTestId("map-offline")).toBeNull();
-  });
-
-  it("comes up when the connection drops while the map is open", async () => {
-    await show();
-
-    await act(async () => onlineManager.setOnline(false));
-
-    expect(screen.getByTestId("map-offline")).toBeOnTheScreen();
   });
 });
 

@@ -5,6 +5,7 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
+import ErrorView from "@/components/error-view";
 import CenterOnUserButton from "@/components/map/center-on-user-button";
 import MapFilterMenu from "@/components/map/map-filter-menu";
 import TrailCardCarousel from "@/components/map/trail-card-carousel";
@@ -30,20 +31,13 @@ export default function MapScreen() {
   const isOnline = useIsOnline();
 
   const cameraRef = useRef<CameraRef>(null);
-  // Remembers the camera between mounts: the map unmounts on blur (and so loses its
-  // view), but this screen stays mounted, so we re-seed the camera from here on
-  // return. A ref, not state, so panning/zooming doesn't re-render the whole map.
+  // The map unmounts on blur and this screen does not, so the camera is re-seeded from here; a ref so panning never re-renders. keep-comment: hidden lifecycle
   const lastViewState = useRef<InitialViewState | null>(null);
-  // The zoom band within which the open selection still matches the map; a later zoom
-  // out of this band dismisses the carousel. Computed by clusterZoomBand() on tap; null
-  // when nothing is open (or the zoom wasn't known at tap time). See cluster-zoom-band.ts.
+  // Zooms within which the open cluster still matches the map; null when nothing is open. See cluster-zoom-band.ts. keep-comment: non-obvious invariant
   const clusterZoomRange = useRef<ClusterZoomBand | null>(null);
 
-  // Opens the map on the user's position, falling back to Borås when there's no
-  // location (permission denied or unavailable — the hook reports that via isFallback).
   const { data: userLocation } = useUserLocation();
-  // Guards the one-time open-on-user animation so it never fights a remembered view
-  // or re-triggers when the user later pans away.
+  // One glide per session, so it never fights a remembered view. keep-comment: why a ref
   const didAutoCenter = useRef(false);
 
   const [isMapReady, setIsMapReady] = useState(false);
@@ -55,20 +49,15 @@ export default function MapScreen() {
     accessibility: false,
   });
   const [carouselIds, setCarouselIds] = useState<string[] | null>(null);
-  // How much of the screen bottom the open carousel covers, so the attribution
-  // button can sit above it instead of behind it. Measured, since card height
-  // varies with content.
+  // Measured, since card height varies, so the attribution button can sit above the cards. keep-comment: why measured
   const [carouselHeight, setCarouselHeight] = useState(0);
   const [highlight, setHighlight] = useState<MapHighlight | null>(null);
 
   const handleMapReady = useCallback(() => setIsMapReady(true), []);
+  // Offline the style never loads, so there is no map to filter or centre. keep-comment: hidden native behaviour
+  const offlineScreen = !isOnline && !isMapReady;
 
-  // On the first open, glide the camera to the user once their location arrives. The
-  // didAutoCenter ref limits this to one glide per session; since MapScreen stays
-  // mounted across the map's blur/focus, a real return visit still finds it set and
-  // keeps the remembered view. Skipped when there's no real fix (fallback → Borås).
-  // Note: we deliberately don't gate on lastViewState — the map's initial camera
-  // settle writes it before the location resolves, which would wrongly cancel the glide.
+  // Not gated on lastViewState: the map's first settle writes it before the location arrives. keep-comment: hidden race
   useEffect(() => {
     if (didAutoCenter.current || !isMapReady) return;
     if (!userLocation || userLocation.isFallback) return;
@@ -76,11 +65,7 @@ export default function MapScreen() {
     cameraRef.current?.flyTo({ center: [userLocation.longitude, userLocation.latitude], zoom: 12, duration: 1000 });
   }, [isMapReady, userLocation]);
 
-  // Ring the tapped cluster/trail for as long as its carousel is open. The position
-  // comes from the tap, so the highlight stays put while you swipe between cards —
-  // co-located trails would all share the same spot anyway. From the cluster's
-  // expansion zoom we derive the band of zooms where the cluster holds together so a
-  // later zoom (in or out) can dismiss it once that's no longer the case.
+  // The ring sits where the user tapped, so it stays put while the cards are swiped. keep-comment: non-obvious choice
   const openCarousel = useCallback((ids: string[], tapped: MapHighlight, expansionZoom?: number) => {
     setCarouselIds(ids);
     setHighlight(tapped);
@@ -98,11 +83,7 @@ export default function MapScreen() {
       const { center, zoom, bearing, pitch, userInteraction } = event.nativeEvent;
       lastViewState.current = { center, zoom, bearing, pitch };
 
-      // Zoom in past the top and the cluster has split; zoom out past the bottom and
-      // it has merged into a bigger cluster — either way the open carousel no longer
-      // matches the map, so close it. Panning and small zooms within the band keep
-      // the cluster intact. Programmatic moves (e.g. the camera restore on return)
-      // aren't user interaction, so they never close it.
+      // Outside the band the cluster has split or merged; a programmatic move (the restore on return) never closes it. keep-comment: non-obvious rule
       if (userInteraction && isZoomOutsideBand(zoom, clusterZoomRange.current)) {
         closeCarousel();
       }
@@ -141,10 +122,7 @@ export default function MapScreen() {
     }, []),
   );
 
-  // The remembered view wins on return; otherwise seed from the user's location when
-  // it's already cached (no Borås flash on a warm re-entry). On a cold start the
-  // location isn't ready yet, so we open at the Borås default and the effect below
-  // animates over once the fix arrives.
+  // A cached fix seeds the camera so a warm return skips the Borås flash. keep-comment: why seed
   const seededViewState: InitialViewState | undefined =
     lastViewState.current ??
     (userLocation && !userLocation.isFallback
@@ -174,16 +152,24 @@ export default function MapScreen() {
         <View testID="map-cover" style={[StyleSheet.absoluteFill, { backgroundColor: theme.colors.background }]} />
       )}
 
-      {/* Before the top bar, so the filter panel drops over it. */}
-      {!isOnline && <OfflineNotice testID="map-offline" message={t("map.offline")} style={s.offline} />}
+      {offlineScreen && (
+        <View testID="map-offline-screen" style={StyleSheet.absoluteFill}>
+          {/* No error of its own: offline, ErrorView shows the same screen as every other tab. keep-comment: null is deliberate */}
+          <ErrorView error={null} />
+        </View>
+      )}
 
-      {/* No safe-area offset: the app header sits above the tab navigator and already
-          clears it, so the map's top edge starts below the status bar. */}
-      <View testID="map-top-bar" style={s.topBar}>
-        <MapFilterMenu filter={filters} onChange={setFilters} />
-      </View>
+      {/* A map loaded from cache stays usable. Before the top bar, so the filter panel drops over it. keep-comment: z-order */}
+      {!isOnline && isMapReady && <OfflineNotice testID="map-offline" message={t("map.offline")} style={s.offline} />}
 
-      {!carouselIds && <CenterOnUserButton cameraRef={cameraRef} />}
+      {/* No safe-area offset: the app header already clears the status bar. keep-comment: layout constraint */}
+      {!offlineScreen && (
+        <View testID="map-top-bar" style={s.topBar}>
+          <MapFilterMenu filter={filters} onChange={setFilters} />
+        </View>
+      )}
+
+      {!carouselIds && !offlineScreen && <CenterOnUserButton cameraRef={cameraRef} />}
 
       {carouselIds && (
         <TrailCardCarousel
@@ -206,7 +192,7 @@ const s = StyleSheet.create({
     position: "absolute",
     top: SCREEN_PADDING,
     left: SCREEN_PADDING,
-    // Leaves the top-right corner to the filter menu at large font sizes.
+    // Leaves the top-right corner to the filter menu at large font sizes. keep-comment: why a cap
     maxWidth: "55%",
   },
   topBar: {
