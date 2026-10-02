@@ -17,7 +17,7 @@ import { useTranslation } from "react-i18next";
 export default function WishlistScreen() {
   const theme = useTheme();
   const { t } = useTranslation();
-  const [{ data, isLoading, isError, error }] = useAtom(userWishlistAtom);
+  const [{ data, isLoading, isError, error, refetch }] = useAtom(userWishlistAtom);
   const [removeUserWishlist] = useAtom(removeFromWishlistAtom);
 
   if (isLoading) {
@@ -25,7 +25,7 @@ export default function WishlistScreen() {
   }
 
   if (isError) {
-    return <ErrorView error={error} />;
+    return <ErrorView error={error} onRetry={refetch} />;
   }
 
   const handleDelete = (trailIdentifier: string) => {

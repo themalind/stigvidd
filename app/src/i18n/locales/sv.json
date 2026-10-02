@@ -515,6 +515,7 @@
   "home": {
     "popularNearYou": "Populära promenader nära dig",
     "popular": "Populära promenader",
+    "popularError": "Kunde inte hämta promenaderna just nu.",
     "locationUnknown": "Plats okänd",
     "guide": "Naturguide",
     "guideSubtitle": "Allemansrätt · Svårighetsgrader",

@@ -235,6 +235,17 @@ it("opens a received walk without asking for a decision", async () => {
   expect(screen.getByText("Ta bort")).toBeTruthy();
 });
 
+it("loads the shared walks again when the user retries after a failure", async () => {
+  mockGetSharedHikes.mockRejectedValueOnce(new Error("nätverket"));
+  renderWithProviders(<SharedHikesScreen />);
+  await flushUntil(() => screen.queryByText("Försök igen"));
+
+  fireEvent.press(screen.getByText("Försök igen"));
+  await flushUntil(() => screen.queryByText("Kvällspromenad"));
+
+  expect(mockGetSharedHikes).toHaveBeenCalledTimes(2);
+});
+
 it("offers a retry when the invitations could not be fetched", async () => {
   mockIncoming = { data: undefined, isPending: false, isError: true };
   await show();

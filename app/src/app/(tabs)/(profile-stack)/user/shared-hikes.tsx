@@ -81,6 +81,7 @@ export default function SharedHikesScreen() {
     isLoading,
     isError: getSharedHikesError,
     error,
+    refetch,
   } = useQuery({
     queryKey: ["shared-hikes", user.data?.identifier],
     queryFn: () => getSharedHikes(),
@@ -121,7 +122,7 @@ export default function SharedHikesScreen() {
   }
 
   if (getSharedHikesError) {
-    return <ErrorView error={error} />;
+    return <ErrorView error={error} onRetry={refetch} />;
   }
 
   return (

@@ -515,6 +515,7 @@
   "home": {
     "popularNearYou": "Popular walks near you",
     "popular": "Popular walks",
+    "popularError": "Could not load the walks right now.",
     "locationUnknown": "Location unknown",
     "guide": "Nature guide",
     "guideSubtitle": "Right of access · Difficulty levels",

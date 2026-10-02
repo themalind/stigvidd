@@ -147,6 +147,27 @@ it("holds the carousel's place until the trails arrive", async () => {
   expect(screen.UNSAFE_queryByType(PagerCarouselSkeleton)).toBeNull();
 });
 
+it("says the trails could not be loaded instead of holding the skeleton", async () => {
+  mockGetPopularTrails.mockRejectedValue(new Error("nätverket"));
+  show();
+  await flushUntil(() => screen.queryByTestId("home-popular-error"));
+
+  expect(screen.getByText("Kunde inte hämta promenaderna just nu.")).toBeTruthy();
+  expect(screen.UNSAFE_queryByType(PagerCarouselSkeleton)).toBeNull();
+});
+
+it("loads the trails again when the user retries", async () => {
+  mockGetPopularTrails.mockRejectedValueOnce(new Error("nätverket"));
+  show();
+  await flushUntil(() => screen.queryByTestId("home-popular-error"));
+
+  fireEvent.press(screen.getByText("Försök igen"));
+  await flushUntil(() => screen.queryByText("Skogsleden"));
+
+  expect(screen.queryByTestId("home-popular-error")).toBeNull();
+  expect(mockGetPopularTrails).toHaveBeenCalledTimes(2);
+});
+
 // One personal card at a time: the pitch for a user with no walks, the walk otherwise.
 it("pitches recording to a signed-out visitor", async () => {
   await showLoaded();

@@ -151,6 +151,18 @@ it("keeps the summary banner off an empty list", async () => {
   expect(screen.queryByText("Vandrat totalt")).toBeNull();
 });
 
+it("loads the walks again when the user retries after a failure", async () => {
+  mockGetHikes.mockRejectedValueOnce(new Error("nätverket"));
+  renderWithProviders(<MyHikesScreen />);
+  await flushUntil(() => screen.queryByText("Försök igen"));
+
+  fireEvent.press(screen.getByText("Försök igen"));
+  await flushUntil(() => screen.queryByText("Kvällspromenad"));
+
+  expect(screen.getByText("Morgonrunda")).toBeTruthy();
+  expect(mockGetHikes).toHaveBeenCalledTimes(2);
+});
+
 it("opens the walk that was tapped", async () => {
   await show();
 

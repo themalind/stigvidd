@@ -89,6 +89,7 @@ export default function MyHikesScreen() {
     isLoading,
     isError,
     error,
+    refetch,
   } = useQuery({
     queryKey: ["hikes", user.data?.identifier],
     queryFn: () => getAllHikesByUserId(user.data!.identifier),
@@ -133,7 +134,7 @@ export default function MyHikesScreen() {
   }
 
   if (isError) {
-    return <ErrorView error={error} />;
+    return <ErrorView error={error} onRetry={refetch} />;
   }
 
   return (

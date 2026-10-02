@@ -22,7 +22,7 @@ import { Image } from "expo-image";
 import { router, useFocusEffect } from "expo-router";
 import React, { useRef } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { useTheme } from "react-native-paper";
+import { Button, useTheme } from "react-native-paper";
 import { useTranslation } from "react-i18next";
 
 export default function HomeScreen() {
@@ -66,7 +66,18 @@ export default function HomeScreen() {
             {userLocation ? t("home.popularNearYou") : t("home.popular")}
           </Text>
         </View>
-        {query.data ? <PagerCarousel data={query.data} /> : <PagerCarouselSkeleton />}
+        {query.data ? (
+          <PagerCarousel data={query.data} />
+        ) : query.isError ? (
+          <View testID="home-popular-error" style={[s.errorCard, { backgroundColor: theme.colors.surface }]}>
+            <Text style={[s.errorText, { color: theme.colors.onSurfaceVariant }]}>{t("home.popularError")}</Text>
+            <Button mode="text" onPress={() => void query.refetch()}>
+              {t("common.retry")}
+            </Button>
+          </View>
+        ) : (
+          <PagerCarouselSkeleton />
+        )}
       </View>
 
       {/* Held for the returning user, who is the one this slot is usually for: a first-time
@@ -149,6 +160,16 @@ const s = StyleSheet.create({
   sectionTitle: {
     fontFamily: "Inter_600SemiBold",
     fontSize: 16,
+  },
+  errorCard: {
+    borderRadius: SURFACE_BORDER_RADIUS,
+    padding: 16,
+    alignItems: "center",
+    gap: 4,
+  },
+  errorText: {
+    fontSize: 14,
+    textAlign: "center",
   },
   cardRow: {
     flexDirection: "row",
