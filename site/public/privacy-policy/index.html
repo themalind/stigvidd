@@ -15,6 +15,10 @@
   samtyckesdialogen och app/src/services/analytics.ts — inte före. Motsvarande text i
   appen: nyckeln about.privacyText i app/src/i18n/locales/{en,sv}.json.
 
+  2026-10-03: positionsavsnitten följer platsförklaringen i appen (create-hike.tsx,
+  createHike.disclosureBackground). Förklaringen kommer före bakgrundsfrågan, inte före
+  förgrundsfrågan — hemskärmen och kartan frågar utan egen förklaring.
+
   PUBLICERAD 2026-08-30. Båda grindarna som höll sidan tillbaka är klarade:
     1. Alla <span class="todo">-markeringar är ersatta. Den sista satt i §8
        (Hostups teknikeråtkomst) och togs bort i båda språken 2026-08-30.
@@ -231,7 +235,7 @@
     <main id="top">
       <header>
         <h1>Integritetspolicy för Stigvidd</h1>
-        <p class="updated">Senast uppdaterad: 25 september 2026</p>
+        <p class="updated">Senast uppdaterad: 3 oktober 2026</p>
         <p class="lang-nav"><strong>Svenska</strong> · <a href="#english">In English</a></p>
       </header>
 
@@ -282,8 +286,8 @@
             <tr>
               <td>Positionsdata</td>
               <td>
-                GPS-koordinater som spelas in medan du registrerar en vandring – även när skärmen
-                är släckt eller appen ligger i bakgrunden. Din nuvarande position när du öppnar
+                GPS-koordinater som spelas in medan du registrerar en vandring – även när appen är
+                stängd eller inte används, till exempel när skärmen är släckt. Din nuvarande position när du öppnar
                 startsidan, visar kartan eller filtrerar på ”nära mig”
               </td>
               <td>
@@ -348,8 +352,8 @@
 
       <p>
         Du styr själv om appen får använda din position, genom behörigheten i telefonens
-        inställningar. Innan vi frågar första gången förklarar vi i appen vad positionen används
-        till. Positionen sparas hos oss bara medan du aktivt registrerar en vandring.
+        inställningar. Innan appen ber om att få använda positionen i bakgrunden förklarar den vad
+        positionen används till. Positionen sparas hos oss bara medan du aktivt registrerar en vandring.
       </p>
       <p>
         På startsidan lämnar din position telefonen för två uppslagningar: vädret hämtas från SMHI,
@@ -534,7 +538,7 @@
       <section class="lang-section" id="english" lang="en">
         <header>
           <h1>Privacy Policy for Stigvidd</h1>
-          <p class="updated">Last updated: 25 September 2026</p>
+          <p class="updated">Last updated: 3 October 2026</p>
           <p class="lang-nav"><a href="#top">På svenska</a> · <strong>English</strong></p>
         </header>
 
@@ -582,8 +586,8 @@
               <tr>
                 <td>Location data</td>
                 <td>
-                  GPS coordinates recorded while you register a walk – including when the screen is
-                  off or the app is in the background. Your current position when you open the home
+                  GPS coordinates recorded while you register a walk – including when the app is
+                  closed or not in use, such as when the screen is off. Your current position when you open the home
                   screen, view the map or filter by “near me”
                 </td>
                 <td>
@@ -649,7 +653,8 @@
 
         <p>
           You decide whether the app may use your location, through the permission in your phone
-          settings. Before we ask the first time, the app explains what the location is used for.
+          settings. Before the app asks to use your location in the background, it explains what the
+          location is used for.
           Your position is only stored by us while you are actively registering a walk.
         </p>
         <p>
