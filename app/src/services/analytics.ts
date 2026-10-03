@@ -5,9 +5,7 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import { Platform } from "react-native";
-import Constants from "expo-constants";
-
+import { getAppInfo } from "./app-info";
 import { getConsentSync, subscribeConsent, type ConsentState } from "./consent";
 import { redact } from "./logger";
 import type { EventCatalogue, EventName } from "./event-catalogue";
@@ -85,6 +83,8 @@ let unsubscribe: (() => void) | undefined;
  */
 let sessionId = newSessionId();
 
+const appInfo = getAppInfo();
+
 function newSessionId(): string {
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
 }
@@ -142,8 +142,8 @@ export function track<N extends EventName>(event: N, props: EventCatalogue[N]): 
     event,
     schema: SCHEMA_VERSION,
     app: "stigvidd-app",
-    appVersion: Constants.expoConfig?.version ?? "unknown",
-    platform: Platform.OS,
+    appVersion: appInfo.appVersion,
+    platform: appInfo.platform,
     sessionId,
   };
 

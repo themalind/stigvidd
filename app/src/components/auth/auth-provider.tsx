@@ -68,7 +68,7 @@ export function useAuth(): Auth {
       throw new Error("not-authenticated");
     }
     // Re-verify identity before the destructive action (throws InvalidCredentialsError).
-    await passwordGrant(user.email, password);
+    await passwordGrant(user.email, password, "delete-account");
     // Backend removes the StigVidd DB record and the Keycloak user.
     await deleteStigViddUser();
     await logout();

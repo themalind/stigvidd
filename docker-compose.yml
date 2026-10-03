@@ -296,9 +296,55 @@ services:
       # First-boot admin bootstrap (change/rotate after first login).
       KC_BOOTSTRAP_ADMIN_USERNAME: ${KC_ADMIN_USER:?KC_ADMIN_USER must be set}
       KC_BOOTSTRAP_ADMIN_PASSWORD: ${KC_ADMIN_PASSWORD:?KC_ADMIN_PASSWORD must be set}
+      # FAILED SIGN-INS -> OpenObserve, opt-in. Logins never reach the API — the app
+      # and the admin web use the password grant straight against this service — so
+      # only Keycloak knows one failed. Its built-in `jboss-logging` event listener
+      # (enabled per realm by scripts/keycloak-events.sh) logs each failure at WARN
+      # under `org.keycloak.events`, typed username included. The syslog handler
+      # below ships WARN+ to the `authevents` collector, which forwards a whitelist
+      # of fields and never the username (observability/otel-auth-events.yaml).
+      #
+      # `console` only, unless KEYCLOAK_LOG_HANDLERS=console,syslog — set it together
+      # with COMPOSE_PROFILES=authevents and AUTH_EVENTS_OTLP_TOKEN (.env.example).
+      # With syslog off, every start prints one WARNING listing the log-syslog-*
+      # options below as UNAVAILABLE and ignored: expected, harmless.
+      #
+      # An IP LITERAL, not the name `authevents`, on purpose. Keycloak's syslog handler
+      # resolves its endpoint ONCE, at startup: by name, a collector absent then, or
+      # restarted later on a new IP, gets nothing until Keycloak itself restarts —
+      # silently, since sign-in never notices. At a fixed address the handler simply
+      # reconnects: Keycloak starts cleanly without the collector, and a collector
+      # restart costs only the ~2 events written into the dead socket. That fixed
+      # address is what the `authlog` network below exists for
+      # (docs/notes/keycloak-syslog-resolves-the-collector-once.md).
+      KC_LOG: ${KEYCLOAK_LOG_HANDLERS:-console}
+      KC_LOG_SYSLOG_ENDPOINT: ${AUTH_EVENTS_NET_PREFIX:-10.213.47}.3:5140
+      # 26.1 has no octet-counting option: over TCP it sends one RFC 5424 message per
+      # line, LF-terminated. The collector's receiver framing is set to match.
+      KC_LOG_SYSLOG_PROTOCOL: tcp
+      # JSON, so the collector reads the logger name and message as fields rather
+      # than scraping a format string.
+      KC_LOG_SYSLOG_OUTPUT: json
+      # Only WARN and above leave the container. Keycloak's other warnings arrive too
+      # and the collector drops them by logger name.
+      KC_LOG_SYSLOG_LEVEL: warn
+      # The default is 2048 bytes, and a long event cut mid-JSON reaches OpenObserve
+      # as a bare "Keycloak event" with no fields. A typical failure is ~0.8 KB.
+      KC_LOG_SYSLOG_MAX_LENGTH: "8192"
+      # The listener's own levels, stated although both are the defaults, because the
+      # privacy argument rests on them: successes at DEBUG sit below the root INFO
+      # level and are logged NOWHERE, console included. Raising success-level would
+      # put every successful sign-in, user id and IP, into both logs.
+      KC_SPI_EVENTS_LISTENER_JBOSS_LOGGING_SUCCESS_LEVEL: debug
+      KC_SPI_EVENTS_LISTENER_JBOSS_LOGGING_ERROR_LEVEL: warn
     networks:
-      - internal   # reach the database
-      - public     # be reachable from the proxy
+      internal:    # reach the database
+      public:      # be reachable from the proxy
+      # Fixed address too, not just the collector's: a dynamically assigned
+      # Keycloak could be handed the collector's .3 while the collector is down,
+      # and the collector would then fail to start.
+      authlog:
+        ipv4_address: ${AUTH_EVENTS_NET_PREFIX:-10.213.47}.2
 
   openobserve:
     # Telemetry store at observatory.<domain>: logs, traces and metrics from the
@@ -454,6 +500,54 @@ services:
     # `internal: true` would cut egress.
     networks:
       - public
+
+  authevents:
+    # Keycloak's FAILED SIGN-INS, forwarded to the OpenObserve stream
+    # `keycloak_events` with a whitelist of fields: event type, error, client id,
+    # Keycloak user id, client IP, grant type, auth method. Never the username — the
+    # email address someone typed stays in Keycloak's own container log, 7 days,
+    # host only. Config and the reasoning: observability/otel-auth-events.yaml.
+    #
+    # OPT-IN, exactly like `hostmetrics`: with COMPOSE_PROFILES lacking `authevents`
+    # this service does not exist for compose. It goes together with
+    # KEYCLOAK_LOG_HANDLERS=console,syslog (which makes `keycloak` send here) and
+    # AUTH_EVENTS_OTLP_TOKEN — see .env.example and DEPLOYMENT.md Part 1 step 8.
+    #
+    # Upstream image, pinned to the same tag as hostmetrics, so the same rule: NOT in
+    # Jenkins' build/push or pull/up set; a tag bump is a manual
+    # `docker compose up -d authevents` on the host.
+    image: otel/opentelemetry-collector-contrib:0.160.0
+    profiles: [authevents]
+    restart: unless-stopped
+    logging: *default-logging
+    # No `user:` override — the image's own non-root USER 10001. Unlike hostmetrics
+    # this reads nothing on the host: it listens on 5140, which needs no privilege.
+    environment:
+      # The org BASE, no signal path — `/v1/logs` is appended in the config. Same
+      # in-stack plaintext default, and the same proxy-alias caveat, as hostmetrics.
+      AUTH_EVENTS_OTLP_ENDPOINT: ${AUTH_EVENTS_OTLP_ENDPOINT:-http://openobserve:5080/api/${OBSERVATORY_ORG:-default}}
+      # An INGESTION TOKEN, never a login password (OpenObserve OSS has no RBAC).
+      # Soft default for the same reason as HOST_METRICS_OTLP_TOKEN: compose
+      # interpolates the whole file, so `:?` would bind every stack, staging too.
+      AUTH_EVENTS_OTLP_TOKEN: ${AUTH_EVENTS_OTLP_TOKEN:-}
+      # Bound to its `authlog` address only, so nothing on `public` (the proxy, the
+      # API, the web servers) can reach the receiver and forge sign-in events.
+      AUTH_EVENTS_SYSLOG_LISTEN: ${AUTH_EVENTS_NET_PREFIX:-10.213.47}.3:5140
+      TZ: ${TZ:-Europe/Stockholm}
+    volumes:
+      # Committed config, carried to the host by the Jenkins deploy's
+      # `scp observability/*.yaml`. A host missing it gets a collector that will not
+      # start — and a Keycloak that keeps running without it.
+      - ./observability/otel-auth-events.yaml:/etc/otelcol-contrib/config.yaml:ro
+    # No published port: Keycloak reaches it at its fixed `authlog` address.
+    # No named volume: the collector holds no state, so nothing for migrate.sh.
+    #
+    # `public` for openobserve, the sink. `authlog` for Keycloak, at the address
+    # KC_LOG_SYSLOG_ENDPOINT names.
+    networks:
+      public:
+      authlog:
+        ipv4_address: ${AUTH_EVENTS_NET_PREFIX:-10.213.47}.3
 
   proxy:
     # Caddy: TLS termination + automatic Let's Encrypt certs, routing each
@@ -632,6 +726,18 @@ networks:
   # 5432 is actually routable. Nothing else joins it, so it is not a general
   # "everything can see the database" network.
   dbedge:
+  # Keycloak -> `authevents` syslog, and nothing else: a /29 holding the gateway
+  # (.1), keycloak (.2) and the collector (.3), all fixed, so the collector keeps
+  # one address across restarts. Created on every host because keycloak always
+  # joins it, even with the authevents profile off — so if the subnet collides with
+  # a network on the host, `up` fails for keycloak. Move it with
+  # AUTH_EVENTS_NET_PREFIX in .env (three octets; keep it outside Docker's default
+  # pools, 172.17-31.x and 192.168.x).
+  authlog:
+    internal: true
+    ipam:
+      config:
+        - subnet: ${AUTH_EVENTS_NET_PREFIX:-10.213.47}.0/29
 
 volumes:
   pgdata:

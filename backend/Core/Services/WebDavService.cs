@@ -93,7 +93,7 @@ public class WebDavService : IWebDavService
 
             if (!result.IsSuccessful)
             {
-                _logger.LogError("DeleteFileAsync: Could not delete file with path: {relativePath}", relativePath);
+                _logger.LogError("DeleteFileAsync: Could not delete file with path: {relativePath}. Status {Status}", relativePath, result.StatusCode);
 
                 return Result.Fail<bool>(new Message(result.StatusCode, $"DeleteFileAsync: Could not delete file"));
             }
@@ -115,6 +115,7 @@ public class WebDavService : IWebDavService
 
         if (!result.IsSuccessful && result.StatusCode != 405) // 405 = already exists
         {
+            _logger.LogError("EnsureDirectoryExistsAsync: Could not create directory {DirectoryPath}. Status {Status}", directoryPath, result.StatusCode);
             throw new Exception($"Could not create directory: {result.StatusCode}");
         }
     }
@@ -155,6 +156,9 @@ public class WebDavService : IWebDavService
         buffer.Position = 0;
 
         var result = await client.PutFile(exactPath, buffer);
+
+        if (!result.IsSuccessful)
+            _logger.LogError("UploadToPathAsync: Could not write {ExactPath}. Status {Status}", exactPath, result.StatusCode);
 
         return result.IsSuccessful
             ? Result.Ok(true)

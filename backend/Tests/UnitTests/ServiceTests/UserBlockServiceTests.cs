@@ -8,6 +8,7 @@ using Infrastructure.Data.Entities;
 using Moq;
 using System.Linq.Expressions;
 using WebDataContracts.ResponseModels.Friend;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace UnitTests.ServiceTests;
 
@@ -35,7 +36,7 @@ public class UserBlockServiceTests
                 .ReturnsAsync(RepositoryResult<int>.Success(TargetUserId));
         }
 
-        return new UserBlockService(blockRepo.Object, userRepo.Object);
+        return new UserBlockService(blockRepo.Object, userRepo.Object, NullLogger<UserBlockService>.Instance);
     }
 
     private static void Healthy(Mock<IUserBlockRepository> mock) =>

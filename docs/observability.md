@@ -19,6 +19,7 @@ wrong is "we retained precise location data about identifiable users for two yea
 | Public routing, ingest/UI split, body cap      | `proxy/Caddyfile`                        |
 | Metrics retention override + PII guard         | `scripts/observatory-retention.sh`       |
 | Host + container metrics collector             | `observability/otel-hostmetrics.yaml`, `docker-compose.yml` → `hostmetrics` |
+| Keycloak failed sign-ins collector (whitelist) | `observability/otel-auth-events.yaml`, `docker-compose.yml` → `authevents`, `scripts/keycloak-events.sh` |
 | Host container log retention (a separate 7 days) | `scripts/container-log-retention.sh`, `x-logging` in `docker-compose.yml` |
 | Operational runbook (first boot, troubleshooting) | `DEPLOYMENT.md` Part 1 step 8         |
 | Deployment variables                           | `.env.example`                           |
@@ -53,6 +54,10 @@ wrong is "we retained precise location data about identifiable users for two yea
   `hostmetrics` service, over the same in-stack OTLP/HTTP path the backend uses.
   Everything above measures the *application*; this is the only thing that measures
   the *machine*. See **Host and container metrics** below.
+- **Keycloak's failed sign-ins** reach `keycloak_events` through a second optional
+  collector, `authevents`, which receives Keycloak's event log over syslog and
+  forwards a whitelist of fields — never the typed username. See **Failed sign-ins:
+  where to look** below.
 - Telemetry is **opt-in everywhere**: with the config absent, the backend
   registers no OpenTelemetry providers at all and the app registers no log sink.
   Nothing breaks when observability is unconfigured, or down.
@@ -300,6 +305,135 @@ What bounds them: the collector publishes no port, joins only the `public` netwo
 is reachable from nothing, and runs a config with no receiver that listens. It is a
 pure outbound pusher. The docker socket is the price of answering "which container
 ate the box", which host-level metrics alone cannot.
+
+## Log streams
+
+Every logs stream sits on the 7-day global retention; `scripts/observatory-retention.sh`
+lists `?type=metrics` only, so it never touches any of these.
+
+| stream | sender | personal data |
+| --- | --- | --- |
+| `stigvidd_api_logs` | the API, OTLP (`Otlp:LogStream`) | Keycloak subject id (`SubjectId` in the request scope) |
+| `stigvidd_app_logs` | the mobile app, bulk `_json` | as redacted by `app/src/services/logger.ts` |
+| `stigvidd_app_events` | the mobile app, consent-gated usage analytics | kept apart so it can be dropped wholesale on a policy change |
+| `stigvidd_web_logs` | the admin web, bulk `_json` | as redacted by the web logger |
+| `keycloak_events` | the `authevents` collector, OTLP | Keycloak user id and client IP — **never the username** |
+
+## Failed sign-ins: where to look
+
+Signing in never touches the API. The app and the admin web post the email address
+and password straight to Keycloak's token endpoint (password grant, realm `stigvidd`,
+clients `stigvidd-app` and `stigvidd-admin`), so each layer sees a different part of a
+failure. Four places, four questions:
+
+| | where | answers | identity |
+| --- | --- | --- | --- |
+| a | `stigvidd_app_logs`, `stigvidd_web_logs` | did a client see a failure, and of what kind | none |
+| b | `keycloak_events` | which account, from which IP, which error | Keycloak user id, IP |
+| c | `docker compose logs keycloak` on the host | what username was typed | the username, 7 days, host only |
+| d | `stigvidd_api_logs` | was a token rejected after sign-in | `SubjectId` |
+
+**a. The clients.** The app logs `Login failed` to `stigvidd_app_logs` with an `outcome`
+of `invalid_credentials`, `account_not_verified`, `timeout`, `network`,
+`server_error` or `unexpected`; the admin web logs `Admin login failed` to
+`stigvidd_web_logs` with `invalid_credentials`, `not_authorized` (a valid user without
+the admin role) or `unavailable`. Neither carries an identity, so they answer "is
+sign-in broken for everyone" — a run of `network` or `server_error` — rather than "who".
+
+**b. `keycloak_events`.** Only Keycloak knows _which_ account failed. Its built-in
+`jboss-logging` event listener writes every failure at WARN under the logger
+`org.keycloak.events`; Keycloak's syslog handler ships WARN and above to the
+`authevents` collector, which forwards one record per failure with these fields, as
+OpenObserve stores them (it lowercases the names):
+
+| field | example | note |
+| --- | --- | --- |
+| `body` | `Keycloak LOGIN_ERROR: invalid_user_credentials` | |
+| `type` | `LOGIN_ERROR` | also `REFRESH_TOKEN_ERROR`, `CODE_TO_TOKEN_ERROR`, … |
+| `error` | `invalid_user_credentials`, `user_not_found`, `client_not_found` | |
+| `userid` | a Keycloak user id | absent when no account matched (`user_not_found`) |
+| `ipaddress` | the client IP | from `X-Forwarded-For`, via `KC_PROXY_HEADERS` |
+| `clientid`, `grant_type`, `auth_method` | `stigvidd-app`, `password`, `openid-connect` | |
+
+So "someone is guessing passwords for one account" is `error = 'invalid_user_credentials'`
+grouped by `userid`, and "one IP is trying many accounts" is the same grouped by
+`ipaddress`. Turn a user id into an account in Keycloak's admin console (_Users_, search
+by ID).
+
+How it is kept lawful, all of it in
+[`observability/otel-auth-events.yaml`](../observability/otel-auth-events.yaml):
+
+- **A whitelist, not a blacklist.** Keycloak's line also carries the typed `username`,
+  `realmName`, and whatever `details` an event type adds (`redirect_uri`, `code_id`,
+  session ids). The collector copies the seven fields above, checks each against the
+  shape it must have — `clientId` and `grant_type` come straight from the request, so a
+  caller can type an email address into them — and deletes every other attribute,
+  every resource attribute and the raw body. A value that fails its check is not
+  copied.
+- **Fail closed.** The body is overwritten before anything is parsed. A record whose
+  parsing fails leaves as a bare `Keycloak event` with no fields; a record from any
+  other logger, or below WARN, is dropped.
+- **Successes are logged nowhere.** The listener logs them at DEBUG, below the root INFO
+  level, so a successful sign-in reaches neither Keycloak's console nor the collector.
+  Both levels are stated in `docker-compose.yml` although they are the defaults.
+- **Nothing is stored in Keycloak's database.** `scripts/keycloak-events.sh` turns the
+  listener on and _Save events_ (`eventsEnabled`) off: stored events would carry the
+  username into every database backup, far past 7 days. Listeners fire regardless.
+
+Measured end to end (Keycloak 26.1.5 with `start --optimized`, collector 0.160.0,
+OpenObserve v0.92.2): the stream's schema held only the fields above plus OpenObserve's
+own (`_timestamp`, `service_name`, `severity`, `dropped_attributes_count`), and no record
+contained an email address — including the ones made with an email address typed into
+`client_id`, and with a username carrying a forged `userId="…"`. Keycloak escapes the
+quotes, and `ParseKeyValue` honours the escaping.
+
+It is opt-in: `COMPOSE_PROFILES` with `authevents`, `AUTH_EVENTS_OTLP_TOKEN`, and
+`KEYCLOAK_LOG_HANDLERS=console,syslog` — the three go together (`.env.example`,
+DEPLOYMENT.md Part 1 step 8 **h**). With the handler off, Keycloak prints one startup
+WARNING listing the `log-syslog-*` options as UNAVAILABLE; that is expected.
+
+> **Why the collector has a fixed address.** Keycloak's syslog handler resolves its
+> endpoint once, at startup. By name, a collector that was absent then, or that came
+> back on a new IP after a restart, received nothing until Keycloak itself was
+> restarted, and nothing said so. So Keycloak sends to an IP literal on the small
+> `authlog` network, where keycloak is `.2` and `authevents` is `.3`, both fixed
+> (`AUTH_EVENTS_NET_PREFIX`, default `10.213.47`). Measured on 26.1, rootless podman,
+> with this compose file:
+>
+> - Keycloak started with the collector **absent**: no error, and every failure after
+>   the collector came up arrived, with no Keycloak restart.
+> - The collector **recreated** while Keycloak ran: same address, and 6 of the next 8
+>   failures arrived. The ~2 written into the dead connection are lost; delivery then
+>   resumes by itself.
+>
+> Sign-in itself is never affected (failures still answer 401 in ~20 ms), and the
+> console log in **c** still has every event. The receiver binds that `authlog`
+> address only, so no container on `public` can send it forged events. The history:
+> [notes/keycloak-syslog-resolves-the-collector-once.md](notes/keycloak-syslog-resolves-the-collector-once.md);
+> what Keycloak 26.1 sends: [notes/keycloak-26-1-syslog-wire-format.md](notes/keycloak-26-1-syslog-wire-format.md).
+
+**c. The typed username.** It exists in exactly one place: Keycloak's own container
+log on the host, where the `jboss-logging` listener writes it in full —
+
+```bash
+docker compose logs keycloak | grep LOGIN_ERROR      # … username="someone@example.com"
+```
+
+It is never shipped anywhere, and it ages out with every other container log
+(`scripts/container-log-retention.sh`, 7 days). This is what §2 "Teknisk data" of the
+privacy policy discloses, in both languages.
+
+**d. The API, after sign-in.** In `stigvidd_api_logs`:
+
+- `JWT rejected ({Reason}) on {Method} {Endpoint}: {ExceptionType}` — Warning, for an
+  issuer, audience, signature or key failure: misconfiguration or tampering. An
+  _expired_ token is routine (the clients refresh on 401) and is only the framework's
+  own Information line.
+- `Authorization denied for {SubjectId} on {Method} {Endpoint}: {FailedRequirements}` —
+  a valid token without the required role or policy.
+- `HTTP {Method} {Endpoint} -> {StatusCode} in {ElapsedMs} ms` — one per request,
+  Information for 4xx and Warning for 5xx. Its log scope carries `SubjectId` and
+  `Endpoint`, and so does every other API log line written inside that request.
 
 ## Health endpoints
 
@@ -648,11 +782,12 @@ stolen credential buys, and that is entirely decided by item 1 below.
    scoped ingest credential, it is full control of the observatory — which is
    what the app shipped before this was measured.
 
-   **Six identities**, one per producer so that a token extracted from a public
+   **Seven identities**, one per producer so that a token extracted from a public
    bundle is not also another producer's, and so one can be rotated alone:
    root (first boot only, and unrotatable), `api@` (server-side), `app@` and
    `web@` (both public, ingest-only), `host@` (server-side, the host-metrics
-   collector, and optional — it exists only where that profile is enabled), and
+   collector, and optional — it exists only where that profile is enabled),
+   `auth@` (server-side, the `authevents` collector, optional in the same way), and
    `ops@` (a password, because stream management is not an ingest route and a
    passcode gets a 401 there).
 

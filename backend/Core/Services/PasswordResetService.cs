@@ -202,6 +202,11 @@ public class PasswordResetService : IPasswordResetService
                 token.Id);
         }
 
+        _logger.LogInformation(
+            "PasswordResetService: password reset completed for user {UserId} (Keycloak account {SubjectId}).",
+            token.UserId,
+            token.User.SubjectId);
+
         return Result.Ok(PasswordResetOutcome.Reset);
     }
 
@@ -223,14 +228,24 @@ public class PasswordResetService : IPasswordResetService
             return Result.Fail<PasswordResetLookup>(new Message(500, "An error occurred while resetting the password."));
 
         if (!lookup.IsSuccess)
+        {
+            _logger.LogInformation("PasswordResetService: the link matches no reset token.");
             return Result.Ok(new PasswordResetLookup(null, PasswordResetOutcome.Invalid));
+        }
 
         var token = lookup.Value;
 
         // A consumed or expired row is reported as Expired rather than Invalid, so the page can
         // say "ask for a new mail" instead of "this link is wrong".
         if (token.ConsumedAt is not null || token.ExpiresAt <= DateTime.UtcNow)
+        {
+            _logger.LogInformation(
+                "PasswordResetService: token {TokenId} for user {UserId} is {TokenState}.",
+                token.Id,
+                token.UserId,
+                token.ConsumedAt is not null ? "already used" : "expired");
             return Result.Ok(new PasswordResetLookup(null, PasswordResetOutcome.Expired));
+        }
 
         return Result.Ok(new PasswordResetLookup(token, PasswordResetOutcome.Valid));
     }

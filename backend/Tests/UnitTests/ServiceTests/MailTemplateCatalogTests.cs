@@ -50,6 +50,7 @@ public class MailTemplateCatalogTests
             tokens.Object,
             Mock.Of<IKeycloakAdminRepository>(),
             outbox.Object,
+            Mock.Of<IWelcomeMailService>(),
             new ConfigurationBuilder().Build(),
             NullLogger<EmailVerificationService>.Instance);
 
@@ -177,7 +178,8 @@ public class MailTemplateCatalogTests
     public void EveryTemplateKeyThatCodeSends_IsDescribed()
     {
         // The keys with a production caller. All three have one now: "welcome" stopped being
-        // the outbox's worked example when registration started sending it.
+        // the outbox's worked example when registration started sending it, and is now sent
+        // by email verification instead.
         Catalog.Find(EmailVerificationService.TemplateKey).Should().NotBeNull();
         Catalog.Find(PasswordResetService.TemplateKey).Should().NotBeNull();
         Catalog.Find(WelcomeMailService.TemplateKey).Should().NotBeNull();

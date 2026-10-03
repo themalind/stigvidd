@@ -1,6 +1,7 @@
 // SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+using Core.Logging;
 using Core.Interfaces.Repositories;
 using Infrastructure.Data;
 using Infrastructure.Data.Entities;
@@ -39,7 +40,7 @@ public class MailOutboxRepository : IMailOutboxRepository
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "MailOutboxRepository: AddAsync -> Something went wrong when queueing a mail to {to}.", email.ToAddress);
+            _logger.LogError(ex, "MailOutboxRepository: AddAsync -> Something went wrong when queueing a mail to {to}.", LogRedaction.MaskEmail(email.ToAddress));
             return RepositoryResult<OutboxEmail>.Error();
         }
     }

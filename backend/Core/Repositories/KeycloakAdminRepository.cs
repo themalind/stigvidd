@@ -1,7 +1,9 @@
 // SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+using System.Text.Json;
 using Core.Interfaces.Repositories;
+using Core.Logging;
 using Keycloak.AuthServices.Sdk.Admin;
 using Keycloak.AuthServices.Sdk.Admin.Models;
 using Keycloak.AuthServices.Sdk.Admin.Requests.Users;
@@ -50,7 +52,15 @@ public class KeycloakAdminRepository : IKeycloakAdminRepository
 
         if (response.StatusCode == System.Net.HttpStatusCode.Conflict)
         {
-            throw new KeycloakUserConflictException($"A Keycloak user with email {email} already exists.");
+            throw new KeycloakUserConflictException($"A Keycloak user with email {LogRedaction.MaskEmail(email)} already exists.");
+        }
+
+        if (!response.IsSuccessStatusCode)
+        {
+            _logger.LogWarning(
+                "KeycloakAdminRepository: CreateUserAsync -> Keycloak refused the new user with {StatusCode}: {KeycloakError}",
+                (int)response.StatusCode,
+                KeycloakError(await response.Content.ReadAsStringAsync(ctoken)));
         }
 
         response.EnsureSuccessStatusCode();
@@ -71,7 +81,7 @@ public class KeycloakAdminRepository : IKeycloakAdminRepository
 
         if (string.IsNullOrEmpty(subjectId))
         {
-            throw new InvalidOperationException($"Keycloak user for {email} was created but its id could not be resolved.");
+            throw new InvalidOperationException($"Keycloak user for {LogRedaction.MaskEmail(email)} was created but its id could not be resolved.");
         }
 
         return subjectId;
@@ -111,12 +121,40 @@ public class KeycloakAdminRepository : IKeycloakAdminRepository
             // friends), localised by the realm's own bundles. It is logged rather than shown:
             // a raw message key is not something to put in front of a user.
             var body = await response.Content.ReadAsStringAsync(ctoken);
-            _logger.LogInformation("Keycloak refused a new password for {SubjectId}: {Body}", subjectId, body);
+            _logger.LogInformation(
+                "Keycloak refused a new password for {SubjectId}: {KeycloakError}",
+                subjectId,
+                KeycloakError(body));
             return false;
         }
 
         response.EnsureSuccessStatusCode();
 
         return true;
+    }
+
+    private static string KeycloakError(string body)
+    {
+        try
+        {
+            using var document = JsonDocument.Parse(body);
+
+            if (document.RootElement.ValueKind != JsonValueKind.Object)
+                return "unrecognised error body";
+
+            var codes = new[] { "error", "errorMessage", "error_description" }
+                .Select(name => document.RootElement.TryGetProperty(name, out var value) && value.ValueKind == JsonValueKind.String
+                    ? value.GetString()
+                    : null)
+                .Where(value => !string.IsNullOrWhiteSpace(value))
+                .Distinct();
+
+            var described = string.Join(" / ", codes);
+            return described.Length > 0 ? described : "unrecognised error body";
+        }
+        catch (JsonException)
+        {
+            return "unrecognised error body";
+        }
     }
 }

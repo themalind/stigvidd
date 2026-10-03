@@ -3,6 +3,7 @@
 
 using Core.Interfaces.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging.Abstractions;
 using System.Net;
 using System.Security.Claims;
 using WebDataContracts.ResponseModels.User;
@@ -21,9 +22,20 @@ public abstract class StigViddController : Controller
             (int)HttpStatusCode.Unauthorized => Unauthorized(message.ResultMessage),
             (int)HttpStatusCode.Forbidden => StatusCode(StatusCodes.Status403Forbidden, message.ResultMessage),
             (int)HttpStatusCode.TooManyRequests => StatusCode(StatusCodes.Status429TooManyRequests, message.ResultMessage),
-            _ => StatusCode(StatusCodes.Status500InternalServerError)
+            _ => ServerError(message)
         };
 
+    }
+
+    private StatusCodeResult ServerError(Message message)
+    {
+        Logger.LogError(
+            "{Controller}: a {StatusCode} from the service layer was returned as 500: {ResultMessage}",
+            GetType().Name,
+            message.StatusCode,
+            message.ResultMessage);
+
+        return StatusCode(StatusCodes.Status500InternalServerError);
     }
 
     protected async Task<UserResponse?> GetAuthenticatedUserAsync(
@@ -34,11 +46,23 @@ public abstract class StigViddController : Controller
 
         if (string.IsNullOrEmpty(subjectId))
         {
+            Logger.LogInformation("{Controller}: the token carries no subject id.", GetType().Name);
             return null;
         }
 
         var userResult = await userService.GetUserBySubjectAsync(subjectId, ctoken);
 
+        if (userResult?.Value is null)
+        {
+            Logger.LogInformation(
+                "{Controller}: no user found for subject {SubjectId}.",
+                GetType().Name,
+                subjectId);
+        }
+
         return userResult?.Value;
     }
+
+    private ILogger Logger =>
+        HttpContext?.RequestServices?.GetService<ILogger<StigViddController>>() ?? NullLogger<StigViddController>.Instance;
 }

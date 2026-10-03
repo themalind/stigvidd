@@ -143,23 +143,42 @@ export function decodeUser(token: string): AuthUser {
   };
 }
 
-/** Direct Access Grant login. Returns the authenticated user, or throws InvalidCredentialsError. */
-export async function passwordGrant(email: string, password: string): Promise<AuthUser> {
-  const tokens = await requestToken({
-    grant_type: "password",
-    client_id: CLIENT_ID,
-    username: email,
-    password,
-    scope: SCOPE,
-  });
+const TOKEN_HTTP_FAILURE = /^Keycloak token request failed: HTTP \d+$/;
 
-  // Reject non-admins before storing any tokens, so no session is established.
-  if (!hasRequiredRole(tokens.access_token)) {
-    throw new NotAuthorizedError();
+function loginFailure(error: unknown): Record<string, string> {
+  if (error instanceof InvalidCredentialsError) return { outcome: "invalid_credentials" };
+  if (error instanceof NotAuthorizedError) return { outcome: "not_authorized" };
+  if (error instanceof Error && TOKEN_HTTP_FAILURE.test(error.message)) {
+    return { outcome: "unavailable", errorMessage: error.message };
   }
 
-  persistTokens(tokens);
-  return decodeUser(tokens.id_token ?? tokens.access_token);
+  // Name only: a JSON.parse or jwt-decode message can quote the token response it choked on. keep-comment: why other messages are withheld
+  return { outcome: "unavailable", errorName: error instanceof Error ? error.name : typeof error };
+}
+
+/** Direct Access Grant login. Returns the authenticated user, or throws InvalidCredentialsError. */
+export async function passwordGrant(email: string, password: string): Promise<AuthUser> {
+  try {
+    const tokens = await requestToken({
+      grant_type: "password",
+      client_id: CLIENT_ID,
+      username: email,
+      password,
+      scope: SCOPE,
+    });
+
+    // Reject non-admins before storing any tokens, so no session is established.
+    if (!hasRequiredRole(tokens.access_token)) {
+      throw new NotAuthorizedError();
+    }
+
+    persistTokens(tokens);
+    return decodeUser(tokens.id_token ?? tokens.access_token);
+  } catch (error) {
+    // Not in requestToken: refreshGrant shares it and logs its own failures. keep-comment: prevents a double log on refresh
+    logger.warn("Admin login failed", loginFailure(error));
+    throw error;
+  }
 }
 
 /**
@@ -177,6 +196,7 @@ export async function refreshGrant(token: string): Promise<AuthUser | null> {
     // Re-check on every refresh so a revoked role (or a pre-existing non-admin
     // session) ends the session instead of silently continuing.
     if (!hasRequiredRole(tokens.access_token)) {
+      logger.warn("Admin role missing on refresh; signed out");
       clearTokens();
       onSessionExpired?.();
       return null;
@@ -202,7 +222,7 @@ export async function logoutKeycloak(): Promise<void> {
   const token = refreshToken ?? localStorage.getItem(REFRESH_TOKEN_KEY);
   if (token) {
     try {
-      await fetch(LOGOUT_ENDPOINT, {
+      const response = await fetch(LOGOUT_ENDPOINT, {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body: new URLSearchParams({
@@ -211,8 +231,12 @@ export async function logoutKeycloak(): Promise<void> {
         }).toString(),
         signal: AbortSignal.timeout(TOKEN_REQUEST_TIMEOUT_MS),
       });
-    } catch {
+      if (!response.ok) {
+        logger.info("Logout revoke failed", { errorMessage: `Keycloak logout failed: HTTP ${response.status}` });
+      }
+    } catch (error) {
       // Best-effort revocation; clear local tokens regardless.
+      logger.info("Logout revoke failed", { errorMessage: String(error) });
     }
   }
   clearTokens();

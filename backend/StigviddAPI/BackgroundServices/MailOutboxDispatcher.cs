@@ -1,6 +1,7 @@
 // SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+using Core.Logging;
 using Core.Interfaces.Repositories;
 using Core.Interfaces.Services;
 using Infrastructure.Enums;
@@ -133,6 +134,8 @@ public class MailOutboxDispatcher : BackgroundService
             var released = await repository.ReleaseAsync(id, stoppingToken);
             if (released.IsSuccess)
                 ScheduleRetry(id, wait, stoppingToken);
+            else
+                _logger.LogError("MailOutboxDispatcher: Could not release mail {id} back to the queue; it waits for the next restart.", id);
 
             return;
         }
@@ -141,7 +144,10 @@ public class MailOutboxDispatcher : BackgroundService
 
         if (sent.Success)
         {
-            await repository.MarkSentAsync(id, stoppingToken);
+            var marked = await repository.MarkSentAsync(id, stoppingToken);
+            if (!marked.IsSuccess)
+                _logger.LogError("MailOutboxDispatcher: Mail {id} was sent but could not be marked as sent; a restart may send it again.", id);
+
             return;
         }
 
@@ -158,7 +164,7 @@ public class MailOutboxDispatcher : BackgroundService
         {
             _logger.LogError(
                 "MailOutboxDispatcher: Giving up on mail {identifier} to {to} after {attempts} attempt(s): {error}",
-                failed.Value.Identifier, failed.Value.ToAddress, failed.Value.Attempts, failed.Value.LastError);
+                failed.Value.Identifier, LogRedaction.MaskEmail(failed.Value.ToAddress), failed.Value.Attempts, LogRedaction.ScrubEmails(failed.Value.LastError));
             return;
         }
 

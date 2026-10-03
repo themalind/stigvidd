@@ -14,7 +14,7 @@ Keycloak's `UPDATE_PASSWORD` action mail and is now `reset-password` below, whic
 wording of every mail a user receives is editable by an operator without a deploy.
 
 Its callers are **registration** — `verify-email` carries the link and code that stand between
-signing up and being able to log in, and `welcome` follows it once the account exists — and
+signing up and being able to log in, and `welcome` follows once that address is verified — and
 **forgotten passwords**, where `reset-password` carries the only link that can set a new one.
 See [auth](auth.md).
 

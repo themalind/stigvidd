@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { getValidAccessToken } from "@/services/keycloak-auth";
+import { logger } from "@/services/telemetry";
 
 /**
  * Single request choke point for the orval-generated API client (see
@@ -41,20 +42,52 @@ async function errorMessage(response: Response): Promise<string> {
   return text.slice(0, 300) || fallback;
 }
 
+export type ApiRequest = { method: string; endpoint: string };
+
+export function describeRequest(path: string, method: string | undefined): ApiRequest {
+  const query = path.search(/[?#]/);
+
+  // The query string can carry coordinates, search terms or one-time codes. keep-comment: GDPR reason the path is cut
+  return { method: (method ?? "GET").toUpperCase(), endpoint: query === -1 ? path : path.slice(0, query) };
+}
+
+export function logRefused(request: ApiRequest, status: number, message: string): void {
+  const context = { ...request, status, errorMessage: message.slice(0, 300) };
+
+  if (status >= 500) logger.error("API request failed", context);
+  else logger.warn("API request failed", context);
+}
+
+export function logUnanswered(request: ApiRequest, error: unknown, signal?: AbortSignal | null): void {
+  // React Query aborts on unmount and key change; that is not a failure. keep-comment: why aborts are not logged
+  if (signal?.aborted) return;
+
+  logger.error("API request failed", { ...request, errorMessage: String(error) });
+}
+
 export const customFetch = async <T>(url: string, options: RequestInit): Promise<T> => {
   const token = await getValidAccessToken();
   const requestUrl = `${import.meta.env.VITE_API_URL}${url}`;
+  const request = describeRequest(url, options.method);
 
-  const response = await fetch(requestUrl, {
-    ...options,
-    headers: {
-      ...options.headers,
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-  });
+  let response: Response;
+  try {
+    response = await fetch(requestUrl, {
+      ...options,
+      headers: {
+        ...options.headers,
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
+  } catch (error) {
+    logUnanswered(request, error, options.signal);
+    throw error;
+  }
 
   if (!response.ok) {
-    throw new Error(await errorMessage(response));
+    const message = await errorMessage(response);
+    logRefused(request, response.status, message);
+    throw new Error(message);
   }
 
   // 204/205/304 carry no body; everything else is JSON from the API.

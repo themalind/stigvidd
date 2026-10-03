@@ -1,0 +1,148 @@
+# SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
+# SPDX-License-Identifier: AGPL-3.0-or-later
+#
+# OpenTelemetry Collector — Keycloak's failed sign-ins, minus who typed them.
+#
+# Logins never reach the API. The app and the admin web post email + password
+# straight to Keycloak's token endpoint (password grant), so only Keycloak knows a
+# sign-in failed. Its built-in `jboss-logging` event listener writes each failure at
+# WARN under the logger `org.keycloak.events`:
+#
+#     type="LOGIN_ERROR", realmId="…", realmName="stigvidd", clientId="stigvidd-app",
+#     userId="…", ipAddress="…", error="invalid_user_credentials",
+#     auth_method="openid-connect", grant_type="password", …, username="someone@example.com"
+#
+# The `keycloak` service ships its WARN+ lines here over syslog (KC_LOG_SYSLOG_* in
+# docker-compose.yml), and this config forwards ONLY a fixed set of fields to the
+# OpenObserve stream `keycloak_events`.
+#
+# A WHITELIST, NOT A BLACKLIST. The username is the email address the person typed,
+# so it must never leave the box — and the same line also carries redirect_uri,
+# code_id, session ids and whatever `details` a future Keycloak adds. Deleting the
+# known-bad keys would ship the next one nobody thought of. So `transform` below
+# copies seven named fields, checks each one's SHAPE, and drops everything else:
+# every other attribute, every resource attribute, and the raw body. If any step
+# fails, what goes out is less, never more: a record whose parsing broke leaves as
+# "Keycloak event" with no fields at all.
+#
+# What stays in the stream is the Keycloak user id and the client IP: personal data,
+# allowed in a 7-day stream by docs/observability.md (GDPR -> retention split). The
+# typed username stays ONLY in Keycloak's own container log on the host, aged out
+# after 7 days by scripts/container-log-retention.sh, and the privacy policy (§2,
+# both languages) says so.
+#
+# It is OPT-IN: the `authevents` service carries `profiles: [authevents]`, and the
+# `keycloak` service sends nothing until KEYCLOAK_LOG_HANDLERS=console,syslog. See
+# "Failed sign-ins: where to look" in docs/observability.md.
+#
+# NO SECRETS IN THIS FILE. It is committed to git and scp'd to the host by the
+# Jenkins deploy; the ingestion token reaches it through the environment only.
+
+receivers:
+  syslog:
+    # Only Keycloak sends here. Bound to the collector's fixed address on the compose
+    # `authlog` network (AUTH_EVENTS_SYSLOG_LISTEN, set in docker-compose.yml), which
+    # only Keycloak shares, so no container on `public` can forge an event. No
+    # published port.
+    tcp:
+      listen_address: ${env:AUTH_EVENTS_SYSLOG_LISTEN}
+    protocol: rfc5424
+    # Measured against Keycloak 26.1 with `log-syslog-protocol=tcp`: one RFC 5424
+    # message per line, NO octet-counting prefix (26.1 has no option for one), a
+    # trailing LF. That is this receiver's default newline split, so octet counting
+    # stays off. Turning it on makes every message unparseable.
+    # See docs/notes/keycloak-26-1-syslog-wire-format.md.
+    enable_octet_counting: false
+
+processors:
+  # Sheds load and says so, rather than being killed by the kernel mid-flush. Same
+  # reasoning and numbers as observability/otel-hostmetrics.yaml.
+  memory_limiter:
+    check_interval: 5s
+    limit_mib: 128
+    spike_limit_mib: 32
+
+  # Keep only the event listener's lines. Keycloak's syslog handler puts the logger
+  # name in the RFC 5424 MSGID (measured: `msg_id = org.keycloak.events`), so this
+  # needs no parsing. Everything else Keycloak logs at WARN — startup warnings, a
+  # stack trace that quotes a request — is dropped here. A record the receiver could
+  # not parse has no msg_id and is dropped too.
+  #
+  # The severity condition is a second lock on "failures only": successful logins
+  # are logged at DEBUG (KC_SPI_EVENTS_LISTENER_JBOSS_LOGGING_SUCCESS_LEVEL), so even
+  # if someone widens the syslog handler's level, they stop here.
+  filter/keycloak_events:
+    error_mode: ignore
+    logs:
+      log_record:
+        - 'attributes["msg_id"] != "org.keycloak.events"'
+        - 'severity_number < SEVERITY_NUMBER_WARN'
+
+  transform/whitelist:
+    # `ignore` logs a failing statement and carries on with the next one, which is
+    # what makes this fail CLOSED: the body overwrite and both keep_keys calls below
+    # do not depend on parsing having worked.
+    error_mode: ignore
+    log_statements:
+      - context: log
+        statements:
+          # 1. The raw syslog line is gone before anything else can fail.
+          - set(log.cache["raw"], log.attributes["message"])
+          - set(log.body, "Keycloak event")
+          # 2. Parse. Keycloak prefixes the RFC 5424 MSG with a UTF-8 BOM, which
+          #    ParseJSON rejects ("invalid character 'ï'"), so strip it first.
+          - 'replace_pattern(log.cache["raw"], "^\\x{FEFF}", "")'
+          - set(log.cache["record"], ParseJSON(log.cache["raw"]))
+          # Keycloak escapes quotes inside values (username="a\", userId=\"x"), and
+          # ParseKeyValue honours that escaping: a quote typed into the username
+          # cannot forge a second userId or type. Measured.
+          - set(log.cache["event"], ParseKeyValue(log.cache["record"]["message"], "=", ", "))
+          # 3. Copy the whitelist, each value checked against the shape it must have.
+          #    clientId and grant_type come straight from the request, so a caller can
+          #    put anything in them — an email address included. A value that fails
+          #    its pattern is simply not copied.
+          - 'set(log.attributes["type"], log.cache["event"]["type"]) where IsMatch(log.cache["event"]["type"], "^[A-Z_]{1,64}$")'
+          - 'set(log.attributes["error"], log.cache["event"]["error"]) where IsMatch(log.cache["event"]["error"], "^[a-z_]{1,64}$")'
+          - 'set(log.attributes["clientId"], log.cache["event"]["clientId"]) where IsMatch(log.cache["event"]["clientId"], "^[a-z0-9-]{1,64}$")'
+          # Keycloak writes the literal string "null" when no user matched.
+          - 'set(log.attributes["userId"], log.cache["event"]["userId"]) where IsMatch(log.cache["event"]["userId"], "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")'
+          - 'set(log.attributes["ipAddress"], log.cache["event"]["ipAddress"]) where IsMatch(log.cache["event"]["ipAddress"], "^[0-9A-Fa-f:.]{2,45}$")'
+          - 'set(log.attributes["grant_type"], log.cache["event"]["grant_type"]) where IsMatch(log.cache["event"]["grant_type"], "^[a-z0-9_:.-]{1,128}$")'
+          - 'set(log.attributes["auth_method"], log.cache["event"]["auth_method"]) where IsMatch(log.cache["event"]["auth_method"], "^[a-z0-9_-]{1,64}$")'
+          # 4. Everything not named above goes: the receiver's own attributes
+          #    (message, hostname, appname, …) and anything a statement above left.
+          - keep_keys(log.attributes, ["type", "error", "clientId", "userId", "ipAddress", "grant_type", "auth_method"])
+          # 5. A readable body, built only from fields that passed their check.
+          - 'set(log.body, Concat(["Keycloak ", log.attributes["type"]], "")) where log.attributes["type"] != nil'
+          - 'set(log.body, Concat(["Keycloak ", log.attributes["type"], ": ", log.attributes["error"]], "")) where log.attributes["type"] != nil and log.attributes["error"] != nil'
+          # 6. The resource side: nothing but a service name to query by.
+          - keep_keys(resource.attributes, [])
+          - set(resource.attributes["service.name"], "keycloak")
+
+  batch:
+
+exporters:
+  otlp_http:
+    # The COMPLETE URL, signal path included — the same trap documented in
+    # observability/otel-hostmetrics.yaml and TelemetryExtensions.cs: an endpoint set
+    # explicitly gets no `/v1/logs` appended. AUTH_EVENTS_OTLP_ENDPOINT holds the org
+    # base. Get it wrong and OpenObserve answers 404 and the only symptom is no data.
+    logs_endpoint: ${env:AUTH_EVENTS_OTLP_ENDPOINT}/v1/logs
+    headers:
+      # An INGESTION TOKEN (already base64("user:passcode")), never a login password:
+      # OpenObserve OSS has no RBAC, so a password here would be full admin over every
+      # stream. See docs/notes/openobserve-oss-has-no-rbac.md.
+      Authorization: Basic ${env:AUTH_EVENTS_OTLP_TOKEN}
+      # OTLP logs land in `default` without it. Same header the API sets
+      # (StreamHeaderName in TelemetryExtensions.cs).
+      stream-name: keycloak_events
+    retry_on_failure:
+      enabled: true
+      max_elapsed_time: 300s
+
+service:
+  pipelines:
+    logs:
+      receivers: [syslog]
+      processors: [memory_limiter, filter/keycloak_events, transform/whitelist, batch]
+      exporters: [otlp_http]

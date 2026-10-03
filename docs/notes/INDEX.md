@@ -117,6 +117,12 @@ you get approved.
   and `guard-test-cancellation-token.mjs` denies the explicit forms the analyzer cannot see. Carries the
   MSBuild trap: scoping this with a `backend/Tests/Directory.Build.props` would silently drop the parent's
   `WarningsAsErrors=nullable`, because the nearest one wins and walking stops.
+- [On Debian without libsqlite3-dev the integration suite runs zero tests, and dotnet test still prints failed: 0](integration-suite-aborts-without-libsqlite3-dev.md) —
+  `IntegrationTests` dies in `SqliteProvider.Init` with `DllNotFoundException: Unable to load
+  shared library 'sqlite3'`, exit code 134, `Zero tests ran`, because the system provider needs
+  the unversioned `libsqlite3.so` from `libsqlite3-dev`, not just `libsqlite3-0`. The run summary
+  says `failed: 0` over the unit tests only. Includes a no-root workaround: symlink plus
+  `apt-get download` of `libsqlite3-mod-spatialite` and its deps, and `LD_LIBRARY_PATH`.
 - [SpatiaLite in the integration tests is set up differently on Windows and on Linux](spatialite-per-os.md) —
   the csproj already splits on `$(OS)`: Windows uses the bundled `e_sqlite3`, Linux binds
   the **system** libsqlite3 via a `[ModuleInitializer]` because the bundle would shadow the
@@ -818,3 +824,35 @@ src/api/generated` then fails with "the generated API client is stale" for reaso
   poll callback and call it by hand after screen.findByText. Also: a negative queryByText
   assertion after resolving a deferred promise passes vacuously without act(), so race tests
   need act.
+- [Keycloak's syslog handler resolves the collector once — absent at start or restarted later, it gets nothing until Keycloak restarts](keycloak-syslog-resolves-the-collector-once.md) —
+  KC_LOG_SYSLOG_ENDPOINT by name (authevents:5140) is resolved when the JBoss LogManager SyslogHandler
+  is built. Keycloak 26.1 started without the authevents collector logs "LogManager error of
+  type OPEN_FAILURE: Failed to create syslog handler" / UnknownHostException and sends nothing
+  for the life of the container; a collector restart or recreate comes back on a new IP and
+  delivery to keycloak_events stops silently. Sign-in is unaffected, so the only symptom is an
+  empty stream. Fixed by an IP literal: the authlog network (internal, /29 from
+  AUTH_EVENTS_NET_PREFIX, default 10.213.47) pins keycloak at .2 and the collector at .3, so
+  Keycloak reconnects by itself and a collector recreate loses only ~2 events; the receiver
+  binds that address only. Cost: a fixed subnet on every host, keycloak's up fails on overlap.
+- [Keycloak 26.1 syslog puts a BOM before the JSON, the logger name in MSGID, and has no octet-counting option](keycloak-26-1-syslog-wire-format.md) —
+  measured `log-syslog-*` option names for the pinned quay.io/keycloak/keycloak:26.1 (26.1.5):
+  endpoint, protocol, output json, level, type, max-length (2048 default), no counting-framing,
+  so the OTel syslog receiver keeps enable_octet_counting false. MSGID carries the logger
+  org.keycloak.events (attributes msg_id); a UTF-8 BOM before the JSON makes OTTL ParseJSON fail
+  with "invalid character 'ï'"; ParseKeyValue honours Keycloak's escaped quotes in username;
+  userId is the string "null" for user_not_found; unset handler prints a harmless UNAVAILABLE
+  WARNING; jboss-logging listener keys success-level / error-level via KC_SPI_EVENTS_LISTENER_*.
+- [The @stigvidd.se catch-all also takes real mailboxes' mail unless each has an alias to itself](mail-catch-all-swallows-real-mailboxes.md) —
+  docker-mailserver (`mailserver` in docker-compose.yml) has a catch-all alias `@stigvidd.se
+  info@stigvidd.se` in the host's git-ignored `mail-config/postfix-virtual.cf`. Postfix applies
+  `virtual_alias_maps` before mailbox delivery, so a new mailbox added with `setup email add`
+  quietly sends its mail to info@ unless you also run `setup alias add X X` (a self-alias, as
+  `no-reply@` has). Shows in `setup debug show-mail-logs` as `to=<info@…>, orig_to=<X>`.
+  DEPLOYMENT.md Part 1 step 6; also affects SPOOF_PROTECTION sender ownership.
+- [A best-effort mail is silently absent in the integration tests, so an assertion that it was not sent passes whatever the code does](best-effort-mail-is-silently-absent-in-integration-tests.md) —
+  Mail templates (welcome, verify-email, reset-password) arrive by migration InsertData, but the
+  IntegrationTests schema is EnsureCreated, so no template exists unless the test seeds one.
+  EnqueueAsync then fails with an unknown key, and a best-effort sender (WelcomeMailService) logs it
+  and swallows it, so no OutboxEmails row is ever written and "not sent" / SingleOrDefault assertions
+  are vacuous. Seed the template; assert 0 before and 1 after; plant the send in the wrong place
+  (prove-it-bites) to see it bite.

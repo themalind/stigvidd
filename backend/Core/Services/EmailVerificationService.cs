@@ -23,6 +23,7 @@ public class EmailVerificationService : IEmailVerificationService
     private readonly IEmailVerificationTokenRepository _tokenRepository;
     private readonly IKeycloakAdminRepository _keycloakAdminRepository;
     private readonly IMailOutboxService _mailOutboxService;
+    private readonly IWelcomeMailService _welcomeMailService;
     private readonly ILogger<EmailVerificationService> _logger;
 
     private readonly int _tokenLifetimeHours;
@@ -34,12 +35,14 @@ public class EmailVerificationService : IEmailVerificationService
         IEmailVerificationTokenRepository tokenRepository,
         IKeycloakAdminRepository keycloakAdminRepository,
         IMailOutboxService mailOutboxService,
+        IWelcomeMailService welcomeMailService,
         IConfiguration configuration,
         ILogger<EmailVerificationService> logger)
     {
         _tokenRepository = tokenRepository;
         _keycloakAdminRepository = keycloakAdminRepository;
         _mailOutboxService = mailOutboxService;
+        _welcomeMailService = welcomeMailService;
         _logger = logger;
 
         _tokenLifetimeHours = ReadInt(configuration, "EmailVerification:TokenLifetimeHours", DefaultTokenLifetimeHours);
@@ -123,7 +126,10 @@ public class EmailVerificationService : IEmailVerificationService
             return Result.Fail<EmailVerificationOutcome>(new Message(500, "An error occurred while verifying the email address."));
 
         if (!lookup.IsSuccess)
+        {
+            _logger.LogInformation("EmailVerificationService: VerifyByTokenAsync -> the link matches no verification token.");
             return Result.Ok(EmailVerificationOutcome.Invalid);
+        }
 
         return await SettleAsync(lookup.Value, ctoken);
     }
@@ -139,7 +145,10 @@ public class EmailVerificationService : IEmailVerificationService
             return Result.Fail<EmailVerificationOutcome>(new Message(500, "An error occurred while verifying the email address."));
 
         if (!userLookup.IsSuccess)
+        {
+            _logger.LogInformation("EmailVerificationService: VerifyByCodeAsync -> no account for the given address.");
             return Result.Ok(EmailVerificationOutcome.Invalid);
+        }
 
         var user = userLookup.Value;
 
@@ -152,12 +161,21 @@ public class EmailVerificationService : IEmailVerificationService
             return Result.Fail<EmailVerificationOutcome>(new Message(500, "An error occurred while verifying the email address."));
 
         if (!lookup.IsSuccess)
+        {
+            _logger.LogInformation("EmailVerificationService: VerifyByCodeAsync -> user {UserId} has no verification token.", user.Id);
             return Result.Ok(EmailVerificationOutcome.Invalid);
+        }
 
         var token = lookup.Value;
 
         if (token.Attempts >= _maxCodeAttempts)
+        {
+            _logger.LogWarning(
+                "EmailVerificationService: VerifyByCodeAsync -> user {UserId} has used all {MaxCodeAttempts} code attempts.",
+                user.Id,
+                _maxCodeAttempts);
             return Result.Ok(EmailVerificationOutcome.TooManyAttempts);
+        }
 
         // Fixed-time comparison: the code is short enough that a timing oracle would meaningfully
         // narrow a brute force, and the comparison costs nothing either way.
@@ -165,7 +183,21 @@ public class EmailVerificationService : IEmailVerificationService
         {
             var counted = await _tokenRepository.IncrementAttemptsAsync(token.Id, ctoken);
 
-            if (counted.IsSuccess && counted.Value >= _maxCodeAttempts)
+            if (!counted.IsSuccess)
+            {
+                _logger.LogWarning(
+                    "EmailVerificationService: VerifyByCodeAsync -> wrong code for user {UserId}, and the attempt could not be counted.",
+                    user.Id);
+                return Result.Ok(EmailVerificationOutcome.Invalid);
+            }
+
+            _logger.LogInformation(
+                "EmailVerificationService: VerifyByCodeAsync -> wrong code for user {UserId} (attempt {Attempt} of {MaxCodeAttempts}).",
+                user.Id,
+                counted.Value,
+                _maxCodeAttempts);
+
+            if (counted.Value >= _maxCodeAttempts)
                 return Result.Ok(EmailVerificationOutcome.TooManyAttempts);
 
             return Result.Ok(EmailVerificationOutcome.Invalid);
@@ -221,16 +253,27 @@ public class EmailVerificationService : IEmailVerificationService
         // link, and the human is clicking it now. Answer the human, not the scanner.
         if (token.ConsumedAt is not null)
         {
-            return token.User?.EmailVerifiedAt is not null
-                ? Result.Ok(EmailVerificationOutcome.AlreadyVerified)
-                : Result.Ok(EmailVerificationOutcome.Invalid);
+            if (token.User?.EmailVerifiedAt is not null)
+                return Result.Ok(EmailVerificationOutcome.AlreadyVerified);
+
+            _logger.LogInformation(
+                "EmailVerificationService: token {TokenId} for user {UserId} was retired by a newer one.",
+                token.Id,
+                token.UserId);
+            return Result.Ok(EmailVerificationOutcome.Invalid);
         }
 
         if (token.User?.EmailVerifiedAt is not null)
             return Result.Ok(EmailVerificationOutcome.AlreadyVerified);
 
         if (token.ExpiresAt <= DateTime.UtcNow)
+        {
+            _logger.LogInformation(
+                "EmailVerificationService: token {TokenId} for user {UserId} has expired.",
+                token.Id,
+                token.UserId);
             return Result.Ok(EmailVerificationOutcome.Expired);
+        }
 
         if (token.User is null)
         {
@@ -256,6 +299,17 @@ public class EmailVerificationService : IEmailVerificationService
             _logger.LogError(ex, "EmailVerificationService: failed to enable Keycloak user {subjectId} after verification.", token.User.SubjectId);
             return Result.Fail<EmailVerificationOutcome>(new Message(500, "An error occurred while verifying the email address."));
         }
+
+        _logger.LogInformation(
+            "EmailVerificationService: user {UserId} verified their email address; Keycloak account {SubjectId} enabled.",
+            token.UserId,
+            token.User.SubjectId);
+
+        // Here and nowhere earlier: this is the first moment the account can be logged in to,
+        // which is what the greeting tells the user. Only the Verified outcome reaches this
+        // line, so a prefetched link clicked again (AlreadyVerified) never greets twice, and a
+        // failed Keycloak enable above greets nobody. Never fails the verification.
+        await _welcomeMailService.SendAsync(token.User.Email, token.User.NickName, ctoken);
 
         return Result.Ok(EmailVerificationOutcome.Verified);
     }

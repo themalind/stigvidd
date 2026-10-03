@@ -18,10 +18,12 @@ namespace StigviddAPI.Controllers;
 public class UsersController : StigViddController
 {
     private readonly IUserService _userService;
+    private readonly ILogger<UsersController> _logger;
 
     public UsersController(IUserService userService, ILogger<UsersController> logger)
     {
         _userService = userService;
+        _logger = logger;
     }
 
     [HttpPost]
@@ -33,6 +35,7 @@ public class UsersController : StigViddController
         var subjectId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (string.IsNullOrEmpty(subjectId))
         {
+            _logger.LogInformation("UsersController: CreateUser -> the token carries no subject id.");
             return Unauthorized("Subject id not found in token.");
         }
 
@@ -57,6 +60,7 @@ public class UsersController : StigViddController
         var subjectId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (string.IsNullOrEmpty(subjectId))
         {
+            _logger.LogInformation("UsersController: GetStigViddUser -> the token carries no subject id.");
             return Unauthorized("Subject id not found in token.");
         }
 

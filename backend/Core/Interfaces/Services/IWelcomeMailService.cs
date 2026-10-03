@@ -4,7 +4,7 @@
 namespace Core.Interfaces.Services;
 
 /// <summary>
-/// The greeting a new account gets.
+/// The greeting a new account gets, once its email address is verified and it can log in.
 /// </summary>
 /// <remarks>
 /// A service rather than an inline EnqueueAsync at the call site for two reasons: controllers

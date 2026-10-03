@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WebDataContracts.RequestModels.MailTemplate;
 using WebDataContracts.ResponseModels.MailTemplate;
+using StigviddAPI.Extensions;
 
 namespace StigviddAPI.Controllers.Admin;
 
@@ -58,7 +59,7 @@ public class MailTemplatesController : StigViddController
         string identifier, [FromBody] UpdateMailTemplateRequest request, CancellationToken ctoken)
     {
         _logger.LogInformation(
-            "Mail template {identifier} edited by {user}", identifier, User.Identity?.Name ?? "unknown");
+            "Mail template {identifier} edited by {user}", identifier, RequestLoggingMiddleware.SubjectId(User) ?? "unknown");
 
         var result = await _mailTemplates.UpdateAsync(identifier, request, ctoken);
 
