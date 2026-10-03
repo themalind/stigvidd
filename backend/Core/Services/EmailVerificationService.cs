@@ -123,7 +123,10 @@ public class EmailVerificationService : IEmailVerificationService
             return Result.Fail<EmailVerificationOutcome>(new Message(500, "An error occurred while verifying the email address."));
 
         if (!lookup.IsSuccess)
+        {
+            _logger.LogInformation("EmailVerificationService: VerifyByTokenAsync -> the link matches no verification token.");
             return Result.Ok(EmailVerificationOutcome.Invalid);
+        }
 
         return await SettleAsync(lookup.Value, ctoken);
     }
@@ -139,7 +142,10 @@ public class EmailVerificationService : IEmailVerificationService
             return Result.Fail<EmailVerificationOutcome>(new Message(500, "An error occurred while verifying the email address."));
 
         if (!userLookup.IsSuccess)
+        {
+            _logger.LogInformation("EmailVerificationService: VerifyByCodeAsync -> no account for the given address.");
             return Result.Ok(EmailVerificationOutcome.Invalid);
+        }
 
         var user = userLookup.Value;
 
@@ -152,12 +158,21 @@ public class EmailVerificationService : IEmailVerificationService
             return Result.Fail<EmailVerificationOutcome>(new Message(500, "An error occurred while verifying the email address."));
 
         if (!lookup.IsSuccess)
+        {
+            _logger.LogInformation("EmailVerificationService: VerifyByCodeAsync -> user {UserId} has no verification token.", user.Id);
             return Result.Ok(EmailVerificationOutcome.Invalid);
+        }
 
         var token = lookup.Value;
 
         if (token.Attempts >= _maxCodeAttempts)
+        {
+            _logger.LogWarning(
+                "EmailVerificationService: VerifyByCodeAsync -> user {UserId} has used all {MaxCodeAttempts} code attempts.",
+                user.Id,
+                _maxCodeAttempts);
             return Result.Ok(EmailVerificationOutcome.TooManyAttempts);
+        }
 
         // Fixed-time comparison: the code is short enough that a timing oracle would meaningfully
         // narrow a brute force, and the comparison costs nothing either way.
@@ -165,7 +180,21 @@ public class EmailVerificationService : IEmailVerificationService
         {
             var counted = await _tokenRepository.IncrementAttemptsAsync(token.Id, ctoken);
 
-            if (counted.IsSuccess && counted.Value >= _maxCodeAttempts)
+            if (!counted.IsSuccess)
+            {
+                _logger.LogWarning(
+                    "EmailVerificationService: VerifyByCodeAsync -> wrong code for user {UserId}, and the attempt could not be counted.",
+                    user.Id);
+                return Result.Ok(EmailVerificationOutcome.Invalid);
+            }
+
+            _logger.LogInformation(
+                "EmailVerificationService: VerifyByCodeAsync -> wrong code for user {UserId} (attempt {Attempt} of {MaxCodeAttempts}).",
+                user.Id,
+                counted.Value,
+                _maxCodeAttempts);
+
+            if (counted.Value >= _maxCodeAttempts)
                 return Result.Ok(EmailVerificationOutcome.TooManyAttempts);
 
             return Result.Ok(EmailVerificationOutcome.Invalid);
@@ -221,16 +250,27 @@ public class EmailVerificationService : IEmailVerificationService
         // link, and the human is clicking it now. Answer the human, not the scanner.
         if (token.ConsumedAt is not null)
         {
-            return token.User?.EmailVerifiedAt is not null
-                ? Result.Ok(EmailVerificationOutcome.AlreadyVerified)
-                : Result.Ok(EmailVerificationOutcome.Invalid);
+            if (token.User?.EmailVerifiedAt is not null)
+                return Result.Ok(EmailVerificationOutcome.AlreadyVerified);
+
+            _logger.LogInformation(
+                "EmailVerificationService: token {TokenId} for user {UserId} was retired by a newer one.",
+                token.Id,
+                token.UserId);
+            return Result.Ok(EmailVerificationOutcome.Invalid);
         }
 
         if (token.User?.EmailVerifiedAt is not null)
             return Result.Ok(EmailVerificationOutcome.AlreadyVerified);
 
         if (token.ExpiresAt <= DateTime.UtcNow)
+        {
+            _logger.LogInformation(
+                "EmailVerificationService: token {TokenId} for user {UserId} has expired.",
+                token.Id,
+                token.UserId);
             return Result.Ok(EmailVerificationOutcome.Expired);
+        }
 
         if (token.User is null)
         {
@@ -256,6 +296,11 @@ public class EmailVerificationService : IEmailVerificationService
             _logger.LogError(ex, "EmailVerificationService: failed to enable Keycloak user {subjectId} after verification.", token.User.SubjectId);
             return Result.Fail<EmailVerificationOutcome>(new Message(500, "An error occurred while verifying the email address."));
         }
+
+        _logger.LogInformation(
+            "EmailVerificationService: user {UserId} verified their email address; Keycloak account {SubjectId} enabled.",
+            token.UserId,
+            token.User.SubjectId);
 
         return Result.Ok(EmailVerificationOutcome.Verified);
     }

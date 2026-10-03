@@ -8,6 +8,7 @@
 // The endpoint credentials are read at module load and the "already initialised" flag lives in
 // module scope, so every test loads its own copy of the module through loadTelemetry.
 
+import { Platform } from "react-native";
 import type { LogRecord } from "@/services/logger";
 
 const mockLoggerError = jest.fn();
@@ -23,6 +24,11 @@ jest.mock("@/services/logger", () => ({
   },
   setLogSink: (...args: unknown[]) => mockSetLogSink(...args),
   startLogLifecycle: (...args: unknown[]) => mockStartLogLifecycle(...args),
+}));
+
+jest.mock("expo-constants", () => ({
+  __esModule: true,
+  default: { expoConfig: { version: "2.3.4", ios: { buildNumber: "17" }, android: { versionCode: 17 } } },
 }));
 
 const mockEnableRejectionTracking = jest.fn();
@@ -178,6 +184,32 @@ describe("the log sink", () => {
     expect(entry.level).toBe("error");
     expect(entry.message).toBe("Kunde inte hämta leder");
     expect(entry._timestamp).not.toBe(1);
+  });
+
+  it("stamps every record with the app version, build, platform and OS version", async () => {
+    const fetchMock = mockFetch(true);
+    await installedSink()([record, { ...record, message: "Andra" }]);
+
+    const entries = JSON.parse(fetchMock.mock.calls[0][1].body);
+    for (const entry of entries) {
+      expect(entry).toMatchObject({
+        appVersion: "2.3.4",
+        buildNumber: "17",
+        platform: Platform.OS,
+        osVersion: expect.any(String),
+      });
+    }
+  });
+
+  // The stream is 7-day operational logs: anything that singles out a person or a device does not belong there.
+  it("adds no session, user or device identifier to a record", async () => {
+    const fetchMock = mockFetch(true);
+    await installedSink()([record]);
+
+    const [entry] = JSON.parse(fetchMock.mock.calls[0][1].body);
+    expect(Object.keys(entry).sort()).toEqual(
+      ["_timestamp", "appVersion", "buildNumber", "endpoint", "level", "message", "osVersion", "platform"].sort(),
+    );
   });
 
   it("sends one entry per record", async () => {

@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WebDataContracts.RequestModels.TrailImport;
 using WebDataContracts.ResponseModels.TrailImport;
+using StigviddAPI.Extensions;
 
 namespace StigviddAPI.Controllers;
 
@@ -190,7 +191,7 @@ public class TrailImportController : StigViddController
     [HttpDelete("sessions/{id:int}")]
     public async Task<ActionResult> DeleteSession([FromRoute] int id, CancellationToken ctoken)
     {
-        _logger.LogInformation("DeleteSession: Session {sessionId} deletion requested by {user}.", id, CurrentUser());
+        _logger.LogInformation("DeleteSession: Session {sessionId} deletion requested by {user}.", id, RequestLoggingMiddleware.SubjectId(User) ?? "unknown");
 
         var result = await _trailImport.DeleteSessionAsync(id, ctoken);
 

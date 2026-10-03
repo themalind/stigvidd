@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { getValidAccessToken } from "@/services/keycloak-auth";
+import { describeRequest, logRefused, logUnanswered } from "./mutator";
 
 // The generated orval client + `customFetch` mutator assume JSON responses, so
 // export (binary zip) and import (raw file upload) use raw fetch here. Auth
@@ -16,11 +17,21 @@ async function authHeaders(): Promise<Record<string, string>> {
 
 /** Downloads a full migration archive and saves it to the user's disk. */
 export async function exportData(): Promise<void> {
-  const response = await fetch(`${apiBase()}/api/v1/admin/export`, {
-    headers: await authHeaders(),
-  });
+  const path = "/api/v1/admin/export";
+  const request = describeRequest(path, "GET");
+  const headers = await authHeaders();
+
+  let response: Response;
+  try {
+    response = await fetch(`${apiBase()}${path}`, { headers });
+  } catch (error) {
+    logUnanswered(request, error);
+    throw error;
+  }
   if (!response.ok) {
-    throw new Error(`Export failed (HTTP ${response.status})`);
+    const message = `Export failed (HTTP ${response.status})`;
+    logRefused(request, response.status, message);
+    throw new Error(message);
   }
 
   const blob = await response.blob();
@@ -39,11 +50,17 @@ export async function exportData(): Promise<void> {
 
 /** Uploads a migration archive to REPLACE this host's data. Returns the server message. */
 export async function importData(file: File): Promise<string> {
-  const response = await fetch(`${apiBase()}/api/v1/admin/import`, {
-    method: "POST",
-    headers: { "Content-Type": "application/zip", ...(await authHeaders()) },
-    body: file,
-  });
+  const path = "/api/v1/admin/import";
+  const request = describeRequest(path, "POST");
+  const headers = { "Content-Type": "application/zip", ...(await authHeaders()) };
+
+  let response: Response;
+  try {
+    response = await fetch(`${apiBase()}${path}`, { method: "POST", headers, body: file });
+  } catch (error) {
+    logUnanswered(request, error);
+    throw error;
+  }
 
   const text = await response.text();
   let message = text;
@@ -54,7 +71,9 @@ export async function importData(file: File): Promise<string> {
   }
 
   if (!response.ok) {
-    throw new Error(message || `Import failed (HTTP ${response.status})`);
+    const failure = message || `Import failed (HTTP ${response.status})`;
+    logRefused(request, response.status, failure);
+    throw new Error(failure);
   }
   return message;
 }

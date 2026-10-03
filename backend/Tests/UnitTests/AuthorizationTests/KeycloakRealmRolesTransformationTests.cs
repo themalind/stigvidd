@@ -4,6 +4,7 @@
 using AwesomeAssertions;
 using StigviddAPI.Authorization;
 using System.Security.Claims;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace UnitTests.AuthorizationTests;
 
@@ -28,7 +29,7 @@ public class KeycloakRealmRolesTransformationTests
     }
 
     private static async Task<ClaimsPrincipal> TransformAsync(ClaimsPrincipal principal) =>
-        await new KeycloakRealmRolesTransformation().TransformAsync(principal);
+        await new KeycloakRealmRolesTransformation(NullLogger<KeycloakRealmRolesTransformation>.Instance).TransformAsync(principal);
 
     [Fact]
     public async Task TransformAsync_WithRealmRoles_AddsThemAsRoleClaims()

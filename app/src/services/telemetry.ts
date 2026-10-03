@@ -7,6 +7,7 @@
 
 import { logger, setLogSink, startLogLifecycle, LogRecord } from "./logger";
 import { setEventSink } from "./analytics";
+import { getAppInfo } from "./app-info";
 import { loadConsent } from "./consent";
 
 /**
@@ -57,6 +58,8 @@ let initialised = false;
  * so it is worth getting right the first time.
  */
 function createHttpSink(url: string, token: string) {
+  const appInfo = getAppInfo();
+
   return async (records: LogRecord[]) => {
     // React Native's fetch has no default timeout, so a stalled connection — a captive portal,
     // or dead-air TCP on a patchy mobile network — would otherwise hold this request open
@@ -78,6 +81,7 @@ function createHttpSink(url: string, token: string) {
           // this reason, but nothing enforces that at the type level.
           records.map((record) => ({
             ...record.context,
+            ...appInfo,
             _timestamp: new Date(record.timestamp).getTime() * 1000, // OpenObserve wants microseconds
             level: record.level,
             message: record.message,

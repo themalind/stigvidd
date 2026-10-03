@@ -77,6 +77,7 @@ public class AccountController : StigViddController
         }
         catch (KeycloakUserConflictException)
         {
+            _logger.LogInformation("AccountController: Register -> refused, the email address is already registered.");
             return Conflict(EmailTakenCode);
         }
 
@@ -127,6 +128,8 @@ public class AccountController : StigViddController
         // verification mail above, a greeting that cannot be queued is not worth undoing a
         // registration for, so this never fails the request.
         await _welcomeMailService.SendAsync(request.Email, request.NickName, ctoken);
+
+        _logger.LogInformation("AccountController: Register -> created account {SubjectId}.", subjectId);
 
         return Created($"{result.Value.Identifier}", result.Value);
     }

@@ -4,6 +4,7 @@
 using AwesomeAssertions;
 using StigviddAPI.Authorization;
 using System.Security.Claims;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace UnitTests.ControllerTests;
 
@@ -30,7 +31,7 @@ public class KeycloakRealmRolesTransformationTests
     }
 
     private static Task<ClaimsPrincipal> Transform(ClaimsPrincipal principal) =>
-        new KeycloakRealmRolesTransformation().TransformAsync(principal);
+        new KeycloakRealmRolesTransformation(NullLogger<KeycloakRealmRolesTransformation>.Instance).TransformAsync(principal);
 
     [Theory]
     [InlineData("role")]              // what Keycloak.AuthServices configures

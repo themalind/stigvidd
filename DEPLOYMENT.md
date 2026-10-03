@@ -655,6 +655,41 @@ as a per-stream override:
 > [docs/observability.md](docs/observability.md). Treat a warning as a release
 > blocker, not a cleanup task.
 
+**h. Failed sign-ins from Keycloak (optional).** Sign-ins go straight to Keycloak,
+so only Keycloak knows one failed. The `authevents` collector forwards each failure
+to the `keycloak_events` stream — user id, IP, error — and never the typed username
+(see *Failed sign-ins: where to look* in [docs/observability.md](docs/observability.md)).
+
+Create one more account as in **a**, `auth@stigvidd.se`, sign in **as it**, copy its
+Authorization value from *Ingestion* exactly as in **b**, and add to `.env`:
+
+```bash
+COMPOSE_PROFILES=hostmetrics,authevents   # ONE list — append, do not replace
+AUTH_EVENTS_OTLP_TOKEN=<the value copied while signed in as auth@>
+KEYCLOAK_LOG_HANDLERS=console,syslog
+```
+
+Start the collector, recreate Keycloak, then switch the realm's event listener on.
+Order does not matter: Keycloak sends to the collector's fixed address on the
+`authlog` network and reconnects by itself:
+
+```bash
+cd /opt/stigvidd && docker compose up -d authevents
+docker compose up -d keycloak                  # recreated: picks up KEYCLOAK_LOG_HANDLERS
+./scripts/keycloak-events.sh --dry-run
+./scripts/keycloak-events.sh                   # adds jboss-logging, turns "Save events" off
+```
+
+Check it: one failed sign-in with a made-up username should show up in *Logs* →
+`keycloak_events` as `Keycloak LOGIN_ERROR: user_not_found` within seconds.
+
+> A restart or recreate of `authevents` needs **no** Keycloak restart: it keeps the
+> fixed address, and only the ~2 events written into the dead connection are lost.
+> Repeat the check after a host reboot. If `up` ever fails for keycloak with a
+> subnet overlap, set `AUTH_EVENTS_NET_PREFIX` in `.env` (see `.env.example`); the
+> `authlog` network exists on every host, feature on or off. CI does not touch
+> `authevents`.
+
 None of this lives in `.env` or in the database the other services share — it is
 stored in OpenObserve's own SQLite metadata DB inside the `observatory` volume,
 which `migrate.sh` does **not** carry. Redo this step after a host move.

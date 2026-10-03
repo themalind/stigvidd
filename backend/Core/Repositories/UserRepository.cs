@@ -110,7 +110,7 @@ public class UserRepository : IUserRepository
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "UserRepository: GetUserByNickNameAsync -> Something went wrong when fetching user with nickname {NickName}.", nickName);
+            _logger.LogError(ex, "UserRepository: GetUserByNickNameAsync -> Something went wrong when fetching a user by nickname.");
             return RepositoryResult<T>.Error();
         }
     }
@@ -134,7 +134,7 @@ public class UserRepository : IUserRepository
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "UserRepository: FindUsersByNickNameAsync -> Something went wrong when searching for users with nickname {NickName}.", nickName);
+            _logger.LogError(ex, "UserRepository: FindUsersByNickNameAsync -> Something went wrong when searching for users by nickname.");
             return RepositoryResult<IReadOnlyCollection<T>>.Error();
         }
     }
@@ -153,7 +153,7 @@ public class UserRepository : IUserRepository
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "UserRepository: GetUserByNicknameAsync -> Something went wrong when fetching user with nickname {nickname}.", nickname);
+            _logger.LogError(ex, "UserRepository: GetUserByNicknameAsync -> Something went wrong when fetching a user by nickname.");
             return RepositoryResult.Error();
         }
     }
@@ -219,7 +219,7 @@ public class UserRepository : IUserRepository
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "UserRepository: CheckForUsername -> Something went wrong when checking for username {username}.", username);
+            _logger.LogError(ex, "UserRepository: CheckForUsername -> Something went wrong when checking whether a username is taken.");
             return RepositoryResult<bool>.Error();
         }
     }

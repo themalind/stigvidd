@@ -60,6 +60,7 @@ const mockGetItem = SecureStore.getItemAsync as jest.Mock;
 const mockDeleteItem = SecureStore.deleteItemAsync as jest.Mock;
 const mockJwtDecode = jwtDecode as jest.Mock;
 const mockWarn = logger.warn as jest.Mock;
+const mockInfo = logger.info as jest.Mock;
 
 const tokenResponse = {
   access_token: "access-1",
@@ -224,6 +225,96 @@ describe("passwordGrant", () => {
   });
 });
 
+describe("passwordGrant failure logging", () => {
+  const EMAIL = "alice@example.com";
+  const PASSWORD = "Hemligt-Lösen-42";
+
+  function everythingLogged(): string {
+    return JSON.stringify(Object.values(logger).map((method) => (method as jest.Mock).mock.calls));
+  }
+
+  it.each([
+    ["a wrong password", () => mockFetch(401), { outcome: "invalid_credentials" }],
+    [
+      "an unverified account",
+      () => mockFetch(400, { error: "invalid_grant", error_description: "Account disabled" }),
+      { outcome: "account_not_verified" },
+    ],
+    [
+      "an unreachable Keycloak",
+      () => {
+        global.fetch = jest.fn().mockRejectedValue(new TypeError("Network request failed"));
+      },
+      { outcome: "network", errorMessage: "Network request failed" },
+    ],
+    [
+      "a Keycloak outage",
+      () => mockFetch(503),
+      { outcome: "server_error", errorMessage: "Keycloak token request failed: HTTP 503" },
+    ],
+  ])("logs %s as a failed login, naming neither the email nor the password", async (_case, arrange, context) => {
+    arrange();
+
+    await expect(passwordGrant(EMAIL, PASSWORD)).rejects.toBeInstanceOf(Error);
+
+    expect(mockWarn).toHaveBeenCalledWith("Login failed", context);
+    expect(everythingLogged()).not.toContain(EMAIL);
+    expect(everythingLogged()).not.toContain(PASSWORD);
+  });
+
+  it("logs only the name of an unexpected failure, whose message can quote the token response", async () => {
+    mockFetch(200, tokenResponse);
+    mockJwtDecode.mockImplementationOnce(() => {
+      throw new SyntaxError(`Invalid token specified: {"email":"${EMAIL}"}`);
+    });
+
+    await expect(passwordGrant(EMAIL, PASSWORD)).rejects.toBeInstanceOf(SyntaxError);
+
+    expect(mockWarn).toHaveBeenCalledWith("Login failed", { outcome: "unexpected", errorName: "SyntaxError" });
+    expect(everythingLogged()).not.toContain(EMAIL);
+  });
+
+  it("logs a grant that never answers as a timeout", async () => {
+    jest.useFakeTimers();
+    global.fetch = jest.fn().mockReturnValue(new Promise(() => {}));
+
+    const settled = expect(passwordGrant(EMAIL, PASSWORD)).rejects.toThrow("Keycloak request timed out");
+    await jest.advanceTimersByTimeAsync(TOKEN_REQUEST_TIMEOUT_MS);
+    await settled;
+
+    expect(mockWarn).toHaveBeenCalledWith("Login failed", { outcome: "timeout" });
+  });
+
+  // The login screen branches on the error class, so logging must hand it back untouched.
+  it("rethrows the very error it logged", async () => {
+    const failure = new TypeError("Network request failed");
+    global.fetch = jest.fn().mockRejectedValue(failure);
+
+    await expect(passwordGrant(EMAIL, PASSWORD)).rejects.toBe(failure);
+  });
+
+  it("logs nothing when the login succeeds", async () => {
+    mockFetch(200, tokenResponse);
+
+    await passwordGrant(EMAIL, PASSWORD);
+
+    expect(mockWarn).not.toHaveBeenCalled();
+    expect(mockInfo).not.toHaveBeenCalled();
+  });
+
+  // A wrong password while deleting the account is not a failed sign-in, and must not be counted as one.
+  it("logs a failed delete-account re-check apart from a failed login", async () => {
+    mockFetch(401);
+
+    await expect(passwordGrant(EMAIL, PASSWORD, "delete-account")).rejects.toBeInstanceOf(InvalidCredentialsError);
+
+    expect(mockInfo).toHaveBeenCalledWith("Delete-account password check failed", { outcome: "invalid_credentials" });
+    expect(mockWarn).not.toHaveBeenCalledWith("Login failed", expect.anything());
+    expect(everythingLogged()).not.toContain(EMAIL);
+    expect(everythingLogged()).not.toContain(PASSWORD);
+  });
+});
+
 describe("refreshGrant", () => {
   it("persists fresh tokens and returns the user on success", async () => {
     mockFetch(200, tokenResponse);
@@ -295,6 +386,14 @@ describe("refreshGrant", () => {
     });
   });
 
+  // The refresh path has its own line; a dead refresh token is not a failed sign-in.
+  it("does not count a failed refresh as a failed login", async () => {
+    mockFetch(400);
+    await refreshGrant("expired-refresh");
+    expect(mockWarn).toHaveBeenCalledTimes(1);
+    expect(mockWarn).not.toHaveBeenCalledWith("Login failed", expect.anything());
+  });
+
   it("logs a repeated identical failure once", async () => {
     global.fetch = jest.fn().mockRejectedValue(new Error("network down"));
     await refreshGrant("refresh-1");
@@ -339,6 +438,30 @@ describe("logoutKeycloak", () => {
     await logoutKeycloak();
     expect(fetch).not.toHaveBeenCalled();
     expect(mockDeleteItem).toHaveBeenCalledWith(STORAGE_KEYS.accessToken);
+  });
+
+  it("reports a revoke that could not be sent, without the refresh token", async () => {
+    await seedTokens((NOW_S + 300) * 1000);
+    global.fetch = jest.fn().mockRejectedValue(new TypeError("Network request failed"));
+    await logoutKeycloak();
+    expect(mockInfo).toHaveBeenCalledWith("Logout revoke failed", {
+      errorMessage: "TypeError: Network request failed",
+    });
+    expect(JSON.stringify(mockInfo.mock.calls)).not.toContain("refresh-1");
+  });
+
+  it("reports a revoke that Keycloak refused", async () => {
+    await seedTokens((NOW_S + 300) * 1000);
+    mockFetch(400);
+    await logoutKeycloak();
+    expect(mockInfo).toHaveBeenCalledWith("Logout revoke failed", { errorMessage: "Keycloak logout failed: HTTP 400" });
+  });
+
+  it("reports nothing when the revoke succeeds", async () => {
+    await seedTokens((NOW_S + 300) * 1000);
+    mockFetch(204);
+    await logoutKeycloak();
+    expect(mockInfo).not.toHaveBeenCalled();
   });
 
   it("clears tokens even when the revocation request throws", async () => {
@@ -458,6 +581,37 @@ describe("handleUnauthorized", () => {
     now.mockReturnValue(NOW_MS + 1000);
     expect(await handleUnauthorized()).toBe("rejected");
     expect(fetch).toHaveBeenCalledTimes(1);
+  });
+
+  // Every 401 inside the cooldown is rejected, and a screen can fire several at once.
+  it("logs a burst of rejections inside one cooldown once", async () => {
+    const now = jest.spyOn(Date, "now").mockReturnValue(NOW_MS);
+    await seedTokens((NOW_S + 300) * 1000);
+    mockFetch(200, { ...tokenResponse, access_token: "access-2" });
+    await handleUnauthorized();
+
+    now.mockReturnValue(NOW_MS + 1000);
+    await handleUnauthorized();
+    await handleUnauthorized();
+
+    expect(mockWarn).toHaveBeenCalledTimes(1);
+    expect(mockWarn).toHaveBeenCalledWith("Session recovery rejected", { reason: "cooldown" });
+  });
+
+  it("logs the rejection again in a later cooldown", async () => {
+    const now = jest.spyOn(Date, "now").mockReturnValue(NOW_MS);
+    await seedTokens((NOW_S + 300) * 1000);
+    mockFetch(200, { ...tokenResponse, access_token: "access-2" });
+    await handleUnauthorized();
+    now.mockReturnValue(NOW_MS + 1000);
+    await handleUnauthorized();
+
+    now.mockReturnValue(NOW_MS + 31_000);
+    expect(await handleUnauthorized()).toBe("refreshed");
+    now.mockReturnValue(NOW_MS + 32_000);
+    await handleUnauthorized();
+
+    expect(mockWarn.mock.calls.filter(([message]) => message === "Session recovery rejected")).toHaveLength(2);
   });
 
   it("reports expired without a network call when there is no refresh token", async () => {

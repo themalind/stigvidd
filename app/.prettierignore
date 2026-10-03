@@ -4,3 +4,8 @@ coverage
 
 # Build output:
 dist
+
+# Ruflo local agent state. Git-ignored at the repo root, but Prettier only reads app/'s own
+# ignore files, so without this `format:check` fails on a machine that runs Ruflo.
+.claude-flow/
+.swarm/

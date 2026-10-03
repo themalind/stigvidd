@@ -32,4 +32,8 @@ Without it, the geometry-bearing tests fail on extension load rather than on any
 changed. `.github/workflows/ci.yml` installs the Debian package explicitly for this
 reason.
 
+On Debian the module alone is not enough: the system provider also needs the unversioned
+`libsqlite3.so` from `libsqlite3-dev`, and without it the integration suite runs zero tests
+while the summary still reads `failed: 0` — see [[integration-suite-aborts-without-libsqlite3-dev]].
+
 Related: [[dotnet-test-connection-string]], [[srid-4326]].

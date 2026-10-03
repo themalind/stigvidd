@@ -117,6 +117,12 @@ you get approved.
   and `guard-test-cancellation-token.mjs` denies the explicit forms the analyzer cannot see. Carries the
   MSBuild trap: scoping this with a `backend/Tests/Directory.Build.props` would silently drop the parent's
   `WarningsAsErrors=nullable`, because the nearest one wins and walking stops.
+- [On Debian without libsqlite3-dev the integration suite runs zero tests, and dotnet test still prints failed: 0](integration-suite-aborts-without-libsqlite3-dev.md) —
+  `IntegrationTests` dies in `SqliteProvider.Init` with `DllNotFoundException: Unable to load
+  shared library 'sqlite3'`, exit code 134, `Zero tests ran`, because the system provider needs
+  the unversioned `libsqlite3.so` from `libsqlite3-dev`, not just `libsqlite3-0`. The run summary
+  says `failed: 0` over the unit tests only. Includes a no-root workaround: symlink plus
+  `apt-get download` of `libsqlite3-mod-spatialite` and its deps, and `LD_LIBRARY_PATH`.
 - [SpatiaLite in the integration tests is set up differently on Windows and on Linux](spatialite-per-os.md) —
   the csproj already splits on `$(OS)`: Windows uses the bundled `e_sqlite3`, Linux binds
   the **system** libsqlite3 via a `[ModuleInitializer]` because the bundle would shadow the
@@ -818,3 +824,21 @@ src/api/generated` then fails with "the generated API client is stale" for reaso
   poll callback and call it by hand after screen.findByText. Also: a negative queryByText
   assertion after resolving a deferred promise passes vacuously without act(), so race tests
   need act.
+- [Keycloak's syslog handler resolves the collector once — absent at start or restarted later, it gets nothing until Keycloak restarts](keycloak-syslog-resolves-the-collector-once.md) —
+  KC_LOG_SYSLOG_ENDPOINT by name (authevents:5140) is resolved when the JBoss LogManager SyslogHandler
+  is built. Keycloak 26.1 started without the authevents collector logs "LogManager error of
+  type OPEN_FAILURE: Failed to create syslog handler" / UnknownHostException and sends nothing
+  for the life of the container; a collector restart or recreate comes back on a new IP and
+  delivery to keycloak_events stops silently. Sign-in is unaffected, so the only symptom is an
+  empty stream. Fixed by an IP literal: the authlog network (internal, /29 from
+  AUTH_EVENTS_NET_PREFIX, default 10.213.47) pins keycloak at .2 and the collector at .3, so
+  Keycloak reconnects by itself and a collector recreate loses only ~2 events; the receiver
+  binds that address only. Cost: a fixed subnet on every host, keycloak's up fails on overlap.
+- [Keycloak 26.1 syslog puts a BOM before the JSON, the logger name in MSGID, and has no octet-counting option](keycloak-26-1-syslog-wire-format.md) —
+  measured `log-syslog-*` option names for the pinned quay.io/keycloak/keycloak:26.1 (26.1.5):
+  endpoint, protocol, output json, level, type, max-length (2048 default), no counting-framing,
+  so the OTel syslog receiver keeps enable_octet_counting false. MSGID carries the logger
+  org.keycloak.events (attributes msg_id); a UTF-8 BOM before the JSON makes OTTL ParseJSON fail
+  with "invalid character 'ï'"; ParseKeyValue honours Keycloak's escaped quotes in username;
+  userId is the string "null" for user_not_found; unset handler prints a harmless UNAVAILABLE
+  WARNING; jboss-logging listener keys success-level / error-level via KC_SPI_EVENTS_LISTENER_*.

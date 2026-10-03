@@ -23,7 +23,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const loadProfile = useCallback(async () => {
     try {
       setStigviddUser(await getStigviddUser());
-    } catch {
+    } catch (error) {
+      logger.warn("Profile load failed", { errorMessage: String(error) });
       setStigviddUser(null);
     }
   }, []);

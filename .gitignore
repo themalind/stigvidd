@@ -98,3 +98,12 @@ docs/registerforteckning.md
 # committed: the typed client under web/src/api/generated IS, and that is what review
 # and the Jenkins staleness gate look at. Run `dotnet build` to produce it.
 web/openapi.json
+
+# Ruflo / claude-flow local agent state (per machine, regenerated). Unignored, it sits in every
+# `git status` and inflates the SessionStart dirty count — same reason as .codegraph/ above.
+.claude-flow/
+.swarm/
+agentdb.rvf
+agentdb.rvf.lock
+.claude/proven-config.json
+.claude/.proven-config-version

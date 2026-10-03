@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WebDataContracts.RequestModels.MailOutbox;
 using WebDataContracts.ResponseModels.MailOutbox;
+using StigviddAPI.Extensions;
 
 namespace StigviddAPI.Controllers.Admin;
 
@@ -89,7 +90,7 @@ public class AdminMailOutboxController : StigViddController
         [FromRoute] string identifier, CancellationToken ctoken)
     {
         _logger.LogInformation(
-            "Mail body {identifier} read by {user}", identifier, User.Identity?.Name ?? "unknown");
+            "Mail body {identifier} read by {user}", identifier, RequestLoggingMiddleware.SubjectId(User) ?? "unknown");
 
         var result = await _outbox.GetBodyAsync(identifier, ctoken);
 
@@ -110,7 +111,7 @@ public class AdminMailOutboxController : StigViddController
         [FromRoute] string identifier, CancellationToken ctoken)
     {
         _logger.LogInformation(
-            "Mail {identifier} retried by {user}", identifier, User.Identity?.Name ?? "unknown");
+            "Mail {identifier} retried by {user}", identifier, RequestLoggingMiddleware.SubjectId(User) ?? "unknown");
 
         var result = await _outbox.RetryAsync(identifier, ctoken);
 
@@ -131,7 +132,7 @@ public class AdminMailOutboxController : StigViddController
         [FromRoute] string identifier, CancellationToken ctoken)
     {
         _logger.LogInformation(
-            "Mail {identifier} cancelled by {user}", identifier, User.Identity?.Name ?? "unknown");
+            "Mail {identifier} cancelled by {user}", identifier, RequestLoggingMiddleware.SubjectId(User) ?? "unknown");
 
         var result = await _outbox.CancelAsync(identifier, ctoken);
 
@@ -153,7 +154,7 @@ public class AdminMailOutboxController : StigViddController
         _logger.LogWarning(
             "Mail outbox purge of mail older than {days} day(s) requested by {user}",
             request.OlderThanDays,
-            User.Identity?.Name ?? "unknown");
+            RequestLoggingMiddleware.SubjectId(User) ?? "unknown");
 
         var result = await _outbox.PurgeAsync(request, ctoken);
 

@@ -22,6 +22,9 @@ vi.mock("@/services/keycloak-auth", () => keycloak);
 const userApi = vi.hoisted(() => ({ getStigviddUser: vi.fn() }));
 vi.mock("@/api/user", () => userApi);
 
+const logger = vi.hoisted(() => ({ debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }));
+vi.mock("@/services/telemetry", () => ({ logger }));
+
 const admin: AuthUser = { id: "user-1", email: "admin@example.test", username: "admin" };
 const profile: StigviddUser = {
   identifier: "abc",
@@ -60,6 +63,7 @@ beforeEach(() => {
   keycloak.passwordGrant.mockResolvedValue(admin);
   keycloak.logoutKeycloak.mockResolvedValue(undefined);
   userApi.getStigviddUser.mockResolvedValue(profile);
+  Object.values(logger).forEach((log) => log.mockClear());
 });
 
 describe("restoring a session on start-up", () => {
@@ -100,6 +104,19 @@ describe("restoring a session on start-up", () => {
 
     await waitFor(() => expect(state()).toBe("signed in as admin"));
     expect(screen.getByTestId("profile")).toHaveTextContent("no profile");
+  });
+
+  it("logs a backend profile that cannot be read", async () => {
+    keycloak.restoreSession.mockResolvedValue(admin);
+    userApi.getStigviddUser.mockRejectedValue(new Error("HTTP error 404"));
+
+    renderAuth();
+
+    await waitFor(() =>
+      expect(logger.warn).toHaveBeenCalledExactlyOnceWith("Profile load failed", {
+        errorMessage: "Error: HTTP error 404",
+      }),
+    );
   });
 });
 

@@ -12,7 +12,7 @@ namespace StigviddAPI.Authorization;
 /// (<c>{"roles":["stigvidd-admin",...]}</c>). This flattens them into role claims
 /// so <c>[Authorize(Roles = "...")]</c> / policies can use them.
 /// </summary>
-public class KeycloakRealmRolesTransformation : IClaimsTransformation
+public class KeycloakRealmRolesTransformation(ILogger<KeycloakRealmRolesTransformation> logger) : IClaimsTransformation
 {
     public Task<ClaimsPrincipal> TransformAsync(ClaimsPrincipal principal)
     {
@@ -45,6 +45,9 @@ public class KeycloakRealmRolesTransformation : IClaimsTransformation
         catch (JsonException)
         {
             // Malformed claim — leave the principal unchanged.
+            logger.LogWarning(
+                "KeycloakRealmRolesTransformation: the realm_access claim for subject {SubjectId} is not valid JSON; no realm roles were applied.",
+                principal.FindFirst(ClaimTypes.NameIdentifier)?.Value);
         }
 
         return Task.FromResult(principal);

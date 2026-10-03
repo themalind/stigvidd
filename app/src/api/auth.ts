@@ -9,6 +9,7 @@ import i18n from "@/i18n";
 import { RegisterData, UpdateUserResult } from "@/data/types";
 import { apiFetch, BASE_URL } from "./api-config";
 import { ApiError } from "./api-error";
+import { logger } from "@/services/logger";
 
 /** Reads the conflict code from a 409 body; an unrecognised body is a generic conflict. */
 async function readConflictCode(response: Response): Promise<string> {
@@ -27,22 +28,30 @@ async function readConflictCode(response: Response): Promise<string> {
  * A 409 throws ApiError carrying the code for the field that collided.
  */
 export async function registerAccount(data: RegisterData): Promise<void> {
-  const response = await apiFetch(`${BASE_URL}/account/register`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      email: data.email,
-      nickName: data.nickName,
-      password: data.password,
-    }),
-  });
+  try {
+    const response = await apiFetch(`${BASE_URL}/account/register`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: data.email,
+        nickName: data.nickName,
+        password: data.password,
+      }),
+    });
 
-  if (response.status === 409) {
-    throw new ApiError(await readConflictCode(response), 409);
-  }
+    if (response.status === 409) {
+      throw new ApiError(await readConflictCode(response), 409);
+    }
 
-  if (!response.ok) {
-    throw new ApiError(`HTTP error ${response.status}`, response.status);
+    if (!response.ok) {
+      throw new ApiError(`HTTP error ${response.status}`, response.status);
+    }
+  } catch (error) {
+    logger.error("Register account failed", {
+      endpoint: "POST /account/register",
+      errorMessage: String(error),
+    });
+    throw error;
   }
 }
 
@@ -54,17 +63,25 @@ export async function registerAccount(data: RegisterData): Promise<void> {
  * "too-many-attempts" — so the screen can say which of the three happened.
  */
 export async function verifyEmailCode(email: string, code: string): Promise<void> {
-  const response = await apiFetch(`${BASE_URL}/account/verify-email`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, code }),
-  });
+  try {
+    const response = await apiFetch(`${BASE_URL}/account/verify-email`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, code }),
+    });
 
-  if (response.ok) {
-    return;
+    if (response.ok) {
+      return;
+    }
+
+    throw new ApiError(await readVerificationCode(response), response.status);
+  } catch (error) {
+    logger.error("Verify email code failed", {
+      endpoint: "POST /account/verify-email",
+      errorMessage: String(error),
+    });
+    throw error;
   }
-
-  throw new ApiError(await readVerificationCode(response), response.status);
 }
 
 /** Reads the verification failure code from the body; an unrecognised body is a generic failure. */
@@ -84,14 +101,22 @@ async function readVerificationCode(response: Response): Promise<string> {
  * so this resolves unless the network or server fails.
  */
 export async function resendVerification(email: string): Promise<void> {
-  const response = await apiFetch(`${BASE_URL}/account/resend-verification`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email }),
-  });
+  try {
+    const response = await apiFetch(`${BASE_URL}/account/resend-verification`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    });
 
-  if (!response.ok) {
-    throw new ApiError(`HTTP error ${response.status}`, response.status);
+    if (!response.ok) {
+      throw new ApiError(`HTTP error ${response.status}`, response.status);
+    }
+  } catch (error) {
+    logger.error("Resend verification failed", {
+      endpoint: "POST /account/resend-verification",
+      errorMessage: String(error),
+    });
+    throw error;
   }
 }
 
@@ -114,6 +139,10 @@ export async function userPasswordReset(email: string): Promise<UpdateUserResult
 
     return { success: true, error: null };
   } catch (error) {
+    logger.error("Password reset request failed", {
+      endpoint: "POST /account/forgot-password",
+      errorMessage: String(error),
+    });
     return {
       success: false,
       error: {

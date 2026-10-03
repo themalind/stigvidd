@@ -6,6 +6,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const getValidAccessToken = vi.hoisted(() => vi.fn<() => Promise<string | null>>());
 vi.mock("@/services/keycloak-auth", () => ({ getValidAccessToken }));
 
+const logger = vi.hoisted(() => ({ debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }));
+vi.mock("@/services/telemetry", () => ({ logger }));
+
 import { exportData, importData } from "./admin";
 
 function reply(body: string | null, init: { status?: number; headers?: Record<string, string> } = {}): Response {
@@ -159,5 +162,57 @@ describe("importData", () => {
     vi.mocked(fetch).mockResolvedValue(reply('{"message":"Restore aborted halfway."}', { status: 500 }));
 
     await expect(importData(archive())).rejects.toThrow("Restore aborted halfway.");
+  });
+});
+
+describe("logging a failed transfer", () => {
+  beforeEach(() => {
+    Object.values(logger).forEach((log) => log.mockClear());
+    getValidAccessToken.mockResolvedValue("a-token");
+  });
+
+  it("logs a failed export as an error", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(reply("nope", { status: 502 })));
+
+    await expect(exportData()).rejects.toThrowError(/^Export failed \(HTTP 502\)$/);
+
+    expect(logger.error).toHaveBeenCalledExactlyOnceWith("API request failed", {
+      method: "GET",
+      endpoint: "/api/v1/admin/export",
+      status: 502,
+      errorMessage: "Export failed (HTTP 502)",
+    });
+  });
+
+  it("logs a refused import as a warning, with the server's reason", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(reply('{"message":"Archive was produced by a newer version."}', { status: 400 })),
+    );
+
+    await expect(importData(new File(["zip-bytes"], "host.zip"))).rejects.toThrowError(
+      /^Archive was produced by a newer version\.$/,
+    );
+
+    expect(logger.warn).toHaveBeenCalledExactlyOnceWith("API request failed", {
+      method: "POST",
+      endpoint: "/api/v1/admin/import",
+      status: 400,
+      errorMessage: "Archive was produced by a newer version.",
+    });
+    expect(JSON.stringify(logger.warn.mock.calls)).not.toContain("a-token");
+  });
+
+  it("logs an export that got no answer, then rethrows the very same error", async () => {
+    const offline = new TypeError("Failed to fetch");
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(offline));
+
+    await expect(exportData()).rejects.toBe(offline);
+
+    expect(logger.error).toHaveBeenCalledExactlyOnceWith("API request failed", {
+      method: "GET",
+      endpoint: "/api/v1/admin/export",
+      errorMessage: "TypeError: Failed to fetch",
+    });
   });
 });
