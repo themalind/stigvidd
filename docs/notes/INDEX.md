@@ -842,3 +842,10 @@ src/api/generated` then fails with "the generated API client is stale" for reaso
   with "invalid character 'ï'"; ParseKeyValue honours Keycloak's escaped quotes in username;
   userId is the string "null" for user_not_found; unset handler prints a harmless UNAVAILABLE
   WARNING; jboss-logging listener keys success-level / error-level via KC_SPI_EVENTS_LISTENER_*.
+- [The @stigvidd.se catch-all also takes real mailboxes' mail unless each has an alias to itself](mail-catch-all-swallows-real-mailboxes.md) —
+  docker-mailserver (`mailserver` in docker-compose.yml) has a catch-all alias `@stigvidd.se
+  info@stigvidd.se` in the host's git-ignored `mail-config/postfix-virtual.cf`. Postfix applies
+  `virtual_alias_maps` before mailbox delivery, so a new mailbox added with `setup email add`
+  quietly sends its mail to info@ unless you also run `setup alias add X X` (a self-alias, as
+  `no-reply@` has). Shows in `setup debug show-mail-logs` as `to=<info@…>, orig_to=<X>`.
+  DEPLOYMENT.md Part 1 step 6; also affects SPOOF_PROTECTION sender ownership.
