@@ -24,7 +24,7 @@
       }
     },
     "android": {
-      "versionCode": 7,
+      "versionCode": 8,
       "softwareKeyboardLayoutMode": "pan",
       "adaptiveIcon": {
         "backgroundColor": "#68AE82",
