@@ -15,7 +15,7 @@
       "url": "https://u.expo.dev/f436d9c7-ff9c-4a60-b51f-1aefd5672205"
     },
     "ios": {
-      "supportsTablet": true,
+      "supportsTablet": false,
       "bundleIdentifier": "com.stigvidd.app",
       "buildNumber": "5",
       "infoPlist": {
