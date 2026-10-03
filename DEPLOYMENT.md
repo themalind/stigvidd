@@ -419,6 +419,14 @@ docker compose exec mailserver setup email add info@stigvidd.se
 docker compose exec mailserver setup alias add postmaster@stigvidd.se info@stigvidd.se
 docker compose exec mailserver setup alias add abuse@stigvidd.se      info@stigvidd.se
 
+# Catch-all: mail to any address without a mailbox goes to info@. Postfix applies
+# it BEFORE mailbox delivery, so it would also take every real mailbox's mail —
+# each mailbox other than info@ needs an alias to itself, added before the
+# catch-all. That includes any mailbox created later: without the self-alias its
+# mail silently lands in info@. See docs/notes/mail-catch-all-swallows-real-mailboxes.md.
+docker compose exec mailserver setup alias add no-reply@stigvidd.se no-reply@stigvidd.se
+docker compose exec mailserver setup alias add @stigvidd.se         info@stigvidd.se
+
 # DKIM key. Defaults to RSA-2048 with selector `mail`, and prints the TXT
 # record to publish as mail._domainkey.stigvidd.se. It restarts Rspamd itself.
 docker compose exec mailserver setup config dkim domain stigvidd.se

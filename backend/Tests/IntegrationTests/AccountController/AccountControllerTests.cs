@@ -55,29 +55,50 @@ public class AccountControllerTests : IClassFixture<StigViddWebApplicationFactor
             .Setup(k => k.ActivateVerifiedUserAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
-        SeedVerificationTemplate();
+        SeedMailTemplates();
     }
 
-    // Registration now sends mail, and the production template arrives via the migration's
-    // InsertData -- which no test applies, because the suite builds its schema with
-    // EnsureCreated. Without this every register would fail on an unknown template key.
-    private void SeedVerificationTemplate()
+    // Registration and verification send mail, and the production templates arrive via the
+    // migrations' InsertData -- which no test applies, because the suite builds its schema with
+    // EnsureCreated. Without verify-email every register would fail on an unknown template key.
+    // Without welcome its enqueue fails quietly (it is best effort by design), so every
+    // assertion about where the welcome mail is or is not sent would pass without meaning it.
+    // See docs/notes/best-effort-mail-is-silently-absent-in-integration-tests.md.
+    private void SeedMailTemplates()
     {
         using var db = Db();
 
-        if (db.MailTemplates.Any(t => t.Key == "verify-email" && t.Language == "sv"))
-            return;
-
-        db.MailTemplates.Add(new MailTemplate
+        if (!db.MailTemplates.Any(t => t.Key == "verify-email" && t.Language == "sv"))
         {
-            Key = "verify-email",
-            Language = "sv",
-            Subject = "Bekräfta din e-postadress hos Stigvidd",
-            BodyHtml = "<p>Hej {{NickName}},</p><p>{{VerificationUrl}}</p><p>{{VerificationCode}}</p>",
-            BodyText = "Hej {{NickName}},\n{{VerificationUrl}}\n{{VerificationCode}}",
-        });
+            db.MailTemplates.Add(new MailTemplate
+            {
+                Key = "verify-email",
+                Language = "sv",
+                Subject = "Bekräfta din e-postadress hos Stigvidd",
+                BodyHtml = "<p>Hej {{NickName}},</p><p>{{VerificationUrl}}</p><p>{{VerificationCode}}</p>",
+                BodyText = "Hej {{NickName}},\n{{VerificationUrl}}\n{{VerificationCode}}",
+            });
+        }
+
+        if (!db.MailTemplates.Any(t => t.Key == "welcome" && t.Language == "sv"))
+        {
+            db.MailTemplates.Add(new MailTemplate
+            {
+                Key = "welcome",
+                Language = "sv",
+                Subject = "Välkommen till Stigvidd, {{NickName}}!",
+                BodyHtml = "<p>Hej {{NickName}},</p>",
+                BodyText = "Hej {{NickName}},",
+            });
+        }
 
         db.SaveChanges();
+    }
+
+    private int WelcomeMailsTo(string email)
+    {
+        using var db = Db();
+        return db.OutboxEmails.Count(e => e.ToAddress == email && e.TemplateKey == "welcome");
     }
 
     private StigViddDbContext Db() =>
@@ -280,6 +301,59 @@ public class AccountControllerTests : IClassFixture<StigViddWebApplicationFactor
         // login is the Keycloak user being disabled, which KeycloakAdminRepositoryTests covers.
         using var db = Db();
         db.Users.Single(u => u.Email == "unverified@test.local").EmailVerifiedAt.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task Register_WhenValid_DoesNotQueueTheWelcomeMail()
+    {
+        // Arrange: the account cannot log in yet, so there is nothing to welcome anybody to.
+        var client = _factory.CreateClient();
+
+        // Act
+        await RegisterAndReadChallengeAsync(client, "notyet@test.local", "NotYet");
+
+        // Assert
+        WelcomeMailsTo("notyet@test.local").Should().Be(0);
+    }
+
+    [Fact]
+    public async Task VerifyEmailByLink_QueuesTheWelcomeMailOnce()
+    {
+        // Arrange
+        var client = _factory.CreateClient();
+        var challenge = await RegisterAndReadChallengeAsync(client, "welcomelink@test.local", "WelcomeLink");
+        var url = $"{VerifyEmailUrl}?token={Uri.EscapeDataString(challenge.Token)}";
+
+        // Without this the 1 below would also be met by a welcome sent at registration.
+        WelcomeMailsTo("welcomelink@test.local").Should().Be(0);
+
+        // Act: the second GET is the human clicking after a mail scanner already followed it.
+        var first = await client.GetAsync(url, TestContext.Current.CancellationToken);
+        var second = await client.GetAsync(url, TestContext.Current.CancellationToken);
+
+        // Assert
+        first.StatusCode.Should().Be(HttpStatusCode.OK);
+        second.StatusCode.Should().Be(HttpStatusCode.OK);
+        WelcomeMailsTo("welcomelink@test.local").Should().Be(1);
+    }
+
+    [Fact]
+    public async Task VerifyEmailByCode_QueuesTheWelcomeMail()
+    {
+        // Arrange
+        var client = _factory.CreateClient();
+        var challenge = await RegisterAndReadChallengeAsync(client, "welcomecode@test.local", "WelcomeCode");
+        WelcomeMailsTo("welcomecode@test.local").Should().Be(0);
+
+        // Act
+        var response = await client.PostAsJsonAsync(
+            VerifyEmailUrl,
+            new VerifyEmailRequest { Email = "welcomecode@test.local", Code = challenge.Code },
+            TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+        WelcomeMailsTo("welcomecode@test.local").Should().Be(1);
     }
 
     [Fact]

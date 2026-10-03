@@ -63,8 +63,13 @@ register ──> Keycloak user (disabled) + User row + mail via the outbox
             code (POST, six digits) ───────────┴──> ActivateVerifiedUserAsync
                                                     Enabled = true, EmailVerified = true
                                                             │
-                                                    login now works
+                                                    login now works + `welcome` mail queued
 ```
+
+The `welcome` mail is sent here and not at registration, because this is the first moment the
+account can be used. Only a first, successful verification sends it: a link clicked again after a
+scanner fetched it (`AlreadyVerified`) does not, and nor does a verification whose Keycloak enable
+failed. It is best effort and never fails the verification.
 
 `User.EmailVerifiedAt` records the same fact in our database. It is for operators and support —
 it enforces nothing, and the two are written together so they cannot drift.
@@ -222,8 +227,8 @@ same reason: `useAuth()` runs in `RootLayout`, which sits _above_ the
 | Action            | Flow                                                                                                                                                                                                                                     |
 | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **login**         | `passwordGrant(email, pw)` → persist tokens → `setUser`                                                                                                                                                                                  |
-| **register**      | Backend provisions a **disabled** Keycloak user + StigVidd DB record (`/account/register`) and mails a verification link and code, followed by a best-effort `welcome` mail that nothing depends on. **No auto-login** — the account cannot log in yet — so the screen routes to the verification step carrying the address. |
-| **verify**        | `POST /account/verify-email` with the six-digit code, or the browser opening `GET /account/verify-email?token=…` from the mail. Either enables the Keycloak user; the screen then routes to login. `POST /account/resend-verification` asks for another mail. |
+| **register**      | Backend provisions a **disabled** Keycloak user + StigVidd DB record (`/account/register`) and mails a verification link and code. **No auto-login** — the account cannot log in yet — so the screen routes to the verification step carrying the address. |
+| **verify**        | `POST /account/verify-email` with the six-digit code, or the browser opening `GET /account/verify-email?token=…` from the mail. Either enables the Keycloak user and queues the best-effort `welcome` mail; the screen then routes to login. `POST /account/resend-verification` asks for another mail. |
 | **logout**        | Unregister push token (best-effort) → `logoutKeycloak()` (revoke at Keycloak + clear tokens) → `setUser(null)` → `queryClient.clear()`                                                                                                   |
 | **deleteAccount** | Re-verify identity via `passwordGrant` (throws on wrong pw) → backend deletes DB + Keycloak user → `logout()`                                                                                                                            |
 
