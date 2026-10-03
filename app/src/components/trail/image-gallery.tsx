@@ -8,8 +8,9 @@
 import ExampleImageOverlay from "@/components/example-image-overlay";
 import { BORDER_RADIUS } from "@/constants/constants";
 import { TrailImage } from "@/data/types";
+import { useIsOnline } from "@/hooks/useIsOnline";
 import { Image } from "expo-image";
-import { useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import { useTheme } from "react-native-paper";
@@ -25,10 +26,46 @@ export default function ImageGallery({ images }: GalleryProps) {
   const theme = useTheme();
   const ITEM_WIDTH = 80;
   const GAP = 15;
+  const isOnline = useIsOnline();
+
+  // expo-image never retries a failed load, so a failed URL is remounted under a new key. keep-comment: hidden library behaviour
+  const [failed, setFailed] = useState<string[]>([]);
+  const [attempts, setAttempts] = useState<Record<string, number>>({});
+
+  const markFailed = useCallback((url: string) => {
+    setFailed((prev) => (prev.includes(url) ? prev : [...prev, url]));
+  }, []);
+
+  const retryFailed = useCallback(() => {
+    if (failed.length === 0) return;
+    setAttempts((prev) => {
+      const next = { ...prev };
+      for (const url of failed) next[url] = (next[url] ?? 0) + 1;
+      return next;
+    });
+    setFailed([]);
+  }, [failed]);
+
+  // Any image that loads proves the connection works again; so does a reconnect. keep-comment: retry trigger
+  const handleLoad = useCallback(
+    (url: string) => {
+      if (!failed.includes(url)) retryFailed();
+    },
+    [failed, retryFailed],
+  );
+
+  const retryFailedRef = useRef(retryFailed);
+  retryFailedRef.current = retryFailed;
+  useEffect(() => {
+    if (isOnline) retryFailedRef.current();
+  }, [isOnline]);
+
+  const keyFor = (url: string) => `${url}#${attempts[url] ?? 0}`;
 
   const handleImagePress = (image: TrailImage, index: number) => {
     setSelectedImage(image);
     setCurrentIndex(index);
+    retryFailed();
 
     // Scrolla till den valda bilden
     scrollViewRef.current?.scrollTo({
@@ -40,7 +77,17 @@ export default function ImageGallery({ images }: GalleryProps) {
   return (
     <View style={s.container}>
       <View style={s.focusImageConatiner}>
-        {selectedImage && <Image source={selectedImage.imageUrl} style={s.focusImage} contentFit="cover" />}
+        {selectedImage && (
+          <Image
+            key={keyFor(selectedImage.imageUrl)}
+            testID="gallery-focus-image"
+            source={selectedImage.imageUrl}
+            style={s.focusImage}
+            contentFit="cover"
+            onLoad={() => handleLoad(selectedImage.imageUrl)}
+            onError={() => markFailed(selectedImage.imageUrl)}
+          />
+        )}
         {selectedImage && <ExampleImageOverlay source={selectedImage.imageUrl} />}
       </View>
       <View style={{ flex: 1 }}>
@@ -56,7 +103,15 @@ export default function ImageGallery({ images }: GalleryProps) {
           {images.map((image, index) => (
             <Pressable key={image.identifier} onPress={() => handleImagePress(image, index)}>
               <View>
-                <Image source={image.imageUrl} style={s.scrollImage} contentFit="cover" />
+                <Image
+                  key={keyFor(image.imageUrl)}
+                  testID={`gallery-thumb-${index}`}
+                  source={image.imageUrl}
+                  style={s.scrollImage}
+                  contentFit="cover"
+                  onLoad={() => handleLoad(image.imageUrl)}
+                  onError={() => markFailed(image.imageUrl)}
+                />
                 <ExampleImageOverlay source={image.imageUrl} />
               </View>
             </Pressable>

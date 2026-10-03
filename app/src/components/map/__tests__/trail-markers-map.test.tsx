@@ -12,7 +12,7 @@ import { flushUntil, settle } from "@/test/flush";
 import { cameraHandles, resetMapHandles, sourceHandle } from "@/test/maplibre";
 import { renderWithProviders } from "@/test/render";
 import type { CameraRef } from "@maplibre/maplibre-react-native";
-import { onlineManager } from "@tanstack/react-query";
+import { notifyManager, onlineManager } from "@tanstack/react-query";
 import { act, fireEvent, screen } from "@testing-library/react-native";
 import { createRef } from "react";
 
@@ -255,6 +255,8 @@ it("keeps a failed fetch quiet while offline", async () => {
 // A failed refetch keeps the markers already shown, so the query stays errored through the
 // reconnect's own refetch; a subscribed online flag would replay the failure right then.
 it("does not replay the offline failure when the connection comes back", async () => {
+  // Synchronous, so the offline failure reaches the screen before the reconnect does. keep-comment: react-query notifies on a timer
+  notifyManager.setScheduler((callback) => callback());
   try {
     mockGetTrailMarkers.mockResolvedValueOnce([]);
     const { store, queryClient } = await show();
@@ -271,6 +273,7 @@ it("does not replay the offline failure when the connection comes back", async (
     expect(mockGetTrailMarkers).toHaveBeenCalledTimes(3);
     expect(store.get(snackbarAtom).visible).toBe(false);
   } finally {
+    notifyManager.setScheduler((callback) => setTimeout(callback, 0));
     onlineManager.setOnline(true);
   }
 });

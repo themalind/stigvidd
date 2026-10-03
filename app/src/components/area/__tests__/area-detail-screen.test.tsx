@@ -11,7 +11,7 @@ import { AppDarkTheme, AppDefaultTheme } from "@/constants/theme";
 import { CityArea, CityAreaTrail, Facility, FacilityType } from "@/data/types";
 import { flushUntil } from "@/test/flush";
 import { renderWithProviders } from "@/test/render";
-import { fireEvent, screen, within } from "@testing-library/react-native";
+import { act, fireEvent, screen, within } from "@testing-library/react-native";
 import { ActivityIndicator, Platform, Text } from "react-native";
 
 const mockGetArea = jest.fn();
@@ -458,4 +458,17 @@ it("colours the section headings and stats for the theme it is drawn in", async 
     color: AppDarkTheme.colors.onBackground,
   });
   expect(stat(/1 leder/)).toHaveStyle({ color: AppDarkTheme.colors.onBackground });
+});
+
+it("keeps the area on screen when a later refetch fails", async () => {
+  const { queryClient } = await show();
+  mockGetArea.mockRejectedValue(new TypeError("Network request failed"));
+  await act(async () => {
+    await queryClient.refetchQueries();
+  });
+  // Gives an error screen every tick it would need to replace the content. keep-comment: react-query notifies on a timer
+  await flushUntil(() => screen.queryByText("Försök igen") ?? screen.queryByText("Något gick fel"));
+
+  expect(screen.getByTestId("area-hero")).toBeTruthy();
+  expect(screen.queryByText("Försök igen")).toBeNull();
 });

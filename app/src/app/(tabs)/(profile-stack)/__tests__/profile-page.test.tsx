@@ -296,3 +296,11 @@ it("keeps the account actions apart, and underlined", () => {
   expect(screen.getByText("Logga ut")).toHaveStyle({ textDecorationLine: "underline" });
   expect(screen.getByText("Avsluta konto")).toHaveStyle({ textDecorationLine: "underline" });
 });
+
+it("keeps the profile on screen when a later refetch fails", () => {
+  mockUserQuery = { data: USER, isLoading: false, isError: true, error: new Error("nätverket") };
+  show();
+
+  expect(screen.getByText("Mina vänner")).toBeTruthy();
+  expect(screen.queryByText("Något gick fel")).toBeNull();
+});

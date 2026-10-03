@@ -7,6 +7,7 @@
 
 import { pendingNotificationsCountAtom } from "@/atoms/friends-atoms";
 import Header from "@/components/header";
+import OfflineBanner from "@/components/offline-banner";
 import { FontAwesome, Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { Tabs, usePathname, useSegments } from "expo-router";
 import { useAtomValue } from "jotai";
@@ -38,6 +39,7 @@ export default function TabsLayout() {
   return (
     <>
       {shouldShowHeader && <Header />}
+      <OfflineBanner clearStatusBar={!shouldShowHeader} />
       <Tabs
         screenOptions={{
           tabBarStyle: {

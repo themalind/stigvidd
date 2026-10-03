@@ -124,7 +124,6 @@ beforeEach(() => {
 
 afterEach(() => {
   jest.restoreAllMocks();
-  onlineManager.setOnline(true);
 });
 
 async function show(theme: AppTheme = AppDefaultTheme) {
@@ -228,11 +227,14 @@ describe("MapScreen — the map and its cover", () => {
 });
 
 describe("MapScreen — offline", () => {
-  it("says nothing while online", async () => {
+  afterEach(() => {
+    onlineManager.setOnline(true);
+  });
+
+  it("shows the map as usual while online", async () => {
     await show();
 
     expect(screen.queryByTestId("map-offline-screen")).toBeNull();
-    expect(screen.queryByTestId("map-offline")).toBeNull();
   });
 
   // The style never loads offline, so the screen says so the way every other tab does.
@@ -264,30 +266,16 @@ describe("MapScreen — offline", () => {
     expect(screen.getByTestId("map-filter-trigger")).toBeOnTheScreen();
   });
 
-  // A map that already loaded keeps working from its cache, so it only gets the small notice.
-  it("leaves a loaded map usable and marks it in the top-left corner", async () => {
+  // A map that already loaded keeps working from its cache; the app banner says it is offline.
+  it("leaves a loaded map usable when the connection drops", async () => {
     await show();
     await mapReady();
 
     await act(async () => onlineManager.setOnline(false));
 
     expect(screen.queryByTestId("map-offline-screen")).toBeNull();
-    expect(screen.getByTestId("map-offline")).toHaveStyle({
-      position: "absolute",
-      top: SCREEN_PADDING,
-      left: SCREEN_PADDING,
-    });
     expect(screen.getByTestId("map-filter-trigger")).toBeOnTheScreen();
-  });
-
-  it("drops the corner notice once the connection is back", async () => {
-    await show();
-    await mapReady();
-    await act(async () => onlineManager.setOnline(false));
-
-    await act(async () => onlineManager.setOnline(true));
-
-    expect(screen.queryByTestId("map-offline")).toBeNull();
+    expect(screen.getByTestId("center-on-user")).toBeOnTheScreen();
   });
 });
 

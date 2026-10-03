@@ -438,3 +438,17 @@ it("swaps the hiker drawing for the theme on screen", async () => {
 
   expect(dark).not.toEqual(light);
 });
+
+it("keeps the trails on screen when a later refetch fails", async () => {
+  const { queryClient } = await show();
+  await flushUntil(() => screen.queryByText("Kvarnstigen"));
+  mockGetAllTrails.mockRejectedValue(new TypeError("Network request failed"));
+  await act(async () => {
+    await queryClient.refetchQueries();
+  });
+  // Gives an error screen every tick it would need to replace the content. keep-comment: react-query notifies on a timer
+  await flushUntil(() => screen.queryByText("Försök igen") ?? screen.queryByText("Något gick fel"));
+
+  expect(screen.getByText("Kvarnstigen")).toBeTruthy();
+  expect(screen.queryByText("Försök igen")).toBeNull();
+});

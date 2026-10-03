@@ -10,7 +10,7 @@ import { AppDarkTheme, AppDefaultTheme } from "@/constants/theme";
 import { PagedReviewResponse, Review, Trail } from "@/data/types";
 import { flushUntil, settle } from "@/test/flush";
 import { renderWithProviders } from "@/test/render";
-import { fireEvent, screen } from "@testing-library/react-native";
+import { act, fireEvent, screen } from "@testing-library/react-native";
 import { createRef } from "react";
 import { ActivityIndicator, View } from "react-native";
 
@@ -267,4 +267,18 @@ it("draws the surface in the dark theme's colour too", async () => {
   await show(AppDarkTheme);
 
   expect(screen.getByTestId("reviews-surface")).toHaveStyle({ backgroundColor: AppDarkTheme.colors.surface });
+});
+
+it("keeps the reviews on screen when a later refetch fails", async () => {
+  const { queryClient } = await show();
+  await flushUntil(() => screen.queryByText("Recensioner"));
+  mockGetReviews.mockRejectedValue(new TypeError("Network request failed"));
+  await act(async () => {
+    await queryClient.refetchQueries();
+  });
+  // Gives an error screen every tick it would need to replace the content. keep-comment: react-query notifies on a timer
+  await flushUntil(() => screen.queryByText("Försök igen") ?? screen.queryByText("Något gick fel"));
+
+  expect(screen.getByText("Recensioner")).toBeTruthy();
+  expect(screen.queryByText("Något gick fel")).toBeNull();
 });

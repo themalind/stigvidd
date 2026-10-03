@@ -121,7 +121,8 @@ export default function SharedHikesScreen() {
     return <LoadingIndicator />;
   }
 
-  if (getSharedHikesError) {
+  // A failed refetch keeps the cached data, so the error screen is only for having nothing to show. keep-comment: refetch-error semantics
+  if (getSharedHikesError && !hikes) {
     return <ErrorView error={error} onRetry={refetch} />;
   }
 

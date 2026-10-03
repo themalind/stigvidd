@@ -9,7 +9,7 @@ import { SharedHike } from "@/data/types";
 import { flushUntil, settle } from "@/test/flush";
 import { stubMeasureInWindow } from "@/test/measure";
 import { renderWithProviders } from "@/test/render";
-import { fireEvent, screen } from "@testing-library/react-native";
+import { act, fireEvent, screen } from "@testing-library/react-native";
 import { Platform } from "react-native";
 import SharedHikesScreen from "../shared-hikes";
 
@@ -254,4 +254,18 @@ it("offers a retry when the invitations could not be fetched", async () => {
   fireEvent.press(screen.getByText("Försök igen"));
 
   expect(mockRefetchIncoming).toHaveBeenCalledTimes(1);
+});
+
+it("keeps the shared walks on screen when a later refetch fails", async () => {
+  const { queryClient } = await show();
+  await flushUntil(() => screen.queryByText("Kvällspromenad"));
+  mockGetSharedHikes.mockRejectedValue(new TypeError("Network request failed"));
+  await act(async () => {
+    await queryClient.refetchQueries();
+  });
+  // Gives an error screen every tick it would need to replace the content. keep-comment: react-query notifies on a timer
+  await flushUntil(() => screen.queryByText("Försök igen") ?? screen.queryByText("Något gick fel"));
+
+  expect(screen.getByText("Kvällspromenad")).toBeTruthy();
+  expect(screen.queryByText("Något gick fel")).toBeNull();
 });

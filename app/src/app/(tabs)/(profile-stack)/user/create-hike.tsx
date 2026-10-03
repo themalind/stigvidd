@@ -26,6 +26,15 @@ import { useTranslation } from "react-i18next";
 // "granted" / "denied" — outcome
 type PermissionPhase = "checking" | "disclosure" | "granted" | "denied";
 
+async function readPermissionPhase(): Promise<PermissionPhase> {
+  const { granted } = await Location.getForegroundPermissionsAsync();
+  if (!granted) return "disclosure";
+  // Play requires the disclosure before the background prompt the recording raises on Android. keep-comment: store policy
+  if (Platform.OS !== "android") return "granted";
+  const background = await Location.getBackgroundPermissionsAsync();
+  return background.granted ? "granted" : "disclosure";
+}
+
 export default function CreateHikeScreen() {
   const theme = useTheme();
   const { t } = useTranslation();
@@ -40,8 +49,8 @@ export default function CreateHikeScreen() {
   // dialog. That is what lets the disclosure come first: Play requires it ahead of the
   // prompt, and users who already granted must not be nagged on every visit.
   useEffect(() => {
-    Location.getForegroundPermissionsAsync()
-      .then(({ granted }) => setPhase(granted ? "granted" : "disclosure"))
+    readPermissionPhase()
+      .then(setPhase)
       .catch((error: unknown) => {
         logger.warn("Reading location permission failed", { errorMessage: String(error) });
         setPhase("disclosure");

@@ -8,6 +8,7 @@
 import { pendingNotificationsCountAtom } from "@/atoms/friends-atoms";
 import { AppDarkTheme, AppDefaultTheme } from "@/constants/theme";
 import { renderWithProviders } from "@/test/render";
+import { onlineManager } from "@tanstack/react-query";
 import { screen } from "@testing-library/react-native";
 import type { ReactElement } from "react";
 import TabsLayout from "../_layout";
@@ -102,6 +103,30 @@ it("keeps settings off the tab bar", () => {
 
   expect(tab("(settings)").href).toBeNull();
   expect(tab("(settings)").tabBarIcon).toBeUndefined();
+});
+
+it("puts the offline banner under the header", () => {
+  onlineManager.setOnline(false);
+  try {
+    show();
+
+    expect(screen.getByTestId("offline-banner")).toHaveStyle({ paddingTop: 4 });
+  } finally {
+    onlineManager.setOnline(true);
+  }
+});
+
+it("lets the offline banner clear the status bar where there is no header", () => {
+  mockPathname.mockReturnValue("/settings/login");
+  mockSegments.mockReturnValue(["(tabs)", "(settings)"]);
+  onlineManager.setOnline(false);
+  try {
+    show();
+
+    expect(screen.getByTestId("offline-banner")).toHaveStyle({ paddingTop: 47 + 4 });
+  } finally {
+    onlineManager.setOnline(true);
+  }
 });
 
 it("shows the app header above the tabs", () => {

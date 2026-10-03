@@ -51,7 +51,6 @@ export default function AreaDetailScreen() {
   const {
     data: area,
     isLoading,
-    isError,
     error,
     refetch,
   } = useQuery({
@@ -64,7 +63,8 @@ export default function AreaDetailScreen() {
     return <LoadingIndicator />;
   }
 
-  if (isError || area === undefined) {
+  // A failed refetch keeps the cached data, so the error screen is only for having nothing to show. keep-comment: refetch-error semantics
+  if (area === undefined) {
     return <ErrorView error={error} onRetry={refetch} />;
   }
 

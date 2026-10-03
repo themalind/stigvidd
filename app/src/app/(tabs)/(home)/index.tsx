@@ -10,7 +10,6 @@ import AdventureCard from "@/components/home/adventure-card";
 import GetStartedCard from "@/components/home/get-started-card";
 import HeroBanner from "@/components/home/hero-banner";
 import LatestHikeCard from "@/components/home/latest-hike-card";
-import OfflineNotice from "@/components/offline-notice";
 import LatestHikeSkeleton from "@/components/skeletons/latest-hike-skeleton";
 import PagerCarouselSkeleton from "@/components/skeletons/pager-carousel-skeleton";
 import PagerCarousel from "@/components/trail/pager-carousel";
@@ -63,38 +62,32 @@ export default function HomeScreen() {
       {(latest.kind === "signedOut" || latest.kind === "empty") && (
         <GetStartedCard signedIn={latest.kind === "empty"} />
       )}
-      <View style={[s.section, { backgroundColor: theme.colors.background }]}>
-        <View style={s.sectionHeader}>
-          <Text style={[s.sectionTitle, { color: theme.colors.onBackground }]}>
-            {userLocation ? t("home.popularNearYou") : t("home.popular")}
-          </Text>
-        </View>
-        {query.data ? (
-          <PagerCarousel data={query.data} />
-        ) : !isOnline ? (
-          // Before the error: a retry offline only pauses, and the query refetches on reconnect anyway.
-          <OfflineNotice testID="home-popular-offline" message={t("home.popularOffline")} />
-        ) : query.isError ? (
-          <View testID="home-popular-error" style={[s.errorCard, { backgroundColor: theme.colors.surface }]}>
-            <Text style={[s.errorText, { color: theme.colors.onSurfaceVariant }]}>{t("home.popularError")}</Text>
-            <Button mode="text" onPress={() => void query.refetch()}>
-              {t("common.retry")}
-            </Button>
+      {/* Offline with nothing cached there is nothing to show; the offline banner says why. keep-comment: hidden coupling to the banner */}
+      {(query.data || isOnline) && (
+        <View testID="home-popular" style={[s.section, { backgroundColor: theme.colors.background }]}>
+          <View style={s.sectionHeader}>
+            <Text style={[s.sectionTitle, { color: theme.colors.onBackground }]}>
+              {userLocation ? t("home.popularNearYou") : t("home.popular")}
+            </Text>
           </View>
-        ) : (
-          <PagerCarouselSkeleton />
-        )}
-      </View>
+          {query.data ? (
+            <PagerCarousel data={query.data} />
+          ) : query.isError ? (
+            <View testID="home-popular-error" style={[s.errorCard, { backgroundColor: theme.colors.surface }]}>
+              <Text style={[s.errorText, { color: theme.colors.onSurfaceVariant }]}>{t("home.popularError")}</Text>
+              <Button mode="text" onPress={() => void query.refetch()}>
+                {t("common.retry")}
+              </Button>
+            </View>
+          ) : (
+            <PagerCarouselSkeleton />
+          )}
+        </View>
+      )}
 
       {/* Held for the returning user, who is the one this slot is usually for: a first-time
           user resolves to "empty" and gets the get-started card above the carousel. */}
       {latest.kind === "loading" && <LatestHikeSkeleton />}
-      {latest.kind === "offline" && (
-        <View testID="home-latest-offline" style={s.latestSection}>
-          <Text style={[s.sectionTitle, { color: theme.colors.onBackground }]}>{t("home.latestHike")}</Text>
-          <OfflineNotice message={t("home.latestHikeOffline")} />
-        </View>
-      )}
       {latest.kind === "error" && (
         <View testID="home-latest-error" style={s.latestSection}>
           <Text style={[s.sectionTitle, { color: theme.colors.onBackground }]}>{t("home.latestHike")}</Text>

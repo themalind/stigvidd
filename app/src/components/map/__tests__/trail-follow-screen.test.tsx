@@ -8,7 +8,7 @@
 import TrailFollowScreen from "@/components/map/trail-follow-screen";
 import { flushUntil } from "@/test/flush";
 import { renderWithProviders } from "@/test/render";
-import { screen } from "@testing-library/react-native";
+import { act, screen } from "@testing-library/react-native";
 
 const mockGetCoordinates = jest.fn();
 
@@ -74,6 +74,25 @@ it("draws the route without a message when it loads", async () => {
 
   renderWithProviders(<TrailFollowScreen />);
   await flushUntil(() => view().includes("idle"));
+
+  expect(view()).toBe("2|idle|");
+});
+
+it("keeps the route without a message when a later refetch fails", async () => {
+  mockGetCoordinates.mockResolvedValue({
+    coordinates: JSON.stringify([
+      { latitude: 57.7, longitude: 12.9 },
+      { latitude: 57.71, longitude: 12.91 },
+    ]),
+  });
+  const { queryClient } = renderWithProviders(<TrailFollowScreen />);
+  await flushUntil(() => view() === "2|idle|");
+  mockGetCoordinates.mockRejectedValue(new TypeError("Network request failed"));
+  await act(async () => {
+    await queryClient.refetchQueries();
+  });
+  // Gives an error screen every tick it would need to replace the content. keep-comment: react-query notifies on a timer
+  await flushUntil(() => view().endsWith("kartdata"));
 
   expect(view()).toBe("2|idle|");
 });

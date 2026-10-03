@@ -133,7 +133,8 @@ export default function MyHikesScreen() {
     return <LoadingIndicator />;
   }
 
-  if (isError) {
+  // A failed refetch keeps the cached data, so the error screen is only for having nothing to show. keep-comment: refetch-error semantics
+  if (isError && !hikes) {
     return <ErrorView error={error} onRetry={refetch} />;
   }
 

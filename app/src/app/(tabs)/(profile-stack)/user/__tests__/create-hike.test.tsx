@@ -20,11 +20,13 @@ import { Dialog } from "react-native-paper";
 
 const mockGetPermissions = jest.fn();
 const mockRequestPermissions = jest.fn();
+const mockGetBackgroundPermissions = jest.fn();
 const mockBack = jest.fn();
 const mockCanGoBack = jest.fn();
 
 jest.mock("expo-location", () => ({
   getForegroundPermissionsAsync: () => mockGetPermissions(),
+  getBackgroundPermissionsAsync: () => mockGetBackgroundPermissions(),
   requestForegroundPermissionsAsync: () => mockRequestPermissions(),
   Accuracy: { Balanced: 3 },
 }));
@@ -74,6 +76,7 @@ beforeEach(() => {
   jest.clearAllMocks();
   onAppState = null;
   mockCanGoBack.mockReturnValue(false);
+  mockGetBackgroundPermissions.mockResolvedValue({ granted: true, canAskAgain: false });
   jest.spyOn(AppState, "addEventListener").mockImplementation((_type, listener) => {
     onAppState = listener as (state: AppStateStatus) => void;
     return { remove: mockRemoveListener };
@@ -101,8 +104,8 @@ async function showGranted(atoms = user(), theme: AppTheme = AppDefaultTheme) {
   return rendered;
 }
 
-async function showDisclosure(atoms = user()) {
-  mockGetPermissions.mockResolvedValue({ granted: false, canAskAgain: true });
+async function showDisclosure({ foregroundGranted = false, atoms = user() } = {}) {
+  mockGetPermissions.mockResolvedValue({ granted: foregroundGranted, canAskAgain: true });
   const rendered = renderWithProviders(<CreateHikeScreen />, { initialAtoms: atoms });
   await flushUntil(() => screen.queryByText("Stigvidd behöver din plats"));
   return rendered;
@@ -162,10 +165,64 @@ it("puts the disclosure in the way when the permission is missing", async () => 
 
   expect(screen.getByText("Stigvidd behöver din plats")).toBeTruthy();
   expect(screen.getByText(/spelar Stigvidd in var du befinner dig/)).toBeTruthy();
-  expect(screen.getByText(/appen ligger i bakgrunden/)).toBeTruthy();
+  expect(screen.getByText(/appen är stängd eller inte används/)).toBeTruthy();
   expect(screen.getByText(/delas inte med någon annan/)).toBeTruthy();
   expect(screen.getByText(/medan du aktivt spelar in/)).toBeTruthy();
   expect(screen.queryByTestId("trail-creator")).toBeNull();
+});
+
+describe("on Android", () => {
+  beforeEach(() => {
+    Platform.OS = "android";
+  });
+
+  afterEach(() => {
+    Platform.OS = "ios";
+  });
+
+  it("shows the disclosure when foreground is granted but background is not", async () => {
+    mockGetBackgroundPermissions.mockResolvedValue({ granted: false, canAskAgain: true });
+
+    await showDisclosure({ foregroundGranted: true });
+
+    expect(screen.getByText("Stigvidd behöver din plats")).toBeTruthy();
+    expect(screen.queryByTestId("trail-creator")).toBeNull();
+  });
+
+  it("opens the creator after Fortsätt without a second disclosure", async () => {
+    mockGetBackgroundPermissions.mockResolvedValue({ granted: false, canAskAgain: true });
+    await showDisclosure({ foregroundGranted: true });
+    mockRequestPermissions.mockResolvedValue({ granted: true, canAskAgain: true });
+
+    fireEvent.press(screen.getByText("Fortsätt"));
+    await flushUntil(() => screen.queryByTestId("trail-creator"));
+
+    expect(screen.getByTestId("trail-creator")).toBeTruthy();
+  });
+
+  it("goes straight to the creator when background is granted too", async () => {
+    await showGranted();
+
+    expect(screen.getByTestId("trail-creator")).toBeTruthy();
+    expect(mockGetBackgroundPermissions).toHaveBeenCalled();
+  });
+
+  it("offers the disclosure when the background status cannot be read", async () => {
+    mockGetBackgroundPermissions.mockRejectedValue(new Error("location service unavailable"));
+
+    await showDisclosure({ foregroundGranted: true });
+
+    expect(screen.getByText("Stigvidd behöver din plats")).toBeTruthy();
+  });
+});
+
+it("does not read the background status on iOS", async () => {
+  mockGetBackgroundPermissions.mockResolvedValue({ granted: false, canAskAgain: true });
+
+  await showGranted();
+
+  expect(screen.getByTestId("trail-creator")).toBeTruthy();
+  expect(mockGetBackgroundPermissions).not.toHaveBeenCalled();
 });
 
 // The disclosure takes an explicit choice; a tap outside does not dismiss it.
@@ -229,6 +286,7 @@ it("leaves the screen on Inte nu when there is somewhere to go back to", async (
 // There is no back stack on the tab's first screen, so the dialog cannot close through router.back().
 it("falls back to the denied screen on Inte nu when there is no back stack", async () => {
   mockCanGoBack.mockReturnValue(false);
+  mockGetBackgroundPermissions.mockResolvedValue({ granted: true, canAskAgain: false });
   await showDisclosure();
 
   fireEvent.press(screen.getByText("Inte nu"));

@@ -47,10 +47,8 @@ export default function HikeFollowScreen() {
     [coordinateJson, hikeIdentifier],
   );
 
-  // Either the request failed, or it succeeded with nothing drawable (empty or
-  // unparseable coordinates). Both leave the user on a blank map, so both get the
-  // message rather than silence.
-  const failed = isError || (!isLoading && coordinateJson !== undefined && path.length === 0);
+  // Only when there is nothing to draw: a failed refetch keeps the route already shown. keep-comment: refetch-error semantics
+  const failed = !isLoading && path.length === 0 && (isError || coordinateJson !== undefined);
 
   return (
     <RouteFollowView

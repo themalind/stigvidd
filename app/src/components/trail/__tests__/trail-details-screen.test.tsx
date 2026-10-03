@@ -9,7 +9,7 @@ import TrailDetailsScreen from "@/components/trail/trail-details-screen";
 import { Trail } from "@/data/types";
 import { flushUntil, settle } from "@/test/flush";
 import { renderWithProviders } from "@/test/render";
-import { fireEvent, screen } from "@testing-library/react-native";
+import { act, fireEvent, screen } from "@testing-library/react-native";
 
 const mockGetTrail = jest.fn();
 const mockGetObstacles = jest.fn();
@@ -176,4 +176,17 @@ it("shows the rating row only once reviews have been counted", async () => {
   expect(screen.getByText("Läs recensioner")).toBeTruthy();
   // The count is a sibling string inside the same Text as the label.
   expect(screen.getByText(/(3)/)).toBeTruthy();
+});
+
+it("keeps the trail on screen when a later refetch fails", async () => {
+  const { queryClient } = await show();
+  mockGetTrail.mockRejectedValue(new TypeError("Network request failed"));
+  await act(async () => {
+    await queryClient.refetchQueries();
+  });
+  // Gives an error screen every tick it would need to replace the content. keep-comment: react-query notifies on a timer
+  await flushUntil(() => screen.queryByText("Försök igen") ?? screen.queryByText("Något gick fel"));
+
+  expect(screen.getByText("Kvarnstigen")).toBeTruthy();
+  expect(screen.queryByText("Försök igen")).toBeNull();
 });

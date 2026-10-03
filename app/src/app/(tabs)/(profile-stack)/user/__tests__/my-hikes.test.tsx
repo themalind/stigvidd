@@ -9,7 +9,7 @@ import { Hike } from "@/data/types";
 import { flushUntil, settle } from "@/test/flush";
 import { stubMeasureInWindow } from "@/test/measure";
 import { renderWithProviders } from "@/test/render";
-import { fireEvent, screen } from "@testing-library/react-native";
+import { act, fireEvent, screen } from "@testing-library/react-native";
 import { Platform } from "react-native";
 import MyHikesScreen from "../my-hikes";
 
@@ -172,4 +172,17 @@ it("opens the walk that was tapped", async () => {
   // The detail modal repeats the name and adds what only it shows.
   expect(screen.getAllByText("Morgonrunda").length).toBeGreaterThan(1);
   expect(screen.getByText("Dela")).toBeTruthy();
+});
+
+it("keeps the walks on screen when a later refetch fails", async () => {
+  const { queryClient } = await show();
+  mockGetHikes.mockRejectedValue(new TypeError("Network request failed"));
+  await act(async () => {
+    await queryClient.refetchQueries();
+  });
+  // Gives an error screen every tick it would need to replace the content. keep-comment: react-query notifies on a timer
+  await flushUntil(() => screen.queryByText("Försök igen") ?? screen.queryByText("Något gick fel"));
+
+  expect(screen.getByText("Kvällspromenad")).toBeTruthy();
+  expect(screen.queryByText("Försök igen")).toBeNull();
 });

@@ -51,3 +51,11 @@ it("lets the user retry loading the wishlist after a failure", () => {
   expect(refetch).toHaveBeenCalledTimes(1);
   expect(screen.queryByTestId("collection")).toBeNull();
 });
+
+it("keeps the wishlist on screen when a later refetch fails", () => {
+  mockWishlistQuery = { data: [{}, {}], isLoading: false, isError: true, error: new Error("nätverket") };
+  renderWithProviders(<WishlistScreen />);
+
+  expect(screen.getByTestId("collection")).toHaveTextContent("2");
+  expect(screen.queryByText("Försök igen")).toBeNull();
+});

@@ -66,7 +66,8 @@ export default function TrailReviewsContainer({ trail, surfaceToScrollToRef, onR
     }
   }, [reviews, totalReviewsCount, onReviewsLoaded]);
 
-  if (isError) {
+  // A failed refetch keeps the cached data, so the error screen is only for having nothing to show. keep-comment: refetch-error semantics
+  if (isError && !reviewResponse) {
     return <ErrorView error={error} onRetry={refetch} />;
   }
 

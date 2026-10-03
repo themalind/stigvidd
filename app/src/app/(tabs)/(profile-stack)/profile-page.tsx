@@ -47,7 +47,8 @@ export default function ProfilePageScreen() {
     return <LoadingIndicator />;
   }
 
-  if (isError) {
+  // A failed refetch keeps the cached data, so the error screen is only for having nothing to show. keep-comment: refetch-error semantics
+  if (isError && !user) {
     return <ErrorView error={error} onRetry={refetch} />;
   }
 

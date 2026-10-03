@@ -42,7 +42,8 @@ export default function TrailFollowScreen() {
     [coords, normalizedIdentifier],
   );
 
-  const failed = isError || (!isLoading && coords !== undefined && path.length === 0);
+  // Only when there is nothing to draw: a failed refetch keeps the route already shown. keep-comment: refetch-error semantics
+  const failed = !isLoading && path.length === 0 && (isError || coords !== undefined);
 
   return (
     <RouteFollowView
