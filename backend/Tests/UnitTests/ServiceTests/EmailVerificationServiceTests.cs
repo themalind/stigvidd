@@ -57,13 +57,15 @@ public class EmailVerificationServiceTests
         Mock<IEmailVerificationTokenRepository>? tokens = null,
         Mock<IKeycloakAdminRepository>? keycloak = null,
         Mock<IMailOutboxService>? mail = null,
-        Dictionary<string, string?>? settings = null)
+        Dictionary<string, string?>? settings = null,
+        Mock<IWelcomeMailService>? welcome = null)
     {
         // Only defaulted, never re-setup: a Setup here would silently replace one a test had
         // already put on the mock it passed in, callbacks and all.
         tokens ??= SucceedingTokens();
         keycloak ??= new Mock<IKeycloakAdminRepository>();
         mail ??= SucceedingMail();
+        welcome ??= new Mock<IWelcomeMailService>();
 
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(settings ?? new Dictionary<string, string?>())
@@ -73,6 +75,7 @@ public class EmailVerificationServiceTests
             tokens.Object,
             keycloak.Object,
             mail.Object,
+            welcome.Object,
             configuration,
             NullLogger<EmailVerificationService>.Instance);
     }
@@ -239,18 +242,68 @@ public class EmailVerificationServiceTests
         var (stored, url, _) = await IssueAsync(tokens);
 
         stored.ExpiresAt = DateTime.UtcNow.AddMinutes(-1);
+        var welcome = new Mock<IWelcomeMailService>();
 
         tokens.Setup(t => t.GetByTokenHashAsync(stored.TokenHash, It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<EmailVerificationToken>.Success(stored));
 
         // Act
-        var result = await Build(tokens, keycloak)
+        var result = await Build(tokens, keycloak, welcome: welcome)
             .VerifyByTokenAsync(TokenFromUrl(url), TestContext.Current.CancellationToken);
 
         // Assert
         result.Value.Should().Be(EmailVerificationOutcome.Expired);
         keycloak.Verify(k => k.ActivateVerifiedUserAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
         tokens.Verify(t => t.ConsumeAsync(It.IsAny<int>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()), Times.Never);
+        welcome.Verify(w => w.SendAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task VerifyByTokenAsync_WhenItVerifies_SendsTheWelcomeMail()
+    {
+        // Arrange
+        var tokens = new Mock<IEmailVerificationTokenRepository>();
+        var welcome = new Mock<IWelcomeMailService>();
+        var (stored, url, _) = await IssueAsync(tokens);
+
+        tokens.Setup(t => t.GetByTokenHashAsync(stored.TokenHash, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<EmailVerificationToken>.Success(stored));
+        tokens.Setup(t => t.ConsumeAsync(It.IsAny<int>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult.Success());
+
+        // Act
+        var result = await Build(tokens, welcome: welcome)
+            .VerifyByTokenAsync(TokenFromUrl(url), TestContext.Current.CancellationToken);
+
+        // Assert: the account has just become usable, which is what the greeting says.
+        result.Value.Should().Be(EmailVerificationOutcome.Verified);
+        welcome.Verify(w => w.SendAsync(Email, NickName, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task VerifyByTokenAsync_WhenKeycloakActivationFails_SendsNoWelcomeMail()
+    {
+        // Arrange: verified in our database but still disabled in Keycloak, so the user cannot
+        // log in yet and must not be told they can.
+        var tokens = new Mock<IEmailVerificationTokenRepository>();
+        var keycloak = new Mock<IKeycloakAdminRepository>();
+        var welcome = new Mock<IWelcomeMailService>();
+        var (stored, url, _) = await IssueAsync(tokens);
+
+        tokens.Setup(t => t.GetByTokenHashAsync(stored.TokenHash, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<EmailVerificationToken>.Success(stored));
+        tokens.Setup(t => t.ConsumeAsync(It.IsAny<int>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult.Success());
+        keycloak.Setup(k => k.ActivateVerifiedUserAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new HttpRequestException("Keycloak is down."));
+
+        // Act
+        var result = await Build(tokens, keycloak, welcome: welcome)
+            .VerifyByTokenAsync(TokenFromUrl(url), TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Success.Should().BeFalse();
+        welcome.Verify(w => w.SendAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -272,6 +325,28 @@ public class EmailVerificationServiceTests
 
         // Assert
         result.Value.Should().Be(EmailVerificationOutcome.AlreadyVerified);
+    }
+
+    [Fact]
+    public async Task VerifyByTokenAsync_WhenAlreadyConsumedByAScanner_SendsNoWelcomeMail()
+    {
+        // Arrange: the scanner's fetch was the verification, and it sent the greeting. The
+        // human clicking afterwards must not get a second one.
+        var tokens = new Mock<IEmailVerificationTokenRepository>();
+        var welcome = new Mock<IWelcomeMailService>();
+        var (stored, url, _) = await IssueAsync(tokens);
+
+        stored.ConsumedAt = DateTime.UtcNow.AddSeconds(-5);
+        stored.User = TestUser(verifiedAt: DateTime.UtcNow.AddSeconds(-5));
+
+        tokens.Setup(t => t.GetByTokenHashAsync(stored.TokenHash, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<EmailVerificationToken>.Success(stored));
+
+        // Act
+        await Build(tokens, welcome: welcome).VerifyByTokenAsync(TokenFromUrl(url), TestContext.Current.CancellationToken);
+
+        // Assert
+        welcome.Verify(w => w.SendAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -335,6 +410,29 @@ public class EmailVerificationServiceTests
     }
 
     [Fact]
+    public async Task VerifyByCodeAsync_WhenItVerifies_SendsTheWelcomeMail()
+    {
+        // Arrange
+        var tokens = new Mock<IEmailVerificationTokenRepository>();
+        var welcome = new Mock<IWelcomeMailService>();
+        var (stored, _, code) = await IssueAsync(tokens);
+
+        tokens.Setup(t => t.GetUserByEmailAsync(Email, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<User>.Success(TestUser()));
+        tokens.Setup(t => t.GetLatestForUserAsync(UserId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<EmailVerificationToken>.Success(stored));
+        tokens.Setup(t => t.ConsumeAsync(It.IsAny<int>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult.Success());
+
+        // Act
+        var result = await Build(tokens, welcome: welcome).VerifyByCodeAsync(Email, code, TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Value.Should().Be(EmailVerificationOutcome.Verified);
+        welcome.Verify(w => w.SendAsync(Email, NickName, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
     public async Task VerifyByCodeAsync_WithAWrongCode_CountsAnAttemptAndDoesNotVerify()
     {
         // Arrange
@@ -350,14 +448,16 @@ public class EmailVerificationServiceTests
             .ReturnsAsync(RepositoryResult<int>.Success(1));
 
         var wrong = code == "000000" ? "111111" : "000000";
+        var welcome = new Mock<IWelcomeMailService>();
 
         // Act
-        var result = await Build(tokens, keycloak).VerifyByCodeAsync(Email, wrong, TestContext.Current.CancellationToken);
+        var result = await Build(tokens, keycloak, welcome: welcome).VerifyByCodeAsync(Email, wrong, TestContext.Current.CancellationToken);
 
         // Assert
         result.Value.Should().Be(EmailVerificationOutcome.Invalid);
         tokens.Verify(t => t.IncrementAttemptsAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Once);
         keycloak.Verify(k => k.ActivateVerifiedUserAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+        welcome.Verify(w => w.SendAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]

@@ -849,3 +849,10 @@ src/api/generated` then fails with "the generated API client is stale" for reaso
   quietly sends its mail to info@ unless you also run `setup alias add X X` (a self-alias, as
   `no-reply@` has). Shows in `setup debug show-mail-logs` as `to=<info@…>, orig_to=<X>`.
   DEPLOYMENT.md Part 1 step 6; also affects SPOOF_PROTECTION sender ownership.
+- [A best-effort mail is silently absent in the integration tests, so an assertion that it was not sent passes whatever the code does](best-effort-mail-is-silently-absent-in-integration-tests.md) —
+  Mail templates (welcome, verify-email, reset-password) arrive by migration InsertData, but the
+  IntegrationTests schema is EnsureCreated, so no template exists unless the test seeds one.
+  EnqueueAsync then fails with an unknown key, and a best-effort sender (WelcomeMailService) logs it
+  and swallows it, so no OutboxEmails row is ever written and "not sent" / SingleOrDefault assertions
+  are vacuous. Seed the template; assert 0 before and 1 after; plant the send in the wrong place
+  (prove-it-bites) to see it bite.

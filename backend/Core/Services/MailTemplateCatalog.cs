@@ -23,10 +23,11 @@ public class MailTemplateCatalog : IMailTemplateCatalog
     [
         new MailTemplateDefinition(
             "welcome",
-            "Sent once a registration has succeeded and the verification mail is safely "
-                + "queued. It carries nothing the user has to act on -- the verify-email mail "
-                + "is the one that does -- so it is the one mail here that can fail to send "
-                + "without costing anybody access to their account.",
+            "Sent once the new account has verified its address and been enabled, so it "
+                + "arrives when the user can actually log in. It carries nothing the user has "
+                + "to act on -- the verify-email mail is the one that does -- so it is the one "
+                + "mail here that can fail to send without costing anybody access to their "
+                + "account.",
             [NickName]),
 
         new MailTemplateDefinition(

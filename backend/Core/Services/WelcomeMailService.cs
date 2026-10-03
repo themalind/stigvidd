@@ -25,8 +25,9 @@ public class WelcomeMailService : IWelcomeMailService
     {
         // Deliberately the opposite of the verification mail, which rolls a whole registration
         // back when it cannot be queued. That one is the only thing standing between the user
-        // and an account they can log in to; this one is a courtesy, and deleting somebody's
-        // new account because a greeting did not render would be absurd.
+        // and an account they can log in to; this one is a courtesy, sent after the account is
+        // already enabled, and failing somebody's verification because a greeting did not
+        // render would be absurd.
         try
         {
             var enqueued = await _mailOutboxService.EnqueueAsync(

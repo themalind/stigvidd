@@ -23,6 +23,7 @@ public class EmailVerificationService : IEmailVerificationService
     private readonly IEmailVerificationTokenRepository _tokenRepository;
     private readonly IKeycloakAdminRepository _keycloakAdminRepository;
     private readonly IMailOutboxService _mailOutboxService;
+    private readonly IWelcomeMailService _welcomeMailService;
     private readonly ILogger<EmailVerificationService> _logger;
 
     private readonly int _tokenLifetimeHours;
@@ -34,12 +35,14 @@ public class EmailVerificationService : IEmailVerificationService
         IEmailVerificationTokenRepository tokenRepository,
         IKeycloakAdminRepository keycloakAdminRepository,
         IMailOutboxService mailOutboxService,
+        IWelcomeMailService welcomeMailService,
         IConfiguration configuration,
         ILogger<EmailVerificationService> logger)
     {
         _tokenRepository = tokenRepository;
         _keycloakAdminRepository = keycloakAdminRepository;
         _mailOutboxService = mailOutboxService;
+        _welcomeMailService = welcomeMailService;
         _logger = logger;
 
         _tokenLifetimeHours = ReadInt(configuration, "EmailVerification:TokenLifetimeHours", DefaultTokenLifetimeHours);
@@ -301,6 +304,12 @@ public class EmailVerificationService : IEmailVerificationService
             "EmailVerificationService: user {UserId} verified their email address; Keycloak account {SubjectId} enabled.",
             token.UserId,
             token.User.SubjectId);
+
+        // Here and nowhere earlier: this is the first moment the account can be logged in to,
+        // which is what the greeting tells the user. Only the Verified outcome reaches this
+        // line, so a prefetched link clicked again (AlreadyVerified) never greets twice, and a
+        // failed Keycloak enable above greets nobody. Never fails the verification.
+        await _welcomeMailService.SendAsync(token.User.Email, token.User.NickName, ctoken);
 
         return Result.Ok(EmailVerificationOutcome.Verified);
     }
