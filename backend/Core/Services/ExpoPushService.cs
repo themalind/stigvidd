@@ -138,14 +138,14 @@ public class ExpoPushService : IPushNotificationService
                     {
                         // App was uninstalled or the token was revoked — remove it so future sends skip it.
                         await _userPushTokenRepository.DeleteByTokenAsync(message.To, ctoken);
-                        _logger.LogInformation("ExpoPushService: Removed stale push token {Token}", message.To);
+                        _logger.LogInformation("ExpoPushService: Removed a stale push token for user {UserId}", userResult.Value);
                     }
                     else
                     {
                         // Other errors (InvalidCredentials, MessageTooBig, etc.) don't need token cleanup,
                         // but do need attention — log at warning so they surface without failing the caller.
-                        _logger.LogWarning("ExpoPushService: Push notification failed for token {Token}. Error: {Error} — {Message}",
-                            message.To, ticket.Details?.Error, ticket.Message);
+                        _logger.LogWarning("ExpoPushService: Push notification failed for a device of user {UserId}. Error: {Error} — {Message}",
+                            userResult.Value, ticket.Details?.Error, ticket.Message);
                     }
                 }
             }
@@ -199,7 +199,7 @@ public class ExpoPushService : IPushNotificationService
 
         if (tokensResult.Value == null)
         {
-            _logger.LogWarning("ExpoPushService: UnregisterTokenAsync -> Attempted to unregister token {Token} for user {UserId}, but it was not found.", expoToken, userIdResult.Value);
+            _logger.LogWarning("ExpoPushService: UnregisterTokenAsync -> Attempted to unregister a push token for user {UserId}, but it was not found.", userIdResult.Value);
             return Result.Fail(new Message(404, "Push token not found for user."));
         };
 

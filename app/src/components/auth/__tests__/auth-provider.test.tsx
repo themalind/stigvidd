@@ -189,7 +189,7 @@ it("re-checks the password against the signed-in account before deleting", async
 
   await attempt(() => auth.deleteAccount("Hemligt123!"));
 
-  expect(grant).toHaveBeenCalledWith(USER.email, "Hemligt123!");
+  expect(grant).toHaveBeenCalledWith(USER.email, "Hemligt123!", "delete-account");
   expect(deleteUser).toHaveBeenCalled();
 });
 

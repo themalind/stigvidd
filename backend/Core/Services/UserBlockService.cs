@@ -4,6 +4,7 @@
 using Core.Interfaces.Repositories;
 using Core.Interfaces.Services;
 using WebDataContracts.ResponseModels.Friend;
+using Microsoft.Extensions.Logging;
 
 namespace Core.Services;
 
@@ -11,13 +12,16 @@ public class UserBlockService : IUserBlockService
 {
     private readonly IUserBlockRepository _userBlockRepository;
     private readonly IUserRepository _userRepository;
+    private readonly ILogger<UserBlockService> _logger;
 
     public UserBlockService(
         IUserBlockRepository userBlockRepository,
-        IUserRepository userRepository)
+        IUserRepository userRepository,
+        ILogger<UserBlockService> logger)
     {
         _userBlockRepository = userBlockRepository;
         _userRepository = userRepository;
+        _logger = logger;
     }
 
     public async Task<Result> BlockUserAsync(string currentUserIdentifier, string targetIdentifier, CancellationToken ctoken)
@@ -84,11 +88,22 @@ public class UserBlockService : IUserBlockService
         var viewerIdResult = await _userRepository.GetUserIdByIdentifierAsync(viewerIdentifier, ctoken);
 
         if (!viewerIdResult.IsSuccess)
+        {
+            if (viewerIdResult.Status == RepositoryResultStatus.Error)
+                _logger.LogWarning("UserBlockService: GetHiddenUserIdsForReadAsync -> could not resolve viewer {UserIdentifier}; hiding no one.", viewerIdentifier);
+
             return [];
+        }
 
         var hiddenResult = await _userBlockRepository.GetHiddenUserIdsAsync(viewerIdResult.Value, ctoken);
 
-        return hiddenResult.IsSuccess ? hiddenResult.Value ?? [] : [];
+        if (!hiddenResult.IsSuccess)
+        {
+            _logger.LogWarning("UserBlockService: GetHiddenUserIdsForReadAsync -> could not read blocks for user {UserId}; hiding no one.", viewerIdResult.Value);
+            return [];
+        }
+
+        return hiddenResult.Value ?? [];
     }
 
     private async Task<Result<(int CurrentUserId, int TargetUserId)>> ResolveBothAsync(

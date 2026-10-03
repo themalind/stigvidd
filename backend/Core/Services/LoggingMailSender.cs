@@ -1,6 +1,7 @@
 // SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+using Core.Logging;
 using Core.Interfaces.Services;
 using Infrastructure.Data.Entities;
 using Microsoft.Extensions.Logging;
@@ -25,8 +26,8 @@ public class LoggingMailSender : IMailSender
     public Task<MailSendResult> SendAsync(OutboxEmail email, CancellationToken ctoken)
     {
         _logger.LogWarning(
-            "LoggingMailSender: Smtp:Host is not configured, so nothing was sent. Mail {identifier} to {to}, subject {subject}.",
-            email.Identifier, email.ToAddress, email.Subject);
+            "LoggingMailSender: Smtp:Host is not configured, so nothing was sent. Mail {identifier} to {to}.",
+            email.Identifier, LogRedaction.MaskEmail(email.ToAddress));
 
         return Task.FromResult(MailSendResult.Ok());
     }

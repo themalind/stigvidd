@@ -5,6 +5,7 @@ using Core.Interfaces.Repositories;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Logging;
+using StigviddAPI.Extensions;
 using System.Security.Claims;
 
 namespace StigviddAPI.Authorization;
@@ -60,6 +61,15 @@ public class BannedUserWriteFilter : IAsyncActionFilter
             return false;
         }
 
-        return result.IsSuccess && result.Value;
+        if (!result.IsSuccess || !result.Value)
+            return false;
+
+        _logger.LogInformation(
+            "BannedUserWriteFilter: refused {Method} {Endpoint} for banned subject {SubjectId}.",
+            context.HttpContext.Request.Method,
+            RequestLoggingMiddleware.RouteTemplate(context.HttpContext) ?? "unmatched",
+            subjectId);
+
+        return true;
     }
 }

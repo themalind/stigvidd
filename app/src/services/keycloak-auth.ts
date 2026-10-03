@@ -42,6 +42,7 @@ const EXPIRY_SKEW_SECONDS = 30;
 // RN's Android fetch (OkHttp) has no timeout; see docs/notes/android-fetch-no-timeout-stale-token-401.md. keep-comment: hidden platform constraint
 export const TOKEN_REQUEST_TIMEOUT_MS = 15_000;
 const TIMEOUT_MESSAGE = "Keycloak request timed out";
+const HTTP_FAILURE_MESSAGE = "Keycloak token request failed: HTTP";
 
 const UNAUTHORIZED_COOLDOWN_MS = 30_000;
 
@@ -99,12 +100,21 @@ type RefreshOutcome = "refreshed" | "expired" | "unavailable";
 
 export type UnauthorizedOutcome = RefreshOutcome | "rejected";
 
+export type PasswordGrantPurpose = "login" | "delete-account";
+
+type GrantFailure = {
+  outcome: "invalid_credentials" | "account_not_verified" | "timeout" | "network" | "server_error" | "unexpected";
+  errorMessage?: string;
+  errorName?: string;
+};
+
 // In-memory cache so the hot path (every API call) avoids hitting SecureStore.
 let accessToken: string | null = null;
 let refreshToken: string | null = null;
 let accessExpiresAt = 0; // epoch ms
 let refreshPromise: Promise<RefreshOutcome> | null = null;
 let lastForcedRefreshAt = 0; // epoch ms
+let reportedCooldownFor = 0; // epoch ms
 // One line per distinct failure: offline, every API call retries the refresh. keep-comment: protects the log buffer
 let lastRefreshFailure: string | null = null;
 
@@ -190,7 +200,7 @@ async function requestToken(body: Record<string, string>): Promise<KeycloakToken
       }
 
       if (!response.ok) {
-        throw new Error(`Keycloak token request failed: HTTP ${response.status}`);
+        throw new Error(`${HTTP_FAILURE_MESSAGE} ${response.status}`);
       }
 
       return (await response.json()) as KeycloakTokenResponse;
@@ -216,18 +226,43 @@ export function decodeUser(token: string): AuthUser {
   };
 }
 
-/** Direct Access Grant login. Returns the authenticated user, or throws InvalidCredentialsError. */
-export async function passwordGrant(email: string, password: string): Promise<AuthUser> {
-  const tokens = await requestToken({
-    grant_type: "password",
-    client_id: CLIENT_ID,
-    username: email,
-    password,
-    scope: SCOPE,
-  });
+// Says what went wrong and never who: no email, username or password may reach the context. keep-comment: GDPR invariant
+function describeGrantFailure(error: unknown): GrantFailure {
+  // AccountNotVerifiedError extends InvalidCredentialsError, so it must be tested first. keep-comment: class-order trap
+  if (error instanceof AccountNotVerifiedError) return { outcome: "account_not_verified" };
+  if (error instanceof InvalidCredentialsError) return { outcome: "invalid_credentials" };
+  if (!(error instanceof Error)) return { outcome: "unexpected", errorName: typeof error };
+  if (error.message === TIMEOUT_MESSAGE || error.name === "AbortError") return { outcome: "timeout" };
+  // React Native's fetch rejects with a TypeError when no response arrives. keep-comment: hidden platform behaviour
+  if (error instanceof TypeError) return { outcome: "network", errorMessage: error.message };
+  if (error.message.startsWith(HTTP_FAILURE_MESSAGE)) return { outcome: "server_error", errorMessage: error.message };
+  // A JSON.parse or jwt-decode message can quote the token response, which carries the email. keep-comment: GDPR reason only the name is logged
+  return { outcome: "unexpected", errorName: error.name };
+}
 
-  await persistTokens(tokens);
-  return decodeUser(tokens.id_token ?? tokens.access_token);
+/** Direct Access Grant login. Returns the authenticated user, or throws InvalidCredentialsError. */
+export async function passwordGrant(
+  email: string,
+  password: string,
+  purpose: PasswordGrantPurpose = "login",
+): Promise<AuthUser> {
+  try {
+    const tokens = await requestToken({
+      grant_type: "password",
+      client_id: CLIENT_ID,
+      username: email,
+      password,
+      scope: SCOPE,
+    });
+
+    await persistTokens(tokens);
+    return decodeUser(tokens.id_token ?? tokens.access_token);
+  } catch (error) {
+    const failure = describeGrantFailure(error);
+    if (purpose === "login") logger.warn("Login failed", failure);
+    else logger.info("Delete-account password check failed", failure);
+    throw error;
+  }
 }
 
 /**
@@ -288,7 +323,7 @@ export async function logoutKeycloak(): Promise<void> {
   const token = refreshToken;
   if (token) {
     try {
-      await withTimeout(
+      const response = await withTimeout(
         (signal) =>
           fetch(LOGOUT_ENDPOINT, {
             method: "POST",
@@ -299,8 +334,12 @@ export async function logoutKeycloak(): Promise<void> {
         TOKEN_REQUEST_TIMEOUT_MS,
         TIMEOUT_MESSAGE,
       );
-    } catch {
+      if (!response.ok) {
+        logger.info("Logout revoke failed", { errorMessage: `Keycloak logout failed: HTTP ${response.status}` });
+      }
+    } catch (error) {
       // Best-effort revocation; we clear local tokens regardless.
+      logger.info("Logout revoke failed", { errorMessage: String(error) });
     }
   }
   await clearTokens();
@@ -355,6 +394,11 @@ export async function getValidAccessToken(): Promise<string | null> {
 export async function handleUnauthorized(): Promise<UnauthorizedOutcome> {
   // The API refused a token refreshed moments ago; refreshing again would loop. keep-comment: loop guard
   if (Date.now() - lastForcedRefreshAt < UNAUTHORIZED_COOLDOWN_MS) {
+    // Every 401 lands here during the cooldown, so log the window once. keep-comment: protects the log buffer
+    if (reportedCooldownFor !== lastForcedRefreshAt) {
+      reportedCooldownFor = lastForcedRefreshAt;
+      logger.warn("Session recovery rejected", { reason: "cooldown" });
+    }
     return "rejected";
   }
   const outcome = await refreshOnce();
@@ -366,4 +410,5 @@ export async function handleUnauthorized(): Promise<UnauthorizedOutcome> {
 
 export function resetUnauthorizedCooldown(): void {
   lastForcedRefreshAt = 0;
+  reportedCooldownFor = 0;
 }

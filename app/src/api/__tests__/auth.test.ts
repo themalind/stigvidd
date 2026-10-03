@@ -15,9 +15,16 @@ jest.mock("@/i18n", () => ({
   default: { t: (key: string) => key },
 }));
 
+jest.mock("@/services/logger", () => ({
+  logger: { error: jest.fn(), warn: jest.fn(), info: jest.fn(), debug: jest.fn() },
+}));
+
 import { ApiError } from "../api-error";
 import { registerAccount, resendVerification, userPasswordReset, verifyEmailCode } from "../auth";
 import { RegisterData } from "@/data/types";
+import { logger } from "@/services/logger";
+
+const mockLoggerError = logger.error as jest.Mock;
 
 function mockFetch(status: number, body: unknown = {}, text = "") {
   global.fetch = jest.fn().mockResolvedValue({
@@ -215,5 +222,48 @@ describe("userPasswordReset", () => {
     const result = await userPasswordReset("alice@example.com");
     expect(result.success).toBe(false);
     expect(result.error?.message).toBe("network down");
+  });
+});
+
+describe("failure logging", () => {
+  // These run before the user has a session, so the address and password are all that identify them.
+  it.each([
+    ["registerAccount", () => registerAccount(registerData), "Register account failed", "POST /account/register"],
+    [
+      "verifyEmailCode",
+      () => verifyEmailCode("alice@example.com", "123456"),
+      "Verify email code failed",
+      "POST /account/verify-email",
+    ],
+    [
+      "resendVerification",
+      () => resendVerification("alice@example.com"),
+      "Resend verification failed",
+      "POST /account/resend-verification",
+    ],
+    [
+      "userPasswordReset",
+      () => userPasswordReset("alice@example.com"),
+      "Password reset request failed",
+      "POST /account/forgot-password",
+    ],
+  ])("%s logs the endpoint and cause, but not what was typed", async (_name, call, message, endpoint) => {
+    mockFetch(500);
+
+    await call().catch(() => undefined);
+
+    expect(mockLoggerError).toHaveBeenCalledWith(message, { endpoint, errorMessage: expect.any(String) });
+    const logged = JSON.stringify(mockLoggerError.mock.calls);
+    expect(logged).not.toContain("alice@example.com");
+    expect(logged).not.toContain("password123");
+    expect(logged).not.toContain("123456");
+  });
+
+  it("logs nothing when the call succeeds", async () => {
+    mockFetch(204);
+
+    await registerAccount(registerData);
+
+    expect(mockLoggerError).not.toHaveBeenCalled();
   });
 });

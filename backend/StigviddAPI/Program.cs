@@ -82,6 +82,7 @@ public class Program
         });
 
         builder.Services.AddKeycloakWebApiAuthentication(builder.Configuration);
+        builder.Services.AddJwtBearerFailureLogging();
 
         // Flatten Keycloak realm roles into Role claims, then gate endpoints on
         // configurable realm roles.
@@ -107,6 +108,7 @@ public class Program
                 .RequireAuthenticatedUser()
                 .Build();
         });
+        builder.Services.AddSingleton<IAuthorizationMiddlewareResultHandler, LoggingAuthorizationResultHandler>();
 
         var options = builder.Configuration.GetKeycloakOptions<KeycloakAdminClientOptions>(configSectionName: "KeycloakAdminClient")
             ?? throw new InvalidOperationException("KeycloakAdminClientOptions not found in configuration.");
@@ -244,6 +246,8 @@ public class Program
             return;
         }
 
+        LogStartup(app);
+
         // Run database migrations at startup
         foreach (var migrationRunner in app.Services.GetServices<IDbMigrationRunner>())
         {
@@ -254,7 +258,8 @@ public class Program
         {
             appError.Run(async context =>
             {
-                var exception = context.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerFeature>()?.Error;
+                var exceptionFeature = context.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerFeature>();
+                var exception = exceptionFeature?.Error;
                 var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
 
                 // Activity.Current is still the ASP.NET Core request activity here, so this is
@@ -271,7 +276,13 @@ public class Program
                 // shape here would make the two 500 paths disagree.
                 var traceId = Activity.Current?.TraceId.ToString() ?? context.TraceIdentifier;
 
-                logger.LogError(exception, "Unhandled exception. TraceId: {TraceId}", traceId);
+                logger.LogError(
+                    exception,
+                    "Unhandled exception on {Method} {Endpoint} for {SubjectId}. TraceId: {TraceId}",
+                    context.Request.Method,
+                    (exceptionFeature?.Endpoint as RouteEndpoint)?.RoutePattern.RawText ?? "unmatched",
+                    RequestLoggingMiddleware.SubjectId(context.User),
+                    traceId);
 
                 context.Response.StatusCode = StatusCodes.Status500InternalServerError;
                 await context.Response.CompleteAsync();
@@ -304,9 +315,10 @@ public class Program
         // ASPNETCORE_HTTP_PORTS=8080 and nothing else), which makes the middleware log
         // "Failed to determine the https port for redirect" and pass through. This UseWhen is
         // what keeps the probes answering 200 if an HTTPS port is ever added.
-        app.UseWhen(context => !IsProbePath(context.Request.Path), branch => branch.UseHttpsRedirection());
+        app.UseWhen(context => !RequestLoggingMiddleware.IsProbePath(context.Request.Path), branch => branch.UseHttpsRedirection());
 
         app.UseAuthentication();
+        app.UseMiddleware<RequestLoggingMiddleware>();
         app.UseAuthorization();
 
         app.MapControllers();
@@ -336,6 +348,17 @@ public class Program
         return null;
     }
 
-    private static bool IsProbePath(PathString path) =>
-        path.StartsWithSegments("/healthz") || path.StartsWithSegments("/readyz");
+    private static void LogStartup(WebApplication app)
+    {
+        var configuration = app.Configuration;
+        var otlpEndpoint = configuration["Otlp:Endpoint"] ?? configuration["OTEL_EXPORTER_OTLP_ENDPOINT"];
+
+        app.Logger.LogInformation(
+            "Stigvidd API starting: environment {Environment}, version {ServiceVersion}, Keycloak {KeycloakServerUrl} realm {KeycloakRealm}, OTLP export {OtlpExport}.",
+            app.Environment.EnvironmentName,
+            configuration["Otlp:ServiceVersion"] ?? "unknown",
+            configuration["Keycloak:auth-server-url"] ?? "unset",
+            configuration["Keycloak:realm"] ?? "unset",
+            string.IsNullOrWhiteSpace(otlpEndpoint) ? "off" : "on");
+    }
 }

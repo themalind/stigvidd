@@ -3,11 +3,12 @@
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const warn = vi.hoisted(() => vi.fn());
+const logger = vi.hoisted(() => ({ debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }));
+const { warn, info } = logger;
 
-vi.mock("@/services/telemetry", () => ({
-  logger: { debug: vi.fn(), info: vi.fn(), warn, error: vi.fn() },
-}));
+vi.mock("@/services/telemetry", () => ({ logger }));
+
+const everythingLogged = () => JSON.stringify(Object.values(logger).map((log) => log.mock.calls));
 
 const TOKEN_ENDPOINT = "https://oidc.test/realms/test-realm/protocol/openid-connect/token";
 const LOGOUT_ENDPOINT = "https://oidc.test/realms/test-realm/protocol/openid-connect/logout";
@@ -70,7 +71,7 @@ function formBody(call: number): URLSearchParams {
 describe("keycloak-auth", () => {
   beforeEach(() => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(ok(tokenResponse())));
-    warn.mockClear();
+    Object.values(logger).forEach((log) => log.mockClear());
   });
 
   describe("passwordGrant", () => {
@@ -149,6 +150,78 @@ describe("keycloak-auth", () => {
     });
   });
 
+  describe("passwordGrant logging", () => {
+    it("logs rejected credentials as invalid_credentials, without the email or the password", async () => {
+      vi.mocked(fetch).mockResolvedValue(new Response("", { status: 401 }));
+      const { passwordGrant, InvalidCredentialsError } = await loadAuth();
+
+      await expect(passwordGrant("someone@example.test", "correct-horse")).rejects.toBeInstanceOf(
+        InvalidCredentialsError,
+      );
+
+      expect(warn).toHaveBeenCalledExactlyOnceWith("Admin login failed", { outcome: "invalid_credentials" });
+      expect(everythingLogged()).not.toContain("someone@example.test");
+      expect(everythingLogged()).not.toContain("correct-horse");
+    });
+
+    it("logs a real account without the admin role as not_authorized, without the email or the password", async () => {
+      vi.mocked(fetch).mockResolvedValue(ok(tokenResponse({ access_token: nonAdminToken })));
+      const { passwordGrant, NotAuthorizedError } = await loadAuth();
+
+      await expect(passwordGrant("hiker@example.test", "trail-mix-99")).rejects.toBeInstanceOf(NotAuthorizedError);
+
+      expect(warn).toHaveBeenCalledExactlyOnceWith("Admin login failed", { outcome: "not_authorized" });
+      expect(everythingLogged()).not.toContain("hiker@example.test");
+      expect(everythingLogged()).not.toContain("trail-mix-99");
+    });
+
+    it("logs a Keycloak 5xx as unavailable, with the status line", async () => {
+      vi.mocked(fetch).mockResolvedValue(new Response("", { status: 503 }));
+      const { passwordGrant } = await loadAuth();
+
+      await expect(passwordGrant("a", "b")).rejects.toThrowError(/^Keycloak token request failed: HTTP 503$/);
+
+      expect(warn).toHaveBeenCalledExactlyOnceWith("Admin login failed", {
+        outcome: "unavailable",
+        errorMessage: "Keycloak token request failed: HTTP 503",
+      });
+    });
+
+    it("logs an unreachable Keycloak as unavailable", async () => {
+      const offline = new TypeError("Failed to fetch");
+      vi.mocked(fetch).mockRejectedValue(offline);
+      const { passwordGrant } = await loadAuth();
+
+      await expect(passwordGrant("a", "b")).rejects.toBe(offline);
+
+      expect(warn).toHaveBeenCalledExactlyOnceWith("Admin login failed", {
+        outcome: "unavailable",
+        errorName: "TypeError",
+      });
+    });
+
+    it("logs only the name of an unexpected failure, whose message can quote the response", async () => {
+      vi.mocked(fetch).mockResolvedValue(new Response("<p>someone@example.test</p>", { status: 200 }));
+      const { passwordGrant } = await loadAuth();
+
+      await expect(passwordGrant("a", "b")).rejects.toBeInstanceOf(SyntaxError);
+
+      expect(warn).toHaveBeenCalledExactlyOnceWith("Admin login failed", {
+        outcome: "unavailable",
+        errorName: "SyntaxError",
+      });
+      expect(everythingLogged()).not.toContain("someone");
+    });
+
+    it("logs nothing when the sign-in succeeds", async () => {
+      const { passwordGrant } = await loadAuth();
+
+      await passwordGrant("admin@example.test", "hunter2");
+
+      expect(everythingLogged()).toBe("[[],[],[],[]]");
+    });
+  });
+
   describe("refreshGrant", () => {
     it("exchanges the refresh token and returns the user", async () => {
       const { refreshGrant } = await loadAuth();
@@ -216,6 +289,27 @@ describe("keycloak-auth", () => {
         outcome: "expired",
         reason: "InvalidCredentialsError",
       });
+    });
+
+    it("logs a failed refresh once, as a refresh and never as a login", async () => {
+      vi.mocked(fetch).mockResolvedValue(new Response("", { status: 401 }));
+      const { refreshGrant } = await loadAuth();
+
+      await refreshGrant("refresh-0");
+
+      expect(warn).toHaveBeenCalledExactlyOnceWith("Token refresh failed", {
+        outcome: "expired",
+        reason: "InvalidCredentialsError",
+      });
+    });
+
+    it("logs the sign-out when the admin role has been revoked", async () => {
+      vi.mocked(fetch).mockResolvedValue(ok(tokenResponse({ access_token: nonAdminToken })));
+      const { refreshGrant } = await loadAuth();
+
+      await refreshGrant("refresh-0");
+
+      expect(warn).toHaveBeenCalledExactlyOnceWith("Admin role missing on refresh; signed out");
     });
 
     it("keeps the stored token on a 5xx", async () => {
@@ -369,6 +463,42 @@ describe("keycloak-auth", () => {
       await expect(logoutKeycloak()).resolves.toBeUndefined();
 
       expect(localStorage.getItem(REFRESH_TOKEN_KEY)).toBeNull();
+    });
+
+    it("logs a revocation that never arrived, without the refresh token", async () => {
+      vi.mocked(fetch).mockRejectedValue(new TypeError("Failed to fetch"));
+      localStorage.setItem(REFRESH_TOKEN_KEY, "refresh-stored");
+      const { logoutKeycloak } = await loadAuth();
+
+      await logoutKeycloak();
+
+      expect(info).toHaveBeenCalledExactlyOnceWith("Logout revoke failed", {
+        errorMessage: "TypeError: Failed to fetch",
+      });
+      expect(everythingLogged()).not.toContain("refresh-stored");
+    });
+
+    it("logs a revocation Keycloak refused", async () => {
+      vi.mocked(fetch).mockResolvedValue(new Response("", { status: 400 }));
+      localStorage.setItem(REFRESH_TOKEN_KEY, "refresh-stored");
+      const { logoutKeycloak } = await loadAuth();
+
+      await logoutKeycloak();
+
+      expect(info).toHaveBeenCalledExactlyOnceWith("Logout revoke failed", {
+        errorMessage: "Keycloak logout failed: HTTP 400",
+      });
+      expect(localStorage.getItem(REFRESH_TOKEN_KEY)).toBeNull();
+    });
+
+    it("logs nothing when the revocation succeeds", async () => {
+      vi.mocked(fetch).mockResolvedValue(new Response(null, { status: 204 }));
+      localStorage.setItem(REFRESH_TOKEN_KEY, "refresh-stored");
+      const { logoutKeycloak } = await loadAuth();
+
+      await logoutKeycloak();
+
+      expect(everythingLogged()).toBe("[[],[],[],[]]");
     });
 
     it("skips the round trip when there is nothing to revoke", async () => {

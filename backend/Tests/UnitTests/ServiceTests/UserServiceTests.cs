@@ -13,6 +13,7 @@ using Moq;
 using System.Linq.Expressions;
 using WebDataContracts.ResponseModels.Friend;
 using WebDataContracts.ResponseModels.User;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace UnitTests.ServiceTests;
 
@@ -61,7 +62,7 @@ public class UserServiceTests
                 .ReturnsAsync(Result.Ok());
         }
 
-        return new UserService(repo.Object, trailobstacleRepo.Object, userResponseFactory, hikeService.Object, reviewService.Object, friendRepo.Object, (userBlockService ?? Utilities.MockFactory.UserBlockServiceHiding()).Object, contentReportRepo.Object, mailOutboxRepo.Object, metrics ?? new StigviddMetrics());
+        return new UserService(repo.Object, trailobstacleRepo.Object, userResponseFactory, hikeService.Object, reviewService.Object, friendRepo.Object, (userBlockService ?? Utilities.MockFactory.UserBlockServiceHiding()).Object, contentReportRepo.Object, mailOutboxRepo.Object, metrics ?? new StigviddMetrics(), NullLogger<UserService>.Instance);
     }
 
     [Fact]

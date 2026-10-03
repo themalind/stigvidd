@@ -45,6 +45,7 @@ looks like a code failure:
 | --- | --- |
 | every integration test fails at host startup, `InvalidOperationException` about configuration | `ConnectionStrings__StigVidd` not set — [note](../../../docs/notes/dotnet-test-connection-string.md) |
 | geometry tests fail on SQLite extension load | the distro's spatialite module is not installed — [note](../../../docs/notes/spatialite-per-os.md) |
+| `DllNotFoundException: 'sqlite3'`, exit 134, `Zero tests ran`, yet the summary says `failed: 0` | Debian without `libsqlite3-dev`; the integration suite never started — [note](../../../docs/notes/integration-suite-aborts-without-libsqlite3-dev.md) |
 | `MSB1003` / "no project or solution" | run from `backend/`, not the repo root |
 | `dotnet ef`: "No project was found" | missing `--project Infrastructure` |
 | `NETSDK1004`, assets file not found | a fresh worktree; `dotnet restore` |

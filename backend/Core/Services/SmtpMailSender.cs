@@ -1,6 +1,7 @@
 // SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+using Core.Logging;
 using Core.Interfaces.Services;
 using Infrastructure.Data.Entities;
 using MailKit.Net.Smtp;
@@ -81,7 +82,9 @@ public class SmtpMailSender : IMailSender
         {
             // A 5xx is the server refusing the message itself — no such mailbox, sender not
             // permitted. Retrying asks the same question and gets the same answer.
-            _logger.LogError(ex, "SmtpMailSender: SendAsync -> Mail {identifier} was rejected permanently ({status}).", email.Identifier, ex.StatusCode);
+            _logger.LogError(
+                "SmtpMailSender: SendAsync -> Mail {identifier} was rejected permanently ({status}): {error}",
+                email.Identifier, ex.StatusCode, LogRedaction.ScrubEmails(ex.Message));
             return MailSendResult.PermanentFailure($"{ex.StatusCode}: {ex.Message}");
         }
         catch (Exception ex)
@@ -89,7 +92,16 @@ public class SmtpMailSender : IMailSender
             // Everything else — connection refused, timeout, a 4xx greylisting reply — is
             // worth another attempt. Greylisting in particular is designed to be retried, and
             // Rspamd has it enabled on this mail server.
-            _logger.LogWarning(ex, "SmtpMailSender: SendAsync -> Mail {identifier} could not be sent; will retry.", email.Identifier);
+            if (ex is SmtpCommandException command)
+            {
+                _logger.LogWarning(
+                    "SmtpMailSender: SendAsync -> Mail {identifier} could not be sent ({status}): {error}; will retry.",
+                    email.Identifier, command.StatusCode, LogRedaction.ScrubEmails(command.Message));
+            }
+            else
+            {
+                _logger.LogWarning(ex, "SmtpMailSender: SendAsync -> Mail {identifier} could not be sent; will retry.", email.Identifier);
+            }
             return MailSendResult.Transient(ex.Message);
         }
     }

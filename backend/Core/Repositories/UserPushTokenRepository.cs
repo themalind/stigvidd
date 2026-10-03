@@ -33,7 +33,7 @@ public class UserPushTokenRepository : IUserPushTokenRepository
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error retrieving push token {ExpoToken} for user {UserId}", expoToken, userId);
+            _logger.LogError(ex, "Error retrieving a push token for user {UserId}", userId);
             return RepositoryResult<UserPushToken?>.Error();
         }
     }
@@ -59,7 +59,7 @@ public class UserPushTokenRepository : IUserPushTokenRepository
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error deleting push token {ExpoToken}", expoToken);
+            _logger.LogError(ex, "Error deleting a push token");
             return RepositoryResult.Error();
         }
     }
@@ -114,7 +114,7 @@ public class UserPushTokenRepository : IUserPushTokenRepository
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error upserting push token {ExpoToken} for user {UserId}", expoToken, userId);
+            _logger.LogError(ex, "Error upserting a push token for user {UserId}", userId);
             return RepositoryResult.Error();
         }
     }    

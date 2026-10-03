@@ -4,6 +4,7 @@
 using Core.Interfaces.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using StigviddAPI.Extensions;
 
 namespace StigviddAPI.Controllers.Admin;
 
@@ -26,7 +27,7 @@ public class AdminController(IDataTransferService dataTransfer, ILogger<AdminCon
         Response.ContentType = "application/zip";
         Response.Headers.ContentDisposition = $"attachment; filename=\"{fileName}\"";
 
-        _logger.LogInformation("Admin export requested by {User}", User.Identity?.Name ?? "unknown");
+        _logger.LogInformation("Admin export requested by {User}", RequestLoggingMiddleware.SubjectId(User) ?? "unknown");
         await _dataTransfer.ExportAsync(Response.Body, ctoken);
     }
 
@@ -38,7 +39,7 @@ public class AdminController(IDataTransferService dataTransfer, ILogger<AdminCon
     [DisableRequestSizeLimit]
     public async Task<IActionResult> Import(CancellationToken ctoken)
     {
-        _logger.LogWarning("Admin import (destructive) requested by {User}", User.Identity?.Name ?? "unknown");
+        _logger.LogWarning("Admin import (destructive) requested by {User}", RequestLoggingMiddleware.SubjectId(User) ?? "unknown");
         try
         {
             await _dataTransfer.ImportAsync(Request.Body, ctoken);

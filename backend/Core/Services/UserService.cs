@@ -6,6 +6,7 @@ using Core.Interfaces.Repositories;
 using Core.Interfaces.Services;
 using Core.Telemetry;
 using Infrastructure.Data.Entities;
+using Microsoft.Extensions.Logging;
 using WebDataContracts.ResponseModels.Friend;
 using WebDataContracts.ResponseModels.Review;
 using WebDataContracts.ResponseModels.Trail;
@@ -30,6 +31,7 @@ public class UserService : IUserService
     // deleted account reaches it unless this service says so.
     private readonly IMailOutboxRepository _mailOutboxRepository;
     private readonly StigviddMetrics _metrics;
+    private readonly ILogger<UserService> _logger;
 
     public UserService(IUserRepository userResponseRepository,
     ITrailObstacleRepository trailObstacleRepository,
@@ -40,7 +42,8 @@ public class UserService : IUserService
     IUserBlockService userBlockService,
     IContentReportRepository contentReportRepository,
     IMailOutboxRepository mailOutboxRepository,
-    StigviddMetrics metrics)
+    StigviddMetrics metrics,
+    ILogger<UserService> logger)
     {
         _userRepository = userResponseRepository;
         _trailObstacleRepository = trailObstacleRepository;
@@ -52,6 +55,7 @@ public class UserService : IUserService
         _contentReportRepository = contentReportRepository;
         _mailOutboxRepository = mailOutboxRepository;
         _metrics = metrics;
+        _logger = logger;
     }
 
     public async Task<Result<UserResponse?>> GetUserBySubjectAsync(string subjectId, CancellationToken ctoken)
@@ -320,6 +324,15 @@ public class UserService : IUserService
 
     public async Task<Result> DeleteUserAsync(string identifier, CancellationToken ctoken)
     {
+        Result DeleteFailed(string step)
+        {
+            _logger.LogError(
+                "UserService: DeleteUserAsync -> deleting user {UserIdentifier} failed at step {Step}.",
+                identifier,
+                step);
+            return Result.Fail(new Message(500, $"Error deleting user with identifier {identifier}"));
+        }
+
         var userResult = await _userRepository.GetUserIdByIdentifierAsync(identifier, ctoken);
 
         if (!userResult.IsSuccess)
@@ -328,43 +341,43 @@ public class UserService : IUserService
                 return Result.Fail(new Message(404, $"User with identifier {identifier} not found."));
 
             if (userResult.Status == RepositoryResultStatus.Error)
-                return Result.Fail(new Message(500, $"Error deleting user with identifier {identifier}"));
+                return DeleteFailed("user lookup");
         }
 
         var hikeResult = await _hikeService.HandleUserHikesOnUserDeleteAsync(userResult.Value, ctoken);
 
         if (!hikeResult.Success)
-            return Result.Fail(new Message(500, $"Error deleting user with identifier {identifier}"));
+            return DeleteFailed("hikes");
 
         var sharedHikesResult = await _hikeService.DeleteHikeSharesByUserIdAsync(userResult.Value, ctoken);
 
         if (!sharedHikesResult.Success)
-            return Result.Fail(new Message(500, $"Error deleting user with identifier {identifier}"));
+            return DeleteFailed("hike shares");
 
         // Must run before the user row goes, while the reviews can still be found by UserId.
         var reviewResult = await _reviewService.AnonymizeUserReviewsOnUserDeleteAsync(userResult.Value, ctoken);
 
         if (!reviewResult.Success)
-            return Result.Fail(new Message(500, $"Error deleting user with identifier {identifier}"));
+            return DeleteFailed("reviews");
 
         // Must run before the user row goes, while the obstacles can still be found by UserId.
         var obstacleResult = await _trailObstacleRepository.AnonymizeObstaclesByUserIdAsync(userResult.Value, ctoken);
 
         if (obstacleResult.Status == RepositoryResultStatus.Error)
-            return Result.Fail(new Message(500, $"Error deleting user with identifier {identifier}"));
+            return DeleteFailed("obstacles");
 
         // Must run before the user row goes: ReporterUserId is a real foreign key with
         // SetNull, so afterwards there is no way left to find what this person reported.
         var reportResult = await _contentReportRepository.HandleUserDeletionAsync(userResult.Value, ctoken);
 
         if (reportResult.Status == RepositoryResultStatus.Error)
-            return Result.Fail(new Message(500, $"Error deleting user with identifier {identifier}"));
+            return DeleteFailed("content reports");
 
         // FriendRequests use NoAction to avoid multiple cascade paths, so they must be removed explicitly before the user is deleted.
         var friendRequestsResult = await _friendRepository.DeleteAllFriendRequestsByUserIdAsync(userResult.Value, ctoken);
 
         if (friendRequestsResult.Status == RepositoryResultStatus.Error)
-            return Result.Fail(new Message(500, $"Error deleting user with identifier {identifier}"));
+            return DeleteFailed("friend requests");
 
         // Must run before the user row goes: the outbox has no foreign key to Users and is
         // matched on the address, so once the Users row is gone there is nothing left to look
@@ -373,20 +386,22 @@ public class UserService : IUserService
         var emailResult = await _userRepository.GetUserByIdentifierAsync(identifier, u => u.Email, ctoken);
 
         if (emailResult.Status == RepositoryResultStatus.Error)
-            return Result.Fail(new Message(500, $"Error deleting user with identifier {identifier}"));
+            return DeleteFailed("email lookup");
 
         if (emailResult.IsSuccess)
         {
             var mailResult = await _mailOutboxRepository.EraseByRecipientAsync(emailResult.Value, ctoken);
 
             if (mailResult.Status == RepositoryResultStatus.Error)
-                return Result.Fail(new Message(500, $"Error deleting user with identifier {identifier}"));
+                return DeleteFailed("mail outbox");
         }
 
         var result = await _userRepository.DeleteUserAsync(identifier, ctoken);
 
         if (result.Status == RepositoryResultStatus.Error)
-            return Result.Fail(new Message(500, $"Error deleting user with identifier {identifier}"));
+            return DeleteFailed("user row");
+
+        _logger.LogInformation("UserService: DeleteUserAsync -> deleted user {UserIdentifier}.", identifier);
 
         return Result.Ok();
     }

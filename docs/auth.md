@@ -38,6 +38,9 @@ Endpoints are derived from `EXPO_PUBLIC_OIDC_URL` / `_OIDC_REALM` / `_CLIENT_ID`
 {OIDC_URL}/realms/{REALM}/protocol/openid-connect/logout   ← session revoke
 ```
 
+A failed sign-in therefore never reaches the API; where it does show up is in
+[observability.md — Failed sign-ins: where to look](observability.md#failed-sign-ins-where-to-look).
+
 ## Email verification, and why the gate has to live in Keycloak
 
 A new account is created **disabled** (`KeycloakAdminRepository.CreateUserAsync` sets

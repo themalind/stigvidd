@@ -12,6 +12,7 @@ using Microsoft.Extensions.Configuration;
 using Moq;
 using System.Linq.Expressions;
 using WebDataContracts.ResponseModels.User;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace UnitTests.Telemetry;
 
@@ -40,7 +41,8 @@ public class ServiceMetricsTests
             new Mock<IUserBlockService>().Object,
             new Mock<IContentReportRepository>().Object,
             new Mock<IMailOutboxRepository>().Object,
-            metrics);
+            metrics,
+            NullLogger<UserService>.Instance);
     }
 
     private static Mock<IUserRepository> AddToFavoritesReturning(RepositoryResult<UserFavoritesTrailResponse> result)

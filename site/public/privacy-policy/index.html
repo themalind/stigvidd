@@ -19,6 +19,13 @@
   createHike.disclosureBackground). Förklaringen kommer före bakgrundsfrågan, inte före
   förgrundsfrågan — hemskärmen och kartan frågar utan egen förklaring.
 
+  2026-10-03: §2 "Teknisk data" nämner användarnamnet vid misslyckad inloggning. Keycloaks
+  inbyggda event-lyssnare (jboss-logging) skriver det i Keycloaks container-logg på värden,
+  som åldras ut efter 7 dagar som övriga serverloggar (§5). Till OpenObserve går det
+  ALDRIG — authevents-collectorn släpper bara igenom en vitlista av fält
+  (observability/otel-auth-events.yaml). Slutar Keycloak logga användarnamnet kan
+  tillägget strykas, i BÅDA språken.
+
   PUBLICERAD 2026-08-30. Båda grindarna som höll sidan tillbaka är klarade:
     1. Alla <span class="todo">-markeringar är ersatta. Den sista satt i §8
        (Hostups teknikeråtkomst) och togs bort i båda språken 2026-08-30.
@@ -319,7 +326,10 @@
             </tr>
             <tr>
               <td>Teknisk data</td>
-              <td>IP-adress, tidpunkt och felmeddelanden i serverloggar</td>
+              <td>
+                IP-adress, tidpunkt och felmeddelanden i serverloggar, samt det användarnamn
+                (e-postadress) som angavs vid misslyckade inloggningsförsök
+              </td>
               <td>Drift, felsökning och säkerhet</td>
               <td>Berättigat intresse (art. 6.1 f)</td>
             </tr>
@@ -619,7 +629,10 @@
               </tr>
               <tr>
                 <td>Technical data</td>
-                <td>IP address, timestamp and error messages in server logs</td>
+                <td>
+                  IP address, timestamp and error messages in server logs, and the username (email
+                  address) entered in a failed sign-in attempt
+                </td>
                 <td>Operation, troubleshooting and security</td>
                 <td>Legitimate interest (Art. 6(1)(f))</td>
               </tr>
