@@ -731,8 +731,7 @@
   },
   "imagePermission": {
     "title": "Permission required",
-    "message": "Permission to access the media library is required.",
-    "jpgOnly": "Only JPG images are allowed"
+    "message": "Permission to access the media library is required."
   },
   "trailList": {
     "title": "Hiking trails",

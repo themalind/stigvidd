@@ -157,29 +157,26 @@ it("does nothing when the picker is closed without a picture", async () => {
   expect(store.get(snackbarAtom).visible).toBe(false);
 });
 
-// The API takes JPEG only, so a PNG has to be turned away here rather than at upload.
-it("turns away a picture that is not a JPEG", async () => {
+// iPhones store photos as HEIC; the resize re-encodes every pick as JPEG, so the original format must not matter.
+it("takes an iPhone HEIC picture and hands it to the resizer", async () => {
   const { store } = show();
 
-  await pickAsset({ uri: "file:///dcim/skarmdump.png", mimeType: "image/png" });
+  await pickAsset({ uri: "file:///dcim/IMG_0001.heic", mimeType: "image/heic" });
 
-  expect(store.get(snackbarAtom)).toMatchObject({
-    visible: true,
-    type: "error",
-    message: "Endast JPG-bilder är tillåtna",
-  });
-  expect(resize).not.toHaveBeenCalled();
-  expect(screen.queryAllByTestId("add-review-image")).toHaveLength(0);
-  expect(setReviewImages).not.toHaveBeenCalled();
+  expect(resize).toHaveBeenCalledWith("file:///dcim/IMG_0001.heic");
+  expect(screen.queryAllByTestId("add-review-image")).toHaveLength(1);
+  expect(setReviewImages).toHaveBeenCalledTimes(1);
+  expect(store.get(snackbarAtom).visible).toBe(false);
 });
 
-it("turns away a picture the library cannot name a type for", async () => {
+it("takes a picture the library cannot name a type for", async () => {
   const { store } = show();
 
   await pickAsset({ uri: "file:///dcim/okand.jpg" });
 
-  expect(store.get(snackbarAtom)).toMatchObject({ visible: true, message: "Endast JPG-bilder är tillåtna" });
-  expect(screen.queryAllByTestId("add-review-image")).toHaveLength(0);
+  expect(resize).toHaveBeenCalledWith("file:///dcim/okand.jpg");
+  expect(screen.queryAllByTestId("add-review-image")).toHaveLength(1);
+  expect(store.get(snackbarAtom).visible).toBe(false);
 });
 
 it("says so when the picture cannot be shrunk, and keeps the ones already picked", async () => {

@@ -57,13 +57,8 @@ export default function AddReviewImages({ setReviewImages }: ReviewImageProp) {
       });
 
       if (!result.canceled) {
-        // Validate the original picked file; we only accept JPEG.
-        if (!result.assets[0].mimeType?.includes("image/jpeg")) {
-          setError(t("imagePermission.jpgOnly"));
-          return;
-        }
-
-        // Shrink dimensions + re-compress to keep uploads small, then swap in the new uri.
+        // Shrink dimensions + re-encode as JPEG (what the API takes; iPhones pick HEIC), then swap in the new uri.
+        // see docs/notes/ios-image-picker-returns-heic-not-jpeg.md
         const resizedUri = await resizeImage(result.assets[0].uri);
         const resizedAsset = { ...result.assets[0], uri: resizedUri };
 
