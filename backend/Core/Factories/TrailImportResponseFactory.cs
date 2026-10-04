@@ -82,8 +82,8 @@ public class TrailImportResponseFactory
             proposal.FeatureProperties);
     }
 
-    // sparlangd out of the stored properties. Read as text rather than deserialised: the
-    // source writes the field in six different shapes and TrailLength.Parse expects that.
+    // keep-comment: read as text, not deserialised — Borås writes sparlangd in six shapes and TrailLength.Parse expects that;
+    // keep-comment: Umeå's numeric langd is turned into the same text so the one parser serves both.
     private static string? ReadSourceLength(string? properties)
     {
         if (string.IsNullOrWhiteSpace(properties))
@@ -93,8 +93,16 @@ public class TrailImportResponseFactory
         {
             using var document = System.Text.Json.JsonDocument.Parse(properties);
 
-            return document.RootElement.TryGetProperty("sparlangd", out var value)
-                ? value.ToString()
+            var root = document.RootElement;
+
+            if (root.TryGetProperty("sparlangd", out var value))
+                return value.ToString();
+
+            // keep-comment: Umeå kommun's langd is a bare number of metres, and 0 where it was never measured.
+            return root.TryGetProperty("langd", out var metres)
+                && metres.ValueKind == System.Text.Json.JsonValueKind.Number
+                && metres.TryGetDecimal(out var amount) && amount > 0
+                ? $"{amount.ToString(System.Globalization.CultureInfo.InvariantCulture)} m"
                 : null;
         }
         catch (System.Text.Json.JsonException)
