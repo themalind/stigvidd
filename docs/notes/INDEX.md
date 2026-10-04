@@ -384,6 +384,11 @@ src/api/generated` then fails with "the generated API client is stale" for reaso
   nothing, so `git diff --exit-code -- web/src/api/generated` run from inside `web/` passes
   unconditionally while `src/api/generated` reports the real 88-file difference. It fails
   OPEN, so a wrong `cd` turns the generated-client gate into a no-op that reports success.
+- [A clean git merge of two client regenerations is not a regenerated client](merged-generated-client-is-not-a-regenerated-one.md) —
+  adb0e716 (dashboard) and 70a175a3 (export/import) each regenerated web/src/api/generated. Git merged
+  model/index.ts without a conflict but put `adminExportParams` out of orval's alphabetical order, so Jenkins
+  failed "the generated API client is stale" while GitHub, build and tests were green. After a merge, rebase or
+  cherry-pick that touches generated files, run dotnet build and npm run generate:api, then commit.
   Locally, assert orval is idempotent (regenerate and `diff -rq` against a snapshot) instead
   of diffing against HEAD, which cannot tell "regenerated" from "not yet committed".
 - [Docker's `json-file` driver has no time-based retention, so `max-size` never means "7 days"](json-file-has-no-time-retention.md) —
