@@ -13,15 +13,18 @@ public class MediaReprocessDispatcher : BackgroundService
 {
     private readonly IMediaReprocessQueue _queue;
     private readonly IServiceScopeFactory _scopeFactory;
+    private readonly IMaintenanceGate _maintenance;
     private readonly ILogger<MediaReprocessDispatcher> _logger;
 
     public MediaReprocessDispatcher(
         IMediaReprocessQueue queue,
         IServiceScopeFactory scopeFactory,
+        IMaintenanceGate maintenance,
         ILogger<MediaReprocessDispatcher> logger)
     {
         _queue = queue;
         _scopeFactory = scopeFactory;
+        _maintenance = maintenance;
         _logger = logger;
     }
 
@@ -33,6 +36,7 @@ public class MediaReprocessDispatcher : BackgroundService
         {
             try
             {
+                await _maintenance.WaitWhilePausedAsync(stoppingToken);
                 await ProcessAsync(itemId, stoppingToken);
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)

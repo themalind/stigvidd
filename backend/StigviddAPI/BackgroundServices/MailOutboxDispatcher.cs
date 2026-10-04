@@ -21,17 +21,20 @@ public class MailOutboxDispatcher : BackgroundService
 
     private readonly IMailOutboxQueue _queue;
     private readonly IServiceScopeFactory _scopeFactory;
+    private readonly IMaintenanceGate _maintenance;
     private readonly ILogger<MailOutboxDispatcher> _logger;
     private readonly int _maxAttempts;
 
     public MailOutboxDispatcher(
         IMailOutboxQueue queue,
         IServiceScopeFactory scopeFactory,
+        IMaintenanceGate maintenance,
         ILogger<MailOutboxDispatcher> logger,
         IConfiguration configuration)
     {
         _queue = queue;
         _scopeFactory = scopeFactory;
+        _maintenance = maintenance;
         _logger = logger;
 
         _maxAttempts = int.TryParse(configuration["MailOutbox:MaxAttempts"], out var configured)
@@ -47,6 +50,7 @@ public class MailOutboxDispatcher : BackgroundService
         {
             try
             {
+                await _maintenance.WaitWhilePausedAsync(stoppingToken);
                 await ProcessAsync(id, stoppingToken);
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)

@@ -5,6 +5,7 @@ using Core.Interfaces.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using StigviddAPI.Extensions;
+using WebDataContracts.ResponseModels.DataTransfer;
 
 namespace StigviddAPI.Controllers.Admin;
 
@@ -19,41 +20,40 @@ public class AdminController(IDataTransferService dataTransfer, ILogger<AdminCon
     private readonly IDataTransferService _dataTransfer = dataTransfer;
     private readonly ILogger<AdminController> _logger = logger;
 
+    [HttpGet("transfer-info")]
+    public ActionResult<DataTransferInfoResponse> GetTransferInfo() => Ok(_dataTransfer.GetInfo());
+
     /// <summary>Streams a full migration archive (database + media + Keycloak).</summary>
     [HttpGet("export")]
-    public async Task Export(CancellationToken ctoken)
+    public async Task<IActionResult> Export([FromQuery] bool anonymize, CancellationToken ctoken)
     {
-        var fileName = $"stigvidd-export-{DateTimeOffset.UtcNow:yyyyMMdd-HHmmss}.zip";
-        Response.ContentType = "application/zip";
-        Response.Headers.ContentDisposition = $"attachment; filename=\"{fileName}\"";
+        _logger.LogInformation("Admin export (anonymize={Anonymize}) requested by {User}",
+            anonymize, RequestLoggingMiddleware.SubjectId(User) ?? "unknown");
 
-        _logger.LogInformation("Admin export requested by {User}", RequestLoggingMiddleware.SubjectId(User) ?? "unknown");
-        await _dataTransfer.ExportAsync(Response.Body, ctoken);
+        var archive = await _dataTransfer.CreateExportAsync(anonymize, ctoken);
+        var suffix = anonymize ? "-anonymized" : "";
+        var fileName = $"stigvidd-export-{DateTimeOffset.UtcNow:yyyyMMdd-HHmmss}{suffix}.zip";
+
+        return File(archive, "application/zip", fileName);
     }
 
     /// <summary>
     /// Restores a migration archive (raw zip in the request body). DESTRUCTIVE —
-    /// replaces this host's data. Restart api + keycloak afterwards.
+    /// replaces this host's data. The response names the services to restart.
     /// </summary>
     [HttpPost("import")]
     [DisableRequestSizeLimit]
-    public async Task<IActionResult> Import(CancellationToken ctoken)
+    public async Task<ActionResult<DataTransferImportResponse>> Import(CancellationToken ctoken)
     {
         _logger.LogWarning("Admin import (destructive) requested by {User}", RequestLoggingMiddleware.SubjectId(User) ?? "unknown");
         try
         {
-            await _dataTransfer.ImportAsync(Request.Body, ctoken);
+            return Ok(await _dataTransfer.ImportAsync(Request.Body, ctoken));
         }
         catch (InvalidOperationException ex)
         {
             _logger.LogError(ex, "Import failed");
             return BadRequest(new { message = ex.Message });
         }
-
-        return Ok(new
-        {
-            message = "Import complete. Restart the api and keycloak services to apply: "
-                    + "docker compose restart api keycloak",
-        });
     }
 }

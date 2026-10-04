@@ -10,15 +10,18 @@ public class TrailImportAnalysisWorker : BackgroundService
 {
     private readonly ITrailImportAnalysisQueue _queue;
     private readonly IServiceScopeFactory _scopeFactory;
+    private readonly IMaintenanceGate _maintenance;
     private readonly ILogger<TrailImportAnalysisWorker> _logger;
 
     public TrailImportAnalysisWorker(
         ITrailImportAnalysisQueue queue,
         IServiceScopeFactory scopeFactory,
+        IMaintenanceGate maintenance,
         ILogger<TrailImportAnalysisWorker> logger)
     {
         _queue = queue;
         _scopeFactory = scopeFactory;
+        _maintenance = maintenance;
         _logger = logger;
     }
 
@@ -40,6 +43,7 @@ public class TrailImportAnalysisWorker : BackgroundService
                 using var scope = _scopeFactory.CreateScope();
                 var analysis = scope.ServiceProvider.GetRequiredService<ITrailImportAnalysisService>();
 
+                await _maintenance.WaitWhilePausedAsync(stoppingToken);
                 await analysis.AnalyzeAsync(sessionId, stoppingToken);
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)

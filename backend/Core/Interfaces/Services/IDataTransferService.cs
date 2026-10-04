@@ -1,22 +1,17 @@
 // SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+using WebDataContracts.ResponseModels.DataTransfer;
+
 namespace Core.Interfaces.Services;
 
-/// <summary>
-/// Whole-environment export/import for host migration: the application
-/// database, the referenced media files, and the Keycloak database (realms,
-/// users, credentials) — bundled into a single archive.
-/// </summary>
 public interface IDataTransferService
 {
-    /// <summary>Writes a migration archive (zip) to <paramref name="output"/>.</summary>
-    Task ExportAsync(Stream output, CancellationToken ctoken);
+    DataTransferInfoResponse GetInfo();
 
-    /// <summary>
-    /// Restores a migration archive read from <paramref name="input"/>.
-    /// DESTRUCTIVE: replaces the target's data. Intended for a freshly deployed
-    /// target host; api and keycloak should be restarted afterwards.
-    /// </summary>
-    Task ImportAsync(Stream input, CancellationToken ctoken);
+    // The archive is a temporary file, deleted when the returned stream is closed. keep-comment: caller owns cleanup via dispose
+    Task<Stream> CreateExportAsync(bool anonymize, CancellationToken ctoken);
+
+    // DESTRUCTIVE. Throws InvalidOperationException for an archive it refuses, before anything is replaced. keep-comment: error contract the controller relies on
+    Task<DataTransferImportResponse> ImportAsync(Stream input, CancellationToken ctoken);
 }

@@ -102,6 +102,7 @@ public class EndpointAuthorizationTests : IClassFixture<StigViddWebApplicationFa
         // import replaces this host's data.
         "GET /api/v1/admin/export",
         "POST /api/v1/admin/import",
+        "GET /api/v1/admin/transfer-info",
 
         // The Boras sync, gated at the class.
         "DELETE /api/v1/admin/trail-import/sessions/{id:int}",

@@ -30,6 +30,8 @@ public class TrailImportFileStore : ITrailImportFileStore
         _logger = logger;
     }
 
+    public string RootDirectory => _root;
+
     public async Task<StoredImportFile> SaveAsync(Stream content, string fileName, CancellationToken ctoken)
     {
         ArgumentNullException.ThrowIfNull(content);

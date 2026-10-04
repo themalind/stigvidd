@@ -12,11 +12,11 @@ this document does not repeat; read that first if you have never deployed this s
 4. [Step 1 — Production-side setup](#step-1--production-side-setup)
 5. [Step 2 — Host prep](#step-2--host-prep)
 6. [Step 3 — The staging `.env`](#step-3--the-staging-env)
-7. [Step 4 — Build the staging images and start](#step-4--build-the-staging-images-and-start)
+7. [Step 4 — Get the staging images and start](#step-4--get-the-staging-images-and-start)
 8. [Step 5 — Verify](#step-5--verify)
 9. [Step 6 — Container log retention timer](#step-6--container-log-retention-timer)
 10. [Refreshing staging from production data](#refreshing-staging-from-production-data)
-11. [When you automate this](#when-you-automate-this)
+11. [Continuous deployment (branch `staging`)](#continuous-deployment-branch-staging)
 12. [Troubleshooting](#troubleshooting)
 
 ---
@@ -113,7 +113,7 @@ DNS:
 
 ## 3. Prerequisites
 
-- A host with Docker Engine and Compose v2, and pull access to the `inkaben.se` registry.
+- A host with Docker Engine and Compose v2, and pull access to the `lingonberg.se` registry (the host the Jenkinsfile pushes to).
 - **Three** DNS A records (§2), with ports 80 and 443 reachable from the internet so Caddy
   can complete an ACME challenge.
 - **No** mail ports needed — staging runs no mail server. 25/465/587/993 stay closed.
@@ -147,7 +147,7 @@ Then:
   to the token endpoint — and never redirects, so redirect URIs change nothing and a
   missing web origin is a CORS error with a login that never completes. Setting the
   redirect URIs too is harmless, but do not expect them to fix a failing login.
-- Create the realm role **`admin`** and grant it to whoever needs the migration page.
+- Create the realm role **`stigvidd-admin`** (the API's `Authorization:AdminRole`; the admin web requires it) and grant it to whoever needs the migration page.
 - **Generate a new secret for `stigvidd-admin-api`.** Do not reuse production's.
 - Configure **Realm settings → Email** for this realm if you want Keycloak's own admin-console
   mail to work: host `mail.stigvidd.se`, port 587, StartTLS, authenticating as
@@ -187,8 +187,8 @@ cd /opt/stigvidd-staging
 Copy from a checkout of the repo:
 
 ```bash
-scp docker-compose.yml            staging-host:/opt/stigvidd-staging/
-scp .env.example                  staging-host:/opt/stigvidd-staging/.env
+scp docker-compose.yml docker-compose.staging.yml staging-host:/opt/stigvidd-staging/
+scp .env.staging.example          staging-host:/opt/stigvidd-staging/.env
 scp db/init/*.sql                 staging-host:/opt/stigvidd-staging/db/init/
 scp scripts/*.sh                  staging-host:/opt/stigvidd-staging/scripts/
 ssh staging-host 'chmod +x /opt/stigvidd-staging/scripts/*.sh'
@@ -210,77 +210,20 @@ is correct — do not copy production's.
 
 ## Step 3 — The staging `.env`
 
-Start from `.env.example` and change everything below. The four groups are: staging's own
-identity, the production services it borrows, the partial-stack switches, and the
-placeholders that exist only to satisfy interpolation.
+[`.env.staging.example`](.env.staging.example) is the whole file, with placeholders only
+(Step 2 already copied it to `.env`). Fill in every `<placeholder>`. The groups:
 
-```ini
-# ---- Images --------------------------------------------------------------
-REGISTRY=inkaben.se
-IMAGE_TAG=<commit-sha>            # see Step 4 for the web image caveat
-
-# ---- Staging's own domains (four DNS records) ----------------------------
-# Caddyfile.app also serves www.{$SITE_DOMAIN} as a redirect to the apex. Without a
-# www.staging.site record that one block fails ACME and logs; the others are unaffected.
-SITE_DOMAIN=staging.site.stigvidd.se
-WEB_DOMAIN=staging.stigvidd.se
-API_DOMAIN=staging.api.stigvidd.se
-MEDIA_DOMAIN=staging.media.stigvidd.se
-ACME_EMAIL=admin@stigvidd.se
-
-# ---- Partial-stack switch ------------------------------------------------
-# Serves site/web/api/media only. Without this, Caddy also tries to obtain certs for
-# AUTH/OBSERVATORY/MAIL_DOMAIN and route them to containers that do not exist.
-CADDYFILE=/etc/caddy/Caddyfile.app
-
-# ---- Names this stack does NOT serve -------------------------------------
-# Required because compose interpolates the whole file. They become docker
-# network aliases, so they MUST NOT be production's names (see §2).
-AUTH_DOMAIN=staging.auth.stigvidd.se
-OBSERVATORY_DOMAIN=staging.observatory.stigvidd.se
-MAIL_DOMAIN=staging.mail.stigvidd.se
-
-# ---- Database (staging's own) --------------------------------------------
-POSTGRES_DB=stigvidd
-POSTGRES_USER=stigvidd
-POSTGRES_PASSWORD=<a new strong secret, not production's>
-DB_PUBLIC_PORT=5432
-
-# ---- Keycloak: PRODUCTION server, STAGING realm --------------------------
-KEYCLOAK_URL=https://auth.stigvidd.se
-KEYCLOAK_REALM=stigvidd-staging
-KEYCLOAK_ADMIN_CLIENT_SECRET=<the staging realm's stigvidd-admin-api secret>
-KEYCLOAK_DB=keycloak              # unused here; staging runs no Keycloak
-
-# ---- Media / WebDAV (staging's own) --------------------------------------
-WEBDAV_USER=<staging value>
-WEBDAV_PASSWORD=<a new strong secret>
-PRESENTABLE_BASE_URL=https://staging.media.stigvidd.se/
-
-# ---- Telemetry: PRODUCTION server, STAGING organization ------------------
-OTLP_ENDPOINT=https://observatory.stigvidd.se/api/<staging-org-id>
-OTLP_TOKEN=<the staging org's api@ INGESTION TOKEN>
-OTLP_LOG_STREAM=stigvidd_api_logs
-# Host metrics stay OFF here. COMPOSE_PROFILES is unset, so the `hostmetrics`
-# service does not exist for compose and the five-service `up` below is unaffected.
-# If you ever do want them, note that HOST_METRICS_OTLP_ENDPOINT must NOT be
-# reached via staging's own OBSERVATORY_DOMAIN: the proxy aliases that name onto
-# itself, so the request would never leave this host. Point it at production's
-# name directly, the same way OTLP_ENDPOINT above does.
-
-# ---- Backend -------------------------------------------------------------
-ASPNETCORE_ENVIRONMENT=Production   # staging runs the production config path
-
-# ---- Log retention -------------------------------------------------------
-CONTAINER_LOG_RETENTION_DAYS=7
-
-# ---- Placeholders: consumed by no service staging runs -------------------
-# Present ONLY because ${VAR:?} is evaluated for the whole file.
-KC_ADMIN_USER=unused-on-staging
-KC_ADMIN_PASSWORD=unused-on-staging
-OBSERVATORY_ROOT_EMAIL=unused@staging.invalid
-OBSERVATORY_ROOT_PASSWORD=unused-on-staging
-```
+- **Compose files and images** — `COMPOSE_FILE` layers
+  [`docker-compose.staging.yml`](docker-compose.staging.yml) on the base file: it pins the slim
+  `Caddyfile.app` (so there is no `CADDYFILE` setting), sets `DataTransfer__SharedServices`
+  and puts `keycloak`, `openobserve` and `mailserver` behind a `production-only` profile.
+  `IMAGE_TAG=staging` follows CI; pin a `<sha>-staging` tag to hold a version.
+- **Staging's own identity** — the four staging domains, database, WebDAV credentials.
+- **The production services it borrows** — `KEYCLOAK_URL` (production host, `stigvidd-staging`
+  realm) and `OTLP_*` (production host, staging organization).
+- **Names this stack does not serve** — `AUTH_/OBSERVATORY_/MAIL_DOMAIN` must be staging
+  names (§2).
+- **Placeholders** that exist only because compose interpolates the whole file.
 
 `ASPNETCORE_ENVIRONMENT=Production` is deliberate: `Development` would enable Swagger and
 change the config precedence chain, which is not what you want to rehearse. Staging should
@@ -288,58 +231,42 @@ exercise the same code path production does.
 
 ---
 
-## Step 4 — Build the staging images and start
+## Step 4 — Get the staging images and start
 
-`api`, `media` and `proxy` carry no baked-in configuration, so a production tag works. `web`
-does not — build it with the staging build args and give it a **distinct tag** so it can
-never be confused with production's:
-
-```bash
-# from a checkout, at the commit you want to stage
-export TAG="$(git rev-parse --short=12 HEAD)"
-
-docker build ./web \
-  --build-arg VITE_API_URL=https://staging.api.stigvidd.se \
-  --build-arg VITE_OIDC_URL=https://auth.stigvidd.se \
-  --build-arg VITE_OIDC_REALM=stigvidd-staging \
-  --build-arg VITE_CLIENT_ID=stigvidd-admin \
-  --build-arg VITE_OO_LOGS_URL=https://observatory.stigvidd.se/api/<staging-org-id>/stigvidd_web_logs/_json \
-  --build-arg VITE_OO_LOGS_TOKEN=<staging org web@ ingestion token> \
-  -t "inkaben.se/stigvidd-web:${TAG}-staging"
-
-docker push "inkaben.se/stigvidd-web:${TAG}-staging"
-```
-
-Note `VITE_OIDC_URL` is **production's** auth host while `VITE_OIDC_REALM` is the staging
-realm — the SPA talks to the same Keycloak, in a different realm.
+Images come from CI: every build of the `staging` branch pushes
+`<registry>/stigvidd-{api,web,site,media,proxy}:<sha12>-staging` and moves the `staging` tag
+(see [Continuous deployment](#continuous-deployment-branch-staging)). The `web` image is built
+there with the staging `VITE_*` values; no host-local override is needed. There is no
+`keycloak` image: staging borrows production's.
 
 On the staging host:
 
 ```bash
 cd /opt/stigvidd-staging
-docker login inkaben.se
+docker login lingonberg.se        # the registry host the Jenkinsfile pushes to
 
 # proxy first: it must be up before anything needs a certificate
 docker compose up -d proxy
 docker compose up -d db api web site media
 ```
 
-Name the six services explicitly. A bare `docker compose up -d` would also start
-`keycloak`, `openobserve` and `mailserver`, which is exactly what this environment is
-avoiding.
+`COMPOSE_FILE` from `.env` selects the override, so a bare `docker compose up -d` would also
+only start the five staging services — but name them anyway on the first run.
 
-> Because `IMAGE_TAG` cannot differ per service, either pin `IMAGE_TAG=<sha>` and re-tag the
-> staging web image to match, or run web from its own tag with a small
-> `docker-compose.override.yml` on the staging host:
->
-> ```yaml
-> services:
->   web:
->     image: inkaben.se/stigvidd-web:${IMAGE_TAG}-staging
-> ```
->
-> The override file is host-local and gitignored; keep it out of the repo so production
-> never picks it up.
+**Fallback without CI**: build `web` by hand with the staging build args and a `-staging` tag,
+push it, and set `IMAGE_TAG` accordingly:
+
+```bash
+docker build ./web \
+  --build-arg VITE_API_URL=https://staging.api.stigvidd.se \
+  --build-arg VITE_OIDC_URL=https://auth.stigvidd.se \
+  --build-arg VITE_OIDC_REALM=stigvidd-staging \
+  --build-arg VITE_CLIENT_ID=stigvidd-admin \
+  -t "lingonberg.se/stigvidd-web:$(git rev-parse --short=12 HEAD)-staging"
+```
+
+(`VITE_OO_LOGS_*` are optional: unset, the bundle installs no log sink.) `VITE_OIDC_URL` is
+**production's** auth host while `VITE_OIDC_REALM` is the staging realm.
 
 ---
 
@@ -441,12 +368,27 @@ one. Install the timer either way; it costs nothing.
 With that settled, two mechanisms exist, both documented in
 [DEPLOYMENT.md Part 4](DEPLOYMENT.md#part-4--migrating-data):
 
-- **Admin export/import** (the migration page in the admin web) — needs the `admin` realm
-  role in the staging realm. The export from production contains a `keycloak.dump`; staging
-  has no Keycloak database, and the import skips it.
+- **Admin export/import** (the migration page in the admin web) — the recommended route.
+  1. On **production**, tick **Anonymize personal data** and export. Users get placeholder
+     names and addresses, push tokens, verification/reset codes and the mail log are
+     removed, and Keycloak is left out; hikes, reviews and photos are kept. The
+     anonymization happens on the production server, so the downloaded archive is the
+     only copy that travels.
+  2. On **staging**, sign in with the `stigvidd-admin` realm role of the staging realm and
+     import it. Because staging runs with `DATA_TRANSFER_SHARED_SERVICES=true` (from
+     `docker-compose.staging.yml`), the import never restores Keycloak — even from a full,
+     non-anonymized archive — and always clears queued mail, push tokens and
+     verification/reset codes, since staging sends mail through production's mail server.
+  3. Restart the API (below). Staging must run the same or a newer version than production;
+     an archive from newer code is refused before anything is touched.
+
+  The restored users belong to production's realm. Staging validates tokens against
+  `stigvidd-staging`, so nobody can sign in to staging as their production account; testers
+  use staging-realm accounts, which get fresh user rows on first use.
 - **`scripts/migrate.sh`** — volume-level copy of `pgdata`, `media`, `maildata`, `mailstate`
   and `trail_imports`. On staging only `pgdata`, `media` and `trail_imports` are meaningful;
-  the two mail volumes have no service to belong to.
+  the two mail volumes have no service to belong to. This copies personal data **as is** and
+  clears nothing; prefer the admin route.
 
 After either, restart the API so EF migrations run against the restored database:
 
@@ -456,33 +398,35 @@ docker compose up -d --no-deps --force-recreate api
 
 ---
 
-## When you automate this
+## Continuous deployment (branch `staging`)
 
-**Not done — this section is a design, not a description of the current Jenkinsfile.**
+The [Jenkinsfile](Jenkinsfile) is branch-aware: `main` is production, `staging` is staging, and
+every other branch or PR stops after `Test`. A push to `staging` runs the same tests, then
+builds and pushes `api web site media proxy` as `<sha12>-staging` plus a moving `staging` tag,
+with the staging `VITE_*` values (`https://staging.api.stigvidd.se`, `auth.stigvidd.se`, realm
+`stigvidd-staging`), and deploys them to `/opt/stigvidd-staging` with
+`pull`/`up -d --no-deps` on those five services. Builds are serialized with `main` by a
+`stigvidd-ci` lock. `db` is never touched by CI: bring it up once by hand (Step 4).
 
-Today the [Jenkinsfile](Jenkinsfile) hard-codes production in its `CONFIGURE ME` block and
-gates both the build and the deploy on `when { branch 'main' }`. Making it serve both
-environments means:
+**One-time Jenkins setup** (details in the Jenkinsfile header):
 
-1. **Parameterise the environment-specific values on branch.** `DEPLOY_HOST`, `DEPLOY_PATH`,
-   the six `VITE_*` values and an image-tag suffix — `main` → production, `develop` →
-   staging.
-2. **Widen the two `when` blocks** to `anyOf { branch 'main'; branch 'develop' }`, keeping
-   PRs stopping after `Test`.
-3. **Add a second SSH credential** for the staging host, and add it to the Jenkins agent's
-   `known_hosts`.
-4. **Build the `web` image per environment.** This is the part that does not parameterise
-   cleanly: the other four images are environment-agnostic and could be built once, but
-   `web` must be built twice with different build args and pushed to different tags.
-5. **Keep the generated-client staleness gate** — it is Jenkins-only and the single reason a
-   stale `src/api/generated` does not reach a deploy.
+1. Plugin: *Lockable Resources*.
+2. Global environment variables (Manage Jenkins > System): `STAGING_DEPLOY_HOST`
+   (e.g. `stigvidd@<staging host>`) and `STAGING_OO_LOGS_URL`
+   (`https://observatory.stigvidd.se/api/<staging-org-id>/stigvidd_web_logs/_json`, optional).
+3. Credential `staging-oo-logs-token` (secret text, the staging org's `web@` ingestion token;
+   optional: without it the web image has no telemetry). The existing `deploy-ssh-key` and
+   `registry-credentials` are reused; authorise the key on the staging host.
+4. Seed the Jenkins user's `known_hosts` with the staging host (`ssh-keyscan -H`).
+5. Create the branch and push it so the multibranch job discovers it:
+   `git push origin develop:staging` (or any commit you want staged).
 
-Until then, staging is deployed by hand with Step 4.
+Until `STAGING_DEPLOY_HOST` is set, a `staging` build pushes the images and **skips the deploy**
+(logging "staging host not configured"), staying green; Step 4 can then pull those tags by hand.
 
-> Rotate `VITE_OO_LOGS_TOKEN` before doing this. It is currently a real production ingest
-> credential committed in plaintext at [Jenkinsfile:100](Jenkinsfile#L100), and a
-> git-committed credential cannot be rotated quietly. Move both it and `VITE_OO_LOGS_URL`
-> into Jenkins credentials as part of the same change, and give staging its own.
+> Rotate `VITE_OO_LOGS_TOKEN` (production's). It is still a real production ingest credential
+> committed in plaintext in the [Jenkinsfile](Jenkinsfile), and a git-committed credential
+> cannot be rotated quietly. Move it into a Jenkins credential like staging's.
 
 ---
 
@@ -513,9 +457,10 @@ Add the placeholders from Step 3.
 
 **Caddy logs repeated ACME failures for `staging.auth...` / `staging.observatory...` /
 `staging.mail...`.**
-`CADDYFILE` is unset, so the proxy is running the full six-site `Caddyfile` and trying to
-obtain certificates for three names with no DNS. Set
-`CADDYFILE=/etc/caddy/Caddyfile.app` and recreate the proxy. Repeated failed validations
+The staging override is not applied (`COMPOSE_FILE` missing from `.env`, or
+`docker-compose.staging.yml` not on the host), so the proxy is running the full six-site
+`Caddyfile` and trying to obtain certificates for three names with no DNS. Fix `COMPOSE_FILE`
+and recreate the proxy. Repeated failed validations
 also consume a Let's Encrypt rate limit, so fix it rather than waiting it out.
 
 **A config change to the admin web appears to do nothing.**

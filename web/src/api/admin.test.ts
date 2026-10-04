@@ -47,6 +47,27 @@ describe("exportData", () => {
     expect(init.headers).toEqual({ Authorization: "Bearer a-token" });
   });
 
+  it("asks for an anonymized archive when told to", async () => {
+    await exportData({ anonymize: true });
+
+    expect(request()[0]).toBe("https://api.test/api/v1/admin/export?anonymize=true");
+  });
+
+  // ASP.NET's File() result sends both forms; the RFC 5987 one must not leak into the name.
+  it("reads the plain filename out of an ASP.NET Content-Disposition", async () => {
+    vi.mocked(fetch).mockResolvedValue(
+      reply("archive-bytes", {
+        headers: {
+          "Content-Disposition":
+            "attachment; filename=stigvidd-export-20261004-120000.zip; filename*=UTF-8''stigvidd-export-20261004-120000.zip",
+        },
+      }),
+    );
+    await exportData();
+
+    expect(savedAs()).toBe("stigvidd-export-20261004-120000.zip");
+  });
+
   it("sends no Authorization header when there is no session", async () => {
     getValidAccessToken.mockResolvedValue(null);
 
@@ -134,13 +155,19 @@ describe("importData", () => {
   });
 
   it("returns the server's own account of what it restored", async () => {
-    await expect(importData(archive())).resolves.toBe("Restored.");
+    await expect(importData(archive())).resolves.toEqual({ message: "Restored.", notes: [] });
+  });
+
+  it("returns the server's notes with its message", async () => {
+    vi.mocked(fetch).mockResolvedValue(reply('{"message":"Done.","notes":["Keycloak was skipped."]}'));
+
+    await expect(importData(archive())).resolves.toEqual({ message: "Done.", notes: ["Keycloak was skipped."] });
   });
 
   it("returns a non-JSON body as it stands", async () => {
     vi.mocked(fetch).mockResolvedValue(reply("Restored 41 trails."));
 
-    await expect(importData(archive())).resolves.toBe("Restored 41 trails.");
+    await expect(importData(archive())).resolves.toEqual({ message: "Restored 41 trails.", notes: [] });
   });
 
   it("throws with the server's reason when the import is refused", async () => {

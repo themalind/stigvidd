@@ -11,4 +11,5 @@ public interface ITrailImportFileStore
 {
     Task<StoredImportFile> SaveAsync(Stream content, string fileName, CancellationToken ctoken);
     void Delete(string storedPath);
+    string RootDirectory { get; }
 }

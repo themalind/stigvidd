@@ -1,0 +1,29 @@
+# SPDX-FileCopyrightText: 2026 The Stigvidd Authors
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+# Staging override. Used together with docker-compose.yml:
+#   COMPOSE_FILE=docker-compose.yml:docker-compose.staging.yml   (see .env.staging.example)
+# Staging runs db, api, web, site, media and proxy, and borrows production's
+# Keycloak (realm stigvidd-staging), mail server and OpenObserve. See STAGING.md.
+
+services:
+  api:
+    environment:
+      # Tells admin export/import that Keycloak, mail and the observatory belong to
+      # production, so there is no keycloak.dump etc. to expect here.
+      DataTransfer__SharedServices: "true"
+
+  proxy:
+    # The slim Caddyfile: no auth/observatory/mail sites. Pinned here so it cannot be
+    # forgotten in .env — the full Caddyfile would request certificates for names this
+    # host has no DNS for.
+    command: caddy run --config /etc/caddy/Caddyfile.app --adapter caddyfile
+
+  # Production-only services. A profile keeps a bare `docker compose up -d` from
+  # starting them on the staging host.
+  keycloak:
+    profiles: [production-only]
+  openobserve:
+    profiles: [production-only]
+  mailserver:
+    profiles: [production-only]

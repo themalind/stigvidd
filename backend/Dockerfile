@@ -19,8 +19,9 @@ RUN dotnet publish StigviddAPI/StigviddAPI.csproj \
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
 
-# pg_dump/pg_restore for the admin export/import feature. Pinned to the same
-# major as the server (Postgres 16) via the PGDG repo; codename is derived so
+# pg_dump/pg_restore/psql for the admin export/import feature. Pinned to the same
+# major as the server (postgis/postgis:17 in docker-compose.yml) via the PGDG repo:
+# pg_dump refuses to dump a server newer than itself (docs/notes/pg-client-must-match-the-postgis-server-major.md). Bump both together; codename is derived so
 # this survives a base-image OS bump.
 RUN apt-get update \
     && apt-get install -y --no-install-recommends curl ca-certificates gnupg \
@@ -30,7 +31,7 @@ RUN apt-get update \
     && echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(. /etc/os-release && echo $VERSION_CODENAME)-pgdg main" \
          > /etc/apt/sources.list.d/pgdg.list \
     && apt-get update \
-    && apt-get install -y --no-install-recommends postgresql-client-16 \
+    && apt-get install -y --no-install-recommends postgresql-client-17 \
     && apt-get purge -y gnupg \
     && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/*
