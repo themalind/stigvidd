@@ -1,25 +1,31 @@
 // SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { CLASSIFICATION, type TableColumn, type TrailShortInfoResponse } from "@/types/types";
+import { CLASSIFICATION, type AdminTrailListItem, type TableColumn } from "@/types/types";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
 import TrailEditor from "../trail-editor";
 import TrailImagesDialog from "../trail-images-dialog";
+import TrailVerifiedToggle from "../trail-verified-toggle";
 
 interface Props {
-  columns: TableColumn<TrailShortInfoResponse>[];
-  trails: TrailShortInfoResponse[];
+  columns: TableColumn<AdminTrailListItem>[];
+  trails: AdminTrailListItem[];
+  onVerifiedChange?: (identifier: string, isVerified: boolean) => void;
 }
 
-export default function TrailsTable({ columns, trails }: Props) {
+export default function TrailsTable({ columns, trails, onVerifiedChange }: Props) {
   // const [selectedCell, setSelectedCell] = useState();
 
-  function getRowValues(columns: TableColumn<TrailShortInfoResponse>[], row: TrailShortInfoResponse) {
+  function getRowValues(columns: TableColumn<AdminTrailListItem>[], row: AdminTrailListItem) {
     return columns.map((column) => {
       const value = row[column.key];
 
       if (column.key === "trailLength") {
         return value + " km";
+      }
+
+      if (column.key === "lastUpdatedAt") {
+        return new Date(value as string).toLocaleDateString("sv-SE");
       }
 
       if (column.key === "classification") {
@@ -40,6 +46,7 @@ export default function TrailsTable({ columns, trails }: Props) {
                 {column.label}
               </TableHead>
             ))}
+            <TableHead className="font-bold">Active</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -48,6 +55,12 @@ export default function TrailsTable({ columns, trails }: Props) {
               {getRowValues(columns, trail).map((value, index) => (
                 <TableCell key={index}>{value}</TableCell>
               ))}
+              <TableCell>
+                <TrailVerifiedToggle
+                  data={trail}
+                  onChange={(isVerified) => onVerifiedChange?.(trail.identifier, isVerified)}
+                />
+              </TableCell>
               <TableCell className="flex justify-end gap-1">
                 <TrailImagesDialog data={trail} selected={true} />
                 <TrailEditor data={trail} selected={true} />

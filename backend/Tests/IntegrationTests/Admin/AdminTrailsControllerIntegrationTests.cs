@@ -34,6 +34,7 @@ public class AdminTrailsControllerIntegrationTests : IClassFixture<StigViddWebAp
     private const string StorsjoledenIdentifier = "22b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d"; // Trail 2
     private const string StorsjoledenImageIdentifier = "img-storlsjon-1";                  // one of Trail 2's images
     private const string NonExistentIdentifier = "00000000-0000-0000-0000-000000000000";
+    private const string TrailWithoutImagesIdentifier = "33c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e"; // Trail 3
 
     public AdminTrailsControllerIntegrationTests(StigViddWebApplicationFactory<Program> factory)
     {
@@ -203,6 +204,110 @@ public class AdminTrailsControllerIntegrationTests : IClassFixture<StigViddWebAp
         // Act
         var response = await client.DeleteAsync(
             $"{TrailsRoute}/images/{NonExistentIdentifier}", TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task SetTrailVerified_RoundTrip_HidesAndRestoresTheTrailForThePublicButNotForTheAdmin()
+    {
+        // Arrange
+        var client = CreateAdminClient();
+        var ctoken = TestContext.Current.CancellationToken;
+
+        // Act
+        var deactivate = await client.PutAsJsonAsync(
+            $"{TrailsRoute}/{StorsjoledenIdentifier}/verified", new SetTrailVerifiedRequest { IsVerified = false }, ctoken);
+
+        // Assert
+        deactivate.StatusCode.Should().Be(HttpStatusCode.NoContent);
+
+        var publicRead = await client.GetAsync($"/api/v1/trails/{StorsjoledenIdentifier}", ctoken);
+        publicRead.StatusCode.Should().Be(HttpStatusCode.NotFound);
+
+        var adminRead = await client.GetFromJsonAsync<TrailResponse>($"{TrailsRoute}/{StorsjoledenIdentifier}", ctoken);
+        adminRead.Should().NotBeNull();
+        adminRead.IsVerified.Should().BeFalse();
+
+        var adminList = await client.GetFromJsonAsync<List<AdminTrailListItemResponse>>(TrailsRoute, ctoken);
+        adminList.Should().NotBeNull();
+        adminList.Should().ContainSingle(t => t.Identifier == StorsjoledenIdentifier)
+            .Which.IsVerified.Should().BeFalse();
+
+        // Act
+        var activate = await client.PutAsJsonAsync(
+            $"{TrailsRoute}/{StorsjoledenIdentifier}/verified", new SetTrailVerifiedRequest { IsVerified = true }, ctoken);
+
+        // Assert
+        activate.StatusCode.Should().Be(HttpStatusCode.NoContent);
+
+        var publicReread = await client.GetAsync($"/api/v1/trails/{StorsjoledenIdentifier}", ctoken);
+        publicReread.StatusCode.Should().Be(HttpStatusCode.OK);
+    }
+
+    [Fact]
+    public async Task GetAllTrails_ReportsWhatEachTrailIsMissing()
+    {
+        // Arrange
+        var client = CreateAdminClient();
+
+        // Act
+        var trails = await client.GetFromJsonAsync<List<AdminTrailListItemResponse>>(
+            TrailsRoute, TestContext.Current.CancellationToken);
+
+        // Assert
+        trails.Should().NotBeNull();
+        var storsjoleden = trails.Should().ContainSingle(t => t.Identifier == StorsjoledenIdentifier).Subject;
+        storsjoleden.HasImages.Should().BeTrue();
+        storsjoleden.HasSymbol.Should().BeTrue();
+        storsjoleden.HasDescription.Should().BeTrue();
+        storsjoleden.HasFullDescription.Should().BeFalse();
+        storsjoleden.HasExampleImages.Should().BeTrue();
+        storsjoleden.CreatedAt.Should().NotBe(default);
+
+        var withoutImages = trails.Should().ContainSingle(t => t.Identifier == TrailWithoutImagesIdentifier).Subject;
+        withoutImages.HasImages.Should().BeFalse();
+        withoutImages.HasExampleImages.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task SetTrailVerified_WithNonExistentTrail_ShouldReturnNotFound()
+    {
+        // Arrange
+        var client = CreateAdminClient();
+
+        // Act
+        var response = await client.PutAsJsonAsync(
+            $"{TrailsRoute}/{NonExistentIdentifier}/verified", new SetTrailVerifiedRequest { IsVerified = true },
+            TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task SetTrailVerified_WithoutTheFlag_ShouldReturnBadRequest()
+    {
+        // Arrange
+        var client = CreateAdminClient();
+
+        // Act
+        var response = await client.PutAsJsonAsync(
+            $"{TrailsRoute}/{StorsjoledenIdentifier}/verified", new { }, TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task GetTrail_WithNonExistentTrail_ShouldReturnNotFound()
+    {
+        // Arrange
+        var client = CreateAdminClient();
+
+        // Act
+        var response = await client.GetAsync($"{TrailsRoute}/{NonExistentIdentifier}", TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);

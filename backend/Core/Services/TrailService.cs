@@ -7,6 +7,7 @@ using Core.Interfaces.Services;
 using Infrastructure.Data.Entities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
+using System.Linq.Expressions;
 using WebDataContracts.RequestModels.Trail;
 using WebDataContracts.ResponseModels.Trail;
 
@@ -60,6 +61,48 @@ public class TrailService : ITrailService
         return Result.Ok<IReadOnlyCollection<TrailShortInfoResponse>>(trails);
     }
 
+    public async Task<Result<IReadOnlyCollection<AdminTrailListItemResponse>>> GetAllTrailsForAdminAsync(CancellationToken ctoken)
+    {
+        var result = await _trailRepository.GetAllTrailsForAdminAsync(
+            t => new AdminTrailListItemResponse
+            {
+                Identifier = t.Identifier,
+                Name = t.Name,
+                TrailLength = t.TrailLength,
+                Accessibility = t.Accessibility,
+                Classification = t.Classification,
+                City = t.City,
+                IsVerified = t.IsVerified,
+                HasImages = t.TrailImages!.Any(),
+                // keep-comment: the app badges an image as an example by this same rule (app/src/utils/is-mock-image.ts)
+                HasExampleImages = t.TrailImages!.Any(img => img.ImageUrl.ToLower().Contains("mock")),
+                HasSymbol = t.TrailSymbolImage != "",
+                HasDescription = t.Description != "",
+                HasFullDescription = t.FullDescription != "",
+                CreatedAt = t.CreatedAt,
+                LastUpdatedAt = t.LastUpdatedAt,
+            },
+            ctoken);
+
+        if (!result.IsSuccess)
+            return Result.Fail<IReadOnlyCollection<AdminTrailListItemResponse>>(new Message(500, "An error occurred while fetching trails."));
+
+        return Result.Ok(result.Value);
+    }
+
+    public async Task<Result> SetTrailVerifiedAsync(string identifier, bool isVerified, CancellationToken ctoken)
+    {
+        var result = await _trailRepository.SetTrailVerifiedAsync(identifier, isVerified, ctoken);
+
+        if (result.Status == RepositoryResultStatus.Error)
+            return Result.Fail(new Message(500, "An error occurred while updating the trail."));
+
+        if (!result.IsSuccess)
+            return Result.Fail(new Message(404, $"Trail with identifier {identifier} not found."));
+
+        return Result.Ok();
+    }
+
     public async Task<Result<IReadOnlyCollection<TrailMarkerResponse>>> GetAllTrailMarkersAsync(CancellationToken ctoken)
     {
         var result = await _trailRepository.GetAllTrailMarkersAsync(
@@ -96,8 +139,28 @@ public class TrailService : ITrailService
 
     public async Task<Result<TrailResponse?>> GetTrailByIdentifierWithoutCoordinatesAsync(string identifier, CancellationToken ctoken)
     {
-        var result = await _trailRepository.GetTrailByIdentifierAsync(
-            identifier,
+        var result = await _trailRepository.GetTrailByIdentifierAsync(identifier, TrailResponseSelector(), ctoken);
+        return ToTrailResult(result, identifier);
+    }
+
+    public async Task<Result<TrailResponse?>> GetTrailForAdminAsync(string identifier, CancellationToken ctoken)
+    {
+        var result = await _trailRepository.GetTrailByIdentifierForAdminAsync(identifier, TrailResponseSelector(), ctoken);
+        return ToTrailResult(result, identifier);
+    }
+
+    private static Result<TrailResponse?> ToTrailResult(RepositoryResult<TrailResponse> result, string identifier)
+    {
+        if (result.Status == RepositoryResultStatus.Error)
+            return Result.Fail<TrailResponse?>(new Message(500, "An error occurred while fetching the trail."));
+
+        if (!result.IsSuccess)
+            return Result.Fail<TrailResponse?>(new Message(404, $"Trail with identifier {identifier} not found."));
+
+        return Result.Ok<TrailResponse?>(result.Value);
+    }
+
+    private Expression<Func<Trail, TrailResponse>> TrailResponseSelector() =>
             t => TrailResponse.Create(
                 t.Identifier,
                 t.Name,
@@ -127,17 +190,7 @@ public class TrailService : ITrailService
                     t.VisitorInformation.Illumination,
                     t.VisitorInformation.IlluminationText,
                     t.VisitorInformation.MaintainedBy,
-                    t.VisitorInformation.WinterMaintenance) : null),
-            ctoken);
-
-        if (result.Status == RepositoryResultStatus.Error)
-            return Result.Fail<TrailResponse?>(new Message(500, "An error occurred while fetching the trail."));
-
-        if (!result.IsSuccess)
-            return Result.Fail<TrailResponse?>(new Message(404, $"Trail with identifier {identifier} not found."));
-
-        return Result.Ok<TrailResponse?>(result.Value);
-    }
+                    t.VisitorInformation.WinterMaintenance) : null);
 
     public async Task<Result<CoordinatesResponse?>> GetCoordinatesByTrailIdentifierAsync(string identifier, CancellationToken ctoken)
     {

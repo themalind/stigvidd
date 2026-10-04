@@ -501,6 +501,108 @@ public class TrailServiceTests
     }
 
     [Fact]
+    public async Task GetAllTrailsForAdmin_WhenRepositoryFails_ReturnsInternalServerError()
+    {
+        // Arrange
+        var repo = new Mock<ITrailRepository>();
+        repo.Setup(r => r.GetAllTrailsForAdminAsync(It.IsAny<Expression<Func<Trail, AdminTrailListItemResponse>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<IReadOnlyCollection<AdminTrailListItemResponse>>.Error());
+
+        // Act
+        var result = await Build(repo).GetAllTrailsForAdminAsync(TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Success.Should().BeFalse();
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(500);
+    }
+
+    [Fact]
+    public async Task GetTrailForAdmin_ReadsThroughTheAdminQuery()
+    {
+        // Arrange
+        var repo = new Mock<ITrailRepository>();
+        repo.Setup(r => r.GetTrailByIdentifierForAdminAsync(It.IsAny<string>(), It.IsAny<Expression<Func<Trail, TrailResponse>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<TrailResponse>.Success(StubTrailResponse()));
+
+        // Act
+        var result = await Build(repo).GetTrailForAdminAsync(Utilities.Identifiers.Trail4, TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Success.Should().BeTrue();
+        repo.Verify(r => r.GetTrailByIdentifierAsync(It.IsAny<string>(), It.IsAny<Expression<Func<Trail, TrailResponse>>>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task GetTrailForAdmin_WhenNotFound_ReturnsNotFound()
+    {
+        // Arrange
+        var repo = new Mock<ITrailRepository>();
+        repo.Setup(r => r.GetTrailByIdentifierForAdminAsync(It.IsAny<string>(), It.IsAny<Expression<Func<Trail, TrailResponse>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<TrailResponse>.NotFound());
+
+        // Act
+        var result = await Build(repo).GetTrailForAdminAsync("missing", TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Success.Should().BeFalse();
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(404);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task SetTrailVerified_WhenFound_PassesTheFlagThrough(bool isVerified)
+    {
+        // Arrange
+        var repo = new Mock<ITrailRepository>();
+        repo.Setup(r => r.SetTrailVerifiedAsync(Utilities.Identifiers.Trail4, isVerified, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult.Success());
+
+        // Act
+        var result = await Build(repo).SetTrailVerifiedAsync(Utilities.Identifiers.Trail4, isVerified, TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Success.Should().BeTrue();
+        repo.Verify(r => r.SetTrailVerifiedAsync(Utilities.Identifiers.Trail4, isVerified, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task SetTrailVerified_WhenNotFound_ReturnsNotFound()
+    {
+        // Arrange
+        var repo = new Mock<ITrailRepository>();
+        repo.Setup(r => r.SetTrailVerifiedAsync(It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult.NotFound());
+
+        // Act
+        var result = await Build(repo).SetTrailVerifiedAsync("missing", true, TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Success.Should().BeFalse();
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(404);
+    }
+
+    [Fact]
+    public async Task SetTrailVerified_WhenRepositoryFails_ReturnsInternalServerError()
+    {
+        // Arrange
+        var repo = new Mock<ITrailRepository>();
+        repo.Setup(r => r.SetTrailVerifiedAsync(It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult.Error());
+
+        // Act
+        var result = await Build(repo).SetTrailVerifiedAsync("any", true, TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Success.Should().BeFalse();
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(500);
+    }
+
+    [Fact]
     public async Task GetAllTrailMarkers_WhenSuccess_ReturnsMarkers()
     {
         // Arrange

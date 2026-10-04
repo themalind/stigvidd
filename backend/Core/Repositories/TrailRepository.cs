@@ -386,4 +386,73 @@ public class TrailRepository : ITrailRepository
             return RepositoryResult<Trail>.Error();
         }
     }
+
+    public async Task<RepositoryResult<IReadOnlyCollection<T>>> GetAllTrailsForAdminAsync<T>(
+        Expression<Func<Trail, T>> selector, CancellationToken ctoken)
+    {
+        try
+        {
+            using var context = await _context.CreateDbContextAsync(ctoken);
+
+            var trails = await context.Trails.AsNoTracking()
+                .Select(selector)
+                .ToListAsync(ctoken);
+
+            return RepositoryResult<IReadOnlyCollection<T>>.Success(trails);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "TrailRepository: GetAllTrailsForAdminAsync -> Something went wrong when fetching trails.");
+            return RepositoryResult<IReadOnlyCollection<T>>.Error();
+        }
+    }
+
+    public async Task<RepositoryResult<T>> GetTrailByIdentifierForAdminAsync<T>(string identifier, Expression<Func<Trail, T>> selector, CancellationToken ctoken)
+    {
+        try
+        {
+            using var context = await _context.CreateDbContextAsync(ctoken);
+
+            var result = await context.Trails
+                .AsNoTracking()
+                .Where(t => t.Identifier == identifier)
+                .Select(selector)
+                .FirstOrDefaultAsync(ctoken);
+
+            return result is null
+                ? RepositoryResult<T>.NotFound()
+                : RepositoryResult<T>.Success(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "TrailRepository: GetTrailByIdentifierForAdminAsync -> Something went wrong when fetching trail with identifier {identifier}.", identifier);
+            return RepositoryResult<T>.Error();
+        }
+    }
+
+    public async Task<RepositoryResult> SetTrailVerifiedAsync(string identifier, bool isVerified, CancellationToken ctoken)
+    {
+        try
+        {
+            using var context = await _context.CreateDbContextAsync(ctoken);
+
+            var trail = await context.Trails
+                .FirstOrDefaultAsync(t => t.Identifier == identifier, ctoken);
+
+            if (trail is null)
+                return RepositoryResult.NotFound();
+
+            trail.IsVerified = isVerified;
+            trail.LastUpdatedAt = DateTime.UtcNow;
+
+            await context.SaveChangesAsync(ctoken);
+
+            return RepositoryResult.Success();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "TrailRepository: SetTrailVerifiedAsync -> Something went wrong when setting IsVerified on trail {Identifier}.", identifier);
+            return RepositoryResult.Error();
+        }
+    }
 }

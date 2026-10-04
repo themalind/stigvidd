@@ -76,6 +76,10 @@ public class EndpointAuthorizationTests : IClassFixture<StigViddWebApplicationFa
         "POST /api/v1/admin/trails/{identifier}/symbol",
         "PUT /api/v1/admin/facilities/{identifier}",
         "PUT /api/v1/admin/trails/{identifier}",
+        "PUT /api/v1/admin/trails/{identifier}/verified",
+        "GET /api/v1/admin/trails",
+        "GET /api/v1/admin/dashboard",
+        "GET /api/v1/admin/trails/{identifier}",
 
         // The one write that stayed on the public controller. It is admin-gated like the
         // rest, but it is also the only admin route that needs the caller's StigVidd user

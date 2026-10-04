@@ -12,6 +12,17 @@ export type TrailShortInfoResponse = {
   startLongitude?: number;
 };
 
+export type AdminTrailListItem = TrailShortInfoResponse & {
+  isVerified: boolean;
+  hasImages: boolean;
+  hasExampleImages: boolean;
+  hasSymbol: boolean;
+  hasDescription: boolean;
+  hasFullDescription: boolean;
+  createdAt: string;
+  lastUpdatedAt: string;
+};
+
 export type StigviddUser = {
   identifier: string;
   nickName: string;

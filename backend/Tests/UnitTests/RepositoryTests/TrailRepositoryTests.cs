@@ -659,4 +659,92 @@ public class TrailRepositoryTests : TestBase
         result.Value.VisitorInformation.GettingThere.Should().Be("Updated");
         result.Value.VisitorInformation.WinterMaintenance.Should().BeTrue();
     }
+
+    [Fact]
+    public async Task GetAllTrailsForAdmin_IncludesUnverifiedTrails()
+    {
+        // Arrange
+        var repo = new TrailRepository(CreateSeededFactory(), NullLogger<TrailRepository>.Instance);
+
+        // Act
+        var result = await repo.GetAllTrailsForAdminAsync(
+            t => new { t.Identifier, t.IsVerified }, TestContext.Current.CancellationToken);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().ContainEquivalentOf(new { Identifier = TivedenIdentifier, IsVerified = false });
+        result.Value.Should().ContainEquivalentOf(new { Identifier = StorsjoledenIdentifier, IsVerified = true });
+    }
+
+    [Fact]
+    public async Task GetTrailByIdentifierForAdmin_ReturnsUnverifiedTrail()
+    {
+        // Arrange
+        var repo = new TrailRepository(CreateSeededFactory(), NullLogger<TrailRepository>.Instance);
+
+        // Act
+        var result = await repo.GetTrailByIdentifierForAdminAsync(
+            TivedenIdentifier, t => t.Identifier, TestContext.Current.CancellationToken);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().Be(TivedenIdentifier);
+    }
+
+    [Fact]
+    public async Task GetTrailByIdentifierForAdmin_WhenNotFound_ReturnsNotFound()
+    {
+        // Arrange
+        var repo = new TrailRepository(CreateSeededFactory(), NullLogger<TrailRepository>.Instance);
+
+        // Act
+        var result = await repo.GetTrailByIdentifierForAdminAsync(
+            "does-not-exist", t => t.Identifier, TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Status.Should().Be(RepositoryResultStatus.NotFound);
+    }
+
+    [Fact]
+    public async Task SetTrailVerified_True_MakesTrailPubliclyVisible()
+    {
+        // Arrange
+        var repo = new TrailRepository(CreateSeededFactory(), NullLogger<TrailRepository>.Instance);
+
+        // Act
+        var result = await repo.SetTrailVerifiedAsync(TivedenIdentifier, true, TestContext.Current.CancellationToken);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        var reread = await repo.GetTrailByIdentifierAsync(TivedenIdentifier, t => t.Identifier, TestContext.Current.CancellationToken);
+        reread.IsSuccess.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task SetTrailVerified_False_HidesTrailFromPublicReads()
+    {
+        // Arrange
+        var repo = new TrailRepository(CreateSeededFactory(), NullLogger<TrailRepository>.Instance);
+
+        // Act
+        var result = await repo.SetTrailVerifiedAsync(StorsjoledenIdentifier, false, TestContext.Current.CancellationToken);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        var reread = await repo.GetTrailByIdentifierAsync(StorsjoledenIdentifier, t => t.Identifier, TestContext.Current.CancellationToken);
+        reread.Status.Should().Be(RepositoryResultStatus.NotFound);
+    }
+
+    [Fact]
+    public async Task SetTrailVerified_WhenNotFound_ReturnsNotFound()
+    {
+        // Arrange
+        var repo = new TrailRepository(CreateSeededFactory(), NullLogger<TrailRepository>.Instance);
+
+        // Act
+        var result = await repo.SetTrailVerifiedAsync("does-not-exist", true, TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Status.Should().Be(RepositoryResultStatus.NotFound);
+    }
 }
