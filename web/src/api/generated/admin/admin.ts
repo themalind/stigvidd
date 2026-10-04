@@ -24,6 +24,12 @@ import type {
   UseQueryResult
 } from '@tanstack/react-query';
 
+import type {
+  AdminExportParams,
+  DataTransferImportResponse,
+  DataTransferInfoResponse
+} from '../model';
+
 import { customFetch } from '../../mutator';
 
 
@@ -46,17 +52,88 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   return result;
 };
 
-export const getAdminExportUrl = () => {
+export const getAdminGetTransferInfoUrl = () => {
 
 
 
 
-  return `/api/v1/admin/export`
+  return `/api/v1/admin/transfer-info`
 }
 
-export const adminExport = async ( options?: RequestInit): Promise<void> => {
+export const adminGetTransferInfo = async ( options?: RequestInit): Promise<DataTransferInfoResponse> => {
 
-  return customFetch<void>(getAdminExportUrl(),
+  return customFetch<DataTransferInfoResponse>(getAdminGetTransferInfoUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getAdminGetTransferInfoMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminGetTransferInfo>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof adminGetTransferInfo>>, TError,void, TContext> => {
+
+const mutationKey = ['adminGetTransferInfo'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminGetTransferInfo>>, void> = () => {
+
+
+          return  adminGetTransferInfo(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AdminGetTransferInfoMutationResult = NonNullable<Awaited<ReturnType<typeof adminGetTransferInfo>>>
+
+    export type AdminGetTransferInfoMutationError = unknown
+
+    export const useAdminGetTransferInfo = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminGetTransferInfo>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof adminGetTransferInfo>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getAdminGetTransferInfoMutationOptions(options), queryClient);
+    }
+    export const getAdminExportUrl = (params?: AdminExportParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/v1/admin/export?${stringifiedParams}` : `/api/v1/admin/export`
+}
+
+export const adminExport = async (params?: AdminExportParams, options?: RequestInit): Promise<Blob> => {
+
+  return customFetch<Blob>(getAdminExportUrl(params),
   {
     ...options,
     method: 'GET'
@@ -70,8 +147,8 @@ export const adminExport = async ( options?: RequestInit): Promise<void> => {
 
 
 export const getAdminExportMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminExport>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof adminExport>>, TError,void, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminExport>>, TError,{params?: AdminExportParams}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof adminExport>>, TError,{params?: AdminExportParams}, TContext> => {
 
 const mutationKey = ['adminExport'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
@@ -83,10 +160,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminExport>>, void> = () => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminExport>>, {params?: AdminExportParams}> = (props) => {
+          const {params} = props ?? {};
 
-
-          return  adminExport(requestOptions)
+          return  adminExport(params,requestOptions)
         }
 
 
@@ -101,11 +178,11 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type AdminExportMutationError = unknown
 
     export const useAdminExport = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminExport>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminExport>>, TError,{params?: AdminExportParams}, TContext>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof adminExport>>,
         TError,
-        void,
+        {params?: AdminExportParams},
         TContext
       > => {
       return useMutation(getAdminExportMutationOptions(options), queryClient);
@@ -118,9 +195,9 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
   return `/api/v1/admin/import`
 }
 
-export const adminImport = async ( options?: RequestInit): Promise<Blob> => {
+export const adminImport = async ( options?: RequestInit): Promise<DataTransferImportResponse> => {
 
-  return customFetch<Blob>(getAdminImportUrl(),
+  return customFetch<DataTransferImportResponse>(getAdminImportUrl(),
   {
     ...options,
     method: 'POST'

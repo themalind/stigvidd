@@ -1160,19 +1160,38 @@ Best when you want to clone content from one running host to another through the
 browser, without SSH.
 
 1. On the **source**, sign in to the admin web → **Migration** →
-   **Export all data**. Downloads a single archive (app DB + Keycloak DB +
-   referenced media).
-2. On the **target** (already deployed per Part 1), go to **Migration** →
+   **Export all data**. Downloads a single archive: app DB, referenced media,
+   trail-import source files and, on a host that runs its own Keycloak, the
+   Keycloak DB. Tick **Anonymize personal data** for a staging/test copy (see
+   below).
+2. On the **target** (already deployed per Part 1, at the **same or a newer**
+   version — an archive from newer code is refused), go to **Migration** →
    **Import**, choose the archive, type the hostname to confirm, and import.
-3. **Restart** the target's api + keycloak (the import replaces the databases
-   they were connected to):
+3. **Restart** what the import result names — `api`, plus `keycloak` when Keycloak
+   was restored:
    ```bash
    docker compose restart api keycloak
    ```
 
 > Import is **destructive** — it replaces all data on the target. Run it on a
 > freshly deployed, idle target (before it serves traffic). Requires the
-> `stigvidd-admin` realm role.
+> `stigvidd-admin` realm role. The database restore is one transaction: a failure
+> leaves the target's database as it was. Background workers pause while it runs.
+
+**Anonymized export.** The production database is copied into a scratch database
+on the production server, anonymized there, and only that copy is archived, so
+personal data never leaves the host. Users get placeholder names, addresses
+and login identities; push tokens, verification/reset codes and the mail log
+are removed; moderation notes are cleared; Keycloak is left out. Hikes, reviews
+and photos are kept. The column-by-column list is `DataAnonymizer` in
+`backend/Core/Services/DataAnonymizer.cs`; a test fails when a new column is not
+classified there.
+
+**Hosts that borrow production's services.** `DATA_TRANSFER_SHARED_SERVICES=true`
+(set by `docker-compose.staging.yml`) marks a host that uses another host's
+Keycloak, mail server and observatory. There an export never includes Keycloak, an
+import never restores it, and every import clears queued mail, push tokens and
+verification/reset codes. Production leaves it unset (`false`).
 
 ### Method B — Volume copy (shell) — exact byte-for-byte clone
 

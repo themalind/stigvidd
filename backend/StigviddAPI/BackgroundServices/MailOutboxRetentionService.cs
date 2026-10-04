@@ -1,6 +1,7 @@
 // SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+using Core.Interfaces.Services;
 using Core.Interfaces.Repositories;
 
 namespace StigviddAPI.BackgroundServices;
@@ -27,6 +28,7 @@ public class MailOutboxRetentionService : BackgroundService
     private const int DefaultBodyRetentionHours = 24;
 
     private readonly IServiceScopeFactory _scopeFactory;
+    private readonly IMaintenanceGate _maintenance;
     private readonly ILogger<MailOutboxRetentionService> _logger;
     private readonly TimeSpan _interval;
     private readonly int _sentRetentionDays;
@@ -35,10 +37,12 @@ public class MailOutboxRetentionService : BackgroundService
 
     public MailOutboxRetentionService(
         IServiceScopeFactory scopeFactory,
+        IMaintenanceGate maintenance,
         ILogger<MailOutboxRetentionService> logger,
         IConfiguration configuration)
     {
         _scopeFactory = scopeFactory;
+        _maintenance = maintenance;
         _logger = logger;
 
         // The interval is an hour rather than the obstacle sweep's day on purpose. It is the
@@ -70,6 +74,8 @@ public class MailOutboxRetentionService : BackgroundService
 
     private async Task RunRetentionAsync(CancellationToken stoppingToken)
     {
+        await _maintenance.WaitWhilePausedAsync(stoppingToken);
+
         try
         {
             // A hosted service is a singleton, so the repository is resolved per run.

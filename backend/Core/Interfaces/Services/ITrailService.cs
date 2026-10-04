@@ -22,5 +22,8 @@ public interface ITrailService
     Task<Result<IReadOnlyCollection<TrailImageResponse>>> AddTrailImagesAsync(string trailIdentifier, IFormFileCollection images, ImageProcessingOptions options, CancellationToken ctoken);
     Task<Result<string>> SetTrailSymbolAsync(string trailIdentifier, IFormFile symbol, ImageProcessingOptions options, CancellationToken ctoken);
     Task<Result> DeleteTrailImageAsync(string imageIdentifier, CancellationToken ctoken);
+    Task<Result<IReadOnlyCollection<AdminTrailListItemResponse>>> GetAllTrailsForAdminAsync(CancellationToken ctoken);
+    Task<Result<TrailResponse?>> GetTrailForAdminAsync(string identifier, CancellationToken ctoken);
+    Task<Result> SetTrailVerifiedAsync(string identifier, bool isVerified, CancellationToken ctoken);
 }
 

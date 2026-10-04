@@ -5,6 +5,8 @@ using AwesomeAssertions;
 using StigviddAPI;
 using System.Net;
 using System.Net.Http.Headers;
+using System.Net.Http.Json;
+using WebDataContracts.ResponseModels.DataTransfer;
 
 namespace IntegrationTests.AdminController;
 
@@ -64,6 +66,38 @@ public class AdminControllerIntegrationTests : IClassFixture<StigViddWebApplicat
 
         // Act
         var response = await client.PostAsync("/api/v1/admin/import", content, TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+    }
+
+    [Fact]
+    public async Task TransferInfo_OnAPrimaryHost_SaysKeycloakIsIncludedAndOutboundIsKept()
+    {
+        // Arrange
+        var client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", AuthenticatedUser);
+        client.DefaultRequestHeaders.Add(TestAuthHandler.RolesHeader, TestAuthHandler.AdminRole);
+
+        // Act
+        var info = await client.GetFromJsonAsync<DataTransferInfoResponse>("/api/v1/admin/transfer-info", TestContext.Current.CancellationToken);
+
+        // Assert
+        if (info is null) throw new InvalidOperationException("expected a body");
+        info.SharedServices.Should().BeFalse();
+        info.ImportRestoresKeycloak.Should().BeTrue();
+        info.ImportClearsOutbound.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task TransferInfo_WithoutAdminRole_ShouldReturnForbidden()
+    {
+        // Arrange
+        var client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", AuthenticatedUser);
+
+        // Act
+        var response = await client.GetAsync("/api/v1/admin/transfer-info", TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Forbidden);

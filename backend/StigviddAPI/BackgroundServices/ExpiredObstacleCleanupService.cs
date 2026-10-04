@@ -1,6 +1,7 @@
 // SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+using Core.Interfaces.Services;
 using Core.Interfaces.Repositories;
 
 namespace StigviddAPI.BackgroundServices;
@@ -11,15 +12,18 @@ public class ExpiredObstacleCleanupService : BackgroundService
     private const int DefaultIntervalHours = 24;
 
     private readonly IServiceScopeFactory _scopeFactory;
+    private readonly IMaintenanceGate _maintenance;
     private readonly ILogger<ExpiredObstacleCleanupService> _logger;
     private readonly TimeSpan _interval;
 
     public ExpiredObstacleCleanupService(
         IServiceScopeFactory scopeFactory,
+        IMaintenanceGate maintenance,
         ILogger<ExpiredObstacleCleanupService> logger,
         IConfiguration configuration)
     {
         _scopeFactory = scopeFactory;
+        _maintenance = maintenance;
         _logger = logger;
 
         var hours = int.TryParse(configuration["ObstacleRetention:CleanupIntervalHours"], out var configured)
@@ -43,6 +47,8 @@ public class ExpiredObstacleCleanupService : BackgroundService
 
     private async Task RunCleanupAsync(CancellationToken stoppingToken)
     {
+        await _maintenance.WaitWhilePausedAsync(stoppingToken);
+
         try
         {
             // A hosted service is a singleton, so the repository is resolved per run.

@@ -3,6 +3,14 @@
 // Flow: test -> build images -> push to registry -> deploy to a remote host
 // over SSH (docker compose pull && up -d).
 //
+// Branches (multibranch job):
+//   main     production. Builds, pushes and deploys all six images.
+//   staging  staging. Builds/pushes api web site media proxy tagged <sha>-staging
+//            plus a moving `staging`, with the staging web build args, and deploys
+//            to STAGING_DEPLOY_HOST (skipped, still green, while that is unset).
+//   others   (feature branches, PRs) stop after Test.
+// Per-branch values are resolved ONCE, in Preflight — see "Resolve per-branch config".
+//
 // The agent runs directly on the Jenkins host — the toolchains are installed
 // natively, so only the *image builds* use Docker.
 //
@@ -13,10 +21,27 @@
 //       - id: registry-credentials   type: Username/Password
 //           registry: https://inkaben.se/  (host inkaben.se, API at /v2/)
 //           user: stigvidd   (password stored in Jenkins, never in git)
-//       - id: deploy-ssh-key         type: SSH Username with private key (deploy host)
+//       - id: deploy-ssh-key         type: SSH Username with private key (deploy host;
+//                                    also used for the staging host, so authorise
+//                                    its public key there too)
+//       - id: staging-oo-logs-token  type: Secret text — the staging OpenObserve org's
+//           web@ INGESTION token (baked into the staging web bundle). OPTIONAL: if the
+//           credential does not exist the staging web image is built with no token and
+//           web/src/services/telemetry.ts installs no log sink.
 //
-//  2. Plugins: SSH Agent, Timestamper. (No Docker Pipeline plugin needed —
-//     nothing runs `inside` a container any more.)
+//     Global environment variables (Manage Jenkins > System > Global properties >
+//     Environment variables):
+//       - STAGING_DEPLOY_HOST   e.g. stigvidd@staging-host. While unset/empty the
+//           staging build pushes images and SKIPS the deploy (green).
+//       - STAGING_OO_LOGS_URL   https://observatory.stigvidd.se/api/<staging-org-id>/stigvidd_web_logs/_json
+//           Optional; empty builds the web image without telemetry.
+//
+//  2. Plugins: SSH Agent, Timestamper, Lockable Resources (the `lock` option below
+//     serialises main and staging builds across the multibranch job). (No Docker
+//     Pipeline plugin needed — nothing runs `inside` a container any more.)
+//
+//     The `staging` branch must exist in the remote (git push origin staging) for the
+//     multibranch job to discover it and build it.
 //
 //  3. The agent host needs:
 //       - .NET SDK 10                      (backend build/test)
@@ -27,7 +52,8 @@
 //       - ssh + scp, with the deploy host in the jenkins user's
 //         ~/.ssh/known_hosts. An unseeded or stale entry fails the Deploy
 //         stage at exit 255 ("Host key verification failed") before it
-//         authenticates — re-seed per the comment in that stage.
+//         authenticates — re-seed per the comment in that stage. Do the same for the
+//         STAGING host (ssh-keyscan -H <staging host>) before the first staging deploy.
 //
 //     SpatiaLite: IntegrationTests.csproj references Sqlite.Core +
 //     SQLitePCLRaw.provider.sqlite3 on Unix (rather than the bundled provider)
@@ -60,8 +86,10 @@
 //         `pull`/`up` fails first. See DEPLOYMENT.md Part 1.)
 //     REGISTRY and IMAGE_TAG are injected by this pipeline at deploy time.
 //
-//  5. Adjust the CONFIGURE block below (registry, deploy host/path, VITE_* build
-//     values). VITE_* are public (client id + URLs), baked into the web bundle.
+//  5. Adjust the CONFIGURE block below (registry) and the per-branch map in
+//     Preflight (deploy host/path, VITE_* build values). VITE_* are baked into the
+//     web bundle, so the web image is per environment; the OO token is a secret
+//     for staging (credential) and — historically — inline for production.
 // ─────────────────────────────────────────────────────────────────────────
 
 pipeline {
@@ -75,6 +103,10 @@ pipeline {
     // Also protects the shared ~/.nuget and ~/.npm caches from concurrent
     // writes now that builds are not isolated in containers.
     disableConcurrentBuilds()
+    // ...and across branches: a main and a staging build must not run at once on
+    // the one agent (shared workspace caches, one Docker daemon, image pruning).
+    // Needs the Lockable Resources plugin.
+    lock(resource: 'stigvidd-ci')
     buildDiscarder(logRotator(numToKeepStr: '20'))
     timeout(time: 40, unit: 'MINUTES')
   }
@@ -85,20 +117,12 @@ pipeline {
     // so `inkaben.se` is both login host and namespace ->
     // images: inkaben.se/stigvidd-{api,web}:<tag>.
     REGISTRY       = 'lingonberg.se'                       // registry host
-    DEPLOY_HOST    = 'stigvidd@stigvidd.se'    // ssh target
-    DEPLOY_PATH    = '/opt/stigvidd'                    // compose dir on host
+    // DEPLOY_HOST, DEPLOY_PATH, IMAGES and the VITE_* values differ per branch
+    // and are set in Preflight ("Resolve per-branch config").
 
     // Uncomment and adjust if the toolchains are not on the agent's default PATH.
     // PATH = "/usr/local/bin:/usr/share/dotnet:${env.PATH}"
 
-    // Web build-time config (public values, baked into the SPA bundle).
-    VITE_API_URL    = 'https://api.stigvidd.se'
-    VITE_OIDC_URL   = 'https://auth.stigvidd.se'
-    VITE_OIDC_REALM = 'stigvidd'
-    VITE_CLIENT_ID  = 'stigvidd-admin'
-    VITE_OO_LOGS_URL= 'https://observatory.stigvidd.se/api/3Igh0Ez9tpaLNBgzzVouYA1NyT5/stigvidd_web_logs/_json'
-    VITE_OO_LOGS_TOKEN='c3RpZ3ZpZGQtcHJvZHVjdGlvbi13ZWI6bzJvaV9PcTZHNHo5VGR4UXFpYmhJMjlQU1RENGFXRlhWNHdMTg=='
-    
     // ========================================================================
 
     DOTNET_NOLOGO = '1'
@@ -192,14 +216,59 @@ pipeline {
           fi
         '''
 
-        // Immutable per-commit tag; keeps deploys traceable and rollbacks easy.
-        // Resolved once here, after checkout, so every later stage agrees.
+        // Resolve per-branch config. Everything that differs between production
+        // (main) and staging is set here, once, after checkout, so every later stage
+        // agrees. Other branches get only IMAGE_TAG: they stop after Test.
+        //
+        // main    : the values that used to live in the environment block, unchanged.
+        // staging : own host/path, `<sha>-staging` tags + moving `staging`, no keycloak
+        //           (staging borrows production's), and the staging web build args.
+        // IMAGE_TAG is an immutable per-commit tag; keeps deploys traceable and
+        // rollbacks easy.
         script {
-          env.IMAGE_TAG = sh(
+          def sha = sh(
             script: 'git rev-parse --short=12 HEAD',
             returnStdout: true).trim()
+          env.IMAGE_TAG = sha
+          if (env.BRANCH_NAME == 'main') {
+            env.DEPLOY_HOST        = 'stigvidd@stigvidd.se'
+            env.DEPLOY_PATH        = '/opt/stigvidd'
+            env.MOVING_TAG         = 'latest'
+            env.IMAGES             = 'api web site media proxy keycloak'
+            env.DEPLOY_DIRS        = 'db/init scripts observability'
+            env.COPY_OBSERVABILITY = 'true'
+            env.COMPOSE_FILES      = 'docker-compose.yml'
+            env.REMOTE_COMPOSE_ENV = ''
+            env.VITE_API_URL       = 'https://api.stigvidd.se'
+            env.VITE_OIDC_URL      = 'https://auth.stigvidd.se'
+            env.VITE_OIDC_REALM    = 'stigvidd'
+            env.VITE_CLIENT_ID     = 'stigvidd-admin'
+            env.VITE_OO_LOGS_URL   = 'https://observatory.stigvidd.se/api/3Igh0Ez9tpaLNBgzzVouYA1NyT5/stigvidd_web_logs/_json'
+            env.VITE_OO_LOGS_TOKEN = 'c3RpZ3ZpZGQtcHJvZHVjdGlvbi13ZWI6bzJvaV9PcTZHNHo5VGR4UXFpYmhJMjlQU1RENGFXRlhWNHdMTg=='
+          } else if (env.BRANCH_NAME == 'staging') {
+            env.IMAGE_TAG          = "${sha}-staging"
+            // Global env var; unset until the staging host exists -> deploy is skipped.
+            env.DEPLOY_HOST        = env.STAGING_DEPLOY_HOST ?: ''
+            env.DEPLOY_PATH        = '/opt/stigvidd-staging'
+            env.MOVING_TAG         = 'staging'
+            env.IMAGES             = 'api web site media proxy'
+            env.DEPLOY_DIRS        = 'db/init scripts'
+            env.COPY_OBSERVABILITY = 'false'
+            env.COMPOSE_FILES      = 'docker-compose.yml docker-compose.staging.yml'
+            // Explicit, so the host's .env cannot forget the override (it would then
+            // run the full Caddyfile).
+            env.REMOTE_COMPOSE_ENV = 'COMPOSE_FILE=docker-compose.yml:docker-compose.staging.yml'
+            env.VITE_API_URL       = 'https://staging.api.stigvidd.se'
+            env.VITE_OIDC_URL      = 'https://auth.stigvidd.se'
+            env.VITE_OIDC_REALM    = 'stigvidd-staging'
+            env.VITE_CLIENT_ID     = 'stigvidd-admin'
+            env.VITE_OO_LOGS_URL   = env.STAGING_OO_LOGS_URL ?: ''
+            // The token is bound from the staging-oo-logs-token credential in the
+            // Build stage; empty here is the "credential missing" fallback.
+            env.VITE_OO_LOGS_TOKEN = ''
+          }
         }
-        echo "Building ${env.IMAGE_TAG}"
+        echo "Branch ${env.BRANCH_NAME}: building ${env.IMAGE_TAG}"
       }
     }
 
@@ -286,51 +355,91 @@ pipeline {
     }
 
     stage('Build & Push images') {
-      when { branch 'main' }   // only publish from main; PRs stop after Test
+      // Only main (production) and staging publish; PRs and other branches stop
+      // after Test.
+      when { anyOf { branch 'main'; branch 'staging' } }
       steps {
-        withCredentials([usernamePassword(
-          credentialsId: 'registry-credentials',
-          usernameVariable: 'REG_USER',
-          passwordVariable: 'REG_PASS')]) {
+        script {
           // ci/build.env supplies throwaway values for compose's whole-file
           // interpolation (the required ${..:?} refs on db/api/media/proxy/
           // keycloak). Real env vars — REGISTRY, IMAGE_TAG, VITE_* — take
           // precedence over the file. Nothing from build.env is baked in.
-          sh '''
-            set -e
-            echo "$REG_PASS" | docker login "${REGISTRY%%/*}" -u "$REG_USER" --password-stdin
-            trap 'docker logout "${REGISTRY%%/*}" >/dev/null 2>&1 || true' EXIT
+          // $IMAGES and $MOVING_TAG are per-branch (Preflight). Single-quoted:
+          // Groovy does not interpolate, the shell expands them.
+          def buildAndPush = {
+            withCredentials([usernamePassword(
+              credentialsId: 'registry-credentials',
+              usernameVariable: 'REG_USER',
+              passwordVariable: 'REG_PASS')]) {
+              sh '''
+                set -e
+                echo "$REG_PASS" | docker login "${REGISTRY%%/*}" -u "$REG_USER" --password-stdin
+                trap 'docker logout "${REGISTRY%%/*}" >/dev/null 2>&1 || true' EXIT
 
-            # Parallelises the six image builds via buildx bake. Drop this line
-            # if the agent's Docker has no buildx plugin.
-            export COMPOSE_BAKE=true
+                # Parallelises the image builds via buildx bake. Drop this line
+                # if the agent's Docker has no buildx plugin.
+                export COMPOSE_BAKE=true
 
-            docker compose --env-file ci/build.env build api web site media proxy keycloak
-            docker compose --env-file ci/build.env push api web site media proxy keycloak
+                docker compose --env-file ci/build.env build $IMAGES
+                docker compose --env-file ci/build.env push $IMAGES
 
-            # Also publish a moving `latest` so a deploy host can pin
-            # IMAGE_TAG=latest once instead of editing .env for every commit.
-            # This stage only runs on main, so `latest` always means current main.
-            # The per-commit tags stay immutable, for pinning and rollback.
-            # Assumes the compose image names stay ${REGISTRY}/stigvidd-<service>,
-            # which is how all six are declared in docker-compose.yml.
-            for svc in api web site media proxy keycloak; do
-              docker tag  "${REGISTRY}/stigvidd-${svc}:${IMAGE_TAG}" "${REGISTRY}/stigvidd-${svc}:latest"
-              docker push --quiet "${REGISTRY}/stigvidd-${svc}:latest"
-            done
-          '''
+                # Also publish a moving tag (`latest` on main, `staging` on staging) so
+                # a deploy host can pin IMAGE_TAG once instead of editing .env for every
+                # commit. This stage only runs on main/staging, so each tag always means
+                # the current head of its branch. The per-commit tags stay immutable,
+                # for pinning and rollback.
+                # Assumes the compose image names stay ${REGISTRY}/stigvidd-<service>.
+                for svc in $IMAGES; do
+                  docker tag  "${REGISTRY}/stigvidd-${svc}:${IMAGE_TAG}" "${REGISTRY}/stigvidd-${svc}:${MOVING_TAG}"
+                  docker push --quiet "${REGISTRY}/stigvidd-${svc}:${MOVING_TAG}"
+                done
+              '''
+            }
+          }
+
+          if (env.BRANCH_NAME == 'staging') {
+            // The staging web token is optional. Probe for the credential first, so a
+            // missing one is told apart from a failing build (which must stay red).
+            def haveToken = true
+            try {
+              withCredentials([string(credentialsId: 'staging-oo-logs-token', variable: 'PROBE')]) { }
+            } catch (err) {
+              haveToken = false
+            }
+            if (haveToken) {
+              // Bound as an env var, masked in the log, never in argv. Compose reads
+              // VITE_OO_LOGS_TOKEN from the environment.
+              withCredentials([string(credentialsId: 'staging-oo-logs-token', variable: 'VITE_OO_LOGS_TOKEN')]) {
+                buildAndPush()
+              }
+            } else {
+              echo 'Credential staging-oo-logs-token not found: building the staging web image without telemetry.'
+              buildAndPush()
+            }
+          } else {
+            buildAndPush()
+          }
         }
       }
       post {
         always {
-          // The agent's Docker daemon is long-lived and every main build tags
-          // six new per-commit images — without this the disk fills up.
-          // Keeps the current build's tags so their layers stay cached.
+          // The agent's Docker daemon is long-lived and every build tags new
+          // per-commit images — without this the disk fills up.
+          // Keeps the current build's tags (and the moving tag) so their layers stay
+          // cached. A staging build prunes only staging tags (-staging / staging) and
+          // a main build only the others, so neither wipes the other's cache.
           sh '''
             [ -n "${IMAGE_TAG:-}" ] || exit 0
+            if [ "${BRANCH_NAME}" = "staging" ]; then
+              KIND='grep -E'
+            else
+              KIND='grep -Ev'
+            fi
             docker image ls --filter "reference=${REGISTRY}/stigvidd-*:*" \
                             --format '{{.Repository}}:{{.Tag}}' \
+              | $KIND ':(.*-staging|staging)$' \
               | grep -v ":${IMAGE_TAG}$" \
+              | grep -v ":${MOVING_TAG}$" \
               | xargs -r docker rmi || true
             docker image prune -f >/dev/null || true
           '''
@@ -338,8 +447,27 @@ pipeline {
       }
     }
 
+    stage('Deploy (skipped: no host)') {
+      // Staging before STAGING_DEPLOY_HOST is configured: images are pushed, deploy
+      // is skipped, the build stays green.
+      when {
+        allOf {
+          branch 'staging'
+          expression { return !(env.DEPLOY_HOST?.trim()) }
+        }
+      }
+      steps {
+        echo "staging host not configured (STAGING_DEPLOY_HOST unset); images pushed as ${env.IMAGE_TAG} (and moving tag ${env.MOVING_TAG}), deploy skipped"
+      }
+    }
+
     stage('Deploy') {
-      when { branch 'main' }
+      when {
+        allOf {
+          anyOf { branch 'main'; branch 'staging' }
+          expression { return env.DEPLOY_HOST?.trim() as boolean }
+        }
+      }
       steps {
         withCredentials([usernamePassword(
           credentialsId: 'registry-credentials',
@@ -353,10 +481,17 @@ pipeline {
               # "Host key verification failed" (exit 255) before authentication is
               # even attempted. Re-seed it, as the jenkins user, and check the
               # fingerprint against the deploy host before trusting it:
+              # (Same for the staging host: substitute its name.)
               #   sudo -u jenkins ssh-keygen -R stigvidd.se -f /var/lib/jenkins/.ssh/known_hosts
               #   sudo -u jenkins sh -c 'ssh-keyscan -H stigvidd.se >> /var/lib/jenkins/.ssh/known_hosts'
-              ssh -o BatchMode=yes "${DEPLOY_HOST}" "mkdir -p ${DEPLOY_PATH}/db/init ${DEPLOY_PATH}/scripts ${DEPLOY_PATH}/observability"
-              scp docker-compose.yml "${DEPLOY_HOST}:${DEPLOY_PATH}/docker-compose.yml"
+              # $DEPLOY_DIRS: db/init scripts (+ observability on main).
+              REMOTE_DIRS=""
+              for d in $DEPLOY_DIRS; do REMOTE_DIRS="$REMOTE_DIRS ${DEPLOY_PATH}/$d"; done
+              ssh -o BatchMode=yes "${DEPLOY_HOST}" "mkdir -p $REMOTE_DIRS"
+              # $COMPOSE_FILES: docker-compose.yml, plus docker-compose.staging.yml on staging.
+              for f in $COMPOSE_FILES; do
+                scp "$f" "${DEPLOY_HOST}:${DEPLOY_PATH}/$f"
+              done
               # The host's operational scripts. DEPLOYMENT.md invokes all of these
               # as ./scripts/<name>.sh from the compose directory, and
               # container-log-retention.sh is run by a systemd timer there — so
@@ -378,7 +513,10 @@ pipeline {
               # sits behind a compose profile and is absent from the up-set below,
               # that would surface whenever someone next ran it by hand rather than
               # on the deploy that broke it.
-              scp observability/*.yaml "${DEPLOY_HOST}:${DEPLOY_PATH}/observability/"
+              # Production only: staging runs no hostmetrics collector.
+              if [ "$COPY_OBSERVABILITY" = "true" ]; then
+                scp observability/*.yaml "${DEPLOY_HOST}:${DEPLOY_PATH}/observability/"
+              fi
 
               # Authenticate the deploy host to the private registry so it can
               # pull. Password is piped over ssh stdin (never in argv/logs).
@@ -388,7 +526,8 @@ pipeline {
               # REGISTRY/IMAGE_TAG override the host .env; POSTGRES_PASSWORD etc.
               # come from the persistent .env already on the host.
               #
-              # Scoped to the six images this pipeline builds, deliberately NOT
+              # Scoped to the images this pipeline builds ($IMAGES: six on main, five on
+              # staging, which borrows production's keycloak), deliberately NOT
               # `db`. An unscoped `pull` would re-pull postgis/postgis:17-3.5 and
               # `up -d` would then recreate the live database container whenever
               # upstream moves that tag. --no-deps stops compose from touching db
@@ -397,11 +536,11 @@ pipeline {
               # operation, on purpose (see DEPLOYMENT.md Part 3).
               #
               # No --remove-orphans: paired with a scoped `up` it can remove
-              # containers outside the named set. Recreating these six keeps all
+              # containers outside the named set. Recreating these keeps all
               # named volumes (pgdata, media, caddy_data, caddy_config) intact.
               ssh -o BatchMode=yes "${DEPLOY_HOST}" "cd ${DEPLOY_PATH} && \
-                REGISTRY=${REGISTRY} IMAGE_TAG=${IMAGE_TAG} docker compose pull api web site media proxy keycloak && \
-                REGISTRY=${REGISTRY} IMAGE_TAG=${IMAGE_TAG} docker compose up -d --no-deps api web site media proxy keycloak && \
+                ${REMOTE_COMPOSE_ENV} REGISTRY=${REGISTRY} IMAGE_TAG=${IMAGE_TAG} docker compose pull ${IMAGES} && \
+                ${REMOTE_COMPOSE_ENV} REGISTRY=${REGISTRY} IMAGE_TAG=${IMAGE_TAG} docker compose up -d --no-deps ${IMAGES} && \
                 docker image prune -f"
             '''
           }

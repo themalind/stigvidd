@@ -63,6 +63,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IEmailVerificationTokenRepository, EmailVerificationTokenRepository>();
         services.AddTransient<IPasswordResetTokenRepository, PasswordResetTokenRepository>();
         services.AddTransient<IContentReportRepository, ContentReportRepository>();
+        services.AddTransient<IAdminDashboardRepository, AdminDashboardRepository>();
 
         // Services
         services.AddTransient<ITrailService, TrailService>();
@@ -76,6 +77,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IMediaReprocessQueue, MediaReprocessQueue>();
         services.AddTransient<MediaReprocessItemProcessor>();
         services.AddTransient<IDataTransferService, DataTransferService>();
+        services.AddSingleton<IMaintenanceGate, MaintenanceGate>();
         services.AddTransient<IHikeService, HikeService>();
         services.AddTransient<ITrailObstaclesService, TrailObstaclesService>();
         services.AddTransient<IFacilityService, FacilityService>();
@@ -89,6 +91,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<ITrailImportService, TrailImportService>();
         services.AddTransient<ITrailImportFileStore, TrailImportFileStore>();
         services.AddTransient<IContentReportService, ContentReportService>();
+        services.AddTransient<IAdminDashboardService, AdminDashboardService>();
 
         // Singleton: the queue is the handover point between the upload request and the worker.
         services.AddSingleton<ITrailImportAnalysisQueue, TrailImportAnalysisQueue>();

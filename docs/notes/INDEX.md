@@ -861,3 +861,17 @@ src/api/generated` then fails with "the generated API client is stale" for reaso
   add-review-images.tsx showed "Endast JPG-bilder är tillåtna" / "Only JPG images are allowed" (jpgOnly) and
   blocked review image upload on iOS only. resizeImage (expo-image-manipulator, SaveFormat.JPEG) already
   re-encodes every pick, so check the uploaded output, never the source format.
+- [Umeå kommun's trail export is not shaped like Borås's, and one MultiLineString used to fail the whole import](umea-trail-export-differs-from-boras.md) —
+  vandringsleder.geojson has MultiLineString geometry, no id, length in langd (integer metres, 0 = unmeasured) instead of
+  sparlangd. SourceFeatureReader threw InvalidOperationException on a MultiLineString and TrailImportAnalysisService marked
+  the session Failed; parts never meet exactly, so it chains within 25 m (not LineMerger) and splits the rest. Upload with
+  source umea-kommun, because the default is boras-stad.
+- [Restoring a pg_dump into a database the postgis image created fails on schema tiger already exists](postgis-image-schemas-break-a-dump-restore.md) —
+  the postgis/postgis image installs postgis_tiger_geocoder, postgis_topology and fuzzystrmatch into POSTGRES_DB, so pg_dump
+  emits CREATE SCHEMA tiger / tiger_data / topology and a restore (admin import, DataTransferService, pg_restore, psql) into
+  prod or staging fails; a hand-made createdb test database lacks them and hides it. The restore drops every dumped schema
+  first, in one psql transaction; EF __EFMigrationsHistory lives in public, not dbo.
+- [The api image's postgresql-client major must track the postgis/postgis tag, or admin export stops working](pg-client-must-match-the-postgis-server-major.md) —
+  pg_dump aborts with "server version mismatch" against a newer server; backend/Dockerfile had postgresql-client-16 while
+  docker-compose.yml ran postgis/postgis:17-3.5, so GET /api/v1/admin/export failed in production and no test noticed.
+  Bump both together; verify-in-docker is the only check of the real export/import path.

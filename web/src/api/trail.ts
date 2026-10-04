@@ -2,15 +2,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {
+  AdminTrailListItem,
   ImageProcessingOptions,
   TrailImageResponse,
   TrailResponse,
-  TrailShortInfoResponse,
   UpdateTrailRequest,
 } from "@/types/types";
-import { trailsGetAllTrails, trailsGetTrailByIdentifier } from "./generated/trails/trails";
-// Editing a trail is admin-only and lives under api/v1/admin/trails.
 import {
+  adminTrailsGetAllTrails,
+  adminTrailsGetTrail,
+  adminTrailsSetTrailVerified,
   adminTrailsUpdateTrail,
   getAdminTrailsAddTrailImagesUrl,
   getAdminTrailsDeleteTrailImageUrl,
@@ -25,12 +26,16 @@ import { appendProcessingOptions } from "./image-options";
 // types, so responses are asserted back to those types at this boundary.
 // Auth + base URL are handled centrally by the `customFetch` mutator.
 
-export async function getAllTrails(): Promise<TrailShortInfoResponse[]> {
-  return (await trailsGetAllTrails()) as TrailShortInfoResponse[];
+export async function getAllTrails(): Promise<AdminTrailListItem[]> {
+  return (await adminTrailsGetAllTrails()) as AdminTrailListItem[];
 }
 
 export async function getTrailByIdentifier({ identifier }: { identifier: string }): Promise<TrailResponse> {
-  return (await trailsGetTrailByIdentifier(identifier)) as TrailResponse;
+  return (await adminTrailsGetTrail(identifier)) as TrailResponse;
+}
+
+export async function setTrailVerified(identifier: string, isVerified: boolean): Promise<void> {
+  await adminTrailsSetTrailVerified(identifier, { isVerified });
 }
 
 export async function updateTrail(identifier: string, request: UpdateTrailRequest): Promise<TrailResponse> {

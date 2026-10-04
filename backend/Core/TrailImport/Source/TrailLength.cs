@@ -91,7 +91,7 @@ public static class TrailLength
         return ratio > DisagreementFactor || ratio < 1 / DisagreementFactor;
     }
 
-    private static double Haversine(Coordinate from, Coordinate to)
+    internal static double Haversine(Coordinate from, Coordinate to)
     {
         var dLat = ToRadians(to.Y - from.Y);
         var dLon = ToRadians(to.X - from.X);

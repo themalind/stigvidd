@@ -13,7 +13,6 @@ namespace StigviddAPI.Controllers.Admin;
 
 /// <summary>
 /// Trail content management for the admin dashboard. Admin-only.
-/// The read endpoints and user-submitted trail creation live in <see cref="TrailsController"/>.
 /// Every action here is resolved by the "AdminOnly" policy alone — none of them needs
 /// the caller's app-side user row, and the admin dashboard never provisions one.
 /// </summary>
@@ -29,6 +28,56 @@ public class AdminTrailsController : StigViddController
     {
         _trailService = trailService;
         _logger = logger;
+    }
+
+    [HttpGet]
+    public async Task<ActionResult<IReadOnlyCollection<AdminTrailListItemResponse>>> GetAllTrails(CancellationToken ctoken)
+    {
+        var result = await _trailService.GetAllTrailsForAdminAsync(ctoken);
+
+        if (!result.Success && result.Message != null)
+        {
+            _logger.LogInformation("GetAllTrails: Failed to fetch trails.");
+
+            return ToActionResult(result.Message);
+        }
+
+        return Ok(result.Value);
+    }
+
+    [HttpGet("{identifier}")]
+    public async Task<ActionResult<TrailResponse?>> GetTrail(string identifier, CancellationToken ctoken)
+    {
+        var result = await _trailService.GetTrailForAdminAsync(identifier, ctoken);
+
+        if (!result.Success && result.Message != null)
+        {
+            _logger.LogInformation(
+                "GetTrail: Failed to fetch trail with identifier: {identifier}.", identifier);
+
+            return ToActionResult(result.Message);
+        }
+
+        return Ok(result.Value);
+    }
+
+    [HttpPut("{identifier}/verified")]
+    public async Task<ActionResult> SetTrailVerified(
+        string identifier,
+        [FromBody] SetTrailVerifiedRequest request,
+        CancellationToken ctoken)
+    {
+        var result = await _trailService.SetTrailVerifiedAsync(identifier, request.IsVerified, ctoken);
+
+        if (!result.Success && result.Message != null)
+        {
+            _logger.LogInformation(
+                "SetTrailVerified: Failed to set IsVerified on trail with identifier: {identifier}.", identifier);
+
+            return ToActionResult(result.Message);
+        }
+
+        return NoContent();
     }
 
     [HttpPut("{identifier}")]

@@ -135,4 +135,136 @@ public class SourceFeatureReaderTests
         // Act & Assert — an upload of the wrong file should be empty, not an exception.
         SourceFeatureReader.Read(Json("""{ "type": "FeatureCollection" }""")).Should().BeEmpty();
     }
+
+    [Fact]
+    public void Read_ForAMultiLineStringBesideALineString_ShouldReadBoth()
+    {
+        // Arrange — Umeå kommun's export; one MultiLineString used to fail the whole analysis.
+        var json = """
+        { "features": [
+          { "properties": { "namn": "Lövölandets led", "langd": 1546 },
+            "geometry": { "type": "LineString", "coordinates": [[20.40, 63.72], [20.41, 63.73]] } },
+          { "properties": { "namn": "Brännland Runt", "langd": 2621 },
+            "geometry": { "type": "MultiLineString", "coordinates": [
+              [[20.10, 63.80], [20.11, 63.80], [20.12, 63.80]],
+              [[20.12, 63.80001], [20.13, 63.80]]] } }
+        ] }
+        """;
+
+        // Act
+        var features = SourceFeatureReader.Read(Json(json));
+
+        // Assert
+        features.Select(f => f.Name).Should().Equal("Lövölandets led", "Brännland Runt");
+    }
+
+    [Fact]
+    public void Read_ForMultiLineStringPartsThatAlmostMeet_ShouldJoinThemIntoOneLine()
+    {
+        // Arrange — the second part is written backwards and its near end is about 1 m off.
+        var json = """
+        { "features": [ { "properties": { "namn": "Kroklandets led" },
+          "geometry": { "coordinates": [
+            [[20.10, 63.80], [20.11, 63.80], [20.12, 63.80]],
+            [[20.14, 63.80], [20.13, 63.80], [20.12, 63.80001]]] } } ] }
+        """;
+
+        // Act
+        var features = SourceFeatureReader.Read(Json(json));
+
+        // Assert
+        features.Should().ContainSingle();
+        var line = features[0].Geometry;
+        line.NumPoints.Should().Be(6);
+        // keep-comment: either direction is one trail; what matters is that it never doubles back.
+        var xs = line.Coordinates.Select(c => c.X).ToList();
+        if (xs[0] > xs[^1])
+            xs.Reverse();
+        xs.Should().BeInAscendingOrder();
+        xs.Should().StartWith(20.10).And.EndWith(20.14);
+        line.SRID.Should().Be(GeoPointFactory.Wgs84Srid);
+    }
+
+    [Fact]
+    public void Read_ForMultiLineStringPartsThatShareAPoint_ShouldKeepItOnce()
+    {
+        // Arrange
+        var json = """
+        { "features": [ { "properties": { "namn": "Tavelsjöleden" },
+          "geometry": { "coordinates": [
+            [[20.10, 63.80], [20.11, 63.80]],
+            [[20.11, 63.80], [20.12, 63.80]]] } } ] }
+        """;
+
+        // Act & Assert
+        SourceFeatureReader.Read(Json(json)).Should().ContainSingle()
+            .Which.Geometry.NumPoints.Should().Be(3);
+    }
+
+    [Fact]
+    public void Read_ForMultiLineStringPartsFarApart_ShouldReturnOneFeaturePerPart()
+    {
+        // Arrange — about 1 km between the parts: a branch, not a gap to draw across.
+        var json = """
+        { "features": [ { "properties": { "id": 7, "namn": "Strömbäck-Kont" },
+          "geometry": { "coordinates": [
+            [[20.10, 63.80], [20.11, 63.80], [20.12, 63.80]],
+            [[20.10, 63.81], [20.11, 63.81]]] } } ] }
+        """;
+
+        // Act
+        var features = SourceFeatureReader.Read(Json(json));
+
+        // Assert
+        features.Select(f => f.ExternalId).Should().Equal("7", "7#2");
+        features.Should().AllSatisfy(f => f.Name.Should().Be("Strömbäck-Kont"));
+        features[0].Geometry.NumPoints.Should().Be(3);
+    }
+
+    [Fact]
+    public void Read_ForSplitPartsWithoutAnId_ShouldLeaveTheIdEmpty()
+    {
+        // Arrange — Umeå's export has no id at all; a bare "#2" would look like one.
+        var json = """
+        { "features": [ { "properties": { "namn": "Strömbäck-Kont" },
+          "geometry": { "coordinates": [
+            [[20.10, 63.80], [20.11, 63.80]],
+            [[20.10, 63.81], [20.11, 63.81]]] } } ] }
+        """;
+
+        // Act & Assert
+        SourceFeatureReader.Read(Json(json)).Select(f => f.ExternalId).Should().Equal("", "");
+    }
+
+    [Fact]
+    public void Read_ForAStrayPartAMetreLongMidLine_ShouldDropIt()
+    {
+        // Arrange — the stub touches the line's middle, so it cannot be chained onto an end.
+        var json = """
+        { "features": [ { "properties": { "namn": "Holmsundsleden" },
+          "geometry": { "coordinates": [
+            [[20.10, 63.80], [20.11, 63.80], [20.12, 63.80]],
+            [[20.11, 63.80], [20.11002, 63.80]]] } } ] }
+        """;
+
+        // Act & Assert
+        SourceFeatureReader.Read(Json(json)).Should().ContainSingle()
+            .Which.Geometry.NumPoints.Should().Be(3);
+    }
+
+    [Fact]
+    public void Read_ForAMultiLineStringPartOfOnePoint_ShouldDropThePart()
+    {
+        // Arrange
+        var json = """
+        { "features": [ { "properties": { "namn": "Holmsundsleden" },
+          "geometry": { "coordinates": [
+            [[20.10, 63.80], [20.11, 63.80]],
+            [[20.30, 63.90]]] } } ] }
+        """;
+
+        // Act & Assert
+        SourceFeatureReader.Read(Json(json)).Should().ContainSingle()
+            .Which.Geometry.NumPoints.Should().Be(2);
+    }
 }

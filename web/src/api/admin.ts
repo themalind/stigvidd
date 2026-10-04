@@ -3,6 +3,8 @@
 
 import { getValidAccessToken } from "@/services/keycloak-auth";
 import { describeRequest, logRefused, logUnanswered } from "./mutator";
+import { adminGetTransferInfo } from "./generated/admin/admin";
+import type { DataTransferInfoResponse } from "./generated/model";
 
 // The generated orval client + `customFetch` mutator assume JSON responses, so
 // export (binary zip) and import (raw file upload) use raw fetch here. Auth
@@ -15,9 +17,15 @@ async function authHeaders(): Promise<Record<string, string>> {
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
-/** Downloads a full migration archive and saves it to the user's disk. */
-export async function exportData(): Promise<void> {
-  const path = "/api/v1/admin/export";
+export type ImportOutcome = { message: string; notes: string[] };
+
+export function getTransferInfo(): Promise<DataTransferInfoResponse> {
+  return adminGetTransferInfo();
+}
+
+/** Downloads a migration archive and saves it to the user's disk. */
+export async function exportData({ anonymize = false }: { anonymize?: boolean } = {}): Promise<void> {
+  const path = anonymize ? "/api/v1/admin/export?anonymize=true" : "/api/v1/admin/export";
   const request = describeRequest(path, "GET");
   const headers = await authHeaders();
 
@@ -36,7 +44,7 @@ export async function exportData(): Promise<void> {
 
   const blob = await response.blob();
   const disposition = response.headers.get("Content-Disposition") ?? "";
-  const filename = /filename="?([^"]+)"?/.exec(disposition)?.[1] ?? "stigvidd-export.zip";
+  const filename = /filename="?([^";]+)"?/.exec(disposition)?.[1] ?? "stigvidd-export.zip";
 
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement("a");
@@ -48,8 +56,8 @@ export async function exportData(): Promise<void> {
   URL.revokeObjectURL(url);
 }
 
-/** Uploads a migration archive to REPLACE this host's data. Returns the server message. */
-export async function importData(file: File): Promise<string> {
+/** Uploads a migration archive to REPLACE this host's data. Returns the server's account of it. */
+export async function importData(file: File): Promise<ImportOutcome> {
   const path = "/api/v1/admin/import";
   const request = describeRequest(path, "POST");
   const headers = { "Content-Type": "application/zip", ...(await authHeaders()) };
@@ -64,8 +72,11 @@ export async function importData(file: File): Promise<string> {
 
   const text = await response.text();
   let message = text;
+  let notes: string[] = [];
   try {
-    message = (JSON.parse(text) as { message?: string }).message ?? text;
+    const body = JSON.parse(text) as { message?: string; notes?: string[] };
+    message = body.message ?? text;
+    notes = body.notes ?? [];
   } catch {
     // Non-JSON body — keep the raw text.
   }
@@ -75,5 +86,5 @@ export async function importData(file: File): Promise<string> {
     logRefused(request, response.status, failure);
     throw new Error(failure);
   }
-  return message;
+  return { message, notes };
 }

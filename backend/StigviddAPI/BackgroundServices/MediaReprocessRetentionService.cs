@@ -1,6 +1,7 @@
 // SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+using Core.Interfaces.Services;
 using Core.Interfaces.Repositories;
 
 namespace StigviddAPI.BackgroundServices;
@@ -11,16 +12,19 @@ public class MediaReprocessRetentionService : BackgroundService
     private const int DefaultSettledRetentionDays = 30;
 
     private readonly IServiceScopeFactory _scopeFactory;
+    private readonly IMaintenanceGate _maintenance;
     private readonly ILogger<MediaReprocessRetentionService> _logger;
     private readonly TimeSpan _interval;
     private readonly int _settledRetentionDays;
 
     public MediaReprocessRetentionService(
         IServiceScopeFactory scopeFactory,
+        IMaintenanceGate maintenance,
         ILogger<MediaReprocessRetentionService> logger,
         IConfiguration configuration)
     {
         _scopeFactory = scopeFactory;
+        _maintenance = maintenance;
         _logger = logger;
 
         _interval = TimeSpan.FromHours(
@@ -43,6 +47,8 @@ public class MediaReprocessRetentionService : BackgroundService
 
     private async Task RunRetentionAsync(CancellationToken stoppingToken)
     {
+        await _maintenance.WaitWhilePausedAsync(stoppingToken);
+
         try
         {
             using var scope = _scopeFactory.CreateScope();

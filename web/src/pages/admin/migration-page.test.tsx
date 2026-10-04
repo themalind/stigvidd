@@ -6,7 +6,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import MigrationPage from "./migration-page";
 
-const api = vi.hoisted(() => ({ exportData: vi.fn(), importData: vi.fn() }));
+const api = vi.hoisted(() => ({ exportData: vi.fn(), importData: vi.fn(), getTransferInfo: vi.fn() }));
 vi.mock("@/api/admin", () => api);
 
 const toasts = vi.hoisted(() => ({ success: vi.fn(), error: vi.fn() }));
@@ -27,17 +27,28 @@ function archive(name = "host.zip") {
 
 beforeEach(() => {
   api.exportData.mockResolvedValue(undefined);
-  api.importData.mockResolvedValue("Restored 41 trails.");
+  api.importData.mockResolvedValue({ message: "Restored 41 trails.", notes: [] });
+  api.getTransferInfo.mockResolvedValue({ sharedServices: false });
 });
 
 describe("export", () => {
-  it("downloads on request", async () => {
+  it("downloads a full export by default", async () => {
     render(<MigrationPage />);
 
     await userEvent.click(screen.getByRole("button", { name: /Export all data/ }));
 
     await waitFor(() => expect(api.exportData).toHaveBeenCalledOnce());
+    expect(api.exportData).toHaveBeenCalledWith({ anonymize: false });
     expect(toasts.success).toHaveBeenCalled();
+  });
+
+  it("asks for an anonymized export once the box is ticked", async () => {
+    render(<MigrationPage />);
+
+    await userEvent.click(screen.getByLabelText(/Anonymize personal data/));
+    await userEvent.click(screen.getByRole("button", { name: /Export anonymized data/ }));
+
+    await waitFor(() => expect(api.exportData).toHaveBeenCalledWith({ anonymize: true }));
   });
 
   it("reports a failed export rather than a finished one", async () => {
@@ -56,6 +67,38 @@ describe("export", () => {
  * operator has to name the host to arm it, and that arming is the only thing standing
  * between a stray click and losing everything.
  */
+describe("what this host does on import", () => {
+  it("warns a primary host that Keycloak is overwritten", async () => {
+    render(<MigrationPage />);
+
+    expect(await screen.findByText(/overwrites ALL data on this host/)).toBeInTheDocument();
+  });
+
+  it("tells a shared-services host that Keycloak is left alone and outbound is cleared", async () => {
+    api.getTransferInfo.mockResolvedValue({ sharedServices: true });
+    render(<MigrationPage />);
+
+    expect(await screen.findByText(/Keycloak users in the archive are not/)).toBeInTheDocument();
+    expect(screen.queryByText(/overwrites ALL data on this host/)).not.toBeInTheDocument();
+  });
+
+  it("shows the server's notes beside its message", async () => {
+    api.importData.mockResolvedValue({ message: "Import complete.", notes: ["Keycloak users were not restored."] });
+    render(<MigrationPage />);
+    await userEvent.upload(archiveBox(), archive());
+    await userEvent.type(confirmBox(), HOST);
+
+    await userEvent.click(importButton());
+
+    await waitFor(() =>
+      expect(toasts.success).toHaveBeenCalledWith(
+        "Import complete.",
+        expect.objectContaining({ description: "Keycloak users were not restored." }),
+      ),
+    );
+  });
+});
+
 describe("the import arming gate", () => {
   it("is dead on arrival", () => {
     render(<MigrationPage />);
@@ -142,8 +185,8 @@ describe("running the import", () => {
 
   // Two clicks on a restore that replaces the host must not be two restores.
   it("sends one request however fast the button is clicked twice", async () => {
-    let release: (value: string) => void = () => {};
-    api.importData.mockReturnValue(new Promise<string>((resolve) => (release = resolve)));
+    let release: (value: { message: string; notes: string[] }) => void = () => {};
+    api.importData.mockReturnValue(new Promise<{ message: string; notes: string[] }>((resolve) => (release = resolve)));
     await arm();
 
     await userEvent.click(importButton());
@@ -151,12 +194,12 @@ describe("running the import", () => {
     expect(importButton()).toBeDisabled();
     expect(api.importData).toHaveBeenCalledOnce();
 
-    release("Restored.");
+    release({ message: "Restored.", notes: [] });
   });
 
   it("locks the inputs while it runs, so the archive cannot change under it", async () => {
-    let release: (value: string) => void = () => {};
-    api.importData.mockReturnValue(new Promise<string>((resolve) => (release = resolve)));
+    let release: (value: { message: string; notes: string[] }) => void = () => {};
+    api.importData.mockReturnValue(new Promise<{ message: string; notes: string[] }>((resolve) => (release = resolve)));
     await arm();
 
     await userEvent.click(importButton());
@@ -164,7 +207,7 @@ describe("running the import", () => {
     expect(archiveBox()).toBeDisabled();
     expect(confirmBox()).toBeDisabled();
 
-    release("Restored.");
+    release({ message: "Restored.", notes: [] });
   });
 
   it("shows what the server said it restored", async () => {
