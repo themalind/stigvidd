@@ -731,8 +731,7 @@
   },
   "imagePermission": {
     "title": "Tillgång krävs",
-    "message": "Tillgång till mediabiblioteket krävs.",
-    "jpgOnly": "Endast JPG-bilder är tillåtna"
+    "message": "Tillgång till mediabiblioteket krävs."
   },
   "trailList": {
     "title": "Vandringsleder",

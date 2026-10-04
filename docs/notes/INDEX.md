@@ -856,3 +856,8 @@ src/api/generated` then fails with "the generated API client is stale" for reaso
   and swallows it, so no OutboxEmails row is ever written and "not sent" / SingleOrDefault assertions
   are vacuous. Seed the template; assert 0 before and 1 after; plant the send in the wrong place
   (prove-it-bites) to see it bite.
+- [On iOS the image picker hands back HEIC, so a JPEG-only check rejects nearly every iPhone photo](ios-image-picker-returns-heic-not-jpeg.md) —
+  expo-image-picker launchImageLibraryAsync returns mimeType image/heic on iPhone; a check for image/jpeg in
+  add-review-images.tsx showed "Endast JPG-bilder är tillåtna" / "Only JPG images are allowed" (jpgOnly) and
+  blocked review image upload on iOS only. resizeImage (expo-image-manipulator, SaveFormat.JPEG) already
+  re-encodes every pick, so check the uploaded output, never the source format.
