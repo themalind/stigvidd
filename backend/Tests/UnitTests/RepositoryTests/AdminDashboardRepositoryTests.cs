@@ -5,6 +5,7 @@ using AwesomeAssertions;
 using Core.Repositories;
 using Infrastructure.Data.Entities;
 using Infrastructure.Enums;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace UnitTests.RepositoryTests;
@@ -38,7 +39,7 @@ public class AdminDashboardRepositoryTests : TestBase
         using (var ctx = await factory.CreateDbContextAsync(TestContext.Current.CancellationToken))
         {
             seededUsers = ctx.Users.Count();
-            seededReviews = ctx.Reviews.Count();
+            seededReviews = ctx.Reviews.IgnoreQueryFilters(["Moderation"]).Count();
         }
 
         // Act
@@ -51,6 +52,33 @@ public class AdminDashboardRepositoryTests : TestBase
         result.Value.NewUsers.Should().Be(1);
         result.Value.ReviewCount.Should().Be(seededReviews);
         result.Value.NewReviews.Should().Be(2);
+    }
+
+    [Fact]
+    public async Task GetCounts_IncludesHiddenReviews()
+    {
+        // Arrange
+        var repo = new AdminDashboardRepository(CreateSeededFactory(ctx =>
+        {
+            SeedDated(ctx);
+            ctx.Reviews.Add(new Review
+            {
+                Identifier = "rev-hidden",
+                TrailId = ctx.Trails.First().Id,
+                UserId = ctx.Users.First().Id,
+                Rating = 1,
+                CreatedAt = Since.AddDays(3),
+                ModerationState = ModerationState.HiddenPendingReview,
+            });
+        }), NullLogger<AdminDashboardRepository>.Instance);
+
+        // Act
+        var result = await repo.GetCountsAsync(Since, TestContext.Current.CancellationToken);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().NotBeNull();
+        result.Value.NewReviews.Should().Be(3);
     }
 
     [Fact]

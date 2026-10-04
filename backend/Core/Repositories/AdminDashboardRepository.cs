@@ -1,4 +1,4 @@
-﻿// SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
+// SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 using Core.Interfaces.Repositories;
@@ -29,8 +29,9 @@ public class AdminDashboardRepository : IAdminDashboardRepository
 
             var userCount = await context.Users.CountAsync(ctoken);
             var newUsers = await context.Users.CountAsync(u => u.CreatedAt >= since, ctoken);
-            var reviewCount = await context.Reviews.CountAsync(ctoken);
-            var newReviews = await context.Reviews.CountAsync(r => r.CreatedAt >= since, ctoken);
+            var reviews = context.Reviews.IgnoreQueryFilters(["Moderation"]);
+            var reviewCount = await reviews.CountAsync(ctoken);
+            var newReviews = await reviews.CountAsync(r => r.CreatedAt >= since, ctoken);
 
             return RepositoryResult<AdminDashboardCounts>.Success(
                 new AdminDashboardCounts(userCount, newUsers, reviewCount, newReviews));
