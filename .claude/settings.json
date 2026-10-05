@@ -11,6 +11,11 @@
     "The codegraph `UserPromptSubmit` hook is deliberately NOT declared here: it already",
     "lives in ~/.claude/settings.json, and project settings merge with user settings, so a",
     "second declaration would inject the same context twice.",
+    "The UserPromptSubmit entry below is a DIFFERENT hook and does not clash with it:",
+    "codegraph's recalls symbols, plan-eval.mjs --prompt recalls docs/notes/ entries, each",
+    "note at most once per session. Together with the Stop round they form the retro cycle:",
+    "recall on every prompt, measure the session's cost at Stop, keep the numbers in a",
+    "machine-local ledger (`plan-eval.mjs --report`).",
     "",
     "guard-symbol-search.mjs, by contrast, belongs HERE and not in user settings. It is a",
     "statement about THIS tree — that .codegraph/ indexes it, and that a search for a symbol",
@@ -65,6 +70,18 @@
             "args": ["${CLAUDE_PROJECT_DIR}/.claude/hooks/session-start.mjs"],
             "statusMessage": "Reading the tree, the contract chain and the notes",
             "timeout": 20
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": ["${CLAUDE_PROJECT_DIR}/.claude/hooks/plan-eval.mjs", "--prompt"],
+            "timeout": 10
           }
         ]
       }

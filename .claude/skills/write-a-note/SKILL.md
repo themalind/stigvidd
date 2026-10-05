@@ -1,6 +1,6 @@
 ---
 name: write-a-note
-description: Record a session's learning as a findable docs/notes/ entry (file + INDEX.md line + citation). Use when plan-eval asks what surprised you, when a doc or skill was wrong, or before ending with an unrecorded fact.
+description: Record a session's learning where the next session finds it cheapest — a CLAUDE.md line, a skill step, a hook check, or a findable docs/notes/ entry. Use when the plan-eval retro asks what would have skipped a cost, when a doc or skill was wrong, when --report lists a note to promote, or before ending with an unrecorded fact.
 ---
 
 # Writing a note that gets read
@@ -33,9 +33,40 @@ Something **measured** that is not derivable from the code:
 **Not** worth a note: what the code says plainly, what `git log` records, a summary of a
 change you just made, or anything that is only true within one conversation.
 
+## Where it goes: the cheapest place it will be found
+
+A note is the most expensive home a fact can have, because every session has to be shown it,
+open it and read it. Before writing one, go down this ladder and stop at the first rung that
+fits:
+
+| rung | when | cost to the next session |
+| --- | --- | --- |
+| a CLAUDE.md line | it changes a decision every time in that area | none, it is always loaded |
+| a skill step | it belongs to a procedure (`add-an-endpoint`, `add-a-migration`, …) | none once the skill loads |
+| a hook check | a machine can detect the mistake | none, the hook says it at the moment it matters |
+| a note | a mechanism, a measurement, a rejected design | a recall, an open, a read |
+
+A **cost** lesson, the answer to the retro's "what would have let you skip that?", records
+the shortcut: the path, symbol, command or `--match` query that leads straight there. It does
+not record the story of the search.
+
+## Promoting a note
+
+`node .claude/hooks/plan-eval.mjs --report` lists the notes opened in 3+ sessions. Every one of
+those sessions paid to re-read a rule. To promote one:
+
+1. Write the rule, in one or two lines, on the highest rung above that fits.
+2. Shrink the note to its evidence: what was measured, and why the wrong thing looks right.
+   Keep its INDEX.md line, so the *why* is still recallable.
+3. Cite the note from where the rule now lives.
+
+The report's **noisy recalls** are the opposite case: notes shown 3+ times and never opened.
+Their INDEX.md line matches too broadly. Rewrite it around the note's own vocabulary.
+
 ## The INDEX.md line is what makes it findable
 
-`plan-eval` matches an approved plan against the **index text**, not the note bodies. So the
+`plan-eval` matches every prompt and every approved plan against the **index text**, not the
+note bodies. So the
 summary has to carry the note's vocabulary: the file paths, the command names, the error
 text, the concepts. A bare title is a note nothing will ever recall — `--check-notes` fails
 a summary under 40 characters for that reason, and 40 is a floor, not a target.
