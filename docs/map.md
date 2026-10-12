@@ -50,7 +50,7 @@ component wraps `MapLibreMap` and every screen composes its own `<Camera>`,
                          │   <Map> (map.tsx)          │
                          │  MapTiler Outdoor style     │
                          │  UserLocation puck (opt.)   │
-                         │  attribution, no logo/compass│
+                         │  attribution + MapTiler logo│
                          └───────────────────────────┘
              ┌──────────────────┬───────────┴───────────┬──────────────────┐
    TrailMarkersMap        RouteFollowView           TrailMap /          RoutePreviewMap
@@ -64,7 +64,19 @@ component wraps `MapLibreMap` and every screen composes its own `<Camera>`,
 `<Map>` is a thin `forwardRef` wrapper over `MapLibreMap`. It centralises the
 decisions every map must share, so no screen re-derives them:
 
-- **Style** — always the MapTiler vector "Outdoor" basemap via `getMapStyle()`.
+- **Style** — `getMapStyle(basemap)`, where `basemapAtom` (`src/atoms/basemap-atom.ts`) is
+  `"outdoor"` (default, the env-selected Outdoor style) or `"satellite"` (built-in
+  `hybrid-v4`: satellite imagery with roads, paths and names). The choice is one global
+  preference, stored in AsyncStorage (`my-basemap`) and loaded in `_layout.tsx`, so every
+  map follows it, previews included. `BasemapToggle` sits above `CenterOnUserButton` on the
+  three fullscreen maps (map tab, follow view, trail creator). Satellite works on the Free
+  plan (verified 2026-10-11) but costs more requests: raster tiles go to z22 where vector
+  stops at z14, and hybrid loads both sources.
+  Real imagery over Borås ends around **z16** (~0.6 m/px): from z17 MapTiler serves
+  upscaled, blurry tiles that still cost a request (measured 2026-10-11 — JPEG size falls
+  83→59→38→24 KB from z14 to z18). Left as is; if it matters, cap satellite zoom at 17,
+  or patch the raster source `maxzoom` to 16. Lantmäteriet orthophotos are ruled out: too
+  expensive for a free hobby app.
 - **User puck** — renders MapLibre's built-in `<UserLocation>` when
   `showsUserLocation` is true (the default). Note this is the _passive_ built-in
   puck; the _live follow_ puck is a separate GeoJSON marker (see below).
@@ -76,6 +88,11 @@ decisions every map must share, so no screen re-derives them:
   **no safe-area offset**: fullscreen maps live inside the tab navigator, whose tab bar
   already clears the home indicator. The embedded previews override
   `attributionPosition` to top-left, because their bottom corners hold the overlay pills.
+- **MapTiler logo** — the Free plan requires MapTiler's logo visibly in the UI; the text credit
+  behind (i) is not enough (MapTiler support, 2026-10-11). `map.tsx` draws
+  `src/assets/map/maptiler-logo.svg` at `attributionPosition` and moves the (i) button
+  beside it, so every caller's position override moves both. The `logo` prop stays `false`:
+  it is MapLibre's logo, not MapTiler's.
 - All other `MapProps` pass through, so callers still set `onPress`,
   `onDidFinishLoadingMap`, `onRegionDidChange`, gesture toggles, etc.
 
@@ -108,7 +125,7 @@ blank until wiped. The verified trigger is installing a new build over an old on
 (dev and preview EAS profiles share `com.stigvidd.app`, so swapping profiles serves
 the other's stale cache). `initMapCache()`, run once at startup:
 
-- Caps the ambient cache at `MAP_AMBIENT_CACHE_MAX_BYTES` (50 MB).
+- Caps the ambient cache at `MAP_AMBIENT_CACHE_MAX_BYTES` (100 MB, shared by both basemaps; a z14 satellite tile is ~44 KB).
 - On a **new build id** (`nativeBuildVersion` + `dev`/`release`) → `resetDatabase()`
   (the in-app `pm clear`). On the **same build** → cheap `invalidateAmbientCache()`
   so a warm cache is kept but no bad entry is served.
@@ -363,7 +380,7 @@ differ to keep the map source/layer ids apart.
 
 ## Colours: the always-light palette
 
-Because the basemap is always the light Outdoor style (even in dark mode), **every
+Because the basemap never follows the app's dark mode, **every
 map overlay uses a fixed light palette from `AppDefaultTheme`, never `useTheme()`** —
 which would turn markers orange and controls wrong-coloured against the light map.
 `marker-styles.ts` is the single source of truth so a category's pin always matches
@@ -372,6 +389,7 @@ its filter-menu legend swatch:
 | Element                                | Colour                                                        |
 | -------------------------------------- | ------------------------------------------------------------- |
 | Trail pins / route line / start marker | `primary` (teal) on `onPrimary` stroke                        |
+| Route line casing                      | `onPrimary` (white), line width + 3, via `routeCasingPaint()` |
 | Shelter pins                           | `tertiary`                                                    |
 | Fire-pit pins                          | `secondary`                                                   |
 | Selection ring                         | `tertiary` outline (pops against the teal trail pins)         |
@@ -419,7 +437,7 @@ theme.
 | Cluster radii                 | 16 / 20 / 26 px | `trail-markers-map.tsx`   | Circle size at ≥ 10 / ≥ 50 members.                          |
 | `RING_GAP`                    | 5 px            | `trail-markers-map.tsx`   | Gap between a marker edge and its selection ring.            |
 | `HEADING_MIN_SPEED`           | ~0.6 m/s        | `useLiveUserLocation.ts`  | Below this, course-over-ground is treated as noise.          |
-| `MAP_AMBIENT_CACHE_MAX_BYTES` | 50 MB           | `constants/cache.ts`      | Ambient tile-cache cap.                                      |
+| `MAP_AMBIENT_CACHE_MAX_BYTES` | 100 MB          | `constants/cache.ts`      | Ambient tile-cache cap.                                      |
 | `MAP_USER_AGENT`              | `"stigvidd"`    | `map-style.ts`            | Must match the MapTiler key's allowed User-Agent.            |
 | `FIT_PADDING`                 | 100/60/120/60   | `route-follow-view.tsx`   | Fit padding leaving room for chrome.                         |
 | `SINGLE_POINT_ZOOM`           | 15              | `route-follow-view.tsx`, `route-preview-map.tsx` | Zoom for a one-point route (zero-area bounds). |

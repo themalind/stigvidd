@@ -40,3 +40,12 @@ SPDX-License-Identifier = "MPL-2.0"
 path = "**"
 SPDX-FileCopyrightText = "2025-2026 The Stigvidd Authors"
 SPDX-License-Identifier = "AGPL-3.0-or-later"
+
+# --- Third-party marks ---------------------------------------------------------
+# MapTiler's logo, shown on every map because their Free plan requires it. It is
+# MapTiler's trademark, not ours, so neither MPL-2.0 nor AGPL-3.0 applies.
+# Last matching annotation wins, so this entry must stay below app/**.
+[[annotations]]
+path = "app/src/assets/map/maptiler-logo.svg"
+SPDX-FileCopyrightText = "MapTiler AG"
+SPDX-License-Identifier = "LicenseRef-MapTiler-Logo"

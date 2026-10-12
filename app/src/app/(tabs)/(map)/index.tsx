@@ -6,6 +6,7 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import ErrorView from "@/components/error-view";
+import BasemapToggle from "@/components/map/basemap-toggle";
 import CenterOnUserButton from "@/components/map/center-on-user-button";
 import MapFilterMenu from "@/components/map/map-filter-menu";
 import TrailCardCarousel from "@/components/map/trail-card-carousel";
@@ -164,6 +165,7 @@ export default function MapScreen() {
       )}
 
       {!carouselIds && !offlineScreen && <CenterOnUserButton cameraRef={cameraRef} />}
+      {!carouselIds && !offlineScreen && <BasemapToggle />}
 
       {carouselIds && (
         <TrailCardCarousel

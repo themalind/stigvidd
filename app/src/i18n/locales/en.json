@@ -159,6 +159,8 @@
     "directionsConfirm": "Open in Maps",
     "locating": "Finding your location…",
     "centerOnUser": "Show my location",
+    "showSatellite": "Show satellite map",
+    "showOutdoor": "Show terrain map",
     "locationBlocked": "Stigvidd is not allowed to use your location. Turn on location access in your phone settings."
   },
   "review": {

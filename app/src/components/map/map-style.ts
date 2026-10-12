@@ -33,14 +33,22 @@ const MAP_USER_AGENT = "stigvidd";
 // own glyphs and sprite from this style, so no separate glyph URL is needed:
 // the cluster-count / start-marker SymbolLayers request "Noto Sans Regular",
 // which MapTiler's font endpoint provides.
-const STYLE_URL = `https://api.maptiler.com/maps/${MAPTILER_STYLE_ID}/style.json?key=${MAPTILER_API_KEY}`;
+function styleUrl(styleId: string | undefined): string {
+  return `https://api.maptiler.com/maps/${styleId}/style.json?key=${MAPTILER_API_KEY}`;
+}
 
-// The map is intentionally always the light Outdoor style, including in the
-// app's dark mode: a legible dark topographic map needs a separately tuned
-// custom style (MapTiler's off-the-shelf "Outdoor Dark" is night-vision dark
-// and hard to read), which is a dedicated follow-up.
-export function getMapStyle(): string {
-  return STYLE_URL;
+export type Basemap = "outdoor" | "satellite";
+
+// Hybrid: satellite imagery with roads, paths and place names on top.
+const STYLE_URLS: Record<Basemap, string> = {
+  outdoor: styleUrl(MAPTILER_STYLE_ID),
+  satellite: styleUrl("hybrid-v4"),
+};
+
+// Outdoor stays light in the app's dark mode: a legible dark topographic map needs a separately
+// tuned custom style (MapTiler's "Outdoor Dark" is night-vision dark and hard to read).
+export function getMapStyle(basemap: Basemap = "outdoor"): string {
+  return STYLE_URLS[basemap];
 }
 
 // Run once at app startup, before any map mounts.

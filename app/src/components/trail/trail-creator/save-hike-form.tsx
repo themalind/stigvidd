@@ -9,6 +9,7 @@ import { createHike } from "@/api/hikes";
 import { isUnauthorized, withUnauthorizedRetry } from "@/api/unauthorized";
 import { showErrorAtom } from "@/atoms/snackbar-atoms";
 import Map from "@/components/map/map";
+import { routeCasingPaint } from "@/components/map/marker-styles";
 import { BORDER_RADIUS } from "@/constants/constants";
 import { ActiveHike, CreateHikeRequest } from "@/data/types";
 import { asTranslationKey } from "@/i18n";
@@ -176,6 +177,12 @@ export default function SaveHikeForm({ hike, onDismiss, onSaveSuccess }: Props) 
             <GeoJSONSource id="save-hike-route-full" data={fullShape}>
               <Layer
                 type="line"
+                id="save-hike-route-full-casing"
+                layout={{ "line-join": "round", "line-cap": "round" }}
+                paint={routeCasingPaint(3)}
+              />
+              <Layer
+                type="line"
                 id="save-hike-route-full-line"
                 layout={{ "line-join": "round", "line-cap": "round" }}
                 paint={{ "line-color": theme.colors.outline, "line-width": 3 }}
@@ -184,6 +191,12 @@ export default function SaveHikeForm({ hike, onDismiss, onSaveSuccess }: Props) 
             {/* Kept portion drawn solid on top. */}
             {keptPositions.length > 1 && (
               <GeoJSONSource id="save-hike-route-kept" data={keptShape}>
+                <Layer
+                  type="line"
+                  id="save-hike-route-kept-casing"
+                  layout={{ "line-join": "round", "line-cap": "round" }}
+                  paint={routeCasingPaint(4)}
+                />
                 <Layer
                   type="line"
                   id="save-hike-route-kept-line"

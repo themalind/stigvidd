@@ -7,7 +7,7 @@
 
 import Map from "@/components/map/map";
 import MapPreviewOverlay from "@/components/map/map-preview-overlay";
-import { ROUTE_LINE_COLOR } from "@/components/map/marker-styles";
+import { ROUTE_LINE_COLOR, routeCasingPaint } from "@/components/map/marker-styles";
 import StartMarker from "@/components/map/start-marker";
 import { SCREEN_PADDING } from "@/constants/constants";
 import { lineStringFromPositions } from "@/utils/geojson";
@@ -92,6 +92,12 @@ export default function RoutePreviewMap({
           <Camera ref={cameraRef} />
           {path.length > 1 && (
             <GeoJSONSource id={`${idPrefix}-route`} data={routeShape}>
+              <Layer
+                type="line"
+                id={`${idPrefix}-route-casing`}
+                layout={{ "line-join": "round", "line-cap": "round" }}
+                paint={routeCasingPaint(3)}
+              />
               <Layer
                 type="line"
                 id={`${idPrefix}-route-line`}

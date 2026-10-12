@@ -15,7 +15,7 @@ import { useTranslation } from "react-i18next";
 import { Surface } from "react-native-paper";
 import Map from "../map/map";
 import MapPreviewOverlay from "../map/map-preview-overlay";
-import { ROUTE_LINE_COLOR } from "../map/marker-styles";
+import { ROUTE_LINE_COLOR, routeCasingPaint } from "../map/marker-styles";
 import StartMarker from "../map/start-marker";
 
 interface TrailMapProps {
@@ -64,6 +64,12 @@ export default function TrailMap({ trail, onPress }: TrailMapProps) {
             <Camera ref={cameraRef} initialViewState={center ? { center, zoom: 12 } : undefined} />
             {trail.length > 1 && (
               <GeoJSONSource id="trail-route" data={lineShape}>
+                <Layer
+                  type="line"
+                  id="trail-route-casing"
+                  layout={{ "line-join": "round", "line-cap": "round" }}
+                  paint={routeCasingPaint(3)}
+                />
                 <Layer
                   type="line"
                   id="trail-route-line"

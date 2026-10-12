@@ -159,6 +159,8 @@
     "directionsConfirm": "Öppna i Kartor",
     "locating": "Hittar din position…",
     "centerOnUser": "Visa min position",
+    "showSatellite": "Visa satellitkarta",
+    "showOutdoor": "Visa terrängkarta",
     "locationBlocked": "Stigvidd får inte använda din position. Slå på platsåtkomst i telefonens inställningar."
   },
   "review": {

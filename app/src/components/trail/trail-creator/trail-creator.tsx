@@ -8,8 +8,9 @@
 import AlertDialog from "@/components/alert-dialog";
 import LoadingIndicator from "@/components/loading-indicator";
 import Map from "@/components/map/map";
+import BasemapToggle from "@/components/map/basemap-toggle";
 import CenterOnUserButton from "@/components/map/center-on-user-button";
-import { ROUTE_LINE_COLOR } from "@/components/map/marker-styles";
+import { ROUTE_LINE_COLOR, routeCasingPaint } from "@/components/map/marker-styles";
 import { BORDER_RADIUS, START_COORDINATE_BORAS } from "@/constants/constants";
 import { LocationData } from "@/data/types";
 import { dismissRecordingInfo, shouldShowRecordingInfo } from "@/services/location-task";
@@ -223,6 +224,12 @@ export default function TrailCreator() {
             <GeoJSONSource id="hike-route" data={routeShape}>
               <Layer
                 type="line"
+                id="hike-route-casing"
+                layout={{ "line-join": "round", "line-cap": "round" }}
+                paint={routeCasingPaint(4)}
+              />
+              <Layer
+                type="line"
                 id="hike-route-line"
                 layout={{ "line-join": "round", "line-cap": "round" }}
                 paint={{ "line-color": ROUTE_LINE_COLOR, "line-width": 4 }}
@@ -231,6 +238,7 @@ export default function TrailCreator() {
           )}
         </Map>
         <CenterOnUserButton cameraRef={cameraRef} onPress={recenterAndFollow} />
+        <BasemapToggle />
         {isLocating && (
           <View style={[s.locatingPill, { backgroundColor: theme.colors.elevation.level3 }]} pointerEvents="none">
             <ActivityIndicator size={16} color={theme.colors.onSurface} />

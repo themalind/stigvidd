@@ -6,10 +6,12 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { userThemeAtom } from "@/atoms/user-theme-atom";
+import { basemapAtom, saveBasemap } from "@/atoms/basemap-atom";
 import { snackbarAtom } from "@/atoms/snackbar-atoms";
 import { APP_THEMES, AppDarkTheme, AppDefaultTheme, type ThemeChoice } from "@/constants/theme";
 import { settle } from "@/test/flush";
 import { focusManager, QueryClient } from "@tanstack/react-query";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { act, render, screen } from "@testing-library/react-native";
 import * as NavigationBar from "expo-navigation-bar";
 import { StatusBar } from "expo-status-bar";
@@ -285,6 +287,50 @@ it("restores the stored theme at startup", async () => {
   await settle();
 
   expect(store.get(userThemeAtom)).toBe("bivack");
+  expect(screen.getByTestId("root-container")).toHaveStyle({ backgroundColor: AppDarkTheme.colors.background });
+});
+
+it("restores the stored basemap at startup", async () => {
+  store.set(basemapAtom, "outdoor");
+  await saveBasemap("satellite");
+  await show();
+  await settle();
+
+  expect(store.get(basemapAtom)).toBe("satellite");
+});
+
+it("draws nothing until the stored basemap is restored", async () => {
+  let restore: (value: string | null) => void = () => {};
+  jest.mocked(AsyncStorage.getItem).mockImplementationOnce(
+    () =>
+      new Promise((resolve) => {
+        restore = resolve;
+      }),
+  );
+  await show();
+
+  expect(screen.queryByTestId("root-container")).toBeNull();
+
+  await act(async () => restore("satellite"));
+
+  expect(store.get(basemapAtom)).toBe("satellite");
+  expect(screen.getByTestId("root-container")).toBeTruthy();
+});
+
+it("draws nothing until the stored theme is restored", async () => {
+  let restore: (value: ThemeChoice) => void = () => {};
+  mockLoadUserTheme.mockImplementationOnce(
+    () =>
+      new Promise((resolve) => {
+        restore = resolve;
+      }),
+  );
+  await show();
+
+  expect(screen.queryByTestId("root-container")).toBeNull();
+
+  await act(async () => restore("bivack"));
+
   expect(screen.getByTestId("root-container")).toHaveStyle({ backgroundColor: AppDarkTheme.colors.background });
 });
 

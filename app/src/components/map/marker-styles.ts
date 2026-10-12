@@ -18,9 +18,7 @@ export interface MarkerColors {
   stroke: string;
 }
 
-// The basemap is always the light MapTiler "Outdoor" style — even in the
-// app's dark mode, since a legible dark topo variant is a separate follow-up
-// (see map-style.ts). So
+// The basemap never follows the app's dark mode (see map-style.ts), so
 // markers always use the light palette: it reads best on that map and the light
 // colours are simply nicer. These are theme-independent on purpose — a single
 // source of truth shared by the map's CircleLayers and the filter menu legend so
@@ -37,6 +35,11 @@ export const MARKER_COLORS: Record<MarkerCategory, MarkerColors> = {
 // basemap, so they must use the fixed light palette too — never useTheme(), which
 // would turn them orange in the app's dark mode (the basemap stays light there).
 export const ROUTE_LINE_COLOR = colors.primary;
+
+// A white edge under every route line keeps the dark line visible on satellite imagery.
+export function routeCasingPaint(lineWidth: number) {
+  return { "line-color": colors.onPrimary, "line-width": lineWidth + 3 };
+}
 
 export const START_MARKER_COLORS: MarkerColors = {
   fill: colors.primary,

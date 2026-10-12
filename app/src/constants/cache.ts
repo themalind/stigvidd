@@ -34,7 +34,7 @@ export const REVIEWS_STALE_TIME = 5 * 60 * 1000; // reviews + derived rating
 // cancelled ("permanent error: Canceled") and the map stays blank. We cap its
 // size and reset it on each new build to neutralise that trigger — see
 // `app/src/utils/map-cache.ts`.
-export const MAP_AMBIENT_CACHE_MAX_BYTES = 50 * 1024 * 1024; // 50 MB ceiling on ambient cache growth
+export const MAP_AMBIENT_CACHE_MAX_BYTES = 100 * 1024 * 1024; // 100 MB, shared by the outdoor and satellite basemaps
 export const MAP_CACHE_BUILD_KEY = "@stigvidd/map_cache_build"; // AsyncStorage key: last build the cache was reset for
 
 // --- User-scoped lists (refreshed via mutation invalidation) ---
