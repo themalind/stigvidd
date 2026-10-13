@@ -12,6 +12,8 @@ services:
       # Tells admin export/import that Keycloak, mail and the observatory belong to
       # production, so there is no keycloak.dump etc. to expect here.
       DataTransfer__SharedServices: "true"
+      # The API's CORS list is production's admin origin only; add staging's own.
+      Cors__AllowedOrigins__0: https://${WEB_DOMAIN}
 
   proxy:
     # The slim Caddyfile: no auth/observatory/mail sites. Pinned here so it cannot be

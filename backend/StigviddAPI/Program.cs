@@ -70,11 +70,14 @@ public class Program
                         // API calls today but is the apex a browser may arrive from.
                         // https://admin.stigvidd.se is the admin UI (web/) — it moved off
                         // the apex when the public site took it over.
+                        // Staging's admin origin comes from docker-compose.staging.yml. keep-comment: cross-file source of the value
+                        var extraOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
                         policy
-                            .WithOrigins(
+                            .WithOrigins([
                                 "https://stigvidd.se",
                                 "https://admin.stigvidd.se",
-                                "https://api.stigvidd.se")
+                                "https://api.stigvidd.se",
+                                .. extraOrigins])
                             .AllowAnyHeader()
                             .AllowAnyMethod();
                     }
