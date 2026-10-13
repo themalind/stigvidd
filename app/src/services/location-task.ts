@@ -23,21 +23,14 @@ export const RECORDING_INFO_KEY = "@stigvidd_recording_info_dismissed";
 export const MIN_DISTANCE = 3;
 // A jump larger than this (meters) between two fixes is a GPS teleport, not travel.
 const MAX_DISTANCE = 100;
-// Drop fixes worse than this (metres). iOS uses a looser gate than Android: in a
-// pocket with a locked screen iOS routinely reports 20-50m even at
-// BestForNavigation, and a 40m fix on a hike is still a useful point — too strict
-// a gate leaves gaps that render as straight lines through buildings. Android's
-// value is Location.getAccuracy() passed through — the fix's own error radius at
-// 68% confidence, so a 20m fix can sit a building's width off the road.
-const MAX_ACCURACY = Platform.OS === "ios" ? 40 : 15;
+// A dropped fix becomes a straight chord on the map, across a lake where the path keep-comment: why the gate is loose
+// bends round one (#239), so the gate only rejects fixes worse than that chord. keep-comment: why the gate is loose
+const MAX_ACCURACY = Platform.OS === "ios" ? 40 : 30;
 // The gate in force once nothing has been accepted for ACCURACY_STALL_MS, so a
 // bad stretch costs detail rather than becoming a hole the map draws a chord across.
-const MAX_ACCURACY_STALLED = Platform.OS === "ios" ? 40 : 20;
-// How long (ms) without an accepted point before the relaxed gate applies — four
-// sampling intervals, the most detail the strict gate can withhold at a stretch.
+const MAX_ACCURACY_STALLED = 40;
 export const ACCURACY_STALL_MS = 12_000;
-// Reported speed (m/s) above which a fix describes travel rather than drift: 1.8
-// km/h. Android reports 0 when it has none, which reads as standing still.
+// Computed from the last accepted point: Android reports 0 for much of a walk. keep-comment: hidden platform trap
 const MOVING_SPEED = 0.5;
 // Physically impossible speed (m/s) between two fixes ⇒ GPS glitch, not movement.
 // ~10 m/s (36 km/h) clears hiking/running/cycling while catching teleport spikes.
@@ -67,10 +60,24 @@ export const MAX_DURATION = 12 * 60 * 60 * 1000; // 12 hours
 // updated info dialog once more.
 export const RECORDING_INFO_VERSION = 1;
 
+export type FilterStats = {
+  accepted: number;
+  rejected: Partial<Record<RejectReason, number>>;
+  accuracyBuckets: Partial<Record<AccuracyBucket, number>>;
+  longestGapMs: number;
+  longestStepM: number;
+  // Accepted steps the reported-speed rule this replaced would have dropped (Android). keep-comment: names the old rule
+  reportedStillButMoving: number;
+};
+
+type AccuracyBucket = "le10" | "le20" | "le30" | "le40" | "over40" | "none";
+
 export type StoredHikeState = {
   isTracking: boolean;
   hike: ActiveHike;
   currentSegment: Segment | null;
+  // The open segment's, kept in storage because the Android task can run in its own JS runtime. keep-comment: why not module state
+  filterStats?: FilterStats;
 };
 
 export const defaultHikeState: StoredHikeState = {
@@ -170,7 +177,9 @@ export async function dismissRecordingInfo(): Promise<void> {
 // calls it directly to recover a killed recording as paused.
 export function finalizeActiveSegment(state: StoredHikeState): StoredHikeState {
   const seg = state.currentSegment;
-  if (!seg) return { ...state, isTracking: false, currentSegment: null };
+  if (!seg) return { isTracking: false, hike: state.hike, currentSegment: null };
+
+  if (state.filterStats) logFilterStats(state.filterStats, seg);
 
   const lastMovementTime = seg.coordinates.at(-1)?.timeStamp ?? seg.startTime;
   const endTime = Math.min(lastMovementTime, seg.startTime + MAX_DURATION);
@@ -191,6 +200,74 @@ export function finalizeActiveSegment(state: StoredHikeState): StoredHikeState {
   return { isTracking: false, hike, currentSegment: null };
 }
 
+// Debug level, so production drops it; development and preview builds send it. keep-comment: where it is visible
+function logFilterStats(stats: FilterStats, seg: Segment): void {
+  logger.debug("Trail recording filter stats", {
+    platform: Platform.OS,
+    points: seg.coordinates.length,
+    segmentMetres: Math.round(seg.distance),
+    accepted: stats.accepted,
+    ...prefixed("rejected_", stats.rejected),
+    ...prefixed("accuracy_", stats.accuracyBuckets),
+    longestGapMs: stats.longestGapMs,
+    longestStepM: stats.longestStepM,
+    reportedStillButMoving: stats.reportedStillButMoving,
+  });
+}
+
+function prefixed(prefix: string, counts: Partial<Record<string, number>>): Record<string, number> {
+  return Object.fromEntries(Object.entries(counts).map(([key, count]) => [`${prefix}${key}`, count ?? 0]));
+}
+
+const emptyFilterStats = (): FilterStats => ({
+  accepted: 0,
+  rejected: {},
+  accuracyBuckets: {},
+  longestGapMs: 0,
+  longestStepM: 0,
+  reportedStillButMoving: 0,
+});
+
+function accuracyBucket(accuracy: number | null | undefined): AccuracyBucket {
+  if (!accuracy || accuracy < 0) return "none";
+  if (accuracy <= 10) return "le10";
+  if (accuracy <= 20) return "le20";
+  if (accuracy <= 30) return "le30";
+  if (accuracy <= 40) return "le40";
+  return "over40";
+}
+
+function recordFix(
+  stats: FilterStats,
+  fix: RawFix,
+  lastPoint: LocationData | undefined,
+  decision: PointDecision,
+): FilterStats {
+  const bucket = accuracyBucket(fix.accuracy);
+  const next: FilterStats = {
+    ...stats,
+    rejected: { ...stats.rejected },
+    accuracyBuckets: { ...stats.accuracyBuckets, [bucket]: (stats.accuracyBuckets[bucket] ?? 0) + 1 },
+  };
+
+  if (!decision.accept) {
+    const reason = decision.reason ?? "noise";
+    next.rejected[reason] = (next.rejected[reason] ?? 0) + 1;
+    return next;
+  }
+
+  next.accepted += 1;
+  if (!lastPoint) return next;
+
+  next.longestGapMs = Math.max(next.longestGapMs, fix.timestamp - lastPoint.timeStamp);
+  next.longestStepM = Math.max(next.longestStepM, decision.distance);
+  const reportedStill = (fix.speed ?? 0) <= MOVING_SPEED;
+  if (Platform.OS === "android" && reportedStill && decision.distance < (fix.accuracy ?? 0)) {
+    next.reportedStillButMoving += 1;
+  }
+  return next;
+}
+
 // Finalizes an in-progress hike that has been left running, but only when it's
 // actually stale — inactive past INACTIVITY_TIMEOUT, or running longer than
 // MAX_DURATION. Returns the finalized state when stale, otherwise null (callers
@@ -207,17 +284,17 @@ export function maybeFinalizeStaleHike(state: StoredHikeState, now: number): Sto
   return finalizeActiveSegment(state);
 }
 
-export type PointDecision = { accept: boolean; distance: number };
+export type RejectReason = "stale" | "accuracy" | "warmup" | "speed" | "teleport" | "noise";
 
-// The parts of a fix beyond its position that steer the filter. Both are optional:
-// a caller that has neither gets the strictest behaviour.
+export type PointDecision = { accept: boolean; distance: number; reason?: RejectReason };
+
 export type PointContext = {
   // Where the accuracy gate measures its stall from before anything has been
   // accepted — the open segment's startTime.
   trackStartedAt?: number;
-  // Reported ground speed in m/s, as the receiver gives it.
-  speed?: number | null;
 };
+
+const reject = (reason: RejectReason): PointDecision => ({ accept: false, distance: 0, reason });
 
 // Decides whether a freshly-sampled GPS fix joins the track, and how much distance
 // it adds relative to the last accepted point. Shared by the background task and
@@ -229,11 +306,11 @@ export function evaluatePoint(
   accuracy: number | null | undefined,
   context: PointContext = {},
 ): PointDecision {
-  const { trackStartedAt, speed } = context;
+  const { trackStartedAt } = context;
 
   // Reject Core Location's cached first fix: its timestamp predates the recording.
   if (trackStartedAt !== undefined && trackStartedAt - candidate.timeStamp > MAX_FIX_AGE) {
-    return { accept: false, distance: 0 };
+    return reject("stale");
   }
 
   // The gate relaxes once the track has stalled, so poor reception costs detail
@@ -244,13 +321,13 @@ export function evaluatePoint(
   // Reject missing/zero and negative accuracy (iOS reports a negative
   // horizontalAccuracy when it can't determine one — the fix is unusable), as well
   // as anything worse than the gate in force.
-  if (!accuracy || accuracy < 0 || accuracy > maxAccuracy) return { accept: false, distance: 0 };
+  if (!accuracy || accuracy < 0 || accuracy > maxAccuracy) return reject("accuracy");
 
   if (!lastPoint) {
     // Every later point is measured from the anchor, so it holds out for a converged
     // fix until WARMUP_MS has passed.
     const warmingUp = trackStartedAt !== undefined && candidate.timeStamp - trackStartedAt < WARMUP_MS;
-    if (warmingUp && accuracy > ANCHOR_ACCURACY) return { accept: false, distance: 0 };
+    if (warmingUp && accuracy > ANCHOR_ACCURACY) return reject("warmup");
     return { accept: true, distance: 0 };
   }
 
@@ -263,23 +340,24 @@ export function evaluatePoint(
     // a suspension gap (pocket, locked screen) is real ground covered at a plausible
     // speed, the same jump over a short gap is a glitch.
     const maxSpeed = dtSeconds <= BURST_WINDOW ? MAX_SPEED_BURST : MAX_SPEED;
-    if (distance / dtSeconds > maxSpeed) return { accept: false, distance: 0 };
+    if (distance / dtSeconds > maxSpeed) return reject("speed");
   } else if (distance > MAX_DISTANCE) {
     // No usable time delta (missing or non-increasing timestamps): fall back to an
     // absolute distance cap to reject teleport glitches.
-    return { accept: false, distance: 0 };
+    return reject("teleport");
   }
 
   // A stationary phone wanders within its accuracy radius, so a move only counts
   // once it clears that noise envelope (but never below MIN_DISTANCE) — otherwise
   // drift piles up phantom distance and zig-zags in place. Consecutive fixes share
   // most of their error, so half the radius is the envelope for a receiver in
-  // motion; the full radius applies while it reports standing still, where drift
-  // would otherwise become distance. iOS halves throughout.
-  const travelling = Platform.OS === "ios" || (speed ?? 0) > MOVING_SPEED;
+  // motion; the full radius applies while it stands still, where drift would keep-comment: noise-floor invariant
+  // otherwise become distance. Measured against the last accepted point, drift keep-comment: why drift reads as still
+  // over a long pause stays under MOVING_SPEED. iOS halves throughout. keep-comment: noise-floor invariant
+  const travelling = Platform.OS === "ios" || (dtSeconds > 0 && distance / dtSeconds > MOVING_SPEED);
   const noiseFloor = travelling ? accuracy / 2 : accuracy;
   const minStep = Math.max(MIN_DISTANCE, noiseFloor);
-  if (distance < minStep) return { accept: false, distance: 0 };
+  if (distance < minStep) return reject("noise");
 
   return { accept: true, distance };
 }
@@ -324,6 +402,7 @@ export async function ingestFixes(fixes: RawFix[]): Promise<IngestResult> {
 
     let currentSegment = state.currentSegment;
     let totalDistance = state.hike.totalDistance;
+    let filterStats = state.filterStats ?? emptyFilterStats();
 
     for (const fix of fixes) {
       const newPoint: LocationData = {
@@ -334,10 +413,11 @@ export async function ingestFixes(fixes: RawFix[]): Promise<IngestResult> {
       // Same filter as the foreground live watcher (see evaluatePoint) so the
       // recorded track and the drawn live tail always agree on what counts.
       const lastPoint = currentSegment.coordinates.at(-1);
-      const { accept, distance } = evaluatePoint(lastPoint, newPoint, fix.accuracy, {
+      const decision = evaluatePoint(lastPoint, newPoint, fix.accuracy, {
         trackStartedAt: currentSegment.startTime,
-        speed: fix.speed,
       });
+      filterStats = recordFix(filterStats, fix, lastPoint, decision);
+      const { accept, distance } = decision;
       if (!accept) {
         continue;
       }
@@ -357,6 +437,7 @@ export async function ingestFixes(fixes: RawFix[]): Promise<IngestResult> {
       ...state,
       currentSegment,
       hike: { ...state.hike, totalDistance },
+      filterStats,
     };
 
     // Auto-stop a forgotten recording: if the session has gone inactive or hit the

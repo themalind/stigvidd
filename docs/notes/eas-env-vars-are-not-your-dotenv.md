@@ -35,6 +35,12 @@ only from SDK 55 up, and this app is on Expo 54, so it does not prompt here:
 npx eas update --branch preview --environment preview
 ```
 
+## A profile's `env` block in eas.json reaches builds only
+
+`build.preview.env` (e.g. `EXPO_PUBLIC_LOG_LEVEL: debug`, added for #239) is inlined into
+builds of that profile. `eas update` never reads it, so a variable an OTA update must carry
+also has to be set on EAS with `eas env:create`.
+
 ## Two more that surprise
 
 - Locally, `.env.local` beats `.env`.

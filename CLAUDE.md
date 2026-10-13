@@ -71,6 +71,11 @@ Core/TrailImport/         own namespaces, NOT global using (Core/Results, Core/S
 - **Secrets**: `.env`, `mail-config/`, `*firebase-adminsdk*.json` and `DEPLOYMENT.md` hold real credentials.
   Never commit or echo them.
 - **CodeGraph**: where `.codegraph/` exists, use `codegraph_explore` before grep. A denied search passes on retry.
+- **Edit with Edit/Write**, not a python/sed/heredoc rewrite through Bash: that skips the generated-file, comment
+  and token guards and the per-edit build and lint (~570 such edits across the first 27 sessions).
 - **Notes**: `docs/notes/` is project memory. Search it with
-  `node .claude/hooks/plan-eval.mjs --match "<task>"`, and do not Read `INDEX.md` whole (71 KB). Add to it with
+  `node .claude/hooks/plan-eval.mjs --match "<task>"`, and do not Read `INDEX.md` whole (83 KB). Add to it with
   `write-a-note`. The runbooks are `DEPLOYMENT.md` and `STAGING.md`; references are in `docs/*.md`.
+- **Retro**: notes are recalled on each prompt; at Stop, a session that shipped and made 15+ calls (or had a
+  plan) gets its measured cost and four questions. Answer them where the fact is cheapest to find next time.
+  `plan-eval.mjs --report` shows the trend and the notes to promote into rules (`--backfill` seeds the ledger).

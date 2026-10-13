@@ -15,8 +15,8 @@ Search it before re-deriving anything:
 node .claude/hooks/plan-eval.mjs --match "what you are about to do"
 ```
 
-Referenced from [CLAUDE.md](../../CLAUDE.md), and matched automatically against any plan
-you get approved.
+Referenced from [CLAUDE.md](../../CLAUDE.md), and matched automatically against every prompt
+and any plan you get approved.
 
 - [The API contract is a one-way pipeline, and the file in the middle is not committed](openapi-contract-snapshot.md) —
   Controllers/WebDataContracts to `web/openapi.json` to `web/src/api/generated` flows one

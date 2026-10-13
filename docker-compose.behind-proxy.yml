@@ -1,0 +1,24 @@
+# SPDX-FileCopyrightText: 2026 The Stigvidd Authors
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+# Behind-a-host-proxy override, layered AFTER docker-compose.staging.yml:
+#   COMPOSE_FILE=docker-compose.yml:docker-compose.staging.yml:docker-compose.behind-proxy.yml
+# For a host whose own reverse proxy (nginx + certbot on gatekeeper) already owns
+# 80/443 and terminates TLS. Caddy then serves plain HTTP on localhost only, and
+# db moves off 5432 (the host's native Postgres has it). See STAGING.md,
+# "Behind an existing reverse proxy".
+#
+# `!override` is load-bearing: a plain `ports:` in an override file is APPENDED to
+# the base file's list, so 80/443/5432 would still be published and clash.
+# Needs Compose >= 2.24.
+
+services:
+  proxy:
+    command: caddy run --config /etc/caddy/Caddyfile.behind-proxy --adapter caddyfile
+    ports: !override
+      - "127.0.0.1:${PROXY_HTTP_PORT:-8088}:80"
+
+  db:
+    # Localhost by default; set DB_BIND=0.0.0.0 to publish it like production does.
+    ports: !override
+      - "${DB_BIND:-127.0.0.1}:${DB_PUBLIC_PORT:-5433}:5432"

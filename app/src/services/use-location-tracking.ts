@@ -38,7 +38,7 @@ import { logger } from "./logger";
 
 // How often the background task samples GPS (ms). Android-only — on iOS the
 // sampling cadence is driven purely by distanceInterval (see startTracking).
-const SAMPLE_INTERVAL = 3000;
+const SAMPLE_INTERVAL = 1000;
 // How often the UI reads AsyncStorage to reflect background task updates (ms)
 const POLL_INTERVAL = 2000;
 
@@ -251,7 +251,6 @@ export function useLocationTracking() {
             };
             const { accept } = evaluatePoint(liveCoordsRef.current.at(-1), candidate, location.coords.accuracy, {
               trackStartedAt: segmentStartRef.current,
-              speed: location.coords.speed,
             });
             if (!accept) return;
             setLive([...liveCoordsRef.current, candidate]);

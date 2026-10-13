@@ -121,6 +121,90 @@ DNS:
   `openobserve`.
 - Access to the **production** Keycloak admin console and OpenObserve UI, for Step 1.
 
+### Behind an existing reverse proxy (gatekeeper)
+
+Staging runs on **gatekeeper**, where a host nginx (with certbot) already owns 80/443 for other
+sites and a native Postgres owns 5432. There, the third override
+[`docker-compose.behind-proxy.yml`](docker-compose.behind-proxy.yml) applies (it is in
+`.env.staging.example`'s `COMPOSE_FILE` and in the Jenkinsfile's staging block):
+
+- Caddy runs [`proxy/Caddyfile.behind-proxy`](proxy/Caddyfile.behind-proxy): the same sites over
+  plain HTTP, no ACME, published only on `127.0.0.1:${PROXY_HTTP_PORT:-8088}`.
+- `db` is published on `${DB_BIND:-127.0.0.1}:${DB_PUBLIC_PORT:-5433}`.
+- nginx terminates TLS and forwards to Caddy. The one-time root setup on the host:
+
+```bash
+adduser --disabled-password --gecos "Stigvidd staging deploy" stigvidd-staging
+usermod -aG docker stigvidd-staging        # effectively root
+install -d -o stigvidd-staging -g stigvidd-staging -m 750 /opt/stigvidd-staging
+# ~stigvidd-staging/.ssh/authorized_keys: the public half of Jenkins' deploy-ssh-key
+sudo -u jenkins sh -c 'ssh-keyscan -H localhost >> ~/.ssh/known_hosts'
+```
+
+`/etc/nginx/sites-available/stigvidd-staging`, enabled, then
+`certbot --nginx --redirect -d staging.stigvidd.se -d staging.api.stigvidd.se -d staging.media.stigvidd.se`
+adds the 443 listener and the redirect:
+
+```nginx
+server {
+    listen 80;
+    listen [::]:80;
+    server_name staging.stigvidd.se staging.api.stigvidd.se staging.media.stigvidd.se;
+
+    client_max_body_size 2G;      # trail imports and admin export archives
+    proxy_read_timeout   600s;
+    proxy_send_timeout   600s;
+
+    location / {
+        proxy_pass http://127.0.0.1:8088;
+        proxy_set_header Host              $host;
+        proxy_set_header X-Real-IP         $remote_addr;
+        proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_request_buffering off;
+    }
+}
+```
+
+Jenkins runs on the same host, so `STAGING_DEPLOY_HOST=stigvidd-staging@localhost`. Set it only
+**after** the first manual `up` (Step 4): a deploy into a directory with no `.env` fails.
+
+The same host builds every image and holds the registry, and nothing removes what they
+leave behind: on 2026-10-13 the Docker build cache alone was 44 GB of a 115 GB disk.
+[`ci/ci-host-cleanup.sh`](ci/ci-host-cleanup.sh) trims the build cache to 10 GB, prunes
+week-old unused images, deletes Jenkins workspaces untouched for 14 days, caps the journal,
+and keeps the newest 10 sha tags per image in the registry before garbage-collecting it.
+It skips the run while a build is active. `DRY_RUN=1` shows what it would do. Install it as root:
+
+```bash
+install -o root -g root -m 755 ci-host-cleanup.sh /usr/local/sbin/ci-host-cleanup.sh
+
+cat > /etc/systemd/system/ci-host-cleanup.service <<'EOF'
+[Unit]
+Description=Trim Docker build cache, Jenkins workspaces, journal and registry tags
+After=docker.service docker-registry.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/ci-host-cleanup.sh
+EOF
+
+cat > /etc/systemd/system/ci-host-cleanup.timer <<'EOF'
+[Unit]
+Description=Weekly CI host disk cleanup
+
+[Timer]
+OnCalendar=Sun 04:30
+RandomizedDelaySec=30min
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+EOF
+
+systemctl daemon-reload && systemctl enable --now ci-host-cleanup.timer
+```
+
 ---
 
 ## Step 1 — Production-side setup
@@ -424,9 +508,14 @@ with the staging `VITE_*` values (`https://staging.api.stigvidd.se`, `auth.stigv
 Until `STAGING_DEPLOY_HOST` is set, a `staging` build pushes the images and **skips the deploy**
 (logging "staging host not configured"), staying green; Step 4 can then pull those tags by hand.
 
-> Rotate `VITE_OO_LOGS_TOKEN` (production's). It is still a real production ingest credential
-> committed in plaintext in the [Jenkinsfile](Jenkinsfile), and a git-committed credential
-> cannot be rotated quietly. Move it into a Jenkins credential like staging's.
+> An ingestion token's user must be a **member** of the org in the URL. Staging's first tokens
+> named accounts that existed in neither org, and production's committed token had the same
+> fault: every log line got a 401 and nothing reported it, so production's
+> `stigvidd_web_logs` stream never existed. Both now come from Jenkins credentials
+> (`prod-oo-logs-token`, `staging-oo-logs-token`) for the accounts `prod-web@` and
+> `staging-web@stigvidd.se`. Test a new token with an empty OTLP payload
+> (`curl -X POST <org url>/v1/logs -H "Authorization: Basic <token>" -d '{"resourceLogs":[]}'`):
+> 200 means accepted, 401 means not a member.
 
 ---
 
