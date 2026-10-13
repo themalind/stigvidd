@@ -254,10 +254,12 @@ pipeline {
             env.IMAGES             = 'api web site media proxy'
             env.DEPLOY_DIRS        = 'db/init scripts'
             env.COPY_OBSERVABILITY = 'false'
-            env.COMPOSE_FILES      = 'docker-compose.yml docker-compose.staging.yml'
-            // Explicit, so the host's .env cannot forget the override (it would then
-            // run the full Caddyfile).
-            env.REMOTE_COMPOSE_ENV = 'COMPOSE_FILE=docker-compose.yml:docker-compose.staging.yml'
+            // The staging host (gatekeeper) sits behind its own nginx, which owns 80/443
+            // and 5432; behind-proxy moves Caddy to 127.0.0.1:8088 and db to 5433.
+            env.COMPOSE_FILES      = 'docker-compose.yml docker-compose.staging.yml docker-compose.behind-proxy.yml'
+            // Explicit, so the host's .env cannot forget the overrides (it would then
+            // run the full Caddyfile on ports nginx already holds).
+            env.REMOTE_COMPOSE_ENV = 'COMPOSE_FILE=docker-compose.yml:docker-compose.staging.yml:docker-compose.behind-proxy.yml'
             env.VITE_API_URL       = 'https://staging.api.stigvidd.se'
             env.VITE_OIDC_URL      = 'https://auth.stigvidd.se'
             env.VITE_OIDC_REALM    = 'stigvidd-staging'

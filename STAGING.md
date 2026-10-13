@@ -121,6 +121,54 @@ DNS:
   `openobserve`.
 - Access to the **production** Keycloak admin console and OpenObserve UI, for Step 1.
 
+### Behind an existing reverse proxy (gatekeeper)
+
+Staging runs on **gatekeeper**, where a host nginx (with certbot) already owns 80/443 for other
+sites and a native Postgres owns 5432. There, the third override
+[`docker-compose.behind-proxy.yml`](docker-compose.behind-proxy.yml) applies (it is in
+`.env.staging.example`'s `COMPOSE_FILE` and in the Jenkinsfile's staging block):
+
+- Caddy runs [`proxy/Caddyfile.behind-proxy`](proxy/Caddyfile.behind-proxy): the same sites over
+  plain HTTP, no ACME, published only on `127.0.0.1:${PROXY_HTTP_PORT:-8088}`.
+- `db` is published on `${DB_BIND:-127.0.0.1}:${DB_PUBLIC_PORT:-5433}`.
+- nginx terminates TLS and forwards to Caddy. The one-time root setup on the host:
+
+```bash
+adduser --disabled-password --gecos "Stigvidd staging deploy" stigvidd-staging
+usermod -aG docker stigvidd-staging        # effectively root
+install -d -o stigvidd-staging -g stigvidd-staging -m 750 /opt/stigvidd-staging
+# ~stigvidd-staging/.ssh/authorized_keys: the public half of Jenkins' deploy-ssh-key
+sudo -u jenkins sh -c 'ssh-keyscan -H localhost >> ~/.ssh/known_hosts'
+```
+
+`/etc/nginx/sites-available/stigvidd-staging`, enabled, then
+`certbot --nginx --redirect -d staging.stigvidd.se -d staging.api.stigvidd.se -d staging.media.stigvidd.se`
+adds the 443 listener and the redirect:
+
+```nginx
+server {
+    listen 80;
+    listen [::]:80;
+    server_name staging.stigvidd.se staging.api.stigvidd.se staging.media.stigvidd.se;
+
+    client_max_body_size 2G;      # trail imports and admin export archives
+    proxy_read_timeout   600s;
+    proxy_send_timeout   600s;
+
+    location / {
+        proxy_pass http://127.0.0.1:8088;
+        proxy_set_header Host              $host;
+        proxy_set_header X-Real-IP         $remote_addr;
+        proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_request_buffering off;
+    }
+}
+```
+
+Jenkins runs on the same host, so `STAGING_DEPLOY_HOST=stigvidd-staging@localhost`. Set it only
+**after** the first manual `up` (Step 4): a deploy into a directory with no `.env` fails.
+
 ---
 
 ## Step 1 — Production-side setup

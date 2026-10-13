@@ -31,6 +31,13 @@ docker compose ps             # every service should be running/healthy, not res
 
 `.claude/hooks/guard-long-running.mjs` denies a foreground `up` and a `logs -f`.
 
+**Check what `docker compose` is first** (`docker compose version`). On the Gentoo workstation
+it is podman-compose, which ignores `COMPOSE_FILE` from `--env-file` and does not apply
+`!override`, so `config` of a layered staging stack shows all nine services and the base
+ports. Validate override chains with real Compose v2 instead: as `stigvidd-staging@10.240.10.1`
+(gatekeeper, Compose 2.26), copy the compose files and `.env.staging.example` (as `.env`) into a
+scratch directory and run `docker compose config` there.
+
 Services: `db` (PostGIS), `api`, `web`, `media` (WebDAV), `keycloak`, `openobserve`,
 `proxy` (Caddy), `mailserver`.
 
