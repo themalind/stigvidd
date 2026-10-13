@@ -26,12 +26,14 @@ const PREVIEW_COUNT = 5;
 
 export default function FriendsScreen() {
   const [query, setQuery] = useState("");
-  const { acceptMutation, rejectMutation, sendRequestMutation, removeFriendMutation } = useFriendMutations();
+  const { acceptMutation, rejectMutation, sendRequestMutation, removeFriendMutation, withdrawRequestMutation } =
+    useFriendMutations();
   const { blockMutation, unblockMutation } = useBlockMutations();
   const theme = useTheme();
   const { t, i18n } = useTranslation();
   const [friendToRemoveId, setFriendToRemoveId] = useState<string | null>(null);
   const [userToBlock, setUserToBlock] = useState<{ identifier: string; nickName: string } | null>(null);
+  const [requestToCancel, setRequestToCancel] = useState<{ identifier: string; nickName: string } | null>(null);
   const [friendsExpanded, setFriendsExpanded] = useState(false);
   const [incomingExpanded, setIncomingExpanded] = useState(false);
   const [outgoingExpanded, setOutgoingExpanded] = useState(false);
@@ -287,8 +289,10 @@ export default function FriendsScreen() {
                             icon="close"
                             size={25}
                             iconColor={theme.colors.outline}
-                            onPress={() => removeFriendMutation.mutate(req.receiverIdentifier)}
-                            disabled={removeFriendMutation.isPending}
+                            onPress={() =>
+                              setRequestToCancel({ identifier: req.receiverIdentifier, nickName: req.receiverNickName })
+                            }
+                            disabled={withdrawRequestMutation.isPending}
                             style={s.actionButton}
                           />
                         </View>
@@ -426,6 +430,23 @@ export default function FriendsScreen() {
               infoText={[t("friends.blockInfo"), t("friends.blockContinue")]}
               cancelText={t("common.cancel")}
               confirmText={t("friends.block")}
+              backgroundColor={theme.colors.surface}
+              textColor={theme.colors.onSurface}
+            />
+            <AlertDialog
+              visible={requestToCancel !== null}
+              onDismiss={() => setRequestToCancel(null)}
+              onConfirm={() => {
+                if (requestToCancel) withdrawRequestMutation.mutate(requestToCancel.identifier);
+                setRequestToCancel(null);
+              }}
+              title={t("friends.cancelRequestTitle")}
+              infoText={[
+                t("friends.cancelRequestInfo", { name: requestToCancel?.nickName ?? "" }),
+                t("friends.removeContinue"),
+              ]}
+              cancelText={t("common.cancel")}
+              confirmText={t("friends.cancelRequestConfirm")}
               backgroundColor={theme.colors.surface}
               textColor={theme.colors.onSurface}
             />

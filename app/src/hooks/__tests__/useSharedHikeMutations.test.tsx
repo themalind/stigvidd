@@ -5,6 +5,7 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
+import { ApiError } from "@/api/api-error";
 import { snackbarAtom } from "@/atoms/snackbar-atoms";
 import { useSharedHikeMutations } from "@/hooks/shared-hikes/useSharedHikeMutations";
 import { flushUntil } from "@/test/flush";
@@ -90,6 +91,28 @@ describe("useSharedHikeMutations", () => {
       });
       expect(invalidated(MINE)).toBe(false);
     });
+
+    it("drops a share that is no longer there instead of inviting a retry", async () => {
+      mockAccept.mockRejectedValue(new ApiError("HTTP error: acceptSharedHike: 404", 404));
+      const { run, store, invalidated } = render();
+      await run("acceptMutation", "h1");
+
+      expect(store.get(snackbarAtom)).toMatchObject({
+        visible: true,
+        type: "warning",
+        message: "Delningen finns inte längre.",
+      });
+      expect(invalidated(INCOMING)).toBe(true);
+    });
+
+    it("still reports a server error as one", async () => {
+      mockAccept.mockRejectedValue(new ApiError("HTTP error: acceptSharedHike: 500", 500));
+      const { run, store, invalidated } = render();
+      await run("acceptMutation", "h1");
+
+      expect(store.get(snackbarAtom)).toMatchObject({ type: "error" });
+      expect(invalidated(INCOMING)).toBe(false);
+    });
   });
 
   describe("rejecting a shared hike", () => {
@@ -130,6 +153,15 @@ describe("useSharedHikeMutations", () => {
         type: "error",
         message: "Något gick fel, försök igen senare!",
       });
+    });
+
+    it("counts a share that is already gone as rejected", async () => {
+      mockReject.mockRejectedValue(new ApiError("HTTP error: rejectSharedHike: 404", 404));
+      const { run, store, invalidated } = render();
+      await run("rejectMutation", "h1");
+
+      expect(store.get(snackbarAtom)).toMatchObject({ type: "success", message: "Promenaden har tagits bort" });
+      expect(invalidated(INCOMING)).toBe(true);
     });
   });
 });
