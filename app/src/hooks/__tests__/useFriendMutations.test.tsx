@@ -5,6 +5,7 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
+import { ApiError } from "@/api/api-error";
 import { snackbarAtom } from "@/atoms/snackbar-atoms";
 import { useFriendMutations } from "@/hooks/friends/useFriendMutations";
 import { flushUntil } from "@/test/flush";
@@ -102,6 +103,32 @@ describe("useFriendMutations", () => {
       });
       expect(invalidated(FRIENDS)).toBe(false);
     });
+
+    it("drops a request that is no longer open instead of inviting a retry", async () => {
+      mockAccept.mockRejectedValue(new ApiError("HTTP error: acceptFriendRequest: 404", 404));
+      const { run, store, invalidated } = render();
+      await run("acceptMutation", "them");
+
+      expect(store.get(snackbarAtom)).toMatchObject({
+        visible: true,
+        type: "warning",
+        message: "Förfrågan är inte längre aktuell.",
+      });
+      expect(invalidated(INCOMING)).toBe(true);
+      expect(invalidated(FRIENDS)).toBe(true);
+    });
+
+    it("still reports a server error as one", async () => {
+      mockAccept.mockRejectedValue(new ApiError("HTTP error: acceptFriendRequest: 500", 500));
+      const { run, store, invalidated } = render();
+      await run("acceptMutation", "them");
+
+      expect(store.get(snackbarAtom)).toMatchObject({
+        type: "error",
+        message: "Kunde inte godkänna, försök igen senare!",
+      });
+      expect(invalidated(INCOMING)).toBe(false);
+    });
   });
 
   describe("rejecting a request", () => {
@@ -138,6 +165,15 @@ describe("useFriendMutations", () => {
         type: "error",
         message: "Något gick fel, försök igen senare!",
       });
+    });
+
+    it("counts a request that is already gone as declined", async () => {
+      mockReject.mockRejectedValue(new ApiError("HTTP error: rejectFriendRequest: 404", 404));
+      const { run, store, invalidated } = render();
+      await run("rejectMutation", "them");
+
+      expect(store.get(snackbarAtom)).toMatchObject({ visible: true, type: "success", message: "Förfrågan nekad" });
+      expect(invalidated(INCOMING)).toBe(true);
     });
   });
 
@@ -209,6 +245,53 @@ describe("useFriendMutations", () => {
         visible: true,
         type: "error",
         message: "Kunde inte ta bort vän, försök igen senare!",
+      });
+    });
+
+    it("refreshes rather than fails when the connection is already gone", async () => {
+      mockRemove.mockRejectedValue(new ApiError("HTTP error: removeFriend: 404", 404));
+      const { run, store, invalidated } = render();
+      await run("removeFriendMutation", "them");
+
+      expect(store.get(snackbarAtom)).toMatchObject({ type: "warning", message: "Förfrågan är inte längre aktuell." });
+      expect(invalidated(FRIENDS)).toBe(true);
+    });
+  });
+
+  describe("withdrawing a sent request", () => {
+    it("withdraws the request to the receiver it was given", async () => {
+      const { run } = render();
+      await run("withdrawRequestMutation", "them");
+
+      expect(mockRemove).toHaveBeenCalledWith("them");
+    });
+
+    it("refreshes the outgoing requests and says the request was withdrawn", async () => {
+      const { run, store, invalidated } = render();
+      await run("withdrawRequestMutation", "them");
+
+      expect(invalidated(OUTGOING)).toBe(true);
+      expect(invalidated(FRIENDS)).toBe(false);
+      expect(store.get(snackbarAtom)).toMatchObject({ type: "success", message: "Förfrågan tillbakadragen" });
+    });
+
+    it("refreshes rather than fails when the receiver already answered", async () => {
+      mockRemove.mockRejectedValue(new ApiError("HTTP error: removeFriend: 404", 404));
+      const { run, store, invalidated } = render();
+      await run("withdrawRequestMutation", "them");
+
+      expect(store.get(snackbarAtom)).toMatchObject({ type: "warning", message: "Förfrågan är inte längre aktuell." });
+      expect(invalidated(OUTGOING)).toBe(true);
+    });
+
+    it("reports any other failure", async () => {
+      mockRemove.mockRejectedValue(new ApiError("HTTP error: removeFriend: 500", 500));
+      const { run, store } = render();
+      await run("withdrawRequestMutation", "them");
+
+      expect(store.get(snackbarAtom)).toMatchObject({
+        type: "error",
+        message: "Kunde inte dra tillbaka förfrågan, försök igen!",
       });
     });
   });

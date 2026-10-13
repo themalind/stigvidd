@@ -5,8 +5,9 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
+import { isApiStatus } from "@/api/api-error";
 import { acceptSharedHike, rejectSharedHike } from "@/api/shared-hikes";
-import { showErrorAtom, showSuccessAtom } from "@/atoms/snackbar-atoms";
+import { showErrorAtom, showSuccessAtom, showWarningAtom } from "@/atoms/snackbar-atoms";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSetAtom } from "jotai";
 import { useTranslation } from "react-i18next";
@@ -15,6 +16,7 @@ export function useSharedHikeMutations() {
   const queryClient = useQueryClient();
   const setSuccessMsg = useSetAtom(showSuccessAtom);
   const setErrorMsg = useSetAtom(showErrorAtom);
+  const setWarningMsg = useSetAtom(showWarningAtom);
   const { t } = useTranslation();
 
   const acceptMutation = useMutation({
@@ -24,7 +26,12 @@ export function useSharedHikeMutations() {
       queryClient.invalidateQueries({ queryKey: ["shared-hikes"] });
       setSuccessMsg(t("hike.hikeAdded"));
     },
-    onError: () => {
+    onError: (error) => {
+      if (isApiStatus(error, 404)) {
+        queryClient.invalidateQueries({ queryKey: ["shared-hikes"] });
+        setWarningMsg(t("hike.shareGone"));
+        return;
+      }
       setErrorMsg(t("friends.acceptError"));
     },
   });
@@ -35,7 +42,12 @@ export function useSharedHikeMutations() {
       queryClient.invalidateQueries({ queryKey: ["shared-hikes", "incoming"] });
       setSuccessMsg(t("hike.incomingRejected"));
     },
-    onError: () => {
+    onError: (error) => {
+      if (isApiStatus(error, 404)) {
+        queryClient.invalidateQueries({ queryKey: ["shared-hikes"] });
+        setSuccessMsg(t("hike.incomingRejected"));
+        return;
+      }
       setErrorMsg(t("friends.rejectError"));
     },
   });

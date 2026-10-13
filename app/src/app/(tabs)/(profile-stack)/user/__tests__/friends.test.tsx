@@ -16,6 +16,7 @@ const mockAccept = jest.fn();
 const mockReject = jest.fn();
 const mockSendRequest = jest.fn();
 const mockRemoveFriend = jest.fn();
+const mockWithdraw = jest.fn();
 const mockBlock = jest.fn();
 const mockGetOutgoing = jest.fn();
 const mockGetBlocked = jest.fn();
@@ -53,6 +54,7 @@ jest.mock("@/hooks/friends/useFriendMutations", () => ({
     rejectMutation: { mutate: mockReject, isPending: false },
     sendRequestMutation: { mutate: mockSendRequest, isPending: false },
     removeFriendMutation: { mutate: mockRemoveFriend, isPending: mockRemovePending },
+    withdrawRequestMutation: { mutate: mockWithdraw, isPending: false },
   }),
 }));
 
@@ -276,7 +278,19 @@ it("shows the sent requests with a way to take them back", async () => {
   expect(screen.getByText("Skickade (1)")).toBeTruthy();
 
   fireEvent.press(actionButton("Ångra skickad förfrågan"));
-  expect(mockRemoveFriend).toHaveBeenCalledWith("id-dora");
+  expect(screen.getByText(/dra tillbaka din vänförfrågan till dora/)).toBeTruthy();
+  expect(mockWithdraw).not.toHaveBeenCalled();
+
+  fireEvent.press(screen.getByText("Avbryt"));
+  expect(mockWithdraw).not.toHaveBeenCalled();
+
+  fireEvent.press(actionButton("Ångra skickad förfrågan"));
+  const confirm = screen.getAllByText("Dra tillbaka").at(-1);
+  if (!confirm) throw new Error("expected a confirm button");
+  fireEvent.press(confirm);
+
+  expect(mockWithdraw).toHaveBeenCalledWith("id-dora");
+  expect(mockRemoveFriend).not.toHaveBeenCalled();
 });
 
 describe("blocking", () => {
