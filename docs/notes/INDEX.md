@@ -442,6 +442,11 @@ src/api/generated` then fails with "the generated API client is stale" for reaso
   (`observatory.stigvidd.se/api/3Igh0Ez9tpaLNBgzzVouYA1NyT5/mcp`) fixes the org, so pass
   `org_id: "3Igh0Ez9tpaLNBgzzVouYA1NyT5"`. `OBSERVATORY_ORG=default` is the ingest org, not
   this id. Also: how to investigate mobile app 401s / access denied from logs and traces.
+  AUTH_HEADER_REJECTED at session start is the credential: the MCP page prints a passcode
+  (`o2oi_…`) that 401s on reads; use the login password, then `/mcp` reconnect. Incident
+  timelines: curl `_search?type=traces` on stream `"default"` by `url_path`.
+  Staging logs: second MCP server `openobserve-staging`, org `3KeRfxpDWf9Hf2CiVsulKJpHWTL`;
+  a staging-only 401 means `mcp@stigvidd.se` is not a member of the staging org.
   `output_format: "csv"` returned empty hits, so use JSON. `okhttp/4.12.0` is the Android app,
   and spans carry no user id. Rule out a restart via `service_service_instance_id` and
   container `start_time`. JwtBearer 401 reasons show only because of the `Information` level
