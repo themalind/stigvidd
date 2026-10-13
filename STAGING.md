@@ -508,9 +508,14 @@ with the staging `VITE_*` values (`https://staging.api.stigvidd.se`, `auth.stigv
 Until `STAGING_DEPLOY_HOST` is set, a `staging` build pushes the images and **skips the deploy**
 (logging "staging host not configured"), staying green; Step 4 can then pull those tags by hand.
 
-> Rotate `VITE_OO_LOGS_TOKEN` (production's). It is still a real production ingest credential
-> committed in plaintext in the [Jenkinsfile](Jenkinsfile), and a git-committed credential
-> cannot be rotated quietly. Move it into a Jenkins credential like staging's.
+> An ingestion token's user must be a **member** of the org in the URL. Staging's first tokens
+> named accounts that existed in neither org, and production's committed token had the same
+> fault: every log line got a 401 and nothing reported it, so production's
+> `stigvidd_web_logs` stream never existed. Both now come from Jenkins credentials
+> (`prod-oo-logs-token`, `staging-oo-logs-token`) for the accounts `prod-web@` and
+> `staging-web@stigvidd.se`. Test a new token with an empty OTLP payload
+> (`curl -X POST <org url>/v1/logs -H "Authorization: Basic <token>" -d '{"resourceLogs":[]}'`):
+> 200 means accepted, 401 means not a member.
 
 ---
 

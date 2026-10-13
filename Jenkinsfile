@@ -24,10 +24,14 @@
 //       - id: deploy-ssh-key         type: SSH Username with private key (deploy host;
 //                                    also used for the staging host, so authorise
 //                                    its public key there too)
-//       - id: staging-oo-logs-token  type: Secret text — the staging OpenObserve org's
-//           web@ INGESTION token (baked into the staging web bundle). OPTIONAL: if the
-//           credential does not exist the staging web image is built with no token and
-//           web/src/services/telemetry.ts installs no log sink.
+//       - id: prod-oo-logs-token     type: Secret text — the production org's
+//           prod-web@stigvidd.se INGESTION token (baked into the production web bundle).
+//       - id: staging-oo-logs-token  type: Secret text — the staging org's
+//           staging-web@stigvidd.se INGESTION token (baked into the staging web bundle).
+//           Both are OPTIONAL: if one does not exist that web image is built with no
+//           token and web/src/services/telemetry.ts installs no log sink. The token's
+//           user must be a MEMBER of the org in VITE_OO_LOGS_URL, or every log line is
+//           rejected with a 401 that nothing reports.
 //
 //     Global environment variables (Manage Jenkins > System > Global properties >
 //     Environment variables):
@@ -88,8 +92,8 @@
 //
 //  5. Adjust the CONFIGURE block below (registry) and the per-branch map in
 //     Preflight (deploy host/path, VITE_* build values). VITE_* are baked into the
-//     web bundle, so the web image is per environment; the OO token is a secret
-//     for staging (credential) and — historically — inline for production.
+//     web bundle, so the web image is per environment; the OO token comes from a
+//     per-branch credential (OO_LOGS_CREDENTIAL).
 // ─────────────────────────────────────────────────────────────────────────
 
 pipeline {
@@ -244,7 +248,9 @@ pipeline {
             env.VITE_OIDC_REALM    = 'stigvidd'
             env.VITE_CLIENT_ID     = 'stigvidd-admin'
             env.VITE_OO_LOGS_URL   = 'https://observatory.stigvidd.se/api/3Igh0Ez9tpaLNBgzzVouYA1NyT5/stigvidd_web_logs/_json'
-            env.VITE_OO_LOGS_TOKEN = 'c3RpZ3ZpZGQtcHJvZHVjdGlvbi13ZWI6bzJvaV9PcTZHNHo5VGR4UXFpYmhJMjlQU1RENGFXRlhWNHdMTg=='
+            // Bound from this credential in the Build stage, like staging's.
+            env.OO_LOGS_CREDENTIAL = 'prod-oo-logs-token'
+            env.VITE_OO_LOGS_TOKEN = ''
           } else if (env.BRANCH_NAME == 'staging') {
             env.IMAGE_TAG          = "${sha}-staging"
             // Global env var; unset until the staging host exists -> deploy is skipped.
@@ -267,6 +273,7 @@ pipeline {
             env.VITE_OO_LOGS_URL   = env.STAGING_OO_LOGS_URL ?: ''
             // The token is bound from the staging-oo-logs-token credential in the
             // Build stage; empty here is the "credential missing" fallback.
+            env.OO_LOGS_CREDENTIAL = 'staging-oo-logs-token'
             env.VITE_OO_LOGS_TOKEN = ''
           }
         }
@@ -399,23 +406,24 @@ pipeline {
             }
           }
 
-          if (env.BRANCH_NAME == 'staging') {
-            // The staging web token is optional. Probe for the credential first, so a
+          if (env.OO_LOGS_CREDENTIAL) {
+            // The web token is optional. Probe for the credential first, so a
             // missing one is told apart from a failing build (which must stay red).
+            def credentialId = env.OO_LOGS_CREDENTIAL
             def haveToken = true
             try {
-              withCredentials([string(credentialsId: 'staging-oo-logs-token', variable: 'PROBE')]) { }
+              withCredentials([string(credentialsId: credentialId, variable: 'PROBE')]) { }
             } catch (err) {
               haveToken = false
             }
             if (haveToken) {
               // Bound as an env var, masked in the log, never in argv. Compose reads
               // VITE_OO_LOGS_TOKEN from the environment.
-              withCredentials([string(credentialsId: 'staging-oo-logs-token', variable: 'VITE_OO_LOGS_TOKEN')]) {
+              withCredentials([string(credentialsId: credentialId, variable: 'VITE_OO_LOGS_TOKEN')]) {
                 buildAndPush()
               }
             } else {
-              echo 'Credential staging-oo-logs-token not found: building the staging web image without telemetry.'
+              echo "Credential ${credentialId} not found: building the web image without telemetry."
               buildAndPush()
             }
           } else {
