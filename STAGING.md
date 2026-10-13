@@ -169,6 +169,42 @@ server {
 Jenkins runs on the same host, so `STAGING_DEPLOY_HOST=stigvidd-staging@localhost`. Set it only
 **after** the first manual `up` (Step 4): a deploy into a directory with no `.env` fails.
 
+The same host builds every image and holds the registry, and nothing removes what they
+leave behind: on 2026-10-13 the Docker build cache alone was 44 GB of a 115 GB disk.
+[`ci/ci-host-cleanup.sh`](ci/ci-host-cleanup.sh) trims the build cache to 10 GB, prunes
+week-old unused images, deletes Jenkins workspaces untouched for 14 days, caps the journal,
+and keeps the newest 10 sha tags per image in the registry before garbage-collecting it.
+It skips the run while a build is active. `DRY_RUN=1` shows what it would do. Install it as root:
+
+```bash
+install -o root -g root -m 755 ci-host-cleanup.sh /usr/local/sbin/ci-host-cleanup.sh
+
+cat > /etc/systemd/system/ci-host-cleanup.service <<'EOF'
+[Unit]
+Description=Trim Docker build cache, Jenkins workspaces, journal and registry tags
+After=docker.service docker-registry.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/ci-host-cleanup.sh
+EOF
+
+cat > /etc/systemd/system/ci-host-cleanup.timer <<'EOF'
+[Unit]
+Description=Weekly CI host disk cleanup
+
+[Timer]
+OnCalendar=Sun 04:30
+RandomizedDelaySec=30min
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+EOF
+
+systemctl daemon-reload && systemctl enable --now ci-host-cleanup.timer
+```
+
 ---
 
 ## Step 1 — Production-side setup
