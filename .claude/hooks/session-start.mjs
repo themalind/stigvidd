@@ -19,6 +19,9 @@
 // Static facts (the green commands, the CodeGraph rules) live in CLAUDE.md, which every
 // session already loads; repeating them here only doubled the context.
 //
+// It also records the session's baseline (HEAD + already-dirty paths) for plan-eval.mjs, whose
+// Stop round evaluates any non-trivial session that shipped work, plan or not.
+//
 // Reads only `git status`/`rev-parse` and a few directory listings — no build, no network.
 // Fails silent: no orientation beats a wrong one.
 //
@@ -27,7 +30,7 @@
 import { existsSync, readdirSync } from "node:fs";
 import path from "node:path";
 import process from "node:process";
-import { readEvent, repoRoot, git, run, inject, checker, lines } from "./lib.mjs";
+import { readEvent, repoRoot, git, run, inject, checker, lines, ensureBaseline, pruneSessionState } from "./lib.mjs";
 
 /** Parse `git status --porcelain -z -uall` into [{x, y, p}], rename sources skipped. */
 export function parsePorcelainZ(out) {
@@ -161,11 +164,21 @@ function main() {
   } catch {
     return 0; // a broken orientation must not cost a session
   }
-  if (!text) return 0;
   if (argv.includes("--print")) {
-    process.stdout.write(text + "\n");
+    process.stdout.write((text ?? "") + "\n");
     return 0;
   }
+  // The baseline plan-eval's round 2 diffs against, so a session without a plan can be
+  // evaluated too. A resume or compact keeps the one it has.
+  try {
+    if (ev.session_id) {
+      pruneSessionState();
+      ensureBaseline(root, ev.session_id);
+    }
+  } catch {
+    /* the retro is optional; orientation is not */
+  }
+  if (!text) return 0;
   return inject(text);
 }
 

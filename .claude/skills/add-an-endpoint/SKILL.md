@@ -71,7 +71,9 @@ runs as its `prebuild`. Either way the client ends up in `git status`, which is 
 Skipping the regeneration leaves the typed client stale. GitHub Actions will not catch it —
 only the Jenkinsfile `web` stage runs `git diff --exit-code -- src/api/generated`, and it
 reports it as "the generated API client is stale", which reads like an infrastructure
-problem.
+problem. A merge or rebase of two branches that both regenerated it trips this too, even
+when git merges cleanly: regenerate after merging
+([merged-generated-client-is-not-a-regenerated-one](../../../docs/notes/merged-generated-client-is-not-a-regenerated-one.md)).
 Full detail: [openapi-contract-snapshot](../../../docs/notes/openapi-contract-snapshot.md).
 
 ## Step 3 — authorization, deliberately

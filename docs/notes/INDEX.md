@@ -15,8 +15,8 @@ Search it before re-deriving anything:
 node .claude/hooks/plan-eval.mjs --match "what you are about to do"
 ```
 
-Referenced from [CLAUDE.md](../../CLAUDE.md), and matched automatically against any plan
-you get approved.
+Referenced from [CLAUDE.md](../../CLAUDE.md), and matched automatically against every prompt
+and any plan you get approved.
 
 - [The API contract is a one-way pipeline, and the file in the middle is not committed](openapi-contract-snapshot.md) —
   Controllers/WebDataContracts to `web/openapi.json` to `web/src/api/generated` flows one
@@ -384,6 +384,11 @@ src/api/generated` then fails with "the generated API client is stale" for reaso
   nothing, so `git diff --exit-code -- web/src/api/generated` run from inside `web/` passes
   unconditionally while `src/api/generated` reports the real 88-file difference. It fails
   OPEN, so a wrong `cd` turns the generated-client gate into a no-op that reports success.
+- [A clean git merge of two client regenerations is not a regenerated client](merged-generated-client-is-not-a-regenerated-one.md) —
+  adb0e716 (dashboard) and 70a175a3 (export/import) each regenerated web/src/api/generated. Git merged
+  model/index.ts without a conflict but put `adminExportParams` out of orval's alphabetical order, so Jenkins
+  failed "the generated API client is stale" while GitHub, build and tests were green. After a merge, rebase or
+  cherry-pick that touches generated files, run dotnet build and npm run generate:api, then commit.
   Locally, assert orval is idempotent (regenerate and `diff -rq` against a snapshot) instead
   of diffing against HEAD, which cannot tell "regenerated" from "not yet committed".
 - [Docker's `json-file` driver has no time-based retention, so `max-size` never means "7 days"](json-file-has-no-time-retention.md) —
@@ -437,6 +442,11 @@ src/api/generated` then fails with "the generated API client is stale" for reaso
   (`observatory.stigvidd.se/api/3Igh0Ez9tpaLNBgzzVouYA1NyT5/mcp`) fixes the org, so pass
   `org_id: "3Igh0Ez9tpaLNBgzzVouYA1NyT5"`. `OBSERVATORY_ORG=default` is the ingest org, not
   this id. Also: how to investigate mobile app 401s / access denied from logs and traces.
+  AUTH_HEADER_REJECTED at session start is the credential: the MCP page prints a passcode
+  (`o2oi_…`) that 401s on reads; use the login password, then `/mcp` reconnect. Incident
+  timelines: curl `_search?type=traces` on stream `"default"` by `url_path`.
+  Staging logs: second MCP server `openobserve-staging`, org `3KeRfxpDWf9Hf2CiVsulKJpHWTL`;
+  a staging-only 401 means `mcp@stigvidd.se` is not a member of the staging org.
   `output_format: "csv"` returned empty hits, so use JSON. `okhttp/4.12.0` is the Android app,
   and spans carry no user id. Rule out a restart via `service_service_instance_id` and
   container `start_time`. JwtBearer 401 reasons show only because of the `Information` level

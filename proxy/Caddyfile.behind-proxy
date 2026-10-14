@@ -1,0 +1,51 @@
+# Caddy reverse proxy — APP-ONLY, PLAIN-HTTP variant, for a partial stack that
+# sits behind a host reverse proxy which already terminates TLS (staging on
+# gatekeeper: nginx + certbot own 80/443 there and forward to 127.0.0.1:8088).
+#
+# Same sites as `Caddyfile.app`, but every address is http:// and auto_https is
+# off, so this Caddy never listens on 443 and never talks to an ACME CA. Selected
+# by docker-compose.behind-proxy.yml — see STAGING.md, "Behind an existing
+# reverse proxy". Keep the web, api and media blocks in step with `Caddyfile`
+# and `Caddyfile.app` — nothing checks that they agree.
+#
+# THE TRAP: the in-stack network aliases (docker-compose.yml, proxy service) still
+# point every *_DOMAIN at this Caddy, which now answers on :80 only. Nothing in
+# the stack calls its own public names over https today (WebDAV goes to
+# http://media/, Keycloak and OTLP are production names), so that is fine — but a
+# future server-to-server call to https://<this stack's name> would get a
+# connection refused here while working on a whole-stack host.
+
+{
+	auto_https off
+	servers {
+		# nginx connects from the docker bridge gateway. Trusting private ranges
+		# lets its X-Forwarded-For/-Proto through to the upstreams instead of
+		# Caddy overwriting them with "http" and the gateway address.
+		trusted_proxies static private_ranges
+	}
+}
+
+# Public site (landing page + the legal pages), on the apex domain.
+http://{$SITE_DOMAIN} {
+	encode zstd gzip
+	reverse_proxy site:80
+}
+
+# Admin web frontend, on its own name. See Caddyfile for the Keycloak coupling.
+http://{$WEB_DOMAIN} {
+	encode zstd gzip
+	reverse_proxy web:80
+}
+
+# Backend API.
+http://{$API_DOMAIN} {
+	encode zstd gzip
+	reverse_proxy api:8080
+}
+
+# Media. Public GETs are served; write methods still require the basic auth only
+# the API holds (and the API uploads over the internal network, not through here).
+http://{$MEDIA_DOMAIN} {
+	encode zstd gzip
+	reverse_proxy media:80
+}

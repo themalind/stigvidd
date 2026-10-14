@@ -25,7 +25,7 @@
 // Everything here fails silent by design: a hook must never be able to wedge a session.
 
 import { spawnSync } from "node:child_process";
-import { existsSync, readFileSync, statSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import process from "node:process";
@@ -135,6 +135,92 @@ export function mtime(p) {
   } catch {
     return null;
   }
+}
+
+// ---------------------------------------------------------------------------
+// Per-session state, shared by session-start.mjs (the baseline) and plan-eval.mjs (the
+// rounds). Keyed by session_id, so a resume or a compact — which fire SessionStart again
+// with the same id — finds the baseline it already has instead of resetting it.
+// ---------------------------------------------------------------------------
+
+export function sessionStateFile(sessionId) {
+  const dir = path.join(stateDir(), "plan-eval");
+  try {
+    mkdirSync(dir, { recursive: true });
+  } catch {
+    /* best effort */
+  }
+  const safe = String(sessionId || "unknown").replace(/[^A-Za-z0-9_-]/g, "_");
+  return path.join(dir, `${safe}.json`);
+}
+
+export function readSessionState(sessionId) {
+  try {
+    return JSON.parse(readFileSync(sessionStateFile(sessionId), "utf8"));
+  } catch {
+    return null;
+  }
+}
+
+export function writeSessionState(sessionId, obj) {
+  try {
+    writeFileSync(sessionStateFile(sessionId), JSON.stringify(obj));
+  } catch {
+    /* best effort */
+  }
+}
+
+/** Drop state older than a day, so a long-lived box does not accumulate them. */
+export function pruneSessionState() {
+  const dir = path.join(stateDir(), "plan-eval");
+  try {
+    const cutoff = Date.now() - 24 * 60 * 60 * 1000;
+    for (const f of readdirSync(dir)) {
+      const p = path.join(dir, f);
+      if (statSync(p).mtimeMs < cutoff) rmSync(p, { force: true });
+    }
+  } catch {
+    /* best effort */
+  }
+}
+
+export function dirtyPaths(root) {
+  const out = git(root, "status", "--porcelain", "-z", "-uall");
+  if (out === null) return [];
+  const fields = out.split("\0");
+  const paths = [];
+  for (let i = 0; i < fields.length; i++) {
+    const f = fields[i];
+    if (f.length < 4) continue;
+    paths.push(f.slice(3));
+    if (f[0] === "R" || f[0] === "C") i++;
+  }
+  return paths;
+}
+
+export function headSha(root) {
+  return (git(root, "rev-parse", "HEAD") ?? "").trim() || null;
+}
+
+/**
+ * The state round 2 diffs against: HEAD and the paths already dirty when the session began.
+ * Written once per session; an existing baseline is returned untouched.
+ */
+export function ensureBaseline(root, sessionId) {
+  const have = readSessionState(sessionId);
+  if (have) return have;
+  const st = { head: headSha(root), dirty: dirtyPaths(root), at: Date.now(), asked: false, shown: [] };
+  writeSessionState(sessionId, st);
+  return st;
+}
+
+/**
+ * The retro ledger: one JSON line per evaluated session, kept in the git COMMON dir — never
+ * committed, shared by linked worktrees, and not wiped on reboot the way stateDir() is.
+ */
+export function ledgerPath(root) {
+  const common = (git(root, "rev-parse", "--git-common-dir") ?? "").trim();
+  return common ? path.join(path.resolve(root, common), "stigvidd-retro.jsonl") : null;
 }
 
 /** Newline-agnostic line split: this repo has CRLF files and no .gitattributes yet. */
@@ -277,11 +363,11 @@ export function speak(text) {
   return 2;
 }
 
-/** SessionStart: inject orientation into the session's context. */
-export function inject(text) {
+/** SessionStart / UserPromptSubmit: add context to the session without blocking anything. */
+export function inject(text, event = "SessionStart") {
   process.stdout.write(
     JSON.stringify({
-      hookSpecificOutput: { hookEventName: "SessionStart", additionalContext: text },
+      hookSpecificOutput: { hookEventName: event, additionalContext: text },
     }) + "\n",
   );
   return 0;

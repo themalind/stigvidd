@@ -15,3 +15,7 @@ export class ApiError extends Error {
     this.status = status;
   }
 }
+
+export function isApiStatus(error: unknown, status: number): boolean {
+  return error instanceof ApiError && error.status === status;
+}
