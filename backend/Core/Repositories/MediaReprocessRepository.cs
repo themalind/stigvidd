@@ -160,11 +160,7 @@ public class MediaReprocessRepository : IMediaReprocessRepository
 
             await context.SaveChangesAsync(ctoken);
 
-            var stillReferenced =
-                await context.HikeImages.AnyAsync(hi => oldPaths.Contains(hi.ImageUrl), ctoken)
-                || await context.ReviewImages.AnyAsync(ri => oldPaths.Contains(ri.ImageUrl), ctoken)
-                || await context.CityAreas.AnyAsync(ca => ca.ImageUrl != null && oldPaths.Contains(ca.ImageUrl), ctoken)
-                || await context.Trails.AnyAsync(t => oldPaths.Contains(t.TrailSymbolImage), ctoken);
+            var stillReferenced = await ImageReferences.IsReferencedAsync(context, oldImageUrl, ctoken);
 
             return RepositoryResult<MediaReprocessSuccess>.Success(
                 new MediaReprocessSuccess(trailImages.Count + facilityImages.Count, stillReferenced));

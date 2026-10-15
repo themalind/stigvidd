@@ -21,7 +21,8 @@ public class Hike : BaseEntity
     public string? GettingThere { get; set; }
     public string? Description { get; set; }
 
-    public IReadOnlyCollection<HikeImage>? Images { get; set; }
+    // keep-comment: ICollection, not IReadOnlyCollection, or EF projections of it throw (docs/notes/ef-projection-needs-icollection-navigation.md)
+    public ICollection<HikeImage>? Images { get; set; }
     public int? UserId { get; set; }
     public User? User { get; set; }
 }

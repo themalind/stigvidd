@@ -88,26 +88,6 @@ public class HikeShareRecipientRepository : IHikeShareRecipientRepository
         }
     }
 
-    public async Task<RepositoryResult> ReshareSharedHikeAsync(HikeShare hikeShare, CancellationToken ctoken)
-    {
-        try
-        {
-            using var context = await _dbContext.CreateDbContextAsync(ctoken);
-
-            context.HikeShares.Add(hikeShare);
-            await context.SaveChangesAsync(ctoken);
-
-            return RepositoryResult.Success();
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, 
-                "HikeShareRecipientRepository: ReshareSharedHikeAsync -> Something went wrong when resharing hike with ID {hikeId} to user with ID {sharedWithId}.", 
-                hikeShare.HikeId, hikeShare.SharedWithId);
-            return RepositoryResult.Error();
-        }
-    }
-
     public async Task<RepositoryResult> DeleteHikeShareAsync(int hikeId, int userId, CancellationToken ctoken)
     {
         try

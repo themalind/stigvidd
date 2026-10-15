@@ -3,6 +3,7 @@
 
 using AwesomeAssertions;
 using Infrastructure.Data;
+using Infrastructure.Data.Entities;
 using Infrastructure.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,6 +13,7 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using WebDataContracts.RequestModels.ContentReport;
 using WebDataContracts.ResponseModels.ContentReport;
+using WebDataContracts.ResponseModels.HikeShare;
 using WebDataContracts.ResponseModels.Review;
 
 namespace IntegrationTests.ContentReportsController;
@@ -250,5 +252,84 @@ public class ContentReportsControllerIntegrationTests : IClassFixture<StigViddWe
         var scope = _factory.Services.CreateScope();
         var contextFactory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<StigViddDbContext>>();
         return contextFactory.CreateDbContextAsync(TestContext.Current.CancellationToken);
+    }
+
+    private const int SharedWithMeHikeId = 5;   // SkogsGreven's, shared accepted with the signed-in user
+    private const string SharedWithMeHikeIdentifier = "7a1e9c3d-2b4f-4d68-8c0a-5f2b7e1d9c32";
+    private const int StrangersHikeId = 1;      // NaturElskaren's, not shared with them
+    private const int OwnHikeId = 3;            // the signed-in user's own
+
+    private async Task<string> AddHikeImageAsync(int hikeId)
+    {
+        using var context = await CreateContextAsync();
+        var image = new HikeImage { HikeId = hikeId, ImageUrl = $"hikes/report-{Guid.NewGuid()}.jpg" };
+        context.HikeImages.Add(image);
+        await context.SaveChangesAsync(TestContext.Current.CancellationToken);
+        return image.Identifier;
+    }
+
+    private static CreateContentReportRequest HikeImageReportOf(string imageIdentifier) => new()
+    {
+        ContentType = nameof(ReportedContentType.HikeImage),
+        ContentIdentifier = imageIdentifier,
+        Reason = nameof(ReportReason.Offensive),
+    };
+
+    [Fact]
+    public async Task Report_HikeImageFromARecipient_TakesItOutOfTheirSharedHike()
+    {
+        // Arrange
+        var imageIdentifier = await AddHikeImageAsync(SharedWithMeHikeId);
+        var client = AuthenticatedClient();
+
+        // Act
+        var response = await client.PostAsJsonAsync(
+            "/api/v1/ContentReports", HikeImageReportOf(imageIdentifier), TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.Created);
+        var report = await response.Content.ReadFromJsonAsync<ContentReportResponse>(TestContext.Current.CancellationToken);
+        report.Should().NotBeNull();
+        report.HideOutcome.Should().Be(nameof(ReportHideOutcome.Hidden));
+
+        var shares = await client.GetFromJsonAsync<List<HikeShareRecipientResponse>>(
+            "/api/v1/hikesharerecipient", TestContext.Current.CancellationToken);
+        shares.Should().NotBeNull();
+        var share = shares.Single(s => s.HikeIdentifier == SharedWithMeHikeIdentifier);
+        share.Images.Should().NotContain(i => i.Identifier == imageIdentifier);
+    }
+
+    [Fact]
+    public async Task Report_HikeImageOnAHikeNotSharedWithMe_ReturnsNotFoundAndHidesNothing()
+    {
+        // Arrange
+        var imageIdentifier = await AddHikeImageAsync(StrangersHikeId);
+        var client = AuthenticatedClient();
+
+        // Act
+        var response = await client.PostAsJsonAsync(
+            "/api/v1/ContentReports", HikeImageReportOf(imageIdentifier), TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+
+        using var context = await CreateContextAsync();
+        var image = await context.HikeImages.SingleAsync(hi => hi.Identifier == imageIdentifier, TestContext.Current.CancellationToken);
+        image.ModerationState.Should().Be(ModerationState.Visible);
+    }
+
+    [Fact]
+    public async Task Report_OwnHikeImage_ReturnsBadRequest()
+    {
+        // Arrange
+        var imageIdentifier = await AddHikeImageAsync(OwnHikeId);
+        var client = AuthenticatedClient();
+
+        // Act
+        var response = await client.PostAsJsonAsync(
+            "/api/v1/ContentReports", HikeImageReportOf(imageIdentifier), TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
 }

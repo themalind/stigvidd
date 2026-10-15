@@ -15,6 +15,7 @@ public class HikeOverviewResponse
     public string? ParkingInfo { get; set; }
     public string? Description { get; set; }
     public DateTime CreatedAt { get; set; }
+    public List<HikeImageResponse> Images { get; set; } = [];
 
     public static HikeOverviewResponse Create(
         string identifier,
@@ -26,7 +27,8 @@ public class HikeOverviewResponse
         string? gettingThere,
         string? parkingInfo,
         string? description,
-        DateTime createdAt)
+        DateTime createdAt,
+        List<HikeImageResponse> images)
     {
         return new HikeOverviewResponse
         {
@@ -39,7 +41,8 @@ public class HikeOverviewResponse
             GettingThere = gettingThere,
             ParkingInfo = parkingInfo,
             Description = description,
-            CreatedAt = createdAt
+            CreatedAt = createdAt,
+            Images = images
         };
     }
 }

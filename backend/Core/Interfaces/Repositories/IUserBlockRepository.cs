@@ -16,6 +16,8 @@ public interface IUserBlockRepository
 
     /// <summary>True when the first user has blocked the second. Directional, never the reverse.</summary>
     Task<RepositoryResult<bool>> HasBlockedAsync(int blockerUserId, int blockedUserId, CancellationToken ctoken);
+    /// <summary>Those candidates who have blocked the given user. Directional, like HasBlockedAsync.</summary> keep-comment: the direction is easy to get backwards
+    Task<RepositoryResult<int[]>> GetUsersWhoBlockedAsync(int blockedUserId, IReadOnlyCollection<int> candidateUserIds, CancellationToken ctoken);
 
     /// <summary>The ids to leave out of this user's reads: the people they blocked, and nobody else.</summary>
     Task<RepositoryResult<int[]>> GetHiddenUserIdsAsync(int userId, CancellationToken ctoken);

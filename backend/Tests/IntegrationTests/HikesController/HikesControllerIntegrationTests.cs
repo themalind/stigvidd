@@ -472,4 +472,152 @@ public class HikesControllerIntegrationTests : IClassFixture<StigViddWebApplicat
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
     }
+
+    private HttpClient AuthenticatedClient()
+    {
+        var client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", AUTHENTICATED_USER);
+        return client;
+    }
+
+    private static MultipartFormDataContent ImageForm(byte[] bytes)
+    {
+        var imageContent = new ByteArrayContent(bytes);
+        imageContent.Headers.ContentType = new MediaTypeHeaderValue("image/jpeg");
+        return new MultipartFormDataContent { { imageContent, "image", "hike.jpg" } };
+    }
+
+    private void SeedHikeImage(string hikeIdentifier, string imageUrl)
+    {
+        using var scope = _factory.Services.CreateScope();
+        var contextFactory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<StigViddDbContext>>();
+        using var context = contextFactory.CreateDbContext();
+        var hikeId = context.Hikes.Where(h => h.Identifier == hikeIdentifier).Select(h => h.Id).Single();
+        context.HikeImages.Add(new Infrastructure.Data.Entities.HikeImage { HikeId = hikeId, ImageUrl = imageUrl });
+        context.SaveChanges();
+    }
+
+    [Fact]
+    public async Task AddHikeImageAsync_ShouldReturnCreated_AndStoreTheImageWithoutExif()
+    {
+        // Arrange
+        var client = AuthenticatedClient();
+        var taggedBytes = TestImages.JpegWithGps();
+        TestImages.HasExif(taggedBytes).Should().BeTrue("the source must carry EXIF");
+        _factory.UploadedFileBytes.Clear();
+
+        // Act
+        var response = await client.PostAsync($"{BASE_URL}{TestHike1Identifier}/images", ImageForm(taggedBytes), TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.Created);
+        var image = await response.Content.ReadFromJsonAsync<HikeImageResponse>(TestContext.Current.CancellationToken);
+        image.Should().NotBeNull();
+        _factory.UploadedFileBytes.Should().ContainSingle();
+        TestImages.HasExif(_factory.UploadedFileBytes.Single()).Should().BeFalse();
+
+        var hike = await client.GetFromJsonAsync<HikeResponse>($"{BASE_URL}{TestHike1Identifier}", TestContext.Current.CancellationToken);
+        hike.Should().NotBeNull();
+        hike.Images.Select(i => i.Identifier).Should().BeEquivalentTo([image.Identifier]);
+    }
+
+    [Fact]
+    public async Task AddHikeImageAsync_ShouldReturnForbidden_WhenHikeIsOnlySharedWithCaller()
+    {
+        // Arrange
+        var client = AuthenticatedClient();
+
+        // Act
+        var response = await client.PostAsync($"{BASE_URL}{TestHike3Identifier}/images", ImageForm(TestImages.Jpeg()), TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+    }
+
+    [Fact]
+    public async Task AddHikeImageAsync_ShouldReturnConflict_WhenHikeAlreadyHasTenImages()
+    {
+        // Arrange
+        for (var i = 0; i < 10; i++)
+            SeedHikeImage(TestHike1Identifier, $"hikes/seeded-{i}.jpg");
+        var client = AuthenticatedClient();
+
+        // Act
+        var response = await client.PostAsync($"{BASE_URL}{TestHike1Identifier}/images", ImageForm(TestImages.Jpeg()), TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.Conflict);
+    }
+
+    [Fact]
+    public async Task DeleteHikeImageAsync_ShouldReturnNoContent_AndRemoveTheImage()
+    {
+        // Arrange
+        var client = AuthenticatedClient();
+        var created = await client.PostAsync($"{BASE_URL}{TestHike1Identifier}/images", ImageForm(TestImages.Jpeg()), TestContext.Current.CancellationToken);
+        var image = await created.Content.ReadFromJsonAsync<HikeImageResponse>(TestContext.Current.CancellationToken);
+        image.Should().NotBeNull();
+
+        // Act
+        var response = await client.DeleteAsync($"{BASE_URL}{TestHike1Identifier}/images/{image.Identifier}", TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+        var hike = await client.GetFromJsonAsync<HikeResponse>($"{BASE_URL}{TestHike1Identifier}", TestContext.Current.CancellationToken);
+        hike.Should().NotBeNull();
+        hike.Images.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task DeleteHikeImageAsync_ShouldReturnForbidden_WhenHikeIsOnlySharedWithCaller()
+    {
+        // Arrange
+        SeedHikeImage(TestHike3Identifier, "hikes/owners-photo.jpg");
+        var client = AuthenticatedClient();
+        var hike = await client.GetFromJsonAsync<HikeResponse>($"{BASE_URL}{TestHike3Identifier}", TestContext.Current.CancellationToken);
+        hike.Should().NotBeNull();
+        var imageIdentifier = hike.Images.Single().Identifier;
+
+        // Act
+        var response = await client.DeleteAsync($"{BASE_URL}{TestHike3Identifier}/images/{imageIdentifier}", TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+    }
+
+    [Fact]
+    public async Task GetHikesAsync_ShouldReturnImagesInUploadOrder_WithPresentableUrls()
+    {
+        // Arrange
+        SeedHikeImage(TestHike1Identifier, "hikes/first.jpg");
+        SeedHikeImage(TestHike1Identifier, "hikes/second.jpg");
+        var client = AuthenticatedClient();
+
+        // Act
+        var hikes = await client.GetFromJsonAsync<List<HikeOverviewResponse>>(BASE_URL, TestContext.Current.CancellationToken);
+
+        // Assert
+        hikes.Should().NotBeNull();
+        var hike = hikes.Single(h => h.Identifier == TestHike1Identifier);
+        hike.Images.Select(i => i.ImageUrl).Should().HaveCount(2);
+        hike.Images[0].ImageUrl.Should().EndWith("hikes/first.jpg").And.NotBe("hikes/first.jpg");
+        hike.Images[1].ImageUrl.Should().EndWith("hikes/second.jpg");
+    }
+
+    [Fact]
+    public async Task GetHikesSharedWithUser_ShouldIncludeTheOwnersImages()
+    {
+        // Arrange
+        SeedHikeImage(TestHike3Identifier, "hikes/owners-photo.jpg");
+        var client = AuthenticatedClient();
+
+        // Act
+        var shared = await client.GetFromJsonAsync<List<WebDataContracts.ResponseModels.HikeShare.HikeShareRecipientResponse>>("/api/v1/HikeShareRecipient", TestContext.Current.CancellationToken);
+
+        // Assert
+        shared.Should().NotBeNull();
+        var hike = shared.Single(h => h.HikeIdentifier == TestHike3Identifier);
+        hike.Images.Should().ContainSingle().Which.ImageUrl.Should().EndWith("hikes/owners-photo.jpg");
+    }
 }

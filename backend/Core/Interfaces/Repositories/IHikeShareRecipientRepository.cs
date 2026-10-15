@@ -12,7 +12,6 @@ public interface IHikeShareRecipientRepository
     Task<RepositoryResult<IReadOnlyCollection<T>>> GetAllHikesSharedWithUserAsync<T>(string identifier, int[] hiddenUserIds, Expression<Func<HikeShare, T>> selector, CancellationToken ctoken);
     Task<RepositoryResult<bool>> HasHikeSharedWithUserAsync(int userId, int hikeId, CancellationToken ctoken);
     Task<RepositoryResult<bool>> IsAllowedToReshareHikeAsync(int userId, int hikeId, CancellationToken ctoken);
-    Task<RepositoryResult> ReshareSharedHikeAsync(HikeShare hikeShare, CancellationToken ctoken);
     Task<RepositoryResult> DeleteHikeShareAsync(int hikeId, int userId, CancellationToken ctoken);
     Task<RepositoryResult<IReadOnlyCollection<T>>> GetPendingSharesForUserAsync<T>(int sharedWithId, int[] hiddenUserIds, Expression<Func<HikeShare, T>> selector, CancellationToken ctoken);
     Task<RepositoryResult<T>> GetPendingShareByIdentifierAsync<T>(int sharedWithId, string hikeIdentifier, int[] hiddenUserIds, Expression<Func<HikeShare, T>> selector, CancellationToken ctoken);

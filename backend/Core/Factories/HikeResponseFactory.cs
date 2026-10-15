@@ -2,12 +2,21 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 using Infrastructure.Data.Entities;
+using Infrastructure.Enums;
+using Microsoft.Extensions.Configuration;
 using WebDataContracts.ResponseModels.Hike;
 
 namespace Core.Factories;
 
 public class HikeResponseFactory
 {
+    public string PresentableBaseUrl { get; }
+
+    public HikeResponseFactory(IConfiguration configuration)
+    {
+        PresentableBaseUrl = configuration["PresentableBaseUrl"] ?? throw new InvalidOperationException("PresentableBaseUrl configuration is missing");
+    }
+
     public HikeResponse Create(Hike hike)
     {
         return HikeResponse.Create(
@@ -21,7 +30,18 @@ public class HikeResponseFactory
             hike.ParkingInfo,
             hike.Description,
             hike.CreatedAt,
-            hike.CreatedByNickName
+            hike.CreatedByNickName,
+            CreateImages(PresentableBaseUrl, hike.Images)
         );
+    }
+
+    // keep-comment: static and null-tolerant because EF top-level projections call it client-side with the materialized navigation
+    public static List<HikeImageResponse> CreateImages(string presentableBaseUrl, IEnumerable<HikeImage>? images)
+    {
+        return images?
+            .Where(i => i.ModerationState == ModerationState.Visible)
+            .OrderBy(i => i.CreatedAt)
+            .Select(i => HikeImageResponse.Create(presentableBaseUrl, i.Identifier, i.ImageUrl))
+            .ToList() ?? [];
     }
 }

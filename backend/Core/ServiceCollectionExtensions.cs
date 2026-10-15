@@ -81,6 +81,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IHikeService, HikeService>();
         services.AddTransient<ITrailObstaclesService, TrailObstaclesService>();
         services.AddTransient<IFacilityService, FacilityService>();
+        services.AddTransient<HikeShareDistributor>();
         services.AddTransient<IHikeShareService, HikeShareService>();
         services.AddTransient<IHikeShareRecipientService, HikeShareRecipientService>();
         services.AddTransient<IFriendService, FriendService>();

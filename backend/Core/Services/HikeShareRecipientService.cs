@@ -1,8 +1,10 @@
 ﻿// SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+using Core.Factories;
 using Core.Interfaces.Repositories;
 using Core.Interfaces.Services;
+using Core.Telemetry;
 using Infrastructure.Data.Entities;
 using WebDataContracts.ResponseModels.HikeShare;
 
@@ -13,35 +15,39 @@ public class HikeShareRecipientService : IHikeShareRecipientService
     private readonly IHikeShareRecipientRepository _hikeShareRecipientRepository;
     private readonly IUserRepository _userRepository;
     private readonly IHikeRepository _hikeRepository;
-    private readonly IFriendRepository _friendRepository;
     private readonly IUserBlockService _userBlockService;
-    private readonly IPushNotificationService _pushNotificationService;
+    private readonly HikeShareDistributor _distributor;
+    private readonly StigviddMetrics _metrics;
     // Dropping a share can leave a hike with no owner and no recipients. Cleaning that up owns
     // image files as well as rows, which is HikeService's job, so it is delegated rather than
     // repeated here.
     private readonly IHikeService _hikeService;
+    private readonly HikeResponseFactory _hikeResponseFactory;
 
     public HikeShareRecipientService(
         IHikeShareRecipientRepository hikeShareRecipientRepository,
         IUserRepository userRepository,
         IHikeRepository hikeRepository,
-        IFriendRepository friendRepository,
         IUserBlockService userBlockService,
-        IPushNotificationService pushNotificationService,
-        IHikeService hikeService)
+        HikeShareDistributor distributor,
+        StigviddMetrics metrics,
+        IHikeService hikeService,
+        HikeResponseFactory hikeResponseFactory)
     {
         _hikeShareRecipientRepository = hikeShareRecipientRepository;
         _userRepository = userRepository;
         _hikeRepository = hikeRepository;
-        _friendRepository = friendRepository;
         _userBlockService = userBlockService;
-        _pushNotificationService = pushNotificationService;
+        _distributor = distributor;
+        _metrics = metrics;
         _hikeService = hikeService;
+        _hikeResponseFactory = hikeResponseFactory;
     }
 
     public async Task<Result<IReadOnlyCollection<HikeShareRecipientResponse>>> GetAllHikesSharedWithUserAsync(string identifier, CancellationToken ctoken)
     {
         var hiddenUserIds = await _userBlockService.GetHiddenUserIdsForReadAsync(identifier, ctoken);
+        var baseUrl = _hikeResponseFactory.PresentableBaseUrl;
 
         var result = await _hikeShareRecipientRepository.GetAllHikesSharedWithUserAsync(identifier, hiddenUserIds, hs => new HikeShareRecipientResponse
         {
@@ -57,7 +63,8 @@ public class HikeShareRecipientService : IHikeShareRecipientService
             GettingThere = hs.Hike.GettingThere,
             ParkingInfo = hs.Hike.ParkingInfo,
             Description = hs.Hike.Description,
-            AllowResharing = hs.AllowResharing
+            AllowResharing = hs.AllowResharing,
+            Images = HikeResponseFactory.CreateImages(baseUrl, hs.Hike.Images)
         }, ctoken);
 
         if (!result.IsSuccess)
@@ -66,24 +73,35 @@ public class HikeShareRecipientService : IHikeShareRecipientService
         return Result.Ok(result.Value);
     }
 
-    public async Task<Result> ReshareSharedHikeAsync(string hikeIdentifier, string userIdentifier, string reShareToName, CancellationToken ctoken)
+    public async Task<Result> ReshareSharedHikeAsync(string hikeIdentifier, string userIdentifier, IReadOnlyCollection<string> reShareToNames, CancellationToken ctoken)
+    {
+        var result = await ReshareSharedHikeCoreAsync(hikeIdentifier, userIdentifier, reShareToNames, ctoken);
+
+        _metrics.RecordHikeShare(MetricTags.Values.KindReshare, MetricOutcome.From(result));
+        if (result.Success)
+            _metrics.RecordHikeShareRecipients(MetricTags.Values.KindReshare, result.Value);
+
+        return result;
+    }
+
+    private async Task<Result<int>> ReshareSharedHikeCoreAsync(string hikeIdentifier, string userIdentifier, IReadOnlyCollection<string> reShareToNames, CancellationToken ctoken)
     {
         var senderResult = await _userRepository.GetUserByIdentifierAsync(userIdentifier, u => new SenderProjection(u.Id, u.NickName), ctoken);
-        if (!senderResult.IsSuccess)
+        if (!senderResult.IsSuccess || senderResult.Value is null)
         {
             if (senderResult.Status == RepositoryResultStatus.NotFound)
-                return Result.Fail(new Message(404, "User not found with the given identifier."));
+                return Result.Fail<int>(new Message(404, "User not found with the given identifier."));
 
-            return Result.Fail(new Message(500, "Something went wrong when fetching user ID."));
+            return Result.Fail<int>(new Message(500, "Something went wrong when fetching user ID."));
         }
 
         var hikeResult = await _hikeRepository.GetHikeByIdentifierAsync(hikeIdentifier, ctoken);
-        if (!hikeResult.IsSuccess)
+        if (!hikeResult.IsSuccess || hikeResult.Value is null)
         {
             if (hikeResult.Status == RepositoryResultStatus.NotFound)
-                return Result.Fail(new Message(404, "Hike not found with the given identifier."));
+                return Result.Fail<int>(new Message(404, "Hike not found with the given identifier."));
 
-            return Result.Fail(new Message(500, "Something went wrong when fetching hike."));
+            return Result.Fail<int>(new Message(500, "Something went wrong when fetching hike."));
         }
 
         // Must have it shared with them, accepted, and with the owner's permission to pass
@@ -91,66 +109,13 @@ public class HikeShareRecipientService : IHikeShareRecipientService
         // per recipient and hike — a true here means that one row is accepted and allows it.
         var isAllowedToReshare = await _hikeShareRecipientRepository.IsAllowedToReshareHikeAsync(senderResult.Value.Id, hikeResult.Value.Id, ctoken);
         if (!isAllowedToReshare.IsSuccess)
-            return Result.Fail(new Message(500, "Something went wrong when checking reshare permissions."));
+            return Result.Fail<int>(new Message(500, "Something went wrong when checking reshare permissions."));
 
         if (!isAllowedToReshare.Value)
-            return Result.Fail(new Message(403, "You do not have permission to reshare this hike."));
+            return Result.Fail<int>(new Message(403, "You do not have permission to reshare this hike."));
 
-        var recipientResult = await _userRepository.GetUserByNickNameAsync(reShareToName, u => new ReceiverProjection(u.Id, u.Identifier), ctoken);
-        if (!recipientResult.IsSuccess)
-        {
-            if (recipientResult.Status == RepositoryResultStatus.NotFound)
-                return Result.Fail(new Message(404, "User not found with the given name."));
-
-            return Result.Fail(new Message(500, "Something went wrong when fetching user ID."));
-        }
-
-        // Must be friends to share a hike
-        var areFriendsResult = await _friendRepository.FriendshipExistsAsync(senderResult.Value.Id, recipientResult.Value.Id, ctoken);
-        if (!areFriendsResult.IsSuccess)
-            return Result.Fail(new Message(500, "Something went wrong when checking friendship status."));
-
-        if (!areFriendsResult.Value)
-            return Result.Fail(new Message(403, "You can only share a hike with a friend."));
-
-        // Cannot share with yourself
-        if (senderResult.Value.Id == recipientResult.Value.Id)
-            return Result.Fail(new Message(400, "You cannot share a hike with yourself."));
-
-        // ReshareToUser can not be owner of the hike
-        var isOwner = hikeResult.Value.UserId == recipientResult.Value.Id;
-        if (isOwner)
-            return Result.Fail(new Message(400, "You cannot reshare a hike to the owner."));
-
-        // Already shared with user (pending or accepted)
-        var alreadyShared = await _hikeShareRecipientRepository.HasHikeSharedWithUserAsync(recipientResult.Value.Id, hikeResult.Value.Id, ctoken);
-        if (!alreadyShared.IsSuccess)
-            return Result.Fail(new Message(500, "Something went wrong when checking if hike is already shared."));
-
-        if (alreadyShared.Value)
-            return Result.Fail(new Message(409, "This hike has already been shared with this user."));
-
-        var hikeShare = new HikeShare
-        {
-            HikeId = hikeResult.Value.Id,
-            SharedById = senderResult.Value.Id,
-            SharedWithId = recipientResult.Value.Id,
-            CreatedAt = DateTime.UtcNow,
-            AllowResharing = false
-        };
-
-        var result = await _hikeShareRecipientRepository.ReshareSharedHikeAsync(hikeShare, ctoken);
-        if (!result.IsSuccess)
-            return Result.Fail(new Message(500, "Something went wrong while resharing the hike"));
-
-        // Send push notification to the recipient
-        await _pushNotificationService.SendToUserAsync(
-            recipientResult.Value.Identifier, "Ny delad vandring",
-            $"{senderResult.Value.NickName} vill dela en vandring med dig",
-             new Dictionary<string, object> { ["type"] = "hike_share" }, ctoken,
-             fromUserIdentifier: userIdentifier);
-
-        return Result.Ok();
+        return await _distributor.DistributeAsync(
+            senderResult.Value.Id, senderResult.Value.NickName, hikeResult.Value, reShareToNames, allowResharing: false, ctoken);
     }
 
     public async Task<Result> RemoveSharedHikeAsync(string hikeIdentifier, string userIdentifier, CancellationToken ctoken)
@@ -228,6 +193,7 @@ public class HikeShareRecipientService : IHikeShareRecipientService
         }
 
         var hiddenUserIds = await _userBlockService.GetHiddenUserIdsForReadAsync(userIdentifier, ctoken);
+        var baseUrl = _hikeResponseFactory.PresentableBaseUrl;
 
         var result = await _hikeShareRecipientRepository.GetPendingShareByIdentifierAsync(userIdResult.Value, hikeIdentifier, hiddenUserIds, hs => HikeShareRecipientResponse.Create(
             hs.Hike!.Identifier,
@@ -242,7 +208,8 @@ public class HikeShareRecipientService : IHikeShareRecipientService
             hs.Hike.GettingThere,
             hs.Hike.ParkingInfo,
             hs.Hike.Description,
-            hs.AllowResharing), ctoken);
+            hs.AllowResharing,
+            HikeResponseFactory.CreateImages(baseUrl, hs.Hike.Images)), ctoken);
 
         if (!result.IsSuccess)
         {
@@ -321,7 +288,4 @@ public class HikeShareRecipientService : IHikeShareRecipientService
 
         return Result.Ok();
     }
-
-    internal record SenderProjection(int Id, string NickName);
-    internal record ReceiverProjection(int Id, string Identifier);
 }

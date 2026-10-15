@@ -10,16 +10,11 @@ public class HikeShareReshareValidator : AbstractValidator<ReshareSharedHikeRequ
 {
     public HikeShareReshareValidator()
     {
-
         RuleFor(hsr => hsr.HikeIdentifier)
             .NotEmpty()
                 .WithMessage("HikeIdentifier is required.")
             .Length(36)
                 .WithMessage("HikeIdentifier must be at least 36 characters long.");
-        RuleFor(hsr => hsr.ReShareToName)
-            .NotEmpty()
-                .WithMessage("Shared with Name is required.")
-            .MaximumLength(20)
-                .WithMessage("Shared with Name cannot exceed 20 characters.");
+        RuleFor(hsr => hsr.ReShareToNames).RecipientNames();
     }
 }

@@ -109,38 +109,4 @@ public class HikeShareRepositoryTests : TestBase
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().Be(1);
     }
-
-    [Fact]
-    public async Task ShareHikeAsync_WhenValid_ReturnsSuccess()
-    {
-        // Arrange
-        var repo = new HikeShareRepository(CreateSeededFactory(), NullLogger<HikeShareRepository>.Instance);
-        var hikeShare = new HikeShare { HikeId = 6, SharedById = 5, SharedWithId = 1 };
-
-        // Act
-        var result = await repo.ShareHikeAsync(hikeShare, TestContext.Current.CancellationToken);
-
-        // Assert
-        result.IsSuccess.Should().BeTrue();
-    }
-
-    [Fact]
-    public async Task ShareHikeAsync_WhenAdded_IncreasesShareCount()
-    {
-        // Arrange — Hike6 (owned by User5) has no shares initially
-        var factory = CreateSeededFactory();
-        var repo = new HikeShareRepository(factory, NullLogger<HikeShareRepository>.Instance);
-        const string user5Identifier = "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5a33";
-        const string hike6Identifier = "a2f3b1c4-9e7d-4a21-bc5f-3d8e6f1a2b90";
-
-        var hikeShare = new HikeShare { HikeId = 6, SharedById = 5, SharedWithId = 1 };
-
-        // Act
-        await repo.ShareHikeAsync(hikeShare, TestContext.Current.CancellationToken);
-        var count = await repo.GetHikeShareCountAsync(user5Identifier, hike6Identifier, TestContext.Current.CancellationToken);
-
-        // Assert
-        count.IsSuccess.Should().BeTrue();
-        count.Value.Should().Be(1);
-    }
 }

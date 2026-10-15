@@ -18,6 +18,7 @@ public class HikeResponse
     // Null once the creator has deleted their account; the hike survives for anyone it
     // was shared with, so the client falls back to a "removed user" label.
     public string? CreatedByNickName { get; set; }
+    public List<HikeImageResponse> Images { get; set; } = [];
 
     public static HikeResponse Create(
         string identifier,
@@ -30,7 +31,8 @@ public class HikeResponse
         string? parkingInfo,
         string? description,
         DateTime createdAt,
-        string? createdByNickName)
+        string? createdByNickName,
+        List<HikeImageResponse> images)
     {
         return new HikeResponse
         {
@@ -44,7 +46,8 @@ public class HikeResponse
             ParkingInfo = parkingInfo,
             Description = description,
             CreatedAt = createdAt,
-            CreatedByNickName = createdByNickName
+            CreatedByNickName = createdByNickName,
+            Images = images
         };
     }
 }

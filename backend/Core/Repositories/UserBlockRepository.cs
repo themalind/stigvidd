@@ -102,6 +102,26 @@ public class UserBlockRepository : IUserBlockRepository
         }
     }
 
+    public async Task<RepositoryResult<int[]>> GetUsersWhoBlockedAsync(int blockedUserId, IReadOnlyCollection<int> candidateUserIds, CancellationToken ctoken)
+    {
+        try
+        {
+            using var context = await _context.CreateDbContextAsync(ctoken);
+
+            var blockers = await context.UserBlocks
+                .Where(ub => ub.BlockedUserId == blockedUserId && candidateUserIds.Contains(ub.BlockerUserId))
+                .Select(ub => ub.BlockerUserId)
+                .ToArrayAsync(ctoken);
+
+            return RepositoryResult<int[]>.Success(blockers);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error checking which of {Count} users block {BlockedUserId}", candidateUserIds.Count, blockedUserId);
+            return RepositoryResult<int[]>.Error();
+        }
+    }
+
     public async Task<RepositoryResult<int[]>> GetHiddenUserIdsAsync(int userId, CancellationToken ctoken)
     {
         try

@@ -3,6 +3,7 @@
 
 using Core.Validators.HikeShare;
 using AwesomeAssertions;
+using System.Text.Json;
 using WebDataContracts.RequestModels.HikeShare;
 
 namespace UnitTests.ValidatorTests;
@@ -14,7 +15,7 @@ public class HikeShareReshareValidatorTests
     private static ReshareSharedHikeRequest ValidRequest() => new()
     {
         HikeIdentifier = "3f9c1b7e-8a42-4e6d-9c5f-2a7b1d8e4f90",
-        ReShareToName = "VandrarVennen"
+        ReShareToNames = ["VandrarVennen"]
     };
 
     [Fact]
@@ -69,10 +70,12 @@ public class HikeShareReshareValidatorTests
     }
 
     [Fact]
-    public void Validate_WithEmptyReShareToName_ShouldFail()
+    public void Validate_WithNullRecipients_ShouldFailWithoutThrowing()
     {
-        var request = ValidRequest();
-        request.ReShareToName = string.Empty;
+        var request = JsonSerializer.Deserialize<ReshareSharedHikeRequest>(
+            """{"hikeIdentifier":"3f9c1b7e-8a42-4e6d-9c5f-2a7b1d8e4f90","reShareToNames":null}""",
+            JsonSerializerOptions.Web);
+        request.Should().NotBeNull();
 
         var result = _validator.Validate(request);
 
@@ -80,10 +83,32 @@ public class HikeShareReshareValidatorTests
     }
 
     [Fact]
-    public void Validate_WithReShareToNameAt20Characters_ShouldPass()
+    public void Validate_WithNoRecipients_ShouldFail()
     {
         var request = ValidRequest();
-        request.ReShareToName = new string('a', 20);
+        request.ReShareToNames = [];
+
+        var result = _validator.Validate(request);
+
+        result.IsValid.Should().BeFalse();
+    }
+
+    [Fact]
+    public void Validate_WithAnEmptyNameAmongTheRecipients_ShouldFail()
+    {
+        var request = ValidRequest();
+        request.ReShareToNames = ["NaturElskaren", string.Empty];
+
+        var result = _validator.Validate(request);
+
+        result.IsValid.Should().BeFalse();
+    }
+
+    [Fact]
+    public void Validate_WithNameAt20Characters_ShouldPass()
+    {
+        var request = ValidRequest();
+        request.ReShareToNames = [new string('a', 20)];
 
         var result = _validator.Validate(request);
 
@@ -91,10 +116,32 @@ public class HikeShareReshareValidatorTests
     }
 
     [Fact]
-    public void Validate_WithReShareToNameExceeding20Characters_ShouldFail()
+    public void Validate_WithNameExceeding20Characters_ShouldFail()
     {
         var request = ValidRequest();
-        request.ReShareToName = new string('a', 21);
+        request.ReShareToNames = ["NaturElskaren", new string('a', 21)];
+
+        var result = _validator.Validate(request);
+
+        result.IsValid.Should().BeFalse();
+    }
+
+    [Fact]
+    public void Validate_WithTheMaximumNumberOfRecipients_ShouldPass()
+    {
+        var request = ValidRequest();
+        request.ReShareToNames = Enumerable.Range(0, RecipientRules.MaxRecipients).Select(i => $"user{i}").ToList();
+
+        var result = _validator.Validate(request);
+
+        result.IsValid.Should().BeTrue();
+    }
+
+    [Fact]
+    public void Validate_WithOneRecipientTooMany_ShouldFail()
+    {
+        var request = ValidRequest();
+        request.ReShareToNames = Enumerable.Range(0, RecipientRules.MaxRecipients + 1).Select(i => $"user{i}").ToList();
 
         var result = _validator.Validate(request);
 

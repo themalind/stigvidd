@@ -67,6 +67,7 @@ public class HikeRepository : IHikeRepository
             using var context = await _context.CreateDbContextAsync(ctoken);
 
             var hike = await context.Hikes
+                .Include(h => h.Images)
                 .FirstOrDefaultAsync(h => h.Identifier == identifier, ctoken);
 
             return hike is null
@@ -344,6 +345,42 @@ public class HikeRepository : IHikeRepository
         catch (Exception ex)
         {
             _logger.LogError(ex, "HikeRepository: AnonymizeSharedHikesOnUserDeleteAsync -> Something went wrong when anonymizing shared hikes for user with ID {userId}.", userId);
+            return RepositoryResult.Error();
+        }
+    }
+
+    public async Task<RepositoryResult<HikeImage>> AddHikeImageAsync(HikeImage image, CancellationToken ctoken)
+    {
+        try
+        {
+            using var context = await _context.CreateDbContextAsync(ctoken);
+
+            context.HikeImages.Add(image);
+            await context.SaveChangesAsync(ctoken);
+
+            return RepositoryResult<HikeImage>.Success(image);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "HikeRepository: AddHikeImageAsync -> Something went wrong when adding an image to hike with ID {hikeId}.", image.HikeId);
+            return RepositoryResult<HikeImage>.Error();
+        }
+    }
+
+    public async Task<RepositoryResult> DeleteHikeImageAsync(HikeImage image, CancellationToken ctoken)
+    {
+        try
+        {
+            using var context = await _context.CreateDbContextAsync(ctoken);
+
+            context.HikeImages.Remove(image);
+            await context.SaveChangesAsync(ctoken);
+
+            return RepositoryResult.Success();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "HikeRepository: DeleteHikeImageAsync -> Something went wrong when deleting image {imageIdentifier}.", image.Identifier);
             return RepositoryResult.Error();
         }
     }

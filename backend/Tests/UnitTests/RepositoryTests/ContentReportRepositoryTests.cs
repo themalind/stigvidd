@@ -40,7 +40,7 @@ public class ContentReportRepositoryTests : TestBase
 
         // Act
         var result = await Build(factory).GetReportableContentAsync(
-            ReportedContentType.Review, HiddenReviewIdentifier, TestContext.Current.CancellationToken);
+            ReportedContentType.Review, HiddenReviewIdentifier, ReporterUserId, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -57,7 +57,7 @@ public class ContentReportRepositoryTests : TestBase
 
         // Act
         var result = await Build(factory).GetReportableContentAsync(
-            ReportedContentType.Review, "no-such-review", TestContext.Current.CancellationToken);
+            ReportedContentType.Review, "no-such-review", ReporterUserId, TestContext.Current.CancellationToken);
 
         // Assert
         result.Status.Should().Be(RepositoryResultStatus.NotFound);
@@ -70,7 +70,7 @@ public class ContentReportRepositoryTests : TestBase
         var factory = CreateSeededFactory(db => db.Reviews.Add(Review(VisibleReviewIdentifier, ModerationState.Visible)));
         var repository = Build(factory);
         var content = await repository.GetReportableContentAsync(
-            ReportedContentType.Review, VisibleReviewIdentifier, TestContext.Current.CancellationToken);
+            ReportedContentType.Review, VisibleReviewIdentifier, ReporterUserId, TestContext.Current.CancellationToken);
 
         // Act
         content.Value.Should().NotBeNull();
@@ -95,7 +95,7 @@ public class ContentReportRepositoryTests : TestBase
         var factory = CreateSeededFactory(db => db.Reviews.Add(Review(VisibleReviewIdentifier, ModerationState.Visible)));
         var repository = Build(factory);
         var content = await repository.GetReportableContentAsync(
-            ReportedContentType.Review, VisibleReviewIdentifier, TestContext.Current.CancellationToken);
+            ReportedContentType.Review, VisibleReviewIdentifier, ReporterUserId, TestContext.Current.CancellationToken);
 
         // Act
         content.Value.Should().NotBeNull();
@@ -881,5 +881,228 @@ public class ContentReportRepositoryTests : TestBase
         // Assert
         result.Value.Should().NotBeNull();
         result.Value.Items.Should().ContainSingle().Which.NickName.Should().Be("GoneAuthor");
+    }
+
+    // Seeded hike 1 is user 1's and shared, accepted, with user 2. keep-comment: the tests below use these ids bare
+    private const int HikeImageId = 500;
+    private const string HikeImageIdentifier = "hike-img-5a6b7c8d-9e0f-4a1b-8c2d-3e4f5a6b7c8d";
+    private const string HikeImagePath = "hikes/report-me.jpg";
+
+    private static HikeImage HikeImageRow(ModerationState state = ModerationState.Visible) => new()
+    {
+        Id = HikeImageId,
+        Identifier = HikeImageIdentifier,
+        HikeId = 1,
+        ImageUrl = HikeImagePath,
+        ModerationState = state,
+    };
+
+    private static IDbContextFactory<StigViddDbContext> FactoryWithHikeImageReport(ModerationState state, Action<StigViddDbContext>? extra = null) =>
+        CreateSeededFactory(db =>
+        {
+            db.HikeImages.Add(HikeImageRow(state));
+            db.ContentReports.Add(new ContentReport
+            {
+                Identifier = "hike-image-report",
+                ContentType = ReportedContentType.HikeImage,
+                ContentId = HikeImageId,
+                ContentIdentifier = HikeImageIdentifier,
+                ContentSnapshot = HikeImagePath,
+                ContentAuthorUserId = 1,
+                ReporterUserId = 2,
+                Reason = ReportReason.Offensive,
+                Status = ReportStatus.Pending,
+                HideOutcome = ReportHideOutcome.Hidden,
+            });
+            extra?.Invoke(db);
+        });
+
+    [Fact]
+    public async Task GetReportableContent_HikeImage_ForAnAcceptedRecipient_ReturnsTheOwnerAndThePath()
+    {
+        // Arrange
+        var factory = CreateSeededFactory(db => db.HikeImages.Add(HikeImageRow()));
+
+        // Act
+        var result = await Build(factory).GetReportableContentAsync(
+            ReportedContentType.HikeImage, HikeImageIdentifier, 2, TestContext.Current.CancellationToken);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().NotBeNull();
+        result.Value.ContentId.Should().Be(HikeImageId);
+        result.Value.AuthorUserId.Should().Be(1);
+        result.Value.Snapshot.Should().Be(HikeImagePath);
+        result.Value.TrailId.Should().BeNull();
+        result.Value.TrailIdentifier.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task GetReportableContent_HikeImage_ForTheOwner_FindsItSoTheServiceCanRefuseOwnContent()
+    {
+        // Arrange
+        var factory = CreateSeededFactory(db => db.HikeImages.Add(HikeImageRow()));
+
+        // Act
+        var result = await Build(factory).GetReportableContentAsync(
+            ReportedContentType.HikeImage, HikeImageIdentifier, 1, TestContext.Current.CancellationToken);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().NotBeNull();
+        result.Value.AuthorUserId.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task GetReportableContent_HikeImage_ForAStranger_ReturnsNotFound()
+    {
+        // Arrange
+        var factory = CreateSeededFactory(db => db.HikeImages.Add(HikeImageRow()));
+
+        // Act
+        var result = await Build(factory).GetReportableContentAsync(
+            ReportedContentType.HikeImage, HikeImageIdentifier, 3, TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Status.Should().Be(RepositoryResultStatus.NotFound);
+    }
+
+    [Fact]
+    public async Task GetReportableContent_HikeImage_ForAPendingRecipient_ReturnsNotFound()
+    {
+        // Arrange
+        var factory = CreateSeededFactory(db =>
+        {
+            db.HikeImages.Add(HikeImageRow());
+            db.HikeShares.Add(new HikeShare { HikeId = 1, SharedWithId = 4, SharedById = 1, Status = HikeShareStatus.Pending });
+        });
+
+        // Act
+        var result = await Build(factory).GetReportableContentAsync(
+            ReportedContentType.HikeImage, HikeImageIdentifier, 4, TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Status.Should().Be(RepositoryResultStatus.NotFound);
+    }
+
+    [Fact]
+    public async Task AddReport_HikeImage_WhenHiding_FlipsTheImage()
+    {
+        // Arrange
+        var factory = CreateSeededFactory(db => db.HikeImages.Add(HikeImageRow()));
+        var report = ReportFor(HikeImageId, HikeImageIdentifier);
+        report.ContentType = ReportedContentType.HikeImage;
+
+        // Act
+        var result = await Build(factory).AddReportAsync(report, hideContent: true, TestContext.Current.CancellationToken);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+
+        using var context = await factory.CreateDbContextAsync(TestContext.Current.CancellationToken);
+        var image = await context.HikeImages.SingleAsync(hi => hi.Id == HikeImageId, TestContext.Current.CancellationToken);
+        image.ModerationState.Should().Be(ModerationState.HiddenPendingReview);
+    }
+
+    [Fact]
+    public async Task ApplyDecision_UpholdingAHikeImage_DeletesTheRowAndHandsBackItsUrl()
+    {
+        // Arrange
+        var factory = FactoryWithHikeImageReport(ModerationState.HiddenPendingReview);
+
+        // Act
+        var result = await Build(factory).ApplyDecisionAsync(
+            ReportedContentType.HikeImage, HikeImageId, ReportStatus.Upheld, "moderator", null,
+            TestContext.Current.CancellationToken);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().NotBeNull();
+        result.Value.DeletedImageUrls.Should().BeEquivalentTo([HikeImagePath]);
+        result.Value.ReportsSettled.Should().Be(1);
+
+        using var context = await factory.CreateDbContextAsync(TestContext.Current.CancellationToken);
+        var stillThere = await context.HikeImages.AnyAsync(hi => hi.Id == HikeImageId, TestContext.Current.CancellationToken);
+        stillThere.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task ApplyDecision_UpholdingAHikeImageWhoseFileAnotherRowShares_KeepsTheFile()
+    {
+        // Arrange
+        var factory = FactoryWithHikeImageReport(ModerationState.HiddenPendingReview, db =>
+            db.HikeImages.Add(new HikeImage { Id = 501, Identifier = "other-row", HikeId = 3, ImageUrl = "/" + HikeImagePath }));
+
+        // Act
+        var result = await Build(factory).ApplyDecisionAsync(
+            ReportedContentType.HikeImage, HikeImageId, ReportStatus.Upheld, "moderator", null,
+            TestContext.Current.CancellationToken);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().NotBeNull();
+        result.Value.DeletedImageUrls.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task ApplyDecision_DismissingAHikeImage_PutsItBack()
+    {
+        // Arrange
+        var factory = FactoryWithHikeImageReport(ModerationState.HiddenPendingReview);
+
+        // Act
+        var result = await Build(factory).ApplyDecisionAsync(
+            ReportedContentType.HikeImage, HikeImageId, ReportStatus.Dismissed, "moderator", null,
+            TestContext.Current.CancellationToken);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().NotBeNull();
+        result.Value.AppliedStatus.Should().Be(ReportStatus.Dismissed);
+
+        using var context = await factory.CreateDbContextAsync(TestContext.Current.CancellationToken);
+        var image = await context.HikeImages.SingleAsync(hi => hi.Id == HikeImageId, TestContext.Current.CancellationToken);
+        image.ModerationState.Should().Be(ModerationState.Visible);
+    }
+
+    [Fact]
+    public async Task HandleUserDeletion_AsOwnerOfAReportedHikeImage_LeavesItHidden()
+    {
+        // Arrange
+        var factory = FactoryWithHikeImageReport(ModerationState.HiddenPendingReview);
+
+        // Act
+        var result = await Build(factory).HandleUserDeletionAsync(1, TestContext.Current.CancellationToken);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+
+        using var context = await factory.CreateDbContextAsync(TestContext.Current.CancellationToken);
+        var image = await context.HikeImages.SingleAsync(hi => hi.Id == HikeImageId, TestContext.Current.CancellationToken);
+        image.ModerationState.Should().Be(ModerationState.HiddenPendingReview);
+        var report = await context.ContentReports.SingleAsync(TestContext.Current.CancellationToken);
+        report.Status.Should().Be(ReportStatus.ContentExpired);
+    }
+
+    [Fact]
+    public async Task GetSummaryByIdentifier_HikeImage_SaysWhetherTheImageStillExists()
+    {
+        // Arrange
+        var factory = FactoryWithHikeImageReport(ModerationState.HiddenPendingReview);
+        var repository = Build(factory);
+
+        // Act
+        var before = await repository.GetSummaryByIdentifierAsync("hike-image-report", TestContext.Current.CancellationToken);
+        await repository.ApplyDecisionAsync(
+            ReportedContentType.HikeImage, HikeImageId, ReportStatus.Upheld, "moderator", null,
+            TestContext.Current.CancellationToken);
+        var after = await repository.GetSummaryByIdentifierAsync("hike-image-report", TestContext.Current.CancellationToken);
+
+        // Assert
+        before.Value.Should().NotBeNull();
+        before.Value.ContentStillExists.Should().BeTrue();
+        before.Value.ContentSnapshot.Should().Be(HikeImagePath);
+        after.Value.Should().NotBeNull();
+        after.Value.ContentStillExists.Should().BeFalse();
     }
 }

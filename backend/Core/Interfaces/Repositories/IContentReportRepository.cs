@@ -79,7 +79,7 @@ public record DecisionOutcome(
 public interface IContentReportRepository
 {
     Task<RepositoryResult<ReportableContent>> GetReportableContentAsync(
-        ReportedContentType contentType, string contentIdentifier, CancellationToken ctoken);
+        ReportedContentType contentType, string contentIdentifier, int reporterUserId, CancellationToken ctoken);
 
     Task<RepositoryResult<int>> CountReportsByReporterSinceAsync(
         int reporterUserId, DateTime since, CancellationToken ctoken);

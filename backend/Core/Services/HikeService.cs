@@ -4,7 +4,10 @@
 using Core.Factories;
 using Core.Interfaces.Repositories;
 using Core.Interfaces.Services;
+using Core.Telemetry;
 using Infrastructure.Data.Entities;
+using Infrastructure.Enums;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using System.Runtime.CompilerServices;
 using WebDataContracts.RequestModels.Hike;
@@ -18,12 +21,15 @@ public class HikeService : IHikeService
     // samples every ~3 s (~14,400 points); this leaves generous headroom while
     // rejecting oversized payloads. Mirror the raw-string cap in CreateHikeRequestValidator.
     private const int MaxCoordinates = 20_000;
+    public const int MaxHikeImages = 10;
 
     private readonly HikeResponseFactory _hikeResponseFactory;
     private readonly IUserRepository _userRepository;
     private readonly IHikeRepository _hikeRepository;
     private readonly IHikeShareRecipientRepository _hikeShareRecipientRepository;
     private readonly IWebDavService _webDavService;
+    private readonly IMediaUploadService _mediaUploadService;
+    private readonly StigviddMetrics _metrics;
     private readonly ILogger<HikeService> _logger;
 
     public HikeService(IHikeRepository hikeRepository,
@@ -31,6 +37,8 @@ public class HikeService : IHikeService
         IUserRepository userRepository,
         IHikeShareRecipientRepository hikeShareRecipientRepository,
         IWebDavService webDavService,
+        IMediaUploadService mediaUploadService,
+        StigviddMetrics metrics,
         ILogger<HikeService> logger)
     {
         _hikeRepository = hikeRepository;
@@ -38,6 +46,8 @@ public class HikeService : IHikeService
         _userRepository = userRepository;
         _hikeShareRecipientRepository = hikeShareRecipientRepository;
         _webDavService = webDavService;
+        _mediaUploadService = mediaUploadService;
+        _metrics = metrics;
         _logger = logger;
     }
 
@@ -157,6 +167,7 @@ public class HikeService : IHikeService
             return Result.Fail<IReadOnlyCollection<HikeOverviewResponse>>(new Message(404, "User not found"));
 
         int userId = userIdResult.Value;
+        var baseUrl = _hikeResponseFactory.PresentableBaseUrl;
 
         // GeoPathSerializer runs in the top-level projection, which EF Core evaluates
         // client-side after materializing the geometry column.
@@ -172,7 +183,8 @@ public class HikeService : IHikeService
                 h.GettingThere,
                 h.ParkingInfo,
                 h.Description,
-                h.CreatedAt),
+                h.CreatedAt,
+                HikeResponseFactory.CreateImages(baseUrl, h.Images)),
             ctoken);
 
         if (!result.IsSuccess)
@@ -274,6 +286,99 @@ public class HikeService : IHikeService
         await DeleteImageFilesAsync(imageUrls, $"HikeIdentifier: {hikeIdentifier}, UserIdentifier: {userIdentifier}");
 
         return Result.Ok();
+    }
+
+    public async Task<Result<HikeImageResponse>> AddHikeImageAsync(string hikeIdentifier, string userIdentifier, IFormFile image, CancellationToken ctoken)
+    {
+        var result = await AddHikeImageCoreAsync(hikeIdentifier, userIdentifier, image, ctoken);
+        _metrics.RecordHikeImageChange(MetricTags.Values.OperationAdd, MetricOutcome.From(result));
+        return result;
+    }
+
+    public async Task<Result> DeleteHikeImageAsync(string hikeIdentifier, string imageIdentifier, string userIdentifier, CancellationToken ctoken)
+    {
+        var result = await DeleteHikeImageCoreAsync(hikeIdentifier, imageIdentifier, userIdentifier, ctoken);
+        _metrics.RecordHikeImageChange(MetricTags.Values.OperationRemove, MetricOutcome.From(result));
+        return result;
+    }
+
+    private async Task<Result<HikeImageResponse>> AddHikeImageCoreAsync(string hikeIdentifier, string userIdentifier, IFormFile image, CancellationToken ctoken)
+    {
+        var ownedResult = await GetOwnedHikeAsync(hikeIdentifier, userIdentifier, ctoken);
+
+        if (!ownedResult.Success || ownedResult.Value is null)
+            return Result.Fail<HikeImageResponse>(ownedResult.Message ?? new Message(500, "An error occurred while fetching the hike."));
+
+        var hike = ownedResult.Value;
+
+        // keep-comment: a reported photo is hidden from the owner too, so it must not take one of their slots
+        var visibleCount = hike.Images?.Count(i => i.ModerationState == ModerationState.Visible) ?? 0;
+
+        if (visibleCount >= MaxHikeImages)
+            return Result.Fail<HikeImageResponse>(new Message(409, $"A hike can have at most {MaxHikeImages} images."));
+
+        // Uploaded via the media upload service, which strips EXIF/GPS.
+        await using var stream = image.OpenReadStream();
+        var uploadResult = await _mediaUploadService.ProcessAndUploadAsync(stream, "hikes", ImageProcessingOptions.StripMetadataOnly);
+
+        if (uploadResult.IsFailure || uploadResult.Value is null)
+            return Result.Fail<HikeImageResponse>(new Message(500, "Could not upload the image. Try again later."));
+
+        var addResult = await _hikeRepository.AddHikeImageAsync(new HikeImage { HikeId = hike.Id, ImageUrl = uploadResult.Value.Path }, ctoken);
+
+        if (!addResult.IsSuccess)
+        {
+            await DeleteImageFilesAsync([uploadResult.Value.Path], $"Rollback of a hike image that could not be saved. HikeIdentifier: {hikeIdentifier}, UserIdentifier: {userIdentifier}");
+            return Result.Fail<HikeImageResponse>(new Message(500, "An error occurred while adding the image."));
+        }
+
+        return Result.Ok(HikeImageResponse.Create(_hikeResponseFactory.PresentableBaseUrl, addResult.Value.Identifier, addResult.Value.ImageUrl));
+    }
+
+    private async Task<Result> DeleteHikeImageCoreAsync(string hikeIdentifier, string imageIdentifier, string userIdentifier, CancellationToken ctoken)
+    {
+        var ownedResult = await GetOwnedHikeAsync(hikeIdentifier, userIdentifier, ctoken);
+
+        if (!ownedResult.Success || ownedResult.Value is null)
+            return Result.Fail(ownedResult.Message ?? new Message(500, "An error occurred while fetching the hike."));
+
+        var image = ownedResult.Value.Images?.FirstOrDefault(i => i.Identifier == imageIdentifier);
+
+        if (image is null)
+            return Result.Fail(new Message(404, "Image not found"));
+
+        var deleteResult = await _hikeRepository.DeleteHikeImageAsync(image, ctoken);
+
+        if (!deleteResult.IsSuccess)
+            return Result.Fail(new Message(500, "An error occurred while deleting the image."));
+
+        await DeleteImageFilesAsync([image.ImageUrl], $"HikeIdentifier: {hikeIdentifier}, ImageIdentifier: {imageIdentifier}");
+
+        return Result.Ok();
+    }
+
+    private async Task<Result<Hike>> GetOwnedHikeAsync(string hikeIdentifier, string userIdentifier, CancellationToken ctoken)
+    {
+        var userIdResult = await _userRepository.GetUserIdByIdentifierAsync(userIdentifier, ctoken);
+
+        if (userIdResult.Status == RepositoryResultStatus.Error)
+            return Result.Fail<Hike>(new Message(500, "An error occurred while fetching the user."));
+
+        if (!userIdResult.IsSuccess)
+            return Result.Fail<Hike>(new Message(404, "User not found"));
+
+        var hikeResult = await _hikeRepository.GetHikeByIdentifierAsync(hikeIdentifier, ctoken);
+
+        if (hikeResult.Status == RepositoryResultStatus.Error)
+            return Result.Fail<Hike>(new Message(500, "An error occurred while fetching the hike."));
+
+        if (!hikeResult.IsSuccess || hikeResult.Value is null)
+            return Result.Fail<Hike>(new Message(404, "Hike not found"));
+
+        if (hikeResult.Value.UserId != userIdResult.Value)
+            return Result.Fail<Hike>(new Message(403, "Hike does not belong to the user"));
+
+        return Result.Ok(hikeResult.Value);
     }
 
     public async Task<Result> DeleteHikeSharesByUserIdAsync(int userId, CancellationToken ctoken)

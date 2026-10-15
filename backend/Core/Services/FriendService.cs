@@ -231,7 +231,4 @@ public class FriendService : IFriendService
             return Result.Fail(new Message(500, "An unexpected error occurred while sending the friend request."));
         }
     }
-
-    internal record SenderProjection(int Id, string NickName);
-    internal record ReceiverProjection(int Id, string Identifier);
 }

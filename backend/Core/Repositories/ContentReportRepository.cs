@@ -24,7 +24,7 @@ public class ContentReportRepository : IContentReportRepository
     // Reads past the moderation filter on purpose: content that is already hidden must still
     // be reportable, or the second reporter gets a 404 on something they saw a moment ago.
     public async Task<RepositoryResult<ReportableContent>> GetReportableContentAsync(
-        ReportedContentType contentType, string contentIdentifier, CancellationToken ctoken)
+        ReportedContentType contentType, string contentIdentifier, int reporterUserId, CancellationToken ctoken)
     {
         try
         {
@@ -48,6 +48,26 @@ public class ContentReportRepository : IContentReportRepository
                     .Select(to => new ReportableContent(
                         to.Id, to.Identifier, to.UserId, to.User!.NickName,
                         to.TrailId, to.Trail!.Identifier, to.Description, to.ModerationState))
+                    .FirstOrDefaultAsync(ctoken),
+
+                // Only the owner or an accepted recipient finds it; the owner then gets the service's "own content" 400. keep-comment: privacy rule a reader cannot infer
+                ReportedContentType.HikeImage => await context.HikeImages
+                    .AsNoTracking()
+                    .Where(hi => hi.Identifier == contentIdentifier
+                        && hi.Hike != null
+                        && (hi.Hike.UserId == reporterUserId
+                            || context.HikeShares.Any(s => s.HikeId == hi.HikeId
+                                && s.SharedWithId == reporterUserId
+                                && s.Status == HikeShareStatus.Accepted)))
+                    .Select(hi => new ReportableContent(
+                        hi.Id,
+                        hi.Identifier,
+                        hi.Hike != null ? hi.Hike.UserId : null,
+                        hi.Hike != null ? hi.Hike.CreatedByNickName : null,
+                        null,
+                        null,
+                        hi.ImageUrl,
+                        hi.ModerationState))
                     .FirstOrDefaultAsync(ctoken),
 
                 _ => null,
@@ -528,7 +548,15 @@ public class ContentReportRepository : IContentReportRepository
 
             await context.SaveChangesAsync(ctoken);
 
-            return RepositoryResult<DecisionOutcome>.Success(new DecisionOutcome(applied, imageUrls, pending.Count));
+            var unreferencedUrls = new List<string>();
+
+            foreach (var url in imageUrls)
+            {
+                if (!await ImageReferences.IsReferencedAsync(context, url, ctoken))
+                    unreferencedUrls.Add(url);
+            }
+
+            return RepositoryResult<DecisionOutcome>.Success(new DecisionOutcome(applied, unreferencedUrls, pending.Count));
         }
         catch (Exception ex)
         {
@@ -563,7 +591,9 @@ public class ContentReportRepository : IContentReportRepository
             r.ContentSnapshot,
             r.ContentType == ReportedContentType.Review
                 ? context.Reviews.Any(x => x.Id == r.ContentId)
-                : context.TrailObstacles.Any(x => x.Id == r.ContentId),
+                : r.ContentType == ReportedContentType.HikeImage
+                    ? context.HikeImages.Any(x => x.Id == r.ContentId)
+                    : context.TrailObstacles.Any(x => x.Id == r.ContentId),
             r.DecidedBy,
             r.DecidedAt,
             r.DecisionNote,
@@ -608,6 +638,17 @@ public class ContentReportRepository : IContentReportRepository
                 context.TrailObstacles.Remove(obstacle);
                 return true;
 
+            case ReportedContentType.HikeImage:
+                var hikeImage = await context.HikeImages
+                    .FirstOrDefaultAsync(hi => hi.Id == contentId, ctoken);
+
+                if (hikeImage is null)
+                    return false;
+
+                imageUrls.Add(hikeImage.ImageUrl);
+                context.HikeImages.Remove(hikeImage);
+                return true;
+
             default:
                 return false;
         }
@@ -638,6 +679,16 @@ public class ContentReportRepository : IContentReportRepository
                     return false;
 
                 obstacle.ModerationState = ModerationState.Visible;
+                return true;
+
+            case ReportedContentType.HikeImage:
+                var hikeImage = await context.HikeImages
+                    .FirstOrDefaultAsync(hi => hi.Id == contentId, ctoken);
+
+                if (hikeImage is null)
+                    return false;
+
+                hikeImage.ModerationState = ModerationState.Visible;
                 return true;
 
             default:
@@ -716,6 +767,10 @@ public class ContentReportRepository : IContentReportRepository
                     obstacle.ModerationState = ModerationState.Visible;
 
                 break;
+
+            // Stays hidden: there is no rating to keep, and a shared hike outlives its owner. keep-comment: deliberate asymmetry with reviews
+            case ReportedContentType.HikeImage:
+                break;
         }
     }
 
@@ -743,6 +798,16 @@ public class ContentReportRepository : IContentReportRepository
                     return false;
 
                 obstacle.ModerationState = ModerationState.HiddenPendingReview;
+                return true;
+
+            case ReportedContentType.HikeImage:
+                var hikeImage = await context.HikeImages
+                    .FirstOrDefaultAsync(hi => hi.Id == report.ContentId, ctoken);
+
+                if (hikeImage is null)
+                    return false;
+
+                hikeImage.ModerationState = ModerationState.HiddenPendingReview;
                 return true;
 
             default:

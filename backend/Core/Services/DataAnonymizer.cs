@@ -54,7 +54,7 @@ public static class DataAnonymizer
                 replaced: "DecidedBy"),
             ["Reviews"] = Table(kept: "Id Identifier CreatedAt LastUpdatedAt ModerationState Rating TrailId TrailReview UserId"),
             ["ReviewImages"] = Table(kept: "Id Identifier CreatedAt LastUpdatedAt ImageUrl ReviewId"),
-            ["HikeImages"] = Table(kept: "Id Identifier CreatedAt LastUpdatedAt HikeId ImageUrl"),
+            ["HikeImages"] = Table(kept: "Id Identifier CreatedAt LastUpdatedAt HikeId ImageUrl ModerationState"),
             ["HikeShares"] = Table(kept: "HikeId SharedWithId AllowResharing CreatedAt SharedById Status"),
             ["FriendRequests"] = Table(kept: "RequesterId ReceiverId CreatedAt Status"),
             ["UserBlocks"] = Table(kept: "BlockerUserId BlockedUserId CreatedAt"),
