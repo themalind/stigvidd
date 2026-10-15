@@ -41,7 +41,13 @@ const EditableTargets =
   '[role="combobox"], [role="listbox"], [role="searchbox"]';
 
 const statusFilters = ["Pending", "Dismissed", "Upheld", "ContentExpired", "All"] as const;
-const contentTypeFilters = ["All", "Review", "TrailObstacle"] as const;
+const contentTypeFilters = ["All", "Review", "TrailObstacle", "HikeImage"] as const;
+
+const contentTypeNoun: Record<string, string> = {
+  Review: "review",
+  TrailObstacle: "obstacle report",
+  HikeImage: "hike image",
+};
 const hideOutcomeFilters = ["All", "Hidden", "AlreadyHidden", "WithheldReporterDismissed"] as const;
 
 const riskLabel: Record<string, string> = {
@@ -339,15 +345,33 @@ export default function ModerationPage() {
 
               <article className="rounded-md border p-4">
                 <h2 className="text-sm font-semibold">Reported content</h2>
-                <p
-                  data-testid="content-snapshot"
-                  className="mt-2 whitespace-pre-wrap text-sm"
-                  onMouseEnter={() => setHasReadContent(true)}
-                  onFocus={() => setHasReadContent(true)}
-                  tabIndex={0}
-                >
-                  {report.contentSnapshot ?? "The snapshot was cleared with the author's account."}
-                </p>
+                {report.contentImageUrl ? (
+                  <a
+                    href={report.contentImageUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-2 block w-fit"
+                    onMouseEnter={() => setHasReadContent(true)}
+                    onFocus={() => setHasReadContent(true)}
+                  >
+                    <img
+                      data-testid="content-image"
+                      src={report.contentImageUrl}
+                      alt="The reported hike image"
+                      className="max-h-80 rounded-md border object-contain"
+                    />
+                  </a>
+                ) : (
+                  <p
+                    data-testid="content-snapshot"
+                    className="mt-2 whitespace-pre-wrap text-sm"
+                    onMouseEnter={() => setHasReadContent(true)}
+                    onFocus={() => setHasReadContent(true)}
+                    tabIndex={0}
+                  >
+                    {report.contentSnapshot ?? "The snapshot was cleared with the author's account."}
+                  </p>
+                )}
                 {!hasReadContent && (
                   <Button
                     className="mt-3"
@@ -469,7 +493,7 @@ export default function ModerationPage() {
             <SheetTitle>Delete this content permanently?</SheetTitle>
             <SheetDescription data-testid="confirm-body">
               This deletes {report?.authorNickName ?? "the author"}
-              {"'"}s {report?.contentType === "Review" ? "review" : "obstacle report"} for good. It cannot be undone. It
+              {"'"}s {contentTypeNoun[report?.contentType ?? ""] ?? "content"} for good. It cannot be undone. It
               becomes strike {strikeAfterUphold(detail?.authorStrikes ?? 0, false)} against them.
             </SheetDescription>
           </SheetHeader>

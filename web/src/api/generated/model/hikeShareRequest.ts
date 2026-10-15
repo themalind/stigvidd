@@ -8,6 +8,6 @@
 
 export interface HikeShareRequest {
   hikeIdentifier: string;
-  sharedWithName: string;
+  sharedWithNames: string[];
   allowResharing?: boolean;
 }

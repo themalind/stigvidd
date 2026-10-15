@@ -26,7 +26,9 @@ import type {
 
 import type {
   CreateHikeRequest,
+  HikeImageResponse,
   HikeResponse,
+  HikesAddHikeImageBody,
   HikesGetHikesParams,
   UpdateHikeRequest
 } from '../model';
@@ -466,6 +468,213 @@ export function useHikesCreateHike<TData = Awaited<ReturnType<typeof hikesCreate
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getHikesCreateHikeQueryOptions(createHikeRequest,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export const getHikesAddHikeImageUrl = (hikeIdentifier: string,) => {
+
+
+
+
+  return `/api/v1/Hikes/${hikeIdentifier}/images`
+}
+
+export const hikesAddHikeImage = async (hikeIdentifier: string,
+    hikesAddHikeImageBody?: HikesAddHikeImageBody, options?: RequestInit): Promise<HikeImageResponse> => {
+    const formData = new FormData();
+if(hikesAddHikeImageBody?.image !== undefined && hikesAddHikeImageBody.image !== null) {
+ formData.append(`image`, hikesAddHikeImageBody.image);
+ }
+
+  return customFetch<HikeImageResponse>(getHikesAddHikeImageUrl(hikeIdentifier),
+  {
+    ...options,
+    method: 'POST'
+    ,
+    body: formData
+  }
+);}
+
+
+
+
+
+export const getHikesAddHikeImageQueryKey = (hikeIdentifier: string,
+    hikesAddHikeImageBody?: HikesAddHikeImageBody,) => {
+    return [
+    'POST', `/api/v1/Hikes/${hikeIdentifier}/images`, hikesAddHikeImageBody
+    ] as const;
+    }
+
+
+export const getHikesAddHikeImageQueryOptions = <TData = Awaited<ReturnType<typeof hikesAddHikeImage>>, TError = unknown>(hikeIdentifier: string,
+    hikesAddHikeImageBody?: HikesAddHikeImageBody, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof hikesAddHikeImage>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getHikesAddHikeImageQueryKey(hikeIdentifier,hikesAddHikeImageBody);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof hikesAddHikeImage>>> = ({ signal }) => hikesAddHikeImage(hikeIdentifier,hikesAddHikeImageBody, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: hikeIdentifier !== null && hikeIdentifier !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof hikesAddHikeImage>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type HikesAddHikeImageQueryResult = NonNullable<Awaited<ReturnType<typeof hikesAddHikeImage>>>
+export type HikesAddHikeImageQueryError = unknown
+
+
+export function useHikesAddHikeImage<TData = Awaited<ReturnType<typeof hikesAddHikeImage>>, TError = unknown>(
+ hikeIdentifier: string,
+    hikesAddHikeImageBody: undefined |  HikesAddHikeImageBody, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof hikesAddHikeImage>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof hikesAddHikeImage>>,
+          TError,
+          Awaited<ReturnType<typeof hikesAddHikeImage>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useHikesAddHikeImage<TData = Awaited<ReturnType<typeof hikesAddHikeImage>>, TError = unknown>(
+ hikeIdentifier: string,
+    hikesAddHikeImageBody?: HikesAddHikeImageBody, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof hikesAddHikeImage>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof hikesAddHikeImage>>,
+          TError,
+          Awaited<ReturnType<typeof hikesAddHikeImage>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useHikesAddHikeImage<TData = Awaited<ReturnType<typeof hikesAddHikeImage>>, TError = unknown>(
+ hikeIdentifier: string,
+    hikesAddHikeImageBody?: HikesAddHikeImageBody, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof hikesAddHikeImage>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useHikesAddHikeImage<TData = Awaited<ReturnType<typeof hikesAddHikeImage>>, TError = unknown>(
+ hikeIdentifier: string,
+    hikesAddHikeImageBody?: HikesAddHikeImageBody, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof hikesAddHikeImage>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getHikesAddHikeImageQueryOptions(hikeIdentifier,hikesAddHikeImageBody,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export const getHikesDeleteHikeImageUrl = (hikeIdentifier: string,
+    imageIdentifier: string,) => {
+
+
+
+
+  return `/api/v1/Hikes/${hikeIdentifier}/images/${imageIdentifier}`
+}
+
+export const hikesDeleteHikeImage = async (hikeIdentifier: string,
+    imageIdentifier: string, options?: RequestInit): Promise<Blob> => {
+
+  return customFetch<Blob>(getHikesDeleteHikeImageUrl(hikeIdentifier,imageIdentifier),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getHikesDeleteHikeImageQueryKey = (hikeIdentifier: string,
+    imageIdentifier: string,) => {
+    return [
+    'DELETE', `/api/v1/Hikes/${hikeIdentifier}/images/${imageIdentifier}`
+    ] as const;
+    }
+
+
+export const getHikesDeleteHikeImageQueryOptions = <TData = Awaited<ReturnType<typeof hikesDeleteHikeImage>>, TError = unknown>(hikeIdentifier: string,
+    imageIdentifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof hikesDeleteHikeImage>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getHikesDeleteHikeImageQueryKey(hikeIdentifier,imageIdentifier);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof hikesDeleteHikeImage>>> = ({ signal }) => hikesDeleteHikeImage(hikeIdentifier,imageIdentifier, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: hikeIdentifier !== null && hikeIdentifier !== undefined && imageIdentifier !== null && imageIdentifier !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof hikesDeleteHikeImage>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type HikesDeleteHikeImageQueryResult = NonNullable<Awaited<ReturnType<typeof hikesDeleteHikeImage>>>
+export type HikesDeleteHikeImageQueryError = unknown
+
+
+export function useHikesDeleteHikeImage<TData = Awaited<ReturnType<typeof hikesDeleteHikeImage>>, TError = unknown>(
+ hikeIdentifier: string,
+    imageIdentifier: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof hikesDeleteHikeImage>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof hikesDeleteHikeImage>>,
+          TError,
+          Awaited<ReturnType<typeof hikesDeleteHikeImage>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useHikesDeleteHikeImage<TData = Awaited<ReturnType<typeof hikesDeleteHikeImage>>, TError = unknown>(
+ hikeIdentifier: string,
+    imageIdentifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof hikesDeleteHikeImage>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof hikesDeleteHikeImage>>,
+          TError,
+          Awaited<ReturnType<typeof hikesDeleteHikeImage>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useHikesDeleteHikeImage<TData = Awaited<ReturnType<typeof hikesDeleteHikeImage>>, TError = unknown>(
+ hikeIdentifier: string,
+    imageIdentifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof hikesDeleteHikeImage>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useHikesDeleteHikeImage<TData = Awaited<ReturnType<typeof hikesDeleteHikeImage>>, TError = unknown>(
+ hikeIdentifier: string,
+    imageIdentifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof hikesDeleteHikeImage>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getHikesDeleteHikeImageQueryOptions(hikeIdentifier,imageIdentifier,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

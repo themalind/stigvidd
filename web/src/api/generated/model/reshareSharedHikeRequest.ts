@@ -8,5 +8,5 @@
 
 export interface ReshareSharedHikeRequest {
   hikeIdentifier: string;
-  reShareToName: string;
+  reShareToNames: string[];
 }

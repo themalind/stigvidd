@@ -5,6 +5,7 @@
  * Stigvidd API. This is free software, licensed under the GNU Affero General Public License version 3 or later. Under section 13 of that licence you are entitled to the Corresponding Source of this running service: https://github.com/themalind/stigvidd
  * OpenAPI spec version: 1.0.0
  */
+import type { HikeImageResponse } from './hikeImageResponse';
 
 export interface HikeShareRecipientResponse {
   hikeIdentifier: string;
@@ -26,4 +27,5 @@ export interface HikeShareRecipientResponse {
   /** @nullable */
   description?: string | null;
   allowResharing?: boolean;
+  images?: HikeImageResponse[];
 }

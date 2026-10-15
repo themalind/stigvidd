@@ -271,3 +271,45 @@ it("says why when the ban fails, and leaves the queue alone", async () => {
 
   await waitFor(() => expect(toasts.error).toHaveBeenCalledWith("the server said no"));
 });
+
+it("shows a reported hike image as the picture itself, not its path", async () => {
+  renderPage([
+    summary({
+      contentType: "HikeImage",
+      contentSnapshot: "hikes/abc.jpg",
+      contentImageUrl: "https://media.stigvidd.se/hikes/abc.jpg",
+    }),
+  ]);
+
+  const image = await screen.findByTestId("content-image");
+  expect(image).toHaveAttribute("src", "https://media.stigvidd.se/hikes/abc.jpg");
+  expect(screen.queryByTestId("content-snapshot")).toBeNull();
+});
+
+it("names a hike image in the deletion warning", async () => {
+  const user = userEvent.setup();
+  renderPage([
+    summary({
+      contentType: "HikeImage",
+      contentSnapshot: "hikes/abc.jpg",
+      contentImageUrl: "https://media.stigvidd.se/hikes/abc.jpg",
+    }),
+  ]);
+
+  await user.click(await screen.findByTestId("mark-read"));
+  await user.click(screen.getByTestId("uphold"));
+
+  expect(await screen.findByTestId("confirm-body")).toHaveTextContent("hike image for good");
+});
+
+it("filters the queue on hike images", async () => {
+  const user = userEvent.setup();
+  renderPage([summary()]);
+  await screen.findByTestId("content-snapshot");
+
+  await user.click(screen.getByRole("button", { name: "HikeImage" }));
+
+  await waitFor(() =>
+    expect(api.getReports).toHaveBeenLastCalledWith(expect.objectContaining({ contentType: "HikeImage" })),
+  );
+});
