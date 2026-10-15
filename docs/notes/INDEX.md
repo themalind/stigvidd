@@ -885,3 +885,11 @@ src/api/generated` then fails with "the generated API client is stale" for reaso
   pg_dump aborts with "server version mismatch" against a newer server; backend/Dockerfile had postgresql-client-16 while
   docker-compose.yml ran postgis/postgis:17-3.5, so GET /api/v1/admin/export failed in production and no test noticed.
   Bump both together; verify-in-docker is the only check of the real export/import path.
+- [An EF Core projection cannot materialize an IReadOnlyCollection navigation; declare it ICollection](ef-projection-needs-icollection-navigation.md) —
+  a selector that passes a collection navigation (Hike.Images) to a client-side helper fails at runtime with ArgumentException
+  "InitializeCollection ... violates the constraint of type TCollection", 500 on GET /hikes and /HikeShareRecipient, while
+  unit tests with a mocked repository stay green. Include() hides it. Fix: ICollection<T> on the entity, no migration needed.
+- [Raw SQL passes on the SQLite test provider and still needs one run against real PostgreSQL](raw-sql-needs-a-postgres-check-the-sqlite-tests-cannot-give.md) —
+  HikeShareInsert's INSERT ... ON CONFLICT DO NOTHING (HikeShareRepository.ShareHikesAsync, HikeShareDistributor) is only
+  tested on SQLite in-memory. Recipe: postgis/postgis:17-3.5 container on a spare port plus a dotnet run file app with
+  PublishAot=false, migrate, call the repository. Why NULL goes in as a literal: EF has no store type for a raw DBNull.

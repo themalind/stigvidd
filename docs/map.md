@@ -32,10 +32,10 @@ separately in [`record-hike.md`](./record-hike.md).
 | One-shot user location (open-on-user, recenter)                    | `src/hooks/useUserLocation.tsx`                                 |
 | **Embedded** trail-detail preview                                  | `src/components/trail/trail-map.tsx`                            |
 | Preview-as-button chrome ("show on map" badge + directions pill)   | `src/components/map/map-preview-overlay.tsx`                    |
-| **Embedded** record-hike map                                       | `src/components/trail/trail-creator/trail-creator.tsx`          |
-| **Embedded** save-hike trim map                                    | `src/components/trail/trail-creator/save-hike-form.tsx`         |
+| **Embedded** record-hike map                                       | `src/components/hike/recorder/hike-recorder.tsx`                |
+| **Embedded** save-hike trim map                                    | `src/components/hike/recorder/save-hike-form.tsx`               |
 | **Embedded** recorded-hike preview (shared by the hike maps below) | `src/components/map/route-preview-map.tsx`                      |
-| Hike / shared-hike detail modals, home "latest hike" card          | `hike-details.tsx`, `shared-hike-details.tsx`, `home/latest-hike-card.tsx` |
+| Hike / shared-hike detail screens, incoming-share modal            | `hike/hike-detail-layout.tsx`, `shared-hike/incoming-shared-hike-modal.tsx` |
 
 ## The stack at a glance
 
@@ -54,7 +54,7 @@ component wraps `MapLibreMap` and every screen composes its own `<Camera>`,
                          └───────────────────────────┘
              ┌──────────────────┬───────────┴───────────┬──────────────────┐
    TrailMarkersMap        RouteFollowView           TrailMap /          RoutePreviewMap
-   (browse, clusters)     (one route + puck;        TrailCreator /      (hike details,
+   (browse, clusters)     (one route + puck;        HikeRecorder /      (hike details,
                            trail or hike)           SaveHikeForm        shared hike,
                                                     (preview / record)  latest-hike card)
 ```
@@ -326,7 +326,7 @@ no animation). The corner pills come from the shared `MapPreviewOverlay`:
 
 Until coordinates load, the screen shows a `MapSkeleton` instead.
 
-## Screen 4 — Embedded record-hike map (`trail-creator.tsx`)
+## Screen 4 — Embedded record-hike map (`hike-recorder.tsx`)
 
 The map you watch while recording a hike. Draws the live track and auto-follows it.
 Recording internals (segments, GPS filter, background engines) are documented in
@@ -369,10 +369,10 @@ three places:
 
 | Where | `onOpen` | Behaviour |
 | ----- | -------- | --------- |
-| Hike-detail modal (`hike-details.tsx`, 30% height) | opens the hike follow view | static; badge + directions pill via `MapPreviewOverlay` |
-| Shared-hike modal (`shared-hike-details.tsx`), accepted share | opens the hike follow view | as above |
-| Shared-hike modal, share **awaiting accept/reject** | none | plain **pannable** preview; tapping the start marker opens directions |
-| Home "latest hike" card (`latest-hike-card.tsx`) | opens the hike-detail modal | `showBadge={false}`: no chrome, just a full-cover `Pressable` so the card still receives the tap |
+| Hike screen (`hike-detail-layout.tsx`, full width, 40% height) | opens the hike follow view in the same tab stack | static; badge + directions pill via `MapPreviewOverlay` |
+| Shared-hike screen, accepted share (same layout) | opens the hike follow view in the profile stack | as above |
+| Incoming-share modal (`incoming-shared-hike-modal.tsx`), **awaiting accept/reject** | none | plain **pannable** preview; tapping the start marker opens directions |
+| Home "latest hike" card (`latest-hike-card.tsx`) | navigates to the home stack's hike screen | `showBadge={false}`: no chrome, just a full-cover `Pressable` so the card still receives the tap |
 
 Passing `onOpen` disables every gesture, since the full-cover `Pressable` would swallow a
 drag anyway. The shared-hikes screen mounts two modals at once, so their `idPrefix`es
