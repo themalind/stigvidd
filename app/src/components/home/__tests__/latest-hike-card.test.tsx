@@ -7,8 +7,25 @@
 
 import { Hike } from "@/data/types";
 import { renderWithProviders } from "@/test/render";
-import { screen } from "@testing-library/react-native";
+import { fireEvent, screen } from "@testing-library/react-native";
 import LatestHikeCard from "../latest-hike-card";
+
+const mockNavigate = jest.fn();
+let clock = 4_000_000;
+
+jest.mock("expo-router", () => ({
+  router: { navigate: (...args: unknown[]) => mockNavigate(...args) },
+}));
+
+beforeEach(() => {
+  jest.clearAllMocks();
+  // keep-comment: guardedNavigate debounces on module state, so the clock only ever moves on, across tests too
+  jest.spyOn(Date, "now").mockImplementation(() => (clock += 1000));
+});
+
+afterEach(() => {
+  jest.restoreAllMocks();
+});
 
 function hike(overrides: Partial<Hike> = {}): Hike {
   return {
@@ -22,6 +39,7 @@ function hike(overrides: Partial<Hike> = {}): Hike {
       { latitude: 57.72, longitude: 12.94 },
       { latitude: 57.73, longitude: 12.95 },
     ]),
+    images: [],
     ...overrides,
   };
 }
@@ -52,4 +70,15 @@ it("renders the map when the hike has a route", () => {
   renderWithProviders(<LatestHikeCard hike={hike()} />);
 
   expect(screen.getByTestId("maplibre-Map")).toBeTruthy();
+});
+
+it("opens the walk in the home stack, so back returns to the home screen", () => {
+  renderWithProviders(<LatestHikeCard hike={hike()} />);
+
+  fireEvent.press(screen.getByText("Kvällspromenad"));
+
+  expect(mockNavigate).toHaveBeenCalledWith({
+    pathname: "/(tabs)/(home)/hike/[identifier]",
+    params: { identifier: "hike-1" },
+  });
 });

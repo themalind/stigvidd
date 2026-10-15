@@ -7,7 +7,7 @@
 
 import { ApiError } from "@/api/api-error";
 import { snackbarAtom } from "@/atoms/snackbar-atoms";
-import SaveHikeForm from "@/components/trail/trail-creator/save-hike-form";
+import SaveHikeForm from "@/components/hike/recorder/save-hike-form";
 import { ActiveHike, Segment } from "@/data/types";
 import { handleUnauthorized } from "@/services/keycloak-auth";
 import { settle } from "@/test/flush";

@@ -5,18 +5,35 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
+import AlertDialog from "@/components/alert-dialog";
 import { BORDER_RADIUS } from "@/constants/constants";
-import { ReviewImage } from "@/data/types";
 import { BlurView } from "expo-blur";
 import { Image } from "expo-image";
-import React, { useState } from "react";
-import { Animated, Dimensions, NativeScrollEvent, NativeSyntheticEvent, StyleSheet, View } from "react-native";
-import { Modal, Portal, useTheme } from "react-native-paper";
+import React, { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+import {
+  Animated,
+  Dimensions,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
+  Pressable,
+  StyleSheet,
+  View,
+} from "react-native";
+import { Icon, Modal, Portal, useTheme } from "react-native-paper";
+
+export interface ViewerImage {
+  identifier: string;
+  imageUrl: string;
+}
 
 interface ModalProps {
-  images: ReviewImage[]; // Borde vi ändra så att det inte finns trailimage och reviewimage, bara Image?
+  images: ViewerImage[];
   visible: boolean;
   onDismiss: () => void;
+  initialIndex?: number;
+  onDelete?: (image: ViewerImage) => Promise<unknown>;
+  onReport?: (image: ViewerImage) => void;
 }
 
 const { width, height } = Dimensions.get("screen");
@@ -26,11 +43,39 @@ const DOT_INDICATOR_SIZE = DOT_SIZE + DOT_SPACING;
 const ITEM_HEIGHT = height * 0.5;
 const ITEM_WIDTH = width * 0.7;
 
-export default function ImageViewer({ images, visible, onDismiss }: ModalProps) {
+export default function ImageViewer({ images, visible, onDismiss, initialIndex, onDelete, onReport }: ModalProps) {
   const theme = useTheme();
+  const { t } = useTranslation();
   const scrollX = React.useRef(new Animated.Value(0)).current;
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [currentIndex, setCurrentIndex] = useState(initialIndex ?? 0);
+  const [wasVisible, setWasVisible] = useState(visible);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const itemWidth = width - 40;
+
+  // keep-comment: set during render, not in an effect, so the list mounts on the tapped picture
+  if (visible !== wasVisible) {
+    setWasVisible(visible);
+    if (visible && initialIndex !== undefined) setCurrentIndex(initialIndex);
+  }
+
+  useEffect(() => {
+    scrollX.setValue(currentIndex * itemWidth);
+  }, [currentIndex, itemWidth, scrollX]);
+
+  const current = images[Math.min(currentIndex, images.length - 1)];
+
+  const confirmDelete = async () => {
+    setShowDeleteDialog(false);
+    if (!onDelete || !current) return;
+    const remaining = images.length - 1;
+    try {
+      await onDelete(current);
+    } catch {
+      return;
+    }
+    if (remaining === 0) onDismiss();
+    else setCurrentIndex((index) => Math.min(index, remaining - 1));
+  };
 
   // För att synka pagination med rätt bild, när man kommer tillbaka för att se bilderna igen.
   const onMomentumScrollEnd = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -50,6 +95,30 @@ export default function ImageViewer({ images, visible, onDismiss }: ModalProps) 
           testID="review-image-frame"
           style={{ position: "relative", overflow: "hidden", borderRadius: BORDER_RADIUS }}
         >
+          {onDelete && current && (
+            <Pressable
+              testID="image-viewer-delete"
+              hitSlop={12}
+              onPress={() => setShowDeleteDialog(true)}
+              accessibilityRole="button"
+              accessibilityLabel={t("common.delete")}
+              style={s.cornerButton}
+            >
+              <Icon size={22} source="delete" color={theme.colors.error} />
+            </Pressable>
+          )}
+          {!onDelete && onReport && current && (
+            <Pressable
+              testID="image-viewer-report"
+              hitSlop={12}
+              onPress={() => onReport(current)}
+              accessibilityRole="button"
+              accessibilityLabel={t("report.title")}
+              style={s.cornerButton}
+            >
+              <Icon size={22} source="alert-circle" color={theme.colors.outline} />
+            </Pressable>
+          )}
           <View>
             <Animated.FlatList
               testID="review-image-list"
@@ -104,6 +173,17 @@ export default function ImageViewer({ images, visible, onDismiss }: ModalProps) 
           </View>
         </View>
       </Modal>
+      <AlertDialog
+        visible={showDeleteDialog}
+        onDismiss={() => setShowDeleteDialog(false)}
+        title={t("hike.deleteImageTitle")}
+        infoText={[t("hike.deleteImageConfirm")]}
+        textColor={theme.colors.onSurface}
+        confirmText={t("common.delete")}
+        cancelText={t("common.cancel")}
+        onConfirm={confirmDelete}
+        backgroundColor={theme.colors.surface}
+      />
     </Portal>
   );
 }
@@ -127,6 +207,14 @@ const s = StyleSheet.create({
   image: {
     height: ITEM_HEIGHT,
     width: ITEM_WIDTH,
+  },
+  cornerButton: {
+    position: "absolute",
+    top: 10,
+    right: 10,
+    zIndex: 1,
+    padding: 6,
+    borderRadius: BORDER_RADIUS,
   },
   pagination: {
     flexDirection: "row",

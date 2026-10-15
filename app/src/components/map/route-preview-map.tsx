@@ -51,9 +51,9 @@ interface Props {
   style?: StyleProp<ViewStyle>;
 }
 
-// The small route map inside the hike and shared-hike detail modals: the recorded walk
+// The small route map on the hike screens and the incoming-share modal: the recorded walk
 // plus its start point, with no live user position (that's the fullscreen follow view's
-// job). Shared by both modals, which otherwise carried an identical copy each.
+// job).
 export default function RoutePreviewMap({
   idPrefix,
   path,

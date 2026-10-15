@@ -5,15 +5,10 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import { getFriends } from "@/api/friends";
-import { stigviddUserAtom } from "@/atoms/user-atoms";
-import { FRIENDS_STALE_TIME } from "@/constants/cache";
+import FriendPicker from "@/components/shared-hike/friend-picker";
 import { BORDER_RADIUS } from "@/constants/constants";
-import { FriendResponse } from "@/data/types";
-import { useQuery } from "@tanstack/react-query";
-import { useAtomValue } from "jotai";
 import { useTranslation } from "react-i18next";
-import { ActivityIndicator, Dimensions, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { Dimensions, Pressable, StyleSheet, View } from "react-native";
 import { Divider, Icon, Modal, Portal, Text, useTheme } from "react-native-paper";
 
 const HEIGHT = Dimensions.get("screen").height;
@@ -21,7 +16,7 @@ const HEIGHT = Dimensions.get("screen").height;
 interface Props {
   visible: boolean;
   onDismiss: () => void;
-  onShare: (friendNickName: string) => void;
+  onShare: (friendNickNames: string[]) => void;
   isPending?: boolean;
   excludeNickNames?: string[];
 }
@@ -29,18 +24,6 @@ interface Props {
 export default function ReshareHikeModal({ visible, onDismiss, onShare, isPending, excludeNickNames }: Props) {
   const theme = useTheme();
   const { t } = useTranslation();
-  const currentUser = useAtomValue(stigviddUserAtom);
-
-  const { data: friendsRaw, isLoading } = useQuery({
-    queryKey: ["friends"],
-    queryFn: getFriends,
-    enabled: visible,
-    staleTime: FRIENDS_STALE_TIME,
-  });
-
-  const friends = friendsRaw?.filter(
-    (f) => f.nickName !== currentUser.data?.nickName && !excludeNickNames?.includes(f.nickName),
-  );
 
   return (
     <Portal>
@@ -56,32 +39,7 @@ export default function ReshareHikeModal({ visible, onDismiss, onShare, isPendin
             </Pressable>
           </View>
           <Divider />
-          {isLoading ? (
-            <View style={s.centered}>
-              <ActivityIndicator color={theme.colors.primary} />
-            </View>
-          ) : friends && friends.length > 0 ? (
-            <ScrollView bounces={false} style={s.flex}>
-              {friends.map((item: FriendResponse, index: number) => (
-                <View key={item.identifier}>
-                  <Pressable
-                    style={({ pressed }) => [s.friendItem, pressed && { backgroundColor: theme.colors.surfaceVariant }]}
-                    onPress={() => onShare(item.nickName)}
-                    disabled={isPending}
-                  >
-                    <Icon size={22} source="account" color={theme.colors.primary} />
-                    <Text style={s.nickName}>{item.nickName}</Text>
-                    <Icon size={20} source="share" color={theme.colors.secondary} />
-                  </Pressable>
-                  {index < friends.length - 1 && <Divider />}
-                </View>
-              ))}
-            </ScrollView>
-          ) : (
-            <View style={s.centered}>
-              <Text style={{ color: theme.colors.onSurfaceVariant }}>{t("hike.noFriendsToShare")}</Text>
-            </View>
-          )}
+          <FriendPicker enabled={visible} onShare={onShare} isPending={isPending} excludeNickNames={excludeNickNames} />
         </View>
       </Modal>
     </Portal>
@@ -103,23 +61,5 @@ const s = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     padding: 16,
-  },
-  friendItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-  },
-  nickName: {
-    flex: 1,
-    fontSize: 16,
-  },
-  centered: {
-    padding: 30,
-    alignItems: "center",
-  },
-  flex: {
-    flex: 1,
   },
 });

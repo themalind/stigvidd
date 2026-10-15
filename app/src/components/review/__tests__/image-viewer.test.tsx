@@ -252,3 +252,132 @@ it("closes when the screen behind the picture is tapped", async () => {
 
   expect(onDismiss).toHaveBeenCalled();
 });
+
+describe("opening on a chosen picture", () => {
+  it("starts on the picture it was opened on", () => {
+    renderWithProviders(<ImageViewer images={images(4)} visible initialIndex={2} onDismiss={onDismiss} />);
+
+    expect(list().props.initialScrollIndex).toBe(2);
+  });
+
+  it("starts on the newly chosen picture each time it is reopened", async () => {
+    const { rerender } = renderWithProviders(
+      <ImageViewer images={images(4)} visible={false} initialIndex={0} onDismiss={onDismiss} />,
+    );
+
+    rerender(<ImageViewer images={images(4)} visible initialIndex={3} onDismiss={onDismiss} />);
+    await settle();
+
+    expect(list().props.initialScrollIndex).toBe(3);
+  });
+});
+
+describe("deleting", () => {
+  const onDelete = jest.fn();
+
+  beforeEach(() => {
+    onDelete.mockResolvedValue(undefined);
+  });
+
+  it("offers no bin when the viewer may not delete", () => {
+    show();
+
+    expect(screen.queryByTestId("image-viewer-delete")).toBeNull();
+  });
+
+  it("asks before deleting, and deletes the picture on screen", async () => {
+    renderWithProviders(
+      <ImageViewer images={images(3)} visible initialIndex={1} onDismiss={onDismiss} onDelete={onDelete} />,
+    );
+
+    fireEvent.press(screen.getByTestId("image-viewer-delete"));
+    await settle();
+    expect(screen.getByText("Ta bort bilden?")).toBeTruthy();
+    expect(onDelete).not.toHaveBeenCalled();
+
+    fireEvent.press(screen.getAllByText("Ta bort").at(-1) ?? screen.getByText("Ta bort"));
+    await settle();
+
+    expect(onDelete).toHaveBeenCalledWith(images(3)[1]);
+    expect(onDismiss).not.toHaveBeenCalled();
+  });
+
+  it("deletes nothing when the question is cancelled", async () => {
+    renderWithProviders(<ImageViewer images={images(2)} visible onDismiss={onDismiss} onDelete={onDelete} />);
+
+    fireEvent.press(screen.getByTestId("image-viewer-delete"));
+    await settle();
+    fireEvent.press(screen.getByText("Avbryt"));
+    await settle();
+
+    expect(onDelete).not.toHaveBeenCalled();
+  });
+
+  it("closes once the last picture is gone", async () => {
+    renderWithProviders(<ImageViewer images={images(1)} visible onDismiss={onDismiss} onDelete={onDelete} />);
+
+    fireEvent.press(screen.getByTestId("image-viewer-delete"));
+    await settle();
+    fireEvent.press(screen.getAllByText("Ta bort").at(-1) ?? screen.getByText("Ta bort"));
+    await settle();
+
+    expect(onDismiss).toHaveBeenCalled();
+  });
+
+  it("stays open on a failed delete", async () => {
+    onDelete.mockRejectedValue(new Error("500"));
+    renderWithProviders(<ImageViewer images={images(1)} visible onDismiss={onDismiss} onDelete={onDelete} />);
+
+    fireEvent.press(screen.getByTestId("image-viewer-delete"));
+    await settle();
+    fireEvent.press(screen.getAllByText("Ta bort").at(-1) ?? screen.getByText("Ta bort"));
+    await settle();
+
+    expect(onDelete).toHaveBeenCalled();
+    expect(onDismiss).not.toHaveBeenCalled();
+  });
+
+  it("moves back onto the new last picture when the last one is deleted", async () => {
+    const { rerender } = renderWithProviders(
+      <ImageViewer images={images(3)} visible initialIndex={2} onDismiss={onDismiss} onDelete={onDelete} />,
+    );
+
+    fireEvent.press(screen.getByTestId("image-viewer-delete"));
+    await settle();
+    fireEvent.press(screen.getAllByText("Ta bort").at(-1) ?? screen.getByText("Ta bort"));
+    await settle();
+    rerender(<ImageViewer images={images(2)} visible initialIndex={2} onDismiss={onDismiss} onDelete={onDelete} />);
+    await settle();
+
+    expect(list().props.initialScrollIndex).toBe(1);
+  });
+});
+
+describe("reporting", () => {
+  const onReport = jest.fn();
+
+  it("offers a flag that reports the picture on screen", () => {
+    renderWithProviders(
+      <ImageViewer images={images(3)} visible initialIndex={2} onDismiss={onDismiss} onReport={onReport} />,
+    );
+
+    fireEvent.press(screen.getByTestId("image-viewer-report"));
+
+    expect(onReport).toHaveBeenCalledWith(images(3)[2]);
+  });
+
+  it("offers no flag to someone who may delete the picture", () => {
+    renderWithProviders(
+      <ImageViewer images={images(2)} visible onDismiss={onDismiss} onDelete={jest.fn()} onReport={onReport} />,
+    );
+
+    expect(screen.queryByTestId("image-viewer-report")).toBeNull();
+    expect(screen.getByTestId("image-viewer-delete")).toBeTruthy();
+  });
+
+  it("offers no flag when nobody asked for one", () => {
+    renderWithProviders(<ImageViewer images={images(2)} visible onDismiss={onDismiss} />);
+
+    expect(screen.queryByTestId("image-viewer-report")).toBeNull();
+  });
+});

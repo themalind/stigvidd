@@ -5,14 +5,12 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import { getAllHikesByUserId } from "@/api/hikes";
 import { stigviddUserAtom } from "@/atoms/user-atoms";
 import { useAuth } from "@/components/auth/auth-provider";
-import { HIKES_STALE_TIME } from "@/constants/cache";
 import { Hike } from "@/data/types";
+import { useMyHikes } from "@/hooks/hike/useMyHikes";
 import { useIsOnline } from "@/hooks/useIsOnline";
 import { latestHike } from "@/utils/hike-stats";
-import { useQuery } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
 import { useMemo } from "react";
 
@@ -31,18 +29,7 @@ export function useLatestHike(): LatestHikeState {
   const user = useAtomValue(stigviddUserAtom);
   const isOnline = useIsOnline();
 
-  // Query key, function and staleTime match the My hikes screen, so both share one cache
-  // entry.
-  const {
-    data: hikes,
-    isError,
-    refetch,
-  } = useQuery({
-    queryKey: ["hikes", user.data?.identifier],
-    queryFn: () => getAllHikesByUserId(user.data!.identifier),
-    enabled: isAuthenticated && !!user.data,
-    staleTime: HIKES_STALE_TIME,
-  });
+  const { data: hikes, isError, refetch } = useMyHikes();
 
   const hike = useMemo(() => (hikes ? latestHike(hikes) : undefined), [hikes]);
 

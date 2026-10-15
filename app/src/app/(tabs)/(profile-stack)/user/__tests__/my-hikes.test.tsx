@@ -14,16 +14,11 @@ import { Platform } from "react-native";
 import MyHikesScreen from "../my-hikes";
 
 const mockGetHikes = jest.fn();
+const mockNavigate = jest.fn();
 
 jest.mock("@/api/hikes", () => ({
   getAllHikesByUserId: (...args: unknown[]) => mockGetHikes(...args),
-  deleteHike: jest.fn(),
-  shareHike: jest.fn(),
-  updateHike: jest.fn(),
-  hikeRouteQueryKey: (id: string) => ["hike-route", id],
 }));
-
-jest.mock("@/api/friends", () => ({ getFriends: jest.fn().mockResolvedValue([]) }));
 
 jest.mock("@/components/auth/auth-provider", () => ({ useAuth: () => ({ isAuthenticated: true }) }));
 
@@ -33,8 +28,8 @@ jest.mock("@/atoms/user-atoms", () => {
 });
 
 jest.mock("expo-router", () => ({
-  useRouter: () => ({ navigate: jest.fn(), back: jest.fn() }),
-  router: { navigate: jest.fn(), back: jest.fn() },
+  useRouter: () => ({ navigate: mockNavigate, back: jest.fn() }),
+  router: { navigate: (...args: unknown[]) => mockNavigate(...args), back: jest.fn() },
 }));
 
 let measured: ReturnType<typeof stubMeasureInWindow>;
@@ -61,6 +56,7 @@ function hike(overrides: Partial<Hike> = {}): Hike {
       { latitude: 57.72, longitude: 12.94 },
       { latitude: 57.73, longitude: 12.95 },
     ]),
+    images: [],
     ...overrides,
   };
 }
@@ -169,9 +165,10 @@ it("opens the walk that was tapped", async () => {
   fireEvent.press(screen.getByText("Morgonrunda"));
   await settle();
 
-  // The detail modal repeats the name and adds what only it shows.
-  expect(screen.getAllByText("Morgonrunda").length).toBeGreaterThan(1);
-  expect(screen.getByText("Dela")).toBeTruthy();
+  expect(mockNavigate).toHaveBeenCalledWith({
+    pathname: "/(tabs)/(profile-stack)/hike/[identifier]",
+    params: { identifier: "hike-2" },
+  });
 });
 
 it("keeps the walks on screen when a later refetch fails", async () => {

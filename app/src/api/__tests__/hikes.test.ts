@@ -50,6 +50,7 @@ const hike: Hike = {
   coordinates: '[{"latitude":59.3,"longitude":18.0}]',
   createdBy: "user-1",
   createdAt: "2026-08-04T10:00:00Z",
+  images: [],
 };
 
 const createRequest: CreateHikeRequest = {
@@ -71,7 +72,7 @@ const updateRequest: UpdateHikeRequest = {
 
 const shareRequest: ShareHikeRequest = {
   hikeIdentifier: "abc-123",
-  sharedWithName: "stigvandraren",
+  sharedWithNames: ["stigvandraren"],
   allowResharing: true,
 };
 

@@ -6,14 +6,13 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { showErrorAtom } from "@/atoms/snackbar-atoms";
-import { resizeImage } from "@/utils/resizeImage";
+import { pickImages } from "@/utils/pick-images";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Image } from "expo-image";
-import * as ImagePicker from "expo-image-picker";
 import { useSetAtom } from "jotai";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Alert, Dimensions, Pressable, StyleSheet, View } from "react-native";
+import { Dimensions, Pressable, StyleSheet, View } from "react-native";
 import { useTheme } from "react-native-paper";
 
 const { width } = Dimensions.get("screen");
@@ -26,9 +25,9 @@ export default function AddReviewImages({ setReviewImages }: ReviewImageProp) {
   const theme = useTheme();
   const { t } = useTranslation();
   const setError = useSetAtom(showErrorAtom);
-  const [images, setImages] = useState<ImagePicker.ImagePickerAsset[]>([]);
+  const [images, setImages] = useState<{ uri: string }[]>([]);
 
-  function OnImagesChange(images: ImagePicker.ImagePickerAsset[]) {
+  function OnImagesChange(images: { uri: string }[]) {
     if (!setReviewImages) {
       return;
     }
@@ -43,26 +42,11 @@ export default function AddReviewImages({ setReviewImages }: ReviewImageProp) {
   };
 
   const pickImage = async () => {
-    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permissionResult.granted) {
-      Alert.alert(t("imagePermission.title"), t("imagePermission.message"));
-      return;
-    }
-
     try {
-      // No cropping (allowsEditing: false) — we resize/compress ourselves below.
-      let result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ["images"],
-        allowsEditing: false,
-      });
+      const uris = await pickImages({ limit: 1 });
 
-      if (!result.canceled) {
-        // Shrink dimensions + re-encode as JPEG (what the API takes; iPhones pick HEIC), then swap in the new uri.
-        // see docs/notes/ios-image-picker-returns-heic-not-jpeg.md
-        const resizedUri = await resizeImage(result.assets[0].uri);
-        const resizedAsset = { ...result.assets[0], uri: resizedUri };
-
-        const newImages = [...images, resizedAsset];
+      if (uris) {
+        const newImages = [...images, ...uris.map((uri) => ({ uri }))];
         setImages(newImages);
         OnImagesChange(newImages);
       }

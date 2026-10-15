@@ -66,7 +66,7 @@ describe("what each call returns", () => {
   });
 
   it.each([
-    ["reshareHike", () => reshareHike({ hikeIdentifier: "h1", reShareToName: "stigvandraren" })],
+    ["reshareHike", () => reshareHike({ hikeIdentifier: "h1", reShareToNames: ["stigvandraren"] })],
     ["acceptSharedHike", () => acceptSharedHike("h1")],
     ["rejectSharedHike", () => rejectSharedHike("h1")],
     ["removeSharedHike", () => removeSharedHike("h1")],

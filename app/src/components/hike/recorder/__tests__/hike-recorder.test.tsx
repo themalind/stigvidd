@@ -5,7 +5,7 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import TrailCreator from "@/components/trail/trail-creator/trail-creator";
+import HikeRecorder from "@/components/hike/recorder/hike-recorder";
 import { START_COORDINATE_BORAS } from "@/constants/constants";
 import { LocationData, Segment } from "@/data/types";
 import { flushUntil, settle } from "@/test/flush";
@@ -77,7 +77,7 @@ function trackingState({
 
 // The map only mounts once a centre is known, which arrives from a promise.
 async function show() {
-  const rendered = renderWithProviders(<TrailCreator />);
+  const rendered = renderWithProviders(<HikeRecorder />);
   await flushUntil(() => screen.queryByTestId("maplibre-Map"));
   return rendered;
 }
@@ -114,13 +114,13 @@ it("offers only what the current state allows", async () => {
   expect(screen.queryByText("Spara")).toBeNull();
 
   mockTracking = trackingState({ isTracking: true, currentSegment: segment([point(0, 1_000)]) });
-  rerender(<TrailCreator />);
+  rerender(<HikeRecorder />);
   expect(screen.getByText("Pausa")).toBeTruthy();
   expect(screen.queryByText("Starta vandring")).toBeNull();
   expect(screen.queryByText("Spara")).toBeNull();
 
   mockTracking = trackingState({ segments: [segment([point(0, 1_000), point(1, 2_000)])] });
-  rerender(<TrailCreator />);
+  rerender(<HikeRecorder />);
   expect(screen.getByText("Nollställ")).toBeTruthy();
   expect(screen.getByText("Spara")).toBeTruthy();
   expect(screen.getByText("Återuppta")).toBeTruthy();
@@ -228,7 +228,7 @@ it("draws no line until there are two points to join", async () => {
   expect(routeLayer()).toBeFalsy();
 
   mockTracking = trackingState({ isTracking: true, currentSegment: segment([point(0, 1_000), point(1, 2_000)]) });
-  rerender(<TrailCreator />);
+  rerender(<HikeRecorder />);
   expect(routeLayer()).toBeTruthy();
 });
 
@@ -239,7 +239,7 @@ it("stops following the route once the user has panned the map", async () => {
   fireEvent(screen.getByTestId("maplibre-Map"), "didFinishLoadingMap");
 
   mockTracking = trackingState({ isTracking: true, currentSegment: segment([point(0, 1_000), point(1, 2_000)]) });
-  rerender(<TrailCreator />);
+  rerender(<HikeRecorder />);
   expect(camera().easeTo).toHaveBeenCalled();
 
   camera().easeTo.mockClear();
@@ -249,7 +249,7 @@ it("stops following the route once the user has panned the map", async () => {
     isTracking: true,
     currentSegment: segment([point(0, 1_000), point(1, 2_000), point(2, 3_000)]),
   });
-  rerender(<TrailCreator />);
+  rerender(<HikeRecorder />);
   expect(camera().easeTo).not.toHaveBeenCalled();
 });
 
@@ -312,7 +312,7 @@ it("ticks the timer once a second while recording, and stops when it does", asyn
   try {
     mockGetActiveTime.mockReturnValue(0);
     mockTracking = trackingState({ isTracking: true, currentSegment: segment([point(0, 1_000)]) });
-    const rendered = renderWithProviders(<TrailCreator />);
+    const rendered = renderWithProviders(<HikeRecorder />);
     await act(async () => {});
     expect(screen.getByText("00:00:00")).toBeTruthy();
 
@@ -322,7 +322,7 @@ it("ticks the timer once a second while recording, and stops when it does", asyn
 
     mockTracking = trackingState({ segments: [segment([point(0, 1_000), point(1, 2_000)])] });
     mockGetActiveTime.mockReturnValue(2_000);
-    rendered.rerender(<TrailCreator />);
+    rendered.rerender(<HikeRecorder />);
     expect(screen.getByText("00:00:02")).toBeTruthy();
 
     // Paused: the interval is gone, so a later reading changes nothing on screen.

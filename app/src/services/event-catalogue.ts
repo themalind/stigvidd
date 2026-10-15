@@ -65,6 +65,32 @@ export type EventCatalogue = {
   };
 
   /**
+   * A share or reshare of a walk finished. How many friends were picked, never who, and no
+   * hike id (rule 2). `outcome` says whether sharing works, which is what the event is for.
+   */
+  "hike.shared": {
+    kind: "share" | "reshare";
+    outcome: "success" | "recipient_unavailable" | "not_allowed" | "error";
+    recipientCount: number;
+    allowResharing: boolean;
+  };
+
+  /**
+   * One batch of photos picked for a walk finished uploading. `uploaded < requested` means
+   * some failed; no image, hike or file data is carried.
+   */
+  "hike.images_added": {
+    requested: number;
+    uploaded: number;
+  };
+
+  /** The owner deleted a photo from their walk. */
+  "hike.image_removed": Record<string, never>;
+
+  /** A recipient reported a photo on a shared walk. No image, hike or author id (rule 2). */
+  "hike.image_reported": Record<string, never>;
+
+  /**
    * The user granted analytics consent. The only consent event there is — see the note above
    * about why the other direction is not recorded.
    */

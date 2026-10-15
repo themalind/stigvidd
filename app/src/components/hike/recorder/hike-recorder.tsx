@@ -37,7 +37,7 @@ import SaveHikeModal from "./save-hike-modal";
 // rendering over the ocean while the first GPS fix resolves.
 const FALLBACK_CENTER: [number, number] = [START_COORDINATE_BORAS.longitude, START_COORDINATE_BORAS.latitude];
 
-export default function TrailCreator() {
+export default function HikeRecorder() {
   const cameraRef = useRef<CameraRef>(null);
   const {
     startTracking,

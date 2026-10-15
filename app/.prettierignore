@@ -9,3 +9,6 @@ dist
 # ignore files, so without this `format:check` fails on a machine that runs Ruflo.
 .claude-flow/
 .swarm/
+
+# Expo-generated route types, git-ignored but rewritten on every dev start.
+.expo/

@@ -5,7 +5,8 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import { CreateHikeRequest, Hike, ShareHikeRequest, UpdateHikeRequest } from "@/data/types";
+import { CreateHikeRequest, Hike, HikeImage, ShareHikeRequest, UpdateHikeRequest } from "@/data/types";
+import uuid from "react-native-uuid";
 import { apiFetch, BASE_URL, UPLOAD_TIMEOUT_MS } from "./api-config";
 import { getUserToken } from "./users";
 import { ApiError } from "./api-error";
@@ -207,6 +208,76 @@ export async function deleteHike(hikeIdentifier: string): Promise<{ success: boo
   } catch (error) {
     logger.error("Delete hike failed", {
       endpoint: "DELETE /hikes/{param}",
+      errorMessage: String(error),
+    });
+    throw error;
+  }
+}
+
+export async function uploadHikeImage(hikeIdentifier: string, uri: string): Promise<HikeImage> {
+  const token = await getUserToken();
+
+  if (!token) {
+    throw new Error("User not authenticated");
+  }
+
+  const formData = new FormData();
+  formData.append("image", {
+    uri,
+    type: "image/jpeg",
+    name: `${uuid.v4()}.jpg`,
+  } as any);
+
+  try {
+    const response = await apiFetch(
+      `${BASE_URL}/hikes/${hikeIdentifier}/images`,
+      {
+        method: "POST",
+        body: formData,
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+      UPLOAD_TIMEOUT_MS,
+    );
+
+    if (!response.ok) {
+      throw new ApiError(`HTTP error: uploadHikeImage: ${response.status}`, response.status);
+    }
+
+    return await response.json();
+  } catch (error) {
+    logger.error("Upload hike image failed", {
+      endpoint: "POST /hikes/{param}/images",
+      errorMessage: String(error),
+    });
+    throw error;
+  }
+}
+
+export async function deleteHikeImage(hikeIdentifier: string, imageIdentifier: string): Promise<{ success: boolean }> {
+  const token = await getUserToken();
+
+  if (!token) {
+    throw new Error("User not authenticated");
+  }
+
+  try {
+    const response = await apiFetch(`${BASE_URL}/hikes/${hikeIdentifier}/images/${imageIdentifier}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new ApiError(`HTTP error: deleteHikeImage: ${response.status}`, response.status);
+    }
+
+    return { success: true };
+  } catch (error) {
+    logger.error("Delete hike image failed", {
+      endpoint: "DELETE /hikes/{param}/images/{param}",
       errorMessage: String(error),
     });
     throw error;

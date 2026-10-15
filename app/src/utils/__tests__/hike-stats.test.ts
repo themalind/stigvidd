@@ -16,6 +16,7 @@ function hike(overrides: Partial<Hike>): Hike {
     duration: 0,
     createdBy: "user",
     createdAt: "2026-08-01T10:00:00Z",
+    images: [],
     ...overrides,
   };
 }

@@ -35,7 +35,16 @@ import {
   searchUsers,
   sendFriendRequest,
 } from "../friends";
-import { createHike, deleteHike, getAllHikesByUserId, getHikeByIdentifier, shareHike, updateHike } from "../hikes";
+import {
+  createHike,
+  deleteHike,
+  deleteHikeImage,
+  getAllHikesByUserId,
+  getHikeByIdentifier,
+  shareHike,
+  updateHike,
+  uploadHikeImage,
+} from "../hikes";
 import { getFacilityMarkers, getTrailMarkers } from "../map-markers";
 import { registerPushToken, unregisterPushToken } from "../notifications";
 import { createReview, deleteReview, getReviewsByTrailIdentifier, hasReviewedTrail } from "../reviews";
@@ -130,9 +139,9 @@ const updateHikeRequest = {
   description: "Fin runda",
 };
 
-const shareHikeRequest = { hikeIdentifier: "h1", sharedWithName: "stigvandraren", allowResharing: true };
+const shareHikeRequest = { hikeIdentifier: "h1", sharedWithNames: ["stigvandraren"], allowResharing: true };
 
-const reshareRequest = { hikeIdentifier: "h1", reShareToName: "stigvandraren" };
+const reshareRequest = { hikeIdentifier: "h1", reShareToNames: ["stigvandraren"] };
 
 const endpoints: Endpoint[] = [
   // areas
@@ -449,6 +458,22 @@ const endpoints: Endpoint[] = [
     auth: "required",
     carriesStatus: true,
   },
+  {
+    name: "uploadHikeImage",
+    call: () => uploadHikeImage("h1", "file:///photo.jpg"),
+    method: "POST",
+    path: "/hikes/h1/images",
+    auth: "required",
+    carriesStatus: true,
+  },
+  {
+    name: "deleteHikeImage",
+    call: () => deleteHikeImage("h1", "img1"),
+    method: "DELETE",
+    path: "/hikes/h1/images/img1",
+    auth: "required",
+    carriesStatus: true,
+  },
 
   // shared hikes
   {
@@ -604,7 +629,7 @@ beforeEach(() => {
 
 describe("api endpoint contract", () => {
   it("covers every exported endpoint in the table", () => {
-    expect(endpoints).toHaveLength(52);
+    expect(endpoints).toHaveLength(54);
     expect(new Set(endpoints.map((e) => e.name)).size).toBe(endpoints.length);
   });
 

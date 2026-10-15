@@ -5,14 +5,14 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import { SURFACE_BORDER_RADIUS } from "@/constants/constants";
+import { InfoCard, InfoGrid, InfoItem, InfoValue } from "@/components/info-card";
 import { Trail } from "@/data/types";
 import { classificationParser } from "@/utils/classification-parser";
 import { getDifficultyIcon } from "@/utils/getDifficultyIcon";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Pressable, StyleSheet, Text, View } from "react-native";
-import { Icon, Surface, useTheme } from "react-native-paper";
+import { Pressable, StyleSheet, View } from "react-native";
+import { Icon, useTheme } from "react-native-paper";
 import AccesibilityInfoModal from "./accessibility-info-modal";
 import DifficultyInfoModal from "./difficulty-info-modal";
 import SymbolInfoModal from "./symbol-info-modal";
@@ -30,114 +30,59 @@ export default function TrailInfo({ trail }: TrailinfoProps) {
   // The API sends "" for a trail without a symbol image, never null.
   const hasSymbolImage = Boolean(trail.trailSymbolImage);
 
+  const helpButton = (testID: string, onPress: () => void) => (
+    <Pressable testID={testID} hitSlop={16} onPress={onPress}>
+      <Icon source="information" size={17} color={theme.colors.onSurfaceVariant} />
+    </Pressable>
+  );
+
   return (
-    <Surface testID="trail-info" elevation={0} style={[s.container, { backgroundColor: theme.colors.surface }]}>
-      <Text style={[s.sectionTitle, { color: theme.colors.onSurface }]}>{t("trail.info")}</Text>
-      <View style={s.grid}>
-        <View style={s.item}>
-          <View style={s.infoIconContainer}>
-            <Text style={[s.label, { color: theme.colors.onSurfaceVariant }]}>{t("trail.marking")}</Text>
-            {hasSymbolImage && (
-              <>
-                <Pressable testID="trail-info-symbol-help" hitSlop={16} onPress={() => setSymbolModal(true)}>
-                  <Icon source="information" size={17} color={theme.colors.onSurfaceVariant} />
-                </Pressable>
-                <SymbolInfoModal
-                  imageUrl={trail.trailSymbolImage}
-                  symbol={trail.trailSymbol}
-                  onDismiss={() => setSymbolModal(false)}
-                  visible={symbolModal}
-                />
-              </>
-            )}
-          </View>
-          <Text style={[s.value, { color: theme.colors.onSurface }]}>{trail.trailSymbol}</Text>
-        </View>
-        <View style={s.item}>
-          <Text style={[s.label, { color: theme.colors.onSurfaceVariant }]}>{t("trail.length")}</Text>
-          <Text style={[s.value, { color: theme.colors.onSurface }]}>{trail.trailLength} km</Text>
-        </View>
-        <View style={s.item}>
-          <View style={s.infoIconContainer}>
-            <Text style={[s.label, { color: theme.colors.onSurfaceVariant }]}>{t("trail.difficulty")}</Text>
-            <Pressable testID="trail-info-difficulty-help" hitSlop={16} onPress={() => setDifficultyModal(true)}>
-              <Icon source="information" size={17} color={theme.colors.onSurfaceVariant} />
-            </Pressable>
-            <DifficultyInfoModal
-              difficulty={trail.classification}
-              onDismiss={() => setDifficultyModal(false)}
-              visible={difficultyModal}
-            />
-          </View>
+    <InfoCard testID="trail-info" title={t("trail.info")}>
+      <InfoGrid>
+        <InfoItem
+          label={t("trail.marking")}
+          labelAccessory={hasSymbolImage && helpButton("trail-info-symbol-help", () => setSymbolModal(true))}
+          value={trail.trailSymbol}
+        />
+        <InfoItem label={t("trail.length")} value={`${trail.trailLength} km`} />
+        <InfoItem
+          label={t("trail.difficulty")}
+          labelAccessory={helpButton("trail-info-difficulty-help", () => setDifficultyModal(true))}
+        >
           <View style={s.iconRow}>
             {getDifficultyIcon(classificationParser(trail.classification))}
-            <Text style={[s.value, { color: theme.colors.onSurface }]}>
-              {classificationParser(trail.classification)}
-            </Text>
+            <InfoValue>{classificationParser(trail.classification)}</InfoValue>
           </View>
-        </View>
-        <View style={s.item}>
-          <View style={s.infoIconContainer}>
-            <Text style={[s.label, { color: theme.colors.onSurfaceVariant }]}>{t("trail.accessibility")}</Text>
-            <Pressable testID="trail-info-accessibility-help" hitSlop={16} onPress={() => setAccessibilityModal(true)}>
-              <Icon source="information" size={17} color={theme.colors.onSurfaceVariant} />
-            </Pressable>
-            <AccesibilityInfoModal onDismiss={() => setAccessibilityModal(false)} visible={accessibiltyModal} />
-          </View>
-          <Text style={[s.value, { color: theme.colors.onSurface }]}>
-            {trail.accessibility ? t("trail.adapted") : t("trail.notAdapted")}
-          </Text>
-        </View>
-        <View style={s.itemFull}>
-          <Text style={[s.label, { color: theme.colors.onSurfaceVariant }]}>{t("trail.variation")}</Text>
-          <Text style={[s.value, { color: theme.colors.onSurface }]}>{trail.accessibilityInfo}</Text>
-        </View>
-      </View>
-    </Surface>
+        </InfoItem>
+        <InfoItem
+          label={t("trail.accessibility")}
+          labelAccessory={helpButton("trail-info-accessibility-help", () => setAccessibilityModal(true))}
+          value={trail.accessibility ? t("trail.adapted") : t("trail.notAdapted")}
+        />
+        <InfoItem label={t("trail.variation")} value={trail.accessibilityInfo} fullWidth />
+      </InfoGrid>
+      {hasSymbolImage && (
+        <SymbolInfoModal
+          imageUrl={trail.trailSymbolImage}
+          symbol={trail.trailSymbol}
+          onDismiss={() => setSymbolModal(false)}
+          visible={symbolModal}
+        />
+      )}
+      <DifficultyInfoModal
+        difficulty={trail.classification}
+        onDismiss={() => setDifficultyModal(false)}
+        visible={difficultyModal}
+      />
+      <AccesibilityInfoModal onDismiss={() => setAccessibilityModal(false)} visible={accessibiltyModal} />
+    </InfoCard>
   );
 }
 
 const s = StyleSheet.create({
-  container: {
-    padding: 20,
-    borderRadius: SURFACE_BORDER_RADIUS,
-    gap: 12,
-  },
-  sectionTitle: {
-    fontWeight: "700",
-    fontSize: 15,
-  },
-  grid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 16,
-  },
-  item: {
-    flexBasis: "45%",
-    flexGrow: 1,
-    gap: 2,
-  },
-  itemFull: {
-    flexBasis: "100%",
-    gap: 2,
-  },
-  label: {
-    fontSize: 11,
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-    fontWeight: "600",
-  },
-  value: {
-    fontSize: 14,
-  },
   iconRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-  },
-  infoIconContainer: {
-    flexDirection: "row",
-    gap: 5,
-    alignItems: "center",
   },
 });

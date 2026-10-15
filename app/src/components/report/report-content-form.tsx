@@ -13,6 +13,7 @@ import { REPORT_REASONS_STALE_TIME } from "@/constants/cache";
 import { BORDER_RADIUS } from "@/constants/constants";
 import { CreateContentReportRequest, ReportedContentType } from "@/data/types";
 import { asTranslationKey } from "@/i18n";
+import { track } from "@/services/analytics";
 import reportReasonParser from "@/utils/report-reason-parser";
 import { MaterialIcons } from "@expo/vector-icons";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -80,6 +81,7 @@ export default function ReportContentForm({
     mutationFn: (report: CreateContentReportRequest) => createContentReport(report),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: invalidateQueryKey });
+      if (contentType === "HikeImage") track("hike.image_reported", {});
       reset();
       onDismiss();
       // Neutral on purpose: a reporter over the withholding threshold gets a queued report

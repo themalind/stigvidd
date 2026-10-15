@@ -18,19 +18,26 @@ interface ReviewImageProps {
 
 export default function ReviewImageGrid({ reviewImages }: ReviewImageProps) {
   const [isGalleryVisible, setIsGalleryVisible] = useState(false);
+  const [openIndex, setOpenIndex] = useState(0);
 
-  const handleImagePress = () => {
+  const handleImagePress = (index: number) => {
+    setOpenIndex(index);
     setIsGalleryVisible(true);
   };
 
   return (
     <View style={s.container}>
-      {reviewImages.map((image) => (
-        <Pressable key={image.identifier} onPress={handleImagePress}>
+      {reviewImages.map((image, index) => (
+        <Pressable key={image.identifier} onPress={() => handleImagePress(index)}>
           <Image style={s.image} contentFit="cover" source={{ uri: image.imageUrl }} />
         </Pressable>
       ))}
-      <ImageViewer images={reviewImages} visible={isGalleryVisible} onDismiss={() => setIsGalleryVisible(false)} />
+      <ImageViewer
+        images={reviewImages}
+        visible={isGalleryVisible}
+        initialIndex={openIndex}
+        onDismiss={() => setIsGalleryVisible(false)}
+      />
     </View>
   );
 }

@@ -38,11 +38,11 @@ jest.mock("expo-router", () => ({
   },
 }));
 
-// TrailCreator has its own suite; this screen only decides whether it may appear.
-jest.mock("@/components/trail/trail-creator/trail-creator", () => {
+// HikeRecorder has its own suite; this screen only decides whether it may appear.
+jest.mock("@/components/hike/recorder/hike-recorder", () => {
   const React = jest.requireActual("react");
   const { View } = jest.requireActual("react-native");
-  return { __esModule: true, default: () => React.createElement(View, { testID: "trail-creator" }) };
+  return { __esModule: true, default: () => React.createElement(View, { testID: "hike-recorder" }) };
 });
 
 // location-task registers a background task at import; only the dialog's two limits are needed.
@@ -143,20 +143,20 @@ it("shows nothing but a spinner while the status is still being read", () => {
 
   expect(screen.UNSAFE_getByType(ActivityIndicator)).toBeTruthy();
   expect(screen.queryByText("Stigvidd behöver din plats")).toBeNull();
-  expect(screen.queryByTestId("trail-creator")).toBeNull();
+  expect(screen.queryByTestId("hike-recorder")).toBeNull();
 });
 
 it("does not hold the creator back while the user profile is still loading", async () => {
   await showGranted(user({ isLoading: true }));
 
-  expect(screen.getByTestId("trail-creator")).toBeTruthy();
+  expect(screen.getByTestId("hike-recorder")).toBeTruthy();
 });
 
 // An already-granted permission is not prompted for again.
 it("goes straight to the creator when the permission is already granted", async () => {
   await showGranted();
 
-  expect(screen.getByTestId("trail-creator")).toBeTruthy();
+  expect(screen.getByTestId("hike-recorder")).toBeTruthy();
   expect(screen.queryByText("Stigvidd behöver din plats")).toBeNull();
 });
 
@@ -168,7 +168,7 @@ it("puts the disclosure in the way when the permission is missing", async () => 
   expect(screen.getByText(/appen är stängd eller inte används/)).toBeTruthy();
   expect(screen.getByText(/delas inte med någon annan/)).toBeTruthy();
   expect(screen.getByText(/medan du aktivt spelar in/)).toBeTruthy();
-  expect(screen.queryByTestId("trail-creator")).toBeNull();
+  expect(screen.queryByTestId("hike-recorder")).toBeNull();
 });
 
 describe("on Android", () => {
@@ -186,7 +186,7 @@ describe("on Android", () => {
     await showDisclosure({ foregroundGranted: true });
 
     expect(screen.getByText("Stigvidd behöver din plats")).toBeTruthy();
-    expect(screen.queryByTestId("trail-creator")).toBeNull();
+    expect(screen.queryByTestId("hike-recorder")).toBeNull();
   });
 
   it("opens the creator after Fortsätt without a second disclosure", async () => {
@@ -195,15 +195,15 @@ describe("on Android", () => {
     mockRequestPermissions.mockResolvedValue({ granted: true, canAskAgain: true });
 
     fireEvent.press(screen.getByText("Fortsätt"));
-    await flushUntil(() => screen.queryByTestId("trail-creator"));
+    await flushUntil(() => screen.queryByTestId("hike-recorder"));
 
-    expect(screen.getByTestId("trail-creator")).toBeTruthy();
+    expect(screen.getByTestId("hike-recorder")).toBeTruthy();
   });
 
   it("goes straight to the creator when background is granted too", async () => {
     await showGranted();
 
-    expect(screen.getByTestId("trail-creator")).toBeTruthy();
+    expect(screen.getByTestId("hike-recorder")).toBeTruthy();
     expect(mockGetBackgroundPermissions).toHaveBeenCalled();
   });
 
@@ -221,7 +221,7 @@ it("does not read the background status on iOS", async () => {
 
   await showGranted();
 
-  expect(screen.getByTestId("trail-creator")).toBeTruthy();
+  expect(screen.getByTestId("hike-recorder")).toBeTruthy();
   expect(mockGetBackgroundPermissions).not.toHaveBeenCalled();
 });
 
@@ -247,9 +247,9 @@ it("opens the creator once the prompt is granted", async () => {
   mockRequestPermissions.mockResolvedValue({ granted: true, canAskAgain: false });
 
   fireEvent.press(screen.getByText("Fortsätt"));
-  await flushUntil(() => screen.queryByTestId("trail-creator"));
+  await flushUntil(() => screen.queryByTestId("hike-recorder"));
 
-  expect(screen.getByTestId("trail-creator")).toBeTruthy();
+  expect(screen.getByTestId("hike-recorder")).toBeTruthy();
   expect(screen.queryByText("Stigvidd behöver din plats")).toBeNull();
 });
 
@@ -260,7 +260,7 @@ it("refreshes the shared location query when the permission arrives", async () =
   mockRequestPermissions.mockResolvedValue({ granted: true, canAskAgain: false });
 
   fireEvent.press(screen.getByText("Fortsätt"));
-  await flushUntil(() => screen.queryByTestId("trail-creator"));
+  await flushUntil(() => screen.queryByTestId("hike-recorder"));
 
   expect(invalidate).toHaveBeenCalledWith({ queryKey: USER_LOCATION_KEY });
 });
@@ -311,9 +311,9 @@ it("asks again from the denied screen, and moves on when it is granted", async (
   mockRequestPermissions.mockResolvedValue({ granted: true, canAskAgain: false });
 
   fireEvent.press(screen.getByText("Tillåt plats"));
-  await flushUntil(() => screen.queryByTestId("trail-creator"));
+  await flushUntil(() => screen.queryByTestId("hike-recorder"));
 
-  expect(screen.getByTestId("trail-creator")).toBeTruthy();
+  expect(screen.getByTestId("hike-recorder")).toBeTruthy();
 });
 
 // Once the OS stops offering the prompt, the only way back is the settings app.
@@ -378,7 +378,7 @@ it("picks up a permission granted in the settings app", async () => {
 
   await foreground();
 
-  expect(screen.getByTestId("trail-creator")).toBeTruthy();
+  expect(screen.getByTestId("hike-recorder")).toBeTruthy();
   expect(invalidate).toHaveBeenCalledWith({ queryKey: USER_LOCATION_KEY });
 });
 
@@ -420,7 +420,7 @@ it("drops the listener once the permission comes through", async () => {
 it("keeps the creator when the user profile fails with 401", async () => {
   await showGranted(user({ isError: true, error: new ApiError("expired", 401) }));
 
-  expect(screen.getByTestId("trail-creator")).toBeTruthy();
+  expect(screen.getByTestId("hike-recorder")).toBeTruthy();
   expect(screen.queryByText("Inte inloggad")).toBeNull();
 });
 
