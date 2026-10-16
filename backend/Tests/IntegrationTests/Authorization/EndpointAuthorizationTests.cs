@@ -34,6 +34,7 @@ public class EndpointAuthorizationTests : IClassFixture<StigViddWebApplicationFa
         "GET /api/v1/Trails",
         "GET /api/v1/Trails/markers",
         "GET /api/v1/Trails/popular",
+        "GET /api/v1/Trails/popular-contributions",
         "GET /api/v1/Trails/{identifier}",
         "GET /api/v1/Trails/{identifier}/card",
         "GET /api/v1/Trails/{identifier}/coordinates",
@@ -152,6 +153,15 @@ public class EndpointAuthorizationTests : IClassFixture<StigViddWebApplicationFa
         // in the app, or lift a ban a moderator set.
         "DELETE /api/v1/admin/users/{identifier}/ban",
         "POST /api/v1/admin/users/{identifier}/ban",
+
+        // keep-comment: a submission's raw path may start at someone's home, and approving one publishes it
+        "DELETE /api/v1/admin/hike-submissions/{identifier}/images/{imageIdentifier}",
+        "GET /api/v1/admin/hike-submissions",
+        "GET /api/v1/admin/hike-submissions/{identifier}",
+        "POST /api/v1/admin/hike-submissions/{identifier}/approve",
+        "POST /api/v1/admin/hike-submissions/{identifier}/reject",
+        "PUT /api/v1/admin/hike-submissions/{identifier}",
+        "PUT /api/v1/admin/hike-submissions/{identifier}/geometry",
     ];
 
     public EndpointAuthorizationTests(StigViddWebApplicationFactory<Program> factory)

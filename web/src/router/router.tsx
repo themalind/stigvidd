@@ -7,6 +7,8 @@ import { lazy, Suspense, type ComponentType } from "react";
 import { createBrowserRouter, Navigate } from "react-router";
 
 const DashboardPage = lazy(() => import("@/pages/dashboard/dashboard-page"));
+const HikeSubmissionReviewPage = lazy(() => import("@/pages/admin/hike-submission-review-page"));
+const HikeSubmissionsPage = lazy(() => import("@/pages/admin/hike-submissions-page"));
 const Layout = lazy(() => import("@/pages/Layout"));
 const LoginPage = lazy(() => import("@/pages/login/login-page"));
 const MailOutboxPage = lazy(() => import("@/pages/admin/mail-outbox-page"));
@@ -88,6 +90,16 @@ export const router = createBrowserRouter([
             path: "/moderation",
             handle: { title: "Moderation" },
             element: withSuspense(ModerationPage),
+          },
+          {
+            path: "/hike-submissions",
+            handle: { title: "Hike Submissions" },
+            element: withSuspense(HikeSubmissionsPage),
+          },
+          {
+            path: "/hike-submissions/:identifier",
+            handle: { title: "Review Submission" },
+            element: withSuspense(HikeSubmissionReviewPage),
           },
           {
             path: "/mail-templates",

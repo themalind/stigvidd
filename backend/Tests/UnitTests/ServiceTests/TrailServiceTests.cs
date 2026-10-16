@@ -7,6 +7,7 @@ using Core.Interfaces.Services;
 using Core.Services;
 using AwesomeAssertions;
 using Infrastructure.Data.Entities;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -31,7 +32,9 @@ public class TrailServiceTests
             (webDav ?? Utilities.MockFactory.WebDavService()).Object,
             (mediaUpload ?? Utilities.MockFactory.MediaUploadService()).Object,
             new Mock<ILogger<TrailService>>().Object,
-            new TrailResponseFactory(cfg.Object));
+            new TrailResponseFactory(cfg.Object),
+            new TrailContributionRanking(new ConfigurationBuilder().Build()),
+            new MemoryCache(new MemoryCacheOptions()));
     }
 
     private static TrailResponse StubTrailResponse() =>
@@ -99,8 +102,8 @@ public class TrailServiceTests
     {
         // Arrange
         var repo = new Mock<ITrailRepository>();
-        repo.Setup(r => r.GetTrailByIdentifierAsync(Utilities.Identifiers.Trail4, It.IsAny<Expression<Func<Trail, TrailResponse>>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(RepositoryResult<TrailResponse>.Success(StubTrailResponse()));
+        repo.Setup(r => r.GetTrailByIdentifierAsync(Utilities.Identifiers.Trail4, It.IsAny<Expression<Func<Trail, TrailWithContributionProjection>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<TrailWithContributionProjection>.Success(new TrailWithContributionProjection(StubTrailResponse(), null)));
 
         // Act
         var result = await Build(repo).GetTrailByIdentifierWithoutCoordinatesAsync(Utilities.Identifiers.Trail4, TestContext.Current.CancellationToken);
@@ -116,8 +119,8 @@ public class TrailServiceTests
     {
         // Arrange
         var repo = new Mock<ITrailRepository>();
-        repo.Setup(r => r.GetTrailByIdentifierAsync(It.IsAny<string>(), It.IsAny<Expression<Func<Trail, TrailResponse>>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(RepositoryResult<TrailResponse>.NotFound());
+        repo.Setup(r => r.GetTrailByIdentifierAsync(It.IsAny<string>(), It.IsAny<Expression<Func<Trail, TrailWithContributionProjection>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<TrailWithContributionProjection>.NotFound());
 
         // Act
         var result = await Build(repo).GetTrailByIdentifierWithoutCoordinatesAsync("no-trail", TestContext.Current.CancellationToken);
@@ -133,8 +136,8 @@ public class TrailServiceTests
     {
         // Arrange
         var repo = new Mock<ITrailRepository>();
-        repo.Setup(r => r.GetTrailByIdentifierAsync(It.IsAny<string>(), It.IsAny<Expression<Func<Trail, TrailResponse>>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(RepositoryResult<TrailResponse>.Error());
+        repo.Setup(r => r.GetTrailByIdentifierAsync(It.IsAny<string>(), It.IsAny<Expression<Func<Trail, TrailWithContributionProjection>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<TrailWithContributionProjection>.Error());
 
         // Act
         var result = await Build(repo).GetTrailByIdentifierWithoutCoordinatesAsync(Utilities.Identifiers.Trail4, TestContext.Current.CancellationToken);
@@ -522,15 +525,15 @@ public class TrailServiceTests
     {
         // Arrange
         var repo = new Mock<ITrailRepository>();
-        repo.Setup(r => r.GetTrailByIdentifierForAdminAsync(It.IsAny<string>(), It.IsAny<Expression<Func<Trail, TrailResponse>>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(RepositoryResult<TrailResponse>.Success(StubTrailResponse()));
+        repo.Setup(r => r.GetTrailByIdentifierForAdminAsync(It.IsAny<string>(), It.IsAny<Expression<Func<Trail, TrailWithContributionProjection>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<TrailWithContributionProjection>.Success(new TrailWithContributionProjection(StubTrailResponse(), null)));
 
         // Act
         var result = await Build(repo).GetTrailForAdminAsync(Utilities.Identifiers.Trail4, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
-        repo.Verify(r => r.GetTrailByIdentifierAsync(It.IsAny<string>(), It.IsAny<Expression<Func<Trail, TrailResponse>>>(), It.IsAny<CancellationToken>()), Times.Never);
+        repo.Verify(r => r.GetTrailByIdentifierAsync(It.IsAny<string>(), It.IsAny<Expression<Func<Trail, TrailWithContributionProjection>>>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -538,8 +541,8 @@ public class TrailServiceTests
     {
         // Arrange
         var repo = new Mock<ITrailRepository>();
-        repo.Setup(r => r.GetTrailByIdentifierForAdminAsync(It.IsAny<string>(), It.IsAny<Expression<Func<Trail, TrailResponse>>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(RepositoryResult<TrailResponse>.NotFound());
+        repo.Setup(r => r.GetTrailByIdentifierForAdminAsync(It.IsAny<string>(), It.IsAny<Expression<Func<Trail, TrailWithContributionProjection>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<TrailWithContributionProjection>.NotFound());
 
         // Act
         var result = await Build(repo).GetTrailForAdminAsync("missing", TestContext.Current.CancellationToken);

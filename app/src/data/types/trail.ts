@@ -20,8 +20,22 @@ export interface Trail {
   tags?: string;
   isVerified: boolean;
   visitorInformation?: VisitorInformation;
+  contribution?: TrailContribution | null;
   trailImagesResponse?: TrailImage[];
   trailLinksResponse?: TrailLink[];
+}
+
+// keep-comment: only trails published from a user's hike carry one
+export interface TrailContribution {
+  // keep-comment: null when the user chose not to be named or has deleted their account
+  submitterNickName?: string | null;
+  publishedAt: string;
+  likeCount: number;
+}
+
+export interface TrailLike {
+  likeCount: number;
+  likedByMe: boolean;
 }
 
 export interface Coordinates {
@@ -77,6 +91,7 @@ export interface TrailMarkerResponse {
   isAccessible: boolean;
   startLatitude?: number;
   startLongitude?: number;
+  isContribution?: boolean;
 }
 
 export interface TrailCard {
@@ -87,6 +102,7 @@ export interface TrailCard {
   isAccessible: boolean;
   averageRating: number;
   image?: TrailImage;
+  contribution?: TrailContribution | null;
 }
 
 export interface CreateTrailRequest {

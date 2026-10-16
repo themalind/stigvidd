@@ -378,6 +378,7 @@ public class DataTransferService : IDataTransferService
         paths.UnionWith(await db.TrailImages.Select(x => x.ImageUrl).ToListAsync(ctoken));
         paths.UnionWith(await db.FacilityImages.Select(x => x.ImageUrl).ToListAsync(ctoken));
         paths.UnionWith(await db.HikeImages.Select(x => x.ImageUrl).ToListAsync(ctoken));
+        paths.UnionWith(await db.HikeSubmissionImages.Select(x => x.ImageUrl).ToListAsync(ctoken));
         paths.UnionWith(await db.ReviewImages.Select(x => x.ImageUrl).ToListAsync(ctoken));
         paths.UnionWith((await db.Trails.Select(x => x.TrailSymbolImage).ToListAsync(ctoken)).OfType<string>());
         paths.UnionWith((await db.CityAreas.Select(x => x.ImageUrl).ToListAsync(ctoken)).OfType<string>());

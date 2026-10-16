@@ -15,8 +15,20 @@ import { fireEvent, screen } from "@testing-library/react-native";
 
 const onChange = jest.fn();
 
-const NOTHING_ON: MapMarkerFilter = { trails: false, shelters: false, firePits: false, accessibility: false };
-const ALL_ON: MapMarkerFilter = { trails: true, shelters: true, firePits: true, accessibility: true };
+const NOTHING_ON: MapMarkerFilter = {
+  trails: false,
+  contributions: false,
+  shelters: false,
+  firePits: false,
+  accessibility: false,
+};
+const ALL_ON: MapMarkerFilter = {
+  trails: true,
+  contributions: true,
+  shelters: true,
+  firePits: true,
+  accessibility: true,
+};
 
 function show(
   filter: Partial<MapMarkerFilter> = {},
@@ -80,10 +92,10 @@ it("counts the filters that are on", () => {
   expect(screen.getByText("2")).toBeTruthy();
 });
 
-it("counts all four", () => {
+it("counts all five", () => {
   show(ALL_ON);
 
-  expect(screen.getByText("4")).toBeTruthy();
+  expect(screen.getByText("5")).toBeTruthy();
 });
 
 it("shows no badge when nothing is filtered on", () => {
@@ -98,7 +110,7 @@ it("turns on the category that was pressed, and leaves the others alone", () => 
   open();
   fireEvent.press(screen.getByTestId("map-filter-row-trails"));
 
-  expect(onChange).toHaveBeenCalledWith({ trails: true, shelters: true, firePits: false, accessibility: false });
+  expect(onChange).toHaveBeenCalledWith({ ...NOTHING_ON, trails: true, shelters: true });
 });
 
 it("turns off a category that is already on", () => {
@@ -107,7 +119,7 @@ it("turns off a category that is already on", () => {
   open();
   fireEvent.press(screen.getByTestId("map-filter-row-firePits"));
 
-  expect(onChange).toHaveBeenCalledWith({ trails: true, shelters: true, firePits: false, accessibility: true });
+  expect(onChange).toHaveBeenCalledWith({ ...ALL_ON, firePits: false });
 });
 
 // Accessibility filters every category rather than being one of its own.
@@ -126,7 +138,7 @@ it("ticks the boxes of the categories that are on", () => {
   open();
 
   expect(screen.getAllByTestId("icon-check-box")).toHaveLength(2);
-  expect(screen.getAllByTestId("icon-check-box-outline-blank")).toHaveLength(2);
+  expect(screen.getAllByTestId("icon-check-box-outline-blank")).toHaveLength(3);
 });
 
 // The swatch is a legend: it has to be the colour that category's pin is drawn in.

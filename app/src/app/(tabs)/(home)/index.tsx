@@ -10,6 +10,7 @@ import AdventureCard from "@/components/home/adventure-card";
 import GetStartedCard from "@/components/home/get-started-card";
 import HeroBanner from "@/components/home/hero-banner";
 import LatestHikeCard from "@/components/home/latest-hike-card";
+import PopularContributions from "@/components/home/popular-contributions";
 import LatestHikeSkeleton from "@/components/skeletons/latest-hike-skeleton";
 import PagerCarouselSkeleton from "@/components/skeletons/pager-carousel-skeleton";
 import PagerCarousel from "@/components/trail/pager-carousel";
@@ -84,6 +85,8 @@ export default function HomeScreen() {
           )}
         </View>
       )}
+
+      <PopularContributions />
 
       {/* Held for the returning user, who is the one this slot is usually for: a first-time
           user resolves to "empty" and gets the get-started card above the carousel. */}

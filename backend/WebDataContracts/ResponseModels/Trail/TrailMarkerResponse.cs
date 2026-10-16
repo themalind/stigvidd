@@ -10,13 +10,15 @@ public class TrailMarkerResponse
     public bool IsAccessible { get; set; }
     public decimal? StartLatitude { get; set; }
     public decimal? StartLongitude { get; set; }
+    public bool IsContribution { get; set; }
 
     public static TrailMarkerResponse Create(
         string identifier,
         string name,
         bool isAccessible,
         decimal? startLatitude,
-        decimal? startLongitude) =>
+        decimal? startLongitude,
+        bool isContribution = false) =>
         new()
         {
             Identifier = identifier,
@@ -24,5 +26,6 @@ public class TrailMarkerResponse
             IsAccessible = isAccessible,
             StartLatitude = startLatitude,
             StartLongitude = startLongitude,
+            IsContribution = isContribution,
         };
 }

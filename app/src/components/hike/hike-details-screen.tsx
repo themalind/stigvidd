@@ -19,8 +19,11 @@ import LoadingIndicator from "@/components/loading-indicator";
 import ShareHikeModal, { ShareHikeFormFields } from "@/components/shared-hike/share-hike-modal";
 import EditHikeModal, { EditHikeFormFields } from "@/components/hike/edit-hike-modal";
 import { BORDER_RADIUS, MAX_HIKE_IMAGES } from "@/constants/constants";
-import { Hike, ShareHikeRequest, UpdateHikeRequest } from "@/data/types";
+import PublishHikeCard from "@/components/hike/publish-hike-card";
+import PublishHikeModal from "@/components/hike/publish-hike-modal";
+import { Hike, HikeSubmission, ShareHikeRequest, UpdateHikeRequest } from "@/data/types";
 import { useHikeImageMutations } from "@/hooks/hike/useHikeImageMutations";
+import { useMyHikeSubmissions } from "@/hooks/hike/useMyHikeSubmissions";
 import { myHikesQueryKey, useMyHikes } from "@/hooks/hike/useMyHikes";
 import { useCanWrite } from "@/hooks/useCanWrite";
 import { track } from "@/services/analytics";
@@ -62,6 +65,7 @@ export default function HikeDetailsScreen({ hikeFollowRoute }: { hikeFollowRoute
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showPublishModal, setShowPublishModal] = useState(false);
   const [showBannedDialog, setShowBannedDialog] = useState(false);
   const [deletedHike, setDeletedHike] = useState<Hike | null>(null);
   const [viewerIndex, setViewerIndex] = useState<number | null>(null);
@@ -70,6 +74,13 @@ export default function HikeDetailsScreen({ hikeFollowRoute }: { hikeFollowRoute
   const hikeIdentifier: string = Array.isArray(identifier) ? identifier[0] : identifier;
   const listKey = myHikesQueryKey(user.data?.identifier);
   const hikeImages = useHikeImageMutations(hikeIdentifier);
+  const { data: hasPendingSubmission = false } = useMyHikeSubmissions(
+    useCallback(
+      (submissions: HikeSubmission[]) =>
+        submissions.some((s) => s.sourceHikeIdentifier === hikeIdentifier && s.status === "Pending"),
+      [hikeIdentifier],
+    ),
+  );
 
   const {
     data: found,
@@ -214,6 +225,9 @@ export default function HikeDetailsScreen({ hikeFollowRoute }: { hikeFollowRoute
           edit={{ max: MAX_HIKE_IMAGES, uploadingCount: hikeImages.uploadingCount, onAdd: unlessBanned(addImages) }}
         />
       }
+      beforeActions={
+        <PublishHikeCard isPending={hasPendingSubmission} onPublish={unlessBanned(() => setShowPublishModal(true))} />
+      }
       actions={
         <>
           <Button
@@ -267,6 +281,13 @@ export default function HikeDetailsScreen({ hikeFollowRoute }: { hikeFollowRoute
         onShare={handleShare}
         isPending={shareMutation.isPending || updateHikeMutation.isPending}
       />
+      {showPublishModal && (
+        <PublishHikeModal
+          hike={hike}
+          nickName={user.data?.nickName ?? ""}
+          onDismiss={() => setShowPublishModal(false)}
+        />
+      )}
       {showEditModal && (
         <EditHikeModal
           hike={hike}

@@ -22,6 +22,7 @@ public class TrailResponse
     public string? City { get; set; }
 
     public VisitorInformationResponse? VisitorInformation { get; set; }
+    public TrailContributionResponse? Contribution { get; set; }
     public IReadOnlyCollection<TrailImageResponse>? TrailImagesResponse { get; set; }
     public IReadOnlyCollection<TrailLinkResponse>? TrailLinksResponse { get; set; }
 

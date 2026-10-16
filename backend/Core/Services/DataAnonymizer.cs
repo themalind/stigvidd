@@ -55,6 +55,13 @@ public static class DataAnonymizer
             ["Reviews"] = Table(kept: "Id Identifier CreatedAt LastUpdatedAt ModerationState Rating TrailId TrailReview UserId"),
             ["ReviewImages"] = Table(kept: "Id Identifier CreatedAt LastUpdatedAt ImageUrl ReviewId"),
             ["HikeImages"] = Table(kept: "Id Identifier CreatedAt LastUpdatedAt HikeId ImageUrl ModerationState"),
+            ["HikeSubmissions"] = Table(
+                kept: "Id Identifier CreatedAt LastUpdatedAt UserId SourceHikeId Name Description GeoPath OriginalGeoPath TrailLength LongestGapMetres Classification Parking GettingThere PublicTransport ShowSubmitterName TransferAcceptedAt ConsentTextId Status RejectionReason DecidedAt PublishedTrailId",
+                replaced: "DecidedBy"),
+            ["HikeSubmissionImages"] = Table(kept: "Id Identifier CreatedAt LastUpdatedAt HikeSubmissionId SourceHikeImageId ImageUrl Width Height SizeBytes SortOrder"),
+            ["TrailContributions"] = Table(kept: "TrailId SubmittedByUserId ShowSubmitterName PublishedAt TransferAcceptedAt ConsentTextId"),
+            ["ConsentTexts"] = Table(kept: "Id Kind Version Locale Text CreatedAt"),
+            ["TrailContributionLikes"] = Table(kept: "TrailId UserId CreatedAt"),
             ["HikeShares"] = Table(kept: "HikeId SharedWithId AllowResharing CreatedAt SharedById Status"),
             ["FriendRequests"] = Table(kept: "RequesterId ReceiverId CreatedAt Status"),
             ["UserBlocks"] = Table(kept: "BlockerUserId BlockedUserId CreatedAt"),
@@ -126,6 +133,9 @@ public static class DataAnonymizer
             .SetProperty(b => b.Reason, (string?)null)
             .SetProperty(b => b.BannedBy, Moderator)
             .SetProperty(b => b.LiftedBy, b => b.LiftedBy == null ? null : Moderator), ctoken);
+
+        await db.HikeSubmissions.Where(s => s.DecidedBy != null)
+            .ExecuteUpdateAsync(s => s.SetProperty(x => x.DecidedBy, Moderator), ctoken);
 
         await db.TrailImportSessions.Where(t => t.UploadedBy != null)
             .ExecuteUpdateAsync(s => s.SetProperty(t => t.UploadedBy, Moderator), ctoken);

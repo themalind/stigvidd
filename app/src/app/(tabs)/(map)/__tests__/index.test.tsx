@@ -703,10 +703,16 @@ describe("MapScreen — leaving for a trail", () => {
 });
 
 describe("MapScreen — the marker filter", () => {
-  it("starts with trails alone", async () => {
+  it("starts with curated and user trails", async () => {
     await show();
 
-    expect(map().filter).toEqual({ trails: true, shelters: false, firePits: false, accessibility: false });
+    expect(map().filter).toEqual({
+      trails: true,
+      contributions: true,
+      shelters: false,
+      firePits: false,
+      accessibility: false,
+    });
   });
 
   it("hands the map the category the user switched on", async () => {
@@ -715,7 +721,13 @@ describe("MapScreen — the marker filter", () => {
 
     await toggleFilter("shelters");
 
-    expect(map().filter).toEqual({ trails: true, shelters: true, firePits: false, accessibility: false });
+    expect(map().filter).toEqual({
+      trails: true,
+      contributions: true,
+      shelters: true,
+      firePits: false,
+      accessibility: false,
+    });
   });
 
   it("hands the map the category the user switched off", async () => {

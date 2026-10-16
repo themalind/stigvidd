@@ -15,6 +15,7 @@ internal static class ImageReferences
         var paths = new List<string> { relative, "/" + relative };
 
         return await context.HikeImages.AnyAsync(hi => paths.Contains(hi.ImageUrl), ctoken)
+            || await context.HikeSubmissionImages.AnyAsync(si => paths.Contains(si.ImageUrl), ctoken)
             || await context.ReviewImages.AnyAsync(ri => paths.Contains(ri.ImageUrl), ctoken)
             || await context.TrailImages.AnyAsync(ti => paths.Contains(ti.ImageUrl), ctoken)
             || await context.FacilityImages.AnyAsync(fi => paths.Contains(fi.ImageUrl), ctoken)

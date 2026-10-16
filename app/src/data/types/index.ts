@@ -14,6 +14,7 @@ export * from "./trail";
 export * from "./review";
 export * from "./user";
 export * from "./hike";
+export * from "./hike-submission";
 export * from "./friends";
 export * from "./obstacle";
 export * from "./facility";

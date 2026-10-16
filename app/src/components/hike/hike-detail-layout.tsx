@@ -33,6 +33,7 @@ interface Props {
   info: HikeInfo;
   media?: ReactNode;
   actions: ReactNode;
+  beforeActions?: ReactNode;
   children?: ReactNode;
 }
 
@@ -49,6 +50,7 @@ export default function HikeDetailLayout({
   info,
   media,
   actions,
+  beforeActions,
   children,
 }: Props) {
   const theme = useTheme();
@@ -83,8 +85,11 @@ export default function HikeDetailLayout({
         />
         {media}
         <HikeInfoCard {...info} />
-        <View testID="hike-actions" style={s.actions}>
-          {actions}
+        <View testID="hike-bottom" style={s.bottom}>
+          {beforeActions}
+          <View testID="hike-actions" style={s.actions}>
+            {actions}
+          </View>
         </View>
       </ScrollView>
       {children}
@@ -145,8 +150,11 @@ const s = StyleSheet.create({
     borderRadius: SURFACE_BORDER_RADIUS,
     overflow: "hidden",
   },
-  actions: {
+  bottom: {
     marginTop: "auto",
+    gap: 16,
+  },
+  actions: {
     flexDirection: "row",
     gap: 16,
     paddingTop: 5,

@@ -22,6 +22,7 @@ public class UserService : IUserService
     // Goes through IHikeService, not IHikeRepository: deleting a user's hikes also has to
     // delete their image files from WebDAV, and that orchestration lives in the hike service.
     private readonly IHikeService _hikeService;
+    private readonly IHikeSubmissionService _hikeSubmissionService;
     // Same reason for reviews: their image files live in WebDAV, not the database.
     private readonly IReviewService _reviewService;
     private readonly IFriendRepository _friendRepository;
@@ -37,6 +38,7 @@ public class UserService : IUserService
     ITrailObstacleRepository trailObstacleRepository,
     UserResponseFactory userResponseFactory,
     IHikeService hikeService,
+    IHikeSubmissionService hikeSubmissionService,
     IReviewService reviewService,
     IFriendRepository friendRepository,
     IUserBlockService userBlockService,
@@ -49,6 +51,7 @@ public class UserService : IUserService
         _trailObstacleRepository = trailObstacleRepository;
         _userResponseFactory = userResponseFactory;
         _hikeService = hikeService;
+        _hikeSubmissionService = hikeSubmissionService;
         _reviewService = reviewService;
         _friendRepository = friendRepository;
         _userBlockService = userBlockService;
@@ -353,6 +356,11 @@ public class UserService : IUserService
 
         if (!sharedHikesResult.Success)
             return DeleteFailed("hike shares");
+
+        var submissionResult = await _hikeSubmissionService.HandleUserDeleteAsync(userResult.Value, ctoken);
+
+        if (!submissionResult.Success)
+            return DeleteFailed("hike submissions");
 
         // Must run before the user row goes, while the reviews can still be found by UserId.
         var reviewResult = await _reviewService.AnonymizeUserReviewsOnUserDeleteAsync(userResult.Value, ctoken);

@@ -69,11 +69,16 @@ import {
 import {
   getAllTrails,
   getCoordinatesByTrailIdentifier,
+  getPopularContributedTrails,
   getPopularTrails,
   getTrailByIdentifier,
   getTrailCard,
   getTrailCards,
+  getTrailLike,
+  likeTrail,
+  unlikeTrail,
 } from "../trails";
+import { createHikeSubmission, getMyHikeSubmissions, withdrawHikeSubmission } from "../hike-submissions";
 import {
   addToUserFavorite,
   addToUserWishlist,
@@ -142,6 +147,20 @@ const updateHikeRequest = {
 const shareHikeRequest = { hikeIdentifier: "h1", sharedWithNames: ["stigvandraren"], allowResharing: true };
 
 const reshareRequest = { hikeIdentifier: "h1", reShareToNames: ["stigvandraren"] };
+
+const createSubmissionRequest = {
+  hikeIdentifier: "h1",
+  name: "Kvällsrunda",
+  description: "Runt sjön",
+  classification: 1,
+  gettingThere: "Buss 3",
+  showSubmitterName: true,
+  acceptTransfer: true,
+  consentVersion: "2026-10-15",
+  consentLocale: "sv",
+  trimStartIndex: 2,
+  imageIdentifiers: ["i1"],
+};
 
 const endpoints: Endpoint[] = [
   // areas
@@ -362,6 +381,63 @@ const endpoints: Endpoint[] = [
     path: "/trails/popular",
     auth: "none",
     carriesStatus: false,
+  },
+  {
+    name: "getPopularContributedTrails",
+    call: () => getPopularContributedTrails(),
+    method: "GET",
+    path: "/trails/popular-contributions",
+    auth: "none",
+    carriesStatus: false,
+  },
+  {
+    name: "getTrailLike",
+    call: () => getTrailLike("t1"),
+    method: "GET",
+    path: "/trails/t1/like",
+    auth: "required",
+    carriesStatus: true,
+  },
+  {
+    name: "likeTrail",
+    call: () => likeTrail("t1"),
+    method: "PUT",
+    path: "/trails/t1/like",
+    auth: "required",
+    carriesStatus: true,
+  },
+  {
+    name: "unlikeTrail",
+    call: () => unlikeTrail("t1"),
+    method: "DELETE",
+    path: "/trails/t1/like",
+    auth: "required",
+    carriesStatus: true,
+  },
+  {
+    name: "createHikeSubmission",
+    call: () => createHikeSubmission(createSubmissionRequest),
+    method: "POST",
+    path: "/hikesubmissions",
+    auth: "required",
+    carriesStatus: true,
+    body: createSubmissionRequest,
+  },
+  {
+    name: "getMyHikeSubmissions",
+    call: () => getMyHikeSubmissions(),
+    method: "GET",
+    path: "/hikesubmissions",
+    auth: "required",
+    carriesStatus: true,
+  },
+  {
+    name: "withdrawHikeSubmission",
+    call: () => withdrawHikeSubmission("s1"),
+    method: "DELETE",
+    path: "/hikesubmissions/s1",
+    auth: "required",
+    carriesStatus: true,
   },
   {
     name: "getAllTrails",
@@ -629,7 +705,7 @@ beforeEach(() => {
 
 describe("api endpoint contract", () => {
   it("covers every exported endpoint in the table", () => {
-    expect(endpoints).toHaveLength(54);
+    expect(endpoints).toHaveLength(61);
     expect(new Set(endpoints.map((e) => e.name)).size).toBe(endpoints.length);
   });
 

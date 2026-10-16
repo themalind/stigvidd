@@ -23,6 +23,7 @@ public class Trail : BaseEntity
     public string City { get; set; } = string.Empty;
 
     public VisitorInformation? VisitorInformation { get; set; }
+    public TrailContribution? Contribution { get; set; }
     public ICollection<TrailImage>? TrailImages { get; set; }
     public ICollection<Review>? Reviews { get; set; }
     public ICollection<TrailLink>? TrailLinks { get; set; }

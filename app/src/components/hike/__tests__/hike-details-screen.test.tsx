@@ -40,6 +40,13 @@ jest.mock("@/api/hikes", () => ({
 
 jest.mock("@/utils/pick-images", () => ({ pickImages: (...args: unknown[]) => mockPickImages(...args) }));
 
+const mockGetSubmissions = jest.fn();
+const mockCreateSubmission = jest.fn();
+jest.mock("@/api/hike-submissions", () => ({
+  getMyHikeSubmissions: () => mockGetSubmissions(),
+  createHikeSubmission: (...args: unknown[]) => mockCreateSubmission(...args),
+}));
+
 const mockGetFriends = jest.fn();
 jest.mock("@/api/friends", () => ({ getFriends: () => mockGetFriends() }));
 
@@ -107,6 +114,7 @@ beforeEach(() => {
   mockShareHike.mockResolvedValue(undefined);
   mockDeleteImage.mockResolvedValue({ success: true });
   mockGetFriends.mockResolvedValue([]);
+  mockGetSubmissions.mockResolvedValue([]);
   // keep-comment: guardedNavigate debounces on module state, so the clock only ever moves on, across tests too
   jest.spyOn(Date, "now").mockImplementation(() => (clock += 1000));
 });
@@ -347,7 +355,7 @@ it("leaves the info card out when the walk has nothing to tell", async () => {
 it("pins the buttons to the bottom of a short screen", async () => {
   await show();
 
-  expect(screen.getByTestId("hike-actions")).toHaveStyle({ marginTop: "auto" });
+  expect(screen.getByTestId("hike-bottom")).toHaveStyle({ marginTop: "auto" });
 });
 
 it("sets the facts in the same type as the trail's info card", async () => {
@@ -476,5 +484,90 @@ describe("sharing", () => {
     expect(store.get(snackbarAtom)).toMatchObject({ visible: true, type: "error" });
     expect(store.get(snackbarAtom).message).not.toBe("Någon du valde är inte längre din vän. Välj igen.");
     expect(mockTrack).toHaveBeenCalledWith("hike.shared", expect.objectContaining({ outcome: "error" }));
+  });
+});
+
+describe("publishing", () => {
+  const expandPublish = async () => {
+    fireEvent.press(screen.getByTestId("publish-hike-accordion"));
+    await settle();
+  };
+
+  it("keeps the publish step folded away until it is opened", async () => {
+    await show();
+    await settle();
+
+    expect(screen.getByTestId("publish-hike-accordion")).toBeTruthy();
+    expect(screen.queryByTestId("hike-publish")).toBeNull();
+  });
+
+  it("offers to publish a walk that has not been sent in", async () => {
+    await show();
+    await settle();
+    await expandPublish();
+
+    expect(screen.getByTestId("hike-publish")).toBeTruthy();
+    expect(screen.queryByTestId("publish-hike-pending")).toBeNull();
+  });
+
+  it("says the walk is waiting instead of offering it again", async () => {
+    mockGetSubmissions.mockResolvedValue([
+      {
+        identifier: "s1",
+        name: "x",
+        trailLength: 1,
+        status: "Pending",
+        createdAt: "",
+        sourceHikeIdentifier: "hike-1",
+        likeCount: 0,
+      },
+    ]);
+    await show();
+    await flushUntil(() => screen.queryByTestId("publish-hike-pending"));
+
+    expect(screen.getByTestId("publish-hike-pending")).toBeTruthy();
+    expect(screen.queryByTestId("hike-publish")).toBeNull();
+  });
+
+  it("still offers it when only another walk is pending", async () => {
+    mockGetSubmissions.mockResolvedValue([
+      {
+        identifier: "s1",
+        name: "x",
+        trailLength: 1,
+        status: "Pending",
+        createdAt: "",
+        sourceHikeIdentifier: "other",
+        likeCount: 0,
+      },
+    ]);
+    await show();
+    await settle();
+    await expandPublish();
+
+    expect(screen.getByTestId("hike-publish")).toBeTruthy();
+  });
+
+  it("opens the publish form", async () => {
+    await show();
+    await settle();
+    await expandPublish();
+
+    fireEvent.press(screen.getByTestId("hike-publish"));
+    await flushUntil(() => screen.queryByTestId("publish-submit"));
+
+    expect(screen.getByTestId("publish-submit")).toBeTruthy();
+  });
+
+  it("keeps a banned user out of the form", async () => {
+    mockWriteBlocked = "banned";
+    await show();
+    await settle();
+    await expandPublish();
+
+    fireEvent.press(screen.getByTestId("hike-publish"));
+    await settle();
+
+    expect(screen.queryByTestId("publish-submit")).toBeNull();
   });
 });

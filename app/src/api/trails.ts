@@ -5,7 +5,15 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import { Coordinates, CreateTrailRequest, Trail, TrailCard, TrailOverview, TrailShortInfoResponse } from "@/data/types";
+import {
+  Coordinates,
+  CreateTrailRequest,
+  Trail,
+  TrailCard,
+  TrailLike,
+  TrailOverview,
+  TrailShortInfoResponse,
+} from "@/data/types";
 import uuid from "react-native-uuid";
 import { ApiError } from "./api-error";
 import { apiFetch, BASE_URL, UPLOAD_TIMEOUT_MS } from "./api-config";
@@ -39,6 +47,53 @@ export async function getPopularTrails(latitude?: number, longitude?: number): P
     throw error;
   }
 }
+
+export async function getPopularContributedTrails(): Promise<TrailCard[]> {
+  try {
+    const response = await apiFetch(`${BASE_URL}/trails/popular-contributions`);
+
+    if (!response.ok) {
+      throw new Error(`HTTP error ${response.status}`);
+    }
+
+    return response.json();
+  } catch (error) {
+    logger.error("Failed to fetch popular contributed trails", {
+      endpoint: "GET /trails/popular-contributions",
+      errorMessage: String(error),
+    });
+    throw error;
+  }
+}
+
+async function trailLikeRequest(identifier: string, method: "GET" | "PUT" | "DELETE"): Promise<TrailLike> {
+  const token = await getUserToken();
+
+  if (!token) throw new Error("User not authenticated!");
+
+  try {
+    const response = await apiFetch(`${BASE_URL}/trails/${identifier}/like`, {
+      method,
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (!response.ok) {
+      throw new ApiError(`trailLike: HTTP error ${response.status}`, response.status);
+    }
+
+    return response.json();
+  } catch (error) {
+    logger.error("Trail like request failed", {
+      endpoint: `${method} /trails/{identifier}/like`,
+      errorMessage: String(error),
+    });
+    throw error;
+  }
+}
+
+export const getTrailLike = (identifier: string) => trailLikeRequest(identifier, "GET");
+export const likeTrail = (identifier: string) => trailLikeRequest(identifier, "PUT");
+export const unlikeTrail = (identifier: string) => trailLikeRequest(identifier, "DELETE");
 
 export async function getAllTrails(): Promise<TrailShortInfoResponse[]> {
   try {

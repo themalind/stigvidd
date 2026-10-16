@@ -23,6 +23,11 @@ connect, so a missing secret does not matter there; `database update` does.
 
 `.claude/hooks/guard-build-commands.mjs` denies a `dotnet ef` without `--project`.
 
+If `dotnet ef` keeps answering "Run "dotnet tool restore"" even after a successful restore, the
+entry in `~/.dotnet/toolResolverCache/1/dotnet-ef` points to an old package folder (it happened
+here when `NUGET_PACKAGES` was moved to `D:\caches\nuget`). Delete that one file and restore
+again. The package itself is fine.
+
 ## What EF owns and you do not
 
 | file | |

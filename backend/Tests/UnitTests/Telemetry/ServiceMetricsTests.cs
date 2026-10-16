@@ -36,6 +36,7 @@ public class ServiceMetricsTests
             new Mock<ITrailObstacleRepository>().Object,
             new UserResponseFactory(cfg.Object),
             new Mock<IHikeService>().Object,
+            new Mock<IHikeSubmissionService>().Object,
             new Mock<IReviewService>().Object,
             new Mock<IFriendRepository>().Object,
             new Mock<IUserBlockService>().Object,

@@ -25,8 +25,15 @@ export interface MarkerColors {
 // a category's pin always matches its filter swatch.
 const colors = AppDefaultTheme.colors;
 
+// keep-comment: trails published from users' walks share the trails source, told apart by this pin colour and their own filter row
+export const CONTRIBUTION_MARKER_COLORS: MarkerColors = {
+  fill: "#7B2D82",
+  stroke: colors.onPrimary,
+};
+
 export const MARKER_COLORS: Record<MarkerCategory, MarkerColors> = {
   trails: { fill: colors.primary, stroke: colors.onPrimary },
+  contributions: CONTRIBUTION_MARKER_COLORS,
   shelters: { fill: colors.tertiary, stroke: colors.onTertiary },
   firePits: { fill: colors.secondary, stroke: colors.onSecondary },
 };

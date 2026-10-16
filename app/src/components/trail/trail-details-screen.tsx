@@ -11,6 +11,7 @@ import { Rating } from "@/components/review/rating";
 import TrailReviewsContainer from "@/components/review/trail-reviews-container";
 import ImageGallery from "@/components/trail/image-gallery";
 import TrailDescription from "@/components/trail/trail-description";
+import TrailContributionBar from "@/components/trail/trail-contribution-bar";
 import TrailInfo from "@/components/trail/trail-info";
 import TrailMap from "@/components/trail/trail-map";
 import UserBar from "@/components/trail/user-action-bar/user-bar";
@@ -144,6 +145,9 @@ export default function TrailDetailsScreen({ followRoute }: { followRoute: Follo
                 </Text>
               </Pressable>
             </View>
+          )}
+          {trail?.contribution && (
+            <TrailContributionBar trailIdentifier={trail.identifier} contribution={trail.contribution} />
           )}
           {trail && <TrailInfo trail={trail} />}
           {obstacles && obstacles.length > 0 && <TrailObstacleWarning onPress={() => setShowObstacleModal(true)} />}

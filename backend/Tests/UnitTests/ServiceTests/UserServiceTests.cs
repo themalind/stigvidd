@@ -28,8 +28,16 @@ public class UserServiceTests
         Mock<IContentReportRepository>? contentReportRepo = null,
         Mock<IMailOutboxRepository>? mailOutboxRepo = null,
         StigviddMetrics? metrics = null,
-        Mock<IUserBlockService>? userBlockService = null)
+        Mock<IUserBlockService>? userBlockService = null,
+        Mock<IHikeSubmissionService>? submissionService = null)
     {
+        if (submissionService is null)
+        {
+            submissionService = new Mock<IHikeSubmissionService>();
+            submissionService.Setup(s => s.HandleUserDeleteAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(Result.Ok());
+        }
+
         var cfg = new Mock<IConfiguration>();
         cfg.Setup(c => c["PresentableBaseUrl"]).Returns("http://stigvidd.se/testing/");
         repo ??= new Mock<IUserRepository>();
@@ -62,7 +70,7 @@ public class UserServiceTests
                 .ReturnsAsync(Result.Ok());
         }
 
-        return new UserService(repo.Object, trailobstacleRepo.Object, userResponseFactory, hikeService.Object, reviewService.Object, friendRepo.Object, (userBlockService ?? Utilities.MockFactory.UserBlockServiceHiding()).Object, contentReportRepo.Object, mailOutboxRepo.Object, metrics ?? new StigviddMetrics(), NullLogger<UserService>.Instance);
+        return new UserService(repo.Object, trailobstacleRepo.Object, userResponseFactory, hikeService.Object, submissionService.Object, reviewService.Object, friendRepo.Object, (userBlockService ?? Utilities.MockFactory.UserBlockServiceHiding()).Object, contentReportRepo.Object, mailOutboxRepo.Object, metrics ?? new StigviddMetrics(), NullLogger<UserService>.Instance);
     }
 
     [Fact]

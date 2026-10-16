@@ -32,7 +32,13 @@ jest.mock("@/hooks/useUserLocation", () => ({
 const onClusterOpen = jest.fn();
 const onMapPress = jest.fn();
 
-const ALL_OFF: MapMarkerFilter = { trails: false, shelters: false, firePits: false, accessibility: false };
+const ALL_OFF: MapMarkerFilter = {
+  trails: false,
+  contributions: false,
+  shelters: false,
+  firePits: false,
+  accessibility: false,
+};
 
 function trailMarker(identifier: string, isAccessible = true) {
   return { identifier, name: `Led ${identifier}`, isAccessible, startLatitude: 57.72, startLongitude: 12.94 };
@@ -116,6 +122,28 @@ it("mounts a source only for the kinds the filter asks for", async () => {
   expect(source("trails")).toBeFalsy();
   expect(source("firepits")).toBeTruthy();
   expect(source("shelters")).toBeTruthy();
+});
+
+// keep-comment: user trails share the trails source, so the two filter rows split one marker list
+it("splits curated trails and user trails by their own filter rows", async () => {
+  mockGetTrailMarkers.mockResolvedValue([trailMarker("t1"), { ...trailMarker("u1"), isContribution: true }]);
+  const identifiers = () =>
+    (source("trails")?.props.data.features ?? []).map(
+      (f: { properties: { identifier: string } }) => f.properties.identifier,
+    );
+
+  const first = await show({ trails: true, contributions: false });
+  await flushUntil(() => source("trails")?.props.data.features.length);
+  expect(identifiers()).toEqual(["t1"]);
+  first.unmount();
+
+  const second = await show({ trails: false, contributions: true });
+  await flushUntil(() => source("trails")?.props.data.features.length);
+  expect(identifiers()).toEqual(["u1"]);
+  second.unmount();
+
+  await show({ trails: false, contributions: false });
+  expect(source("trails")).toBeFalsy();
 });
 
 // The accessibility filter applies across every kind at once.

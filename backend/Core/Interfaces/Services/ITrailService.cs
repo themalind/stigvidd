@@ -25,5 +25,8 @@ public interface ITrailService
     Task<Result<IReadOnlyCollection<AdminTrailListItemResponse>>> GetAllTrailsForAdminAsync(CancellationToken ctoken);
     Task<Result<TrailResponse?>> GetTrailForAdminAsync(string identifier, CancellationToken ctoken);
     Task<Result> SetTrailVerifiedAsync(string identifier, bool isVerified, CancellationToken ctoken);
+    Task<Result<IReadOnlyCollection<TrailCardResponse>>> GetPopularContributedTrailsAsync(CancellationToken ctoken);
+    Task<Result<TrailLikeResponse>> GetTrailLikeAsync(string trailIdentifier, string userIdentifier, CancellationToken ctoken);
+    Task<Result<TrailLikeResponse>> SetTrailLikeAsync(string trailIdentifier, string userIdentifier, bool liked, CancellationToken ctoken);
 }
 

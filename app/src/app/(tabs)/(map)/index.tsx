@@ -42,6 +42,7 @@ export default function MapScreen() {
   const [isFocused, setIsFocused] = useState(true);
   const [filters, setFilters] = useState<MapMarkerFilter>({
     trails: true,
+    contributions: true,
     shelters: false,
     firePits: false,
     accessibility: false,

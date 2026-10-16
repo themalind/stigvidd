@@ -95,6 +95,64 @@ namespace Infrastructure.Migrations
                     b.ToTable("CityAreas", "dbo");
                 });
 
+            modelBuilder.Entity("Infrastructure.Data.Entities.ConsentText", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("Locale")
+                        .IsRequired()
+                        .HasMaxLength(8)
+                        .HasColumnType("character varying(8)");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Version")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Kind", "Version", "Locale")
+                        .IsUnique();
+
+                    b.ToTable("ConsentTexts", "dbo");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            CreatedAt = new DateTime(2026, 10, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Kind = "hike-transfer",
+                            Locale = "sv",
+                            Text = "Jag godkänner att jag lämnar ifrån mig den här promenaden till Stigvidd. Text, linje och valda bilder blir Stigvidds. Det går inte att ångra efter att leden publicerats. Din egen promenad kan du fortfarande ta bort.",
+                            Version = "2026-10-15"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            CreatedAt = new DateTime(2026, 10, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Kind = "hike-transfer",
+                            Locale = "en",
+                            Text = "I agree to hand this walk over to Stigvidd. The text, route and chosen photos become Stigvidd's. This cannot be undone once the trail is published. You can still delete your own walk.",
+                            Version = "2026-10-15"
+                        });
+                });
+
             modelBuilder.Entity("Infrastructure.Data.Entities.ContentReport", b =>
                 {
                     b.Property<int>("Id")
@@ -471,6 +529,163 @@ namespace Infrastructure.Migrations
                     b.HasIndex("SharedWithId");
 
                     b.ToTable("HikeShares", "dbo");
+                });
+
+            modelBuilder.Entity("Infrastructure.Data.Entities.HikeSubmission", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("Classification")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ConsentTextId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("DecidedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DecidedBy")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<LineString>("GeoPath")
+                        .IsRequired()
+                        .HasColumnType("geometry(LineString, 4326)")
+                        .HasAnnotation("Sqlite:Srid", 4326);
+
+                    b.Property<string>("GettingThere")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Identifier")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("LastUpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<double>("LongestGapMetres")
+                        .HasColumnType("double precision");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<LineString>("OriginalGeoPath")
+                        .IsRequired()
+                        .HasColumnType("geometry(LineString, 4326)")
+                        .HasAnnotation("Sqlite:Srid", 4326);
+
+                    b.Property<string>("Parking")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("PublicTransport")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int?>("PublishedTrailId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("RejectionReason")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("ShowSubmitterName")
+                        .HasColumnType("boolean");
+
+                    b.Property<int?>("SourceHikeId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Status")
+                        .IsConcurrencyToken()
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("TrailLength")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<DateTime>("TransferAcceptedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ConsentTextId");
+
+                    b.HasIndex("Identifier")
+                        .IsUnique();
+
+                    b.HasIndex("PublishedTrailId")
+                        .IsUnique();
+
+                    b.HasIndex("SourceHikeId")
+                        .IsUnique()
+                        .HasFilter("\"Status\" = 0");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("HikeSubmissions", "dbo");
+                });
+
+            modelBuilder.Entity("Infrastructure.Data.Entities.HikeSubmissionImage", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Height")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("HikeSubmissionId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Identifier")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ImageUrl")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("LastUpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<long>("SizeBytes")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("SourceHikeImageId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Width")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("HikeSubmissionId");
+
+                    b.HasIndex("SourceHikeImageId");
+
+                    b.ToTable("HikeSubmissionImages", "dbo");
                 });
 
             modelBuilder.Entity("Infrastructure.Data.Entities.MailTemplate", b =>
@@ -853,6 +1068,53 @@ namespace Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("Trails", "dbo");
+                });
+
+            modelBuilder.Entity("Infrastructure.Data.Entities.TrailContribution", b =>
+                {
+                    b.Property<int>("TrailId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ConsentTextId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("PublishedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("ShowSubmitterName")
+                        .HasColumnType("boolean");
+
+                    b.Property<int?>("SubmittedByUserId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("TransferAcceptedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("TrailId");
+
+                    b.HasIndex("ConsentTextId");
+
+                    b.HasIndex("SubmittedByUserId");
+
+                    b.ToTable("TrailContributions", "dbo");
+                });
+
+            modelBuilder.Entity("Infrastructure.Data.Entities.TrailContributionLike", b =>
+                {
+                    b.Property<int>("TrailId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("TrailId", "UserId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("TrailContributionLikes", "dbo");
                 });
 
             modelBuilder.Entity("Infrastructure.Data.Entities.TrailImage", b =>
@@ -1645,6 +1907,57 @@ namespace Infrastructure.Migrations
                     b.Navigation("SharedWith");
                 });
 
+            modelBuilder.Entity("Infrastructure.Data.Entities.HikeSubmission", b =>
+                {
+                    b.HasOne("Infrastructure.Data.Entities.ConsentText", "ConsentText")
+                        .WithMany()
+                        .HasForeignKey("ConsentTextId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Infrastructure.Data.Entities.Trail", "PublishedTrail")
+                        .WithMany()
+                        .HasForeignKey("PublishedTrailId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Infrastructure.Data.Entities.Hike", "SourceHike")
+                        .WithMany()
+                        .HasForeignKey("SourceHikeId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Infrastructure.Data.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ConsentText");
+
+                    b.Navigation("PublishedTrail");
+
+                    b.Navigation("SourceHike");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Infrastructure.Data.Entities.HikeSubmissionImage", b =>
+                {
+                    b.HasOne("Infrastructure.Data.Entities.HikeSubmission", "HikeSubmission")
+                        .WithMany("Images")
+                        .HasForeignKey("HikeSubmissionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Infrastructure.Data.Entities.HikeImage", "SourceHikeImage")
+                        .WithMany()
+                        .HasForeignKey("SourceHikeImageId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("HikeSubmission");
+
+                    b.Navigation("SourceHikeImage");
+                });
+
             modelBuilder.Entity("Infrastructure.Data.Entities.MediaReprocessItem", b =>
                 {
                     b.HasOne("Infrastructure.Data.Entities.MediaReprocessJob", "Job")
@@ -1694,6 +2007,51 @@ namespace Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Review");
+                });
+
+            modelBuilder.Entity("Infrastructure.Data.Entities.TrailContribution", b =>
+                {
+                    b.HasOne("Infrastructure.Data.Entities.ConsentText", "ConsentText")
+                        .WithMany()
+                        .HasForeignKey("ConsentTextId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Infrastructure.Data.Entities.User", "SubmittedBy")
+                        .WithMany()
+                        .HasForeignKey("SubmittedByUserId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Infrastructure.Data.Entities.Trail", "Trail")
+                        .WithOne("Contribution")
+                        .HasForeignKey("Infrastructure.Data.Entities.TrailContribution", "TrailId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ConsentText");
+
+                    b.Navigation("SubmittedBy");
+
+                    b.Navigation("Trail");
+                });
+
+            modelBuilder.Entity("Infrastructure.Data.Entities.TrailContributionLike", b =>
+                {
+                    b.HasOne("Infrastructure.Data.Entities.TrailContribution", "Contribution")
+                        .WithMany("Likes")
+                        .HasForeignKey("TrailId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Infrastructure.Data.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Contribution");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Infrastructure.Data.Entities.TrailImage", b =>
@@ -1884,6 +2242,11 @@ namespace Infrastructure.Migrations
                     b.Navigation("Images");
                 });
 
+            modelBuilder.Entity("Infrastructure.Data.Entities.HikeSubmission", b =>
+                {
+                    b.Navigation("Images");
+                });
+
             modelBuilder.Entity("Infrastructure.Data.Entities.MediaReprocessJob", b =>
                 {
                     b.Navigation("Items");
@@ -1896,6 +2259,8 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Infrastructure.Data.Entities.Trail", b =>
                 {
+                    b.Navigation("Contribution");
+
                     b.Navigation("Reviews");
 
                     b.Navigation("SourceLinks");
@@ -1907,6 +2272,11 @@ namespace Infrastructure.Migrations
                     b.Navigation("TrailObstacles");
 
                     b.Navigation("VisitorInformation");
+                });
+
+            modelBuilder.Entity("Infrastructure.Data.Entities.TrailContribution", b =>
+                {
+                    b.Navigation("Likes");
                 });
 
             modelBuilder.Entity("Infrastructure.Data.Entities.TrailImportSession", b =>

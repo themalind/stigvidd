@@ -37,7 +37,7 @@ import { useTranslation } from "react-i18next";
 import { NativeSyntheticEvent, StyleProp, StyleSheet, View, ViewStyle } from "react-native";
 import { ActivityIndicator, Text, useTheme } from "react-native-paper";
 import Map from "./map";
-import { HIGHLIGHT_MARKER_COLORS, MARKER_COLORS, type MarkerColors } from "./marker-styles";
+import { CONTRIBUTION_MARKER_COLORS, HIGHLIGHT_MARKER_COLORS, MARKER_COLORS, type MarkerColors } from "./marker-styles";
 
 type FacilityTypeValue = (typeof FacilityType)[keyof typeof FacilityType];
 
@@ -244,7 +244,7 @@ export default function TrailMarkersMap({
   const { data: trailMarkers, isError: trailMarkersError } = useQuery({
     queryKey: ["trails", "markers"],
     queryFn: getTrailMarkers,
-    enabled: filter.trails,
+    enabled: filter.trails || filter.contributions,
     staleTime: 5 * 60 * 1000,
   });
 
@@ -265,9 +265,11 @@ export default function TrailMarkersMap({
   }, [trailMarkersError, facilitiesError, showError, t]);
 
   const trailFC = useMemo(() => {
-    const markers = (trailMarkers ?? []).filter((m) => !filter.accessibility || m.isAccessible);
+    const markers = (trailMarkers ?? []).filter(
+      (m) => (m.isContribution ? filter.contributions : filter.trails) && (!filter.accessibility || m.isAccessible),
+    );
     return featureCollectionFromMarkers(markers);
-  }, [trailMarkers, filter.accessibility]);
+  }, [trailMarkers, filter.trails, filter.contributions, filter.accessibility]);
 
   const firePitFC = useMemo(() => {
     const items = (facilities ?? []).filter(
@@ -384,7 +386,7 @@ export default function TrailMarkersMap({
           </Marker>
         )}
 
-        {filter.trails && (
+        {(filter.trails || filter.contributions) && (
           <GeoJSONSource
             id="trails"
             ref={trailSourceRef}
@@ -429,7 +431,12 @@ export default function TrailMarkersMap({
               id="trail-points"
               filter={NO_COUNT}
               paint={{
-                "circle-color": MARKER_COLORS.trails.fill,
+                "circle-color": [
+                  "case",
+                  ["==", ["get", "isContribution"], true],
+                  CONTRIBUTION_MARKER_COLORS.fill,
+                  MARKER_COLORS.trails.fill,
+                ],
                 "circle-radius": POINT_RADIUS,
                 "circle-stroke-width": 2,
                 "circle-stroke-color": MARKER_COLORS.trails.stroke,

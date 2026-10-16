@@ -893,3 +893,7 @@ src/api/generated` then fails with "the generated API client is stale" for reaso
   HikeShareInsert's INSERT ... ON CONFLICT DO NOTHING (HikeShareRepository.ShareHikesAsync, HikeShareDistributor) is only
   tested on SQLite in-memory. Recipe: postgis/postgis:17-3.5 container on a spare port plus a dotnet run file app with
   PublishAot=false, migrate, call the repository. Why NULL goes in as a literal: EF has no store type for a raw DBNull.
+- [A MapLibre container sized with Tailwind absolute inset-0 renders at height 0 in web/](maplibre-css-beats-tailwind-v4-layered-utilities.md) —
+  Blank or black map in the admin (hike-submissions review, submission-map.tsx) while the legend still shows. maplibre-gl.css
+  sets unlayered .maplibregl-map position: relative, which beats Tailwind v4 layered utilities (@layer), so absolute/inset-0
+  collapse the container to 0 height. Fix: h-full w-full on the map container. Not the MapTiler key, OSM tiles or the style.
