@@ -55,6 +55,11 @@ public class DataAnonymizerIntegrationTests : IClassFixture<StigViddWebApplicati
             DecidedBy = ModeratorName, DecidedAt = DateTime.UtcNow, DecisionNote = "Pratade med NaturElskaren",
         });
         db.UserBans.Add(new UserBan { UserId = user.Id, BannedBy = ModeratorName, Reason = "Hotade Greta", LiftedBy = ModeratorName, LiftedAt = DateTime.UtcNow });
+        db.UserKeycloakMappings.Add(new UserKeycloakMapping
+        {
+            PackageUserId = user.Id, KeycloakSubjectId = "staging-sub", KeycloakUsername = "staging.person@example.local",
+            NickName = "StagingPerson", Email = "staging.person@example.local",
+        });
 
         var session = new TrailImportSession
         {
@@ -127,6 +132,7 @@ public class DataAnonymizerIntegrationTests : IClassFixture<StigViddWebApplicati
         (await db.EmailVerificationTokens.CountAsync(TestContext.Current.CancellationToken)).Should().Be(0);
         (await db.PasswordResetTokens.CountAsync(TestContext.Current.CancellationToken)).Should().Be(0);
         (await db.OutboxEmails.CountAsync(TestContext.Current.CancellationToken)).Should().Be(0);
+        (await db.UserKeycloakMappings.CountAsync(TestContext.Current.CancellationToken)).Should().Be(0);
     }
 
     [Fact]

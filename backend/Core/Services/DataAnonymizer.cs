@@ -22,7 +22,7 @@ public static class DataAnonymizer
     // Emptied outright: contact channels and live secrets. keep-comment: why these tables are not scrubbed column by column
     public static readonly IReadOnlySet<string> EmptiedTables = new HashSet<string>
     {
-        "UserPushTokens", "EmailVerificationTokens", "PasswordResetTokens", "OutboxEmails",
+        "UserPushTokens", "EmailVerificationTokens", "PasswordResetTokens", "OutboxEmails", "UserKeycloakMappings",
     };
 
     // Every column of every other table. ClassificationTests fails on any column missing here, so a new personal column cannot reach an anonymized export unreviewed. keep-comment: the guard this list exists for
@@ -168,6 +168,7 @@ public static class DataAnonymizer
         await db.EmailVerificationTokens.ExecuteDeleteAsync(ctoken);
         await db.PasswordResetTokens.ExecuteDeleteAsync(ctoken);
         await db.OutboxEmails.ExecuteDeleteAsync(ctoken);
+        await db.UserKeycloakMappings.ExecuteDeleteAsync(ctoken);
     }
 
     private static IReadOnlyDictionary<string, ColumnTreatment> Table(string kept, string replaced = "", string cleared = "")

@@ -4,6 +4,7 @@
 using System.Text.Json;
 using Core.Interfaces.Repositories;
 using Core.Logging;
+using Keycloak.AuthServices.Sdk;
 using Keycloak.AuthServices.Sdk.Admin;
 using Keycloak.AuthServices.Sdk.Admin.Models;
 using Keycloak.AuthServices.Sdk.Admin.Requests.Users;
@@ -131,6 +132,35 @@ public class KeycloakAdminRepository : IKeycloakAdminRepository
         response.EnsureSuccessStatusCode();
 
         return true;
+    }
+
+    public async Task<IReadOnlyList<KeycloakUserSummary>> SearchUsersAsync(string search, int max, CancellationToken ctoken)
+    {
+        var users = await _userClient.GetUsersAsync(
+            _realm,
+            new GetUsersRequestParameters { Search = search, Max = max, BriefRepresentation = true },
+            ctoken);
+
+        return users
+            .Select(u => u.Id is { Length: > 0 } id ? new KeycloakUserSummary(id, u.Username ?? "", u.Email, u.Enabled ?? false) : null)
+            .OfType<KeycloakUserSummary>()
+            .ToList();
+    }
+
+    public async Task<KeycloakUserSummary?> FindUserAsync(string subjectId, CancellationToken ctoken)
+    {
+        try
+        {
+            var user = await _userClient.GetUserAsync(_realm, subjectId, cancellationToken: ctoken);
+
+            return string.IsNullOrEmpty(user?.Id)
+                ? null
+                : new KeycloakUserSummary(user.Id, user.Username ?? "", user.Email, user.Enabled ?? false);
+        }
+        catch (KeycloakHttpClientException ex) when (ex.StatusCode == (int)System.Net.HttpStatusCode.NotFound)
+        {
+            return null;
+        }
     }
 
     private static string KeycloakError(string body)

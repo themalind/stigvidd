@@ -9,6 +9,8 @@ import MigrationPage from "./migration-page";
 const api = vi.hoisted(() => ({ exportData: vi.fn(), importData: vi.fn(), getTransferInfo: vi.fn() }));
 vi.mock("@/api/admin", () => api);
 
+vi.mock("@/components/user-mapping-card", () => ({ default: () => <div data-testid="user-mapping-card" /> }));
+
 const toasts = vi.hoisted(() => ({ success: vi.fn(), error: vi.fn() }));
 vi.mock("sonner", () => ({ toast: toasts }));
 

@@ -4,7 +4,9 @@
 using System.Diagnostics;
 using System.IO.Compression;
 using Core.Interfaces.Services;
+using Infrastructure;
 using Infrastructure.Data;
+using Infrastructure.Data.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -25,6 +27,7 @@ public class DataTransferService : IDataTransferService
     private readonly IWebDavService _webDav;
     private readonly ITrailImportFileStore _trailImportFiles;
     private readonly IMaintenanceGate _maintenance;
+    private readonly IDbMigrationRunner _migrationRunner;
     private readonly ILogger<DataTransferService> _logger;
     private readonly string _appConnectionString;
     private readonly string _keycloakDbName;
@@ -35,6 +38,7 @@ public class DataTransferService : IDataTransferService
         IWebDavService webDav,
         ITrailImportFileStore trailImportFiles,
         IMaintenanceGate maintenance,
+        IDbMigrationRunner migrationRunner,
         IConfiguration configuration,
         ILogger<DataTransferService> logger)
     {
@@ -42,6 +46,7 @@ public class DataTransferService : IDataTransferService
         _webDav = webDav;
         _trailImportFiles = trailImportFiles;
         _maintenance = maintenance;
+        _migrationRunner = migrationRunner;
         _logger = logger;
         _appConnectionString = configuration.GetConnectionString("StigVidd")
             ?? throw new InvalidOperationException("Connection string 'StigVidd' not found.");
@@ -231,14 +236,22 @@ public class DataTransferService : IDataTransferService
             var appDump = ExtractEntry(zip, AppDumpEntry, tempDir)
                 ?? throw new InvalidOperationException($"Archive is missing '{AppDumpEntry}'.");
 
+            // The restore replaces the whole schema, this table included. keep-comment: why the rows are held in memory across it
+            var savedMappings = _sharedServices ? await ReadMappingsAsync(ctoken) : [];
+
             await RestoreAppDatabaseAsync(appConn, appDump, tempDir, ctoken);
             NpgsqlConnection.ClearAllPools();
+
+            if (_sharedServices)
+                await ReinstateMappingsAsync(savedMappings, ctoken);
 
             if (plan.NeutralizeOutbound)
             {
                 await using var db = await _dbContextFactory.CreateDbContextAsync(ctoken);
                 await DataAnonymizer.NeutralizeOutboundAsync(db, ctoken);
             }
+
+            var mappingsApplied = await ApplyMappingsAsync(savedMappings.Count, ctoken);
 
             if (plan.RestoreKeycloak && ExtractEntry(zip, KeycloakDumpEntry, tempDir) is { } keycloakDump)
             {
@@ -256,6 +269,15 @@ public class DataTransferService : IDataTransferService
             var trailImportFiles = await RestoreTrailImportFilesAsync(zip, ctoken);
 
             var notes = plan.Notes.ToList();
+            if (savedMappings.Count > 0)
+            {
+                notes.Add(mappingsApplied switch
+                {
+                    null => $"{savedMappings.Count} saved user mapping(s) are kept but could not be applied; see the API log.",
+                    var applied when applied == savedMappings.Count => $"All {applied} saved user mapping(s) were applied.",
+                    var applied => $"{applied} of {savedMappings.Count} saved user mapping(s) were applied; the rest name users the archive does not contain.",
+                });
+            }
             if (mediaFailed > 0)
                 notes.Add($"{mediaFailed} media file(s) could not be uploaded; see the API log.");
             if (manifest.MediaMissing > 0)
@@ -283,6 +305,59 @@ public class DataTransferService : IDataTransferService
         finally
         {
             TryDeleteDir(tempDir);
+        }
+    }
+
+    private async Task<List<UserKeycloakMapping>> ReadMappingsAsync(CancellationToken ctoken)
+    {
+        await using var db = await _dbContextFactory.CreateDbContextAsync(ctoken);
+        return await db.UserKeycloakMappings.AsNoTracking().ToListAsync(ctoken);
+    }
+
+    // Runs before anything else can fail, so the saved rows are back in the database as early as possible. keep-comment: ordering constraint
+    private async Task ReinstateMappingsAsync(List<UserKeycloakMapping> saved, CancellationToken ctoken)
+    {
+        try
+        {
+            // An archive older than the mapping table restored without it, and its history row is gone too. Migrating now, as the restart would, keeps that restart from trying to create a table this code made by hand. keep-comment: why the runner and not CREATE TABLE
+            await _migrationRunner.RunMigrationsAsync(ctoken);
+
+            if (saved.Count == 0)
+                return;
+
+            await using var db = await _dbContextFactory.CreateDbContextAsync(ctoken);
+            await using var transaction = await db.Database.BeginTransactionAsync(ctoken);
+
+            await db.UserKeycloakMappings.ExecuteDeleteAsync(ctoken);
+            db.UserKeycloakMappings.AddRange(saved);
+            await db.SaveChangesAsync(ctoken);
+
+            await transaction.CommitAsync(ctoken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "The user mappings could not be put back after the restore and must be made again. Users: {Mappings}",
+                string.Join(", ", saved.Select(m => $"{m.PackageUserId}->{m.KeycloakSubjectId}")));
+            throw;
+        }
+    }
+
+    // A mapping that cannot be applied is kept, so it can be fixed and the import repeated; it must not undo the restore that already happened. keep-comment: why this swallows
+    private async Task<int?> ApplyMappingsAsync(int savedCount, CancellationToken ctoken)
+    {
+        if (savedCount == 0)
+            return 0;
+
+        try
+        {
+            await using var db = await _dbContextFactory.CreateDbContextAsync(ctoken);
+            return await UserKeycloakMappingApplier.ApplyAsync(db, ctoken);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _logger.LogError(ex, "The saved user mappings are in the database but could not be applied to the restored users.");
+            return null;
         }
     }
 
