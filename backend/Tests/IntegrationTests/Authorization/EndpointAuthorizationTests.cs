@@ -104,6 +104,10 @@ public class EndpointAuthorizationTests : IClassFixture<StigViddWebApplicationFa
         "GET /api/v1/admin/export",
         "POST /api/v1/admin/import",
         "GET /api/v1/admin/transfer-info",
+        "DELETE /api/v1/admin/user-mappings/{packageUserId:int}",
+        "GET /api/v1/admin/keycloak-users",
+        "GET /api/v1/admin/user-mappings",
+        "PUT /api/v1/admin/user-mappings/{packageUserId:int}",
 
         // The Boras sync, gated at the class.
         "DELETE /api/v1/admin/trail-import/sessions/{id:int}",

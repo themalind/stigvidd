@@ -90,4 +90,30 @@ public class KeycloakAdminRepositoryTests
         sent.Enabled.Should().BeTrue();
         sent.EmailVerified.Should().BeTrue();
     }
+
+    [Fact]
+    public async Task FindUserAsync_WhenKeycloakAnswersNotFound_ReturnsNull()
+    {
+        // Arrange
+        var http = new HttpClient(new StubHandler(HttpStatusCode.NotFound)) { BaseAddress = new Uri("http://keycloak.local/") };
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?> { ["Keycloak:realm"] = Realm })
+            .Build();
+        var repository = new KeycloakAdminRepository(new KeycloakClient(http), configuration, NullLogger<KeycloakAdminRepository>.Instance);
+
+        // Act
+        var user = await repository.FindUserAsync("no-such-subject", TestContext.Current.CancellationToken);
+
+        // Assert
+        user.Should().BeNull();
+    }
+
+    private sealed class StubHandler(HttpStatusCode status) : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) =>
+            Task.FromResult(new HttpResponseMessage(status)
+            {
+                Content = new StringContent("{\"error\":\"User not found\"}", System.Text.Encoding.UTF8, "application/json"),
+            });
+    }
 }

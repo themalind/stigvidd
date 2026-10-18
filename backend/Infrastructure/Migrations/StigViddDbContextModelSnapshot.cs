@@ -1655,6 +1655,38 @@ namespace Infrastructure.Migrations
                     b.ToTable("UserBlocks", "dbo");
                 });
 
+            modelBuilder.Entity("Infrastructure.Data.Entities.UserKeycloakMapping", b =>
+                {
+                    b.Property<int>("PackageUserId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("KeycloakSubjectId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("KeycloakUsername")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("NickName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("PackageUserId");
+
+                    b.HasIndex("KeycloakSubjectId")
+                        .IsUnique();
+
+                    b.ToTable("UserKeycloakMappings", "dbo");
+                });
+
             modelBuilder.Entity("Infrastructure.Data.Entities.UserPushToken", b =>
                 {
                     b.Property<int>("Id")

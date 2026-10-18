@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import UserMappingCard from "@/components/user-mapping-card";
 import { exportData, getTransferInfo, importData } from "@/api/admin";
 import type { DataTransferInfoResponse } from "@/api/generated/model";
 
@@ -102,6 +103,8 @@ export default function MigrationPage() {
             </Button>
           </CardFooter>
         </Card>
+
+        {sharedServices && <UserMappingCard />}
 
         {/* Import */}
         <Card className="border-destructive/50">

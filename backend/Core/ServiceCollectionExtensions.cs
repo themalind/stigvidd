@@ -89,6 +89,8 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IFriendService, FriendService>();
         services.AddTransient<IUserBlockService, UserBlockService>();
         services.AddTransient<IAdminUserService, AdminUserService>();
+        services.AddTransient<IUserKeycloakMappingService, UserKeycloakMappingService>();
+        services.AddTransient<IUserKeycloakMappingRepository, UserKeycloakMappingRepository>();
         services.AddTransient<ICityAreaService, CityAreaService>();
         services.AddTransient<ITrailImportAnalysisService, TrailImportAnalysisService>();
         services.AddTransient<ITrailImportService, TrailImportService>();

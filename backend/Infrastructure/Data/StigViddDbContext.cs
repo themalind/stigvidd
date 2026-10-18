@@ -30,6 +30,7 @@ public class StigViddDbContext(DbContextOptions<StigViddDbContext> options) : Db
     public DbSet<FriendRequest> FriendRequests { get; set; }
     public DbSet<UserBlock> UserBlocks { get; set; }
     public DbSet<UserBan> UserBans { get; set; }
+    public DbSet<UserKeycloakMapping> UserKeycloakMappings { get; set; }
     public DbSet<UserPushToken> UserPushTokens { get; set; }
     public DbSet<CityArea> CityAreas { get; set; }
     public DbSet<TrailSourceLink> TrailSourceLinks { get; set; }

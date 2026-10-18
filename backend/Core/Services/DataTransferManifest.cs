@@ -83,7 +83,7 @@ public static class DataTransferPreflight
             notes.Add("Queued mail, push tokens and verification/reset codes were cleared: this host sends through production's mail server.");
 
         if (manifest.Anonymized)
-            notes.Add("The archive is anonymized: users have placeholder names and addresses and cannot sign in.");
+            notes.Add("The archive is anonymized: users have placeholder names and addresses and cannot sign in, except those mapped to a Keycloak user.");
 
         return new ImportPlan(restoreKeycloak, sharedServices, notes);
     }

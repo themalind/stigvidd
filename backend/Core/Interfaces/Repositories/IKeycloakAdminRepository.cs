@@ -43,7 +43,15 @@ public interface IKeycloakAdminRepository
     /// expected answer to a user typing a weak password, not a fault.
     /// </remarks>
     Task<bool> SetPasswordAsync(string subjectId, string newPassword, CancellationToken ctoken);
+
+    /// <summary>Finds users by username, email or name. Capped, because the realm may hold every user of another environment.</summary>
+    Task<IReadOnlyList<KeycloakUserSummary>> SearchUsersAsync(string search, int max, CancellationToken ctoken);
+
+    /// <summary>The Keycloak user with this subject id, or null when there is none.</summary>
+    Task<KeycloakUserSummary?> FindUserAsync(string subjectId, CancellationToken ctoken);
 }
+
+public record KeycloakUserSummary(string Id, string Username, string? Email, bool Enabled);
 
 /// <summary>Thrown when Keycloak rejects user creation because the user already exists.</summary>
 public class KeycloakUserConflictException : Exception
