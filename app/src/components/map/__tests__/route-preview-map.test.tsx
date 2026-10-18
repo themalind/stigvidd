@@ -226,7 +226,7 @@ it("offers directions to the start of the walk", async () => {
 
   expect(alert).toHaveBeenCalledWith(
     "Vägbeskrivning",
-    "Vill du öppna vägbeskrivning till ledens start i din kartapp?",
+    expect.stringContaining("Kolla parkeringsinformationen under Praktisk information"),
     expect.any(Array),
   );
 });

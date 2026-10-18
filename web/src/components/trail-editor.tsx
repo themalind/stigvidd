@@ -1,7 +1,12 @@
 // SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { CLASSIFICATION, type TrailShortInfoResponse, type UpdateTrailRequest } from "@/types/types";
+import {
+  CLASSIFICATION,
+  type TrailShortInfoResponse,
+  type UpdateTrailLinkRequest,
+  type UpdateTrailRequest,
+} from "@/types/types";
 import { Button } from "./ui/button";
 import { Checkbox } from "./ui/checkbox";
 import { Input } from "./ui/input";
@@ -18,7 +23,7 @@ import {
 } from "./ui/sheet";
 import { Textarea } from "./ui/textarea";
 import { TagInput } from "./tag-input";
-import { Edit } from "lucide-react";
+import { Edit, Plus, X } from "lucide-react";
 import { useState } from "react";
 import { getTrailByIdentifier, updateTrail } from "@/api/trail";
 import { toast } from "sonner";
@@ -49,6 +54,7 @@ const emptyForm = (): UpdateTrailRequest => ({
     maintainedBy: "",
     winterMaintenance: false,
   },
+  links: [],
 });
 
 // Mirrors the max lengths in UpdateTrailRequestValidator; over these the API
@@ -64,7 +70,24 @@ const LIMITS = {
   parking: 400,
   illuminationText: 400,
   maintainedBy: 100,
+  linkTitle: 100,
+  link: 500,
 } as const;
+
+function isHttpUrl(value: string) {
+  try {
+    const url = new URL(value.trim());
+    return url.protocol === "http:" || url.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
+function linkProblem(link: UpdateTrailLinkRequest): string | null {
+  if (!link.title.trim()) return "Give the link a title.";
+  if (!isHttpUrl(link.link)) return "Enter a full address starting with https://";
+  return null;
+}
 
 function FieldHeader({ label, value, max }: { label: string; value: string; max: number }) {
   return (
@@ -109,6 +132,7 @@ export default function TrailEditor({ data, selected }: Props) {
           maintainedBy: trail.visitorInformation?.maintainedBy ?? "",
           winterMaintenance: trail.visitorInformation?.winterMaintenance ?? false,
         },
+        links: (trail.trailLinksResponse ?? []).map(({ identifier, title, link }) => ({ identifier, title, link })),
       });
       setLoaded(true);
     } catch {
@@ -116,6 +140,13 @@ export default function TrailEditor({ data, selected }: Props) {
     } finally {
       setLoading(false);
     }
+  }
+
+  const links = formData.links ?? [];
+  const linksValid = links.every((link) => linkProblem(link) === null);
+
+  function setLink(index: number, patch: Partial<UpdateTrailLinkRequest>) {
+    setFormData({ ...formData, links: links.map((link, i) => (i === index ? { ...link, ...patch } : link)) });
   }
 
   async function handleSubmit() {
@@ -412,12 +443,61 @@ export default function TrailEditor({ data, selected }: Props) {
                 />
                 <p>Winter Maintenance</p>
               </div>
+
+              <Separator className="mt-3" />
+
+              <p className="font-semibold">Links</p>
+
+              {links.length === 0 ? <p className="text-muted-foreground text-sm">No links yet.</p> : null}
+
+              {links.map((link, index) => {
+                const problem = linkProblem(link);
+                return (
+                  <div key={link.identifier ?? `new-${index}`} className="flex flex-col gap-2 rounded-[5px] border p-3">
+                    <div className="flex items-center gap-2">
+                      <Input
+                        aria-label={`Link ${index + 1} title`}
+                        placeholder="Title"
+                        value={link.title}
+                        maxLength={LIMITS.linkTitle}
+                        onChange={(e) => setLink(index, { title: e.target.value })}
+                      />
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        aria-label={`Remove link ${index + 1}`}
+                        onClick={() => setFormData({ ...formData, links: links.filter((_, i) => i !== index) })}
+                      >
+                        <X />
+                      </Button>
+                    </div>
+                    <Input
+                      aria-label={`Link ${index + 1} address`}
+                      placeholder="https://"
+                      type="url"
+                      value={link.link}
+                      maxLength={LIMITS.link}
+                      onChange={(e) => setLink(index, { link: e.target.value })}
+                    />
+                    {problem ? <p className="text-destructive text-xs">{problem}</p> : null}
+                  </div>
+                );
+              })}
+
+              <Button
+                variant="outline"
+                className="mb-4 self-start"
+                onClick={() => setFormData({ ...formData, links: [...links, { title: "", link: "" }] })}
+              >
+                <Plus />
+                Add link
+              </Button>
             </div>
           </div>
         )}
 
         <SheetFooter>
-          <Button onClick={handleSubmit} disabled={submitting || loading || !loaded}>
+          <Button onClick={handleSubmit} disabled={submitting || loading || !loaded || !linksValid}>
             {submitting ? "Saving..." : "Save changes"}
           </Button>
           <SheetClose asChild>

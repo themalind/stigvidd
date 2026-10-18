@@ -11,6 +11,7 @@ import type {
 import {
   adminTrailsGetAllTrails,
   adminTrailsGetTrail,
+  adminTrailsGetTrailPath,
   adminTrailsSetTrailVerified,
   adminTrailsUpdateTrail,
   getAdminTrailsAddTrailImagesUrl,
@@ -18,6 +19,7 @@ import {
   getAdminTrailsSetTrailSymbolUrl,
 } from "./generated/admin-trails/admin-trails";
 import { customFetch } from "./mutator";
+import type { LngLat } from "@/lib/geometry-edit";
 import { appendProcessingOptions } from "./image-options";
 
 // These wrappers preserve the app's existing signatures/return types while
@@ -32,6 +34,11 @@ export async function getAllTrails(): Promise<AdminTrailListItem[]> {
 
 export async function getTrailByIdentifier({ identifier }: { identifier: string }): Promise<TrailResponse> {
   return (await adminTrailsGetTrail(identifier)) as TrailResponse;
+}
+
+export async function getTrailPath(identifier: string): Promise<LngLat[]> {
+  const { coordinates } = await adminTrailsGetTrailPath(identifier);
+  return (coordinates ?? []).filter((pair): pair is LngLat => pair.length === 2);
 }
 
 export async function setTrailVerified(identifier: string, isVerified: boolean): Promise<void> {

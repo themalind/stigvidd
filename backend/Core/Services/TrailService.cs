@@ -159,6 +159,19 @@ public class TrailService : ITrailService
         return ToTrailResult(result, identifier);
     }
 
+    public async Task<Result<AdminTrailPathResponse>> GetTrailPathForAdminAsync(string identifier, CancellationToken ctoken)
+    {
+        var result = await _trailRepository.GetTrailPathForAdminAsync(identifier, ctoken);
+
+        if (result.Status == RepositoryResultStatus.Error)
+            return Result.Fail<AdminTrailPathResponse>(new Message(500, "An error occurred while fetching the trail path."));
+
+        if (!result.IsSuccess)
+            return Result.Fail<AdminTrailPathResponse>(new Message(404, $"Trail with identifier {identifier} not found."));
+
+        return Result.Ok(AdminTrailPathResponse.Create(result.Value));
+    }
+
     private static Result<TrailResponse?> ToTrailResult(RepositoryResult<TrailWithContributionProjection> result, string identifier)
     {
         if (result.Status == RepositoryResultStatus.Error)
@@ -503,6 +516,18 @@ public class TrailService : ITrailService
                 MaintainedBy = request.VisitorInformation.MaintainedBy ?? string.Empty,
                 WinterMaintenance = request.VisitorInformation.WinterMaintenance ?? false,
             };
+        }
+
+        if (request.Links != null)
+        {
+            trail.TrailLinks = request.Links
+                .Select(link => new TrailLink
+                {
+                    Identifier = link.Identifier ?? Guid.NewGuid().ToString(),
+                    Title = link.Title.Trim(),
+                    Link = link.Link.Trim(),
+                })
+                .ToList();
         }
 
         var result = await _trailRepository.UpdateTrailAsync(trail, ctoken);

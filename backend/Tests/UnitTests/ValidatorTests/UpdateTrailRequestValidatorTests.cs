@@ -520,4 +520,86 @@ public class UpdateTrailRequestValidatorTests
 
         result.Errors.Select(e => e.PropertyName).Should().BeEmpty();
     }
+
+    // --- Links --- keep-comment: section marker, matches the file's other sections
+
+    [Theory]
+    [InlineData("https://www.boras.se/friluftsliv")]
+    [InlineData("http://example.com")]
+    public void Validate_WithHttpLink_ShouldPass(string link)
+    {
+        var request = ValidRequest();
+        request.Links = [new UpdateTrailLinkRequest { Title = "Kommunen", Link = link }];
+
+        var result = _validator.Validate(request);
+
+        result.IsValid.Should().BeTrue();
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("www.boras.se")]
+    [InlineData("javascript:alert(1)")]
+    [InlineData("ftp://example.com/file")]
+    public void Validate_WithLinkThatIsNotAnAbsoluteHttpUrl_ShouldFail(string link)
+    {
+        var request = ValidRequest();
+        request.Links = [new UpdateTrailLinkRequest { Title = "Kommunen", Link = link }];
+
+        var result = _validator.Validate(request);
+
+        result.IsValid.Should().BeFalse();
+    }
+
+    [Fact]
+    public void Validate_WithEmptyLinkTitle_ShouldFail()
+    {
+        var request = ValidRequest();
+        request.Links = [new UpdateTrailLinkRequest { Title = "", Link = "https://www.boras.se" }];
+
+        var result = _validator.Validate(request);
+
+        result.IsValid.Should().BeFalse();
+    }
+
+    [Fact]
+    public void Validate_WithLinkTitleAtMaxLength_ShouldPassAndOneOverShouldFail()
+    {
+        var request = ValidRequest();
+        request.Links = [new UpdateTrailLinkRequest { Title = new string('a', 100), Link = "https://www.boras.se" }];
+        _validator.Validate(request).IsValid.Should().BeTrue();
+
+        request.Links = [new UpdateTrailLinkRequest { Title = new string('a', 101), Link = "https://www.boras.se" }];
+        _validator.Validate(request).IsValid.Should().BeFalse();
+    }
+
+    [Fact]
+    public void Validate_WithDuplicateLinkIdentifiers_ShouldFail()
+    {
+        var request = ValidRequest();
+        request.Links =
+        [
+            new UpdateTrailLinkRequest { Identifier = "same", Title = "A", Link = "https://a.se" },
+            new UpdateTrailLinkRequest { Identifier = "same", Title = "B", Link = "https://b.se" },
+        ];
+
+        var result = _validator.Validate(request);
+
+        result.IsValid.Should().BeFalse();
+    }
+
+    [Fact]
+    public void Validate_WithSeveralNewLinks_ShouldPass()
+    {
+        var request = ValidRequest();
+        request.Links =
+        [
+            new UpdateTrailLinkRequest { Title = "A", Link = "https://a.se" },
+            new UpdateTrailLinkRequest { Title = "B", Link = "https://b.se" },
+        ];
+
+        var result = _validator.Validate(request);
+
+        result.IsValid.Should().BeTrue();
+    }
 }

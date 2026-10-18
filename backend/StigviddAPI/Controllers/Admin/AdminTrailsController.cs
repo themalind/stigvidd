@@ -61,6 +61,22 @@ public class AdminTrailsController : StigViddController
         return Ok(result.Value);
     }
 
+    [HttpGet("{identifier}/path")]
+    public async Task<ActionResult<AdminTrailPathResponse>> GetTrailPath(string identifier, CancellationToken ctoken)
+    {
+        var result = await _trailService.GetTrailPathForAdminAsync(identifier, ctoken);
+
+        if (!result.Success && result.Message != null)
+        {
+            _logger.LogInformation(
+                "GetTrailPath: Failed to fetch the path of trail with identifier: {identifier}.", identifier);
+
+            return ToActionResult(result.Message);
+        }
+
+        return Ok(result.Value);
+    }
+
     [HttpPut("{identifier}/verified")]
     public async Task<ActionResult> SetTrailVerified(
         string identifier,

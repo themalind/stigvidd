@@ -22,6 +22,7 @@ public interface ITrailRepository
     Task<RepositoryResult> UpdateTrailSymbolAsync(string trailIdentifier, string symbolPath, CancellationToken ctoken);
     Task<RepositoryResult<IReadOnlyCollection<T>>> GetAllTrailsForAdminAsync<T>(Expression<Func<Trail, T>> selector, CancellationToken ctoken);
     Task<RepositoryResult<T>> GetTrailByIdentifierForAdminAsync<T>(string identifier, Expression<Func<Trail, T>> selector, CancellationToken ctoken);
+    Task<RepositoryResult<IReadOnlyList<double[]>>> GetTrailPathForAdminAsync(string identifier, CancellationToken ctoken);
     Task<RepositoryResult> SetTrailVerifiedAsync(string identifier, bool isVerified, CancellationToken ctoken);
     Task<RepositoryResult<IReadOnlyCollection<Core.Services.ContributionRankingInput>>> GetContributionRankingInputsAsync(CancellationToken ctoken);
     Task<RepositoryResult<TrailLikeState>> GetTrailLikeAsync(string trailIdentifier, string userIdentifier, CancellationToken ctoken);

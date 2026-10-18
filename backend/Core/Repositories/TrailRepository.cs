@@ -76,6 +76,31 @@ public class TrailRepository : ITrailRepository
         }
     }
 
+    public async Task<RepositoryResult<IReadOnlyList<double[]>>> GetTrailPathForAdminAsync(string identifier, CancellationToken ctoken)
+    {
+        try
+        {
+            using var context = await _context.CreateDbContextAsync(ctoken);
+
+            var match = await context.Trails
+                .AsNoTracking()
+                .Where(t => t.Identifier == identifier)
+                .Select(t => new { t.GeoPath })
+                .FirstOrDefaultAsync(ctoken);
+
+            if (match is null)
+                return RepositoryResult<IReadOnlyList<double[]>>.NotFound();
+
+            return RepositoryResult<IReadOnlyList<double[]>>.Success(
+                match.GeoPath is null ? [] : GeoPathSerializer.ToCoordinatePairs(match.GeoPath));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "TrailRepository: GetTrailPathForAdminAsync -> Something went wrong when fetching the path for trail with identifier {identifier}.", identifier);
+            return RepositoryResult<IReadOnlyList<double[]>>.Error();
+        }
+    }
+
     public async Task<RepositoryResult<IReadOnlyCollection<T>>> GetPopularTrailOverviewsAsync<T>(
         double? userLatitude, double? userLongitude, Expression<Func<Trail, T>> selector, CancellationToken ctoken)
     {
@@ -339,11 +364,15 @@ public class TrailRepository : ITrailRepository
 
             var existing = await context.Trails
                 .Include(t => t.VisitorInformation)
+                .Include(t => t.TrailLinks)
                 .Where(t => t.Identifier == trail.Identifier)
                 .FirstOrDefaultAsync(ctoken);
 
             if (existing is null)
                 return RepositoryResult<Trail>.NotFound();
+
+            if (trail.TrailLinks != null)
+                ReplaceTrailLinks(context, existing, trail.TrailLinks);
 
             existing.Name = trail.Name;
             existing.TrailLength = trail.TrailLength;
@@ -384,6 +413,30 @@ public class TrailRepository : ITrailRepository
         {
             _logger.LogError(ex, "TrailRepository: UpdateTrailAsync -> Something went wrong when updating trail with identifier {Identifier}.", trail.Identifier);
             return RepositoryResult<Trail>.Error();
+        }
+    }
+
+    private static void ReplaceTrailLinks(StigViddDbContext context, Trail existing, ICollection<TrailLink> links)
+    {
+        existing.TrailLinks ??= [];
+        var incoming = links.ToDictionary(l => l.Identifier);
+
+        context.TrailLinks.RemoveRange(existing.TrailLinks.Where(l => !incoming.ContainsKey(l.Identifier)).ToList());
+
+        var byIdentifier = existing.TrailLinks.ToDictionary(l => l.Identifier);
+
+        foreach (var link in links)
+        {
+            if (byIdentifier.TryGetValue(link.Identifier, out var match))
+            {
+                match.Title = link.Title;
+                match.Link = link.Link;
+                match.LastUpdatedAt = DateTime.UtcNow;
+            }
+            else
+            {
+                existing.TrailLinks.Add(new TrailLink { Title = link.Title, Link = link.Link });
+            }
         }
     }
 
