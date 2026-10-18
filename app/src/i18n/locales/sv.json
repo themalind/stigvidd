@@ -157,7 +157,7 @@
     "start": "Start",
     "directions": "Vägbeskrivning",
     "directionsTitle": "Vägbeskrivning",
-    "directionsMessage": "Vill du öppna vägbeskrivning till ledens start i din kartapp?",
+    "directionsMessage": "Vägbeskrivningen går till ledens första startpunkt, som inte alltid ligger vid parkeringen. Kolla parkeringsinformationen under Praktisk information innan du åker.\n\nVill du öppna vägbeskrivningen i din kartapp?",
     "directionsConfirm": "Öppna i Kartor",
     "locating": "Hittar din position…",
     "centerOnUser": "Visa min position",

@@ -157,7 +157,7 @@
     "start": "Start",
     "directions": "Directions",
     "directionsTitle": "Directions",
-    "directionsMessage": "Open directions to the trailhead in your maps app?",
+    "directionsMessage": "Directions lead to the trail's first starting point, which isn't always where you can park. Check the parking details under Practical information before you go.\n\nOpen directions in your maps app?",
     "directionsConfirm": "Open in Maps",
     "locating": "Finding your location…",
     "centerOnUser": "Show my location",
