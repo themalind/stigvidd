@@ -17,9 +17,11 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.stigvidd.app",
-      "buildNumber": "7",
+      "buildNumber": "8",
       "infoPlist": {
-        "UIBackgroundModes": ["location"],
+        "UIBackgroundModes": [
+          "location"
+        ],
         "ITSAppUsesNonExemptEncryption": false
       }
     },
