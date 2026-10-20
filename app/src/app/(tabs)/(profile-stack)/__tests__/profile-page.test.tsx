@@ -221,7 +221,7 @@ it("asks for the password before deleting the account", async () => {
   show();
 
   expect(screen.queryByText("Skriv in ditt lösenord")).toBeNull();
-  fireEvent.press(screen.getByText("Avsluta konto"));
+  fireEvent.press(screen.getByText("Radera konto"));
   await flushUntil(() => screen.queryByText("Skriv in ditt lösenord"));
 
   expect(screen.getByText("Skriv in ditt lösenord")).toBeTruthy();
@@ -231,7 +231,7 @@ it("asks for the password before deleting the account", async () => {
 it("closes the delete modal again without deleting anything", async () => {
   show();
 
-  fireEvent.press(screen.getByText("Avsluta konto"));
+  fireEvent.press(screen.getByText("Radera konto"));
   await flushUntil(() => screen.queryByTestId("delete-account-close"));
   fireEvent.press(screen.getByTestId("delete-account-close"));
   await settle();
@@ -294,7 +294,7 @@ it("keeps the account actions apart, and underlined", () => {
 
   expect(screen.getByTestId("profile-account-actions")).toHaveStyle({ alignItems: "center", paddingTop: 30, gap: 20 });
   expect(screen.getByText("Logga ut")).toHaveStyle({ textDecorationLine: "underline" });
-  expect(screen.getByText("Avsluta konto")).toHaveStyle({ textDecorationLine: "underline" });
+  expect(screen.getByText("Radera konto")).toHaveStyle({ textDecorationLine: "underline" });
 });
 
 it("keeps the profile on screen when a later refetch fails", () => {

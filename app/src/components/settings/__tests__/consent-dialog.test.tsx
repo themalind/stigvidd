@@ -5,9 +5,6 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-// The first thing a new install shows: a statistics consent, and beside it the location
-// disclosure. Only the consent is what the buttons decide.
-
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { fireEvent, screen, waitFor } from "@testing-library/react-native";
 
@@ -34,13 +31,13 @@ async function showDialog() {
   return rendered;
 }
 
-it("explains what the position is used for, beside the statistics question", async () => {
+// App Review 5.1.1(iv) rejects a "Nej tack" ahead of the location prompt. keep-comment: store policy
+it("says nothing about location", async () => {
   await showDialog();
 
-  expect(screen.getByTestId("consent-location-note")).toHaveTextContent(sv.privacy.askLocationNote);
+  expect(screen.queryByText(/frågar telefonen|använda din (position|plats)/i)).toBeNull();
 });
 
-// The location disclosure is information, so it gets no button of its own.
 it("offers exactly the two statistics answers and no third button", async () => {
   await showDialog();
 
