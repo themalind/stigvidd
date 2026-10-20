@@ -105,7 +105,7 @@ interface Props {
 }
 
 // keep-comment: must match HikeSubmissionConsent in the backend; bump both when publish.consent or consentNote changes
-export const PUBLISH_CONSENT_VERSION = "2026-10-15";
+export const PUBLISH_CONSENT_VERSION = "2026-10-19";
 
 // keep-comment: mounted only while open, so the form always starts from the hike's current values
 export default function PublishHikeModal({ hike, nickName, onDismiss }: Props) {

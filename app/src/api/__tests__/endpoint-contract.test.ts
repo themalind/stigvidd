@@ -156,7 +156,7 @@ const createSubmissionRequest = {
   gettingThere: "Buss 3",
   showSubmitterName: true,
   acceptTransfer: true,
-  consentVersion: "2026-10-15",
+  consentVersion: "2026-10-19",
   consentLocale: "sv",
   trimStartIndex: 2,
   imageIdentifiers: ["i1"],

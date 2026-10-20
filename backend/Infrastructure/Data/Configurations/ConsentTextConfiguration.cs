@@ -39,6 +39,24 @@ public class ConsentTextConfiguration : IEntityTypeConfiguration<ConsentText>
                 Locale = "en",
                 Text = "I agree to hand this walk over to Stigvidd. The text, route and chosen photos become Stigvidd's. This cannot be undone once the trail is published. You can still delete your own walk.",
                 CreatedAt = created,
+            },
+            new ConsentText
+            {
+                Id = 3,
+                Kind = HikeTransfer,
+                Version = "2026-10-19",
+                Locale = "sv",
+                Text = "Jag ger Stigvidd rätt att publicera den här promenaden som en led. Stigvidd får för alltid och utan ersättning använda, ändra och publicera text, linje och valda bilder. Rätten går inte att återkalla efter att leden publicerats. Du behåller upphovsrätten till dina bilder och kan fortfarande ta bort din egen promenad.",
+                CreatedAt = new DateTime(2026, 10, 19, 0, 0, 0, DateTimeKind.Utc),
+            },
+            new ConsentText
+            {
+                Id = 4,
+                Kind = HikeTransfer,
+                Version = "2026-10-19",
+                Locale = "en",
+                Text = "I give Stigvidd the right to publish this walk as a trail. Stigvidd may use, edit and publish the text, route and chosen photos, forever and free of charge. This right cannot be withdrawn once the trail is published. You keep the copyright to your photos and can still delete your own walk.",
+                CreatedAt = new DateTime(2026, 10, 19, 0, 0, 0, DateTimeKind.Utc),
             });
     }
 }

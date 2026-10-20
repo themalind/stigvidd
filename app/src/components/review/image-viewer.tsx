@@ -33,6 +33,7 @@ interface ModalProps {
   onDismiss: () => void;
   initialIndex?: number;
   onDelete?: (image: ViewerImage) => Promise<unknown>;
+  deleteNotes?: string[];
   onReport?: (image: ViewerImage) => void;
 }
 
@@ -43,7 +44,15 @@ const DOT_INDICATOR_SIZE = DOT_SIZE + DOT_SPACING;
 const ITEM_HEIGHT = height * 0.5;
 const ITEM_WIDTH = width * 0.7;
 
-export default function ImageViewer({ images, visible, onDismiss, initialIndex, onDelete, onReport }: ModalProps) {
+export default function ImageViewer({
+  images,
+  visible,
+  onDismiss,
+  initialIndex,
+  onDelete,
+  deleteNotes = [],
+  onReport,
+}: ModalProps) {
   const theme = useTheme();
   const { t } = useTranslation();
   const scrollX = React.useRef(new Animated.Value(0)).current;
@@ -177,7 +186,7 @@ export default function ImageViewer({ images, visible, onDismiss, initialIndex, 
         visible={showDeleteDialog}
         onDismiss={() => setShowDeleteDialog(false)}
         title={t("hike.deleteImageTitle")}
-        infoText={[t("hike.deleteImageConfirm")]}
+        infoText={[t("hike.deleteImageConfirm"), ...deleteNotes]}
         textColor={theme.colors.onSurface}
         confirmText={t("common.delete")}
         cancelText={t("common.cancel")}

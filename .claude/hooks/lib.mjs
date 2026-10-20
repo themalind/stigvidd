@@ -357,7 +357,17 @@ export function deny(reason) {
   return 0;
 }
 
-/** Put text in front of Claude in the same turn without blocking anything. */
+/** PreToolUse: let the call through and put text in front of Claude. speak() would block it, since exit 2 denies there. */
+export function advise(text) {
+  process.stdout.write(
+    JSON.stringify({
+      hookSpecificOutput: { hookEventName: "PreToolUse", additionalContext: text },
+    }) + "\n",
+  );
+  return 0;
+}
+
+/** Put text in front of Claude in the same turn; blocks the call on PreToolUse, not on PostToolUse. */
 export function speak(text) {
   process.stderr.write(text.endsWith("\n") ? text : text + "\n");
   return 2;

@@ -140,6 +140,11 @@ it("spells out what deleting the account does to the data", async () => {
       "Dina recensionsbetyg och hinderrapporter står kvar utan koppling till dig – texten och bilderna raderas.",
     ),
   ).toBeTruthy();
+  expect(
+    screen.getByText(
+      "Leder du publicerat finns kvar i Stigvidd, men utan ditt namn. Inskick som inte publicerats raderas.",
+    ),
+  ).toBeTruthy();
 });
 
 it("keeps the account when the confirmation is cancelled", async () => {

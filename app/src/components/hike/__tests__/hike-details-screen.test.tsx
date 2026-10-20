@@ -570,4 +570,48 @@ describe("publishing", () => {
 
     expect(screen.queryByTestId("publish-submit")).toBeNull();
   });
+
+  const submission = (status: string) => ({
+    identifier: "s1",
+    name: "x",
+    trailLength: 1,
+    status,
+    createdAt: "",
+    sourceHikeIdentifier: "hike-1",
+    likeCount: 0,
+  });
+  const submissionNote = /Ditt inskick för publicering påverkas inte/;
+
+  it.each(["Pending", "Approved"])("says a %s submission outlives the walk before deleting it", async (status) => {
+    mockGetSubmissions.mockResolvedValue([submission(status)]);
+    await show();
+    await settle();
+
+    fireEvent.press(screen.getByTestId("hike-delete"));
+
+    expect(screen.getByText(submissionNote)).toBeTruthy();
+  });
+
+  it("says nothing about a submission that was rejected", async () => {
+    mockGetSubmissions.mockResolvedValue([submission("Rejected")]);
+    await show();
+    await settle();
+
+    fireEvent.press(screen.getByTestId("hike-delete"));
+
+    expect(screen.queryByText(submissionNote)).toBeNull();
+  });
+
+  it("says a pending submission keeps its copy of a deleted photo", async () => {
+    mockGetSubmissions.mockResolvedValue([submission("Pending")]);
+    await show({ images: [{ identifier: "img-1", imageUrl: "https://media.stigvidd.se/hikes/1.jpg" }] });
+    await settle();
+
+    fireEvent.press(screen.getAllByTestId("hike-image-thumb")[0]);
+    await settle();
+    fireEvent.press(screen.getByTestId("image-viewer-delete"));
+    await settle();
+
+    expect(screen.getByText(/ligger kopian kvar där/)).toBeTruthy();
+  });
 });

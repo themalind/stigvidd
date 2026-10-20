@@ -77,8 +77,8 @@ public class HikeSubmissionRepositoryTests : TestBase
     }
 
     [Theory]
-    [InlineData("sv", 1)]
-    [InlineData("en", 2)]
+    [InlineData("sv", 3)]
+    [InlineData("en", 4)]
     public async Task GetConsentTextId_FindsTheSeededWordingForTheCurrentVersion(string locale, int expectedId)
     {
         var (repository, _) = Build(Submission());
@@ -146,6 +146,52 @@ public class HikeSubmissionRepositoryTests : TestBase
     }
 
     [Fact]
+    public async Task Reject_KeepsOnlyTheNameAndClearsTheRouteAndTexts()
+    {
+        var (repository, factory) = Build(Submission());
+
+        await repository.RejectAsync(SubmissionIdentifier, "Mest gata", "admin", TestContext.Current.CancellationToken);
+
+        await using var db = await factory.CreateDbContextAsync(TestContext.Current.CancellationToken);
+        var submission = await db.HikeSubmissions.SingleAsync(TestContext.Current.CancellationToken);
+        submission.Name.Should().Be("Kvällsrunda");
+        submission.UserId.Should().Be(1);
+        submission.SourceHikeId.Should().Be(1);
+        submission.GeoPath.Should().BeNull();
+        submission.OriginalGeoPath.Should().BeNull();
+        submission.Description.Should().BeEmpty();
+        submission.Parking.Should().BeEmpty();
+        submission.GettingThere.Should().BeEmpty();
+        submission.PublicTransport.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task DeleteByUserId_RemovesEverySubmissionButLeavesThePublishedTrail()
+    {
+        var (repository, factory) = Build(Submission());
+        var approved = await ApproveOkAsync(repository);
+        await using (var seed = await factory.CreateDbContextAsync(TestContext.Current.CancellationToken))
+        {
+            var pending = Submission();
+            pending.Identifier = "sub-pending";
+            pending.Images = [new HikeSubmissionImage { ImageUrl = "trails/pending-copy.jpeg" }];
+            seed.HikeSubmissions.Add(pending);
+            await seed.SaveChangesAsync(TestContext.Current.CancellationToken);
+        }
+
+        var result = await repository.DeleteByUserIdAsync(1, TestContext.Current.CancellationToken);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().Equal("trails/pending-copy.jpeg");
+        await using var db = await factory.CreateDbContextAsync(TestContext.Current.CancellationToken);
+        (await db.HikeSubmissions.AnyAsync(TestContext.Current.CancellationToken)).Should().BeFalse();
+        var trail = await db.Trails.Include(t => t.TrailImages)
+            .SingleAsync(t => t.Identifier == approved.TrailIdentifier, TestContext.Current.CancellationToken);
+        trail.TrailImages.Should().NotBeNull();
+        trail.TrailImages.Select(i => i.ImageUrl).Should().Equal("trails/copy.jpeg");
+    }
+
+    [Fact]
     public async Task Withdraw_ByAnotherUser_IsNotFound()
     {
         var (repository, _) = Build(Submission());
@@ -176,6 +222,8 @@ public class HikeSubmissionRepositoryTests : TestBase
         result.IsSuccess.Should().BeTrue();
         await using var db = await factory.CreateDbContextAsync(TestContext.Current.CancellationToken);
         var submission = await db.HikeSubmissions.SingleAsync(TestContext.Current.CancellationToken);
+        submission.GeoPath.Should().NotBeNull();
+        submission.OriginalGeoPath.Should().NotBeNull();
         submission.GeoPath.NumPoints.Should().Be(3);
         submission.TrailLength.Should().Be(1.4m);
         submission.LongestGapMetres.Should().Be(52.5);

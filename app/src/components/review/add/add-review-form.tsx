@@ -98,7 +98,14 @@ export default function AddReviewForm({ trailIdentifier, onSuccess }: ReviewForm
         <Controller
           control={control}
           render={({ field: { onChange, value } }) => (
-            <StarRating rating={value} onChange={onChange} color={theme.colors.onSurface} starSize={25} step="full" />
+            <StarRating
+              rating={value}
+              // Library bug: step="full" doesn't clamp, so a drag past the last star yields 6+. keep-comment: workaround
+              onChange={(rating) => onChange(Math.min(5, rating))}
+              color={theme.colors.onSurface}
+              starSize={25}
+              step="full"
+            />
           )}
           name="rating"
         />

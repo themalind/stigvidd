@@ -1,6 +1,6 @@
 # Stigvidd
 
-Stigvidd is a full-stack hiking and trail discovery application built as a thesis project. It lets users explore hiking trails in the Borås area, record their own hikes with GPS tracking, rate and review trails, and report obstacles along the way.
+Stigvidd is a full-stack hiking and trail discovery application built as a thesis project. It lets users explore hiking trails in the Borås area, record their own hikes with GPS tracking, publish a hike as a trail for everyone, rate and review trails, and report obstacles along the way.
 
 The project consists of four parts: a cross-platform mobile app, a public website, a web-based admin dashboard, and a REST API backend.
 
@@ -130,8 +130,12 @@ stigvidd/
 - Report trail obstacles/hazards with a voting system
 - Hike pages for your own and shared hikes: the route, stats, notes, and up to 10 photos
   from the walk (EXIF and GPS data are stripped on upload)
-- Share completed hikes with friends, who can follow the route, see the photos, and
-  reshare it if the owner allowed that
+- Share completed hikes with several friends at once, who can follow the route, see the
+  photos, and reshare it if the owner allowed that
+- Publish a hike as a trail: trim the start and end, pick photos and give Stigvidd a permanent
+  licence to them (the user keeps the copyright); an admin reviews it before it appears. Published trails are marked on the map,
+  can be liked, and the popular ones show on the home screen. Once published, a trail outlives
+  the hike it came from and the account that sent it — only the submitter's name is removed
 - Report offensive or incorrect reviews, obstacles and shared hike photos for moderation;
   a report hides the content until an admin decides
 - Block other users; banned accounts keep reading but can no longer post
@@ -141,8 +145,9 @@ stigvidd/
 - Email verification on registration, followed by a welcome mail
 - User profiles with hike history
 - Admin dashboard: trail statistics, trails, facilities and media, the trail-import review,
-  the moderation queue and user bans, editable mail templates, and whole-environment
-  export/import
+  the review of published hikes (edit the route and text, approve or reject), the moderation
+  queue and user bans, editable mail templates, and whole-environment export/import with
+  user mappings that keep sign-ins working across an import
 
 > **In progress:** Swedish/English language support (i18n) is being built but not yet user-facing.
 

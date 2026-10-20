@@ -81,6 +81,13 @@ export default function HikeDetailsScreen({ hikeFollowRoute }: { hikeFollowRoute
       [hikeIdentifier],
     ),
   );
+  const { data: hasSubmission = false } = useMyHikeSubmissions(
+    useCallback(
+      (submissions: HikeSubmission[]) =>
+        submissions.some((s) => s.sourceHikeIdentifier === hikeIdentifier && s.status !== "Rejected"),
+      [hikeIdentifier],
+    ),
+  );
 
   const {
     data: found,
@@ -255,7 +262,11 @@ export default function HikeDetailsScreen({ hikeFollowRoute }: { hikeFollowRoute
         visible={showDeleteDialog}
         onDismiss={() => setShowDeleteDialog(false)}
         title={t("hike.deleteTitle")}
-        infoText={[t("hike.deleteConfirm"), t("hike.deleteSharedNote")]}
+        infoText={[
+          t("hike.deleteConfirm"),
+          t("hike.deleteSharedNote"),
+          ...(hasSubmission ? [t("hike.deleteSubmissionNote")] : []),
+        ]}
         textColor={theme.colors.onSurface}
         confirmText={t("hike.delete")}
         cancelText={t("common.cancel")}
@@ -269,6 +280,7 @@ export default function HikeDetailsScreen({ hikeFollowRoute }: { hikeFollowRoute
         initialIndex={viewerIndex ?? 0}
         onDismiss={() => setViewerIndex(null)}
         onDelete={(image) => hikeImages.deleteImage(image.identifier)}
+        deleteNotes={hasPendingSubmission ? [t("hike.deleteImageSubmissionNote")] : []}
       />
       <ShareHikeModal
         visible={showShareModal}

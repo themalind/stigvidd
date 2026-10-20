@@ -279,6 +279,7 @@ public class HikeSubmissionRepository : IHikeSubmissionRepository
             var urls = submission.Images.Select(i => i.ImageUrl).ToList();
 
             context.HikeSubmissionImages.RemoveRange(submission.Images);
+            ClearContent(submission);
             submission.Status = HikeSubmissionStatus.Rejected;
             submission.RejectionReason = reason;
             submission.DecidedBy = decidedBy;
@@ -298,6 +299,18 @@ public class HikeSubmissionRepository : IHikeSubmissionRepository
             _logger.LogError(ex, "HikeSubmissionRepository: RejectAsync -> Something went wrong for submission {Identifier}.", identifier);
             return RepositoryResult<IReadOnlyCollection<string>>.Error();
         }
+    }
+
+    // keep-comment: the name stays so the submitter can see which walk the rejection reason is about
+    private static void ClearContent(HikeSubmission submission)
+    {
+        submission.GeoPath = null;
+        submission.OriginalGeoPath = null;
+        submission.Description = string.Empty;
+        submission.Parking = string.Empty;
+        submission.GettingThere = string.Empty;
+        submission.PublicTransport = string.Empty;
+        submission.LongestGapMetres = 0;
     }
 
     public async Task<RepositoryResult<ApprovedSubmission>> ApproveAsync(string identifier, string decidedBy, IReadOnlyCollection<string> placeholderImagePaths, CancellationToken ctoken)

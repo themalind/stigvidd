@@ -180,11 +180,11 @@ it("measures a path in metres", () => {
 
 // keep-comment: the server stores its own copy of this wording per version, so a text change without a version bump would record the wrong consent
 it("keeps the consent wording the server stores for this version", () => {
-  expect(PUBLISH_CONSENT_VERSION).toBe("2026-10-15");
+  expect(PUBLISH_CONSENT_VERSION).toBe("2026-10-19");
   expect(`${sv.publish.consent} ${sv.publish.consentNote}`).toBe(
-    "Jag godkänner att jag lämnar ifrån mig den här promenaden till Stigvidd. Text, linje och valda bilder blir Stigvidds. Det går inte att ångra efter att leden publicerats. Din egen promenad kan du fortfarande ta bort.",
+    "Jag ger Stigvidd rätt att publicera den här promenaden som en led. Stigvidd får för alltid och utan ersättning använda, ändra och publicera text, linje och valda bilder. Rätten går inte att återkalla efter att leden publicerats. Du behåller upphovsrätten till dina bilder och kan fortfarande ta bort din egen promenad.",
   );
   expect(`${en.publish.consent} ${en.publish.consentNote}`).toBe(
-    "I agree to hand this walk over to Stigvidd. The text, route and chosen photos become Stigvidd's. This cannot be undone once the trail is published. You can still delete your own walk.",
+    "I give Stigvidd the right to publish this walk as a trail. Stigvidd may use, edit and publish the text, route and chosen photos, forever and free of charge. This right cannot be withdrawn once the trail is published. You keep the copyright to your photos and can still delete your own walk.",
   );
 });

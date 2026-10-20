@@ -177,6 +177,16 @@ it("only lets whole stars be picked, which is what the API accepts", () => {
   expect(screen.UNSAFE_getByType(StarRating as never).props.step).toBe("full");
 });
 
+it("sends five stars when the drag overshoots the last star", async () => {
+  show();
+
+  await setRating(7);
+  await submit();
+
+  expect(screen.queryByText("Sätt ett betyg")).toBeNull();
+  expect(mockMutate).toHaveBeenCalledWith(expect.objectContaining({ rating: 5 }));
+});
+
 it("refuses a rating below one star", async () => {
   show();
 

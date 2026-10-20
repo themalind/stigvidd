@@ -15,8 +15,9 @@ public class HikeSubmission : BaseEntity
 
     public required string Name { get; set; }
     public string Description { get; set; } = string.Empty;
-    public required LineString GeoPath { get; set; }
-    public required LineString OriginalGeoPath { get; set; }
+    // keep-comment: null once rejected; a rejection keeps only that it happened, not the route
+    public LineString? GeoPath { get; set; }
+    public LineString? OriginalGeoPath { get; set; }
     public decimal TrailLength { get; set; }
     public double LongestGapMetres { get; set; }
     public int Classification { get; set; }

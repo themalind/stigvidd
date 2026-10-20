@@ -150,6 +150,24 @@ namespace Infrastructure.Migrations
                             Locale = "en",
                             Text = "I agree to hand this walk over to Stigvidd. The text, route and chosen photos become Stigvidd's. This cannot be undone once the trail is published. You can still delete your own walk.",
                             Version = "2026-10-15"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            CreatedAt = new DateTime(2026, 10, 19, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Kind = "hike-transfer",
+                            Locale = "sv",
+                            Text = "Jag ger Stigvidd rätt att publicera den här promenaden som en led. Stigvidd får för alltid och utan ersättning använda, ändra och publicera text, linje och valda bilder. Rätten går inte att återkalla efter att leden publicerats. Du behåller upphovsrätten till dina bilder och kan fortfarande ta bort din egen promenad.",
+                            Version = "2026-10-19"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            CreatedAt = new DateTime(2026, 10, 19, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Kind = "hike-transfer",
+                            Locale = "en",
+                            Text = "I give Stigvidd the right to publish this walk as a trail. Stigvidd may use, edit and publish the text, route and chosen photos, forever and free of charge. This right cannot be withdrawn once the trail is published. You keep the copyright to your photos and can still delete your own walk.",
+                            Version = "2026-10-19"
                         });
                 });
 
@@ -559,7 +577,6 @@ namespace Infrastructure.Migrations
                         .HasColumnType("text");
 
                     b.Property<LineString>("GeoPath")
-                        .IsRequired()
                         .HasColumnType("geometry(LineString, 4326)")
                         .HasAnnotation("Sqlite:Srid", 4326);
 
@@ -582,7 +599,6 @@ namespace Infrastructure.Migrations
                         .HasColumnType("text");
 
                     b.Property<LineString>("OriginalGeoPath")
-                        .IsRequired()
                         .HasColumnType("geometry(LineString, 4326)")
                         .HasAnnotation("Sqlite:Srid", 4326);
 
