@@ -70,8 +70,8 @@ Core/TrailImport/         own namespaces, NOT global using (Core/Results, Core/S
   `openobserve` = production `3Igh0Ez9tpaLNBgzzVouYA1NyT5`, `openobserve-staging` = staging
   `3KeRfxpDWf9Hf2CiVsulKJpHWTL` ([note](docs/notes/openobserve-mcp-org-is-not-default.md)). Device-side errors
   (push token, token refresh) are only in `stigvidd_app_logs`, not `stigvidd_api_logs`; select columns, not `_timestamp, *`.
-- **Secrets**: `.env`, `mail-config/`, `*firebase-adminsdk*.json` and `DEPLOYMENT.md` hold real credentials.
-  Never commit or echo them.
+- **Secrets**: `.env`, `mail-config/` and `*firebase-adminsdk*.json` hold real credentials. Never commit or echo
+  them. `DEPLOYMENT.md` is a tracked, public runbook: names variables only, never values.
 - **CodeGraph**: where `.codegraph/` exists, use `codegraph_explore` before grep. A denied search passes on retry.
 - **Edit with Edit/Write**, not a python/sed/heredoc rewrite through Bash: that skips the generated-file, comment
   and token guards and the per-edit build and lint (~570 such edits across the first 27 sessions).
