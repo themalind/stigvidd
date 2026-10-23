@@ -214,6 +214,23 @@ it("says the limit is reached when the server answers 429", async () => {
   });
 });
 
+it("explains what to write in each field from the info button by the heading", async () => {
+  await open();
+
+  fireEvent.press(screen.getByLabelText("Vad ska jag skriva?"));
+
+  expect(screen.getByText(/^Beskrivning: /)).toBeTruthy();
+  expect(screen.getByText(/^Ta sig dit: /)).toBeTruthy();
+});
+
+it("gives photo advice from the info button by the photos heading", async () => {
+  await open();
+
+  fireEvent.press(screen.getByLabelText("Tips om bilder"));
+
+  expect(screen.getByText("Undvik bilder där människor syns, och bilder som kan vara stötande.")).toBeTruthy();
+});
+
 it("tells a walk without photos that example images are used", async () => {
   await open({ images: [] });
 

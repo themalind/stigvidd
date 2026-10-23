@@ -6,15 +6,15 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { BORDER_RADIUS } from "@/constants/constants";
-import { asTranslationKey } from "@/i18n";
 import { DIFFICULTIES } from "@/data/trail-content";
+import { asTranslationKey } from "@/i18n";
 import { classificationParser } from "@/utils/classification-parser";
 import { getDifficultyIcon } from "@/utils/getDifficultyIcon";
 import { BlurView } from "expo-blur";
+import { useTranslation } from "react-i18next";
 import { Dimensions, Pressable, StyleSheet, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { Icon, Modal, Portal, Text, useTheme } from "react-native-paper";
-import { useTranslation } from "react-i18next";
 
 interface Props {
   difficulty: number;
@@ -78,7 +78,7 @@ export default function DifficultyInfoModal({ difficulty, visible, onDismiss }: 
 
 const s = StyleSheet.create({
   modalContainerStyle: {
-    height: height * 0.8,
+    height: height * 0.7,
     borderRadius: BORDER_RADIUS,
     padding: 10,
   },

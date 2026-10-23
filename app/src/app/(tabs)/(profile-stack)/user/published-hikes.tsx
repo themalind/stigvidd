@@ -11,9 +11,11 @@ import AlertDialog from "@/components/alert-dialog";
 import BackButton from "@/components/back-button";
 import ErrorView from "@/components/error-view";
 import LikeCount from "@/components/like-count";
+import RouteThumbnail from "@/components/hike/route-thumbnail";
 import LoadingIndicator from "@/components/loading-indicator";
 import { BORDER_RADIUS, SCREEN_PADDING } from "@/constants/constants";
-import { HikeSubmission, HikeSubmissionStatus } from "@/data/types";
+import { Hike, HikeSubmission, HikeSubmissionStatus } from "@/data/types";
+import { useMyHikes } from "@/hooks/hike/useMyHikes";
 import { HIKE_SUBMISSIONS_QUERY_ROOT, useMyHikeSubmissions } from "@/hooks/hike/useMyHikeSubmissions";
 import { formatDate } from "@/utils/format-date";
 import { formatDistanceKm } from "@/utils/format-distance";
@@ -25,7 +27,9 @@ import { useSetAtom } from "jotai";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { FlatList, Pressable, StyleSheet, View } from "react-native";
-import { Icon, MD3Theme, Text, useTheme } from "react-native-paper";
+import { Icon, IconButton, MD3Theme, Text, useTheme } from "react-native-paper";
+
+const THUMBNAIL_SIZE = 64;
 
 function statusColors(status: HikeSubmissionStatus, theme: MD3Theme) {
   switch (status) {
@@ -38,12 +42,16 @@ function statusColors(status: HikeSubmissionStatus, theme: MD3Theme) {
   }
 }
 
+const routesByHike = (hikes: Hike[]) =>
+  new Map(hikes.flatMap((h) => (h.coordinates ? [[h.identifier, h.coordinates] as const] : [])));
+
 interface RowProps {
   submission: HikeSubmission;
+  coordinates?: string;
   onWithdraw: (submission: HikeSubmission) => void;
 }
 
-function SubmissionRow({ submission, onWithdraw }: RowProps) {
+function SubmissionRow({ submission, coordinates, onWithdraw }: RowProps) {
   const theme = useTheme();
   const { t } = useTranslation();
   const colors = statusColors(submission.status, theme);
@@ -72,7 +80,9 @@ function SubmissionRow({ submission, onWithdraw }: RowProps) {
         {submission.imageUrl ? (
           <Image source={{ uri: submission.imageUrl }} style={s.thumbnail} contentFit="cover" />
         ) : (
-          <View style={[s.thumbnail, { backgroundColor: theme.colors.surfaceVariant }]} />
+          <View testID={`submission-route-${submission.identifier}`}>
+            <RouteThumbnail coordinates={coordinates} identifier={submission.identifier} size={THUMBNAIL_SIZE} />
+          </View>
         )}
         <View style={s.flex}>
           <Text style={s.name} numberOfLines={1}>
@@ -89,22 +99,21 @@ function SubmissionRow({ submission, onWithdraw }: RowProps) {
           </Text>
         </View>
         {published && <Icon source="chevron-right" size={20} />}
+        {submission.status !== "Approved" && (
+          <IconButton
+            testID={`submission-withdraw-${submission.identifier}`}
+            icon="undo-variant"
+            iconColor={theme.colors.onSurfaceVariant}
+            accessibilityLabel={t("publish.withdraw")}
+            onPress={() => onWithdraw(submission)}
+          />
+        )}
       </View>
       {submission.status === "Rejected" && submission.rejectionReason && (
         <Text style={[s.reason, { backgroundColor: theme.colors.background }]}>
           <Text style={s.bold}>{`${t("publish.fromStigvidd")} `}</Text>
           {submission.rejectionReason}
         </Text>
-      )}
-      {submission.status !== "Approved" && (
-        <Pressable
-          testID={`submission-withdraw-${submission.identifier}`}
-          style={s.withdraw}
-          onPress={() => onWithdraw(submission)}
-          accessibilityRole="button"
-        >
-          <Text style={{ color: theme.colors.error }}>{t("publish.withdraw")}</Text>
-        </Pressable>
       )}
     </Pressable>
   );
@@ -118,6 +127,7 @@ export default function PublishedHikesScreen() {
   const setSuccessMsg = useSetAtom(showSuccessAtom);
   const [toWithdraw, setToWithdraw] = useState<HikeSubmission | null>(null);
   const { data, isLoading, isError, error, refetch } = useMyHikeSubmissions();
+  const { data: routes } = useMyHikes(routesByHike);
 
   const withdraw = useMutation({
     mutationFn: (submission: HikeSubmission) => withdrawHikeSubmission(submission.identifier),
@@ -145,7 +155,13 @@ export default function PublishedHikesScreen() {
         data={data ?? []}
         keyExtractor={(item) => item.identifier}
         contentContainerStyle={s.list}
-        renderItem={({ item }) => <SubmissionRow submission={item} onWithdraw={setToWithdraw} />}
+        renderItem={({ item }) => (
+          <SubmissionRow
+            submission={item}
+            coordinates={item.sourceHikeIdentifier ? routes?.get(item.sourceHikeIdentifier) : undefined}
+            onWithdraw={setToWithdraw}
+          />
+        )}
         ListEmptyComponent={<Text style={s.empty}>{t("publish.empty")}</Text>}
       />
       <AlertDialog
@@ -195,8 +211,8 @@ const s = StyleSheet.create({
     gap: 12,
   },
   thumbnail: {
-    width: 64,
-    height: 64,
+    width: THUMBNAIL_SIZE,
+    height: THUMBNAIL_SIZE,
     borderRadius: BORDER_RADIUS,
   },
   flex: {
@@ -226,12 +242,6 @@ const s = StyleSheet.create({
   },
   bold: {
     fontFamily: "Inter_600SemiBold",
-  },
-  withdraw: {
-    alignSelf: "center",
-    minHeight: 44,
-    justifyContent: "center",
-    paddingHorizontal: 12,
   },
   empty: {
     textAlign: "center",

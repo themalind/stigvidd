@@ -11,6 +11,8 @@ import { showErrorAtom, showSuccessAtom } from "@/atoms/snackbar-atoms";
 import Map from "@/components/map/map";
 import { routeCasingPaint } from "@/components/map/marker-styles";
 import FormTextField from "@/components/form-text-field";
+import InfoButton from "@/components/info-button";
+import InfoHeading from "@/components/info-heading";
 import ModalFormScrollView from "@/components/modal-form-scroll-view";
 import DifficultyInfoModal from "@/components/trail/difficulty-info-modal";
 import { BORDER_RADIUS, MAX_PENDING_SUBMISSIONS } from "@/constants/constants";
@@ -253,7 +255,19 @@ export default function PublishHikeModal({ hike, nickName, onDismiss }: Props) {
             </View>
 
             <View style={s.section}>
-              <Text variant="titleSmall">{t("publish.aboutTitle")}</Text>
+              <InfoHeading
+                label={t("publish.aboutTitle")}
+                labelVariant="titleSmall"
+                infoTitle={t("publish.aboutInfoTitle")}
+                infoText={[
+                  t("publish.aboutInfoName"),
+                  t("publish.aboutInfoCity"),
+                  t("publish.aboutInfoDescription"),
+                  t("publish.aboutInfoVariation"),
+                  t("publish.aboutInfoGettingThere"),
+                  t("publish.aboutInfoParking"),
+                ]}
+              />
               <FormTextField
                 name="name"
                 testID="publish-name"
@@ -290,15 +304,11 @@ export default function PublishHikeModal({ hike, nickName, onDismiss }: Props) {
               />
               <View style={s.labelRow}>
                 <Text variant="labelLarge">{t("publish.difficulty")}</Text>
-                <Pressable
+                <InfoButton
                   testID="publish-difficulty-help"
-                  hitSlop={16}
-                  onPress={() => setShowDifficultyInfo(true)}
-                  accessibilityRole="button"
                   accessibilityLabel={t("trail.difficultiesTitle")}
-                >
-                  <Icon source="information" size={17} color={theme.colors.onSurfaceVariant} />
-                </Pressable>
+                  onPress={() => setShowDifficultyInfo(true)}
+                />
               </View>
               <Controller
                 control={control}
@@ -366,7 +376,12 @@ export default function PublishHikeModal({ hike, nickName, onDismiss }: Props) {
             </View>
 
             <View style={s.section}>
-              <Text variant="titleSmall">{t("publish.imagesTitle")}</Text>
+              <InfoHeading
+                label={t("publish.imagesTitle")}
+                labelVariant="titleSmall"
+                infoTitle={t("publish.imagesInfoTitle")}
+                infoText={[t("publish.imagesInfoDaylight"), t("publish.imagesInfoPeople")]}
+              />
               <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
                 {images.length > 0 ? t("publish.imagesHint") : t("publish.noImages")}
               </Text>

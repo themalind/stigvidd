@@ -131,7 +131,11 @@ it("says it is working, and takes no second submit while it is", async () => {
 it("opens each help dialog on its own", async () => {
   show();
 
-  const helpButtons = screen.getAllByTestId("icon-information-slab-circle-outline");
+  const helpButtons = [
+    screen.getByLabelText("Sätt ett betyg ⭐️⭐️"),
+    screen.getByLabelText("Lägg till bilder"),
+    screen.getByLabelText("Skriv något"),
+  ];
   expect(helpButtons).toHaveLength(3);
 
   fireEvent.press(helpButtons[0]);

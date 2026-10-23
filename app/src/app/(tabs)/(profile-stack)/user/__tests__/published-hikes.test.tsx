@@ -18,6 +18,11 @@ jest.mock("@/api/hike-submissions", () => ({
   withdrawHikeSubmission: (...args: unknown[]) => mockWithdraw(...args),
 }));
 
+const mockGetHikes = jest.fn();
+jest.mock("@/api/hikes", () => ({
+  getAllHikesByUserId: () => mockGetHikes(),
+}));
+
 const mockNavigate = jest.fn();
 jest.mock("expo-router", () => ({
   router: { navigate: (...args: unknown[]) => mockNavigate(...args), back: jest.fn() },
@@ -48,6 +53,7 @@ function submission(overrides: Partial<HikeSubmission>): HikeSubmission {
 beforeEach(() => {
   jest.clearAllMocks();
   mockWithdraw.mockResolvedValue(undefined);
+  mockGetHikes.mockResolvedValue([]);
   jest.spyOn(Date, "now").mockImplementation(() => (clock += 1000));
 });
 
@@ -103,13 +109,47 @@ it("opens the published trail in the profile stack", async () => {
 it("withdraws a pending submission after confirming", async () => {
   await show([submission({ identifier: "b" })]);
 
-  fireEvent.press(screen.getByTestId("submission-withdraw-b"));
+  fireEvent.press(screen.getByLabelText("Dra tillbaka"));
   expect(mockWithdraw).not.toHaveBeenCalled();
 
-  fireEvent.press(screen.getAllByText("Dra tillbaka")[1]);
+  fireEvent.press(screen.getByText("Dra tillbaka"));
   await settle();
 
   expect(mockWithdraw).toHaveBeenCalledWith("b");
+});
+
+it("draws the walk's route when the submission has no photo", async () => {
+  mockGetHikes.mockResolvedValue([
+    {
+      identifier: "h1",
+      coordinates: JSON.stringify([
+        { latitude: 57.72, longitude: 12.94 },
+        { latitude: 57.73, longitude: 12.95 },
+      ]),
+    },
+  ]);
+  await show([submission({ identifier: "b", sourceHikeIdentifier: "h1" })]);
+  await flushUntil(() => screen.queryByTestId("submission-route-b"));
+
+  expect(screen.getByTestId("submission-route-b")).toBeTruthy();
+  expect(screen.queryByTestId("route-thumbnail-fallback", { includeHiddenElements: true })).toBeNull();
+});
+
+it("falls back to an icon when the walk behind the submission is gone", async () => {
+  mockGetHikes.mockResolvedValue([
+    {
+      identifier: "other-hike",
+      coordinates: JSON.stringify([
+        { latitude: 57.72, longitude: 12.94 },
+        { latitude: 57.73, longitude: 12.95 },
+      ]),
+    },
+  ]);
+  await show([submission({ identifier: "b", sourceHikeIdentifier: "deleted-hike" })]);
+  await settle();
+
+  expect(screen.getByTestId("submission-route-b")).toBeTruthy();
+  expect(screen.getByTestId("route-thumbnail-fallback", { includeHiddenElements: true })).toBeTruthy();
 });
 
 it("explains how to publish when there is nothing yet", async () => {

@@ -107,6 +107,7 @@ const s = StyleSheet.create({
   content: {
     gap: 8,
     paddingHorizontal: 16,
+    paddingTop: 12,
     paddingBottom: 16,
   },
   point: {

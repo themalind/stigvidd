@@ -52,7 +52,7 @@ function RouteThumbnail({ coordinates, identifier, size = DEFAULT_SIZE, backgrou
           <Circle cx={route.start[0]} cy={route.start[1]} r={3} fill={line} />
         </Svg>
       ) : (
-        <MaterialCommunityIcons name="map-legend" size={24} color={line} />
+        <MaterialCommunityIcons testID="route-thumbnail-fallback" name="map-legend" size={24} color={line} />
       )}
     </View>
   );
