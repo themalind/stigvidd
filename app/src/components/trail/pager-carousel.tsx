@@ -28,9 +28,17 @@ interface PagerCarouselProps {
   data: TrailOverview[];
   onItemPress?: (item: TrailOverview) => void;
   containerPadding?: number;
+  imageRadius?: number;
+  textInset?: number;
 }
 
-export default function PagerCarousel({ data, onItemPress, containerPadding = 24 }: PagerCarouselProps) {
+export default function PagerCarousel({
+  data,
+  onItemPress,
+  containerPadding = 24,
+  imageRadius = BORDER_RADIUS,
+  textInset = 2,
+}: PagerCarouselProps) {
   const theme = useTheme();
   const listRef = useRef<FlatList<TrailOverview>>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -85,14 +93,14 @@ export default function PagerCarousel({ data, onItemPress, containerPadding = 24
               <View>
                 <ExpoImage
                   source={imageSource(item)}
-                  style={{ width, height: imageHeight, borderRadius: BORDER_RADIUS }}
+                  style={{ width, height: imageHeight, borderRadius: imageRadius }}
                   contentFit="cover"
                   cachePolicy="disk"
                   priority="high"
                 />
                 <ExampleImageOverlay source={imageSource(item)} />
               </View>
-              <View style={s.textRow}>
+              <View style={[s.textRow, { paddingHorizontal: textInset }]}>
                 <Text style={[s.name, { color: theme.colors.onSurface }]}>{item.name}</Text>
                 <Text style={[s.sub, { color: theme.colors.onSurfaceVariant }]}>{item.trailLength} km</Text>
               </View>
@@ -137,7 +145,6 @@ export default function PagerCarousel({ data, onItemPress, containerPadding = 24
 const s = StyleSheet.create({
   textRow: {
     paddingTop: 8,
-    paddingHorizontal: 2,
     gap: 2,
   },
   name: {

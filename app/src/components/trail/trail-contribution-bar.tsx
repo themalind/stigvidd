@@ -8,11 +8,12 @@
 import { getTrailLike, likeTrail, unlikeTrail } from "@/api/trails";
 import { showErrorAtom } from "@/atoms/snackbar-atoms";
 import { useAuth } from "@/components/auth/auth-provider";
-import { CONTRIBUTION_MARKER_COLORS } from "@/components/map/marker-styles";
+import NotAuthenticatedDialog from "@/components/auth/not-authenticated-msg-dialog";
 import { BORDER_RADIUS } from "@/constants/constants";
 import { TrailContribution, TrailLike } from "@/data/types";
 import { skipToken, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSetAtom } from "jotai";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Pressable, StyleSheet, View } from "react-native";
 import { Icon, Text, useTheme } from "react-native-paper";
@@ -31,8 +32,8 @@ export default function TrailContributionBar({ trailIdentifier, contribution }: 
   const { user, isAuthenticated } = useAuth();
   const queryClient = useQueryClient();
   const setErrorMsg = useSetAtom(showErrorAtom);
+  const [showAuthDialog, setAuthDialog] = useState(false);
   const queryKey = trailLikeQueryKey(trailIdentifier, user?.id);
-  const accent = CONTRIBUTION_MARKER_COLORS.fill;
 
   const { data } = useQuery({
     queryKey,
@@ -60,12 +61,23 @@ export default function TrailContributionBar({ trailIdentifier, contribution }: 
   });
 
   // keep-comment: until the user's own like has loaded, a press would guess likedByMe and could like when meaning to unlike
-  const canPress = isAuthenticated && data !== undefined && !mutation.isPending;
+  const canPress = !isAuthenticated || (data !== undefined && !mutation.isPending);
+
+  const onPress = () => {
+    if (!isAuthenticated) {
+      setAuthDialog(true);
+      return;
+    }
+    mutation.mutate(!like.likedByMe);
+  };
 
   return (
-    <View testID="trail-contribution" style={s.container}>
+    <View
+      testID="trail-contribution"
+      style={[s.container, { backgroundColor: theme.colors.surface, borderLeftColor: theme.colors.primary }]}
+    >
       <View style={s.byline}>
-        <Text style={[s.badge, { color: accent }]}>{t("trail.contributed")}</Text>
+        <Text style={[s.badge, { color: theme.colors.onSurface }]}>{t("trail.contributed")}</Text>
         {contribution.submitterNickName && (
           <View style={s.submitter}>
             <Icon source="account-outline" size={16} color={theme.colors.onSurfaceVariant} />
@@ -78,28 +90,23 @@ export default function TrailContributionBar({ trailIdentifier, contribution }: 
       <Pressable
         testID="trail-like"
         disabled={!canPress}
-        onPress={() => mutation.mutate(!like.likedByMe)}
+        onPress={onPress}
         accessibilityRole="button"
         accessibilityState={{ selected: like.likedByMe, disabled: !canPress }}
         accessibilityLabel={like.likedByMe ? t("trail.liked") : t("trail.like")}
-        style={[
-          s.likeButton,
-          { borderColor: accent, backgroundColor: like.likedByMe ? accent : "transparent" },
-          !isAuthenticated && s.disabled,
-        ]}
+        hitSlop={8}
+        style={({ pressed }) => [s.likeButton, pressed && s.pressed]}
       >
-        <Icon
-          source={like.likedByMe ? "thumb-up" : "thumb-up-outline"}
-          size={20}
-          color={like.likedByMe ? CONTRIBUTION_MARKER_COLORS.stroke : accent}
-        />
-        <Text
-          testID="trail-like-count"
-          style={[s.likeCount, { color: like.likedByMe ? CONTRIBUTION_MARKER_COLORS.stroke : accent }]}
-        >
+        <Icon source={like.likedByMe ? "thumb-up" : "thumb-up-outline"} size={20} color={theme.colors.primary} />
+        <Text testID="trail-like-count" style={[s.likeCount, { color: theme.colors.primary }]}>
           {like.likeCount}
         </Text>
       </Pressable>
+      <NotAuthenticatedDialog
+        visible={showAuthDialog}
+        onDissmiss={() => setAuthDialog(false)}
+        infoMessage={t("trail.notAuthLike")}
+      />
     </View>
   );
 }
@@ -109,6 +116,11 @@ const s = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
+    borderLeftWidth: 4,
+    borderRadius: BORDER_RADIUS,
+    paddingVertical: 10,
+    paddingLeft: 12,
+    paddingRight: 10,
   },
   byline: {
     flex: 1,
@@ -131,13 +143,11 @@ const s = StyleSheet.create({
     gap: 6,
     minHeight: 44,
     paddingHorizontal: 14,
-    borderWidth: 1,
-    borderRadius: BORDER_RADIUS,
+  },
+  pressed: {
+    opacity: 0.6,
   },
   likeCount: {
     fontFamily: "Inter_600SemiBold",
-  },
-  disabled: {
-    opacity: 0.6,
   },
 });

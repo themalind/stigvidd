@@ -7,37 +7,26 @@
 
 import { CARD_HEIGHT } from "@/components/home/latest-hike-card";
 import ShimmerBlock from "@/components/skeletons/shimmer-block";
-import { SCREEN_PADDING, SURFACE_BORDER_RADIUS } from "@/constants/constants";
+import SectionPanel, { PANEL_BLEED, PANEL_PADDING } from "@/components/section-panel";
 import { useTranslation } from "react-i18next";
-import { StyleSheet, View } from "react-native";
-import { Text, useTheme } from "react-native-paper";
+import { StyleSheet } from "react-native";
 
-// Holds the latest-hike card's slot while the query runs. The heading is the real one —
-// it is known before the data is, so only the card itself has to fill in.
+// keep-comment: the heading is real, since it is known before the data; only the card is a placeholder
 export default function LatestHikeSkeleton() {
-  const theme = useTheme();
   const { t } = useTranslation();
 
   return (
-    <View style={s.section}>
-      <Text style={[s.sectionTitle, { color: theme.colors.onBackground }]}>{t("home.latestHike")}</Text>
-      <ShimmerBlock style={s.card} />
-    </View>
+    <SectionPanel title={t("home.latestHike")}>
+      <ShimmerBlock style={[s.card, PANEL_BLEED]} />
+    </SectionPanel>
   );
 }
 
-// Mirrors latest-hike-card's own section and card metrics.
+// keep-comment: mirrors latest-hike-card's metrics so the card drops in without a shift
 const s = StyleSheet.create({
-  section: {
-    gap: 8,
-    paddingHorizontal: SCREEN_PADDING,
-  },
-  sectionTitle: {
-    fontFamily: "Inter_600SemiBold",
-    fontSize: 16,
-  },
   card: {
     height: CARD_HEIGHT,
-    borderRadius: SURFACE_BORDER_RADIUS,
+    marginBottom: -PANEL_PADDING,
+    borderRadius: 0,
   },
 });

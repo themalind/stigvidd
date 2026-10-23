@@ -7,6 +7,7 @@
 
 import { snackbarAtom } from "@/atoms/snackbar-atoms";
 import TrailContributionBar from "@/components/trail/trail-contribution-bar";
+import { APP_THEMES } from "@/constants/theme";
 import { flushUntil, settle } from "@/test/flush";
 import { renderWithProviders } from "@/test/render";
 import { fireEvent, screen } from "@testing-library/react-native";
@@ -107,6 +108,35 @@ it("unlikes a trail the user had already liked", async () => {
   expect(mockLike).not.toHaveBeenCalled();
 });
 
+describe.each(APP_THEMES)("in the $id theme", ({ theme }) => {
+  it("sits on the theme's surface with a primary edge, like the obstacle warning", async () => {
+    renderWithProviders(<TrailContributionBar trailIdentifier="t1" contribution={contribution} />, { theme });
+    await settle();
+
+    expect(screen.getByTestId("trail-contribution")).toHaveStyle({
+      backgroundColor: theme.colors.surface,
+      borderLeftColor: theme.colors.primary,
+      borderLeftWidth: 4,
+    });
+  });
+
+  it("draws the like without a frame in the theme's primary colour, unfilled once liked", async () => {
+    renderWithProviders(<TrailContributionBar trailIdentifier="t1" contribution={contribution} />, { theme });
+    await flushUntil(pressable);
+
+    const ink = theme.colors.primary;
+    expect(screen.getByTestId("trail-like")).not.toHaveStyle({ borderWidth: 1 });
+    expect(screen.getByTestId("trail-like-count")).toHaveStyle({ color: ink });
+
+    fireEvent.press(screen.getByTestId("trail-like"));
+    await flushUntil(() => count() === 235);
+
+    expect(screen.getByTestId("trail-like").props.accessibilityState).toMatchObject({ selected: true });
+    expect(screen.getByTestId("trail-like")).not.toHaveStyle({ backgroundColor: ink });
+    expect(screen.getByTestId("trail-like-count")).toHaveStyle({ color: ink });
+  });
+});
+
 it("asks again for another user rather than showing the previous user's like", async () => {
   mockGetLike.mockResolvedValue({ likeCount: 235, likedByMe: true });
   const { rerender } = renderWithProviders(<TrailContributionBar trailIdentifier="t1" contribution={contribution} />);
@@ -133,7 +163,7 @@ it("rolls back and reports when the like fails", async () => {
   expect(store.get(snackbarAtom)).toMatchObject({ type: "error" });
 });
 
-it("shows the count but cannot be pressed when signed out", async () => {
+it("asks a signed-out user to sign in instead of liking", async () => {
   mockIsAuthenticated = false;
   renderWithProviders(<TrailContributionBar trailIdentifier="t1" contribution={contribution} />);
   await settle();
@@ -141,6 +171,7 @@ it("shows the count but cannot be pressed when signed out", async () => {
   fireEvent.press(screen.getByTestId("trail-like"));
   await settle();
 
+  expect(screen.getByText("Du behöver vara inloggad för att gilla en promenad.")).toBeTruthy();
   expect(mockGetLike).not.toHaveBeenCalled();
   expect(mockLike).not.toHaveBeenCalled();
   expect(count()).toBe(234);

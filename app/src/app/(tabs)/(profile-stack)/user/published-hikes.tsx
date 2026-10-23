@@ -10,8 +10,8 @@ import { showErrorAtom, showSuccessAtom } from "@/atoms/snackbar-atoms";
 import AlertDialog from "@/components/alert-dialog";
 import BackButton from "@/components/back-button";
 import ErrorView from "@/components/error-view";
+import LikeCount from "@/components/like-count";
 import LoadingIndicator from "@/components/loading-indicator";
-import { CONTRIBUTION_MARKER_COLORS } from "@/components/map/marker-styles";
 import { BORDER_RADIUS, SCREEN_PADDING } from "@/constants/constants";
 import { HikeSubmission, HikeSubmissionStatus } from "@/data/types";
 import { HIKE_SUBMISSIONS_QUERY_ROOT, useMyHikeSubmissions } from "@/hooks/hike/useMyHikeSubmissions";
@@ -82,12 +82,7 @@ function SubmissionRow({ submission, onWithdraw }: RowProps) {
             <Text style={[s.status, { backgroundColor: colors.background, color: colors.text }]}>
               {t(`publish.status.${submission.status}`)}
             </Text>
-            {submission.status === "Approved" && (
-              <View style={s.likes}>
-                <Icon source="thumb-up-outline" size={16} color={CONTRIBUTION_MARKER_COLORS.fill} />
-                <Text style={{ color: CONTRIBUTION_MARKER_COLORS.fill }}>{submission.likeCount}</Text>
-              </View>
-            )}
+            {submission.status === "Approved" && <LikeCount count={submission.likeCount} />}
           </View>
           <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
             {`${formatDistanceKm(submission.trailLength)} · ${date}`}
@@ -223,11 +218,6 @@ const s = StyleSheet.create({
     paddingVertical: 2,
     borderRadius: BORDER_RADIUS,
     overflow: "hidden",
-  },
-  likes: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
   },
   reason: {
     padding: 10,

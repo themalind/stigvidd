@@ -5,7 +5,8 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import PopularContributions from "@/components/home/popular-contributions";
+import { trailListSourceAtom } from "@/atoms/trail-list-atoms";
+import PopularContributions, { HOME_CONTRIBUTION_LIMIT } from "@/components/home/popular-contributions";
 import { TrailCard } from "@/data/types";
 import { flushUntil, settle } from "@/test/flush";
 import { renderWithProviders } from "@/test/render";
@@ -59,6 +60,26 @@ it("lists the walks in the order the server ranked them, with likes and credit",
   expect(screen.getByText("7,2 km · Vandrarvennen")).toBeTruthy();
   expect(screen.getByText("7,2 km")).toBeTruthy();
   expect(screen.getByText("234")).toBeTruthy();
+});
+
+it("shows at most five walks, so the home screen keeps its height", async () => {
+  mockGetPopular.mockResolvedValue(Array.from({ length: 8 }, (_, i) => card(`w${i}`, `Promenad ${i}`, 8 - i, null)));
+  renderWithProviders(<PopularContributions />);
+  await flushUntil(() => screen.queryByTestId("home-popular-contributions"));
+
+  expect(screen.getAllByTestId(/^home-contribution-w/)).toHaveLength(HOME_CONTRIBUTION_LIMIT);
+  expect(screen.queryByTestId("home-contribution-w5")).toBeNull();
+});
+
+it("opens the trail list on the walks from show all", async () => {
+  mockGetPopular.mockResolvedValue([card("a", "Ljungåsen runt", 3, null)]);
+  const { store } = renderWithProviders(<PopularContributions />);
+  await flushUntil(() => screen.queryByTestId("home-contributions-see-all"));
+
+  fireEvent.press(screen.getByTestId("home-contributions-see-all"));
+
+  expect(store.get(trailListSourceAtom)).toBe("contributions");
+  expect(mockNavigate).toHaveBeenCalledWith("/(tabs)/(trails-tab)");
 });
 
 it("opens the trail in the home stack", async () => {
