@@ -13,6 +13,7 @@ export default function HomeStackLayout() {
       <Stack.Screen name="index" />
       <Stack.Screen name="trail/[identifier]" />
       <Stack.Screen name="follow/[identifier]" />
+      <Stack.Screen name="guide" />
       <Stack.Screen name="hike/[identifier]" />
       <Stack.Screen name="hike-follow/[identifier]" />
       <Stack.Screen name="area/[identifier]" />

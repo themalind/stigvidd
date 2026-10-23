@@ -8,5 +8,5 @@
 import TrailDetailsScreen from "@/components/trail/trail-details-screen";
 
 export default function TrailScreen() {
-  return <TrailDetailsScreen followRoute="/(tabs)/(home)/follow/[identifier]" />;
+  return <TrailDetailsScreen followRoute="/(tabs)/(home)/follow/[identifier]" guideRoute="/(tabs)/(home)/guide" />;
 }

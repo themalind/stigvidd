@@ -13,6 +13,7 @@ export default function TrailsStackLayout() {
       <Stack.Screen name="index" />
       <Stack.Screen name="trail/[identifier]" />
       <Stack.Screen name="follow/[identifier]" />
+      <Stack.Screen name="guide" />
     </Stack>
   );
 }
