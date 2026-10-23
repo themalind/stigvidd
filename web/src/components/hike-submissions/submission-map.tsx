@@ -4,10 +4,10 @@
 import "maplibre-gl/dist/maplibre-gl.css";
 import maplibregl, { type GeoJSONSource, type Map as MapLibreMap, type MapLayerMouseEvent } from "maplibre-gl";
 import { useEffect, useLayoutEffect, useRef } from "react";
-import type { Jump, LngLat } from "@/lib/geometry-edit";
+import { type Jump, type LngLat, midpoints } from "@/lib/geometry-edit";
 import { mapStyle } from "./map-style";
 
-export type EditMode = "move" | "delete" | "redraw";
+export type EditMode = "move" | "delete" | "cut" | "redraw" | "extend" | "start";
 
 type Props = {
   path: LngLat[];
@@ -19,6 +19,7 @@ type Props = {
   draft: LngLat[];
   focus: LngLat[] | null;
   onMovePoint: (index: number, to: LngLat) => void;
+  onInsertPoint: (afterIndex: number, at: LngLat) => void;
   onPointClick: (index: number) => void;
   onMapClick: (at: LngLat) => void;
 };
@@ -57,6 +58,18 @@ function pointsOf(path: LngLat[], keptRange: [number, number], anchors: number[]
                 ? "anchor"
                 : "point",
       },
+      geometry: { type: "Point", coordinates },
+    })),
+  };
+}
+
+export function handlesOf(path: LngLat[], mode: EditMode): GeoJSON.FeatureCollection {
+  if (mode !== "move") return EMPTY;
+  return {
+    type: "FeatureCollection",
+    features: midpoints(path).map((coordinates, index) => ({
+      type: "Feature",
+      properties: { index },
       geometry: { type: "Point", coordinates },
     })),
   };
@@ -117,6 +130,19 @@ function ensureLayers(map: MapLibreMap) {
     paint: { "line-color": DRAFT, "line-width": 4, "line-dasharray": [1, 1.5] },
   });
   map.addLayer({
+    id: "handles",
+    type: "circle",
+    source: "handles",
+    minzoom: 15,
+    paint: {
+      "circle-radius": 3,
+      "circle-color": KEPT,
+      "circle-opacity": 0.5,
+      "circle-stroke-color": "#ffffff",
+      "circle-stroke-width": 1,
+    },
+  });
+  map.addLayer({
     id: "points",
     type: "circle",
     source: "points",
@@ -142,17 +168,19 @@ export function SubmissionMap(props: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
   const propsRef = useRef(props);
-  const draggingRef = useRef<number | null>(null);
+  const draggingRef = useRef<{ index: number; insert: boolean } | null>(null);
   const fittedRef = useRef(false);
+  const styleReadyRef = useRef(false);
 
   useLayoutEffect(() => {
     propsRef.current = props;
   });
 
+  // keep-comment: not isStyleLoaded(), which stays false until every tile has arrived and so skips the first draw
   const sync = () => {
     const map = mapRef.current;
-    if (!map || !map.isStyleLoaded()) return;
-    const { path, keptRange, jumps, redrawAnchors, draft } = propsRef.current;
+    if (!map || !styleReadyRef.current) return;
+    const { path, keptRange, jumps, redrawAnchors, draft, mode } = propsRef.current;
     const anchors = redrawAnchors.map((i) => path[i]).filter(Boolean);
     const draftLine = anchors.length === 2 ? [anchors[0], ...draft, anchors[1]] : [...anchors, ...draft];
 
@@ -160,6 +188,7 @@ export function SubmissionMap(props: Props) {
     setData(map, "kept", line(path.slice(keptRange[0], keptRange[1] + 1)));
     setData(map, "jumps", jumpsOf(path, jumps));
     setData(map, "draft", line(draftLine));
+    setData(map, "handles", handlesOf(path, mode));
     setData(map, "points", pointsOf(path, keptRange, redrawAnchors));
     ensureLayers(map);
   };
@@ -177,6 +206,7 @@ export function SubmissionMap(props: Props) {
     mapRef.current = map;
 
     map.on("style.load", () => {
+      styleReadyRef.current = true;
       sync();
       const path = propsRef.current.path;
       if (!fittedRef.current && path.length > 1) {
@@ -195,9 +225,17 @@ export function SubmissionMap(props: Props) {
       const { mode } = propsRef.current;
       if (mode === "move") {
         event.preventDefault();
-        draggingRef.current = index;
+        draggingRef.current = { index, insert: false };
         map.getCanvas().style.cursor = "grabbing";
       }
+    };
+
+    const onHandleDown = (event: MapLayerMouseEvent) => {
+      const index = event.features?.[0]?.properties?.index;
+      if (typeof index !== "number" || propsRef.current.mode !== "move") return;
+      event.preventDefault();
+      draggingRef.current = { index, insert: true };
+      map.getCanvas().style.cursor = "grabbing";
     };
 
     const onPointClick = (event: MapLayerMouseEvent) => {
@@ -207,25 +245,33 @@ export function SubmissionMap(props: Props) {
     };
 
     const onMove = (event: maplibregl.MapMouseEvent) => {
-      const index = draggingRef.current;
-      if (index === null) return;
+      const dragging = draggingRef.current;
+      if (dragging === null) return;
       const at: LngLat = [event.lngLat.lng, event.lngLat.lat];
       const { path, keptRange, redrawAnchors } = propsRef.current;
-      const live = path.map((p, i) => (i === index ? at : p));
-      setData(map, "points", pointsOf(live, keptRange, redrawAnchors));
-      setData(map, "kept", line(live.slice(keptRange[0], keptRange[1] + 1)));
+      const live = dragging.insert
+        ? [...path.slice(0, dragging.index + 1), at, ...path.slice(dragging.index + 1)]
+        : path.map((p, i) => (i === dragging.index ? at : p));
+      const shift = (bound: number) => (dragging.insert && dragging.index < bound ? bound + 1 : bound);
+      const start = shift(keptRange[0]);
+      const end = shift(keptRange[1]);
+      setData(map, "points", pointsOf(live, [start, end], redrawAnchors));
+      setData(map, "kept", line(live.slice(start, end + 1)));
     };
 
     const onUp = (event: maplibregl.MapMouseEvent) => {
-      const index = draggingRef.current;
-      if (index === null) return;
+      const dragging = draggingRef.current;
+      if (dragging === null) return;
       draggingRef.current = null;
       map.getCanvas().style.cursor = "";
-      propsRef.current.onMovePoint(index, [event.lngLat.lng, event.lngLat.lat]);
+      const at: LngLat = [event.lngLat.lng, event.lngLat.lat];
+      if (dragging.insert) propsRef.current.onInsertPoint(dragging.index, at);
+      else propsRef.current.onMovePoint(dragging.index, at);
     };
 
     const onClick = (event: maplibregl.MapMouseEvent) => {
-      if (propsRef.current.mode !== "redraw") return;
+      const { mode } = propsRef.current;
+      if (mode !== "redraw" && mode !== "extend") return;
       const hit = map.queryRenderedFeatures(event.point, { layers: pointLayers });
       if (hit.length > 0) return;
       propsRef.current.onMapClick([event.lngLat.lng, event.lngLat.lat]);
@@ -237,6 +283,9 @@ export function SubmissionMap(props: Props) {
       map.on("mouseenter", layer, () => (map.getCanvas().style.cursor = "pointer"));
       map.on("mouseleave", layer, () => (map.getCanvas().style.cursor = ""));
     }
+    map.on("mousedown", "handles", onHandleDown);
+    map.on("mouseenter", "handles", () => (map.getCanvas().style.cursor = "copy"));
+    map.on("mouseleave", "handles", () => (map.getCanvas().style.cursor = ""));
     map.on("mousemove", onMove);
     map.on("mouseup", onUp);
     map.on("click", onClick);
@@ -248,12 +297,13 @@ export function SubmissionMap(props: Props) {
   }, []);
 
   useEffect(() => {
-    mapRef.current?.setStyle(mapStyle(props.satellite));
+    styleReadyRef.current = false;
+    mapRef.current?.setStyle(mapStyle(props.satellite), { diff: false });
   }, [props.satellite]);
 
   useEffect(() => {
     sync();
-  }, [props.path, props.keptRange, props.jumps, props.redrawAnchors, props.draft]);
+  }, [props.path, props.keptRange, props.jumps, props.redrawAnchors, props.draft, props.mode]);
 
   useEffect(() => {
     const map = mapRef.current;

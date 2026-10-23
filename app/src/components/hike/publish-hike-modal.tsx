@@ -10,11 +10,13 @@ import { createHikeSubmission } from "@/api/hike-submissions";
 import { showErrorAtom, showSuccessAtom } from "@/atoms/snackbar-atoms";
 import Map from "@/components/map/map";
 import { routeCasingPaint } from "@/components/map/marker-styles";
+import FormTextField from "@/components/form-text-field";
 import DifficultyInfoModal from "@/components/trail/difficulty-info-modal";
 import { BORDER_RADIUS } from "@/constants/constants";
 import { DIFFICULTIES } from "@/data/trail-content";
 import { CreateHikeSubmissionRequest, Hike } from "@/data/types";
 import { HIKE_SUBMISSIONS_QUERY_ROOT } from "@/hooks/hike/useMyHikeSubmissions";
+import { useModalKeyboardLift } from "@/hooks/useModalKeyboardLift";
 import { asTranslationKey } from "@/i18n";
 import CoordinateParser from "@/utils/coordinate-parser";
 import { formatDistanceKm } from "@/utils/format-distance";
@@ -28,14 +30,12 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Image } from "expo-image";
 import { useSetAtom } from "jotai";
 import { useCallback, useMemo, useRef, useState } from "react";
-import { Control, Controller, FieldError, useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { Dimensions, Pressable, StyleSheet, View } from "react-native";
+import { Platform, Pressable, StyleSheet, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
-import { Button, Checkbox, Divider, Icon, Modal, Portal, Text, TextInput, useTheme } from "react-native-paper";
+import { Button, Checkbox, Divider, Icon, Modal, Portal, Text, useTheme } from "react-native-paper";
 import { z } from "zod";
-
-const HEIGHT = Dimensions.get("screen").height;
 
 // keep-comment: limits mirror CreateHikeSubmissionRequestValidator
 const publishFields = z.object({
@@ -45,10 +45,11 @@ const publishFields = z.object({
   gettingThere: z.string().trim().min(1, "publish.gettingThereRequired").max(500, "publish.maxChars500"),
   parking: z.string().max(500, "publish.maxChars500"),
   publicTransport: z.string().max(500, "publish.maxChars500"),
+  accessibilityInfo: z.string().max(200, "publish.maxChars200"),
+  city: z.string().trim().min(1, "publish.cityRequired").max(30, "publish.maxChars30"),
 });
 
 type PublishFormFields = z.infer<typeof publishFields>;
-type TextFieldName = "name" | "description" | "gettingThere" | "parking" | "publicTransport";
 
 export function lengthOfPath(path: GeoJSON.Position[]): number {
   let metres = 0;
@@ -56,46 +57,6 @@ export function lengthOfPath(path: GeoJSON.Position[]): number {
     metres += haversineDistance(path[i - 1][1], path[i - 1][0], path[i][1], path[i][0]);
   }
   return metres;
-}
-
-interface FieldProps {
-  name: TextFieldName;
-  label: string;
-  control: Control<PublishFormFields>;
-  error?: FieldError;
-  maxLength: number;
-  multiline?: boolean;
-}
-
-function FormField({ name, label, control, error, maxLength, multiline }: FieldProps) {
-  const theme = useTheme();
-  const { t } = useTranslation();
-  return (
-    <View style={s.field}>
-      <Controller
-        control={control}
-        name={name}
-        render={({ field: { onChange, onBlur, value } }) => (
-          <TextInput
-            testID={`publish-${name}`}
-            error={!!error}
-            style={{ backgroundColor: theme.colors.surfaceVariant }}
-            onBlur={onBlur}
-            onChangeText={onChange}
-            value={value}
-            label={label}
-            maxLength={maxLength}
-            autoCapitalize="sentences"
-            textAlignVertical="top"
-            multiline={multiline}
-          />
-        )}
-      />
-      {error?.message && (
-        <Text style={[s.errorText, { color: theme.colors.error }]}>{t(asTranslationKey(error.message))}</Text>
-      )}
-    </View>
-  );
 }
 
 interface Props {
@@ -110,6 +71,7 @@ export const PUBLISH_CONSENT_VERSION = "2026-10-19";
 // keep-comment: mounted only while open, so the form always starts from the hike's current values
 export default function PublishHikeModal({ hike, nickName, onDismiss }: Props) {
   const theme = useTheme();
+  const { modalStyle, maxHeight } = useModalKeyboardLift(0.9);
   const { t, i18n } = useTranslation();
   const queryClient = useQueryClient();
   const setErrorMsg = useSetAtom(showErrorAtom);
@@ -154,6 +116,8 @@ export default function PublishHikeModal({ hike, nickName, onDismiss }: Props) {
       gettingThere: hike.gettingThere ?? "",
       parking: hike.parkingInfo ?? "",
       publicTransport: "",
+      accessibilityInfo: "",
+      city: "",
     },
   });
 
@@ -183,6 +147,8 @@ export default function PublishHikeModal({ hike, nickName, onDismiss }: Props) {
       gettingThere: data.gettingThere.trim(),
       parking: data.parking.trim() || null,
       publicTransport: data.publicTransport.trim() || null,
+      accessibilityInfo: data.accessibilityInfo.trim() || null,
+      city: data.city.trim(),
       showSubmitterName: showName,
       acceptTransfer: consent,
       consentVersion: PUBLISH_CONSENT_VERSION,
@@ -197,8 +163,8 @@ export default function PublishHikeModal({ hike, nickName, onDismiss }: Props) {
 
   return (
     <Portal>
-      <Modal visible onDismiss={onDismiss} contentContainerStyle={s.container}>
-        <View style={[s.inner, { backgroundColor: theme.colors.surface }]}>
+      <Modal visible onDismiss={onDismiss} style={modalStyle} contentContainerStyle={s.container}>
+        <View testID="publish-card" style={[s.inner, { backgroundColor: theme.colors.surface }, { maxHeight }]}>
           <View style={s.header}>
             <Icon source="upload" size={18} color={theme.colors.primary} />
             <Text variant="titleMedium" style={[s.title, { color: theme.colors.onSurface }]}>
@@ -220,6 +186,7 @@ export default function PublishHikeModal({ hike, nickName, onDismiss }: Props) {
             contentContainerStyle={s.content}
             keyboardShouldPersistTaps="handled"
             enableOnAndroid
+            enableAutomaticScroll={Platform.OS !== "ios"}
           >
             <Text style={{ color: theme.colors.onSurfaceVariant }}>{t("publish.intro")}</Text>
 
@@ -284,13 +251,38 @@ export default function PublishHikeModal({ hike, nickName, onDismiss }: Props) {
 
             <View style={s.section}>
               <Text variant="titleSmall">{t("publish.aboutTitle")}</Text>
-              <FormField name="name" label={t("publish.name")} control={control} error={errors.name} maxLength={80} />
-              <FormField
+              <FormTextField
+                name="name"
+                testID="publish-name"
+                label={t("publish.name")}
+                control={control}
+                error={errors.name}
+                maxLength={80}
+              />
+              <FormTextField
+                name="city"
+                testID="publish-city"
+                label={t("publish.city")}
+                control={control}
+                error={errors.city}
+                maxLength={30}
+              />
+              <FormTextField
                 name="description"
+                testID="publish-description"
                 label={t("publish.description")}
                 control={control}
                 error={errors.description}
                 maxLength={2000}
+                multiline
+              />
+              <FormTextField
+                name="accessibilityInfo"
+                testID="publish-accessibilityInfo"
+                label={t("publish.variationOptional")}
+                control={control}
+                error={errors.accessibilityInfo}
+                maxLength={200}
                 multiline
               />
               <View style={s.labelRow}>
@@ -341,24 +333,27 @@ export default function PublishHikeModal({ hike, nickName, onDismiss }: Props) {
                   {t(asTranslationKey(errors.classification.message))}
                 </Text>
               )}
-              <FormField
+              <FormTextField
                 name="gettingThere"
+                testID="publish-gettingThere"
                 label={t("publish.gettingThere")}
                 control={control}
                 error={errors.gettingThere}
                 maxLength={500}
                 multiline
               />
-              <FormField
+              <FormTextField
                 name="parking"
+                testID="publish-parking"
                 label={t("publish.parkingOptional")}
                 control={control}
                 error={errors.parking}
                 maxLength={500}
                 multiline
               />
-              <FormField
+              <FormTextField
                 name="publicTransport"
+                testID="publish-publicTransport"
                 label={t("publish.publicTransportOptional")}
                 control={control}
                 error={errors.publicTransport}
@@ -457,7 +452,6 @@ const s = StyleSheet.create({
   inner: {
     borderRadius: BORDER_RADIUS,
     overflow: "hidden",
-    maxHeight: HEIGHT * 0.9,
   },
   header: {
     flexDirection: "row",
@@ -486,9 +480,6 @@ const s = StyleSheet.create({
   },
   map: {
     flex: 1,
-  },
-  field: {
-    gap: 4,
   },
   errorText: {
     fontSize: 12,

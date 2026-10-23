@@ -12,8 +12,10 @@ import { Hike } from "@/data/types";
 import en from "@/i18n/locales/en.json";
 import sv from "@/i18n/locales/sv.json";
 import { flushUntil, settle } from "@/test/flush";
+import { captureKeyboard } from "@/test/keyboard";
 import { renderWithProviders } from "@/test/render";
 import { fireEvent, screen } from "@testing-library/react-native";
+import { Dimensions, StyleSheet } from "react-native";
 
 const mockCreateSubmission = jest.fn();
 jest.mock("@/api/hike-submissions", () => ({
@@ -45,11 +47,12 @@ function hike(overrides: Partial<Hike> = {}): Hike {
   };
 }
 
-async function open(overrides: Partial<Hike> = {}) {
+async function open(overrides: Partial<Hike> = {}, city = "Borås") {
   const rendered = renderWithProviders(
     <PublishHikeModal hike={hike(overrides)} nickName="Vandrarvennen" onDismiss={onDismiss} />,
   );
   await flushUntil(() => screen.queryByTestId("publish-submit"));
+  fireEvent.changeText(screen.getByTestId("publish-city"), city);
   return rendered;
 }
 
@@ -113,6 +116,8 @@ it("sends the untrimmed walk with all photos, the nickname choice and the consen
     gettingThere: "Buss 3",
     parking: null,
     publicTransport: null,
+    accessibilityInfo: null,
+    city: "Borås",
     showSubmitterName: true,
     acceptTransfer: true,
     consentVersion: PUBLISH_CONSENT_VERSION,
@@ -123,6 +128,41 @@ it("sends the untrimmed walk with all photos, the nickname choice and the consen
   });
   expect(onDismiss).toHaveBeenCalled();
   expect(store.get(snackbarAtom)).toMatchObject({ visible: true, type: "success" });
+});
+
+it("requires a city, since every trail is listed under one", async () => {
+  await open({}, "   ");
+  fireEvent.press(screen.getByTestId("publish-consent"));
+  fireEvent.press(screen.getByTestId("publish-difficulty-2"));
+
+  fireEvent.press(screen.getByTestId("publish-submit"));
+  await settle();
+
+  expect(mockCreateSubmission).not.toHaveBeenCalled();
+  expect(screen.getByText("Ange stad eller ort")).toBeTruthy();
+});
+
+it("sends the city trimmed", async () => {
+  await open({}, "  Ulricehamn ");
+  fireEvent.press(screen.getByTestId("publish-difficulty-2"));
+  fireEvent.press(screen.getByTestId("publish-consent"));
+
+  fireEvent.press(screen.getByTestId("publish-submit"));
+  await flushUntil(() => mockCreateSubmission.mock.calls.length > 0);
+
+  expect(mockCreateSubmission).toHaveBeenCalledWith(expect.objectContaining({ city: "Ulricehamn" }));
+});
+
+it("sends the variation, trimmed", async () => {
+  await open();
+  fireEvent.press(screen.getByTestId("publish-difficulty-2"));
+  fireEvent.press(screen.getByTestId("publish-consent"));
+  fireEvent.changeText(screen.getByTestId("publish-accessibilityInfo"), "  Grus och rötter  ");
+
+  fireEvent.press(screen.getByTestId("publish-submit"));
+  await flushUntil(() => mockCreateSubmission.mock.calls.length > 0);
+
+  expect(mockCreateSubmission).toHaveBeenCalledWith(expect.objectContaining({ accessibilityInfo: "Grus och rötter" }));
 });
 
 it("leaves out deselected photos and the nickname when unticked", async () => {
@@ -187,4 +227,26 @@ it("keeps the consent wording the server stores for this version", () => {
   expect(`${en.publish.consent} ${en.publish.consentNote}`).toBe(
     "I give Stigvidd the right to publish this walk as a trail. Stigvidd may use, edit and publish the text, route and chosen photos, forever and free of charge. This right cannot be withdrawn once the trail is published. You keep the copyright to your photos and can still delete your own walk.",
   );
+});
+
+it("caps the card's height with no keyboard up, so the form scrolls instead of outgrowing the screen", async () => {
+  await open();
+
+  const { maxHeight } = StyleSheet.flatten(screen.getByTestId("publish-card").props.style);
+  expect(maxHeight).toBe(Dimensions.get("window").height * 0.9);
+});
+
+it("lifts and shrinks the card above the iOS keyboard so the submit button stays reachable", async () => {
+  const keyboard = captureKeyboard();
+  await open();
+
+  keyboard.show(300);
+
+  expect(screen.getByTestId("modal-wrapper")).toHaveStyle({ marginBottom: 310 });
+  const { maxHeight } = StyleSheet.flatten(screen.getByTestId("publish-card").props.style);
+  expect(maxHeight).toBeLessThanOrEqual(Dimensions.get("window").height - 310 - 10);
+
+  keyboard.hide();
+
+  expect(screen.getByTestId("modal-wrapper")).not.toHaveStyle({ marginBottom: 310 });
 });

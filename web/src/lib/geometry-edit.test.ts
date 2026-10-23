@@ -7,12 +7,18 @@ import {
   distanceMetres,
   findJumps,
   formatMetres,
+  extendPath,
+  insertPoint,
+  isLoop,
   type LngLat,
+  midpoints,
   movePoint,
   parseCoordinates,
   pathLengthMetres,
   replaceSection,
+  reversePath,
   serializeCoordinates,
+  startLoopAt,
   trimPath,
 } from "./geometry-edit";
 
@@ -104,5 +110,64 @@ describe("editing", () => {
     expect(replaceSection(path, 0, 3, drawn)).toEqual([a, ...drawn, far]);
     expect(replaceSection(path, 3, 0, drawn)).toEqual([a, ...drawn, far]);
     expect(replaceSection(path, 1, 1, drawn)).toBe(path);
+  });
+
+  it("removes the section between two points by replacing it with nothing", () => {
+    expect(replaceSection(path, 0, 3, [])).toEqual([a, far]);
+  });
+
+  it("inserts a point after the given index", () => {
+    expect(insertPoint(path, 1, [1, 1])).toEqual([a, b, [1, 1], c, far]);
+    expect(insertPoint(path, 3, [1, 1])).toBe(path);
+  });
+
+  it("puts a handle halfway along every segment", () => {
+    expect(
+      midpoints([
+        [0, 0],
+        [2, 4],
+        [4, 4],
+      ]),
+    ).toEqual([
+      [1, 2],
+      [3, 4],
+    ]);
+  });
+
+  it("extends either end with points drawn outward from it", () => {
+    const drawn: LngLat[] = [
+      [1, 1],
+      [2, 2],
+    ];
+
+    expect(extendPath([a, b], "end", drawn)).toEqual([a, b, [1, 1], [2, 2]]);
+    expect(extendPath([a, b], "start", drawn)).toEqual([[2, 2], [1, 1], a, b]);
+    expect(extendPath([a, b], "start", [])).toEqual([a, b]);
+  });
+});
+
+describe("start point", () => {
+  const east: LngLat = [12.9402, 57.7201];
+  const loop: LngLat[] = [a, b, c, east, a];
+
+  it("tells a loop from a walk that ends somewhere else", () => {
+    expect(isLoop(loop)).toBe(true);
+    expect(isLoop([a, b, c, far])).toBe(false);
+  });
+
+  it("rotates a loop to start and end at the chosen point, keeping every point", () => {
+    expect(startLoopAt(loop, 2)).toEqual([c, east, a, a, b, c]);
+    expect(startLoopAt(loop, 0)).toBe(loop);
+  });
+
+  it("refuses to rotate a walk that is not a loop", () => {
+    expect(startLoopAt([a, b, c, far], 2)).toBeNull();
+  });
+
+  it("reverses the direction without touching the original", () => {
+    const path: LngLat[] = [a, b, c];
+
+    expect(reversePath(path)).toEqual([c, b, a]);
+    expect(path).toEqual([a, b, c]);
   });
 });

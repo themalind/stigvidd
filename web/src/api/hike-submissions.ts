@@ -4,6 +4,7 @@
 import {
   adminHikeSubmissionsApproveSubmission,
   adminHikeSubmissionsDeleteSubmissionImage,
+  adminHikeSubmissionsGetSimilarRoutes,
   adminHikeSubmissionsGetSubmission,
   adminHikeSubmissionsGetSubmissions,
   adminHikeSubmissionsRejectSubmission,
@@ -13,8 +14,11 @@ import {
 import type {
   AdminHikeSubmissionListItemResponse,
   AdminHikeSubmissionResponse,
+  SimilarTrailResponse,
   UpdateHikeSubmissionRequest,
 } from "./generated/model";
+
+export type SimilarRoute = SimilarTrailResponse;
 
 export type SubmissionListItem = AdminHikeSubmissionListItemResponse;
 export type SubmissionDetail = AdminHikeSubmissionResponse;
@@ -27,6 +31,10 @@ export function getSubmissions(status: SubmissionStatus): Promise<SubmissionList
 
 export function getSubmission(identifier: string): Promise<SubmissionDetail> {
   return adminHikeSubmissionsGetSubmission(identifier);
+}
+
+export function getSimilarRoutes(identifier: string): Promise<SimilarRoute[]> {
+  return adminHikeSubmissionsGetSimilarRoutes(identifier);
 }
 
 export function updateSubmission(identifier: string, details: SubmissionDetails): Promise<SubmissionDetail> {

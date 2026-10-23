@@ -30,6 +30,7 @@ import type {
   AdminHikeSubmissionsGetSubmissionsParams,
   ApproveHikeSubmissionResponse,
   RejectHikeSubmissionRequest,
+  SimilarTrailResponse,
   UpdateHikeSubmissionGeometryRequest,
   UpdateHikeSubmissionRequest
 } from '../model';
@@ -292,7 +293,71 @@ export function useAdminHikeSubmissionsUpdateSubmission<TData = Awaited<ReturnTy
 
 
 
-export const getAdminHikeSubmissionsUpdateSubmissionGeometryUrl = (identifier: string,) => {
+export const getAdminHikeSubmissionsGetSimilarRoutesUrl = (identifier: string,) => {
+
+
+
+
+  return `/api/v1/admin/hike-submissions/${identifier}/similar-routes`
+}
+
+export const adminHikeSubmissionsGetSimilarRoutes = async (identifier: string, options?: RequestInit): Promise<SimilarTrailResponse[]> => {
+
+  return customFetch<SimilarTrailResponse[]>(getAdminHikeSubmissionsGetSimilarRoutesUrl(identifier),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getAdminHikeSubmissionsGetSimilarRoutesMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminHikeSubmissionsGetSimilarRoutes>>, TError,{identifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof adminHikeSubmissionsGetSimilarRoutes>>, TError,{identifier: string}, TContext> => {
+
+const mutationKey = ['adminHikeSubmissionsGetSimilarRoutes'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminHikeSubmissionsGetSimilarRoutes>>, {identifier: string}> = (props) => {
+          const {identifier} = props ?? {};
+
+          return  adminHikeSubmissionsGetSimilarRoutes(identifier,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AdminHikeSubmissionsGetSimilarRoutesMutationResult = NonNullable<Awaited<ReturnType<typeof adminHikeSubmissionsGetSimilarRoutes>>>
+
+    export type AdminHikeSubmissionsGetSimilarRoutesMutationError = unknown
+
+    export const useAdminHikeSubmissionsGetSimilarRoutes = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminHikeSubmissionsGetSimilarRoutes>>, TError,{identifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof adminHikeSubmissionsGetSimilarRoutes>>,
+        TError,
+        {identifier: string},
+        TContext
+      > => {
+      return useMutation(getAdminHikeSubmissionsGetSimilarRoutesMutationOptions(options), queryClient);
+    }
+    export const getAdminHikeSubmissionsUpdateSubmissionGeometryUrl = (identifier: string,) => {
 
 
 

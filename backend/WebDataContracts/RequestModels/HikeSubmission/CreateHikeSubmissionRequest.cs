@@ -12,6 +12,8 @@ public class CreateHikeSubmissionRequest
     public string? Parking { get; set; }
     public required string GettingThere { get; set; }
     public string? PublicTransport { get; set; }
+    public string? AccessibilityInfo { get; set; }
+    public required string City { get; set; }
     public bool ShowSubmitterName { get; set; }
     public bool AcceptTransfer { get; set; }
     public required string ConsentVersion { get; set; }

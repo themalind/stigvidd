@@ -15,6 +15,8 @@ export interface CreateHikeSubmissionRequest {
   gettingThere: string;
   parking?: string | null;
   publicTransport?: string | null;
+  accessibilityInfo?: string | null;
+  city: string;
   showSubmitterName: boolean;
   acceptTransfer: boolean;
   consentVersion: string;

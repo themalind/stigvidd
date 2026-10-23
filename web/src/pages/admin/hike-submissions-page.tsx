@@ -139,7 +139,7 @@ export default function HikeSubmissionsPage() {
                       to={`/hike-submissions/${item.identifier}`}
                       className="inline-flex items-center gap-1 font-medium text-primary hover:underline"
                     >
-                      Review
+                      {status === "Approved" ? "Edit" : "Review"}
                       <ChevronRight className="size-4" aria-hidden="true" />
                     </Link>
                   </TableCell>

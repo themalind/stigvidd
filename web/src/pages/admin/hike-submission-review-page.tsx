@@ -8,14 +8,18 @@ import { toast } from "sonner";
 import {
   approveSubmission,
   deleteSubmissionImage,
+  getSimilarRoutes,
   getSubmission,
   rejectSubmission,
+  type SimilarRoute,
   type SubmissionDetail,
   updateSubmission,
   updateSubmissionGeometry,
 } from "@/api/hike-submissions";
 import { hasSatellite } from "@/components/hike-submissions/map-style";
+import { SimilarRoutesCard } from "@/components/hike-submissions/similar-routes-card";
 import { type EditMode, SubmissionMap } from "@/components/hike-submissions/submission-map";
+import TrailImagesDialog from "@/components/trail-images-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,14 +30,18 @@ import { Slider } from "@/components/ui/slider";
 import { Textarea } from "@/components/ui/textarea";
 import {
   deletePoint,
+  extendPath,
   findJumps,
   formatMetres,
+  insertPoint,
   type LngLat,
   movePoint,
   parseCoordinates,
   pathLengthMetres,
   replaceSection,
+  reversePath,
   serializeCoordinates,
+  startLoopAt,
   trimPath,
 } from "@/lib/geometry-edit";
 
@@ -46,7 +54,10 @@ const CLASSIFICATIONS = [
 const MODES: { mode: EditMode; label: string }[] = [
   { mode: "move", label: "Move point" },
   { mode: "delete", label: "Delete point" },
+  { mode: "cut", label: "Cut section" },
   { mode: "redraw", label: "Redraw section" },
+  { mode: "extend", label: "Extend" },
+  { mode: "start", label: "Set start" },
 ];
 
 type Fields = {
@@ -56,6 +67,8 @@ type Fields = {
   gettingThere: string;
   parking: string;
   publicTransport: string;
+  accessibilityInfo: string;
+  city: string;
 };
 
 function fieldsOf(detail: SubmissionDetail): Fields {
@@ -66,6 +79,8 @@ function fieldsOf(detail: SubmissionDetail): Fields {
     gettingThere: detail.gettingThere,
     parking: detail.parking,
     publicTransport: detail.publicTransport,
+    accessibilityInfo: detail.accessibilityInfo,
+    city: detail.city,
   };
 }
 
@@ -80,11 +95,14 @@ export default function HikeSubmissionReviewPage() {
   const [mode, setMode] = useState<EditMode>("move");
   const [anchors, setAnchors] = useState<number[]>([]);
   const [draft, setDraft] = useState<LngLat[]>([]);
+  const [extendFrom, setExtendFrom] = useState<"start" | "end">("end");
   const [satellite, setSatellite] = useState(false);
   const [focus, setFocus] = useState<LngLat[] | null>(null);
   const [fields, setFields] = useState<Fields | null>(null);
   const [rejectReason, setRejectReason] = useState("");
   const [busy, setBusy] = useState(false);
+  const [similar, setSimilar] = useState<SimilarRoute[] | null>(null);
+  const [similarFailed, setSimilarFailed] = useState(false);
 
   useEffect(() => {
     let current = true;
@@ -109,6 +127,20 @@ export default function HikeSubmissionReviewPage() {
     };
   }, [identifier]);
 
+  const savedCoordinates = detail?.coordinates;
+  useEffect(() => {
+    if (savedCoordinates === undefined) return;
+    let current = true;
+    setSimilar(null);
+    setSimilarFailed(false);
+    getSimilarRoutes(identifier)
+      .then((routes) => current && setSimilar(routes))
+      .catch(() => current && setSimilarFailed(true));
+    return () => {
+      current = false;
+    };
+  }, [identifier, savedCoordinates]);
+
   const kept = useMemo(() => trimPath(path, range[0], range[1]), [path, range]);
   const jumps = useMemo(
     () => findJumps(path).filter((j) => j.index >= range[0] && j.index + 1 <= range[1]),
@@ -118,12 +150,44 @@ export default function HikeSubmissionReviewPage() {
   const routeDirty = history.length > 0 || range[0] > 0 || range[1] < path.length - 1;
   const fieldsDirty = detail !== null && fields !== null && JSON.stringify(fields) !== JSON.stringify(fieldsOf(detail));
   const pending = detail?.status === "Pending";
+  const editable = pending || (detail?.status === "Approved" && Boolean(detail.publishedTrailIdentifier));
 
   const edit = (next: LngLat[]) => {
     if (next === path) return;
     setHistory((h) => [...h, path]);
     setPath(next);
     setRange(([start, end]) => [Math.min(start, next.length - 2), Math.min(Math.max(end, 1), next.length - 1)]);
+  };
+
+  // keep-comment: works on the kept part, so the trim is applied first and the result is kept whole
+  const replaceKept = (next: LngLat[]) => {
+    setHistory((h) => [...h, path]);
+    setPath(next);
+    setRange([0, next.length - 1]);
+  };
+
+  const setStart = (index: number) => {
+    if (index < range[0] || index > range[1]) return;
+    const rotated = startLoopAt(kept, index - range[0]);
+    if (!rotated) {
+      if (index === range[0]) return;
+      if (index === range[1]) {
+        toast.error("The start must leave at least two points.");
+        return;
+      }
+      replaceKept(kept.slice(index - range[0]));
+      toast.info("Not a loop, so everything before the new start was trimmed.");
+      return;
+    }
+    if (rotated !== kept) replaceKept(rotated);
+  };
+
+  const onInsertPoint = (afterIndex: number, at: LngLat) => {
+    const next = insertPoint(path, afterIndex, at);
+    if (next === path) return;
+    setHistory((h) => [...h, path]);
+    setPath(next);
+    setRange(([start, end]) => [afterIndex < start ? start + 1 : start, afterIndex < end ? end + 1 : end]);
   };
 
   const undo = () => {
@@ -151,20 +215,33 @@ export default function HikeSubmissionReviewPage() {
   const onPointClick = (index: number) => {
     if (mode === "delete") {
       edit(deletePoint(path, index));
-    } else if (mode === "redraw") {
+    } else if (mode === "redraw" || mode === "cut") {
       setAnchors((current) => (current.length >= 2 ? [index] : [...current, index]));
       setDraft([]);
+    } else if (mode === "start") {
+      setStart(index);
     }
   };
 
   const onMapClick = (at: LngLat) => {
-    if (mode === "redraw" && anchors.length === 2) setDraft((d) => [...d, at]);
+    if ((mode === "redraw" && anchors.length === 2) || mode === "extend") setDraft((d) => [...d, at]);
   };
 
   const applyRedraw = () => {
     if (anchors.length !== 2) return;
     edit(replaceSection(path, anchors[0], anchors[1], draft));
     setAnchors([]);
+    setDraft([]);
+  };
+
+  const applyExtend = () => {
+    if (draft.length === 0) return;
+    replaceKept(extendPath(kept, extendFrom, draft));
+    setDraft([]);
+  };
+
+  const changeExtendFrom = (from: "start" | "end") => {
+    setExtendFrom(from);
     setDraft([]);
   };
 
@@ -189,16 +266,18 @@ export default function HikeSubmissionReviewPage() {
 
   const saveFields = () =>
     run(async () => {
-      if (!fields) return;
+      if (!fields || !detail) return;
       const updated = await updateSubmission(identifier, {
         ...fields,
         parking: fields.parking || null,
         publicTransport: fields.publicTransport || null,
+        accessibilityInfo: fields.accessibilityInfo || null,
+        lastUpdatedAt: detail.lastUpdatedAt,
       });
       setDetail(updated);
       setFields(fieldsOf(updated));
       toast.success("Details saved.");
-    }, "Could not save the details.");
+    }, "Could not save the details. If the trail was changed elsewhere, reload the page and try again.");
 
   const removeImage = (imageIdentifier: string) =>
     run(async () => {
@@ -267,7 +346,7 @@ export default function HikeSubmissionReviewPage() {
 
       <div className="flex flex-wrap items-start gap-5">
         <section className="min-w-0 flex-[999_1_640px] space-y-3">
-          {pending && (
+          {editable && (
             <div className="flex flex-wrap items-center gap-2 rounded-[5px] border p-2">
               {MODES.map(({ mode: m, label }) => (
                 <Button
@@ -281,6 +360,9 @@ export default function HikeSubmissionReviewPage() {
                 </Button>
               ))}
               <span className="mx-1 h-6 w-px bg-border" />
+              <Button size="sm" variant="ghost" onClick={() => replaceKept(reversePath(kept))}>
+                Reverse
+              </Button>
               <Button size="sm" variant="ghost" disabled={history.length === 0} onClick={undo}>
                 Undo
               </Button>
@@ -300,37 +382,70 @@ export default function HikeSubmissionReviewPage() {
             path={path}
             keptRange={range}
             jumps={jumps}
-            mode={pending ? mode : "move"}
+            mode={editable ? mode : "move"}
             satellite={satellite}
-            redrawAnchors={anchors}
+            redrawAnchors={mode === "extend" ? [extendFrom === "start" ? range[0] : range[1]] : anchors}
             draft={draft}
             focus={focus}
-            onMovePoint={(index, to) => pending && edit(movePoint(path, index, to))}
+            onMovePoint={(index, to) => editable && edit(movePoint(path, index, to))}
+            onInsertPoint={(afterIndex, at) => editable && onInsertPoint(afterIndex, at)}
             onPointClick={onPointClick}
             onMapClick={onMapClick}
           />
 
-          {pending && mode === "redraw" && (
+          {editable && (mode === "redraw" || mode === "cut") && (
             <div className="flex flex-wrap items-center gap-3 rounded-[5px] border p-3 text-sm">
               {anchors.length < 2 ? (
-                <span>Click the two points the new section should run between ({anchors.length}/2).</span>
+                <span>
+                  {`Click the two points the section ${mode === "cut" ? "to remove lies" : "should run"} between (${anchors.length}/2).`}
+                </span>
+              ) : mode === "cut" ? (
+                <span>Everything between the two points goes, and they are joined by a straight line.</span>
               ) : (
                 <span>Click on the map to draw the new path ({draft.length} points).</span>
               )}
               <span className="flex-1" />
               <Button size="sm" disabled={anchors.length !== 2} onClick={applyRedraw}>
-                Replace section
+                {mode === "cut" ? "Cut section" : "Replace section"}
+              </Button>
+            </div>
+          )}
+          {editable && mode === "extend" && (
+            <div className="flex flex-wrap items-center gap-3 rounded-[5px] border p-3 text-sm">
+              <span>Extend from</span>
+              {(["start", "end"] as const).map((from) => (
+                <Button
+                  key={from}
+                  size="sm"
+                  variant={extendFrom === from ? "default" : "ghost"}
+                  aria-pressed={extendFrom === from}
+                  onClick={() => changeExtendFrom(from)}
+                >
+                  {from === "start" ? "Start" : "End"}
+                </Button>
+              ))}
+              <span>Click on the map to draw outward ({draft.length} points).</span>
+              <span className="flex-1" />
+              <Button size="sm" disabled={draft.length === 0} onClick={applyExtend}>
+                Add to route
               </Button>
             </div>
           )}
           <p className="text-xs text-muted-foreground">
-            Zoom in to see every GPS point. Move point: drag it. Delete point: click it. Redraw section: click two
-            points, then click the new path between them.
+            Zoom in to see every GPS point. Move point: drag a point, or drag a small handle between two points to add
+            one. Delete point: click it. Cut section: click two points to remove what lies between. Redraw section:
+            click two points, then click the new path between them. Extend: draw onward from the start or end. Set
+            start: click a point; a loop is turned to begin there, any other walk is trimmed to it.
           </p>
+          {editable && !pending && (
+            <p className="text-sm text-muted-foreground">
+              This walk is published. Saved changes go straight to trail {detail.publishedTrailIdentifier}.
+            </p>
+          )}
         </section>
 
         <aside className="min-w-0 flex-[1_1_340px] space-y-4">
-          {pending && (
+          {editable && (
             <Card>
               <CardHeader>
                 <CardTitle className="text-base">Trim start and end</CardTitle>
@@ -367,6 +482,8 @@ export default function HikeSubmissionReviewPage() {
             </Card>
           )}
 
+          <SimilarRoutesCard routes={similar} failed={similarFailed} />
+
           <Card>
             <CardHeader>
               <CardTitle className="text-base">To check</CardTitle>
@@ -396,15 +513,21 @@ export default function HikeSubmissionReviewPage() {
               <FieldInput
                 label="Name"
                 value={fields.name}
-                disabled={!pending}
+                disabled={!editable}
                 onChange={(name) => setFields({ ...fields, name })}
+              />
+              <FieldInput
+                label="City"
+                value={fields.city}
+                disabled={!editable}
+                onChange={(city) => setFields({ ...fields, city })}
               />
               <div className="space-y-1">
                 <Label htmlFor="review-description">Description</Label>
                 <Textarea
                   id="review-description"
                   value={fields.description}
-                  disabled={!pending}
+                  disabled={!editable}
                   onChange={(e) => setFields({ ...fields, description: e.target.value })}
                 />
               </div>
@@ -414,7 +537,7 @@ export default function HikeSubmissionReviewPage() {
                   id="review-classification"
                   className="h-9 w-full rounded-[5px] border bg-background px-2 text-sm"
                   value={fields.classification}
-                  disabled={!pending}
+                  disabled={!editable}
                   onChange={(e) => setFields({ ...fields, classification: Number(e.target.value) })}
                 >
                   {CLASSIFICATIONS.map((c) => (
@@ -427,22 +550,28 @@ export default function HikeSubmissionReviewPage() {
               <FieldInput
                 label="Getting there"
                 value={fields.gettingThere}
-                disabled={!pending}
+                disabled={!editable}
                 onChange={(gettingThere) => setFields({ ...fields, gettingThere })}
               />
               <FieldInput
                 label="Parking"
                 value={fields.parking}
-                disabled={!pending}
+                disabled={!editable}
                 onChange={(parking) => setFields({ ...fields, parking })}
               />
               <FieldInput
                 label="Public transport"
                 value={fields.publicTransport}
-                disabled={!pending}
+                disabled={!editable}
                 onChange={(publicTransport) => setFields({ ...fields, publicTransport })}
               />
-              {pending && (
+              <FieldInput
+                label="Variation"
+                value={fields.accessibilityInfo}
+                disabled={!editable}
+                onChange={(accessibilityInfo) => setFields({ ...fields, accessibilityInfo })}
+              />
+              {editable && (
                 <Button
                   className="w-full"
                   variant="outline"
@@ -460,10 +589,23 @@ export default function HikeSubmissionReviewPage() {
               <CardTitle className="text-base">Photos</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              {images.length === 0 && (
-                <p className="text-sm text-muted-foreground">
-                  No photos. The trail gets the example images; you can replace them on the trail afterwards.
-                </p>
+              {editable && !pending && detail.publishedTrailIdentifier ? (
+                <>
+                  <p className="text-sm text-muted-foreground">
+                    The photos now belong to the published trail. Add your own or remove the example images there.
+                  </p>
+                  <TrailImagesDialog
+                    data={{ identifier: detail.publishedTrailIdentifier, name: fields.name }}
+                    selected
+                    label="Manage photos"
+                  />
+                </>
+              ) : (
+                images.length === 0 && (
+                  <p className="text-sm text-muted-foreground">
+                    No photos. The trail gets the example images; you can replace them on the trail afterwards.
+                  </p>
+                )
               )}
               <div className="flex flex-wrap gap-2">
                 {images.map((image) => (
@@ -494,7 +636,17 @@ export default function HikeSubmissionReviewPage() {
                 {(routeDirty || fieldsDirty) && (
                   <p className="text-sm text-destructive">Save your changes before approving.</p>
                 )}
-                <Button className="w-full" disabled={busy || routeDirty || fieldsDirty} onClick={() => void approve()}>
+                {!detail.city.trim() && <p className="text-sm text-destructive">Add a city before approving.</p>}
+                {similar?.some((r) => r.likelyDuplicate) && (
+                  <p className="text-sm text-destructive">
+                    This looks like a route that already exists. Check "Already on the map?" before approving.
+                  </p>
+                )}
+                <Button
+                  className="w-full"
+                  disabled={busy || routeDirty || fieldsDirty || !detail.city.trim()}
+                  onClick={() => void approve()}
+                >
                   {busy && <Loader2 className="size-4 animate-spin" />}
                   Approve and publish
                 </Button>

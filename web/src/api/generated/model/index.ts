@@ -103,6 +103,7 @@ export * from './saveUserMappingRequest';
 export * from './searchFriendResultResponse';
 export * from './sendFriendRequestRequest';
 export * from './setTrailVerifiedRequest';
+export * from './similarTrailResponse';
 export * from './trailCardResponse';
 export * from './trailContributionResponse';
 export * from './trailImageResponse';

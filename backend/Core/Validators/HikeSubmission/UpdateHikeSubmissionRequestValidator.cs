@@ -16,5 +16,7 @@ public class UpdateHikeSubmissionRequestValidator : AbstractValidator<UpdateHike
         RuleFor(x => x.Parking).MaximumLength(HikeSubmissionLimits.ShortText);
         RuleFor(x => x.GettingThere).NotEmpty().MaximumLength(HikeSubmissionLimits.ShortText);
         RuleFor(x => x.PublicTransport).MaximumLength(HikeSubmissionLimits.ShortText);
+        RuleFor(x => x.AccessibilityInfo).MaximumLength(HikeSubmissionLimits.AccessibilityInfo);
+        RuleFor(x => x.City).NotEmpty().MaximumLength(HikeSubmissionLimits.City);
     }
 }

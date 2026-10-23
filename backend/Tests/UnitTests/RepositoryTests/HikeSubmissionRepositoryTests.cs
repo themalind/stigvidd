@@ -299,6 +299,132 @@ public class HikeSubmissionRepositoryTests : TestBase
         (await check.Trails.AnyAsync(t => t.Identifier == approved.TrailIdentifier, TestContext.Current.CancellationToken)).Should().BeTrue();
     }
 
+    [Fact]
+    public async Task UpdateDetails_WhenApproved_ReachesThePublishedTrail()
+    {
+        var (repository, factory) = Build(Submission());
+        var approved = await ApproveOkAsync(repository);
+        var stamp = await TrailLastUpdatedAtAsync(factory, approved.TrailIdentifier);
+
+        var result = await repository.UpdateDetailsAsync(
+            SubmissionIdentifier, "Biblioteksrundan", "Från biblioteket", 1, "Vid biblioteket", "Buss 4", "Linje 4", "Asfalt", "Borås",
+            stamp, TestContext.Current.CancellationToken);
+
+        result.IsSuccess.Should().BeTrue();
+        await using var db = await factory.CreateDbContextAsync(TestContext.Current.CancellationToken);
+        var trail = await db.Trails.Include(t => t.VisitorInformation)
+            .SingleAsync(t => t.Identifier == approved.TrailIdentifier, TestContext.Current.CancellationToken);
+        trail.Name.Should().Be("Biblioteksrundan");
+        trail.Description.Should().Be("Från biblioteket");
+        trail.Classification.Should().Be(1);
+        trail.AccessibilityInfo.Should().Be("Asfalt");
+        trail.City.Should().Be("Borås");
+        trail.VisitorInformation.Should().NotBeNull();
+        trail.VisitorInformation.Parking.Should().Be("Vid biblioteket");
+        trail.VisitorInformation.GettingThere.Should().Be("Buss 4");
+        trail.VisitorInformation.PublicTransport.Should().Be("Linje 4");
+    }
+
+    [Fact]
+    public async Task UpdateGeometry_WhenApproved_ReachesThePublishedTrail()
+    {
+        var (repository, factory) = Build(Submission());
+        var approved = await ApproveOkAsync(repository);
+        var moved = Utilities.GeoPath((12.95, 57.73), (12.94, 57.72), (12.95, 57.73));
+
+        var result = await repository.UpdateGeometryAsync(SubmissionIdentifier, moved, 2.6m, 10, TestContext.Current.CancellationToken);
+
+        result.IsSuccess.Should().BeTrue();
+        await using var db = await factory.CreateDbContextAsync(TestContext.Current.CancellationToken);
+        var trail = await db.Trails.SingleAsync(t => t.Identifier == approved.TrailIdentifier, TestContext.Current.CancellationToken);
+        trail.GeoPath.Should().NotBeNull();
+        trail.GeoPath.NumPoints.Should().Be(3);
+        trail.GeoPath.Coordinates[0].X.Should().Be(12.95);
+        trail.TrailLength.Should().Be(2.6m);
+    }
+
+    [Fact]
+    public async Task Update_WhenRejected_IsAConflict()
+    {
+        var (repository, _) = Build(Submission(HikeSubmissionStatus.Rejected));
+
+        var details = await repository.UpdateDetailsAsync(
+            SubmissionIdentifier, "x", "y", 1, "", "z", "", "", "Borås", default, TestContext.Current.CancellationToken);
+        var geometry = await repository.UpdateGeometryAsync(
+            SubmissionIdentifier, Utilities.GeoPath((12.94, 57.72), (12.95, 57.73)), 1m, 0, TestContext.Current.CancellationToken);
+
+        details.Status.Should().Be(RepositoryResultStatus.Conflict);
+        geometry.Status.Should().Be(RepositoryResultStatus.Conflict);
+    }
+
+    [Fact]
+    public async Task Update_WhenApprovedButTheTrailIsGone_IsAConflict()
+    {
+        var (repository, _) = Build(Submission(HikeSubmissionStatus.Approved, withImage: false));
+
+        var result = await repository.UpdateDetailsAsync(
+            SubmissionIdentifier, "x", "y", 1, "", "z", "", "", "Borås", default, TestContext.Current.CancellationToken);
+
+        result.Status.Should().Be(RepositoryResultStatus.Conflict);
+    }
+
+    [Fact]
+    public async Task UpdateDetails_WhenTheTrailChangedSinceItWasLoaded_IsAConflictAndKeepsTheTrail()
+    {
+        var (repository, factory) = Build(Submission());
+        var approved = await ApproveOkAsync(repository);
+        var loaded = await TrailLastUpdatedAtAsync(factory, approved.TrailIdentifier);
+        await using (var db = await factory.CreateDbContextAsync(TestContext.Current.CancellationToken))
+        {
+            var edited = await db.Trails.Include(t => t.VisitorInformation)
+                .SingleAsync(t => t.Identifier == approved.TrailIdentifier, TestContext.Current.CancellationToken);
+            edited.VisitorInformation.Should().NotBeNull();
+            edited.VisitorInformation.Parking = "Ändrad i trail-editorn";
+            edited.LastUpdatedAt = loaded.AddMinutes(5);
+            await db.SaveChangesAsync(TestContext.Current.CancellationToken);
+        }
+
+        var result = await repository.UpdateDetailsAsync(
+            SubmissionIdentifier, "Nytt namn", "y", 1, "Gammal parkering", "z", "", "", "Borås", loaded,
+            TestContext.Current.CancellationToken);
+
+        result.Status.Should().Be(RepositoryResultStatus.Conflict);
+        await using var check = await factory.CreateDbContextAsync(TestContext.Current.CancellationToken);
+        var trail = await check.Trails.Include(t => t.VisitorInformation)
+            .SingleAsync(t => t.Identifier == approved.TrailIdentifier, TestContext.Current.CancellationToken);
+        trail.Name.Should().NotBe("Nytt namn");
+        trail.VisitorInformation.Should().NotBeNull();
+        trail.VisitorInformation.Parking.Should().Be("Ändrad i trail-editorn");
+    }
+
+    [Fact]
+    public async Task UpdateDetails_WhenPendingAndChangedSinceItWasLoaded_IsAConflict()
+    {
+        var (repository, factory) = Build(Submission());
+        await using var db = await factory.CreateDbContextAsync(TestContext.Current.CancellationToken);
+        var stamp = await db.HikeSubmissions
+            .Where(s => s.Identifier == SubmissionIdentifier)
+            .Select(s => s.LastUpdatedAt)
+            .SingleAsync(TestContext.Current.CancellationToken);
+
+        var stale = await repository.UpdateDetailsAsync(
+            SubmissionIdentifier, "x", "y", 1, "", "z", "", "", "Borås", stamp.AddSeconds(-1), TestContext.Current.CancellationToken);
+        var current = await repository.UpdateDetailsAsync(
+            SubmissionIdentifier, "x", "y", 1, "", "z", "", "", "Borås", stamp, TestContext.Current.CancellationToken);
+
+        stale.Status.Should().Be(RepositoryResultStatus.Conflict);
+        current.IsSuccess.Should().BeTrue();
+    }
+
+    private static async Task<DateTime> TrailLastUpdatedAtAsync(IDbContextFactory<StigViddDbContext> factory, string trailIdentifier)
+    {
+        await using var db = await factory.CreateDbContextAsync(TestContext.Current.CancellationToken);
+        return await db.Trails
+            .Where(t => t.Identifier == trailIdentifier)
+            .Select(t => t.LastUpdatedAt)
+            .SingleAsync(TestContext.Current.CancellationToken);
+    }
+
     private static async Task<ApprovedSubmission> ApproveOkAsync(HikeSubmissionRepository repository, IReadOnlyCollection<string>? placeholders = null)
     {
         var result = await repository.ApproveAsync(SubmissionIdentifier, "admin", placeholders ?? [], TestContext.Current.CancellationToken);

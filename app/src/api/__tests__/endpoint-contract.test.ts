@@ -154,6 +154,7 @@ const createSubmissionRequest = {
   description: "Runt sjön",
   classification: 1,
   gettingThere: "Buss 3",
+  city: "Borås",
   showSubmitterName: true,
   acceptTransfer: true,
   consentVersion: "2026-10-19",

@@ -45,6 +45,17 @@ public class AdminHikeSubmissionsController : StigViddController
         return Ok(result.Value);
     }
 
+    [HttpGet("{identifier}/similar-routes")]
+    public async Task<ActionResult<IReadOnlyCollection<SimilarTrailResponse>>> GetSimilarRoutes(string identifier, CancellationToken ctoken)
+    {
+        var result = await _submissionService.GetSimilarRoutesAsync(identifier, ctoken);
+
+        if (!result.Success && result.Message != null)
+            return ToActionResult(result.Message);
+
+        return Ok(result.Value);
+    }
+
     [HttpPut("{identifier}")]
     public async Task<ActionResult<AdminHikeSubmissionResponse>> UpdateSubmission(
         string identifier,

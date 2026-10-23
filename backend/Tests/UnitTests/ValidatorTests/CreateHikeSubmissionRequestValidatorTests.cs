@@ -18,6 +18,7 @@ public class CreateHikeSubmissionRequestValidatorTests
         Description = "Runt sjön",
         Classification = 2,
         GettingThere = "Buss 3",
+        City = "Borås",
         AcceptTransfer = true,
         ConsentVersion = HikeSubmissionConsent.CurrentVersion,
         ConsentLocale = "sv",
@@ -27,6 +28,31 @@ public class CreateHikeSubmissionRequestValidatorTests
     public void Validate_WithTheCurrentConsent_ShouldPass()
     {
         _validator.Validate(ValidRequest()).IsValid.Should().BeTrue();
+    }
+
+    [Theory]
+    [InlineData(200, true)]
+    [InlineData(201, false)]
+    public void Validate_AccessibilityInfo_AllowsWhatATrailCanHold(int length, bool valid)
+    {
+        var request = ValidRequest();
+        request.AccessibilityInfo = new string('a', length);
+
+        _validator.Validate(request).IsValid.Should().Be(valid);
+    }
+
+    [Theory]
+    [InlineData("", false)]
+    [InlineData("   ", false)]
+    [InlineData("Borås", true)]
+    [InlineData("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", true)]
+    [InlineData("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", false)]
+    public void Validate_City_IsRequiredAndFitsATrail(string city, bool valid)
+    {
+        var request = ValidRequest();
+        request.City = city;
+
+        _validator.Validate(request).IsValid.Should().Be(valid);
     }
 
     [Fact]

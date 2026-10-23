@@ -164,18 +164,25 @@ public class HikeSubmissionRepository : IHikeSubmissionRepository
 
     public async Task<RepositoryResult> UpdateDetailsAsync(
         string identifier, string name, string description, int classification,
-        string parking, string gettingThere, string publicTransport, CancellationToken ctoken)
+        string parking, string gettingThere, string publicTransport, string accessibilityInfo, string city,
+        DateTime expectedLastUpdatedAt, CancellationToken ctoken)
     {
         try
         {
             using var context = await _context.CreateDbContextAsync(ctoken);
 
-            var submission = await context.HikeSubmissions.FirstOrDefaultAsync(s => s.Identifier == identifier, ctoken);
+            var submission = await context.HikeSubmissions
+                .Include($"{nameof(HikeSubmission.PublishedTrail)}.{nameof(Trail.VisitorInformation)}")
+                .FirstOrDefaultAsync(s => s.Identifier == identifier, ctoken);
 
             if (submission is null)
                 return RepositoryResult.NotFound();
 
-            if (submission.Status != HikeSubmissionStatus.Pending)
+            if (!IsEditable(submission))
+                return RepositoryResult.Conflict();
+
+            // keep-comment: the form sends every field, so a save over a newer trail edit would silently undo it
+            if ((submission.PublishedTrail?.LastUpdatedAt ?? submission.LastUpdatedAt) != expectedLastUpdatedAt)
                 return RepositoryResult.Conflict();
 
             submission.Name = name;
@@ -184,7 +191,23 @@ public class HikeSubmissionRepository : IHikeSubmissionRepository
             submission.Parking = parking;
             submission.GettingThere = gettingThere;
             submission.PublicTransport = publicTransport;
+            submission.AccessibilityInfo = accessibilityInfo;
+            submission.City = city;
             submission.LastUpdatedAt = DateTime.UtcNow;
+
+            if (submission.PublishedTrail is { } trail)
+            {
+                trail.Name = name;
+                trail.Description = description;
+                trail.Classification = classification;
+                trail.AccessibilityInfo = accessibilityInfo;
+                trail.City = city;
+                trail.VisitorInformation ??= new VisitorInformation();
+                trail.VisitorInformation.Parking = parking;
+                trail.VisitorInformation.GettingThere = gettingThere;
+                trail.VisitorInformation.PublicTransport = publicTransport;
+                trail.LastUpdatedAt = DateTime.UtcNow;
+            }
 
             await context.SaveChangesAsync(ctoken);
 
@@ -207,18 +230,27 @@ public class HikeSubmissionRepository : IHikeSubmissionRepository
         {
             using var context = await _context.CreateDbContextAsync(ctoken);
 
-            var submission = await context.HikeSubmissions.FirstOrDefaultAsync(s => s.Identifier == identifier, ctoken);
+            var submission = await context.HikeSubmissions
+                .Include(s => s.PublishedTrail)
+                .FirstOrDefaultAsync(s => s.Identifier == identifier, ctoken);
 
             if (submission is null)
                 return RepositoryResult.NotFound();
 
-            if (submission.Status != HikeSubmissionStatus.Pending)
+            if (!IsEditable(submission))
                 return RepositoryResult.Conflict();
 
             submission.GeoPath = path;
             submission.TrailLength = lengthKm;
             submission.LongestGapMetres = longestGapMetres;
             submission.LastUpdatedAt = DateTime.UtcNow;
+
+            if (submission.PublishedTrail is { } trail)
+            {
+                trail.GeoPath = path.Copy() as LineString ?? path;
+                trail.TrailLength = lengthKm;
+                trail.LastUpdatedAt = DateTime.UtcNow;
+            }
 
             await context.SaveChangesAsync(ctoken);
 
@@ -234,6 +266,11 @@ public class HikeSubmissionRepository : IHikeSubmissionRepository
             return RepositoryResult.Error();
         }
     }
+
+    // keep-comment: an approved submission stays editable while its trail exists, and edits reach the trail too
+    private static bool IsEditable(HikeSubmission submission) =>
+        submission.Status == HikeSubmissionStatus.Pending
+        || (submission.Status == HikeSubmissionStatus.Approved && submission.PublishedTrail is not null);
 
     public async Task<RepositoryResult<string>> DeleteImageAsync(string identifier, string imageIdentifier, CancellationToken ctoken)
     {
@@ -310,6 +347,8 @@ public class HikeSubmissionRepository : IHikeSubmissionRepository
         submission.Parking = string.Empty;
         submission.GettingThere = string.Empty;
         submission.PublicTransport = string.Empty;
+        submission.AccessibilityInfo = string.Empty;
+        submission.City = string.Empty;
         submission.LongestGapMetres = 0;
     }
 
@@ -355,6 +394,8 @@ public class HikeSubmissionRepository : IHikeSubmissionRepository
                 TrailLength = submission.TrailLength,
                 Classification = submission.Classification,
                 Description = submission.Description,
+                AccessibilityInfo = submission.AccessibilityInfo,
+                City = submission.City,
                 GeoPath = submission.GeoPath,
                 CreatedBy = decidedBy,
                 IsVerified = true,
@@ -462,6 +503,49 @@ public class HikeSubmissionRepository : IHikeSubmissionRepository
         {
             _logger.LogError(ex, "HikeSubmissionRepository: DeleteByUserIdAsync -> Something went wrong for user {UserId}.", userId);
             return RepositoryResult<IReadOnlyCollection<string>>.Error();
+        }
+    }
+
+    // keep-comment: every trail plus the other pending submissions, leaving out this submission and the trail it published
+    public async Task<RepositoryResult<IReadOnlyCollection<RoutePath>>> GetComparableRoutesAsync(string exceptSubmissionIdentifier, CancellationToken ctoken)
+    {
+        try
+        {
+            using var context = await _context.CreateDbContextAsync(ctoken);
+
+            var ownTrailId = await context.HikeSubmissions
+                .Where(s => s.Identifier == exceptSubmissionIdentifier)
+                .Select(s => s.PublishedTrailId)
+                .FirstOrDefaultAsync(ctoken);
+
+            var trails = await context.Trails
+                .Where(t => t.GeoPath != null && t.Id != ownTrailId)
+                .Select(t => new { t.Identifier, t.Name, IsContribution = t.Contribution != null, t.GeoPath })
+                .ToListAsync(ctoken);
+
+            var submissions = await context.HikeSubmissions
+                .Where(s => s.Status == HikeSubmissionStatus.Pending && s.GeoPath != null && s.Identifier != exceptSubmissionIdentifier)
+                .Select(s => new { s.Identifier, s.Name, s.GeoPath })
+                .ToListAsync(ctoken);
+
+            IReadOnlyCollection<RoutePath> routes =
+            [
+                .. trails
+                    .Select(t => t.GeoPath is { } path
+                        ? new RoutePath(t.Identifier, t.Name, t.IsContribution ? RouteKind.Contribution : RouteKind.Trail, path)
+                        : null)
+                    .OfType<RoutePath>(),
+                .. submissions
+                    .Select(s => s.GeoPath is { } path ? new RoutePath(s.Identifier, s.Name, RouteKind.Submission, path) : null)
+                    .OfType<RoutePath>(),
+            ];
+
+            return RepositoryResult<IReadOnlyCollection<RoutePath>>.Success(routes);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "HikeSubmissionRepository: GetComparableRoutesAsync -> Something went wrong for submission {Identifier}.", exceptSubmissionIdentifier);
+            return RepositoryResult<IReadOnlyCollection<RoutePath>>.Error();
         }
     }
 }

@@ -56,7 +56,7 @@ public static class DataAnonymizer
             ["ReviewImages"] = Table(kept: "Id Identifier CreatedAt LastUpdatedAt ImageUrl ReviewId"),
             ["HikeImages"] = Table(kept: "Id Identifier CreatedAt LastUpdatedAt HikeId ImageUrl ModerationState"),
             ["HikeSubmissions"] = Table(
-                kept: "Id Identifier CreatedAt LastUpdatedAt UserId SourceHikeId Name Description GeoPath OriginalGeoPath TrailLength LongestGapMetres Classification Parking GettingThere PublicTransport ShowSubmitterName TransferAcceptedAt ConsentTextId Status RejectionReason DecidedAt PublishedTrailId",
+                kept: "Id Identifier CreatedAt LastUpdatedAt UserId SourceHikeId Name Description GeoPath OriginalGeoPath TrailLength LongestGapMetres Classification Parking GettingThere PublicTransport AccessibilityInfo City ShowSubmitterName TransferAcceptedAt ConsentTextId Status RejectionReason DecidedAt PublishedTrailId",
                 replaced: "DecidedBy"),
             ["HikeSubmissionImages"] = Table(kept: "Id Identifier CreatedAt LastUpdatedAt HikeSubmissionId SourceHikeImageId ImageUrl Width Height SizeBytes SortOrder"),
             ["TrailContributions"] = Table(kept: "TrailId SubmittedByUserId ShowSubmitterName PublishedAt TransferAcceptedAt ConsentTextId"),

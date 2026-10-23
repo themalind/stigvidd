@@ -163,6 +163,7 @@ public class EndpointAuthorizationTests : IClassFixture<StigViddWebApplicationFa
         "DELETE /api/v1/admin/hike-submissions/{identifier}/images/{imageIdentifier}",
         "GET /api/v1/admin/hike-submissions",
         "GET /api/v1/admin/hike-submissions/{identifier}",
+        "GET /api/v1/admin/hike-submissions/{identifier}/similar-routes",
         "POST /api/v1/admin/hike-submissions/{identifier}/approve",
         "POST /api/v1/admin/hike-submissions/{identifier}/reject",
         "PUT /api/v1/admin/hike-submissions/{identifier}",

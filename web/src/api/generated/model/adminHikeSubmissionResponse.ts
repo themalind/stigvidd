@@ -15,6 +15,8 @@ export interface AdminHikeSubmissionResponse {
   parking: string;
   gettingThere: string;
   publicTransport: string;
+  accessibilityInfo: string;
+  city: string;
   showSubmitterName?: boolean;
   /** @nullable */
   submitterNickName?: string | null;
@@ -27,6 +29,7 @@ export interface AdminHikeSubmissionResponse {
   /** @nullable */
   decidedAt?: string | null;
   createdAt?: string;
+  lastUpdatedAt?: string;
   trailLength?: number;
   coordinates: string;
   originalCoordinates: string;

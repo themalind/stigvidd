@@ -73,6 +73,21 @@ export function movePoint(path: LngLat[], index: number, to: LngLat): LngLat[] {
   return path.map((point, i) => (i === index ? to : point));
 }
 
+export function insertPoint(path: LngLat[], afterIndex: number, at: LngLat): LngLat[] {
+  if (afterIndex < 0 || afterIndex >= path.length - 1) return path;
+  return [...path.slice(0, afterIndex + 1), at, ...path.slice(afterIndex + 1)];
+}
+
+export function midpoints(path: LngLat[]): LngLat[] {
+  return path.slice(1).map((b, i) => [(path[i][0] + b[0]) / 2, (path[i][1] + b[1]) / 2]);
+}
+
+// keep-comment: drawn runs outward from the chosen end, so extending the start puts the last drawn point first
+export function extendPath(path: LngLat[], end: "start" | "end", drawn: LngLat[]): LngLat[] {
+  if (drawn.length === 0) return path;
+  return end === "end" ? [...path, ...drawn] : [...reversePath(drawn), ...path];
+}
+
 // keep-comment: a path needs two points, so the last two are never removed
 export function deletePoint(path: LngLat[], index: number): LngLat[] {
   if (path.length <= 2 || index < 0 || index >= path.length) return path;
@@ -85,6 +100,24 @@ export function replaceSection(path: LngLat[], from: number, to: number, drawn: 
   const end = Math.max(from, to);
   if (start < 0 || end >= path.length || start === end) return path;
   return [...path.slice(0, start + 1), ...drawn, ...path.slice(end)];
+}
+
+// keep-comment: a walk that ends this close to where it began is a loop, so it can start anywhere along it
+export const LOOP_CLOSE_METRES = 150;
+
+export function isLoop(path: LngLat[], closeMetres = LOOP_CLOSE_METRES): boolean {
+  return path.length > 2 && distanceMetres(path[0], path[path.length - 1]) <= closeMetres;
+}
+
+// keep-comment: rotates a loop to begin and end at index; null when the path is not a loop
+export function startLoopAt(path: LngLat[], index: number, closeMetres = LOOP_CLOSE_METRES): LngLat[] | null {
+  if (!isLoop(path, closeMetres) || index < 0 || index >= path.length) return null;
+  if (index === 0 || index === path.length - 1) return path;
+  return [...path.slice(index), ...path.slice(0, index + 1)];
+}
+
+export function reversePath(path: LngLat[]): LngLat[] {
+  return [...path].reverse();
 }
 
 export function formatMetres(metres: number): string {

@@ -24,6 +24,8 @@ public class HikeSubmission : BaseEntity
     public string Parking { get; set; } = string.Empty;
     public string GettingThere { get; set; } = string.Empty;
     public string PublicTransport { get; set; } = string.Empty;
+    public string AccessibilityInfo { get; set; } = string.Empty;
+    public string City { get; set; } = string.Empty;
 
     public bool ShowSubmitterName { get; set; }
     public DateTime TransferAcceptedAt { get; set; }

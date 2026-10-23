@@ -12,6 +12,8 @@ public class AdminHikeSubmissionResponse
     public required string Parking { get; set; }
     public required string GettingThere { get; set; }
     public required string PublicTransport { get; set; }
+    public required string AccessibilityInfo { get; set; }
+    public required string City { get; set; }
     public bool ShowSubmitterName { get; set; }
     public string? SubmitterNickName { get; set; }
     public DateTime TransferAcceptedAt { get; set; }
@@ -20,6 +22,7 @@ public class AdminHikeSubmissionResponse
     public string? DecidedBy { get; set; }
     public DateTime? DecidedAt { get; set; }
     public DateTime CreatedAt { get; set; }
+    public DateTime LastUpdatedAt { get; set; }
     public decimal TrailLength { get; set; }
     public required string Coordinates { get; set; }
     public required string OriginalCoordinates { get; set; }

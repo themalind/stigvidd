@@ -5,6 +5,7 @@ using Core.Factories;
 using Core.Interfaces.Repositories;
 using Core.Interfaces.Services;
 using Core.Repositories;
+using Core.TrailImport.Matching;
 using Infrastructure.Data.Entities;
 using Infrastructure.Enums;
 using Microsoft.Extensions.Configuration;
@@ -124,6 +125,8 @@ public class HikeSubmissionService : IHikeSubmissionService
             Parking = request.Parking?.Trim() ?? string.Empty,
             GettingThere = request.GettingThere.Trim(),
             PublicTransport = request.PublicTransport?.Trim() ?? string.Empty,
+            AccessibilityInfo = request.AccessibilityInfo?.Trim() ?? string.Empty,
+            City = request.City.Trim(),
             ShowSubmitterName = request.ShowSubmitterName,
             TransferAcceptedAt = DateTime.UtcNow,
             ConsentTextId = consentResult.Value,
@@ -310,6 +313,8 @@ public class HikeSubmissionService : IHikeSubmissionService
                 s.Parking,
                 s.GettingThere,
                 s.PublicTransport,
+                s.AccessibilityInfo,
+                s.City,
                 s.ShowSubmitterName,
                 SubmitterNickName = s.User != null ? s.User.NickName : null,
                 s.TransferAcceptedAt,
@@ -318,10 +323,25 @@ public class HikeSubmissionService : IHikeSubmissionService
                 s.DecidedBy,
                 s.DecidedAt,
                 s.CreatedAt,
+                s.LastUpdatedAt,
                 s.TrailLength,
                 s.GeoPath,
                 s.OriginalGeoPath,
                 PublishedTrailIdentifier = s.PublishedTrail != null ? s.PublishedTrail.Identifier : null,
+                Published = s.PublishedTrail == null ? null : new
+                {
+                    s.PublishedTrail.Name,
+                    s.PublishedTrail.Description,
+                    s.PublishedTrail.Classification,
+                    s.PublishedTrail.AccessibilityInfo,
+                    s.PublishedTrail.City,
+                    s.PublishedTrail.TrailLength,
+                    s.PublishedTrail.GeoPath,
+                    s.PublishedTrail.LastUpdatedAt,
+                    Parking = s.PublishedTrail.VisitorInformation != null ? s.PublishedTrail.VisitorInformation.Parking : "",
+                    GettingThere = s.PublishedTrail.VisitorInformation != null ? s.PublishedTrail.VisitorInformation.GettingThere : "",
+                    PublicTransport = s.PublishedTrail.VisitorInformation != null ? s.PublishedTrail.VisitorInformation.PublicTransport : "",
+                },
                 Images = s.Images.AsQueryable()
                     .Where(HikeSubmissionRepository.IsPublishableExpression)
                     .OrderBy(i => i.SortOrder)
@@ -337,16 +357,20 @@ public class HikeSubmissionService : IHikeSubmissionService
             return Result.Fail<AdminHikeSubmissionResponse>(new Message(404, "Submission not found"));
 
         var s = result.Value;
+        // keep-comment: once published the trail is what the app shows, and the trail editor may have changed it since
+        var p = s.Published;
 
         return Result.Ok(new AdminHikeSubmissionResponse
         {
             Identifier = s.Identifier,
-            Name = s.Name,
-            Description = s.Description,
-            Classification = s.Classification,
-            Parking = s.Parking,
-            GettingThere = s.GettingThere,
-            PublicTransport = s.PublicTransport,
+            Name = p?.Name ?? s.Name,
+            Description = p?.Description ?? s.Description,
+            Classification = p?.Classification ?? s.Classification,
+            Parking = p?.Parking ?? s.Parking,
+            GettingThere = p?.GettingThere ?? s.GettingThere,
+            PublicTransport = p?.PublicTransport ?? s.PublicTransport,
+            AccessibilityInfo = p?.AccessibilityInfo ?? s.AccessibilityInfo,
+            City = p?.City ?? s.City,
             ShowSubmitterName = s.ShowSubmitterName,
             SubmitterNickName = s.SubmitterNickName,
             TransferAcceptedAt = s.TransferAcceptedAt,
@@ -355,8 +379,9 @@ public class HikeSubmissionService : IHikeSubmissionService
             DecidedBy = s.DecidedBy,
             DecidedAt = s.DecidedAt,
             CreatedAt = s.CreatedAt,
-            TrailLength = s.TrailLength,
-            Coordinates = GeoPathSerializer.ToCoordinateJson(s.GeoPath),
+            LastUpdatedAt = p?.LastUpdatedAt ?? s.LastUpdatedAt,
+            TrailLength = p?.TrailLength ?? s.TrailLength,
+            Coordinates = GeoPathSerializer.ToCoordinateJson(p?.GeoPath ?? s.GeoPath),
             OriginalCoordinates = GeoPathSerializer.ToCoordinateJson(s.OriginalGeoPath),
             PublishedTrailIdentifier = s.PublishedTrailIdentifier,
             Images = s.Images
@@ -381,6 +406,9 @@ public class HikeSubmissionService : IHikeSubmissionService
             request.Parking?.Trim() ?? string.Empty,
             request.GettingThere.Trim(),
             request.PublicTransport?.Trim() ?? string.Empty,
+            request.AccessibilityInfo?.Trim() ?? string.Empty,
+            request.City.Trim(),
+            request.LastUpdatedAt,
             ctoken);
 
         var failure = ToFailure(result.Status, identifier);
@@ -459,6 +487,61 @@ public class HikeSubmissionService : IHikeSubmissionService
         return Result.Ok();
     }
 
+    public async Task<Result<IReadOnlyCollection<SimilarTrailResponse>>> GetSimilarRoutesAsync(string identifier, CancellationToken ctoken)
+    {
+        var walkResult = await _submissionRepository.GetByIdentifierAsync(
+            identifier,
+            s => new { s.GeoPath, Published = s.PublishedTrail != null ? s.PublishedTrail.GeoPath : null },
+            ctoken);
+
+        if (walkResult.Status == RepositoryResultStatus.Error)
+            return Result.Fail<IReadOnlyCollection<SimilarTrailResponse>>(new Message(500, "An error occurred while fetching the submission."));
+
+        if (!walkResult.IsSuccess)
+            return Result.Fail<IReadOnlyCollection<SimilarTrailResponse>>(new Message(404, "Submission not found"));
+
+        if ((walkResult.Value.Published ?? walkResult.Value.GeoPath) is not { } walk)
+            return Result.Ok<IReadOnlyCollection<SimilarTrailResponse>>([]);
+
+        var routes = await _submissionRepository.GetComparableRoutesAsync(identifier, ctoken);
+
+        if (!routes.IsSuccess)
+            return Result.Fail<IReadOnlyCollection<SimilarTrailResponse>>(new Message(500, "An error occurred while fetching the trails to compare with."));
+
+        return Result.Ok(RankSimilar(walk, routes.Value));
+    }
+
+    // keep-comment: wider than the import's 15 m, since a phone's GPS wanders further than a drawn trail
+    internal const double SimilarToleranceMetres = 25;
+    internal const double SimilarMinimumShare = 0.3;
+    internal const double DuplicateShare = 0.8;
+    private const int MaxSimilar = 5;
+    private const double NearbySlackDegrees = 0.005;
+
+    internal static IReadOnlyCollection<SimilarTrailResponse> RankSimilar(LineString walk, IEnumerable<RoutePath> routes)
+    {
+        var box = walk.EnvelopeInternal.Copy();
+        box.ExpandBy(NearbySlackDegrees);
+
+        return routes
+            .Where(r => box.Intersects(r.GeoPath.EnvelopeInternal))
+            .Select(r => (Route: r, Comparison: GeometryComparison.Compare(walk, r.GeoPath, SimilarToleranceMetres)))
+            .Where(x => Math.Max(x.Comparison.CoverageForward, x.Comparison.CoverageBackward) >= SimilarMinimumShare)
+            .OrderByDescending(x => Math.Min(x.Comparison.CoverageForward, x.Comparison.CoverageBackward))
+            .ThenByDescending(x => x.Comparison.CoverageForward)
+            .Take(MaxSimilar)
+            .Select(x => new SimilarTrailResponse
+            {
+                Identifier = x.Route.Identifier,
+                Name = x.Route.Name,
+                Kind = x.Route.Kind.ToString(),
+                WalkOnRoute = Math.Round(x.Comparison.CoverageForward, 2),
+                RouteOnWalk = Math.Round(x.Comparison.CoverageBackward, 2),
+                LikelyDuplicate = Math.Min(x.Comparison.CoverageForward, x.Comparison.CoverageBackward) >= DuplicateShare,
+            })
+            .ToList();
+    }
+
     // keep-comment: a null index keeps that end as recorded; both are inclusive and must leave at least two points
     internal static LineString? Trim(LineString path, int? startIndex, int? endIndex)
     {
@@ -476,7 +559,7 @@ public class HikeSubmissionService : IHikeSubmissionService
     {
         RepositoryResultStatus.Success => null,
         RepositoryResultStatus.NotFound => new Message(404, $"Submission {identifier} not found."),
-        RepositoryResultStatus.Conflict => new Message(409, "The submission has already been decided."),
+        RepositoryResultStatus.Conflict => new Message(409, "The submission has been decided or changed elsewhere. Reload it and try again."),
         _ => new Message(500, "An error occurred while updating the submission."),
     };
 

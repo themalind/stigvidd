@@ -16,14 +16,19 @@ public interface IHikeSubmissionRepository
     Task<RepositoryResult<T>> GetByIdentifierAsync<T>(string identifier, Expression<Func<HikeSubmission, T>> selector, CancellationToken ctoken);
     Task<RepositoryResult<IReadOnlyCollection<T>>> GetByUserIdAsync<T>(int userId, Expression<Func<HikeSubmission, T>> selector, CancellationToken ctoken);
     Task<RepositoryResult<IReadOnlyCollection<T>>> GetByStatusAsync<T>(HikeSubmissionStatus? status, Expression<Func<HikeSubmission, T>> selector, CancellationToken ctoken);
-    Task<RepositoryResult> UpdateDetailsAsync(string identifier, string name, string description, int classification, string parking, string gettingThere, string publicTransport, CancellationToken ctoken);
+    Task<RepositoryResult> UpdateDetailsAsync(string identifier, string name, string description, int classification, string parking, string gettingThere, string publicTransport, string accessibilityInfo, string city, DateTime expectedLastUpdatedAt, CancellationToken ctoken);
     Task<RepositoryResult> UpdateGeometryAsync(string identifier, LineString path, decimal lengthKm, double longestGapMetres, CancellationToken ctoken);
     Task<RepositoryResult<string>> DeleteImageAsync(string identifier, string imageIdentifier, CancellationToken ctoken);
     Task<RepositoryResult<IReadOnlyCollection<string>>> RejectAsync(string identifier, string reason, string decidedBy, CancellationToken ctoken);
     Task<RepositoryResult<ApprovedSubmission>> ApproveAsync(string identifier, string decidedBy, IReadOnlyCollection<string> placeholderImagePaths, CancellationToken ctoken);
     Task<RepositoryResult<IReadOnlyCollection<string>>> WithdrawAsync(string identifier, int userId, CancellationToken ctoken);
     Task<RepositoryResult<IReadOnlyCollection<string>>> DeleteByUserIdAsync(int userId, CancellationToken ctoken);
+    Task<RepositoryResult<IReadOnlyCollection<RoutePath>>> GetComparableRoutesAsync(string exceptSubmissionIdentifier, CancellationToken ctoken);
 }
+
+public enum RouteKind { Trail, Contribution, Submission }
+
+public record RoutePath(string Identifier, string Name, RouteKind Kind, LineString GeoPath);
 
 // keep-comment: DiscardedImageUrls are copies whose hike photo was hidden by moderation; their files are the caller's to delete
 public record ApprovedSubmission(string TrailIdentifier, IReadOnlyCollection<string> DiscardedImageUrls);

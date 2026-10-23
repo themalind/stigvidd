@@ -15,4 +15,8 @@ export interface UpdateHikeSubmissionRequest {
   gettingThere: string;
   /** @nullable */
   publicTransport?: string | null;
+  /** @nullable */
+  accessibilityInfo?: string | null;
+  city: string;
+  lastUpdatedAt?: string;
 }

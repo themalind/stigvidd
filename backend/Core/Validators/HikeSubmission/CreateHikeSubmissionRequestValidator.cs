@@ -17,6 +17,8 @@ public class CreateHikeSubmissionRequestValidator : AbstractValidator<CreateHike
         RuleFor(x => x.Parking).MaximumLength(HikeSubmissionLimits.ShortText);
         RuleFor(x => x.GettingThere).NotEmpty().MaximumLength(HikeSubmissionLimits.ShortText);
         RuleFor(x => x.PublicTransport).MaximumLength(HikeSubmissionLimits.ShortText);
+        RuleFor(x => x.AccessibilityInfo).MaximumLength(HikeSubmissionLimits.AccessibilityInfo);
+        RuleFor(x => x.City).NotEmpty().MaximumLength(HikeSubmissionLimits.City);
         RuleFor(x => x.AcceptTransfer).Equal(true).WithMessage("The transfer to Stigvidd must be accepted.");
         RuleFor(x => x.ConsentVersion).Equal(HikeSubmissionConsent.CurrentVersion)
             .WithMessage("The consent text has changed. Update the app and accept it again.");
