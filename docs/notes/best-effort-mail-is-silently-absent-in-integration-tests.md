@@ -15,7 +15,7 @@ does.
 For a mail whose failure is fatal, this is loud. `verify-email` rolls registration back, so every
 register goes red until the template is seeded. For a **best-effort** mail it is completely
 silent. `MailOutboxService.EnqueueAsync` answers an unknown key with a failed `Result` (404),
-[`WelcomeMailService.SendAsync`](../../backend/Core/Services/WelcomeMailService.cs) logs it and
+[`WelcomeMailService.SendAsync`](../../backend/Core/Services/Mail/WelcomeMailService.cs) logs it and
 returns, the endpoint answers exactly as it would have anyway, and **no `OutboxEmails` row is ever
 written**. Measured when the welcome mail moved from registration to email verification: before
 `welcome` was seeded, the welcome mail had been failing on every register in that suite, and

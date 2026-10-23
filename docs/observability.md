@@ -14,7 +14,7 @@ wrong is "we retained precise location data about identifiable users for two yea
 | Concern                                        | File                                     |
 | ---------------------------------------------- | ---------------------------------------- |
 | Backend OTel wiring (opt-in guard, filters)    | `backend/StigviddAPI/Extensions/TelemetryExtensions.cs` |
-| Readiness probe over the DB                    | `backend/StigviddAPI/Extensions/DatabaseHealthCheck.cs` |
+| Readiness probe over the DB                    | `backend/StigviddAPI/HealthChecks/DatabaseHealthCheck.cs` |
 | Service definition, retention + memory caps    | `docker-compose.yml` → `openobserve`     |
 | Public routing, ingest/UI split, body cap      | `proxy/Caddyfile`                        |
 | Metrics retention override + PII guard         | `scripts/observatory-retention.sh`       |

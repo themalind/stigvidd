@@ -475,5 +475,3 @@ public class HikeService : IHikeService
         }
     }
 }
-
-internal record UserProjection(int Id, string NickName);

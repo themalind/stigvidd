@@ -30,7 +30,7 @@ it — deny is reserved for `*ModelSnapshot.cs` and `*.Designer.cs`. See
 
 **Omit the `Id`.** The column is `IdentityByDefaultColumn`, so an explicit `Id` inserts fine but
 does not advance the sequence — and the next row added through the application collides on the
-primary key. That is what [`reseed-identity-sequences.sql`](../../backend/reseed-identity-sequences.sql)
+primary key. That is what [`reseed-identity-sequences.sql`](../../scripts/reseed-identity-sequences.sql)
 exists to clean up; do not create more work for it.
 
 ## The cost, which is real but small

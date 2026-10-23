@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 using AwesomeAssertions;
+using Infrastructure.Enums;
 using StigviddAPI;
 using System.Net;
 using System.Net.Http.Headers;

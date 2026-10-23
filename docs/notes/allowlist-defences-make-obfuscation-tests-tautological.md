@@ -1,6 +1,6 @@
 # When the defence is an allowlist, "this obfuscated attack is rejected" cannot fail — the test that bites asserts an obfuscated *legitimate* value is accepted
 
-[`MailHtmlPolicy`](../../backend/Core/Services/MailHtmlPolicy.cs) decides whether an `href` is
+[`MailHtmlPolicy`](../../backend/Core/Services/Mail/MailHtmlPolicy.cs) decides whether an `href` is
 acceptable by requiring one of `http: https: mailto: tel: cid:`. It also HTML-decodes the value
 and strips control characters first, because `&#106;avascript:` and `java<TAB>script:` are both
 `javascript:` to a browser.

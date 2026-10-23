@@ -4,6 +4,8 @@
 using FluentValidation;
 using WebDataContracts.RequestModels.Trail;
 
+namespace Core.Validators.Trail;
+
 public class UpdateTrailRequestValidator : AbstractValidator<UpdateTrailRequest>
 {
     public UpdateTrailRequestValidator()

@@ -43,7 +43,7 @@ hand-built array and asserts exactly which ones match — no provider involved, 
 irrelevant. Measured: it goes red if the status check is dropped or the date field is swapped.
 The integration suite, which is **SQLite and does support `ExecuteDelete`**, then proves that
 the delete actually happens; see
-`Tests/IntegrationTests/MailOutboxController/AdminMailOutboxControllerIntegrationTests.cs`.
+`Tests/IntegrationTests/Admin/AdminMailOutboxControllerIntegrationTests.cs`.
 
 That split is worth more than a workaround would be. The predicate is where the damage lives —
 a purge that deletes the wrong rows cannot be undone — and testing it as data makes every

@@ -34,7 +34,7 @@ The old `MarkSucceededAsync` repointed only the processed row. The dispatcher th
 tables and under either spelling, still references that path. The reprocess now repoints
 every row on the old path and deletes only when `MediaReprocessSuccess.OldFileStillReferenced`
 is false. See [MediaReprocessRepository.cs](../../backend/Core/Repositories/MediaReprocessRepository.cs)
-and [MediaReprocessItemProcessor.cs](../../backend/Core/Services/MediaReprocessItemProcessor.cs).
+and [MediaReprocessItemProcessor.cs](../../backend/Core/Services/Media/MediaReprocessItemProcessor.cs).
 
 **The item status has to follow the rows.** A row is repointed whatever its item says, so
 `MarkSucceededAsync` also settles the items of those rows: every unsettled one in the same job

@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 using FluentValidation;
+using Infrastructure.Enums;
 using WebDataContracts.RequestModels.Facility;
 
 namespace Core.Validators.Facility;
