@@ -8,12 +8,14 @@
 import { ApiError } from "@/api/api-error";
 import { snackbarAtom } from "@/atoms/snackbar-atoms";
 import HikeDetailsScreen, { HikeFollowRoute } from "@/components/hike/hike-details-screen";
-import { SURFACE_BORDER_RADIUS } from "@/constants/constants";
+import { MAX_PENDING_SUBMISSIONS, SURFACE_BORDER_RADIUS } from "@/constants/constants";
 import { AppDefaultTheme } from "@/constants/theme";
 import { Hike } from "@/data/types";
 import { flushUntil, settle } from "@/test/flush";
+import { formatDate } from "@/utils/format-date";
 import { renderWithProviders } from "@/test/render";
 import { fireEvent, screen } from "@testing-library/react-native";
+import { View } from "react-native";
 
 const mockGetHikes = jest.fn();
 const mockDeleteHike = jest.fn();
@@ -527,6 +529,116 @@ describe("publishing", () => {
 
     expect(screen.getByTestId("publish-hike-pending")).toBeTruthy();
     expect(screen.queryByTestId("hike-publish")).toBeNull();
+  });
+
+  it("shows when the walk was published instead of offering it again", async () => {
+    mockGetSubmissions.mockResolvedValue([
+      {
+        identifier: "s1",
+        name: "x",
+        trailLength: 1,
+        status: "Approved",
+        createdAt: "2026-10-01T10:00:00Z",
+        decidedAt: "2026-10-05T10:00:00Z",
+        sourceHikeIdentifier: "hike-1",
+        publishedTrailIdentifier: "trail-9",
+        likeCount: 0,
+      },
+    ]);
+    await show();
+    await flushUntil(() => screen.queryByTestId("publish-hike-published"));
+
+    expect(screen.getByTestId("publish-hike-published")).toHaveTextContent(
+      `Publicerad ${formatDate("2026-10-05T10:00:00Z")}`,
+    );
+    expect(screen.queryByTestId("publish-hike-accordion")).toBeNull();
+  });
+
+  it("says the limit is reached instead of offering it when enough other walks are waiting", async () => {
+    mockGetSubmissions.mockResolvedValue(
+      Array.from({ length: MAX_PENDING_SUBMISSIONS }, (_, i) => ({
+        identifier: `s${i}`,
+        name: "x",
+        trailLength: 1,
+        status: "Pending",
+        createdAt: "",
+        sourceHikeIdentifier: `other-hike-${i}`,
+        likeCount: 0,
+      })),
+    );
+    await show();
+    await flushUntil(() => screen.queryByTestId("publish-hike-limit"));
+
+    expect(screen.getByTestId("publish-hike-limit")).toHaveTextContent(
+      `Du har redan ${MAX_PENDING_SUBMISSIONS} promenader som väntar på granskning. Du kan publicera fler när de är granskade.`,
+    );
+    expect(screen.queryByTestId("publish-hike-accordion")).toBeNull();
+  });
+
+  it("reads the submissions again on every visit, so a review since the last one shows at once", async () => {
+    mockGetSubmissions.mockResolvedValue(
+      Array.from({ length: MAX_PENDING_SUBMISSIONS }, (_, i) => ({
+        identifier: `s${i}`,
+        name: "x",
+        trailLength: 1,
+        status: "Pending",
+        createdAt: "",
+        sourceHikeIdentifier: `other-hike-${i}`,
+        likeCount: 0,
+      })),
+    );
+    const { rerender } = await show();
+    await flushUntil(() => screen.queryByTestId("publish-hike-limit"));
+
+    mockGetSubmissions.mockResolvedValue([]);
+    rerender(<View />);
+    rerender(<HikeDetailsScreen hikeFollowRoute={PROFILE_FOLLOW} />);
+    await flushUntil(() => screen.queryByTestId("publish-hike-accordion"));
+
+    expect(screen.getByTestId("publish-hike-accordion")).toBeTruthy();
+    expect(screen.queryByTestId("publish-hike-limit")).toBeNull();
+  });
+
+  it("treats a walk as published even when the decision date is missing", async () => {
+    mockGetSubmissions.mockResolvedValue([
+      {
+        identifier: "s1",
+        name: "x",
+        trailLength: 1,
+        status: "Approved",
+        createdAt: "2026-10-01T10:00:00Z",
+        decidedAt: null,
+        sourceHikeIdentifier: "hike-1",
+        publishedTrailIdentifier: "trail-9",
+        likeCount: 0,
+      },
+    ]);
+    await show();
+    await flushUntil(() => screen.queryByTestId("publish-hike-published"));
+
+    expect(screen.getByTestId("publish-hike-published")).toHaveTextContent("Publicerad");
+    expect(screen.queryByTestId("publish-hike-accordion")).toBeNull();
+  });
+
+  it("offers it again once the published trail has been removed", async () => {
+    mockGetSubmissions.mockResolvedValue([
+      {
+        identifier: "s1",
+        name: "x",
+        trailLength: 1,
+        status: "Approved",
+        createdAt: "2026-10-01T10:00:00Z",
+        decidedAt: "2026-10-05T10:00:00Z",
+        sourceHikeIdentifier: "hike-1",
+        publishedTrailIdentifier: null,
+        likeCount: 0,
+      },
+    ]);
+    await show();
+    await settle();
+
+    expect(screen.getByTestId("publish-hike-accordion")).toBeTruthy();
+    expect(screen.queryByTestId("publish-hike-published")).toBeNull();
   });
 
   it("still offers it when only another walk is pending", async () => {

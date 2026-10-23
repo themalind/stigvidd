@@ -27,6 +27,8 @@ export function useMyHikeSubmissions<T = HikeSubmission[]>(select?: (submissions
     queryKey: myHikeSubmissionsQueryKey(userIdentifier),
     queryFn: isAuthenticated && userIdentifier ? () => getMyHikeSubmissions() : skipToken,
     staleTime: HIKES_STALE_TIME,
+    // keep-comment: an admin decides on submissions in the background, so each screen visit asks again
+    refetchOnMount: "always",
     select,
   });
 }

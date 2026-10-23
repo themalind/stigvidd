@@ -13,4 +13,6 @@ public static class HikeSubmissionLimits
     // keep-comment: copied into Trail.City on approval, so it shares UpdateTrailRequestValidator's limit
     public const int City = 30;
     public const int Images = 10;
+    // keep-comment: mirrored by MAX_PENDING_SUBMISSIONS in the app
+    public const int PendingPerUser = 3;
 }

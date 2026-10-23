@@ -12,6 +12,8 @@ public interface IHikeSubmissionRepository
 {
     Task<RepositoryResult<HikeSubmission>> AddAsync(HikeSubmission submission, CancellationToken ctoken);
     Task<RepositoryResult<bool>> HasPendingForHikeAsync(int hikeId, CancellationToken ctoken);
+    Task<RepositoryResult<bool>> HasPublishedForHikeAsync(int hikeId, CancellationToken ctoken);
+    Task<RepositoryResult<int>> CountPendingByUserAsync(int userId, CancellationToken ctoken);
     Task<RepositoryResult<int>> GetConsentTextIdAsync(string version, string locale, CancellationToken ctoken);
     Task<RepositoryResult<T>> GetByIdentifierAsync<T>(string identifier, Expression<Func<HikeSubmission, T>> selector, CancellationToken ctoken);
     Task<RepositoryResult<IReadOnlyCollection<T>>> GetByUserIdAsync<T>(int userId, Expression<Func<HikeSubmission, T>> selector, CancellationToken ctoken);

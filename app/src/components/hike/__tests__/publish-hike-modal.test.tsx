@@ -9,6 +9,7 @@ import { ApiError } from "@/api/api-error";
 import { snackbarAtom } from "@/atoms/snackbar-atoms";
 import PublishHikeModal, { lengthOfPath, PUBLISH_CONSENT_VERSION } from "@/components/hike/publish-hike-modal";
 import { Hike } from "@/data/types";
+import { HIKE_SUBMISSIONS_QUERY_ROOT } from "@/hooks/hike/useMyHikeSubmissions";
 import en from "@/i18n/locales/en.json";
 import sv from "@/i18n/locales/sv.json";
 import { flushUntil, settle } from "@/test/flush";
@@ -180,8 +181,26 @@ it("leaves out deselected photos and the nickname when unticked", async () => {
   );
 });
 
-it("says the walk is already waiting when the server answers 409", async () => {
+it("says the walk is already sent in or published when the server answers 409, and reads the submissions again", async () => {
   mockCreateSubmission.mockRejectedValue(new ApiError("conflict", 409));
+  const { store, queryClient } = await open();
+  const invalidate = jest.spyOn(queryClient, "invalidateQueries");
+  fireEvent.press(screen.getByTestId("publish-difficulty-3"));
+  fireEvent.press(screen.getByTestId("publish-consent"));
+
+  fireEvent.press(screen.getByTestId("publish-submit"));
+  await flushUntil(() => store.get(snackbarAtom).visible);
+
+  expect(store.get(snackbarAtom)).toMatchObject({
+    type: "error",
+    message: "Promenaden är redan inskickad eller publicerad.",
+  });
+  expect(invalidate).toHaveBeenCalledWith({ queryKey: [HIKE_SUBMISSIONS_QUERY_ROOT] });
+  expect(onDismiss).not.toHaveBeenCalled();
+});
+
+it("says the limit is reached when the server answers 429", async () => {
+  mockCreateSubmission.mockRejectedValue(new ApiError("too many", 429));
   const { store } = await open();
   fireEvent.press(screen.getByTestId("publish-difficulty-3"));
   fireEvent.press(screen.getByTestId("publish-consent"));
@@ -189,8 +208,10 @@ it("says the walk is already waiting when the server answers 409", async () => {
   fireEvent.press(screen.getByTestId("publish-submit"));
   await flushUntil(() => store.get(snackbarAtom).visible);
 
-  expect(store.get(snackbarAtom)).toMatchObject({ type: "error", message: "Promenaden väntar redan på granskning." });
-  expect(onDismiss).not.toHaveBeenCalled();
+  expect(store.get(snackbarAtom)).toMatchObject({
+    type: "error",
+    message: "Du har redan 3 promenader som väntar på granskning. Du kan publicera fler när de är granskade.",
+  });
 });
 
 it("tells a walk without photos that example images are used", async () => {
@@ -234,6 +255,12 @@ it("caps the card's height with no keyboard up, so the form scrolls instead of o
 
   const { maxHeight } = StyleSheet.flatten(screen.getByTestId("publish-card").props.style);
   expect(maxHeight).toBe(Dimensions.get("window").height * 0.9);
+});
+
+it("renders the map as a TextureView on Android, so it moves with the card when the keyboard lifts it", async () => {
+  await open();
+
+  expect(screen.getByTestId("maplibre-Map").props.androidView).toBe("texture");
 });
 
 it("lifts and shrinks the card above the iOS keyboard so the submit button stays reachable", async () => {

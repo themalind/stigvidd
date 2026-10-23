@@ -262,6 +262,74 @@ public class AdminHikeSubmissionsControllerIntegrationTests : IClassFixture<Stig
     }
 
     [Fact]
+    public async Task Create_ForAHikeAlreadyPublished_AnswersConflict()
+    {
+        const string hikeIdentifier = "c4d8a1b9-6f3e-4c72-8a5d-1e9b2f7c0a46"; // VandrarVennen's Hike4
+        var submissionIdentifier = Guid.NewGuid().ToString();
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<StigViddDbContext>();
+            var hike = await db.Hikes.SingleAsync(h => h.Identifier == hikeIdentifier, TestContext.Current.CancellationToken);
+            hike.GeoPath = Utilities.GeoPath((12.94, 57.72), (12.95, 57.73));
+            db.HikeSubmissions.Add(Pending(submissionIdentifier, hike.Id));
+            await db.SaveChangesAsync(TestContext.Current.CancellationToken);
+        }
+        var approve = await AdminClient().PostAsync($"/api/v1/admin/hike-submissions/{submissionIdentifier}/approve", null, TestContext.Current.CancellationToken);
+        approve.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", AuthenticatedUser);
+        var response = await client.PostAsJsonAsync("/api/v1/HikeSubmissions", new
+        {
+            hikeIdentifier,
+            name = "Kvällsrunda",
+            description = "Runt sjön",
+            classification = 2,
+            gettingThere = "Buss 3",
+            city = "Borås",
+            acceptTransfer = true,
+            consentVersion = HikeSubmissionConsent.CurrentVersion,
+            consentLocale = "sv",
+            imageIdentifiers = Array.Empty<string>(),
+        }, TestContext.Current.CancellationToken);
+
+        response.StatusCode.Should().Be(HttpStatusCode.Conflict, await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
+    }
+
+    [Fact]
+    public async Task Create_WhenTheUserAlreadyHasTheMostPendingSubmissions_AnswersTooManyRequests()
+    {
+        const string hikeIdentifier = "91e4c2d7-3b8f-4f6a-9d1c-7a2e5b0c8f13"; // VandrarVennen's Hike3
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<StigViddDbContext>();
+            var hike = await db.Hikes.SingleAsync(h => h.Identifier == hikeIdentifier, TestContext.Current.CancellationToken);
+            hike.GeoPath = Utilities.GeoPath((12.94, 57.72), (12.95, 57.73));
+            for (var i = 0; i < HikeSubmissionLimits.PendingPerUser; i++)
+                db.HikeSubmissions.Add(Pending(Guid.NewGuid().ToString(), null));
+            await db.SaveChangesAsync(TestContext.Current.CancellationToken);
+        }
+
+        var client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", AuthenticatedUser);
+        var response = await client.PostAsJsonAsync("/api/v1/HikeSubmissions", new
+        {
+            hikeIdentifier,
+            name = "Kvällsrunda",
+            description = "Runt sjön",
+            classification = 2,
+            gettingThere = "Buss 3",
+            city = "Borås",
+            acceptTransfer = true,
+            consentVersion = HikeSubmissionConsent.CurrentVersion,
+            consentLocale = "sv",
+            imageIdentifiers = Array.Empty<string>(),
+        }, TestContext.Current.CancellationToken);
+
+        response.StatusCode.Should().Be(HttpStatusCode.TooManyRequests, await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
+    }
+
+    [Fact]
     public async Task Create_WithANullImageList_IsABadRequestNotACrash()
     {
         var client = _factory.CreateClient();

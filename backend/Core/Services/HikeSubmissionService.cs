@@ -6,6 +6,7 @@ using Core.Interfaces.Repositories;
 using Core.Interfaces.Services;
 using Core.Repositories;
 using Core.TrailImport.Matching;
+using Core.Validators.HikeSubmission;
 using Infrastructure.Data.Entities;
 using Infrastructure.Enums;
 using Microsoft.Extensions.Configuration;
@@ -89,6 +90,22 @@ public class HikeSubmissionService : IHikeSubmissionService
 
         if (pendingResult.Value)
             return Result.Fail<HikeSubmissionResponse>(new Message(409, "This hike is already waiting for review."));
+
+        var publishedResult = await _submissionRepository.HasPublishedForHikeAsync(hike.Id, ctoken);
+
+        if (!publishedResult.IsSuccess)
+            return Result.Fail<HikeSubmissionResponse>(new Message(500, "An error occurred while checking earlier submissions."));
+
+        if (publishedResult.Value)
+            return Result.Fail<HikeSubmissionResponse>(new Message(409, "This hike is already published as a trail."));
+
+        var pendingCountResult = await _submissionRepository.CountPendingByUserAsync(userIdResult.Value, ctoken);
+
+        if (!pendingCountResult.IsSuccess)
+            return Result.Fail<HikeSubmissionResponse>(new Message(500, "An error occurred while checking earlier submissions."));
+
+        if (pendingCountResult.Value >= HikeSubmissionLimits.PendingPerUser)
+            return Result.Fail<HikeSubmissionResponse>(new Message(429, $"At most {HikeSubmissionLimits.PendingPerUser} walks can wait for review at a time."));
 
         var path = Trim(hike.GeoPath, request.TrimStartIndex, request.TrimEndIndex);
 

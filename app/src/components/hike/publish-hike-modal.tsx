@@ -13,7 +13,7 @@ import { routeCasingPaint } from "@/components/map/marker-styles";
 import FormTextField from "@/components/form-text-field";
 import ModalFormScrollView from "@/components/modal-form-scroll-view";
 import DifficultyInfoModal from "@/components/trail/difficulty-info-modal";
-import { BORDER_RADIUS } from "@/constants/constants";
+import { BORDER_RADIUS, MAX_PENDING_SUBMISSIONS } from "@/constants/constants";
 import { DIFFICULTIES } from "@/data/trail-content";
 import { CreateHikeSubmissionRequest, Hike } from "@/data/types";
 import { HIKE_SUBMISSIONS_QUERY_ROOT } from "@/hooks/hike/useMyHikeSubmissions";
@@ -129,7 +129,15 @@ export default function PublishHikeModal({ hike, nickName, onDismiss }: Props) {
       onDismiss();
     },
     onError: (error) => {
-      setErrorMsg(error instanceof ApiError && error.status === 409 ? t("publish.alreadyPending") : t("publish.error"));
+      const status = error instanceof ApiError ? error.status : null;
+      if (status === 409 || status === 429) queryClient.invalidateQueries({ queryKey: [HIKE_SUBMISSIONS_QUERY_ROOT] });
+      setErrorMsg(
+        status === 409
+          ? t("publish.alreadySubmitted")
+          : status === 429
+            ? t("publish.tooManyPending", { count: MAX_PENDING_SUBMISSIONS })
+            : t("publish.error"),
+      );
     },
   });
 
@@ -191,7 +199,8 @@ export default function PublishHikeModal({ hike, nickName, onDismiss }: Props) {
               </Text>
               {path.length > 1 && (
                 <View style={s.mapContainer}>
-                  <Map style={s.map} showsUserLocation={false} onDidFinishLoadingMap={fitToRoute}>
+                  {/* keep-comment: a SurfaceView lags behind the keyboard lift and leaves a stale copy of the map */}
+                  <Map style={s.map} androidView="texture" showsUserLocation={false} onDidFinishLoadingMap={fitToRoute}>
                     <Camera ref={cameraRef} />
                     <GeoJSONSource id="publish-route-full" data={fullShape}>
                       <Layer

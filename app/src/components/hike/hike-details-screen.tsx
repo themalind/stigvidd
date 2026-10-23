@@ -18,7 +18,7 @@ import ImageViewer from "@/components/review/image-viewer";
 import LoadingIndicator from "@/components/loading-indicator";
 import ShareHikeModal, { ShareHikeFormFields } from "@/components/shared-hike/share-hike-modal";
 import EditHikeModal, { EditHikeFormFields } from "@/components/hike/edit-hike-modal";
-import { BORDER_RADIUS, MAX_HIKE_IMAGES } from "@/constants/constants";
+import { BORDER_RADIUS, MAX_HIKE_IMAGES, MAX_PENDING_SUBMISSIONS } from "@/constants/constants";
 import PublishHikeCard from "@/components/hike/publish-hike-card";
 import PublishHikeModal from "@/components/hike/publish-hike-modal";
 import { Hike, HikeSubmission, ShareHikeRequest, UpdateHikeRequest } from "@/data/types";
@@ -79,6 +79,24 @@ export default function HikeDetailsScreen({ hikeFollowRoute }: { hikeFollowRoute
       (submissions: HikeSubmission[]) =>
         submissions.some((s) => s.sourceHikeIdentifier === hikeIdentifier && s.status === "Pending"),
       [hikeIdentifier],
+    ),
+  );
+  const { data: published = null } = useMyHikeSubmissions(
+    useCallback(
+      (submissions: HikeSubmission[]) => {
+        const approved = submissions.find(
+          (s) => s.sourceHikeIdentifier === hikeIdentifier && s.status === "Approved" && s.publishedTrailIdentifier,
+        );
+        return approved ? { at: approved.decidedAt ?? null } : null;
+      },
+      [hikeIdentifier],
+    ),
+  );
+  const { data: atPendingLimit = false } = useMyHikeSubmissions(
+    useCallback(
+      (submissions: HikeSubmission[]) =>
+        submissions.filter((s) => s.status === "Pending").length >= MAX_PENDING_SUBMISSIONS,
+      [],
     ),
   );
   const { data: hasSubmission = false } = useMyHikeSubmissions(
@@ -233,7 +251,12 @@ export default function HikeDetailsScreen({ hikeFollowRoute }: { hikeFollowRoute
         />
       }
       beforeActions={
-        <PublishHikeCard isPending={hasPendingSubmission} onPublish={unlessBanned(() => setShowPublishModal(true))} />
+        <PublishHikeCard
+          isPending={hasPendingSubmission}
+          published={published}
+          atPendingLimit={atPendingLimit}
+          onPublish={unlessBanned(() => setShowPublishModal(true))}
+        />
       }
       actions={
         <>

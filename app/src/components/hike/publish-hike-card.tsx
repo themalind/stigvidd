@@ -5,7 +5,8 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import { BORDER_RADIUS } from "@/constants/constants";
+import { BORDER_RADIUS, MAX_PENDING_SUBMISSIONS } from "@/constants/constants";
+import { formatDate } from "@/utils/format-date";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { StyleSheet, View } from "react-native";
@@ -13,23 +14,44 @@ import { Button, Icon, List, Text, useTheme } from "react-native-paper";
 
 interface Props {
   isPending: boolean;
+  published?: { at: string | null } | null;
+  atPendingLimit?: boolean;
   onPublish: () => void;
 }
 
 // keep-comment: collapsed by default and the form is a second step, so publishing takes a deliberate choice
-export default function PublishHikeCard({ isPending, onPublish }: Props) {
+export default function PublishHikeCard({ isPending, published, atPendingLimit, onPublish }: Props) {
   const theme = useTheme();
   const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
 
-  if (isPending) {
+  const status = (() => {
+    if (published)
+      return {
+        testID: "publish-hike-published",
+        icon: "check-circle-outline",
+        text: published.at
+          ? t("publish.publishedOn", { date: formatDate(published.at) })
+          : t("publish.status.Approved"),
+      };
+    if (isPending) return { testID: "publish-hike-pending", icon: "clock-outline", text: t("publish.pendingHint") };
+    if (atPendingLimit)
+      return {
+        testID: "publish-hike-limit",
+        icon: "clock-outline",
+        text: t("publish.tooManyPending", { count: MAX_PENDING_SUBMISSIONS }),
+      };
+    return null;
+  })();
+
+  if (status) {
     return (
       <View
-        testID="publish-hike-pending"
+        testID={status.testID}
         style={[s.card, { backgroundColor: theme.colors.surfaceVariant, borderColor: theme.colors.outlineVariant }]}
       >
-        <Icon source="clock-outline" size={20} color={theme.colors.onSurfaceVariant} />
-        <Text style={[s.pendingText, { color: theme.colors.onSurfaceVariant }]}>{t("publish.pendingHint")}</Text>
+        <Icon source={status.icon} size={20} color={theme.colors.onSurfaceVariant} />
+        <Text style={[s.pendingText, { color: theme.colors.onSurfaceVariant }]}>{status.text}</Text>
       </View>
     );
   }

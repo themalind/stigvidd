@@ -66,6 +66,38 @@ public class HikeSubmissionRepository : IHikeSubmissionRepository
         }
     }
 
+    public async Task<RepositoryResult<bool>> HasPublishedForHikeAsync(int hikeId, CancellationToken ctoken)
+    {
+        try
+        {
+            using var context = await _context.CreateDbContextAsync(ctoken);
+
+            return RepositoryResult<bool>.Success(await context.HikeSubmissions
+                .AnyAsync(s => s.SourceHikeId == hikeId && s.Status == HikeSubmissionStatus.Approved && s.PublishedTrailId != null, ctoken));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "HikeSubmissionRepository: HasPublishedForHikeAsync -> Something went wrong for hike {HikeId}.", hikeId);
+            return RepositoryResult<bool>.Error();
+        }
+    }
+
+    public async Task<RepositoryResult<int>> CountPendingByUserAsync(int userId, CancellationToken ctoken)
+    {
+        try
+        {
+            using var context = await _context.CreateDbContextAsync(ctoken);
+
+            return RepositoryResult<int>.Success(await context.HikeSubmissions
+                .CountAsync(s => s.UserId == userId && s.Status == HikeSubmissionStatus.Pending, ctoken));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "HikeSubmissionRepository: CountPendingByUserAsync -> Something went wrong for user {UserId}.", userId);
+            return RepositoryResult<int>.Error();
+        }
+    }
+
     private async Task<bool> HasPendingAsync(int? hikeId, CancellationToken ctoken)
     {
         using var context = await _context.CreateDbContextAsync(ctoken);
