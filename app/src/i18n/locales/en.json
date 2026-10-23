@@ -839,7 +839,7 @@
     "message": "Permission to access the media library is required."
   },
   "trailList": {
-    "title": "Hiking trails",
+    "title": "Hikes",
     "filter": "Filter",
     "search": "Search for trail or location...",
     "showing_one": "Showing {{shown}} of {{count}} trail",

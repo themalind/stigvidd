@@ -839,7 +839,7 @@
     "message": "Tillgång till mediabiblioteket krävs."
   },
   "trailList": {
-    "title": "Vandringsleder",
+    "title": "Vandringar",
     "filter": "Filtrera",
     "search": "Sök efter led eller ort...",
     "showing_one": "Visar {{shown}} av {{count}} led",

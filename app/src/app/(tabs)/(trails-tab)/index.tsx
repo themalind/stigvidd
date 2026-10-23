@@ -21,7 +21,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useAtom } from "jotai";
-import React, { useCallback, useMemo, useRef, useState } from "react";
+import React, { useCallback, useDeferredValue, useMemo, useRef, useState } from "react";
 import { FlatList, Pressable, RefreshControl, StyleSheet, View } from "react-native";
 import { Text, TextInput, useTheme } from "react-native-paper";
 import { useTranslation } from "react-i18next";
@@ -44,9 +44,10 @@ export default function TrailsScreen() {
   const [chosenSource, setSource] = useAtom(trailListSourceAtom);
   const hasContributions = trails?.some((trail) => trail.isContribution) ?? false;
   const source = hasContributions ? chosenSource : "trails";
+  const listSource = useDeferredValue(source);
   const sourceTrails = useMemo(
-    () => trails?.filter((trail) => Boolean(trail.isContribution) === (source === "contributions")),
-    [trails, source],
+    () => trails?.filter((trail) => Boolean(trail.isContribution) === (listSource === "contributions")),
+    [trails, listSource],
   );
 
   const {
@@ -119,8 +120,8 @@ export default function TrailsScreen() {
             ]}
             value={source}
             onChange={(next) => {
-              setSource(next);
               listRef.current?.scrollToOffset({ offset: 0, animated: false });
+              setSource(next);
             }}
             style={s.sourceToggle}
           />

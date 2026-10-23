@@ -5,6 +5,7 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
+import { compareSv } from "@/utils/compare-sv";
 import { useMemo, useState } from "react";
 
 export type HikeSortOption =
@@ -53,7 +54,7 @@ export const useHikeFilters = <T>(hikes: T[] | undefined, accessors: HikeAccesso
     const read = accessors.sharedBy;
     if (!hikes || !read) return [];
     const names = hikes.map(read).filter((name): name is string => name !== null);
-    return [...new Set(names)].sort((a, b) => a.localeCompare(b, "sv"));
+    return [...new Set(names)].sort(compareSv);
   }, [hikes, accessors]);
 
   // Slider bounds follow the collection, so the thumbs spread across the whole track
@@ -107,10 +108,10 @@ export const useHikeFilters = <T>(hikes: T[] | undefined, accessors: HikeAccesso
 
     switch (sortBy) {
       case "name-asc":
-        result.sort((a, b) => accessors.name(a).localeCompare(accessors.name(b), "sv"));
+        result.sort((a, b) => compareSv(accessors.name(a), accessors.name(b)));
         break;
       case "name-desc":
-        result.sort((a, b) => accessors.name(b).localeCompare(accessors.name(a), "sv"));
+        result.sort((a, b) => compareSv(accessors.name(b), accessors.name(a)));
         break;
       case "date-asc":
         result.sort((a, b) => Date.parse(accessors.date(a)) - Date.parse(accessors.date(b)));
