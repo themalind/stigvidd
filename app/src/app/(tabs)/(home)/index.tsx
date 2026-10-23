@@ -17,8 +17,10 @@ import SectionPanel, { PANEL_BLEED, PANEL_PADDING } from "@/components/section-p
 import LatestHikeSkeleton from "@/components/skeletons/latest-hike-skeleton";
 import PagerCarouselSkeleton from "@/components/skeletons/pager-carousel-skeleton";
 import PagerCarousel from "@/components/trail/pager-carousel";
+import { POPULAR_TRAILS_STALE_TIME } from "@/constants/cache";
 import { SCREEN_PADDING } from "@/constants/constants";
 import { guardedNavigate } from "@/utils/navigation";
+import { roundTo } from "@/utils/round-to";
 import { useLatestHike } from "@/hooks/hike/useLatestHike";
 import { useIsOnline } from "@/hooks/useIsOnline";
 import { useUserLocation } from "@/hooks/useUserLocation";
@@ -45,12 +47,16 @@ export default function HomeScreen() {
   const userLocation = location?.isFallback ? undefined : location;
   const latest = useLatestHike();
   const isOnline = useIsOnline();
+  // keep-comment: about a kilometre, so GPS drift does not make a new query for the same ranking
+  const latitude = roundTo(userLocation?.latitude, 2);
+  const longitude = roundTo(userLocation?.longitude, 2);
   const query = useQuery({
-    queryKey: ["trails", "popular", userLocation?.latitude, userLocation?.longitude],
-    queryFn: () => getPopularTrails(userLocation?.latitude, userLocation?.longitude),
+    queryKey: ["trails", "popular", latitude, longitude],
+    queryFn: () => getPopularTrails(latitude, longitude),
     // keep-comment: waits for the position, so this fires once rather than again with coordinates
     enabled: !locationPending,
     placeholderData: keepPreviousData,
+    staleTime: POPULAR_TRAILS_STALE_TIME,
   });
 
   useFocusEffect(
@@ -65,7 +71,7 @@ export default function HomeScreen() {
       ref={scrollViewRef}
       contentContainerStyle={[s.container, { backgroundColor: theme.colors.background }]}
     >
-      <HeroBanner lat={userLocation?.latitude} lon={userLocation?.longitude} />
+      <HeroBanner lat={latitude} lon={longitude} />
       {(latest.kind === "signedOut" || latest.kind === "empty") && (
         <GetStartedCard signedIn={latest.kind === "empty"} />
       )}

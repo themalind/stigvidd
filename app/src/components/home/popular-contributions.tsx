@@ -10,6 +10,7 @@ import { trailListSourceAtom } from "@/atoms/trail-list-atoms";
 import ContributionCard from "@/components/home/contribution-card";
 import SectionPanel, { PANEL_BLEED, PANEL_PADDING } from "@/components/section-panel";
 import { guardedNavigate } from "@/utils/navigation";
+import { POPULAR_TRAILS_STALE_TIME } from "@/constants/cache";
 import { useQuery } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { useSetAtom } from "jotai";
@@ -26,7 +27,11 @@ export default function PopularContributions() {
   const theme = useTheme();
   const { t } = useTranslation();
   const setTrailListSource = useSetAtom(trailListSourceAtom);
-  const { data } = useQuery({ queryKey: popularContributionsQueryKey, queryFn: getPopularContributedTrails });
+  const { data } = useQuery({
+    queryKey: popularContributionsQueryKey,
+    queryFn: getPopularContributedTrails,
+    staleTime: POPULAR_TRAILS_STALE_TIME,
+  });
 
   if (!data || data.length === 0) return null;
 

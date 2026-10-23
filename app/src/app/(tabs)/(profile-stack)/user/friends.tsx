@@ -14,6 +14,7 @@ import { BORDER_RADIUS, SCREEN_PADDING } from "@/constants/constants";
 import { useFriendMutations } from "@/hooks/friends/useFriendMutations";
 import { useCanWrite } from "@/hooks/useCanWrite";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { BLOCKS_STALE_TIME, REQUESTS_STALE_TIME } from "@/constants/cache";
 import { useQuery } from "@tanstack/react-query";
 import { useAtom } from "jotai";
 import React, { useState } from "react";
@@ -60,6 +61,7 @@ export default function FriendsScreen() {
   } = useQuery({
     queryKey: ["friends", "outgoing"],
     queryFn: () => getOutgoingRequests(),
+    staleTime: REQUESTS_STALE_TIME,
   });
 
   const {
@@ -70,6 +72,7 @@ export default function FriendsScreen() {
   } = useQuery({
     queryKey: ["blocks"],
     queryFn: () => getBlockedUsers(),
+    staleTime: BLOCKS_STALE_TIME,
   });
 
   const showSearchResults = query.trim().length >= 3;

@@ -11,6 +11,7 @@ import { useAuth } from "@/components/auth/auth-provider";
 import NotAuthenticatedDialog from "@/components/auth/not-authenticated-msg-dialog";
 import { BORDER_RADIUS } from "@/constants/constants";
 import { TrailContribution, TrailLike } from "@/data/types";
+import { TRAIL_LIKES_STALE_TIME } from "@/constants/cache";
 import { skipToken, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSetAtom } from "jotai";
 import { useState } from "react";
@@ -38,6 +39,7 @@ export default function TrailContributionBar({ trailIdentifier, contribution }: 
   const { data } = useQuery({
     queryKey,
     queryFn: isAuthenticated ? () => getTrailLike(trailIdentifier) : skipToken,
+    staleTime: TRAIL_LIKES_STALE_TIME,
   });
 
   const like: TrailLike = data ?? { likeCount: contribution.likeCount, likedByMe: false };

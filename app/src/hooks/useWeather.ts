@@ -7,6 +7,7 @@
 
 import { apiFetch } from "@/api/api-config";
 import { START_COORDINATE_BORAS } from "@/constants/constants";
+import { WEATHER_STALE_TIME } from "@/constants/cache";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 
 // https://opendata.smhi.se/metfcst/snow1gv1/get_point_forecast
@@ -46,7 +47,7 @@ export function useWeather(lat?: number, lon?: number) {
     queryKey: ["weather", lat, lon],
     queryFn: () => fetchWeather(lat!, lon!),
     enabled: lat != null && lon != null,
-    staleTime: 1000 * 60 * 30,
+    staleTime: WEATHER_STALE_TIME,
     retry: false,
     placeholderData: keepPreviousData,
   });

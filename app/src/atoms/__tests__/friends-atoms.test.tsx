@@ -13,7 +13,7 @@ import {
   pendingNotificationsCountAtom,
   userSearchAtomFamily,
 } from "@/atoms/friends-atoms";
-import { FRIENDS_STALE_TIME } from "@/constants/cache";
+import { FRIENDS_STALE_TIME, REQUESTS_STALE_TIME } from "@/constants/cache";
 import { AuthUser } from "@/data/types";
 import { flushUntil, settle } from "@/test/flush";
 import { staleTimeOf } from "@/test/query";
@@ -87,13 +87,11 @@ describe("incoming friend requests", () => {
     expect(harness.result().data).toEqual([{ userIdentifier: "u2" }]);
   });
 
-  // A friend request accepted elsewhere has to disappear on the next visit, so this list is
-  // never served from cache.
-  it("is never treated as fresh", async () => {
+  it("is fresh for only a short while, so a request handled on another device soon disappears", async () => {
     const harness = renderQuery(incomingRequestsAtom);
     await harness.settled();
 
-    expect(staleTimeOf(harness.queryClient, ["friends", "incoming", "u1"])).toBe(0);
+    expect(staleTimeOf(harness.queryClient, ["friends", "incoming", "u1"])).toBe(REQUESTS_STALE_TIME);
   });
 
   it("asks for nothing at all while signed out", async () => {
@@ -128,11 +126,11 @@ describe("incoming shared hikes", () => {
     expect(mockGetIncomingSharedHikes).not.toHaveBeenCalled();
   });
 
-  it("is never treated as fresh", async () => {
+  it("is fresh for only a short while, so a share handled on another device soon disappears", async () => {
     const harness = renderQuery(incomingSharedHikesAtom);
     await harness.settled();
 
-    expect(staleTimeOf(harness.queryClient, ["shared-hikes", "incoming", "u1"])).toBe(0);
+    expect(staleTimeOf(harness.queryClient, ["shared-hikes", "incoming", "u1"])).toBe(REQUESTS_STALE_TIME);
   });
 });
 

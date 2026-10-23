@@ -24,6 +24,7 @@ import { formatDate } from "@/utils/format-date";
 import FormattedTime from "@/utils/format-time-from-ms";
 import { guardedNavigate } from "@/utils/navigation";
 import { Fontisto, MaterialCommunityIcons } from "@expo/vector-icons";
+import { SHARED_HIKES_STALE_TIME } from "@/constants/cache";
 import { skipToken, useQuery } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { useAtom } from "jotai";
@@ -69,6 +70,7 @@ export default function SharedHikesScreen() {
   } = useQuery({
     queryKey: ["incoming-hike-detail", selectedIncomingId],
     queryFn: selectedIncomingId ? () => getIncomingSharedHike(selectedIncomingId) : skipToken,
+    staleTime: SHARED_HIKES_STALE_TIME,
   });
 
   const { data: hikes, isLoading, isError: getSharedHikesError, error, refetch } = useSharedHikes();

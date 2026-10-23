@@ -6,6 +6,7 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { getFriends } from "@/api/friends";
+import { userAtom } from "@/atoms/auth-atoms";
 import { stigviddUserAtom } from "@/atoms/user-atoms";
 import { FRIENDS_STALE_TIME } from "@/constants/cache";
 import { BORDER_RADIUS, MAX_SHARE_RECIPIENTS } from "@/constants/constants";
@@ -28,10 +29,12 @@ export default function FriendPicker({ enabled, onShare, isPending, excludeNickN
   const theme = useTheme();
   const { t } = useTranslation();
   const currentUser = useAtomValue(stigviddUserAtom);
+  const authUser = useAtomValue(userAtom);
   const [selected, setSelected] = useState<string[]>([]);
 
   const { data: friendsRaw, isLoading } = useQuery({
-    queryKey: ["friends"],
+    // keep-comment: same key as friendsAtom, so the picker and the friends screen share one cache entry
+    queryKey: ["friends", authUser?.id],
     queryFn: getFriends,
     enabled,
     staleTime: FRIENDS_STALE_TIME,

@@ -121,6 +121,19 @@ it("ranks the popular trails around the user's position", async () => {
   expect(screen.getByText("Populära promenader nära dig")).toBeTruthy();
 });
 
+it("asks once for a position that only drifts a few metres", async () => {
+  mockLocation = { data: { latitude: 57.6512, longitude: 13.0211, isFallback: false }, isPending: false };
+  const { rerender } = show();
+  await flushUntil(() => screen.queryByText("Skogsleden"));
+
+  mockLocation = { data: { latitude: 57.6538, longitude: 13.0189, isFallback: false }, isPending: false };
+  rerender(<HomeScreen />);
+  await settle();
+
+  expect(mockGetPopularTrails).toHaveBeenCalledTimes(1);
+  expect(mockGetPopularTrails).toHaveBeenCalledWith(57.65, 13.02);
+});
+
 // The Borås fallback is not the user's position, so it is never sent as one.
 it("never sends the Borås fallback to the API", async () => {
   mockLocation = { data: FALLBACK, isPending: false };

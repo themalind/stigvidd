@@ -6,7 +6,7 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { getAllTrails } from "@/api/trails";
-import { TRAIL_LIST_STALE_TIME } from "@/constants/cache";
+import { TRAIL_LIST_GC_TIME, TRAIL_LIST_STALE_TIME } from "@/constants/cache";
 import { TrailShortInfoResponse } from "@/data/types";
 import { useQuery } from "@tanstack/react-query";
 
@@ -16,10 +16,7 @@ export const useTrails = () => {
     queryFn: getAllTrails,
 
     staleTime: TRAIL_LIST_STALE_TIME,
-    gcTime: TRAIL_LIST_STALE_TIME, // keep in cache as long as it stays fresh
-
-    // Show cached data immediately while refetching in background
-    refetchOnMount: "always",
+    gcTime: TRAIL_LIST_GC_TIME,
     refetchOnWindowFocus: false,
   });
 };

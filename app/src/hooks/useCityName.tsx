@@ -5,6 +5,7 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
+import { REVERSE_GEOCODE_STALE_TIME } from "@/constants/cache";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import * as Location from "expo-location";
 
@@ -26,7 +27,7 @@ export function useCityName(latitude?: number, longitude?: number) {
       return place?.city ?? place?.district ?? place?.subregion ?? fromAddress ?? null;
     },
     enabled: latitude != null && longitude != null,
-    staleTime: 1000 * 60 * 10,
+    staleTime: REVERSE_GEOCODE_STALE_TIME,
     // A missing permission fails every attempt identically; retrying just delays the
     // point at which the banner can settle on its "location unknown" wording.
     retry: false,

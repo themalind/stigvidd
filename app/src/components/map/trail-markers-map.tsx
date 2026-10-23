@@ -30,6 +30,7 @@ import {
   useCurrentPosition,
   type ViewStateChangeEvent,
 } from "@maplibre/maplibre-react-native";
+import { TRAIL_MARKERS_STALE_TIME } from "@/constants/cache";
 import { onlineManager, useQuery } from "@tanstack/react-query";
 import { useSetAtom } from "jotai";
 import { RefObject, useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -249,14 +250,14 @@ export default function TrailMarkersMap({
     queryKey: ["trails", "markers"],
     queryFn: getTrailMarkers,
     enabled: filter.trails || filter.contributions,
-    staleTime: 5 * 60 * 1000,
+    staleTime: TRAIL_MARKERS_STALE_TIME,
   });
 
   const { data: facilities, isError: facilitiesError } = useQuery({
     queryKey: ["facilities", "markers"],
     queryFn: getFacilityMarkers,
     enabled: filter.firePits || filter.shelters,
-    staleTime: 5 * 60 * 1000,
+    staleTime: TRAIL_MARKERS_STALE_TIME,
   });
 
   // Surface load failures without blanking the map: keep whatever tiles/markers

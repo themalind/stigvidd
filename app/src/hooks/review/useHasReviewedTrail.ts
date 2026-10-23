@@ -8,6 +8,7 @@
 import { hasReviewedTrail } from "@/api/reviews";
 import { stigviddUserAtom } from "@/atoms/user-atoms";
 import { useAuth } from "@/components/auth/auth-provider";
+import { REVIEWS_STALE_TIME } from "@/constants/cache";
 import { useQuery } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
 
@@ -27,5 +28,6 @@ export function useHasReviewedTrail(trailIdentifier: string) {
     queryKey: hasReviewedTrailKey(trailIdentifier, stigviddUser?.identifier),
     queryFn: () => hasReviewedTrail(trailIdentifier),
     enabled: isAuthenticated && !!stigviddUser?.identifier,
+    staleTime: REVIEWS_STALE_TIME,
   });
 }
