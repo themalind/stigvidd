@@ -457,7 +457,7 @@ public class TrailServiceTests
         // Arrange
         IReadOnlyCollection<TrailShortInfoProjection> trails =
         [
-            new TrailShortInfoProjection(Utilities.Identifiers.Trail4, "Trail A", 5M, true, 2, "Gothenburg", 4.5M, null, null)
+            new TrailShortInfoProjection(Utilities.Identifiers.Trail4, "Trail A", 5M, true, 2, "Gothenburg", 4.5M, null, null, true)
         ];
         var repo = new Mock<ITrailRepository>();
         repo.Setup(r => r.GetAllTrailsWithBasicInfoAsync(It.IsAny<Expression<Func<Trail, TrailShortInfoProjection>>>(), It.IsAny<CancellationToken>()))
@@ -470,6 +470,7 @@ public class TrailServiceTests
         result.Success.Should().BeTrue();
         result.Value.Should().HaveCount(1);
         result.Value.First().AverageRating.Should().Be(4.5M);
+        result.Value.First().IsContribution.Should().BeTrue();
     }
 
     [Fact]

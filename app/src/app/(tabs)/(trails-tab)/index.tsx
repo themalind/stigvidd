@@ -5,8 +5,10 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
+import { trailListSourceAtom } from "@/atoms/trail-list-atoms";
 import ErrorView from "@/components/error-view";
 import LoadingIndicator from "@/components/loading-indicator";
+import SegmentedControl from "@/components/segmented-control";
 import { TrailFilterModal } from "@/components/trail/trail-list/trail-filter-modal";
 import TrailItem from "@/components/trail/trail-list/trail-item";
 import { BORDER_RADIUS } from "@/constants/constants";
@@ -18,7 +20,8 @@ import { guardedNavigate } from "@/utils/navigation";
 import { MaterialIcons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { router } from "expo-router";
-import React, { useCallback, useRef, useState } from "react";
+import { useAtom } from "jotai";
+import React, { useCallback, useMemo, useRef, useState } from "react";
 import { FlatList, Pressable, RefreshControl, StyleSheet, View } from "react-native";
 import { Text, TextInput, useTheme } from "react-native-paper";
 import { useTranslation } from "react-i18next";
@@ -27,7 +30,7 @@ export default function TrailsScreen() {
   const theme = useTheme();
   const { t } = useTranslation();
   const listRef = useRef<FlatList>(null);
-  // Null without a real fix, which hides the distance sort and the "near me" filter.
+  // keep-comment: null without a real fix, which hides the distance sort and the "near me" filter
   const userLocation = useRealUserLocation();
 
   const hikers = theme.dark
@@ -38,6 +41,13 @@ export default function TrailsScreen() {
   const onRefresh = () => {
     refetch();
   };
+  const [chosenSource, setSource] = useAtom(trailListSourceAtom);
+  const hasContributions = trails?.some((trail) => trail.isContribution) ?? false;
+  const source = hasContributions ? chosenSource : "trails";
+  const sourceTrails = useMemo(
+    () => trails?.filter((trail) => Boolean(trail.isContribution) === (source === "contributions")),
+    [trails, source],
+  );
 
   const {
     filteredTrails,
@@ -53,7 +63,7 @@ export default function TrailsScreen() {
     filteredCount,
     searchQuery,
     setSearchQuery,
-  } = useTrailFilters(trails, userLocation);
+  } = useTrailFilters(sourceTrails, userLocation);
 
   const [filterModalVisible, setFilterModalVisible] = useState(false);
   const [showScrollToTop, setShowScrollToTop] = useState(false);
@@ -100,6 +110,21 @@ export default function TrailsScreen() {
             </View>
           </Pressable>
         </View>
+        {hasContributions && (
+          <SegmentedControl
+            testID="trails-source"
+            options={[
+              { value: "trails", label: t("trailList.sourceTrails") },
+              { value: "contributions", label: t("trailList.sourceContributions") },
+            ]}
+            value={source}
+            onChange={(next) => {
+              setSource(next);
+              listRef.current?.scrollToOffset({ offset: 0, animated: false });
+            }}
+            style={s.sourceToggle}
+          />
+        )}
         <TextInput
           mode="outlined"
           placeholder={t("trailList.search")}
@@ -198,6 +223,9 @@ const s = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     paddingBottom: 20,
+  },
+  sourceToggle: {
+    marginBottom: 10,
   },
   titleRow: {
     flexDirection: "row",

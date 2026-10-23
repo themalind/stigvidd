@@ -55,7 +55,8 @@ public class TrailService : ITrailService
                 t.City,
                 t.Reviews!.Any() ? t.Reviews!.Average(r => r.Rating) : 0m,
                 (decimal?)t.GeoPath!.StartPoint.Coordinate.Y,
-                (decimal?)t.GeoPath.StartPoint.Coordinate.X),
+                (decimal?)t.GeoPath.StartPoint.Coordinate.X,
+                t.Contribution != null),
             ctoken);
 
         if (!result.IsSuccess)
@@ -64,7 +65,7 @@ public class TrailService : ITrailService
         var trails = result.Value
             .Select(v => TrailShortInfoResponse.Create(
                 v.Identifier, v.Name, v.TrailLength, v.Accessibility, v.Classification, v.City, v.AverageRating,
-                v.StartLatitude, v.StartLongitude))
+                v.StartLatitude, v.StartLongitude, v.IsContribution))
             .ToList();
 
         return Result.Ok<IReadOnlyCollection<TrailShortInfoResponse>>(trails);
@@ -382,8 +383,7 @@ public class TrailService : ITrailService
 
         try
         {
-            // Coordinates are validated before anything is uploaded, so a rejected trail
-            // leaves no files behind.
+            // keep-comment: ordering matters - validating before upload means a rejected trail leaves no files behind
             var parsedCoordinates = Newtonsoft.Json.JsonConvert.DeserializeObject<WebDataContracts.Coordinate[]>(request.Coordinates);
             if (parsedCoordinates is null || parsedCoordinates.Length < 2)
             {
@@ -392,7 +392,7 @@ public class TrailService : ITrailService
             var coords = GeoPointFactory.FromLonLatPath(
                 parsedCoordinates.Select(c => new NetTopologySuite.Geometries.Coordinate(c.Longitude, c.Latitude)));
 
-            // Uploaded via the media upload service, which strips EXIF/GPS.
+            // keep-comment: privacy - the media upload service strips EXIF/GPS
             if (trailSymbolImageUrl != null)
             {
                 var result = await _mediaUploadService.ProcessAndUploadAsync(

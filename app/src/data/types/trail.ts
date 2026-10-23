@@ -79,10 +79,11 @@ export interface TrailShortInfoResponse {
   accessibility: boolean;
   classification: number;
   city: string;
-  // 0 means no reviews yet — ratings are always 1-5.
+  // keep-comment: 0 is a sentinel for no reviews, since ratings are always 1-5
   averageRating: number;
   startLatitude?: number;
   startLongitude?: number;
+  isContribution?: boolean;
 }
 
 export interface TrailMarkerResponse {

@@ -77,6 +77,10 @@ const DEFAULT_VIEW_STATE: InitialViewState = { center: BORAS_CENTER, zoom: 9.5 }
 // Keep points clustered up to a high zoom so overlapping trailheads stay a single
 // tappable cluster instead of un-tappable stacked individual pins.
 const CLUSTER_MAX_ZOOM = 16;
+// keep-comment: a cluster of user walks only is drawn in their colour; a mixed one stays a trail cluster
+const TRAIL_CLUSTER_PROPERTIES = {
+  curatedCount: ["+", ["case", ["==", ["get", "isContribution"], true], 0, 1]],
+} as const;
 // Small clusters open the carousel directly — they're usually trails sharing a
 // trailhead that won't separate usefully by zooming. Larger, genuinely separable
 // clusters zoom in to break apart instead.
@@ -394,6 +398,7 @@ export default function TrailMarkersMap({
             cluster
             clusterRadius={60}
             clusterMaxZoom={CLUSTER_MAX_ZOOM}
+            clusterProperties={TRAIL_CLUSTER_PROPERTIES}
             onPress={handleTrailPress}
           >
             <Layer
@@ -401,7 +406,12 @@ export default function TrailMarkersMap({
               id="trail-clusters"
               filter={HAS_COUNT}
               paint={{
-                "circle-color": MARKER_COLORS.trails.fill,
+                "circle-color": [
+                  "case",
+                  ["==", ["get", "curatedCount"], 0],
+                  CONTRIBUTION_MARKER_COLORS.fill,
+                  MARKER_COLORS.trails.fill,
+                ],
                 "circle-radius": [
                   "step",
                   ["get", "point_count"],

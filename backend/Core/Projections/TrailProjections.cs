@@ -21,7 +21,7 @@ internal record TrailMarkerProjection(
 internal record TrailShortInfoProjection(
     string Identifier, string Name, decimal TrailLength, bool Accessibility,
     int? Classification, string City, decimal AverageRating,
-    decimal? StartLatitude, decimal? StartLongitude);
+    decimal? StartLatitude, decimal? StartLongitude, bool IsContribution);
 
 internal record TrailOverviewProjection(
     string Identifier, string Name, decimal TrailLength, decimal AverageRating,

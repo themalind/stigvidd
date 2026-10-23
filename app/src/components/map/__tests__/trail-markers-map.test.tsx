@@ -6,6 +6,7 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { snackbarAtom } from "@/atoms/snackbar-atoms";
+import { CONTRIBUTION_MARKER_COLORS, MARKER_COLORS } from "@/components/map/marker-styles";
 import TrailMarkersMap from "@/components/map/trail-markers-map";
 import { FacilityType, MapMarkerFilter } from "@/data/types";
 import { flushUntil, settle } from "@/test/flush";
@@ -144,6 +145,21 @@ it("splits curated trails and user trails by their own filter rows", async () =>
 
   await show({ trails: false, contributions: false });
   expect(source("trails")).toBeFalsy();
+});
+
+it("colours a cluster of user walks only in the user-walk colour", async () => {
+  await show({ trails: true, contributions: true });
+  await flushUntil(() => source("trails"));
+
+  const curatedCount = source("trails")?.props.clusterProperties.curatedCount;
+  expect(curatedCount).toEqual(["+", ["case", ["==", ["get", "isContribution"], true], 0, 1]]);
+  const clusters = screen.queryAllByTestId("maplibre-Layer").find((node) => node.props.id === "trail-clusters");
+  expect(clusters?.props.paint["circle-color"]).toEqual([
+    "case",
+    ["==", ["get", "curatedCount"], 0],
+    CONTRIBUTION_MARKER_COLORS.fill,
+    MARKER_COLORS.trails.fill,
+  ]);
 });
 
 // The accessibility filter applies across every kind at once.
