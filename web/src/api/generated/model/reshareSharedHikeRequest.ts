@@ -8,5 +8,7 @@
 
 export interface ReshareSharedHikeRequest {
   hikeIdentifier: string;
-  reShareToNames: string[];
+  reShareToNames?: string[];
+  /** @nullable */
+  reShareToName?: string | null;
 }

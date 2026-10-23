@@ -219,6 +219,31 @@ public class HikeSharesControllerTests : IClassFixture<StigViddWebApplicationFac
         response.StatusCode.Should().Be(HttpStatusCode.OK);
     }
 
+    [Fact]
+    public async Task ShareHike_WithLegacySingleName_SharesWithThatFriend()
+    {
+        // Arrange — NaturElskaren sends request, VandrarVennen accepts
+        var client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", NaturElskarenUid);
+        await client.PostAsJsonAsync($"{FRIENDS_URL}/requests",
+            new SendFriendRequestRequest { ReceiverNickName = VandrarVennenNickName },
+            TestContext.Current.CancellationToken);
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", VandrarVennenUid);
+        await client.PutAsync($"{FRIENDS_URL}/requests/accept/{NaturElskarenIdentifier}", null, TestContext.Current.CancellationToken);
+
+        // Act — store builds 6 and 8 send one name in sharedWithName
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", NaturElskarenUid);
+        var request = new { hikeIdentifier = Hike1Identifier, sharedWithNames = (string[]?)null, sharedWithName = VandrarVennenNickName };
+        var response = await client.PostAsJsonAsync($"{BASE_URL}/share", request, TestContext.Current.CancellationToken);
+
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", VandrarVennenUid);
+        var pending = await client.GetAsync($"{RECIPIENT_URL}/incoming/{Hike1Identifier}", TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        pending.StatusCode.Should().Be(HttpStatusCode.OK);
+    }
+
     [Theory]
     [InlineData(true)]
     [InlineData(false)]

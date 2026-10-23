@@ -6,6 +6,13 @@ namespace WebDataContracts.RequestModels.HikeShare;
 public class HikeShareRequest
 {
     public required string HikeIdentifier { get; set; }
-    public required IReadOnlyCollection<string> SharedWithNames { get; set; }
+    public IReadOnlyCollection<string> SharedWithNames { get; set; } = [];
     public bool AllowResharing { get; set; }
+
+    // keep-comment: store builds 6 and 8 send one name here; remove once a newer store build replaces them
+    public string? SharedWithName
+    {
+        get => null;
+        set { if (value is not null && SharedWithNames is null or { Count: 0 }) SharedWithNames = [value]; }
+    }
 }

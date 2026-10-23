@@ -506,6 +506,21 @@ public class HikeShareRecipientControllerTests : IClassFixture<StigViddWebApplic
     }
 
     [Fact]
+    public async Task ReshareSharedHike_WithLegacySingleName_ReturnsOk()
+    {
+        // Arrange — store builds 6 and 8 send one name in reShareToName
+        await EstablishFriendshipWithNaturElskaren(SkogsGrevUid, SkogsGrevNickName);
+        var client = CreateAuthenticatedClient(NaturElskarenUid);
+        var request = new { hikeIdentifier = Hike3Identifier, reShareToNames = (string[]?)null, reShareToName = SkogsGrevNickName };
+
+        // Act
+        var response = await client.PostAsJsonAsync($"{BASE_URL}/re-share", request, TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+    }
+
+    [Fact]
     public async Task ReshareSharedHike_WhenOwnerDidNotAllowResharing_ReturnsForbidden()
     {
         // Arrange — VandrarVennen has Hike5 as Accepted, but SkogsGreven (the owner) never
