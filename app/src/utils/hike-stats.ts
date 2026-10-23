@@ -31,7 +31,7 @@ export interface SharedHikeStats {
   totalKm: number;
   /** How many distinct people have shared something with you. */
   senderCount: number;
-  /** The one person worth naming, and on what grounds. Absent only for an empty list. */
+  /** The one person worth naming, and on what grounds. Absent when no sharer has a name. keep-comment: contract */
   featured?: { name: string; kind: "most" | "latest" };
 }
 
@@ -44,6 +44,7 @@ export function summarizeSharedHikes(hikes: readonly SharedHike[]): SharedHikeSt
 
   for (const hike of hikes) {
     if (Number.isFinite(hike.hikeLength)) totalKm += hike.hikeLength;
+    if (hike.sharedByName === null) continue;
     shareCounts.set(hike.sharedByName, (shareCounts.get(hike.sharedByName) ?? 0) + 1);
 
     // An unparseable date gives NaN, which loses every comparison and drops out here.

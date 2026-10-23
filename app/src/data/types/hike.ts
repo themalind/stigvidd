@@ -54,8 +54,8 @@ export interface SharedHike {
   duration: number;
   coordinates: string;
   createdByName: string | null;
-  sharedByName: string;
-  sharedByIdentifier: string;
+  sharedByName: string | null; // keep-comment: null once the sharer deleted their account
+  sharedByIdentifier: string | null;
   sharedAt: string;
   gettingThere?: string;
   parkingInfo?: string;
@@ -80,8 +80,8 @@ export interface IncomingSharedHike {
   hikeName: string;
   hikeLength: number;
   duration: number;
-  sharedByName: string;
-  sharedByIdentifier: string;
+  sharedByName: string | null;
+  sharedByIdentifier: string | null;
   createdByName: string | null;
   sharedAt: string;
 }

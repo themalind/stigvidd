@@ -30,7 +30,7 @@ export interface HikeAccessors<T> {
   length: (h: T) => number;
   duration: (h: T) => number; // ms
   date: (h: T) => string; // ISO
-  sharedBy?: (h: T) => string;
+  sharedBy?: (h: T) => string | null;
 }
 
 /** Upper bounds and step sizes for the range sliders. Duration is in minutes. */
@@ -52,7 +52,8 @@ export const useHikeFilters = <T>(hikes: T[] | undefined, accessors: HikeAccesso
   const sharedByNames = useMemo(() => {
     const read = accessors.sharedBy;
     if (!hikes || !read) return [];
-    return [...new Set(hikes.map(read))].sort((a, b) => a.localeCompare(b, "sv"));
+    const names = hikes.map(read).filter((name): name is string => name !== null);
+    return [...new Set(names)].sort((a, b) => a.localeCompare(b, "sv"));
   }, [hikes, accessors]);
 
   // Slider bounds follow the collection, so the thumbs spread across the whole track
@@ -88,7 +89,7 @@ export const useHikeFilters = <T>(hikes: T[] | undefined, accessors: HikeAccesso
       result = result.filter(
         (h) =>
           accessors.name(h).toLowerCase().includes(query) ||
-          (accessors.sharedBy?.(h).toLowerCase().includes(query) ?? false),
+          (accessors.sharedBy?.(h)?.toLowerCase().includes(query) ?? false),
       );
     }
 

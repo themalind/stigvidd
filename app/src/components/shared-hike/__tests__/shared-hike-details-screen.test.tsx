@@ -9,7 +9,7 @@ import { ApiError } from "@/api/api-error";
 import { snackbarAtom } from "@/atoms/snackbar-atoms";
 import SharedHikeDetailsScreen from "@/components/shared-hike/shared-hike-details-screen";
 import { SharedHike } from "@/data/types";
-import { flushUntil, settle } from "@/test/flush";
+import { flushUntil, flushUntilGone, settle } from "@/test/flush";
 import { renderWithProviders } from "@/test/render";
 import { fireEvent, screen } from "@testing-library/react-native";
 
@@ -134,6 +134,12 @@ it("shows who shared the walk, when, and its figures", async () => {
   expect(screen.getByText(/2026-05-04/)).toBeTruthy();
   expect(screen.getByText("4.2 km")).toBeTruthy();
   expect(screen.getByText("01:30:00")).toBeTruthy();
+});
+
+it("names a sharer who deleted their account as a deleted user", async () => {
+  await show({ sharedByName: null, sharedByIdentifier: null });
+
+  expect(screen.getByText("Borttagen användare")).toBeTruthy();
 });
 
 it("says the walk is gone when it is no longer shared", async () => {
@@ -302,6 +308,7 @@ describe("images", () => {
     fireEvent.press(screen.getByTestId("report-submit"));
     await flushUntil(() => (mockGetSharedHikes.mock.calls.length > fetchesBefore ? true : null));
     await flushUntil(() => mockTrack.mock.calls.length > 0);
+    await flushUntilGone(() => screen.queryByTestId("review-image-list"));
 
     expect(mockCreateReport).toHaveBeenCalledWith(
       expect.objectContaining({ contentType: "HikeImage", contentIdentifier: "img-2" }),

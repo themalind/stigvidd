@@ -37,7 +37,7 @@ public class ContentReportRepository : IContentReportRepository
                     .AsNoTracking()
                     .Where(r => r.Identifier == contentIdentifier)
                     .Select(r => new ReportableContent(
-                        r.Id, r.Identifier, r.UserId, r.User!.NickName,
+                        r.Id, r.Identifier, r.UserId, r.User != null ? r.User.NickName : null,
                         r.TrailId, r.Trail!.Identifier, r.TrailReview, r.ModerationState))
                     .FirstOrDefaultAsync(ctoken),
 
@@ -46,7 +46,7 @@ public class ContentReportRepository : IContentReportRepository
                     .AsNoTracking()
                     .Where(to => to.Identifier == contentIdentifier)
                     .Select(to => new ReportableContent(
-                        to.Id, to.Identifier, to.UserId, to.User!.NickName,
+                        to.Id, to.Identifier, to.UserId, to.User != null ? to.User.NickName : null,
                         to.TrailId, to.Trail!.Identifier, to.Description, to.ModerationState))
                     .FirstOrDefaultAsync(ctoken),
 

@@ -126,6 +126,19 @@ it("lists a received walk with who sent it and when", async () => {
   expect(screen.getByText("2026-05-04")).toBeTruthy();
 });
 
+it("names a sharer who deleted their account as a deleted user, in both lists", async () => {
+  mockGetSharedHikes.mockResolvedValue([sharedHike({ sharedByName: null, sharedByIdentifier: null })]);
+  mockIncoming = {
+    data: [sharedHike({ hikeIdentifier: "in-0", sharedByName: null, sharedByIdentifier: null })],
+    isPending: false,
+    isError: false,
+  };
+  await show();
+
+  expect(screen.getAllByText("Delad av: Borttagen användare")).toHaveLength(2);
+  expect(screen.queryByText("Delad av: ")).toBeNull();
+});
+
 it("says the shelf is empty rather than showing an empty card", async () => {
   mockGetSharedHikes.mockResolvedValue([]);
   await show();

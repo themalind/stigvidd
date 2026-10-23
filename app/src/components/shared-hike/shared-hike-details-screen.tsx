@@ -136,7 +136,7 @@ export default function SharedHikeDetailsScreen() {
       hikeLength={sharedHike.hikeLength}
       duration={sharedHike.duration}
       facts={[
-        { label: t("hike.sharedByTitle"), value: sharedHike.sharedByName },
+        { label: t("hike.sharedByTitle"), value: sharedHike.sharedByName ?? t("hike.deletedUser") },
         { label: t("hike.sharedOn"), value: formatDate(sharedHike.sharedAt) },
       ]}
       info={sharedHike}

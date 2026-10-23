@@ -61,6 +61,12 @@ it("shows who shared the walk, when, and its figures", () => {
   expect(screen.getByText("01:30:00")).toBeTruthy();
 });
 
+it("names a sharer who deleted their account as a deleted user", () => {
+  show({ sharedHike: sharedHike({ sharedByName: null, sharedByIdentifier: null }) });
+
+  expect(screen.getByText("Borttagen användare")).toBeTruthy();
+});
+
 it("shows the info rows the walk carries", () => {
   show({ sharedHike: sharedHike({ gettingThere: "Buss 100 till vändplan" }) });
 

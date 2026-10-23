@@ -69,7 +69,7 @@ public class AdminUserServiceTests
         logger.Verify(l => l.Log(
             LogLevel.Information,
             It.IsAny<EventId>(),
-            It.Is<It.IsAnyType>((state, _) => (state.ToString() ?? "").Contains("unbanned by second-moderator")),
+            It.Is<It.IsAnyType>((state, _) => (state == null ? "" : state.ToString() ?? "").Contains("unbanned by second-moderator")),
             It.IsAny<Exception?>(),
             It.IsAny<Func<It.IsAnyType, Exception?, string>>()), Times.Once);
     }

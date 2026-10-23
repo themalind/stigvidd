@@ -83,7 +83,7 @@ export default function IncomingSharedHikeModal({
               <View style={s.sharedDetails}>
                 <View style={s.row}>
                   <Text style={[s.bold, { color: theme.colors.secondary }]}>{t("hike.sharedBy")} </Text>
-                  <Text>{sharedHike.sharedByName}</Text>
+                  <Text>{sharedHike.sharedByName ?? t("hike.deletedUser")}</Text>
                 </View>
                 <View style={s.row}>
                   <Text style={[s.bold, { color: theme.colors.secondary }]}>{t("hike.date")} </Text>

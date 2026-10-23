@@ -164,7 +164,7 @@ export default function SharedHikesScreen() {
                                 {req.hikeName}
                               </Text>
                               <Text variant="bodySmall" style={{ color: theme.colors.secondary }}>
-                                {t("hike.sharedByLabel", { name: req.sharedByName })}
+                                {t("hike.sharedByLabel", { name: req.sharedByName ?? t("hike.deletedUser") })}
                               </Text>
                             </View>
                             <View style={s.rowActions}>
@@ -274,7 +274,7 @@ export default function SharedHikesScreen() {
                               style={[s.sharedBy, { color: theme.colors.secondary }]}
                               numberOfLines={1}
                             >
-                              {t("hike.sharedByLabel", { name: hike.sharedByName })}
+                              {t("hike.sharedByLabel", { name: hike.sharedByName ?? t("hike.deletedUser") })}
                             </Text>
                             <Text variant="bodySmall" style={s.sharedDate}>
                               {formatDate(hike.sharedAt)}

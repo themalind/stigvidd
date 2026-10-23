@@ -5,8 +5,46 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import { Hike } from "@/data/types";
-import { formatTotalDuration, latestHike, summarizeHikes } from "@/utils/hike-stats";
+import { Hike, SharedHike } from "@/data/types";
+import { formatTotalDuration, latestHike, summarizeHikes, summarizeSharedHikes } from "@/utils/hike-stats";
+
+function sharedHike(overrides: Partial<SharedHike>): SharedHike {
+  return {
+    hikeIdentifier: "id",
+    hikeName: "Promenad",
+    hikeLength: 1,
+    duration: 0,
+    coordinates: "[]",
+    createdByName: null,
+    sharedByName: "Anna",
+    sharedByIdentifier: "anna-id",
+    sharedAt: "2026-08-01T10:00:00Z",
+    allowResharing: false,
+    images: [],
+    ...overrides,
+  };
+}
+
+describe("summarizeSharedHikes", () => {
+  it("never names a sharer who deleted their account, even as the latest", () => {
+    const stats = summarizeSharedHikes([
+      sharedHike({ sharedByName: "Anna", sharedAt: "2026-08-01T10:00:00Z" }),
+      sharedHike({ sharedByName: null, sharedByIdentifier: null, sharedAt: "2026-09-01T10:00:00Z" }),
+    ]);
+
+    expect(stats.count).toBe(2);
+    expect(stats.totalKm).toBe(2);
+    expect(stats.senderCount).toBe(1);
+    expect(stats.featured).toEqual({ name: "Anna", kind: "latest" });
+  });
+
+  it("names no one when every sharer has deleted their account", () => {
+    const stats = summarizeSharedHikes([sharedHike({ sharedByName: null, sharedByIdentifier: null })]);
+
+    expect(stats.senderCount).toBe(0);
+    expect(stats.featured).toBeUndefined();
+  });
+});
 
 function hike(overrides: Partial<Hike>): Hike {
   return {
