@@ -897,3 +897,7 @@ src/api/generated` then fails with "the generated API client is stale" for reaso
   Blank or black map in the admin (hike-submissions review, submission-map.tsx) while the legend still shows. maplibre-gl.css
   sets unlayered .maplibregl-map position: relative, which beats Tailwind v4 layered utilities (@layer), so absolute/inset-0
   collapse the container to 0 height. Fix: h-full w-full on the map container. Not the MapTiler key, OSM tiles or the style.
+- [A Paper modal's pinned submit button hides behind the keyboard unless it uses useModalKeyboardLift](app-modal-submit-button-hides-behind-keyboard.md) —
+  app/ form modals (obstacle, share hike, edit/publish hike, report, reset password): Skicka/Spara button disappears while the
+  keyboard is up. Android is softwareKeyboardLayoutMode pan + edgeToEdgeEnabled, not resize; keyboardDidShow height excludes
+  the nav bar. Fix: useModalKeyboardLift modalStyle + maxHeight, ScrollView, button pinned below. No dev build needed.

@@ -23,6 +23,7 @@ import { useTranslation } from "react-i18next";
 import { useBlockMutations } from "@/hooks/friends/useBlockMutations";
 
 const PREVIEW_COUNT = 5;
+const ACCEPT_COLOR = "#43a047";
 
 export default function FriendsScreen() {
   const [query, setQuery] = useState("");
@@ -193,7 +194,7 @@ export default function FriendsScreen() {
                               accessibilityLabel={t("friends.accept")}
                               icon="check-circle-outline"
                               size={30}
-                              iconColor={theme.colors.primary}
+                              iconColor={ACCEPT_COLOR}
                               onPress={() => unlessBanned(() => acceptMutation.mutate(req.requesterIdentifier))}
                               disabled={acceptMutation.isPending || rejectMutation.isPending}
                               style={s.actionButton}

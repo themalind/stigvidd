@@ -9,6 +9,7 @@ import { userPasswordReset } from "@/api/auth";
 import { asTranslationKey } from "@/i18n";
 import { showSuccessAtom } from "@/atoms/snackbar-atoms";
 import { BORDER_RADIUS } from "@/constants/constants";
+import { useModalKeyboardLift } from "@/hooks/useModalKeyboardLift";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { BlurView } from "expo-blur";
 import { useSetAtom } from "jotai";
@@ -37,6 +38,7 @@ export default function ResetPasswordModal({ visible, onDismiss }: Props) {
   const theme = useTheme();
   const [resetError, setResetError] = useState("");
   const setSuccessMessage = useSetAtom(showSuccessAtom);
+  const { modalStyle } = useModalKeyboardLift(0.6);
   const {
     control,
     handleSubmit,
@@ -61,6 +63,7 @@ export default function ResetPasswordModal({ visible, onDismiss }: Props) {
     <Portal>
       {visible && <BlurView intensity={100} tint="dark" style={StyleSheet.absoluteFill} />}
       <Modal
+        style={modalStyle}
         contentContainerStyle={[s.modalContainerStyle, { backgroundColor: theme.colors.surface }]}
         visible={visible}
         onDismiss={onDismiss}
@@ -137,7 +140,7 @@ const s = StyleSheet.create({
     width: width * 0.65,
   },
   errorContainer: {
-    // Pinned to the field width so a long error message wraps instead of widening the modal.
+    // keep-comment: pinned to the field width so a long error message wraps instead of widening the modal
     width: width * 0.65,
   },
   errorBadge: {

@@ -5,19 +5,18 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
+import ModalFormScrollView from "@/components/modal-form-scroll-view";
 import FriendPicker from "@/components/shared-hike/friend-picker";
 import { BORDER_RADIUS } from "@/constants/constants";
+import { useModalKeyboardLift } from "@/hooks/useModalKeyboardLift";
 import { asTranslationKey } from "@/i18n";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import { Control, Controller, FieldError, SubmitHandler, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { Dimensions, Pressable, StyleSheet, View } from "react-native";
-import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import { Pressable, StyleSheet, View } from "react-native";
 import { Button, Checkbox, Divider, Icon, Modal, Portal, Text, TextInput, useTheme } from "react-native-paper";
 import { z } from "zod";
-
-const HEIGHT = Dimensions.get("screen").height;
 
 // Limits mirror CreateHikeRequestValidator; the message key follows the limit. keep-comment: links to the backend validator
 const maxChars = (max: 200 | 500) => z.string().max(max, `hike.maxChars${max}`).optional();
@@ -87,6 +86,7 @@ export default function ShareHikeModal({ visible, onDismiss, onShare, isPending,
   const { t } = useTranslation();
   const [step, setStep] = useState<"form" | "friends">("form");
   const [formData, setFormData] = useState<ShareHikeFormFields>({});
+  const { modalStyle, maxHeight } = useModalKeyboardLift(0.85);
 
   const {
     control,
@@ -106,8 +106,8 @@ export default function ShareHikeModal({ visible, onDismiss, onShare, isPending,
 
   return (
     <Portal>
-      <Modal visible={visible} onDismiss={handleDismiss} contentContainerStyle={s.container}>
-        <View style={[s.inner, { backgroundColor: theme.colors.surface }]}>
+      <Modal visible={visible} onDismiss={handleDismiss} style={modalStyle} contentContainerStyle={s.container}>
+        <View style={[s.inner, { backgroundColor: theme.colors.surface, height: maxHeight }]}>
           <View style={s.header}>
             <Icon source="share" size={18} color={theme.colors.primary} />
             <Text variant="titleMedium" style={{ color: theme.colors.onSurface }}>
@@ -125,12 +125,7 @@ export default function ShareHikeModal({ visible, onDismiss, onShare, isPending,
           <Divider />
           {step === "form" ? (
             <>
-              <KeyboardAwareScrollView
-                style={s.flex}
-                contentContainerStyle={s.formContent}
-                keyboardShouldPersistTaps="handled"
-                enableOnAndroid
-              >
+              <ModalFormScrollView style={s.flex} contentContainerStyle={s.formContent}>
                 <View style={{ paddingBottom: 15, gap: 10 }}>
                   <Text variant="titleSmall" style={{ color: theme.colors.secondary }}>
                     {t("hike.shareWarningHeading")}
@@ -178,7 +173,7 @@ export default function ShareHikeModal({ visible, onDismiss, onShare, isPending,
                   control={control}
                   error={errors.description}
                 />
-              </KeyboardAwareScrollView>
+              </ModalFormScrollView>
               <View style={s.buttonContainer}>
                 <Button
                   mode="contained"
@@ -215,7 +210,6 @@ const s = StyleSheet.create({
   inner: {
     borderRadius: BORDER_RADIUS,
     overflow: "hidden",
-    height: HEIGHT * 0.85,
   },
   header: {
     flexDirection: "row",

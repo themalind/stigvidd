@@ -77,7 +77,7 @@ export default function TrailContributionBar({ trailIdentifier, contribution }: 
       style={[s.container, { backgroundColor: theme.colors.surface, borderLeftColor: theme.colors.primary }]}
     >
       <View style={s.byline}>
-        <Text style={[s.badge, { color: theme.colors.onSurface }]}>{t("trail.contributed")}</Text>
+        <Text style={[s.badge, { color: theme.colors.primary }]}>{t("trail.contributed")}</Text>
         {contribution.submitterNickName && (
           <View style={s.submitter}>
             <Icon source="account-outline" size={16} color={theme.colors.onSurfaceVariant} />

@@ -6,18 +6,18 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import FormTextField from "@/components/form-text-field";
+import ModalFormScrollView from "@/components/modal-form-scroll-view";
 import { BORDER_RADIUS } from "@/constants/constants";
 import { Hike } from "@/data/types";
 import { useModalKeyboardLift } from "@/hooks/useModalKeyboardLift";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { Platform, Pressable, StyleSheet, View } from "react-native";
-import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import { Pressable, StyleSheet, View } from "react-native";
 import { Button, Divider, Icon, Modal, Portal, Text, useTheme } from "react-native-paper";
 import { z } from "zod";
 
-// Limits mirror UpdateHikeRequestValidator; the name rules match the save form.
+// keep-comment: limits mirror UpdateHikeRequestValidator; the name rules match the save form
 const maxChars = (max: 200 | 500) => z.string().max(max, `hike.maxChars${max}`);
 
 const editHikeFields = z.object({
@@ -36,7 +36,7 @@ interface Props {
   isPending?: boolean;
 }
 
-// Mounted only while open, so the form always starts from the hike's current values.
+// keep-comment: mounted only while open, so the form always starts from the hike's current values
 export default function EditHikeModal({ hike, onDismiss, onSave, isPending }: Props) {
   const theme = useTheme();
   const { t } = useTranslation();
@@ -77,13 +77,7 @@ export default function EditHikeModal({ hike, onDismiss, onSave, isPending }: Pr
             </Pressable>
           </View>
           <Divider />
-          <KeyboardAwareScrollView
-            style={s.scroll}
-            contentContainerStyle={s.formContent}
-            keyboardShouldPersistTaps="handled"
-            enableOnAndroid
-            enableAutomaticScroll={Platform.OS !== "ios"}
-          >
+          <ModalFormScrollView style={s.scroll} contentContainerStyle={s.formContent}>
             <FormTextField
               name="name"
               testID="edit-name"
@@ -119,7 +113,7 @@ export default function EditHikeModal({ hike, onDismiss, onSave, isPending }: Pr
               maxLength={500}
               multiline
             />
-          </KeyboardAwareScrollView>
+          </ModalFormScrollView>
           <View style={s.buttonContainer}>
             <Button
               style={s.button}

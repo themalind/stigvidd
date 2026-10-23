@@ -11,6 +11,7 @@ import { showErrorAtom, showSuccessAtom } from "@/atoms/snackbar-atoms";
 import Map from "@/components/map/map";
 import { routeCasingPaint } from "@/components/map/marker-styles";
 import FormTextField from "@/components/form-text-field";
+import ModalFormScrollView from "@/components/modal-form-scroll-view";
 import DifficultyInfoModal from "@/components/trail/difficulty-info-modal";
 import { BORDER_RADIUS } from "@/constants/constants";
 import { DIFFICULTIES } from "@/data/trail-content";
@@ -32,8 +33,7 @@ import { useSetAtom } from "jotai";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { Platform, Pressable, StyleSheet, View } from "react-native";
-import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import { Pressable, StyleSheet, View } from "react-native";
 import { Button, Checkbox, Divider, Icon, Modal, Portal, Text, useTheme } from "react-native-paper";
 import { z } from "zod";
 
@@ -181,13 +181,7 @@ export default function PublishHikeModal({ hike, nickName, onDismiss }: Props) {
             </Pressable>
           </View>
           <Divider />
-          <KeyboardAwareScrollView
-            style={s.scroll}
-            contentContainerStyle={s.content}
-            keyboardShouldPersistTaps="handled"
-            enableOnAndroid
-            enableAutomaticScroll={Platform.OS !== "ios"}
-          >
+          <ModalFormScrollView style={s.scroll} contentContainerStyle={s.content}>
             <Text style={{ color: theme.colors.onSurfaceVariant }}>{t("publish.intro")}</Text>
 
             <View style={s.section}>
@@ -423,7 +417,7 @@ export default function PublishHikeModal({ hike, nickName, onDismiss }: Props) {
                 {t("publish.consentNote")}
               </Text>
             </View>
-          </KeyboardAwareScrollView>
+          </ModalFormScrollView>
           <View style={s.footer}>
             <Button
               testID="publish-submit"

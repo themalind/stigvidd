@@ -8,14 +8,15 @@
 import { useEffect, useState } from "react";
 import { Keyboard, Platform } from "react-native";
 
-// keep-comment: Android resizes the window for the keyboard itself, so only iOS needs the height.
-export function useIosKeyboardHeight() {
+// keep-comment: Android has no Will events; its height excludes the navigation bar, iOS's does not
+export function useKeyboardHeight() {
   const [height, setHeight] = useState(0);
 
   useEffect(() => {
-    if (Platform.OS !== "ios") return;
-    const show = Keyboard.addListener("keyboardWillShow", (e) => setHeight(e.endCoordinates.height));
-    const hide = Keyboard.addListener("keyboardWillHide", () => setHeight(0));
+    const showEvent = Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
+    const hideEvent = Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
+    const show = Keyboard.addListener(showEvent, (e) => setHeight(e.endCoordinates.height));
+    const hide = Keyboard.addListener(hideEvent, () => setHeight(0));
     return () => {
       show.remove();
       hide.remove();
