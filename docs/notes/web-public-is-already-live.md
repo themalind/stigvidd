@@ -67,5 +67,9 @@ and `UserService.DeleteUserAsync`; the FK `OnDelete` rules in `Infrastructure/Da
 and the publish promise, which is the seeded consent text in `ConsentTextConfiguration.cs`
 (mirrored by `publish.consent*` in the app's locales).
 
+"Update web/public" means these pages too: `web/public` holds only `icon.png` and `robots.txt`. Fastest
+diff: `git log -1 --format=%h -- site/public/privacy-policy`, then `git diff <that>..HEAD --stat -- backend/Infrastructure/Data/Entities`
+for new stored fields; `HikeSubmissionRepository.ClearContent` lists what a rejection wipes.
+
 Related: [[json-file-has-no-time-retention]] — the same publication turned §5's stated 7-day
 log retention into a promise that had to be made true.
