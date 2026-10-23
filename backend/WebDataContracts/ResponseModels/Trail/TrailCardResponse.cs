@@ -12,6 +12,7 @@ public class TrailCardResponse
     public bool IsAccessible { get; set; }
     public decimal AverageRating { get; set; }
     public TrailImageResponse? Image { get; set; }
+    public TrailContributionResponse? Contribution { get; set; }
 
     public static TrailCardResponse Create(
         string identifier,
@@ -20,7 +21,8 @@ public class TrailCardResponse
         int classification,
         bool isAccessible,
         decimal averageRating,
-        TrailImageResponse? image)
+        TrailImageResponse? image,
+        TrailContributionResponse? contribution = null)
     {
         return new TrailCardResponse
         {
@@ -30,7 +32,8 @@ public class TrailCardResponse
             Classification = classification,
             IsAccessible = isAccessible,
             AverageRating = averageRating,
-            Image = image
+            Image = image,
+            Contribution = contribution
         };
     }
 }

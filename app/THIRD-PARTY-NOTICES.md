@@ -77,7 +77,8 @@ condition on combination, so linking these raises none of the questions GPLv3 §
 The basemap is **MapTiler Cloud**, a commercial tile service, rendered by MapLibre
 (MIT client, BSD-2-Clause native SDK). Its underlying data is **OpenStreetMap, under the
 Open Database License (ODbL) 1.0**, which requires attribution. The app honours this: the
-MapTiler + OpenStreetMap credit is rendered on every map screen and is deliberately not
+MapTiler + OpenStreetMap credit and the MapTiler logo (MapTiler AG's trademark, required
+by the Free plan) are rendered on every map screen and is deliberately not
 optional — see `src/components/map/map.tsx` and [`../docs/map.md`](../docs/map.md).
 
 ## Direct dependencies

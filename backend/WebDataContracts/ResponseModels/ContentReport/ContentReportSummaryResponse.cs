@@ -26,6 +26,9 @@ public class ContentReportSummaryResponse
     public DateTime? AuthorBannedAt { get; set; }
     public string? ContentSnapshot { get; set; }
 
+    // Set for a reported image only: the snapshot as an absolute URL. keep-comment: the snapshot itself is a relative path
+    public string? ContentImageUrl { get; set; }
+
     // False once retention or an account deletion has taken the content. Upholding is still
     // allowed, so the strike can land.
     public bool ContentStillExists { get; set; }
@@ -48,6 +51,7 @@ public class ContentReportSummaryResponse
         string? authorIdentifier,
         DateTime? authorBannedAt,
         string? contentSnapshot,
+        string? contentImageUrl,
         bool contentStillExists,
         string? decidedBy,
         DateTime? decidedAt,
@@ -69,6 +73,7 @@ public class ContentReportSummaryResponse
             AuthorIdentifier = authorIdentifier,
             AuthorBannedAt = authorBannedAt,
             ContentSnapshot = contentSnapshot,
+            ContentImageUrl = contentImageUrl,
             ContentStillExists = contentStillExists,
             DecidedBy = decidedBy,
             DecidedAt = decidedAt,

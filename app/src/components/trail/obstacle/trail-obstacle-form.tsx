@@ -9,8 +9,11 @@ import { createTrailObstacle, getObstacleIssueTypes } from "@/api/trail-obstacle
 import { asTranslationKey } from "@/i18n";
 import { getCoordinatesByTrailIdentifier } from "@/api/trails";
 import { showErrorAtom, showSuccessAtom } from "@/atoms/snackbar-atoms";
+import CountedTextInput from "@/components/counted-text-input";
+import ModalFormScrollView from "@/components/modal-form-scroll-view";
 import SelectInput from "@/components/select-input";
 import { BORDER_RADIUS } from "@/constants/constants";
+import { useModalKeyboardLift } from "@/hooks/useModalKeyboardLift";
 import { CreateTrailObstacleRequest } from "@/data/types";
 import CoordinateParser from "@/utils/coordinate-parser";
 import { isNearTrail } from "@/utils/haversine";
@@ -26,9 +29,8 @@ import { useSetAtom } from "jotai";
 import { useState } from "react";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { Dimensions, Pressable, StyleSheet, Switch, View } from "react-native";
-import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
-import { ActivityIndicator, Button, Modal, Portal, Surface, Text, TextInput, useTheme } from "react-native-paper";
+import { Pressable, StyleSheet, Switch, View } from "react-native";
+import { ActivityIndicator, Button, Modal, Portal, Surface, Text, useTheme } from "react-native-paper";
 import { z } from "zod";
 import { logger } from "../../../services/logger";
 
@@ -46,8 +48,6 @@ const obstacleFields = z.object({
 
 type FormFields = z.infer<typeof obstacleFields>;
 
-const { height } = Dimensions.get("screen");
-
 interface Props {
   trailIdentifier: string;
   visible: boolean;
@@ -63,10 +63,9 @@ export default function TrailObstacleForm({ trailIdentifier, visible, onDismiss 
   const setErrorMsg = useSetAtom(showErrorAtom);
   const setSuccessMsg = useSetAtom(showSuccessAtom);
   const queryClient = useQueryClient();
+  const { modalStyle, maxHeight } = useModalKeyboardLift(0.8);
 
-  // Only fetch once the report form is actually opened — this component is always
-  // mounted inside UserBar, so without the visible gate these would fire on every
-  // trail-detail load even when the user never opens the report sheet.
+  // keep-comment: always mounted inside UserBar, so the visible gate stops these firing on every trail-detail load
   const { data: issueTypes } = useQuery({
     queryKey: ["issueTypes", "obstacle"],
     queryFn: () => getObstacleIssueTypes(),
@@ -169,7 +168,8 @@ export default function TrailObstacleForm({ trailIdentifier, visible, onDismiss 
     <Portal>
       {visible && <BlurView intensity={100} tint="dark" style={StyleSheet.absoluteFill} />}
       <Modal
-        contentContainerStyle={[s.modalContainerStyle, { backgroundColor: theme.colors.surface }]}
+        style={modalStyle}
+        contentContainerStyle={[s.modalContainerStyle, { backgroundColor: theme.colors.surface, height: maxHeight }]}
         visible={visible}
         onDismiss={onDismiss}
       >
@@ -190,11 +190,7 @@ export default function TrailObstacleForm({ trailIdentifier, visible, onDismiss 
               <Text style={[s.infoBody, { color: theme.colors.onSurfaceVariant }]}>{t("obstacle.formInfo2")}</Text>
             </Surface>
 
-            <KeyboardAwareScrollView
-              keyboardShouldPersistTaps="handled"
-              style={s.scrollView}
-              contentContainerStyle={s.scrollContent}
-            >
+            <ModalFormScrollView style={s.scrollView} contentContainerStyle={s.scrollContent}>
               <View style={s.fieldGroup}>
                 <Text style={[s.fieldLabel, { color: theme.colors.onSurfaceVariant }]}>
                   {t("obstacle.selectCategory")}
@@ -226,7 +222,7 @@ export default function TrailObstacleForm({ trailIdentifier, visible, onDismiss 
                   control={control}
                   name="description"
                   render={({ field: { onChange, onBlur, value } }) => (
-                    <TextInput
+                    <CountedTextInput
                       testID="obstacle-description"
                       mode="outlined"
                       error={!!errors.description}
@@ -281,7 +277,7 @@ export default function TrailObstacleForm({ trailIdentifier, visible, onDismiss 
               )}
               {!isLocating && watch("useLocation") && <Text>{t("obstacle.locationAttached")}</Text>}
               {locationError && <Text style={[s.bold, { color: theme.colors.error }]}>{locationError}</Text>}
-            </KeyboardAwareScrollView>
+            </ModalFormScrollView>
 
             <Button
               testID="obstacle-submit"
@@ -301,7 +297,6 @@ export default function TrailObstacleForm({ trailIdentifier, visible, onDismiss 
 
 const s = StyleSheet.create({
   modalContainerStyle: {
-    height: height * 0.8,
     justifyContent: "flex-start",
     borderRadius: BORDER_RADIUS,
     padding: 15,

@@ -11,7 +11,7 @@ import { SCREEN_PADDING } from "@/constants/constants";
 import { settle } from "@/test/flush";
 import { renderWithProviders } from "@/test/render";
 import { act, fireEvent, screen } from "@testing-library/react-native";
-import { Alert, Linking } from "react-native";
+import { Alert, Linking, StyleSheet } from "react-native";
 
 // The camera is driven through an imperative handle, so its moves show on the mock's handle.
 const maplibre = jest.requireMock("@maplibre/maplibre-react-native");
@@ -156,7 +156,8 @@ it("moves the map's attribution out of the pills' corners", () => {
   show();
 
   expect(map().props.attribution).toBe(true);
-  expect(map().props.attributionPosition).toEqual({ top: SCREEN_PADDING, left: SCREEN_PADDING });
+  expect(screen.getByTestId("maptiler-logo")).toHaveStyle({ top: SCREEN_PADDING, left: SCREEN_PADDING });
+  expect(map().props.attributionPosition.top).toBe(SCREEN_PADDING);
 });
 
 // A preview that is a button cannot also be panned: the full-cover Pressable swallows the drag.
@@ -225,7 +226,7 @@ it("offers directions to the start of the walk", async () => {
 
   expect(alert).toHaveBeenCalledWith(
     "Vägbeskrivning",
-    "Vill du öppna vägbeskrivning till ledens start i din kartapp?",
+    expect.stringContaining("Kolla parkeringsinformationen under Praktisk information"),
     expect.any(Array),
   );
 });
@@ -280,5 +281,5 @@ it("lets the map fill the frame the caller gives it", () => {
   show({ style: { height: 180, borderRadius: 12 } });
 
   expect(screen.getByTestId("route-preview")).toHaveStyle({ height: 180, borderRadius: 12 });
-  expect(map()).toHaveStyle({ flex: 1 });
+  expect(map()).toHaveStyle(StyleSheet.absoluteFill);
 });

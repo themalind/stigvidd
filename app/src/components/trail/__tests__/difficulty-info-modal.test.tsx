@@ -145,7 +145,7 @@ describe("how the modal is drawn", () => {
   it("gives it most of the screen's height, on the theme's surface", () => {
     show();
 
-    expect(screen.getByTestId("modal-surface-outer-layer")).toHaveStyle({ height: HEIGHT * 0.8 });
+    expect(screen.getByTestId("modal-surface-outer-layer")).toHaveStyle({ height: HEIGHT * 0.7 });
     expect(screen.getByTestId("modal-surface")).toHaveStyle({
       borderRadius: BORDER_RADIUS,
       padding: 10,

@@ -6,11 +6,13 @@ using Core.Factories;
 using Core.Interfaces.Repositories;
 using Core.Interfaces.Services;
 using Core.Services;
+using Core.Telemetry;
 using Infrastructure.Data.Entities;
 using Infrastructure.Enums;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
+using UnitTests.Telemetry;
 using WebDataContracts.RequestModels.ContentReport;
 
 namespace UnitTests.ServiceTests;
@@ -49,7 +51,7 @@ public class ContentReportServiceTests
     {
         var repo = new Mock<IContentReportRepository>();
 
-        repo.Setup(r => r.GetReportableContentAsync(It.IsAny<ReportedContentType>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+        repo.Setup(r => r.GetReportableContentAsync(It.IsAny<ReportedContentType>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<ReportableContent>.Success(content ?? VisibleReview()));
         repo.Setup(r => r.CountReportsByReporterSinceAsync(It.IsAny<int>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<int>.Success(0));
@@ -66,7 +68,8 @@ public class ContentReportServiceTests
     private static ContentReportService Build(
         Mock<IContentReportRepository> repo,
         Mock<IConfiguration>? cfg = null,
-        Mock<IWebDavService>? webDav = null)
+        Mock<IWebDavService>? webDav = null,
+        StigviddMetrics? metrics = null)
     {
         var userService = new Mock<IUserService>();
         userService.Setup(s => s.GetUserIdByIdentifierAsync(ReporterIdentifier, It.IsAny<CancellationToken>()))
@@ -76,9 +79,48 @@ public class ContentReportServiceTests
             repo.Object,
             userService.Object,
             (webDav ?? Utilities.MockFactory.WebDavService()).Object,
-            new ContentReportResponseFactory(),
+            Utilities.Stubs.ContentReportResponseFactory(),
+            metrics ?? new StigviddMetrics(),
             NullLogger<ContentReportService>.Instance,
             (cfg ?? Config()).Object);
+    }
+
+    [Fact]
+    public async Task Create_RecordsOneReport_TaggedWithTheContentTypeAndOutcome()
+    {
+        // Arrange
+        using var metrics = new StigviddMetrics();
+        using var recorded = new RecordedMetrics(metrics);
+        var request = ValidRequest();
+        request.ContentType = nameof(ReportedContentType.HikeImage);
+
+        // Act
+        await Build(HappyRepository(), metrics: metrics).CreateAsync(ReporterIdentifier, request, TestContext.Current.CancellationToken);
+
+        // Assert
+        recorded.PublishedInstruments.Should().Contain(MetricNames.ContentReportCreated);
+        var measurement = recorded.For(MetricNames.ContentReportCreated).Should().ContainSingle().Subject;
+        measurement.Tags.Should().Contain("content_type", "hike_image");
+        measurement.Tags.Should().Contain("outcome", "success");
+        measurement.Tags.Keys.Should().OnlyContain(k => k == "content_type" || k == "outcome");
+    }
+
+    [Fact]
+    public async Task Create_WithAnUnknownContentType_RecordsItAsUnknownAndRejected()
+    {
+        // Arrange
+        using var metrics = new StigviddMetrics();
+        using var recorded = new RecordedMetrics(metrics);
+        var request = ValidRequest();
+        request.ContentType = "Banana";
+
+        // Act
+        await Build(HappyRepository(), metrics: metrics).CreateAsync(ReporterIdentifier, request, TestContext.Current.CancellationToken);
+
+        // Assert
+        var measurement = recorded.For(MetricNames.ContentReportCreated).Should().ContainSingle().Subject;
+        measurement.Tags.Should().Contain("content_type", "unknown");
+        measurement.Tags.Should().Contain("outcome", "rejected");
     }
 
     [Fact]
@@ -312,7 +354,7 @@ public class ContentReportServiceTests
         result.Success.Should().BeFalse();
         result.Message.Should().NotBeNull();
         result.Message.StatusCode.Should().Be(400);
-        repo.Verify(r => r.GetReportableContentAsync(It.IsAny<ReportedContentType>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+        repo.Verify(r => r.GetReportableContentAsync(It.IsAny<ReportedContentType>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -320,7 +362,7 @@ public class ContentReportServiceTests
     {
         // Arrange
         var repo = HappyRepository();
-        repo.Setup(r => r.GetReportableContentAsync(It.IsAny<ReportedContentType>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+        repo.Setup(r => r.GetReportableContentAsync(It.IsAny<ReportedContentType>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<ReportableContent>.NotFound());
 
         // Act

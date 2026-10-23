@@ -1,6 +1,6 @@
 # Stigvidd
 
-Stigvidd is a full-stack hiking and trail discovery application built as a thesis project. It lets users explore hiking trails in the Borås area, record their own hikes with GPS tracking, rate and review trails, and report obstacles along the way.
+Stigvidd is a full-stack hiking and trail discovery application built as a thesis project. It lets users explore hiking trails in the Borås area, record their own hikes with GPS tracking, publish a hike as a trail for everyone, rate and review trails, and report obstacles along the way.
 
 The project consists of four parts: a cross-platform mobile app, a public website, a web-based admin dashboard, and a REST API backend.
 
@@ -83,7 +83,8 @@ stigvidd/
 - React Native with Expo (SDK 54)
 - TypeScript
 - Expo Router (file-based routing)
-- MapLibre Native + MapTiler "Outdoor" vector tiles, with Expo Location (GPS tracking)
+- MapLibre Native + MapTiler tiles — "Outdoor" vectors by default, or "Hybrid" satellite
+  imagery with roads and paths — with Expo Location (GPS tracking)
 - TanStack Query (server state) + Jotai (global state)
 - React Hook Form + Zod (form validation)
 - React Native Paper (Material Design 3)
@@ -119,18 +120,34 @@ stigvidd/
 ## Features
 
 - Browse and filter hiking trails (difficulty, accessibility, length, distance, city)
-- Interactive map with trail markers and GPS coordinates
+- Interactive map with trail markers and GPS coordinates, and a toggle between the outdoor
+  map and satellite imagery — one choice that every map in the app follows
 - Background GPS tracking during hikes with distance calculation
+- Follow a trail or a recorded hike on the map; tapping the start hands off to the phone's
+  maps app for directions there
 - Trail reviews with star ratings and photos
 - Favorites and wishlist with optimistic UI updates
 - Report trail obstacles/hazards with a voting system
-- Report offensive or incorrect reviews and obstacles for moderation
-- Share completed hikes with friends, who can follow the route on the map
+- Hike pages for your own and shared hikes: the route, stats, notes, and up to 10 photos
+  from the walk (EXIF and GPS data are stripped on upload)
+- Share completed hikes with several friends at once, who can follow the route, see the
+  photos, and reshare it if the owner allowed that
+- Publish a hike as a trail: trim the start and end, pick photos and give Stigvidd a permanent
+  licence to them (the user keeps the copyright); an admin reviews it before it appears. Published trails are marked on the map,
+  can be liked, and the popular ones show on the home screen. Once published, a trail outlives
+  the hike it came from and the account that sent it — only the submitter's name is removed
+- Report offensive or incorrect reviews, obstacles and shared hike photos for moderation;
+  a report hides the content until an admin decides
+- Block other users; banned accounts keep reading but can no longer post
+- Works offline where it can: an offline banner, cached data, and retry instead of errors
+- Light and dark themes to choose from
 - Push notifications
-- Email verification on registration
+- Email verification on registration, followed by a welcome mail
 - User profiles with hike history
-- Admin dashboard: trails, facilities and media, the Borås trail-import review, the
-  moderation queue, editable mail templates, and whole-environment export/import
+- Admin dashboard: trail statistics, trails, facilities and media, the trail-import review,
+  the review of published hikes (edit the route and text, approve or reject), the moderation
+  queue and user bans, editable mail templates, and whole-environment export/import with
+  user mappings that keep sign-ins working across an import
 
 > **In progress:** Swedish/English language support (i18n) is being built but not yet user-facing.
 
@@ -512,8 +529,9 @@ Dependencies keep their own licences, listed in
 [`web/THIRD-PARTY-NOTICES.md`](web/THIRD-PARTY-NOTICES.md) and
 [`app/THIRD-PARTY-NOTICES.md`](app/THIRD-PARTY-NOTICES.md). Nothing in the tree is non-free.
 
-Map data is OpenStreetMap under **ODbL 1.0**, served by MapTiler; the attribution is rendered
-on every map screen and is not optional. Trail and facility data comes from Borås Stad's open
+Map data is OpenStreetMap under **ODbL 1.0**, served by MapTiler, as is the satellite
+imagery; the attribution and MapTiler's logo are rendered on every map screen and are not
+optional. Trail and facility data comes from Borås Stad's open
 data portal under **CC0 1.0**, a public domain dedication that requires no attribution — the
 credit given to Borås Stad is a courtesy, and only the ODbL one is an obligation.
 

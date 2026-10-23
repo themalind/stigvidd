@@ -47,6 +47,7 @@ const full = {
     maintainedBy: "Borås stad",
     winterMaintenance: false,
   },
+  trailLinksResponse: [{ identifier: "link-1", title: "Borås Stad", link: "https://www.boras.se" }],
 } as TrailResponse;
 
 const open = () => userEvent.click(screen.getByRole("button"));
@@ -255,6 +256,58 @@ describe("TrailEditor", () => {
 
     await waitFor(() => expect(api.updateTrail).toHaveBeenCalled());
     expect(sent().trailSymbol).toHaveLength(40);
+  });
+
+  it("sends the existing links back with their identifiers", async () => {
+    render(<TrailEditor data={short} selected />);
+    await open();
+    await screen.findByDisplayValue("Borås Stad");
+    await userEvent.click(saveButton());
+
+    await waitFor(() => expect(api.updateTrail).toHaveBeenCalled());
+    expect(sent().links).toEqual([{ identifier: "link-1", title: "Borås Stad", link: "https://www.boras.se" }]);
+  });
+
+  it("adds a new link without an identifier", async () => {
+    render(<TrailEditor data={short} selected />);
+    await open();
+    await screen.findByDisplayValue("Borås Stad");
+
+    await userEvent.click(screen.getByRole("button", { name: /Add link/ }));
+    await userEvent.type(screen.getByLabelText("Link 2 title"), "Karta");
+    await userEvent.type(screen.getByLabelText("Link 2 address"), "https://example.com/karta");
+    await userEvent.click(saveButton());
+
+    await waitFor(() => expect(api.updateTrail).toHaveBeenCalled());
+    expect(sent().links).toEqual([
+      { identifier: "link-1", title: "Borås Stad", link: "https://www.boras.se" },
+      { title: "Karta", link: "https://example.com/karta" },
+    ]);
+  });
+
+  it("drops a removed link from what it sends", async () => {
+    render(<TrailEditor data={short} selected />);
+    await open();
+    await screen.findByDisplayValue("Borås Stad");
+
+    await userEvent.click(screen.getByRole("button", { name: "Remove link 1" }));
+    await userEvent.click(saveButton());
+
+    await waitFor(() => expect(api.updateTrail).toHaveBeenCalled());
+    expect(sent().links).toEqual([]);
+  });
+
+  it("will not save a link the API would reject", async () => {
+    render(<TrailEditor data={short} selected />);
+    await open();
+    await screen.findByDisplayValue("Borås Stad");
+
+    await userEvent.click(screen.getByRole("button", { name: /Add link/ }));
+    await userEvent.type(screen.getByLabelText("Link 2 title"), "Karta");
+    await userEvent.type(screen.getByLabelText("Link 2 address"), "www.example.com");
+
+    expect(screen.getByText(/starting with https:\/\//)).toBeVisible();
+    expect(saveButton()).toBeDisabled();
   });
 
   // A tag is only committed to the form when the field is left, so saving

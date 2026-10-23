@@ -16,4 +16,6 @@ public class UpdateTrailRequest
     public string? Tags { get; set; }
     public string? City { get; set; }
     public UpdateVisitorInformationRequest? VisitorInformation { get; set; }
+    // Null leaves the links untouched; a list replaces them. keep-comment: wire contract, not visible from the type
+    public IReadOnlyCollection<UpdateTrailLinkRequest>? Links { get; set; }
 }

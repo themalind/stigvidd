@@ -25,6 +25,7 @@ export function featureCollectionFromMarkers(markers: TrailMarkerResponse[]): Ge
         identifier: m.identifier,
         name: m.name,
         isAccessible: m.isAccessible,
+        isContribution: m.isContribution ?? false,
       },
       geometry: {
         type: "Point",

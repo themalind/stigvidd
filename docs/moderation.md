@@ -26,9 +26,15 @@ to make that one irreversible step safe.
 
 ## What can be reported
 
-`ReportedContentType` is `Review` or `TrailObstacle`. Reasons are `Offensive`, `Spam`,
+`ReportedContentType` is `Review`, `TrailObstacle` or `HikeImage`. Reasons are `Offensive`, `Spam`,
 `PersonalData`, `Misinformation` and `Other`, served to the app by
 `GET api/v1/contentreports/reasons`, with an optional free-text note.
+
+A **hike image** is reported from the image viewer on a shared hike (a flag, shown only to a
+recipient). Hikes are private, so only someone holding an **accepted** share of the hike can
+report one of its images; anyone else gets the same 404 as for a missing image, and the owner
+gets the usual 400. The snapshot is the image's relative path, and the queue shows it as a
+picture (`ContentImageUrl`, prefixed with `PresentableBaseUrl`).
 
 `POST api/v1/contentreports` (any signed-in user) refuses, with nothing written:
 
@@ -47,6 +53,16 @@ Both reportable tables carry a `ModerationState` (`Visible` / `HiddenPendingRevi
 hidden review disappears from every read in the API — including the trail rating averages,
 which reach reviews through a navigation ([note](notes/query-filter-reaches-navigation-aggregates.md)).
 Code that must see hidden rows opts out by name: `IgnoreQueryFilters(["Moderation"])`.
+
+`HikeImages` has the same `ModerationState` but **no** query filter: account deletion, orphan
+cleanup, the 10-image cap and the shared-file check must all see hidden rows. Hiding is applied
+in one place instead, `HikeResponseFactory.CreateImages`, which every hike response goes through
+— so a hidden image is gone for the owner as well as the recipients, as a hidden review is for
+its author. Unlike a review, a hidden hike image is **not** restored when its owner deletes their
+account (there is no rating to give back, and a shared hike outlives its owner). Upholding deletes
+the row and then the file, but only if no other image row still points at the same file
+([note](notes/media-files-are-shared-by-many-image-rows.md)); that check now covers upheld review
+images too.
 
 Each report records what it did as `HideOutcome`:
 

@@ -5,26 +5,20 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import { getFriends } from "@/api/friends";
-import { stigviddUserAtom } from "@/atoms/user-atoms";
-import { FRIENDS_STALE_TIME } from "@/constants/cache";
+import ModalFormScrollView from "@/components/modal-form-scroll-view";
+import FriendPicker from "@/components/shared-hike/friend-picker";
 import { BORDER_RADIUS } from "@/constants/constants";
-import { FriendResponse } from "@/data/types";
+import { useModalKeyboardLift } from "@/hooks/useModalKeyboardLift";
 import { asTranslationKey } from "@/i18n";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useQuery } from "@tanstack/react-query";
-import { useAtomValue } from "jotai";
 import { useState } from "react";
 import { Control, Controller, FieldError, SubmitHandler, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { ActivityIndicator, Dimensions, Pressable, ScrollView, StyleSheet, View } from "react-native";
-import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import { Pressable, StyleSheet, View } from "react-native";
 import { Button, Checkbox, Divider, Icon, Modal, Portal, Text, TextInput, useTheme } from "react-native-paper";
 import { z } from "zod";
 
-const HEIGHT = Dimensions.get("screen").height;
-
-// Limits mirror CreateHikeRequestValidator; the message key follows the limit.
+// Limits mirror CreateHikeRequestValidator; the message key follows the limit. keep-comment: links to the backend validator
 const maxChars = (max: 200 | 500) => z.string().max(max, `hike.maxChars${max}`).optional();
 
 const additionalHikeFields = z.object({
@@ -82,36 +76,17 @@ function FormField({ name, label, control, error }: FormFieldProps) {
 interface Props {
   visible: boolean;
   onDismiss: () => void;
-  onShare: (friendNickName: string, formData: ShareHikeFormFields) => void;
+  onShare: (friendNickNames: string[], formData: ShareHikeFormFields) => void;
   isPending?: boolean;
-  excludeNickName?: string;
   defaultValues?: ShareHikeFormFields;
 }
 
-export default function ShareHikeModal({
-  visible,
-  onDismiss,
-  onShare,
-  isPending,
-  excludeNickName,
-  defaultValues,
-}: Props) {
+export default function ShareHikeModal({ visible, onDismiss, onShare, isPending, defaultValues }: Props) {
   const theme = useTheme();
   const { t } = useTranslation();
   const [step, setStep] = useState<"form" | "friends">("form");
   const [formData, setFormData] = useState<ShareHikeFormFields>({});
-  const currentUser = useAtomValue(stigviddUserAtom);
-
-  const { data: friendsRaw, isLoading } = useQuery({
-    queryKey: ["friends"],
-    queryFn: getFriends,
-    enabled: visible,
-    staleTime: FRIENDS_STALE_TIME,
-  });
-
-  const friends = friendsRaw?.filter(
-    (f) => f.nickName !== currentUser.data?.nickName && f.nickName !== excludeNickName,
-  );
+  const { modalStyle, maxHeight } = useModalKeyboardLift(0.85);
 
   const {
     control,
@@ -131,8 +106,8 @@ export default function ShareHikeModal({
 
   return (
     <Portal>
-      <Modal visible={visible} onDismiss={handleDismiss} contentContainerStyle={s.container}>
-        <View style={[s.inner, { backgroundColor: theme.colors.surface }]}>
+      <Modal visible={visible} onDismiss={handleDismiss} style={modalStyle} contentContainerStyle={s.container}>
+        <View style={[s.inner, { backgroundColor: theme.colors.surface, height: maxHeight }]}>
           <View style={s.header}>
             <Icon source="share" size={18} color={theme.colors.primary} />
             <Text variant="titleMedium" style={{ color: theme.colors.onSurface }}>
@@ -150,12 +125,7 @@ export default function ShareHikeModal({
           <Divider />
           {step === "form" ? (
             <>
-              <KeyboardAwareScrollView
-                style={s.flex}
-                contentContainerStyle={s.formContent}
-                keyboardShouldPersistTaps="handled"
-                enableOnAndroid
-              >
+              <ModalFormScrollView style={s.flex} contentContainerStyle={s.formContent}>
                 <View style={{ paddingBottom: 15, gap: 10 }}>
                   <Text variant="titleSmall" style={{ color: theme.colors.secondary }}>
                     {t("hike.shareWarningHeading")}
@@ -203,11 +173,12 @@ export default function ShareHikeModal({
                   control={control}
                   error={errors.description}
                 />
-              </KeyboardAwareScrollView>
+              </ModalFormScrollView>
               <View style={s.buttonContainer}>
                 <Button
                   mode="contained"
                   icon="arrow-right"
+                  style={s.button}
                   contentStyle={s.buttonContent}
                   onPress={handleSubmit(onSubmit)}
                 >
@@ -215,41 +186,15 @@ export default function ShareHikeModal({
                 </Button>
               </View>
             </>
-          ) : isLoading ? (
-            <View style={s.centered}>
-              <ActivityIndicator color={theme.colors.primary} />
-            </View>
-          ) : friends && friends.length > 0 ? (
+          ) : (
             <>
               <Pressable hitSlop={12} style={s.backButton} onPress={() => setStep("form")}>
                 <Icon size={18} source="arrow-left" color={theme.colors.onSurface} />
                 <Text style={{ color: theme.colors.onSurface }}>{t("hike.back")}</Text>
               </Pressable>
               <Divider />
-              <ScrollView bounces={false} style={s.flex}>
-                {friends.map((item: FriendResponse, index: number) => (
-                  <View key={item.identifier}>
-                    <Pressable
-                      style={({ pressed }) => [
-                        s.friendItem,
-                        pressed && { backgroundColor: theme.colors.surfaceVariant },
-                      ]}
-                      onPress={() => onShare(item.nickName, formData)}
-                      disabled={isPending}
-                    >
-                      <Icon size={22} source="account" color={theme.colors.primary} />
-                      <Text style={s.nickName}>{item.nickName}</Text>
-                      <Icon size={20} source="share" color={theme.colors.secondary} />
-                    </Pressable>
-                    {index < friends.length - 1 && <Divider />}
-                  </View>
-                ))}
-              </ScrollView>
+              <FriendPicker enabled={visible} onShare={(names) => onShare(names, formData)} isPending={isPending} />
             </>
-          ) : (
-            <View style={s.centered}>
-              <Text style={{ color: theme.colors.onSurfaceVariant }}>{t("hike.noFriendsToShare")}</Text>
-            </View>
           )}
         </View>
       </Modal>
@@ -265,28 +210,12 @@ const s = StyleSheet.create({
   inner: {
     borderRadius: BORDER_RADIUS,
     overflow: "hidden",
-    height: HEIGHT * 0.85,
   },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     padding: 16,
-  },
-  friendItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-  },
-  nickName: {
-    flex: 1,
-    fontSize: 16,
-  },
-  centered: {
-    padding: 30,
-    alignItems: "center",
   },
   formContent: {
     padding: 16,
@@ -302,6 +231,9 @@ const s = StyleSheet.create({
   buttonContainer: {
     padding: 16,
     alignItems: "center",
+  },
+  button: {
+    borderRadius: BORDER_RADIUS,
   },
   buttonContent: {
     flexDirection: "row-reverse",

@@ -9,6 +9,7 @@ import { ApiError } from "@/api/api-error";
 import { snackbarAtom } from "@/atoms/snackbar-atoms";
 import ReportContentForm from "@/components/report/report-content-form";
 import { flushUntil, settle } from "@/test/flush";
+import { captureKeyboard } from "@/test/keyboard";
 import { renderWithProviders } from "@/test/render";
 import { fireEvent, screen } from "@testing-library/react-native";
 
@@ -160,4 +161,15 @@ it("falls back to a generic message on any other failure", async () => {
     type: "error",
     message: "Anmälan kunde inte skickas. Försök igen.",
   });
+});
+
+it("lifts the modal above the iOS keyboard so the send button stays reachable", async () => {
+  const keyboard = captureKeyboard();
+  await showLoaded();
+
+  keyboard.show(300);
+  expect(screen.getByTestId("modal-wrapper")).toHaveStyle({ marginBottom: 310 });
+
+  keyboard.hide();
+  expect(screen.getByTestId("modal-wrapper")).not.toHaveStyle({ marginBottom: 310 });
 });

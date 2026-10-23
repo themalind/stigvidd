@@ -9,7 +9,7 @@ import { getFriends, getIncomingRequests, searchUsers } from "@/api/friends";
 import { getIncomingSharedHikes } from "@/api/shared-hikes";
 import { atom } from "jotai";
 import { atomWithQuery } from "jotai-tanstack-query";
-import { FRIENDS_STALE_TIME } from "@/constants/cache";
+import { FRIENDS_STALE_TIME, REQUESTS_STALE_TIME, USER_SEARCH_STALE_TIME } from "@/constants/cache";
 import { userAtom } from "./auth-atoms";
 
 export const incomingRequestsAtom = atomWithQuery((get) => {
@@ -21,7 +21,7 @@ export const incomingRequestsAtom = atomWithQuery((get) => {
       return getIncomingRequests();
     },
     enabled: !!user?.id,
-    staleTime: 0,
+    staleTime: REQUESTS_STALE_TIME,
   };
 });
 
@@ -31,7 +31,7 @@ export const incomingSharedHikesAtom = atomWithQuery((get) => {
     queryKey: ["shared-hikes", "incoming", user?.id],
     queryFn: () => getIncomingSharedHikes(),
     enabled: !!user?.id,
-    staleTime: 0,
+    staleTime: REQUESTS_STALE_TIME,
   };
 });
 
@@ -52,7 +52,7 @@ export const userSearchAtomFamily = (query: string) =>
       queryKey: ["users", "search", user?.id, query],
       queryFn: () => searchUsers(query),
       enabled: !!user?.id && query.trim().length >= 3, // bara sök vid 3+ tecken
-      staleTime: 10_000,
+      staleTime: USER_SEARCH_STALE_TIME,
     };
   });
 

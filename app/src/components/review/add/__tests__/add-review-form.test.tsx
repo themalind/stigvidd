@@ -131,7 +131,11 @@ it("says it is working, and takes no second submit while it is", async () => {
 it("opens each help dialog on its own", async () => {
   show();
 
-  const helpButtons = screen.getAllByTestId("icon-information-slab-circle-outline");
+  const helpButtons = [
+    screen.getByLabelText("Sätt ett betyg ⭐️⭐️"),
+    screen.getByLabelText("Lägg till bilder"),
+    screen.getByLabelText("Skriv något"),
+  ];
   expect(helpButtons).toHaveLength(3);
 
   fireEvent.press(helpButtons[0]);
@@ -175,6 +179,16 @@ it("only lets whole stars be picked, which is what the API accepts", () => {
   show();
 
   expect(screen.UNSAFE_getByType(StarRating as never).props.step).toBe("full");
+});
+
+it("sends five stars when the drag overshoots the last star", async () => {
+  show();
+
+  await setRating(7);
+  await submit();
+
+  expect(screen.queryByText("Sätt ett betyg")).toBeNull();
+  expect(mockMutate).toHaveBeenCalledWith(expect.objectContaining({ rating: 5 }));
 });
 
 it("refuses a rating below one star", async () => {

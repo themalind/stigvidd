@@ -4,7 +4,7 @@
 using FluentValidation;
 using WebDataContracts.RequestModels.User;
 
-namespace Core.Validators.Friends;
+namespace Core.Validators.Friend;
 
 public class CheckUsernameRequestValidator : AbstractValidator<CheckUsernameRequest>
 {

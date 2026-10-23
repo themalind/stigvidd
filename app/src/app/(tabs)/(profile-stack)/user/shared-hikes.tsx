@@ -5,28 +5,29 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import { getIncomingSharedHike, getSharedHikes } from "@/api/shared-hikes";
+import { getIncomingSharedHike } from "@/api/shared-hikes";
 import { incomingSharedHikesAtom } from "@/atoms/friends-atoms";
-import { stigviddUserAtom } from "@/atoms/user-atoms";
-import { useAuth } from "@/components/auth/auth-provider";
 import BackButton from "@/components/back-button";
 import ErrorView from "@/components/error-view";
 import { HikeFilterModal } from "@/components/hike/hike-filter-modal";
 import RouteThumbnail from "@/components/hike/route-thumbnail";
 import ListHeaderActions, { SortField } from "@/components/list-header-actions";
 import LoadingIndicator from "@/components/loading-indicator";
-import SharedHikeDetails from "@/components/shared-hike/shared-hike-details";
+import IncomingSharedHikeModal from "@/components/shared-hike/incoming-shared-hike-modal";
 import SharedHikeStatsBanner from "@/components/shared-hike/shared-hike-stats-banner";
-import { SHARED_HIKES_STALE_TIME } from "@/constants/cache";
 import { BORDER_RADIUS, SCREEN_PADDING } from "@/constants/constants";
 import { SharedHike } from "@/data/types";
 import { HikeAccessors, HikeSortOption, useHikeFilters } from "@/hooks/hike/useHikeFilters";
 import { useSharedHikeMutations } from "@/hooks/shared-hikes/useSharedHikeMutations";
+import { useSharedHikes } from "@/hooks/shared-hikes/useSharedHikes";
 import { formatDate } from "@/utils/format-date";
 import FormattedTime from "@/utils/format-time-from-ms";
+import { guardedNavigate } from "@/utils/navigation";
 import { Fontisto, MaterialCommunityIcons } from "@expo/vector-icons";
-import { useQuery } from "@tanstack/react-query";
-import { useAtom, useAtomValue } from "jotai";
+import { SHARED_HIKES_STALE_TIME } from "@/constants/cache";
+import { skipToken, useQuery } from "@tanstack/react-query";
+import { router } from "expo-router";
+import { useAtom } from "jotai";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
@@ -53,13 +54,9 @@ const SORT_FIELDS: SortField[] = [
 
 export default function SharedHikesScreen() {
   const theme = useTheme();
-  const { isAuthenticated } = useAuth();
   const { t } = useTranslation();
   const { acceptMutation, rejectMutation } = useSharedHikeMutations();
   const [incomingExpanded, setIncomingExpanded] = useState(false);
-  const user = useAtomValue(stigviddUserAtom);
-  const [visible, setVisible] = useState(false);
-  const [sharedHike, setSelectedSharedHike] = useState<SharedHike | null>(null);
   const [filterModalVisible, setFilterModalVisible] = useState(false);
   const [selectedIncomingId, setSelectedIncomingId] = useState<string | null>(null);
   const [incomingDetailVisible, setIncomingDetailVisible] = useState(false);
@@ -72,22 +69,11 @@ export default function SharedHikesScreen() {
     isError: incomingDetailError,
   } = useQuery({
     queryKey: ["incoming-hike-detail", selectedIncomingId],
-    queryFn: () => getIncomingSharedHike(selectedIncomingId!),
-    enabled: !!selectedIncomingId,
-  });
-
-  const {
-    data: hikes,
-    isLoading,
-    isError: getSharedHikesError,
-    error,
-    refetch,
-  } = useQuery({
-    queryKey: ["shared-hikes", user.data?.identifier],
-    queryFn: () => getSharedHikes(),
-    enabled: isAuthenticated && !!user?.data,
+    queryFn: selectedIncomingId ? () => getIncomingSharedHike(selectedIncomingId) : skipToken,
     staleTime: SHARED_HIKES_STALE_TIME,
   });
+
+  const { data: hikes, isLoading, isError: getSharedHikesError, error, refetch } = useSharedHikes();
 
   // Filtering covers received hikes only. Incoming requests are an action list, and keep
   // their preview cap and their own order.
@@ -180,7 +166,7 @@ export default function SharedHikesScreen() {
                                 {req.hikeName}
                               </Text>
                               <Text variant="bodySmall" style={{ color: theme.colors.secondary }}>
-                                {t("hike.sharedByLabel", { name: req.sharedByName })}
+                                {t("hike.sharedByLabel", { name: req.sharedByName ?? t("hike.deletedUser") })}
                               </Text>
                             </View>
                             <View style={s.rowActions}>
@@ -257,10 +243,14 @@ export default function SharedHikesScreen() {
                     <View key={hike.hikeIdentifier}>
                       <Pressable
                         style={({ pressed }) => [s.row, pressed && { opacity: 0.7 }]}
-                        onPress={() => {
-                          setSelectedSharedHike(hike);
-                          setVisible(true);
-                        }}
+                        onPress={() =>
+                          guardedNavigate(() =>
+                            router.navigate({
+                              pathname: "/(tabs)/(profile-stack)/shared-hike/[identifier]",
+                              params: { identifier: hike.hikeIdentifier },
+                            }),
+                          )
+                        }
                       >
                         {/* Neutral tint: the accent stays with the incoming rows above,
                             which are the ones asking for a decision. */}
@@ -286,7 +276,7 @@ export default function SharedHikesScreen() {
                               style={[s.sharedBy, { color: theme.colors.secondary }]}
                               numberOfLines={1}
                             >
-                              {t("hike.sharedByLabel", { name: hike.sharedByName })}
+                              {t("hike.sharedByLabel", { name: hike.sharedByName ?? t("hike.deletedUser") })}
                             </Text>
                             <Text variant="bodySmall" style={s.sharedDate}>
                               {formatDate(hike.sharedAt)}
@@ -306,17 +296,7 @@ export default function SharedHikesScreen() {
           )}
         </View>
       </ScrollView>
-      {sharedHike && (
-        <SharedHikeDetails
-          visible={visible}
-          sharedHike={sharedHike}
-          onDismiss={() => {
-            setVisible(false);
-            setSelectedSharedHike(null);
-          }}
-        />
-      )}
-      <SharedHikeDetails
+      <IncomingSharedHikeModal
         visible={incomingDetailVisible}
         sharedHike={incomingHikeDetail ?? null}
         isLoading={incomingDetailLoading}
@@ -326,12 +306,12 @@ export default function SharedHikesScreen() {
           setSelectedIncomingId(null);
         }}
         onAccept={() => {
-          acceptMutation.mutate(selectedIncomingId!);
+          if (selectedIncomingId) acceptMutation.mutate(selectedIncomingId);
           setIncomingDetailVisible(false);
           setSelectedIncomingId(null);
         }}
         onReject={() => {
-          rejectMutation.mutate(selectedIncomingId!);
+          if (selectedIncomingId) rejectMutation.mutate(selectedIncomingId);
           setIncomingDetailVisible(false);
           setSelectedIncomingId(null);
         }}

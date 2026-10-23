@@ -24,7 +24,7 @@ interface TestSharedHike {
   hikeLength: number;
   duration: number;
   sharedAt: string;
-  sharedByName: string;
+  sharedByName: string | null;
 }
 
 const MINUTE = 60_000;
@@ -135,6 +135,21 @@ describe("useHikeFilters", () => {
       const { result } = renderHook(() => useHikeFilters(SHARED, sharedAccessors));
 
       expect(result.current.sharedByNames).toEqual(["Anna", "Bosse"]);
+    });
+
+    it("leaves out a sharer who deleted their account, and searching still works", () => {
+      const withDeleted = [
+        ...SHARED,
+        { ...SHARED[0], hikeIdentifier: "d", hikeName: "Mossleden", sharedByName: null },
+        { ...SHARED[0], hikeIdentifier: "e", hikeName: "Kärrleden", sharedByName: null },
+      ];
+      const { result } = renderHook(() => useHikeFilters(withDeleted, sharedAccessors));
+
+      expect(result.current.sharedByNames).toEqual(["Anna", "Bosse"]);
+
+      act(() => result.current.setSearchQuery("anna"));
+
+      expect(sharedNames(result.current.filteredHikes)).toEqual(["Sjöstigen", "Åspromenaden"]);
     });
 
     it("is empty when the accessor is absent", () => {

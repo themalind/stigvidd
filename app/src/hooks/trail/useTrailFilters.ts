@@ -6,6 +6,7 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { FilterOptions, LatLng } from "@/data/types";
+import { compareSv } from "@/utils/compare-sv";
 import { getDistance } from "geolib";
 import { useMemo, useState } from "react";
 
@@ -142,10 +143,10 @@ export const useTrailFilters = <T extends FilterableTrail>(trails: T[] | undefin
 
     switch (sortBy) {
       case "name-asc":
-        result.sort((a, b) => a.name.localeCompare(b.name, "sv"));
+        result.sort((a, b) => compareSv(a.name, b.name));
         break;
       case "name-desc":
-        result.sort((a, b) => b.name.localeCompare(a.name, "sv"));
+        result.sort((a, b) => compareSv(b.name, a.name));
         break;
       case "length-asc":
         result.sort((a, b) => Number(a.trailLength) - Number(b.trailLength));

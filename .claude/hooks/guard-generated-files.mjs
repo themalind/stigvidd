@@ -26,7 +26,7 @@
 //
 // Self-test: `node .claude/hooks/guard-generated-files.mjs --self-test`
 import process from "node:process";
-import { readEvent, repoRoot, relKey, under, deny, speak, checker } from "./lib.mjs";
+import { readEvent, repoRoot, relKey, under, deny, advise, checker } from "./lib.mjs";
 
 const GENERATED_DIR = "web/src/api/generated";
 const MIGRATIONS_DIR = "backend/infrastructure/migrations";
@@ -114,7 +114,7 @@ function main() {
   const ev = readEvent();
   const d = decide(String(ev.tool_name ?? ""), ev.tool_input ?? {});
   if (!d) return 0;
-  return d[0] === "deny" ? deny(d[1]) : speak(d[1]);
+  return d[0] === "deny" ? deny(d[1]) : advise(d[1]);
 }
 
 function selfTest() {

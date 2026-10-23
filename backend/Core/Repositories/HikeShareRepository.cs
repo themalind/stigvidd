@@ -57,18 +57,23 @@ public class HikeShareRepository : IHikeShareRepository
         }
     }
 
-    public async Task<RepositoryResult> ShareHikeAsync(HikeShare hikeShare, CancellationToken ctoken)
+    public async Task<RepositoryResult> ShareHikesAsync(IReadOnlyCollection<HikeShare> hikeShares, CancellationToken ctoken)
     {
         using var context = await _dbContext.CreateDbContextAsync(ctoken);
         try
         {
-            await context.HikeShares.AddAsync(hikeShare, ctoken);
-            await context.SaveChangesAsync(ctoken);
+            var inserted = await HikeShareInsert.InsertSkippingExistingAsync(context, hikeShares, ctoken);
+
+            if (inserted < hikeShares.Count)
+                _logger.LogInformation(
+                    "HikeShareRepository: ShareHikesAsync -> A concurrent share already inserted {Skipped} of {Count} rows for hike {HikeId}.",
+                    hikeShares.Count - inserted, hikeShares.Count, hikeShares.FirstOrDefault()?.HikeId);
+
             return RepositoryResult.Success();
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "HikeShareRepository: ShareHikeAsync -> Something went wrong when sharing hike with ID {hikeId} to user with ID {sharedWithId}.", hikeShare.HikeId, hikeShare.SharedWithId);
+            _logger.LogError(ex, "HikeShareRepository: ShareHikesAsync -> Something went wrong when sharing hike with ID {hikeId} to {count} users.", hikeShares.FirstOrDefault()?.HikeId, hikeShares.Count);
             return RepositoryResult.Error();
         }
     }

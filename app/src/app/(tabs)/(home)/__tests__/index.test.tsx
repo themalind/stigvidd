@@ -45,6 +45,15 @@ jest.mock("@/components/home/adventure-card", () => {
   };
 });
 
+jest.mock("@/components/home/popular-contributions", () => {
+  const { View } = jest.requireActual("react-native");
+  const ReactActual = jest.requireActual("react");
+  return {
+    __esModule: true,
+    default: () => ReactActual.createElement(View, { testID: "home-contributions" }),
+  };
+});
+
 // The banner's own two queries would reach the network; it has a suite of its own.
 jest.mock("@/hooks/useWeather", () => ({ useWeather: () => ({ data: undefined }) }));
 jest.mock("@/hooks/useCityName", () => ({ useCityName: () => ({ data: "Borås", isPending: false }) }));
@@ -110,6 +119,19 @@ it("ranks the popular trails around the user's position", async () => {
 
   expect(mockGetPopularTrails).toHaveBeenCalledWith(HERE.latitude, HERE.longitude);
   expect(screen.getByText("Populära promenader nära dig")).toBeTruthy();
+});
+
+it("asks once for a position that only drifts a few metres", async () => {
+  mockLocation = { data: { latitude: 57.6512, longitude: 13.0211, isFallback: false }, isPending: false };
+  const { rerender } = show();
+  await flushUntil(() => screen.queryByText("Skogsleden"));
+
+  mockLocation = { data: { latitude: 57.6538, longitude: 13.0189, isFallback: false }, isPending: false };
+  rerender(<HomeScreen />);
+  await settle();
+
+  expect(mockGetPopularTrails).toHaveBeenCalledTimes(1);
+  expect(mockGetPopularTrails).toHaveBeenCalledWith(57.65, 13.02);
 });
 
 // The Borås fallback is not the user's position, so it is never sent as one.
@@ -269,12 +291,11 @@ it("offers a retry when the walk could not be loaded", async () => {
   expect(retry).toHaveBeenCalledTimes(1);
 });
 
-it("opens the nature guide", async () => {
+it("leaves the nature guide to the drawer", async () => {
   await showLoaded();
 
-  fireEvent.press(screen.getByTestId("home-guide-card"));
-
-  expect(mockNavigate).toHaveBeenCalledWith("/(tabs)/(settings)/guide");
+  expect(screen.queryByTestId("home-guide-card")).toBeNull();
+  expect(screen.queryByText("Naturguide")).toBeNull();
 });
 
 it("opens the area list", async () => {
@@ -285,11 +306,9 @@ it("opens the area list", async () => {
   expect(mockNavigate).toHaveBeenCalledWith("/(tabs)/(home)/area/area-list-screen");
 });
 
-it("names both bottom cards", async () => {
+it("names the area card", async () => {
   await showLoaded();
 
-  expect(screen.getByText("Naturguide")).toBeTruthy();
-  expect(screen.getByText("Allemansrätt · Svårighetsgrader")).toBeTruthy();
   expect(screen.getByText("Utforska Borås")).toBeTruthy();
   expect(screen.getByText("Rya åsar · Kype · m.fl.")).toBeTruthy();
 });
@@ -299,7 +318,7 @@ it("fills the screen with the theme's background", async () => {
 
   expect(StyleSheet.flatten(screen.getByTestId("home-scroll").props.contentContainerStyle)).toMatchObject({
     flexGrow: 1,
-    gap: 12,
+    gap: 16,
     backgroundColor: AppDefaultTheme.colors.background,
   });
 });
@@ -313,35 +332,27 @@ it("fills the screen with the dark theme's background too", async () => {
   });
 });
 
-// The two cards share the row evenly whatever their text does, and clip their own images.
-it("splits the bottom row evenly between the two cards", async () => {
+it("lays the area card out full width and clipped", async () => {
   await showLoaded();
 
-  expect(screen.getByTestId("home-card-row")).toHaveStyle({
-    flexDirection: "row",
-    alignItems: "stretch",
-    gap: 8,
-    paddingHorizontal: SCREEN_PADDING,
+  expect(screen.getByTestId("home-areas-card")).toHaveStyle({
+    marginHorizontal: SCREEN_PADDING,
+    borderRadius: SURFACE_BORDER_RADIUS,
+    overflow: "hidden",
   });
-  for (const card of ["home-guide-card", "home-areas-card"]) {
-    expect(screen.getByTestId(card)).toHaveStyle({
-      flex: 1,
-      borderRadius: SURFACE_BORDER_RADIUS,
-      overflow: "hidden",
-    });
-  }
 });
 
-it("puts the randomizer below the two browse cards", async () => {
+it("puts the area card between the popular trails and the shared walks, and the randomizer last", async () => {
   await showLoaded();
 
-  // The rendered tree, not the JSX children: the card is given no props, so its testID
-  // exists only once it renders.
+  // keep-comment: the rendered tree, not the JSX children: the cards are given no testID props, so theirs exist only once they render
   const scroll = screen.getByTestId("home-scroll");
   const order = scroll
     .findAll((node: typeof scroll) => typeof node.props?.testID === "string")
     .map((node: typeof scroll) => node.props.testID);
 
-  expect(order.indexOf("adventure-card")).toBeGreaterThan(order.indexOf("home-card-row"));
+  const areas = order.indexOf("home-areas-card");
+  expect(areas).toBeGreaterThan(order.indexOf("home-popular"));
+  expect(order.indexOf("home-contributions")).toBeGreaterThan(areas);
   expect(order.at(-1)).toBe("adventure-card");
 });

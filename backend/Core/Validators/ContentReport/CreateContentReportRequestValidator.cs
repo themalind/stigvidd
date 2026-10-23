@@ -16,7 +16,7 @@ public class CreateContentReportRequestValidator : AbstractValidator<CreateConte
         RuleFor(request => request.ContentType)
             .NotEmpty().WithMessage("ContentType is required.")
             .Must(value => Enum.TryParse<ReportedContentType>(value, out var parsed) && parsed != ReportedContentType.Unknown)
-            .WithMessage("ContentType must be Review or TrailObstacle.");
+            .WithMessage("ContentType must be Review, TrailObstacle or HikeImage.");
 
         RuleFor(request => request.ContentIdentifier)
             .NotEmpty().WithMessage("ContentIdentifier is required.")

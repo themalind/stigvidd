@@ -25,10 +25,14 @@ export default function ProfileStackLayout() {
         <Stack.Screen name="about" />
         <Stack.Screen name="trail/[identifier]" />
         <Stack.Screen name="follow/[identifier]" />
+        <Stack.Screen name="guide" />
+        <Stack.Screen name="hike/[identifier]" />
+        <Stack.Screen name="shared-hike/[identifier]" />
         <Stack.Screen name="hike-follow/[identifier]" />
         <Stack.Screen name="user/favorites" />
         <Stack.Screen name="user/wishlist" />
         <Stack.Screen name="user/my-hikes" />
+        <Stack.Screen name="user/published-hikes" />
         <Stack.Screen name="user/create-hike" />
         <Stack.Screen name="user/shared-hikes" />
         <Stack.Screen name="user/friends" />

@@ -27,6 +27,8 @@ export interface ContentReportSummaryResponse {
   authorBannedAt?: string | null;
   /** @nullable */
   contentSnapshot?: string | null;
+  /** @nullable */
+  contentImageUrl?: string | null;
   contentStillExists?: boolean;
   /** @nullable */
   decidedBy?: string | null;

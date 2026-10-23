@@ -45,6 +45,26 @@ public class KeycloakRealmRolesTransformationTests
         result.IsInRole("offline_access").Should().BeTrue();
     }
 
+    [Theory]
+    [InlineData("role")]
+    [InlineData(ClaimTypes.Role)]
+    public async Task TransformAsync_ForAnyRoleClaimType_MakesTheRealmRoleVisibleToIsInRole(string roleClaimType)
+    {
+        // Arrange
+        var principal = new ClaimsPrincipal(new ClaimsIdentity(
+            [new Claim("realm_access", $"{{\"roles\":[\"{AdminRole}\"]}}")],
+            authenticationType: "Bearer",
+            nameType: "preferred_username",
+            roleType: roleClaimType));
+
+        // Act
+        var result = await TransformAsync(principal);
+
+        // Assert
+        result.IsInRole(AdminRole).Should().BeTrue();
+        result.IsInRole("a-role-the-token-does-not-carry").Should().BeFalse();
+    }
+
     [Fact]
     public async Task TransformAsync_WithoutTheAdminRole_LeavesThePolicyUnsatisfied()
     {

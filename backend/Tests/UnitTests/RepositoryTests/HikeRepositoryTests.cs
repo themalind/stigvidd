@@ -325,4 +325,95 @@ public class HikeRepositoryTests : TestBase
         var verify = await repo.GetHikeByIdentifierAsync(HikeIdentifierNoShares, TestContext.Current.CancellationToken);
         verify.IsSuccess.Should().BeFalse();
     }
+
+    [Fact]
+    public async Task GetHikeByIdentifier_IncludesItsImages()
+    {
+        // Arrange — hike 1 has one seeded image
+        var repo = new HikeRepository(CreateSeededFactory(SeedHikeImages), NullLogger<HikeRepository>.Instance);
+
+        // Act
+        var result = await repo.GetHikeByIdentifierAsync(HikeIdentifier, TestContext.Current.CancellationToken);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().NotBeNull();
+        result.Value.Images.Should().NotBeNull();
+        result.Value.Images.Select(i => i.ImageUrl).Should().BeEquivalentTo(["hikes/hike1-a.jpeg"]);
+    }
+
+    [Fact]
+    public async Task AddHikeImage_PersistsTheRow()
+    {
+        // Arrange
+        var repo = new HikeRepository(CreateSeededFactory(), NullLogger<HikeRepository>.Instance);
+
+        // Act
+        var result = await repo.AddHikeImageAsync(new HikeImage { HikeId = 1, ImageUrl = "hikes/new.jpeg" }, TestContext.Current.CancellationToken);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        var urls = await repo.GetHikeImageUrlsByHikeIdAsync(1, TestContext.Current.CancellationToken);
+        urls.Value.Should().BeEquivalentTo(["hikes/new.jpeg"]);
+    }
+
+    [Fact]
+    public async Task DeleteHikeImage_RemovesOnlyThatRow()
+    {
+        // Arrange
+        var repo = new HikeRepository(CreateSeededFactory(SeedHikeImages), NullLogger<HikeRepository>.Instance);
+        var hike = await repo.GetHikeByIdentifierAsync(HikeIdentifierNoShares, TestContext.Current.CancellationToken);
+        hike.Value.Should().NotBeNull();
+        hike.Value.Images.Should().NotBeNull();
+        var image = hike.Value.Images.Single(i => i.ImageUrl == "hikes/hike6-a.jpeg");
+
+        // Act
+        var result = await repo.DeleteHikeImageAsync(image, TestContext.Current.CancellationToken);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        var urls = await repo.GetHikeImageUrlsByHikeIdAsync(6, TestContext.Current.CancellationToken);
+        urls.Value.Should().BeEquivalentTo(["hikes/hike6-b.jpeg"]);
+    }
+
+    [Theory]
+    [InlineData("hikes/hike1-a.jpeg")]
+    [InlineData("/hikes/hike1-a.jpeg")]
+    public async Task ImageReferences_WhenAHikeImageUsesEitherSpelling_ReturnsTrue(string url)
+    {
+        // Arrange
+        await using var context = await CreateSeededFactory(SeedHikeImages).CreateDbContextAsync(TestContext.Current.CancellationToken);
+
+        // Act
+        var referenced = await ImageReferences.IsReferencedAsync(context, url, TestContext.Current.CancellationToken);
+
+        // Assert
+        referenced.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task ImageReferences_WhenATrailImageUsesIt_ReturnsTrue()
+    {
+        // Arrange
+        await using var context = await CreateSeededFactory().CreateDbContextAsync(TestContext.Current.CancellationToken);
+
+        // Act
+        var referenced = await ImageReferences.IsReferencedAsync(context, "https://inkaben.se/stigvidd/mock/tiveden-forest.jpg", TestContext.Current.CancellationToken);
+
+        // Assert
+        referenced.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task ImageReferences_WhenNoRowUsesIt_ReturnsFalse()
+    {
+        // Arrange
+        await using var context = await CreateSeededFactory(SeedHikeImages).CreateDbContextAsync(TestContext.Current.CancellationToken);
+
+        // Act
+        var referenced = await ImageReferences.IsReferencedAsync(context, "hikes/nobody.jpeg", TestContext.Current.CancellationToken);
+
+        // Assert
+        referenced.Should().BeFalse();
+    }
 }

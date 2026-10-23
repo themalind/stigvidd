@@ -60,10 +60,10 @@ afterAll(() => {
 });
 
 describe("initMapCache", () => {
-  it("caps the ambient cache at 50 MB", async () => {
+  it("caps the ambient cache at 100 MB", async () => {
     await initMapCache();
     expect(offline.setMaximumAmbientCacheSize).toHaveBeenCalledWith(MAP_AMBIENT_CACHE_MAX_BYTES);
-    expect(MAP_AMBIENT_CACHE_MAX_BYTES).toBe(50 * 1024 * 1024);
+    expect(MAP_AMBIENT_CACHE_MAX_BYTES).toBe(100 * 1024 * 1024);
   });
 
   it("resets the database on first launch, when no build is stored", async () => {

@@ -9,6 +9,7 @@ import { pruneTrailCardCache } from "@/hooks/useTrailCard";
 import { initMapTiler } from "@/components/map/map-style";
 import { initMapCache } from "@/utils/map-cache";
 import { loadUserTheme, userThemeAtom } from "@/atoms/user-theme-atom";
+import { basemapAtom, loadBasemap } from "@/atoms/basemap-atom";
 import { BannedWriteDialog } from "@/components/auth/banned-write-dialog";
 import { SessionRecovery } from "@/components/auth/session-recovery";
 import { createQueryClient } from "@/api/query-client";
@@ -34,7 +35,7 @@ import { StatusBar } from "expo-status-bar";
 import { useSetAtom } from "jotai";
 import { queryClientAtom } from "jotai-tanstack-query";
 import { Inter_600SemiBold, useFonts } from "@expo-google-fonts/inter";
-import React, { useEffect, useMemo, useRef } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { PaperProvider, ThemeProvider as PaperThemeProvider } from "react-native-paper";
@@ -108,10 +109,16 @@ export default function RootLayout() {
   // (notification tap, app switcher, or tapping the home screen icon).
   useAppState();
 
-  // Load theme
+  // Gates the render below, so nothing draws in the default theme or map style first. keep-comment: why the gate exists
+  const setBasemap = useSetAtom(basemapAtom);
+  const [preferencesRestored, setPreferencesRestored] = useState(false);
   useEffect(() => {
-    loadUserTheme().then(setUserTheme);
-  }, [setUserTheme]);
+    Promise.all([loadUserTheme(), loadBasemap()]).then(([userTheme, basemap]) => {
+      setUserTheme(userTheme);
+      setBasemap(basemap);
+      setPreferencesRestored(true);
+    });
+  }, [setUserTheme, setBasemap]);
 
   useEffect(() => {
     loadStoredLanguage();
@@ -138,7 +145,7 @@ export default function RootLayout() {
   // Render nothing until the initial session restore has resolved — prevents an
   // auth-resolution blink at startup. Session is restored from the stored refresh
   // token, so this is brief.
-  if (isLoading || (!fontsLoaded && !fontError)) return null;
+  if (isLoading || !preferencesRestored || (!fontsLoaded && !fontError)) return null;
 
   return (
     <QueryClientProvider client={queryClient}>

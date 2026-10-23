@@ -158,4 +158,56 @@ public class HikesController : StigViddController
 
         return NoContent();
     }
+
+    [Authorize]
+    [HttpPost("{hikeIdentifier}/images")]
+    public async Task<ActionResult<HikeImageResponse>> AddHikeImage(
+        [FromRoute] string hikeIdentifier,
+        IFormFile image,
+        CancellationToken ctoken)
+    {
+        var userResponse = await GetAuthenticatedUserAsync(_userService, ctoken);
+
+        if (userResponse == null)
+        {
+            return Unauthorized("User not found");
+        }
+
+        var result = await _hikeService.AddHikeImageAsync(hikeIdentifier, userResponse.Identifier, image, ctoken);
+
+        if (!result.Success && result.Message != null)
+        {
+            return ToActionResult(result.Message);
+        }
+
+        if (result.Value is null)
+            return StatusCode(500);
+
+        return Created($"/api/v1/hikes/{hikeIdentifier}/images/{result.Value.Identifier}", result.Value);
+    }
+
+    [Authorize]
+    [AllowWhenBanned]
+    [HttpDelete("{hikeIdentifier}/images/{imageIdentifier}")]
+    public async Task<ActionResult> DeleteHikeImage(
+        [FromRoute] string hikeIdentifier,
+        [FromRoute] string imageIdentifier,
+        CancellationToken ctoken)
+    {
+        var userResponse = await GetAuthenticatedUserAsync(_userService, ctoken);
+
+        if (userResponse == null)
+        {
+            return Unauthorized("User not found");
+        }
+
+        var result = await _hikeService.DeleteHikeImageAsync(hikeIdentifier, imageIdentifier, userResponse.Identifier, ctoken);
+
+        if (!result.Success && result.Message != null)
+        {
+            return ToActionResult(result.Message);
+        }
+
+        return NoContent();
+    }
 }

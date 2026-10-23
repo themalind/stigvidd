@@ -4,6 +4,7 @@
 using Core.Factories;
 using Core.Interfaces.Repositories;
 using Core.Interfaces.Services;
+using Core.Telemetry;
 using Infrastructure.Data.Entities;
 using Infrastructure.Enums;
 using Microsoft.Extensions.Configuration;
@@ -30,6 +31,7 @@ public class ContentReportService : IContentReportService
     private readonly IUserService _userService;
     private readonly IWebDavService _webDavService;
     private readonly ContentReportResponseFactory _responseFactory;
+    private readonly StigviddMetrics _metrics;
     private readonly ILogger<ContentReportService> _logger;
     private readonly int _maxReportsPerUserPerDay;
     private readonly int _dismissedReportsBeforeHideIsWithheld;
@@ -40,6 +42,7 @@ public class ContentReportService : IContentReportService
         IUserService userService,
         IWebDavService webDavService,
         ContentReportResponseFactory responseFactory,
+        StigviddMetrics metrics,
         ILogger<ContentReportService> logger,
         IConfiguration configuration)
     {
@@ -47,6 +50,7 @@ public class ContentReportService : IContentReportService
         _userService = userService;
         _webDavService = webDavService;
         _responseFactory = responseFactory;
+        _metrics = metrics;
         _logger = logger;
         _maxReportsPerUserPerDay = int.TryParse(configuration["ContentReports:MaxReportsPerUserPerDay"], out var max)
             ? max : DefaultMaxReportsPerUserPerDay;
@@ -57,6 +61,23 @@ public class ContentReportService : IContentReportService
     }
 
     public async Task<Result<ContentReportResponse?>> CreateAsync(
+        string reporterIdentifier, CreateContentReportRequest request, CancellationToken ctoken)
+    {
+        var result = await CreateCoreAsync(reporterIdentifier, request, ctoken);
+        _metrics.RecordContentReport(ContentTypeTag(request.ContentType), MetricOutcome.From(result));
+        return result;
+    }
+
+    private static string ContentTypeTag(string? contentType) =>
+        Enum.TryParse<ReportedContentType>(contentType, out var parsed) ? parsed switch
+        {
+            ReportedContentType.Review => MetricTags.Values.ContentTypeReview,
+            ReportedContentType.TrailObstacle => MetricTags.Values.ContentTypeTrailObstacle,
+            ReportedContentType.HikeImage => MetricTags.Values.ContentTypeHikeImage,
+            _ => MetricTags.Values.ContentTypeUnknown,
+        } : MetricTags.Values.ContentTypeUnknown;
+
+    private async Task<Result<ContentReportResponse?>> CreateCoreAsync(
         string reporterIdentifier, CreateContentReportRequest request, CancellationToken ctoken)
     {
         if (!Enum.TryParse<ReportedContentType>(request.ContentType, out var contentType)
@@ -77,7 +98,7 @@ public class ContentReportService : IContentReportService
         if (capResult.IsFailure && capResult.Message != null)
             return Result.Fail<ContentReportResponse?>(capResult.Message);
 
-        var contentResult = await _reportRepository.GetReportableContentAsync(contentType, request.ContentIdentifier, ctoken);
+        var contentResult = await _reportRepository.GetReportableContentAsync(contentType, request.ContentIdentifier, reporterUserId, ctoken);
 
         if (contentResult.Status == RepositoryResultStatus.Error)
             return Result.Fail<ContentReportResponse?>(new Message(500, "An error occurred while fetching the reported content."));

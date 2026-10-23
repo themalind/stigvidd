@@ -83,6 +83,25 @@ public class UserPushTokenRepository : IUserPushTokenRepository
         }
     }
 
+    public async Task<RepositoryResult<IReadOnlyCollection<UserPushToken>>> GetTokensForUsersAsync(IReadOnlyCollection<int> userIds, CancellationToken ctoken)
+    {
+        try
+        {
+            using var context = await _dbContextFactory.CreateDbContextAsync(ctoken);
+
+            var tokens = await context.UserPushTokens
+                .Where(t => userIds.Contains(t.UserId))
+                .ToListAsync(ctoken);
+
+            return RepositoryResult<IReadOnlyCollection<UserPushToken>>.Success(tokens);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving push tokens for {Count} users", userIds.Count);
+            return RepositoryResult<IReadOnlyCollection<UserPushToken>>.Error();
+        }
+    }
+
     public async Task<RepositoryResult> UpsertAsync(int userId, string expoToken, string platform, CancellationToken ctoken)
     {
         try

@@ -7,6 +7,7 @@ using Core.Services;
 using AwesomeAssertions;
 using Infrastructure.Data.Entities;
 using Infrastructure.Enums;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -48,7 +49,9 @@ public class ModerationQueryFilterTests : TestBase
             Utilities.MockFactory.WebDavService().Object,
             Utilities.MockFactory.MediaUploadService().Object,
             NullLogger<TrailService>.Instance,
-            new TrailResponseFactory(cfg.Object));
+            new TrailResponseFactory(cfg.Object),
+            new TrailContributionRanking(new ConfigurationBuilder().Build()),
+            new MemoryCache(new MemoryCacheOptions()));
     }
 
     [Fact]
@@ -137,7 +140,9 @@ public class ModerationQueryFilterTests : TestBase
             Utilities.MockFactory.WebDavService().Object,
             Utilities.MockFactory.MediaUploadService().Object,
             NullLogger<TrailService>.Instance,
-            new TrailResponseFactory(cfg.Object));
+            new TrailResponseFactory(cfg.Object),
+            new TrailContributionRanking(new ConfigurationBuilder().Build()),
+            new MemoryCache(new MemoryCacheOptions()));
     }
 
     private static (int High, int Low) PositionsIn(IReadOnlyCollection<TrailOverviewResponse?> overviews)

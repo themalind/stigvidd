@@ -82,7 +82,7 @@ Same fix, for the same reason: write the file with the **Write** or **Edit** too
 goes through a shell, so no splitter ever sees the text.
 
 It is **not only documentation files**. Measured again while writing
-`Tests/IntegrationTests/MailTemplatesController/EditedCopyReachesTheOutboxTests.cs`: a `///`
+`Tests/IntegrationTests/Mail/EditedCopyReachesTheOutboxTests.cs`: a `///`
 comment explaining that the test exists *because* the stack cannot be brought up on a plain
 checkout named the compose command in inline code, and the heredoc writing that .cs file was
 denied. That shape recurs — a test or a hook whose comment says "this exists because you

@@ -6,18 +6,16 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import ImageViewer from "@/components/review/image-viewer";
-import { BORDER_RADIUS } from "@/constants/constants";
 import { AppDarkTheme, AppDefaultTheme } from "@/constants/theme";
 import { ReviewImage } from "@/data/types";
 import { settle } from "@/test/flush";
 import { renderWithProviders } from "@/test/render";
-import { fireEvent, screen } from "@testing-library/react-native";
-import { BlurView } from "expo-blur";
+import { ZOOM_TYPE, Zoomable } from "@likashefqet/react-native-image-zoom";
+import { act, fireEvent, screen } from "@testing-library/react-native";
 import { Image } from "expo-image";
 import { Dimensions, StyleSheet } from "react-native";
 
-const { width: WIDTH, height: HEIGHT } = Dimensions.get("screen");
-const ITEM_WIDTH = WIDTH - 40;
+const { width: ITEM_WIDTH, height: ITEM_HEIGHT } = Dimensions.get("window");
 
 const onDismiss = jest.fn();
 
@@ -65,28 +63,25 @@ it("stays out of sight until it is opened", () => {
   show(images(3), false);
 
   expect(screen.queryByTestId("review-image-item")).toBeNull();
-  expect(screen.UNSAFE_queryByType(BlurView)).toBeNull();
+  expect(screen.queryByTestId("image-viewer-close")).toBeNull();
 });
 
-// A review photo is shown whole rather than cropped.
-it("shows each picture whole, at the same size as the others", () => {
+it("shows each picture whole, filling the screen", () => {
   show();
 
   for (const image of screen.UNSAFE_getAllByType(Image)) {
     expect(image.props.contentFit).toBe("contain");
-    expect(StyleSheet.flatten(image.props.style)).toMatchObject({ height: HEIGHT * 0.5, width: WIDTH * 0.7 });
+    expect(StyleSheet.flatten(image.props.style)).toMatchObject({ width: "100%", height: "100%" });
   }
+  expect(screen.getAllByTestId("review-image-item")[0]).toHaveStyle({ width: ITEM_WIDTH, height: ITEM_HEIGHT });
 });
 
-it("gives each picture the full width of the modal to sit in", () => {
-  show();
+it("covers the whole screen in black, whatever the theme", () => {
+  show(images(3), true, AppDarkTheme);
 
-  expect(screen.getAllByTestId("review-image-item")[0]).toHaveStyle({
-    width: ITEM_WIDTH,
-    padding: 30,
-    alignItems: "center",
-    justifyContent: "center",
-  });
+  expect(screen.getByTestId("modal-wrapper")).toHaveStyle({ marginTop: 0, marginBottom: 0 });
+  expect(screen.getByTestId("modal-surface-outer-layer")).toHaveStyle({ flex: 1 });
+  expect(screen.getByTestId("modal-surface")).toHaveStyle({ backgroundColor: "#000" });
 });
 
 // One swipe is one picture, not a free scroll that leaves two half-shown.
@@ -122,8 +117,7 @@ it("comes back to the picture that was left on screen", async () => {
   expect(list().props.initialScrollIndex).toBe(2);
 });
 
-// The strip can rest a few pixels off, so the nearest picture wins. A page is the gallery's width,
-// not the screen's, which would drift a whole picture out by the end of a long gallery.
+// The strip can rest a few pixels off, so the nearest picture wins. keep-comment: why rounding
 it("counts the picture nearest to where the swipe stopped", async () => {
   show(images(4));
 
@@ -188,67 +182,218 @@ it("carries the dark theme's colours too", () => {
 
   expect(screen.getAllByTestId("review-image-dot")[0]).toHaveStyle({ backgroundColor: AppDarkTheme.colors.tertiary });
   expect(screen.getByTestId("review-image-indicator")).toHaveStyle({ borderColor: AppDarkTheme.colors.primary });
-  expect(screen.getByTestId("modal-surface")).toHaveStyle({ backgroundColor: AppDarkTheme.colors.inverseOnSurface });
 });
 
-// The dots lie over the bottom of the picture, so the gallery keeps the height it was given.
-it("lays the dots across the bottom of the picture", () => {
+it("lays the dots over the bottom of the picture", () => {
   show();
 
   expect(screen.getByTestId("review-image-pagination")).toHaveStyle({
+    position: "absolute",
     flexDirection: "row",
     alignSelf: "center",
-    transform: [{ translateY: -20 }],
   });
 });
 
-it("keeps the gallery inside the screen, on the theme's own backdrop", () => {
-  show();
+describe("closing", () => {
+  it("closes from the cross, handing back the picture it was on", async () => {
+    show();
+    await scrollTo(ITEM_WIDTH * 2);
 
-  // Paper keeps the outer margin one layer above the surface and the rest of the layout on it.
-  expect(screen.getByTestId("modal-surface-outer-layer")).toHaveStyle({ margin: 20 });
-  // justifyContent is left out: Paper's modal already centres its content.
-  expect(screen.getByTestId("modal-surface")).toHaveStyle({
-    maxHeight: HEIGHT * 0.6,
-    maxWidth: WIDTH,
-    alignItems: "center",
-    flexDirection: "row",
-    borderRadius: BORDER_RADIUS,
-    backgroundColor: AppDefaultTheme.colors.inverseOnSurface,
+    fireEvent.press(screen.getByTestId("image-viewer-close"));
+
+    expect(onDismiss).toHaveBeenCalledWith(2);
+  });
+
+  it("hands back the picture it was on when Paper dismisses it", async () => {
+    show();
+    await scrollTo(ITEM_WIDTH);
+
+    fireEvent.press(screen.getByTestId("modal-backdrop"));
+    await settle();
+
+    expect(onDismiss).toHaveBeenCalledWith(1);
   });
 });
 
-// The strip is wider than the modal, and the clip keeps its neighbours off the rounded corners.
-it("clips the strip to the gallery's rounded corners", () => {
-  show();
+describe("zooming", () => {
+  function zoom() {
+    return screen.UNSAFE_getAllByType(Zoomable)[0];
+  }
 
-  expect(screen.getByTestId("review-image-frame")).toHaveStyle({
-    position: "relative",
-    overflow: "hidden",
-    borderRadius: BORDER_RADIUS,
+  it("lets a picture be pinched and double-tapped up to five times its size", () => {
+    show();
+
+    expect(zoom().props.maxScale).toBe(5);
+    expect(zoom().props.isDoubleTapEnabled).toBe(true);
+  });
+
+  it("stops the swipe to the next picture while zoomed in, so a drag pans instead", () => {
+    show();
+    expect(list().props.scrollEnabled).toBe(true);
+
+    act(() => zoom().props.onPinchStart());
+
+    expect(list().props.scrollEnabled).toBe(false);
+    expect(screen.queryByTestId("review-image-pagination")).toBeNull();
+  });
+
+  it("swipes again once zoomed back out", () => {
+    show();
+    act(() => zoom().props.onDoubleTap(ZOOM_TYPE.ZOOM_IN));
+    expect(list().props.scrollEnabled).toBe(false);
+
+    act(() => zoom().props.onResetAnimationEnd());
+
+    expect(list().props.scrollEnabled).toBe(true);
+  });
+
+  it("swipes again after a double tap that zooms out", () => {
+    show();
+    act(() => zoom().props.onPinchStart());
+
+    act(() => zoom().props.onDoubleTap(ZOOM_TYPE.ZOOM_OUT));
+
+    expect(list().props.scrollEnabled).toBe(true);
+  });
+
+  it("opens unzoomed even if it was closed zoomed in", async () => {
+    const { rerender } = renderWithProviders(<ImageViewer images={images(2)} visible onDismiss={onDismiss} />);
+    act(() => zoom().props.onPinchStart());
+
+    rerender(<ImageViewer images={images(2)} visible={false} onDismiss={onDismiss} />);
+    await settle();
+    rerender(<ImageViewer images={images(2)} visible onDismiss={onDismiss} />);
+    await settle();
+
+    expect(list().props.scrollEnabled).toBe(true);
   });
 });
 
-it("blurs the screen behind the gallery", () => {
-  show();
+describe("opening on a chosen picture", () => {
+  it("starts on the picture it was opened on", () => {
+    renderWithProviders(<ImageViewer images={images(4)} visible initialIndex={2} onDismiss={onDismiss} />);
 
-  const blur = screen.UNSAFE_getByType(BlurView);
-  expect(blur.props.intensity).toBe(100);
-  expect(blur.props.tint).toBe("dark");
-  expect(StyleSheet.flatten(blur.props.style)).toMatchObject({
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
+    expect(list().props.initialScrollIndex).toBe(2);
+  });
+
+  it("starts on the newly chosen picture each time it is reopened", async () => {
+    const { rerender } = renderWithProviders(
+      <ImageViewer images={images(4)} visible={false} initialIndex={0} onDismiss={onDismiss} />,
+    );
+
+    rerender(<ImageViewer images={images(4)} visible initialIndex={3} onDismiss={onDismiss} />);
+    await settle();
+
+    expect(list().props.initialScrollIndex).toBe(3);
   });
 });
 
-it("closes when the screen behind the picture is tapped", async () => {
-  show();
+describe("deleting", () => {
+  const onDelete = jest.fn();
 
-  fireEvent.press(screen.getByTestId("modal-backdrop"));
-  await settle();
+  beforeEach(() => {
+    onDelete.mockResolvedValue(undefined);
+  });
 
-  expect(onDismiss).toHaveBeenCalled();
+  it("offers no bin when the viewer may not delete", () => {
+    show();
+
+    expect(screen.queryByTestId("image-viewer-delete")).toBeNull();
+  });
+
+  it("asks before deleting, and deletes the picture on screen", async () => {
+    renderWithProviders(
+      <ImageViewer images={images(3)} visible initialIndex={1} onDismiss={onDismiss} onDelete={onDelete} />,
+    );
+
+    fireEvent.press(screen.getByTestId("image-viewer-delete"));
+    await settle();
+    expect(screen.getByText("Ta bort bilden?")).toBeTruthy();
+    expect(onDelete).not.toHaveBeenCalled();
+
+    fireEvent.press(screen.getAllByText("Ta bort").at(-1) ?? screen.getByText("Ta bort"));
+    await settle();
+
+    expect(onDelete).toHaveBeenCalledWith(images(3)[1]);
+    expect(onDismiss).not.toHaveBeenCalled();
+  });
+
+  it("deletes nothing when the question is cancelled", async () => {
+    renderWithProviders(<ImageViewer images={images(2)} visible onDismiss={onDismiss} onDelete={onDelete} />);
+
+    fireEvent.press(screen.getByTestId("image-viewer-delete"));
+    await settle();
+    fireEvent.press(screen.getByText("Avbryt"));
+    await settle();
+
+    expect(onDelete).not.toHaveBeenCalled();
+  });
+
+  it("closes once the last picture is gone", async () => {
+    renderWithProviders(<ImageViewer images={images(1)} visible onDismiss={onDismiss} onDelete={onDelete} />);
+
+    fireEvent.press(screen.getByTestId("image-viewer-delete"));
+    await settle();
+    fireEvent.press(screen.getAllByText("Ta bort").at(-1) ?? screen.getByText("Ta bort"));
+    await settle();
+
+    expect(onDismiss).toHaveBeenCalled();
+  });
+
+  it("stays open on a failed delete", async () => {
+    onDelete.mockRejectedValue(new Error("500"));
+    renderWithProviders(<ImageViewer images={images(1)} visible onDismiss={onDismiss} onDelete={onDelete} />);
+
+    fireEvent.press(screen.getByTestId("image-viewer-delete"));
+    await settle();
+    fireEvent.press(screen.getAllByText("Ta bort").at(-1) ?? screen.getByText("Ta bort"));
+    await settle();
+
+    expect(onDelete).toHaveBeenCalled();
+    expect(onDismiss).not.toHaveBeenCalled();
+  });
+
+  it("moves back onto the new last picture when the last one is deleted", async () => {
+    const { rerender } = renderWithProviders(
+      <ImageViewer images={images(3)} visible initialIndex={2} onDismiss={onDismiss} onDelete={onDelete} />,
+    );
+
+    fireEvent.press(screen.getByTestId("image-viewer-delete"));
+    await settle();
+    fireEvent.press(screen.getAllByText("Ta bort").at(-1) ?? screen.getByText("Ta bort"));
+    await settle();
+    rerender(<ImageViewer images={images(2)} visible initialIndex={2} onDismiss={onDismiss} onDelete={onDelete} />);
+    await settle();
+
+    expect(list().props.initialScrollIndex).toBe(1);
+  });
+});
+
+describe("reporting", () => {
+  const onReport = jest.fn();
+
+  it("offers a flag that reports the picture on screen", () => {
+    renderWithProviders(
+      <ImageViewer images={images(3)} visible initialIndex={2} onDismiss={onDismiss} onReport={onReport} />,
+    );
+
+    fireEvent.press(screen.getByTestId("image-viewer-report"));
+
+    expect(onReport).toHaveBeenCalledWith(images(3)[2]);
+  });
+
+  it("offers no flag to someone who may delete the picture", () => {
+    renderWithProviders(
+      <ImageViewer images={images(2)} visible onDismiss={onDismiss} onDelete={jest.fn()} onReport={onReport} />,
+    );
+
+    expect(screen.queryByTestId("image-viewer-report")).toBeNull();
+    expect(screen.getByTestId("image-viewer-delete")).toBeTruthy();
+  });
+
+  it("offers no flag when nobody asked for one", () => {
+    renderWithProviders(<ImageViewer images={images(2)} visible onDismiss={onDismiss} />);
+
+    expect(screen.queryByTestId("image-viewer-report")).toBeNull();
+  });
 });

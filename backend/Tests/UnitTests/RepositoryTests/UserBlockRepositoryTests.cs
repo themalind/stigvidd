@@ -77,6 +77,41 @@ public class UserBlockRepositoryTests : TestBase
     }
 
     [Fact]
+    public async Task GetUsersWhoBlockedAsync_ReturnsOnlyCandidatesWhoBlockedTheUser()
+    {
+        // Arrange — 2 blocked the sender (1); the sender blocked 3; 4 blocked the sender but is not a candidate
+        const int sender = 1, blockedSender = 2, blockedBySender = 3, notCandidate = 4, unrelated = 5;
+        var repo = Build(CreateSeededFactory());
+        var ctoken = TestContext.Current.CancellationToken;
+        await repo.BlockAsync(blockedSender, sender, ctoken);
+        await repo.BlockAsync(sender, blockedBySender, ctoken);
+        await repo.BlockAsync(notCandidate, sender, ctoken);
+
+        // Act
+        var result = await repo.GetUsersWhoBlockedAsync(sender, [blockedSender, blockedBySender, unrelated], ctoken);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().Equal(blockedSender);
+    }
+
+    [Fact]
+    public async Task GetUsersWhoBlockedAsync_WhenNoCandidateBlockedTheUser_ReturnsEmpty()
+    {
+        // Arrange — only the reverse direction exists
+        var repo = Build(CreateSeededFactory());
+        var ctoken = TestContext.Current.CancellationToken;
+        await repo.BlockAsync(BlockerUserId, BlockedUserId, ctoken);
+
+        // Act
+        var result = await repo.GetUsersWhoBlockedAsync(BlockerUserId, [BlockedUserId, ThirdUserId], ctoken);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().BeEmpty();
+    }
+
+    [Fact]
     public async Task UnblockAsync_RemovesTheBlock()
     {
         // Arrange

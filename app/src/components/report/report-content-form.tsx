@@ -8,11 +8,14 @@
 import { createContentReport, getReportReasons } from "@/api/content-reports";
 import { ApiError } from "@/api/api-error";
 import { showErrorAtom, showSuccessAtom } from "@/atoms/snackbar-atoms";
+import CountedTextInput from "@/components/counted-text-input";
 import SelectInput from "@/components/select-input";
 import { REPORT_REASONS_STALE_TIME } from "@/constants/cache";
 import { BORDER_RADIUS } from "@/constants/constants";
 import { CreateContentReportRequest, ReportedContentType } from "@/data/types";
 import { asTranslationKey } from "@/i18n";
+import { useModalKeyboardLift } from "@/hooks/useModalKeyboardLift";
+import { track } from "@/services/analytics";
 import reportReasonParser from "@/utils/report-reason-parser";
 import { MaterialIcons } from "@expo/vector-icons";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -21,9 +24,8 @@ import { BlurView } from "expo-blur";
 import { useSetAtom } from "jotai";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { Dimensions, Pressable, StyleSheet, View } from "react-native";
-import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
-import { Button, Modal, Portal, Surface, Text, TextInput, useTheme } from "react-native-paper";
+import { Dimensions, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { Button, Modal, Portal, Surface, Text, useTheme } from "react-native-paper";
 import { z } from "zod";
 
 const reportFields = z.object({
@@ -56,6 +58,7 @@ export default function ReportContentForm({
   const setErrorMsg = useSetAtom(showErrorAtom);
   const setSuccessMsg = useSetAtom(showSuccessAtom);
   const queryClient = useQueryClient();
+  const { modalStyle } = useModalKeyboardLift(0.6);
 
   // Gated on visible for the same reason the obstacle form gates its lookups: this sits
   // inside a list row and would otherwise fire once per rendered row.
@@ -80,6 +83,7 @@ export default function ReportContentForm({
     mutationFn: (report: CreateContentReportRequest) => createContentReport(report),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: invalidateQueryKey });
+      if (contentType === "HikeImage") track("hike.image_reported", {});
       reset();
       onDismiss();
       // Neutral on purpose: a reporter over the withholding threshold gets a queued report
@@ -116,6 +120,7 @@ export default function ReportContentForm({
     <Portal>
       {visible && <BlurView intensity={100} tint="dark" style={StyleSheet.absoluteFill} />}
       <Modal
+        style={modalStyle}
         contentContainerStyle={[s.modalContainerStyle, { backgroundColor: theme.colors.surface }]}
         visible={visible}
         onDismiss={onDismiss}
@@ -136,11 +141,7 @@ export default function ReportContentForm({
             <Text style={[s.infoBody, { color: theme.colors.onSurfaceVariant }]}>{t("report.formInfo2")}</Text>
           </Surface>
 
-          <KeyboardAwareScrollView
-            keyboardShouldPersistTaps="handled"
-            style={s.scrollView}
-            contentContainerStyle={s.scrollContent}
-          >
+          <ScrollView keyboardShouldPersistTaps="handled" style={s.scrollView} contentContainerStyle={s.scrollContent}>
             <View style={s.fieldGroup}>
               <Text style={[s.fieldLabel, { color: theme.colors.onSurfaceVariant }]}>{t("report.selectReason")}</Text>
               {!!reasons?.length && (
@@ -169,7 +170,7 @@ export default function ReportContentForm({
                 control={control}
                 name="reporterNote"
                 render={({ field: { onChange, onBlur, value } }) => (
-                  <TextInput
+                  <CountedTextInput
                     testID="report-note"
                     mode="outlined"
                     error={!!errors.reporterNote}
@@ -196,7 +197,7 @@ export default function ReportContentForm({
                 </Text>
               )}
             </View>
-          </KeyboardAwareScrollView>
+          </ScrollView>
 
           <Button
             testID="report-submit"
@@ -216,6 +217,7 @@ export default function ReportContentForm({
 const s = StyleSheet.create({
   modalContainerStyle: {
     height: height * 0.6,
+    flexShrink: 1,
     justifyContent: "flex-start",
     borderRadius: BORDER_RADIUS,
     padding: 15,

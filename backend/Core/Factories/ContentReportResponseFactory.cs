@@ -4,12 +4,20 @@
 using Core.Interfaces.Repositories;
 using Infrastructure.Data.Entities;
 using Infrastructure.Enums;
+using Microsoft.Extensions.Configuration;
 using WebDataContracts.ResponseModels.ContentReport;
 
 namespace Core.Factories;
 
 public class ContentReportResponseFactory
 {
+    private readonly string _presentableBaseUrl;
+
+    public ContentReportResponseFactory(IConfiguration configuration)
+    {
+        _presentableBaseUrl = configuration["PresentableBaseUrl"] ?? throw new InvalidOperationException("PresentableBaseUrl configuration is missing");
+    }
+
     public ContentReportResponse Create(ContentReport report)
     {
         return ContentReportResponse.Create(
@@ -39,6 +47,9 @@ public class ContentReportResponseFactory
             summary.AuthorIdentifier,
             summary.AuthorBannedAt,
             summary.ContentSnapshot,
+            summary.ContentType == ReportedContentType.HikeImage && summary.ContentSnapshot is not null
+                ? $"{_presentableBaseUrl}{summary.ContentSnapshot}"
+                : null,
             summary.ContentStillExists,
             summary.DecidedBy,
             summary.DecidedAt,

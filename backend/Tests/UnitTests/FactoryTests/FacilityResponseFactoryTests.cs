@@ -4,6 +4,7 @@
 using Core.Factories;
 using AwesomeAssertions;
 using Infrastructure.Data.Entities;
+using Infrastructure.Enums;
 
 namespace UnitTests.FactoryTests;
 

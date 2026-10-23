@@ -6,6 +6,7 @@ using Core.Interfaces.Repositories;
 using Core.Interfaces.Services;
 using Infrastructure.Data.Entities;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using System.Linq.Expressions;
 using WebDataContracts.RequestModels.Trail;
@@ -20,15 +21,23 @@ public class TrailService : ITrailService
     private readonly ILogger<TrailService> _logger;
     private readonly TrailResponseFactory _trailResponseFactory;
     private readonly ITrailRepository _trailRepository;
+    private readonly TrailContributionRanking _ranking;
+    private readonly IMemoryCache _cache;
+
+    private const string PopularContributionsCacheKey = "trails:popular-contributions";
 
     public TrailService(
         ITrailRepository trailResponseRepository,
         IWebDavService webDavService,
         IMediaUploadService mediaUploadService,
         ILogger<TrailService> logger,
-        TrailResponseFactory factory)
+        TrailResponseFactory factory,
+        TrailContributionRanking ranking,
+        IMemoryCache cache)
     {
         _trailRepository = trailResponseRepository;
+        _ranking = ranking;
+        _cache = cache;
         _webDavService = webDavService;
         _mediaUploadService = mediaUploadService;
         _logger = logger;
@@ -46,7 +55,8 @@ public class TrailService : ITrailService
                 t.City,
                 t.Reviews!.Any() ? t.Reviews!.Average(r => r.Rating) : 0m,
                 (decimal?)t.GeoPath!.StartPoint.Coordinate.Y,
-                (decimal?)t.GeoPath.StartPoint.Coordinate.X),
+                (decimal?)t.GeoPath.StartPoint.Coordinate.X,
+                t.Contribution != null),
             ctoken);
 
         if (!result.IsSuccess)
@@ -55,7 +65,7 @@ public class TrailService : ITrailService
         var trails = result.Value
             .Select(v => TrailShortInfoResponse.Create(
                 v.Identifier, v.Name, v.TrailLength, v.Accessibility, v.Classification, v.City, v.AverageRating,
-                v.StartLatitude, v.StartLongitude))
+                v.StartLatitude, v.StartLongitude, v.IsContribution))
             .ToList();
 
         return Result.Ok<IReadOnlyCollection<TrailShortInfoResponse>>(trails);
@@ -111,14 +121,15 @@ public class TrailService : ITrailService
                 t.Name,
                 t.Accessibility,
                 (decimal?)t.GeoPath!.StartPoint.Coordinate.Y,
-                (decimal?)t.GeoPath.StartPoint.Coordinate.X),
+                (decimal?)t.GeoPath.StartPoint.Coordinate.X,
+                t.Contribution != null),
             ctoken);
 
         if (!result.IsSuccess)
             return Result.Fail<IReadOnlyCollection<TrailMarkerResponse>>(new Message(500, "An error occurred while fetching trail markers."));
 
         var markers = result.Value
-            .Select(v => TrailMarkerResponse.Create(v.Identifier, v.Name, v.IsAccessible, v.StartLatitude, v.StartLongitude))
+            .Select(v => TrailMarkerResponse.Create(v.Identifier, v.Name, v.IsAccessible, v.StartLatitude, v.StartLongitude, v.IsContribution))
             .ToList();
 
         return Result.Ok<IReadOnlyCollection<TrailMarkerResponse>>(markers);
@@ -149,7 +160,20 @@ public class TrailService : ITrailService
         return ToTrailResult(result, identifier);
     }
 
-    private static Result<TrailResponse?> ToTrailResult(RepositoryResult<TrailResponse> result, string identifier)
+    public async Task<Result<AdminTrailPathResponse>> GetTrailPathForAdminAsync(string identifier, CancellationToken ctoken)
+    {
+        var result = await _trailRepository.GetTrailPathForAdminAsync(identifier, ctoken);
+
+        if (result.Status == RepositoryResultStatus.Error)
+            return Result.Fail<AdminTrailPathResponse>(new Message(500, "An error occurred while fetching the trail path."));
+
+        if (!result.IsSuccess)
+            return Result.Fail<AdminTrailPathResponse>(new Message(404, $"Trail with identifier {identifier} not found."));
+
+        return Result.Ok(AdminTrailPathResponse.Create(result.Value));
+    }
+
+    private static Result<TrailResponse?> ToTrailResult(RepositoryResult<TrailWithContributionProjection> result, string identifier)
     {
         if (result.Status == RepositoryResultStatus.Error)
             return Result.Fail<TrailResponse?>(new Message(500, "An error occurred while fetching the trail."));
@@ -157,11 +181,14 @@ public class TrailService : ITrailService
         if (!result.IsSuccess)
             return Result.Fail<TrailResponse?>(new Message(404, $"Trail with identifier {identifier} not found."));
 
-        return Result.Ok<TrailResponse?>(result.Value);
+        var trail = result.Value.Trail;
+        trail.Contribution = result.Value.Contribution;
+
+        return Result.Ok<TrailResponse?>(trail);
     }
 
-    private Expression<Func<Trail, TrailResponse>> TrailResponseSelector() =>
-            t => TrailResponse.Create(
+    private Expression<Func<Trail, TrailWithContributionProjection>> TrailResponseSelector() =>
+            t => new TrailWithContributionProjection(TrailResponse.Create(
                 t.Identifier,
                 t.Name,
                 t.TrailLength,
@@ -190,7 +217,15 @@ public class TrailService : ITrailService
                     t.VisitorInformation.Illumination,
                     t.VisitorInformation.IlluminationText,
                     t.VisitorInformation.MaintainedBy,
-                    t.VisitorInformation.WinterMaintenance) : null);
+                    t.VisitorInformation.WinterMaintenance) : null),
+                t.Contribution == null ? null : new TrailContributionResponse
+                {
+                    SubmitterNickName = t.Contribution.ShowSubmitterName && t.Contribution.SubmittedBy != null
+                        ? t.Contribution.SubmittedBy.NickName
+                        : null,
+                    PublishedAt = t.Contribution.PublishedAt,
+                    LikeCount = t.Contribution.Likes.Count,
+                });
 
     public async Task<Result<CoordinatesResponse?>> GetCoordinatesByTrailIdentifierAsync(string identifier, CancellationToken ctoken)
     {
@@ -207,17 +242,7 @@ public class TrailService : ITrailService
 
     public async Task<Result<TrailCardResponse?>> GetTrailCardByIdentifierAsync(string identifier, CancellationToken ctoken)
     {
-        var result = await _trailRepository.GetTrailByIdentifierAsync(
-            identifier,
-            t => new TrailCardProjection(
-                t.Identifier,
-                t.Name,
-                t.TrailLength,
-                t.Classification,
-                t.Accessibility,
-                t.Reviews!.Any() ? t.Reviews!.Average(r => r.Rating) : 0m,
-                t.TrailImages!.Select(i => new TrailCardImageProjection(i.Identifier, i.ImageUrl)).FirstOrDefault()),
-            ctoken);
+        var result = await _trailRepository.GetTrailByIdentifierAsync(identifier, TrailCardSelector, ctoken);
 
         if (result.Status == RepositoryResultStatus.Error)
             return Result.Fail<TrailCardResponse?>(new Message(500, "An error occurred while fetching trail card."));
@@ -225,44 +250,94 @@ public class TrailService : ITrailService
         if (!result.IsSuccess)
             return Result.Fail<TrailCardResponse?>(new Message(404, $"Trail with identifier {identifier} not found."));
 
-        var v = result.Value;
-        var image = v.Image != null
-            ? TrailImageResponse.Create(_trailResponseFactory.PresentableBaseUrl, v.Image.Identifier, v.Image.ImageUrl)
-            : null;
-
-        return Result.Ok<TrailCardResponse?>(TrailCardResponse.Create(
-            v.Identifier, v.Name, v.TrailLength, v.Classification, v.Accessibility, v.AverageRating, image));
+        return Result.Ok<TrailCardResponse?>(ToCard(result.Value));
     }
 
     public async Task<Result<IReadOnlyCollection<TrailCardResponse>>> GetTrailCardsByIdentifiersAsync(
         IReadOnlyCollection<string> identifiers, CancellationToken ctoken)
     {
-        var result = await _trailRepository.GetTrailsByIdentifiersAsync(
-            identifiers,
-            t => new TrailCardProjection(
-                t.Identifier,
-                t.Name,
-                t.TrailLength,
-                t.Classification,
-                t.Accessibility,
-                t.Reviews!.Any() ? t.Reviews!.Average(r => r.Rating) : 0m,
-                t.TrailImages!.Select(i => new TrailCardImageProjection(i.Identifier, i.ImageUrl)).FirstOrDefault()),
-            ctoken);
+        var result = await _trailRepository.GetTrailsByIdentifiersAsync(identifiers, TrailCardSelector, ctoken);
 
         if (!result.IsSuccess)
             return Result.Fail<IReadOnlyCollection<TrailCardResponse>>(
                 new Message(500, "An error occurred while fetching trail cards."));
 
-        var cards = result.Value
-            .Select(v => TrailCardResponse.Create(
-                v.Identifier, v.Name, v.TrailLength, v.Classification, v.Accessibility, v.AverageRating,
-                v.Image != null
-                    ? TrailImageResponse.Create(_trailResponseFactory.PresentableBaseUrl, v.Image.Identifier, v.Image.ImageUrl)
-                    : null))
-            .ToList();
-
-        return Result.Ok<IReadOnlyCollection<TrailCardResponse>>(cards);
+        return Result.Ok<IReadOnlyCollection<TrailCardResponse>>(result.Value.Select(ToCard).ToList());
     }
+
+    public async Task<Result<IReadOnlyCollection<TrailCardResponse>>> GetPopularContributedTrailsAsync(CancellationToken ctoken)
+    {
+        // keep-comment: the ranking reads every review and like of every contributed trail, so only the order is cached, not the cards
+        if (!_cache.TryGetValue(PopularContributionsCacheKey, out IReadOnlyList<string>? ranked) || ranked is null)
+        {
+            var inputs = await _trailRepository.GetContributionRankingInputsAsync(ctoken);
+
+            if (!inputs.IsSuccess)
+                return Result.Fail<IReadOnlyCollection<TrailCardResponse>>(
+                    new Message(500, "An error occurred while fetching popular contributed trails."));
+
+            ranked = _ranking.Rank(inputs.Value, DateTime.UtcNow);
+            _cache.Set(PopularContributionsCacheKey, ranked, _ranking.CacheDuration);
+        }
+
+        if (ranked.Count == 0)
+            return Result.Ok<IReadOnlyCollection<TrailCardResponse>>([]);
+
+        var cards = await _trailRepository.GetTrailsByIdentifiersAsync(ranked, TrailCardSelector, ctoken);
+
+        if (!cards.IsSuccess)
+            return Result.Fail<IReadOnlyCollection<TrailCardResponse>>(
+                new Message(500, "An error occurred while fetching popular contributed trails."));
+
+        var byIdentifier = cards.Value.ToDictionary(c => c.Identifier);
+
+        return Result.Ok<IReadOnlyCollection<TrailCardResponse>>(ranked
+            .Where(byIdentifier.ContainsKey)
+            .Select(id => ToCard(byIdentifier[id]))
+            .ToList());
+    }
+
+    public async Task<Result<TrailLikeResponse>> GetTrailLikeAsync(string trailIdentifier, string userIdentifier, CancellationToken ctoken) =>
+        ToLikeResult(await _trailRepository.GetTrailLikeAsync(trailIdentifier, userIdentifier, ctoken), trailIdentifier);
+
+    public async Task<Result<TrailLikeResponse>> SetTrailLikeAsync(string trailIdentifier, string userIdentifier, bool liked, CancellationToken ctoken) =>
+        ToLikeResult(await _trailRepository.SetTrailLikeAsync(trailIdentifier, userIdentifier, liked, ctoken), trailIdentifier);
+
+    private static Result<TrailLikeResponse> ToLikeResult(RepositoryResult<TrailLikeState> result, string trailIdentifier)
+    {
+        if (result.Status == RepositoryResultStatus.Error)
+            return Result.Fail<TrailLikeResponse>(new Message(500, "An error occurred while updating the like."));
+
+        if (!result.IsSuccess)
+            return Result.Fail<TrailLikeResponse>(new Message(404, $"No user-contributed trail with identifier {trailIdentifier}."));
+
+        return Result.Ok(new TrailLikeResponse { LikeCount = result.Value.LikeCount, LikedByMe = result.Value.LikedByMe });
+    }
+
+    private TrailCardResponse ToCard(TrailCardProjection v) => TrailCardResponse.Create(
+        v.Identifier, v.Name, v.TrailLength, v.Classification, v.Accessibility, v.AverageRating,
+        v.Image != null
+            ? TrailImageResponse.Create(_trailResponseFactory.PresentableBaseUrl, v.Image.Identifier, v.Image.ImageUrl)
+            : null,
+        v.Contribution);
+
+    private static readonly Expression<Func<Trail, TrailCardProjection>> TrailCardSelector =
+        t => new TrailCardProjection(
+            t.Identifier,
+            t.Name,
+            t.TrailLength,
+            t.Classification,
+            t.Accessibility,
+            t.Reviews!.Any() ? t.Reviews!.Average(r => r.Rating) : 0m,
+            t.TrailImages!.Select(i => new TrailCardImageProjection(i.Identifier, i.ImageUrl)).FirstOrDefault(),
+            t.Contribution == null ? null : new TrailContributionResponse
+            {
+                SubmitterNickName = t.Contribution.ShowSubmitterName && t.Contribution.SubmittedBy != null
+                    ? t.Contribution.SubmittedBy.NickName
+                    : null,
+                PublishedAt = t.Contribution.PublishedAt,
+                LikeCount = t.Contribution.Likes.Count,
+            });
 
     public async Task<Result<IReadOnlyCollection<TrailOverviewResponse?>>> GetPopularTrailOverviewsAsync(
         double? userLatitude, double? userLongitude, CancellationToken ctoken)
@@ -308,8 +383,7 @@ public class TrailService : ITrailService
 
         try
         {
-            // Coordinates are validated before anything is uploaded, so a rejected trail
-            // leaves no files behind.
+            // keep-comment: ordering matters - validating before upload means a rejected trail leaves no files behind
             var parsedCoordinates = Newtonsoft.Json.JsonConvert.DeserializeObject<WebDataContracts.Coordinate[]>(request.Coordinates);
             if (parsedCoordinates is null || parsedCoordinates.Length < 2)
             {
@@ -318,7 +392,7 @@ public class TrailService : ITrailService
             var coords = GeoPointFactory.FromLonLatPath(
                 parsedCoordinates.Select(c => new NetTopologySuite.Geometries.Coordinate(c.Longitude, c.Latitude)));
 
-            // Uploaded via the media upload service, which strips EXIF/GPS.
+            // keep-comment: privacy - the media upload service strips EXIF/GPS
             if (trailSymbolImageUrl != null)
             {
                 var result = await _mediaUploadService.ProcessAndUploadAsync(
@@ -444,6 +518,18 @@ public class TrailService : ITrailService
             };
         }
 
+        if (request.Links != null)
+        {
+            trail.TrailLinks = request.Links
+                .Select(link => new TrailLink
+                {
+                    Identifier = link.Identifier ?? Guid.NewGuid().ToString(),
+                    Title = link.Title.Trim(),
+                    Link = link.Link.Trim(),
+                })
+                .ToList();
+        }
+
         var result = await _trailRepository.UpdateTrailAsync(trail, ctoken);
 
         if (result.Status == RepositoryResultStatus.Error)
@@ -567,23 +653,3 @@ public class TrailService : ITrailService
         return Result.Ok();
     }
 }
-
-internal record TrailCardProjection(
-    string Identifier, string Name, decimal TrailLength,
-    int Classification, bool Accessibility, decimal AverageRating,
-    TrailCardImageProjection? Image);
-
-internal record TrailCardImageProjection(string Identifier, string ImageUrl);
-
-internal record TrailMarkerProjection(
-    string Identifier, string Name, bool IsAccessible,
-    decimal? StartLatitude, decimal? StartLongitude);
-
-internal record TrailShortInfoProjection(
-    string Identifier, string Name, decimal TrailLength, bool Accessibility,
-    int? Classification, string City, decimal AverageRating,
-    decimal? StartLatitude, decimal? StartLongitude);
-
-internal record TrailOverviewProjection(
-    string Identifier, string Name, decimal TrailLength, decimal AverageRating,
-    TrailCardImageProjection? Image);

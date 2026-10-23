@@ -6,21 +6,23 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import RoutePreviewMap from "@/components/map/route-preview-map";
-import HikeDetails from "@/components/trail/trail-creator/hike-details";
-import { OVERLAY_TEXT_SHADOW, SCREEN_PADDING, SURFACE_BORDER_RADIUS } from "@/constants/constants";
+import SectionPanel, { PANEL_BLEED, PANEL_PADDING } from "@/components/section-panel";
+import { OVERLAY_TEXT_SHADOW } from "@/constants/constants";
 import { Hike } from "@/data/types";
 import CoordinateParser from "@/utils/coordinate-parser";
 import { formatDate } from "@/utils/format-date";
 import { formatDistanceKm } from "@/utils/format-distance";
 import { formatTotalDuration } from "@/utils/hike-stats";
+import { guardedNavigate } from "@/utils/navigation";
 import { relativeDay } from "@/utils/relative-day";
 import { LinearGradient } from "expo-linear-gradient";
+import { router } from "expo-router";
 import { startTransition, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Pressable, StyleSheet, View } from "react-native";
 import { Icon, Text, useTheme } from "react-native-paper";
 
-// Exported so the skeleton reserves exactly this, and the card drops in without a shift.
+// keep-comment: exported so the skeleton reserves exactly this, and the card drops in without a shift
 export const CARD_HEIGHT = 210;
 
 interface Props {
@@ -30,10 +32,9 @@ interface Props {
 export default function LatestHikeCard({ hike }: Props) {
   const theme = useTheme();
   const { t } = useTranslation();
-  const [detailsVisible, setDetailsVisible] = useState(false);
   const [mapReady, setMapReady] = useState(false);
 
-  // Defers the map so it doesn't compete with the landing screen's first paint.
+  // keep-comment: defers the map so it doesn't compete with the landing screen's first paint
   useEffect(() => {
     startTransition(() => setMapReady(true));
   }, []);
@@ -43,19 +44,23 @@ export default function LatestHikeCard({ hike }: Props) {
     [hike.coordinates, hike.identifier],
   );
 
+  const openHike = () =>
+    guardedNavigate(() =>
+      router.navigate({ pathname: "/(tabs)/(home)/hike/[identifier]", params: { identifier: hike.identifier } }),
+    );
+
   const when = relativeDay(hike.createdAt);
-  // relativeDay returns null past a month, where the absolute date takes over.
+  // keep-comment: relativeDay returns null past a month, where the absolute date takes over
   const whenLabel = when ? t(when.key, { count: when.count }) : formatDate(hike.createdAt);
 
   return (
-    <View style={s.section}>
-      <Text style={[s.sectionTitle, { color: theme.colors.onBackground }]}>{t("home.latestHike")}</Text>
-      <View style={[s.card, { backgroundColor: theme.colors.surfaceVariant }]}>
+    <SectionPanel title={t("home.latestHike")}>
+      <View style={[s.card, PANEL_BLEED, { backgroundColor: theme.colors.surfaceVariant }]}>
         {mapReady && path.length > 0 && (
           <RoutePreviewMap
             idPrefix="latest-hike"
             path={path}
-            onOpen={() => setDetailsVisible(true)}
+            onOpen={openHike}
             showBadge={false}
             style={StyleSheet.absoluteFill}
           />
@@ -66,10 +71,7 @@ export default function LatestHikeCard({ hike }: Props) {
           style={StyleSheet.absoluteFill}
           pointerEvents="none"
         />
-        <Pressable
-          style={({ pressed }) => [s.content, pressed && { opacity: 0.7 }]}
-          onPress={() => setDetailsVisible(true)}
-        >
+        <Pressable style={({ pressed }) => [s.content, pressed && { opacity: 0.7 }]} onPress={openHike}>
           <View style={s.textColumn}>
             <Text style={s.name} numberOfLines={1}>
               {hike.name}
@@ -81,28 +83,14 @@ export default function LatestHikeCard({ hike }: Props) {
           <Icon source="chevron-right" size={24} color="#ffffff" />
         </Pressable>
       </View>
-      <HikeDetails
-        visible={detailsVisible}
-        hike={hike}
-        onDismiss={() => setDetailsVisible(false)}
-        hikeFollowRoute="/(tabs)/(home)/hike-follow/[identifier]"
-      />
-    </View>
+    </SectionPanel>
   );
 }
 
 const s = StyleSheet.create({
-  section: {
-    gap: 8,
-    paddingHorizontal: SCREEN_PADDING,
-  },
-  sectionTitle: {
-    fontFamily: "Inter_600SemiBold",
-    fontSize: 16,
-  },
   card: {
     height: CARD_HEIGHT,
-    borderRadius: SURFACE_BORDER_RADIUS,
+    marginBottom: -PANEL_PADDING,
     overflow: "hidden",
     justifyContent: "flex-end",
   },

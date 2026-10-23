@@ -64,6 +64,61 @@ public class TrailsController : StigViddController
     }
 
     [AllowAnonymous]
+    [HttpGet("popular-contributions")]
+    public async Task<ActionResult<IReadOnlyCollection<TrailCardResponse>>> GetPopularContributedTrails(CancellationToken ctoken)
+    {
+        var result = await _trailService.GetPopularContributedTrailsAsync(ctoken);
+
+        if (!result.Success && result.Message != null)
+            return ToActionResult(result.Message);
+
+        return Ok(result.Value);
+    }
+
+    [Authorize]
+    [HttpGet("{identifier}/like")]
+    public async Task<ActionResult<TrailLikeResponse>> GetTrailLike(string identifier, CancellationToken ctoken)
+    {
+        var userResponse = await GetAuthenticatedUserAsync(_userService, ctoken);
+
+        if (userResponse == null)
+            return Unauthorized("User not found");
+
+        var result = await _trailService.GetTrailLikeAsync(identifier, userResponse.Identifier, ctoken);
+
+        if (!result.Success && result.Message != null)
+            return ToActionResult(result.Message);
+
+        return Ok(result.Value);
+    }
+
+    [Authorize]
+    [HttpPut("{identifier}/like")]
+    public Task<ActionResult<TrailLikeResponse>> LikeTrail(string identifier, CancellationToken ctoken) =>
+        SetTrailLikeAsync(identifier, true, ctoken);
+
+    [Authorize]
+    [AllowWhenBanned]
+    [HttpDelete("{identifier}/like")]
+    public Task<ActionResult<TrailLikeResponse>> UnlikeTrail(string identifier, CancellationToken ctoken) =>
+        SetTrailLikeAsync(identifier, false, ctoken);
+
+    private async Task<ActionResult<TrailLikeResponse>> SetTrailLikeAsync(string identifier, bool liked, CancellationToken ctoken)
+    {
+        var userResponse = await GetAuthenticatedUserAsync(_userService, ctoken);
+
+        if (userResponse == null)
+            return Unauthorized("User not found");
+
+        var result = await _trailService.SetTrailLikeAsync(identifier, userResponse.Identifier, liked, ctoken);
+
+        if (!result.Success && result.Message != null)
+            return ToActionResult(result.Message);
+
+        return Ok(result.Value);
+    }
+
+    [AllowAnonymous]
     [HttpGet("")]
     public async Task<ActionResult<IReadOnlyCollection<TrailShortInfoResponse>>> GetAllTrails(CancellationToken ctoken)
     {

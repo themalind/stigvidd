@@ -10,18 +10,18 @@ decisions that are easy to break.
 | Concern                                 | File                                                    |
 | --------------------------------------- | ------------------------------------------------------- |
 | Client pre-upload resize/compress       | `app/src/utils/resizeImage.ts`                          |
-| Orchestrates process → upload           | `backend/Core/Services/MediaUploadService.cs`           |
-| ImageMagick processing                  | `backend/Core/Services/ImageProcessingService.cs`       |
-| Request DTO → processing options        | `backend/Core/Services/ImageProcessingOptionsMapper.cs` |
-| WebDAV storage (upload/delete/download) | `backend/Core/Services/WebDavService.cs`                |
-| Media records + presentable URLs        | `backend/Core/Services/MediaService.cs`                 |
+| Orchestrates process → upload           | `backend/Core/Services/Media/MediaUploadService.cs`     |
+| ImageMagick processing                  | `backend/Core/Services/Media/ImageProcessingService.cs` |
+| Request DTO → processing options        | `backend/Core/Factories/ImageProcessingOptionsMapper.cs` |
+| WebDAV storage (upload/delete/download) | `backend/Core/Services/Media/WebDavService.cs`          |
+| Media records + presentable URLs        | `backend/Core/Services/Media/MediaService.cs`           |
 | Upload endpoints (trail/facility/symbol) | `backend/StigviddAPI/Controllers/Admin/AdminTrailsController.cs`, `AdminFacilitiesController.cs` |
 | Upload endpoint (review photos)         | `backend/StigviddAPI/Controllers/ReviewsController.cs` (`POST api/v1/reviews`) |
 | Media library + image metadata          | `backend/StigviddAPI/Controllers/Admin/AdminMediaController.cs` |
 | Admin web upload panel                  | `web/src/components/media/media-upload.tsx`, `web/src/pages/media/media-page.tsx` |
 | Admin web upload rules (tested)         | `web/src/lib/media-upload.ts`                           |
 | Admin web staged files across a refresh | `web/src/lib/staged-media.ts`                           |
-| Batch reprocess job + dispatcher        | `backend/Core/Services/MediaReprocessService.cs`, `backend/StigviddAPI/BackgroundServices/MediaReprocessDispatcher.cs` |
+| Batch reprocess job + dispatcher        | `backend/Core/Services/Media/MediaReprocessService.cs`, `backend/StigviddAPI/BackgroundServices/MediaReprocessDispatcher.cs` |
 | Admin web batch dialog + jobs list      | `web/src/components/media/media-reprocess-dialog.tsx`, `web/src/components/media/media-reprocess-jobs.tsx` |
 
 ## The pipeline at a glance

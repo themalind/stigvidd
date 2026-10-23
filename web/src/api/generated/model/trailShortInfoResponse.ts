@@ -19,4 +19,5 @@ export interface TrailShortInfoResponse {
   startLatitude?: number | null;
   /** @nullable */
   startLongitude?: number | null;
+  isContribution?: boolean;
 }

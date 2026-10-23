@@ -1,6 +1,8 @@
 ﻿// SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+using WebDataContracts.ResponseModels.Hike;
+
 namespace WebDataContracts.ResponseModels.HikeShare;
 
 public class HikeShareRecipientResponse
@@ -18,6 +20,7 @@ public class HikeShareRecipientResponse
     public string? ParkingInfo { get; set; }
     public string? Description { get; set; }
     public bool AllowResharing { get; set; }
+    public List<HikeImageResponse> Images { get; set; } = [];
 
     public static HikeShareRecipientResponse Create(
         string hikeIdentifier,
@@ -32,7 +35,8 @@ public class HikeShareRecipientResponse
         string? gettingThere,
         string? parkingInfo,
         string? description,
-        bool allowResharing)
+        bool allowResharing,
+        List<HikeImageResponse> images)
     {
         return new HikeShareRecipientResponse
         {
@@ -48,7 +52,8 @@ public class HikeShareRecipientResponse
             GettingThere = gettingThere,
             ParkingInfo = parkingInfo,
             Description = description,
-            AllowResharing = allowResharing
+            AllowResharing = allowResharing,
+            Images = images
         };
     }
 }

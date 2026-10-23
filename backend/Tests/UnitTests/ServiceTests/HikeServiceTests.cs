@@ -5,11 +5,14 @@ using Core.Factories;
 using Core.Interfaces.Repositories;
 using Core.Interfaces.Services;
 using Core.Services;
+using Core.Telemetry;
 using AwesomeAssertions;
 using Infrastructure.Data.Entities;
+using Infrastructure.Enums;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using System.Linq.Expressions;
+using UnitTests.Telemetry;
 using WebDataContracts.RequestModels.Hike;
 using WebDataContracts.ResponseModels.Hike;
 
@@ -21,13 +24,17 @@ public class HikeServiceTests
         Mock<IHikeRepository>? hikeRepo = null,
         Mock<IUserRepository>? userRepo = null,
         Mock<IHikeShareRecipientRepository>? shareRepo = null,
-        Mock<IWebDavService>? webDav = null) =>
+        Mock<IWebDavService>? webDav = null,
+        Mock<IMediaUploadService>? mediaUpload = null,
+        StigviddMetrics? metrics = null) =>
         new(
             (hikeRepo ?? new Mock<IHikeRepository>()).Object,
-            new HikeResponseFactory(),
+            Utilities.Stubs.HikeResponseFactory(),
             (userRepo ?? new Mock<IUserRepository>()).Object,
             (shareRepo ?? new Mock<IHikeShareRecipientRepository>()).Object,
             (webDav ?? Utilities.MockFactory.WebDavService()).Object,
+            (mediaUpload ?? Utilities.MockFactory.MediaUploadService()).Object,
+            metrics ?? new StigviddMetrics(),
             NullLogger<HikeService>.Instance);
 
     private static CreateHikeRequest ValidRequest() => new()
@@ -390,8 +397,8 @@ public class HikeServiceTests
         var createdAtDate = DateTime.UtcNow;
         IReadOnlyCollection<HikeOverviewResponse> list =
         [
-            HikeOverviewResponse.Create("id1", "H1", 10, 3600000, "[]", Utilities.Identifiers.User, null, null, null, createdAtDate),
-            HikeOverviewResponse.Create("id2", "H2", 20, 7200000, "[]", Utilities.Identifiers.User, null, null, null, createdAtDate),
+            HikeOverviewResponse.Create("id1", "H1", 10, 3600000, "[]", Utilities.Identifiers.User, null, null, null, createdAtDate, []),
+            HikeOverviewResponse.Create("id2", "H2", 20, 7200000, "[]", Utilities.Identifiers.User, null, null, null, createdAtDate, []),
         ];
         var hikeRepo = new Mock<IHikeRepository>();
         hikeRepo.Setup(r => r.GetHikesAsync(It.IsAny<int?>(), It.IsAny<Expression<Func<Hike, HikeOverviewResponse>>>(), It.IsAny<CancellationToken>()))
@@ -977,5 +984,278 @@ public class HikeServiceTests
         result.Message.StatusCode.Should().Be(500);
         hikeRepo.Verify(r => r.AnonymizeSharedHikesOnUserDeleteAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Never);
         webDav.Verify(w => w.DeleteFileAsync(It.IsAny<string>()), Times.Never);
+    }
+
+    private static Hike HikeWithImages(int count, int ownerId = 1)
+    {
+        var hike = Utilities.Stubs.Hike();
+        hike.UserId = ownerId;
+        hike.Images = Enumerable.Range(0, count)
+            .Select(i => new HikeImage { Identifier = $"image-{i}", HikeId = hike.Id, ImageUrl = $"hikes/image-{i}.jpg" })
+            .ToList();
+        return hike;
+    }
+
+    private static (Mock<IHikeRepository> HikeRepo, Mock<IUserRepository> UserRepo) ImageRepos(Hike hike, int callerId = 1)
+    {
+        var userRepo = new Mock<IUserRepository>();
+        userRepo.Setup(r => r.GetUserIdByIdentifierAsync(Utilities.Identifiers.User, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<int>.Success(callerId));
+
+        var hikeRepo = new Mock<IHikeRepository>();
+        hikeRepo.Setup(r => r.GetHikeByIdentifierAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<Hike>.NotFound());
+        hikeRepo.Setup(r => r.GetHikeByIdentifierAsync(hike.Identifier, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<Hike>.Success(hike));
+        hikeRepo.Setup(r => r.AddHikeImageAsync(It.IsAny<HikeImage>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((HikeImage image, CancellationToken _) => RepositoryResult<HikeImage>.Success(image));
+        hikeRepo.Setup(r => r.DeleteHikeImageAsync(It.IsAny<HikeImage>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult.Success());
+
+        return (hikeRepo, userRepo);
+    }
+
+    [Fact]
+    public async Task AddHikeImage_WhenOwner_UploadsStrippedAndSavesRow()
+    {
+        // Arrange
+        var hike = HikeWithImages(2);
+        var (hikeRepo, userRepo) = ImageRepos(hike);
+        var media = Utilities.MockFactory.MediaUploadService();
+
+        // Act
+        var result = await Build(hikeRepo, userRepo, mediaUpload: media)
+            .AddHikeImageAsync(hike.Identifier, Utilities.Identifiers.User, Utilities.Stubs.FakeFile(), TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Success.Should().BeTrue();
+        result.Value.Should().NotBeNull();
+        result.Value.ImageUrl.Should().Be($"{Utilities.Stubs.PresentableBaseUrl}hikes/test-image.jpg");
+        media.Verify(m => m.ProcessAndUploadAsync(It.IsAny<Stream>(), "hikes", ImageProcessingOptions.StripMetadataOnly), Times.Once);
+        hikeRepo.Verify(r => r.AddHikeImageAsync(
+            It.Is<HikeImage>(i => i.HikeId == hike.Id && i.ImageUrl == "hikes/test-image.jpg"),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task AddHikeImage_WhenNotOwner_Returns403AndUploadsNothing()
+    {
+        // Arrange
+        var hike = HikeWithImages(0, ownerId: 99);
+        var (hikeRepo, userRepo) = ImageRepos(hike);
+        var media = Utilities.MockFactory.MediaUploadService();
+
+        // Act
+        var result = await Build(hikeRepo, userRepo, mediaUpload: media)
+            .AddHikeImageAsync(hike.Identifier, Utilities.Identifiers.User, Utilities.Stubs.FakeFile(), TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Success.Should().BeFalse();
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(403);
+        media.Verify(m => m.ProcessAndUploadAsync(It.IsAny<Stream>(), It.IsAny<string>(), It.IsAny<ImageProcessingOptions>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task AddHikeImage_WhenHikeAlreadyHasMax_Returns409AndUploadsNothing()
+    {
+        // Arrange
+        var hike = HikeWithImages(HikeService.MaxHikeImages);
+        var (hikeRepo, userRepo) = ImageRepos(hike);
+        var media = Utilities.MockFactory.MediaUploadService();
+
+        // Act
+        var result = await Build(hikeRepo, userRepo, mediaUpload: media)
+            .AddHikeImageAsync(hike.Identifier, Utilities.Identifiers.User, Utilities.Stubs.FakeFile(), TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Success.Should().BeFalse();
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(409);
+        media.Verify(m => m.ProcessAndUploadAsync(It.IsAny<Stream>(), It.IsAny<string>(), It.IsAny<ImageProcessingOptions>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task AddHikeImage_WhenOneBelowMax_Succeeds()
+    {
+        // Arrange
+        var hike = HikeWithImages(HikeService.MaxHikeImages - 1);
+        var (hikeRepo, userRepo) = ImageRepos(hike);
+
+        // Act
+        var result = await Build(hikeRepo, userRepo)
+            .AddHikeImageAsync(hike.Identifier, Utilities.Identifiers.User, Utilities.Stubs.FakeFile(), TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Success.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task AddHikeImage_WhenAReportedPhotoIsHidden_ItDoesNotCountTowardTheCap()
+    {
+        // Arrange
+        var hike = HikeWithImages(HikeService.MaxHikeImages);
+        hike.Images.Should().NotBeNull();
+        hike.Images.First().ModerationState = ModerationState.HiddenPendingReview;
+        var (hikeRepo, userRepo) = ImageRepos(hike);
+
+        // Act
+        var result = await Build(hikeRepo, userRepo)
+            .AddHikeImageAsync(hike.Identifier, Utilities.Identifiers.User, Utilities.Stubs.FakeFile(), TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Success.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task AddHikeImage_RecordsOneAdd_TaggedWithTheOutcome()
+    {
+        // Arrange
+        using var metrics = new StigviddMetrics();
+        using var recorded = new RecordedMetrics(metrics);
+        var hike = HikeWithImages(HikeService.MaxHikeImages);
+        var (hikeRepo, userRepo) = ImageRepos(hike);
+
+        // Act
+        await Build(hikeRepo, userRepo, metrics: metrics)
+            .AddHikeImageAsync(hike.Identifier, Utilities.Identifiers.User, Utilities.Stubs.FakeFile(), TestContext.Current.CancellationToken);
+
+        // Assert
+        recorded.PublishedInstruments.Should().Contain(MetricNames.HikeImageChanged);
+        var measurement = recorded.For(MetricNames.HikeImageChanged).Should().ContainSingle().Subject;
+        measurement.Tags.Should().Contain("operation", "add");
+        measurement.Tags.Should().Contain("outcome", "conflict");
+        measurement.Tags.Keys.Should().OnlyContain(k => k == "operation" || k == "outcome");
+    }
+
+    [Fact]
+    public async Task DeleteHikeImage_RecordsOneRemove()
+    {
+        // Arrange
+        using var metrics = new StigviddMetrics();
+        using var recorded = new RecordedMetrics(metrics);
+        var hike = HikeWithImages(1);
+        var (hikeRepo, userRepo) = ImageRepos(hike);
+
+        // Act
+        await Build(hikeRepo, userRepo, metrics: metrics)
+            .DeleteHikeImageAsync(hike.Identifier, "image-0", Utilities.Identifiers.User, TestContext.Current.CancellationToken);
+
+        // Assert
+        var measurement = recorded.For(MetricNames.HikeImageChanged).Should().ContainSingle().Subject;
+        measurement.Tags.Should().Contain("operation", "remove");
+        measurement.Tags.Should().Contain("outcome", "success");
+    }
+
+    [Fact]
+    public async Task AddHikeImage_WhenHikeNotFound_Returns404()
+    {
+        // Arrange
+        var (hikeRepo, userRepo) = ImageRepos(HikeWithImages(0));
+
+        // Act
+        var result = await Build(hikeRepo, userRepo)
+            .AddHikeImageAsync("unknown-hike", Utilities.Identifiers.User, Utilities.Stubs.FakeFile(), TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Success.Should().BeFalse();
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(404);
+    }
+
+    [Fact]
+    public async Task AddHikeImage_WhenSaveFails_DeletesTheUploadedFile()
+    {
+        // Arrange
+        var hike = HikeWithImages(0);
+        var (hikeRepo, userRepo) = ImageRepos(hike);
+        hikeRepo.Setup(r => r.AddHikeImageAsync(It.IsAny<HikeImage>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<HikeImage>.Error());
+        var webDav = Utilities.MockFactory.WebDavService();
+
+        // Act
+        var result = await Build(hikeRepo, userRepo, webDav: webDav)
+            .AddHikeImageAsync(hike.Identifier, Utilities.Identifiers.User, Utilities.Stubs.FakeFile(), TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Success.Should().BeFalse();
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(500);
+        webDav.Verify(w => w.DeleteFileAsync("hikes/test-image.jpg"), Times.Once);
+    }
+
+    [Fact]
+    public async Task AddHikeImage_WhenUploadFails_Returns500AndSavesNothing()
+    {
+        // Arrange
+        var hike = HikeWithImages(0);
+        var (hikeRepo, userRepo) = ImageRepos(hike);
+        var media = new Mock<IMediaUploadService>();
+        media.Setup(m => m.ProcessAndUploadAsync(It.IsAny<Stream>(), It.IsAny<string>(), It.IsAny<ImageProcessingOptions>()))
+            .ReturnsAsync(Result.Fail<UploadedMedia>(new Message(500, "boom")));
+
+        // Act
+        var result = await Build(hikeRepo, userRepo, mediaUpload: media)
+            .AddHikeImageAsync(hike.Identifier, Utilities.Identifiers.User, Utilities.Stubs.FakeFile(), TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Success.Should().BeFalse();
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(500);
+        hikeRepo.Verify(r => r.AddHikeImageAsync(It.IsAny<HikeImage>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task DeleteHikeImage_WhenOwner_DeletesRowAndFile()
+    {
+        // Arrange
+        var hike = HikeWithImages(2);
+        var (hikeRepo, userRepo) = ImageRepos(hike);
+        var webDav = Utilities.MockFactory.WebDavService();
+
+        // Act
+        var result = await Build(hikeRepo, userRepo, webDav: webDav)
+            .DeleteHikeImageAsync(hike.Identifier, "image-1", Utilities.Identifiers.User, TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Success.Should().BeTrue();
+        hikeRepo.Verify(r => r.DeleteHikeImageAsync(It.Is<HikeImage>(i => i.Identifier == "image-1"), It.IsAny<CancellationToken>()), Times.Once);
+        webDav.Verify(w => w.DeleteFileAsync("hikes/image-1.jpg"), Times.Once);
+    }
+
+    [Fact]
+    public async Task DeleteHikeImage_WhenNotOwner_Returns403AndDeletesNothing()
+    {
+        // Arrange
+        var hike = HikeWithImages(1, ownerId: 99);
+        var (hikeRepo, userRepo) = ImageRepos(hike);
+
+        // Act
+        var result = await Build(hikeRepo, userRepo)
+            .DeleteHikeImageAsync(hike.Identifier, "image-0", Utilities.Identifiers.User, TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Success.Should().BeFalse();
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(403);
+        hikeRepo.Verify(r => r.DeleteHikeImageAsync(It.IsAny<HikeImage>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task DeleteHikeImage_WhenImageIsNotOnThatHike_Returns404()
+    {
+        // Arrange
+        var hike = HikeWithImages(1);
+        var (hikeRepo, userRepo) = ImageRepos(hike);
+
+        // Act
+        var result = await Build(hikeRepo, userRepo)
+            .DeleteHikeImageAsync(hike.Identifier, "image-from-another-hike", Utilities.Identifiers.User, TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Success.Should().BeFalse();
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(404);
+        hikeRepo.Verify(r => r.DeleteHikeImageAsync(It.IsAny<HikeImage>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 }

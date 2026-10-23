@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 using Infrastructure.Data.Entities;
+using Microsoft.AspNetCore.Http;
 using WebDataContracts.RequestModels.Hike;
 using WebDataContracts.ResponseModels.Hike;
 
@@ -15,6 +16,8 @@ public interface IHikeService
     Task<Result> HandleUserHikesOnUserDeleteAsync(int userId, CancellationToken ctoken);
     Task<Result<HikeResponse>> UpdateHikeAsync(string hikeIdentifier, string userIdentifier, string? name, string? description, string? gettingThere, string? parkingInfo, CancellationToken ctoken);
     Task<Result> DeleteHikeAsync(string hikeIdentifier, string userIdentifier, CancellationToken ctoken);
+    Task<Result<HikeImageResponse>> AddHikeImageAsync(string hikeIdentifier, string userIdentifier, IFormFile image, CancellationToken ctoken);
+    Task<Result> DeleteHikeImageAsync(string hikeIdentifier, string imageIdentifier, string userIdentifier, CancellationToken ctoken);
     Task<Result> DeleteHikeSharesByUserIdAsync(int userId, CancellationToken ctoken);
     // Best-effort housekeeping: never fails the caller, see the implementation
     Task CleanUpOrphanedHikesAsync(CancellationToken ctoken);

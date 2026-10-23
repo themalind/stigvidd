@@ -10,7 +10,7 @@
   under Datasäkerhet. Byt aldrig sökväg eller filnamn.
 
   Innehållet måste stämma med raderingsmodellen i koden (HikeRepository,
-  HikeService, UserService) och med §5 i integritetspolicyn. Ändras det ena ska
+  HikeService, HikeSubmissionService, UserService) och med §5 i integritetspolicyn. Ändras det ena ska
   det andra följa med.
 
   PUBLICERAD 2026-08-30. Grinden som höll sidan tillbaka — att alla
@@ -181,7 +181,7 @@
     <main id="top">
       <header>
         <h1>Radera konto och data</h1>
-        <p class="updated">Gäller appen Stigvidd · Senast uppdaterad: 12 september 2026</p>
+        <p class="updated">Gäller appen Stigvidd · Senast uppdaterad: 19 oktober 2026</p>
         <p class="lang-nav"><strong>Svenska</strong> · <a href="#english">In English</a></p>
       </header>
 
@@ -220,6 +220,13 @@
         <li>Beskrivningen i dina hinderrapporter.</li>
         <li>Dina vänförfrågningar och din vänlista.</li>
         <li>Dina favoriter och din önskelista.</li>
+        <li>Promenader som andra har delat med dig försvinner ur din lista.</li>
+        <li>
+          Promenader du skickat in för publicering som led men som inte har publicerats: de som
+          väntar på granskning, med text, rutt och bildkopior, och det som finns kvar av de som fått
+          avslag.
+        </li>
+        <li>Dina gillamarkeringar på leder.</li>
         <li>Enhetstoken för push-notiser, så att inga fler notiser kan skickas till dig.</li>
       </ul>
 
@@ -260,6 +267,13 @@
         bort den manuellt. Det finns ingen knapp för det i appen.
       </p>
       <p>
+        <strong>En promenad som har publicerats som led finns kvar.</strong> När du skickade in
+        den gav du Stigvidd en rätt att för alltid använda text, linje och valda bilder, som inte
+        går att återkalla när leden publicerats. Leden står därför kvar, men ditt smeknamn tas bort från den och den går inte längre att
+        knyta till dig. Det gäller också om du tar bort din egen promenad – leden är en kopia och
+        påverkas inte.
+      </p>
+      <p>
         Serverloggar med IP-adress sparas i 7 dagar och säkerhetskopior skrivs över inom 49 dagar
         efter raderingen.
       </p>
@@ -274,7 +288,7 @@
       <section class="lang-section" id="english" lang="en">
         <header>
           <h1>Delete account and data</h1>
-          <p class="updated">Applies to the Stigvidd app · Last updated: 12 September 2026</p>
+          <p class="updated">Applies to the Stigvidd app · Last updated: 19 October 2026</p>
           <p class="lang-nav"><a href="#top">På svenska</a> · <strong>English</strong></p>
         </header>
 
@@ -312,6 +326,13 @@
           <li>The description in your obstacle reports.</li>
           <li>Your friend requests and your friend list.</li>
           <li>Your favourites and your wish list.</li>
+          <li>Walks that others have shared with you disappear from your list.</li>
+          <li>
+            Walks you submitted for publication as a trail that have not been published: those
+            waiting for review, with their text, route and photo copies, and what is left of those
+            that were rejected.
+          </li>
+          <li>Your likes on trails.</li>
           <li>Device tokens for push notifications, so no further notifications can be sent to you.</li>
         </ul>
 
@@ -351,6 +372,13 @@
         <p>
           If you want a walk removed from the people you shared it with as well, write to us and we
           will remove it manually. There is no button for that in the app.
+        </p>
+        <p>
+          <strong>A walk that has been published as a trail remains.</strong> When you submitted
+          it you gave Stigvidd a right to use the text, route and chosen photos forever, which
+          cannot be withdrawn once the trail is published. The trail therefore stays, but your nickname is removed from it and it can no
+          longer be linked to you. The same applies if you delete your own walk – the trail is a
+          copy and is not affected.
         </p>
         <p>
           Server logs containing IP addresses are kept for 7 days, and backups are overwritten

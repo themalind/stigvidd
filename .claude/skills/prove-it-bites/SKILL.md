@@ -70,3 +70,6 @@ git diff        # the planted defect must not be in the diff you commit
 ```
 
 A planted defect left in the tree is worse than no test at all.
+
+Rebuild after restoring (`dotnet build`) before any later `dotnet test --no-build`: the binaries
+still hold the planted defect, so the next full run fails on your own test and looks like a regression.

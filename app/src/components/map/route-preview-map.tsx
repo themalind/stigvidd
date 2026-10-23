@@ -7,7 +7,7 @@
 
 import Map from "@/components/map/map";
 import MapPreviewOverlay from "@/components/map/map-preview-overlay";
-import { ROUTE_LINE_COLOR } from "@/components/map/marker-styles";
+import { ROUTE_LINE_COLOR, routeCasingPaint } from "@/components/map/marker-styles";
 import StartMarker from "@/components/map/start-marker";
 import { SCREEN_PADDING } from "@/constants/constants";
 import { lineStringFromPositions } from "@/utils/geojson";
@@ -51,9 +51,9 @@ interface Props {
   style?: StyleProp<ViewStyle>;
 }
 
-// The small route map inside the hike and shared-hike detail modals: the recorded walk
+// The small route map on the hike screens and the incoming-share modal: the recorded walk
 // plus its start point, with no live user position (that's the fullscreen follow view's
-// job). Shared by both modals, which otherwise carried an identical copy each.
+// job).
 export default function RoutePreviewMap({
   idPrefix,
   path,
@@ -92,6 +92,12 @@ export default function RoutePreviewMap({
           <Camera ref={cameraRef} />
           {path.length > 1 && (
             <GeoJSONSource id={`${idPrefix}-route`} data={routeShape}>
+              <Layer
+                type="line"
+                id={`${idPrefix}-route-casing`}
+                layout={{ "line-join": "round", "line-cap": "round" }}
+                paint={routeCasingPaint(3)}
+              />
               <Layer
                 type="line"
                 id={`${idPrefix}-route-line`}

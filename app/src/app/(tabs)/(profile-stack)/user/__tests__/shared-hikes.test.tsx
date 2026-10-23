@@ -18,18 +18,14 @@ const mockGetIncoming = jest.fn();
 const mockAccept = jest.fn();
 const mockReject = jest.fn();
 const mockRefetchIncoming = jest.fn();
+const mockNavigate = jest.fn();
 let mockIncoming: { data?: unknown[]; isPending: boolean; isError: boolean };
 let mockMutationsPending = false;
 
 jest.mock("@/api/shared-hikes", () => ({
   getSharedHikes: () => mockGetSharedHikes(),
   getIncomingSharedHike: (...args: unknown[]) => mockGetIncoming(...args),
-  removeSharedHike: jest.fn(),
-  reshareHike: jest.fn(),
 }));
-
-jest.mock("@/api/hikes", () => ({ hikeRouteQueryKey: (id: string) => ["hike-route", id] }));
-jest.mock("@/api/friends", () => ({ getFriends: jest.fn().mockResolvedValue([]) }));
 
 jest.mock("@/components/auth/auth-provider", () => ({ useAuth: () => ({ isAuthenticated: true }) }));
 
@@ -57,8 +53,8 @@ jest.mock("@/hooks/shared-hikes/useSharedHikeMutations", () => ({
 }));
 
 jest.mock("expo-router", () => ({
-  useRouter: () => ({ navigate: jest.fn(), back: jest.fn() }),
-  router: { navigate: jest.fn(), back: jest.fn() },
+  useRouter: () => ({ navigate: mockNavigate, back: jest.fn() }),
+  router: { navigate: (...args: unknown[]) => mockNavigate(...args), back: jest.fn() },
 }));
 
 let measured: ReturnType<typeof stubMeasureInWindow>;
@@ -89,6 +85,7 @@ function sharedHike(overrides: Partial<SharedHike> = {}): SharedHike {
     sharedByIdentifier: "friend-1",
     sharedAt: "2026-05-04T18:00:00Z",
     allowResharing: true,
+    images: [],
     ...overrides,
   };
 }
@@ -127,6 +124,19 @@ it("lists a received walk with who sent it and when", async () => {
   expect(screen.getByText("Kvällspromenad")).toBeTruthy();
   expect(screen.getByText("Delad av: bertil")).toBeTruthy();
   expect(screen.getByText("2026-05-04")).toBeTruthy();
+});
+
+it("names a sharer who deleted their account as a deleted user, in both lists", async () => {
+  mockGetSharedHikes.mockResolvedValue([sharedHike({ sharedByName: null, sharedByIdentifier: null })]);
+  mockIncoming = {
+    data: [sharedHike({ hikeIdentifier: "in-0", sharedByName: null, sharedByIdentifier: null })],
+    isPending: false,
+    isError: false,
+  };
+  await show();
+
+  expect(screen.getAllByText("Delad av: Borttagen användare")).toHaveLength(2);
+  expect(screen.queryByText("Delad av: ")).toBeNull();
 });
 
 it("says the shelf is empty rather than showing an empty card", async () => {
@@ -224,15 +234,17 @@ it("opens an invitation for inspection, and answers from inside it", async () =>
   expect(screen.queryByText("Avvisa")).toBeNull();
 });
 
-// A received walk is already yours: its modal offers sharing and removal, never a decision.
-it("opens a received walk without asking for a decision", async () => {
+it("opens a received walk as its own screen, without asking for a decision", async () => {
   await show();
 
   fireEvent.press(screen.getByText("Kvällspromenad"));
   await settle();
 
+  expect(mockNavigate).toHaveBeenCalledWith({
+    pathname: "/(tabs)/(profile-stack)/shared-hike/[identifier]",
+    params: { identifier: "hike-1" },
+  });
   expect(screen.queryByText("Acceptera")).toBeNull();
-  expect(screen.getByText("Ta bort")).toBeTruthy();
 });
 
 it("loads the shared walks again when the user retries after a failure", async () => {

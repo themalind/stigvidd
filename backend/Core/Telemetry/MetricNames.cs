@@ -33,4 +33,16 @@ public static class MetricNames
 
     /// <summary>The star rating carried by a review. A MEASUREMENT, never an attribute.</summary>
     public const string ReviewRating = "stigvidd.review.rating";
+
+    /// <summary>A photo was added to or removed from a hike.</summary>
+    public const string HikeImageChanged = "stigvidd.hike.image.changed";
+
+    /// <summary>A hike was shared or reshared.</summary>
+    public const string HikeShareCreated = "stigvidd.hike.share.created";
+
+    /// <summary>How many new recipients one successful share reached. A MEASUREMENT, never an attribute.</summary>
+    public const string HikeShareRecipients = "stigvidd.hike.share.recipients";
+
+    /// <summary>A user reported a piece of content.</summary>
+    public const string ContentReportCreated = "stigvidd.content.report.created";
 }

@@ -35,7 +35,16 @@ import {
   searchUsers,
   sendFriendRequest,
 } from "../friends";
-import { createHike, deleteHike, getAllHikesByUserId, getHikeByIdentifier, shareHike, updateHike } from "../hikes";
+import {
+  createHike,
+  deleteHike,
+  deleteHikeImage,
+  getAllHikesByUserId,
+  getHikeByIdentifier,
+  shareHike,
+  updateHike,
+  uploadHikeImage,
+} from "../hikes";
 import { getFacilityMarkers, getTrailMarkers } from "../map-markers";
 import { registerPushToken, unregisterPushToken } from "../notifications";
 import { createReview, deleteReview, getReviewsByTrailIdentifier, hasReviewedTrail } from "../reviews";
@@ -60,11 +69,16 @@ import {
 import {
   getAllTrails,
   getCoordinatesByTrailIdentifier,
+  getPopularContributedTrails,
   getPopularTrails,
   getTrailByIdentifier,
   getTrailCard,
   getTrailCards,
+  getTrailLike,
+  likeTrail,
+  unlikeTrail,
 } from "../trails";
+import { createHikeSubmission, getMyHikeSubmissions, withdrawHikeSubmission } from "../hike-submissions";
 import {
   addToUserFavorite,
   addToUserWishlist,
@@ -130,9 +144,24 @@ const updateHikeRequest = {
   description: "Fin runda",
 };
 
-const shareHikeRequest = { hikeIdentifier: "h1", sharedWithName: "stigvandraren", allowResharing: true };
+const shareHikeRequest = { hikeIdentifier: "h1", sharedWithNames: ["stigvandraren"], allowResharing: true };
 
-const reshareRequest = { hikeIdentifier: "h1", reShareToName: "stigvandraren" };
+const reshareRequest = { hikeIdentifier: "h1", reShareToNames: ["stigvandraren"] };
+
+const createSubmissionRequest = {
+  hikeIdentifier: "h1",
+  name: "Kvällsrunda",
+  description: "Runt sjön",
+  classification: 1,
+  gettingThere: "Buss 3",
+  city: "Borås",
+  showSubmitterName: true,
+  acceptTransfer: true,
+  consentVersion: "2026-10-19",
+  consentLocale: "sv",
+  trimStartIndex: 2,
+  imageIdentifiers: ["i1"],
+};
 
 const endpoints: Endpoint[] = [
   // areas
@@ -355,6 +384,63 @@ const endpoints: Endpoint[] = [
     carriesStatus: false,
   },
   {
+    name: "getPopularContributedTrails",
+    call: () => getPopularContributedTrails(),
+    method: "GET",
+    path: "/trails/popular-contributions",
+    auth: "none",
+    carriesStatus: false,
+  },
+  {
+    name: "getTrailLike",
+    call: () => getTrailLike("t1"),
+    method: "GET",
+    path: "/trails/t1/like",
+    auth: "required",
+    carriesStatus: true,
+  },
+  {
+    name: "likeTrail",
+    call: () => likeTrail("t1"),
+    method: "PUT",
+    path: "/trails/t1/like",
+    auth: "required",
+    carriesStatus: true,
+  },
+  {
+    name: "unlikeTrail",
+    call: () => unlikeTrail("t1"),
+    method: "DELETE",
+    path: "/trails/t1/like",
+    auth: "required",
+    carriesStatus: true,
+  },
+  {
+    name: "createHikeSubmission",
+    call: () => createHikeSubmission(createSubmissionRequest),
+    method: "POST",
+    path: "/hikesubmissions",
+    auth: "required",
+    carriesStatus: true,
+    body: createSubmissionRequest,
+  },
+  {
+    name: "getMyHikeSubmissions",
+    call: () => getMyHikeSubmissions(),
+    method: "GET",
+    path: "/hikesubmissions",
+    auth: "required",
+    carriesStatus: true,
+  },
+  {
+    name: "withdrawHikeSubmission",
+    call: () => withdrawHikeSubmission("s1"),
+    method: "DELETE",
+    path: "/hikesubmissions/s1",
+    auth: "required",
+    carriesStatus: true,
+  },
+  {
     name: "getAllTrails",
     call: () => getAllTrails(),
     method: "GET",
@@ -446,6 +532,22 @@ const endpoints: Endpoint[] = [
     call: () => deleteHike("h1"),
     method: "DELETE",
     path: "/hikes/h1",
+    auth: "required",
+    carriesStatus: true,
+  },
+  {
+    name: "uploadHikeImage",
+    call: () => uploadHikeImage("h1", "file:///photo.jpg"),
+    method: "POST",
+    path: "/hikes/h1/images",
+    auth: "required",
+    carriesStatus: true,
+  },
+  {
+    name: "deleteHikeImage",
+    call: () => deleteHikeImage("h1", "img1"),
+    method: "DELETE",
+    path: "/hikes/h1/images/img1",
     auth: "required",
     carriesStatus: true,
   },
@@ -604,7 +706,7 @@ beforeEach(() => {
 
 describe("api endpoint contract", () => {
   it("covers every exported endpoint in the table", () => {
-    expect(endpoints).toHaveLength(52);
+    expect(endpoints).toHaveLength(61);
     expect(new Set(endpoints.map((e) => e.name)).size).toBe(endpoints.length);
   });
 

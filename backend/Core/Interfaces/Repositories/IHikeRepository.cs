@@ -22,4 +22,6 @@ public interface IHikeRepository
     Task<RepositoryResult<bool>> HikeHasSharesAsync(int hikeId, CancellationToken ctoken);
     Task<RepositoryResult<IEnumerable<string>>> GetDeletableHikeImageUrlsByUserIdAsync(int userId, CancellationToken ctoken);
     Task<RepositoryResult> AnonymizeSharedHikesOnUserDeleteAsync(int userId, CancellationToken ctoken);
+    Task<RepositoryResult<HikeImage>> AddHikeImageAsync(HikeImage image, CancellationToken ctoken);
+    Task<RepositoryResult> DeleteHikeImageAsync(HikeImage image, CancellationToken ctoken);
 }

@@ -5,9 +5,10 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
+import BasemapToggle from "@/components/map/basemap-toggle";
 import CenterOnUserButton from "@/components/map/center-on-user-button";
 import Map from "@/components/map/map";
-import { ROUTE_LINE_COLOR } from "@/components/map/marker-styles";
+import { ROUTE_LINE_COLOR, routeCasingPaint } from "@/components/map/marker-styles";
 import StartMarker from "@/components/map/start-marker";
 import UserLocationMarker from "@/components/map/user-location-marker";
 import { SCREEN_PADDING, SURFACE_BORDER_RADIUS } from "@/constants/constants";
@@ -102,6 +103,12 @@ export default function RouteFollowView({ idPrefix, path, title, isLoading, erro
           <GeoJSONSource id={`${idPrefix}-route`} data={lineShape}>
             <Layer
               type="line"
+              id={`${lineLayerId}-casing`}
+              layout={{ "line-join": "round", "line-cap": "round" }}
+              paint={routeCasingPaint(5)}
+            />
+            <Layer
+              type="line"
               id={lineLayerId}
               layout={{ "line-join": "round", "line-cap": "round" }}
               paint={{ "line-color": ROUTE_LINE_COLOR, "line-width": 5 }}
@@ -159,6 +166,7 @@ export default function RouteFollowView({ idPrefix, path, title, isLoading, erro
       )}
 
       <CenterOnUserButton cameraRef={cameraRef} position={userLocation?.position ?? null} />
+      <BasemapToggle />
     </View>
   );
 }

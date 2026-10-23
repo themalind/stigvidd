@@ -59,5 +59,17 @@ No router knows anything about them. Verified by building the real image
    Nothing surfaces this: the SPA fallback (`try_files ... /index.html`) means no path 404s,
    so the only way to see it is to curl a directory path against the built image.
 
+## Keeping the legal pages in step with the code
+
+"Are the public docs up to date" means these three pages, in both languages. Check them against:
+the delete model in `HikeService`, `HikeRepository`, `HikeSubmissionService.HandleUserDeleteAsync`
+and `UserService.DeleteUserAsync`; the FK `OnDelete` rules in `Infrastructure/Data/Configurations/`;
+and the publish promise, which is the seeded consent text in `ConsentTextConfiguration.cs`
+(mirrored by `publish.consent*` in the app's locales).
+
+"Update web/public" means these pages too: `web/public` holds only `icon.png` and `robots.txt`. Fastest
+diff: `git log -1 --format=%h -- site/public/privacy-policy`, then `git diff <that>..HEAD --stat -- backend/Infrastructure/Data/Entities`
+for new stored fields; `HikeSubmissionRepository.ClearContent` lists what a rejection wipes.
+
 Related: [[json-file-has-no-time-retention]] — the same publication turned §5's stated 7-day
 log retention into a promise that had to be made true.

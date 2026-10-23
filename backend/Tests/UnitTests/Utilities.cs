@@ -1,12 +1,14 @@
 ﻿// SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+using Core.Factories;
 using Core.Interfaces.Repositories;
 using Core.Interfaces.Services;
 using Infrastructure.Data;
 using Infrastructure.Data.Entities;
 using Infrastructure.Enums;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
 using Moq;
 using NetTopologySuite.Geometries;
 using System.Linq.Expressions;
@@ -719,6 +721,22 @@ public static class Utilities
             col.Add(FakeFile("img1.jpg"));
             col.Add(FakeFile("img2.jpg"));
             return col;
+        }
+
+        public const string PresentableBaseUrl = "http://stigvidd.se/testing/";
+
+        public static HikeResponseFactory HikeResponseFactory()
+        {
+            var cfg = new Mock<IConfiguration>();
+            cfg.Setup(c => c["PresentableBaseUrl"]).Returns(PresentableBaseUrl);
+            return new HikeResponseFactory(cfg.Object);
+        }
+
+        public static ContentReportResponseFactory ContentReportResponseFactory()
+        {
+            var cfg = new Mock<IConfiguration>();
+            cfg.Setup(c => c["PresentableBaseUrl"]).Returns(PresentableBaseUrl);
+            return new ContentReportResponseFactory(cfg.Object);
         }
     }
 

@@ -43,6 +43,12 @@ public static class MetricTags
 
         /// <summary>Which of a user's two trail collections: favorites or wishlist.</summary>
         public const string List = "list";
+
+        /// <summary>Whether the owner shared a hike or a recipient passed it on: share or reshare.</summary>
+        public const string Kind = "kind";
+
+        /// <summary>What was reported: review, trail_obstacle or hike_image.</summary>
+        public const string ContentType = "content_type";
     }
 
     /// <summary>
@@ -64,5 +70,13 @@ public static class MetricTags
 
         public const string ListFavorites = "favorites";
         public const string ListWishlist = "wishlist";
+
+        public const string KindShare = "share";
+        public const string KindReshare = "reshare";
+
+        public const string ContentTypeReview = "review";
+        public const string ContentTypeTrailObstacle = "trail_obstacle";
+        public const string ContentTypeHikeImage = "hike_image";
+        public const string ContentTypeUnknown = "unknown";
     }
 }

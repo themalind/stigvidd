@@ -7,9 +7,9 @@
 
 import BackButton from "@/components/back-button";
 import LoadingIndicator from "@/components/loading-indicator";
-import LocationDisclosureDialog from "@/components/trail/trail-creator/location-disclosure-dialog";
-import RecordingInfoDialog from "@/components/trail/trail-creator/recording-info-dialog";
-import TrailCreator from "@/components/trail/trail-creator/trail-creator";
+import LocationDisclosureDialog from "@/components/hike/recorder/location-disclosure-dialog";
+import RecordingInfoDialog from "@/components/hike/recorder/recording-info-dialog";
+import HikeRecorder from "@/components/hike/recorder/hike-recorder";
 import { USER_LOCATION_KEY } from "@/hooks/useUserLocation";
 import { logger } from "@/services/logger";
 import { useQueryClient } from "@tanstack/react-query";
@@ -168,7 +168,7 @@ export default function CreateHikeScreen() {
         />
       </View>
       <View testID="create-hike-content" style={s.content}>
-        <TrailCreator />
+        <HikeRecorder />
       </View>
 
       <RecordingInfoDialog visible={showInfo} onDismiss={() => setShowInfo(false)} />

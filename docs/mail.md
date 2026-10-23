@@ -301,7 +301,7 @@ not a refusal.
 ### Which placeholders a template may use
 
 That set used to exist only as prose in the `Description` column, which nothing validated.
-It is now declared in [`Core/Services/MailTemplateCatalog.cs`](../backend/Core/Services/MailTemplateCatalog.cs)
+It is now declared in [`Core/Services/Mail/MailTemplateCatalog.cs`](../backend/Core/Services/Mail/MailTemplateCatalog.cs)
 — a label, a description and a sample value per placeholder, per template key — and the editor
 shows it beside the copy.
 
@@ -348,20 +348,20 @@ moment the page opened. See
 
 | | |
 | --- | --- |
-| `Core/Services/MailOutboxService.cs` | the enqueue API: validate, render, journal, signal |
-| `Core/Services/MailTemplateRenderer.cs` | `{{Placeholder}}` substitution and the encoding rules |
-| `Core/Services/MailTemplateCatalog.cs` | which placeholders each template key may use |
-| `Core/Services/MailTemplateAdminService.cs` | the editor's read/update/preview, and the unknown-placeholder refusal |
-| `Core/Services/MailHtmlPolicy.cs` | the email-safe markup allowlist a save is checked against |
+| `Core/Services/Mail/MailOutboxService.cs` | the enqueue API: validate, render, journal, signal |
+| `Core/Services/Mail/MailTemplateRenderer.cs` | `{{Placeholder}}` substitution and the encoding rules |
+| `Core/Services/Mail/MailTemplateCatalog.cs` | which placeholders each template key may use |
+| `Core/Services/Mail/MailTemplateAdminService.cs` | the editor's read/update/preview, and the unknown-placeholder refusal |
+| `Core/Services/Mail/MailHtmlPolicy.cs` | the email-safe markup allowlist a save is checked against |
 | `StigviddAPI/Controllers/Admin/MailTemplatesController.cs` | `api/v1/admin/mail-templates`, admin-only |
 | `web/src/lib/mail-template.ts` | the editor's pure rules: the token grammar, the HTML scanner, loss detection |
-| `Core/Services/MailOutboxQueue.cs` | the `Channel<int>` trigger |
-| `Core/Services/SmtpMailSender.cs` | MailKit; STARTTLS on 587 |
-| `Core/Services/LoggingMailSender.cs` | the no-op used when `Smtp:Host` is absent |
+| `Core/Services/Mail/MailOutboxQueue.cs` | the `Channel<int>` trigger |
+| `Core/Services/Mail/SmtpMailSender.cs` | MailKit; STARTTLS on 587 |
+| `Core/Services/Mail/LoggingMailSender.cs` | the no-op used when `Smtp:Host` is absent |
 | `Core/Repositories/MailOutboxRepository.cs` | claim, mark, release, recover, the backoff, the retention predicates and the erasure |
 | `StigviddAPI/BackgroundServices/MailOutboxDispatcher.cs` | the drain loop and the startup sweep |
 | `StigviddAPI/BackgroundServices/MailOutboxRetentionService.cs` | the retention run: clear settled bodies, then delete past-window rows |
-| `Core/Services/MailOutboxAdminService.cs` | the admin read/retry/cancel/purge, and the body route's redaction refusal |
+| `Core/Services/Mail/MailOutboxAdminService.cs` | the admin read/retry/cancel/purge, and the body route's redaction refusal |
 | `StigviddAPI/Controllers/Admin/AdminMailOutboxController.cs` | `api/v1/admin/mail-outbox`, admin-only; logs retry, cancel, purge and every body read |
 | `web/src/lib/mail-outbox.ts` | the outbox page's pure rules: what may be retried, revealed, and what a purge says |
 

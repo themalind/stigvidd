@@ -49,6 +49,18 @@ describe("what the panel states about the trail", () => {
     expect(screen.getByText("Kuperad terräng med rötter")).toBeTruthy();
   });
 
+  it("leaves out the variation row when the trail has none", () => {
+    show({ accessibilityInfo: "" });
+
+    expect(screen.queryByText("Variation")).toBeNull();
+  });
+
+  it("calls a trail without a marking unmarked instead of leaving the value blank", () => {
+    show({ trailSymbol: "" });
+
+    expect(screen.getByText("Omarkerad")).toBeTruthy();
+  });
+
   // The API sends a number; the unit belongs to the screen, not to the data.
   it("gives the length its unit", () => {
     show();

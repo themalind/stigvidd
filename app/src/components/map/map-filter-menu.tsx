@@ -23,6 +23,7 @@ interface Props {
 
 const ITEMS: { key: keyof MapMarkerFilter; label: string; icon: keyof typeof MaterialCommunityIcons.glyphMap }[] = [
   { key: "trails", label: "filter.trails", icon: "map-marker-path" },
+  { key: "contributions", label: "filter.contributions", icon: "account-group" },
   { key: "shelters", label: "filter.shelters", icon: "tent" },
   { key: "firePits", label: "filter.firePits", icon: "campfire" },
   { key: "accessibility", label: "filter.accessibility", icon: "wheelchair-accessibility" },

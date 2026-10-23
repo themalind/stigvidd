@@ -5,6 +5,7 @@ import { CLASSIFICATION, type AdminTrailListItem, type TableColumn } from "@/typ
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
 import TrailEditor from "../trail-editor";
 import TrailImagesDialog from "../trail-images-dialog";
+import TrailPathDialog from "../trail-path-dialog";
 import TrailVerifiedToggle from "../trail-verified-toggle";
 
 interface Props {
@@ -62,6 +63,7 @@ export default function TrailsTable({ columns, trails, onVerifiedChange }: Props
                 />
               </TableCell>
               <TableCell className="flex justify-end gap-1">
+                <TrailPathDialog data={trail} />
                 <TrailImagesDialog data={trail} selected={true} />
                 <TrailEditor data={trail} selected={true} />
               </TableCell>

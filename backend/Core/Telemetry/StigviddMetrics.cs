@@ -39,6 +39,10 @@ public sealed class StigviddMetrics : IDisposable
     private readonly Counter<long> _trailFavoritesChanged;
     private readonly Counter<long> _reviewCreated;
     private readonly Histogram<double> _reviewRating;
+    private readonly Counter<long> _hikeImageChanged;
+    private readonly Counter<long> _hikeShareCreated;
+    private readonly Histogram<long> _hikeShareRecipients;
+    private readonly Counter<long> _contentReportCreated;
 
     public StigviddMetrics(IMeterFactory meterFactory)
         : this(meterFactory.Create(MetricNames.MeterName), ownsMeter: false)
@@ -75,6 +79,26 @@ public sealed class StigviddMetrics : IDisposable
             MetricNames.ReviewRating,
             unit: "{star}",
             description: "The star rating carried by a written review.");
+
+        _hikeImageChanged = _meter.CreateCounter<long>(
+            MetricNames.HikeImageChanged,
+            unit: "{image}",
+            description: "Photos added to or removed from a hike by its owner.");
+
+        _hikeShareCreated = _meter.CreateCounter<long>(
+            MetricNames.HikeShareCreated,
+            unit: "{share}",
+            description: "Hikes shared by their owner or passed on by a recipient.");
+
+        _hikeShareRecipients = _meter.CreateHistogram<long>(
+            MetricNames.HikeShareRecipients,
+            unit: "{recipient}",
+            description: "New recipients reached by one successful share.");
+
+        _contentReportCreated = _meter.CreateCounter<long>(
+            MetricNames.ContentReportCreated,
+            unit: "{report}",
+            description: "Content reports submitted by users.");
     }
 
     /// <summary>
@@ -111,6 +135,33 @@ public sealed class StigviddMetrics : IDisposable
     /// dimension for no gain.
     /// </summary>
     public void RecordReviewRating(decimal rating) => _reviewRating.Record((double)rating);
+
+    /// <summary>A hike photo was added or removed. Takes no hike and no user.</summary>
+    public void RecordHikeImageChange(string operation, string outcome) =>
+        _hikeImageChanged.Add(
+            1,
+            new KeyValuePair<string, object?>(MetricTags.Keys.Operation, operation),
+            new KeyValuePair<string, object?>(MetricTags.Keys.Outcome, outcome));
+
+    /// <summary>A share or reshare was attempted. Takes no hike, sender or recipient.</summary>
+    public void RecordHikeShare(string kind, string outcome) =>
+        _hikeShareCreated.Add(
+            1,
+            new KeyValuePair<string, object?>(MetricTags.Keys.Kind, kind),
+            new KeyValuePair<string, object?>(MetricTags.Keys.Outcome, outcome));
+
+    /// <summary>How many new recipients a successful share reached; zero when everyone already had it.</summary>
+    public void RecordHikeShareRecipients(string kind, int newRecipients) =>
+        _hikeShareRecipients.Record(
+            newRecipients,
+            new KeyValuePair<string, object?>(MetricTags.Keys.Kind, kind));
+
+    /// <summary>A content report was submitted. Takes no content, reporter or author.</summary>
+    public void RecordContentReport(string contentType, string outcome) =>
+        _contentReportCreated.Add(
+            1,
+            new KeyValuePair<string, object?>(MetricTags.Keys.ContentType, contentType),
+            new KeyValuePair<string, object?>(MetricTags.Keys.Outcome, outcome));
 
     public void Dispose()
     {

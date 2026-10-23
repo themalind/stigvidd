@@ -1184,7 +1184,7 @@ personal data never leaves the host. Users get placeholder names, addresses
 and login identities; push tokens, verification/reset codes and the mail log
 are removed; moderation notes are cleared; Keycloak is left out. Hikes, reviews
 and photos are kept. The column-by-column list is `DataAnonymizer` in
-`backend/Core/Services/DataAnonymizer.cs`; a test fails when a new column is not
+`backend/Core/Services/DataTransfer/DataAnonymizer.cs`; a test fails when a new column is not
 classified there.
 
 **Hosts that borrow production's services.** `DATA_TRANSFER_SHARED_SERVICES=true`

@@ -19,7 +19,7 @@ import { useTranslation } from "react-i18next";
 // hike walkable: the friend gets the route plus their own live position.
 //
 // The route is fetched by identifier rather than handed over through navigation, so the
-// screen stands on its own (deep link, cold start). In practice the details modal that
+// screen stands on its own (deep link, cold start). In practice the details screen that
 // opens it already holds the geometry and primes this query's cache, so the normal path
 // paints immediately without a request.
 export default function HikeFollowScreen() {
@@ -36,7 +36,7 @@ export default function HikeFollowScreen() {
     queryKey: hikeRouteQueryKey(hikeIdentifier),
     // Only the coordinates are cached: they're the immutable part of a hike, and both
     // the own-hike and shared-hike payloads carry them in the same shape, so either
-    // modal can prime this key.
+    // screen can prime this key.
     queryFn: async () => (await getHikeByIdentifier(hikeIdentifier)).coordinates ?? "",
     enabled: !!hikeIdentifier,
     staleTime: HIKE_GEOMETRY_STALE_TIME,

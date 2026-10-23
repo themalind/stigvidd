@@ -14,7 +14,7 @@ wrong is "we retained precise location data about identifiable users for two yea
 | Concern                                        | File                                     |
 | ---------------------------------------------- | ---------------------------------------- |
 | Backend OTel wiring (opt-in guard, filters)    | `backend/StigviddAPI/Extensions/TelemetryExtensions.cs` |
-| Readiness probe over the DB                    | `backend/StigviddAPI/Extensions/DatabaseHealthCheck.cs` |
+| Readiness probe over the DB                    | `backend/StigviddAPI/HealthChecks/DatabaseHealthCheck.cs` |
 | Service definition, retention + memory caps    | `docker-compose.yml` → `openobserve`     |
 | Public routing, ingest/UI split, body cap      | `proxy/Caddyfile`                        |
 | Metrics retention override + PII guard         | `scripts/observatory-retention.sh`       |
@@ -95,8 +95,12 @@ instance:
   a call site chooses from the bounded vocabulary in `Core/Telemetry/MetricTags.cs`
   rather than assembling its own dimensions. Attribute vocabulary is the part with
   the 730-day retention and the GDPR argument attached, so it is not left to each
-  caller. Today: `stigvidd.trail.favorites.changed`, `stigvidd.review.created`
-  (counters) and `stigvidd.review.rating` (histogram).
+  caller. Today: `stigvidd.trail.favorites.changed`, `stigvidd.review.created`,
+  `stigvidd.hike.image.changed`, `stigvidd.hike.share.created` and
+  `stigvidd.content.report.created` (counters), plus `stigvidd.review.rating` and
+  `stigvidd.hike.share.recipients` (histograms; the second counts new recipients per
+  share, tagged only `kind` = `share`/`reshare`). Each new name needs
+  `scripts/observatory-retention.sh` rerun on the host after deploy.
 
   Registering the meter does **not** weaken the opt-in guard. A `Meter` is a BCL
   type: creating one registers nothing with OpenTelemetry and starts no thread, so

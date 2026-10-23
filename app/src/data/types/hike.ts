@@ -7,6 +7,11 @@
 
 import { LatLng } from "./geo";
 
+export interface HikeImage {
+  identifier: string;
+  imageUrl: string;
+}
+
 export interface Hike {
   identifier: string;
   name: string;
@@ -18,6 +23,7 @@ export interface Hike {
   parkingInfo?: string;
   description?: string;
   createdAt: string;
+  images: HikeImage[];
 }
 
 export interface CreateHikeRequest {
@@ -48,23 +54,24 @@ export interface SharedHike {
   duration: number;
   coordinates: string;
   createdByName: string | null;
-  sharedByName: string;
-  sharedByIdentifier: string;
+  sharedByName: string | null; // keep-comment: null once the sharer deleted their account
+  sharedByIdentifier: string | null;
   sharedAt: string;
   gettingThere?: string;
   parkingInfo?: string;
   description?: string;
   allowResharing: boolean;
+  images: HikeImage[];
 }
 
 export interface ReshareSharedHikeRequest {
   hikeIdentifier: string;
-  reShareToName: string;
+  reShareToNames: string[];
 }
 
 export interface ShareHikeRequest {
   hikeIdentifier: string;
-  sharedWithName: string;
+  sharedWithNames: string[];
   allowResharing: boolean;
 }
 
@@ -73,8 +80,8 @@ export interface IncomingSharedHike {
   hikeName: string;
   hikeLength: number;
   duration: number;
-  sharedByName: string;
-  sharedByIdentifier: string;
+  sharedByName: string | null;
+  sharedByIdentifier: string | null;
   createdByName: string | null;
   sharedAt: string;
 }

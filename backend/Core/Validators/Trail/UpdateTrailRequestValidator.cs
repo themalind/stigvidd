@@ -4,6 +4,8 @@
 using FluentValidation;
 using WebDataContracts.RequestModels.Trail;
 
+namespace Core.Validators.Trail;
+
 public class UpdateTrailRequestValidator : AbstractValidator<UpdateTrailRequest>
 {
     public UpdateTrailRequestValidator()
@@ -37,5 +39,15 @@ public class UpdateTrailRequestValidator : AbstractValidator<UpdateTrailRequest>
         RuleFor(x => x.VisitorInformation!)
             .SetValidator(new UpdateVisitorInformationRequestValidator())
             .When(x => x.VisitorInformation != null);
+
+        RuleForEach(x => x.Links)
+            .SetValidator(new UpdateTrailLinkRequestValidator());
+
+        RuleFor(x => x.Links)
+            .Must(links => links == null || links
+                .Where(l => l.Identifier != null)
+                .GroupBy(l => l.Identifier)
+                .All(g => g.Count() == 1))
+            .WithMessage("Each link identifier may appear only once.");
     }
 }

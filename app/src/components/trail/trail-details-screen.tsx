@@ -11,6 +11,7 @@ import { Rating } from "@/components/review/rating";
 import TrailReviewsContainer from "@/components/review/trail-reviews-container";
 import ImageGallery from "@/components/trail/image-gallery";
 import TrailDescription from "@/components/trail/trail-description";
+import TrailContributionBar from "@/components/trail/trail-contribution-bar";
 import TrailInfo from "@/components/trail/trail-info";
 import TrailMap from "@/components/trail/trail-map";
 import UserBar from "@/components/trail/user-action-bar/user-bar";
@@ -34,16 +35,25 @@ import TrailObstacleWarning from "./obstacle/trail-obstacle-warning";
 import TrailObstacleModal from "./obstacle/trail-obstacles-modal";
 import TrailMiscInfo from "./trail-misc-section/trail-misc-accordion";
 
-// The trail detail screen is rendered inside four different tab stacks. Each
-// stack's route file passes its own follow route, so tapping the embedded map
-// opens the follow view in the *same* stack and back returns here.
+// keep-comment: rendered in four tab stacks; each passes its own follow and guide routes so back returns here, not to the first tab
 export type FollowRoute =
   | "/(tabs)/(map)/follow/[identifier]"
   | "/(tabs)/(trails-tab)/follow/[identifier]"
   | "/(tabs)/(profile-stack)/follow/[identifier]"
   | "/(tabs)/(home)/follow/[identifier]";
 
-export default function TrailDetailsScreen({ followRoute }: { followRoute: FollowRoute }) {
+export type GuideRoute =
+  | "/(tabs)/(map)/guide"
+  | "/(tabs)/(trails-tab)/guide"
+  | "/(tabs)/(profile-stack)/guide"
+  | "/(tabs)/(home)/guide";
+
+interface Props {
+  followRoute: FollowRoute;
+  guideRoute: GuideRoute;
+}
+
+export default function TrailDetailsScreen({ followRoute, guideRoute }: Props) {
   const theme = useTheme();
   const { t } = useTranslation();
   const router = useRouter();
@@ -145,6 +155,9 @@ export default function TrailDetailsScreen({ followRoute }: { followRoute: Follo
               </Pressable>
             </View>
           )}
+          {trail?.contribution && (
+            <TrailContributionBar trailIdentifier={trail.identifier} contribution={trail.contribution} />
+          )}
           {trail && <TrailInfo trail={trail} />}
           {obstacles && obstacles.length > 0 && <TrailObstacleWarning onPress={() => setShowObstacleModal(true)} />}
           {trail && <UserBar trail={trail} />}
@@ -154,7 +167,9 @@ export default function TrailDetailsScreen({ followRoute }: { followRoute: Follo
           ) : (
             <MapSkeleton text={t("trail.loadingMap")} />
           )}
-          {trail && <TrailMiscInfo trail={trail} />}
+          {trail && (
+            <TrailMiscInfo trail={trail} onOpenGuide={() => guardedNavigate(() => router.navigate(guideRoute))} />
+          )}
 
           {trail && (
             <TrailReviewsContainer

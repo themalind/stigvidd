@@ -134,6 +134,87 @@ public class AdminTrailsControllerIntegrationTests : IClassFixture<StigViddWebAp
     }
 
     [Fact]
+    public async Task UpdateTrail_WithLinks_ReplacesTheLinksAndKeepsTheIdentifiersOfEditedOnes()
+    {
+        // Arrange
+        var client = CreateAdminClient();
+        var route = $"{TrailsRoute}/{TrailWithoutImagesIdentifier}";
+        var first = ValidUpdateRequest();
+        first.Links =
+        [
+            new UpdateTrailLinkRequest { Title = "Kommunen", Link = "https://www.boras.se" },
+            new UpdateTrailLinkRequest { Title = "Tas bort", Link = "https://example.com/old" },
+        ];
+
+        var created = await (await client.PutAsJsonAsync(route, first, TestContext.Current.CancellationToken))
+            .Content.ReadFromJsonAsync<TrailResponse>(TestContext.Current.CancellationToken);
+        created.Should().NotBeNull();
+        created.TrailLinksResponse.Should().NotBeNull();
+        var kommunen = created.TrailLinksResponse.Single(l => l.Title == "Kommunen");
+
+        var second = ValidUpdateRequest();
+        second.Links =
+        [
+            new UpdateTrailLinkRequest { Identifier = kommunen.Identifier, Title = "Borås Stad", Link = "https://www.boras.se/friluftsliv" },
+            new UpdateTrailLinkRequest { Title = "Ny", Link = "https://example.com/new" },
+        ];
+
+        // Act
+        var response = await client.PutAsJsonAsync(route, second, TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var reread = await client.GetFromJsonAsync<TrailResponse>(route, TestContext.Current.CancellationToken);
+        reread.Should().NotBeNull();
+        reread.TrailLinksResponse.Should().NotBeNull();
+        reread.TrailLinksResponse.Select(l => (l.Title, l.Link)).Should().BeEquivalentTo(
+        [
+            ("Borås Stad", "https://www.boras.se/friluftsliv"),
+            ("Ny", "https://example.com/new"),
+        ]);
+        reread.TrailLinksResponse.Single(l => l.Title == "Borås Stad").Identifier.Should().Be(kommunen.Identifier);
+    }
+
+    [Fact]
+    public async Task UpdateTrail_WithoutLinks_LeavesTheExistingLinksUntouched()
+    {
+        // Arrange
+        var client = CreateAdminClient();
+        var route = $"{TrailsRoute}/{TrailWithoutImagesIdentifier}";
+        var withLinks = ValidUpdateRequest();
+        withLinks.Links = [new UpdateTrailLinkRequest { Title = "Kommunen", Link = "https://www.boras.se" }];
+        await client.PutAsJsonAsync(route, withLinks, TestContext.Current.CancellationToken);
+
+        // Act
+        var response = await client.PutAsJsonAsync(route, ValidUpdateRequest(), TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var reread = await client.GetFromJsonAsync<TrailResponse>(route, TestContext.Current.CancellationToken);
+        reread.Should().NotBeNull();
+        reread.TrailLinksResponse.Should().NotBeNull();
+        reread.TrailLinksResponse.Select(l => l.Title).Should().BeEquivalentTo(["Kommunen"]);
+    }
+
+    [Fact]
+    public async Task UpdateTrail_WithANonHttpLink_ShouldReturnBadRequest()
+    {
+        // Arrange
+        var client = CreateAdminClient();
+        var request = ValidUpdateRequest();
+        request.Links = [new UpdateTrailLinkRequest { Title = "Skript", Link = "javascript:alert(1)" }];
+
+        // Act
+        var response = await client.PutAsJsonAsync(
+            $"{TrailsRoute}/{TrailWithoutImagesIdentifier}", request, TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
     public async Task UpdateTrail_WithNonExistentTrail_ShouldReturnNotFound()
     {
         // Arrange
@@ -298,6 +379,46 @@ public class AdminTrailsControllerIntegrationTests : IClassFixture<StigViddWebAp
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task GetTrailPath_ForAnUnverifiedTrail_ReturnsLongitudeLatitudePairs()
+    {
+        // Arrange
+        var client = CreateAdminClient();
+        await client.PutAsJsonAsync(
+            $"{TrailsRoute}/{StorsjoledenIdentifier}/verified",
+            new SetTrailVerifiedRequest { IsVerified = false },
+            TestContext.Current.CancellationToken);
+
+        // Act
+        var response = await client.GetAsync($"{TrailsRoute}/{StorsjoledenIdentifier}/path", TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var path = await response.Content.ReadFromJsonAsync<AdminTrailPathResponse>(TestContext.Current.CancellationToken);
+        path.Should().NotBeNull();
+        path.Coordinates.Should().NotBeEmpty();
+        path.Coordinates.Should().AllSatisfy(pair =>
+        {
+            pair.Should().HaveCount(2);
+            pair[0].Should().BeInRange(10, 25, "Swedish longitudes come first");
+            pair[1].Should().BeInRange(55, 70, "Swedish latitudes come second");
+        });
+    }
+
+    [Fact]
+    public async Task GetTrailPath_WithNonExistentTrail_ShouldReturnNotFound()
+    {
+        // Arrange
+        var client = CreateAdminClient();
+
+        // Act
+        var response = await client.GetAsync($"{TrailsRoute}/{NonExistentIdentifier}/path", TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
 
     [Fact]

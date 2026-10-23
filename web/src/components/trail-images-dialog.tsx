@@ -11,11 +11,12 @@ import { toast } from "sonner";
 import { Images, X } from "lucide-react";
 
 interface Props {
-  data: TrailShortInfoResponse;
+  data: Pick<TrailShortInfoResponse, "identifier" | "name">;
   selected: boolean;
+  label?: string;
 }
 
-export default function TrailImagesDialog({ data, selected }: Props) {
+export default function TrailImagesDialog({ data, selected, label }: Props) {
   const [images, setImages] = useState<TrailImageResponse[]>([]);
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -75,8 +76,9 @@ export default function TrailImagesDialog({ data, selected }: Props) {
       <Dialog.Root onOpenChange={handleOpenChange}>
         <Dialog.Trigger asChild>
           {selected ? (
-            <Button variant="ghost" size="icon">
+            <Button variant={label ? "outline" : "ghost"} size={label ? "default" : "icon"}>
               <Images />
+              {label}
             </Button>
           ) : null}
         </Dialog.Trigger>

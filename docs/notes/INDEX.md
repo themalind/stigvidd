@@ -885,3 +885,19 @@ src/api/generated` then fails with "the generated API client is stale" for reaso
   pg_dump aborts with "server version mismatch" against a newer server; backend/Dockerfile had postgresql-client-16 while
   docker-compose.yml ran postgis/postgis:17-3.5, so GET /api/v1/admin/export failed in production and no test noticed.
   Bump both together; verify-in-docker is the only check of the real export/import path.
+- [An EF Core projection cannot materialize an IReadOnlyCollection navigation; declare it ICollection](ef-projection-needs-icollection-navigation.md) —
+  a selector that passes a collection navigation (Hike.Images) to a client-side helper fails at runtime with ArgumentException
+  "InitializeCollection ... violates the constraint of type TCollection", 500 on GET /hikes and /HikeShareRecipient, while
+  unit tests with a mocked repository stay green. Include() hides it. Fix: ICollection<T> on the entity, no migration needed.
+- [Raw SQL passes on the SQLite test provider and still needs one run against real PostgreSQL](raw-sql-needs-a-postgres-check-the-sqlite-tests-cannot-give.md) —
+  HikeShareInsert's INSERT ... ON CONFLICT DO NOTHING (HikeShareRepository.ShareHikesAsync, HikeShareDistributor) is only
+  tested on SQLite in-memory. Recipe: postgis/postgis:17-3.5 container on a spare port plus a dotnet run file app with
+  PublishAot=false, migrate, call the repository. Why NULL goes in as a literal: EF has no store type for a raw DBNull.
+- [A MapLibre container sized with Tailwind absolute inset-0 renders at height 0 in web/](maplibre-css-beats-tailwind-v4-layered-utilities.md) —
+  Blank or black map in the admin (hike-submissions review, submission-map.tsx) while the legend still shows. maplibre-gl.css
+  sets unlayered .maplibregl-map position: relative, which beats Tailwind v4 layered utilities (@layer), so absolute/inset-0
+  collapse the container to 0 height. Fix: h-full w-full on the map container. Not the MapTiler key, OSM tiles or the style.
+- [A Paper modal's pinned submit button hides behind the keyboard unless it uses useModalKeyboardLift](app-modal-submit-button-hides-behind-keyboard.md) —
+  app/ form modals (obstacle, share hike, edit/publish hike, report, reset password): Skicka/Spara button disappears while the
+  keyboard is up. Android is softwareKeyboardLayoutMode pan + edgeToEdgeEnabled, not resize; keyboardDidShow height excludes
+  the nav bar. Fix: useModalKeyboardLift modalStyle + maxHeight, ScrollView, button pinned below. No dev build needed.

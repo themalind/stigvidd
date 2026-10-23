@@ -40,7 +40,7 @@ hand-made database proves nothing about it.
 
 ## What the restore does about it
 
-[`DataTransferService.RestoreAppDatabaseAsync`](../../backend/Core/Services/DataTransferService.cs)
+[`DataTransferService.RestoreAppDatabaseAsync`](../../backend/Core/Services/DataTransfer/DataTransferService.cs)
 first turns the dump into SQL with `pg_restore -f`. It collects every `CREATE SCHEMA` line and
 emits a `DROP SCHEMA IF EXISTS … CASCADE` for each. It then runs that prelude and the dump in a
 single `psql --single-transaction -v ON_ERROR_STOP=1`.

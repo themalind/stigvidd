@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+using Core.Factories;
 using Core.Interfaces.Services;
-using Core.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WebDataContracts.RequestModels.Media;
@@ -54,6 +54,22 @@ public class AdminTrailsController : StigViddController
         {
             _logger.LogInformation(
                 "GetTrail: Failed to fetch trail with identifier: {identifier}.", identifier);
+
+            return ToActionResult(result.Message);
+        }
+
+        return Ok(result.Value);
+    }
+
+    [HttpGet("{identifier}/path")]
+    public async Task<ActionResult<AdminTrailPathResponse>> GetTrailPath(string identifier, CancellationToken ctoken)
+    {
+        var result = await _trailService.GetTrailPathForAdminAsync(identifier, ctoken);
+
+        if (!result.Success && result.Message != null)
+        {
+            _logger.LogInformation(
+                "GetTrailPath: Failed to fetch the path of trail with identifier: {identifier}.", identifier);
 
             return ToActionResult(result.Message);
         }

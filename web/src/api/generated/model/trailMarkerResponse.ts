@@ -14,4 +14,5 @@ export interface TrailMarkerResponse {
   startLatitude?: number | null;
   /** @nullable */
   startLongitude?: number | null;
+  isContribution?: boolean;
 }

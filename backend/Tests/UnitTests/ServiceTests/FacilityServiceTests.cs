@@ -7,6 +7,7 @@ using Core.Interfaces.Services;
 using Core.Services;
 using AwesomeAssertions;
 using Infrastructure.Data.Entities;
+using Infrastructure.Enums;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;

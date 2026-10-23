@@ -47,6 +47,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IUserRepository, UserRepository>();
         services.AddTransient<IReviewRepository, ReviewRepository>();
         services.AddTransient<IHikeRepository, HikeRepository>();
+        services.AddTransient<IHikeSubmissionRepository, HikeSubmissionRepository>();
         services.AddTransient<ITrailObstacleRepository, TrailObstacleRepository>();
         services.AddTransient<IFacilityRepository, FacilityRepository>();
         services.AddTransient<IHikeShareRepository, HikeShareRepository>();
@@ -79,13 +80,17 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IDataTransferService, DataTransferService>();
         services.AddSingleton<IMaintenanceGate, MaintenanceGate>();
         services.AddTransient<IHikeService, HikeService>();
+        services.AddTransient<IHikeSubmissionService, HikeSubmissionService>();
         services.AddTransient<ITrailObstaclesService, TrailObstaclesService>();
         services.AddTransient<IFacilityService, FacilityService>();
+        services.AddTransient<HikeShareDistributor>();
         services.AddTransient<IHikeShareService, HikeShareService>();
         services.AddTransient<IHikeShareRecipientService, HikeShareRecipientService>();
         services.AddTransient<IFriendService, FriendService>();
         services.AddTransient<IUserBlockService, UserBlockService>();
         services.AddTransient<IAdminUserService, AdminUserService>();
+        services.AddTransient<IUserKeycloakMappingService, UserKeycloakMappingService>();
+        services.AddTransient<IUserKeycloakMappingRepository, UserKeycloakMappingRepository>();
         services.AddTransient<ICityAreaService, CityAreaService>();
         services.AddTransient<ITrailImportAnalysisService, TrailImportAnalysisService>();
         services.AddTransient<ITrailImportService, TrailImportService>();
@@ -159,6 +164,8 @@ public static class ServiceCollectionExtensions
 
         // Factories
         services.AddTransient<TrailResponseFactory>();
+        services.AddSingleton<TrailContributionRanking>();
+        services.AddMemoryCache();
         services.AddTransient<UserResponseFactory>();
         services.AddTransient<ReviewResponseFactory>();
         services.AddTransient<HikeResponseFactory>();

@@ -22,9 +22,15 @@ public class StigViddDbContext(DbContextOptions<StigViddDbContext> options) : Db
     public DbSet<FacilityImage> FacilityImages { get; set; }
     public DbSet<HikeShare> HikeShares { get; set; }
     public DbSet<HikeImage> HikeImages { get; set; }
+    public DbSet<HikeSubmission> HikeSubmissions { get; set; }
+    public DbSet<HikeSubmissionImage> HikeSubmissionImages { get; set; }
+    public DbSet<TrailContribution> TrailContributions { get; set; }
+    public DbSet<ConsentText> ConsentTexts { get; set; }
+    public DbSet<TrailContributionLike> TrailContributionLikes { get; set; }
     public DbSet<FriendRequest> FriendRequests { get; set; }
     public DbSet<UserBlock> UserBlocks { get; set; }
     public DbSet<UserBan> UserBans { get; set; }
+    public DbSet<UserKeycloakMapping> UserKeycloakMappings { get; set; }
     public DbSet<UserPushToken> UserPushTokens { get; set; }
     public DbSet<CityArea> CityAreas { get; set; }
     public DbSet<TrailSourceLink> TrailSourceLinks { get; set; }
@@ -84,6 +90,14 @@ public class StigViddDbContext(DbContextOptions<StigViddDbContext> options) : Db
                 .Property(p => p.FeatureGeometry)
                 .HasColumnType("geometry(LineString, 4326)");
 
+            modelBuilder.Entity<HikeSubmission>()
+                .Property(s => s.GeoPath)
+                .HasColumnType("geometry(LineString, 4326)");
+
+            modelBuilder.Entity<HikeSubmission>()
+                .Property(s => s.OriginalGeoPath)
+                .HasColumnType("geometry(LineString, 4326)");
+
             // Proximity queries are the reason these are geometry columns at all; without a
             // GIST index they are sequential scans. Npgsql-only: "gist" is not an index
             // method SQLite understands, and the test schema comes from EnsureCreated().
@@ -118,6 +132,14 @@ public class StigViddDbContext(DbContextOptions<StigViddDbContext> options) : Db
 
         modelBuilder.Entity<TrailImportProposal>()
             .Property(p => p.FeatureGeometry)
+            .HasAnnotation("Sqlite:Srid", 4326);
+
+        modelBuilder.Entity<HikeSubmission>()
+            .Property(s => s.GeoPath)
+            .HasAnnotation("Sqlite:Srid", 4326);
+
+        modelBuilder.Entity<HikeSubmission>()
+            .Property(s => s.OriginalGeoPath)
             .HasAnnotation("Sqlite:Srid", 4326);
     }
 }

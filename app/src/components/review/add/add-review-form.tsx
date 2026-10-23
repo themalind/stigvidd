@@ -6,20 +6,20 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { showErrorAtom } from "@/atoms/snackbar-atoms";
+import CountedTextInput from "@/components/counted-text-input";
+import InfoHeading from "@/components/info-heading";
 import { asTranslationKey } from "@/i18n";
 import { BORDER_RADIUS } from "@/constants/constants";
 import { useCreateReview } from "@/hooks/review/useCreateReview";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useSetAtom } from "jotai";
 import { useState } from "react";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { StyleSheet, View } from "react-native";
-import { Button, Divider, Text, TextInput, useTheme } from "react-native-paper";
+import { Button, Divider, Text, useTheme } from "react-native-paper";
 import StarRating from "react-native-star-rating-widget";
 import { z } from "zod";
-import AlertDialog from "../../alert-dialog";
 import AddReviewImages from "./add-review-images";
 
 interface ReviewFormProps {
@@ -40,9 +40,6 @@ type FormFields = z.infer<typeof newReviewForm>;
 export default function AddReviewForm({ trailIdentifier, onSuccess }: ReviewFormProps) {
   const { t } = useTranslation();
   const theme = useTheme();
-  const [showImageInfoModal, setShowImageInfoModal] = useState(false);
-  const [showStarInfoModal, setShowStarInfoModal] = useState(false);
-  const [showReviewInfoModal, setShowReviewInfoModal] = useState(false);
   const [reviewImages, setReviewImages] = useState<string[]>([]);
   const setError = useSetAtom(showErrorAtom);
   const createReviewMutation = useCreateReview(onSuccess);
@@ -77,28 +74,23 @@ export default function AddReviewForm({ trailIdentifier, onSuccess }: ReviewForm
   return (
     <View style={s.formContainer}>
       <Divider />
-      <View style={s.rowGap}>
-        <Text>{t("review.rating")}</Text>
-        <MaterialCommunityIcons
-          name="information-slab-circle-outline"
-          size={24}
-          color={theme.colors.onSurface}
-          onPress={() => setShowStarInfoModal(true)}
-        />
-        <AlertDialog
-          visible={showStarInfoModal}
-          onDismiss={() => setShowStarInfoModal(false)}
-          title={t("review.ratingTitle")}
-          infoText={[t("review.ratingQuestion"), t("review.ratingInstruction")]}
-          backgroundColor={theme.colors.background}
-          textColor={theme.colors.onBackground}
-        />
-      </View>
+      <InfoHeading
+        label={t("review.rating")}
+        infoTitle={t("review.ratingTitle")}
+        infoText={[t("review.ratingQuestion"), t("review.ratingInstruction")]}
+      />
       <View>
         <Controller
           control={control}
           render={({ field: { onChange, value } }) => (
-            <StarRating rating={value} onChange={onChange} color={theme.colors.onSurface} starSize={25} step="full" />
+            <StarRating
+              rating={value}
+              // Library bug: step="full" doesn't clamp, so a drag past the last star yields 6+. keep-comment: workaround
+              onChange={(rating) => onChange(Math.min(5, rating))}
+              color={theme.colors.onSurface}
+              starSize={25}
+              step="full"
+            />
           )}
           name="rating"
         />
@@ -107,49 +99,25 @@ export default function AddReviewForm({ trailIdentifier, onSuccess }: ReviewForm
         )}
       </View>
       <Divider />
-      <View style={s.rowGap}>
-        <Text>{t("review.addImage")}</Text>
-        <MaterialCommunityIcons
-          name="information-slab-circle-outline"
-          size={24}
-          color={theme.colors.onSurface}
-          onPress={() => setShowImageInfoModal(true)}
-        />
-        <AlertDialog
-          visible={showImageInfoModal}
-          onDismiss={() => setShowImageInfoModal(false)}
-          title={t("review.addImageTitle")}
-          infoText={[t("review.addImageInfo1"), t("review.addImageInfo2"), t("review.addImageInfo3")]}
-          backgroundColor={theme.colors.background}
-          textColor={theme.colors.onBackground}
-        />
-      </View>
+      <InfoHeading
+        label={t("review.addImage")}
+        infoTitle={t("review.addImageTitle")}
+        infoText={[t("review.addImageInfo1"), t("review.addImageInfo2"), t("review.addImageInfo3")]}
+      />
       <View style={s.rowGap}>
         <AddReviewImages setReviewImages={setReviewImages} />
       </View>
       <Divider />
       <View style={s.gap}>
-        <View style={s.rowGap}>
-          <Text>{t("review.writeReview")}</Text>
-          <MaterialCommunityIcons
-            name="information-slab-circle-outline"
-            size={24}
-            color={theme.colors.onSurface}
-            onPress={() => setShowReviewInfoModal(true)}
-          />
-          <AlertDialog
-            visible={showReviewInfoModal}
-            onDismiss={() => setShowReviewInfoModal(false)}
-            title={t("review.writeReviewTitle")}
-            infoText={[t("review.writeReviewInfo1"), t("review.writeReviewInfo2")]}
-            backgroundColor={theme.colors.background}
-            textColor={theme.colors.onBackground}
-          />
-        </View>
+        <InfoHeading
+          label={t("review.writeReview")}
+          infoTitle={t("review.writeReviewTitle")}
+          infoText={[t("review.writeReviewInfo1"), t("review.writeReviewInfo2")]}
+        />
         <Controller
           control={control}
           render={({ field: { onChange, onBlur, value } }) => (
-            <TextInput
+            <CountedTextInput
               testID="review-text"
               error={!!errors.trailReview}
               onBlur={onBlur}

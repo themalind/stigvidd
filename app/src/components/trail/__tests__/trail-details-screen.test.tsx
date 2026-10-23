@@ -33,6 +33,7 @@ jest.mock("expo-router", () => ({
 
 // The screen composes parts that each have their own suite or queries, so they are stood in for here.
 jest.mock("@/components/trail/image-gallery", () => "ImageGallery");
+jest.mock("@/components/trail/trail-contribution-bar", () => "TrailContributionBar");
 jest.mock("@/components/trail/trail-info", () => "TrailInfo");
 jest.mock("@/components/trail/trail-description", () => "TrailDescription");
 jest.mock("@/components/trail/trail-misc-section/trail-misc-accordion", () => "TrailMiscInfo");
@@ -81,18 +82,21 @@ const COORDINATES = JSON.stringify([
 ]);
 
 async function show() {
-  const rendered = renderWithProviders(<TrailDetailsScreen followRoute="/(tabs)/(map)/follow/[identifier]" />);
+  const rendered = renderWithProviders(
+    <TrailDetailsScreen followRoute="/(tabs)/(map)/follow/[identifier]" guideRoute="/(tabs)/(map)/guide" />,
+  );
   await flushUntil(() => screen.queryByText("Kvarnstigen"));
   return rendered;
 }
+
+// keep-comment: guardedNavigate keeps the last navigation in module state, so the clock must keep rising across tests
+let clock = 6_000_000;
 
 beforeEach(() => {
   jest.clearAllMocks();
   mockGetTrail.mockResolvedValue(trail());
   mockGetObstacles.mockResolvedValue([]);
   mockGetCoordinates.mockResolvedValue({ coordinates: COORDINATES });
-  // guardedNavigate debounces on module state for 500 ms.
-  let clock = 6_000_000;
   jest.spyOn(Date, "now").mockImplementation(() => (clock += 1000));
 });
 
@@ -102,7 +106,9 @@ afterEach(() => {
 
 it("waits for the trail before drawing anything else", () => {
   mockGetTrail.mockReturnValue(new Promise(() => {}));
-  renderWithProviders(<TrailDetailsScreen followRoute="/(tabs)/(map)/follow/[identifier]" />);
+  renderWithProviders(
+    <TrailDetailsScreen followRoute="/(tabs)/(map)/follow/[identifier]" guideRoute="/(tabs)/(map)/guide" />,
+  );
 
   expect(screen.queryByText("Kvarnstigen")).toBeNull();
   expect(screen.queryByText("Tillbaka till toppen")).toBeNull();
@@ -110,7 +116,9 @@ it("waits for the trail before drawing anything else", () => {
 
 it("offers a retry instead of a half-empty page when the trail cannot be fetched", async () => {
   mockGetTrail.mockRejectedValue(new Error("500"));
-  renderWithProviders(<TrailDetailsScreen followRoute="/(tabs)/(map)/follow/[identifier]" />);
+  renderWithProviders(
+    <TrailDetailsScreen followRoute="/(tabs)/(map)/follow/[identifier]" guideRoute="/(tabs)/(map)/guide" />,
+  );
   await flushUntil(() => screen.queryByText("Försök igen"));
 
   expect(screen.queryByText("Kvarnstigen")).toBeNull();
@@ -128,6 +136,26 @@ it("shows the trail once it arrives", async () => {
 
   expect(screen.getByText("Kvarnstigen")).toBeTruthy();
   expect(screen.getByText("Tillbaka till toppen")).toBeTruthy();
+});
+
+it("puts who shared a walk from a user below the images and above the trail info", async () => {
+  mockGetTrail.mockResolvedValue(
+    trail({ contribution: { submitterNickName: "Vandrarvennen", publishedAt: "2026-09-02T10:00:00Z", likeCount: 2 } }),
+  );
+  await show();
+
+  const root = screen.UNSAFE_root;
+  const order = root
+    .findAll((node: typeof root) => ["ImageGallery", "TrailContributionBar", "TrailInfo"].includes(String(node.type)))
+    .map((node: typeof root) => node.type);
+  expect(order).toEqual(["ImageGallery", "TrailContributionBar", "TrailInfo"]);
+});
+
+it("leaves the byline out for a curated trail", async () => {
+  await show();
+
+  const root = screen.UNSAFE_root;
+  expect(root.findAll((node: typeof root) => node.type === "TrailContributionBar")).toHaveLength(0);
 });
 
 // The map waits for the geometry and the end of the screen transition; a MapView built during
@@ -151,6 +179,16 @@ it("draws the map once the route is in, and opens the follow view in this stack"
     pathname: "/(tabs)/(map)/follow/[identifier]",
     params: { identifier: "trail-1" },
   });
+});
+
+it("opens the nature guide in this stack", async () => {
+  await show();
+
+  const root = screen.UNSAFE_root;
+  const misc = root.find((node: typeof root) => node.type === "TrailMiscInfo");
+  misc.props.onOpenGuide();
+
+  expect(mockNavigate).toHaveBeenCalledWith("/(tabs)/(map)/guide");
 });
 
 // The warning is the only sign a trail is blocked, and it stays away when nothing is reported.

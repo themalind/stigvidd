@@ -5,6 +5,7 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
+import { compareSv } from "@/utils/compare-sv";
 import { useMemo, useState } from "react";
 
 export type HikeSortOption =
@@ -30,7 +31,7 @@ export interface HikeAccessors<T> {
   length: (h: T) => number;
   duration: (h: T) => number; // ms
   date: (h: T) => string; // ISO
-  sharedBy?: (h: T) => string;
+  sharedBy?: (h: T) => string | null;
 }
 
 /** Upper bounds and step sizes for the range sliders. Duration is in minutes. */
@@ -52,7 +53,8 @@ export const useHikeFilters = <T>(hikes: T[] | undefined, accessors: HikeAccesso
   const sharedByNames = useMemo(() => {
     const read = accessors.sharedBy;
     if (!hikes || !read) return [];
-    return [...new Set(hikes.map(read))].sort((a, b) => a.localeCompare(b, "sv"));
+    const names = hikes.map(read).filter((name): name is string => name !== null);
+    return [...new Set(names)].sort(compareSv);
   }, [hikes, accessors]);
 
   // Slider bounds follow the collection, so the thumbs spread across the whole track
@@ -88,7 +90,7 @@ export const useHikeFilters = <T>(hikes: T[] | undefined, accessors: HikeAccesso
       result = result.filter(
         (h) =>
           accessors.name(h).toLowerCase().includes(query) ||
-          (accessors.sharedBy?.(h).toLowerCase().includes(query) ?? false),
+          (accessors.sharedBy?.(h)?.toLowerCase().includes(query) ?? false),
       );
     }
 
@@ -106,10 +108,10 @@ export const useHikeFilters = <T>(hikes: T[] | undefined, accessors: HikeAccesso
 
     switch (sortBy) {
       case "name-asc":
-        result.sort((a, b) => accessors.name(a).localeCompare(accessors.name(b), "sv"));
+        result.sort((a, b) => compareSv(accessors.name(a), accessors.name(b)));
         break;
       case "name-desc":
-        result.sort((a, b) => accessors.name(b).localeCompare(accessors.name(a), "sv"));
+        result.sort((a, b) => compareSv(accessors.name(b), accessors.name(a)));
         break;
       case "date-asc":
         result.sort((a, b) => Date.parse(accessors.date(a)) - Date.parse(accessors.date(b)));

@@ -114,7 +114,7 @@ public class HikeShareRecipientController : StigViddController
             return Unauthorized();
         }
 
-        var result = await _hikeShareRecipientService.ReshareSharedHikeAsync(request.HikeIdentifier, userResponse.Identifier, request.ReShareToName, ctoken);
+        var result = await _hikeShareRecipientService.ReshareSharedHikeAsync(request.HikeIdentifier, userResponse.Identifier, request.ReShareToNames, ctoken);
 
         if (!result.Success && result.Message != null)
         {

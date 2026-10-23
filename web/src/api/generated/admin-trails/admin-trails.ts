@@ -26,6 +26,7 @@ import type {
 
 import type {
   AdminTrailListItemResponse,
+  AdminTrailPathResponse,
   AdminTrailsAddTrailImagesBody,
   AdminTrailsSetTrailSymbolBody,
   SetTrailVerifiedRequest,
@@ -285,7 +286,71 @@ export function useAdminTrailsUpdateTrail<TData = Awaited<ReturnType<typeof admi
 
 
 
-export const getAdminTrailsSetTrailVerifiedUrl = (identifier: string,) => {
+export const getAdminTrailsGetTrailPathUrl = (identifier: string,) => {
+
+
+
+
+  return `/api/v1/admin/trails/${identifier}/path`
+}
+
+export const adminTrailsGetTrailPath = async (identifier: string, options?: RequestInit): Promise<AdminTrailPathResponse> => {
+
+  return customFetch<AdminTrailPathResponse>(getAdminTrailsGetTrailPathUrl(identifier),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getAdminTrailsGetTrailPathMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminTrailsGetTrailPath>>, TError,{identifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof adminTrailsGetTrailPath>>, TError,{identifier: string}, TContext> => {
+
+const mutationKey = ['adminTrailsGetTrailPath'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminTrailsGetTrailPath>>, {identifier: string}> = (props) => {
+          const {identifier} = props ?? {};
+
+          return  adminTrailsGetTrailPath(identifier,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AdminTrailsGetTrailPathMutationResult = NonNullable<Awaited<ReturnType<typeof adminTrailsGetTrailPath>>>
+
+    export type AdminTrailsGetTrailPathMutationError = unknown
+
+    export const useAdminTrailsGetTrailPath = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminTrailsGetTrailPath>>, TError,{identifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof adminTrailsGetTrailPath>>,
+        TError,
+        {identifier: string},
+        TContext
+      > => {
+      return useMutation(getAdminTrailsGetTrailPathMutationOptions(options), queryClient);
+    }
+    export const getAdminTrailsSetTrailVerifiedUrl = (identifier: string,) => {
 
 
 

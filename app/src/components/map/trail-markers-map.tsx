@@ -30,6 +30,7 @@ import {
   useCurrentPosition,
   type ViewStateChangeEvent,
 } from "@maplibre/maplibre-react-native";
+import { TRAIL_MARKERS_STALE_TIME } from "@/constants/cache";
 import { onlineManager, useQuery } from "@tanstack/react-query";
 import { useSetAtom } from "jotai";
 import { RefObject, useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -37,7 +38,7 @@ import { useTranslation } from "react-i18next";
 import { NativeSyntheticEvent, StyleProp, StyleSheet, View, ViewStyle } from "react-native";
 import { ActivityIndicator, Text, useTheme } from "react-native-paper";
 import Map from "./map";
-import { HIGHLIGHT_MARKER_COLORS, MARKER_COLORS, type MarkerColors } from "./marker-styles";
+import { CONTRIBUTION_MARKER_COLORS, HIGHLIGHT_MARKER_COLORS, MARKER_COLORS, type MarkerColors } from "./marker-styles";
 
 type FacilityTypeValue = (typeof FacilityType)[keyof typeof FacilityType];
 
@@ -77,6 +78,10 @@ const DEFAULT_VIEW_STATE: InitialViewState = { center: BORAS_CENTER, zoom: 9.5 }
 // Keep points clustered up to a high zoom so overlapping trailheads stay a single
 // tappable cluster instead of un-tappable stacked individual pins.
 const CLUSTER_MAX_ZOOM = 16;
+// keep-comment: a cluster of user walks only is drawn in their colour; a mixed one stays a trail cluster
+const TRAIL_CLUSTER_PROPERTIES = {
+  curatedCount: ["+", ["case", ["==", ["get", "isContribution"], true], 0, 1]],
+} as const;
 // Small clusters open the carousel directly — they're usually trails sharing a
 // trailhead that won't separate usefully by zooming. Larger, genuinely separable
 // clusters zoom in to break apart instead.
@@ -244,15 +249,15 @@ export default function TrailMarkersMap({
   const { data: trailMarkers, isError: trailMarkersError } = useQuery({
     queryKey: ["trails", "markers"],
     queryFn: getTrailMarkers,
-    enabled: filter.trails,
-    staleTime: 5 * 60 * 1000,
+    enabled: filter.trails || filter.contributions,
+    staleTime: TRAIL_MARKERS_STALE_TIME,
   });
 
   const { data: facilities, isError: facilitiesError } = useQuery({
     queryKey: ["facilities", "markers"],
     queryFn: getFacilityMarkers,
     enabled: filter.firePits || filter.shelters,
-    staleTime: 5 * 60 * 1000,
+    staleTime: TRAIL_MARKERS_STALE_TIME,
   });
 
   // Surface load failures without blanking the map: keep whatever tiles/markers
@@ -265,9 +270,11 @@ export default function TrailMarkersMap({
   }, [trailMarkersError, facilitiesError, showError, t]);
 
   const trailFC = useMemo(() => {
-    const markers = (trailMarkers ?? []).filter((m) => !filter.accessibility || m.isAccessible);
+    const markers = (trailMarkers ?? []).filter(
+      (m) => (m.isContribution ? filter.contributions : filter.trails) && (!filter.accessibility || m.isAccessible),
+    );
     return featureCollectionFromMarkers(markers);
-  }, [trailMarkers, filter.accessibility]);
+  }, [trailMarkers, filter.trails, filter.contributions, filter.accessibility]);
 
   const firePitFC = useMemo(() => {
     const items = (facilities ?? []).filter(
@@ -384,7 +391,7 @@ export default function TrailMarkersMap({
           </Marker>
         )}
 
-        {filter.trails && (
+        {(filter.trails || filter.contributions) && (
           <GeoJSONSource
             id="trails"
             ref={trailSourceRef}
@@ -392,6 +399,7 @@ export default function TrailMarkersMap({
             cluster
             clusterRadius={60}
             clusterMaxZoom={CLUSTER_MAX_ZOOM}
+            clusterProperties={TRAIL_CLUSTER_PROPERTIES}
             onPress={handleTrailPress}
           >
             <Layer
@@ -399,7 +407,12 @@ export default function TrailMarkersMap({
               id="trail-clusters"
               filter={HAS_COUNT}
               paint={{
-                "circle-color": MARKER_COLORS.trails.fill,
+                "circle-color": [
+                  "case",
+                  ["==", ["get", "curatedCount"], 0],
+                  CONTRIBUTION_MARKER_COLORS.fill,
+                  MARKER_COLORS.trails.fill,
+                ],
                 "circle-radius": [
                   "step",
                   ["get", "point_count"],
@@ -429,7 +442,12 @@ export default function TrailMarkersMap({
               id="trail-points"
               filter={NO_COUNT}
               paint={{
-                "circle-color": MARKER_COLORS.trails.fill,
+                "circle-color": [
+                  "case",
+                  ["==", ["get", "isContribution"], true],
+                  CONTRIBUTION_MARKER_COLORS.fill,
+                  MARKER_COLORS.trails.fill,
+                ],
                 "circle-radius": POINT_RADIUS,
                 "circle-stroke-width": 2,
                 "circle-stroke-color": MARKER_COLORS.trails.stroke,

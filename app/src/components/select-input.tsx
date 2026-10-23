@@ -56,9 +56,13 @@ export default function SelectInput({ selectedValue, onValueChange, options, pla
           </View>
 
           {Platform.OS === "ios" ? (
-            <Picker selectedValue={selectedValue} onValueChange={(val) => onValueChange(String(val))}>
+            <Picker
+              selectedValue={selectedValue}
+              onValueChange={(val) => onValueChange(String(val))}
+              itemStyle={{ color: theme.colors.onSurface }}
+            >
               {options.map((opt) => (
-                <Picker.Item key={opt.value} label={opt.label} value={opt.value} />
+                <Picker.Item key={opt.value} label={opt.label} value={opt.value} color={theme.colors.onSurface} />
               ))}
             </Picker>
           ) : (

@@ -13,6 +13,8 @@ interface ImportMetaEnv {
   // a login password — it is inlined into the public bundle. See services/telemetry.ts.
   readonly VITE_OO_LOGS_URL?: string;
   readonly VITE_OO_LOGS_TOKEN?: string;
+  // keep-comment: optional; without it the submission map falls back to OpenStreetMap and has no satellite view
+  readonly VITE_MAPTILER_KEY?: string;
 }
 
 interface ImportMeta {

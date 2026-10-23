@@ -52,7 +52,7 @@ dependencies. What it means in practice:
   Treat a staging ingest token as production-grade, and never ship a login password.
 - **Staging's `db` never holds a `keycloak` database.** `db/init/02-keycloak-db.sql` still
   creates an empty one; nothing uses it. The admin export from staging simply contains no
-  `keycloak.dump` — [`DataTransferService`](backend/Core/Services/DataTransferService.cs)
+  `keycloak.dump` — [`DataTransferService`](backend/Core/Services/DataTransfer/DataTransferService.cs)
   skips it best-effort, so export/import still works.
 
 > ### The web image cannot be shared with production
@@ -233,6 +233,11 @@ Then:
   redirect URIs too is harmless, but do not expect them to fix a failing login.
 - Create the realm role **`stigvidd-admin`** (the API's `Authorization:AdminRole`; the admin web requires it) and grant it to whoever needs the migration page.
 - **Generate a new secret for `stigvidd-admin-api`.** Do not reuse production's.
+- Give `stigvidd-admin-api`'s service account the `realm-management` role **`manage-users`**
+  (it already needs it to create users). The migration page's **User mapping** card also
+  searches this realm's users, which needs it too. Mappings made there are kept in the
+  database and re-applied after every import, so an anonymized archive keeps the same
+  people able to sign in with their staging credentials.
 - Configure **Realm settings → Email** for this realm if you want Keycloak's own admin-console
   mail to work: host `mail.stigvidd.se`, port 587, StartTLS, authenticating as
   `SMTP_NOREPLY_USER` / `SMTP_NOREPLY_PASSWORD`. Realm SMTP is per-realm config stored in the

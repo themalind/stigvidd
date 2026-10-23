@@ -114,6 +114,11 @@ export default function ProfilePageScreen() {
           icon={<MaterialCommunityIcons name="map-legend" size={30} color={theme.colors.onSurfaceVariant} />}
         />
         <ProfileMenuItem
+          text={t("profile.myPublishedHikes")}
+          route="/(tabs)/(profile-stack)/user/published-hikes"
+          icon={<MaterialCommunityIcons name="upload" size={30} color={theme.colors.onSurfaceVariant} />}
+        />
+        <ProfileMenuItem
           text={t("profile.sharedHikes")}
           route="/(tabs)/(profile-stack)/user/shared-hikes"
           icon={<Fontisto name="map" size={26} color={theme.colors.onSurfaceVariant} />}

@@ -29,7 +29,10 @@ public class BannedUserWriteTests : IClassFixture<StigViddWebApplicationFactory<
         "POST /api/v1/Users/favorites",
         "POST /api/v1/Users/wishlist",
         "DELETE /api/v1/Hikes/{hikeIdentifier}",
+        "DELETE /api/v1/Hikes/{hikeIdentifier}/images/{imageIdentifier}",
         "POST /api/v1/Hikes",
+        "DELETE /api/v1/HikeSubmissions/{identifier}",
+        "DELETE /api/v1/Trails/{identifier}/like",
 
         // Push tokens are plumbing: the device registers one on every start, and a banned
         // account still gets the notifications it is subscribed to.

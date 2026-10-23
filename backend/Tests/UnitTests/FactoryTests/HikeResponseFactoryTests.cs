@@ -4,12 +4,13 @@
 using Core.Factories;
 using AwesomeAssertions;
 using Infrastructure.Data.Entities;
+using Infrastructure.Enums;
 
 namespace UnitTests.FactoryTests;
 
 public class HikeResponseFactoryTests
 {
-    private static HikeResponseFactory BuildFactory() => new();
+    private static HikeResponseFactory BuildFactory() => UnitTests.Utilities.Stubs.HikeResponseFactory();
 
     [Fact]
     public void Create_MapsAllFieldsCorrectly()
@@ -71,5 +72,22 @@ public class HikeResponseFactoryTests
         result.GettingThere.Should().BeNull();
         result.ParkingInfo.Should().BeNull();
         result.Description.Should().BeNull();
+    }
+
+    [Fact]
+    public void CreateImages_LeavesOutAnImageHiddenByAReport()
+    {
+        // Arrange
+        var images = new List<HikeImage>
+        {
+            new() { Identifier = "visible", ImageUrl = "hikes/a.jpg" },
+            new() { Identifier = "hidden", ImageUrl = "hikes/b.jpg", ModerationState = ModerationState.HiddenPendingReview },
+        };
+
+        // Act
+        var result = HikeResponseFactory.CreateImages("https://media.example/", images);
+
+        // Assert
+        result.Should().ContainSingle().Which.Identifier.Should().Be("visible");
     }
 }

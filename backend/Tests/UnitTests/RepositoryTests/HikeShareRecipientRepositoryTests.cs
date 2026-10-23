@@ -218,37 +218,6 @@ public class HikeShareRecipientRepositoryTests : TestBase
         result.IsSuccess.Should().BeTrue();
     }
 
-    [Fact]
-    public async Task ReshareSharedHikeAsync_WhenValid_ReturnsSuccess()
-    {
-        // Arrange — add a new share: Hike6 shared with User2 by User5
-        var repo = new HikeShareRecipientRepository(CreateSeededFactory(), NullLogger<HikeShareRecipientRepository>.Instance);
-        var hikeShare = new HikeShare { HikeId = 6, SharedById = 5, SharedWithId = 2 };
-
-        // Act
-        var result = await repo.ReshareSharedHikeAsync(hikeShare, TestContext.Current.CancellationToken);
-
-        // Assert
-        result.IsSuccess.Should().BeTrue();
-    }
-
-    [Fact]
-    public async Task ReshareSharedHikeAsync_WhenAdded_IsDetectableAsPendingShare()
-    {
-        // Arrange — reshare creates a Pending share; the recipient must accept before it becomes Accepted
-        var factory = CreateSeededFactory();
-        var repo = new HikeShareRecipientRepository(factory, NullLogger<HikeShareRecipientRepository>.Instance);
-        var hikeShare = new HikeShare { HikeId = 6, SharedById = 5, SharedWithId = 2 };
-
-        // Act
-        await repo.ReshareSharedHikeAsync(hikeShare, TestContext.Current.CancellationToken);
-        var verify = await repo.GetPendingSharesForUserAsync(User2Id, [], hs => hs.HikeId, TestContext.Current.CancellationToken);
-
-        // Assert
-        verify.IsSuccess.Should().BeTrue();
-        verify.Value.Should().Contain(Hike6Id);
-    }
-
     // GetPendingSharesForUserAsync
 
     [Fact]

@@ -6,6 +6,7 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import SelectInput from "@/components/select-input";
+import { AppDarkTheme } from "@/constants/theme";
 import { renderWithProviders } from "@/test/render";
 import { Picker } from "@react-native-picker/picker";
 import { fireEvent, screen } from "@testing-library/react-native";
@@ -68,6 +69,20 @@ it("hands iOS a wheel carrying every option", () => {
   const picker = screen.UNSAFE_getByType(Picker);
   expect(picker.props.selectedValue).toBe("Boras");
   expect(picker.props.children).toHaveLength(3);
+});
+
+it("colours the iOS wheel from the app theme, not the phone's", () => {
+  renderWithProviders(<SelectInput selectedValue="Boras" onValueChange={onValueChange} options={options} />, {
+    theme: AppDarkTheme,
+  });
+
+  fireEvent.press(screen.getByText("Borås"));
+
+  const picker = screen.UNSAFE_getByType(Picker);
+  expect(picker.props.itemStyle).toEqual({ color: AppDarkTheme.colors.onSurface });
+  for (const item of picker.props.children) {
+    expect(item.props.color).toBe(AppDarkTheme.colors.onSurface);
+  }
 });
 
 it("gives Android rows instead of a picker", () => {

@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.Routing.Patterns;
 using Microsoft.Extensions.Logging;
-using StigviddAPI.Extensions;
+using StigviddAPI.Middleware;
 
 namespace UnitTests.LoggingTests;
 

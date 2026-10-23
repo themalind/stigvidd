@@ -147,6 +147,7 @@ public class StigViddWebApplicationFactory<TProgram>
             services.AddSingleton(mailSender.Object);
 
             services.RemoveAll<IDbMigrationRunner>();
+            services.AddSingleton(Mock.Of<IDbMigrationRunner>());
 
             // Their startup runs race SeedDatabase on the shared in-memory connection.
             var startupServices = services.Where(d =>

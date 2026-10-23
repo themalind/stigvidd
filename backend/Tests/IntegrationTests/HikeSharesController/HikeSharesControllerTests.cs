@@ -119,7 +119,7 @@ public class HikeSharesControllerTests : IClassFixture<StigViddWebApplicationFac
     {
         // Arrange
         var client = _factory.CreateClient();
-        var request = new HikeShareRequest { HikeIdentifier = Hike1Identifier, SharedWithName = VandrarVennenNickName };
+        var request = new HikeShareRequest { HikeIdentifier = Hike1Identifier, SharedWithNames = [VandrarVennenNickName] };
 
         // Act
         var response = await client.PostAsJsonAsync($"{BASE_URL}/share", request, TestContext.Current.CancellationToken);
@@ -134,7 +134,7 @@ public class HikeSharesControllerTests : IClassFixture<StigViddWebApplicationFac
         // Arrange
         var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", UnknownUserUid);
-        var request = new HikeShareRequest { HikeIdentifier = Hike1Identifier, SharedWithName = VandrarVennenNickName };
+        var request = new HikeShareRequest { HikeIdentifier = Hike1Identifier, SharedWithNames = [VandrarVennenNickName] };
 
         // Act
         var response = await client.PostAsJsonAsync($"{BASE_URL}/share", request, TestContext.Current.CancellationToken);
@@ -149,7 +149,7 @@ public class HikeSharesControllerTests : IClassFixture<StigViddWebApplicationFac
         // Arrange
         var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", NaturElskarenUid);
-        var request = new HikeShareRequest { HikeIdentifier = Hike1Identifier, SharedWithName = "NoSuchUser" };
+        var request = new HikeShareRequest { HikeIdentifier = Hike1Identifier, SharedWithNames = ["NoSuchUser"] };
 
         // Act
         var response = await client.PostAsJsonAsync($"{BASE_URL}/share", request, TestContext.Current.CancellationToken);
@@ -159,18 +159,23 @@ public class HikeSharesControllerTests : IClassFixture<StigViddWebApplicationFac
     }
 
     [Fact]
-    public async Task ShareHike_WithNonFriend_ReturnsForbidden()
+    public async Task ShareHike_WithNonFriend_ReturnsNotFoundLikeAnUnknownName()
     {
         // Arrange
         var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", NaturElskarenUid);
-        var request = new HikeShareRequest { HikeIdentifier = Hike1Identifier, SharedWithName = VandrarVennenNickName };
+        var stranger = new HikeShareRequest { HikeIdentifier = Hike1Identifier, SharedWithNames = [VandrarVennenNickName] };
+        var unknown = new HikeShareRequest { HikeIdentifier = Hike1Identifier, SharedWithNames = ["NoSuchNickname"] };
 
         // Act
-        var response = await client.PostAsJsonAsync($"{BASE_URL}/share", request, TestContext.Current.CancellationToken);
+        var strangerResponse = await client.PostAsJsonAsync($"{BASE_URL}/share", stranger, TestContext.Current.CancellationToken);
+        var unknownResponse = await client.PostAsJsonAsync($"{BASE_URL}/share", unknown, TestContext.Current.CancellationToken);
 
-        // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        // Assert — the same answer, so a share request cannot tell whether a nickname exists
+        strangerResponse.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        unknownResponse.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        (await strangerResponse.Content.ReadAsStringAsync(TestContext.Current.CancellationToken))
+            .Should().Be(await unknownResponse.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
     }
 
     [Fact]
@@ -186,7 +191,7 @@ public class HikeSharesControllerTests : IClassFixture<StigViddWebApplicationFac
         await client.PutAsync($"{FRIENDS_URL}/requests/accept/{NaturElskarenIdentifier}", null, TestContext.Current.CancellationToken);
 
         // Act — VandrarVennen tries to share NaturElskaren's Hike1 with NaturElskaren
-        var request = new HikeShareRequest { HikeIdentifier = Hike1Identifier, SharedWithName = NaturElskarenNickName };
+        var request = new HikeShareRequest { HikeIdentifier = Hike1Identifier, SharedWithNames = [NaturElskarenNickName] };
         var response = await client.PostAsJsonAsync($"{BASE_URL}/share", request, TestContext.Current.CancellationToken);
 
         // Assert
@@ -207,11 +212,36 @@ public class HikeSharesControllerTests : IClassFixture<StigViddWebApplicationFac
 
         // Act — NaturElskaren shares Hike1 with VandrarVennen
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", NaturElskarenUid);
-        var request = new HikeShareRequest { HikeIdentifier = Hike1Identifier, SharedWithName = VandrarVennenNickName };
+        var request = new HikeShareRequest { HikeIdentifier = Hike1Identifier, SharedWithNames = [VandrarVennenNickName] };
         var response = await client.PostAsJsonAsync($"{BASE_URL}/share", request, TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
+    }
+
+    [Fact]
+    public async Task ShareHike_WithLegacySingleName_SharesWithThatFriend()
+    {
+        // Arrange — NaturElskaren sends request, VandrarVennen accepts
+        var client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", NaturElskarenUid);
+        await client.PostAsJsonAsync($"{FRIENDS_URL}/requests",
+            new SendFriendRequestRequest { ReceiverNickName = VandrarVennenNickName },
+            TestContext.Current.CancellationToken);
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", VandrarVennenUid);
+        await client.PutAsync($"{FRIENDS_URL}/requests/accept/{NaturElskarenIdentifier}", null, TestContext.Current.CancellationToken);
+
+        // Act — store builds 6 and 8 send one name in sharedWithName
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", NaturElskarenUid);
+        var request = new { hikeIdentifier = Hike1Identifier, sharedWithNames = (string[]?)null, sharedWithName = VandrarVennenNickName };
+        var response = await client.PostAsJsonAsync($"{BASE_URL}/share", request, TestContext.Current.CancellationToken);
+
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", VandrarVennenUid);
+        var pending = await client.GetAsync($"{RECIPIENT_URL}/incoming/{Hike1Identifier}", TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        pending.StatusCode.Should().Be(HttpStatusCode.OK);
     }
 
     [Theory]
@@ -230,7 +260,7 @@ public class HikeSharesControllerTests : IClassFixture<StigViddWebApplicationFac
 
         // Act — NaturElskaren shares Hike1, and VandrarVennen reads the pending invitation
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", NaturElskarenUid);
-        var request = new HikeShareRequest { HikeIdentifier = Hike1Identifier, SharedWithName = VandrarVennenNickName, AllowResharing = allowResharing };
+        var request = new HikeShareRequest { HikeIdentifier = Hike1Identifier, SharedWithNames = [VandrarVennenNickName], AllowResharing = allowResharing };
         var response = await client.PostAsJsonAsync($"{BASE_URL}/share", request, TestContext.Current.CancellationToken);
 
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", VandrarVennenUid);

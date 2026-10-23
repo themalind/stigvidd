@@ -65,9 +65,10 @@ export default function TrailObstacleModal({ visible, onDismiss, obstacles, trai
 
 const s = StyleSheet.create({
   modalContainerStyle: {
-    height: height * 0.9,
+    maxHeight: height * 0.9,
     borderRadius: BORDER_RADIUS,
     padding: 10,
+    paddingBottom: 15,
     gap: 15,
   },
   header: {
@@ -106,6 +107,7 @@ const s = StyleSheet.create({
     gap: 15,
   },
   scrollView: {
-    flex: 1,
+    flexGrow: 0,
+    flexShrink: 1,
   },
 });

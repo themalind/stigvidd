@@ -61,7 +61,7 @@ never calls:
 - `jpeg_write_marker` — reached only when writing an **EXIF APP1** marker, which is what
   `TestImages.JpegWithGps` does;
 - the **decompress** family — reached only on decode, which is what
-  [`ImageProcessingService.Process`](../../backend/Core/Services/ImageProcessingService.cs)
+  [`ImageProcessingService.Process`](../../backend/Core/Services/Media/ImageProcessingService.cs)
   does server-side. That is why `AddTrail_WithNoTrailImages_ShouldCreateTrail`, a test with
   no images in the request at all, failed with a 500.
 

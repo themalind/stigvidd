@@ -52,7 +52,7 @@ public class HikeSharesController : StigViddController
             return Unauthorized();
         }
 
-        var result = await _hikeShareService.ShareHikeAsync(userResponse.Identifier, hikeShareRequest.HikeIdentifier, hikeShareRequest.SharedWithName, hikeShareRequest.AllowResharing, ctoken);
+        var result = await _hikeShareService.ShareHikeAsync(userResponse.Identifier, hikeShareRequest.HikeIdentifier, hikeShareRequest.SharedWithNames, hikeShareRequest.AllowResharing, ctoken);
 
         if (!result.Success && result.Message != null)
         {

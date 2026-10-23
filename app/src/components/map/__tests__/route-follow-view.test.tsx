@@ -37,6 +37,15 @@ beforeEach(() => {
   mockUseLiveUserLocation.mockReturnValue(null);
 });
 
+it("edges the route line in white, underneath it", () => {
+  renderWithProviders(<RouteFollowView idPrefix="hike" path={PATH} />);
+
+  const ids = screen.queryAllByTestId("maplibre-Layer").map((node) => node.props.id);
+  expect(ids.indexOf("hike-route-line-casing")).toBeGreaterThan(-1);
+  expect(ids.indexOf("hike-route-line-casing")).toBeLessThan(ids.indexOf("hike-route-line"));
+  expect(layer("hike-route-line-casing")?.props.paint).toEqual({ "line-color": "rgb(255, 255, 255)", "line-width": 8 });
+});
+
 it("draws the route as a line and marks its start", () => {
   renderWithProviders(<RouteFollowView idPrefix="hike" path={PATH} />);
 

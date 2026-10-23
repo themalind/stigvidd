@@ -7,7 +7,7 @@ import { contactEmail, install, installLinks } from "@/content/site-content";
 import { detectPlatform, orderedPlatforms, type Platform } from "@/lib/install-links";
 
 const LABELS = {
-  ios: { label: "Hämta till iPhone", Icon: Apple },
+  ios: { label: "Testa på iPhone via TestFlight", Icon: Apple },
   android: { label: "Hämta till Android", Icon: Smartphone },
 } as const;
 

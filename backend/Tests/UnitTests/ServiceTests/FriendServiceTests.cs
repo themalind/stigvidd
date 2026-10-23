@@ -508,8 +508,8 @@ public class FriendServiceTests
     {
         // Arrange
         var userRepoMock = new Mock<IUserRepository>();
-        userRepoMock.Setup(r => r.GetUserByIdentifierAsync(It.IsAny<string>(), It.IsAny<Expression<Func<User, FriendService.SenderProjection>>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(RepositoryResult<FriendService.SenderProjection>.NotFound());
+        userRepoMock.Setup(r => r.GetUserByIdentifierAsync(It.IsAny<string>(), It.IsAny<Expression<Func<User, SenderProjection>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<SenderProjection>.NotFound());
 
         var service = Build(userRepositoryMock: userRepoMock);
 
@@ -527,10 +527,10 @@ public class FriendServiceTests
     {
         // Arrange
         var userRepoMock = new Mock<IUserRepository>();
-        userRepoMock.Setup(r => r.GetUserByIdentifierAsync(It.IsAny<string>(), It.IsAny<Expression<Func<User, FriendService.SenderProjection>>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(RepositoryResult<FriendService.SenderProjection>.Success(new FriendService.SenderProjection(1, "TestUser")));
-        userRepoMock.Setup(r => r.GetUserByNickNameAsync(It.IsAny<string>(), It.IsAny<Expression<Func<User, FriendService.ReceiverProjection>>>(), It.IsAny<CancellationToken>()))
-           .ReturnsAsync(RepositoryResult<FriendService.ReceiverProjection>.NotFound());
+        userRepoMock.Setup(r => r.GetUserByIdentifierAsync(It.IsAny<string>(), It.IsAny<Expression<Func<User, SenderProjection>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<SenderProjection>.Success(new SenderProjection(1, "TestUser")));
+        userRepoMock.Setup(r => r.GetUserByNickNameAsync(It.IsAny<string>(), It.IsAny<Expression<Func<User, ReceiverProjection>>>(), It.IsAny<CancellationToken>()))
+           .ReturnsAsync(RepositoryResult<ReceiverProjection>.NotFound());
 
         var service = Build(userRepositoryMock: userRepoMock);
 
@@ -549,10 +549,10 @@ public class FriendServiceTests
     {
         // Arrange
         var userRepoMock = new Mock<IUserRepository>();
-        userRepoMock.Setup(r => r.GetUserByIdentifierAsync(It.IsAny<string>(), It.IsAny<Expression<Func<User, FriendService.SenderProjection>>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(RepositoryResult<FriendService.SenderProjection>.Success(new FriendService.SenderProjection(1, "TestUser")));
-        userRepoMock.Setup(r => r.GetUserByNickNameAsync(It.IsAny<string>(), It.IsAny<Expression<Func<User, FriendService.ReceiverProjection>>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(RepositoryResult<FriendService.ReceiverProjection>.Success(new FriendService.ReceiverProjection(2, "receiver-id")));
+        userRepoMock.Setup(r => r.GetUserByIdentifierAsync(It.IsAny<string>(), It.IsAny<Expression<Func<User, SenderProjection>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<SenderProjection>.Success(new SenderProjection(1, "TestUser")));
+        userRepoMock.Setup(r => r.GetUserByNickNameAsync(It.IsAny<string>(), It.IsAny<Expression<Func<User, ReceiverProjection>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<ReceiverProjection>.Success(new ReceiverProjection(2, "receiver-id")));
 
         var friendRepoMock = new Mock<IFriendRepository>();
         friendRepoMock.Setup(r => r.SendRequestAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
@@ -576,10 +576,10 @@ public class FriendServiceTests
     {
         // Arrange
         var userRepoMock = new Mock<IUserRepository>();
-        userRepoMock.Setup(r => r.GetUserByIdentifierAsync(It.IsAny<string>(), It.IsAny<Expression<Func<User, FriendService.SenderProjection>>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(RepositoryResult<FriendService.SenderProjection>.Success(new FriendService.SenderProjection(1, "TestUser")));
-        userRepoMock.Setup(r => r.GetUserByNickNameAsync(It.IsAny<string>(), It.IsAny<Expression<Func<User, FriendService.ReceiverProjection>>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(RepositoryResult<FriendService.ReceiverProjection>.Success(new FriendService.ReceiverProjection(1, "same-user-id")));
+        userRepoMock.Setup(r => r.GetUserByIdentifierAsync(It.IsAny<string>(), It.IsAny<Expression<Func<User, SenderProjection>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<SenderProjection>.Success(new SenderProjection(1, "TestUser")));
+        userRepoMock.Setup(r => r.GetUserByNickNameAsync(It.IsAny<string>(), It.IsAny<Expression<Func<User, ReceiverProjection>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<ReceiverProjection>.Success(new ReceiverProjection(1, "same-user-id")));
 
         var service = Build(userRepositoryMock: userRepoMock);
 
@@ -598,10 +598,10 @@ public class FriendServiceTests
     {
         // Arrange
         var userRepoMock = new Mock<IUserRepository>();
-        userRepoMock.Setup(r => r.GetUserByIdentifierAsync(It.IsAny<string>(), It.IsAny<Expression<Func<User, FriendService.SenderProjection>>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(RepositoryResult<FriendService.SenderProjection>.Success(new FriendService.SenderProjection(1, "TestUser")));
-        userRepoMock.Setup(r => r.GetUserByNickNameAsync(It.IsAny<string>(), It.IsAny<Expression<Func<User, FriendService.ReceiverProjection>>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(RepositoryResult<FriendService.ReceiverProjection>.Success(new FriendService.ReceiverProjection(2, "receiver-id")));
+        userRepoMock.Setup(r => r.GetUserByIdentifierAsync(It.IsAny<string>(), It.IsAny<Expression<Func<User, SenderProjection>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<SenderProjection>.Success(new SenderProjection(1, "TestUser")));
+        userRepoMock.Setup(r => r.GetUserByNickNameAsync(It.IsAny<string>(), It.IsAny<Expression<Func<User, ReceiverProjection>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<ReceiverProjection>.Success(new ReceiverProjection(2, "receiver-id")));
 
         var friendRepoMock = new Mock<IFriendRepository>();
         friendRepoMock.Setup(r => r.FriendshipExistsAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
@@ -625,10 +625,10 @@ public class FriendServiceTests
     {
         // Arrange
         var userRepoMock = new Mock<IUserRepository>();
-        userRepoMock.Setup(r => r.GetUserByIdentifierAsync(It.IsAny<string>(), It.IsAny<Expression<Func<User, FriendService.SenderProjection>>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(RepositoryResult<FriendService.SenderProjection>.Success(new FriendService.SenderProjection(1, "TestUser")));
-        userRepoMock.Setup(r => r.GetUserByNickNameAsync(It.IsAny<string>(), It.IsAny<Expression<Func<User, FriendService.ReceiverProjection>>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(RepositoryResult<FriendService.ReceiverProjection>.Success(new FriendService.ReceiverProjection(2, "receiver-id")));
+        userRepoMock.Setup(r => r.GetUserByIdentifierAsync(It.IsAny<string>(), It.IsAny<Expression<Func<User, SenderProjection>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<SenderProjection>.Success(new SenderProjection(1, "TestUser")));
+        userRepoMock.Setup(r => r.GetUserByNickNameAsync(It.IsAny<string>(), It.IsAny<Expression<Func<User, ReceiverProjection>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<ReceiverProjection>.Success(new ReceiverProjection(2, "receiver-id")));
 
         var friendRepoMock = new Mock<IFriendRepository>();
         friendRepoMock.Setup(r => r.FriendshipExistsAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
@@ -654,10 +654,10 @@ public class FriendServiceTests
     {
         // Arrange
         var userRepoMock = new Mock<IUserRepository>();
-        userRepoMock.Setup(r => r.GetUserByIdentifierAsync(It.IsAny<string>(), It.IsAny<Expression<Func<User, FriendService.SenderProjection>>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(RepositoryResult<FriendService.SenderProjection>.Success(new FriendService.SenderProjection(1, "TestUser")));
-        userRepoMock.Setup(r => r.GetUserByNickNameAsync(It.IsAny<string>(), It.IsAny<Expression<Func<User, FriendService.ReceiverProjection>>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(RepositoryResult<FriendService.ReceiverProjection>.Success(new FriendService.ReceiverProjection(2, "receiver-id")));
+        userRepoMock.Setup(r => r.GetUserByIdentifierAsync(It.IsAny<string>(), It.IsAny<Expression<Func<User, SenderProjection>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<SenderProjection>.Success(new SenderProjection(1, "TestUser")));
+        userRepoMock.Setup(r => r.GetUserByNickNameAsync(It.IsAny<string>(), It.IsAny<Expression<Func<User, ReceiverProjection>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<ReceiverProjection>.Success(new ReceiverProjection(2, "receiver-id")));
 
         var friendRepoMock = new Mock<IFriendRepository>();
         friendRepoMock.Setup(r => r.FriendshipExistsAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
@@ -688,10 +688,10 @@ public class FriendServiceTests
     {
         // Arrange
         var userRepoMock = new Mock<IUserRepository>();
-        userRepoMock.Setup(r => r.GetUserByIdentifierAsync(It.IsAny<string>(), It.IsAny<Expression<Func<User, FriendService.SenderProjection>>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(RepositoryResult<FriendService.SenderProjection>.Success(new FriendService.SenderProjection(1, "TestUser")));
-        userRepoMock.Setup(r => r.GetUserByNickNameAsync(It.IsAny<string>(), It.IsAny<Expression<Func<User, FriendService.ReceiverProjection>>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(RepositoryResult<FriendService.ReceiverProjection>.Success(new FriendService.ReceiverProjection(2, "receiver-id")));
+        userRepoMock.Setup(r => r.GetUserByIdentifierAsync(It.IsAny<string>(), It.IsAny<Expression<Func<User, SenderProjection>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<SenderProjection>.Success(new SenderProjection(1, "TestUser")));
+        userRepoMock.Setup(r => r.GetUserByNickNameAsync(It.IsAny<string>(), It.IsAny<Expression<Func<User, ReceiverProjection>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<ReceiverProjection>.Success(new ReceiverProjection(2, "receiver-id")));
 
         var friendRepoMock = new Mock<IFriendRepository>();
         friendRepoMock.Setup(r => r.FriendshipExistsAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
@@ -714,8 +714,8 @@ public class FriendServiceTests
     {
         // Arrange
         var userRepoMock = new Mock<IUserRepository>();
-        userRepoMock.Setup(r => r.GetUserByIdentifierAsync(It.IsAny<string>(), It.IsAny<Expression<Func<User, FriendService.SenderProjection>>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(RepositoryResult<FriendService.SenderProjection>.Error());
+        userRepoMock.Setup(r => r.GetUserByIdentifierAsync(It.IsAny<string>(), It.IsAny<Expression<Func<User, SenderProjection>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<SenderProjection>.Error());
 
         var service = Build(userRepositoryMock: userRepoMock);
 
@@ -733,10 +733,10 @@ public class FriendServiceTests
     {
         // Arrange
         var userRepoMock = new Mock<IUserRepository>();
-        userRepoMock.Setup(r => r.GetUserByIdentifierAsync(It.IsAny<string>(), It.IsAny<Expression<Func<User, FriendService.SenderProjection>>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(RepositoryResult<FriendService.SenderProjection>.Success(new FriendService.SenderProjection(1, "TestUser")));
-        userRepoMock.Setup(r => r.GetUserByNickNameAsync(It.IsAny<string>(), It.IsAny<Expression<Func<User, FriendService.ReceiverProjection>>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(RepositoryResult<FriendService.ReceiverProjection>.Error());
+        userRepoMock.Setup(r => r.GetUserByIdentifierAsync(It.IsAny<string>(), It.IsAny<Expression<Func<User, SenderProjection>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<SenderProjection>.Success(new SenderProjection(1, "TestUser")));
+        userRepoMock.Setup(r => r.GetUserByNickNameAsync(It.IsAny<string>(), It.IsAny<Expression<Func<User, ReceiverProjection>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<ReceiverProjection>.Error());
 
         var service = Build(userRepositoryMock: userRepoMock);
 
@@ -754,10 +754,10 @@ public class FriendServiceTests
     {
         // Arrange
         var userRepoMock = new Mock<IUserRepository>();
-        userRepoMock.Setup(r => r.GetUserByIdentifierAsync(It.IsAny<string>(), It.IsAny<Expression<Func<User, FriendService.SenderProjection>>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(RepositoryResult<FriendService.SenderProjection>.Success(new FriendService.SenderProjection(1, "TestUser")));
-        userRepoMock.Setup(r => r.GetUserByNickNameAsync(It.IsAny<string>(), It.IsAny<Expression<Func<User, FriendService.ReceiverProjection>>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(RepositoryResult<FriendService.ReceiverProjection>.Success(new FriendService.ReceiverProjection(2, "receiver-id")));
+        userRepoMock.Setup(r => r.GetUserByIdentifierAsync(It.IsAny<string>(), It.IsAny<Expression<Func<User, SenderProjection>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<SenderProjection>.Success(new SenderProjection(1, "TestUser")));
+        userRepoMock.Setup(r => r.GetUserByNickNameAsync(It.IsAny<string>(), It.IsAny<Expression<Func<User, ReceiverProjection>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<ReceiverProjection>.Success(new ReceiverProjection(2, "receiver-id")));
 
         var friendRepoMock = new Mock<IFriendRepository>();
         friendRepoMock.Setup(r => r.FriendshipExistsAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))

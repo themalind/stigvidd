@@ -76,6 +76,31 @@ public class TrailRepository : ITrailRepository
         }
     }
 
+    public async Task<RepositoryResult<IReadOnlyList<double[]>>> GetTrailPathForAdminAsync(string identifier, CancellationToken ctoken)
+    {
+        try
+        {
+            using var context = await _context.CreateDbContextAsync(ctoken);
+
+            var match = await context.Trails
+                .AsNoTracking()
+                .Where(t => t.Identifier == identifier)
+                .Select(t => new { t.GeoPath })
+                .FirstOrDefaultAsync(ctoken);
+
+            if (match is null)
+                return RepositoryResult<IReadOnlyList<double[]>>.NotFound();
+
+            return RepositoryResult<IReadOnlyList<double[]>>.Success(
+                match.GeoPath is null ? [] : GeoPathSerializer.ToCoordinatePairs(match.GeoPath));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "TrailRepository: GetTrailPathForAdminAsync -> Something went wrong when fetching the path for trail with identifier {identifier}.", identifier);
+            return RepositoryResult<IReadOnlyList<double[]>>.Error();
+        }
+    }
+
     public async Task<RepositoryResult<IReadOnlyCollection<T>>> GetPopularTrailOverviewsAsync<T>(
         double? userLatitude, double? userLongitude, Expression<Func<Trail, T>> selector, CancellationToken ctoken)
     {
@@ -86,7 +111,7 @@ public class TrailRepository : ITrailRepository
             // A trail with no path has no start point to rank by, so it is ineligible either
             // way — consistent with the markers and basic-info queries.
             var eligibleTrails = context.Trails.AsNoTracking()
-                .Where(t => t.IsVerified && t.GeoPath != null);
+                .Where(t => t.IsVerified && t.GeoPath != null && t.Contribution == null);
 
             // Score = average rating, boosted by proximity when the user's location is known.
             // Ordering/scoring is a data concern and stays here; the projection shape comes
@@ -339,11 +364,15 @@ public class TrailRepository : ITrailRepository
 
             var existing = await context.Trails
                 .Include(t => t.VisitorInformation)
+                .Include(t => t.TrailLinks)
                 .Where(t => t.Identifier == trail.Identifier)
                 .FirstOrDefaultAsync(ctoken);
 
             if (existing is null)
                 return RepositoryResult<Trail>.NotFound();
+
+            if (trail.TrailLinks != null)
+                ReplaceTrailLinks(context, existing, trail.TrailLinks);
 
             existing.Name = trail.Name;
             existing.TrailLength = trail.TrailLength;
@@ -384,6 +413,30 @@ public class TrailRepository : ITrailRepository
         {
             _logger.LogError(ex, "TrailRepository: UpdateTrailAsync -> Something went wrong when updating trail with identifier {Identifier}.", trail.Identifier);
             return RepositoryResult<Trail>.Error();
+        }
+    }
+
+    private static void ReplaceTrailLinks(StigViddDbContext context, Trail existing, ICollection<TrailLink> links)
+    {
+        existing.TrailLinks ??= [];
+        var incoming = links.ToDictionary(l => l.Identifier);
+
+        context.TrailLinks.RemoveRange(existing.TrailLinks.Where(l => !incoming.ContainsKey(l.Identifier)).ToList());
+
+        var byIdentifier = existing.TrailLinks.ToDictionary(l => l.Identifier);
+
+        foreach (var link in links)
+        {
+            if (byIdentifier.TryGetValue(link.Identifier, out var match))
+            {
+                match.Title = link.Title;
+                match.Link = link.Link;
+                match.LastUpdatedAt = DateTime.UtcNow;
+            }
+            else
+            {
+                existing.TrailLinks.Add(new TrailLink { Title = link.Title, Link = link.Link });
+            }
         }
     }
 
@@ -429,6 +482,121 @@ public class TrailRepository : ITrailRepository
             return RepositoryResult<T>.Error();
         }
     }
+
+    public async Task<RepositoryResult<IReadOnlyCollection<Services.ContributionRankingInput>>> GetContributionRankingInputsAsync(CancellationToken ctoken)
+    {
+        try
+        {
+            using var context = await _context.CreateDbContextAsync(ctoken);
+
+            var rows = await context.Trails.AsNoTracking()
+                .Where(t => t.IsVerified && t.GeoPath != null && t.Contribution != null)
+                .Select(t => new
+                {
+                    t.Identifier,
+                    Reviews = context.Reviews
+                        .Where(r => r.TrailId == t.Id)
+                        .Select(r => new { r.Rating, r.LastUpdatedAt })
+                        .ToList(),
+                    Likes = context.TrailContributionLikes
+                        .Where(l => l.TrailId == t.Id)
+                        .Select(l => l.CreatedAt)
+                        .ToList(),
+                })
+                .ToListAsync(ctoken);
+
+            IReadOnlyCollection<Services.ContributionRankingInput> inputs = rows
+                .Select(r => new Services.ContributionRankingInput(
+                    r.Identifier,
+                    r.Reviews.Select(x => new Services.RankedReview(x.Rating, x.LastUpdatedAt)).ToList(),
+                    r.Likes))
+                .ToList();
+
+            return RepositoryResult<IReadOnlyCollection<Services.ContributionRankingInput>>.Success(inputs);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "TrailRepository: GetContributionRankingInputsAsync -> Something went wrong when fetching contributed trails.");
+            return RepositoryResult<IReadOnlyCollection<Services.ContributionRankingInput>>.Error();
+        }
+    }
+
+    public async Task<RepositoryResult<TrailLikeState>> GetTrailLikeAsync(string trailIdentifier, string userIdentifier, CancellationToken ctoken)
+    {
+        try
+        {
+            using var context = await _context.CreateDbContextAsync(ctoken);
+
+            var trailId = await ContributedTrailIdAsync(context, trailIdentifier, ctoken);
+            var userId = await UserIdAsync(context, userIdentifier, ctoken);
+
+            if (trailId is null || userId is null)
+                return RepositoryResult<TrailLikeState>.NotFound();
+
+            return RepositoryResult<TrailLikeState>.Success(await LikeStateAsync(context, trailId.Value, userId.Value, ctoken));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "TrailRepository: GetTrailLikeAsync -> Something went wrong reading likes for trail {TrailIdentifier}.", trailIdentifier);
+            return RepositoryResult<TrailLikeState>.Error();
+        }
+    }
+
+    public async Task<RepositoryResult<TrailLikeState>> SetTrailLikeAsync(string trailIdentifier, string userIdentifier, bool liked, CancellationToken ctoken)
+    {
+        try
+        {
+            using var context = await _context.CreateDbContextAsync(ctoken);
+
+            var trailId = await ContributedTrailIdAsync(context, trailIdentifier, ctoken);
+            var userId = await UserIdAsync(context, userIdentifier, ctoken);
+
+            if (trailId is null || userId is null)
+                return RepositoryResult<TrailLikeState>.NotFound();
+
+            var existing = await context.TrailContributionLikes
+                .FirstOrDefaultAsync(l => l.TrailId == trailId.Value && l.UserId == userId.Value, ctoken);
+
+            if (liked && existing is null)
+                context.TrailContributionLikes.Add(new TrailContributionLike { TrailId = trailId.Value, UserId = userId.Value });
+            else if (!liked && existing is not null)
+                context.TrailContributionLikes.Remove(existing);
+
+            try
+            {
+                await context.SaveChangesAsync(ctoken);
+            }
+            catch (DbUpdateException)
+            {
+                // keep-comment: a concurrent like or unlike of the same pair already reached the state asked for
+                context.ChangeTracker.Clear();
+            }
+
+            return RepositoryResult<TrailLikeState>.Success(await LikeStateAsync(context, trailId.Value, userId.Value, ctoken));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "TrailRepository: SetTrailLikeAsync -> Something went wrong setting a like on trail {TrailIdentifier}.", trailIdentifier);
+            return RepositoryResult<TrailLikeState>.Error();
+        }
+    }
+
+    private static Task<int?> ContributedTrailIdAsync(StigViddDbContext context, string trailIdentifier, CancellationToken ctoken) =>
+        context.Trails
+            .Where(t => t.Identifier == trailIdentifier && t.IsVerified && t.Contribution != null)
+            .Select(t => (int?)t.Id)
+            .FirstOrDefaultAsync(ctoken);
+
+    private static Task<int?> UserIdAsync(StigViddDbContext context, string userIdentifier, CancellationToken ctoken) =>
+        context.Users
+            .Where(u => u.Identifier == userIdentifier)
+            .Select(u => (int?)u.Id)
+            .FirstOrDefaultAsync(ctoken);
+
+    private static async Task<TrailLikeState> LikeStateAsync(StigViddDbContext context, int trailId, int userId, CancellationToken ctoken) =>
+        new(
+            await context.TrailContributionLikes.CountAsync(l => l.TrailId == trailId, ctoken),
+            await context.TrailContributionLikes.AnyAsync(l => l.TrailId == trailId && l.UserId == userId, ctoken));
 
     public async Task<RepositoryResult> SetTrailVerifiedAsync(string identifier, bool isVerified, CancellationToken ctoken)
     {

@@ -408,4 +408,120 @@ public class ExpoPushServiceTests
         result.Success.Should().BeTrue();
         tokenRepoMock.Verify(r => r.DeleteByTokenAsync(token, It.IsAny<CancellationToken>()), Times.Once);
     }
+
+    private sealed class RecordingHttpMessageHandler(string jsonBody = """{"data": []}""") : HttpMessageHandler
+    {
+        public List<string> Bodies { get; } = [];
+
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            Bodies.Add(request.Content is null ? "" : await request.Content.ReadAsStringAsync(cancellationToken));
+            return new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(jsonBody, Encoding.UTF8, "application/json") };
+        }
+    }
+
+    private static UserPushToken Token(int userId, string token) => new() { UserId = userId, ExpoToken = token, Platform = "ios" };
+
+    private static Mock<IUserPushTokenRepository> TokensFor(params UserPushToken[] tokens)
+    {
+        var tokenRepoMock = new Mock<IUserPushTokenRepository>();
+        tokenRepoMock.Setup(r => r.GetTokensForUsersAsync(It.IsAny<IReadOnlyCollection<int>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<IReadOnlyCollection<UserPushToken>>.Success(tokens));
+        return tokenRepoMock;
+    }
+
+    [Fact]
+    public async Task SendToUsersAsync_SendsEveryRecipientsDevicesInOneRequest()
+    {
+        var tokenRepoMock = TokensFor(Token(1, "t1"), Token(2, "t2a"), Token(2, "t2b"), Token(3, "t3"));
+        var handler = new RecordingHttpMessageHandler();
+        var service = Build(tokenRepoMock: tokenRepoMock, httpClient: new HttpClient(handler) { BaseAddress = new Uri("https://exp.host/") });
+
+        var result = await service.SendToUsersAsync([1, 2, 3, 2], "title", "body", new Dictionary<string, object>(), TestContext.Current.CancellationToken);
+
+        result.Success.Should().BeTrue();
+        tokenRepoMock.Verify(r => r.GetTokensForUsersAsync(
+            It.Is<IReadOnlyCollection<int>>(ids => ids.Count == 3 && ids.ToHashSet().SetEquals(new[] { 1, 2, 3 })), It.IsAny<CancellationToken>()), Times.Once);
+        handler.Bodies.Should().ContainSingle();
+        foreach (var token in new[] { "t1", "t2a", "t2b", "t3" })
+            handler.Bodies[0].Should().Contain($"\"to\":\"{token}\"");
+    }
+
+    [Fact]
+    public async Task SendToUsersAsync_SkipsRecipientsWhoBlockedTheSender()
+    {
+        var tokenRepoMock = TokensFor(Token(1, "t1"));
+        var blockRepoMock = new Mock<IUserBlockRepository>();
+        blockRepoMock.Setup(r => r.GetUsersWhoBlockedAsync(99, It.IsAny<IReadOnlyCollection<int>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<int[]>.Success([2]));
+        var service = Build(tokenRepoMock: tokenRepoMock, blockRepoMock: blockRepoMock);
+
+        var result = await service.SendToUsersAsync([1, 2], "title", "body", new Dictionary<string, object>(), TestContext.Current.CancellationToken, fromUserId: 99);
+
+        result.Success.Should().BeTrue();
+        tokenRepoMock.Verify(r => r.GetTokensForUsersAsync(
+            It.Is<IReadOnlyCollection<int>>(ids => ids.SequenceEqual(new[] { 1 })), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task SendToUsersAsync_WhenEveryRecipientBlockedTheSender_SendsNothing()
+    {
+        var tokenRepoMock = TokensFor();
+        var blockRepoMock = new Mock<IUserBlockRepository>();
+        blockRepoMock.Setup(r => r.GetUsersWhoBlockedAsync(99, It.IsAny<IReadOnlyCollection<int>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<int[]>.Success([1, 2]));
+        var service = Build(tokenRepoMock: tokenRepoMock, blockRepoMock: blockRepoMock);
+
+        var result = await service.SendToUsersAsync([1, 2], "title", "body", new Dictionary<string, object>(), TestContext.Current.CancellationToken, fromUserId: 99);
+
+        result.Success.Should().BeTrue();
+        tokenRepoMock.Verify(r => r.GetTokensForUsersAsync(It.IsAny<IReadOnlyCollection<int>>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task SendToUsersAsync_WhenTheBlockLookupFails_StillSendsToEveryone()
+    {
+        var tokenRepoMock = TokensFor(Token(1, "t1"), Token(2, "t2"));
+        var blockRepoMock = new Mock<IUserBlockRepository>();
+        blockRepoMock.Setup(r => r.GetUsersWhoBlockedAsync(It.IsAny<int>(), It.IsAny<IReadOnlyCollection<int>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<int[]>.Error());
+        var service = Build(tokenRepoMock: tokenRepoMock, blockRepoMock: blockRepoMock);
+
+        var result = await service.SendToUsersAsync([1, 2], "title", "body", new Dictionary<string, object>(), TestContext.Current.CancellationToken, fromUserId: 99);
+
+        result.Success.Should().BeTrue();
+        tokenRepoMock.Verify(r => r.GetTokensForUsersAsync(
+            It.Is<IReadOnlyCollection<int>>(ids => ids.Count == 2), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task SendToUsersAsync_WhenGetTokensErrors_Returns500()
+    {
+        var tokenRepoMock = new Mock<IUserPushTokenRepository>();
+        tokenRepoMock.Setup(r => r.GetTokensForUsersAsync(It.IsAny<IReadOnlyCollection<int>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<IReadOnlyCollection<UserPushToken>>.Error());
+        var service = Build(tokenRepoMock: tokenRepoMock);
+
+        var result = await service.SendToUsersAsync([1], "title", "body", new Dictionary<string, object>(), TestContext.Current.CancellationToken);
+
+        result.Success.Should().BeFalse();
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(500);
+    }
+
+    [Fact]
+    public async Task SendToUsersAsync_WhenOneDeviceIsNotRegistered_DeletesOnlyThatToken()
+    {
+        const string ticketsJson = """{"data": [{"status": "ok", "id": "a"}, {"status": "error", "id": null, "message": "Not registered", "details": {"error": "DeviceNotRegistered"}}]}""";
+        var tokenRepoMock = TokensFor(Token(1, "t1"), Token(2, "t2"));
+        tokenRepoMock.Setup(r => r.DeleteByTokenAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult.Success());
+        var service = Build(tokenRepoMock: tokenRepoMock, httpClient: CreateHttpClient(HttpStatusCode.OK, ticketsJson));
+
+        var result = await service.SendToUsersAsync([1, 2], "title", "body", new Dictionary<string, object>(), TestContext.Current.CancellationToken);
+
+        result.Success.Should().BeTrue();
+        tokenRepoMock.Verify(r => r.DeleteByTokenAsync("t2", It.IsAny<CancellationToken>()), Times.Once);
+        tokenRepoMock.Verify(r => r.DeleteByTokenAsync("t1", It.IsAny<CancellationToken>()), Times.Never);
+    }
 }

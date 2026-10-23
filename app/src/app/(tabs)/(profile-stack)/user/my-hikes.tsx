@@ -5,25 +5,21 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import { getAllHikesByUserId } from "@/api/hikes";
-import { stigviddUserAtom } from "@/atoms/user-atoms";
-import { useAuth } from "@/components/auth/auth-provider";
 import BackButton from "@/components/back-button";
 import ErrorView from "@/components/error-view";
 import { HikeFilterModal } from "@/components/hike/hike-filter-modal";
 import RouteThumbnail from "@/components/hike/route-thumbnail";
 import ListHeaderActions, { SortField } from "@/components/list-header-actions";
 import LoadingIndicator from "@/components/loading-indicator";
-import HikeDetails from "@/components/trail/trail-creator/hike-details";
 import HikeStatsBanner from "@/components/user/hike-stats-banner";
-import { HIKES_STALE_TIME } from "@/constants/cache";
 import { BORDER_RADIUS, SCREEN_PADDING } from "@/constants/constants";
 import { Hike } from "@/data/types";
 import { HikeAccessors, HikeSortOption, useHikeFilters } from "@/hooks/hike/useHikeFilters";
+import { useMyHikes } from "@/hooks/hike/useMyHikes";
 import { formatDate } from "@/utils/format-date";
 import FormattedTime from "@/utils/format-time-from-ms";
-import { useQuery } from "@tanstack/react-query";
-import { useAtomValue } from "jotai";
+import { guardedNavigate } from "@/utils/navigation";
+import { router } from "expo-router";
 import { memo, useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { FlatList, Pressable, StyleSheet, View } from "react-native";
@@ -77,25 +73,10 @@ const HikeRow = memo(function HikeRow({ hike, onPress }: HikeRowProps) {
 
 export default function MyHikesScreen() {
   const theme = useTheme();
-  const { isAuthenticated } = useAuth();
   const { t } = useTranslation();
-  const user = useAtomValue(stigviddUserAtom);
-  const [visible, setVisible] = useState(false);
-  const [hike, setSelectedhike] = useState<Hike | null>(null);
   const [filterModalVisible, setFilterModalVisible] = useState(false);
 
-  const {
-    data: hikes,
-    isLoading,
-    isError,
-    error,
-    refetch,
-  } = useQuery({
-    queryKey: ["hikes", user.data?.identifier],
-    queryFn: () => getAllHikesByUserId(user.data!.identifier),
-    enabled: isAuthenticated && !!user?.data,
-    staleTime: HIKES_STALE_TIME,
-  });
+  const { data: hikes, isLoading, isError, error, refetch } = useMyHikes();
 
   const {
     filteredHikes,
@@ -122,10 +103,16 @@ export default function MyHikesScreen() {
     );
   }, [filters]);
 
-  const openHike = useCallback((selected: Hike) => {
-    setSelectedhike(selected);
-    setVisible(true);
-  }, []);
+  const openHike = useCallback(
+    (selected: Hike) =>
+      guardedNavigate(() =>
+        router.navigate({
+          pathname: "/(tabs)/(profile-stack)/hike/[identifier]",
+          params: { identifier: selected.identifier },
+        }),
+      ),
+    [],
+  );
 
   const renderHike = useCallback(({ item }: { item: Hike }) => <HikeRow hike={item} onPress={openHike} />, [openHike]);
 
@@ -187,17 +174,6 @@ export default function MyHikesScreen() {
           )
         }
       />
-      {hike && (
-        <HikeDetails
-          visible={visible}
-          hike={hike}
-          onDismiss={() => {
-            setVisible(false);
-            setSelectedhike(null);
-          }}
-          hikeFollowRoute="/(tabs)/(profile-stack)/hike-follow/[identifier]"
-        />
-      )}
       <HikeFilterModal
         visible={filterModalVisible}
         onClose={() => setFilterModalVisible(false)}

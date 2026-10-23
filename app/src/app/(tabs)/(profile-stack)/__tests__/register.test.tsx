@@ -75,14 +75,26 @@ describe("validation errors", () => {
     expect(mockRegister).not.toHaveBeenCalled();
   });
 
-  it("rejects a nickname with characters the backend will not accept", async () => {
+  it("rejects a nickname with spaces or punctuation", async () => {
     renderWithProviders(<RegisterScreen />);
 
     fillForm({ nickName: "stig vandraren!" });
     submit();
 
-    expect(await errorUnder("nickname")).toHaveTextContent("Endast a–z, 0–9, _ och - är tillåtna");
+    expect(await errorUnder("nickname")).toHaveTextContent("Endast a–ö, 0–9, _ och - är tillåtna");
     noErrorUnder("email");
+  });
+
+  it("accepts å, ä and ö in a nickname", async () => {
+    renderWithProviders(<RegisterScreen />);
+
+    fillForm({ nickName: "Skogsälvan_Åsa-Ö" });
+    submit();
+
+    await waitFor(() =>
+      expect(mockRegister).toHaveBeenCalledWith(expect.objectContaining({ nickName: "Skogsälvan_Åsa-Ö" })),
+    );
+    noErrorUnder("nickname");
   });
 
   it("reports the mismatch on the repeat field, not the password field", async () => {

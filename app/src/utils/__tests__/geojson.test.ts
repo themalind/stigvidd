@@ -22,11 +22,26 @@ describe("featureCollectionFromMarkers", () => {
         {
           type: "Feature",
           id: "t1",
-          properties: { identifier: "t1", name: "Trail 1", isAccessible: true },
+          properties: { identifier: "t1", name: "Trail 1", isAccessible: true, isContribution: false },
           geometry: { type: "Point", coordinates: [12.0, 57.7] },
         },
       ],
     });
+  });
+
+  it("marks trails published from a user's walk so the map can colour them", () => {
+    const markers: TrailMarkerResponse[] = [
+      {
+        identifier: "t1",
+        name: "Trail 1",
+        isAccessible: false,
+        startLatitude: 57.7,
+        startLongitude: 12.0,
+        isContribution: true,
+      },
+    ];
+
+    expect(featureCollectionFromMarkers(markers).features[0].properties).toMatchObject({ isContribution: true });
   });
 
   it("skips markers missing a start coordinate", () => {

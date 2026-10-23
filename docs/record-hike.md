@@ -13,10 +13,10 @@ _why_ the code does what it does so future changes don't quietly undo a fix.
 | Pure state machine + GPS filter + storage     | `src/services/location-task.ts`                                |
 | iOS 18+ native background engine (JS wrapper) | `src/services/live-location.ts`                                |
 | iOS 18+ native module (Swift)                 | `modules/expo-live-location/`                                  |
-| Recording UI (map, timer, buttons)            | `src/components/trail/trail-creator/trail-creator.tsx`         |
+| Recording UI (map, timer, buttons)            | `src/components/hike/recorder/hike-recorder.tsx`               |
 | Permission gate + screen chrome               | `src/app/(tabs)/(profile-stack)/user/create-hike.tsx`          |
-| Pre-start info dialog                         | `src/components/trail/trail-creator/recording-info-dialog.tsx` |
-| Save form (name, trim, submit)                | `src/components/trail/trail-creator/save-hike-form.tsx`        |
+| Pre-start info dialog                         | `src/components/hike/recorder/recording-info-dialog.tsx`       |
+| Save form (name, trim, submit)                | `src/components/hike/recorder/save-hike-form.tsx`              |
 | Trim/duration recompute                       | `src/utils/trim-hike.ts`                                       |
 
 ## Core data model
@@ -68,11 +68,11 @@ killed.
   **Discard**, **Save**, **Resume**.
 
 `hasData = segments.length > 0 || currentSegment has coordinates` decides IDLE vs
-PAUSED in the UI (`trail-creator.tsx`).
+PAUSED in the UI (`hike-recorder.tsx`).
 
 ### Start
 
-1. The screen only mounts `TrailCreator` after **foreground** ("When In Use")
+1. The screen only mounts `HikeRecorder` after **foreground** ("When In Use")
    permission is granted (`create-hike.tsx`). Without it the screen shows
    `createHike.locationRequired` and there is no way to record.
 2. First-ever start shows the **recording info dialog** (auto-stop rules, trim hint)
@@ -264,7 +264,7 @@ atomic write path both platforms share.
 - **Foreground** (app open): a `watchPositionAsync` watcher (or the native event stream
   on iOS 18+) appends accepted points to a **live tail** so the drawn route follows the
   user dot smoothly in real time — purely visual.
-- The UI stitches them (`routePositions` in `trail-creator.tsx`): persisted
+- The UI stitches them (`routePositions` in `hike-recorder.tsx`): persisted
   background points are the committed base; the live tail contributes only points newer
   than the last persisted timestamp. So there are no duplicates and no gaps when
   returning from background.

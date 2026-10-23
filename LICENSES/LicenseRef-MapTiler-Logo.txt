@@ -1,0 +1,5 @@
+The MapTiler logo is a trademark of MapTiler AG. All rights reserved.
+
+It is included unmodified, as served from https://api.maptiler.com/resources/logo.svg,
+solely to meet the attribution requirement of the MapTiler Cloud Free plan. It is not
+covered by the licences of this repository and may not be reused apart from that purpose.

@@ -100,6 +100,19 @@ export type TrailResponse = {
   city: string;
   visitorInformation?: VisitorInformation;
   trailImagesResponse?: TrailImageResponse[];
+  trailLinksResponse?: TrailLinkResponse[];
+};
+
+export type TrailLinkResponse = {
+  identifier: string;
+  link: string;
+  title: string;
+};
+
+export type UpdateTrailLinkRequest = {
+  identifier?: string;
+  title: string;
+  link: string;
 };
 
 export type TableColumn<T> = {
@@ -131,6 +144,7 @@ export type UpdateTrailRequest = {
   tags?: string;
   city?: string;
   visitorInformation?: UpdateVisitorInformationRequest;
+  links?: UpdateTrailLinkRequest[];
 };
 
 export const CLASSIFICATION: Record<number, string> = {

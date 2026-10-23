@@ -11,6 +11,7 @@ public enum ReportedContentType
     Unknown = 0,
     Review = 1,
     TrailObstacle = 2,
+    HikeImage = 3,
 }
 
 // Do not change the values of the enum as they are used in the database and changing them would break existing data.

@@ -3,6 +3,7 @@
 
 using Core.Interfaces.Repositories;
 using Core.Interfaces.Services;
+using Infrastructure.Data.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System.Net.Http.Headers;
@@ -97,65 +98,108 @@ public class ExpoPushService : IPushNotificationService
                     return Result.Fail(new Message(500,"Failed to get push tokens"));
             }
 
-            // Step 3: Build one message per registered device. One token = one device; one friend request
-            // triggers a single SendToUserAsync call that fans out to all of the recipient's devices (usually one).
-            var expoPushMsg = tokensResult.Value.Select(t => new ExpoPushMessage(
-                To: t.ExpoToken,
-                Title: title,
-                Body: body,
-                Data: data
-            ))
-            .ToList()
-            .Chunk(100); // Expo recommends batching messages in chunks of 100
-
-            // Step 4: Send each batch of messages to Expo's push endpoint
-            foreach (var batch in expoPushMsg)
-            {
-                // Post to Expo's push API
-                var response = await _httpClient.PostAsJsonAsync(PushEndpoint, batch, _jsonOptions, ctoken);
-                if (!response.IsSuccessStatusCode)
-                {
-                    _logger.LogError("ExpoPushService: SendToUserAsync -> Failed to send push notifications for user {UserId}. Status Code: {StatusCode}", userResult.Value, response.StatusCode);
-                    continue;
-                }
-
-                var ticketsResponse = await response.Content.ReadFromJsonAsync<ExpoTicketsResponse>(cancellationToken: ctoken);
-                if (ticketsResponse == null)
-                {
-                    _logger.LogError("ExpoPushService: SendToUserAsync -> Failed to parse Expo tickets response for user {UserId}. Response content was null.", userResult.Value);
-                    continue;
-                }
-
-                // Step 5: Correlate each ticket back to its message by index (Expo preserves order).
-                // This lets us know which token caused a failure so we can act on it.
-                // batch.Zip pairs each sent message with its ticket by position — ticket.Id is Expo's
-                // receipt ID, not the token, so the zip is the only way to know which token failed.
-                foreach (var (message, ticket) in batch.Zip(ticketsResponse.Data))
-                {
-                    if (ticket.Status == "ok") continue;
-
-                    if (ticket.Details?.Error == "DeviceNotRegistered")
-                    {
-                        // App was uninstalled or the token was revoked — remove it so future sends skip it.
-                        await _userPushTokenRepository.DeleteByTokenAsync(message.To, ctoken);
-                        _logger.LogInformation("ExpoPushService: Removed a stale push token for user {UserId}", userResult.Value);
-                    }
-                    else
-                    {
-                        // Other errors (InvalidCredentials, MessageTooBig, etc.) don't need token cleanup,
-                        // but do need attention — log at warning so they surface without failing the caller.
-                        _logger.LogWarning("ExpoPushService: Push notification failed for a device of user {UserId}. Error: {Error} — {Message}",
-                            userResult.Value, ticket.Details?.Error, ticket.Message);
-                    }
-                }
-            }
+            await SendToTokensAsync(tokensResult.Value.ToList(), title, body, data, ctoken);
 
             return Result.Ok();
         }
-        catch (Exception ex) 
+        catch (Exception ex)
         {
             _logger.LogError(ex, "ExpoPushService: SendToUserAsync -> An unexpected error occurred while sending push notifications to user {Identifier}.", userIdentifier);
             return Result.Fail(new Message(500, "An error occurred while sending push notifications."));
+        }
+    }
+
+    public async Task<Result> SendToUsersAsync(IReadOnlyCollection<int> userIds, string title, string body, IReadOnlyDictionary<string, object> data, CancellationToken ctoken, int? fromUserId = null)
+    {
+        try
+        {
+            var recipients = userIds.Distinct().ToList();
+            var requested = recipients.Count;
+
+            // Fails open: a failed block lookup still sends, like RecipientHasBlockedSenderAsync. keep-comment: matches the single-user path on purpose
+            if (fromUserId is int senderId && recipients.Count > 0)
+            {
+                var blockersResult = await _userBlockRepository.GetUsersWhoBlockedAsync(senderId, recipients, ctoken);
+                if (blockersResult.IsSuccess)
+                    recipients = recipients.Except(blockersResult.Value).ToList();
+            }
+
+            if (recipients.Count == 0)
+                return Result.Ok();
+
+            var tokensResult = await _userPushTokenRepository.GetTokensForUsersAsync(recipients, ctoken);
+            if (!tokensResult.IsSuccess)
+            {
+                _logger.LogError("ExpoPushService: SendToUsersAsync -> Failed to get push tokens for {Count} users. Status: {Status}", recipients.Count, tokensResult.Status);
+                return Result.Fail(new Message(500, "Failed to get push tokens"));
+            }
+
+            _logger.LogDebug(
+                "ExpoPushService: SendToUsersAsync -> {Recipients} recipients, {SkippedBlocked} skipped as blockers, {Tokens} devices",
+                recipients.Count, requested - recipients.Count, tokensResult.Value.Count);
+
+            await SendToTokensAsync(tokensResult.Value, title, body, data, ctoken);
+
+            return Result.Ok();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "ExpoPushService: SendToUsersAsync -> An unexpected error occurred while sending push notifications to {Count} users.", userIds.Count);
+            return Result.Fail(new Message(500, "An error occurred while sending push notifications."));
+        }
+    }
+
+    private async Task SendToTokensAsync(IReadOnlyCollection<UserPushToken> tokens, string title, string body, IReadOnlyDictionary<string, object> data, CancellationToken ctoken)
+    {
+        var userIdByToken = tokens.GroupBy(t => t.ExpoToken).ToDictionary(g => g.Key, g => g.First().UserId);
+        var expoPushMsg = userIdByToken.Keys.Select(token => new ExpoPushMessage(
+            To: token,
+            Title: title,
+            Body: body,
+            Data: data
+        ))
+        .ToList()
+        .Chunk(100); // Expo recommends batching messages in chunks of 100
+
+        foreach (var batch in expoPushMsg)
+        {
+            var response = await _httpClient.PostAsJsonAsync(PushEndpoint, batch, _jsonOptions, ctoken);
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogError("ExpoPushService: Failed to send {Count} push notifications. Status Code: {StatusCode}", batch.Length, response.StatusCode);
+                continue;
+            }
+
+            var ticketsResponse = await response.Content.ReadFromJsonAsync<ExpoTicketsResponse>(cancellationToken: ctoken);
+            if (ticketsResponse == null)
+            {
+                _logger.LogError("ExpoPushService: Failed to parse Expo tickets response for {Count} push notifications. Response content was null.", batch.Length);
+                continue;
+            }
+
+            // Correlate each ticket back to its message by index (Expo preserves order). keep-comment: ticket order is Expo's contract
+            // This lets us know which token caused a failure so we can act on it.
+            // batch.Zip pairs each sent message with its ticket by position — ticket.Id is Expo's
+            // receipt ID, not the token, so the zip is the only way to know which token failed.
+            foreach (var (message, ticket) in batch.Zip(ticketsResponse.Data))
+            {
+                if (ticket.Status == "ok") continue;
+
+                var userId = userIdByToken[message.To];
+                if (ticket.Details?.Error == "DeviceNotRegistered")
+                {
+                    // App was uninstalled or the token was revoked — remove it so future sends skip it.
+                    await _userPushTokenRepository.DeleteByTokenAsync(message.To, ctoken);
+                    _logger.LogInformation("ExpoPushService: Removed a stale push token for user {UserId}", userId);
+                }
+                else
+                {
+                    // Other errors (InvalidCredentials, MessageTooBig, etc.) don't need token cleanup,
+                    // but do need attention — log at warning so they surface without failing the caller.
+                    _logger.LogWarning("ExpoPushService: Push notification failed for a device of user {UserId}. Error: {Error} — {Message}",
+                        userId, ticket.Details?.Error, ticket.Message);
+                }
+            }
         }
     }
 

@@ -6,6 +6,7 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import TrailsScreen from "@/app/(tabs)/(trails-tab)/index";
+import { trailListSourceAtom } from "@/atoms/trail-list-atoms";
 import { AppDarkTheme, AppDefaultTheme } from "@/constants/theme";
 import { TrailShortInfoResponse } from "@/data/types";
 import { UserLocation } from "@/hooks/useUserLocation";
@@ -451,4 +452,51 @@ it("keeps the trails on screen when a later refetch fails", async () => {
 
   expect(screen.getByText("Kvarnstigen")).toBeTruthy();
   expect(screen.queryByText("Försök igen")).toBeNull();
+});
+
+describe("trails and walks from users", () => {
+  const WALK = trail({ identifier: "w-1", name: "Kvällsrundan", isContribution: true });
+
+  it("lists only the curated trails by default", async () => {
+    await show([...TRAILS, WALK]);
+
+    expect(screen.queryByText("Kvällsrundan")).toBeNull();
+    expect(screen.getByText("Kvarnstigen")).toBeTruthy();
+  });
+
+  it("switches to the walks from users", async () => {
+    await show([...TRAILS, WALK]);
+
+    fireEvent.press(screen.getByTestId("trails-source-contributions"));
+
+    expect(screen.getByText("Kvällsrundan")).toBeTruthy();
+    expect(screen.queryByText("Kvarnstigen")).toBeNull();
+    expect(screen.getByText("Visar 1 av 1 led")).toBeTruthy();
+  });
+
+  it("opens on the walks when the home screen asked for them", async () => {
+    mockGetAllTrails.mockResolvedValue([...TRAILS, WALK]);
+    renderWithProviders(<TrailsScreen />, { initialAtoms: [[trailListSourceAtom, "contributions"]] });
+    await flushUntil(() => screen.queryByTestId("trails-screen"));
+
+    expect(screen.getByText("Kvällsrundan")).toBeTruthy();
+    expect(screen.getByTestId("trails-source-contributions").props.accessibilityState).toMatchObject({
+      selected: true,
+    });
+  });
+
+  it("hides the switch while no walk from users is published", async () => {
+    await show(TRAILS);
+
+    expect(screen.queryByTestId("trails-source")).toBeNull();
+    expect(screen.getByText("Kvarnstigen")).toBeTruthy();
+  });
+
+  it("lists the trails even if walks were asked for before any exist", async () => {
+    mockGetAllTrails.mockResolvedValue(TRAILS);
+    renderWithProviders(<TrailsScreen />, { initialAtoms: [[trailListSourceAtom, "contributions"]] });
+    await flushUntil(() => screen.queryByTestId("trails-screen"));
+
+    expect(screen.getByText("Kvarnstigen")).toBeTruthy();
+  });
 });

@@ -10,12 +10,8 @@
  * different product than the app is worse than no landing page. When the app's copy
  * changes, change it here too. Nothing checks that they agree.
  *
- * The feature list is the app's `about.features` array, one card per entry, in the same
- * order — ten of them. Three were added to that array when this site was built: the areas
- * browser, the trail randomiser and the nature guide, all three real features that the
- * About screen had never listed. `about-screen.test.tsx` asserts the count, so the app
- * side cannot lose one silently; this side has no such guard, so the order and wording
- * here are kept in step by hand.
+ * keep-comment: the feature list mirrors the app's `about.features`, one card per entry, same order and wording;
+ * keep-comment: nothing checks this side, so change both together (`about-screen.test.tsx` pins the app's count).
  *
  * `phase` is what turns the tester page into the public one. In "beta" the install
  * section recruits testers; in "public" it shows store links. Flip it, fill in
@@ -77,6 +73,16 @@ export const features = [
     icon: "users",
   },
   {
+    title: "Publicera som led",
+    body: "Publicera din promenad som en led så att fler kan gå den.",
+    icon: "send",
+  },
+  {
+    title: "Upptäck andras leder",
+    body: "Upptäck och gilla leder som andra vandrare har publicerat.",
+    icon: "thumbs-up",
+  },
+  {
     title: "Utforska områden",
     body: "Utforska friluftsområden i Boråstrakten, som Rya åsar och Kype.",
     icon: "compass",
@@ -93,14 +99,9 @@ export const features = [
   },
 ] as const;
 
-/**
- * The store links. `null` means "does not exist yet" and the install section renders no
- * store button at all — testers are recruited by mail until there is somewhere to send
- * them. Nothing is registered with App Store Connect or Play Console yet; when a build is
- * uploaded, put the invite URL here and the buttons appear on their own.
- */
+// keep-comment: null renders no button for that platform, so testers on it are recruited by mail
 export const installLinks: { ios: string | null; android: string | null } = {
-  ios: null,
+  ios: "https://testflight.apple.com/join/WBm5tFaq",
   android: null,
 };
 
@@ -112,11 +113,11 @@ export const install = {
   steps: [
     {
       title: "Hör av dig",
-      body: `Mejla ${contactEmail} och berätta om du vandrar med iPhone eller Android.`,
+      body: `Har du iPhone går du med direkt via TestFlight-knappen nedan. Har du Android, mejla ${contactEmail}.`,
     },
     {
-      title: "Få din inbjudan",
-      body: "Du får ett mejl med en länk som installerar appen på din telefon.",
+      title: "Installera appen",
+      body: "På iPhone installerar du TestFlight och sedan Stigvidd. Android-testare får ett mejl med en länk.",
     },
     {
       title: "Gå en tur",
@@ -134,7 +135,8 @@ export const faq = [
     question: "Vilka leder finns i appen?",
     answer:
       "Leder i Boråsområdet. Leddata kommer från Borås Stads öppna dataportal och " +
-      "tillhandahålls under Creative Commons CC0 1.0.",
+      "tillhandahålls under Creative Commons CC0 1.0. Till det kommer leder som andra " +
+      "vandrare har publicerat från sina egna promenader, granskade av Stigvidd.",
   },
   {
     question: "Vad kostar appen?",

@@ -8,8 +8,10 @@
 import { getObstacleIssueTypes, updateTrailObstacle } from "@/api/trail-obstacles";
 import { asTranslationKey } from "@/i18n";
 import { showErrorAtom, showSuccessAtom } from "@/atoms/snackbar-atoms";
+import CountedTextInput from "@/components/counted-text-input";
 import SelectInput from "@/components/select-input";
 import { BORDER_RADIUS } from "@/constants/constants";
+import { useModalKeyboardLift } from "@/hooks/useModalKeyboardLift";
 import { UpdateTrailObstacleRequest } from "@/data/types";
 import issueTypeParser from "@/utils/issue-type-parser";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -19,8 +21,8 @@ import { ISSUE_TYPES_STALE_TIME } from "@/constants/cache";
 import { BlurView } from "expo-blur";
 import { useSetAtom } from "jotai";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
-import { Dimensions, Pressable, StyleSheet, View } from "react-native";
-import { Button, Modal, Portal, Text, TextInput, useTheme } from "react-native-paper";
+import { Dimensions, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { Button, Modal, Portal, Text, useTheme } from "react-native-paper";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
 
@@ -35,7 +37,7 @@ const updateObstacleFields = z.object({
 
 type FormFields = z.infer<typeof updateObstacleFields>;
 
-const { height, width } = Dimensions.get("screen");
+const { width } = Dimensions.get("screen");
 
 interface Props {
   obstacleIdentifier: string;
@@ -56,6 +58,7 @@ export default function TrailObstacleUpdateForm({
 }: Props) {
   const theme = useTheme();
   const { t } = useTranslation();
+  const { modalStyle, maxHeight } = useModalKeyboardLift(0.6);
   const setErrorMsg = useSetAtom(showErrorAtom);
   const setSuccessMsg = useSetAtom(showSuccessAtom);
   const queryClient = useQueryClient();
@@ -98,7 +101,8 @@ export default function TrailObstacleUpdateForm({
     <Portal>
       {visible && <BlurView intensity={100} tint="dark" style={StyleSheet.absoluteFill} />}
       <Modal
-        contentContainerStyle={[s.modalContainerStyle, { backgroundColor: theme.colors.surface }]}
+        style={modalStyle}
+        contentContainerStyle={[s.modalContainerStyle, { backgroundColor: theme.colors.surface, height: maxHeight }]}
         visible={visible}
         onDismiss={onDismiss}
       >
@@ -113,56 +117,62 @@ export default function TrailObstacleUpdateForm({
             </Pressable>
           </View>
 
-          <View style={s.fieldGroup}>
-            <Text style={[s.fieldLabel, { color: theme.colors.onSurfaceVariant }]}>{t("obstacle.selectCategory")}</Text>
-            {!!issueTypes?.length && (
+          <ScrollView keyboardShouldPersistTaps="handled" style={s.scrollView} contentContainerStyle={s.scrollContent}>
+            <View style={s.fieldGroup}>
+              <Text style={[s.fieldLabel, { color: theme.colors.onSurfaceVariant }]}>
+                {t("obstacle.selectCategory")}
+              </Text>
+              {!!issueTypes?.length && (
+                <Controller
+                  control={control}
+                  name="issueType"
+                  render={({ field: { onChange, value } }) => (
+                    <SelectInput
+                      selectedValue={value}
+                      onValueChange={onChange}
+                      options={issueTypes.map((type) => ({ label: issueTypeParser(type), value: type }))}
+                    />
+                  )}
+                />
+              )}
+              {errors.issueType?.message && (
+                <Text style={{ color: theme.colors.error }}>{t(asTranslationKey(errors.issueType.message))}</Text>
+              )}
+            </View>
+
+            <View style={s.fieldGroup}>
+              <Text style={[s.fieldLabel, { color: theme.colors.onSurfaceVariant }]}>
+                {t("obstacle.descriptionMax")}
+              </Text>
               <Controller
                 control={control}
-                name="issueType"
-                render={({ field: { onChange, value } }) => (
-                  <SelectInput
-                    selectedValue={value}
-                    onValueChange={onChange}
-                    options={issueTypes.map((type) => ({ label: issueTypeParser(type), value: type }))}
+                name="description"
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <CountedTextInput
+                    testID="obstacle-update-description"
+                    mode="outlined"
+                    error={!!errors.description}
+                    style={[s.textInput, { backgroundColor: theme.colors.surfaceVariant }]}
+                    onBlur={onBlur}
+                    onChangeText={onChange}
+                    value={value}
+                    maxLength={500}
+                    label={t("obstacle.description")}
+                    autoCapitalize="sentences"
+                    multiline
+                    scrollEnabled={false}
+                    textAlignVertical="top"
+                    theme={{ colors: { primary: theme.colors.onSurface } }}
                   />
                 )}
               />
-            )}
-            {errors.issueType?.message && (
-              <Text style={{ color: theme.colors.error }}>{t(asTranslationKey(errors.issueType.message))}</Text>
-            )}
-          </View>
-
-          <View style={s.fieldGroup}>
-            <Text style={[s.fieldLabel, { color: theme.colors.onSurfaceVariant }]}>{t("obstacle.descriptionMax")}</Text>
-            <Controller
-              control={control}
-              name="description"
-              render={({ field: { onChange, onBlur, value } }) => (
-                <TextInput
-                  testID="obstacle-update-description"
-                  mode="outlined"
-                  error={!!errors.description}
-                  style={[s.textInput, { backgroundColor: theme.colors.surfaceVariant }]}
-                  onBlur={onBlur}
-                  onChangeText={onChange}
-                  value={value}
-                  maxLength={500}
-                  label={t("obstacle.description")}
-                  autoCapitalize="sentences"
-                  multiline
-                  scrollEnabled={false}
-                  textAlignVertical="top"
-                  theme={{ colors: { primary: theme.colors.onSurface } }}
-                />
+              {errors.description && (
+                <Text style={[s.bold, { color: theme.colors.error }]}>
+                  {errors.description.message ? t(asTranslationKey(errors.description.message)) : ""}
+                </Text>
               )}
-            />
-            {errors.description && (
-              <Text style={[s.bold, { color: theme.colors.error }]}>
-                {errors.description.message ? t(asTranslationKey(errors.description.message)) : ""}
-              </Text>
-            )}
-          </View>
+            </View>
+          </ScrollView>
 
           <Button
             testID="obstacle-update-submit"
@@ -181,12 +191,18 @@ export default function TrailObstacleUpdateForm({
 
 const s = StyleSheet.create({
   modalContainerStyle: {
-    height: height * 0.6,
     justifyContent: "flex-start",
     borderRadius: BORDER_RADIUS,
     padding: 15,
   },
   modalContentContainer: {
+    flex: 1,
+    gap: 40,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
     gap: 40,
   },
   textInput: {
