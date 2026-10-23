@@ -77,7 +77,7 @@
       [
         "expo-notifications",
         {
-          "icon": "./src/assets/images/android-icon-foreground.png",
+          "icon": "./src/assets/images/notification-icon.png",
           "color": "#68AE82"
         }
       ],

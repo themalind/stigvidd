@@ -33,7 +33,7 @@ const registerFields = z
       .string({ required_error: "auth.validation.nicknameRequired" })
       .min(1, "auth.validation.nicknameRequired")
       .max(20, "auth.validation.nicknameTooLong")
-      .regex(/^[a-zA-Z0-9_-]+$/, "auth.validation.nicknameInvalidChars"),
+      .regex(/^[a-zA-Z0-9åäöÅÄÖ_-]+$/, "auth.validation.nicknameInvalidChars"),
     email: z.string({ required_error: "auth.validation.emailRequired" }).email("auth.validation.emailInvalid"),
     password: z
       .string({ required_error: "auth.validation.passwordRequired" })
