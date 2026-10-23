@@ -84,6 +84,13 @@ it("covers the whole screen in black, whatever the theme", () => {
   expect(screen.getByTestId("modal-surface")).toHaveStyle({ backgroundColor: "#000" });
 });
 
+it("sizes the frame to the screen itself, since Paper's iOS modal surface gives it no flex", () => {
+  show();
+
+  expect(screen.getByTestId("modal-surface")).not.toHaveStyle({ flex: 1 });
+  expect(screen.getByTestId("review-image-frame")).toHaveStyle({ width: ITEM_WIDTH, height: ITEM_HEIGHT });
+});
+
 // One swipe is one picture, not a free scroll that leaves two half-shown.
 it("moves one whole picture per swipe, and stops at the ends", () => {
   show();

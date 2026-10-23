@@ -79,8 +79,12 @@ const DEFAULT_VIEW_STATE: InitialViewState = { center: BORAS_CENTER, zoom: 9.5 }
 // tappable cluster instead of un-tappable stacked individual pins.
 const CLUSTER_MAX_ZOOM = 16;
 // keep-comment: a cluster of user walks only is drawn in their colour; a mixed one stays a trail cluster
+// keep-comment: the full reduce form, since MapLibre iOS reads a bare "+" as a string constant and never sums
 const TRAIL_CLUSTER_PROPERTIES = {
-  curatedCount: ["+", ["case", ["==", ["get", "isContribution"], true], 0, 1]],
+  curatedCount: [
+    ["+", ["accumulated"], ["get", "curatedCount"]],
+    ["case", ["==", ["get", "isContribution"], true], 0, 1],
+  ],
 } as const;
 // Small clusters open the carousel directly — they're usually trails sharing a
 // trailhead that won't separate usefully by zooming. Larger, genuinely separable

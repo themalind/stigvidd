@@ -152,7 +152,10 @@ it("colours a cluster of user walks only in the user-walk colour", async () => {
   await flushUntil(() => source("trails"));
 
   const curatedCount = source("trails")?.props.clusterProperties.curatedCount;
-  expect(curatedCount).toEqual(["+", ["case", ["==", ["get", "isContribution"], true], 0, 1]]);
+  expect(curatedCount).toEqual([
+    ["+", ["accumulated"], ["get", "curatedCount"]],
+    ["case", ["==", ["get", "isContribution"], true], 0, 1],
+  ]);
   const clusters = screen.queryAllByTestId("maplibre-Layer").find((node) => node.props.id === "trail-clusters");
   expect(clusters?.props.paint["circle-color"]).toEqual([
     "case",

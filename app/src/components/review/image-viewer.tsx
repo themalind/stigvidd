@@ -100,7 +100,8 @@ export default function ImageViewer({
     <Portal>
       <Modal visible={visible} onDismiss={close} style={s.fullScreen} contentContainerStyle={s.surface}>
         {visible && <StatusBar style="light" />}
-        <View testID="review-image-frame" style={s.frame}>
+        {/* keep-comment: Paper's iOS Surface drops flex on its inner layer for a Modal, so the frame needs a fixed size */}
+        <View testID="review-image-frame" style={{ width: itemWidth, height: itemHeight }}>
           <Animated.FlatList
             testID="review-image-list"
             horizontal
@@ -221,9 +222,6 @@ const s = StyleSheet.create({
   surface: {
     flex: 1,
     backgroundColor: "#000",
-  },
-  frame: {
-    flex: 1,
   },
   zoomable: {
     flex: 1,
