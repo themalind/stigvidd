@@ -403,7 +403,6 @@ it("sits in a rounded, outlined card, in both themes", () => {
     borderWidth: 1,
     borderRadius: 5,
     padding: 12,
-    gap: 10,
     borderColor: AppDefaultTheme.colors.outlineVariant,
   });
   light.unmount();

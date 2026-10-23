@@ -122,58 +122,60 @@ export default function TrailObstacleItem({ obstacle, trailIdentifier, onCloseMo
 
   return (
     <View testID="obstacle-card" style={[s.container, { borderColor: theme.colors.outlineVariant }]}>
-      <View style={s.categoryRow}>
-        <View style={s.field}>
-          <Text style={[s.label, { color: theme.colors.onSurfaceVariant }]}>{t("obstacle.category")}</Text>
-          <Text style={[s.value, { color: theme.colors.onSurface }]}>{issueTypeParser(obstacle.issueType)}</Text>
-        </View>
-        {isOwner && (
-          <View style={s.ownerActions}>
-            <Pressable hitSlop={12} onPress={handleEdit} disabled={deleteObstacleIsPending}>
-              <MaterialIcons size={20} name="edit" color={theme.colors.onSurfaceVariant} />
-            </Pressable>
-            <Pressable hitSlop={12} onPress={() => setShowDeleteDialog(true)} disabled={deleteObstacleIsPending}>
-              <MaterialIcons size={20} name="delete-outline" color={theme.colors.onSurface} />
-            </Pressable>
+      <View style={s.content}>
+        <View style={s.categoryRow}>
+          <View style={s.field}>
+            <Text style={[s.label, { color: theme.colors.onSurfaceVariant }]}>{t("obstacle.category")}</Text>
+            <Text style={[s.value, { color: theme.colors.onSurface }]}>{issueTypeParser(obstacle.issueType)}</Text>
           </View>
-        )}
-      </View>
-      <Divider />
-      <View style={s.field}>
-        <Text style={[s.label, { color: theme.colors.onSurfaceVariant }]}>{t("obstacle.description")}</Text>
-        {/* Trailing newlines from the multiline input would render as blank lines in the card. */}
-        <Text style={[s.description, { color: theme.colors.onSurface }]}>
-          {obstacle.description?.trim() || t("obstacle.removedDescription")}
-        </Text>
-      </View>
-      <View style={s.footer}>
-        <View style={s.field}>
-          <Text style={[s.label, { color: theme.colors.onSurfaceVariant }]}>{t("obstacle.date")}</Text>
-          <Text style={[s.value, { color: theme.colors.onSurface }]}>{formatDate(obstacle.createdAt)}</Text>
-        </View>
-
-        <View testID="obstacle-actions" style={s.voteRow}>
-          {!isOwner && (
-            <Pressable testID="report-obstacle-button" hitSlop={12} onPress={handleReport}>
-              <MaterialCommunityIcons size={24} name="alert-circle" color={theme.colors.outline} />
-            </Pressable>
+          {isOwner && (
+            <View style={s.ownerActions}>
+              <Pressable hitSlop={12} onPress={handleEdit} disabled={deleteObstacleIsPending}>
+                <MaterialIcons size={20} name="edit" color={theme.colors.onSurfaceVariant} />
+              </Pressable>
+              <Pressable hitSlop={12} onPress={() => setShowDeleteDialog(true)} disabled={deleteObstacleIsPending}>
+                <MaterialIcons size={20} name="delete-outline" color={theme.colors.onSurface} />
+              </Pressable>
+            </View>
           )}
-          <View style={s.voteGroup}>
-            <Text style={s.voteCount}>{obstacle.solvedVoteCount ?? obstacle.solvedVotes?.length ?? 0}/3</Text>
+        </View>
+        <Divider />
+        <View style={s.field}>
+          <Text style={[s.label, { color: theme.colors.onSurfaceVariant }]}>{t("obstacle.description")}</Text>
+          {/* Trailing newlines from the multiline input would render as blank lines in the card. */}
+          <Text style={[s.description, { color: theme.colors.onSurface }]}>
+            {obstacle.description?.trim() || t("obstacle.removedDescription")}
+          </Text>
+        </View>
+        <View style={s.footer}>
+          <View style={s.field}>
+            <Text style={[s.label, { color: theme.colors.onSurfaceVariant }]}>{t("obstacle.date")}</Text>
+            <Text style={[s.value, { color: theme.colors.onSurface }]}>{formatDate(obstacle.createdAt)}</Text>
+          </View>
+
+          <View testID="obstacle-actions" style={s.voteRow}>
             {!isOwner && (
-              <Pressable
-                testID="vote-button"
-                hitSlop={12}
-                onPress={handlePress}
-                disabled={isPending || deleteSolvedVoteIsPending}
-              >
-                <MaterialIcons
-                  size={24}
-                  name={hasVoted ? "check-circle" : "radio-button-unchecked"}
-                  color={isPending ? theme.colors.outline : theme.colors.tertiary}
-                />
+              <Pressable testID="report-obstacle-button" hitSlop={12} onPress={handleReport}>
+                <MaterialCommunityIcons size={24} name="alert-circle" color={theme.colors.outline} />
               </Pressable>
             )}
+            <View style={s.voteGroup}>
+              <Text style={s.voteCount}>{obstacle.solvedVoteCount ?? obstacle.solvedVotes?.length ?? 0}/3</Text>
+              {!isOwner && (
+                <Pressable
+                  testID="vote-button"
+                  hitSlop={12}
+                  onPress={handlePress}
+                  disabled={isPending || deleteSolvedVoteIsPending}
+                >
+                  <MaterialIcons
+                    size={24}
+                    name={hasVoted ? "check-circle" : "radio-button-unchecked"}
+                    color={isPending ? theme.colors.outline : theme.colors.tertiary}
+                  />
+                </Pressable>
+              )}
+            </View>
           </View>
         </View>
       </View>
@@ -241,6 +243,8 @@ const s = StyleSheet.create({
     borderWidth: 1,
     borderRadius: BORDER_RADIUS,
     padding: 12,
+  },
+  content: {
     gap: 10,
   },
   field: {
@@ -277,7 +281,7 @@ const s = StyleSheet.create({
   voteRow: {
     flexDirection: "row",
     alignItems: "center",
-    // 24 is twice the hitSlop, so the report and vote touch areas meet without overlapping.
+    // keep-comment: 24 is twice the hitSlop, so the report and vote touch areas meet without overlapping.
     gap: 24,
   },
   voteGroup: {
