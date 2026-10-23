@@ -5,7 +5,7 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import { AppDarkTheme, AppDefaultTheme } from "@/constants/theme";
+import { AppDefaultTheme, AppTheme } from "@/constants/theme";
 import { ThemeProvider } from "@react-navigation/native";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, RenderOptions } from "@testing-library/react-native";
@@ -30,7 +30,7 @@ interface Options extends Omit<RenderOptions, "wrapper"> {
   // Atom values to seed before the first render, as [atom, value] pairs.
   initialAtoms?: [any, unknown][];
   // The theme to render under; the app passes one to both providers. Pass AppDarkTheme for dark mode.
-  theme?: typeof AppDefaultTheme | typeof AppDarkTheme;
+  theme?: AppTheme;
 }
 
 export function renderWithProviders(

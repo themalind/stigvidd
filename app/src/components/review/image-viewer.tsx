@@ -6,21 +6,22 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import AlertDialog from "@/components/alert-dialog";
-import { BORDER_RADIUS } from "@/constants/constants";
-import { BlurView } from "expo-blur";
+import { ZOOM_TYPE, Zoomable } from "@likashefqet/react-native-image-zoom";
 import { Image } from "expo-image";
+import { StatusBar } from "expo-status-bar";
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Animated,
-  Dimensions,
   NativeScrollEvent,
   NativeSyntheticEvent,
   Pressable,
   StyleSheet,
   View,
+  useWindowDimensions,
 } from "react-native";
 import { Icon, Modal, Portal, useTheme } from "react-native-paper";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export interface ViewerImage {
   identifier: string;
@@ -30,19 +31,18 @@ export interface ViewerImage {
 interface ModalProps {
   images: ViewerImage[];
   visible: boolean;
-  onDismiss: () => void;
+  onDismiss: (lastIndex: number) => void;
   initialIndex?: number;
   onDelete?: (image: ViewerImage) => Promise<unknown>;
   deleteNotes?: string[];
   onReport?: (image: ViewerImage) => void;
 }
 
-const { width, height } = Dimensions.get("screen");
 const DOT_SIZE = 8;
 const DOT_SPACING = 8;
 const DOT_INDICATOR_SIZE = DOT_SIZE + DOT_SPACING;
-const ITEM_HEIGHT = height * 0.5;
-const ITEM_WIDTH = width * 0.7;
+const MAX_ZOOM = 5;
+const DOUBLE_TAP_ZOOM = 2.5;
 
 export default function ImageViewer({
   images,
@@ -55,15 +55,18 @@ export default function ImageViewer({
 }: ModalProps) {
   const theme = useTheme();
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
+  const { width: itemWidth, height: itemHeight } = useWindowDimensions();
   const scrollX = React.useRef(new Animated.Value(0)).current;
   const [currentIndex, setCurrentIndex] = useState(initialIndex ?? 0);
   const [wasVisible, setWasVisible] = useState(visible);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const itemWidth = width - 40;
+  const [zoomed, setZoomed] = useState(false);
 
   // keep-comment: set during render, not in an effect, so the list mounts on the tapped picture
   if (visible !== wasVisible) {
     setWasVisible(visible);
+    setZoomed(false);
     if (visible && initialIndex !== undefined) setCurrentIndex(initialIndex);
   }
 
@@ -71,7 +74,9 @@ export default function ImageViewer({
     scrollX.setValue(currentIndex * itemWidth);
   }, [currentIndex, itemWidth, scrollX]);
 
-  const current = images[Math.min(currentIndex, images.length - 1)];
+  const lastIndex = Math.max(0, Math.min(currentIndex, images.length - 1));
+  const current = images[lastIndex];
+  const close = () => onDismiss(lastIndex);
 
   const confirmDelete = async () => {
     setShowDeleteDialog(false);
@@ -82,11 +87,10 @@ export default function ImageViewer({
     } catch {
       return;
     }
-    if (remaining === 0) onDismiss();
+    if (remaining === 0) onDismiss(0);
     else setCurrentIndex((index) => Math.min(index, remaining - 1));
   };
 
-  // För att synka pagination med rätt bild, när man kommer tillbaka för att se bilderna igen.
   const onMomentumScrollEnd = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     const index = Math.round(e.nativeEvent.contentOffset.x / itemWidth);
     setCurrentIndex(index);
@@ -94,16 +98,52 @@ export default function ImageViewer({
 
   return (
     <Portal>
-      {visible && <BlurView intensity={100} tint="dark" style={StyleSheet.absoluteFill} />}
-      <Modal
-        visible={visible}
-        onDismiss={onDismiss}
-        contentContainerStyle={[s.modalContainerStyle, { backgroundColor: theme.colors.inverseOnSurface }]}
-      >
-        <View
-          testID="review-image-frame"
-          style={{ position: "relative", overflow: "hidden", borderRadius: BORDER_RADIUS }}
-        >
+      <Modal visible={visible} onDismiss={close} style={s.fullScreen} contentContainerStyle={s.surface}>
+        {visible && <StatusBar style="light" />}
+        <View testID="review-image-frame" style={s.frame}>
+          <Animated.FlatList
+            testID="review-image-list"
+            horizontal
+            pagingEnabled
+            scrollEnabled={!zoomed}
+            showsHorizontalScrollIndicator={false}
+            bounces={false}
+            keyExtractor={(image) => image.identifier}
+            data={images}
+            initialScrollIndex={currentIndex}
+            getItemLayout={(_, index) => ({
+              length: itemWidth,
+              offset: itemWidth * index,
+              index,
+            })}
+            onMomentumScrollEnd={onMomentumScrollEnd}
+            onScroll={Animated.event([{ nativeEvent: { contentOffset: { x: scrollX } } }], { useNativeDriver: true })}
+            renderItem={({ item }) => (
+              <View testID="review-image-item" style={{ width: itemWidth, height: itemHeight }}>
+                <Zoomable
+                  style={s.zoomable}
+                  maxScale={MAX_ZOOM}
+                  doubleTapScale={DOUBLE_TAP_ZOOM}
+                  isDoubleTapEnabled
+                  onPinchStart={() => setZoomed(true)}
+                  onDoubleTap={(type) => setZoomed(type === ZOOM_TYPE.ZOOM_IN)}
+                  onResetAnimationEnd={() => setZoomed(false)}
+                >
+                  <Image source={item.imageUrl} contentFit="contain" style={s.image} />
+                </Zoomable>
+              </View>
+            )}
+          />
+          <Pressable
+            testID="image-viewer-close"
+            hitSlop={12}
+            onPress={close}
+            accessibilityRole="button"
+            accessibilityLabel={t("common.close")}
+            style={[s.cornerButton, { top: insets.top + 8, left: 12 }]}
+          >
+            <Icon size={26} source="close" color="#fff" />
+          </Pressable>
           {onDelete && current && (
             <Pressable
               testID="image-viewer-delete"
@@ -111,9 +151,9 @@ export default function ImageViewer({
               onPress={() => setShowDeleteDialog(true)}
               accessibilityRole="button"
               accessibilityLabel={t("common.delete")}
-              style={s.cornerButton}
+              style={[s.cornerButton, { top: insets.top + 8, right: 12 }]}
             >
-              <Icon size={22} source="delete" color={theme.colors.error} />
+              <Icon size={24} source="delete" color={theme.colors.error} />
             </Pressable>
           )}
           {!onDelete && onReport && current && (
@@ -123,63 +163,39 @@ export default function ImageViewer({
               onPress={() => onReport(current)}
               accessibilityRole="button"
               accessibilityLabel={t("report.title")}
-              style={s.cornerButton}
+              style={[s.cornerButton, { top: insets.top + 8, right: 12 }]}
             >
-              <Icon size={22} source="alert-circle" color={theme.colors.outline} />
+              <Icon size={24} source="alert-circle" color="#fff" />
             </Pressable>
           )}
-          <View>
-            <Animated.FlatList
-              testID="review-image-list"
-              horizontal
-              pagingEnabled
-              showsHorizontalScrollIndicator={false}
-              bounces={false}
-              keyExtractor={(image) => image.identifier}
-              data={images}
-              initialScrollIndex={currentIndex}
-              getItemLayout={(_, index) => ({
-                length: itemWidth,
-                offset: itemWidth * index,
-                index,
-              })}
-              onMomentumScrollEnd={onMomentumScrollEnd}
-              onScroll={Animated.event([{ nativeEvent: { contentOffset: { x: scrollX } } }], { useNativeDriver: true })}
-              renderItem={({ item }) => (
-                <View testID="review-image-item" style={s.imageContainer}>
-                  <Image source={item.imageUrl} contentFit="contain" style={s.image} />
-                </View>
-              )}
-            />
-            {images.length > 1 && (
-              <View testID="review-image-pagination" style={s.pagination}>
-                {images.map((_, index) => (
-                  <View
-                    key={index}
-                    testID="review-image-dot"
-                    style={[s.dot, { backgroundColor: theme.colors.tertiary }]}
-                  />
-                ))}
-                <Animated.View
-                  testID="review-image-indicator"
-                  style={[
-                    s.dotIndicator,
-                    {
-                      borderColor: theme.colors.primary,
-                      transform: [
-                        {
-                          translateX: scrollX.interpolate({
-                            inputRange: images.map((_, i) => i * (width - 40)),
-                            outputRange: images.map((_, i) => i * DOT_INDICATOR_SIZE),
-                          }),
-                        },
-                      ],
-                    },
-                  ]}
+          {images.length > 1 && !zoomed && (
+            <View testID="review-image-pagination" style={[s.pagination, { bottom: insets.bottom + 24 }]}>
+              {images.map((_, index) => (
+                <View
+                  key={index}
+                  testID="review-image-dot"
+                  style={[s.dot, { backgroundColor: theme.colors.tertiary }]}
                 />
-              </View>
-            )}
-          </View>
+              ))}
+              <Animated.View
+                testID="review-image-indicator"
+                style={[
+                  s.dotIndicator,
+                  {
+                    borderColor: theme.colors.primary,
+                    transform: [
+                      {
+                        translateX: scrollX.interpolate({
+                          inputRange: images.map((_, i) => i * itemWidth),
+                          outputRange: images.map((_, i) => i * DOT_INDICATOR_SIZE),
+                        }),
+                      },
+                    ],
+                  },
+                ]}
+              />
+            </View>
+          )}
         </View>
       </Modal>
       <AlertDialog
@@ -198,37 +214,35 @@ export default function ImageViewer({
 }
 
 const s = StyleSheet.create({
-  modalContainerStyle: {
-    margin: 20,
-    justifyContent: "center",
-    alignItems: "center",
-    flexDirection: "row",
-    maxHeight: height * 0.6,
-    maxWidth: width,
-    borderRadius: BORDER_RADIUS,
+  fullScreen: {
+    marginTop: 0,
+    marginBottom: 0,
   },
-  imageContainer: {
-    padding: 30,
-    alignItems: "center",
-    justifyContent: "center",
-    width: width - 40, // För att bildrna ska ligga snyggt i modalen
+  surface: {
+    flex: 1,
+    backgroundColor: "#000",
+  },
+  frame: {
+    flex: 1,
+  },
+  zoomable: {
+    flex: 1,
   },
   image: {
-    height: ITEM_HEIGHT,
-    width: ITEM_WIDTH,
+    width: "100%",
+    height: "100%",
   },
   cornerButton: {
     position: "absolute",
-    top: 10,
-    right: 10,
     zIndex: 1,
-    padding: 6,
-    borderRadius: BORDER_RADIUS,
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: "rgba(0,0,0,0.4)",
   },
   pagination: {
+    position: "absolute",
     flexDirection: "row",
     alignSelf: "center",
-    transform: [{ translateY: -20 }],
   },
   dot: {
     width: DOT_SIZE,
@@ -246,5 +260,3 @@ const s = StyleSheet.create({
     left: -DOT_SPACING / 2,
   },
 });
-
-// TODO Pagination: https://www.youtube.com/watch?v=FIAPuq24b0g
