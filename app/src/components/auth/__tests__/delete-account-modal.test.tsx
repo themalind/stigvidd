@@ -35,7 +35,7 @@ const { InvalidCredentialsError } = require("@/services/keycloak-auth");
 
 const WIDTH = Dimensions.get("screen").width;
 const PASSWORD = "hemligt123";
-const CONFIRM_QUESTION = "Är du säker på att du vill avsluta ditt konto?";
+const CONFIRM_QUESTION = "Är du säker på att du vill radera ditt konto?";
 
 const onDismiss = jest.fn();
 
@@ -52,9 +52,9 @@ async function send() {
   await settle();
 }
 
-// "Avsluta konto" is the modal title, the dialog title and the confirm button; the button is the last.
+// "Radera konto" is the modal title, the dialog title and the confirm button; the button is the last.
 async function confirmDeletion() {
-  const labels = screen.getAllByText("Avsluta konto");
+  const labels = screen.getAllByText("Radera konto");
   fireEvent.press(labels[labels.length - 1]);
   await settle();
 }
@@ -221,12 +221,12 @@ it("says it is working, and takes no second press, while the account is being de
 
   await reachConfirmation();
   await confirmDeletion();
-  await flushUntil(() => screen.queryByText("Avslutar..."));
+  await flushUntil(() => screen.queryByText("Raderar..."));
   // The confirmation is on its way out; wait for it, or "it did not come back" is meaningless.
   await flushUntilGone(() => screen.queryByText(CONFIRM_QUESTION));
 
-  expect(screen.getByText("Avslutar...")).toBeTruthy();
-  fireEvent.press(screen.getByText("Avslutar..."));
+  expect(screen.getByText("Raderar...")).toBeTruthy();
+  fireEvent.press(screen.getByText("Raderar..."));
   await settle();
 
   // A second press must not reopen the confirmation, which is the way back to a second delete.
@@ -247,7 +247,7 @@ it("cannot be dismissed by tapping outside while the delete is in flight", async
 
   await reachConfirmation();
   await confirmDeletion();
-  await flushUntil(() => screen.queryByText("Avslutar..."));
+  await flushUntil(() => screen.queryByText("Raderar..."));
 
   fireEvent.press(screen.getByTestId("modal-backdrop"));
   await settle();

@@ -27,9 +27,7 @@ import { getConsentSync, isConsentHydrated, setConsent, subscribeConsent, type C
  * and treating it as one in either direction would be wrong. Unanswered stays "unknown", which
  * holds events without transmitting them.
  *
- * It also discloses what the position is used for, before the phone asks. That is
- * information, not a second consent: the buttons decide analytics and nothing else, and
- * useUserLocation holds the system prompt back until this is answered.
+ * Never mention location here: App Review rejects text ahead of the permission prompt whose buttons are not "Continue". keep-comment: store policy
  *
  * Rendered inside the layout's provider tree beside GlobalSnackbar. It waits for hydration —
  * without that, a returning user who already answered would be asked again on every launch,
@@ -65,9 +63,6 @@ export function ConsentDialog() {
         <Dialog.Title>{t("privacy.askTitle")}</Dialog.Title>
         <Dialog.Content style={s.content}>
           <Text variant="bodyMedium">{t("privacy.askBody")}</Text>
-          <Text testID="consent-location-note" variant="bodyMedium">
-            {t("privacy.askLocationNote")}
-          </Text>
         </Dialog.Content>
         <Dialog.Actions>
           <Button testID="consent-accept" onPress={() => void choose(true)}>

@@ -30,8 +30,8 @@
     "register": "Skapa konto",
     "registering": "Skapar konto...",
     "logout": "Logga ut",
-    "deleteAccount": "Avsluta konto",
-    "deletingAccount": "Avslutar...",
+    "deleteAccount": "Radera konto",
+    "deletingAccount": "Raderar...",
     "forgotPassword": "Glömt ditt lösenord?",
     "resetHere": "Återställ här.",
     "resetPassword": "Återställ ditt lösenord",
@@ -52,7 +52,7 @@
     "checkEmail": "Kolla din e-post! Länken gäller i två timmar. Kika även i skräpposten.",
     "checkSpam": "Får du inget mail? Kika i din skräppost!",
     "enterYourPassword": "Skriv in ditt lösenord",
-    "confirmDeleteAccount": "Är du säker på att du vill avsluta ditt konto?",
+    "confirmDeleteAccount": "Är du säker på att du vill radera ditt konto?",
     "deleteAccountWarning": "Ditt konto och dina promenader raderas för alltid. Promenader du delat med någon finns kvar hos mottagarna.",
     "deleteAccountKeptData": "Dina recensionsbetyg och hinderrapporter står kvar utan koppling till dig – texten och bilderna raderas.",
     "unknownError": "Ett oväntat fel inträffade",
@@ -102,7 +102,7 @@
     "myHikes": "Mina egna promenader",
     "sharedHikes": "Promenader delade med mig",
     "about": "Om Stigvidd",
-    "deleteAccount": "Avsluta konto"
+    "deleteAccount": "Radera konto"
   },
   "filter": {
     "title": "Filter & Sortering",
@@ -784,7 +784,6 @@
     "errorsNote": "Felrapporter samlas in oavsett, eftersom de är det som håller appen igång. De innehåller heller aldrig din position.",
     "askTitle": "Vill du hjälpa oss förbättra Stigvidd?",
     "askBody": "Får vi samla in användningsstatistik – vilka funktioner som används och om de fungerar? Den innehåller aldrig din position, vi sparar den i 7 dagar på våra egna servrar inom EU, och du kan ändra dig när som helst under Inställningar.",
-    "askLocationNote": "Strax frågar telefonen också om Stigvidd får använda din position. Den används för vädret, ortsnamnet och leder nära dig. Du kan svara nej, appen fungerar ändå och utgår då från Borås.",
     "accept": "Ja, det går bra",
     "decline": "Nej tack"
   }
