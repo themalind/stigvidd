@@ -493,8 +493,8 @@ export default function ModerationPage() {
             <SheetTitle>Delete this content permanently?</SheetTitle>
             <SheetDescription data-testid="confirm-body">
               This deletes {report?.authorNickName ?? "the author"}
-              {"'"}s {contentTypeNoun[report?.contentType ?? ""] ?? "content"} for good. It cannot be undone. It
-              becomes strike {strikeAfterUphold(detail?.authorStrikes ?? 0, false)} against them.
+              {"'"}s {contentTypeNoun[report?.contentType ?? ""] ?? "content"} for good. It cannot be undone. It becomes
+              strike {strikeAfterUphold(detail?.authorStrikes ?? 0, false)} against them.
             </SheetDescription>
           </SheetHeader>
 
