@@ -9,6 +9,7 @@ import { createTrailObstacle, getObstacleIssueTypes } from "@/api/trail-obstacle
 import { asTranslationKey } from "@/i18n";
 import { getCoordinatesByTrailIdentifier } from "@/api/trails";
 import { showErrorAtom, showSuccessAtom } from "@/atoms/snackbar-atoms";
+import CountedTextInput from "@/components/counted-text-input";
 import SelectInput from "@/components/select-input";
 import { BORDER_RADIUS } from "@/constants/constants";
 import { CreateTrailObstacleRequest } from "@/data/types";
@@ -28,7 +29,7 @@ import { Controller, SubmitHandler, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { Dimensions, Pressable, StyleSheet, Switch, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
-import { ActivityIndicator, Button, Modal, Portal, Surface, Text, TextInput, useTheme } from "react-native-paper";
+import { ActivityIndicator, Button, Modal, Portal, Surface, Text, useTheme } from "react-native-paper";
 import { z } from "zod";
 import { logger } from "../../../services/logger";
 
@@ -226,7 +227,7 @@ export default function TrailObstacleForm({ trailIdentifier, visible, onDismiss 
                   control={control}
                   name="description"
                   render={({ field: { onChange, onBlur, value } }) => (
-                    <TextInput
+                    <CountedTextInput
                       testID="obstacle-description"
                       mode="outlined"
                       error={!!errors.description}

@@ -8,6 +8,7 @@
 import { createHike } from "@/api/hikes";
 import { isUnauthorized, withUnauthorizedRetry } from "@/api/unauthorized";
 import { showErrorAtom } from "@/atoms/snackbar-atoms";
+import CountedTextInput from "@/components/counted-text-input";
 import Map from "@/components/map/map";
 import { routeCasingPaint } from "@/components/map/marker-styles";
 import { BORDER_RADIUS } from "@/constants/constants";
@@ -28,7 +29,7 @@ import { useCallback, useMemo, useRef, useState } from "react";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { Pressable, StyleSheet, View } from "react-native";
-import { Divider, Text, TextInput, useTheme } from "react-native-paper";
+import { Divider, Text, useTheme } from "react-native-paper";
 import { z } from "zod";
 
 interface Props {
@@ -132,7 +133,7 @@ export default function SaveHikeForm({ hike, onDismiss, onSaveSuccess }: Props) 
         name="hikeName"
         control={control}
         render={({ field: { onChange, onBlur, value } }) => (
-          <TextInput
+          <CountedTextInput
             testID="save-hike-name"
             error={!!errors.hikeName}
             style={{ backgroundColor: theme.colors.surface }}

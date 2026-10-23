@@ -6,6 +6,7 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { showErrorAtom } from "@/atoms/snackbar-atoms";
+import CountedTextInput from "@/components/counted-text-input";
 import { asTranslationKey } from "@/i18n";
 import { BORDER_RADIUS } from "@/constants/constants";
 import { useCreateReview } from "@/hooks/review/useCreateReview";
@@ -16,7 +17,7 @@ import { useState } from "react";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { StyleSheet, View } from "react-native";
-import { Button, Divider, Text, TextInput, useTheme } from "react-native-paper";
+import { Button, Divider, Text, useTheme } from "react-native-paper";
 import StarRating from "react-native-star-rating-widget";
 import { z } from "zod";
 import AlertDialog from "../../alert-dialog";
@@ -156,7 +157,7 @@ export default function AddReviewForm({ trailIdentifier, onSuccess }: ReviewForm
         <Controller
           control={control}
           render={({ field: { onChange, onBlur, value } }) => (
-            <TextInput
+            <CountedTextInput
               testID="review-text"
               error={!!errors.trailReview}
               onBlur={onBlur}

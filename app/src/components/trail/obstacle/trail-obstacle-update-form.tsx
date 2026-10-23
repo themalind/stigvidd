@@ -8,6 +8,7 @@
 import { getObstacleIssueTypes, updateTrailObstacle } from "@/api/trail-obstacles";
 import { asTranslationKey } from "@/i18n";
 import { showErrorAtom, showSuccessAtom } from "@/atoms/snackbar-atoms";
+import CountedTextInput from "@/components/counted-text-input";
 import SelectInput from "@/components/select-input";
 import { BORDER_RADIUS } from "@/constants/constants";
 import { UpdateTrailObstacleRequest } from "@/data/types";
@@ -20,7 +21,7 @@ import { BlurView } from "expo-blur";
 import { useSetAtom } from "jotai";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
 import { Dimensions, Pressable, StyleSheet, View } from "react-native";
-import { Button, Modal, Portal, Text, TextInput, useTheme } from "react-native-paper";
+import { Button, Modal, Portal, Text, useTheme } from "react-native-paper";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
 
@@ -139,7 +140,7 @@ export default function TrailObstacleUpdateForm({
               control={control}
               name="description"
               render={({ field: { onChange, onBlur, value } }) => (
-                <TextInput
+                <CountedTextInput
                   testID="obstacle-update-description"
                   mode="outlined"
                   error={!!errors.description}
