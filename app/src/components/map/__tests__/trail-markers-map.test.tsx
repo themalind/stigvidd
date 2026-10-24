@@ -125,44 +125,62 @@ it("mounts a source only for the kinds the filter asks for", async () => {
   expect(source("shelters")).toBeTruthy();
 });
 
-// keep-comment: user trails share the trails source, so the two filter rows split one marker list
-it("splits curated trails and user trails by their own filter rows", async () => {
+// keep-comment: one marker list feeds both sources, so a trail and a user walk must never cluster together
+it("puts curated trails and user walks in separate sources", async () => {
   mockGetTrailMarkers.mockResolvedValue([trailMarker("t1"), { ...trailMarker("u1"), isContribution: true }]);
-  const identifiers = () =>
-    (source("trails")?.props.data.features ?? []).map(
-      (f: { properties: { identifier: string } }) => f.properties.identifier,
-    );
+  const identifiers = (id: string) =>
+    (source(id)?.props.data.features ?? []).map((f: { properties: { identifier: string } }) => f.properties.identifier);
 
-  const first = await show({ trails: true, contributions: false });
-  await flushUntil(() => source("trails")?.props.data.features.length);
-  expect(identifiers()).toEqual(["t1"]);
+  const first = await show({ trails: true, contributions: true });
+  await flushUntil(() => source("contributions")?.props.data.features.length);
+  expect(identifiers("trails")).toEqual(["t1"]);
+  expect(identifiers("contributions")).toEqual(["u1"]);
   first.unmount();
 
   const second = await show({ trails: false, contributions: true });
-  await flushUntil(() => source("trails")?.props.data.features.length);
-  expect(identifiers()).toEqual(["u1"]);
+  await flushUntil(() => source("contributions")?.props.data.features.length);
+  expect(source("trails")).toBeFalsy();
+  expect(identifiers("contributions")).toEqual(["u1"]);
   second.unmount();
 
-  await show({ trails: false, contributions: false });
-  expect(source("trails")).toBeFalsy();
+  await show({ trails: true, contributions: false });
+  expect(source("contributions")).toBeFalsy();
 });
 
-it("colours a cluster of user walks only in the user-walk colour", async () => {
+it("draws user-walk clusters in their own colour", async () => {
   await show({ trails: true, contributions: true });
-  await flushUntil(() => source("trails"));
+  const layer = (id: string) => screen.queryAllByTestId("maplibre-Layer").find((node) => node.props.id === id);
 
-  const curatedCount = source("trails")?.props.clusterProperties.curatedCount;
-  expect(curatedCount).toEqual([
-    ["+", ["accumulated"], ["get", "curatedCount"]],
-    ["case", ["==", ["get", "isContribution"], true], 0, 1],
+  expect(layer("trails-clusters")?.props.paint["circle-color"]).toBe(MARKER_COLORS.trails.fill);
+  expect(layer("contributions-clusters")?.props.paint["circle-color"]).toBe(CONTRIBUTION_MARKER_COLORS.fill);
+  expect(layer("contributions-points")?.props.paint["circle-color"]).toBe(CONTRIBUTION_MARKER_COLORS.fill);
+});
+
+it("never drops a cluster count when clusters from two sources overlap", async () => {
+  await show({ trails: true, contributions: true, firePits: true, shelters: true });
+  const counts = screen.queryAllByTestId("maplibre-Layer").filter((node) => node.props.id.endsWith("-cluster-count"));
+
+  expect(counts).toHaveLength(4);
+  for (const count of counts) {
+    expect(count.props.layout).toMatchObject({ "text-allow-overlap": true, "text-ignore-placement": true });
+  }
+});
+
+it("opens a user-walk cluster from its own source", async () => {
+  await show({ trails: true, contributions: true });
+  sourceHandle("contributions").getClusterExpansionZoom.mockResolvedValue(12);
+  sourceHandle("contributions").getClusterLeaves.mockResolvedValue([
+    { properties: { identifier: "u1" } },
+    { properties: { identifier: "u2" } },
   ]);
-  const clusters = screen.queryAllByTestId("maplibre-Layer").find((node) => node.props.id === "trail-clusters");
-  expect(clusters?.props.paint["circle-color"]).toEqual([
-    "case",
-    ["==", ["get", "curatedCount"], 0],
-    CONTRIBUTION_MARKER_COLORS.fill,
-    MARKER_COLORS.trails.fill,
-  ]);
+  const contributions = source("contributions");
+  if (!contributions) throw new Error("expected the contributions source");
+
+  fireEvent(contributions, "press", clusterFeature(2));
+  await settle();
+
+  expect(onClusterOpen).toHaveBeenCalledWith(["u1", "u2"], { coordinate: [12.94, 57.72], radius: 16 }, 12);
+  expect(sourceHandle("trails").getClusterLeaves).not.toHaveBeenCalled();
 });
 
 // The accessibility filter applies across every kind at once.

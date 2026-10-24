@@ -70,6 +70,16 @@ it("shows a card per trail in the cluster, up to what the list has mounted", () 
   expect(screen.getAllByText("3.5 km")).toHaveLength(2);
 });
 
+it("marks a user-contributed walk, and only that one", () => {
+  mockUseTrailCards.mockReturnValue(
+    state([card("a", { contribution: { publishedAt: "2026-10-01", likeCount: 0 } }), card("b")]),
+  );
+  show(["a", "b"]);
+
+  expect(screen.getAllByTestId("carousel-contribution")).toHaveLength(1);
+  expect(screen.getByTestId("carousel-card-a")).toContainElement(screen.getByTestId("carousel-contribution"));
+});
+
 // A card narrower than the screen shows a sliver of the next one, which is what reads as scrollable.
 it("leaves the next card peeking when there is more than one", () => {
   show(["a", "b", "c"]);
