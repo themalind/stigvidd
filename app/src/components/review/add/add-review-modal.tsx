@@ -6,7 +6,7 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { BORDER_RADIUS } from "@/constants/constants";
-import { BlurView } from "expo-blur";
+import ModalScrim from "@/components/dialog/modal-scrim";
 import { Dimensions, Pressable, StyleSheet, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { Icon, Modal, Portal, Text, useTheme } from "react-native-paper";
@@ -28,7 +28,7 @@ export default function AddReview({ visible, onDismiss, trailIdentifier, trailNa
   const { t } = useTranslation();
   return (
     <Portal>
-      {visible && <BlurView intensity={100} tint="dark" style={StyleSheet.absoluteFill} />}
+      {visible && <ModalScrim />}
       <Modal
         contentContainerStyle={[s.modalContainerStyle, { backgroundColor: theme.colors.surface }]}
         visible={visible}

@@ -5,43 +5,32 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import { DIALOG_BORDER_RADIUS } from "@/constants/constants";
+import DialogFrame from "@/components/dialog/dialog-frame";
 import { ActiveHike } from "@/data/types";
-import { StyleSheet } from "react-native";
-import { Dialog, Portal, useTheme } from "react-native-paper";
 import { useTranslation } from "react-i18next";
 import SaveHikeForm from "./save-hike-form";
 
 interface Props {
   visible: boolean;
   onDismiss: () => void;
-  onConfirm: () => void;
   onSaveSuccess: () => void;
   hike: ActiveHike;
 }
 
-export default function SaveHikeModal({ visible, onDismiss, onConfirm, onSaveSuccess, hike }: Props) {
-  const theme = useTheme();
+export default function SaveHikeModal({ visible, onDismiss, onSaveSuccess, hike }: Props) {
   const { t } = useTranslation();
 
   return (
-    <Portal>
-      <Dialog
-        style={[s.container, { backgroundColor: theme.colors.background }]}
-        visible={visible}
-        onDismiss={onDismiss}
-      >
-        <Dialog.Title>{t("hike.saveTitle")}</Dialog.Title>
-        <Dialog.Content>
-          <SaveHikeForm hike={hike} onDismiss={onDismiss} onSaveSuccess={onSaveSuccess} />
-        </Dialog.Content>
-      </Dialog>
-    </Portal>
+    <DialogFrame
+      testID="save-hike"
+      visible={visible}
+      onDismiss={onDismiss}
+      title={t("hike.saveTitle")}
+      icon="content-save-outline"
+      showClose
+      actions={[]}
+    >
+      <SaveHikeForm hike={hike} onDismiss={onDismiss} onSaveSuccess={onSaveSuccess} />
+    </DialogFrame>
   );
 }
-
-const s = StyleSheet.create({
-  container: {
-    borderRadius: DIALOG_BORDER_RADIUS,
-  },
-});

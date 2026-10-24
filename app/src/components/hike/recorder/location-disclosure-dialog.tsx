@@ -5,9 +5,9 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import { DIALOG_BORDER_RADIUS } from "@/constants/constants";
-import { StyleSheet, View } from "react-native";
-import { Button, Dialog, Portal, Text, useTheme } from "react-native-paper";
+import DialogFrame from "@/components/dialog/dialog-frame";
+import { DialogListItem, DialogText } from "@/components/dialog/dialog-section";
+import { useTheme } from "react-native-paper";
 import { useTranslation } from "react-i18next";
 
 interface Props {
@@ -40,49 +40,22 @@ export default function LocationDisclosureDialog({ visible, onContinue, onDeclin
   ];
 
   return (
-    <Portal>
-      <Dialog
-        style={[s.dialog, { backgroundColor: theme.colors.background }]}
-        visible={visible}
-        dismissable={false}
-        onDismiss={onDecline}
-      >
-        <Dialog.Title>{t("createHike.disclosureTitle")}</Dialog.Title>
-        <Dialog.Content>
-          <View style={s.lines}>
-            <Text variant="bodyMedium">{t("createHike.disclosureIntro")}</Text>
-            {lines.map((line, index) => (
-              <View key={index} style={s.bulletRow}>
-                <Text variant="bodyMedium">{"•"}</Text>
-                <Text variant="bodyMedium" style={s.bulletText}>
-                  {line}
-                </Text>
-              </View>
-            ))}
-          </View>
-        </Dialog.Content>
-        <Dialog.Actions>
-          <Button onPress={onDecline}>{t("createHike.disclosureDecline")}</Button>
-          <Button onPress={onContinue}>{t("createHike.disclosureContinue")}</Button>
-        </Dialog.Actions>
-      </Dialog>
-    </Portal>
+    <DialogFrame
+      testID="location-disclosure"
+      visible={visible}
+      dismissable={false}
+      onDismiss={onDecline}
+      title={t("createHike.disclosureTitle")}
+      icon="map-marker-outline"
+      actions={[
+        { label: t("createHike.disclosureContinue"), onPress: onContinue },
+        { label: t("createHike.disclosureDecline"), onPress: onDecline, variant: "text" },
+      ]}
+    >
+      <DialogText>{t("createHike.disclosureIntro")}</DialogText>
+      {lines.map((line, index) => (
+        <DialogListItem key={index} icon="circle-small" color={theme.colors.primary} text={line} />
+      ))}
+    </DialogFrame>
   );
 }
-
-const s = StyleSheet.create({
-  dialog: {
-    borderRadius: DIALOG_BORDER_RADIUS,
-  },
-  lines: {
-    gap: 10,
-  },
-  bulletRow: {
-    flexDirection: "row",
-    gap: 8,
-    alignItems: "flex-start",
-  },
-  bulletText: {
-    flex: 1,
-  },
-});

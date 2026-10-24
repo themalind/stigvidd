@@ -15,7 +15,7 @@ import sv from "@/i18n/locales/sv.json";
 import { flushUntil, settle } from "@/test/flush";
 import { captureKeyboard } from "@/test/keyboard";
 import { renderWithProviders } from "@/test/render";
-import { fireEvent, screen } from "@testing-library/react-native";
+import { fireEvent, screen, within } from "@testing-library/react-native";
 import { Dimensions, StyleSheet } from "react-native";
 
 const mockCreateSubmission = jest.fn();
@@ -219,8 +219,10 @@ it("explains what to write in each field from the info button by the heading", a
 
   fireEvent.press(screen.getByLabelText("Vad ska jag skriva?"));
 
-  expect(screen.getByText(/^Beskrivning: /)).toBeTruthy();
-  expect(screen.getByText(/^Ta sig dit: /)).toBeTruthy();
+  const dialog = screen.getByTestId("info-dialog");
+  expect(within(dialog).getByText("Beskrivning")).toBeTruthy();
+  expect(within(dialog).getByText("Hur man hittar till starten.")).toBeTruthy();
+  expect(within(dialog).getByText("T.ex. Runt Ballasjön")).toBeTruthy();
 });
 
 it("gives photo advice from the info button by the photos heading", async () => {
@@ -228,7 +230,9 @@ it("gives photo advice from the info button by the photos heading", async () => 
 
   fireEvent.press(screen.getByLabelText("Tips om bilder"));
 
-  expect(screen.getByText("Undvik bilder där människor syns, och bilder som kan vara stötande.")).toBeTruthy();
+  const dialog = screen.getByTestId("info-dialog");
+  expect(within(dialog).getByText("Undvik")).toBeTruthy();
+  expect(within(dialog).getByText("Bilder där människor syns")).toBeTruthy();
 });
 
 it("tells a walk without photos that example images are used", async () => {
@@ -241,9 +245,11 @@ it("opens the difficulty guide from the info icon", async () => {
   await open();
 
   fireEvent.press(screen.getByTestId("publish-difficulty-help"));
-  await flushUntil(() => screen.queryByTestId("difficulty-info-content"));
+  await flushUntil(() => screen.queryByTestId("difficulty-info"));
 
-  expect(screen.getByTestId("difficulty-info-content")).toBeTruthy();
+  expect(screen.getAllByTestId("difficulty-info-card")).toHaveLength(4);
+  // keep-comment: a walk being published has no level yet, so the guide must not pre-mark one
+  expect(screen.queryByText("Den här leden")).toBeNull();
 });
 
 it("measures a path in metres", () => {

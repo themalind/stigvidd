@@ -8,7 +8,7 @@
 import { BORDER_RADIUS } from "@/constants/constants";
 import { TrailObstacle } from "@/data/types";
 import { MaterialIcons } from "@expo/vector-icons";
-import { BlurView } from "expo-blur";
+import ModalScrim from "@/components/dialog/modal-scrim";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { Dimensions, Pressable, ScrollView, StyleSheet, View } from "react-native";
@@ -29,7 +29,7 @@ export default function TrailObstacleModal({ visible, onDismiss, obstacles, trai
   const theme = useTheme();
   return (
     <Portal>
-      {visible && <BlurView intensity={100} tint="dark" style={StyleSheet.absoluteFill} />}
+      {visible && <ModalScrim />}
       <Modal
         contentContainerStyle={[s.modalContainerStyle, { backgroundColor: theme.colors.surface }]}
         visible={visible}

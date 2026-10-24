@@ -10,7 +10,7 @@ import { asTranslationKey } from "@/i18n";
 import { InvalidCredentialsError } from "@/services/keycloak-auth";
 import { BORDER_RADIUS } from "@/constants/constants";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { BlurView } from "expo-blur";
+import ModalScrim from "@/components/dialog/modal-scrim";
 import { router } from "expo-router";
 import { useState } from "react";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
@@ -73,7 +73,7 @@ export default function DeleteAccountModal({ visible, onDismiss }: Props) {
 
   return (
     <Portal>
-      {visible && <BlurView intensity={100} tint="dark" style={StyleSheet.absoluteFill} />}
+      {visible && <ModalScrim />}
       <Modal
         contentContainerStyle={[s.modalContainerStyle, { backgroundColor: theme.colors.surface }]}
         visible={visible}
@@ -129,16 +129,12 @@ export default function DeleteAccountModal({ visible, onDismiss }: Props) {
       </Modal>
       <AlertDialog
         visible={confirmVisible}
-        textColor={theme.colors.error}
-        backgroundColor={theme.colors.surface}
         onDismiss={() => setConfirmVisible(false)}
         title={t("auth.deleteAccount")}
-        infoText={[
-          t("auth.confirmDeleteAccount"),
-          t("auth.deleteAccountWarning"),
-          t("auth.deleteAccountKeptData"),
-          t("auth.deleteAccountPublished"),
-        ]}
+        icon="account-remove-outline"
+        tone="danger"
+        infoText={[t("auth.confirmDeleteAccount"), t("auth.deleteAccountKeptData"), t("auth.deleteAccountPublished")]}
+        warning={t("auth.deleteAccountWarning")}
         confirmText={t("auth.deleteAccount")}
         onConfirm={handleConfirm}
         cancelText={t("common.cancel")}

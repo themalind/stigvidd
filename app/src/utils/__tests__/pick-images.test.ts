@@ -6,10 +6,10 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import "@/i18n";
+import { getDialog, hideDialog } from "@/services/dialog";
 import { pickImages } from "@/utils/pick-images";
 import { resizeImage } from "@/utils/resizeImage";
 import * as ImagePicker from "expo-image-picker";
-import { Alert } from "react-native";
 
 jest.mock("expo-image-picker", () => ({
   requestMediaLibraryPermissionsAsync: jest.fn(),
@@ -20,7 +20,6 @@ jest.mock("@/utils/resizeImage", () => ({ resizeImage: jest.fn() }));
 const requestPermission = ImagePicker.requestMediaLibraryPermissionsAsync as jest.Mock;
 const launchLibrary = ImagePicker.launchImageLibraryAsync as jest.Mock;
 const resize = resizeImage as jest.Mock;
-let alert: jest.SpyInstance;
 
 function picked(...names: string[]) {
   return { canceled: false, assets: names.map((name) => ({ uri: `file:///dcim/${name}.heic` })) };
@@ -28,13 +27,12 @@ function picked(...names: string[]) {
 
 beforeEach(() => {
   jest.clearAllMocks();
-  alert = jest.spyOn(Alert, "alert").mockImplementation(() => {});
   requestPermission.mockResolvedValue({ granted: true });
   resize.mockImplementation(async (uri: string) => uri.replace(".heic", ".jpg"));
 });
 
 afterEach(() => {
-  alert.mockRestore();
+  hideDialog();
 });
 
 it("explains and opens nothing when library access is denied", async () => {
@@ -42,8 +40,16 @@ it("explains and opens nothing when library access is denied", async () => {
 
   await expect(pickImages({ limit: 3 })).resolves.toBeNull();
 
-  expect(alert).toHaveBeenCalledWith("Tillgång krävs", "Tillgång till mediabiblioteket krävs.");
+  expect(getDialog()).toMatchObject({ title: "Tillgång krävs", message: "Tillgång till mediabiblioteket krävs." });
   expect(launchLibrary).not.toHaveBeenCalled();
+});
+
+it("opens no dialog when access is granted", async () => {
+  launchLibrary.mockResolvedValue(picked("a"));
+
+  await pickImages({ limit: 1 });
+
+  expect(getDialog()).toBeNull();
 });
 
 it("returns nothing when the picker is cancelled", async () => {

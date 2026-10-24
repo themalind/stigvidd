@@ -16,6 +16,8 @@ public record PageTexts
     public required string AppStore { get; init; }
     public required string GooglePlay { get; init; }
     public required string GetTheAppHint { get; init; }
+    public required string AndroidTest { get; init; }
+    public required string AndroidTestHint { get; init; }
     public required string FallbackTrailName { get; init; }
     public required string ToSite { get; init; }
     public required string NotFoundHeading { get; init; }
@@ -34,6 +36,8 @@ public record PageTexts
         AppStore = "Hämta i App Store",
         GooglePlay = "Hämta på Google Play",
         GetTheAppHint = "Har du inte Stigvidd? Hämta appen och öppna länken igen.",
+        AndroidTest = "Testa på Android",
+        AndroidTestHint = "Stigvidd finns snart på Google Play. Vill du testa redan nu? Hör av dig.",
         FallbackTrailName = "En led på Stigvidd",
         ToSite = "Till stigvidd.se",
         NotFoundHeading = "Leden finns inte",
@@ -53,6 +57,8 @@ public record PageTexts
         AppStore = "Download on the App Store",
         GooglePlay = "Get it on Google Play",
         GetTheAppHint = "Don't have Stigvidd? Get the app and open the link again.",
+        AndroidTest = "Try it on Android",
+        AndroidTestHint = "Stigvidd is coming to Google Play soon. Want to try it now? Get in touch.",
         FallbackTrailName = "A trail on Stigvidd",
         ToSite = "Go to stigvidd.se",
         NotFoundHeading = "Trail not found",

@@ -5,14 +5,13 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import { BORDER_RADIUS } from "@/constants/constants";
-import { asTranslationKey } from "@/i18n";
+import DialogSection from "@/components/dialog/dialog-section";
+import InfoDialog from "@/components/dialog/info-dialog";
 import { ACCESSIBILITY_INFO } from "@/data/trail-content";
+import { asTranslationKey } from "@/i18n";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { BlurView } from "expo-blur";
-import { Dimensions, Pressable, StyleSheet, View } from "react-native";
-import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
-import { Icon, Modal, Portal, Text, useTheme } from "react-native-paper";
+import { StyleSheet } from "react-native";
+import { Text, useTheme } from "react-native-paper";
 import { useTranslation } from "react-i18next";
 
 interface Props {
@@ -20,136 +19,48 @@ interface Props {
   onDismiss: () => void;
 }
 
-const { height } = Dimensions.get("screen");
-
 export default function AccesibilityInfoModal({ visible, onDismiss }: Props) {
   const theme = useTheme();
   const { t } = useTranslation();
 
   return (
-    <Portal>
-      {visible && <BlurView intensity={100} tint="dark" style={StyleSheet.absoluteFill} />}
-      <Modal
-        contentContainerStyle={[s.modalContainerStyle, { backgroundColor: theme.colors.surface }]}
-        visible={visible}
-        onDismiss={onDismiss}
-      >
-        <KeyboardAwareScrollView
-          keyboardShouldPersistTaps="handled"
-          enableOnAndroid={true}
-          extraScrollHeight={20}
-          contentContainerStyle={s.scrollContent}
-        >
-          <View testID="accessibility-info-content" style={s.content}>
-            <View testID="accessibility-info-header" style={s.header}>
-              <View testID="accessibility-info-header-left" style={s.headerLeft}>
-                <View
-                  testID="accessibility-info-symbol"
-                  style={[s.headerIconCircle, { borderColor: theme.colors.primary }]}
-                >
-                  <Icon size={20} source="human-handsup" color={theme.colors.tertiary} />
-                </View>
-                <Text style={s.title}>{t("trail.accessibilityTitle")}</Text>
-              </View>
-              <Pressable testID="accessibility-info-close" hitSlop={16} onPress={onDismiss}>
-                <Icon source="close" size={20} color={theme.colors.onSurface} />
-              </Pressable>
-            </View>
+    <InfoDialog
+      testID="accessibility-info"
+      visible={visible}
+      onDismiss={onDismiss}
+      title={t("trail.accessibilityTitle")}
+      icon="human-handsup"
+    >
+      {ACCESSIBILITY_INFO.map((info) => {
+        const paragraphs = t(asTranslationKey(info.description))
+          .split("\n")
+          .filter((p) => p.trim().length > 0);
 
-            {ACCESSIBILITY_INFO.map((info) => {
-              const paragraphs = t(asTranslationKey(info.description))
-                .split("\n")
-                .filter((p) => p.trim().length > 0);
-
-              return (
-                <View
-                  key={info.title}
-                  testID="accessibility-info-card"
-                  style={[
-                    s.infoCard,
-                    {
-                      borderColor: theme.colors.outlineVariant,
-                      backgroundColor: theme.colors.secondaryContainer,
-                    },
-                  ]}
-                >
-                  <View testID="accessibility-info-card-header" style={s.infoHeader}>
-                    <MaterialCommunityIcons name={info.iconName} size={24} color={theme.colors.primary} />
-                    <Text style={s.infoLabel}>{t(asTranslationKey(info.title))}</Text>
-                  </View>
-                  {paragraphs.map((paragraph, i) => (
-                    <Text key={i} style={[s.infoBody, i > 0 && s.infoBodySpacing]}>
-                      {paragraph.trim()}
-                    </Text>
-                  ))}
-                </View>
-              );
-            })}
-          </View>
-        </KeyboardAwareScrollView>
-      </Modal>
-    </Portal>
+        return (
+          <DialogSection
+            key={info.title}
+            testID="accessibility-info-card"
+            icon={<MaterialCommunityIcons name={info.iconName} size={20} color={theme.colors.primary} />}
+            heading={t(asTranslationKey(info.title))}
+          >
+            {paragraphs.map((paragraph, i) => (
+              <Text key={i} style={[s.paragraph, { color: theme.colors.onSurface }, i > 0 && s.spacing]}>
+                {paragraph.trim()}
+              </Text>
+            ))}
+          </DialogSection>
+        );
+      })}
+    </InfoDialog>
   );
 }
 
 const s = StyleSheet.create({
-  modalContainerStyle: {
-    height: height * 0.8,
-    borderRadius: BORDER_RADIUS,
-    padding: 10,
-  },
-  scrollContent: {
-    flexGrow: 1,
-  },
-  content: {
-    gap: 15,
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: 5,
-  },
-  headerLeft: {
-    flexDirection: "row",
-    gap: 10,
-    alignItems: "center",
-  },
-  headerIconCircle: {
-    borderWidth: 0.5,
-    borderRadius: 100,
-    width: 32,
-    height: 32,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  title: {
-    fontWeight: "700",
-    fontSize: 16,
-  },
-  infoCard: {
-    borderWidth: 0.5,
-    padding: 12,
-    borderRadius: BORDER_RADIUS,
-    gap: 8,
-  },
-  infoHeader: {
-    flexDirection: "row",
-    gap: 8,
-    alignItems: "center",
-    marginBottom: 4,
-  },
-  infoLabel: {
-    fontSize: 11,
-    fontWeight: "600",
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-  },
-  infoBody: {
+  paragraph: {
     fontSize: 13,
     lineHeight: 20,
   },
-  infoBodySpacing: {
+  spacing: {
     marginTop: 8,
   },
 });

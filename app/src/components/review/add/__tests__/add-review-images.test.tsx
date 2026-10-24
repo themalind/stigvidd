@@ -9,12 +9,13 @@ import { snackbarAtom } from "@/atoms/snackbar-atoms";
 import AddReviewImages from "@/components/review/add/add-review-images";
 import { AppDarkTheme, AppDefaultTheme } from "@/constants/theme";
 import { settle } from "@/test/flush";
+import { getDialog, hideDialog } from "@/services/dialog";
 import { renderWithProviders } from "@/test/render";
 import { resizeImage } from "@/utils/resizeImage";
 import { fireEvent, screen } from "@testing-library/react-native";
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
-import { Alert, Dimensions, StyleProp, StyleSheet, ViewStyle } from "react-native";
+import { Dimensions, StyleProp, StyleSheet, ViewStyle } from "react-native";
 
 // The picker dialog and the resizer are the platform's; the component owns what it does with their answers.
 jest.mock("expo-image-picker", () => ({
@@ -31,17 +32,15 @@ const { width: WIDTH } = Dimensions.get("screen");
 const BUTTON_WIDTH = WIDTH * 0.25;
 
 const setReviewImages = jest.fn();
-let alert: jest.SpyInstance;
 
 beforeEach(() => {
   jest.clearAllMocks();
-  alert = jest.spyOn(Alert, "alert").mockImplementation(() => {});
   requestPermission.mockResolvedValue({ granted: true });
   resize.mockImplementation(async (uri: string) => uri.replace(".jpg", "-liten.jpg"));
 });
 
 afterEach(() => {
-  alert.mockRestore();
+  hideDialog();
 });
 
 function show(theme: typeof AppDefaultTheme | typeof AppDarkTheme = AppDefaultTheme) {
@@ -138,7 +137,7 @@ it("asks for the library before opening it, and gives up when it is refused", as
   fireEvent.press(screen.getByTestId("add-review-image-add"));
   await settle();
 
-  expect(alert).toHaveBeenCalledWith("Tillgång krävs", "Tillgång till mediabiblioteket krävs.");
+  expect(getDialog()).toMatchObject({ title: "Tillgång krävs", message: "Tillgång till mediabiblioteket krävs." });
   expect(launchLibrary).not.toHaveBeenCalled();
   expect(screen.queryAllByTestId("add-review-image")).toHaveLength(0);
 });

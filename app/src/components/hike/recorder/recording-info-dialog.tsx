@@ -5,11 +5,12 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import { DIALOG_BORDER_RADIUS } from "@/constants/constants";
+import DialogFrame, { DialogAction } from "@/components/dialog/dialog-frame";
+import { DialogText } from "@/components/dialog/dialog-section";
 import { INACTIVITY_TIMEOUT, MAX_DURATION } from "@/services/location-task";
 import { useState } from "react";
-import { Pressable, StyleSheet, View } from "react-native";
-import { Button, Checkbox, Dialog, Portal, Text, useTheme } from "react-native-paper";
+import { Pressable, StyleSheet } from "react-native";
+import { Checkbox, Text, useTheme } from "react-native-paper";
 import { useTranslation } from "react-i18next";
 
 interface Props {
@@ -36,46 +37,41 @@ export default function RecordingInfoDialog({ visible, onDismiss, onStart }: Pro
     t("createHike.infoTrimHint"),
   ];
 
+  const actions: DialogAction[] = onStart
+    ? [
+        { label: t("createHike.start"), onPress: () => onStart(dontShowAgain) },
+        { label: t("common.cancel"), onPress: onDismiss, variant: "text" },
+      ]
+    : [{ label: t("common.ok"), onPress: onDismiss }];
+
   return (
-    <Portal>
-      <Dialog style={[s.dialog, { backgroundColor: theme.colors.background }]} visible={visible} onDismiss={onDismiss}>
-        <Dialog.Title>{t("createHike.infoTitle")}</Dialog.Title>
-        <Dialog.Content>
-          <View style={s.lines}>
-            {lines.map((line, index) => (
-              <Text key={index} variant="bodyMedium">
-                {line}
-              </Text>
-            ))}
-          </View>
-          {onStart && (
-            <Pressable style={s.checkboxRow} onPress={() => setDontShowAgain((prev) => !prev)}>
-              <Checkbox.Android
-                status={dontShowAgain ? "checked" : "unchecked"}
-                color={theme.colors.primary}
-                uncheckedColor={theme.colors.onSurfaceVariant}
-              />
-              <Text variant="bodyMedium">{t("createHike.dontShowAgain")}</Text>
-            </Pressable>
-          )}
-        </Dialog.Content>
-        <Dialog.Actions>
-          {onStart && <Button onPress={onDismiss}>{t("common.cancel")}</Button>}
-          {onStart && <Button onPress={() => onStart(dontShowAgain)}>{t("createHike.start")}</Button>}
-          {!onStart && <Button onPress={onDismiss}>{t("common.ok")}</Button>}
-        </Dialog.Actions>
-      </Dialog>
-    </Portal>
+    <DialogFrame
+      testID="recording-info"
+      visible={visible}
+      onDismiss={onDismiss}
+      title={t("createHike.infoTitle")}
+      icon="record-circle-outline"
+      showClose={!onStart}
+      actions={actions}
+    >
+      {lines.map((line, index) => (
+        <DialogText key={index}>{line}</DialogText>
+      ))}
+      {onStart && (
+        <Pressable style={s.checkboxRow} onPress={() => setDontShowAgain((prev) => !prev)}>
+          <Checkbox.Android
+            status={dontShowAgain ? "checked" : "unchecked"}
+            color={theme.colors.primary}
+            uncheckedColor={theme.colors.onSurfaceVariant}
+          />
+          <Text variant="bodyMedium">{t("createHike.dontShowAgain")}</Text>
+        </Pressable>
+      )}
+    </DialogFrame>
   );
 }
 
 const s = StyleSheet.create({
-  dialog: {
-    borderRadius: DIALOG_BORDER_RADIUS,
-  },
-  lines: {
-    gap: 10,
-  },
   checkboxRow: {
     flexDirection: "row",
     alignItems: "center",

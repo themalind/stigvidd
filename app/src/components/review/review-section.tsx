@@ -5,6 +5,7 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
+import AlertDialog from "@/components/alert-dialog";
 import NotAuthenticatedDialog from "@/components/auth/not-authenticated-msg-dialog";
 import ReportContentForm from "@/components/report/report-content-form";
 import { useAuth } from "@/components/auth/auth-provider";
@@ -15,7 +16,7 @@ import { useDeleteReview } from "@/hooks/review/useDeleteReview";
 import { formatDate } from "@/utils/format-date";
 import { useAtom } from "jotai";
 import { Fragment, useState } from "react";
-import { Alert, Pressable, StyleSheet, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import { Divider, List, Text, useTheme } from "react-native-paper";
 import { useTranslation } from "react-i18next";
 import { Rating } from "./rating";
@@ -32,22 +33,13 @@ export default function ReviewSection({ reviews }: ReviewProps) {
   const [{ data: user }] = useAtom(stigviddUserAtom);
   const [showAuthDialog, setShowAuthDialog] = useState(false);
   const [reportedReview, setReportedReview] = useState<Review | null>(null);
+  const [reviewToDelete, setReviewToDelete] = useState<{ reviewIdentifier: string; trailIdentifier: string } | null>(
+    null,
+  );
   const deleteMutation = useDeleteReview();
 
-  const handleDelete = async (reviewIdentifier: string, trailIdentifier: string) => {
-    Alert.alert(t("review.deleteTitle"), t("review.deleteConfirm"), [
-      {
-        text: t("common.cancel"),
-        style: "cancel",
-      },
-      {
-        text: t("common.delete"),
-        style: "destructive",
-        onPress: () => {
-          deleteMutation.mutate({ reviewIdentifier, trailIdentifier });
-        },
-      },
-    ]);
+  const handleDelete = (reviewIdentifier: string, trailIdentifier: string) => {
+    setReviewToDelete({ reviewIdentifier, trailIdentifier });
   };
 
   const handleReportReview = (review: Review) => {
@@ -132,6 +124,22 @@ export default function ReviewSection({ reviews }: ReviewProps) {
         visible={showAuthDialog}
         onDissmiss={() => setShowAuthDialog(false)}
         infoMessage={t("report.notAuthReport")}
+      />
+      <AlertDialog
+        testID="review-delete-dialog"
+        visible={reviewToDelete !== null}
+        onDismiss={() => setReviewToDelete(null)}
+        title={t("review.deleteTitle")}
+        infoText={[t("review.deleteConfirm")]}
+        icon="delete-outline"
+        tone="danger"
+        irreversible
+        confirmText={t("common.delete")}
+        cancelText={t("common.cancel")}
+        onConfirm={() => {
+          if (reviewToDelete) deleteMutation.mutate(reviewToDelete);
+          setReviewToDelete(null);
+        }}
       />
     </List.Section>
   );

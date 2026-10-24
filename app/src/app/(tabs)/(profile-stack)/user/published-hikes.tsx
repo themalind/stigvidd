@@ -169,11 +169,11 @@ export default function PublishedHikesScreen() {
         onDismiss={() => setToWithdraw(null)}
         title={t("publish.withdrawTitle")}
         infoText={[t("publish.withdrawConfirm")]}
-        textColor={theme.colors.onSurface}
+        icon="undo-variant"
+        tone="danger"
         confirmText={t("publish.withdraw")}
         cancelText={t("common.cancel")}
         onConfirm={() => toWithdraw && withdraw.mutate(toWithdraw)}
-        backgroundColor={theme.colors.surface}
       />
     </View>
   );

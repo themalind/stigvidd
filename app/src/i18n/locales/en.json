@@ -22,7 +22,8 @@
     "next": "Next",
     "select": "Select...",
     "exampleImage": "Example image",
-    "exampleImageShort": "Example"
+    "exampleImageShort": "Example",
+    "cannotBeUndone": "Can't be undone"
   },
   "auth": {
     "login": "Log in",
@@ -184,26 +185,54 @@
     "trimTooShort": "Some of the walk has to remain.",
     "aboutTitle": "2. About the trail",
     "aboutInfoTitle": "What should I write?",
-    "aboutInfoName": "Name: a short name that makes the trail easy to recognise, e.g. Around Lake Ballasjön.",
-    "aboutInfoCity": "Town or place: the nearest town or place.",
-    "aboutInfoDescription": "Description: what you see and experience along the way, and anything worth knowing beforehand.",
-    "aboutInfoVariation": "Variation: surface and terrain, e.g. gravel road, rooty path or steep slopes.",
-    "aboutInfoGettingThere": "Getting there: how to find the start, e.g. which road to take or a well-known landmark.",
-    "aboutInfoParking": "Parking and public transport: where to park, and the nearest stop.",
-    "name": "Name",
-    "description": "Description",
-    "difficulty": "Difficulty",
-    "gettingThere": "Getting there",
+    "aboutInfoIntro": "Write so that someone who has never been there can find it and knows what to expect.",
+    "aboutInfo": {
+      "name": {
+        "heading": "Name",
+        "text": "A short name that makes the trail easy to recognise.",
+        "example": "E.g. Around Lake Ballasjön"
+      },
+      "city": {
+        "heading": "Town or place",
+        "text": "The nearest town or place."
+      },
+      "description": {
+        "heading": "Description",
+        "text": "What you see and experience along the way, and anything worth knowing beforehand."
+      },
+      "variation": {
+        "heading": "Variation",
+        "text": "Surface and terrain.",
+        "example": "E.g. gravel road, rooty path or steep slopes"
+      },
+      "gettingThere": {
+        "heading": "Getting there",
+        "text": "How to find the start.",
+        "example": "E.g. which road to take or a well-known landmark"
+      },
+      "parking": {
+        "heading": "Parking and public transport",
+        "text": "Where to park, and the nearest stop."
+      }
+    },
+    "name": "Name *",
+    "description": "Description *",
+    "difficulty": "Difficulty *",
+    "gettingThere": "Getting there *",
     "parkingOptional": "Parking (optional)",
     "publicTransportOptional": "Public transport (optional)",
     "variationOptional": "Variation, e.g. surface and terrain (optional)",
-    "city": "City or town",
+    "city": "City or town *",
     "cityRequired": "Enter the city or town",
     "maxChars30": "At most 30 characters",
     "imagesTitle": "3. Photos",
     "imagesInfoTitle": "Photo tips",
-    "imagesInfoDaylight": "Choose photos taken in daylight that show the trail and the surroundings.",
-    "imagesInfoPeople": "Avoid photos where people can be seen, and photos that could be offensive.",
+    "imagesInfoDoHeading": "Do",
+    "imagesInfoDaylight": "Photos taken in daylight",
+    "imagesInfoNature": "Photos that show the trail and the surroundings",
+    "imagesInfoAvoidHeading": "Avoid",
+    "imagesInfoPeople": "Photos where people can be seen",
+    "imagesInfoOffensive": "Photos that could be offensive",
     "imagesHint": "Choose from the walk's photos. If you choose none we add example images for now.",
     "noImages": "The walk has no photos, so we add example images for now.",
     "consentTitle": "4. Agree",
@@ -252,7 +281,7 @@
     "addImageInfo1": "Show us your walking adventures!",
     "addImageInfo2": "Feel free to add photos from the walk, but avoid images that may be offensive or inappropriate.",
     "addImageInfo3": "Max 3 images per walk.",
-    "writeReview": "Write a review or comment",
+    "writeReview": "Write a review or comment (optional)",
     "writeReviewTitle": "Write something",
     "writeReviewInfo1": "Tell us about the walk!",
     "writeReviewInfo2": "Write a comment or review about your experiences. Remember to keep the text friendly and respectful.",
@@ -307,6 +336,7 @@
     "links": "Links",
     "guideLink": "Right of public access and nature reserves",
     "difficultiesTitle": "Difficulty levels",
+    "thisTrail": "This trail",
     "accessibilityTitle": "Accessibility",
     "markingTitle": "Trail marking",
     "markingInfo": "The trail is marked on the ground with this symbol. Look for it on trees, posts and rocks. As long as you can see it, you are still on the trail.",
@@ -370,7 +400,6 @@
     "date": "Date",
     "deleteTitle": "Delete obstacle",
     "deleteConfirm": "Are you sure you want to delete this report?",
-    "deleteWarning": "This action cannot be undone.",
     "fixedTitle": "Obstacle resolved",
     "fixedConfirm": "Do you want to mark this obstacle as resolved?",
     "fixedInfo": "By marking as resolved you confirm the obstacle is no longer present. Do you want to continue?",
@@ -804,7 +833,6 @@
     "locationRequired": "You need to share your location to create your own walk.",
     "cancelTitle": "Cancel ongoing walk",
     "cancelConfirm": "Are you sure you want to cancel the ongoing walk?",
-    "cancelWarning": "This cannot be undone.",
     "no": "No",
     "yes": "Yes",
     "title": "Create walk",

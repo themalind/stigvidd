@@ -176,12 +176,13 @@ export default function SharedHikeDetailsScreen() {
         visible={showDeleteDialog}
         onDismiss={() => setShowDeleteDialog(false)}
         title={t("hike.deleteTitle")}
-        infoText={[t("hike.removeSharedConfirm"), t("hike.removeSharedNote")]}
-        textColor={theme.colors.onSurface}
+        infoText={[t("hike.removeSharedConfirm")]}
+        warning={t("hike.removeSharedNote")}
+        icon="delete-outline"
+        tone="danger"
         confirmText={t("common.delete")}
         cancelText={t("common.cancel")}
         onConfirm={() => deleteMutation.mutate(sharedHike)}
-        backgroundColor={theme.colors.surface}
       />
       <AccountBannedDialog visible={showBannedDialog} onDismiss={() => setShowBannedDialog(false)} />
       <ImageViewer

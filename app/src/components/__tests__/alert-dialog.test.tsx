@@ -6,10 +6,10 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import AlertDialog from "@/components/alert-dialog";
-import { DIALOG_BORDER_RADIUS } from "@/constants/constants";
-import { AppDarkTheme, AppDefaultTheme } from "@/constants/theme";
+import { AppDefaultTheme } from "@/constants/theme";
 import { renderWithProviders } from "@/test/render";
-import { fireEvent, screen } from "@testing-library/react-native";
+import { fireEvent, screen, within } from "@testing-library/react-native";
+import { Text } from "react-native";
 
 const onDismiss = jest.fn();
 const onConfirm = jest.fn();
@@ -20,7 +20,6 @@ function props(overrides: Partial<React.ComponentProps<typeof AlertDialog>> = {}
     onDismiss,
     title: "Ta bort vandringen?",
     infoText: ["Det här går inte att ångra.", "Rutten försvinner också."],
-    backgroundColor: AppDefaultTheme.colors.surface,
     ...overrides,
   };
 }
@@ -75,30 +74,48 @@ it("calls back the button that was pressed", () => {
   expect(onDismiss).toHaveBeenCalledTimes(1);
 });
 
-it("keeps the caller's background and the shared dialog radius", () => {
-  renderWithProviders(<AlertDialog {...props({ backgroundColor: "rgb(1, 2, 3)" })} />);
+it("fills the confirm button, and the lone button when there is nothing to confirm", () => {
+  const { rerender } = renderWithProviders(<AlertDialog {...props({ confirmText: "Ta bort", onConfirm })} />);
+  expect(screen.getByTestId("alert-dialog-confirm-container")).toHaveStyle({
+    backgroundColor: AppDefaultTheme.colors.primary,
+  });
+  expect(screen.getByTestId("alert-dialog-cancel-container")).not.toHaveStyle({
+    backgroundColor: AppDefaultTheme.colors.primary,
+  });
 
-  // Paper hangs the style on the inner Surface and derives its testID from the Dialog's.
-  expect(screen.getByTestId("alert-dialog-surface")).toHaveStyle({
-    backgroundColor: "rgb(1, 2, 3)",
-    borderRadius: DIALOG_BORDER_RADIUS,
+  rerender(<AlertDialog {...props()} />);
+  expect(screen.getByTestId("alert-dialog-cancel-container")).toHaveStyle({
+    backgroundColor: AppDefaultTheme.colors.primary,
   });
 });
 
-// The body and buttons are plain RN Text, which does not inherit Paper's colour, so a fallback is set.
-it("falls back to the theme's onSurface colour, in both themes", () => {
-  const { unmount } = renderWithProviders(<AlertDialog {...props({ confirmText: "Ta bort", onConfirm })} />);
-  expect(screen.getByText("Det här går inte att ångra.")).toHaveStyle({ color: AppDefaultTheme.colors.onSurface });
-  expect(screen.getByText("Ta bort")).toHaveStyle({ color: AppDefaultTheme.colors.onSurface });
+it("makes a danger dialog's confirm button red", () => {
+  renderWithProviders(<AlertDialog {...props({ confirmText: "Ta bort", onConfirm, tone: "danger" })} />);
 
-  unmount();
-  renderWithProviders(<AlertDialog {...props({ confirmText: "Ta bort", onConfirm })} />, { theme: AppDarkTheme });
-  expect(screen.getByText("Det här går inte att ångra.")).toHaveStyle({ color: AppDarkTheme.colors.onSurface });
-  expect(screen.getByText("Ta bort")).toHaveStyle({ color: AppDarkTheme.colors.onSurface });
+  expect(screen.getByTestId("alert-dialog-confirm-container")).toHaveStyle({
+    backgroundColor: AppDefaultTheme.colors.error,
+  });
 });
 
-it("lets the caller override the text colour", () => {
-  renderWithProviders(<AlertDialog {...props({ textColor: "rgb(9, 9, 9)" })} />);
+it("warns in a card of its own when the action cannot be undone", () => {
+  const { rerender } = renderWithProviders(<AlertDialog {...props()} />);
+  expect(screen.queryByTestId("alert-dialog-warning")).toBeNull();
 
-  expect(screen.getByText("Rutten försvinner också.")).toHaveStyle({ color: "rgb(9, 9, 9)" });
+  rerender(<AlertDialog {...props({ irreversible: true })} />);
+  expect(within(screen.getByTestId("alert-dialog-warning")).getByText("Går inte att ångra")).toBeTruthy();
+
+  rerender(<AlertDialog {...props({ warning: "Promenaderna raderas för alltid." })} />);
+  const warning = screen.getByTestId("alert-dialog-warning");
+  expect(within(warning).getByText("Går inte att ångra")).toBeTruthy();
+  expect(within(warning).getByText("Promenaderna raderas för alltid.")).toBeTruthy();
+});
+
+it("shows the caller's own content with the text", () => {
+  renderWithProviders(
+    <AlertDialog {...props()}>
+      <Text>Kontakta oss på hej@stigvidd.se</Text>
+    </AlertDialog>,
+  );
+
+  expect(screen.getByText("Kontakta oss på hej@stigvidd.se")).toBeTruthy();
 });

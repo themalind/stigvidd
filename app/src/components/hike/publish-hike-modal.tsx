@@ -10,6 +10,7 @@ import { createHikeSubmission } from "@/api/hike-submissions";
 import { showErrorAtom, showSuccessAtom } from "@/atoms/snackbar-atoms";
 import Map from "@/components/map/map";
 import { routeCasingPaint } from "@/components/map/marker-styles";
+import DialogSection, { DialogListItem } from "@/components/dialog/dialog-section";
 import FormTextField from "@/components/form-text-field";
 import InfoButton from "@/components/info-button";
 import InfoHeading from "@/components/info-heading";
@@ -31,6 +32,7 @@ import { Camera, type CameraRef, GeoJSONSource, Layer } from "@maplibre/maplibre
 import { Slider } from "@miblanchard/react-native-slider";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Image } from "expo-image";
+import { ParseKeys } from "i18next";
 import { useSetAtom } from "jotai";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -52,6 +54,27 @@ const publishFields = z.object({
 });
 
 type PublishFormFields = z.infer<typeof publishFields>;
+
+const ABOUT_INFO: { heading: ParseKeys; text: ParseKeys; example?: ParseKeys }[] = [
+  {
+    heading: "publish.aboutInfo.name.heading",
+    text: "publish.aboutInfo.name.text",
+    example: "publish.aboutInfo.name.example",
+  },
+  { heading: "publish.aboutInfo.city.heading", text: "publish.aboutInfo.city.text" },
+  { heading: "publish.aboutInfo.description.heading", text: "publish.aboutInfo.description.text" },
+  {
+    heading: "publish.aboutInfo.variation.heading",
+    text: "publish.aboutInfo.variation.text",
+    example: "publish.aboutInfo.variation.example",
+  },
+  {
+    heading: "publish.aboutInfo.gettingThere.heading",
+    text: "publish.aboutInfo.gettingThere.text",
+    example: "publish.aboutInfo.gettingThere.example",
+  },
+  { heading: "publish.aboutInfo.parking.heading", text: "publish.aboutInfo.parking.text" },
+];
 
 export function lengthOfPath(path: GeoJSON.Position[]): number {
   let metres = 0;
@@ -259,15 +282,18 @@ export default function PublishHikeModal({ hike, nickName, onDismiss }: Props) {
                 label={t("publish.aboutTitle")}
                 labelVariant="titleSmall"
                 infoTitle={t("publish.aboutInfoTitle")}
-                infoText={[
-                  t("publish.aboutInfoName"),
-                  t("publish.aboutInfoCity"),
-                  t("publish.aboutInfoDescription"),
-                  t("publish.aboutInfoVariation"),
-                  t("publish.aboutInfoGettingThere"),
-                  t("publish.aboutInfoParking"),
-                ]}
-              />
+                infoIcon="pencil-outline"
+                infoIntro={t("publish.aboutInfoIntro")}
+              >
+                {ABOUT_INFO.map((section) => (
+                  <DialogSection
+                    key={section.heading}
+                    heading={t(section.heading)}
+                    text={t(section.text)}
+                    example={section.example && t(section.example)}
+                  />
+                ))}
+              </InfoHeading>
               <FormTextField
                 name="name"
                 testID="publish-name"
@@ -380,8 +406,17 @@ export default function PublishHikeModal({ hike, nickName, onDismiss }: Props) {
                 label={t("publish.imagesTitle")}
                 labelVariant="titleSmall"
                 infoTitle={t("publish.imagesInfoTitle")}
-                infoText={[t("publish.imagesInfoDaylight"), t("publish.imagesInfoPeople")]}
-              />
+                infoIcon="camera-outline"
+              >
+                <DialogSection heading={t("publish.imagesInfoDoHeading")}>
+                  <DialogListItem icon="check" color={theme.colors.primary} text={t("publish.imagesInfoDaylight")} />
+                  <DialogListItem icon="check" color={theme.colors.primary} text={t("publish.imagesInfoNature")} />
+                </DialogSection>
+                <DialogSection heading={t("publish.imagesInfoAvoidHeading")}>
+                  <DialogListItem icon="close" color={theme.colors.error} text={t("publish.imagesInfoPeople")} />
+                  <DialogListItem icon="close" color={theme.colors.error} text={t("publish.imagesInfoOffensive")} />
+                </DialogSection>
+              </InfoHeading>
               <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
                 {images.length > 0 ? t("publish.imagesHint") : t("publish.noImages")}
               </Text>
@@ -457,7 +492,7 @@ export default function PublishHikeModal({ hike, nickName, onDismiss }: Props) {
           </View>
         </View>
       </Modal>
-      <DifficultyInfoModal difficulty={0} visible={showDifficultyInfo} onDismiss={() => setShowDifficultyInfo(false)} />
+      <DifficultyInfoModal visible={showDifficultyInfo} onDismiss={() => setShowDifficultyInfo(false)} />
     </Portal>
   );
 }

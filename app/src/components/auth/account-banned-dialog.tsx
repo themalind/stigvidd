@@ -27,10 +27,13 @@ export default function AccountBannedDialog({ visible, onDismiss }: DialogProps)
         onDismiss={onDismiss}
         title={t("ban.title")}
         infoText={[t("ban.body")]}
-        backgroundColor={theme.colors.surface}
-        textColor={theme.colors.onSurface}
+        icon="account-cancel-outline"
+        tone="danger"
       >
-        <BanContactText style={[s.contact, { color: theme.colors.onSurface }]} linkColor={theme.colors.primary} />
+        <BanContactText
+          style={[s.contact, { color: theme.colors.onSurfaceVariant }]}
+          linkColor={theme.colors.primary}
+        />
       </AlertDialog>
     </View>
   );
@@ -39,6 +42,6 @@ export default function AccountBannedDialog({ visible, onDismiss }: DialogProps)
 const s = StyleSheet.create({
   contact: {
     fontSize: 15,
-    lineHeight: 24,
+    lineHeight: 22,
   },
 });

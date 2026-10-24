@@ -5,13 +5,14 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
+import { DialogText } from "@/components/dialog/dialog-section";
+import InfoDialog from "@/components/dialog/info-dialog";
 import ExampleImageOverlay from "@/components/example-image-overlay";
 import { BORDER_RADIUS } from "@/constants/constants";
 import { Image } from "expo-image";
-import { BlurView } from "expo-blur";
 import { useTranslation } from "react-i18next";
-import { Dimensions, Pressable, StyleSheet, View } from "react-native";
-import { Icon, Modal, Portal, Text, useTheme } from "react-native-paper";
+import { Dimensions, StyleSheet, View } from "react-native";
+import { Text, useTheme } from "react-native-paper";
 
 interface Props {
   imageUrl: string;
@@ -27,83 +28,33 @@ export default function SymbolInfoModal({ imageUrl, symbol, visible, onDismiss }
   const { t } = useTranslation();
 
   return (
-    <Portal>
-      {visible && <BlurView intensity={100} tint="dark" style={StyleSheet.absoluteFill} />}
-      <Modal
-        contentContainerStyle={[s.modalContainerStyle, { backgroundColor: theme.colors.surface }]}
-        visible={visible}
-        onDismiss={onDismiss}
+    <InfoDialog
+      testID="symbol-info"
+      visible={visible}
+      onDismiss={onDismiss}
+      title={t("trail.markingTitle")}
+      icon="sign-direction"
+    >
+      <View
+        testID="symbol-info-image-frame"
+        style={[s.imageFrame, { backgroundColor: theme.colors.secondaryContainer }]}
       >
-        <View testID="symbol-info-content" style={s.content}>
-          <View testID="symbol-info-header" style={s.header}>
-            <View testID="symbol-info-header-left" style={s.headerLeft}>
-              <View testID="symbol-info-symbol" style={[s.headerIconCircle, { borderColor: theme.colors.primary }]}>
-                <Icon size={20} source="sign-direction" color={theme.colors.tertiary} />
-              </View>
-              <Text style={s.title}>{t("trail.markingTitle")}</Text>
-            </View>
-            <Pressable testID="symbol-info-close" hitSlop={16} onPress={onDismiss}>
-              <Icon source="close" size={20} color={theme.colors.onSurface} />
-            </Pressable>
-          </View>
+        <Image testID="symbol-info-image" source={imageUrl} contentFit="contain" style={s.image} />
+        <ExampleImageOverlay source={imageUrl} />
+      </View>
 
-          <View
-            testID="symbol-info-image-frame"
-            style={[s.imageFrame, { backgroundColor: theme.colors.secondaryContainer }]}
-          >
-            <Image testID="symbol-info-image" source={imageUrl} contentFit="contain" style={s.image} />
-            <ExampleImageOverlay source={imageUrl} />
-          </View>
+      {symbol.length > 0 && (
+        <Text testID="symbol-info-caption" style={[s.caption, { color: theme.colors.onSurface }]}>
+          {symbol}
+        </Text>
+      )}
 
-          {symbol.length > 0 && (
-            <Text testID="symbol-info-caption" style={[s.caption, { color: theme.colors.onSurface }]}>
-              {symbol}
-            </Text>
-          )}
-
-          <Text testID="symbol-info-body" style={s.body}>
-            {t("trail.markingInfo")}
-          </Text>
-        </View>
-      </Modal>
-    </Portal>
+      <DialogText>{t("trail.markingInfo")}</DialogText>
+    </InfoDialog>
   );
 }
 
 const s = StyleSheet.create({
-  // Wraps its content rather than filling the screen.
-  modalContainerStyle: {
-    margin: 20,
-    maxHeight: height * 0.8,
-    borderRadius: BORDER_RADIUS,
-    padding: 10,
-  },
-  content: {
-    gap: 15,
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: 5,
-  },
-  headerLeft: {
-    flexDirection: "row",
-    gap: 10,
-    alignItems: "center",
-  },
-  headerIconCircle: {
-    borderWidth: 0.5,
-    borderRadius: 100,
-    width: 32,
-    height: 32,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  title: {
-    fontWeight: "700",
-    fontSize: 16,
-  },
   imageFrame: {
     position: "relative",
     overflow: "hidden",
@@ -117,14 +68,10 @@ const s = StyleSheet.create({
     width: width * 0.55,
   },
   caption: {
-    fontSize: 14,
-    fontWeight: "600",
+    fontSize: 11,
+    fontWeight: "700",
+    textTransform: "uppercase",
+    letterSpacing: 0.6,
     textAlign: "center",
-  },
-  body: {
-    fontSize: 13,
-    lineHeight: 20,
-    paddingHorizontal: 5,
-    paddingBottom: 5,
   },
 });

@@ -19,4 +19,7 @@ public class AppLinksOptions
     public string[] AndroidSha256Fingerprints { get; set; } = [];
     public string AppStoreUrl { get; set; } = string.Empty;
     public string PlayStoreUrl { get; set; } = string.Empty;
+
+    // Shown to Android visitors while PlayStoreUrl is empty. keep-comment: the Play test is closed, so testers are recruited here
+    public string AndroidTestUrl { get; set; } = string.Empty;
 }

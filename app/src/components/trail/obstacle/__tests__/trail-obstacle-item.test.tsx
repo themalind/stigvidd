@@ -10,7 +10,7 @@ import { AppDarkTheme, AppDefaultTheme } from "@/constants/theme";
 import { TrailObstacle } from "@/data/types";
 import { flushUntilGone, settle } from "@/test/flush";
 import { renderWithProviders } from "@/test/render";
-import { fireEvent, screen } from "@testing-library/react-native";
+import { fireEvent, screen, within } from "@testing-library/react-native";
 
 const mockAddVote = jest.fn();
 const mockDeleteVote = jest.fn();
@@ -302,7 +302,7 @@ it("warns that deleting the report cannot be undone", async () => {
   await press("icon-delete-outline");
 
   expect(screen.getByText("Är du säker på att du vill ta bort den här rapporten?")).toBeTruthy();
-  expect(screen.getByText("Åtgärden kan inte ångras.")).toBeTruthy();
+  expect(within(screen.getByTestId("alert-dialog-warning")).getByText("Går inte att ångra")).toBeTruthy();
   expect(mockDeleteObstacle).not.toHaveBeenCalled();
 });
 

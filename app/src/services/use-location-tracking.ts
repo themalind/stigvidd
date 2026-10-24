@@ -11,7 +11,7 @@ import * as Location from "expo-location";
 import { useSetAtom } from "jotai";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Alert, AppState, Linking } from "react-native";
+import { AppState, Linking } from "react-native";
 import {
   LOCATION_TASK_NAME,
   MIN_DISTANCE,
@@ -34,6 +34,7 @@ import {
   stopLiveLocation,
 } from "./live-location";
 import { track } from "./analytics";
+import { showDialog } from "./dialog";
 import { logger } from "./logger";
 
 // How often the background task samples GPS (ms). Android-only — on iOS the
@@ -291,13 +292,18 @@ export function useLocationTracking() {
     // letting the recording start provisionally.
     const { status: bgPermission } = await Location.requestBackgroundPermissionsAsync();
     if (bgPermission !== "granted") {
-      Alert.alert(t("createHike.bgPermissionTitle"), t("createHike.bgPermissionMessage"), [
-        { text: t("createHike.bgPermissionContinue"), style: "cancel" },
-        {
-          text: t("createHike.bgPermissionOpenSettings"),
-          onPress: () => Linking.openSettings().catch(() => undefined),
-        },
-      ]);
+      showDialog({
+        title: t("createHike.bgPermissionTitle"),
+        message: t("createHike.bgPermissionMessage"),
+        icon: "map-marker-alert-outline",
+        actions: [
+          {
+            label: t("createHike.bgPermissionOpenSettings"),
+            onPress: () => Linking.openSettings().catch(() => undefined),
+          },
+          { label: t("createHike.bgPermissionContinue"), variant: "text" },
+        ],
+      });
     }
 
     // Each press of "start" opens a new segment

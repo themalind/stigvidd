@@ -21,6 +21,7 @@ public class LinkServiceFactory : WebApplicationFactory<Program>
         ["AppLinks:AppleTeamId"] = "",
         ["AppLinks:AppStoreUrl"] = "",
         ["AppLinks:PlayStoreUrl"] = "",
+        ["AppLinks:AndroidTestUrl"] = "",
     };
 
     public StubApiHandler Api { get; } = new();

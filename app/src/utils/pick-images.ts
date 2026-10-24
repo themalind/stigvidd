@@ -6,14 +6,19 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import i18n from "@/i18n";
+import { showDialog } from "@/services/dialog";
 import { resizeImage } from "@/utils/resizeImage";
 import * as ImagePicker from "expo-image-picker";
-import { Alert } from "react-native";
 
 export async function pickImages({ limit }: { limit: number }): Promise<string[] | null> {
   const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
   if (!permission.granted) {
-    Alert.alert(i18n.t("imagePermission.title"), i18n.t("imagePermission.message"));
+    showDialog({
+      title: i18n.t("imagePermission.title"),
+      message: i18n.t("imagePermission.message"),
+      icon: "image-lock-outline",
+      actions: [{ label: i18n.t("common.ok") }],
+    });
     return null;
   }
 

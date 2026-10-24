@@ -191,12 +191,13 @@ export default function TrailObstacleItem({ obstacle, trailIdentifier, onCloseMo
         visible={showDeleteDialog}
         onDismiss={() => setShowDeleteDialog(false)}
         title={t("obstacle.deleteTitle")}
-        infoText={[t("obstacle.deleteConfirm"), t("obstacle.deleteWarning")]}
+        infoText={[t("obstacle.deleteConfirm")]}
+        icon="delete-outline"
+        tone="danger"
+        irreversible
         onConfirm={handleDelete}
         confirmText={t("common.delete")}
         cancelText={t("common.cancel")}
-        backgroundColor={theme.colors.surface}
-        textColor={theme.colors.onSurface}
       />
       <ReportContentForm
         visible={showReportForm}
@@ -217,22 +218,21 @@ export default function TrailObstacleItem({ obstacle, trailIdentifier, onCloseMo
         onDismiss={() => setShowVoteDialog(false)}
         title={t("obstacle.fixedTitle")}
         infoText={[t("obstacle.fixedConfirm"), t("obstacle.fixedInfo")]}
+        icon="check-circle-outline"
         onConfirm={handleAddVote}
         confirmText={t("common.ok")}
         cancelText={t("common.cancel")}
-        backgroundColor={theme.colors.surface}
-        textColor={theme.colors.onSurface}
       />
       <AlertDialog
         visible={showUndoDialog}
         onDismiss={() => setShowUndoDialog(false)}
         title={t("obstacle.undoTitle")}
         infoText={[t("obstacle.undoInfo1"), t("obstacle.undoInfo2"), t("obstacle.undoInfo3")]}
+        icon="undo-variant"
+        tone="danger"
         onConfirm={handleRemoveVote}
         confirmText={t("common.delete")}
         cancelText={t("common.cancel")}
-        backgroundColor={theme.colors.surface}
-        textColor={theme.colors.onSurface}
       />
     </View>
   );

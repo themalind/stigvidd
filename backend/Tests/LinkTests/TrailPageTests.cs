@@ -113,6 +113,77 @@ public class TrailPageTests
         html.Should().NotContain("Google Play");
     }
 
+    private const string AndroidUserAgent =
+        "Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Mobile Safari/537.36";
+
+    private const string IphoneUserAgent =
+        "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1";
+
+    private static LinkServiceFactory StoreFactory(string playStoreUrl = "") => new LinkServiceFactory()
+        .With("AppLinks:AppStoreUrl", "https://apps.apple.com/se/app/id123")
+        .With("AppLinks:PlayStoreUrl", playStoreUrl)
+        .With("AppLinks:AndroidTestUrl", "https://example.test/#hamta");
+
+    private static async Task<string> GetAsAsync(LinkServiceFactory factory, string path, string userAgent)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, path);
+        request.Headers.TryAddWithoutValidation("User-Agent", userAgent);
+        var response = await factory.CreateClient().SendAsync(request, TestContext.Current.CancellationToken);
+        return await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+    }
+
+    [Fact]
+    public async Task Android_visitors_get_the_tester_button_instead_of_the_app_store()
+    {
+        using var factory = StoreFactory();
+        factory.Api.Returns(Trail());
+
+        var html = await GetAsAsync(factory, "/trail/trail-1", AndroidUserAgent);
+
+        html.Should().NotContain("App Store");
+        html.Should().Contain("href=\"https://example.test/#hamta\"");
+        html.Should().Contain(">Testa på Android</a>");
+        html.Should().Contain("Stigvidd finns snart på Google Play.");
+        html.Should().Contain("href=\"stigvidd://trail/trail-1\"");
+    }
+
+    [Fact]
+    public async Task Android_visitors_get_google_play_once_it_is_configured()
+    {
+        using var factory = StoreFactory(playStoreUrl: "https://play.google.com/store/apps/details?id=x");
+        factory.Api.Returns(Trail());
+
+        var html = await GetAsAsync(factory, "/trail/trail-1", AndroidUserAgent);
+
+        html.Should().Contain(">Hämta på Google Play</a>");
+        html.Should().NotContain("Testa på Android");
+        html.Should().NotContain("App Store");
+    }
+
+    [Fact]
+    public async Task Iphone_visitors_get_the_app_store_and_no_tester_button()
+    {
+        using var factory = StoreFactory();
+        factory.Api.Returns(Trail());
+
+        var html = await GetAsAsync(factory, "/trail/trail-1", IphoneUserAgent);
+
+        html.Should().Contain("href=\"https://apps.apple.com/se/app/id123\"");
+        html.Should().NotContain("Testa på Android");
+        html.Should().Contain("Har du inte Stigvidd?");
+    }
+
+    [Fact]
+    public async Task The_trail_page_varies_by_user_agent()
+    {
+        using var factory = new LinkServiceFactory();
+        factory.Api.Returns(Trail());
+
+        var (response, _) = await GetAsync(factory, "/trail/trail-1");
+
+        response.Headers.Vary.Should().Contain("User-Agent");
+    }
+
     [Fact]
     public async Task A_found_trail_may_be_cached_briefly()
     {
