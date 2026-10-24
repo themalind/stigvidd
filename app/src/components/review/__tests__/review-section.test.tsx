@@ -8,10 +8,9 @@
 import ReviewSection from "@/components/review/review-section";
 import { AppDarkTheme, AppDefaultTheme } from "@/constants/theme";
 import { Review } from "@/data/types";
-import { settle } from "@/test/flush";
+import { flushUntilGone, settle } from "@/test/flush";
 import { renderWithProviders } from "@/test/render";
-import { fireEvent, screen } from "@testing-library/react-native";
-import { Alert } from "react-native";
+import { fireEvent, screen, within } from "@testing-library/react-native";
 import { StarRatingDisplay } from "react-native-star-rating-widget";
 
 const mockDelete = jest.fn();
@@ -210,58 +209,47 @@ it("asks a signed-out visitor to sign in instead of opening the form", async () 
   expect(screen.getByText("Du är inte inloggad")).toBeTruthy();
 });
 
-it("asks before deleting, and deletes nothing until the answer comes back", async () => {
-  const alert = jest.spyOn(Alert, "alert").mockImplementation(() => {});
-  show([review({ userIdentifier: "me" })]);
-
+async function askToDelete() {
   await expand("Alva");
   fireEvent.press(screen.getByTestId("icon-trash-can-outline", { includeHiddenElements: true }));
   await settle();
+}
 
-  expect(alert).toHaveBeenCalledWith("Ta bort recension", "Är du säker på att du vill ta bort din recension?", [
-    expect.objectContaining({ text: "Avbryt", style: "cancel" }),
-    expect.objectContaining({ text: "Ta bort", style: "destructive" }),
-  ]);
+it("asks before deleting, and deletes nothing until the answer comes back", async () => {
+  show([review({ userIdentifier: "me" })]);
+
+  await askToDelete();
+
+  const dialog = screen.getByTestId("review-delete-dialog");
+  expect(within(dialog).getByText("Ta bort recension")).toBeTruthy();
+  expect(within(dialog).getByText("Är du säker på att du vill ta bort din recension?")).toBeTruthy();
+  expect(within(dialog).getByText("Går inte att ångra")).toBeTruthy();
   expect(mockDelete).not.toHaveBeenCalled();
-  alert.mockRestore();
 });
 
 it("deletes this review from this trail once confirmed", async () => {
-  let buttons: { text?: string; onPress?: () => void }[] = [];
-  const alert = jest.spyOn(Alert, "alert").mockImplementation((_title, _message, b) => {
-    buttons = (b ?? []) as typeof buttons;
-  });
   show([review({ identifier: "r9", userIdentifier: "me" })]);
 
-  await expand("Alva");
-  fireEvent.press(screen.getByTestId("icon-trash-can-outline", { includeHiddenElements: true }));
-  await settle();
-  buttons.find((button) => button.text === "Ta bort")?.onPress?.();
+  await askToDelete();
+  fireEvent.press(screen.getByTestId("review-delete-dialog-confirm"));
 
   expect(mockDelete).toHaveBeenCalledWith({ reviewIdentifier: "r9", trailIdentifier: TRAIL_ID });
-  alert.mockRestore();
 });
 
 it("deletes nothing when the confirmation is cancelled", async () => {
-  let buttons: { text?: string; onPress?: () => void }[] = [];
-  const alert = jest.spyOn(Alert, "alert").mockImplementation((_title, _message, b) => {
-    buttons = (b ?? []) as typeof buttons;
-  });
   show([review({ userIdentifier: "me" })]);
 
-  await expand("Alva");
-  fireEvent.press(screen.getByTestId("icon-trash-can-outline", { includeHiddenElements: true }));
-  await settle();
-  buttons.find((button) => button.text === "Avbryt")?.onPress?.();
+  await askToDelete();
+  fireEvent.press(screen.getByTestId("review-delete-dialog-cancel"));
+  await flushUntilGone(() => screen.queryByTestId("review-delete-dialog"));
 
+  expect(screen.queryByTestId("review-delete-dialog")).toBeNull();
   expect(mockDelete).not.toHaveBeenCalled();
-  alert.mockRestore();
 });
 
 // A second press while the first delete is in flight would send it twice.
 it("greys the delete out while the delete is in flight", async () => {
   mockIsDeleting = true;
-  const alert = jest.spyOn(Alert, "alert").mockImplementation(() => {});
   show([review({ userIdentifier: "me" })]);
 
   await expand("Alva");
@@ -270,8 +258,7 @@ it("greys the delete out while the delete is in flight", async () => {
   await settle();
 
   expect(icon.props.color).toBe(AppDefaultTheme.colors.surfaceDisabled);
-  expect(alert).not.toHaveBeenCalled();
-  alert.mockRestore();
+  expect(screen.queryByTestId("review-delete-dialog")).toBeNull();
 });
 
 it("draws every row on the theme's surface colour", () => {

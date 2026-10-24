@@ -9,9 +9,10 @@ import { ROUTE_LINE_COLOR } from "@/components/map/marker-styles";
 import RoutePreviewMap from "@/components/map/route-preview-map";
 import { SCREEN_PADDING } from "@/constants/constants";
 import { settle } from "@/test/flush";
+import { getDialog, hideDialog } from "@/services/dialog";
 import { renderWithProviders } from "@/test/render";
 import { act, fireEvent, screen } from "@testing-library/react-native";
-import { Alert, Linking, StyleSheet } from "react-native";
+import { Linking, StyleSheet } from "react-native";
 
 // The camera is driven through an imperative handle, so its moves show on the mock's handle.
 const maplibre = jest.requireMock("@maplibre/maplibre-react-native");
@@ -23,20 +24,30 @@ const PATH: GeoJSON.Position[] = [
 ];
 
 const onOpen = jest.fn();
-let alert: jest.SpyInstance;
 let openURL: jest.SpyInstance;
 
 beforeEach(() => {
   jest.clearAllMocks();
   maplibre.resetHandles();
-  alert = jest.spyOn(Alert, "alert").mockImplementation(() => {});
   openURL = jest.spyOn(Linking, "openURL").mockResolvedValue(true);
 });
 
 afterEach(() => {
-  alert.mockRestore();
+  hideDialog();
   openURL.mockRestore();
 });
+
+function shownDialog() {
+  const dialog = getDialog();
+  if (!dialog) throw new Error("expected a dialog");
+  return dialog;
+}
+
+async function confirmDirections() {
+  await act(async () => {
+    shownDialog().actions[0].onPress?.();
+  });
+}
 
 function show(props: Partial<React.ComponentProps<typeof RoutePreviewMap>> = {}) {
   return renderWithProviders(<RoutePreviewMap idPrefix="hike" path={PATH} {...props} />);
@@ -224,11 +235,10 @@ it("offers directions to the start of the walk", async () => {
   fireEvent.press(screen.getByLabelText("Vägbeskrivning"));
   await settle();
 
-  expect(alert).toHaveBeenCalledWith(
-    "Vägbeskrivning",
-    expect.stringContaining("Kolla parkeringsinformationen under Praktisk information"),
-    expect.any(Array),
-  );
+  expect(shownDialog()).toMatchObject({
+    title: "Vägbeskrivning",
+    message: expect.stringContaining("Kolla parkeringsinformationen under Praktisk information"),
+  });
 });
 
 // Longitude comes first in a GeoJSON position and last in a maps url, so the pair is swapped.
@@ -236,10 +246,7 @@ it("sends the maps app the start point, latitude first", async () => {
   show({ onOpen });
 
   fireEvent.press(screen.getByLabelText("Vägbeskrivning"));
-  const [, , buttons] = alert.mock.calls[0];
-  await act(async () => {
-    buttons.at(-1).onPress();
-  });
+  await confirmDirections();
 
   expect(openURL).toHaveBeenCalledWith(expect.stringContaining("57.72,12.94"));
 });
@@ -268,12 +275,9 @@ it("opens directions to the start from the marker itself when there is no pill",
 
   fireEvent(source("hike-start")!, "press");
   await settle();
-  const [, , buttons] = alert.mock.calls[0];
-  await act(async () => {
-    buttons.at(-1).onPress();
-  });
+  expect(shownDialog().title).toBe("Vägbeskrivning");
+  await confirmDirections();
 
-  expect(alert).toHaveBeenCalledWith("Vägbeskrivning", expect.any(String), expect.any(Array));
   expect(openURL).toHaveBeenCalledWith(expect.stringContaining("57.72,12.94"));
 });
 

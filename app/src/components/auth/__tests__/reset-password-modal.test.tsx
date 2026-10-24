@@ -12,7 +12,7 @@ import { AppDarkTheme, AppDefaultTheme } from "@/constants/theme";
 import { flushUntil, settle } from "@/test/flush";
 import { renderWithProviders } from "@/test/render";
 import { fireEvent, screen } from "@testing-library/react-native";
-import { BlurView } from "expo-blur";
+import { SCRIM_COLOR } from "@/components/dialog/modal-scrim";
 import { Dimensions, StyleSheet } from "react-native";
 import { Button } from "react-native-paper";
 
@@ -61,7 +61,7 @@ it("stays out of sight until it is opened", () => {
   show(false);
 
   expect(screen.queryByText(TITLE)).toBeNull();
-  expect(screen.UNSAFE_queryByType(BlurView)).toBeNull();
+  expect(screen.queryByTestId("modal-scrim", { includeHiddenElements: true })).toBeNull();
 });
 
 it("closes without sending anything when the close icon is pressed", async () => {
@@ -203,20 +203,17 @@ it("draws the modal on the dark theme's surface too", () => {
   expect(screen.getByTestId("modal-surface")).toHaveStyle({ backgroundColor: AppDarkTheme.colors.surface });
 });
 
-// The login fields stay on screen behind the modal; the blur is what stops them competing with it.
-it("blurs whatever is behind it while it is open", () => {
+// The login fields stay on screen behind the modal; the scrim stops them competing with it. keep-comment: why
+it("dims whatever is behind it while it is open", () => {
   show();
 
-  const blur = screen.UNSAFE_getByType(BlurView);
-  expect(blur.props.intensity).toBe(100);
-  expect(blur.props.tint).toBe("dark");
-  // BlurView is a class component, not a host element, so its style is read from the props.
-  expect(StyleSheet.flatten(blur.props.style)).toMatchObject({
+  expect(screen.getByTestId("modal-scrim", { includeHiddenElements: true })).toHaveStyle({
     position: "absolute",
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
+    backgroundColor: SCRIM_COLOR,
   });
 });
 

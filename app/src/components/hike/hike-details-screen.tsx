@@ -290,11 +290,12 @@ export default function HikeDetailsScreen({ hikeFollowRoute }: { hikeFollowRoute
           t("hike.deleteSharedNote"),
           ...(hasSubmission ? [t("hike.deleteSubmissionNote")] : []),
         ]}
-        textColor={theme.colors.onSurface}
+        icon="delete-outline"
+        tone="danger"
+        irreversible
         confirmText={t("hike.delete")}
         cancelText={t("common.cancel")}
         onConfirm={() => deleteMutation.mutate(hike)}
-        backgroundColor={theme.colors.surface}
       />
       <AccountBannedDialog visible={showBannedDialog} onDismiss={() => setShowBannedDialog(false)} />
       <ImageViewer

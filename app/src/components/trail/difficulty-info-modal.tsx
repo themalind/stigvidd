@@ -5,117 +5,45 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import { BORDER_RADIUS } from "@/constants/constants";
+import DialogSection from "@/components/dialog/dialog-section";
+import InfoDialog from "@/components/dialog/info-dialog";
 import { DIFFICULTIES } from "@/data/trail-content";
 import { asTranslationKey } from "@/i18n";
 import { classificationParser } from "@/utils/classification-parser";
 import { getDifficultyIcon } from "@/utils/getDifficultyIcon";
-import { BlurView } from "expo-blur";
 import { useTranslation } from "react-i18next";
-import { Dimensions, Pressable, StyleSheet, View } from "react-native";
-import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
-import { Icon, Modal, Portal, Text, useTheme } from "react-native-paper";
 
 interface Props {
-  difficulty: number;
+  difficulty?: number;
   visible: boolean;
   onDismiss: () => void;
 }
 
-const { height } = Dimensions.get("screen");
-
 export default function DifficultyInfoModal({ difficulty, visible, onDismiss }: Props) {
-  const theme = useTheme();
   const { t } = useTranslation();
-  const modalStyle = [s.modalContainerStyle, { backgroundColor: theme.colors.surface }];
 
   return (
-    <Portal>
-      {visible && <BlurView intensity={100} tint="dark" style={StyleSheet.absoluteFill} />}
-      <Modal contentContainerStyle={modalStyle} visible={visible} onDismiss={onDismiss}>
-        <KeyboardAwareScrollView
-          keyboardShouldPersistTaps="handled"
-          enableOnAndroid={true}
-          extraScrollHeight={20}
-          contentContainerStyle={s.scrollContent}
-        >
-          <View testID="difficulty-info-content" style={s.content}>
-            <View testID="difficulty-info-header" style={s.header}>
-              <Text style={s.title}>{t("trail.difficultiesTitle")}</Text>
-              <Pressable testID="difficulty-info-close" hitSlop={16} onPress={onDismiss}>
-                <Icon source="close" size={20} color={theme.colors.onSurface} />
-              </Pressable>
-            </View>
-
-            {DIFFICULTIES.map((item) => {
-              const isActive = difficulty === item.value;
-              return (
-                <View
-                  key={item.value}
-                  testID="difficulty-info-card"
-                  style={[
-                    s.classificationSection,
-                    {
-                      backgroundColor: isActive ? theme.colors.surfaceVariant : theme.colors.surface,
-                      borderColor: isActive ? theme.colors.primary : theme.colors.outlineVariant,
-                    },
-                  ]}
-                >
-                  <View style={s.classificationIcon}>
-                    {getDifficultyIcon(classificationParser(item.value))}
-                    <Text style={s.infoLabel}>{t(asTranslationKey(item.label))}</Text>
-                  </View>
-                  <Text style={s.infoBody}>{t(asTranslationKey(item.description))}</Text>
-                </View>
-              );
-            })}
-          </View>
-        </KeyboardAwareScrollView>
-      </Modal>
-    </Portal>
+    <InfoDialog
+      testID="difficulty-info"
+      visible={visible}
+      onDismiss={onDismiss}
+      title={t("trail.difficultiesTitle")}
+      icon="terrain"
+    >
+      {DIFFICULTIES.map((item) => {
+        const selected = difficulty === item.value;
+        return (
+          <DialogSection
+            key={item.value}
+            testID="difficulty-info-card"
+            selected={selected}
+            badge={selected ? t("trail.thisTrail") : undefined}
+            icon={getDifficultyIcon(classificationParser(item.value))}
+            heading={t(asTranslationKey(item.label))}
+            text={t(asTranslationKey(item.description))}
+          />
+        );
+      })}
+    </InfoDialog>
   );
 }
-
-const s = StyleSheet.create({
-  modalContainerStyle: {
-    height: height * 0.7,
-    borderRadius: BORDER_RADIUS,
-    padding: 10,
-  },
-  scrollContent: {
-    flexGrow: 1,
-  },
-  content: {
-    gap: 25,
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    padding: 5,
-  },
-  title: {
-    fontWeight: "700",
-    fontSize: 16,
-  },
-  infoLabel: {
-    fontSize: 11,
-    fontWeight: "600",
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-  },
-  infoBody: {
-    fontSize: 13,
-    lineHeight: 20,
-  },
-  classificationSection: {
-    borderWidth: 1.5,
-    borderRadius: BORDER_RADIUS,
-    padding: 10,
-    gap: 5,
-  },
-  classificationIcon: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-  },
-});

@@ -204,11 +204,12 @@ export default function ImageViewer({
         onDismiss={() => setShowDeleteDialog(false)}
         title={t("hike.deleteImageTitle")}
         infoText={[t("hike.deleteImageConfirm"), ...deleteNotes]}
-        textColor={theme.colors.onSurface}
+        icon="image-remove-outline"
+        tone="danger"
+        irreversible
         confirmText={t("common.delete")}
         cancelText={t("common.cancel")}
         onConfirm={confirmDelete}
-        backgroundColor={theme.colors.surface}
       />
     </Portal>
   );

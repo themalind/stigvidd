@@ -6,11 +6,10 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import React from "react";
-import { StyleSheet } from "react-native";
-import { Button, Dialog, Portal, Text } from "react-native-paper";
 import { useTranslation } from "react-i18next";
 
-import { DIALOG_BORDER_RADIUS } from "@/constants/constants";
+import DialogFrame from "@/components/dialog/dialog-frame";
+import { DialogText } from "@/components/dialog/dialog-section";
 import { track } from "@/services/analytics";
 import { getConsentSync, isConsentHydrated, setConsent, subscribeConsent, type ConsentState } from "@/services/consent";
 
@@ -58,27 +57,19 @@ export function ConsentDialog() {
   if (!hydrated || consent !== "unknown") return null;
 
   return (
-    <Portal>
-      <Dialog style={{ borderRadius: DIALOG_BORDER_RADIUS }} visible dismissable={false} testID="consent-dialog">
-        <Dialog.Title>{t("privacy.askTitle")}</Dialog.Title>
-        <Dialog.Content style={s.content}>
-          <Text variant="bodyMedium">{t("privacy.askBody")}</Text>
-        </Dialog.Content>
-        <Dialog.Actions>
-          <Button testID="consent-accept" onPress={() => void choose(true)}>
-            {t("privacy.accept")}
-          </Button>
-          <Button testID="consent-decline" onPress={() => void choose(false)}>
-            {t("privacy.decline")}
-          </Button>
-        </Dialog.Actions>
-      </Dialog>
-    </Portal>
+    <DialogFrame
+      testID="consent-dialog"
+      visible
+      dismissable={false}
+      onDismiss={() => undefined}
+      title={t("privacy.askTitle")}
+      icon="shield-check-outline"
+      actions={[
+        { label: t("privacy.accept"), onPress: () => void choose(true), testID: "consent-accept" },
+        { label: t("privacy.decline"), onPress: () => void choose(false), testID: "consent-decline" },
+      ]}
+    >
+      <DialogText>{t("privacy.askBody")}</DialogText>
+    </DialogFrame>
   );
 }
-
-const s = StyleSheet.create({
-  content: {
-    gap: 12,
-  },
-});

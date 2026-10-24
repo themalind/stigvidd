@@ -6,8 +6,6 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { router } from "expo-router";
-import { View } from "react-native";
-import { useTheme } from "react-native-paper";
 import { useTranslation } from "react-i18next";
 import AlertDialog from "../alert-dialog";
 
@@ -19,24 +17,22 @@ interface DialogProps {
 }
 
 export default function NotAuthenticatedDialog({ infoMessage, visible, onDissmiss, onBeforeNavigate }: DialogProps) {
-  const theme = useTheme();
   const { t } = useTranslation();
   return (
-    <View>
-      <AlertDialog
-        visible={visible}
-        onDismiss={() => onDissmiss()}
-        title={t("auth.notLoggedIn")}
-        infoText={[infoMessage]}
-        confirmText={t("auth.goToLogin")}
-        backgroundColor={theme.colors.surface}
-        textColor={theme.colors.onSurface}
-        onConfirm={() => {
-          onDissmiss();
-          onBeforeNavigate?.();
-          router.navigate("/(tabs)/(profile-stack)/login");
-        }}
-      />
-    </View>
+    <AlertDialog
+      testID="not-authenticated-dialog"
+      visible={visible}
+      onDismiss={() => onDissmiss()}
+      title={t("auth.notLoggedIn")}
+      icon="lock-outline"
+      infoText={[infoMessage]}
+      confirmText={t("auth.goToLogin")}
+      cancelText={t("common.cancel")}
+      onConfirm={() => {
+        onDissmiss();
+        onBeforeNavigate?.();
+        router.navigate("/(tabs)/(profile-stack)/login");
+      }}
+    />
   );
 }

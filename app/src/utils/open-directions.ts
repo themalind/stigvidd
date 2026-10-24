@@ -5,8 +5,9 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
+import { showDialog } from "@/services/dialog";
 import type { TFunction } from "i18next";
-import { Alert, Linking, Platform } from "react-native";
+import { Linking, Platform } from "react-native";
 
 // Hands off to the device's maps app for turn-by-turn directions to a coordinate —
 // Apple Maps on iOS, Google Maps elsewhere (both accept the same daddr/destination
@@ -19,8 +20,13 @@ export function openDirectionsToStart(position: GeoJSON.Position, t: TFunction) 
   });
   if (!url) return;
 
-  Alert.alert(t("map.directionsTitle"), t("map.directionsMessage"), [
-    { text: t("common.cancel"), style: "cancel" },
-    { text: t("map.directionsConfirm"), onPress: () => Linking.openURL(url).catch(() => undefined) },
-  ]);
+  showDialog({
+    title: t("map.directionsTitle"),
+    message: t("map.directionsMessage"),
+    icon: "directions",
+    actions: [
+      { label: t("map.directionsConfirm"), onPress: () => Linking.openURL(url).catch(() => undefined) },
+      { label: t("common.cancel"), variant: "text" },
+    ],
+  });
 }

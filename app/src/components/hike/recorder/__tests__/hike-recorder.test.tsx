@@ -184,7 +184,7 @@ it("throws the recording away only after it has been confirmed", async () => {
 
   fireEvent.press(screen.getByText("Nollställ"));
   expect(mockReset).not.toHaveBeenCalled();
-  expect(screen.getByText("Vill du verkligen avbryta den pågående promenad?")).toBeTruthy();
+  expect(screen.getByText("Vill du verkligen avbryta den pågående promenaden?")).toBeTruthy();
 
   fireEvent.press(screen.getByText("Nej"));
   expect(mockReset).not.toHaveBeenCalled();

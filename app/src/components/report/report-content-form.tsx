@@ -20,7 +20,7 @@ import reportReasonParser from "@/utils/report-reason-parser";
 import { MaterialIcons } from "@expo/vector-icons";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { BlurView } from "expo-blur";
+import ModalScrim from "@/components/dialog/modal-scrim";
 import { useSetAtom } from "jotai";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -118,7 +118,7 @@ export default function ReportContentForm({
 
   return (
     <Portal>
-      {visible && <BlurView intensity={100} tint="dark" style={StyleSheet.absoluteFill} />}
+      {visible && <ModalScrim />}
       <Modal
         style={modalStyle}
         contentContainerStyle={[s.modalContainerStyle, { backgroundColor: theme.colors.surface }]}

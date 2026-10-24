@@ -11,7 +11,7 @@ import { showSuccessAtom } from "@/atoms/snackbar-atoms";
 import { BORDER_RADIUS } from "@/constants/constants";
 import { useModalKeyboardLift } from "@/hooks/useModalKeyboardLift";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { BlurView } from "expo-blur";
+import ModalScrim from "@/components/dialog/modal-scrim";
 import { useSetAtom } from "jotai";
 import { useState } from "react";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
@@ -61,7 +61,7 @@ export default function ResetPasswordModal({ visible, onDismiss }: Props) {
 
   return (
     <Portal>
-      {visible && <BlurView intensity={100} tint="dark" style={StyleSheet.absoluteFill} />}
+      {visible && <ModalScrim />}
       <Modal
         style={modalStyle}
         contentContainerStyle={[s.modalContainerStyle, { backgroundColor: theme.colors.surface }]}

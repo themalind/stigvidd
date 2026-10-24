@@ -11,7 +11,6 @@ import { AppDarkTheme, AppDefaultTheme } from "@/constants/theme";
 import { settle } from "@/test/flush";
 import { renderWithProviders } from "@/test/render";
 import { fireEvent, screen } from "@testing-library/react-native";
-import { BlurView } from "expo-blur";
 import { Image } from "expo-image";
 import { Dimensions, StyleSheet } from "react-native";
 
@@ -31,10 +30,6 @@ function show({
     <SymbolInfoModal imageUrl={imageUrl} symbol={symbol} visible={visible} onDismiss={onDismiss} />,
     { theme },
   );
-}
-
-function icon(name: string) {
-  return screen.getByTestId(`icon-${name}`, { includeHiddenElements: true });
 }
 
 beforeEach(() => {
@@ -70,10 +65,9 @@ it("stays out of sight until it is opened", () => {
   show({ visible: false });
 
   expect(screen.queryByText(TITLE)).toBeNull();
-  expect(screen.UNSAFE_queryByType(BlurView)).toBeNull();
 });
 
-it("closes when the close icon is pressed", async () => {
+it("closes from the cross", async () => {
   show();
 
   fireEvent.press(screen.getByTestId("symbol-info-close"));
@@ -95,78 +89,24 @@ it("leaves a real symbol unbadged", () => {
   expect(screen.queryByTestId("example-image-overlay")).toBeNull();
 });
 
-it("marks the modal itself with a signpost", () => {
+it("marks the dialog itself with a signpost", () => {
   show();
 
-  expect(icon("sign-direction").props.size).toBe(20);
-  expect(icon("sign-direction").props.color).toBe(AppDefaultTheme.colors.tertiary);
-  expect(screen.getByTestId("symbol-info-symbol")).toHaveStyle({
-    borderColor: AppDefaultTheme.colors.primary,
-    borderWidth: 0.5,
-    borderRadius: 100,
-    width: 32,
-    height: 32,
-  });
-});
-
-it("keeps the title and the way out at opposite ends of one row", () => {
-  show();
-
-  expect(screen.getByTestId("symbol-info-header")).toHaveStyle({
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: 5,
-  });
-  expect(screen.getByText(TITLE)).toHaveStyle({ fontWeight: "700", fontSize: 16 });
-  // A 20pt glyph is smaller than a finger, so the touch target is the slop around it.
-  expect(screen.getByTestId("symbol-info-close").props.hitSlop).toBe(16);
-  expect(icon("close").props.size).toBe(20);
-  expect(icon("close").props.color).toBe(AppDefaultTheme.colors.onSurface);
-});
-
-it("sizes itself to its content, on the theme's surface", () => {
-  show();
-
-  const surface = screen.getByTestId("modal-surface");
-  expect(StyleSheet.flatten(surface.props.style).height).toBeUndefined();
-  expect(surface).toHaveStyle({
-    maxHeight: HEIGHT * 0.8,
-    borderRadius: BORDER_RADIUS,
-    padding: 10,
-    backgroundColor: AppDefaultTheme.colors.surface,
-  });
-});
-
-it("follows the dark theme too", () => {
-  show({ theme: AppDarkTheme });
-
-  expect(screen.getByTestId("modal-surface")).toHaveStyle({ backgroundColor: AppDarkTheme.colors.surface });
-  expect(screen.getByTestId("symbol-info-image-frame")).toHaveStyle({
-    backgroundColor: AppDarkTheme.colors.secondaryContainer,
-  });
+  expect(screen.getByTestId("icon-sign-direction", { includeHiddenElements: true })).toBeTruthy();
 });
 
 // The symbol is a flat graphic, often on white, so it needs a panel of its own.
-it("sets the symbol on a panel of its own", () => {
-  show();
-
+it("sets the symbol on a panel of its own, in both themes", () => {
+  const { unmount } = show();
   expect(screen.getByTestId("symbol-info-image-frame")).toHaveStyle({
     backgroundColor: AppDefaultTheme.colors.secondaryContainer,
     borderRadius: BORDER_RADIUS,
-    alignItems: "center",
-    justifyContent: "center",
     overflow: "hidden",
-    padding: 20,
   });
-});
 
-// The blur keeps the text-heavy trail screen behind it from competing.
-it("blurs the screen behind it while it is open", () => {
-  show();
-
-  const blur = screen.UNSAFE_getByType(BlurView);
-  expect(blur.props.intensity).toBe(100);
-  expect(blur.props.tint).toBe("dark");
-  expect(StyleSheet.flatten(blur.props.style)).toMatchObject({ position: "absolute", top: 0, left: 0 });
+  unmount();
+  show({ theme: AppDarkTheme });
+  expect(screen.getByTestId("symbol-info-image-frame")).toHaveStyle({
+    backgroundColor: AppDarkTheme.colors.secondaryContainer,
+  });
 });

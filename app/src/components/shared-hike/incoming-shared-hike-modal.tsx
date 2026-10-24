@@ -11,7 +11,7 @@ import { SharedHike } from "@/data/types";
 import CoordinateParser from "@/utils/coordinate-parser";
 import { formatDate } from "@/utils/format-date";
 import { Fontisto } from "@expo/vector-icons";
-import { BlurView } from "expo-blur";
+import ModalScrim from "@/components/dialog/modal-scrim";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { ActivityIndicator, Dimensions, Pressable, ScrollView, StyleSheet, View } from "react-native";
@@ -51,7 +51,7 @@ export default function IncomingSharedHikeModal({
 
   return (
     <Portal>
-      {visible && <BlurView intensity={100} tint="dark" style={StyleSheet.absoluteFill} />}
+      {visible && <ModalScrim />}
       <Modal
         visible={visible}
         onDismiss={onDismiss}

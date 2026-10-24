@@ -13,6 +13,7 @@ import { basemapAtom, loadBasemap } from "@/atoms/basemap-atom";
 import { BannedWriteDialog } from "@/components/auth/banned-write-dialog";
 import { SessionRecovery } from "@/components/auth/session-recovery";
 import { createQueryClient } from "@/api/query-client";
+import { DialogHost } from "@/components/dialog/dialog-host";
 import { GlobalSnackbar } from "@/components/global-snackbar";
 import { ConsentDialog } from "@/components/settings/consent-dialog";
 import { useAppState } from "@/hooks/useAppState";
@@ -162,6 +163,7 @@ export default function RootLayout() {
               <ConsentDialog />
               <BannedWriteDialog />
               <SessionRecovery />
+              <DialogHost />
             </PaperProvider>
             {/* After the portal host, so it is drawn over every modal and dialog. */}
             <PaperThemeProvider theme={theme}>

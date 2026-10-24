@@ -22,7 +22,8 @@
     "next": "Nästa",
     "select": "Välj...",
     "exampleImage": "Exempelbild",
-    "exampleImageShort": "Exempel"
+    "exampleImageShort": "Exempel",
+    "cannotBeUndone": "Går inte att ångra"
   },
   "auth": {
     "login": "Logga in",
@@ -184,26 +185,54 @@
     "trimTooShort": "Det måste finnas kvar en del av promenaden.",
     "aboutTitle": "2. Om leden",
     "aboutInfoTitle": "Vad ska jag skriva?",
-    "aboutInfoName": "Namn: ett kort namn som gör leden lätt att känna igen, t.ex. Runt Ballasjön.",
-    "aboutInfoCity": "Stad eller ort: den stad eller ort som ligger närmast.",
-    "aboutInfoDescription": "Beskrivning: vad man ser och upplever längs vägen, och om det finns något särskilt att tänka på.",
-    "aboutInfoVariation": "Variation: underlag och terräng, t.ex. grusväg, stig med rötter eller branta backar.",
-    "aboutInfoGettingThere": "Ta sig dit: hur man hittar till starten, t.ex. vilken väg man tar eller ett känt riktmärke.",
-    "aboutInfoParking": "Parkering och kollektivtrafik: var man kan parkera, och närmaste hållplats.",
-    "name": "Namn",
-    "description": "Beskrivning",
-    "difficulty": "Svårighetsgrad",
-    "gettingThere": "Ta sig dit",
+    "aboutInfoIntro": "Skriv så att någon som aldrig varit där hittar dit och vet vad som väntar.",
+    "aboutInfo": {
+      "name": {
+        "heading": "Namn",
+        "text": "Ett kort namn som gör leden lätt att känna igen.",
+        "example": "T.ex. Runt Ballasjön"
+      },
+      "city": {
+        "heading": "Stad eller ort",
+        "text": "Den stad eller ort som ligger närmast."
+      },
+      "description": {
+        "heading": "Beskrivning",
+        "text": "Vad man ser och upplever längs vägen, och om det finns något särskilt att tänka på."
+      },
+      "variation": {
+        "heading": "Variation",
+        "text": "Underlag och terräng.",
+        "example": "T.ex. grusväg, stig med rötter eller branta backar"
+      },
+      "gettingThere": {
+        "heading": "Ta sig dit",
+        "text": "Hur man hittar till starten.",
+        "example": "T.ex. vilken väg man tar eller ett känt riktmärke"
+      },
+      "parking": {
+        "heading": "Parkering och kollektivtrafik",
+        "text": "Var man kan parkera, och närmaste hållplats."
+      }
+    },
+    "name": "Namn *",
+    "description": "Beskrivning *",
+    "difficulty": "Svårighetsgrad *",
+    "gettingThere": "Ta sig dit *",
     "parkingOptional": "Parkering (valfritt)",
     "publicTransportOptional": "Kollektivtrafik (valfritt)",
     "variationOptional": "Variation, t.ex. underlag och terräng (valfritt)",
-    "city": "Stad eller ort",
+    "city": "Stad eller ort *",
     "cityRequired": "Ange stad eller ort",
     "maxChars30": "Max 30 tecken",
     "imagesTitle": "3. Bilder",
     "imagesInfoTitle": "Tips om bilder",
-    "imagesInfoDaylight": "Välj bilder tagna i dagsljus som visar leden och naturen.",
-    "imagesInfoPeople": "Undvik bilder där människor syns, och bilder som kan vara stötande.",
+    "imagesInfoDoHeading": "Gör så här",
+    "imagesInfoDaylight": "Bilder tagna i dagsljus",
+    "imagesInfoNature": "Bilder som visar leden och naturen",
+    "imagesInfoAvoidHeading": "Undvik",
+    "imagesInfoPeople": "Bilder där människor syns",
+    "imagesInfoOffensive": "Bilder som kan vara stötande",
     "imagesHint": "Välj bland promenadens bilder. Väljer du inga lägger vi in exempelbilder tills vidare.",
     "noImages": "Promenaden har inga bilder, så vi lägger in exempelbilder tills vidare.",
     "consentTitle": "4. Godkänn",
@@ -243,7 +272,7 @@
     "saveError": "Kunde inte spara recensionen",
     "deleted": "Recensionen har tagits bort",
     "deleteError": "Kunde inte ta bort recensionen",
-    "rating": "Väl ett betyg *",
+    "rating": "Välj ett betyg *",
     "ratingTitle": "Sätt ett betyg ⭐️⭐️",
     "ratingQuestion": "Hur nöjd är du med promenaden?",
     "ratingInstruction": "Ge upp till 5 stjärnor!",
@@ -252,7 +281,7 @@
     "addImageInfo1": "Visa oss dina promenadäventyr!",
     "addImageInfo2": "Lägg gärna till bilder från promenaden, men undvik bilder som kan vara stötande eller olämpliga.",
     "addImageInfo3": "Max 3 bilder per promenad.",
-    "writeReview": "Skriv en recension eller kommentar",
+    "writeReview": "Skriv en recension eller kommentar (valfritt)",
     "writeReviewTitle": "Skriv något",
     "writeReviewInfo1": "Berätta för oss om promenaden!",
     "writeReviewInfo2": "Skriv en kommentar eller recension om dina upplevelser. Tänk på att hålla texten trevlig och respektfull.",
@@ -307,6 +336,7 @@
     "links": "Länkar",
     "guideLink": "Allemansrätten och naturreservat",
     "difficultiesTitle": "Svårighetsgrader",
+    "thisTrail": "Den här leden",
     "accessibilityTitle": "Tillgänglighet",
     "markingTitle": "Ledmarkering",
     "markingInfo": "Leden är märkt i terrängen med den här symbolen. Håll utkik efter den på träd, stolpar och stenar. Så länge du ser den är du kvar på leden.",
@@ -370,7 +400,6 @@
     "date": "Datum",
     "deleteTitle": "Ta bort hinder",
     "deleteConfirm": "Är du säker på att du vill ta bort den här rapporten?",
-    "deleteWarning": "Åtgärden kan inte ångras.",
     "fixedTitle": "Hinder åtgärdat",
     "fixedConfirm": "Vill du markera detta hinder som löst?",
     "fixedInfo": "När du markerar som åtgärdat intygar du att hindret inte längre finns kvar. Vill du fortsätta?",
@@ -803,8 +832,7 @@
   "createHike": {
     "locationRequired": "Du behöver dela din plats för att kunna skapa en egen promenad.",
     "cancelTitle": "Avbryt pågående promenad",
-    "cancelConfirm": "Vill du verkligen avbryta den pågående promenad?",
-    "cancelWarning": "Detta går inte att ångra.",
+    "cancelConfirm": "Vill du verkligen avbryta den pågående promenaden?",
     "no": "Nej",
     "yes": "Ja",
     "title": "Skapa promenad",

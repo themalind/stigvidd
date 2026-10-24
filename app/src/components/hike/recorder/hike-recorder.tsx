@@ -316,9 +316,10 @@ export default function HikeRecorder() {
           setShowDeleteDialog(false);
         }}
         title={t("createHike.cancelTitle")}
-        infoText={[t("createHike.cancelConfirm"), t("createHike.cancelWarning")]}
-        backgroundColor={theme.colors.background}
-        textColor={theme.colors.onBackground}
+        infoText={[t("createHike.cancelConfirm")]}
+        icon="stop-circle-outline"
+        tone="danger"
+        irreversible
         cancelText={t("createHike.no")}
         confirmText={t("createHike.yes")}
       />
@@ -326,7 +327,6 @@ export default function HikeRecorder() {
       <SaveHikeModal
         visible={showSaveModal}
         onDismiss={() => setShowSaveModal(false)}
-        onConfirm={() => setShowSaveModal(false)}
         onSaveSuccess={resetTracking}
         hike={hike}
       />

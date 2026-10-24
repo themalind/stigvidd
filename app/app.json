@@ -15,7 +15,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.stigvidd.app",
-      "buildNumber": "8",
+      "buildNumber": "9",
       "associatedDomains": ["applinks:link.stigvidd.se"],
       "infoPlist": {
         "CFBundleDevelopmentRegion": "sv",
@@ -50,7 +50,13 @@
         {
           "action": "VIEW",
           "autoVerify": true,
-          "data": [{ "scheme": "https", "host": "link.stigvidd.se", "pathPrefix": "/trail/" }],
+          "data": [
+            {
+              "scheme": "https",
+              "host": "link.stigvidd.se",
+              "pathPrefix": "/trail/"
+            }
+          ],
           "category": ["BROWSABLE", "DEFAULT"]
         }
       ]

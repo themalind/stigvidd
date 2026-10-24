@@ -16,7 +16,6 @@ import { renderWithProviders } from "@/test/render";
 import { QueryClient } from "@tanstack/react-query";
 import { fireEvent, screen } from "@testing-library/react-native";
 import { ActivityIndicator, AppState, AppStateStatus, Linking, Platform } from "react-native";
-import { Dialog } from "react-native-paper";
 
 const mockGetPermissions = jest.fn();
 const mockRequestPermissions = jest.fn();
@@ -229,7 +228,13 @@ it("does not read the background status on iOS", async () => {
 it("does not let the disclosure be tapped away", async () => {
   await showDisclosure();
 
-  expect(screen.UNSAFE_getByType(Dialog).props.dismissable).toBe(false);
+  fireEvent.press(screen.getByTestId("location-disclosure-backdrop"));
+  await settle();
+
+  expect(screen.getByText("Stigvidd behöver din plats")).toBeTruthy();
+  expect(mockRequestPermissions).not.toHaveBeenCalled();
+  expect(mockBack).not.toHaveBeenCalled();
+  expect(mockCanGoBack).not.toHaveBeenCalled();
 });
 
 it("raises the system prompt on Fortsätt", async () => {

@@ -5,23 +5,25 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import { DIALOG_BORDER_RADIUS } from "@/constants/constants";
+import DialogFrame, { DialogAction, DialogTone } from "@/components/dialog/dialog-frame";
+import DialogSection, { DialogText } from "@/components/dialog/dialog-section";
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { Text, View } from "react-native";
-import { Button, Dialog, Portal, useTheme } from "react-native-paper";
 
 interface AlertDialogProps {
   visible: boolean;
   onDismiss: () => void;
   title: string;
   infoText: string[];
-  backgroundColor: string;
-  textColor?: string;
+  icon?: string;
+  tone?: DialogTone;
+  irreversible?: boolean;
+  warning?: string;
   confirmText?: string;
   onConfirm?: () => void;
   cancelText?: string;
   children?: React.ReactNode;
+  testID?: string;
 }
 
 export default function AlertDialog({
@@ -29,47 +31,48 @@ export default function AlertDialog({
   onDismiss,
   infoText,
   title,
-  backgroundColor,
-  textColor,
+  icon,
+  tone = "default",
+  irreversible = false,
+  warning,
   confirmText,
   onConfirm,
   cancelText,
   children,
+  testID = "alert-dialog",
 }: AlertDialogProps) {
   const { t } = useTranslation();
-  const theme = useTheme();
   const resolvedCancelText = cancelText ?? t("common.ok");
-  const resolvedTextColor = textColor ?? theme.colors.onSurface;
+  const actions: DialogAction[] =
+    confirmText && onConfirm
+      ? [
+          {
+            label: confirmText,
+            onPress: onConfirm,
+            variant: tone === "danger" ? "danger" : "primary",
+            testID: `${testID}-confirm`,
+          },
+          { label: resolvedCancelText, onPress: onDismiss, variant: "text", testID: `${testID}-cancel` },
+        ]
+      : [{ label: resolvedCancelText, onPress: onDismiss, testID: `${testID}-cancel` }];
+
   return (
-    <Portal>
-      <Dialog
-        testID="alert-dialog"
-        style={{ backgroundColor: backgroundColor, borderRadius: DIALOG_BORDER_RADIUS }}
-        visible={visible}
-        onDismiss={onDismiss}
-      >
-        <Dialog.Title>{title}</Dialog.Title>
-        <Dialog.Content>
-          <View style={{ gap: 10 }}>
-            {infoText.map((t, index) => (
-              <Text key={index} style={{ fontSize: 15, lineHeight: 24, color: resolvedTextColor }}>
-                {infoText[index]}
-              </Text>
-            ))}
-            {children}
-          </View>
-        </Dialog.Content>
-        <Dialog.Actions>
-          <Button onPress={onDismiss}>
-            <Text style={{ fontSize: 18, color: resolvedTextColor }}>{resolvedCancelText}</Text>
-          </Button>
-          {confirmText && onConfirm && (
-            <Button onPress={onConfirm}>
-              <Text style={{ fontSize: 18, color: resolvedTextColor }}>{confirmText}</Text>
-            </Button>
-          )}
-        </Dialog.Actions>
-      </Dialog>
-    </Portal>
+    <DialogFrame
+      testID={testID}
+      visible={visible}
+      onDismiss={onDismiss}
+      title={title}
+      icon={icon}
+      tone={tone}
+      actions={actions}
+    >
+      {infoText.map((line, index) => (
+        <DialogText key={index}>{line}</DialogText>
+      ))}
+      {(irreversible || warning) && (
+        <DialogSection testID={`${testID}-warning`} tone="danger" heading={t("common.cannotBeUndone")} text={warning} />
+      )}
+      {children}
+    </DialogFrame>
   );
 }

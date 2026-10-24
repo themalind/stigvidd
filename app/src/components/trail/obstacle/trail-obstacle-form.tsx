@@ -22,7 +22,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ISSUE_TYPES_STALE_TIME, TRAIL_COORDINATES_STALE_TIME } from "@/constants/cache";
-import { BlurView } from "expo-blur";
+import ModalScrim from "@/components/dialog/modal-scrim";
 import * as ExpoLinking from "expo-linking";
 import * as Location from "expo-location";
 import { useSetAtom } from "jotai";
@@ -166,7 +166,7 @@ export default function TrailObstacleForm({ trailIdentifier, visible, onDismiss 
 
   return (
     <Portal>
-      {visible && <BlurView intensity={100} tint="dark" style={StyleSheet.absoluteFill} />}
+      {visible && <ModalScrim />}
       <Modal
         style={modalStyle}
         contentContainerStyle={[s.modalContainerStyle, { backgroundColor: theme.colors.surface, height: maxHeight }]}

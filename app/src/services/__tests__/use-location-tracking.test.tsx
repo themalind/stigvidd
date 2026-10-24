@@ -19,12 +19,13 @@ import {
   readHikeState,
   writeHikeState,
 } from "@/services/location-task";
+import { getDialog, hideDialog } from "@/services/dialog";
 import { useLocationTracking } from "@/services/use-location-tracking";
 import { flushUntil, settle } from "@/test/flush";
 import { renderWithProviders } from "@/test/render";
 import { act } from "@testing-library/react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Alert, AppState, Linking } from "react-native";
+import { AppState, Linking } from "react-native";
 
 // location-task registers the background task at import; the registration itself is
 // covered by its own suite.
@@ -133,11 +134,11 @@ beforeEach(async () => {
     if (event === "change") appStateListeners.push(handler as (next: string) => void);
     return { remove: jest.fn() } as never;
   });
-  jest.spyOn(Alert, "alert").mockImplementation(() => {});
   jest.spyOn(Date, "now").mockReturnValue(NOW);
 });
 
 afterEach(() => {
+  hideDialog();
   jest.restoreAllMocks();
 });
 
@@ -184,11 +185,10 @@ describe("startTracking", () => {
 
       await act(async () => harness.hook().startTracking());
 
-      expect(Alert.alert).toHaveBeenCalledWith(
-        'Aktivera platsåtkomst "Alltid"',
-        expect.stringContaining("Inspelningen kan starta nu"),
-        expect.any(Array),
-      );
+      expect(getDialog()).toMatchObject({
+        title: 'Aktivera platsåtkomst "Alltid"',
+        message: expect.stringContaining("Inspelningen kan starta nu"),
+      });
       expect(harness.hook().isTracking).toBe(true);
       expect(mockStartUpdates).toHaveBeenCalled();
     });
@@ -200,9 +200,10 @@ describe("startTracking", () => {
 
       await act(async () => harness.hook().startTracking());
 
-      const buttons = (Alert.alert as jest.Mock).mock.calls[0][2] as { text: string; onPress?: () => void }[];
-      expect(buttons.map((b) => b.text)).toEqual(["Fortsätt ändå", "Öppna inställningar"]);
-      await act(async () => buttons[1].onPress?.());
+      const dialog = getDialog();
+      if (!dialog) throw new Error("expected a dialog");
+      expect(dialog.actions.map((a) => a.label)).toEqual(["Öppna inställningar", "Fortsätt ändå"]);
+      await act(async () => dialog.actions[0].onPress?.());
       expect(openSettings).toHaveBeenCalled();
     });
 
@@ -211,7 +212,7 @@ describe("startTracking", () => {
 
       await act(async () => harness.hook().startTracking());
 
-      expect(Alert.alert).not.toHaveBeenCalled();
+      expect(getDialog()).toBeNull();
     });
   });
 

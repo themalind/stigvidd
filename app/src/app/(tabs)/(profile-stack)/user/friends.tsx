@@ -420,8 +420,8 @@ export default function FriendsScreen() {
               ]}
               cancelText={t("common.cancel")}
               confirmText={t("friends.remove")}
-              backgroundColor={theme.colors.surface}
-              textColor={theme.colors.onSurface}
+              icon="account-remove-outline"
+              tone="danger"
             />
             <AlertDialog
               visible={userToBlock !== null}
@@ -434,8 +434,8 @@ export default function FriendsScreen() {
               infoText={[t("friends.blockInfo"), t("friends.blockContinue")]}
               cancelText={t("common.cancel")}
               confirmText={t("friends.block")}
-              backgroundColor={theme.colors.surface}
-              textColor={theme.colors.onSurface}
+              icon="cancel"
+              tone="danger"
             />
             <AlertDialog
               visible={requestToCancel !== null}
@@ -451,8 +451,7 @@ export default function FriendsScreen() {
               ]}
               cancelText={t("common.cancel")}
               confirmText={t("friends.cancelRequestConfirm")}
-              backgroundColor={theme.colors.surface}
-              textColor={theme.colors.onSurface}
+              icon="account-arrow-left-outline"
             />
           </View>
 
