@@ -1,0 +1,69 @@
+@* SPDX-FileCopyrightText: 2026 The Stigvidd Authors *@
+@* SPDX-License-Identifier: AGPL-3.0-or-later *@
+
+@using System.Globalization
+
+<Document Title="@Name"
+          Description="@Summary"
+          SiteUrl="@Options.SiteUrl"
+          CanonicalUrl="@CanonicalUrl"
+          ImageUrl="@Image?.ImageUrl">
+    @if (Image is not null)
+    {
+        <img class="hero" src="@Image.ImageUrl" alt="@(Image.AltText ?? Name)" />
+    }
+    <div class="content">
+        <h1>@Name</h1>
+        @if (Facts.Length > 0)
+        {
+            <p class="facts">@Facts</p>
+        }
+        @if (!string.IsNullOrWhiteSpace(Trail.Description))
+        {
+            <p class="description">@Trail.Description</p>
+        }
+        <div class="actions">
+            <a class="button primary" href="@AppUrl">Öppna i appen</a>
+            @if (!string.IsNullOrWhiteSpace(Options.AppStoreUrl))
+            {
+                <a class="button" href="@Options.AppStoreUrl">Hämta i App Store</a>
+            }
+            @if (!string.IsNullOrWhiteSpace(Options.PlayStoreUrl))
+            {
+                <a class="button" href="@Options.PlayStoreUrl">Hämta på Google Play</a>
+            }
+        </div>
+        <p class="hint">Har du inte Stigvidd? Hämta appen och öppna länken igen.</p>
+    </div>
+</Document>
+
+@code {
+    private const int SummaryLength = 200;
+    private static readonly CultureInfo Swedish = CultureInfo.GetCultureInfo("sv-SE");
+
+    [Parameter, EditorRequired] public required TrailResponse Trail { get; set; }
+    [Parameter, EditorRequired] public required AppLinksOptions Options { get; set; }
+
+    private string Name => string.IsNullOrWhiteSpace(Trail.Name) ? "En led på Stigvidd" : Trail.Name;
+
+    private TrailImageResponse? Image => Trail.TrailImagesResponse?.FirstOrDefault();
+
+    private string CanonicalUrl => $"{Options.PublicBaseUrl.TrimEnd('/')}/trail/{Uri.EscapeDataString(Trail.Identifier)}";
+
+    private string AppUrl => $"{Options.AppScheme}://trail/{Uri.EscapeDataString(Trail.Identifier)}";
+
+    private string Facts => string.Join(" · ", new[]
+    {
+        Trail.TrailLength is { } length ? $"{length.ToString("0.#", Swedish)} km" : null,
+        Trail.City,
+    }.Where(part => !string.IsNullOrWhiteSpace(part)));
+
+    private string Summary
+    {
+        get
+        {
+            var text = string.IsNullOrWhiteSpace(Trail.Description) ? Facts : Trail.Description.Trim();
+            return text.Length <= SummaryLength ? text : $"{text[..(SummaryLength - 1)].TrimEnd()}…";
+        }
+    }
+}

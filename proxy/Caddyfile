@@ -23,6 +23,15 @@ www.{$SITE_DOMAIN} {
 	redir https://{$SITE_DOMAIN}{uri} permanent
 }
 
+# Share links (link.<apex>): the trail landing page and the .well-known files that let
+# iOS and Android open those links in the app. Derived from the apex like www, so it
+# needs no variable of its own, but it does need its own DNS record or ACME fails for
+# this block alone. The app's associatedDomains names this host, so it must not move.
+link.{$SITE_DOMAIN} {
+	encode zstd gzip
+	reverse_proxy link:8080
+}
+
 # Admin web frontend. Moved off the apex to its own name so a visitor who types
 # stigvidd.se reaches the site above rather than an admin login form. Changing this
 # name means adding it to the Keycloak client's WEB ORIGINS (not its redirect URIs —

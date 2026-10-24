@@ -247,6 +247,25 @@ services:
     networks:
       - public
 
+  # Share links at link.<apex>: renders /trail/<id> from the API's public trail endpoint
+  # over the internal network, and serves the .well-known files for universal/app links.
+  # No database and no secrets. No depends_on, so the .well-known files answer even
+  # while the API is down; the trail page shows a 503 page until it is back.
+  link:
+    image: ${REGISTRY:-stigvidd}/stigvidd-link:${IMAGE_TAG:-latest}
+    build:
+      context: ./backend
+      dockerfile: StigviddLinks/Dockerfile
+    restart: unless-stopped
+    logging: *default-logging
+    environment:
+      Api__BaseUrl: http://api:8080
+      AppLinks__PublicBaseUrl: https://link.${SITE_DOMAIN:?SITE_DOMAIN must be set}
+      AppLinks__SiteUrl: https://${SITE_DOMAIN:?SITE_DOMAIN must be set}
+    # Served by the proxy as `link:8080` on the `public` network.
+    networks:
+      - public
+
   media:
     # WebDAV media server (nginx). API writes here (basic auth); browsers read
     # (public). Data lives in the `media` volume — part of the migration path.
@@ -573,6 +592,7 @@ services:
     depends_on:
       - web
       - site
+      - link
       - api
       - media
     environment:

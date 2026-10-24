@@ -38,6 +38,12 @@ www.{$SITE_DOMAIN} {
 	redir https://{$SITE_DOMAIN}{uri} permanent
 }
 
+# Share links, derived from the apex. See Caddyfile.
+link.{$SITE_DOMAIN} {
+	encode zstd gzip
+	reverse_proxy link:8080
+}
+
 # Admin web frontend, on its own name. See Caddyfile for the Keycloak coupling.
 {$WEB_DOMAIN} {
 	encode zstd gzip
