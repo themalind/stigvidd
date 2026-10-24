@@ -62,8 +62,10 @@ Core/TrailImport/         own namespaces, NOT global using (Core/Results, Core/S
 
 - **Licence per area**: `app/` is MPL-2.0 (**never add Exhibit B**); everything else is AGPL-3.0-or-later. New
   files need a matching SPDX header (`The Stigvidd Authors`) or a `REUSE.toml` entry. Keep a `.cs` BOM first; LF.
-- **Hostnames**: the CORS list in `Program.cs` and Keycloak Web Origins are untested and outside the repo; both
-  Caddyfiles need every block ([note](docs/notes/moving-the-admin-off-the-apex.md)).
+- **Hostnames**: the CORS list in `Program.cs` and Keycloak Web Origins are untested and outside the repo; all
+  three `proxy/Caddyfile*` need every block ([note](docs/notes/moving-the-admin-off-the-apex.md)). A new service
+  also needs proxy `depends_on`, `env.IMAGES` for main **and** staging in `Jenkinsfile`, and DEPLOYMENT.md's two
+  tables. An apex-derived name (`www.`, `link.{$SITE_DOMAIN}`) needs no `.env` variable.
 - **Media files are shared**: one `ImageUrl` can back many image rows, so check references before any WebDAV
   delete ([note](docs/notes/media-files-are-shared-by-many-image-rows.md)).
 - **Logs**: one OpenObserve MCP server per org, each taking only its own `org_id` (`default` gives a 401):
