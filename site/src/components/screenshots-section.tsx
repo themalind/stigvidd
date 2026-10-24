@@ -8,15 +8,15 @@ const SHOTS = [
   {
     // Picks up where the hero leaves off: that shows the top of the start screen, this
     // is the bottom of the same screen.
-    src: "/screenshots/start-screen-bottom.webp",
+    src: "/screenshots/home-recent-walk.webp",
     alt:
-      "Nedre delen av startskärmen med Naturguide, Utforska Borås och en knapp som " +
-      "slumpar fram en promenad åt dig",
+      "Nedre delen av startskärmen med din senaste promenad inritad på kartan och en " +
+      "knapp som slumpar fram en promenad åt dig",
     caption: "Låt appen välja",
   },
   {
-    src: "/screenshots/map_overview.webp",
-    alt: "Kartan över Boråsområdet med leder samlade i grupper och ett ledkort längst ned",
+    src: "/screenshots/map-satellite.webp",
+    alt: "Satellitkartan över Bollebygd med leder samlade i grupper och ett ledkort längst ned",
     caption: "Leder på kartan",
   },
   {
@@ -32,9 +32,9 @@ const SHOTS = [
     caption: "Ta dig dit",
   },
   {
-    src: "/screenshots/trail-information.webp",
-    alt: "Varning om rapporterade hinder längs leden, och knappar för att spara, dela, " + "betygsätta och rapportera",
-    caption: "Hinder och omdömen",
+    src: "/screenshots/community-trails.webp",
+    alt: "Promenader som andra vandrare har publicerat som leder, med längd, upphovsperson och antal gillanden",
+    caption: "Delat av andra vandrare",
   },
 ];
 

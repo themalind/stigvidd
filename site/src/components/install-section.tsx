@@ -3,13 +3,15 @@
 
 import { useState } from "react";
 import { Apple, Mail, Smartphone } from "lucide-react";
-import { contactEmail, install, installLinks } from "@/content/site-content";
+import { contactEmail, install, installLabels, installLinks } from "@/content/site-content";
 import { detectPlatform, orderedPlatforms, type Platform } from "@/lib/install-links";
 
-const LABELS = {
-  ios: { label: "Testa på iPhone via TestFlight", Icon: Apple },
-  android: { label: "Hämta till Android", Icon: Smartphone },
-} as const;
+const ICONS = { ios: Apple, android: Smartphone } as const;
+
+const PRIMARY =
+  "inline-flex items-center gap-2 rounded-base bg-accent px-6 py-3 font-medium text-accent-contrast transition-opacity hover:opacity-90";
+const SECONDARY =
+  "inline-flex items-center gap-2 rounded-base border border-border bg-bg px-6 py-3 font-medium transition-colors hover:bg-surface";
 
 export default function InstallSection() {
   // Read once, at first render. This is a client-only bundle with no SSR, so the user
@@ -17,10 +19,10 @@ export default function InstallSection() {
   const [platform] = useState<Platform>(() => detectPlatform(navigator.userAgent));
 
   const available = orderedPlatforms(installLinks, platform);
-  const mailto = `mailto:${contactEmail}?subject=${encodeURIComponent("Jag vill testa Stigvidd")}`;
+  const mailto = `mailto:${contactEmail}?subject=${encodeURIComponent(install.mailSubject)}`;
 
   return (
-    <section id="testa" className="border-y border-border bg-surface">
+    <section id="hamta" className="border-y border-border bg-surface">
       <div className="mx-auto max-w-6xl px-5 py-16 md:py-24">
         <div className="max-w-2xl">
           <h2 className="text-3xl font-semibold tracking-tight md:text-4xl">{install.title}</h2>
@@ -40,27 +42,20 @@ export default function InstallSection() {
         </ol>
 
         <div className="mt-10 flex flex-wrap items-center gap-3">
-          <a
-            href={mailto}
-            className="inline-flex items-center gap-2 rounded-base bg-accent px-6 py-3 font-medium text-accent-contrast transition-opacity hover:opacity-90"
-          >
-            <Mail aria-hidden="true" className="size-5" />
-            Mejla {contactEmail}
-          </a>
-
-          {available.map(({ platform: name, url }) => {
-            const { label, Icon } = LABELS[name];
+          {available.map(({ platform: name, url }, index) => {
+            const Icon = ICONS[name];
             return (
-              <a
-                key={name}
-                href={url}
-                className="inline-flex items-center gap-2 rounded-base border border-border bg-bg px-6 py-3 font-medium transition-colors hover:bg-surface"
-              >
+              <a key={name} href={url} className={index === 0 ? PRIMARY : SECONDARY}>
                 <Icon aria-hidden="true" className="size-5" />
-                {label}
+                {installLabels[name]}
               </a>
             );
           })}
+
+          <a href={mailto} className={available.length === 0 ? PRIMARY : SECONDARY}>
+            <Mail aria-hidden="true" className="size-5" />
+            {install.mailCta}
+          </a>
         </div>
       </div>
     </section>

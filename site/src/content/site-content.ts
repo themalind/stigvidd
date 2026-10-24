@@ -13,14 +13,12 @@
  * keep-comment: the feature list mirrors the app's `about.features`, one card per entry, same order and wording;
  * keep-comment: nothing checks this side, so change both together (`about-screen.test.tsx` pins the app's count).
  *
- * `phase` is what turns the tester page into the public one. In "beta" the install
- * section recruits testers; in "public" it shows store links. Flip it, fill in
- * `installLinks`, and the page is a launch page — no component changes.
+ * keep-comment: `phase` only shows the beta badge; the buttons come from `installLinks`, so a store goes live by filling in its URL.
  */
 
 export type SitePhase = "beta" | "public";
 
-export const phase: SitePhase = "beta";
+export const phase: SitePhase = "public";
 
 export const contactEmail = "info@stigvidd.se";
 
@@ -32,7 +30,7 @@ export const hero = {
     "Stigvidd är en vandringsapp skapad som ett hobbyprojekt, av kärlek till naturen. " +
     "Utforska vandringsleder i Boråsområdet, spela in egna vandringar med GPS, betygsätt " +
     "lederna du gillar och hjälp andra vandrare genom att rapportera hinder längs vägen.",
-  primaryCta: "Bli testare",
+  primaryCta: "Hämta appen",
   secondaryCta: "Det här kan du göra",
 };
 
@@ -101,30 +99,37 @@ export const features = [
 
 // keep-comment: null renders no button for that platform, so testers on it are recruited by mail
 export const installLinks: { ios: string | null; android: string | null } = {
-  ios: "https://testflight.apple.com/join/WBm5tFaq",
+  ios: "https://apps.apple.com/se/app/stigvidd/id6818785238",
   android: null,
 };
 
+export const installLabels = {
+  ios: "Hämta i App Store",
+  android: "Hämta på Google Play",
+};
+
 export const install = {
-  title: "Var med och testa",
+  title: "Hämta Stigvidd",
   body:
-    "Stigvidd är i sluten testperiod. Testarna får appen före alla andra, och det som " +
-    "rapporteras nu är det som hinner bli bättre innan lanseringen.",
+    "Stigvidd finns i App Store för iPhone. Android-versionen är i sluten testperiod – " +
+    "mejla oss så får du en testlänk.",
+  mailCta: "Testa på Android",
+  mailSubject: "Jag vill testa Stigvidd på Android",
   steps: [
     {
-      title: "Hör av dig",
-      body: `Har du iPhone går du med direkt via TestFlight-knappen nedan. Har du Android, mejla ${contactEmail}.`,
+      title: "Hämta appen",
+      body: `Har du iPhone hämtar du Stigvidd i App Store. Har du Android, mejla ${contactEmail} så får du en länk.`,
     },
     {
-      title: "Installera appen",
-      body: "På iPhone installerar du TestFlight och sedan Stigvidd. Android-testare får ett mejl med en länk.",
+      title: "Hitta en led",
+      body: "Leta bland lederna i Boråsområdet, eller låt appen slumpa fram en promenad.",
     },
     {
       title: "Gå en tur",
-      body: "Använd appen som du hade gjort ändå. Det är då bristerna syns.",
+      body: "Spela in vandringen med GPS och se hur långt du gick.",
     },
     {
-      title: "Berätta vad som hände",
+      title: "Berätta vad du tycker",
       body: `Krångel, konstigheter och önskemål – allt går till ${contactEmail}.`,
     },
   ],
