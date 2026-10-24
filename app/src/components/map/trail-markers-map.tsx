@@ -38,7 +38,7 @@ import { useTranslation } from "react-i18next";
 import { NativeSyntheticEvent, StyleProp, StyleSheet, View, ViewStyle } from "react-native";
 import { ActivityIndicator, Text, useTheme } from "react-native-paper";
 import Map from "./map";
-import { CONTRIBUTION_MARKER_COLORS, HIGHLIGHT_MARKER_COLORS, MARKER_COLORS, type MarkerColors } from "./marker-styles";
+import { HIGHLIGHT_MARKER_COLORS, MARKER_COLORS, type MarkerColors } from "./marker-styles";
 
 type FacilityTypeValue = (typeof FacilityType)[keyof typeof FacilityType];
 
@@ -78,14 +78,6 @@ const DEFAULT_VIEW_STATE: InitialViewState = { center: BORAS_CENTER, zoom: 9.5 }
 // Keep points clustered up to a high zoom so overlapping trailheads stay a single
 // tappable cluster instead of un-tappable stacked individual pins.
 const CLUSTER_MAX_ZOOM = 16;
-// keep-comment: a cluster of user walks only is drawn in their colour; a mixed one stays a trail cluster
-// keep-comment: the full reduce form, since MapLibre iOS reads a bare "+" as a string constant and never sums
-const TRAIL_CLUSTER_PROPERTIES = {
-  curatedCount: [
-    ["+", ["accumulated"], ["get", "curatedCount"]],
-    ["case", ["==", ["get", "isContribution"], true], 0, 1],
-  ],
-} as const;
 // Small clusters open the carousel directly — they're usually trails sharing a
 // trailhead that won't separate usefully by zooming. Larger, genuinely separable
 // clusters zoom in to break apart instead.
@@ -103,6 +95,7 @@ const NO_COUNT: FilterSpecification = ["!", ["has", "point_count"]];
 // the selection ring can be sized from the same numbers and always sit just outside
 // whatever was tapped (a point or a cluster of any size).
 const POINT_RADIUS = 9;
+const FACILITY_POINT_RADIUS = 6;
 const CLUSTER_RADIUS_BASE = 16;
 const CLUSTER_RADIUS_MED = 20;
 const CLUSTER_RADIUS_LARGE = 26;
@@ -127,19 +120,19 @@ export interface MapHighlight {
   radius: number;
 }
 
-// A clustered facility source (fire pits or shelters). Clusters exactly like the
-// trail source — same radii/step thresholds — so every category groups and breaks
-// apart at the same zooms. Coloured per category via `colors`.
-function FacilityClusterSource({
+// keep-comment: one source per marker category, so categories never merge into one cluster and all break apart at the same zooms
+function ClusterSource({
   id,
   data,
   colors,
+  pointRadius,
   sourceRef,
   onPress,
 }: {
   id: string;
   data: GeoJSON.FeatureCollection<GeoJSON.Point>;
   colors: MarkerColors;
+  pointRadius: number;
   sourceRef: RefObject<GeoJSONSourceRef | null>;
   onPress: (event: NativeSyntheticEvent<PressEventWithFeatures>) => void;
 }) {
@@ -180,6 +173,9 @@ function FacilityClusterSource({
           "text-field": ["get", "point_count_abbreviated"],
           "text-font": ["Noto Sans Regular"],
           "text-size": 12,
+          // keep-comment: clusters from different sources can overlap, and a collided count would leave its circle blank
+          "text-allow-overlap": true,
+          "text-ignore-placement": true,
         }}
         paint={{ "text-color": colors.stroke }}
       />
@@ -189,7 +185,7 @@ function FacilityClusterSource({
         filter={NO_COUNT}
         paint={{
           "circle-color": colors.fill,
-          "circle-radius": 6,
+          "circle-radius": pointRadius,
           "circle-stroke-width": 2,
           "circle-stroke-color": colors.stroke,
         }}
@@ -214,6 +210,7 @@ export default function TrailMarkersMap({
   const { t } = useTranslation();
   const showError = useSetAtom(showErrorAtom);
   const trailSourceRef = useRef<GeoJSONSourceRef>(null);
+  const contributionSourceRef = useRef<GeoJSONSourceRef>(null);
 
   // The location-puck has its own native GPS engine that can take tens of seconds for
   // a first fix. useCurrentPosition subscribes to that same engine (a shared singleton,
@@ -274,11 +271,14 @@ export default function TrailMarkersMap({
   }, [trailMarkersError, facilitiesError, showError, t]);
 
   const trailFC = useMemo(() => {
-    const markers = (trailMarkers ?? []).filter(
-      (m) => (m.isContribution ? filter.contributions : filter.trails) && (!filter.accessibility || m.isAccessible),
-    );
+    const markers = (trailMarkers ?? []).filter((m) => !m.isContribution && (!filter.accessibility || m.isAccessible));
     return featureCollectionFromMarkers(markers);
-  }, [trailMarkers, filter.trails, filter.contributions, filter.accessibility]);
+  }, [trailMarkers, filter.accessibility]);
+
+  const contributionFC = useMemo(() => {
+    const markers = (trailMarkers ?? []).filter((m) => m.isContribution && (!filter.accessibility || m.isAccessible));
+    return featureCollectionFromMarkers(markers);
+  }, [trailMarkers, filter.accessibility]);
 
   const firePitFC = useMemo(() => {
     const items = (facilities ?? []).filter(
@@ -306,7 +306,7 @@ export default function TrailMarkersMap({
   }, [highlight]);
 
   const handleTrailPress = useCallback(
-    async (event: NativeSyntheticEvent<PressEventWithFeatures>) => {
+    (sourceRef: RefObject<GeoJSONSourceRef | null>) => async (event: NativeSyntheticEvent<PressEventWithFeatures>) => {
       event.stopPropagation();
       setSelectedFacility(null);
       const feature = event.nativeEvent.features?.[0];
@@ -318,14 +318,14 @@ export default function TrailMarkersMap({
         const pointCount = props.point_count as number;
         const [lng, lat] = (feature.geometry as GeoJSON.Point).coordinates;
 
-        const expansionZoom = await trailSourceRef.current?.getClusterExpansionZoom(clusterId);
+        const expansionZoom = await sourceRef.current?.getClusterExpansionZoom(clusterId);
         const action = decideClusterAction(pointCount, expansionZoom, CLUSTER_ACTION_CONFIG);
         if (action.kind === "zoom") {
           cameraRef.current?.flyTo({ center: [lng, lat], zoom: action.zoom, duration: 500 });
           return;
         }
 
-        const leaves = await trailSourceRef.current?.getClusterLeaves(clusterId, pointCount, 0);
+        const leaves = await sourceRef.current?.getClusterLeaves(clusterId, pointCount, 0);
         const ids = (leaves ?? [])
           .map((leaf) => leaf.properties?.identifier as string | undefined)
           .filter((id): id is string => !!id);
@@ -395,87 +395,46 @@ export default function TrailMarkersMap({
           </Marker>
         )}
 
-        {(filter.trails || filter.contributions) && (
-          <GeoJSONSource
+        {filter.trails && (
+          <ClusterSource
             id="trails"
-            ref={trailSourceRef}
+            sourceRef={trailSourceRef}
             data={trailFC}
-            cluster
-            clusterRadius={60}
-            clusterMaxZoom={CLUSTER_MAX_ZOOM}
-            clusterProperties={TRAIL_CLUSTER_PROPERTIES}
-            onPress={handleTrailPress}
-          >
-            <Layer
-              type="circle"
-              id="trail-clusters"
-              filter={HAS_COUNT}
-              paint={{
-                "circle-color": [
-                  "case",
-                  ["==", ["get", "curatedCount"], 0],
-                  CONTRIBUTION_MARKER_COLORS.fill,
-                  MARKER_COLORS.trails.fill,
-                ],
-                "circle-radius": [
-                  "step",
-                  ["get", "point_count"],
-                  CLUSTER_RADIUS_BASE,
-                  CLUSTER_COUNT_MED,
-                  CLUSTER_RADIUS_MED,
-                  CLUSTER_COUNT_LARGE,
-                  CLUSTER_RADIUS_LARGE,
-                ],
-                "circle-stroke-width": 2,
-                "circle-stroke-color": MARKER_COLORS.trails.stroke,
-              }}
-            />
-            <Layer
-              type="symbol"
-              id="trail-cluster-count"
-              filter={HAS_COUNT}
-              layout={{
-                "text-field": ["get", "point_count_abbreviated"],
-                "text-font": ["Noto Sans Regular"],
-                "text-size": 12,
-              }}
-              paint={{ "text-color": MARKER_COLORS.trails.stroke }}
-            />
-            <Layer
-              type="circle"
-              id="trail-points"
-              filter={NO_COUNT}
-              paint={{
-                "circle-color": [
-                  "case",
-                  ["==", ["get", "isContribution"], true],
-                  CONTRIBUTION_MARKER_COLORS.fill,
-                  MARKER_COLORS.trails.fill,
-                ],
-                "circle-radius": POINT_RADIUS,
-                "circle-stroke-width": 2,
-                "circle-stroke-color": MARKER_COLORS.trails.stroke,
-              }}
-            />
-          </GeoJSONSource>
+            colors={MARKER_COLORS.trails}
+            pointRadius={POINT_RADIUS}
+            onPress={handleTrailPress(trailSourceRef)}
+          />
+        )}
+
+        {filter.contributions && (
+          <ClusterSource
+            id="contributions"
+            sourceRef={contributionSourceRef}
+            data={contributionFC}
+            colors={MARKER_COLORS.contributions}
+            pointRadius={POINT_RADIUS}
+            onPress={handleTrailPress(contributionSourceRef)}
+          />
         )}
 
         {filter.firePits && (
-          <FacilityClusterSource
+          <ClusterSource
             id="firepits"
             sourceRef={firePitSourceRef}
             data={firePitFC}
             colors={MARKER_COLORS.firePits}
+            pointRadius={FACILITY_POINT_RADIUS}
             onPress={handleFacilityPress(FacilityType.FirePit, firePitSourceRef)}
           />
         )}
 
         {filter.shelters && (
-          <FacilityClusterSource
+          <ClusterSource
             id="shelters"
             sourceRef={shelterSourceRef}
             data={shelterFC}
             colors={MARKER_COLORS.shelters}
+            pointRadius={FACILITY_POINT_RADIUS}
             onPress={handleFacilityPress(FacilityType.Shelter, shelterSourceRef)}
           />
         )}

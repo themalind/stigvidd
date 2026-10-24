@@ -17,7 +17,7 @@ import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Dimensions, FlatList, Pressable, StyleSheet, View } from "react-native";
 import type { NativeScrollEvent, NativeSyntheticEvent } from "react-native";
 import { useTranslation } from "react-i18next";
-import { Text, useTheme } from "react-native-paper";
+import { Icon, Text, useTheme } from "react-native-paper";
 import { Rating } from "../review/rating";
 
 interface Props {
@@ -218,6 +218,12 @@ const CarouselCard = memo(function CarouselCard({
               </View>
             )}
             <View style={s.meta}>
+              {card.contribution && (
+                <View testID="carousel-contribution" style={s.contributionRow}>
+                  <Icon source="account-group" size={14} color={theme.colors.primary} />
+                  <Text style={[s.contributionText, { color: theme.colors.primary }]}>{t("trail.contributed")}</Text>
+                </View>
+              )}
               <Text style={s.name} numberOfLines={1}>
                 {card.name}
               </Text>
@@ -319,6 +325,16 @@ const s = StyleSheet.create({
   meta: {
     flex: 1,
     gap: 4,
+  },
+  contributionRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  contributionText: {
+    fontSize: 12,
+    fontFamily: "Inter_600SemiBold",
+    textTransform: "uppercase",
   },
   name: {
     fontSize: 14,
