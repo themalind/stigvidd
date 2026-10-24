@@ -2,7 +2,7 @@
 @* SPDX-License-Identifier: AGPL-3.0-or-later *@
 
 <!doctype html>
-<html lang="sv">
+<html lang="@Texts.Code">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -16,7 +16,7 @@
     }
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Stigvidd" />
-    <meta property="og:locale" content="sv_SE" />
+    <meta property="og:locale" content="@Texts.OgLocale" />
     <meta property="og:title" content="@Title" />
     <meta property="og:description" content="@Description" />
     <meta property="og:image" content="@(ImageUrl ?? IconUrl)" />
@@ -85,11 +85,16 @@
 
         .button.primary { background: var(--accent); color: var(--on-accent); }
         .hint { margin: 10px 0 0; font-size: 0.9rem; color: var(--muted); text-align: center; }
+        .lang { max-width: 32rem; margin: 0 auto 10px; text-align: right; font-size: 0.9rem; }
+        .lang a { color: var(--muted); }
         footer { max-width: 32rem; margin: 16px auto 0; text-align: center; font-size: 0.9rem; }
         footer a { color: var(--muted); }
     </style>
 </head>
 <body>
+    <nav class="lang">
+        <a href="@($"{CurrentPath}?lang={Texts.SwitchToCode}")" hreflang="@Texts.SwitchToCode" lang="@Texts.SwitchToCode">@Texts.SwitchToLabel</a>
+    </nav>
     <main>
         @ChildContent
     </main>
@@ -103,6 +108,8 @@
     [Parameter, EditorRequired] public string Title { get; set; } = string.Empty;
     [Parameter, EditorRequired] public string Description { get; set; } = string.Empty;
     [Parameter, EditorRequired] public string SiteUrl { get; set; } = string.Empty;
+    [Parameter, EditorRequired] public required PageTexts Texts { get; set; }
+    [Parameter, EditorRequired] public required string CurrentPath { get; set; }
     [Parameter] public string? CanonicalUrl { get; set; }
     [Parameter] public string? ImageUrl { get; set; }
     [Parameter] public RenderFragment? ChildContent { get; set; }

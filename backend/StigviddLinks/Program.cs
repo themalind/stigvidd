@@ -40,34 +40,42 @@ app.MapGet("/healthz", () => Results.Ok());
 
 app.MapGet("/trail/{identifier}", async Task<IResult> (
     string identifier,
+    string? lang,
     TrailClient trails,
     IOptions<AppLinksOptions> options,
+    HttpRequest request,
     HttpResponse response,
     CancellationToken ctoken) =>
 {
     var lookup = await trails.GetTrailAsync(identifier, ctoken);
+    var texts = PageTexts.For(lang);
     var siteUrl = options.Value.SiteUrl;
 
     if (lookup is { Status: TrailLookupStatus.Found, Trail: { } trail })
     {
         response.Headers.CacheControl = "public, max-age=300";
-        return new RazorComponentResult<TrailPage>(new { Trail = trail, Options = options.Value });
+        return new RazorComponentResult<TrailPage>(new { Trail = trail, Options = options.Value, Texts = texts });
     }
 
     response.Headers.CacheControl = "no-store";
+    var currentPath = request.Path.ToUriComponent();
 
     return lookup.Status == TrailLookupStatus.NotFound
         ? new RazorComponentResult<MessagePage>(new
         {
-            Heading = "Leden finns inte",
-            Body = "Vi hittar ingen led med den här länken. Den kan ha tagits bort.",
+            Heading = texts.NotFoundHeading,
+            Body = texts.NotFoundBody,
             SiteUrl = siteUrl,
+            Texts = texts,
+            CurrentPath = currentPath,
         }) { StatusCode = StatusCodes.Status404NotFound }
         : new RazorComponentResult<MessagePage>(new
         {
-            Heading = "Något gick fel",
-            Body = "Vi kunde inte hämta leden just nu. Försök igen om en stund.",
+            Heading = texts.ErrorHeading,
+            Body = texts.ErrorBody,
             SiteUrl = siteUrl,
+            Texts = texts,
+            CurrentPath = currentPath,
         }) { StatusCode = StatusCodes.Status503ServiceUnavailable };
 });
 

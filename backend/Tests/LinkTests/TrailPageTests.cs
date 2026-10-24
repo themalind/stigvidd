@@ -174,6 +174,59 @@ public class TrailPageTests
     }
 
     [Fact]
+    public async Task The_page_is_swedish_by_default_and_offers_english()
+    {
+        using var factory = new LinkServiceFactory();
+        factory.Api.Returns(Trail());
+
+        var (_, html) = await GetAsync(factory, "/trail/trail-1");
+
+        html.Should().Contain("<html lang=\"sv\">");
+        html.Should().Contain(">Öppna i appen</a>");
+        html.Should().Contain("href=\"/trail/trail-1?lang=en\"");
+    }
+
+    [Fact]
+    public async Task English_translates_the_page_but_not_the_trail()
+    {
+        using var factory = new LinkServiceFactory();
+        factory.Api.Returns(Trail());
+
+        var (_, html) = await GetAsync(factory, "/trail/trail-1?lang=en");
+
+        html.Should().Contain("<html lang=\"en\">");
+        html.Should().Contain(">Open in the app</a>");
+        html.Should().Contain("4.2 km · Borås");
+        html.Should().Contain("<h1>Sjöleden</h1>");
+        html.Should().Contain("<meta property=\"og:locale\" content=\"en_GB\"");
+        html.Should().Contain("<link rel=\"canonical\" href=\"https://link.example.test/trail/trail-1?lang=en\"");
+        html.Should().Contain("href=\"/trail/trail-1?lang=sv\"");
+    }
+
+    [Fact]
+    public async Task An_unknown_language_falls_back_to_swedish()
+    {
+        using var factory = new LinkServiceFactory();
+        factory.Api.Returns(Trail());
+
+        var (_, html) = await GetAsync(factory, "/trail/trail-1?lang=de");
+
+        html.Should().Contain("<html lang=\"sv\">");
+    }
+
+    [Fact]
+    public async Task The_404_page_follows_the_chosen_language()
+    {
+        using var factory = new LinkServiceFactory();
+        factory.Api.Returns(HttpStatusCode.NotFound);
+
+        var (_, html) = await GetAsync(factory, "/trail/missing?lang=en");
+
+        html.Should().Contain("Trail not found");
+        html.Should().Contain("href=\"/trail/missing?lang=sv\"");
+    }
+
+    [Fact]
     public async Task Any_other_path_redirects_to_the_site()
     {
         using var factory = new LinkServiceFactory();
