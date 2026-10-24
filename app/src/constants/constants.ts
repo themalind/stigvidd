@@ -28,6 +28,8 @@ export const OVERLAY_TEXT_SHADOW = {
 export const PRIVACY_POLICY_URL = "https://stigvidd.se/privacy-policy/";
 export const TERMS_OF_USE_URL = "https://stigvidd.se/terms-of-use/";
 export const DELETE_ACCOUNT_URL = "https://stigvidd.se/delete-account/";
+// Shared links outlive the app version that made them, and the iOS build's associatedDomains names this host. keep-comment: why the host and path must not change
+export const SHARE_LINK_BASE_URL = "https://link.stigvidd.se";
 // AGPL section 13 obliges the operator to offer the running service's Corresponding
 // Source to everyone who interacts with it. App users are users of that backend, so
 // the About screen links here. This repository IS that source.

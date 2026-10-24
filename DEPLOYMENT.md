@@ -23,7 +23,7 @@ and is designed to be picked up and moved at will.
 
 ## The stack
 
-Eight services on two networks. Only the proxy and the mail server are exposed
+Nine services on two networks. Only the proxy and the mail server are exposed
 to the internet.
 
 | Service      | Image                     | Role                                            |
@@ -31,6 +31,7 @@ to the internet.
 | `proxy`      | `stigvidd-proxy` (Caddy)  | TLS termination + Let's Encrypt, routes subdomains. Only service on 80/443. |
 | `web`        | `stigvidd-web` (nginx)    | React admin SPA.                                 |
 | `api`        | `stigvidd-api` (.NET 10)  | Backend API. Runs EF migrations on startup.     |
+| `link`       | `stigvidd-link` (.NET 10) | Share links at link.<domain>: trail landing pages (read from the API) and the `.well-known` files for iOS/Android app links. Stateless. |
 | `media`      | `stigvidd-media` (nginx)  | WebDAV media server (authed writes, public reads). |
 | `keycloak`   | `stigvidd-keycloak`       | Identity provider. Owns every password; sends no user-facing mail. |
 | `openobserve`| `openobserve` v0.92.2     | Telemetry at observatory.<domain>: logs, traces, metrics and mobile RUM. Ingests from the API (in-stack OTLP) and from the apps (public HTTPS). Upstream image — **not** built by CI. |
@@ -72,6 +73,7 @@ Each subdomain needs a public DNS record pointing at the host:
 |-----------------------|------------|
 | `stigvidd.se`         | site       |
 | `www.stigvidd.se`     | 301 to the apex |
+| `link.stigvidd.se`    | link       |
 | `admin.stigvidd.se`   | web        |
 | `api.stigvidd.se`     | api        |
 | `media.stigvidd.se`   | media      |
@@ -82,8 +84,10 @@ Each subdomain needs a public DNS record pointing at the host:
 Mail additionally needs MX, SPF, DKIM, DMARC and a Hostup authorisation record —
 see [Mail DNS records](#mail-dns-records).
 
-`www` is a site block of its own in `proxy/Caddyfile` and takes its own certificate, so
-the record has to exist before Caddy can answer there.
+`www` and `link` are site blocks of their own in `proxy/Caddyfile`, derived from
+`SITE_DOMAIN`, and take their own certificates, so each record has to exist before Caddy
+can answer there. The shipped iOS app names `link.stigvidd.se` in its associated domains,
+so that name cannot move without a new app build.
 
 > **The apex serves the public site, not the admin.** `stigvidd.se` is the `site`
 > container, because the three legal-page URLs (`/privacy-policy/`, `/terms-of-use/`,

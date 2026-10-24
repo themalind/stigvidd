@@ -25,7 +25,7 @@ export default function UserBar({ trail }: Props) {
   return (
     <View testID="user-bar" style={[s.container, { backgroundColor: theme.colors.outlineVariant }]}>
       <AddToUserWishlist trailIdentifier={trail.identifier} />
-      <UserShare />
+      <UserShare trail={trail} />
       <UserRating trail={trail} />
       <UserReportIssue trailIdentifier={trail.identifier} />
       <AddToUserFavorite trailIdentifier={trail.identifier} />

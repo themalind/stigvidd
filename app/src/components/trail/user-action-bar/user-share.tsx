@@ -5,30 +5,37 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import AlertDialog from "@/components/alert-dialog";
+import { SHARE_LINK_BASE_URL } from "@/constants/constants";
+import { Trail } from "@/data/types";
+import { logger } from "@/services/logger";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, Share, StyleSheet, Text, View } from "react-native";
 import { useTheme } from "react-native-paper";
 
-export default function UserShare() {
+interface Props {
+  trail: Pick<Trail, "identifier" | "name">;
+}
+
+export function trailShareUrl(identifier: string) {
+  return `${SHARE_LINK_BASE_URL}/trail/${encodeURIComponent(identifier)}`;
+}
+
+export default function UserShare({ trail }: Props) {
   const theme = useTheme();
   const { t } = useTranslation();
-  const [visible, setVisible] = useState(false);
+
+  const share = () => {
+    const message = t("userActions.shareMessage", { name: trail.name, url: trailShareUrl(trail.identifier) });
+    Share.share({ message }).catch((error) => logger.warn("Sharing a trail failed", { errorMessage: String(error) }));
+  };
+
   return (
     <View style={s.container}>
-      <Pressable onPress={() => setVisible(true)} style={({ pressed }) => [s.touchable, pressed && { opacity: 0.7 }]}>
+      <Pressable onPress={share} style={({ pressed }) => [s.touchable, pressed && { opacity: 0.7 }]}>
         <MaterialIcons name="share" size={30} color={theme.colors.onSurface} />
         <Text style={[s.text, { color: theme.colors.onSurface }]}>{t("userActions.share")}</Text>
       </Pressable>
-      <AlertDialog
-        visible={visible}
-        onDismiss={() => setVisible(false)}
-        title={t("userActions.shareTitle")}
-        infoText={[t("userActions.shareUnavailable")]}
-        backgroundColor={theme.colors.surface}
-      />
     </View>
   );
 }

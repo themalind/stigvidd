@@ -21,7 +21,7 @@ export default function HeroSection() {
 
           <div className="mt-8 flex flex-wrap gap-3">
             <a
-              href="#testa"
+              href="#hamta"
               className="rounded-base bg-accent px-6 py-3 font-medium text-accent-contrast transition-opacity hover:opacity-90"
             >
               {hero.primaryCta}
@@ -37,7 +37,7 @@ export default function HeroSection() {
 
         <div className="justify-self-center">
           <img
-            src="/screenshots/start-screen.webp"
+            src="/screenshots/start-screen-home.webp"
             alt="Startskärmen i Stigvidd med väder, hälsning och populära promenader nära dig"
             width={320}
             height={693}

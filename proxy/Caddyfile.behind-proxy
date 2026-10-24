@@ -31,6 +31,12 @@ http://{$SITE_DOMAIN} {
 	reverse_proxy site:80
 }
 
+# Share links, derived from the apex. See Caddyfile. The host proxy must forward this name too.
+http://link.{$SITE_DOMAIN} {
+	encode zstd gzip
+	reverse_proxy link:8080
+}
+
 # Admin web frontend, on its own name. See Caddyfile for the Keycloak coupling.
 http://{$WEB_DOMAIN} {
 	encode zstd gzip

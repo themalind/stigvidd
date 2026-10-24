@@ -4,8 +4,8 @@
 // over SSH (docker compose pull && up -d).
 //
 // Branches (multibranch job):
-//   main     production. Builds, pushes and deploys all six images.
-//   staging  staging. Builds/pushes api web site media proxy tagged <sha>-staging
+//   main     production. Builds, pushes and deploys all seven images.
+//   staging  staging. Builds/pushes api web site link media proxy tagged <sha>-staging
 //            plus a moving `staging`, with the staging web build args, and deploys
 //            to STAGING_DEPLOY_HOST (skipped, still green, while that is unset).
 //   others   (feature branches, PRs) stop after Test.
@@ -238,7 +238,7 @@ pipeline {
             env.DEPLOY_HOST        = 'stigvidd@stigvidd.se'
             env.DEPLOY_PATH        = '/opt/stigvidd'
             env.MOVING_TAG         = 'latest'
-            env.IMAGES             = 'api web site media proxy keycloak'
+            env.IMAGES             = 'api web site link media proxy keycloak'
             env.DEPLOY_DIRS        = 'db/init scripts observability'
             env.COPY_OBSERVABILITY = 'true'
             env.COMPOSE_FILES      = 'docker-compose.yml'
@@ -257,7 +257,7 @@ pipeline {
             env.DEPLOY_HOST        = env.STAGING_DEPLOY_HOST ?: ''
             env.DEPLOY_PATH        = '/opt/stigvidd-staging'
             env.MOVING_TAG         = 'staging'
-            env.IMAGES             = 'api web site media proxy'
+            env.IMAGES             = 'api web site link media proxy'
             env.DEPLOY_DIRS        = 'db/init scripts'
             env.COPY_OBSERVABILITY = 'false'
             // The staging host (gatekeeper) sits behind its own nginx, which owns 80/443
@@ -536,7 +536,7 @@ pipeline {
               # REGISTRY/IMAGE_TAG override the host .env; POSTGRES_PASSWORD etc.
               # come from the persistent .env already on the host.
               #
-              # Scoped to the images this pipeline builds ($IMAGES: six on main, five on
+              # Scoped to the images this pipeline builds ($IMAGES: seven on main, six on
               # staging, which borrows production's keycloak), deliberately NOT
               # `db`. An unscoped `pull` would re-pull postgis/postgis:17-3.5 and
               # `up -d` would then recreate the live database container whenever
