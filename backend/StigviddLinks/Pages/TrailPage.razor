@@ -24,7 +24,7 @@
         }
         <div class="actions">
             <a class="button primary" href="@AppUrl">@Texts.OpenInApp</a>
-            @if (!string.IsNullOrWhiteSpace(Options.AppStoreUrl))
+            @if (!IsAndroid && !string.IsNullOrWhiteSpace(Options.AppStoreUrl))
             {
                 <a class="button" href="@Options.AppStoreUrl">@Texts.AppStore</a>
             }
@@ -32,8 +32,12 @@
             {
                 <a class="button" href="@Options.PlayStoreUrl">@Texts.GooglePlay</a>
             }
+            else if (OffersAndroidTest)
+            {
+                <a class="button" href="@Options.AndroidTestUrl">@Texts.AndroidTest</a>
+            }
         </div>
-        <p class="hint">@Texts.GetTheAppHint</p>
+        <p class="hint">@(OffersAndroidTest ? Texts.AndroidTestHint : Texts.GetTheAppHint)</p>
     </div>
 </Document>
 
@@ -43,6 +47,10 @@
     [Parameter, EditorRequired] public required TrailResponse Trail { get; set; }
     [Parameter, EditorRequired] public required AppLinksOptions Options { get; set; }
     [Parameter, EditorRequired] public required PageTexts Texts { get; set; }
+    [Parameter] public bool IsAndroid { get; set; }
+
+    private bool OffersAndroidTest =>
+        IsAndroid && string.IsNullOrWhiteSpace(Options.PlayStoreUrl) && !string.IsNullOrWhiteSpace(Options.AndroidTestUrl);
 
     private string Name => string.IsNullOrWhiteSpace(Trail.Name) ? Texts.FallbackTrailName : Trail.Name;
 

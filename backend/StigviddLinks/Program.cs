@@ -54,7 +54,9 @@ app.MapGet("/trail/{identifier}", async Task<IResult> (
     if (lookup is { Status: TrailLookupStatus.Found, Trail: { } trail })
     {
         response.Headers.CacheControl = "public, max-age=300";
-        return new RazorComponentResult<TrailPage>(new { Trail = trail, Options = options.Value, Texts = texts });
+        response.Headers.Vary = "User-Agent";
+        var isAndroid = request.Headers.UserAgent.ToString().Contains("Android", StringComparison.OrdinalIgnoreCase);
+        return new RazorComponentResult<TrailPage>(new { Trail = trail, Options = options.Value, Texts = texts, IsAndroid = isAndroid });
     }
 
     response.Headers.CacheControl = "no-store";
