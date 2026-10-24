@@ -9,7 +9,8 @@ import HeroBanner from "@/components/home/hero-banner";
 import { SURFACE_BORDER_RADIUS } from "@/constants/constants";
 import { AppDarkTheme, AppDefaultTheme } from "@/constants/theme";
 import { renderWithProviders } from "@/test/render";
-import { screen, within } from "@testing-library/react-native";
+import { act, screen, within } from "@testing-library/react-native";
+import { AppState, type AppStateStatus, type NativeEventSubscription } from "react-native";
 
 const mockWeather = jest.fn();
 const mockCityName = jest.fn();
@@ -22,16 +23,22 @@ const LAT = 57.72;
 const LON = 12.94;
 
 let hours: jest.SpyInstance;
+let onAppState: ((status: AppStateStatus) => void) | undefined;
 
 beforeEach(() => {
   jest.clearAllMocks();
+  onAppState = undefined;
+  jest.spyOn(AppState, "addEventListener").mockImplementation((_type, listener) => {
+    onAppState = listener;
+    return { remove: jest.fn() } as unknown as NativeEventSubscription;
+  });
   hours = jest.spyOn(Date.prototype, "getHours").mockReturnValue(12);
   mockWeather.mockReturnValue({ data: { temperature: 14, symbolCode: 1 } });
   mockCityName.mockReturnValue({ data: "Borås", isPending: false });
 });
 
 afterEach(() => {
-  hours.mockRestore();
+  jest.restoreAllMocks();
 });
 
 function show(theme: typeof AppDefaultTheme | typeof AppDarkTheme = AppDefaultTheme, coords = true) {
@@ -74,6 +81,17 @@ it.each([
   show();
 
   expect(screen.getByText(greeting)).toBeTruthy();
+});
+
+it("greets by the new hour when the app returns from the background", () => {
+  atHour(23);
+  show();
+  expect(screen.getByText("God natt!")).toBeTruthy();
+
+  atHour(10);
+  act(() => onAppState?.("active"));
+
+  expect(screen.getByText("Hej!")).toBeTruthy();
 });
 
 it("asks the forecast and the geocoder about the position it was given", () => {

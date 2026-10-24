@@ -10,7 +10,8 @@ import { useCityName } from "@/hooks/useCityName";
 import { useWeather } from "@/hooks/useWeather";
 import { MaterialIcons } from "@expo/vector-icons";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { StyleSheet, View } from "react-native";
+import { useEffect, useState } from "react";
+import { AppState, StyleSheet, View } from "react-native";
 import { MD3Theme, Text, useTheme } from "react-native-paper";
 import { useTranslation } from "react-i18next";
 
@@ -53,8 +54,16 @@ export default function HeroBanner({ lat, lon }: Props) {
     ? getWeatherStyle(weather.symbolCode, theme)
     : { tint: theme.colors.surfaceVariant, accent: theme.colors.onSurfaceVariant };
 
+  // Nothing else re-renders the banner when the app returns from the background, so the hour is re-read then. keep-comment: why the AppState listener exists
+  const [h, setHour] = useState(() => new Date().getHours());
+  useEffect(() => {
+    const subscription = AppState.addEventListener("change", (status) => {
+      if (status === "active") setHour(new Date().getHours());
+    });
+    return () => subscription.remove();
+  }, []);
+
   function getGreeting(): string {
-    const h = new Date().getHours();
     if (h >= 5 && h < 10) return t("home.greetingMorning");
     if (h >= 10 && h < 18) return t("home.greetingDay");
     if (h >= 18 && h < 22) return t("home.greetingEvening");

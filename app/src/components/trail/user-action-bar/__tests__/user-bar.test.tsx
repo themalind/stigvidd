@@ -28,7 +28,7 @@ function mockStub(name: string, prop: "trailIdentifier" | "trail" | "none") {
 }
 
 jest.mock("@/components/trail/user-action-bar/add-to-user-wishlist", () => mockStub("wishlist", "trailIdentifier"));
-jest.mock("@/components/trail/user-action-bar/user-share", () => mockStub("share", "none"));
+jest.mock("@/components/trail/user-action-bar/user-share", () => mockStub("share", "trail"));
 jest.mock("@/components/trail/user-action-bar/user-rating", () => mockStub("rating", "trail"));
 jest.mock("@/components/trail/user-action-bar/user-report-issue", () => mockStub("report", "trailIdentifier"));
 jest.mock("@/components/trail/user-action-bar/add-user-favorite", () => mockStub("favorite", "trailIdentifier"));
@@ -64,6 +64,11 @@ describe("UserBar", () => {
   it("passes the whole trail to the rating, which needs its name and length", () => {
     renderWithProviders(<UserBar trail={trail()} />);
     expect(screen.getByTestId("action-rating")).toHaveTextContent(`rating:${TRAIL_ID}`);
+  });
+
+  it("passes the whole trail to sharing, which needs its name", () => {
+    renderWithProviders(<UserBar trail={trail()} />);
+    expect(screen.getByTestId("action-share")).toHaveTextContent(`share:${TRAIL_ID}`);
   });
 
   it("spreads the actions across a rounded bar", () => {

@@ -2,15 +2,13 @@
   "expo": {
     "name": "Stigvidd",
     "slug": "stigvidd",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./src/assets/images/icon.png",
     "scheme": "stigvidd",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
-    "runtimeVersion": {
-      "policy": "appVersion"
-    },
+    "runtimeVersion": "1.0.0",
     "updates": {
       "url": "https://u.expo.dev/f436d9c7-ff9c-4a60-b51f-1aefd5672205"
     },
@@ -18,10 +16,16 @@
       "supportsTablet": false,
       "bundleIdentifier": "com.stigvidd.app",
       "buildNumber": "8",
+      "associatedDomains": ["applinks:link.stigvidd.se"],
       "infoPlist": {
+        "CFBundleDevelopmentRegion": "sv",
+        "CFBundleLocalizations": ["sv"],
         "UIBackgroundModes": ["location"],
         "ITSAppUsesNonExemptEncryption": false
       }
+    },
+    "locales": {
+      "sv": "./src/i18n/ios/sv.json"
     },
     "android": {
       "versionCode": 8,
@@ -41,7 +45,15 @@
         "android.permission.FOREGROUND_SERVICE_LOCATION"
       ],
       "package": "com.stigvidd.app",
-      "googleServicesFile": "./google-services.json"
+      "googleServicesFile": "./google-services.json",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [{ "scheme": "https", "host": "link.stigvidd.se", "pathPrefix": "/trail/" }],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
     },
     "web": {
       "output": "static",
