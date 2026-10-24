@@ -1,12 +1,12 @@
 @* SPDX-FileCopyrightText: 2026 The Stigvidd Authors *@
 @* SPDX-License-Identifier: AGPL-3.0-or-later *@
 
-<Document Title="@Heading" Description="@Body" SiteUrl="@SiteUrl">
+<Document Title="@Heading" Description="@Body" SiteUrl="@SiteUrl" Texts="@Texts" CurrentPath="@CurrentPath">
     <div class="content">
         <h1>@Heading</h1>
         <p class="description">@Body</p>
         <div class="actions">
-            <a class="button primary" href="@SiteUrl">Till stigvidd.se</a>
+            <a class="button primary" href="@SiteUrl">@Texts.ToSite</a>
         </div>
     </div>
 </Document>
@@ -15,4 +15,6 @@
     [Parameter, EditorRequired] public required string Heading { get; set; }
     [Parameter, EditorRequired] public required string Body { get; set; }
     [Parameter, EditorRequired] public required string SiteUrl { get; set; }
+    [Parameter, EditorRequired] public required PageTexts Texts { get; set; }
+    [Parameter, EditorRequired] public required string CurrentPath { get; set; }
 }

@@ -1,13 +1,13 @@
 @* SPDX-FileCopyrightText: 2026 The Stigvidd Authors *@
 @* SPDX-License-Identifier: AGPL-3.0-or-later *@
 
-@using System.Globalization
-
 <Document Title="@Name"
           Description="@Summary"
           SiteUrl="@Options.SiteUrl"
           CanonicalUrl="@CanonicalUrl"
-          ImageUrl="@Image?.ImageUrl">
+          ImageUrl="@Image?.ImageUrl"
+          Texts="@Texts"
+          CurrentPath="@TrailPath">
     @if (Image is not null)
     {
         <img class="hero" src="@Image.ImageUrl" alt="@(Image.AltText ?? Name)" />
@@ -23,38 +23,41 @@
             <p class="description">@Trail.Description</p>
         }
         <div class="actions">
-            <a class="button primary" href="@AppUrl">Öppna i appen</a>
+            <a class="button primary" href="@AppUrl">@Texts.OpenInApp</a>
             @if (!string.IsNullOrWhiteSpace(Options.AppStoreUrl))
             {
-                <a class="button" href="@Options.AppStoreUrl">Hämta i App Store</a>
+                <a class="button" href="@Options.AppStoreUrl">@Texts.AppStore</a>
             }
             @if (!string.IsNullOrWhiteSpace(Options.PlayStoreUrl))
             {
-                <a class="button" href="@Options.PlayStoreUrl">Hämta på Google Play</a>
+                <a class="button" href="@Options.PlayStoreUrl">@Texts.GooglePlay</a>
             }
         </div>
-        <p class="hint">Har du inte Stigvidd? Hämta appen och öppna länken igen.</p>
+        <p class="hint">@Texts.GetTheAppHint</p>
     </div>
 </Document>
 
 @code {
     private const int SummaryLength = 200;
-    private static readonly CultureInfo Swedish = CultureInfo.GetCultureInfo("sv-SE");
 
     [Parameter, EditorRequired] public required TrailResponse Trail { get; set; }
     [Parameter, EditorRequired] public required AppLinksOptions Options { get; set; }
+    [Parameter, EditorRequired] public required PageTexts Texts { get; set; }
 
-    private string Name => string.IsNullOrWhiteSpace(Trail.Name) ? "En led på Stigvidd" : Trail.Name;
+    private string Name => string.IsNullOrWhiteSpace(Trail.Name) ? Texts.FallbackTrailName : Trail.Name;
 
     private TrailImageResponse? Image => Trail.TrailImagesResponse?.FirstOrDefault();
 
-    private string CanonicalUrl => $"{Options.PublicBaseUrl.TrimEnd('/')}/trail/{Uri.EscapeDataString(Trail.Identifier)}";
+    private string TrailPath => $"/trail/{Uri.EscapeDataString(Trail.Identifier)}";
+
+    private string CanonicalUrl =>
+        $"{Options.PublicBaseUrl.TrimEnd('/')}{TrailPath}{(Texts == PageTexts.Swedish ? "" : $"?lang={Texts.Code}")}";
 
     private string AppUrl => $"{Options.AppScheme}://trail/{Uri.EscapeDataString(Trail.Identifier)}";
 
     private string Facts => string.Join(" · ", new[]
     {
-        Trail.TrailLength is { } length ? $"{length.ToString("0.#", Swedish)} km" : null,
+        Trail.TrailLength is { } length ? $"{length.ToString("0.#", Texts.Culture)} km" : null,
         Trail.City,
     }.Where(part => !string.IsNullOrWhiteSpace(part)));
 
