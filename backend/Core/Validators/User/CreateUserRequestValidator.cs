@@ -15,6 +15,7 @@ public class CreateUserRequestValidator : AbstractValidator<CreateUserRequest>
             .EmailAddress().WithMessage("Invalid email format.");
         RuleFor(CreateUserRequest => CreateUserRequest.NickName)
             .NotEmpty().WithMessage("NickName is required.")
+            .MinimumLength(2).WithMessage("NickName must be at least 2 characters.")
             .MaximumLength(20).WithMessage("NickName cannot exceed 20 characters.");
     }
 }

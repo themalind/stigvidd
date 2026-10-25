@@ -145,18 +145,18 @@ it("says so when there are none", async () => {
   expect(screen.getByText(/Du har inga vänner än/)).toBeTruthy();
 });
 
-// One or two characters would ask the server about nearly every user, on every keystroke.
-it("does not search until the query is worth a request", async () => {
+// keep-comment: two letters is the shortest nickname, so it must already show results
+it("shows results from two characters", async () => {
   await show();
 
-  searchFor("be");
+  searchFor("b");
   expect(screen.queryByText("Sökresultat")).toBeNull();
 
-  mockSearch = { data: [friend("bengt")], isPending: false, isError: false };
-  searchFor("ber");
+  mockSearch = { data: [friend("bo")], isPending: false, isError: false };
+  searchFor("bo");
 
   expect(screen.getByText("Sökresultat")).toBeTruthy();
-  expect(screen.getByText("bengt")).toBeTruthy();
+  expect(screen.getByText("bo")).toBeTruthy();
 });
 
 it("sends a request to the user that was picked", async () => {

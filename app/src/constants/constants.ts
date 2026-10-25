@@ -15,6 +15,10 @@ export const MAX_SHARE_RECIPIENTS = 10;
 export const MAX_HIKE_IMAGES = 10;
 // keep-comment: must match HikeSubmissionLimits.PendingPerUser in the backend
 export const MAX_PENDING_SUBMISSIONS = 3;
+// keep-comment: must match CreateUserRequestValidator in the backend
+export const MIN_NICKNAME_LENGTH = 2;
+// keep-comment: must not exceed the shortest nickname any existing account has, or that account can't be found
+export const MIN_USER_SEARCH_LENGTH = 2;
 // White text laid over a photo or a map needs to survive whatever bright patch sits
 // beneath it. Shared by the home screen's two full-bleed cards so they can't drift
 // apart, and so a seasonal image swap can never reopen the legibility question.

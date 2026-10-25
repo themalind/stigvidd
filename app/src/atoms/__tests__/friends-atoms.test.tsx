@@ -159,10 +159,9 @@ describe("the friends list", () => {
 });
 
 describe("searching for users", () => {
-  // Searching on one or two characters would return most of the user base on every keystroke.
   it.each([
     ["", "empty"],
-    ["st", "two characters"],
+    ["s", "one character"],
     ["  s  ", "whitespace around one character"],
   ])("does not search on %s (%s)", async (query) => {
     renderQuery(userSearchAtomFamily(query));
@@ -171,11 +170,12 @@ describe("searching for users", () => {
     expect(mockSearchUsers).not.toHaveBeenCalled();
   });
 
-  it("searches from three characters", async () => {
-    const harness = renderQuery(userSearchAtomFamily("sti"));
+  // keep-comment: a two-letter nickname is valid, so its owner must be findable by the whole name
+  it("searches from two characters", async () => {
+    const harness = renderQuery(userSearchAtomFamily("st"));
     await harness.settled();
 
-    expect(mockSearchUsers).toHaveBeenCalledWith("sti");
+    expect(mockSearchUsers).toHaveBeenCalledWith("st");
     expect(harness.result().data).toEqual([{ userIdentifier: "u4" }]);
   });
 

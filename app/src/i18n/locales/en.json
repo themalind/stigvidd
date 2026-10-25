@@ -64,6 +64,7 @@
     "couldNotDeleteFromServer": "Could not delete account from server",
     "validation": {
       "nicknameRequired": "Enter a username",
+      "nicknameTooShort": "Name too short. Min 2 characters",
       "nicknameTooLong": "Name too long. Max 20 characters",
       "nicknameInvalidChars": "Only a–z, å, ä, ö, 0–9, _ and - are allowed",
       "nicknameTaken": "Nickname already taken!",

@@ -10,7 +10,7 @@ import { friendsAtom, incomingRequestsAtom, userSearchAtomFamily } from "@/atoms
 import AlertDialog from "@/components/alert-dialog";
 import AccountBannedDialog from "@/components/auth/account-banned-dialog";
 import BackButton from "@/components/back-button";
-import { BORDER_RADIUS, SCREEN_PADDING } from "@/constants/constants";
+import { BORDER_RADIUS, MIN_USER_SEARCH_LENGTH, SCREEN_PADDING } from "@/constants/constants";
 import { useFriendMutations } from "@/hooks/friends/useFriendMutations";
 import { useCanWrite } from "@/hooks/useCanWrite";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -75,7 +75,7 @@ export default function FriendsScreen() {
     staleTime: BLOCKS_STALE_TIME,
   });
 
-  const showSearchResults = query.trim().length >= 3;
+  const showSearchResults = query.trim().length >= MIN_USER_SEARCH_LENGTH;
 
   function getInitials(name: string) {
     return name.slice(0, 2).toUpperCase();

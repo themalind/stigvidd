@@ -64,6 +64,7 @@
     "couldNotDeleteFromServer": "Kunde inte ta bort kontot från servern",
     "validation": {
       "nicknameRequired": "Ange ett användarnamn",
+      "nicknameTooShort": "Namn för kort. Minst 2 tecken",
       "nicknameTooLong": "Namn för långt. Max 20 tecken",
       "nicknameInvalidChars": "Endast a–ö, 0–9, _ och - är tillåtna",
       "nicknameTaken": "Smeknamnet upptaget!",

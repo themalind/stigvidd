@@ -10,7 +10,13 @@ import { asTranslationKey } from "@/i18n";
 import { showSuccessAtom } from "@/atoms/snackbar-atoms";
 import PasswordInputField from "@/components/auth/password-input-field";
 import BackButton from "@/components/back-button";
-import { BORDER_RADIUS, PRIVACY_POLICY_URL, SURFACE_BORDER_RADIUS, TERMS_OF_USE_URL } from "@/constants/constants";
+import {
+  BORDER_RADIUS,
+  MIN_NICKNAME_LENGTH,
+  PRIVACY_POLICY_URL,
+  SURFACE_BORDER_RADIUS,
+  TERMS_OF_USE_URL,
+} from "@/constants/constants";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Image } from "expo-image";
 import { Link, router } from "expo-router";
@@ -32,6 +38,7 @@ const registerFields = z
     nickName: z
       .string({ required_error: "auth.validation.nicknameRequired" })
       .min(1, "auth.validation.nicknameRequired")
+      .min(MIN_NICKNAME_LENGTH, "auth.validation.nicknameTooShort")
       .max(20, "auth.validation.nicknameTooLong")
       .regex(/^[a-zA-Z0-9åäöÅÄÖ_-]+$/, "auth.validation.nicknameInvalidChars"),
     email: z.string({ required_error: "auth.validation.emailRequired" }).email("auth.validation.emailInvalid"),
