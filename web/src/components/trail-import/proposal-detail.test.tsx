@@ -16,9 +16,8 @@ vi.mock("@/api/trail-import", () => api);
 const toasted = vi.hoisted(() => ({ error: vi.fn(), success: vi.fn() }));
 vi.mock("sonner", () => ({ toast: toasted }));
 
-// The drawing has its own tests; here it is only in the way of the decision controls.
-vi.mock("./geometry-preview", () => ({
-  GeometryPreview: () => <div data-testid="geometry-preview" />,
+vi.mock("./proposal-map", () => ({
+  ProposalMap: () => <div data-testid="proposal-map" />,
 }));
 
 import { ProposalDetail } from "./proposal-detail";
@@ -94,7 +93,7 @@ function show(
   );
 }
 
-const drawn = () => screen.findByTestId("geometry-preview");
+const drawn = () => screen.findByTestId("proposal-map");
 const button = (name: RegExp | string) => screen.getByRole("button", { name });
 const saved = () => api.decideProposal.mock.calls[0][2];
 

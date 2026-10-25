@@ -1,6 +1,7 @@
 ﻿// SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+using Core.Spatial;
 using Core.TrailImport.Source;
 using NetTopologySuite.Geometries;
 using System.Text.Json;
@@ -31,9 +32,11 @@ public static class SourceFeatureReader
             return features;
         }
 
+        var project = ProjectionFor(document.RootElement);
+
         foreach (var feature in array.EnumerateArray())
         {
-            var lines = ReadGeometry(feature);
+            var lines = ReadGeometry(feature, project);
 
             if (lines.Count == 0)
                 continue;
@@ -44,8 +47,8 @@ public static class SourceFeatureReader
                 continue;
             }
 
-            var externalId = ReadString(properties, "id");
-            var name = ReadString(properties, "namn");
+            var externalId = ReadFirstString(properties, "id", "LED_ID", "OBJECTID", "FID");
+            var name = ReadFirstString(properties, "namn", "LEDNAMN", "STATLIGLEDNAMN");
             var raw = properties.GetRawText();
 
             for (var i = 0; i < lines.Count; i++)
@@ -61,7 +64,27 @@ public static class SourceFeatureReader
         return features;
     }
 
-    private static IReadOnlyList<LineString> ReadGeometry(JsonElement feature)
+    // keep-comment: Naturvårdsverket's exports declare EPSG:3006 (SWEREF99 TM, metres) in "crs";
+    // keep-comment: every other known source either declares CRS84 or leaves "crs" out, which GeoJSON defines as WGS84 — both already (lon, lat).
+    private static Func<double, double, Coordinate> ProjectionFor(JsonElement root)
+    {
+        if (root.TryGetProperty("crs", out var crs) &&
+            crs.TryGetProperty("properties", out var crsProperties) &&
+            crsProperties.TryGetProperty("name", out var crsName) &&
+            crsName.ValueKind == JsonValueKind.String &&
+            (crsName.GetString() ?? string.Empty).Contains("3006", StringComparison.Ordinal))
+        {
+            return (easting, northing) =>
+            {
+                var (longitude, latitude) = Sweref99TmProjection.ToWgs84(easting, northing);
+                return new Coordinate(longitude, latitude);
+            };
+        }
+
+        return (x, y) => new Coordinate(x, y);
+    }
+
+    private static IReadOnlyList<LineString> ReadGeometry(JsonElement feature, Func<double, double, Coordinate> project)
     {
         if (!feature.TryGetProperty("geometry", out var geometry) ||
             geometry.ValueKind != JsonValueKind.Object ||
@@ -78,7 +101,7 @@ public static class SourceFeatureReader
 
             foreach (var part in coordinates.EnumerateArray())
             {
-                if (ReadPoints(part) is { Count: >= 2 } points)
+                if (ReadPoints(part, project) is { Count: >= 2 } points)
                     parts.Add(points);
             }
 
@@ -87,7 +110,7 @@ public static class SourceFeatureReader
 
         // A single point cannot be matched against anything, and an empty one cannot be
         // fingerprinted at all.
-        return ReadPoints(coordinates) is { Count: >= 2 } line
+        return ReadPoints(coordinates, project) is { Count: >= 2 } line
             ? [GeoPointFactory.FromLonLatPath(line)]
             : [];
     }
@@ -97,7 +120,7 @@ public static class SourceFeatureReader
         element.GetArrayLength() > 0 &&
         element[0].ValueKind == JsonValueKind.Array;
 
-    private static List<Coordinate>? ReadPoints(JsonElement line)
+    private static List<Coordinate>? ReadPoints(JsonElement line, Func<double, double, Coordinate> project)
     {
         if (line.ValueKind != JsonValueKind.Array)
             return null;
@@ -112,7 +135,7 @@ public static class SourceFeatureReader
                 return null;
             }
 
-            points.Add(new Coordinate(point[0].GetDouble(), point[1].GetDouble()));
+            points.Add(project(point[0].GetDouble(), point[1].GetDouble()));
         }
 
         return points;
@@ -170,4 +193,18 @@ public static class SourceFeatureReader
         properties.TryGetProperty(name, out var value) && value.ValueKind is not JsonValueKind.Null
             ? value.ValueKind == JsonValueKind.String ? value.GetString() ?? string.Empty : value.GetRawText()
             : string.Empty;
+
+    // keep-comment: each source spells id and name fields differently (Borås "id"/"namn", Naturvårdsverket "LED_ID"/"LEDNAMN" or "OBJECTID"/"STATLIGLEDNAMN", RUFS2050 "FID" with no name at all) — first one present wins.
+    private static string ReadFirstString(JsonElement properties, params string[] names)
+    {
+        foreach (var name in names)
+        {
+            var value = ReadString(properties, name);
+
+            if (value.Length > 0)
+                return value;
+        }
+
+        return string.Empty;
+    }
 }
