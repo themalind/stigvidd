@@ -21,6 +21,7 @@ import ReportContentForm from "@/components/report/report-content-form";
 import ReshareHikeModal from "@/components/shared-hike/reshare-hike-modal";
 import { BORDER_RADIUS } from "@/constants/constants";
 import { ReshareSharedHikeRequest, SharedHike } from "@/data/types";
+import { outgoingSharesQueryKey } from "@/hooks/shared-hikes/useOutgoingShares";
 import { sharedHikesQueryKey, useSharedHikes } from "@/hooks/shared-hikes/useSharedHikes";
 import { useCanWrite } from "@/hooks/useCanWrite";
 import { track } from "@/services/analytics";
@@ -91,6 +92,7 @@ export default function SharedHikeDetailsScreen() {
     onSuccess: (_, request) => {
       setShowShareModal(false);
       setSuccessMsg(t("hike.shared"));
+      queryClient.invalidateQueries({ queryKey: outgoingSharesQueryKey });
       trackReshared("success", request);
     },
     onError: (error, request) => {

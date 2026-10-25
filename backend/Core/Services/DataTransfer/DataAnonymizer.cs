@@ -23,6 +23,7 @@ public static class DataAnonymizer
     public static readonly IReadOnlySet<string> EmptiedTables = new HashSet<string>
     {
         "UserPushTokens", "EmailVerificationTokens", "PasswordResetTokens", "OutboxEmails", "UserKeycloakMappings",
+        "FriendNotes",
     };
 
     // Every column of every other table. ClassificationTests fails on any column missing here, so a new personal column cannot reach an anonymized export unreviewed. keep-comment: the guard this list exists for
@@ -63,7 +64,7 @@ public static class DataAnonymizer
             ["ConsentTexts"] = Table(kept: "Id Kind Version Locale Text CreatedAt"),
             ["TrailContributionLikes"] = Table(kept: "TrailId UserId CreatedAt"),
             ["HikeShares"] = Table(kept: "HikeId SharedWithId AllowResharing CreatedAt SharedById Status"),
-            ["FriendRequests"] = Table(kept: "RequesterId ReceiverId CreatedAt Status"),
+            ["FriendRequests"] = Table(kept: "RequesterId ReceiverId CreatedAt AcceptedAt Status"),
             ["UserBlocks"] = Table(kept: "BlockerUserId BlockedUserId CreatedAt"),
             ["UserFavorites"] = Table(kept: "UserId TrailId"),
             ["UserWishList"] = Table(kept: "UserId TrailId"),

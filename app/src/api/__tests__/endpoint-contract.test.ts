@@ -27,6 +27,7 @@ import { ApiError } from "../api-error";
 import { getAreaByIdentifier, getAreas } from "../areas";
 import {
   acceptFriendRequest,
+  getFriendProfile,
   getFriends,
   getIncomingRequests,
   getOutgoingRequests,
@@ -34,6 +35,7 @@ import {
   removeFriend,
   searchUsers,
   sendFriendRequest,
+  setFriendNote,
 } from "../friends";
 import {
   createHike,
@@ -52,6 +54,7 @@ import {
   acceptSharedHike,
   getIncomingSharedHike,
   getIncomingSharedHikes,
+  getOutgoingSharedHikes,
   getSharedHikes,
   rejectSharedHike,
   removeSharedHike,
@@ -562,6 +565,14 @@ const endpoints: Endpoint[] = [
     carriesStatus: true,
   },
   {
+    name: "getOutgoingSharedHikes",
+    call: () => getOutgoingSharedHikes(),
+    method: "GET",
+    path: "/hikeshares/outgoing",
+    auth: "required",
+    carriesStatus: true,
+  },
+  {
     name: "getIncomingSharedHikes",
     call: () => getIncomingSharedHikes(),
     method: "GET",
@@ -670,6 +681,23 @@ const endpoints: Endpoint[] = [
     carriesStatus: true,
   },
   {
+    name: "getFriendProfile",
+    call: () => getFriendProfile("u1"),
+    method: "GET",
+    path: "/friends/u1/profile",
+    auth: "required",
+    carriesStatus: true,
+  },
+  {
+    name: "setFriendNote",
+    call: () => setFriendNote("u1", "Kusin"),
+    method: "PUT",
+    path: "/friends/u1/note",
+    auth: "required",
+    carriesStatus: true,
+    body: { note: "Kusin" },
+  },
+  {
     name: "searchUsers",
     call: () => searchUsers("anna banan"),
     method: "GET",
@@ -706,7 +734,7 @@ beforeEach(() => {
 
 describe("api endpoint contract", () => {
   it("covers every exported endpoint in the table", () => {
-    expect(endpoints).toHaveLength(61);
+    expect(endpoints).toHaveLength(64);
     expect(new Set(endpoints.map((e) => e.name)).size).toBe(endpoints.length);
   });
 

@@ -50,13 +50,19 @@ public class FriendRepository : IFriendRepository
         {
             using var context = await _context.CreateDbContextAsync(ctoken);
 
-            var friends = await context.Users
+            var query = context.Users
                 .AsNoTracking()
                 .Where(u => context.FriendRequests.Any(fr =>
                     fr.Status == FriendRequestStatus.Accepted &&
                     ((fr.RequesterId == userId && fr.ReceiverId == u.Id) ||
                     (fr.ReceiverId == userId && fr.RequesterId == u.Id))))
-                .Where(u => !hiddenUserIds.Contains(u.Id))
+                .Where(u => !hiddenUserIds.Contains(u.Id));
+
+            var ordered = SwedishCollation.For(context) is { } collation
+                ? query.OrderBy(u => EF.Functions.Collate(u.NickName, collation))
+                : query.OrderBy(u => u.NickName);
+
+            var friends = await ordered
                 .Select(selector)
                 .ToListAsync(ctoken);
 
@@ -131,6 +137,9 @@ public class FriendRepository : IFriendRepository
             }
 
             context.FriendRequests.Remove(friendRequest);
+            context.FriendNotes.RemoveRange(context.FriendNotes.Where(fn =>
+                (fn.OwnerUserId == userId && fn.FriendUserId == otherUserId) ||
+                (fn.OwnerUserId == otherUserId && fn.FriendUserId == userId)));
             await context.SaveChangesAsync(ctoken);
 
             return RepositoryResult.Success();
@@ -155,6 +164,7 @@ public class FriendRepository : IFriendRepository
                 return RepositoryResult.NotFound();
 
             friendRequest.Status = FriendRequestStatus.Accepted;
+            friendRequest.AcceptedAt = DateTime.UtcNow;
             await context.SaveChangesAsync(ctoken);
 
             return RepositoryResult.Success();
@@ -186,28 +196,6 @@ public class FriendRepository : IFriendRepository
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error rejecting friend request from user {RequesterId} to user {ReceiverId}", requesterId, receiverId);
-            return RepositoryResult.Error();
-        }
-    }
-
-    public async Task<RepositoryResult> DeleteAllFriendRequestsByUserIdAsync(int userId, CancellationToken ctoken)
-    {
-        try
-        {
-            using var context = await _context.CreateDbContextAsync(ctoken);
-
-            var requests = await context.FriendRequests
-                .Where(fr => fr.RequesterId == userId || fr.ReceiverId == userId)
-                .ToListAsync(ctoken);
-
-            context.FriendRequests.RemoveRange(requests);
-            await context.SaveChangesAsync(ctoken);
-
-            return RepositoryResult.Success();
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error deleting friend requests for user {UserId}", userId);
             return RepositoryResult.Error();
         }
     }
@@ -245,6 +233,83 @@ public class FriendRepository : IFriendRepository
         {
             _logger.LogError(ex, "Error sending friend request from user {RequesterId} to user {ReceiverId}", requesterId, receiverId);
             return RepositoryResult.Error();
+        }
+    }
+
+    public async Task<RepositoryResult> SetNoteAsync(int ownerUserId, int friendUserId, string? text, CancellationToken ctoken)
+    {
+        try
+        {
+            using var context = await _context.CreateDbContextAsync(ctoken);
+
+            var note = await context.FriendNotes
+                .FirstOrDefaultAsync(fn => fn.OwnerUserId == ownerUserId && fn.FriendUserId == friendUserId, ctoken);
+
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                if (note != null)
+                    context.FriendNotes.Remove(note);
+            }
+            else if (note == null)
+            {
+                context.FriendNotes.Add(new FriendNote { OwnerUserId = ownerUserId, FriendUserId = friendUserId, Text = text });
+            }
+            else
+            {
+                note.Text = text;
+                note.LastUpdatedAt = DateTime.UtcNow;
+            }
+
+            await context.SaveChangesAsync(ctoken);
+            return RepositoryResult.Success();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error saving the note user {OwnerUserId} keeps on user {FriendUserId}", ownerUserId, friendUserId);
+            return RepositoryResult.Error();
+        }
+    }
+
+    public async Task<RepositoryResult<IReadOnlyDictionary<string, DateTime>>> GetFriendsSinceByIdentifierAsync(int userId, CancellationToken ctoken)
+    {
+        try
+        {
+            using var context = await _context.CreateDbContextAsync(ctoken);
+
+            var since = await context.FriendRequests
+                .AsNoTracking()
+                .Where(fr => fr.Status == FriendRequestStatus.Accepted && (fr.RequesterId == userId || fr.ReceiverId == userId))
+                .Join(context.Users, fr => fr.RequesterId == userId ? fr.ReceiverId : fr.RequesterId, u => u.Id, (fr, u) => new { u.Identifier, Since = fr.AcceptedAt ?? fr.CreatedAt })
+                .ToListAsync(ctoken);
+
+            return RepositoryResult<IReadOnlyDictionary<string, DateTime>>.Success(
+                since.GroupBy(f => f.Identifier).ToDictionary(g => g.Key, g => g.Min(f => f.Since)));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error reading friendship dates of user {UserId}", userId);
+            return RepositoryResult<IReadOnlyDictionary<string, DateTime>>.Error();
+        }
+    }
+
+    public async Task<RepositoryResult<IReadOnlyDictionary<string, string>>> GetNotesByFriendIdentifierAsync(int ownerUserId, CancellationToken ctoken)
+    {
+        try
+        {
+            using var context = await _context.CreateDbContextAsync(ctoken);
+
+            var notes = await context.FriendNotes
+                .AsNoTracking()
+                .Where(fn => fn.OwnerUserId == ownerUserId)
+                .Join(context.Users, fn => fn.FriendUserId, u => u.Id, (fn, u) => new { u.Identifier, fn.Text })
+                .ToDictionaryAsync(n => n.Identifier, n => n.Text, ctoken);
+
+            return RepositoryResult<IReadOnlyDictionary<string, string>>.Success(notes);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error reading the notes of user {OwnerUserId}", ownerUserId);
+            return RepositoryResult<IReadOnlyDictionary<string, string>>.Error();
         }
     }
 }

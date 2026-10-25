@@ -535,7 +535,7 @@ public class UsersControllerIntegrationTests : IClassFixture<StigViddWebApplicat
     //   - Solved vote 3 on obstacle 3 — removed by DB cascade on user delete
     //   - Hike 3 (shared with NaturElskaren) — preserved; only UserId is nulled by EF SetNull
     //   - Hike 4 (not shared) — deleted during deletion flow
-    //   - HikeShare recipient record for Hike 5 — removed by DeleteHikeSharesByUserIdAsync
+    //   - HikeShare recipient record for Hike 5 — removed by AccountDeletionRepository
 
     [Fact]
     public async Task DeleteUser_ShouldReturnNoContent_WhenUserHasReviewsHikesObstaclesAndSharedHikes()

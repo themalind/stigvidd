@@ -19,7 +19,7 @@ namespace Infrastructure.Migrations
 #pragma warning disable 612, 618
             modelBuilder
                 .HasDefaultSchema("dbo")
-                .HasAnnotation("ProductVersion", "10.0.9")
+                .HasAnnotation("ProductVersion", "10.0.13")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "postgis");
@@ -405,6 +405,29 @@ namespace Infrastructure.Migrations
                     b.ToTable("FacilityImages", "dbo");
                 });
 
+            modelBuilder.Entity("Infrastructure.Data.Entities.FriendNote", b =>
+                {
+                    b.Property<int>("OwnerUserId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("FriendUserId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("LastUpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.HasKey("OwnerUserId", "FriendUserId");
+
+                    b.HasIndex("FriendUserId");
+
+                    b.ToTable("FriendNotes", "dbo");
+                });
+
             modelBuilder.Entity("Infrastructure.Data.Entities.FriendRequest", b =>
                 {
                     b.Property<int>("RequesterId")
@@ -412,6 +435,9 @@ namespace Infrastructure.Migrations
 
                     b.Property<int>("ReceiverId")
                         .HasColumnType("integer");
+
+                    b.Property<DateTime?>("AcceptedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -1895,6 +1921,25 @@ namespace Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Facility");
+                });
+
+            modelBuilder.Entity("Infrastructure.Data.Entities.FriendNote", b =>
+                {
+                    b.HasOne("Infrastructure.Data.Entities.User", "Friend")
+                        .WithMany()
+                        .HasForeignKey("FriendUserId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("Infrastructure.Data.Entities.User", "Owner")
+                        .WithMany()
+                        .HasForeignKey("OwnerUserId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Friend");
+
+                    b.Navigation("Owner");
                 });
 
             modelBuilder.Entity("Infrastructure.Data.Entities.FriendRequest", b =>

@@ -5,11 +5,13 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import { APP_THEMES, AppDarkTheme, AppDefaultTheme, resolveTheme } from "@/constants/theme";
+import { APP_THEMES, AppDefaultTheme, resolveTheme } from "@/constants/theme";
+
+const stjarnhimmel = APP_THEMES.find((t) => t.id === "stjarnhimmel")?.theme;
 
 it.each([
   ["light", AppDefaultTheme],
-  ["dark", AppDarkTheme],
+  ["dark", stjarnhimmel],
   [null, AppDefaultTheme],
 ])("follows a %s system with the default pair", (scheme, expected) => {
   expect(resolveTheme("auto", scheme)).toBe(expected);

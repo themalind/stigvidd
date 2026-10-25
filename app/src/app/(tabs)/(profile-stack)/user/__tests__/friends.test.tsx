@@ -10,7 +10,7 @@ import { renderWithProviders } from "@/test/render";
 import { fireEvent, screen } from "@testing-library/react-native";
 import FriendsScreen from "../friends";
 
-type Row = { identifier: string; nickName: string };
+type Row = { identifier: string; nickName: string; note?: string | null };
 
 const mockAccept = jest.fn();
 const mockReject = jest.fn();
@@ -75,10 +75,18 @@ jest.mock("@/hooks/useCanWrite", () => ({
   useCanWrite: () => ({ canWrite: mockWriteBlocked === null, reason: mockWriteBlocked }),
 }));
 
+let mockShares: unknown[] = [];
+jest.mock("@/hooks/shared-hikes/useSharedHikes", () => ({
+  useSharedHikes: (select?: (hikes: unknown[]) => unknown) => ({ data: select ? select(mockShares) : mockShares }),
+}));
+
+const mockNavigate = jest.fn();
 jest.mock("expo-router", () => ({
-  router: { back: jest.fn(), navigate: jest.fn() },
+  router: { back: jest.fn(), navigate: (...args: unknown[]) => mockNavigate(...args) },
   useRouter: () => ({ back: jest.fn(), navigate: jest.fn() }),
 }));
+
+jest.mock("@/utils/navigation", () => ({ guardedNavigate: (fn: () => void) => fn() }));
 
 function friend(nickName: string, identifier = `id-${nickName}`): Row {
   return { identifier, nickName };
@@ -86,6 +94,10 @@ function friend(nickName: string, identifier = `id-${nickName}`): Row {
 
 function incomingRequest(nickName: string) {
   return { requesterIdentifier: `id-${nickName}`, requesterNickName: nickName };
+}
+
+function sharedHike(hikeName: string, sharedByIdentifier: string, sharedAt: string) {
+  return { hikeIdentifier: `hike-${hikeName}`, hikeName, sharedByIdentifier, sharedAt };
 }
 
 function blockedUser(nickName: string) {
@@ -123,6 +135,7 @@ beforeEach(() => {
   mockSearchAtoms.clear();
   mockRemovePending = false;
   mockWriteBlocked = null;
+  mockShares = [];
   mockFriends = { data: [friend("bertil"), friend("cissi")], isPending: false, isError: false };
   mockIncoming = { data: [], isPending: false, isError: false };
   mockSearch = { data: [], isPending: false, isError: false };
@@ -136,6 +149,14 @@ it("lists the friends there are", async () => {
   expect(screen.getByText("Vänner (2)")).toBeTruthy();
   expect(screen.getByText("bertil")).toBeTruthy();
   expect(screen.getByText("cissi")).toBeTruthy();
+});
+
+it("shows a friend's note beside the name", async () => {
+  mockFriends = { data: [{ ...friend("bertil"), note: "Grannen" }, friend("cissi")], isPending: false, isError: false };
+  await show();
+
+  expect(screen.getAllByTestId("friend-note")).toHaveLength(1);
+  expect(screen.getByText("Grannen")).toBeTruthy();
 });
 
 it("says so when there are none", async () => {
@@ -220,22 +241,38 @@ describe("a banned account", () => {
   });
 });
 
-// Removing a friend is confirmed, and the dialog names the person being removed.
-it("names the friend it is about to remove, and removes only on confirmation", async () => {
-  await show();
+describe("a friend row", () => {
+  it("opens that friend's profile", async () => {
+    await show();
 
-  fireEvent.press(actionButton("Ta bort vän", 1));
-  expect(screen.getByText(/avsluta din vänskap med cissi/)).toBeTruthy();
-  expect(mockRemoveFriend).not.toHaveBeenCalled();
+    fireEvent.press(screen.getByLabelText("cissi"));
 
-  fireEvent.press(screen.getByText("Avbryt"));
-  expect(mockRemoveFriend).not.toHaveBeenCalled();
+    expect(mockNavigate).toHaveBeenCalledWith({
+      pathname: "/(tabs)/(profile-stack)/user/friend/[identifier]",
+      params: { identifier: "id-cissi" },
+    });
+  });
 
-  fireEvent.press(actionButton("Ta bort vän", 0));
-  // The dialog repeats the label of the button that opened it; the confirm is the last.
-  fireEvent.press(screen.getAllByText("Ta bort").at(-1)!);
+  it("names the newest hike that friend shared, and only theirs", async () => {
+    mockShares = [
+      sharedHike("Rya åsar", "id-bertil", "2026-08-01T10:00:00Z"),
+      sharedHike("Kypesjön runt", "id-bertil", "2026-09-01T10:00:00Z"),
+      sharedHike("Öresjö runt", "id-someone-else", "2026-10-01T10:00:00Z"),
+    ];
+    await show();
 
-  expect(mockRemoveFriend).toHaveBeenCalledWith("id-bertil");
+    expect(screen.getByText("Delade Kypesjön runt · 2026-09-01")).toBeTruthy();
+    expect(screen.queryByText(/Rya åsar/)).toBeNull();
+    expect(screen.queryByText(/Öresjö runt/)).toBeNull();
+    expect(screen.getByText("Inga delade turer än")).toBeTruthy();
+  });
+
+  it("offers no way to remove or block, which live on the profile", async () => {
+    await show();
+
+    expect(screen.queryByLabelText("Ta bort vän")).toBeNull();
+    expect(screen.queryByTestId("block-friend")).toBeNull();
+  });
 });
 
 // Every list is a preview of five with the rest behind a button.
@@ -293,64 +330,67 @@ it("shows the sent requests with a way to take them back", async () => {
   expect(mockRemoveFriend).not.toHaveBeenCalled();
 });
 
-describe("blocking", () => {
-  // Blocking cannot be undone from anywhere the other person sees, so the press only asks.
+describe("blocking a requester", () => {
+  // keep-comment: blocking is invisible to the other person, so the press must only ask
   it("asks before it blocks, and names who", async () => {
-    mockFriends = { data: [friend("Grima")], isPending: false, isError: false };
+    mockIncoming = { data: [incomingRequest("Grima")], isPending: false, isError: false };
     await show();
 
-    fireEvent.press(screen.getByTestId("block-friend"));
+    fireEvent.press(screen.getByTestId("block-requester"));
 
     expect(screen.getByText("Blockera Grima?")).toBeTruthy();
     expect(mockBlock).not.toHaveBeenCalled();
   });
 
-  it("blocks the friend once the question is answered", async () => {
-    mockFriends = { data: [friend("Grima")], isPending: false, isError: false };
-    await show();
-
-    fireEvent.press(screen.getByTestId("block-friend"));
-    fireEvent.press(screen.getByText("Blockera"));
-
-    expect(mockBlock).toHaveBeenCalledWith("id-Grima");
-  });
-
-  it("offers the same on an incoming request, which is where a stranger reaches you", async () => {
+  it("blocks once the question is answered", async () => {
     mockIncoming = { data: [incomingRequest("Grima")], isPending: false, isError: false };
     await show();
 
     fireEvent.press(screen.getByTestId("block-requester"));
-    fireEvent.press(screen.getByText("Blockera"));
+    const confirm = screen.getAllByText("Blockera").at(-1);
+    if (!confirm) throw new Error("expected a confirm button");
+    fireEvent.press(confirm);
 
     expect(mockBlock).toHaveBeenCalledWith("id-Grima");
   });
 });
 
 describe("the blocked section", () => {
+  async function openBlocked(label: string) {
+    await show();
+    await flushUntil(() => screen.queryByText(label));
+    fireEvent.press(screen.getByText(label));
+  }
+
   it("stays away entirely when nobody is blocked", async () => {
     await show();
     await drainQueries();
 
-    expect(screen.queryByText(/^Blockerad/)).toBeNull();
+    expect(screen.queryByTestId("toggle-blocked")).toBeNull();
+    expect(screen.queryAllByTestId("blocked-row")).toHaveLength(0);
+  });
+
+  it("stays folded until asked for", async () => {
+    mockGetBlocked.mockResolvedValue([blockedUser("Grima")]);
+    await show();
+    await flushUntil(() => screen.queryByTestId("toggle-blocked"));
+
     expect(screen.queryAllByTestId("blocked-row")).toHaveLength(0);
   });
 
   it("lists who is blocked, and when", async () => {
     mockGetBlocked.mockResolvedValue([blockedUser("Grima"), blockedUser("Bill")]);
-    await show();
-    await flushUntil(() => screen.queryAllByTestId("blocked-row").length === 2);
+    await openBlocked("Blockerade (2)");
 
-    expect(screen.getByText("Blockerade (2)")).toBeTruthy();
+    expect(screen.getAllByTestId("blocked-row")).toHaveLength(2);
     expect(screen.getByText("Grima")).toBeTruthy();
     expect(screen.getByText("Bill")).toBeTruthy();
     expect(screen.getAllByText("Blockerad 2026-09-18")).toHaveLength(2);
   });
 
-  // The blocked list is the only place a block can be lifted.
   it("unblocks the person whose row was pressed", async () => {
     mockGetBlocked.mockResolvedValue([blockedUser("Grima"), blockedUser("Bill")]);
-    await show();
-    await flushUntil(() => screen.queryAllByTestId("blocked-row").length === 2);
+    await openBlocked("Blockerade (2)");
 
     fireEvent.press(screen.getAllByTestId("unblock-user")[1]);
 
@@ -359,8 +399,7 @@ describe("the blocked section", () => {
 
   it("offers a retry rather than an empty section when the list fails to load", async () => {
     mockGetBlocked.mockRejectedValue(new Error("nope"));
-    await show();
-    await flushUntil(() => screen.queryByText("Kunde inte hämta blockerade användare"));
+    await openBlocked("Blockerade");
 
     expect(screen.getByText("Kunde inte hämta blockerade användare")).toBeTruthy();
     expect(screen.queryAllByTestId("blocked-row")).toHaveLength(0);

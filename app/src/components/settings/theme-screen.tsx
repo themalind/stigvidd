@@ -6,7 +6,7 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { BORDER_RADIUS } from "@/constants/constants";
-import { APP_THEMES, AppDarkTheme, AppDefaultTheme, type AppTheme, type ThemeChoice } from "@/constants/theme";
+import { APP_THEMES, AUTO_THEMES, type AppTheme, type ThemeChoice } from "@/constants/theme";
 import { useThemeChoice } from "@/hooks/useThemeChoice";
 import ThemePreview from "@/components/settings/theme-preview";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -68,7 +68,7 @@ export default function ThemeScreen() {
     background: theme.colors.surface,
     text: theme.colors.onSurface,
     subtext: theme.colors.onSurfaceVariant,
-    stripes: [AppDefaultTheme.colors.background, AppDarkTheme.colors.background],
+    stripes: [AUTO_THEMES.light.colors.background, AUTO_THEMES.dark.colors.background],
   };
 
   return (

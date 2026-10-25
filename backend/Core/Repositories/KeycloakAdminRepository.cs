@@ -102,7 +102,14 @@ public class KeycloakAdminRepository : IKeycloakAdminRepository
 
     public async Task DeleteUserAsync(string subjectId, CancellationToken ctoken)
     {
-        await _userClient.DeleteUserAsync(_realm, subjectId, ctoken);
+        try
+        {
+            await _userClient.DeleteUserAsync(_realm, subjectId, ctoken);
+        }
+        catch (KeycloakHttpClientException ex) when (ex.StatusCode == (int)System.Net.HttpStatusCode.NotFound)
+        {
+            // keep-comment: already gone is the outcome asked for, so a retried deletion can finish
+        }
     }
 
     public async Task<bool> SetPasswordAsync(string subjectId, string newPassword, CancellationToken ctoken)

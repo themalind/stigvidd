@@ -16,6 +16,8 @@ public class ContentReportRepositoryTests : TestBase
     private const string HiddenReviewIdentifier = "hidden-1a1b2c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d";
     private const string VisibleReviewIdentifier = "shown-2b2c3d4e-5f6a-7b8c-9d0e-1f2a3b4c5d6e";
     private const int ReporterUserId = 2;
+    private const string ReporterUserIdentifier = "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e";
+    private const string AuthorUserIdentifier = "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d";
 
     private static Review Review(string identifier, ModerationState state) => new()
     {
@@ -154,7 +156,7 @@ public class ContentReportRepositoryTests : TestBase
     }
 
     [Fact]
-    public async Task HandleUserDeletion_AsAuthor_ClearsTheSnapshotSettlesTheReportAndRestoresTheContent()
+    public async Task DeleteAccount_AsAuthor_ClearsTheSnapshotSettlesTheReportAndRestoresTheContent()
     {
         // Arrange — the deleted user wrote the review, someone else reported it
         var factory = CreateSeededFactory(db =>
@@ -166,11 +168,9 @@ public class ContentReportRepositoryTests : TestBase
         });
 
         // Act
-        var result = await Build(factory).HandleUserDeletionAsync(1, TestContext.Current.CancellationToken);
+        await DeleteAccountAsync(factory, AuthorUserIdentifier);
 
         // Assert
-        result.IsSuccess.Should().BeTrue();
-
         using var context = await factory.CreateDbContextAsync(TestContext.Current.CancellationToken);
         var report = await context.ContentReports.SingleAsync(TestContext.Current.CancellationToken);
         report.ContentSnapshot.Should().BeNull();
@@ -185,18 +185,16 @@ public class ContentReportRepositoryTests : TestBase
     }
 
     [Fact]
-    public async Task HandleUserDeletion_AsReporter_ClearsOnlyTheNoteAndKeepsTheReportPending()
+    public async Task DeleteAccount_AsReporter_ClearsOnlyTheNoteAndKeepsTheReportPending()
     {
         // Arrange — the deleted user reported someone else's content
         var factory = CreateSeededFactory(db =>
             db.ContentReports.Add(ReportFor(1, "other-content", authorUserId: 99)));
 
         // Act
-        var result = await Build(factory).HandleUserDeletionAsync(ReporterUserId, TestContext.Current.CancellationToken);
+        await DeleteAccountAsync(factory, ReporterUserIdentifier);
 
         // Assert
-        result.IsSuccess.Should().BeTrue();
-
         using var context = await factory.CreateDbContextAsync(TestContext.Current.CancellationToken);
         var report = await context.ContentReports.SingleAsync(TestContext.Current.CancellationToken);
         report.ReporterNote.Should().BeNull();
@@ -1066,17 +1064,15 @@ public class ContentReportRepositoryTests : TestBase
     }
 
     [Fact]
-    public async Task HandleUserDeletion_AsOwnerOfAReportedHikeImage_LeavesItHidden()
+    public async Task DeleteAccount_AsOwnerOfAReportedHikeImage_LeavesItHidden()
     {
         // Arrange
         var factory = FactoryWithHikeImageReport(ModerationState.HiddenPendingReview);
 
         // Act
-        var result = await Build(factory).HandleUserDeletionAsync(1, TestContext.Current.CancellationToken);
+        await DeleteAccountAsync(factory, AuthorUserIdentifier);
 
         // Assert
-        result.IsSuccess.Should().BeTrue();
-
         using var context = await factory.CreateDbContextAsync(TestContext.Current.CancellationToken);
         var image = await context.HikeImages.SingleAsync(hi => hi.Id == HikeImageId, TestContext.Current.CancellationToken);
         image.ModerationState.Should().Be(ModerationState.HiddenPendingReview);

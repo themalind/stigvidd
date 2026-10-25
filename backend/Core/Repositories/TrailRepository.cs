@@ -483,6 +483,39 @@ public class TrailRepository : ITrailRepository
         }
     }
 
+    public async Task<RepositoryResult<IReadOnlyCollection<ContributedTrailProjection>>> GetTrailsCreditedToUserAsync(int userId, CancellationToken ctoken)
+    {
+        try
+        {
+            using var context = await _context.CreateDbContextAsync(ctoken);
+
+            var trails = await context.TrailContributions
+                .AsNoTracking()
+                .Where(c => c.SubmittedByUserId == userId && c.ShowSubmitterName)
+                .Join(context.Trails.Where(t => t.IsVerified), c => c.TrailId, t => t.Id, (c, t) => new { c.PublishedAt, Trail = t })
+                .OrderByDescending(x => x.PublishedAt)
+                .Select(x => new ContributedTrailProjection(
+                    x.Trail.Identifier,
+                    x.Trail.Name,
+                    x.Trail.TrailLength,
+                    x.Trail.City,
+                    context.TrailImages
+                        .Where(i => i.TrailId == x.Trail.Id)
+                        .OrderBy(i => i.SortOrder)
+                        .Select(i => i.ImageUrl)
+                        .FirstOrDefault(),
+                    x.PublishedAt))
+                .ToListAsync(ctoken);
+
+            return RepositoryResult<IReadOnlyCollection<ContributedTrailProjection>>.Success(trails);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "TrailRepository: GetTrailsCreditedToUserAsync -> Something went wrong when fetching trails credited to user {userId}.", userId);
+            return RepositoryResult<IReadOnlyCollection<ContributedTrailProjection>>.Error();
+        }
+    }
+
     public async Task<RepositoryResult<IReadOnlyCollection<Services.ContributionRankingInput>>> GetContributionRankingInputsAsync(CancellationToken ctoken)
     {
         try
@@ -581,22 +614,28 @@ public class TrailRepository : ITrailRepository
         }
     }
 
-    private static Task<int?> ContributedTrailIdAsync(StigViddDbContext context, string trailIdentifier, CancellationToken ctoken) =>
-        context.Trails
+    private static Task<int?> ContributedTrailIdAsync(StigViddDbContext context, string trailIdentifier, CancellationToken ctoken)
+    {
+        return context.Trails
             .Where(t => t.Identifier == trailIdentifier && t.IsVerified && t.Contribution != null)
             .Select(t => (int?)t.Id)
             .FirstOrDefaultAsync(ctoken);
+    }
 
-    private static Task<int?> UserIdAsync(StigViddDbContext context, string userIdentifier, CancellationToken ctoken) =>
-        context.Users
+    private static Task<int?> UserIdAsync(StigViddDbContext context, string userIdentifier, CancellationToken ctoken)
+    {
+        return context.Users
             .Where(u => u.Identifier == userIdentifier)
             .Select(u => (int?)u.Id)
             .FirstOrDefaultAsync(ctoken);
+    }
 
-    private static async Task<TrailLikeState> LikeStateAsync(StigViddDbContext context, int trailId, int userId, CancellationToken ctoken) =>
-        new(
+    private static async Task<TrailLikeState> LikeStateAsync(StigViddDbContext context, int trailId, int userId, CancellationToken ctoken)
+    {
+        return new(
             await context.TrailContributionLikes.CountAsync(l => l.TrailId == trailId, ctoken),
             await context.TrailContributionLikes.AnyAsync(l => l.TrailId == trailId && l.UserId == userId, ctoken));
+    }
 
     public async Task<RepositoryResult> SetTrailVerifiedAsync(string identifier, bool isVerified, CancellationToken ctoken)
     {

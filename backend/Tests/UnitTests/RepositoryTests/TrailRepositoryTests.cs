@@ -747,4 +747,56 @@ public class TrailRepositoryTests : TestBase
         // Assert
         result.Status.Should().Be(RepositoryResultStatus.NotFound);
     }
+
+    private static Trail Contributed(string name, bool showName, bool verified = true, DateTime? publishedAt = null, params (string Url, int Order)[] images) =>
+        new()
+        {
+            Identifier = $"trail-{name}",
+            Name = name,
+            TrailLength = 2m,
+            IsVerified = verified,
+            City = "Borås",
+            GeoPath = Utilities.GeoPath((12.94, 57.72), (12.95, 57.73)),
+            Contribution = new TrailContribution
+            {
+                SubmittedByUserId = 2,
+                ShowSubmitterName = showName,
+                PublishedAt = publishedAt ?? new DateTime(2026, 10, 1, 0, 0, 0, DateTimeKind.Utc),
+            },
+            TrailImages = [.. images.Select(i => new TrailImage { Identifier = $"img-{i.Url}", ImageUrl = i.Url, SortOrder = i.Order })],
+        };
+
+    [Fact]
+    public async Task GetTrailsCreditedToUserAsync_ListsOnlyVerifiedTrailsTheUserPutTheirNameTo()
+    {
+        var repo = new TrailRepository(CreateSeededFactory(db => db.Trails.AddRange(
+            Contributed("Med namn", showName: true),
+            Contributed("Utan namn", showName: false),
+            Contributed("Ej godkänd", showName: true, verified: false))),
+            NullLogger<TrailRepository>.Instance);
+
+        var result = await repo.GetTrailsCreditedToUserAsync(2, TestContext.Current.CancellationToken);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value?.Select(t => t.Name).Should().Equal("Med namn");
+    }
+
+    [Fact]
+    public async Task GetTrailsCreditedToUserAsync_PutsTheNewestFirstWithItsFirstImage()
+    {
+        var repo = new TrailRepository(CreateSeededFactory(db => db.Trails.AddRange(
+            Contributed("Äldre", showName: true, publishedAt: new DateTime(2026, 9, 1, 0, 0, 0, DateTimeKind.Utc)),
+            Contributed("Nyare", showName: true, publishedAt: new DateTime(2026, 10, 1, 0, 0, 0, DateTimeKind.Utc),
+                images: [("trails/second.jpg", 2), ("trails/first.jpg", 1)]))),
+            NullLogger<TrailRepository>.Instance);
+
+        var result = await repo.GetTrailsCreditedToUserAsync(2, TestContext.Current.CancellationToken);
+
+        var trails = result.Value;
+        trails.Should().NotBeNull();
+        if (trails is null) return;
+        trails.Select(t => t.Name).Should().Equal("Nyare", "Äldre");
+        trails.First().ImageUrl.Should().Be("trails/first.jpg");
+        trails.Last().ImageUrl.Should().BeNull();
+    }
 }

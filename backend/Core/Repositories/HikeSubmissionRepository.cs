@@ -1,4 +1,4 @@
-﻿// SPDX-FileCopyrightText: 2026 The Stigvidd Authors
+// SPDX-FileCopyrightText: 2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 using Core.Interfaces.Repositories;
@@ -300,9 +300,11 @@ public class HikeSubmissionRepository : IHikeSubmissionRepository
     }
 
     // keep-comment: an approved submission stays editable while its trail exists, and edits reach the trail too
-    private static bool IsEditable(HikeSubmission submission) =>
-        submission.Status == HikeSubmissionStatus.Pending
-        || (submission.Status == HikeSubmissionStatus.Approved && submission.PublishedTrail is not null);
+    private static bool IsEditable(HikeSubmission submission)
+    {
+        return submission.Status == HikeSubmissionStatus.Pending
+          || (submission.Status == HikeSubmissionStatus.Approved && submission.PublishedTrail is not null);
+    }
 
     public async Task<RepositoryResult<string>> DeleteImageAsync(string identifier, string imageIdentifier, CancellationToken ctoken)
     {
@@ -509,31 +511,6 @@ public class HikeSubmissionRepository : IHikeSubmissionRepository
         catch (Exception ex)
         {
             _logger.LogError(ex, "HikeSubmissionRepository: WithdrawAsync -> Something went wrong for submission {Identifier}.", identifier);
-            return RepositoryResult<IReadOnlyCollection<string>>.Error();
-        }
-    }
-
-    public async Task<RepositoryResult<IReadOnlyCollection<string>>> DeleteByUserIdAsync(int userId, CancellationToken ctoken)
-    {
-        try
-        {
-            using var context = await _context.CreateDbContextAsync(ctoken);
-
-            var submissions = await context.HikeSubmissions
-                .Include(s => s.Images)
-                .Where(s => s.UserId == userId)
-                .ToListAsync(ctoken);
-
-            var urls = submissions.SelectMany(s => s.Images).Select(i => i.ImageUrl).ToList();
-
-            context.HikeSubmissions.RemoveRange(submissions);
-            await context.SaveChangesAsync(ctoken);
-
-            return RepositoryResult<IReadOnlyCollection<string>>.Success(urls);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "HikeSubmissionRepository: DeleteByUserIdAsync -> Something went wrong for user {UserId}.", userId);
             return RepositoryResult<IReadOnlyCollection<string>>.Error();
         }
     }

@@ -15,12 +15,14 @@ namespace StigviddAPI.Controllers;
 public class FriendsController : StigViddController
 {
     private readonly IFriendService _friendService;
+    private readonly IFriendProfileService _friendProfileService;
     private readonly IUserBlockService _userBlockService;
     private readonly IUserService _userService;
 
-    public FriendsController(IFriendService friendService, IUserBlockService userBlockService, IUserService userService)
+    public FriendsController(IFriendService friendService, IFriendProfileService friendProfileService, IUserBlockService userBlockService, IUserService userService)
     {
         _friendService = friendService;
+        _friendProfileService = friendProfileService;
         _userBlockService = userBlockService;
         _userService = userService;
     }
@@ -109,6 +111,48 @@ public class FriendsController : StigViddController
         }
 
         return Ok(result.Value);
+    }
+
+    [HttpGet]
+    [Route("{identifier}/profile")]
+    public async Task<ActionResult<FriendProfileResponse>> GetFriendProfile([FromRoute] string identifier, CancellationToken ctoken)
+    {
+        var userResponse = await GetAuthenticatedUserAsync(_userService, ctoken);
+
+        if (userResponse == null)
+        {
+            return Unauthorized("User not found");
+        }
+
+        var result = await _friendProfileService.GetProfileAsync(userResponse.Identifier, identifier, ctoken);
+
+        if (!result.Success && result.Message != null)
+        {
+            return ToActionResult(result.Message);
+        }
+
+        return Ok(result.Value);
+    }
+
+    [HttpPut]
+    [Route("{identifier}/note")]
+    public async Task<ActionResult> SetFriendNote([FromRoute] string identifier, [FromBody] SetFriendNoteRequest request, CancellationToken ctoken)
+    {
+        var userResponse = await GetAuthenticatedUserAsync(_userService, ctoken);
+
+        if (userResponse == null)
+        {
+            return Unauthorized("User not found");
+        }
+
+        var result = await _friendService.SetNoteAsync(userResponse.Identifier, identifier, request.Note, ctoken);
+
+        if (!result.Success && result.Message != null)
+        {
+            return ToActionResult(result.Message);
+        }
+
+        return NoContent();
     }
 
     [HttpGet]

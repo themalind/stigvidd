@@ -17,11 +17,15 @@ import HikeImageSection from "@/components/hike/hike-image-section";
 import ImageViewer from "@/components/review/image-viewer";
 import LoadingIndicator from "@/components/loading-indicator";
 import ShareHikeModal, { ShareHikeFormFields } from "@/components/shared-hike/share-hike-modal";
+import ShareRecipientsDialog from "@/components/shared-hike/share-recipients-dialog";
+import ShareRecipientsRow from "@/components/shared-hike/share-recipients-row";
 import EditHikeModal, { EditHikeFormFields } from "@/components/hike/edit-hike-modal";
 import { BORDER_RADIUS, MAX_HIKE_IMAGES, MAX_PENDING_SUBMISSIONS } from "@/constants/constants";
 import PublishHikeCard from "@/components/hike/publish-hike-card";
 import PublishHikeModal from "@/components/hike/publish-hike-modal";
-import { Hike, HikeSubmission, ShareHikeRequest, UpdateHikeRequest } from "@/data/types";
+import { Hike, HikeSubmission, OutgoingSharedHike, ShareHikeRequest, UpdateHikeRequest } from "@/data/types";
+import { outgoingSharesQueryKey, useOutgoingShares } from "@/hooks/shared-hikes/useOutgoingShares";
+import { recipientsOf } from "@/utils/outgoing-shares";
 import { useHikeImageMutations } from "@/hooks/hike/useHikeImageMutations";
 import { useMyHikeSubmissions } from "@/hooks/hike/useMyHikeSubmissions";
 import { myHikesQueryKey, useMyHikes } from "@/hooks/hike/useMyHikes";
@@ -62,15 +66,17 @@ export default function HikeDetailsScreen({ hikeFollowRoute }: { hikeFollowRoute
   const setErrorMsg = useSetAtom(showErrorAtom);
   const setSuccessMsg = useSetAtom(showSuccessAtom);
   const { reason } = useCanWrite();
+  const { identifier, shareWith } = useLocalSearchParams<{ identifier: string; shareWith?: string }>();
+  const shareWithName = Array.isArray(shareWith) ? shareWith[0] : shareWith;
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [showShareModal, setShowShareModal] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(() => !!shareWithName && reason !== "banned");
   const [showEditModal, setShowEditModal] = useState(false);
   const [showPublishModal, setShowPublishModal] = useState(false);
-  const [showBannedDialog, setShowBannedDialog] = useState(false);
+  const [showBannedDialog, setShowBannedDialog] = useState(() => !!shareWithName && reason === "banned");
   const [deletedHike, setDeletedHike] = useState<Hike | null>(null);
   const [viewerIndex, setViewerIndex] = useState<number | null>(null);
+  const [showRecipients, setShowRecipients] = useState(false);
 
-  const { identifier } = useLocalSearchParams<{ identifier: string }>();
   const hikeIdentifier: string = Array.isArray(identifier) ? identifier[0] : identifier;
   const listKey = myHikesQueryKey(user.data?.identifier);
   const hikeImages = useHikeImageMutations(hikeIdentifier);
@@ -107,6 +113,10 @@ export default function HikeDetailsScreen({ hikeFollowRoute }: { hikeFollowRoute
     ),
   );
 
+  const { data: recipients = [] } = useOutgoingShares(
+    useCallback((hikes: OutgoingSharedHike[]) => recipientsOf(hikes, hikeIdentifier), [hikeIdentifier]),
+  );
+
   const {
     data: found,
     isPending,
@@ -135,6 +145,7 @@ export default function HikeDetailsScreen({ hikeFollowRoute }: { hikeFollowRoute
       setSuccessMsg(t("hike.deleted"));
       router.back();
       queryClient.invalidateQueries({ queryKey: listKey });
+      queryClient.invalidateQueries({ queryKey: outgoingSharesQueryKey });
     },
     onError: () => setErrorMsg(t("hike.genericError")),
   });
@@ -144,6 +155,7 @@ export default function HikeDetailsScreen({ hikeFollowRoute }: { hikeFollowRoute
     onSuccess: (_, request) => {
       setShowShareModal(false);
       setSuccessMsg(t("hike.shared"));
+      queryClient.invalidateQueries({ queryKey: outgoingSharesQueryKey });
       trackShared("success", request);
     },
     onError: (error, request) => {
@@ -251,12 +263,17 @@ export default function HikeDetailsScreen({ hikeFollowRoute }: { hikeFollowRoute
         />
       }
       beforeActions={
-        <PublishHikeCard
-          isPending={hasPendingSubmission}
-          published={published}
-          atPendingLimit={atPendingLimit}
-          onPublish={unlessBanned(() => setShowPublishModal(true))}
-        />
+        <>
+          {recipients.length > 0 && (
+            <ShareRecipientsRow recipients={recipients} onPress={() => setShowRecipients(true)} />
+          )}
+          <PublishHikeCard
+            isPending={hasPendingSubmission}
+            published={published}
+            atPendingLimit={atPendingLimit}
+            onPublish={unlessBanned(() => setShowPublishModal(true))}
+          />
+        </>
       }
       actions={
         <>
@@ -306,6 +323,12 @@ export default function HikeDetailsScreen({ hikeFollowRoute }: { hikeFollowRoute
         onDelete={(image) => hikeImages.deleteImage(image.identifier)}
         deleteNotes={hasPendingSubmission ? [t("hike.deleteImageSubmissionNote")] : []}
       />
+      <ShareRecipientsDialog
+        visible={showRecipients}
+        recipients={recipients}
+        onDismiss={() => setShowRecipients(false)}
+        onShareMore={unlessBanned(() => setShowShareModal(true))}
+      />
       <ShareHikeModal
         visible={showShareModal}
         onDismiss={() => setShowShareModal(false)}
@@ -316,6 +339,7 @@ export default function HikeDetailsScreen({ hikeFollowRoute }: { hikeFollowRoute
         }}
         onShare={handleShare}
         isPending={shareMutation.isPending || updateHikeMutation.isPending}
+        preselectedNickNames={shareWithName ? [shareWithName] : undefined}
       />
       {showPublishModal && (
         <PublishHikeModal

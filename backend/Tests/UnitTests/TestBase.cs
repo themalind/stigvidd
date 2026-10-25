@@ -1,8 +1,13 @@
 // SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+using Core;
+using Core.Interfaces.Repositories;
+using Core.Repositories;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 
 namespace UnitTests;
@@ -17,6 +22,7 @@ public abstract class TestBase
     {
         var options = new DbContextOptionsBuilder<StigViddDbContext>()
             .UseInMemoryDatabase(Guid.NewGuid().ToString())
+            .ConfigureWarnings(w => w.Ignore(InMemoryEventId.TransactionIgnoredWarning))
             .Options;
 
         using var seed = new StigViddDbContext(options);
@@ -34,4 +40,8 @@ public abstract class TestBase
             .ReturnsAsync(() => new StigViddDbContext(options));
         return mock.Object;
     }
+
+    protected static Task<RepositoryResult<DeletedAccount>> DeleteAccountAsync(IDbContextFactory<StigViddDbContext> factory, string userIdentifier) =>
+        new AccountDeletionRepository(factory, Mock.Of<IKeycloakAdminRepository>(), NullLogger<AccountDeletionRepository>.Instance)
+            .DeleteAccountAsync(userIdentifier, TestContext.Current.CancellationToken);
 }

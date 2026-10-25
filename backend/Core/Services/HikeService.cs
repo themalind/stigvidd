@@ -381,18 +381,6 @@ public class HikeService : IHikeService
         return Result.Ok(hikeResult.Value);
     }
 
-    public async Task<Result> DeleteHikeSharesByUserIdAsync(int userId, CancellationToken ctoken)
-    {
-        var result = await _hikeRepository.DeleteHikeSharesByUserIdAsync(userId, ctoken);
-
-        if (!result.IsSuccess)
-            return Result.Fail(new Message(500, "An error occurred while deleting the hike shares."));
-
-        await CleanUpOrphanedHikesAsync(ctoken);
-
-        return Result.Ok();
-    }
-
     // Call after any path that removes HikeShare rows. A hike that has lost both its owner and
     // its last recipient is kept for nobody, so it is removed here together with its image files.
     //
@@ -418,35 +406,6 @@ public class HikeService : IHikeService
         }
 
         await DeleteImageFilesAsync(imageUrlsResult.Value, "Orphaned hike cleanup: no owner and no shares left.");
-    }
-
-    public async Task<Result> HandleUserHikesOnUserDeleteAsync(int userId, CancellationToken ctoken)
-    {
-        // Read the URLs first: only the hikes that are actually removed (the ones without
-        // shares) should lose their files, and once the rows are gone so are the URLs.
-        var imageUrlsResult = await _hikeRepository.GetDeletableHikeImageUrlsByUserIdAsync(userId, ctoken);
-
-        if (!imageUrlsResult.IsSuccess)
-            return Result.Fail(new Message(500, "An error occurred while fetching the hike image URLs."));
-
-        // Delete Hikes with no shares
-        var result = await _hikeRepository.HandleUserHikesOnUserDeleteAsync(userId, ctoken);
-
-        if (!result.IsSuccess)
-            return Result.Fail(new Message(500, "An error occurred while handling user hikes on user delete."));
-
-        // Whatever is still owned by this user is a shared hike, kept for its recipients.
-        // It survives the account, but the creator's identifiers must not survive with it.
-        var anonymizeResult = await _hikeRepository.AnonymizeSharedHikesOnUserDeleteAsync(userId, ctoken);
-
-        if (!anonymizeResult.IsSuccess)
-            return Result.Fail(new Message(500, "An error occurred while anonymizing the shared hikes."));
-
-        // Files go after the rows: an orphaned file can be cleaned up later, a row pointing at
-        // a missing file cannot be undone. A WebDAV failure must not fail the account deletion.
-        await DeleteImageFilesAsync(imageUrlsResult.Value, $"Account deletion. UserId: {userId}");
-
-        return Result.Ok();
     }
 
     // Best-effort file removal: a leftover file is recoverable, so a WebDAV failure is logged

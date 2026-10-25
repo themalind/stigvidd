@@ -15,7 +15,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.stigvidd.app",
-      "buildNumber": "9",
+      "buildNumber": "10",
       "associatedDomains": ["applinks:link.stigvidd.se"],
       "infoPlist": {
         "CFBundleDevelopmentRegion": "sv",
@@ -28,7 +28,7 @@
       "sv": "./src/i18n/ios/sv.json"
     },
     "android": {
-      "versionCode": 10,
+      "versionCode": 11,
       "softwareKeyboardLayoutMode": "pan",
       "adaptiveIcon": {
         "backgroundColor": "#68AE82",

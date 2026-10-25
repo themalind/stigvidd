@@ -23,6 +23,9 @@ internal record TrailShortInfoProjection(
     int? Classification, string City, decimal AverageRating,
     decimal? StartLatitude, decimal? StartLongitude, bool IsContribution);
 
+public record ContributedTrailProjection(
+    string Identifier, string Name, decimal TrailLength, string City, string? ImageUrl, DateTime PublishedAt);
+
 internal record TrailOverviewProjection(
     string Identifier, string Name, decimal TrailLength, decimal AverageRating,
     TrailCardImageProjection? Image);

@@ -25,7 +25,8 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
-  HikeShareRequest
+  HikeShareRequest,
+  OutgoingHikeShareResponse
 } from '../model';
 
 import { customFetch } from '../../mutator';
@@ -50,7 +51,71 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   return result;
 };
 
-export const getHikeSharesGetHikeSharedByUserCountUrl = (hikeIdentifier: string,) => {
+export const getHikeSharesGetOutgoingSharesUrl = () => {
+
+
+
+
+  return `/api/v1/HikeShares/outgoing`
+}
+
+export const hikeSharesGetOutgoingShares = async ( options?: RequestInit): Promise<OutgoingHikeShareResponse[]> => {
+
+  return customFetch<OutgoingHikeShareResponse[]>(getHikeSharesGetOutgoingSharesUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getHikeSharesGetOutgoingSharesMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof hikeSharesGetOutgoingShares>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof hikeSharesGetOutgoingShares>>, TError,void, TContext> => {
+
+const mutationKey = ['hikeSharesGetOutgoingShares'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof hikeSharesGetOutgoingShares>>, void> = () => {
+
+
+          return  hikeSharesGetOutgoingShares(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type HikeSharesGetOutgoingSharesMutationResult = NonNullable<Awaited<ReturnType<typeof hikeSharesGetOutgoingShares>>>
+
+    export type HikeSharesGetOutgoingSharesMutationError = unknown
+
+    export const useHikeSharesGetOutgoingShares = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof hikeSharesGetOutgoingShares>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof hikeSharesGetOutgoingShares>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getHikeSharesGetOutgoingSharesMutationOptions(options), queryClient);
+    }
+    export const getHikeSharesGetHikeSharedByUserCountUrl = (hikeIdentifier: string,) => {
 
 
 

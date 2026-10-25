@@ -171,6 +171,13 @@ public class FriendServiceTests
         var friendsRepoMock = new Mock<IFriendRepository>();
         friendsRepoMock.Setup(r => r.GetFriendsAsync(It.IsAny<int>(), It.IsAny<int[]>(), It.IsAny<Expression<Func<User, FriendResponse>>>(), It.IsAny<CancellationToken>()))
            .ReturnsAsync(RepositoryResult<IEnumerable<FriendResponse>>.Success(friends));
+        friendsRepoMock.Setup(r => r.GetNotesByFriendIdentifierAsync(1, It.IsAny<CancellationToken>()))
+           .ReturnsAsync(RepositoryResult<IReadOnlyDictionary<string, string>>.Success(
+               new Dictionary<string, string> { ["Hobbit-identifier-2"] = "Trädgårdsmästaren" }));
+        var since = new DateTime(2026, 3, 1, 0, 0, 0, DateTimeKind.Utc);
+        friendsRepoMock.Setup(r => r.GetFriendsSinceByIdentifierAsync(1, It.IsAny<CancellationToken>()))
+           .ReturnsAsync(RepositoryResult<IReadOnlyDictionary<string, DateTime>>.Success(
+               new Dictionary<string, DateTime> { ["Hobbit-identifier-1"] = since }));
 
         var service = Build(userRepositoryMock: userRepoMock, friendRepositoryMock: friendsRepoMock);
 
@@ -180,7 +187,57 @@ public class FriendServiceTests
         // Assert
         result.Success.Should().BeTrue();
         result.Message.Should().BeNull();
-        result.Value.Should().HaveCount(2);
+        result.Value.Should().NotBeNull();
+        (result.Value ?? []).Select(f => f.Note).Should().Equal(null, "Trädgårdsmästaren");
+        (result.Value ?? []).Select(f => f.FriendsSince).Should().Equal(since, null);
+    }
+
+    [Fact]
+    public async Task SetNoteAsync_OnSomeoneWhoIsNotAFriend_ReturnsNotFoundAndSavesNothing()
+    {
+        // Arrange
+        var userRepoMock = new Mock<IUserRepository>();
+        userRepoMock.Setup(r => r.GetUserIdByIdentifierAsync("me", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<int>.Success(1));
+        userRepoMock.Setup(r => r.GetUserIdByIdentifierAsync("stranger", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<int>.Success(2));
+        var friendsRepoMock = new Mock<IFriendRepository>();
+        friendsRepoMock.Setup(r => r.FriendshipExistsAsync(1, 2, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<bool>.Success(false));
+        var service = Build(userRepositoryMock: userRepoMock, friendRepositoryMock: friendsRepoMock);
+
+        // Act
+        var result = await service.SetNoteAsync("me", "stranger", "Kusin", TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Success.Should().BeFalse();
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(404);
+        friendsRepoMock.Verify(r => r.SetNoteAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task SetNoteAsync_SavesTheTrimmedNoteForAFriend()
+    {
+        // Arrange
+        var userRepoMock = new Mock<IUserRepository>();
+        userRepoMock.Setup(r => r.GetUserIdByIdentifierAsync("me", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<int>.Success(1));
+        userRepoMock.Setup(r => r.GetUserIdByIdentifierAsync("friend", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<int>.Success(2));
+        var friendsRepoMock = new Mock<IFriendRepository>();
+        friendsRepoMock.Setup(r => r.FriendshipExistsAsync(1, 2, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<bool>.Success(true));
+        friendsRepoMock.Setup(r => r.SetNoteAsync(1, 2, "Kusin", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult.Success());
+        var service = Build(userRepositoryMock: userRepoMock, friendRepositoryMock: friendsRepoMock);
+
+        // Act
+        var result = await service.SetNoteAsync("me", "friend", "  Kusin ", TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Success.Should().BeTrue();
+        friendsRepoMock.Verify(r => r.SetNoteAsync(1, 2, "Kusin", It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]

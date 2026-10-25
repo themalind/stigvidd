@@ -825,7 +825,7 @@ public static class Utilities
             // SkogsGreven (User 3) shares Hike 5 with VandrarVennen (User 2) — Accepted,
             // resharing NOT allowed (the default every share gets unless the owner opts in).
             // When VandrarVennen deletes, this recipient record is removed by
-            // DeleteHikeSharesByUserIdAsync (SharedWithId == VandrarVennen's Id).
+            // AccountDeletionRepository (SharedWithId == VandrarVennen's Id). keep-comment: names the seed row's role in the deletion tests
             new HikeShare
             {
                 HikeId = 5,

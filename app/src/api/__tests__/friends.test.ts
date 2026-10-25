@@ -22,8 +22,13 @@ jest.mock("@/api/users", () => ({
   },
 }));
 
+jest.mock("@/services/logger", () => ({
+  logger: { error: jest.fn(), warn: jest.fn(), info: jest.fn(), debug: jest.fn() },
+}));
+
 import { getUserToken } from "@/api/users";
-import { searchUsers } from "../friends";
+import { logger } from "@/services/logger";
+import { getFriendProfile, searchUsers } from "../friends";
 
 const mockGetUserToken = getUserToken as jest.Mock;
 
@@ -38,6 +43,20 @@ function mockFetch(status: number, body: unknown = {}) {
 beforeEach(() => {
   jest.clearAllMocks();
   mockGetUserToken.mockResolvedValue("bearer-token");
+});
+
+describe("getFriendProfile", () => {
+  it("rejects a 404 without logging it, since a stranger and a block both answer 404", async () => {
+    mockFetch(404);
+    await expect(getFriendProfile("id-anna")).rejects.toMatchObject({ status: 404 });
+    expect(logger.error).not.toHaveBeenCalled();
+  });
+
+  it("logs any other failure", async () => {
+    mockFetch(500);
+    await expect(getFriendProfile("id-anna")).rejects.toMatchObject({ status: 500 });
+    expect(logger.error).toHaveBeenCalledWith("Get friend profile failed", expect.anything());
+  });
 });
 
 describe("searchUsers", () => {

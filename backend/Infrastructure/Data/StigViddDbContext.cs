@@ -29,6 +29,7 @@ public class StigViddDbContext(DbContextOptions<StigViddDbContext> options) : Db
     public DbSet<TrailContributionLike> TrailContributionLikes { get; set; }
     public DbSet<FriendRequest> FriendRequests { get; set; }
     public DbSet<UserBlock> UserBlocks { get; set; }
+    public DbSet<FriendNote> FriendNotes { get; set; }
     public DbSet<UserBan> UserBans { get; set; }
     public DbSet<UserKeycloakMapping> UserKeycloakMappings { get; set; }
     public DbSet<UserPushToken> UserPushTokens { get; set; }

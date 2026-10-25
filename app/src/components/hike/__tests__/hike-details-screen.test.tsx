@@ -27,6 +27,7 @@ const mockPickImages = jest.fn();
 const mockNavigate = jest.fn();
 const mockBack = jest.fn();
 let mockIdentifier = "hike-1";
+let mockShareWith: string | undefined;
 let mockIsAuthenticated = true;
 let clock = 2_000_000;
 
@@ -52,12 +53,15 @@ jest.mock("@/api/hike-submissions", () => ({
 const mockGetFriends = jest.fn();
 jest.mock("@/api/friends", () => ({ getFriends: () => mockGetFriends() }));
 
+const mockGetOutgoing = jest.fn();
+jest.mock("@/api/shared-hikes", () => ({ getOutgoingSharedHikes: () => mockGetOutgoing() }));
+
 const mockTrack = jest.fn();
 jest.mock("@/services/analytics", () => ({ track: (...args: unknown[]) => mockTrack(...args) }));
 
 jest.mock("expo-router", () => ({
   useRouter: () => ({ navigate: mockNavigate, back: mockBack }),
-  useLocalSearchParams: () => ({ identifier: mockIdentifier }),
+  useLocalSearchParams: () => ({ identifier: mockIdentifier, shareWith: mockShareWith }),
   router: { navigate: (...args: unknown[]) => mockNavigate(...args), back: mockBack },
 }));
 
@@ -110,12 +114,14 @@ function confirmDelete() {
 beforeEach(() => {
   jest.clearAllMocks();
   mockIdentifier = "hike-1";
+  mockShareWith = undefined;
   mockIsAuthenticated = true;
   mockWriteBlocked = null;
   mockDeleteHike.mockResolvedValue(undefined);
   mockShareHike.mockResolvedValue(undefined);
   mockDeleteImage.mockResolvedValue({ success: true });
   mockGetFriends.mockResolvedValue([]);
+  mockGetOutgoing.mockResolvedValue([]);
   mockGetSubmissions.mockResolvedValue([]);
   // keep-comment: guardedNavigate debounces on module state, so the clock only ever moves on, across tests too
   jest.spyOn(Date, "now").mockImplementation(() => (clock += 1000));
@@ -444,6 +450,29 @@ describe("sharing", () => {
     return rendered;
   }
 
+  it("opens the share form with the friend from the profile already picked", async () => {
+    mockShareWith = "anna";
+    mockGetFriends.mockResolvedValue([
+      { identifier: "id-anna", nickName: "anna" },
+      { identifier: "id-bo", nickName: "bo" },
+    ]);
+    mockUpdateHike.mockResolvedValue(hike());
+    await show();
+
+    expect(screen.getByText("Dela med en vän")).toBeTruthy();
+    fireEvent.press(screen.getByText("Nästa"));
+    await settle();
+    await screen.findByText("bo");
+    fireEvent.press(screen.getByText("Dela med 1 vän"));
+    await flushUntil(() => mockTrack.mock.calls.length > 0);
+
+    expect(mockShareHike).toHaveBeenCalledWith({
+      hikeIdentifier: "hike-1",
+      sharedWithNames: ["anna"],
+      allowResharing: false,
+    });
+  });
+
   it("shares with every picked friend and counts them, not who they are", async () => {
     const { store } = await shareWith("bertil", "cissi");
 
@@ -453,6 +482,7 @@ describe("sharing", () => {
       allowResharing: false,
     });
     expect(store.get(snackbarAtom)).toMatchObject({ visible: true, type: "success" });
+    await flushUntil(() => mockGetOutgoing.mock.calls.length > 1);
     expect(mockTrack).toHaveBeenCalledWith("hike.shared", {
       kind: "share",
       outcome: "success",
@@ -476,6 +506,96 @@ describe("sharing", () => {
       "hike.shared",
       expect.objectContaining({ outcome: "recipient_unavailable" }),
     );
+  });
+
+  function sent(hikeIdentifier: string, ...nickNames: string[]) {
+    return {
+      hikeIdentifier,
+      hikeName: "Kvällspromenad",
+      hikeLength: 4.2,
+      duration: 5_400_000,
+      coordinates: "[]",
+      isOwnHike: true,
+      lastSharedAt: "2026-10-20T10:00:00Z",
+      recipients: nickNames.map((nickName) => ({
+        identifier: `id-${nickName}`,
+        nickName,
+        sharedAt: "2026-10-20T10:00:00Z",
+      })),
+    };
+  }
+
+  it("says who the walk was shared with, and lists them on request", async () => {
+    mockGetOutgoing.mockResolvedValue([sent("other", "ola"), sent("hike-1", "anna", "bo")]);
+    await show();
+    await flushUntil(() => screen.queryByTestId("share-recipients-row"));
+
+    expect(screen.getByText("Delad med 2")).toBeTruthy();
+    fireEvent.press(screen.getByTestId("share-recipients-row"));
+
+    const rows = screen.getAllByTestId("share-recipient");
+    expect(rows).toHaveLength(2);
+    expect(screen.getByText("anna")).toBeTruthy();
+    expect(screen.queryByText("ola")).toBeNull();
+    expect(screen.getAllByText(`Delad ${formatDate("2026-10-20T10:00:00Z")}`)).toHaveLength(2);
+  });
+
+  it("goes from the list of recipients to sharing with more", async () => {
+    mockGetOutgoing.mockResolvedValue([sent("hike-1", "anna")]);
+    await show();
+    await flushUntil(() => screen.queryByTestId("share-recipients-row"));
+
+    fireEvent.press(screen.getByTestId("share-recipients-row"));
+    fireEvent.press(screen.getByTestId("share-more"));
+
+    expect(screen.getByText("Dela med en vän")).toBeTruthy();
+  });
+
+  it("shows a banned account the ban rather than a form opened from the profile", async () => {
+    mockWriteBlocked = "banned";
+    mockShareWith = "anna";
+    await show();
+
+    expect(screen.getByText("Du har blivit avstängd")).toBeTruthy();
+    expect(screen.queryByText("Dela med en vän")).toBeNull();
+  });
+
+  it("shows a banned account the ban rather than sharing with more", async () => {
+    mockWriteBlocked = "banned";
+    mockGetOutgoing.mockResolvedValue([sent("hike-1", "anna")]);
+    await show();
+    await flushUntil(() => screen.queryByTestId("share-recipients-row"));
+
+    fireEvent.press(screen.getByTestId("share-recipients-row"));
+    fireEvent.press(screen.getByTestId("share-more"));
+
+    expect(screen.getByText("Du har blivit avstängd")).toBeTruthy();
+    expect(screen.queryByText("Dela med en vän")).toBeNull();
+  });
+
+  it("refreshes who the walk was shared with after a share", async () => {
+    await shareWith("bertil");
+    await flushUntil(() => mockGetOutgoing.mock.calls.length > 1);
+
+    expect(mockGetOutgoing).toHaveBeenCalledTimes(2);
+  });
+
+  it("refreshes the sent shares once the walk is deleted", async () => {
+    await show();
+    await flushUntil(() => mockGetOutgoing.mock.calls.length > 0);
+
+    confirmDelete();
+    await flushUntil(() => mockBack.mock.calls.length > 0);
+
+    expect(mockGetOutgoing.mock.calls.length).toBeGreaterThan(1);
+  });
+
+  it("shows no recipients row for a walk that was never shared", async () => {
+    mockGetOutgoing.mockResolvedValue([sent("other", "ola")]);
+    await show();
+    await settle();
+
+    expect(screen.queryByTestId("share-recipients-row")).toBeNull();
   });
 
   it("reports any other failure as a plain error", async () => {

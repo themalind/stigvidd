@@ -6,7 +6,13 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { isApiStatus } from "@/api/api-error";
-import { acceptFriendRequest, rejectFriendRequest, removeFriend, sendFriendRequest } from "@/api/friends";
+import {
+  acceptFriendRequest,
+  rejectFriendRequest,
+  removeFriend,
+  sendFriendRequest,
+  setFriendNote,
+} from "@/api/friends";
 import { showErrorAtom, showSuccessAtom, showWarningAtom } from "@/atoms/snackbar-atoms";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSetAtom } from "jotai";
@@ -89,5 +95,24 @@ export function useFriendMutations() {
     },
   });
 
-  return { acceptMutation, rejectMutation, sendRequestMutation, removeFriendMutation, withdrawRequestMutation };
+  const setNoteMutation = useMutation({
+    mutationFn: ({ identifier, note }: { identifier: string; note: string | null }) => setFriendNote(identifier, note),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["friends"] });
+      setSuccessMsg(t("friends.noteSaved"));
+    },
+    onError: (error) => {
+      if (isApiStatus(error, 404)) return onGone();
+      setErrorMsg(t("friends.noteError"));
+    },
+  });
+
+  return {
+    acceptMutation,
+    rejectMutation,
+    sendRequestMutation,
+    removeFriendMutation,
+    withdrawRequestMutation,
+    setNoteMutation,
+  };
 }

@@ -10,76 +10,81 @@ import { friendsAtom, incomingRequestsAtom, userSearchAtomFamily } from "@/atoms
 import AlertDialog from "@/components/alert-dialog";
 import AccountBannedDialog from "@/components/auth/account-banned-dialog";
 import BackButton from "@/components/back-button";
-import { BORDER_RADIUS, MIN_USER_SEARCH_LENGTH, SCREEN_PADDING } from "@/constants/constants";
-import { useFriendMutations } from "@/hooks/friends/useFriendMutations";
-import { useCanWrite } from "@/hooks/useCanWrite";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import BlockUserDialog, { UserRef } from "@/components/friends/block-user-dialog";
+import PersonRow from "@/components/friends/person-row";
+import ListSection from "@/components/list-section";
 import { BLOCKS_STALE_TIME, REQUESTS_STALE_TIME } from "@/constants/cache";
+import { BORDER_RADIUS, MIN_USER_SEARCH_LENGTH, SCREEN_PADDING } from "@/constants/constants";
+import { SharedHike } from "@/data/types";
+import { useBlockMutations } from "@/hooks/friends/useBlockMutations";
+import { useFriendMutations } from "@/hooks/friends/useFriendMutations";
+import { useSharedHikes } from "@/hooks/shared-hikes/useSharedHikes";
+import { useCanWrite } from "@/hooks/useCanWrite";
+import { formatDate } from "@/utils/format-date";
+import { guardedNavigate } from "@/utils/navigation";
+import { relativeDay } from "@/utils/relative-day";
+import { latestShareBySender } from "@/utils/shares-by-sender";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
+import { router } from "expo-router";
+import { TFunction } from "i18next";
 import { useAtom } from "jotai";
 import React, { useState } from "react";
-import { Platform, Pressable, ScrollView, StyleSheet, View } from "react-native";
-import { ActivityIndicator, Avatar, Button, IconButton, Searchbar, Surface, Text, useTheme } from "react-native-paper";
 import { useTranslation } from "react-i18next";
-import { useBlockMutations } from "@/hooks/friends/useBlockMutations";
+import { Platform, ScrollView, StyleSheet, View } from "react-native";
+import { Button, IconButton, Searchbar, Text, useTheme } from "react-native-paper";
 
-const PREVIEW_COUNT = 5;
-const ACCEPT_COLOR = "#43a047";
+const RECENT_SHARE_DAYS = 7;
+
+function openProfile(identifier: string) {
+  guardedNavigate(() =>
+    router.navigate({ pathname: "/(tabs)/(profile-stack)/user/friend/[identifier]", params: { identifier } }),
+  );
+}
+
+function latestShareSubtitle(t: TFunction, share: SharedHike | undefined) {
+  if (!share) return { subtitle: t("friends.noSharesYet"), recent: false };
+  const rel = relativeDay(share.sharedAt);
+  const when = rel ? t(rel.key, { count: rel.count }) : formatDate(share.sharedAt);
+  return {
+    subtitle: t("friends.latestShare", { hike: share.hikeName, when }),
+    recent: rel !== null && rel.count <= RECENT_SHARE_DAYS,
+  };
+}
 
 export default function FriendsScreen() {
   const [query, setQuery] = useState("");
-  const { acceptMutation, rejectMutation, sendRequestMutation, removeFriendMutation, withdrawRequestMutation } =
-    useFriendMutations();
+  const { acceptMutation, rejectMutation, sendRequestMutation, withdrawRequestMutation } = useFriendMutations();
   const { blockMutation, unblockMutation } = useBlockMutations();
   const theme = useTheme();
   const { t, i18n } = useTranslation();
-  const [friendToRemoveId, setFriendToRemoveId] = useState<string | null>(null);
-  const [userToBlock, setUserToBlock] = useState<{ identifier: string; nickName: string } | null>(null);
-  const [requestToCancel, setRequestToCancel] = useState<{ identifier: string; nickName: string } | null>(null);
-  const [friendsExpanded, setFriendsExpanded] = useState(false);
-  const [incomingExpanded, setIncomingExpanded] = useState(false);
-  const [outgoingExpanded, setOutgoingExpanded] = useState(false);
-  const [searchExpanded, setSearchExpanded] = useState(false);
-  const [blockedExpanded, setBlockedExpanded] = useState(false);
+  const [userToBlock, setUserToBlock] = useState<UserRef | null>(null);
+  const [requestToCancel, setRequestToCancel] = useState<UserRef | null>(null);
+  const [blockedVisible, setBlockedVisible] = useState(false);
   const [showBannedDialog, setBannedDialog] = useState(false);
   const { reason } = useCanWrite();
   const unlessBanned = (write: () => void) => (reason === "banned" ? setBannedDialog(true) : write());
 
-  const [{ data: incomingRequests, isPending: incomingPending, isError: incomingError, refetch: refetchIncoming }] =
-    useAtom(incomingRequestsAtom);
-  const [{ data: searchResults, isPending: searchPending, isError: searchError }] = useAtom(
-    userSearchAtomFamily(query),
-  );
-  const [{ data: friends, isPending: friendsPending, isError: friendsError, refetch: refetchFriends }] =
-    useAtom(friendsAtom);
+  const [incoming] = useAtom(incomingRequestsAtom);
+  const [search] = useAtom(userSearchAtomFamily(query));
+  const [friends] = useAtom(friendsAtom);
+  const { data: latestShares } = useSharedHikes(latestShareBySender);
 
-  const {
-    data: outgoingRequests,
-    isPending: outgoingPending,
-    isError: outgoingError,
-    refetch: refetchOutgoing,
-  } = useQuery({
+  const outgoing = useQuery({
     queryKey: ["friends", "outgoing"],
     queryFn: () => getOutgoingRequests(),
     staleTime: REQUESTS_STALE_TIME,
   });
 
-  const {
-    data: blocked,
-    isPending: blockedPending,
-    isError: blockedError,
-    refetch: refetchBlocked,
-  } = useQuery({
+  const blocked = useQuery({
     queryKey: ["blocks"],
     queryFn: () => getBlockedUsers(),
     staleTime: BLOCKS_STALE_TIME,
   });
 
-  const showSearchResults = query.trim().length >= MIN_USER_SEARCH_LENGTH;
-
-  function getInitials(name: string) {
-    return name.slice(0, 2).toUpperCase();
-  }
+  const isFriend = (identifier: string) => friends.data?.some((f) => f.identifier === identifier) ?? false;
+  const isAsked = (identifier: string) => outgoing.data?.some((r) => r.receiverIdentifier === identifier) ?? false;
+  const answering = acceptMutation.isPending || rejectMutation.isPending;
 
   return (
     <View style={[s.screen, { backgroundColor: theme.colors.background }]}>
@@ -98,451 +103,225 @@ export default function FriendsScreen() {
             inputStyle={s.searchbarInput}
           />
 
-          {showSearchResults && (
-            <View style={s.section}>
-              <SectionHeader
-                icon="account-search"
-                label={t("friends.searchResults")}
-                color={theme.colors.onSurfaceVariant}
-              />
-              <Surface style={[s.card, { backgroundColor: theme.colors.surface }]} elevation={0}>
-                <View style={s.cardInner}>
-                  {searchPending ? (
-                    <ActivityIndicator style={s.loader} />
-                  ) : searchError ? (
-                    <EmptyState text={t("friends.searchError")} />
-                  ) : searchResults?.length === 0 ? (
-                    <EmptyState text={t("friends.noResults")} />
-                  ) : (
-                    <>
-                      {(searchExpanded ? searchResults : searchResults?.slice(0, PREVIEW_COUNT))?.map(
-                        (user, i, arr) => (
-                          <View key={user.identifier}>
-                            <Pressable hitSlop={12} onPress={() => {}}>
-                              <View style={s.row}>
-                                <Avatar.Text
-                                  size={40}
-                                  label={getInitials(user.nickName)}
-                                  style={{ backgroundColor: theme.colors.surfaceVariant }}
-                                  labelStyle={{ color: theme.colors.onSurfaceVariant, fontSize: 14 }}
-                                />
-                                <Text style={s.rowName} variant="bodyLarge" numberOfLines={1}>
-                                  {user.nickName}
-                                </Text>
-                                {friends?.some((f) => f.identifier === user.identifier) ? (
-                                  <MaterialCommunityIcons
-                                    name="account-check"
-                                    size={22}
-                                    color={theme.colors.onSurfaceVariant}
-                                  />
-                                ) : outgoingRequests?.some((r) => r.receiverIdentifier === user.identifier) ? (
-                                  <MaterialCommunityIcons name="clock-outline" size={22} color={theme.colors.outline} />
-                                ) : (
-                                  <IconButton
-                                    hitSlop={20}
-                                    accessibilityLabel={t("friends.sendRequest")}
-                                    icon="account-plus"
-                                    size={25}
-                                    onPress={() => unlessBanned(() => sendRequestMutation.mutate(user.nickName))}
-                                    style={s.actionButton}
-                                  />
-                                )}
-                              </View>
-                            </Pressable>
-                            {i < arr.length - 1 && (
-                              <View style={[s.divider, { backgroundColor: theme.colors.outlineVariant }]} />
-                            )}
-                          </View>
-                        ),
-                      )}
-                      {(searchResults?.length ?? 0) > PREVIEW_COUNT && (
-                        <Button mode="text" onPress={() => setSearchExpanded((v) => !v)} style={s.retryButton}>
-                          {searchExpanded
-                            ? t("friends.showLess")
-                            : t("friends.showAll", { count: searchResults?.length })}
-                        </Button>
-                      )}
-                    </>
-                  )}
-                </View>
-              </Surface>
-            </View>
-          )}
-
-          {!incomingPending && !incomingError && (incomingRequests?.length ?? 0) > 0 && (
-            <View style={s.section}>
-              <SectionHeader
-                icon="account-arrow-down"
-                label={t("friends.incomingCount", { count: incomingRequests?.length })}
-                color={theme.colors.onSurfaceVariant}
-              />
-              <Surface style={[s.card, { backgroundColor: theme.colors.surface }]} elevation={0}>
-                <View style={s.cardInner}>
-                  {(incomingExpanded ? incomingRequests : incomingRequests?.slice(0, PREVIEW_COUNT))?.map(
-                    (req, i, arr) => (
-                      <View key={req.requesterIdentifier}>
-                        <View style={s.row}>
-                          <Avatar.Text
-                            size={40}
-                            label={getInitials(req.requesterNickName)}
-                            style={{ backgroundColor: theme.colors.secondaryContainer }}
-                            labelStyle={{ color: theme.colors.secondary, fontSize: 14 }}
-                          />
-                          <Text style={s.rowName} variant="bodyLarge" numberOfLines={1}>
-                            {req.requesterNickName}
-                          </Text>
-                          <View style={s.rowActions}>
-                            <IconButton
-                              hitSlop={16}
-                              accessibilityLabel={t("friends.accept")}
-                              icon="check-circle-outline"
-                              size={30}
-                              iconColor={ACCEPT_COLOR}
-                              onPress={() => unlessBanned(() => acceptMutation.mutate(req.requesterIdentifier))}
-                              disabled={acceptMutation.isPending || rejectMutation.isPending}
-                              style={s.actionButton}
-                            />
-                            <IconButton
-                              hitSlop={16}
-                              accessibilityLabel={t("friends.reject")}
-                              icon="close-circle-outline"
-                              size={30}
-                              iconColor={theme.colors.error}
-                              onPress={() => rejectMutation.mutate(req.requesterIdentifier)}
-                              disabled={acceptMutation.isPending || rejectMutation.isPending}
-                              style={s.actionButton}
-                            />
-                            <IconButton
-                              testID="block-requester"
-                              hitSlop={16}
-                              accessibilityLabel={t("friends.block")}
-                              icon="cancel"
-                              size={25}
-                              iconColor={theme.colors.outline}
-                              onPress={() =>
-                                setUserToBlock({
-                                  identifier: req.requesterIdentifier,
-                                  nickName: req.requesterNickName,
-                                })
-                              }
-                              disabled={blockMutation.isPending}
-                              style={s.actionButton}
-                            />
-                          </View>
-                        </View>
-                        {i < arr.length - 1 && (
-                          <View style={[s.divider, { backgroundColor: theme.colors.outlineVariant }]} />
-                        )}
-                      </View>
-                    ),
-                  )}
-                  {(incomingRequests?.length ?? 0) > PREVIEW_COUNT && (
-                    <Button mode="text" onPress={() => setIncomingExpanded((v) => !v)} style={s.retryButton}>
-                      {incomingExpanded
-                        ? t("friends.showLess")
-                        : t("friends.showAll", { count: incomingRequests?.length })}
-                    </Button>
-                  )}
-                </View>
-              </Surface>
-            </View>
-          )}
-          {incomingError && (
-            <View style={s.section}>
-              <SectionHeader
-                icon="account-arrow-down"
-                label={t("friends.incomingTitle")}
-                color={theme.colors.onSurfaceVariant}
-              />
-              <Surface style={[s.card, { backgroundColor: theme.colors.surface }]} elevation={0}>
-                <View style={s.cardInner}>
-                  <EmptyState text={t("friends.incomingError")} />
-                  <Button mode="text" onPress={() => refetchIncoming()} style={s.retryButton}>
-                    {t("friends.retry")}
-                  </Button>
-                </View>
-              </Surface>
-            </View>
-          )}
-
-          {!outgoingPending && !outgoingError && (outgoingRequests?.length ?? 0) > 0 && (
-            <View style={s.section}>
-              <SectionHeader
-                icon="account-arrow-right"
-                label={t("friends.outgoingCount", { count: outgoingRequests?.length })}
-                color={theme.colors.onSurfaceVariant}
-              />
-              <Surface style={[s.card, { backgroundColor: theme.colors.surface }]} elevation={0}>
-                <View style={s.cardInner}>
-                  {(outgoingExpanded ? outgoingRequests : outgoingRequests?.slice(0, PREVIEW_COUNT))?.map(
-                    (req, i, arr) => (
-                      <View key={req.receiverIdentifier}>
-                        <View style={s.row}>
-                          <Avatar.Text
-                            size={40}
-                            label={getInitials(req.receiverNickName)}
-                            style={{ backgroundColor: theme.colors.surfaceVariant }}
-                            labelStyle={{ color: theme.colors.onSurfaceVariant, fontSize: 14 }}
-                          />
-                          <Text style={s.rowName} variant="bodyLarge" numberOfLines={1}>
-                            {req.receiverNickName}
-                          </Text>
-                          <IconButton
-                            hitSlop={16}
-                            accessibilityLabel={t("friends.cancelRequest")}
-                            icon="close"
-                            size={25}
-                            iconColor={theme.colors.outline}
-                            onPress={() =>
-                              setRequestToCancel({ identifier: req.receiverIdentifier, nickName: req.receiverNickName })
-                            }
-                            disabled={withdrawRequestMutation.isPending}
-                            style={s.actionButton}
-                          />
-                        </View>
-                        {i < arr.length - 1 && (
-                          <View style={[s.divider, { backgroundColor: theme.colors.outlineVariant }]} />
-                        )}
-                      </View>
-                    ),
-                  )}
-                  {(outgoingRequests?.length ?? 0) > PREVIEW_COUNT && (
-                    <Button mode="text" onPress={() => setOutgoingExpanded((v) => !v)} style={s.retryButton}>
-                      {outgoingExpanded
-                        ? t("friends.showLess")
-                        : t("friends.showAll", { count: outgoingRequests?.length })}
-                    </Button>
-                  )}
-                </View>
-              </Surface>
-            </View>
-          )}
-          {outgoingError && (
-            <View style={s.section}>
-              <SectionHeader
-                icon="account-arrow-right"
-                label={t("friends.outgoingTitle")}
-                color={theme.colors.onSurfaceVariant}
-              />
-              <Surface style={[s.card, { backgroundColor: theme.colors.surface }]} elevation={0}>
-                <View style={s.cardInner}>
-                  <EmptyState text={t("friends.outgoingError")} />
-                  <Button mode="text" onPress={() => refetchOutgoing()} style={s.retryButton}>
-                    {t("friends.retry")}
-                  </Button>
-                </View>
-              </Surface>
-            </View>
-          )}
-
-          <View style={s.section}>
-            <SectionHeader
-              icon="account-group"
-              label={friends ? t("friends.friendsCount", { count: friends.length }) : t("friends.friendsTitle")}
-              color={theme.colors.onSurfaceVariant}
-            />
-            <Surface style={[s.card, { backgroundColor: theme.colors.surface }]} elevation={0}>
-              <View style={s.cardInner}>
-                {friendsPending ? (
-                  <ActivityIndicator style={s.loader} />
-                ) : friendsError ? (
-                  <>
-                    <EmptyState text={t("friends.friendsError")} />
-                    <Button mode="text" onPress={() => refetchFriends()} style={s.retryButton}>
-                      {t("friends.retry")}
-                    </Button>
-                  </>
-                ) : friends?.length === 0 ? (
-                  <EmptyState text={t("friends.noFriends")} />
+          {query.trim().length >= MIN_USER_SEARCH_LENGTH && (
+            <ListSection
+              title={t("friends.searchResults")}
+              icon="account-search"
+              items={search.data}
+              keyOf={(user) => user.identifier}
+              isPending={search.isPending}
+              isError={search.isError}
+              errorText={t("friends.searchError")}
+              emptyText={t("friends.noResults")}
+              renderItem={(user) =>
+                isFriend(user.identifier) ? (
+                  <PersonRow
+                    name={user.nickName}
+                    identifier={user.identifier}
+                    onPress={() => openProfile(user.identifier)}
+                    trailing={
+                      <MaterialCommunityIcons name="account-check" size={22} color={theme.colors.onSurfaceVariant} />
+                    }
+                  />
                 ) : (
-                  <>
-                    {(friendsExpanded ? friends : friends?.slice(0, PREVIEW_COUNT))?.map((friend, i, arr) => (
-                      <View key={friend.identifier}>
-                        <View style={s.row}>
-                          <Avatar.Text
-                            size={40}
-                            label={getInitials(friend.nickName)}
-                            style={{ backgroundColor: theme.colors.surfaceVariant }}
-                            labelStyle={{ color: theme.colors.onSurfaceVariant, fontSize: 14 }}
-                          />
-                          <Text style={s.rowName} variant="bodyLarge" numberOfLines={1}>
-                            {friend.nickName}
-                          </Text>
-                          <IconButton
-                            hitSlop={16}
-                            accessibilityLabel={t("friends.removeFriend")}
-                            icon="account-remove"
-                            size={25}
-                            iconColor={theme.colors.outline}
-                            onPress={() => setFriendToRemoveId(friend.identifier)}
-                            disabled={removeFriendMutation.isPending}
-                            style={s.actionButton}
-                          />
-                          <IconButton
-                            testID="block-friend"
-                            hitSlop={16}
-                            accessibilityLabel={t("friends.block")}
-                            icon="cancel"
-                            size={25}
-                            iconColor={theme.colors.outline}
-                            onPress={() => setUserToBlock(friend)}
-                            disabled={blockMutation.isPending}
-                            style={s.actionButton}
-                          />
-                        </View>
-                        {i < arr.length - 1 && (
-                          <View style={[s.divider, { backgroundColor: theme.colors.outlineVariant }]} />
-                        )}
-                      </View>
-                    ))}
-                    {(friends?.length ?? 0) > PREVIEW_COUNT && (
-                      <Button mode="text" onPress={() => setFriendsExpanded((v) => !v)} style={s.retryButton}>
-                        {friendsExpanded ? t("friends.showLess") : t("friends.showAll", { count: friends?.length })}
-                      </Button>
-                    )}
-                  </>
-                )}
-              </View>
-            </Surface>
-            <AlertDialog
-              visible={friendToRemoveId !== null}
-              onDismiss={() => setFriendToRemoveId(null)}
-              onConfirm={() => {
-                if (friendToRemoveId) removeFriendMutation.mutate(friendToRemoveId);
-                setFriendToRemoveId(null);
-              }}
-              title={t("friends.removeTitle")}
-              infoText={[
-                t("friends.removeInfo", {
-                  name: friends?.find((f) => f.identifier === friendToRemoveId)?.nickName ?? "",
-                }),
-                t("friends.removeContinue"),
-              ]}
-              cancelText={t("common.cancel")}
-              confirmText={t("friends.remove")}
-              icon="account-remove-outline"
-              tone="danger"
-            />
-            <AlertDialog
-              visible={userToBlock !== null}
-              onDismiss={() => setUserToBlock(null)}
-              onConfirm={() => {
-                if (userToBlock) blockMutation.mutate(userToBlock.identifier);
-                setUserToBlock(null);
-              }}
-              title={t("friends.blockTitle", { name: userToBlock?.nickName ?? "" })}
-              infoText={[t("friends.blockInfo"), t("friends.blockContinue")]}
-              cancelText={t("common.cancel")}
-              confirmText={t("friends.block")}
-              icon="cancel"
-              tone="danger"
-            />
-            <AlertDialog
-              visible={requestToCancel !== null}
-              onDismiss={() => setRequestToCancel(null)}
-              onConfirm={() => {
-                if (requestToCancel) withdrawRequestMutation.mutate(requestToCancel.identifier);
-                setRequestToCancel(null);
-              }}
-              title={t("friends.cancelRequestTitle")}
-              infoText={[
-                t("friends.cancelRequestInfo", { name: requestToCancel?.nickName ?? "" }),
-                t("friends.removeContinue"),
-              ]}
-              cancelText={t("common.cancel")}
-              confirmText={t("friends.cancelRequestConfirm")}
-              icon="account-arrow-left-outline"
-            />
-          </View>
-
-          {!blockedPending && !blockedError && (blocked?.length ?? 0) > 0 && (
-            <View style={s.section}>
-              <SectionHeader
-                icon="cancel"
-                label={t("friends.blockedCount", { count: blocked?.length })}
-                color={theme.colors.onSurfaceVariant}
-              />
-              <Surface style={[s.card, { backgroundColor: theme.colors.surface }]} elevation={0}>
-                <View style={s.cardInner}>
-                  {(blockedExpanded ? blocked : blocked?.slice(0, PREVIEW_COUNT))?.map((user, i, arr) => (
-                    <View key={user.identifier}>
-                      <View testID="blocked-row" style={s.row}>
-                        <Avatar.Text
-                          size={40}
-                          label={getInitials(user.nickName)}
-                          style={{ backgroundColor: theme.colors.surfaceVariant }}
-                          labelStyle={{ color: theme.colors.onSurfaceVariant, fontSize: 14 }}
+                  <PersonRow
+                    name={user.nickName}
+                    identifier={user.identifier}
+                    trailing={
+                      isAsked(user.identifier) ? (
+                        <MaterialCommunityIcons name="clock-outline" size={22} color={theme.colors.outline} />
+                      ) : (
+                        <IconButton
+                          hitSlop={20}
+                          accessibilityLabel={t("friends.sendRequest")}
+                          icon="account-plus"
+                          size={25}
+                          onPress={() => unlessBanned(() => sendRequestMutation.mutate(user.nickName))}
+                          style={s.iconButton}
                         />
-                        <View style={s.rowText}>
-                          <Text variant="bodyLarge" numberOfLines={1} style={s.blockedName}>
-                            {user.nickName}
-                          </Text>
-                          <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
-                            {t("friends.blockedSince", {
-                              date: new Date(user.blockedAt).toLocaleDateString(i18n.language),
-                            })}
-                          </Text>
-                        </View>
-                        <Button
-                          testID="unblock-user"
-                          mode="text"
-                          compact
-                          onPress={() => unblockMutation.mutate(user.identifier)}
-                          disabled={unblockMutation.isPending}
-                        >
-                          {t("friends.unblock")}
-                        </Button>
-                      </View>
-                      {i < arr.length - 1 && (
-                        <View style={[s.divider, { backgroundColor: theme.colors.outlineVariant }]} />
-                      )}
-                    </View>
-                  ))}
-                  {(blocked?.length ?? 0) > PREVIEW_COUNT && (
-                    <Button mode="text" onPress={() => setBlockedExpanded((v) => !v)} style={s.retryButton}>
-                      {blockedExpanded ? t("friends.showLess") : t("friends.showAll", { count: blocked?.length })}
-                    </Button>
-                  )}
-                </View>
-              </Surface>
-            </View>
+                      )
+                    }
+                  />
+                )
+              }
+            />
           )}
-          {blockedError && (
-            <View style={s.section}>
-              <SectionHeader icon="cancel" label={t("friends.blockedTitle")} color={theme.colors.onSurfaceVariant} />
-              <Surface style={[s.card, { backgroundColor: theme.colors.surface }]} elevation={0}>
-                <View style={s.cardInner}>
-                  <EmptyState text={t("friends.blockedError")} />
-                  <Button mode="text" onPress={() => refetchBlocked()} style={s.retryButton}>
-                    {t("friends.retry")}
+
+          <ListSection
+            title={t("friends.incomingCount", { count: incoming.data?.length ?? 0 })}
+            icon="account-arrow-down"
+            items={incoming.data}
+            keyOf={(req) => req.requesterIdentifier}
+            isError={incoming.isError}
+            errorText={t("friends.incomingError")}
+            onRetry={() => incoming.refetch()}
+            renderItem={(req) => (
+              <PersonRow
+                name={req.requesterNickName}
+                identifier={req.requesterIdentifier}
+                actions={
+                  <>
+                    <Button
+                      mode="contained"
+                      compact
+                      accessibilityLabel={t("friends.accept")}
+                      onPress={() => unlessBanned(() => acceptMutation.mutate(req.requesterIdentifier))}
+                      disabled={answering}
+                    >
+                      {t("friends.acceptShort")}
+                    </Button>
+                    <Button
+                      mode="outlined"
+                      compact
+                      accessibilityLabel={t("friends.reject")}
+                      onPress={() => rejectMutation.mutate(req.requesterIdentifier)}
+                      disabled={answering}
+                    >
+                      {t("friends.rejectShort")}
+                    </Button>
+                    <Button
+                      testID="block-requester"
+                      mode="text"
+                      compact
+                      textColor={theme.colors.error}
+                      onPress={() =>
+                        setUserToBlock({ identifier: req.requesterIdentifier, nickName: req.requesterNickName })
+                      }
+                      disabled={blockMutation.isPending}
+                    >
+                      {t("friends.block")}
+                    </Button>
+                  </>
+                }
+              />
+            )}
+          />
+
+          <ListSection
+            title={friends.data ? t("friends.friendsCount", { count: friends.data.length }) : t("friends.friendsTitle")}
+            icon="account-group"
+            items={friends.data}
+            keyOf={(friend) => friend.identifier}
+            isPending={friends.isPending}
+            isError={friends.isError}
+            errorText={t("friends.friendsError")}
+            onRetry={() => friends.refetch()}
+            emptyText={t("friends.noFriends")}
+            renderItem={(friend) => {
+              const { subtitle, recent } = latestShareSubtitle(t, latestShares?.get(friend.identifier));
+              return (
+                <PersonRow
+                  testID="friend-row"
+                  name={friend.nickName}
+                  identifier={friend.identifier}
+                  note={friend.note}
+                  subtitle={subtitle}
+                  subtitleTone={recent ? "accent" : "muted"}
+                  onPress={() => openProfile(friend.identifier)}
+                />
+              );
+            }}
+          />
+
+          <ListSection
+            title={t("friends.outgoingCount", { count: outgoing.data?.length ?? 0 })}
+            icon="account-arrow-right"
+            items={outgoing.data}
+            keyOf={(req) => req.receiverIdentifier}
+            isError={outgoing.isError}
+            errorText={t("friends.outgoingError")}
+            onRetry={() => outgoing.refetch()}
+            renderItem={(req) => (
+              <PersonRow
+                name={req.receiverNickName}
+                identifier={req.receiverIdentifier}
+                trailing={
+                  <Button
+                    mode="text"
+                    compact
+                    accessibilityLabel={t("friends.cancelRequest")}
+                    onPress={() =>
+                      setRequestToCancel({ identifier: req.receiverIdentifier, nickName: req.receiverNickName })
+                    }
+                    disabled={withdrawRequestMutation.isPending}
+                  >
+                    {t("friends.withdrawShort")}
                   </Button>
-                </View>
-              </Surface>
-            </View>
+                }
+              />
+            )}
+          />
+
+          {(blocked.isError || (blocked.data?.length ?? 0) > 0) && (
+            <Button
+              testID="toggle-blocked"
+              mode="text"
+              textColor={theme.colors.onSurfaceVariant}
+              icon={blockedVisible ? "chevron-up" : "chevron-down"}
+              onPress={() => setBlockedVisible((v) => !v)}
+            >
+              {blocked.isError
+                ? t("friends.blockedTitle")
+                : t("friends.blockedCount", { count: blocked.data?.length ?? 0 })}
+            </Button>
+          )}
+          {blockedVisible && (
+            <ListSection
+              title={t("friends.blockedTitle")}
+              icon="cancel"
+              items={blocked.data}
+              keyOf={(user) => user.identifier}
+              isError={blocked.isError}
+              errorText={t("friends.blockedError")}
+              onRetry={() => blocked.refetch()}
+              renderItem={(user) => (
+                <PersonRow
+                  testID="blocked-row"
+                  name={user.nickName}
+                  identifier={user.identifier}
+                  subtitle={t("friends.blockedSince", {
+                    date: new Date(user.blockedAt).toLocaleDateString(i18n.language),
+                  })}
+                  trailing={
+                    <Button
+                      testID="unblock-user"
+                      mode="text"
+                      compact
+                      onPress={() => unblockMutation.mutate(user.identifier)}
+                      disabled={unblockMutation.isPending}
+                    >
+                      {t("friends.unblock")}
+                    </Button>
+                  }
+                />
+              )}
+            />
           )}
         </View>
       </ScrollView>
+      <BlockUserDialog
+        user={userToBlock}
+        onDismiss={() => setUserToBlock(null)}
+        onConfirm={(user) => blockMutation.mutate(user.identifier)}
+      />
+      <AlertDialog
+        visible={requestToCancel !== null}
+        onDismiss={() => setRequestToCancel(null)}
+        onConfirm={() => {
+          if (requestToCancel) withdrawRequestMutation.mutate(requestToCancel.identifier);
+          setRequestToCancel(null);
+        }}
+        title={t("friends.cancelRequestTitle")}
+        infoText={[
+          t("friends.cancelRequestInfo", { name: requestToCancel?.nickName ?? "" }),
+          t("friends.removeContinue"),
+        ]}
+        cancelText={t("common.cancel")}
+        confirmText={t("friends.cancelRequestConfirm")}
+        icon="account-arrow-left-outline"
+      />
       <AccountBannedDialog visible={showBannedDialog} onDismiss={() => setBannedDialog(false)} />
     </View>
-  );
-}
-
-function SectionHeader({ icon, label, color }: { icon: string; label: string; color: string }) {
-  return (
-    <View style={s.sectionHeader}>
-      <MaterialCommunityIcons name={icon as any} size={18} color={color} />
-      <Text variant="titleSmall" style={[s.sectionLabel, { color }]}>
-        {label}
-      </Text>
-    </View>
-  );
-}
-
-function EmptyState({ text }: { text: string }) {
-  return (
-    <Text variant="bodyMedium" style={s.emptyText}>
-      {text}
-    </Text>
   );
 }
 
@@ -576,65 +355,7 @@ const s = StyleSheet.create({
     borderRadius: BORDER_RADIUS,
     elevation: 0,
   },
-  section: {
-    gap: 8,
-  },
-  sectionHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    paddingHorizontal: 4,
-  },
-  sectionLabel: {
-    fontWeight: "600",
-    letterSpacing: 0.3,
-  },
-  card: {
-    borderRadius: BORDER_RADIUS,
-  },
-  cardInner: {
-    borderRadius: BORDER_RADIUS,
-    overflow: "hidden",
-    paddingVertical: 4,
-  },
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    gap: 14,
-  },
-  rowName: {
-    flex: 1,
-    fontWeight: "500",
-  },
-  rowText: {
-    flex: 1,
-  },
-  blockedName: {
-    fontWeight: "500",
-  },
-  rowActions: {
-    flexDirection: "row",
-    gap: 0,
-  },
-  actionButton: {
+  iconButton: {
     margin: 0,
-  },
-  divider: {
-    height: StyleSheet.hairlineWidth,
-    marginHorizontal: 16,
-  },
-  emptyText: {
-    textAlign: "center",
-    paddingVertical: 20,
-    paddingHorizontal: 16,
-    opacity: 0.55,
-  },
-  retryButton: {
-    marginBottom: 8,
-  },
-  loader: {
-    paddingVertical: 20,
   },
 });

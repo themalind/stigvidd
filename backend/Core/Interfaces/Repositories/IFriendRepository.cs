@@ -16,5 +16,7 @@ public interface IFriendRepository
     Task<RepositoryResult<IEnumerable<T>>> GetOutgoingRequestsAsync<T>(int userId, int[] hiddenUserIds, Expression<Func<FriendRequest, T>> selector, CancellationToken ctoken);
     Task<RepositoryResult> RemoveFriendShipOrFriendRequestAsync(int userId, int otherUserId, CancellationToken ctoken);
     Task<RepositoryResult<bool>> FriendshipExistsAsync(int userId, int otherUserId, CancellationToken ctoken);
-    Task<RepositoryResult> DeleteAllFriendRequestsByUserIdAsync(int userId, CancellationToken ctoken);
+    Task<RepositoryResult> SetNoteAsync(int ownerUserId, int friendUserId, string? text, CancellationToken ctoken);
+    Task<RepositoryResult<IReadOnlyDictionary<string, string>>> GetNotesByFriendIdentifierAsync(int ownerUserId, CancellationToken ctoken);
+    Task<RepositoryResult<IReadOnlyDictionary<string, DateTime>>> GetFriendsSinceByIdentifierAsync(int userId, CancellationToken ctoken);
 }

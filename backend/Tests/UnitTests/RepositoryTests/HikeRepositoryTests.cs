@@ -14,7 +14,7 @@ public class HikeRepositoryTests : TestBase
     private const string UserIdentifier = "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d";
     private const int UserIdNoHikes = 4;
     private const int UserIdWithHikes = 1;
-    private const int UserIdNoShares = 5;
+    private const string UserIdentifierNoShares = "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5a33";
     private const string HikeIdentifierSharedNoOwner = "b7a2d4c1-5e9f-4a63-8c1d-0f2e7b9a6c34"; // Hike 2, shared with user 3
     private const string HikeIdentifierOwned = "91e4c2d7-3b8f-4f6a-9d1c-7a2e5b0c8f13";         // Hike 3, still owned by user 2
     private const string HikeIdentifier = "3f9c1b7e-8a42-4e6d-9c5f-2a7b1d8e4f90";
@@ -173,45 +173,45 @@ public class HikeRepositoryTests : TestBase
     }
 
     [Fact]
-    public async Task GetDeletableHikeImageUrls_SkipsImagesOnSharedHikes()
+    public async Task DeleteAccount_SkipsImagesOnSharedHikes()
     {
         // Arrange — user 1 owns hikes 1 and 2, both of which have HikeShares in the seed,
         // so their images must survive the account deletion.
-        var repo = new HikeRepository(CreateSeededFactory(SeedHikeImages), NullLogger<HikeRepository>.Instance);
+        var factory = CreateSeededFactory(SeedHikeImages);
 
         // Act
-        var result = await repo.GetDeletableHikeImageUrlsByUserIdAsync(UserIdWithHikes, TestContext.Current.CancellationToken);
+        var result = await DeleteAccountAsync(factory, UserIdentifier);
 
         // Assert
-        result.IsSuccess.Should().BeTrue();
-        result.Value.Should().BeEmpty();
+        result.Value.Should().NotBeNull();
+        result.Value.FileUrls.Should().BeEmpty();
     }
 
     [Fact]
-    public async Task GetDeletableHikeImageUrls_ReturnsImagesOnUnsharedHikes()
+    public async Task DeleteAccount_ReturnsImagesOnUnsharedHikes()
     {
         // Arrange — user 5 owns hike 6, which has no HikeShares, so its images go with it
-        var repo = new HikeRepository(CreateSeededFactory(SeedHikeImages), NullLogger<HikeRepository>.Instance);
+        var factory = CreateSeededFactory(SeedHikeImages);
 
         // Act
-        var result = await repo.GetDeletableHikeImageUrlsByUserIdAsync(UserIdNoShares, TestContext.Current.CancellationToken);
+        var result = await DeleteAccountAsync(factory, UserIdentifierNoShares);
 
         // Assert
-        result.IsSuccess.Should().BeTrue();
-        result.Value.Should().BeEquivalentTo(["hikes/hike6-a.jpeg", "hikes/hike6-b.jpeg"]);
+        result.Value.Should().NotBeNull();
+        result.Value.FileUrls.Should().BeEquivalentTo(["hikes/hike6-a.jpeg", "hikes/hike6-b.jpeg"]);
     }
 
     [Fact]
-    public async Task HandleUserHikesOnUserDelete_RemovesOnlyHikesWithoutShares()
+    public async Task DeleteAccount_RemovesOnlyHikesWithoutShares()
     {
         // Arrange — user 1 owns hike 1 (shared) and hike 2 (shared); user 5 owns hike 6 (not shared)
-        var repo = new HikeRepository(CreateSeededFactory(), NullLogger<HikeRepository>.Instance);
+        var factory = CreateSeededFactory();
+        var repo = new HikeRepository(factory, NullLogger<HikeRepository>.Instance);
 
         // Act
-        var result = await repo.HandleUserHikesOnUserDeleteAsync(UserIdNoShares, TestContext.Current.CancellationToken);
+        await DeleteAccountAsync(factory, UserIdentifierNoShares);
 
         // Assert
-        result.IsSuccess.Should().BeTrue();
         var deleted = await repo.GetHikeByIdentifierAsync(HikeIdentifierNoShares, TestContext.Current.CancellationToken);
         deleted.IsSuccess.Should().BeFalse();
         var kept = await repo.GetHikeByIdentifierAsync(HikeIdentifier, TestContext.Current.CancellationToken);

@@ -75,6 +75,24 @@ export interface ShareHikeRequest {
   allowResharing: boolean;
 }
 
+export interface ShareRecipient {
+  identifier: string;
+  nickName: string;
+  sharedAt: string;
+}
+
+export interface OutgoingSharedHike {
+  hikeIdentifier: string;
+  hikeName: string;
+  hikeLength: number;
+  duration: number;
+  coordinates: string;
+  isOwnHike: boolean;
+  imageUrl?: string | null;
+  lastSharedAt: string;
+  recipients: ShareRecipient[];
+}
+
 export interface IncomingSharedHike {
   hikeIdentifier: string;
   hikeName: string;

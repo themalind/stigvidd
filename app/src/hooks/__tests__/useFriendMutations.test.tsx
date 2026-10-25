@@ -16,12 +16,14 @@ const mockAccept = jest.fn();
 const mockReject = jest.fn();
 const mockSend = jest.fn();
 const mockRemove = jest.fn();
+const mockSetNote = jest.fn();
 
 jest.mock("@/api/friends", () => ({
   acceptFriendRequest: (...args: unknown[]) => mockAccept(...args),
   rejectFriendRequest: (...args: unknown[]) => mockReject(...args),
   sendFriendRequest: (...args: unknown[]) => mockSend(...args),
   removeFriend: (...args: unknown[]) => mockRemove(...args),
+  setFriendNote: (...args: unknown[]) => mockSetNote(...args),
 }));
 
 const FRIENDS = ["friends", "u1"];
@@ -29,7 +31,7 @@ const INCOMING = ["friends", "incoming", "u1"];
 const OUTGOING = ["friends", "outgoing"];
 
 type Mutations = ReturnType<typeof useFriendMutations>;
-type MutationName = keyof Mutations;
+type MutationName = Exclude<keyof Mutations, "setNoteMutation">;
 
 function render() {
   let hook!: Mutations;
@@ -39,7 +41,7 @@ function render() {
   }
 
   const rendered = renderWithProviders(<Probe />);
-  // The lists are seeded without an observer, and renderWithProviders sets gcTime 0.
+  // The lists are seeded without an observer, and renderWithProviders sets gcTime 0. keep-comment: why gcTime is raised
   for (const key of [FRIENDS, INCOMING, OUTGOING]) {
     rendered.queryClient.setQueryDefaults(key, { gcTime: Infinity });
     rendered.queryClient.setQueryData(key, []);
@@ -51,6 +53,10 @@ function render() {
       act(() => hook[name].mutate(arg));
       await flushUntil(() => hook[name].isError || hook[name].isSuccess);
     },
+    setNote: async (identifier: string, note: string | null) => {
+      act(() => hook.setNoteMutation.mutate({ identifier, note }));
+      await flushUntil(() => hook.setNoteMutation.isError || hook.setNoteMutation.isSuccess);
+    },
     invalidated: (key: unknown[]) => rendered.queryClient.getQueryState(key)?.isInvalidated === true,
   };
 }
@@ -61,9 +67,39 @@ beforeEach(() => {
   mockReject.mockResolvedValue({ success: true });
   mockSend.mockResolvedValue({ success: true });
   mockRemove.mockResolvedValue({ success: true });
+  mockSetNote.mockResolvedValue(undefined);
 });
 
 describe("useFriendMutations", () => {
+  describe("setting a note", () => {
+    it("saves the note and refreshes the friend list", async () => {
+      const { setNote, store, invalidated } = render();
+      await setNote("them", "Grannen");
+
+      expect(mockSetNote).toHaveBeenCalledWith("them", "Grannen");
+      expect(invalidated(FRIENDS)).toBe(true);
+      expect(store.get(snackbarAtom)).toMatchObject({ type: "success", message: "Anteckningen är sparad" });
+    });
+
+    it("treats a friend who is gone as stale, not as a failure", async () => {
+      mockSetNote.mockRejectedValue(new ApiError("HTTP error: setFriendNote: 404", 404));
+      const { setNote, store, invalidated } = render();
+      await setNote("them", "Grannen");
+
+      expect(store.get(snackbarAtom)).toMatchObject({ type: "warning" });
+      expect(invalidated(FRIENDS)).toBe(true);
+    });
+
+    it("reports a server error", async () => {
+      mockSetNote.mockRejectedValue(new ApiError("HTTP error: setFriendNote: 500", 500));
+      const { setNote, store, invalidated } = render();
+      await setNote("them", "Grannen");
+
+      expect(store.get(snackbarAtom)).toMatchObject({ type: "error", message: "Kunde inte spara anteckningen" });
+      expect(invalidated(FRIENDS)).toBe(false);
+    });
+  });
+
   describe("accepting a request", () => {
     it("accepts the request it was given", async () => {
       const { run } = render();
@@ -139,7 +175,7 @@ describe("useFriendMutations", () => {
       expect(mockReject).toHaveBeenCalledWith("them");
     });
 
-    // A rejection adds nobody, so the friend list is left as it is.
+    // A rejection adds nobody, so the friend list is left as it is. keep-comment: why FRIENDS stays valid
     it("refreshes the incoming requests only", async () => {
       const { run, invalidated } = render();
       await run("rejectMutation", "them");

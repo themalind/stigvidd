@@ -116,7 +116,7 @@ The admin page also lists reporters and authors (`GET …/reporters`, `GET …/a
 
 ## When a user deletes their account
 
-`ContentReportRepository.HandleUserDeletionAsync` runs **before** the user row is removed
+`AccountDeletionRepository` settles their reports **before** the user row is removed
 (afterwards `ReporterUserId` is already nulled and their reports cannot be found):
 
 - **As an author:** snapshots are cleared, pending reports become `ContentExpired`, and the

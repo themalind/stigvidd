@@ -18,9 +18,6 @@ public class ReviewService : IReviewService
     private readonly IReviewRepository _reviewRepository;
     private readonly IWebDavService _webDavService;
     private readonly IMediaUploadService _mediaUploadService;
-    // The user lookup goes to the repository, not IUserService: UserService depends on this
-    // service to clean up a deleted user's reviews, and taking IUserService here would make
-    // the two services a resolve-time cycle.
     private readonly IUserRepository _userRepository;
     private readonly IUserBlockService _userBlockService;
     private readonly ITrailService _trailService;
@@ -276,23 +273,5 @@ public class ReviewService : IReviewService
             return Result.Fail<bool>(new Message(500, "An error occurred while checking for an existing review."));
 
         return Result.Ok(result.Value);
-    }
-
-    public async Task<Result> AnonymizeUserReviewsOnUserDeleteAsync(int userId, CancellationToken ctoken)
-    {
-        // Read the URLs while the rows still point at the user; the files go last, best-effort.
-        var imageUrlsResult = await _reviewRepository.GetReviewImageUrlsByUserIdAsync(userId, ctoken);
-
-        if (!imageUrlsResult.IsSuccess)
-            return Result.Fail(new Message(500, "An error occurred while fetching the review image URLs."));
-
-        var result = await _reviewRepository.AnonymizeReviewsByUserIdAsync(userId, ctoken);
-
-        if (!result.IsSuccess)
-            return Result.Fail(new Message(500, "An error occurred while anonymizing the user's reviews."));
-
-        await DeleteImageFilesAsync(imageUrlsResult.Value, $"Account deletion. UserId: {userId}");
-
-        return Result.Ok();
     }
 }

@@ -13,12 +13,10 @@ public interface IHikeService
     Task<Result<HikeResponse>> CreateHikeAsync(CreateHikeRequest request, string userIdentifer, CancellationToken ctoken);
     Task<Result<HikeResponse>> GetHikeByIdentifierAsync(string hikeIdentifier, string userIdentifier, CancellationToken ctoken);
     Task<Result<IReadOnlyCollection<HikeOverviewResponse>>> GetHikesAsync(string createdBy, CancellationToken ctoken);
-    Task<Result> HandleUserHikesOnUserDeleteAsync(int userId, CancellationToken ctoken);
     Task<Result<HikeResponse>> UpdateHikeAsync(string hikeIdentifier, string userIdentifier, string? name, string? description, string? gettingThere, string? parkingInfo, CancellationToken ctoken);
     Task<Result> DeleteHikeAsync(string hikeIdentifier, string userIdentifier, CancellationToken ctoken);
     Task<Result<HikeImageResponse>> AddHikeImageAsync(string hikeIdentifier, string userIdentifier, IFormFile image, CancellationToken ctoken);
     Task<Result> DeleteHikeImageAsync(string hikeIdentifier, string imageIdentifier, string userIdentifier, CancellationToken ctoken);
-    Task<Result> DeleteHikeSharesByUserIdAsync(int userId, CancellationToken ctoken);
     // Best-effort housekeeping: never fails the caller, see the implementation
     Task CleanUpOrphanedHikesAsync(CancellationToken ctoken);
 }
