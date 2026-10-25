@@ -5,7 +5,7 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import { IncomingSharedHike, ReshareSharedHikeRequest, SharedHike } from "@/data/types";
+import { IncomingSharedHike, OutgoingSharedHike, ReshareSharedHikeRequest, SharedHike } from "@/data/types";
 import { apiFetch, BASE_URL } from "./api-config";
 import { getUserToken } from "./users";
 import { ApiError } from "./api-error";
@@ -35,6 +35,36 @@ export async function getSharedHikes(): Promise<SharedHike[]> {
   } catch (error) {
     logger.error("Get shared hikes failed", {
       endpoint: "GET /hikesharerecipient",
+      errorMessage: String(error),
+    });
+    throw error;
+  }
+}
+
+export async function getOutgoingSharedHikes(): Promise<OutgoingSharedHike[]> {
+  try {
+    const token = await getUserToken();
+
+    if (!token) {
+      throw new Error("User not authenticated");
+    }
+
+    const response = await apiFetch(`${BASE_URL}/hikeshares/outgoing`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new ApiError(`HTTP error: getOutgoingSharedHikes: ${response.status}`, response.status);
+    }
+
+    return response.json();
+  } catch (error) {
+    logger.error("Get outgoing shared hikes failed", {
+      endpoint: "GET /hikeshares/outgoing",
       errorMessage: String(error),
     });
     throw error;

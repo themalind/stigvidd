@@ -492,18 +492,6 @@ public class HikeSubmissionService : IHikeSubmissionService
         return Result.Ok();
     }
 
-    public async Task<Result> HandleUserDeleteAsync(int userId, CancellationToken ctoken)
-    {
-        var result = await _submissionRepository.DeleteByUserIdAsync(userId, ctoken);
-
-        if (!result.IsSuccess)
-            return Result.Fail(new Message(500, "An error occurred while deleting the user's submissions."));
-
-        await DeleteFilesAsync(result.Value, $"Account deletion. UserId: {userId}");
-
-        return Result.Ok();
-    }
-
     public async Task<Result<IReadOnlyCollection<SimilarTrailResponse>>> GetSimilarRoutesAsync(string identifier, CancellationToken ctoken)
     {
         var walkResult = await _submissionRepository.GetByIdentifierAsync(

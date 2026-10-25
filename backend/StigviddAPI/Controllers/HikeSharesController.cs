@@ -5,6 +5,7 @@ using Core.Interfaces.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WebDataContracts.RequestModels.HikeShare;
+using WebDataContracts.ResponseModels.HikeShare;
 
 namespace StigviddAPI.Controllers;
 
@@ -20,6 +21,26 @@ public class HikeSharesController : StigViddController
     {
         _hikeShareService = hikeShareService;
         _userService = userService;
+    }
+
+    [HttpGet]
+    [Route("outgoing")]
+    public async Task<ActionResult<IReadOnlyCollection<OutgoingHikeShareResponse>>> GetOutgoingShares(CancellationToken ctoken)
+    {
+        var userResponse = await GetAuthenticatedUserAsync(_userService, ctoken);
+        if (userResponse == null)
+        {
+            return Unauthorized();
+        }
+
+        var result = await _hikeShareService.GetOutgoingSharesAsync(userResponse.Identifier, ctoken);
+
+        if (!result.Success && result.Message != null)
+        {
+            return ToActionResult(result.Message);
+        }
+
+        return Ok(result.Value);
     }
 
     [HttpGet]

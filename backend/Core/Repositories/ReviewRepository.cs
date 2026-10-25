@@ -63,65 +63,6 @@ public class ReviewRepository : IReviewRepository
         }
     }
 
-    // Shared so the collected image URLs match the rows that change. Past the moderation
-    // filter: account deletion has to clean up hidden reviews too, or their files stay on
-    // WebDAV forever.
-    private static IQueryable<Review> UserReviews(StigViddDbContext context, int userId) =>
-        context.Reviews.IgnoreQueryFilters(["Moderation"]).Where(r => r.UserId == userId);
-
-    public async Task<RepositoryResult<IEnumerable<string>>> GetReviewImageUrlsByUserIdAsync(int userId, CancellationToken ctoken)
-    {
-        try
-        {
-            using var context = await _context.CreateDbContextAsync(ctoken);
-
-            var userReviewIds = UserReviews(context, userId).Select(r => r.Id);
-
-            // Repeated on the outer query because IgnoreQueryFilters applies to a query, not
-            // an entity, and UserReviews is a subquery here rather than the query itself.
-            var imageUrls = await context.ReviewImages
-                .IgnoreQueryFilters(["Moderation"])
-                .Where(ri => userReviewIds.Contains(ri.ReviewId))
-                .Select(ri => ri.ImageUrl)
-                .ToListAsync(ctoken);
-
-            return RepositoryResult<IEnumerable<string>>.Success(imageUrls);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "ReviewRepository: GetReviewImageUrlsByUserIdAsync -> Something went wrong when fetching review image URLs for user with ID {userId}.", userId);
-            return RepositoryResult<IEnumerable<string>>.Error();
-        }
-    }
-
-    // Clears the text and deletes the images on the user's reviews, keeping the rating.
-    // UserId is nulled by SetNull when the user row goes.
-    public async Task<RepositoryResult> AnonymizeReviewsByUserIdAsync(int userId, CancellationToken ctoken)
-    {
-        try
-        {
-            using var context = await _context.CreateDbContextAsync(ctoken);
-
-            var reviews = await UserReviews(context, userId)
-                .Include(r => r.ReviewImages)
-                .ToListAsync(ctoken);
-
-            foreach (var review in reviews)
-                review.TrailReview = null;
-
-            context.ReviewImages.RemoveRange(reviews.SelectMany(r => r.ReviewImages ?? []));
-
-            await context.SaveChangesAsync(ctoken);
-
-            return RepositoryResult.Success();
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "ReviewRepository: AnonymizeReviewsByUserIdAsync -> Something went wrong when anonymizing reviews for user with ID {userId}.", userId);
-            return RepositoryResult.Error();
-        }
-    }
-
     public async Task<RepositoryResult> DeleteReviewAsync(Review review, CancellationToken ctoken)
     {
         try
@@ -158,6 +99,28 @@ public class ReviewRepository : IReviewRepository
         {
             _logger.LogError(ex, "ReviewRepository: GetReviewByIdentifierAsync -> Something went wrong when fetching review with identifier {reviewIdentifier}.", reviewIdentifier);
             return RepositoryResult<Review>.Error();
+        }
+    }
+
+    public async Task<RepositoryResult<IReadOnlyCollection<T>>> GetReviewsByUserIdAsync<T>(int userId, Expression<Func<Review, T>> selector, CancellationToken ctoken)
+    {
+        try
+        {
+            using var context = await _context.CreateDbContextAsync(ctoken);
+
+            var reviews = await context.Reviews
+                .AsNoTracking()
+                .Where(r => r.UserId == userId && r.Trail != null && r.Trail.IsVerified)
+                .OrderByDescending(r => r.CreatedAt)
+                .Select(selector)
+                .ToListAsync(ctoken);
+
+            return RepositoryResult<IReadOnlyCollection<T>>.Success(reviews);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "ReviewRepository: GetReviewsByUserIdAsync -> Something went wrong when fetching reviews by user {userId}.", userId);
+            return RepositoryResult<IReadOnlyCollection<T>>.Error();
         }
     }
 

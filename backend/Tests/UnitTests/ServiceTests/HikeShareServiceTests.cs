@@ -35,6 +35,7 @@ public class HikeShareServiceTests
             userRepository.Object,
             hikeRepositoryMock?.Object ?? new Mock<IHikeRepository>().Object,
             HikeShareDistributorTests.Distributor(userRepository, friendRepositoryMock, shareRepository, pushNotificationServiceMock),
+            Utilities.Stubs.HikeResponseFactory(),
             metrics ?? new StigviddMetrics(),
             new Mock<ILogger<HikeShareService>>().Object
         );
@@ -47,6 +48,98 @@ public class HikeShareServiceTests
                 It.IsAny<string>(), It.IsAny<Expression<Func<User, SenderProjection>>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<SenderProjection>.Success(new SenderProjection(1, "NaturElskaren")));
         return userRepoMock;
+    }
+
+    private static SentHikeShareRecipient Recipient(string nickName, DateTime sharedAt) =>
+        new() { Identifier = $"id-{nickName}", NickName = nickName, SharedAt = sharedAt };
+
+    private static SentHikeShare Sent(string name, params SentHikeShareRecipient[] recipients) =>
+        new() { HikeIdentifier = $"hike-{name}", HikeName = name, GeoPath = Utilities.GeoPath((12.94, 57.72), (12.95, 57.73)), Recipients = [.. recipients] };
+
+    private static Mock<IHikeShareRepository> SentShares(params SentHikeShare[] hikes)
+    {
+        var repo = new Mock<IHikeShareRepository>();
+        repo.Setup(r => r.GetHikesSharedByUserAsync(1, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<IReadOnlyCollection<SentHikeShare>>.Success(hikes));
+        return repo;
+    }
+
+    [Fact]
+    public async Task GetOutgoingSharesAsync_PutsTheMostRecentlySharedHikeAndRecipientFirst()
+    {
+        var oct1 = new DateTime(2026, 10, 1, 0, 0, 0, DateTimeKind.Utc);
+        var service = Build(
+            SentShares(
+                Sent("Rya åsar", Recipient("anna", oct1)),
+                Sent("Kypesjön", Recipient("bo", oct1), Recipient("cissi", oct1.AddDays(5)))),
+            SenderFound());
+
+        var result = await service.GetOutgoingSharesAsync(OwnerIdentifier, TestContext.Current.CancellationToken);
+
+        result.Success.Should().BeTrue();
+        var shares = result.Value;
+        shares.Should().NotBeNull();
+        if (shares is null) return;
+        shares.Select(s => s.HikeName).Should().Equal("Kypesjön", "Rya åsar");
+        var first = shares.First();
+        first.LastSharedAt.Should().Be(oct1.AddDays(5));
+        first.Recipients.Select(r => r.NickName).Should().Equal("cissi", "bo");
+        first.Coordinates.Should().Contain("57.73");
+    }
+
+    [Fact]
+    public async Task GetOutgoingSharesAsync_PrefixesTheImagePathAndLeavesNoImageAsNull()
+    {
+        var oct1 = new DateTime(2026, 10, 1, 0, 0, 0, DateTimeKind.Utc);
+        var withImage = Sent("Rya åsar", Recipient("anna", oct1.AddDays(1)));
+        var service = Build(
+            SentShares(
+                new SentHikeShare
+                {
+                    HikeIdentifier = withImage.HikeIdentifier,
+                    HikeName = withImage.HikeName,
+                    GeoPath = withImage.GeoPath,
+                    ImageUrl = "hikes/rya.jpg",
+                    Recipients = withImage.Recipients,
+                },
+                Sent("Kypesjön", Recipient("bo", oct1))),
+            SenderFound());
+
+        var result = await service.GetOutgoingSharesAsync(OwnerIdentifier, TestContext.Current.CancellationToken);
+
+        var shares = result.Value;
+        shares.Should().NotBeNull();
+        if (shares is null) return;
+        shares.Select(s => s.ImageUrl).Should().Equal(Utilities.Stubs.PresentableBaseUrl +"hikes/rya.jpg", null);
+    }
+
+    [Fact]
+    public async Task GetOutgoingSharesAsync_WhenSenderMissing_ReturnsNotFound()
+    {
+        var userRepo = new Mock<IUserRepository>();
+        userRepo.Setup(r => r.GetUserByIdentifierAsync(
+                It.IsAny<string>(), It.IsAny<Expression<Func<User, SenderProjection>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<SenderProjection>.NotFound());
+        var service = Build(SentShares(), userRepo);
+
+        var result = await service.GetOutgoingSharesAsync(OwnerIdentifier, TestContext.Current.CancellationToken);
+
+        result.Success.Should().BeFalse();
+        result.Message?.StatusCode.Should().Be(404);
+    }
+
+    [Fact]
+    public async Task GetOutgoingSharesAsync_WhenRepositoryFails_ReturnsServerError()
+    {
+        var repo = new Mock<IHikeShareRepository>();
+        repo.Setup(r => r.GetHikesSharedByUserAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<IReadOnlyCollection<SentHikeShare>>.Error());
+        var service = Build(repo, SenderFound());
+
+        var result = await service.GetOutgoingSharesAsync(OwnerIdentifier, TestContext.Current.CancellationToken);
+
+        result.Success.Should().BeFalse();
+        result.Message?.StatusCode.Should().Be(500);
     }
 
     private static Mock<IHikeRepository> HikeCreatedBy(string creatorIdentifier)

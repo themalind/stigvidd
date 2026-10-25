@@ -75,6 +75,16 @@ describe("validation errors", () => {
     expect(mockRegister).not.toHaveBeenCalled();
   });
 
+  it("rejects a one-character nickname", async () => {
+    renderWithProviders(<RegisterScreen />);
+
+    fillForm({ nickName: "B" });
+    submit();
+
+    expect(await errorUnder("nickname")).toHaveTextContent("Namn för kort. Minst 2 tecken");
+    expect(mockRegister).not.toHaveBeenCalled();
+  });
+
   it("rejects a nickname with spaces or punctuation", async () => {
     renderWithProviders(<RegisterScreen />);
 

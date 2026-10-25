@@ -112,6 +112,49 @@ public class HikeSharesControllerTests : IClassFixture<StigViddWebApplicationFac
 
     #endregion
 
+    #region GET /outgoing
+
+    [Fact]
+    public async Task GetOutgoingShares_WhenUnauthenticated_ReturnsUnauthorized()
+    {
+        var client = _factory.CreateClient();
+
+        var response = await client.GetAsync($"{BASE_URL}/outgoing", TestContext.Current.CancellationToken);
+
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task GetOutgoingShares_ListsTheSendersHikeWithItsRecipient()
+    {
+        var client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", VandrarVennenUid);
+
+        var shares = await client.GetFromJsonAsync<List<OutgoingHikeShareResponse>>($"{BASE_URL}/outgoing", TestContext.Current.CancellationToken);
+
+        shares.Should().NotBeNull();
+        if (shares is null) return;
+        var hike3 = shares.SingleOrDefault(s => s.HikeIdentifier == Hike3Identifier);
+        hike3.Should().NotBeNull();
+        if (hike3 is null) return;
+        hike3.Recipients.Select(r => r.NickName).Should().Equal(NaturElskarenNickName);
+    }
+
+    [Fact]
+    public async Task GetOutgoingShares_LeavesOutWhatOthersShared()
+    {
+        var client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", NaturElskarenUid);
+
+        var shares = await client.GetFromJsonAsync<List<OutgoingHikeShareResponse>>($"{BASE_URL}/outgoing", TestContext.Current.CancellationToken);
+
+        shares.Should().NotBeNull();
+        if (shares is null) return;
+        shares.Select(s => s.HikeIdentifier).Should().NotContain(Hike3Identifier);
+    }
+
+    #endregion
+
     #region POST /share
 
     [Fact]

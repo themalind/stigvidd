@@ -97,6 +97,9 @@ not yours. Add `"<METHOD> /api/v1/<Controller>/<route>"` to `ApprovedAnonymousEn
 - **Integration** (`Tests/IntegrationTests/<Xs>Controller/`) — the real host over SQLite +
   SpatiaLite, which is what proves the route, the model binding, the validator and the
   authorization actually line up.
+- **App client** — a new function in `app/src/api/` needs a row in
+  `app/src/api/__tests__/endpoint-contract.test.ts` (method, path, auth, body), and that file's
+  `toHaveLength(N)` raised by one per new function — one row per function, not per case.
 
 Then run [prove-it-bites](../prove-it-bites/SKILL.md) on the new assertions. An integration
 test that passed first try is equally consistent with the route never being hit.

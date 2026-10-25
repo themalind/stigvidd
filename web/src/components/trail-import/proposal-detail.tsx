@@ -26,7 +26,7 @@ import {
 } from "@/api/trail-import";
 import type { TrailShortInfoResponse } from "@/types/types";
 import { ConfidenceBadge, DecisionBadge } from "./badges";
-import { GeometryPreview } from "./geometry-preview";
+import { ProposalMap } from "./proposal-map";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -362,11 +362,7 @@ export function ProposalDetail({
         <Skeleton className="h-64 w-full" />
       ) : preview ? (
         <>
-          <GeometryPreview
-            feature={preview.featureCoordinates ?? []}
-            trail={preview.trailCoordinates}
-            className="h-72"
-          />
+          <ProposalMap feature={preview.featureCoordinates ?? []} trail={preview.trailCoordinates} className="h-72" />
 
           {preview.trailIsNearestOnly && preview.trailName && (
             <p className="rounded-md border border-dashed px-3 py-2 text-sm text-muted-foreground">

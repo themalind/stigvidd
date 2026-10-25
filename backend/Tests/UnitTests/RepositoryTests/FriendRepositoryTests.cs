@@ -3,6 +3,9 @@
 
 using Core.Repositories;
 using AwesomeAssertions;
+using Infrastructure.Data.Entities;
+using Infrastructure.Enums;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using WebDataContracts.ResponseModels.Friend;
 
@@ -28,6 +31,96 @@ public class FriendRepositoryTests : TestBase
         // Assert
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().HaveCount(1);
+    }
+
+    [Fact]
+    public async Task GetFriendsAsync_ReturnsFriendsInNameOrder()
+    {
+        // Arrange
+        const int userId = 100;
+        var factory = CreateSeededFactory(db =>
+        {
+            db.Users.Add(new User { Id = userId, NickName = "me", Email = "me@test", SubjectId = "me" });
+            var friendId = userId;
+            foreach (var name in new[] { "cissi", "anna", "bertil" })
+            {
+                friendId++;
+                db.Users.Add(new User { Id = friendId, NickName = name, Email = $"{name}@test", SubjectId = name });
+                db.FriendRequests.Add(new FriendRequest
+                {
+                    RequesterId = friendId % 2 == 0 ? userId : friendId,
+                    ReceiverId = friendId % 2 == 0 ? friendId : userId,
+                    Status = FriendRequestStatus.Accepted,
+                });
+            }
+        });
+        var repo = new FriendRepository(factory, NullLogger<FriendRepository>.Instance);
+
+        // Act
+        var result = await repo.GetFriendsAsync(userId, [], u => u.NickName, TestContext.Current.CancellationToken);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().Equal("anna", "bertil", "cissi");
+    }
+
+    [Fact]
+    public async Task SetNoteAsync_AddsThenReplacesThenRemoves()
+    {
+        // Arrange
+        var repo = new FriendRepository(CreateSeededFactory(), NullLogger<FriendRepository>.Instance);
+        var ct = TestContext.Current.CancellationToken;
+
+        // Act & Assert
+        (await repo.SetNoteAsync(UserIdWithFriend, FriendUserId, "Kusin", ct)).IsSuccess.Should().BeTrue();
+        (await NotesOf(repo, UserIdWithFriend)).Values.Should().Equal("Kusin");
+
+        (await repo.SetNoteAsync(UserIdWithFriend, FriendUserId, "Kusin Emil", ct)).IsSuccess.Should().BeTrue();
+        (await NotesOf(repo, UserIdWithFriend)).Values.Should().Equal("Kusin Emil");
+
+        (await repo.SetNoteAsync(UserIdWithFriend, FriendUserId, null, ct)).IsSuccess.Should().BeTrue();
+        (await NotesOf(repo, UserIdWithFriend)).Should().BeEmpty();
+    }
+
+    private static async Task<IReadOnlyDictionary<string, string>> NotesOf(FriendRepository repo, int ownerUserId)
+    {
+        var result = await repo.GetNotesByFriendIdentifierAsync(ownerUserId, TestContext.Current.CancellationToken);
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().NotBeNull();
+        return result.Value ?? new Dictionary<string, string>();
+    }
+
+    [Fact]
+    public async Task GetNotesByFriendIdentifierAsync_GivesOnlyTheOwnersNotes()
+    {
+        // Arrange
+        var repo = new FriendRepository(CreateSeededFactory(), NullLogger<FriendRepository>.Instance);
+        var ct = TestContext.Current.CancellationToken;
+        await repo.SetNoteAsync(UserIdWithFriend, FriendUserId, "min anteckning", ct);
+        await repo.SetNoteAsync(FriendUserId, UserIdWithFriend, "hennes anteckning", ct);
+
+        // Act
+        var notes = await NotesOf(repo, UserIdWithFriend);
+
+        // Assert
+        notes.Values.Should().Equal("min anteckning");
+    }
+
+    [Fact]
+    public async Task RemoveFriendShipOrFriendRequestAsync_ForgetsBothSidesNotes()
+    {
+        // Arrange
+        var repo = new FriendRepository(CreateSeededFactory(), NullLogger<FriendRepository>.Instance);
+        var ct = TestContext.Current.CancellationToken;
+        await repo.SetNoteAsync(UserIdWithFriend, FriendUserId, "a", ct);
+        await repo.SetNoteAsync(FriendUserId, UserIdWithFriend, "b", ct);
+
+        // Act
+        (await repo.RemoveFriendShipOrFriendRequestAsync(UserIdWithFriend, FriendUserId, ct)).IsSuccess.Should().BeTrue();
+
+        // Assert
+        (await NotesOf(repo, UserIdWithFriend)).Should().BeEmpty();
+        (await NotesOf(repo, FriendUserId)).Should().BeEmpty();
     }
 
     [Fact]
@@ -255,32 +348,6 @@ public class FriendRepositoryTests : TestBase
     }
 
     [Fact]
-    public async Task DeleteAllFriendRequestsByUserIdAsync_WhenFound_ReturnsSuccess()
-    {
-        // Arrange
-        var repo = new FriendRepository(CreateSeededFactory(), NullLogger<FriendRepository>.Instance);
-
-        // Act
-        var result = await repo.DeleteAllFriendRequestsByUserIdAsync(UserIdWithFriend, TestContext.Current.CancellationToken);
-
-        // Assert
-        result.IsSuccess.Should().BeTrue();
-    }
-
-    [Fact]
-    public async Task DeleteAllFriendRequestsByUserIdAsync_WhenNotFound_ReturnsSuccess()
-    {
-        // Arrange
-        var repo = new FriendRepository(CreateSeededFactory(), NullLogger<FriendRepository>.Instance);
-
-        // Act
-        var result = await repo.DeleteAllFriendRequestsByUserIdAsync(UserIdWithNoFriends, TestContext.Current.CancellationToken);
-
-        // Assert
-        result.IsSuccess.Should().BeTrue();
-    }
-
-    [Fact]
     public async Task SendRequestAsync_WhenFound_ReturnsSuccess()
     {
         // Arrange
@@ -368,21 +435,62 @@ public class FriendRepositoryTests : TestBase
     }
 
     [Fact]
-    public async Task DeleteAllFriendRequestsByUserIdAsync_WhenFound_ActuallyDeletesRecords()
+    public async Task DeleteAccount_DeletesTheirFriendRequestsInBothDirections()
     {
         // Arrange — user 1 has rows as requester (1→2 Accepted, 1→3 Pending)
-        var repo = new FriendRepository(CreateSeededFactory(), NullLogger<FriendRepository>.Instance);
+        var factory = CreateSeededFactory();
 
         // Act
-        var result = await repo.DeleteAllFriendRequestsByUserIdAsync(UserIdWithFriend, TestContext.Current.CancellationToken);
+        await DeleteAccountAsync(factory, "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d");
 
         // Assert
-        result.IsSuccess.Should().BeTrue();
+        await using var context = await factory.CreateDbContextAsync(TestContext.Current.CancellationToken);
+        var left = await context.FriendRequests
+            .CountAsync(fr => fr.RequesterId == UserIdWithFriend || fr.ReceiverId == UserIdWithFriend, TestContext.Current.CancellationToken);
+        left.Should().Be(0);
+    }
 
-        var friends = await repo.GetFriendsAsync(UserIdWithFriend, [], u => FriendResponse.Create(u.Identifier, u.NickName), TestContext.Current.CancellationToken);
-        friends.Value.Should().HaveCount(0);
+    [Fact]
+    public async Task GetFriendsSinceByIdentifierAsync_DatesEveryAcceptedFriendshipFromEitherSide()
+    {
+        var since = new DateTime(2026, 3, 1, 0, 0, 0, DateTimeKind.Utc);
+        var factory = CreateSeededFactory(db =>
+        {
+            var request = db.FriendRequests.Local.Single(fr => fr.RequesterId == 3 && fr.ReceiverId == 4);
+            request.CreatedAt = since;
+        });
+        var repo = new FriendRepository(factory, NullLogger<FriendRepository>.Instance);
 
-        var outgoing = await repo.GetOutgoingRequestsAsync(UserIdWithFriend, [], u => FriendResponse.Create(u.Receiver!.Identifier, u.Receiver.NickName), TestContext.Current.CancellationToken);
-        outgoing.Value.Should().HaveCount(0);
+        var asReceiver = await repo.GetFriendsSinceByIdentifierAsync(4, TestContext.Current.CancellationToken);
+        var asRequester = await repo.GetFriendsSinceByIdentifierAsync(3, TestContext.Current.CancellationToken);
+
+        asReceiver.IsSuccess.Should().BeTrue();
+        asReceiver.Value.Should().BeEquivalentTo(new Dictionary<string, DateTime> { ["b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d67"] = since });
+        asRequester.Value.Should().BeEquivalentTo(new Dictionary<string, DateTime> { ["b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d22"] = since });
+    }
+
+    [Fact]
+    public async Task GetFriendsSinceByIdentifierAsync_DatesAFriendshipFromTheAcceptNotTheRequest()
+    {
+        var repo = new FriendRepository(CreateSeededFactory(), NullLogger<FriendRepository>.Instance);
+        var ct = TestContext.Current.CancellationToken;
+        (await repo.AcceptRequestAsync(UserIdWithFriend, RequesterUserId, ct)).IsSuccess.Should().BeTrue();
+
+        var result = await repo.GetFriendsSinceByIdentifierAsync(RequesterUserId, ct);
+
+        result.Value.Should().NotBeNull();
+        result.Value?.Values.Should().HaveCount(2)
+            .And.ContainSingle(since => since > DateTime.UtcNow.AddMinutes(-5));
+    }
+
+    [Fact]
+    public async Task GetFriendsSinceByIdentifierAsync_LeavesOutPendingRequests()
+    {
+        var repo = new FriendRepository(CreateSeededFactory(), NullLogger<FriendRepository>.Instance);
+
+        var result = await repo.GetFriendsSinceByIdentifierAsync(UserIdWithFriend, TestContext.Current.CancellationToken);
+
+        result.Value.Should().NotBeNull();
+        result.Value?.Keys.Should().Equal("b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e");
     }
 }

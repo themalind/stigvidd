@@ -876,6 +876,11 @@ src/api/generated` then fails with "the generated API client is stale" for reaso
   sparlangd. SourceFeatureReader threw InvalidOperationException on a MultiLineString and TrailImportAnalysisService marked
   the session Failed; parts never meet exactly, so it chains within 25 m (not LineMerger) and splits the rest. Upload with
   source umea-kommun, because the default is boras-stad.
+- [Naturvårdsverket's trail exports are SWEREF99 TM (EPSG:3006), not WGS84](naturvardsverket-trail-export-is-sweref99-tm.md) —
+  coordinates like [392726, 7001832] read as (lon, lat) with no CRS check, so every match silently became garbage
+  (Unmatched everywhere) instead of failing loudly. SourceFeatureReader now reprojects when the FeatureCollection's crs
+  names EPSG:3006 (Sweref99TmProjection), before Chain's Haversine joining sees the points. Also different field names:
+  LEDNAMN/STATLIGLEDNAMN, LED_ID/OBJECTID, LEDLANGD. RUFS2050_Regional_vandringsled.geojson is already CRS84.
 - [Restoring a pg_dump into a database the postgis image created fails on schema tiger already exists](postgis-image-schemas-break-a-dump-restore.md) —
   the postgis/postgis image installs postgis_tiger_geocoder, postgis_topology and fuzzystrmatch into POSTGRES_DB, so pg_dump
   emits CREATE SCHEMA tiger / tiger_data / topology and a restore (admin import, DataTransferService, pg_restore, psql) into

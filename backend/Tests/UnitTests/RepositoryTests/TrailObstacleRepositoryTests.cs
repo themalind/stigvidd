@@ -27,6 +27,7 @@ public class TrailObstacleRepositoryTests : TestBase
     private const string Obstacle3Identifier = "ob3c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e"; // Tångaleden, 3 solved votes (expired)
 
     private const int UserId1 = 1;
+    private const string UserIdentifier1 = "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d";
     private const int ObstacleId2 = 2;
     private const int ObstacleId3 = 3;
 
@@ -465,7 +466,7 @@ public class TrailObstacleRepositoryTests : TestBase
     }
 
     [Fact]
-    public async Task AnonymizeObstaclesByUserId_ClearsTheDescriptionExceptForOther()
+    public async Task DeleteAccount_ClearsTheObstacleDescriptionExceptForOther()
     {
         // Arrange — user 1 owns Obstacle1 (FallenTree) plus an Other report added here
         var factory = CreateSeededFactory(ctx => ctx.TrailObstacles.Add(new TrailObstacle
@@ -483,11 +484,9 @@ public class TrailObstacleRepositoryTests : TestBase
         var otherBefore = await repo.GetTrailObstacleByIdentifierAsync(OtherObstacleIdentifier, TestContext.Current.CancellationToken);
 
         // Act
-        var result = await repo.AnonymizeObstaclesByUserIdAsync(UserId1, TestContext.Current.CancellationToken);
+        await DeleteAccountAsync(factory, UserIdentifier1);
 
         // Assert
-        result.IsSuccess.Should().BeTrue();
-
         var categorized = await repo.GetTrailObstacleByIdentifierAsync(Obstacle1Identifier, TestContext.Current.CancellationToken);
         categorized.IsSuccess.Should().BeTrue();
         categorized.Value.Should().NotBeNull();
@@ -503,7 +502,7 @@ public class TrailObstacleRepositoryTests : TestBase
     }
 
     [Fact]
-    public async Task AnonymizeObstaclesByUserId_LeavesOtherUsersObstaclesAndTheirVotesAlone()
+    public async Task DeleteAccount_LeavesOtherUsersObstaclesAlone()
     {
         // Arrange — Obstacle2 belongs to user 2 and carries a solved vote from user 1
         var factory = CreateSeededFactory();
@@ -511,17 +510,12 @@ public class TrailObstacleRepositoryTests : TestBase
         var before = await repo.GetTrailObstacleByIdentifierAsync(Obstacle2Identifier, TestContext.Current.CancellationToken);
 
         // Act
-        var result = await repo.AnonymizeObstaclesByUserIdAsync(UserId1, TestContext.Current.CancellationToken);
+        await DeleteAccountAsync(factory, UserIdentifier1);
 
         // Assert
-        result.IsSuccess.Should().BeTrue();
-
         var untouched = await repo.GetTrailObstacleByIdentifierAsync(Obstacle2Identifier, TestContext.Current.CancellationToken);
         untouched.Value.Should().NotBeNull();
         before.Value.Should().NotBeNull();
         untouched.Value.Description.Should().Be(before.Value.Description);
-
-        var vote = await repo.GetSolvedVoteByObstacleIdAndUserIdAsync(ObstacleId2, UserId1, TestContext.Current.CancellationToken);
-        vote.IsSuccess.Should().BeTrue();
     }
 }

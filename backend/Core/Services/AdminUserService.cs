@@ -18,11 +18,15 @@ public class AdminUserService : IAdminUserService
         _logger = logger;
     }
 
-    public async Task<Result> BanAsync(string identifier, string bannedBy, string? reason, CancellationToken ctoken) =>
-        Report(await _userRepository.BanUserAsync(identifier, bannedBy, reason, ctoken), identifier, "banned", bannedBy, "The user is already banned.");
+    public async Task<Result> BanAsync(string identifier, string bannedBy, string? reason, CancellationToken ctoken)
+    {
+        return Report(await _userRepository.BanUserAsync(identifier, bannedBy, reason, ctoken), identifier, "banned", bannedBy, "The user is already banned.");
+    }
 
-    public async Task<Result> UnbanAsync(string identifier, string unbannedBy, CancellationToken ctoken) =>
-        Report(await _userRepository.UnbanUserAsync(identifier, unbannedBy, ctoken), identifier, "unbanned", unbannedBy, "The user is not banned.");
+    public async Task<Result> UnbanAsync(string identifier, string unbannedBy, CancellationToken ctoken)
+    {
+        return Report(await _userRepository.UnbanUserAsync(identifier, unbannedBy, ctoken), identifier, "unbanned", unbannedBy, "The user is not banned.");
+    }
 
     private Result Report(RepositoryResult result, string identifier, string action, string moderator, string conflictMessage)
     {

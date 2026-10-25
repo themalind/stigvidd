@@ -45,6 +45,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IKeycloakAdminRepository, KeycloakAdminRepository>();
         services.AddTransient<ITrailRepository, TrailRepository>();
         services.AddTransient<IUserRepository, UserRepository>();
+        services.AddTransient<IAccountDeletionRepository, AccountDeletionRepository>();
         services.AddTransient<IReviewRepository, ReviewRepository>();
         services.AddTransient<IHikeRepository, HikeRepository>();
         services.AddTransient<IHikeSubmissionRepository, HikeSubmissionRepository>();
@@ -87,6 +88,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IHikeShareService, HikeShareService>();
         services.AddTransient<IHikeShareRecipientService, HikeShareRecipientService>();
         services.AddTransient<IFriendService, FriendService>();
+        services.AddTransient<IFriendProfileService, FriendProfileService>();
         services.AddTransient<IUserBlockService, UserBlockService>();
         services.AddTransient<IAdminUserService, AdminUserService>();
         services.AddTransient<IUserKeycloakMappingService, UserKeycloakMappingService>();

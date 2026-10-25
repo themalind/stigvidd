@@ -166,7 +166,7 @@ public class HikeSubmissionRepositoryTests : TestBase
     }
 
     [Fact]
-    public async Task DeleteByUserId_RemovesEverySubmissionButLeavesThePublishedTrail()
+    public async Task DeleteAccount_RemovesEverySubmissionButLeavesThePublishedTrail()
     {
         var (repository, factory) = Build(Submission());
         var approved = await ApproveOkAsync(repository);
@@ -179,10 +179,10 @@ public class HikeSubmissionRepositoryTests : TestBase
             await seed.SaveChangesAsync(TestContext.Current.CancellationToken);
         }
 
-        var result = await repository.DeleteByUserIdAsync(1, TestContext.Current.CancellationToken);
+        var result = await DeleteAccountAsync(factory, "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d");
 
-        result.IsSuccess.Should().BeTrue();
-        result.Value.Should().Equal("trails/pending-copy.jpeg");
+        result.Value.Should().NotBeNull();
+        result.Value.FileUrls.Should().Equal("trails/pending-copy.jpeg");
         await using var db = await factory.CreateDbContextAsync(TestContext.Current.CancellationToken);
         (await db.HikeSubmissions.AnyAsync(TestContext.Current.CancellationToken)).Should().BeFalse();
         var trail = await db.Trails.Include(t => t.TrailImages)

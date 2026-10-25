@@ -42,6 +42,17 @@ public class MailOutboxRetentionIntegrationTests : IClassFixture<StigViddWebAppl
     private StigViddDbContext NewContext() =>
         _factory.Services.GetRequiredService<IDbContextFactory<StigViddDbContext>>().CreateDbContext();
 
+    private const string LeavingIdentifier = "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e";
+    private const string LeavingEmail = "vandrar@example.local";
+
+    private async Task DeleteLeavingAccountAsync()
+    {
+        using var scope = NewScope();
+        var result = await scope.ServiceProvider.GetRequiredService<IAccountDeletionRepository>()
+            .DeleteAccountAsync(LeavingIdentifier, TestContext.Current.CancellationToken);
+        result.IsSuccess.Should().BeTrue();
+    }
+
     private string SeedMail(
         OutboxEmailStatus status,
         string toAddress = "vandrare@example.com",
@@ -179,25 +190,22 @@ public class MailOutboxRetentionIntegrationTests : IClassFixture<StigViddWebAppl
     }
 
     [Fact]
-    public async Task EraseByRecipientAsync_RemovesEveryTraceOfThatAddress()
+    public async Task DeleteAccount_RemovesEveryTraceOfTheirAddress()
     {
         // Art. 17. The outbox has no foreign key to Users, so nothing cascades — without this
         // the address, the nickname and a live token URL outlive the account indefinitely.
         // Arrange
-        const string leaving = "lamnar@example.com";
         const string staying = "stannar@example.com";
 
-        var theirSent = SeedMail(OutboxEmailStatus.Sent, leaving, sentAt: DateTime.UtcNow);
-        var theirFailed = SeedMail(OutboxEmailStatus.Failed, leaving, settledAt: DateTime.UtcNow);
-        var theirPending = SeedMail(OutboxEmailStatus.Pending, leaving);
+        var theirSent = SeedMail(OutboxEmailStatus.Sent, LeavingEmail, sentAt: DateTime.UtcNow);
+        var theirFailed = SeedMail(OutboxEmailStatus.Failed, LeavingEmail, settledAt: DateTime.UtcNow);
+        var theirPending = SeedMail(OutboxEmailStatus.Pending, LeavingEmail);
         var somebodyElse = SeedMail(OutboxEmailStatus.Sent, staying, sentAt: DateTime.UtcNow);
 
         // Act
-        using var scope = NewScope();
-        var result = await Repository(scope).EraseByRecipientAsync(leaving, TestContext.Current.CancellationToken);
+        await DeleteLeavingAccountAsync();
 
         // Assert
-        result.IsSuccess.Should().BeTrue();
         Find(theirSent).Should().BeNull();
         Find(theirFailed).Should().BeNull();
         Find(theirPending).Should().BeNull();
@@ -205,26 +213,23 @@ public class MailOutboxRetentionIntegrationTests : IClassFixture<StigViddWebAppl
     }
 
     [Fact]
-    public async Task EraseByRecipientAsync_MatchesTheAddressRegardlessOfCase()
+    public async Task DeleteAccount_MatchesTheAddressRegardlessOfCase()
     {
         // Addresses arrive however the user typed them. ToLower on both sides rather than a
         // collation or ILike, because Postgres and SQLite disagree about both -- and an erasure
         // that quietly matched nothing on one of them is the worst possible failure here.
         // Arrange
-        var identifier = SeedMail(OutboxEmailStatus.Sent, "Vandrare@Example.COM", sentAt: DateTime.UtcNow);
+        var identifier = SeedMail(OutboxEmailStatus.Sent, LeavingEmail.ToUpperInvariant(), sentAt: DateTime.UtcNow);
 
         // Act
-        using var scope = NewScope();
-        var result = await Repository(scope).EraseByRecipientAsync(
-            "vandrare@example.com", TestContext.Current.CancellationToken);
+        await DeleteLeavingAccountAsync();
 
         // Assert
-        result.IsSuccess.Should().BeTrue();
         Find(identifier).Should().BeNull();
     }
 
     [Fact]
-    public async Task EraseByRecipientAsync_LeavesAMailThatIsOnTheWireButStopsAQueuedOne()
+    public async Task DeleteAccount_LeavesAMailThatIsOnTheWireButStopsAQueuedOne()
     {
         // The one row erasure may not delete. The dispatcher is holding a Sending row right now
         // and nothing can recall a message already handed to SMTP; deleting it under the worker
@@ -235,16 +240,13 @@ public class MailOutboxRetentionIntegrationTests : IClassFixture<StigViddWebAppl
         // which takes it out of the dispatcher's reach, since claiming guards on Pending -- and
         // then deleted in the same call.
         // Arrange
-        const string leaving = "lamnar@example.com";
-        var sending = SeedMail(OutboxEmailStatus.Sending, leaving);
-        var pending = SeedMail(OutboxEmailStatus.Pending, leaving);
+        var sending = SeedMail(OutboxEmailStatus.Sending, LeavingEmail);
+        var pending = SeedMail(OutboxEmailStatus.Pending, LeavingEmail);
 
         // Act
-        using var scope = NewScope();
-        var result = await Repository(scope).EraseByRecipientAsync(leaving, TestContext.Current.CancellationToken);
+        await DeleteLeavingAccountAsync();
 
         // Assert
-        result.IsSuccess.Should().BeTrue();
         Find(pending).Should().BeNull();
 
         var onTheWire = Find(sending);

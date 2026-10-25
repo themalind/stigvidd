@@ -517,7 +517,9 @@ export function isThemeChoice(value: unknown): value is ThemeChoice {
   return value === "auto" || APP_THEMES.some((t) => t.id === value);
 }
 
+export const AUTO_THEMES = { light: AppDefaultTheme, dark: StjarnhimmelTheme } as const;
+
 export function resolveTheme(choice: ThemeChoice, colorScheme: string | null | undefined): AppTheme {
-  if (choice === "auto") return colorScheme === "dark" ? AppDarkTheme : AppDefaultTheme;
+  if (choice === "auto") return colorScheme === "dark" ? AUTO_THEMES.dark : AUTO_THEMES.light;
   return APP_THEMES.find((t) => t.id === choice)?.theme ?? AppDefaultTheme;
 }

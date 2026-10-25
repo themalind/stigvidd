@@ -23,14 +23,15 @@ interface Props {
   onShare: (friendNickNames: string[]) => void;
   isPending?: boolean;
   excludeNickNames?: string[];
+  initialSelected?: string[];
 }
 
-export default function FriendPicker({ enabled, onShare, isPending, excludeNickNames }: Props) {
+export default function FriendPicker({ enabled, onShare, isPending, excludeNickNames, initialSelected }: Props) {
   const theme = useTheme();
   const { t } = useTranslation();
   const currentUser = useAtomValue(stigviddUserAtom);
   const authUser = useAtomValue(userAtom);
-  const [selected, setSelected] = useState<string[]>([]);
+  const [selected, setSelected] = useState<string[]>(initialSelected ?? []);
 
   const { data: friendsRaw, isLoading } = useQuery({
     // keep-comment: same key as friendsAtom, so the picker and the friends screen share one cache entry

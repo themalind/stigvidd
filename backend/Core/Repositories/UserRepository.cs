@@ -13,13 +13,11 @@ namespace Core.Repositories;
 public class UserRepository : IUserRepository
 {
     private readonly IDbContextFactory<StigViddDbContext> _context;
-    private readonly IKeycloakAdminRepository _keycloakAdminRepository;
     private readonly ILogger<UserRepository> _logger;
 
-    public UserRepository(IDbContextFactory<StigViddDbContext> context, IKeycloakAdminRepository keycloakAdminRepository, ILogger<UserRepository> logger)
+    public UserRepository(IDbContextFactory<StigViddDbContext> context, ILogger<UserRepository> logger)
     {
         _context = context;
-        _keycloakAdminRepository = keycloakAdminRepository;
         _logger = logger;
     }
 
@@ -115,7 +113,12 @@ public class UserRepository : IUserRepository
         }
     }
 
-    public async Task<RepositoryResult<IReadOnlyCollection<T>>> FindUsersByNickNameAsync<T>(string nickName, string excludeUserIdentifier, int[] hiddenUserIds, Expression<Func<User, T>> selector, CancellationToken ctoken)
+    public async Task<RepositoryResult<IReadOnlyCollection<T>>> FindUsersByNickNameAsync<T>(
+        string nickName, 
+        string excludeUserIdentifier, 
+        int[] hiddenUserIds, 
+        Expression<Func<User, T>> selector, 
+        CancellationToken ctoken)
     {
         try
         {
@@ -480,47 +483,6 @@ public class UserRepository : IUserRepository
         catch (Exception ex)
         {
             _logger.LogError(ex, "UserRepository: UnbanUserAsync -> Something went wrong when lifting the ban for user with identifier {identifier}.", identifier);
-            return RepositoryResult.Error();
-        }
-    }
-
-    public async Task<RepositoryResult> DeleteUserAsync(string identifier, CancellationToken ctoken)
-    {
-        try
-        {
-            using var context = await _context.CreateDbContextAsync(ctoken);
-
-            var user = await context.Users
-                .FirstOrDefaultAsync(u => u.Identifier == identifier, ctoken);
-
-            if (user is null)
-                return RepositoryResult.NotFound();
-
-            // Wrap in a transaction so the DB deletion is rolled back if the Keycloak deletion fails.
-            // Both deletions must succeed together — a partial delete would leave the systems out of sync.
-            using var transaction = await context.Database.BeginTransactionAsync(ctoken);
-
-            var blocks = await context.UserBlocks
-                .Where(ub => ub.BlockerUserId == user.Id || ub.BlockedUserId == user.Id)
-                .ToListAsync(ctoken);
-
-            context.UserBlocks.RemoveRange(blocks);
-            context.Users.Remove(user);
-#if !WINDOWS
-            // In-memory SQLite EF provider on Linux doesn't support cascade deletes, so we have to manually delete related entities.
-            context.TrailObstacleSolvedVotes.Where(v => v.UserId == user.Id).ToList().ForEach(v => context.TrailObstacleSolvedVotes.Remove(v));
-#endif
-            await context.SaveChangesAsync(ctoken);
-
-            await _keycloakAdminRepository.DeleteUserAsync(user.SubjectId, ctoken);
-
-            await transaction.CommitAsync(ctoken);
-
-            return RepositoryResult.Success();
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "UserRepository: DeleteUserAsync -> Something went wrong when deleting user with identifier {identifier}.", identifier);
             return RepositoryResult.Error();
         }
     }

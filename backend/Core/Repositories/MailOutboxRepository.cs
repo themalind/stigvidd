@@ -548,61 +548,6 @@ public class MailOutboxRepository : IMailOutboxRepository
         }
     }
 
-    public async Task<RepositoryResult<int>> EraseByRecipientAsync(string emailAddress, CancellationToken ctoken)
-    {
-        try
-        {
-            using var context = await _dbContextFactory.CreateDbContextAsync(ctoken);
-
-            // ToLower on both sides, for the reason GetPagedAsync gives above: LIKE and equality
-            // differ in case sensitivity between Postgres and SQLite, and EF.Functions.ILike
-            // would fix Postgres and throw on SQLite.
-            var needle = emailAddress.Trim().ToLower();
-
-            // Step 1: take anything still queued out of the dispatcher's reach BEFORE deleting
-            // it. Claiming guards on Pending, so a row moved to Cancelled can no longer be
-            // picked up, and a signal already sitting in the channel becomes a no-op.
-            //
-            // Without this, the delete below races the claim: the dispatcher can move a row
-            // Pending -> Sending in between, and step 2 then SPARES it as on-the-wire. The mail
-            // goes to the deleted account and the row survives the erasure -- both halves wrong.
-            // That is the same race that is the stated reason cancel is a status transition
-            // rather than a delete.
-            //
-            // NOTHING TESTS THIS. Both orderings leave the same rows behind unless a claim lands
-            // in the window, and this suite has no way to make one. It is here on the argument
-            // above, not on a green test -- so do not remove it because nothing went red.
-            var queued = await context.OutboxEmails
-                .Where(e => e.ToAddress.ToLower() == needle && e.Status == OutboxEmailStatus.Pending)
-                .ToListAsync(ctoken);
-
-            foreach (var email in queued)
-            {
-                email.Status = OutboxEmailStatus.Cancelled;
-                email.SettledAt = DateTime.UtcNow;
-                email.LastUpdatedAt = DateTime.UtcNow;
-            }
-
-            if (queued.Count > 0)
-                await context.SaveChangesAsync(ctoken);
-
-            // Step 2: delete everything except the row the dispatcher is holding right now.
-            // Nothing can recall a message already on the wire, and deleting it under the worker
-            // would make MarkSentAsync's NotFound the only trace that it went out. It settles
-            // within seconds and the sweep collects it.
-            var deleted = await context.OutboxEmails
-                .Where(e => e.ToAddress.ToLower() == needle && e.Status != OutboxEmailStatus.Sending)
-                .ExecuteDeleteAsync(ctoken);
-
-            return RepositoryResult<int>.Success(deleted);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "MailOutboxRepository: EraseByRecipientAsync -> Something went wrong when erasing mail for a deleted account.");
-            return RepositoryResult<int>.Error();
-        }
-    }
-
     // Clears the rendered bodies in place and records that it happened. RedactedAt, not the
     // emptiness of the two strings, is what every reader branches on.
     private static void Redact(OutboxEmail email)

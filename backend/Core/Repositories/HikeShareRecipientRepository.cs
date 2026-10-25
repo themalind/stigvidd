@@ -1,4 +1,4 @@
-﻿// SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
+// SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 using Core.Interfaces.Repositories;
@@ -22,8 +22,10 @@ public class HikeShareRecipientRepository : IHikeShareRecipientRepository
         _logger = logger;
     }
 
-    private static Expression<Func<HikeShare, bool>> NotFromHiddenUser(int[] hiddenUserIds) =>
-        hs => hs.SharedById == null || !hiddenUserIds.Contains(hs.SharedById.Value);
+    private static Expression<Func<HikeShare, bool>> NotFromHiddenUser(int[] hiddenUserIds)
+    {
+        return hs => hs.SharedById == null || !hiddenUserIds.Contains(hs.SharedById.Value);
+    }
 
     public async Task<RepositoryResult<IReadOnlyCollection<T>>> GetAllHikesSharedWithUserAsync<T>(string identifier, int[] hiddenUserIds, Expression<Func<HikeShare, T>> selector, CancellationToken ctoken)
     {
@@ -106,7 +108,7 @@ public class HikeShareRecipientRepository : IHikeShareRecipientRepository
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "HikeShareRecipientRepository: DeleteHikeShareAsync -> Something went wrong when deleting hike share for hike with ID {hikeId} and user with ID {userId}.", 
+                "HikeShareRecipientRepository: DeleteHikeShareAsync -> Something went wrong when deleting hike share for hike with ID {hikeId} and user with ID {userId}.",
                 hikeId, userId);
             return RepositoryResult.Error();
         }
@@ -130,7 +132,7 @@ public class HikeShareRecipientRepository : IHikeShareRecipientRepository
 
             return RepositoryResult<IReadOnlyCollection<T>>.Success(pendingShares);
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
             _logger.LogError(ex,
                 "HikeShareRecipientRepository: GetPendingSharesForUserAsync -> Something went wrong when fetching pending shares for user with identifier {identifier}.",
@@ -177,28 +179,28 @@ public class HikeShareRecipientRepository : IHikeShareRecipientRepository
             var sharedRequest = await context.HikeShares
                 .FirstOrDefaultAsync(hs => hs.HikeId == hikeId && hs.SharedWithId == sharedWithId && hs.Status == HikeShareStatus.Pending, ctoken);
 
-            if (sharedRequest == null) 
+            if (sharedRequest == null)
                 return RepositoryResult.NotFound();
 
-            sharedRequest.Status = HikeShareStatus.Accepted; 
+            sharedRequest.Status = HikeShareStatus.Accepted;
             await context.SaveChangesAsync(ctoken);
 
             return RepositoryResult.Success();
         }
-        catch (Exception ex) 
+        catch (Exception ex)
         {
             _logger.LogError(ex,
-                "HikeShareRecipientRepository: AcceptHikeShareAsync -> Something went wrong when accepting hike share for hike with ID {hikeId} and user with ID {userId}.", 
+                "HikeShareRecipientRepository: AcceptHikeShareAsync -> Something went wrong when accepting hike share for hike with ID {hikeId} and user with ID {userId}.",
                 hikeId, sharedWithId);
             return RepositoryResult.Error();
-        }    
+        }
     }
 
     public async Task<RepositoryResult> RejectHikeShareAsync(int hikeId, int sharedWithId, CancellationToken ctoken)
     {
         try
         {
-            using  var context = await _dbContext.CreateDbContextAsync(ctoken);
+            using var context = await _dbContext.CreateDbContextAsync(ctoken);
 
             var sharedRequest = await context.HikeShares
                 .FirstOrDefaultAsync(hs => hs.HikeId == hikeId && hs.SharedWithId == sharedWithId && hs.Status == HikeShareStatus.Pending, ctoken);
@@ -211,10 +213,10 @@ public class HikeShareRecipientRepository : IHikeShareRecipientRepository
 
             return RepositoryResult.Success();
         }
-        catch(Exception ex) 
+        catch (Exception ex)
         {
             _logger.LogError(ex,
-                "HikeShareRecipientRepository: RejectHikeShareAsync -> Something went wrong when rejecting hike share for hike with ID {hikeId} and user with ID {userId}.", 
+                "HikeShareRecipientRepository: RejectHikeShareAsync -> Something went wrong when rejecting hike share for hike with ID {hikeId} and user with ID {userId}.",
                 hikeId, sharedWithId);
             return RepositoryResult.Error();
         }

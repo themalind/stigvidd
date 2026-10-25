@@ -11,6 +11,7 @@ public class FriendRequest
     public int ReceiverId { get; set; }
     public FriendRequestStatus Status { get; set; } = FriendRequestStatus.Pending;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime? AcceptedAt { get; set; }
     public User? Requester { get; set; }
     public User? Receiver { get; set; }
 }

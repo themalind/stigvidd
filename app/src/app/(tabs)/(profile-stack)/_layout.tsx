@@ -36,6 +36,7 @@ export default function ProfileStackLayout() {
         <Stack.Screen name="user/create-hike" />
         <Stack.Screen name="user/shared-hikes" />
         <Stack.Screen name="user/friends" />
+        <Stack.Screen name="user/friend/[identifier]" />
       </Stack.Protected>
     </Stack>
   );

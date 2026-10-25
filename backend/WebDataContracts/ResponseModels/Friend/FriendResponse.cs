@@ -7,6 +7,8 @@ public class FriendResponse
 {
     public required string Identifier { get; set; }
     public required string NickName { get; set; }
+    public string? Note { get; set; }
+    public DateTime? FriendsSince { get; set; }
 
     public static FriendResponse Create(string identifier, string nickName)
     {

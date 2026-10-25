@@ -63,6 +63,21 @@ public class CreateUserRequestValidatorTests
         result.IsValid.Should().BeFalse();
     }
 
+    [Theory]
+    [InlineData("B", false)]
+    [InlineData("Bo", true)]
+    public void Validate_NickNameMinimumIsTwoCharacters(string nickName, bool expectedValid)
+    {
+        // Arrange
+        var request = new CreateUserRequest { Email = "test@example.com", NickName = nickName };
+
+        // Act
+        var result = _validator.Validate(request);
+
+        // Assert
+        result.IsValid.Should().Be(expectedValid);
+    }
+
     [Fact]
     public void Validate_WithNickNameExceeding20Characters_ShouldFail()
     {

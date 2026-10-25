@@ -17,46 +17,29 @@ namespace Core.Services;
 public class UserService : IUserService
 {
     private readonly IUserRepository _userRepository;
-    private readonly ITrailObstacleRepository _trailObstacleRepository;
+    private readonly IAccountDeletionRepository _accountDeletionRepository;
     private readonly UserResponseFactory _userResponseFactory;
-    // Goes through IHikeService, not IHikeRepository: deleting a user's hikes also has to
-    // delete their image files from WebDAV, and that orchestration lives in the hike service.
     private readonly IHikeService _hikeService;
-    private readonly IHikeSubmissionService _hikeSubmissionService;
-    // Same reason for reviews: their image files live in WebDAV, not the database.
-    private readonly IReviewService _reviewService;
-    private readonly IFriendRepository _friendRepository;
+    private readonly IWebDavService _webDavService;
     private readonly IUserBlockService _userBlockService;
-    private readonly IContentReportRepository _contentReportRepository;
-    // The outbox has no foreign key to Users -- it keys on the address -- so nothing about a
-    // deleted account reaches it unless this service says so.
-    private readonly IMailOutboxRepository _mailOutboxRepository;
     private readonly StigviddMetrics _metrics;
     private readonly ILogger<UserService> _logger;
 
     public UserService(IUserRepository userResponseRepository,
-    ITrailObstacleRepository trailObstacleRepository,
+    IAccountDeletionRepository accountDeletionRepository,
     UserResponseFactory userResponseFactory,
     IHikeService hikeService,
-    IHikeSubmissionService hikeSubmissionService,
-    IReviewService reviewService,
-    IFriendRepository friendRepository,
+    IWebDavService webDavService,
     IUserBlockService userBlockService,
-    IContentReportRepository contentReportRepository,
-    IMailOutboxRepository mailOutboxRepository,
     StigviddMetrics metrics,
     ILogger<UserService> logger)
     {
         _userRepository = userResponseRepository;
-        _trailObstacleRepository = trailObstacleRepository;
+        _accountDeletionRepository = accountDeletionRepository;
         _userResponseFactory = userResponseFactory;
         _hikeService = hikeService;
-        _hikeSubmissionService = hikeSubmissionService;
-        _reviewService = reviewService;
-        _friendRepository = friendRepository;
+        _webDavService = webDavService;
         _userBlockService = userBlockService;
-        _contentReportRepository = contentReportRepository;
-        _mailOutboxRepository = mailOutboxRepository;
         _metrics = metrics;
         _logger = logger;
     }
@@ -327,90 +310,38 @@ public class UserService : IUserService
 
     public async Task<Result> DeleteUserAsync(string identifier, CancellationToken ctoken)
     {
-        Result DeleteFailed(string step)
-        {
-            _logger.LogError(
-                "UserService: DeleteUserAsync -> deleting user {UserIdentifier} failed at step {Step}.",
-                identifier,
-                step);
+        var result = await _accountDeletionRepository.DeleteAccountAsync(identifier, ctoken);
+
+        if (result.Status == RepositoryResultStatus.NotFound)
+            return Result.Fail(new Message(404, $"User with identifier {identifier} not found."));
+
+        if (!result.IsSuccess)
             return Result.Fail(new Message(500, $"Error deleting user with identifier {identifier}"));
-        }
-
-        var userResult = await _userRepository.GetUserIdByIdentifierAsync(identifier, ctoken);
-
-        if (!userResult.IsSuccess)
-        {
-            if (userResult.Status == RepositoryResultStatus.NotFound)
-                return Result.Fail(new Message(404, $"User with identifier {identifier} not found."));
-
-            if (userResult.Status == RepositoryResultStatus.Error)
-                return DeleteFailed("user lookup");
-        }
-
-        var hikeResult = await _hikeService.HandleUserHikesOnUserDeleteAsync(userResult.Value, ctoken);
-
-        if (!hikeResult.Success)
-            return DeleteFailed("hikes");
-
-        var sharedHikesResult = await _hikeService.DeleteHikeSharesByUserIdAsync(userResult.Value, ctoken);
-
-        if (!sharedHikesResult.Success)
-            return DeleteFailed("hike shares");
-
-        var submissionResult = await _hikeSubmissionService.HandleUserDeleteAsync(userResult.Value, ctoken);
-
-        if (!submissionResult.Success)
-            return DeleteFailed("hike submissions");
-
-        // Must run before the user row goes, while the reviews can still be found by UserId.
-        var reviewResult = await _reviewService.AnonymizeUserReviewsOnUserDeleteAsync(userResult.Value, ctoken);
-
-        if (!reviewResult.Success)
-            return DeleteFailed("reviews");
-
-        // Must run before the user row goes, while the obstacles can still be found by UserId.
-        var obstacleResult = await _trailObstacleRepository.AnonymizeObstaclesByUserIdAsync(userResult.Value, ctoken);
-
-        if (obstacleResult.Status == RepositoryResultStatus.Error)
-            return DeleteFailed("obstacles");
-
-        // Must run before the user row goes: ReporterUserId is a real foreign key with
-        // SetNull, so afterwards there is no way left to find what this person reported.
-        var reportResult = await _contentReportRepository.HandleUserDeletionAsync(userResult.Value, ctoken);
-
-        if (reportResult.Status == RepositoryResultStatus.Error)
-            return DeleteFailed("content reports");
-
-        // FriendRequests use NoAction to avoid multiple cascade paths, so they must be removed explicitly before the user is deleted.
-        var friendRequestsResult = await _friendRepository.DeleteAllFriendRequestsByUserIdAsync(userResult.Value, ctoken);
-
-        if (friendRequestsResult.Status == RepositoryResultStatus.Error)
-            return DeleteFailed("friend requests");
-
-        // Must run before the user row goes: the outbox has no foreign key to Users and is
-        // matched on the address, so once the Users row is gone there is nothing left to look
-        // the address up by. Those rows carry the address, the nickname in four places, and --
-        // for verify-email and reset-password -- a token URL.
-        var emailResult = await _userRepository.GetUserByIdentifierAsync(identifier, u => u.Email, ctoken);
-
-        if (emailResult.Status == RepositoryResultStatus.Error)
-            return DeleteFailed("email lookup");
-
-        if (emailResult.IsSuccess)
-        {
-            var mailResult = await _mailOutboxRepository.EraseByRecipientAsync(emailResult.Value, ctoken);
-
-            if (mailResult.Status == RepositoryResultStatus.Error)
-                return DeleteFailed("mail outbox");
-        }
-
-        var result = await _userRepository.DeleteUserAsync(identifier, ctoken);
-
-        if (result.Status == RepositoryResultStatus.Error)
-            return DeleteFailed("user row");
 
         _logger.LogInformation("UserService: DeleteUserAsync -> deleted user {UserIdentifier}.", identifier);
 
+        await DeleteFilesAsync(result.Value.FileUrls, $"Account deletion. UserId: {result.Value.UserId}");
+        await _hikeService.CleanUpOrphanedHikesAsync(ctoken);
+
         return Result.Ok();
+    }
+
+    // keep-comment: best-effort; the account is already gone, and a leftover file is only findable through this log.
+    private async Task DeleteFilesAsync(IEnumerable<string> urls, string context)
+    {
+        foreach (var url in urls)
+        {
+            try
+            {
+                var result = await _webDavService.DeleteFileAsync(url);
+
+                if (result.IsFailure)
+                    _logger.LogError("UserService: DeleteUserAsync -> WebDAV refused to delete file {Url}. {Context}", url, context);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "UserService: DeleteUserAsync -> Failed to delete file {Url}. {Context}", url, context);
+            }
+        }
     }
 }

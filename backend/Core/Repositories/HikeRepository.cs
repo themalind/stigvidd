@@ -133,61 +133,13 @@ public class HikeRepository : IHikeRepository
         }
     }
 
-    public async Task<RepositoryResult> DeleteHikeSharesByUserIdAsync(int userId, CancellationToken ctoken)
-    {
-        try
-        {
-            using var context = await _context.CreateDbContextAsync(ctoken);
-
-            await context.HikeShares
-                   .Where(hs => hs.SharedWithId == userId)
-                   .ExecuteDeleteAsync(ctoken);
-
-            return RepositoryResult.Success();
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "HikeRepository: DeleteHikeSharesByUserIdAsync -> Something went wrong when deleting hike shares for user with ID {userId}.", userId);
-            return RepositoryResult.Error();
-        }
-    }
-
-    // The rule for which hikes an account deletion actually removes: the ones the user owns
-    // that nobody holds a share of. A shared hike survives with Hike.UserId nulled, so its
-    // images must survive too. Kept in one place because both the delete below and
-    // GetDeletableHikeImageUrlsByUserIdAsync must agree on the exact same set.
-    private static IQueryable<Hike> UserHikesWithoutShares(StigViddDbContext context, int userId) =>
-        context.Hikes
-            .Where(h => h.UserId == userId && !context.HikeShares.Any(hs => hs.HikeId == h.Id));
-
     // A hike with no owner and no shares is stored for nobody: the owner let it go (or deleted
     // their account) and the last recipient has now let it go too. Nothing keeps it alive, so
     // the row and its files must both go.
-    private static IQueryable<Hike> OrphanedHikes(StigViddDbContext context) =>
-        context.Hikes
-            .Where(h => h.UserId == null && !context.HikeShares.Any(hs => hs.HikeId == h.Id));
-
-    public async Task<RepositoryResult> HandleUserHikesOnUserDeleteAsync(int userId, CancellationToken ctoken)
+    private static IQueryable<Hike> OrphanedHikes(StigViddDbContext context)
     {
-        // Owner deletes account(has shared hikes) EF SetNull nulls Hike.UserId; hike, HikeShare rows, and images stay intact
-        // Owner deletes account(no shared hikes) Fully delete the hike here; HikeService deletes the image files from WebDAV
-
-        try
-        {
-            using var context = await _context.CreateDbContextAsync(ctoken);
-
-            var hikesToDelete = await UserHikesWithoutShares(context, userId).ToListAsync(ctoken);
-
-            context.Hikes.RemoveRange(hikesToDelete);
-
-            await context.SaveChangesAsync(ctoken);
-            return RepositoryResult.Success();
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "HikeRepository: HandleUserHikesOnUserDeleteAsync -> Something went wrong when handling user hikes on user delete for user with ID {userId}.", userId);
-            return RepositoryResult.Error();
-        }
+        return context.Hikes
+             .Where(h => h.UserId == null && !context.HikeShares.Any(hs => hs.HikeId == h.Id));
     }
 
     public async Task<RepositoryResult<Hike>> UpdateHikeAsync(Hike hike, CancellationToken ctoken)
@@ -244,31 +196,9 @@ public class HikeRepository : IHikeRepository
         }
     }
 
-    private static Task<bool> HasSharesAsync(StigViddDbContext context, int hikeId, CancellationToken ctoken) =>
-        context.HikeShares.AnyAsync(hs => hs.HikeId == hikeId, ctoken);
-
-    // The image files belonging to the hikes HandleUserHikesOnUserDeleteAsync will remove.
-    // Read this before the delete: afterwards the rows are gone and the URLs with them.
-    public async Task<RepositoryResult<IEnumerable<string>>> GetDeletableHikeImageUrlsByUserIdAsync(int userId, CancellationToken ctoken)
+    private static Task<bool> HasSharesAsync(StigViddDbContext context, int hikeId, CancellationToken ctoken)
     {
-        try
-        {
-            using var context = await _context.CreateDbContextAsync(ctoken);
-
-            var deletableHikeIds = UserHikesWithoutShares(context, userId).Select(h => h.Id);
-
-            var imageUrls = await context.HikeImages
-                   .Where(hi => deletableHikeIds.Contains(hi.HikeId))
-                   .Select(hi => hi.ImageUrl)
-                   .ToListAsync(ctoken);
-
-            return RepositoryResult<IEnumerable<string>>.Success(imageUrls);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "HikeRepository: GetDeletableHikeImageUrlsByUserIdAsync -> Something went wrong when fetching deletable image URLs for user with ID {userId}.", userId);
-            return RepositoryResult<IEnumerable<string>>.Error();
-        }
+        return context.HikeShares.AnyAsync(hs => hs.HikeId == hikeId, ctoken);
     }
 
     // Read before DeleteOrphanedHikesAsync: afterwards the rows are gone and the URLs with them.
@@ -313,38 +243,6 @@ public class HikeRepository : IHikeRepository
         catch (Exception ex)
         {
             _logger.LogError(ex, "HikeRepository: DeleteOrphanedHikesAsync -> Something went wrong when deleting orphaned hikes.");
-            return RepositoryResult.Error();
-        }
-    }
-
-    // Run after HandleUserHikesOnUserDeleteAsync, so the hikes still owned by this user are
-    // exactly the shared ones that live on with their recipients. They keep the route, but not
-    // the identifiers of someone who asked to be deleted. UserId itself is nulled by EF's
-    // SetNull when the user row goes; CreatedBy and CreatedByNickName are denormalised copies
-    // that nothing else clears.
-    //
-    // A single UPDATE rather than loaded entities: a Hike carries its whole GeoPath, and
-    // fetching thousands of coordinates in order to null two strings is a round trip for nothing.
-    public async Task<RepositoryResult> AnonymizeSharedHikesOnUserDeleteAsync(int userId, CancellationToken ctoken)
-    {
-        try
-        {
-            using var context = await _context.CreateDbContextAsync(ctoken);
-
-            foreach (var hike in await context.Hikes.Where(h => h.UserId == userId).ToListAsync(ctoken))
-            {
-                hike.CreatedBy = null;
-                hike.CreatedByNickName = null;
-                hike.UserId = null;
-            }
-
-            await context.SaveChangesAsync(ctoken);
-
-            return RepositoryResult.Success();
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "HikeRepository: AnonymizeSharedHikesOnUserDeleteAsync -> Something went wrong when anonymizing shared hikes for user with ID {userId}.", userId);
             return RepositoryResult.Error();
         }
     }

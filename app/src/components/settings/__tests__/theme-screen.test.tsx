@@ -7,7 +7,7 @@
 
 import { userThemeAtom } from "@/atoms/user-theme-atom";
 import ThemeScreen from "@/components/settings/theme-screen";
-import { APP_THEMES, AppDarkTheme, AppDefaultTheme, type ThemeChoice } from "@/constants/theme";
+import { APP_THEMES, AppDefaultTheme, type ThemeChoice } from "@/constants/theme";
 import { settle } from "@/test/flush";
 import { renderWithProviders } from "@/test/render";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -100,7 +100,9 @@ it("shows the system choice as one light and one dark stripe", () => {
   show();
 
   expect(screen.getByTestId("theme-stripe-auto-0")).toHaveStyle({ backgroundColor: AppDefaultTheme.colors.background });
-  expect(screen.getByTestId("theme-stripe-auto-1")).toHaveStyle({ backgroundColor: AppDarkTheme.colors.background });
+  expect(screen.getByTestId("theme-stripe-auto-1")).toHaveStyle({
+    backgroundColor: themeOf("stjarnhimmel").colors.background,
+  });
   expect(screen.queryByTestId("theme-stripe-auto-2")).toBeNull();
 });
 

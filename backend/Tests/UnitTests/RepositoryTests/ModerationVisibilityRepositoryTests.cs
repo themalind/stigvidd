@@ -110,34 +110,30 @@ public class ModerationVisibilityRepositoryTests : TestBase
     // ReviewImages, and IgnoreQueryFilters applies to a query rather than an entity. Miss it
     // and account deletion silently stops cleaning files off WebDAV.
     [Fact]
-    public async Task GetReviewImageUrlsByUserId_StillReturnsTheHiddenReviewsImages()
-    {
-        // Arrange
-        var repository = BuildReviewRepo(FactoryWithHiddenReview());
-
-        // Act
-        var result = await repository.GetReviewImageUrlsByUserIdAsync(
-            Review1UserId, TestContext.Current.CancellationToken);
-
-        // Assert
-        result.IsSuccess.Should().BeTrue();
-        result.Value.Should().Contain("https://inkaben.se/stigvidd/mock/review-tiveden-1.jpg");
-        result.Value.Should().Contain("https://inkaben.se/stigvidd/mock/review-tiveden-2.jpg");
-    }
-
-    [Fact]
-    public async Task AnonymizeReviewsByUserId_AlsoClearsTheHiddenReview()
+    public async Task DeleteAccount_StillReturnsTheHiddenReviewsImages()
     {
         // Arrange
         var factory = FactoryWithHiddenReview();
 
         // Act
-        var result = await BuildReviewRepo(factory).AnonymizeReviewsByUserIdAsync(
-            Review1UserId, TestContext.Current.CancellationToken);
+        var result = await DeleteAccountAsync(factory, User2Identifier);
 
         // Assert
-        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().NotBeNull();
+        result.Value.FileUrls.Should().Contain("https://inkaben.se/stigvidd/mock/review-tiveden-1.jpg");
+        result.Value.FileUrls.Should().Contain("https://inkaben.se/stigvidd/mock/review-tiveden-2.jpg");
+    }
 
+    [Fact]
+    public async Task DeleteAccount_AlsoAnonymizesTheHiddenReview()
+    {
+        // Arrange
+        var factory = FactoryWithHiddenReview();
+
+        // Act
+        await DeleteAccountAsync(factory, User2Identifier);
+
+        // Assert
         using var context = await factory.CreateDbContextAsync(TestContext.Current.CancellationToken);
         var review = await context.Reviews
             .IgnoreQueryFilters(["Moderation"])
@@ -228,18 +224,15 @@ public class ModerationVisibilityRepositoryTests : TestBase
     }
 
     [Fact]
-    public async Task AnonymizeObstaclesByUserId_AlsoClearsTheHiddenObstacle()
+    public async Task DeleteAccount_AlsoClearsTheHiddenObstacle()
     {
         // Arrange
         var factory = FactoryWithHiddenObstacle(Obstacle1Identifier);
 
         // Act
-        var result = await BuildObstacleRepo(factory).AnonymizeObstaclesByUserIdAsync(
-            Obstacle1UserId, TestContext.Current.CancellationToken);
+        await DeleteAccountAsync(factory, "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d");
 
         // Assert
-        result.IsSuccess.Should().BeTrue();
-
         using var context = await factory.CreateDbContextAsync(TestContext.Current.CancellationToken);
         var obstacle = await context.TrailObstacles
             .IgnoreQueryFilters(["Moderation"])

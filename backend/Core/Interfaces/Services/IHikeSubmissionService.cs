@@ -18,6 +18,5 @@ public interface IHikeSubmissionService
     Task<Result> DeleteImageAsync(string identifier, string imageIdentifier, CancellationToken ctoken);
     Task<Result<string>> ApproveAsync(string identifier, string decidedBy, CancellationToken ctoken);
     Task<Result> RejectAsync(string identifier, RejectHikeSubmissionRequest request, string decidedBy, CancellationToken ctoken);
-    Task<Result> HandleUserDeleteAsync(int userId, CancellationToken ctoken);
     Task<Result<IReadOnlyCollection<SimilarTrailResponse>>> GetSimilarRoutesAsync(string identifier, CancellationToken ctoken);
 }

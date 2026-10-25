@@ -33,15 +33,11 @@ public class ServiceMetricsTests
 
         return new UserService(
             repo.Object,
-            new Mock<ITrailObstacleRepository>().Object,
+            new Mock<IAccountDeletionRepository>().Object,
             new UserResponseFactory(cfg.Object),
             new Mock<IHikeService>().Object,
-            new Mock<IHikeSubmissionService>().Object,
-            new Mock<IReviewService>().Object,
-            new Mock<IFriendRepository>().Object,
+            new Mock<IWebDavService>().Object,
             new Mock<IUserBlockService>().Object,
-            new Mock<IContentReportRepository>().Object,
-            new Mock<IMailOutboxRepository>().Object,
             metrics,
             NullLogger<UserService>.Instance);
     }

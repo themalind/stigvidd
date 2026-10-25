@@ -33,15 +33,19 @@ public class TrailObstacleRepository : ITrailObstacleRepository
     // Reports young enough and with too few solved votes to be resolved. No longer the exact
     // opposite of ExpiredObstacles: this one also drops what moderation has hidden, while
     // ExpiredObstacles deliberately sees everything so retention still clears hidden rows.
-    private IQueryable<TrailObstacle> ActiveObstacles(StigViddDbContext context) =>
-        context.TrailObstacles.Where(to =>
+    private IQueryable<TrailObstacle> ActiveObstacles(StigViddDbContext context)
+    {
+        return context.TrailObstacles.Where(to =>
             to.CreatedAt > DateTime.UtcNow.AddDays(-_retentionDays) &&
             to.SolvedVotes.Count < _solvedVotesToHide);
+    }
 
-    private IQueryable<TrailObstacle> ExpiredObstacles(StigViddDbContext context) =>
-        context.TrailObstacles.IgnoreQueryFilters(["Moderation"]).Where(to =>
+    private IQueryable<TrailObstacle> ExpiredObstacles(StigViddDbContext context)
+    {
+        return context.TrailObstacles.IgnoreQueryFilters(["Moderation"]).Where(to =>
             to.CreatedAt <= DateTime.UtcNow.AddDays(-_retentionDays) ||
             to.SolvedVotes.Count >= _solvedVotesToHide);
+    }
 
     public async Task<RepositoryResult<IReadOnlyCollection<T>>> GetTrailObstaclesByTrailIdentifierAsync<T>(string identifier, int[] hiddenUserIds, Expression<Func<TrailObstacle, T>> selector, CancellationToken ctoken)
     {
@@ -256,33 +260,6 @@ public class TrailObstacleRepository : ITrailObstacleRepository
         {
             _logger.LogError(ex, "TrailObstacleRepository: DeleteExpiredObstaclesAsync -> Something went wrong when deleting expired obstacles.");
             return RepositoryResult<int>.Error();
-        }
-    }
-
-    // Clears the description on the user's reports, keeping the text on Other where the category
-    // says nothing on its own. UserId is nulled by SetNull when the user row goes.
-    public async Task<RepositoryResult> AnonymizeObstaclesByUserIdAsync(int userId, CancellationToken ctoken)
-    {
-        try
-        {
-            using var context = await _context.CreateDbContextAsync(ctoken);
-
-            var obstacles = await context.TrailObstacles
-                .IgnoreQueryFilters(["Moderation"])
-                .Where(to => to.UserId == userId && to.IssueType != TrailIssueType.Other)
-                .ToListAsync(ctoken);
-
-            foreach (var obstacle in obstacles)
-                obstacle.Description = string.Empty;
-
-            await context.SaveChangesAsync(ctoken);
-
-            return RepositoryResult.Success();
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "TrailObstacleRepository: AnonymizeObstaclesByUserIdAsync -> Something went wrong when anonymizing obstacles for user {userId}.", userId);
-            return RepositoryResult.Error();
         }
     }
 }

@@ -92,7 +92,56 @@ public class FriendService : IFriendService
         if (!result.IsSuccess)
             return Result.Fail<IEnumerable<FriendResponse>>(new Message(500, "An error occurred while fetching friends."));
 
+        var notesResult = await _friendRepository.GetNotesByFriendIdentifierAsync(userIdResult.Value, ctoken);
+        if (!notesResult.IsSuccess)
+            return Result.Fail<IEnumerable<FriendResponse>>(new Message(500, "An error occurred while fetching friends."));
+
+        var sinceResult = await _friendRepository.GetFriendsSinceByIdentifierAsync(userIdResult.Value, ctoken);
+        if (!sinceResult.IsSuccess)
+            return Result.Fail<IEnumerable<FriendResponse>>(new Message(500, "An error occurred while fetching friends."));
+
+        foreach (var friend in result.Value)
+        {
+            friend.Note = notesResult.Value.GetValueOrDefault(friend.Identifier);
+            friend.FriendsSince = sinceResult.Value.TryGetValue(friend.Identifier, out var since) ? since : null;
+        }
+
         return Result.Ok(result.Value);
+    }
+
+    public async Task<Result> SetNoteAsync(string currentUserIdentifier, string friendIdentifier, string? note, CancellationToken ctoken)
+    {
+        var currentUserIdResult = await _userRepository.GetUserIdByIdentifierAsync(currentUserIdentifier, ctoken);
+        if (!currentUserIdResult.IsSuccess)
+        {
+            if (currentUserIdResult.Status == RepositoryResultStatus.NotFound)
+                return Result.Fail(new Message(404, "Current user not found."));
+
+            return Result.Fail(new Message(500, "An error occurred while retrieving the current user."));
+        }
+
+        var friendIdResult = await _userRepository.GetUserIdByIdentifierAsync(friendIdentifier, ctoken);
+        if (!friendIdResult.IsSuccess)
+        {
+            if (friendIdResult.Status == RepositoryResultStatus.NotFound)
+                return Result.Fail(new Message(404, "Friend not found."));
+
+            return Result.Fail(new Message(500, "An error occurred while retrieving the user."));
+        }
+
+        var areFriendsResult = await _friendRepository.FriendshipExistsAsync(currentUserIdResult.Value, friendIdResult.Value, ctoken);
+        if (!areFriendsResult.IsSuccess)
+            return Result.Fail(new Message(500, "An error occurred while checking friendship status."));
+
+        // keep-comment: same answer as an unknown user, so a note cannot probe who exists
+        if (!areFriendsResult.Value)
+            return Result.Fail(new Message(404, "Friend not found."));
+
+        var result = await _friendRepository.SetNoteAsync(currentUserIdResult.Value, friendIdResult.Value, note?.Trim(), ctoken);
+        if (!result.IsSuccess)
+            return Result.Fail(new Message(500, "An error occurred while saving the note."));
+
+        return Result.Ok();
     }
 
     public async Task<Result<IEnumerable<FriendRequestResponse>>> GetIncomingRequestsAsync(string currentUserIdentifier, CancellationToken ctoken)

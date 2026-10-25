@@ -4,6 +4,7 @@
 using Core.Interfaces.Repositories;
 using Infrastructure.Data;
 using Infrastructure.Data.Entities;
+using Infrastructure.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Npgsql;
@@ -38,6 +39,50 @@ public class HikeShareRepository : IHikeShareRepository
         {
             _logger.LogError(ex, "HikeShareRepository: GetHikeShareCountAsync -> Something went wrong when fetching hike share count for hike {hikeIdentifier}.", hikeIdentifier);
             return RepositoryResult<int>.Error();
+        }
+    }
+
+    public async Task<RepositoryResult<IReadOnlyCollection<SentHikeShare>>> GetHikesSharedByUserAsync(int senderId, CancellationToken ctoken)
+    {
+        try
+        {
+            using var context = await _dbContext.CreateDbContextAsync(ctoken);
+            var sent = context.HikeShares.Where(hs => hs.SharedById == senderId);
+
+            var hikes = await context.Hikes
+                .AsNoTracking()
+                .Where(h => sent.Any(hs => hs.HikeId == h.Id))
+                .Select(h => new SentHikeShare
+                {
+                    HikeIdentifier = h.Identifier,
+                    HikeName = h.Name,
+                    HikeLength = h.HikeLength,
+                    Duration = h.Duration,
+                    GeoPath = h.GeoPath,
+                    IsOwnHike = h.UserId == senderId,
+                    ImageUrl = context.HikeImages
+                        .Where(i => i.HikeId == h.Id && i.ModerationState == ModerationState.Visible)
+                        .OrderBy(i => i.CreatedAt)
+                        .Select(i => i.ImageUrl)
+                        .FirstOrDefault(),
+                    Recipients = sent
+                        .Where(hs => hs.HikeId == h.Id)
+                        .Join(context.Users, hs => hs.SharedWithId, u => u.Id, (hs, u) => new SentHikeShareRecipient
+                        {
+                            Identifier = u.Identifier,
+                            NickName = u.NickName,
+                            SharedAt = hs.CreatedAt,
+                        })
+                        .ToList(),
+                })
+                .ToListAsync(ctoken);
+
+            return RepositoryResult<IReadOnlyCollection<SentHikeShare>>.Success(hikes);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "HikeShareRepository: GetHikesSharedByUserAsync -> Something went wrong when fetching hikes shared by user {senderId}.", senderId);
+            return RepositoryResult<IReadOnlyCollection<SentHikeShare>>.Error();
         }
     }
 

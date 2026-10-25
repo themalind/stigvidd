@@ -37,9 +37,9 @@ context.Reviews.IgnoreQueryFilters("Moderation")     // does not compile
 
 ## `IgnoreQueryFilters` is per QUERY, not per entity
 
-`ReviewRepository.UserReviews` is used two ways: standalone in
-`AnonymizeReviewsByUserIdAsync`, and as a **subquery** whose `Select(r => r.Id)` feeds a
-`Contains` against `ReviewImages` in `GetReviewImageUrlsByUserIdAsync`. Putting the call
+`AccountDeletionRepository.UserReviews` is used two ways: standalone in
+`AnonymizeReviewsAsync`, and as a **subquery** whose `Select(r => r.Id)` feeds a
+`Contains` against `ReviewImages` in `GetReviewImageUrlsAsync`. Putting the call
 only inside the helper is not enough to reason about; the outer query carries it too. Get
 this wrong and account deletion silently stops cleaning hidden reviews' files off WebDAV,
 with nothing red anywhere. `ModerationVisibilityRepositoryTests` is what holds it.

@@ -101,7 +101,7 @@ was queued and then stopped, and a delete would race the dispatcher — a row ca
 between the read and the delete, and `MarkSentAsync` has no status guard.
 
 **Erasure is the one exception, and it respects that race rather than ignoring it.** When an
-account is deleted, `EraseByRecipientAsync` removes that address's mail outright — the outbox
+account is deleted, `AccountDeletionRepository` removes that address's mail outright — the outbox
 has no foreign key to `Users`, so nothing cascades and the rows would otherwise outlive the
 account. It moves `Pending` rows to `Cancelled` *first*, which puts them out of the
 dispatcher's reach because claiming guards on `Pending`, and only then deletes. A `Sending`

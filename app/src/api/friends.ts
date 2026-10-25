@@ -5,7 +5,14 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import { BlockedUser, FriendRequest, FriendResponse, OutgoingFriendRequest, SearchFriendResult } from "@/data/types";
+import {
+  BlockedUser,
+  FriendProfile,
+  FriendRequest,
+  FriendResponse,
+  OutgoingFriendRequest,
+  SearchFriendResult,
+} from "@/data/types";
 import { apiFetch, BASE_URL } from "./api-config";
 import { ApiError } from "./api-error";
 import { getUserToken } from "./users";
@@ -126,6 +133,69 @@ export async function getFriends(): Promise<FriendResponse[]> {
   } catch (error) {
     logger.error("Get friends failed", {
       endpoint: "GET /friends",
+      errorMessage: String(error),
+    });
+    throw error;
+  }
+}
+
+export async function getFriendProfile(friendIdentifier: string): Promise<FriendProfile> {
+  try {
+    const token = await getUserToken();
+
+    if (!token) {
+      throw new Error("User not authenticated");
+    }
+
+    const response = await apiFetch(`${BASE_URL}/friends/${friendIdentifier}/profile`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new ApiError(`HTTP error: getFriendProfile: ${response.status}`, response.status);
+    }
+
+    return response.json();
+  } catch (error) {
+    // keep-comment: 404 is the backend's deliberate answer for a stranger or a block, not a failure
+    if (error instanceof ApiError && error.status === 404) throw error;
+    logger.error("Get friend profile failed", {
+      endpoint: "GET /friends/{param}/profile",
+      errorMessage: String(error),
+    });
+    throw error;
+  }
+}
+
+export async function setFriendNote(friendIdentifier: string, note: string | null): Promise<{ success: boolean }> {
+  try {
+    const token = await getUserToken();
+
+    if (!token) {
+      throw new Error("User not authenticated");
+    }
+
+    const response = await apiFetch(`${BASE_URL}/friends/${friendIdentifier}/note`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ note }),
+    });
+
+    if (!response.ok) {
+      throw new ApiError(`HTTP error: setFriendNote: ${response.status}`, response.status);
+    }
+
+    return { success: true };
+  } catch (error) {
+    logger.error("Set friend note failed", {
+      endpoint: "PUT /friends/{param}/note",
       errorMessage: String(error),
     });
     throw error;

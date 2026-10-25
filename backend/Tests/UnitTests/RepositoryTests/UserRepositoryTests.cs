@@ -8,7 +8,6 @@ using Core.Repositories;
 using AwesomeAssertions;
 using Infrastructure.Data.Entities;
 using Microsoft.Extensions.Logging.Abstractions;
-using Moq;
 
 namespace UnitTests.RepositoryTests;
 
@@ -20,8 +19,8 @@ public class UserRepositoryTests : TestBase
     private const string TivedenIdentifier = "11a1b2c3-d4e5-4f6a-7b8c-9d0e1f2a3b4c";
     private const string NassehultIdentifier = "77a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c";
 
-    private UserRepository BuildRepo(IKeycloakAdminRepository? keycloak = null) =>
-        new(CreateSeededFactory(), keycloak ?? new Mock<IKeycloakAdminRepository>().Object, NullLogger<UserRepository>.Instance);
+    private UserRepository BuildRepo() =>
+        new(CreateSeededFactory(), NullLogger<UserRepository>.Instance);
 
     [Fact]
     public async Task GetUserBySubjectId_WhenFound_ReturnsSuccess()
@@ -284,7 +283,7 @@ public class UserRepositoryTests : TestBase
     {
         // Arrange
         var factory = CreateSeededFactory();
-        var repo = new UserRepository(factory, new Mock<IKeycloakAdminRepository>().Object, NullLogger<UserRepository>.Instance);
+        var repo = new UserRepository(factory, NullLogger<UserRepository>.Instance);
         var newUser = new User
         {
             Identifier = Guid.NewGuid().ToString(),
@@ -533,22 +532,5 @@ public class UserRepositoryTests : TestBase
         // Assert
         result.IsSuccess.Should().BeFalse();
         result.Status.Should().Be(RepositoryResultStatus.Conflict);
-    }
-
-    // Note: DeleteUserAsync uses BeginTransactionAsync which is not supported by EF InMemory.
-    // The happy-path delete is covered by integration tests instead.
-
-    [Fact]
-    public async Task DeleteUser_WhenNotFound_ReturnsNotFound()
-    {
-        // Arrange
-        var repo = BuildRepo();
-
-        // Act
-        var result = await repo.DeleteUserAsync("no-such-user", TestContext.Current.CancellationToken);
-
-        // Assert
-        result.IsSuccess.Should().BeFalse();
-        result.Status.Should().Be(RepositoryResultStatus.NotFound);
     }
 }

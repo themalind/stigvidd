@@ -1,10 +1,12 @@
 ﻿// SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+using Core.Factories;
 using Core.Interfaces.Repositories;
 using Core.Interfaces.Services;
 using Core.Telemetry;
 using Microsoft.Extensions.Logging;
+using WebDataContracts.ResponseModels.HikeShare;
 
 namespace Core.Services.HikeShares;
 
@@ -14,6 +16,7 @@ public class HikeShareService : IHikeShareService
     private readonly IUserRepository _userRepository;
     private readonly IHikeRepository _hikeRepository;
     private readonly HikeShareDistributor _distributor;
+    private readonly HikeResponseFactory _hikeResponseFactory;
     private readonly StigviddMetrics _metrics;
     private readonly ILogger _logger;
 
@@ -22,6 +25,7 @@ public class HikeShareService : IHikeShareService
         IUserRepository userRepository,
         IHikeRepository hikeRepository,
         HikeShareDistributor distributor,
+        HikeResponseFactory hikeResponseFactory,
         StigviddMetrics metrics,
         ILogger<HikeShareService> logger)
     {
@@ -29,6 +33,7 @@ public class HikeShareService : IHikeShareService
         _userRepository = userRepository;
         _hikeRepository = hikeRepository;
         _distributor = distributor;
+        _hikeResponseFactory = hikeResponseFactory;
         _metrics = metrics;
         _logger = logger;
     }
@@ -41,6 +46,45 @@ public class HikeShareService : IHikeShareService
             return Result.Fail<int>(new Message(500, "Something went wrong when fetching hike share count."));
 
         return Result.Ok<int>(result.Value);
+    }
+
+    public async Task<Result<IReadOnlyCollection<OutgoingHikeShareResponse>>> GetOutgoingSharesAsync(string identifier, CancellationToken ctoken)
+    {
+        var senderResult = await _userRepository.GetUserByIdentifierAsync(identifier, u => new SenderProjection(u.Id, u.NickName), ctoken);
+        if (!senderResult.IsSuccess || senderResult.Value is null)
+        {
+            if (senderResult.Status == RepositoryResultStatus.NotFound)
+                return Result.Fail<IReadOnlyCollection<OutgoingHikeShareResponse>>(new Message(404, "User not found with the given identifier."));
+
+            return Result.Fail<IReadOnlyCollection<OutgoingHikeShareResponse>>(new Message(500, "Something went wrong when fetching user ID."));
+        }
+
+        var result = await _hikeShareRepository.GetHikesSharedByUserAsync(senderResult.Value.Id, ctoken);
+        if (!result.IsSuccess || result.Value is null)
+            return Result.Fail<IReadOnlyCollection<OutgoingHikeShareResponse>>(new Message(500, "Something went wrong when fetching sent shares."));
+
+        IReadOnlyCollection<OutgoingHikeShareResponse> shares = result.Value
+            .Where(h => h.Recipients.Count > 0)
+            .Select(h => new OutgoingHikeShareResponse
+            {
+                HikeIdentifier = h.HikeIdentifier,
+                HikeName = h.HikeName,
+                HikeLength = h.HikeLength,
+                Duration = h.Duration,
+                Coordinates = GeoPathSerializer.ToCoordinateJson(h.GeoPath),
+                IsOwnHike = h.IsOwnHike,
+                ImageUrl = h.ImageUrl is null ? null : _hikeResponseFactory.PresentableBaseUrl + h.ImageUrl,
+                LastSharedAt = h.Recipients.Max(r => r.SharedAt),
+                Recipients = h.Recipients
+                    .OrderByDescending(r => r.SharedAt)
+                    .ThenBy(r => r.NickName, StringComparer.OrdinalIgnoreCase)
+                    .Select(r => new OutgoingHikeShareRecipientResponse { Identifier = r.Identifier, NickName = r.NickName, SharedAt = r.SharedAt })
+                    .ToList(),
+            })
+            .OrderByDescending(h => h.LastSharedAt)
+            .ToList();
+
+        return Result.Ok(shares);
     }
 
     public async Task<Result> ShareHikeAsync(string identifier, string hikeIdentifier, IReadOnlyCollection<string> sharedWithNames, bool allowResharing, CancellationToken ctoken)

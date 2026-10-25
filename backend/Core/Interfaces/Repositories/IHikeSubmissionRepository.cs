@@ -24,7 +24,6 @@ public interface IHikeSubmissionRepository
     Task<RepositoryResult<IReadOnlyCollection<string>>> RejectAsync(string identifier, string reason, string decidedBy, CancellationToken ctoken);
     Task<RepositoryResult<ApprovedSubmission>> ApproveAsync(string identifier, string decidedBy, IReadOnlyCollection<string> placeholderImagePaths, CancellationToken ctoken);
     Task<RepositoryResult<IReadOnlyCollection<string>>> WithdrawAsync(string identifier, int userId, CancellationToken ctoken);
-    Task<RepositoryResult<IReadOnlyCollection<string>>> DeleteByUserIdAsync(int userId, CancellationToken ctoken);
     Task<RepositoryResult<IReadOnlyCollection<RoutePath>>> GetComparableRoutesAsync(string exceptSubmissionIdentifier, CancellationToken ctoken);
 }
 

@@ -64,4 +64,15 @@ public class TrailImportResponseFactoryTests
         // Assert
         preview.SourceStatedLengthKm.Should().Be(2.5m);
     }
+
+    [Fact]
+    public void Create_ForNaturvardsverketsLedlangdInMetres_ShouldStateItInKilometres()
+    {
+        // Act
+        var preview = new TrailImportResponseFactory().Create(Proposal("""{ "LEDNAMN": "Led Hygntornet", "LEDLANGD": 1546 }"""));
+
+        // Assert
+        preview.SourceStatedLengthKm.Should().Be(1.55m);
+        preview.SourceLengthDisagrees.Should().BeFalse();
+    }
 }

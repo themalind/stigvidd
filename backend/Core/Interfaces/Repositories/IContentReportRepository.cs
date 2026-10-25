@@ -93,11 +93,6 @@ public interface IContentReportRepository
     Task<RepositoryResult<ContentReport>> AddReportAsync(
         ContentReport report, bool hideContent, CancellationToken ctoken);
 
-    // Account deletion. Two different jobs in one step: what the user reported stays
-    // Pending because it still needs a decision, while reports ABOUT them are settled and
-    // their snapshot cleared.
-    Task<RepositoryResult> HandleUserDeletionAsync(int userId, CancellationToken ctoken);
-
     // --- The admin queue ---
 
     Task<RepositoryResult<PagedResult<ContentReportSummary>>> GetPagedAsync(

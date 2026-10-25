@@ -13,6 +13,31 @@ export interface SearchFriendResult {
 export interface FriendResponse {
   identifier: string;
   nickName: string;
+  note?: string | null;
+  friendsSince?: string | null;
+}
+
+export interface FriendReview {
+  identifier: string;
+  trailIdentifier: string;
+  trailName: string;
+  rating: number;
+  text: string | null;
+  createdAt: string;
+}
+
+export interface FriendPublishedTrail {
+  identifier: string;
+  name: string;
+  trailLength: number;
+  city: string;
+  imageUrl: string | null;
+  publishedAt: string;
+}
+
+export interface FriendProfile {
+  reviews: FriendReview[];
+  publishedTrails: FriendPublishedTrail[];
 }
 
 export interface FriendRequest {

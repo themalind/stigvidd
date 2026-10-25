@@ -24,6 +24,4 @@ public interface IUserRepository
     Task<RepositoryResult> RemoveTrailFromUserWishListAsync(string userIdentifier, string trailIdentifier, CancellationToken ctoken);
     Task<RepositoryResult> BanUserAsync(string identifier, string bannedBy, string? bannedReason, CancellationToken ctoken);
     Task<RepositoryResult> UnbanUserAsync(string identifier, string liftedBy, CancellationToken ctoken);
-
-    Task<RepositoryResult> DeleteUserAsync(string identifier, CancellationToken ctoken);
 }

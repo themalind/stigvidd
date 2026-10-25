@@ -19,6 +19,9 @@ public class HikeShareRepositoryTests : TestBase
     private const string Hike1Identifier = "3f9c1b7e-8a42-4e6d-9c5f-2a7b1d8e4f90";
     private const string Hike2Identifier = "b7a2d4c1-5e9f-4a63-8c1d-0f2e7b9a6c34";
     private const string User6Identifier = "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5a44";
+    private const string User2Identifier = "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e";
+    private const string User3Identifier = "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d67";
+    private const string User5Identifier = "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5a33";
 
     // IsAlreadySharedAsync
 
@@ -108,5 +111,87 @@ public class HikeShareRepositoryTests : TestBase
         // Assert
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task GetHikesSharedByUserAsync_ReturnsEachHikeOnceWithItsRecipients()
+    {
+        var factory = CreateSeededFactory(ctx =>
+            ctx.HikeShares.Add(new HikeShare { HikeId = 1, SharedWithId = 5, SharedById = 1, Status = HikeShareStatus.Pending }));
+        var repo = new HikeShareRepository(factory, NullLogger<HikeShareRepository>.Instance);
+
+        var result = await repo.GetHikesSharedByUserAsync(1, TestContext.Current.CancellationToken);
+
+        result.IsSuccess.Should().BeTrue();
+        var hikes = result.Value;
+        hikes.Should().NotBeNull();
+        if (hikes is null) return;
+        hikes.Select(h => h.HikeIdentifier).Should().BeEquivalentTo([Hike1Identifier, Hike2Identifier]);
+        hikes.Single(h => h.HikeIdentifier == Hike1Identifier).Recipients.Select(r => r.Identifier)
+            .Should().BeEquivalentTo([User2Identifier, User5Identifier]);
+        hikes.Should().OnlyContain(h => h.IsOwnHike);
+        hikes.Single(h => h.HikeIdentifier == Hike2Identifier).Recipients.Select(r => r.Identifier)
+            .Should().BeEquivalentTo([User3Identifier]);
+    }
+
+    [Fact]
+    public async Task GetHikesSharedByUserAsync_CarriesTheEarliestVisibleImage()
+    {
+        var jan = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        var factory = CreateSeededFactory(ctx => ctx.HikeImages.AddRange(
+            new HikeImage { HikeId = 1, ImageUrl = "hidden.jpg", CreatedAt = jan, ModerationState = ModerationState.HiddenPendingReview },
+            new HikeImage { HikeId = 1, ImageUrl = "later.jpg", CreatedAt = jan.AddDays(2) },
+            new HikeImage { HikeId = 1, ImageUrl = "first.jpg", CreatedAt = jan.AddDays(1) }));
+        var repo = new HikeShareRepository(factory, NullLogger<HikeShareRepository>.Instance);
+
+        var result = await repo.GetHikesSharedByUserAsync(1, TestContext.Current.CancellationToken);
+
+        var hikes = result.Value;
+        hikes.Should().NotBeNull();
+        if (hikes is null) return;
+        hikes.Single(h => h.HikeIdentifier == Hike1Identifier).ImageUrl.Should().Be("first.jpg");
+        hikes.Single(h => h.HikeIdentifier == Hike2Identifier).ImageUrl.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task GetHikesSharedByUserAsync_LeavesOutWhatOthersReshared()
+    {
+        var factory = CreateSeededFactory(ctx =>
+            ctx.HikeShares.Add(new HikeShare { HikeId = 1, SharedWithId = 4, SharedById = 2, Status = HikeShareStatus.Accepted }));
+        var repo = new HikeShareRepository(factory, NullLogger<HikeShareRepository>.Instance);
+
+        var result = await repo.GetHikesSharedByUserAsync(1, TestContext.Current.CancellationToken);
+
+        var hikes = result.Value;
+        hikes.Should().NotBeNull();
+        if (hikes is null) return;
+        hikes.Single(h => h.HikeIdentifier == Hike1Identifier).Recipients.Select(r => r.Identifier)
+            .Should().BeEquivalentTo([User2Identifier]);
+    }
+
+    [Fact]
+    public async Task GetHikesSharedByUserAsync_MarksAReshareAsSomeoneElsesHike()
+    {
+        var factory = CreateSeededFactory(ctx =>
+            ctx.HikeShares.Add(new HikeShare { HikeId = 1, SharedWithId = 4, SharedById = 2, Status = HikeShareStatus.Accepted }));
+        var repo = new HikeShareRepository(factory, NullLogger<HikeShareRepository>.Instance);
+
+        var result = await repo.GetHikesSharedByUserAsync(2, TestContext.Current.CancellationToken);
+
+        var hikes = result.Value;
+        hikes.Should().NotBeNull();
+        if (hikes is null) return;
+        hikes.Single(h => h.HikeIdentifier == Hike1Identifier).IsOwnHike.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task GetHikesSharedByUserAsync_WhenNothingShared_ReturnsEmpty()
+    {
+        var repo = new HikeShareRepository(CreateSeededFactory(), NullLogger<HikeShareRepository>.Instance);
+
+        var result = await repo.GetHikesSharedByUserAsync(6, TestContext.Current.CancellationToken);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().BeEmpty();
     }
 }

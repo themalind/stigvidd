@@ -14,14 +14,10 @@ public interface IHikeRepository
     Task<RepositoryResult<IReadOnlyCollection<T>>> GetHikesAsync<T>(int? userId, Expression<Func<Hike, T>> selector, CancellationToken ctoken);
     Task<RepositoryResult<Hike>> UpdateHikeAsync(Hike hike, CancellationToken ctoken);
     Task<RepositoryResult> DeleteHikeAsync(Hike hike, CancellationToken ctoken);
-    Task<RepositoryResult> DeleteHikeSharesByUserIdAsync(int userId, CancellationToken ctoken);
     Task<RepositoryResult<IEnumerable<string>>> GetOrphanedHikeImageUrlsAsync(CancellationToken ctoken);
     Task<RepositoryResult> DeleteOrphanedHikesAsync(CancellationToken ctoken);
-    Task<RepositoryResult> HandleUserHikesOnUserDeleteAsync(int userId, CancellationToken ctoken);
     Task<RepositoryResult<IEnumerable<string>>> GetHikeImageUrlsByHikeIdAsync(int hikeId, CancellationToken ctoken);
     Task<RepositoryResult<bool>> HikeHasSharesAsync(int hikeId, CancellationToken ctoken);
-    Task<RepositoryResult<IEnumerable<string>>> GetDeletableHikeImageUrlsByUserIdAsync(int userId, CancellationToken ctoken);
-    Task<RepositoryResult> AnonymizeSharedHikesOnUserDeleteAsync(int userId, CancellationToken ctoken);
     Task<RepositoryResult<HikeImage>> AddHikeImageAsync(HikeImage image, CancellationToken ctoken);
     Task<RepositoryResult> DeleteHikeImageAsync(HikeImage image, CancellationToken ctoken);
 }

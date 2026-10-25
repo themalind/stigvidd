@@ -79,9 +79,17 @@ interface Props {
   onShare: (friendNickNames: string[], formData: ShareHikeFormFields) => void;
   isPending?: boolean;
   defaultValues?: ShareHikeFormFields;
+  preselectedNickNames?: string[];
 }
 
-export default function ShareHikeModal({ visible, onDismiss, onShare, isPending, defaultValues }: Props) {
+export default function ShareHikeModal({
+  visible,
+  onDismiss,
+  onShare,
+  isPending,
+  defaultValues,
+  preselectedNickNames,
+}: Props) {
   const theme = useTheme();
   const { t } = useTranslation();
   const [step, setStep] = useState<"form" | "friends">("form");
@@ -193,7 +201,12 @@ export default function ShareHikeModal({ visible, onDismiss, onShare, isPending,
                 <Text style={{ color: theme.colors.onSurface }}>{t("hike.back")}</Text>
               </Pressable>
               <Divider />
-              <FriendPicker enabled={visible} onShare={(names) => onShare(names, formData)} isPending={isPending} />
+              <FriendPicker
+                enabled={visible}
+                onShare={(names) => onShare(names, formData)}
+                isPending={isPending}
+                initialSelected={preselectedNickNames}
+              />
             </>
           )}
         </View>

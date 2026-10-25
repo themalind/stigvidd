@@ -1,4 +1,4 @@
-﻿// SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
+// SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 using Core.Interfaces.Repositories;
@@ -186,15 +186,19 @@ public class TrailImportRepository : ITrailImportRepository
     }
 
     /// <summary>Overridable so tests exercise the retry without waiting for it.</summary>
-    protected virtual Task WaitBeforeRetryAsync(int attempt, CancellationToken ctoken) =>
-        Task.Delay(RetryDelays[attempt], ctoken);
+    protected virtual Task WaitBeforeRetryAsync(int attempt, CancellationToken ctoken)
+    {
+        return Task.Delay(RetryDelays[attempt], ctoken);
+    }
 
     // A dropped connection or a stalled read, anywhere in the chain. Deliberately not
     // matched on Npgsql types: the repository stays provider-agnostic, and this is the
     // shape every transport failure arrives in.
-    private static bool IsTransient(Exception ex) =>
-        ex is TimeoutException or SocketException or IOException
+    private static bool IsTransient(Exception ex)
+    {
+        return ex is TimeoutException or SocketException or IOException
         || (ex.InnerException is not null && IsTransient(ex.InnerException));
+    }
 
     // A session is only Analyzing while a worker holds it, so a row still in that state at
     // startup belongs to a run a restart cut short.
@@ -698,7 +702,7 @@ public class TrailImportRepository : ITrailImportRepository
             // Lowest confidence first: the features that need a human come before the ones
             // that matched themselves. Alphabetical within a tier, which is what the list
             // shows once a confidence filter is on.
-            var ordered = SwedishCollation(context) is { } collation
+            var ordered = SwedishCollation.For(context) is { } collation
                 ? query.OrderBy(p => p.Confidence).ThenBy(p => EF.Functions.Collate(p.FeatureName, collation))
                 : query.OrderBy(p => p.Confidence).ThenBy(p => p.FeatureName);
 
@@ -739,15 +743,6 @@ public class TrailImportRepository : ITrailImportRepository
             return RepositoryResult<PagedResult<ProposalSummary>>.Error();
         }
     }
-
-    // The database is en_US.UTF-8, which sorts Älmås between Alfa and Åsa rather than after
-    // Zeta. Reviewers read Swedish trail names, so the list asks for a Swedish collation —
-    // on Postgres only, since the integration tests run on SQLite, which has no such thing.
-    private const string SwedishIcuCollation = "sv-SE-x-icu";
-    private const string NpgsqlProvider = "Npgsql.EntityFrameworkCore.PostgreSQL";
-
-    private static string? SwedishCollation(StigViddDbContext context) =>
-        context.Database.ProviderName == NpgsqlProvider ? SwedishIcuCollation : null;
 
     // The only read that carries FeatureGeometry, because the preview is the only caller
     // that draws it.

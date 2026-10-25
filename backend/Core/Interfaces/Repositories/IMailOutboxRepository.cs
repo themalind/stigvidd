@@ -141,16 +141,4 @@ public interface IMailOutboxRepository
     /// -- and why RequeueAsync refuses once the window has closed.
     /// </remarks>
     Task<RepositoryResult<int>> RedactBodiesBeforeAsync(DateTime cutoffUtc, CancellationToken ctoken);
-
-    /// <summary>
-    /// Erases every row for a recipient, for Art. 17 on account deletion. Returns the row count.
-    /// </summary>
-    /// <remarks>
-    /// Rows still queued are moved to Cancelled first, so the dispatcher cannot claim one
-    /// between the read and the delete. A row already Sending is left alone: nothing can recall
-    /// a message on the wire, and the sweep collects it once it settles. Matching is on the
-    /// address, because the outbox has no foreign key to Users -- so mail queued to an address
-    /// the account no longer uses is not reached by this.
-    /// </remarks>
-    Task<RepositoryResult<int>> EraseByRecipientAsync(string emailAddress, CancellationToken ctoken);
 }

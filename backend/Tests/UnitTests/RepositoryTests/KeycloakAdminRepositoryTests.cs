@@ -3,6 +3,7 @@
 
 using AwesomeAssertions;
 using Core.Repositories;
+using Keycloak.AuthServices.Sdk;
 using Keycloak.AuthServices.Sdk.Admin;
 using Keycloak.AuthServices.Sdk.Admin.Models;
 using Microsoft.Extensions.Configuration;
@@ -106,6 +107,41 @@ public class KeycloakAdminRepositoryTests
 
         // Assert
         user.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task DeleteUserAsync_WhenTheUserIsAlreadyGone_Succeeds()
+    {
+        // Arrange
+        var repository = OverHttp(HttpStatusCode.NotFound);
+
+        // Act
+        var delete = () => repository.DeleteUserAsync("no-such-subject", TestContext.Current.CancellationToken);
+
+        // Assert
+        await delete.Should().NotThrowAsync();
+    }
+
+    [Fact]
+    public async Task DeleteUserAsync_WhenKeycloakFails_Throws()
+    {
+        // Arrange
+        var repository = OverHttp(HttpStatusCode.InternalServerError);
+
+        // Act
+        var delete = () => repository.DeleteUserAsync(SubjectId, TestContext.Current.CancellationToken);
+
+        // Assert
+        await delete.Should().ThrowAsync<KeycloakHttpClientException>();
+    }
+
+    private static KeycloakAdminRepository OverHttp(HttpStatusCode status)
+    {
+        var http = new HttpClient(new StubHandler(status)) { BaseAddress = new Uri("http://keycloak.local/") };
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?> { ["Keycloak:realm"] = Realm })
+            .Build();
+        return new KeycloakAdminRepository(new KeycloakClient(http), configuration, NullLogger<KeycloakAdminRepository>.Instance);
     }
 
     private sealed class StubHandler(HttpStatusCode status) : HttpMessageHandler

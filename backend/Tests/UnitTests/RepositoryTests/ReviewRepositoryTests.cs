@@ -6,6 +6,7 @@ using Core;
 using Core.Repositories;
 using AwesomeAssertions;
 using Infrastructure.Data.Entities;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using WebDataContracts.ResponseModels.Review;
 
@@ -18,6 +19,7 @@ public class ReviewRepositoryTests : TestBase
     private const string Review1Identifier = "r1a1b2c3-d4e5-4f6a-7b8c-9d0e1f2a3b4c"; // VandrarVennen, Tiveden, with images
     private const string Review5Identifier = "r5e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a"; // Kattleten, no images
     private const string VandrarVennenIdentifier = "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e";
+    private const string NaturElskarenIdentifier = "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d";
     private const int VandrarVennenId = 2;
     private const int TivedenId = 1;                 // reviewed by user 2 (Review 1) and user 3 (Review 8)
     private const int OtherTrailWithReviewsId = 2;   // reviewed by user 1, not by user 2
@@ -206,33 +208,31 @@ public class ReviewRepositoryTests : TestBase
     }
 
     [Fact]
-    public async Task GetReviewImageUrlsByUserId_ReturnsUrlsFromAllTheirReviews()
+    public async Task DeleteAccount_ReturnsTheImageUrlsFromAllTheirReviews()
     {
         // Arrange — user 2 (VandrarVennen) wrote review 1, the only seeded review with images
-        var repo = new ReviewRepository(CreateSeededFactory(), NullLogger<ReviewRepository>.Instance);
 
         // Act
-        var result = await repo.GetReviewImageUrlsByUserIdAsync(VandrarVennenId, TestContext.Current.CancellationToken);
+        var result = await DeleteAccountAsync(CreateSeededFactory(), VandrarVennenIdentifier);
 
         // Assert
-        result.IsSuccess.Should().BeTrue();
-        result.Value.Should().BeEquivalentTo([
+        result.Value.Should().NotBeNull();
+        result.Value.FileUrls.Should().BeEquivalentTo([
             "https://inkaben.se/stigvidd/mock/review-tiveden-1.jpg",
             "https://inkaben.se/stigvidd/mock/review-tiveden-2.jpg"]);
     }
 
     [Fact]
-    public async Task GetReviewImageUrlsByUserId_WhenReviewsHaveNoImages_ReturnsEmpty()
+    public async Task DeleteAccount_WhenTheirReviewsHaveNoImages_ReturnsNoUrls()
     {
         // Arrange — user 1 has reviews, none of them with images
-        var repo = new ReviewRepository(CreateSeededFactory(), NullLogger<ReviewRepository>.Instance);
 
         // Act
-        var result = await repo.GetReviewImageUrlsByUserIdAsync(1, TestContext.Current.CancellationToken);
+        var result = await DeleteAccountAsync(CreateSeededFactory(), NaturElskarenIdentifier);
 
         // Assert
-        result.IsSuccess.Should().BeTrue();
-        result.Value.Should().BeEmpty();
+        result.Value.Should().NotBeNull();
+        result.Value.FileUrls.Should().BeEmpty();
     }
 
     [Fact]
@@ -278,47 +278,77 @@ public class ReviewRepositoryTests : TestBase
     }
 
     [Fact]
-    public async Task AnonymizeReviewsByUserId_KeepsTheRatingAndDropsTheTextAndImages()
+    public async Task DeleteAccount_KeepsTheRatingAndDropsTheReviewTextAndImages()
     {
         // Arrange — user 2 (VandrarVennen) wrote review 1, the only seeded review with images
-        var repo = new ReviewRepository(CreateSeededFactory(), NullLogger<ReviewRepository>.Instance);
+        var factory = CreateSeededFactory();
+        var repo = new ReviewRepository(factory, NullLogger<ReviewRepository>.Instance);
         var before = await repo.GetReviewByIdentifierAsync(Review1Identifier, VandrarVennenIdentifier, TestContext.Current.CancellationToken);
         before.Value.Should().NotBeNull();
         before.Value.TrailReview.Should().NotBeNull();
         before.Value.ReviewImages.Should().NotBeEmpty();
 
         // Act
-        var result = await repo.AnonymizeReviewsByUserIdAsync(VandrarVennenId, TestContext.Current.CancellationToken);
+        await DeleteAccountAsync(factory, VandrarVennenIdentifier);
 
         // Assert
-        result.IsSuccess.Should().BeTrue();
-
-        var after = await repo.GetReviewByIdentifierAsync(Review1Identifier, VandrarVennenIdentifier, TestContext.Current.CancellationToken);
-        after.IsSuccess.Should().BeTrue();
-        after.Value.Should().NotBeNull();
-        after.Value.Rating.Should().Be(before.Value.Rating);
-        after.Value.TrailReview.Should().BeNull();
-        after.Value.ReviewImages.Should().BeNullOrEmpty();
+        await using var context = await factory.CreateDbContextAsync(TestContext.Current.CancellationToken);
+        var after = await context.Reviews
+            .Include(r => r.ReviewImages)
+            .SingleAsync(r => r.Identifier == Review1Identifier, TestContext.Current.CancellationToken);
+        after.Rating.Should().Be(before.Value.Rating);
+        after.TrailReview.Should().BeNull();
+        after.ReviewImages.Should().BeNullOrEmpty();
     }
 
     [Fact]
-    public async Task AnonymizeReviewsByUserId_LeavesOtherUsersReviewsAlone()
+    public async Task DeleteAccount_LeavesOtherUsersReviewsAlone()
     {
         // Arrange
-        var repo = new ReviewRepository(CreateSeededFactory(), NullLogger<ReviewRepository>.Instance);
+        var factory = CreateSeededFactory();
+        var repo = new ReviewRepository(factory, NullLogger<ReviewRepository>.Instance);
         var before = await repo.GetReviewByIdentifierAsync(Review5Identifier, KattletenIdentifier, TestContext.Current.CancellationToken);
 
         // Act
-        var result = await repo.AnonymizeReviewsByUserIdAsync(VandrarVennenId, TestContext.Current.CancellationToken);
+        await DeleteAccountAsync(factory, VandrarVennenIdentifier);
 
         // Assert
-        result.IsSuccess.Should().BeTrue();
-
         var after = await repo.GetReviewByIdentifierAsync(Review5Identifier, KattletenIdentifier, TestContext.Current.CancellationToken);
         after.IsSuccess.Should().BeTrue();
         after.Value.Should().NotBeNull();
         before.Value.Should().NotBeNull();
         after.Value.TrailReview.Should().Be(before.Value.TrailReview);
         after.Value.Rating.Should().Be(before.Value.Rating);
+    }
+
+    [Fact]
+    public async Task GetReviewsByUserIdAsync_ListsOnlyTheUsersVisibleReviews()
+    {
+        var factory = CreateSeededFactory(db => db.Reviews.Add(new Review
+        {
+            Identifier = "hidden-review",
+            Rating = 1m,
+            TrailId = 3,
+            UserId = 1,
+            TrailReview = "Dold",
+            ModerationState = Infrastructure.Enums.ModerationState.HiddenPendingReview,
+        }));
+        var repo = new ReviewRepository(factory, NullLogger<ReviewRepository>.Instance);
+
+        var result = await repo.GetReviewsByUserIdAsync(1, r => r.Identifier, TestContext.Current.CancellationToken);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().BeEquivalentTo(["r2b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d", "r6f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b"]);
+    }
+
+    [Fact]
+    public async Task GetReviewsByUserIdAsync_LeavesOutReviewsOfTrailsNoLongerShown()
+    {
+        var factory = CreateSeededFactory(db => db.Trails.Local.Single(t => t.Id == 2).IsVerified = false);
+        var repo = new ReviewRepository(factory, NullLogger<ReviewRepository>.Instance);
+
+        var result = await repo.GetReviewsByUserIdAsync(1, r => r.Identifier, TestContext.Current.CancellationToken);
+
+        result.Value.Should().Equal("r6f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b");
     }
 }

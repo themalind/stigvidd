@@ -10,23 +10,19 @@ import { incomingSharedHikesAtom } from "@/atoms/friends-atoms";
 import BackButton from "@/components/back-button";
 import ErrorView from "@/components/error-view";
 import { HikeFilterModal } from "@/components/hike/hike-filter-modal";
-import RouteThumbnail from "@/components/hike/route-thumbnail";
 import ListHeaderActions, { SortField } from "@/components/list-header-actions";
 import LoadingIndicator from "@/components/loading-indicator";
 import IncomingSharedHikeModal from "@/components/shared-hike/incoming-shared-hike-modal";
+import SharedHikeRow from "@/components/shared-hike/shared-hike-row";
 import SharedHikeStatsBanner from "@/components/shared-hike/shared-hike-stats-banner";
 import { BORDER_RADIUS, SCREEN_PADDING } from "@/constants/constants";
 import { SharedHike } from "@/data/types";
 import { HikeAccessors, HikeSortOption, useHikeFilters } from "@/hooks/hike/useHikeFilters";
 import { useSharedHikeMutations } from "@/hooks/shared-hikes/useSharedHikeMutations";
 import { useSharedHikes } from "@/hooks/shared-hikes/useSharedHikes";
-import { formatDate } from "@/utils/format-date";
-import FormattedTime from "@/utils/format-time-from-ms";
-import { guardedNavigate } from "@/utils/navigation";
 import { Fontisto, MaterialCommunityIcons } from "@expo/vector-icons";
 import { SHARED_HIKES_STALE_TIME } from "@/constants/cache";
 import { skipToken, useQuery } from "@tanstack/react-query";
-import { router } from "expo-router";
 import { useAtom } from "jotai";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -241,50 +237,7 @@ export default function SharedHikesScreen() {
                   {filteredHikes.map((hike, index) => (
                     // Identifier, not index: sorting reorders the list.
                     <View key={hike.hikeIdentifier}>
-                      <Pressable
-                        style={({ pressed }) => [s.row, pressed && { opacity: 0.7 }]}
-                        onPress={() =>
-                          guardedNavigate(() =>
-                            router.navigate({
-                              pathname: "/(tabs)/(profile-stack)/shared-hike/[identifier]",
-                              params: { identifier: hike.hikeIdentifier },
-                            }),
-                          )
-                        }
-                      >
-                        {/* Neutral tint: the accent stays with the incoming rows above,
-                            which are the ones asking for a decision. */}
-                        <RouteThumbnail
-                          coordinates={hike.coordinates}
-                          identifier={hike.hikeIdentifier}
-                          background={theme.colors.surfaceVariant}
-                          stroke={theme.colors.onSurfaceVariant}
-                        />
-                        <View style={s.rowLeft}>
-                          <Text style={s.rowName} numberOfLines={1}>
-                            {hike.hikeName}
-                          </Text>
-                          <View style={s.metaRow}>
-                            <Text variant="bodySmall">{hike.hikeLength} km</Text>
-                            <Text variant="bodySmall">{FormattedTime(hike.duration)}</Text>
-                          </View>
-                          {/* Who and when on one line — the list shows the date it can be
-                              sorted by. */}
-                          <View style={s.sharedRow}>
-                            <Text
-                              variant="bodySmall"
-                              style={[s.sharedBy, { color: theme.colors.secondary }]}
-                              numberOfLines={1}
-                            >
-                              {t("hike.sharedByLabel", { name: hike.sharedByName ?? t("hike.deletedUser") })}
-                            </Text>
-                            <Text variant="bodySmall" style={s.sharedDate}>
-                              {formatDate(hike.sharedAt)}
-                            </Text>
-                          </View>
-                        </View>
-                        <Icon source="chevron-right" size={20} />
-                      </Pressable>
+                      <SharedHikeRow hike={hike} />
                       {index < filteredHikes.length - 1 && (
                         <View style={[s.divider, { backgroundColor: theme.colors.outlineVariant }]} />
                       )}
@@ -436,23 +389,6 @@ const s = StyleSheet.create({
   },
   rowName: {
     fontWeight: "600",
-  },
-  metaRow: {
-    flexDirection: "row",
-    gap: 12,
-    marginTop: 2,
-  },
-  sharedRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  // Flexible, so a long sharer name truncates instead of pushing the date off the row.
-  sharedBy: {
-    flex: 1,
-  },
-  sharedDate: {
-    opacity: 0.6,
   },
   rowActions: {
     flexDirection: "row",

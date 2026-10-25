@@ -86,6 +86,16 @@ migrations. So:
 
 This is the single most common way a migration reaches a deploy unexercised.
 
+## A new table or column needs an anonymizer entry
+
+`Core/Services/DataTransfer/DataAnonymizer.cs` lists every column of every table (`Columns`) or
+empties the table outright (`EmptiedTables`). `ClassificationTests` fails on any column missing
+there, so add each new column as Kept, Replaced or Cleared in the same change. Free text a user
+wrote, and anything naming a person, is Replaced or Cleared.
+
+A new reportable content type also goes in `ReportedContentType` (next free value, never
+renumber) and in every `switch` in `Core/Repositories/ContentReportRepository.cs`.
+
 ## Geometry columns
 
 SRID 4326, always — `geometry(Point, 4326)` / `geometry(LineString, 4326)`, with the typmod

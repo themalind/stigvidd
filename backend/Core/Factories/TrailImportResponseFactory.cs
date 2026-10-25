@@ -98,12 +98,18 @@ public class TrailImportResponseFactory
             if (root.TryGetProperty("sparlangd", out var value))
                 return value.ToString();
 
-            // keep-comment: Umeå kommun's langd is a bare number of metres, and 0 where it was never measured.
-            return root.TryGetProperty("langd", out var metres)
-                && metres.ValueKind == System.Text.Json.JsonValueKind.Number
-                && metres.TryGetDecimal(out var amount) && amount > 0
-                ? $"{amount.ToString(System.Globalization.CultureInfo.InvariantCulture)} m"
-                : null;
+            // keep-comment: Umeå kommun's langd, and Naturvårdsverket's LEDLANGD, are both bare metres, 0 where unmeasured.
+            foreach (var key in new[] { "langd", "LEDLANGD" })
+            {
+                if (root.TryGetProperty(key, out var metres)
+                    && metres.ValueKind == System.Text.Json.JsonValueKind.Number
+                    && metres.TryGetDecimal(out var amount) && amount > 0)
+                {
+                    return $"{amount.ToString(System.Globalization.CultureInfo.InvariantCulture)} m";
+                }
+            }
+
+            return null;
         }
         catch (System.Text.Json.JsonException)
         {

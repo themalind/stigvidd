@@ -10,6 +10,7 @@ import { getIncomingSharedHikes } from "@/api/shared-hikes";
 import { atom } from "jotai";
 import { atomWithQuery } from "jotai-tanstack-query";
 import { FRIENDS_STALE_TIME, REQUESTS_STALE_TIME, USER_SEARCH_STALE_TIME } from "@/constants/cache";
+import { MIN_USER_SEARCH_LENGTH } from "@/constants/constants";
 import { userAtom } from "./auth-atoms";
 
 export const incomingRequestsAtom = atomWithQuery((get) => {
@@ -51,7 +52,7 @@ export const userSearchAtomFamily = (query: string) =>
     return {
       queryKey: ["users", "search", user?.id, query],
       queryFn: () => searchUsers(query),
-      enabled: !!user?.id && query.trim().length >= 3, // bara sök vid 3+ tecken
+      enabled: !!user?.id && query.trim().length >= MIN_USER_SEARCH_LENGTH,
       staleTime: USER_SEARCH_STALE_TIME,
     };
   });

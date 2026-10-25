@@ -267,4 +267,76 @@ public class SourceFeatureReaderTests
         SourceFeatureReader.Read(Json(json)).Should().ContainSingle()
             .Which.Geometry.NumPoints.Should().Be(2);
     }
+
+    [Fact]
+    public void Read_ForAnEpsg3006Export_ShouldReprojectToWgs84()
+    {
+        // Arrange — two points from naturvardsverket-Statliga_Leder.geojson, near Vålådalen.
+        var json = """
+        { "crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:EPSG::3006" } },
+          "features": [ { "properties": { "STATLIGLEDNAMN": "Vålådalen - Vålåstugorna" },
+          "geometry": { "coordinates": [
+            [392726.4338, 7001831.936], [392726.5487, 7001831.6623]] } } ] }
+        """;
+
+        // Act
+        var features = SourceFeatureReader.Read(Json(json));
+
+        // Assert — SWEREF99 TM easting/northing, not WGS84 lon/lat straight through.
+        features.Should().ContainSingle();
+        var point = features[0].Geometry.Coordinates[0];
+        point.X.Should().BeApproximately(12.8724, 0.001);
+        point.Y.Should().BeApproximately(63.1298, 0.001);
+    }
+
+    [Fact]
+    public void Read_ForAWgs84ExportWithACrsMember_ShouldLeaveCoordinatesAsIs()
+    {
+        // Arrange — RUFS2050's own export declares CRS84 explicitly rather than leaving it out.
+        var json = """
+        { "crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+          "features": [ { "properties": { "namn": "Vandringsled" },
+          "geometry": { "coordinates": [[18.8587, 59.9131], [18.8592, 59.9138]] } } ] }
+        """;
+
+        // Act
+        var point = SourceFeatureReader.Read(Json(json)).Should().ContainSingle().Which.Geometry.Coordinates[0];
+
+        // Assert
+        point.X.Should().Be(18.8587);
+        point.Y.Should().Be(59.9131);
+    }
+
+    [Theory]
+    [InlineData("LEDNAMN")]
+    [InlineData("STATLIGLEDNAMN")]
+    public void Read_ForANameUnderNaturvardsverketsOwnKey_ShouldReadIt(string key)
+    {
+        // Arrange — Naturvårdsverket's two exports spell the name field differently from Borås's "namn".
+        var json = $$"""
+        { "features": [ { "properties": { "{{key}}": "Led Hygntornet" },
+          "geometry": { "coordinates": [[12.84, 57.67], [12.86, 57.68]] } } ] }
+        """;
+
+        // Act & Assert
+        SourceFeatureReader.Read(Json(json)).Should().ContainSingle()
+            .Which.Name.Should().Be("Led Hygntornet");
+    }
+
+    [Theory]
+    [InlineData("LED_ID")]
+    [InlineData("OBJECTID")]
+    [InlineData("FID")]
+    public void Read_ForAnIdUnderAnotherSourcesOwnKey_ShouldReadIt(string key)
+    {
+        // Arrange — RUFS2050 writes FID, Naturvårdsverket LED_ID or OBJECTID; none write "id".
+        var json = $$"""
+        { "features": [ { "properties": { "{{key}}": 42 },
+          "geometry": { "coordinates": [[12.84, 57.67], [12.86, 57.68]] } } ] }
+        """;
+
+        // Act & Assert
+        SourceFeatureReader.Read(Json(json)).Should().ContainSingle()
+            .Which.ExternalId.Should().Be("42");
+    }
 }
