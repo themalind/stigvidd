@@ -1,3 +1,5 @@
 {
-  "CFBundleDisplayName": "Stigvidd"
+  "ios": {
+    "CFBundleDisplayName": "Stigvidd"
+  }
 }

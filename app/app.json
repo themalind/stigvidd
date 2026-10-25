@@ -28,7 +28,7 @@
       "sv": "./src/i18n/ios/sv.json"
     },
     "android": {
-      "versionCode": 8,
+      "versionCode": 10,
       "softwareKeyboardLayoutMode": "pan",
       "adaptiveIcon": {
         "backgroundColor": "#68AE82",
