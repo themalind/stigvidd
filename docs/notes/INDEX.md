@@ -623,7 +623,10 @@ src/api/generated` then fails with "the generated API client is stale" for reaso
   one only and tokens validate against one realm while registration, forgot-password and
   admin provisioning hit another, with no startup error: a runtime 404/401 from the Admin
   API. Sign-in works but every `[Authorize]` call returns 401 means the SPA's
-  `VITE_OIDC_REALM` (a build arg, baked into the bundle) drifted from the API's env.
+  `VITE_OIDC_REALM` (a build arg, baked into the bundle) drifted from the API's env. Because
+  that value is already `stigvidd` in production and `stigvidd-staging` in staging, it also
+  doubles as a free signal for a staging indicator/banner in the web admin UI — see
+  `web/src/lib/environment.ts`'s `isStagingRealm`, which needs no new `VITE_*` build arg.
 - [A markdown backtick reads as shell command substitution, so _documenting_ a dev server trips `guard-long-running`](backticks-in-prose-trip-the-long-running-guard.md) —
   writing a note, a skill or any .claude/ or docs/ file that NAMES a guarded command: a
   heredoc whose body mentions a dev server in markdown inline code is DENIED by

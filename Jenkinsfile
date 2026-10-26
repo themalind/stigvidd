@@ -268,6 +268,7 @@ pipeline {
             env.REMOTE_COMPOSE_ENV = 'COMPOSE_FILE=docker-compose.yml:docker-compose.staging.yml:docker-compose.behind-proxy.yml'
             env.VITE_API_URL       = 'https://staging.api.stigvidd.se'
             env.VITE_OIDC_URL      = 'https://auth.stigvidd.se'
+            // keep-comment: web/src/lib/environment.ts reads this value to show the admin UI's staging indicator
             env.VITE_OIDC_REALM    = 'stigvidd-staging'
             env.VITE_CLIENT_ID     = 'stigvidd-admin'
             env.VITE_OO_LOGS_URL   = env.STAGING_OO_LOGS_URL ?: ''

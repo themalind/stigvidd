@@ -10,6 +10,8 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { Badge } from "@/components/ui/badge";
+import { isStaging } from "@/lib/environment";
 import { Code2 } from "lucide-react";
 import NavMain from "./nav-main";
 import { NavUser } from "./nav-user";
@@ -22,9 +24,10 @@ export function AppSidebar() {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild>
-              <NavLink to="/" className="flex w-full items-center">
+              <NavLink to="/" className="flex w-full items-center gap-2">
                 <img src="/icon.png" className="h-6 aspect-square shrink-0" />
                 <h1 className="text-xl cursor-default">Stigvidd</h1>
+                {isStaging && <Badge variant="destructive">STAGING</Badge>}
               </NavLink>
             </SidebarMenuButton>
           </SidebarMenuItem>

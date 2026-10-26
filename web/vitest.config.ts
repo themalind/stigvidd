@@ -22,6 +22,7 @@ export default defineConfig({
     env: {
       VITE_API_URL: "https://api.test",
       VITE_OIDC_URL: "https://oidc.test",
+      // keep-comment: not "stigvidd", so lib/environment.ts's isStaging is true in every test
       VITE_OIDC_REALM: "test-realm",
       VITE_CLIENT_ID: "test-client",
       // telemetry.ts reads these at module load too. Left EMPTY on purpose: the default
