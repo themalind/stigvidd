@@ -918,3 +918,8 @@ src/api/generated` then fails with "the generated API client is stale" for reaso
   from another tab. Shared trail link (ledlänk, link.stigvidd.se/trail) goes via the list (?trail=, useOpenLinkedTrail,
   useFocusEffect); never anchor index in the trails tab (app starts on trails). Local notification to test a tap in a
   dev build. Recipe for renderRouter tests (expo-router/testing-library, getPathname, GatedRoot).
+- [A `docker compose push` to lingonberg.se occasionally drops mid-blob with "write: broken pipe"](docker-push-to-the-registry-drops-mid-blob.md) —
+  Jenkins "Build & Push images" stage fails on `docker compose --env-file ci/build.env push $IMAGES` (or the moving-tag
+  `docker push`) with `writing blob: Patch "...": write tcp ...: write: broken pipe`, build/tests all green, Deploy skipped.
+  Hit staging first, then main (#92, 2026-10-27) — same `buildAndPush` closure in Jenkinsfile, no retry existed. Fix:
+  `push_with_retry` shell function (3 attempts, backoff) around both push calls; retries only the push, not the build.
