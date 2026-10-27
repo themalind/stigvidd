@@ -34,7 +34,7 @@ const addOpacity = (color: string, opacity: number): string => {
 };
 
 const loginFields = z.object({
-  email: z.string({ required_error: "auth.validation.emailRequired" }).email("auth.validation.emailInvalid"),
+  email: z.string({ required_error: "auth.validation.emailRequired" }).trim().email("auth.validation.emailInvalid"),
   password: z.string({ required_error: "auth.validation.passwordRequired" }).min(8, "auth.validation.passwordTooShort"),
 });
 
@@ -118,6 +118,7 @@ export default function LoginScreen({ showBackButton = false }: { showBackButton
                     value={value}
                     label={t("auth.email")}
                     autoCapitalize="none"
+                    autoCorrect={false}
                     keyboardType="email-address"
                     theme={{
                       colors: {

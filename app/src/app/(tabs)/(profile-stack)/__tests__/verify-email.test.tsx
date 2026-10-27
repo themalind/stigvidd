@@ -53,6 +53,15 @@ describe("entering the code", () => {
     await waitFor(() => expect(mockVerify).toHaveBeenCalledWith("vandrare@example.com", "123456"));
   });
 
+  it("accepts a pasted code with a space around it", async () => {
+    renderWithProviders(<VerifyEmailScreen />);
+
+    enterCode(" 123456");
+    submit();
+
+    await waitFor(() => expect(mockVerify).toHaveBeenCalledWith("vandrare@example.com", "123456"));
+  });
+
   it("sends the user to login once the address is confirmed", async () => {
     renderWithProviders(<VerifyEmailScreen />);
 

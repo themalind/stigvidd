@@ -63,6 +63,16 @@ it("logs in with what was typed", async () => {
   expect(mockLogin).toHaveBeenCalledWith("vandrare@example.com", "hemligt123");
 });
 
+it("logs in without the space the keyboard left after the address, and suggests no words there", async () => {
+  renderWithProviders(<LoginScreen />);
+
+  expect(screen.getByTestId("login-email")).toHaveProp("autoCorrect", false);
+  fillForm({ email: "vandrare@example.com " });
+  await submit();
+
+  expect(mockLogin).toHaveBeenCalledWith("vandrare@example.com", "hemligt123");
+});
+
 // Each message lands under its own field, not merely somewhere on screen.
 it("names the field each validation message belongs to", async () => {
   renderWithProviders(<LoginScreen />);

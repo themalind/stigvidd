@@ -26,7 +26,7 @@ interface Props {
 }
 
 const resetFields = z.object({
-  email: z.string({ required_error: "auth.validation.emailRequired" }).email("auth.validation.emailInvalid"),
+  email: z.string({ required_error: "auth.validation.emailRequired" }).trim().email("auth.validation.emailInvalid"),
 });
 
 type FormFields = z.infer<typeof resetFields>;
@@ -88,6 +88,7 @@ export default function ResetPasswordModal({ visible, onDismiss }: Props) {
                   value={value}
                   label={t("auth.enterEmail")}
                   autoCapitalize="none"
+                  autoCorrect={false}
                   keyboardType="email-address"
                   theme={{
                     colors: {
