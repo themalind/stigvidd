@@ -81,7 +81,7 @@ export default function TabsLayout() {
           }}
         />
         <Tabs.Screen
-          name="(trails-tab)"
+          name="trails"
           options={{
             title: t("tabs.trails"),
             tabBarIcon: ({ focused }) =>

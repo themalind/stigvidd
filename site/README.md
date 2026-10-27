@@ -22,10 +22,13 @@ The Vite dev server is `npm run dev`; never run it in the foreground
 
 ## Where the words live
 
-[`src/content/site-content.ts`](src/content/site-content.ts) holds every word on the page.
-The product description and tagline are **copied from the app** —
-`app/src/i18n/locales/sv.json`, key `about` — so the site and the About screen describe the
-same product. Nothing checks that they still agree; when one changes, change the other.
+[`src/content/site-content.ts`](src/content/site-content.ts) holds every word on the page,
+once in Swedish (`sv`, served at `/`) and once in English (`en`, served at `/en/`). The two
+pages are `index.html` and `en/index.html`; they load the same bundle, which picks its
+language from `<html lang>`. `site-content.test.ts` checks that both languages have the
+same features, screenshots, anchors and links. The product description and tagline are
+**copied from the app** — `app/src/i18n/locales/{sv,en}.json`, key `about` — so the site
+and the About screen describe the same product. Nothing checks that they still agree; when one changes, change the other.
 
 The feature list is that file's `about.features`, one card per entry and in the same order.
 Three entries were added to it when this site was built — the areas browser, the trail

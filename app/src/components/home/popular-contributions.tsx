@@ -41,7 +41,7 @@ export default function PopularContributions() {
   const showAll = () =>
     guardedNavigate(() => {
       setTrailListSource("contributions");
-      router.navigate("/(tabs)/(trails-tab)");
+      router.navigate("/(tabs)/trails");
     });
 
   return (

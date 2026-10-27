@@ -8,25 +8,27 @@ import InstallSection from "@/components/install-section";
 import ScreenshotsSection from "@/components/screenshots-section";
 import SiteFooter from "@/components/site-footer";
 import SiteHeader from "@/components/site-header";
+import { siteContent, type Locale } from "@/content/site-content";
 
-export default function App() {
+export default function App({ locale }: { locale: Locale }) {
+  const content = siteContent[locale];
   return (
     <div className="min-h-svh bg-bg text-text">
       <a
         href="#innehall"
         className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-base focus:bg-accent focus:px-4 focus:py-2 focus:text-accent-contrast"
       >
-        Hoppa till innehållet
+        {content.skipLink}
       </a>
-      <SiteHeader />
+      <SiteHeader header={content.header} cta={content.hero.primaryCta} />
       <main id="innehall">
-        <HeroSection />
-        <FeaturesSection />
-        <ScreenshotsSection />
-        <InstallSection />
-        <FaqSection />
+        <HeroSection hero={content.hero} />
+        <FeaturesSection title={content.featuresTitle} features={content.features} />
+        <ScreenshotsSection title={content.screenshotsTitle} screenshots={content.screenshots} />
+        <InstallSection install={content.install} labels={content.installLabels} />
+        <FaqSection title={content.faqTitle} faq={content.faq} sources={content.sources} />
       </main>
-      <SiteFooter />
+      <SiteFooter footer={content.footer} />
     </div>
   );
 }

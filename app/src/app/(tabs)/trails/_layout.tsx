@@ -7,6 +7,9 @@
 
 import { Stack } from "expo-router";
 
+// A linked trail opens with the list beneath it. keep-comment: why the anchor exists (docs/notes/router-push-into-unmounted-tab-has-no-back.md)
+export const unstable_settings = { anchor: "index" };
+
 export default function TrailsStackLayout() {
   return (
     <Stack screenOptions={{ headerShown: false }}>

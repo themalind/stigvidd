@@ -2,12 +2,20 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { ChevronDown } from "lucide-react";
-import { faq, sources } from "@/content/site-content";
+import type { SiteContent } from "@/content/site-content";
 
-export default function FaqSection() {
+export default function FaqSection({
+  title,
+  faq,
+  sources,
+}: {
+  title: string;
+  faq: SiteContent["faq"];
+  sources: SiteContent["sources"];
+}) {
   return (
     <section id="fragor" className="mx-auto max-w-3xl px-5 py-16 md:py-24">
-      <h2 className="text-3xl font-semibold tracking-tight md:text-4xl">Vanliga frågor</h2>
+      <h2 className="text-3xl font-semibold tracking-tight md:text-4xl">{title}</h2>
 
       {/* <details> rather than a JS accordion: it opens without React, it is keyboard
           accessible for free, and browser find-in-page reaches the closed answers. */}

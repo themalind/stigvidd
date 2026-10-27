@@ -5,7 +5,7 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import TrailsScreen from "@/app/(tabs)/(trails-tab)/index";
+import TrailsScreen from "@/app/(tabs)/trails/index";
 import { trailListSourceAtom } from "@/atoms/trail-list-atoms";
 import { AppDarkTheme, AppDefaultTheme } from "@/constants/theme";
 import { TrailShortInfoResponse } from "@/data/types";
@@ -26,10 +26,6 @@ jest.mock("@/api/trails", () => ({
 
 jest.mock("expo-router", () => ({
   router: { navigate: (...args: unknown[]) => mockNavigate(...args) },
-}));
-
-jest.mock("@/hooks/trail/useOpenLinkedTrail", () => ({
-  useOpenLinkedTrail: () => undefined,
 }));
 
 jest.mock("@/hooks/useUserLocation", () => ({
@@ -191,7 +187,7 @@ it("opens the trail that was pressed", async () => {
   fireEvent.press(screen.getByText("Åsundens strandstig"));
 
   expect(mockNavigate).toHaveBeenCalledWith({
-    pathname: "/(tabs)/(trails-tab)/trail/[identifier]",
+    pathname: "/(tabs)/trails/trail/[identifier]",
     params: { identifier: "t-2" },
   });
 });

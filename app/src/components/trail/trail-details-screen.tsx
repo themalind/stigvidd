@@ -38,13 +38,13 @@ import TrailMiscInfo from "./trail-misc-section/trail-misc-accordion";
 // keep-comment: rendered in four tab stacks; each passes its own follow and guide routes so back returns here, not to the first tab
 export type FollowRoute =
   | "/(tabs)/(map)/follow/[identifier]"
-  | "/(tabs)/(trails-tab)/follow/[identifier]"
+  | "/(tabs)/trails/follow/[identifier]"
   | "/(tabs)/(profile-stack)/follow/[identifier]"
   | "/(tabs)/(home)/follow/[identifier]";
 
 export type GuideRoute =
   | "/(tabs)/(map)/guide"
-  | "/(tabs)/(trails-tab)/guide"
+  | "/(tabs)/trails/guide"
   | "/(tabs)/(profile-stack)/guide"
   | "/(tabs)/(home)/guide";
 
