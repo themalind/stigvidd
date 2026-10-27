@@ -79,7 +79,7 @@ it("opens the trail list on the walks from show all", async () => {
   fireEvent.press(screen.getByTestId("home-contributions-see-all"));
 
   expect(store.get(trailListSourceAtom)).toBe("contributions");
-  expect(mockNavigate).toHaveBeenCalledWith("/(tabs)/(trails-tab)");
+  expect(mockNavigate).toHaveBeenCalledWith("/(tabs)/trails");
 });
 
 it("opens the trail in the home stack", async () => {

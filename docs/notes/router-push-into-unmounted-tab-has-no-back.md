@@ -60,18 +60,22 @@ queue for every later test in the file.
 expo-notifications keeps the last response in native memory only (`lastNotificationResponseBundle`
 on Android, `lastResponse` on iOS), so the re-delivery comes from the intent, not from storage.
 
-**Trail links go through the list, not an anchor.** Opened straight on `trail/<id>`, a
+**Trail links: the trails tab is a real path segment.** Opened straight on `trail/<id>`, a
 `link.stigvidd.se/trail/<id>` left the trail alone in the trails stack: the same stuck state
-(confirmed on a device 2026-10-27). `redirectSystemPath` now returns
-`/(tabs)/(trails-tab)?trail=<id>`, and `useOpenLinkedTrail` on the list clears the param and
-pushes the trail with the screen's own `navigation` (the global `router` throws "navigate before
-mounting the Root Layout" on a cold start). It acts in `useFocusEffect`, not `useEffect`: behind
-the root layout's render gate a push from the list's first effect is dropped silently (the list
-opens, the trail does not, as seen on a device), because the navigator is still applying the
-link's initial state. The test's `GatedRoot` reproduces it. **Never `anchor: "index"` in the trails tab:** home,
-map and trails all have an `index` at `/`, and with that anchor the app started on the trails tab
-instead of the start page, on a device and in a renderRouter test with all the tab layouts.
-Tests: `(trails-tab)/__tests__/_layout.test.tsx`; with the old redirect three of four fail.
+(confirmed on a device 2026-10-27). The tab is the folder `trails/` (the list is `/trails`), its
+layout has `anchor: "index"`, and `redirectSystemPath` returns `/trails/trail/<id>`. The anchor
+puts the list beneath the trail on a cold link and on a link while the app runs (device-checked
+2026-10-27: icon start lands on the start page; cold and background links go back to the list).
+**Never an index anchor in a group tab at `/`:** as `(trails-tab)`, home, map and trails all had
+an `index` at `/`, and with that anchor the app started on the trails tab instead of the start
+page (device and renderRouter). That is why the tab got its own segment. Ruled out before that: a
+`?trail=` param that the list pushed from. It needed the screen's own `navigation` (the global
+`router` throws "navigate before mounting the Root Layout" on a cold start) and `useFocusEffect`
+(a push from the first `useEffect` behind the root layout's render gate is dropped silently).
+Tests: `trails/__tests__/_layout.test.tsx`. Without the anchor, or with the old `/trail/<id>`
+redirect, three of five fail. The test kit stubs out the `url` event, so a link while the app
+runs is replayed the way `fork/useLinking.native.js` does it: `getStateFromPath`, then
+`getActionFromState`, then `store.navigationRef.dispatch`.
 
 **Not fixed: links replay too.** A task first opened by a trail link gets that VIEW intent back
 after process death, so `redirectSystemPath` (`+native-intent.tsx`) reopens the trail. A link

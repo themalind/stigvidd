@@ -915,9 +915,10 @@ src/api/generated` then fails with "the generated API client is stale" for reaso
   press does nothing (händer ingenting). expo-router NotificationHandler push needs withAnchor: true plus
   unstable_settings anchor profile-page. Android relaunch re-delivers an old notification tap (claimNotificationResponse,
   AsyncStorage, releaseNotificationResponse). dismissTo rejected: it unmounts live screens and POP_TO is not handled
-  from another tab. Shared trail link (ledlänk, link.stigvidd.se/trail) goes via the list (?trail=, useOpenLinkedTrail,
-  useFocusEffect); never anchor index in the trails tab (app starts on trails). Local notification to test a tap in a
-  dev build. Recipe for renderRouter tests (expo-router/testing-library, getPathname, GatedRoot).
+  from another tab. Shared trail link (ledlänk, link.stigvidd.se/trail) maps to /trails/trail/<id>: the trails tab is a
+  real path segment (trails/, not a (trails-tab) group) with anchor index; an index anchor in a group at / made the app
+  start on trails. Local notification to test a tap in a dev build. Recipe for renderRouter tests
+  (expo-router/testing-library, getPathname, GatedRoot, a link while the app runs via getActionFromState).
 - [A `docker compose push` to lingonberg.se occasionally drops mid-blob with "write: broken pipe"](docker-push-to-the-registry-drops-mid-blob.md) —
   Jenkins "Build & Push images" stage fails on `docker compose --env-file ci/build.env push $IMAGES` (or the moving-tag
   `docker push`) with `writing blob: Patch "...": write tcp ...: write: broken pipe`, build/tests all green, Deploy skipped.

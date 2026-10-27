@@ -7,7 +7,7 @@
 
 import { redirectSystemPath } from "@/app/+native-intent";
 
-const TRAIL_ROUTE = "/(tabs)/(trails-tab)?trail=abc-123";
+const TRAIL_ROUTE = "/trails/trail/abc-123";
 
 function redirect(path: string) {
   return redirectSystemPath({ path, initial: true });

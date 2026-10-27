@@ -90,10 +90,10 @@ function icon(name: string, focused: boolean): ReactElement<Record<string, any>>
 it("carries the four tabs a walker navigates by, in order", () => {
   show();
 
-  expect(Object.keys(router.__screens)).toEqual(["(home)", "(map)", "(trails-tab)", "(profile-stack)", "(settings)"]);
+  expect(Object.keys(router.__screens)).toEqual(["(home)", "(map)", "trails", "(profile-stack)", "(settings)"]);
   expect(tab("(home)").title).toBe("Start");
   expect(tab("(map)").title).toBe("Karta");
-  expect(tab("(trails-tab)").title).toBe("Vandring");
+  expect(tab("trails").title).toBe("Vandring");
   expect(tab("(profile-stack)").title).toBe("Profil");
 });
 
@@ -147,7 +147,7 @@ it.each(["/settings/login", "/register", "/user/login"])("hides the header on %s
 
 it("keeps the header on every other screen", () => {
   mockPathname.mockReturnValue("/trail/kvarnstigen");
-  mockSegments.mockReturnValue(["(tabs)", "(trails-tab)"]);
+  mockSegments.mockReturnValue(["(tabs)", "trails"]);
   show();
 
   expect(screen.getByTestId("app-header")).toBeTruthy();
@@ -241,7 +241,7 @@ it("marks the tab being looked at, and leaves the rest plain", () => {
 it.each([
   ["(home)", "home", "home-outline"],
   ["(map)", "map", "map-o"],
-  ["(trails-tab)", "trail-sign-sharp", "trail-sign-outline"],
+  ["trails", "trail-sign-sharp", "trail-sign-outline"],
   ["(profile-stack)", "account-box", "account-box-outline"],
 ])("fills in %s's glyph when it is the open tab", (name, filled, outline) => {
   show();
@@ -250,14 +250,14 @@ it.each([
   expect(icon(name, false).props.name).toBe(outline);
 });
 
-it.each(["(home)", "(map)", "(trails-tab)", "(profile-stack)"])("colours %s by whether it is open", (name) => {
+it.each(["(home)", "(map)", "trails", "(profile-stack)"])("colours %s by whether it is open", (name) => {
   show();
 
   expect(icon(name, true).props.color).toBe(AppDefaultTheme.colors.onTertiaryContainer);
   expect(icon(name, false).props.color).toBe(AppDefaultTheme.colors.onBackground);
 });
 
-it.each(["(home)", "(trails-tab)", "(profile-stack)"])("draws %s's glyph at the same size either way", (name) => {
+it.each(["(home)", "trails", "(profile-stack)"])("draws %s's glyph at the same size either way", (name) => {
   show();
 
   expect(icon(name, true).props.size).toBe(30);
@@ -300,7 +300,7 @@ it("puts the badge on no tab but the profile", () => {
 
   expect(tab("(home)").tabBarBadge).toBeUndefined();
   expect(tab("(map)").tabBarBadge).toBeUndefined();
-  expect(tab("(trails-tab)").tabBarBadge).toBeUndefined();
+  expect(tab("trails").tabBarBadge).toBeUndefined();
 });
 
 it("carries the dark theme through to the glyphs and the badge", () => {

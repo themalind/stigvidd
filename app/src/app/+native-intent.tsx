@@ -11,5 +11,5 @@ const TRAIL_LINK = /^(?:[a-z][a-z0-9+.-]*:\/\/)?(?:[^/]*\/)?trail\/([^/?#]+)/i;
 // Four tabs have a trail/[identifier] route, so a bare /trail/<id> would land in whichever expo-router picks. keep-comment: why the rewrite exists
 export function redirectSystemPath({ path }: { path: string; initial: boolean }) {
   const match = TRAIL_LINK.exec(path);
-  return match ? `/(tabs)/(trails-tab)?trail=${match[1]}` : path;
+  return match ? `/trails/trail/${match[1]}` : path;
 }
