@@ -109,7 +109,7 @@ export default function GetStartedCard({ signedIn }: Props) {
           mode="contained"
           icon={signedIn ? "record-circle-outline" : "login"}
           style={s.action}
-          onPress={() => guardedNavigate(() => router.navigate(target))}
+          onPress={() => guardedNavigate(() => router.navigate(target, { withAnchor: true }))}
         >
           {signedIn ? t("home.getStartedNoHikesAction") : t("home.getStartedSignedOutAction")}
         </Button>

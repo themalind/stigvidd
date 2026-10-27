@@ -30,7 +30,10 @@ const WIDTH = Dimensions.get("screen").width;
 const RESEND_COOLDOWN_SECONDS = 60;
 
 const verifyFields = z.object({
-  code: z.string({ required_error: "auth.validation.codeRequired" }).regex(/^[0-9]{6}$/, "auth.validation.codeInvalid"),
+  code: z
+    .string({ required_error: "auth.validation.codeRequired" })
+    .trim()
+    .regex(/^[0-9]{6}$/, "auth.validation.codeInvalid"),
 });
 
 type FormFields = z.infer<typeof verifyFields>;

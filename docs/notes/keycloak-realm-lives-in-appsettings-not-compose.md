@@ -49,4 +49,13 @@ whenever the API's env changes and the web image is not rebuilt. Check both:
 docker compose exec api env | grep -i realm
 ```
 
+## A free staging/production signal for the web admin UI
+
+Because `VITE_OIDC_REALM` is already `stigvidd` in production and `stigvidd-staging` in
+staging (`Jenkinsfile`'s per-branch `env.VITE_OIDC_REALM` assignments), it doubles as a
+zero-plumbing way for the admin UI to tell which environment it's running in — no new build
+arg needed. `web/src/lib/environment.ts`'s `isStagingRealm(realm)` uses it to show a "STAGING"
+badge (header, login page, sidebar), tint the header, and prefix the document title with
+`[STAGING]`, when the realm isn't the known-good `"stigvidd"`.
+
 Related: [[proxy-aliases-shadow-public-hostnames]], [[integration-tests-inherit-api-config]].

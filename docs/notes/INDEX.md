@@ -623,7 +623,10 @@ src/api/generated` then fails with "the generated API client is stale" for reaso
   one only and tokens validate against one realm while registration, forgot-password and
   admin provisioning hit another, with no startup error: a runtime 404/401 from the Admin
   API. Sign-in works but every `[Authorize]` call returns 401 means the SPA's
-  `VITE_OIDC_REALM` (a build arg, baked into the bundle) drifted from the API's env.
+  `VITE_OIDC_REALM` (a build arg, baked into the bundle) drifted from the API's env. Because
+  that value is already `stigvidd` in production and `stigvidd-staging` in staging, it also
+  doubles as a free signal for a staging indicator/banner in the web admin UI — see
+  `web/src/lib/environment.ts`'s `isStagingRealm`, which needs no new `VITE_*` build arg.
 - [A markdown backtick reads as shell command substitution, so _documenting_ a dev server trips `guard-long-running`](backticks-in-prose-trip-the-long-running-guard.md) —
   writing a note, a skill or any .claude/ or docs/ file that NAMES a guarded command: a
   heredoc whose body mentions a dev server in markdown inline code is DENIED by
@@ -906,3 +909,17 @@ src/api/generated` then fails with "the generated API client is stale" for reaso
   app/ form modals (obstacle, share hike, edit/publish hike, report, reset password): Skicka/Spara button disappears while the
   keyboard is up. Android is softwareKeyboardLayoutMode pan + edgeToEdgeEnabled, not resize; keyboardDidShow height excludes
   the nav bar. Fix: useModalKeyboardLift modalStyle + maxHeight, ScrollView, button pinned below. No dev build needed.
+- [A router.push into a tab that has not mounted yet builds its stack with only the target screen](router-push-into-unmounted-tab-has-no-back.md) —
+  app/ stuck (låst) on a profile screen (Mina delade promenader, vänner) after a push notification (notis) tap or overnight
+  resume (bakgrunden, förgrunden): back (bakåt) goes to the start tab (startskärmen) and the profile tab (profilfliken)
+  press does nothing (händer ingenting). expo-router NotificationHandler push needs withAnchor: true plus
+  unstable_settings anchor profile-page. Android relaunch re-delivers an old notification tap (claimNotificationResponse,
+  AsyncStorage, releaseNotificationResponse). dismissTo rejected: it unmounts live screens and POP_TO is not handled
+  from another tab. Shared trail link (ledlänk, link.stigvidd.se/trail) goes via the list (?trail=, useOpenLinkedTrail,
+  useFocusEffect); never anchor index in the trails tab (app starts on trails). Local notification to test a tap in a
+  dev build. Recipe for renderRouter tests (expo-router/testing-library, getPathname, GatedRoot).
+- [A `docker compose push` to lingonberg.se occasionally drops mid-blob with "write: broken pipe"](docker-push-to-the-registry-drops-mid-blob.md) —
+  Jenkins "Build & Push images" stage fails on `docker compose --env-file ci/build.env push $IMAGES` (or the moving-tag
+  `docker push`) with `writing blob: Patch "...": write tcp ...: write: broken pipe`, build/tests all green, Deploy skipped.
+  Hit staging first, then main (#92, 2026-10-27) — same `buildAndPush` closure in Jenkinsfile, no retry existed. Fix:
+  `push_with_retry` shell function (3 attempts, backoff) around both push calls; retries only the push, not the build.

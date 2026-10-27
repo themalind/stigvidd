@@ -268,6 +268,7 @@ pipeline {
             env.REMOTE_COMPOSE_ENV = 'COMPOSE_FILE=docker-compose.yml:docker-compose.staging.yml:docker-compose.behind-proxy.yml'
             env.VITE_API_URL       = 'https://staging.api.stigvidd.se'
             env.VITE_OIDC_URL      = 'https://auth.stigvidd.se'
+            // keep-comment: web/src/lib/environment.ts reads this value to show the admin UI's staging indicator
             env.VITE_OIDC_REALM    = 'stigvidd-staging'
             env.VITE_CLIENT_ID     = 'stigvidd-admin'
             env.VITE_OO_LOGS_URL   = env.STAGING_OO_LOGS_URL ?: ''
@@ -389,8 +390,22 @@ pipeline {
                 # if the agent's Docker has no buildx plugin.
                 export COMPOSE_BAKE=true
 
+                # A blob upload to the registry occasionally drops mid-transfer
+                # ("write: broken pipe"); the image is already built locally, so
+                # retrying just the push is enough, cheaper than re-building.
+                push_with_retry() {
+                  for attempt in 1 2 3; do
+                    if "$@"; then
+                      return 0
+                    fi
+                    echo "push failed (attempt ${attempt}/3)" >&2
+                    [ "$attempt" = 3 ] && return 1
+                    sleep $((attempt * 5))
+                  done
+                }
+
                 docker compose --env-file ci/build.env build $IMAGES
-                docker compose --env-file ci/build.env push $IMAGES
+                push_with_retry docker compose --env-file ci/build.env push $IMAGES
 
                 # Also publish a moving tag (`latest` on main, `staging` on staging) so
                 # a deploy host can pin IMAGE_TAG once instead of editing .env for every
@@ -400,7 +415,7 @@ pipeline {
                 # Assumes the compose image names stay ${REGISTRY}/stigvidd-<service>.
                 for svc in $IMAGES; do
                   docker tag  "${REGISTRY}/stigvidd-${svc}:${IMAGE_TAG}" "${REGISTRY}/stigvidd-${svc}:${MOVING_TAG}"
-                  docker push --quiet "${REGISTRY}/stigvidd-${svc}:${MOVING_TAG}"
+                  push_with_retry docker push --quiet "${REGISTRY}/stigvidd-${svc}:${MOVING_TAG}"
                 done
               '''
             }

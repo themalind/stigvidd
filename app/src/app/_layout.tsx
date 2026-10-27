@@ -24,14 +24,16 @@ import { initOnlineStatus } from "@/services/online-status";
 import { initTelemetry } from "@/services/telemetry";
 import { logger } from "@/services/logger";
 import {
+  claimNotificationResponse,
   NOTIFICATION_QUERY_KEYS,
   NOTIFICATION_ROUTES,
   registerForPushNotificationsAsync,
+  releaseNotificationResponse,
 } from "@/services/notifications";
 import { QueryClientProvider, useQueryClient } from "@tanstack/react-query";
 import * as Notifications from "expo-notifications";
 import { ThemeProvider } from "@react-navigation/native";
-import { Stack, useRouter } from "expo-router";
+import { router, Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useSetAtom } from "jotai";
 import { queryClientAtom } from "jotai-tanstack-query";
@@ -49,11 +51,15 @@ import { useAuth, useInitAuth } from "@/components/auth/auth-provider";
 initTelemetry();
 
 function NotificationHandler() {
-  const router = useRouter();
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const lastResponse = Notifications.useLastNotificationResponse();
   const handledNotificationId = useRef<string | null>(null);
+  const signedInUserId = useRef<string | undefined>(undefined);
+
+  useEffect(() => {
+    signedInUserId.current = user?.id;
+  }, [user]);
 
   // Foreground: notification arrives while app is open — just refresh data, no navigation.
   useEffect(() => {
@@ -66,7 +72,6 @@ function NotificationHandler() {
   }, [queryClient]);
 
   // Background tap or cold-start tap: navigate to the right screen after auth resolves.
-  // handledNotificationId prevents re-navigation if the app is restarted after a tap.
   useEffect(() => {
     if (!lastResponse || !user) return;
     const notifId = lastResponse.notification.request.identifier;
@@ -74,11 +79,25 @@ function NotificationHandler() {
     handledNotificationId.current = notifId;
     const type = lastResponse.notification.request.content.data?.type as string | undefined;
     if (!type) return;
-    const keys = NOTIFICATION_QUERY_KEYS[type];
-    if (keys) queryClient.invalidateQueries({ queryKey: keys });
-    const route = NOTIFICATION_ROUTES[type];
-    if (route) router.push(route as never);
-  }, [lastResponse, user, queryClient, router]);
+    const userId = user.id;
+    void claimNotificationResponse(notifId)
+      .then((isNew) => {
+        if (!isNew) return;
+        if (signedInUserId.current !== userId) {
+          if (handledNotificationId.current === notifId) handledNotificationId.current = null;
+          return releaseNotificationResponse(notifId);
+        }
+        const keys = NOTIFICATION_QUERY_KEYS[type];
+        if (keys) queryClient.invalidateQueries({ queryKey: keys });
+        const route = NOTIFICATION_ROUTES[type];
+        if (route) router.navigate(route as never, { withAnchor: true });
+        Notifications.clearLastNotificationResponse();
+      })
+      .catch((error: unknown) => {
+        logger.error("Notification navigation failed", { type, errorMessage: String(error) });
+        return releaseNotificationResponse(notifId);
+      });
+  }, [lastResponse, user, queryClient]);
 
   return null;
 }

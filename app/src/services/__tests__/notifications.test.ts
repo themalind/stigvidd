@@ -35,10 +35,13 @@ jest.mock("@/services/logger", () => ({
 }));
 
 import * as Notifications from "expo-notifications";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { registerPushToken, unregisterPushToken } from "@/api/notifications";
 import { logger } from "@/services/logger";
 import { Platform } from "react-native";
 import {
+  claimNotificationResponse,
+  releaseNotificationResponse,
   NOTIFICATION_QUERY_KEYS,
   NOTIFICATION_ROUTES,
   registerForPushNotificationsAsync,
@@ -317,5 +320,171 @@ describe("a notification arriving while the app is open", () => {
       shouldPlaySound: false,
       shouldSetBadge: false,
     });
+  });
+});
+
+describe("claiming a notification tap", () => {
+  const KEY = "@stigvidd_handled_notifications";
+
+  beforeEach(async () => {
+    await AsyncStorage.clear();
+  });
+
+  it("claims a tap it has not seen", async () => {
+    expect(await claimNotificationResponse("a")).toBe(true);
+  });
+
+  it("refuses the same tap a second time, as after a relaunch", async () => {
+    await claimNotificationResponse("a");
+
+    expect(await claimNotificationResponse("a")).toBe(false);
+  });
+
+  it("refuses an older tap after newer ones were claimed", async () => {
+    await claimNotificationResponse("a");
+    await claimNotificationResponse("b");
+    await claimNotificationResponse("c");
+
+    expect(await claimNotificationResponse("a")).toBe(false);
+  });
+
+  it("remembers only the latest two hundred taps", async () => {
+    for (let i = 0; i < 201; i++) await claimNotificationResponse(`n${i}`);
+
+    expect(JSON.parse((await AsyncStorage.getItem(KEY)) ?? "[]")).toHaveLength(200);
+    expect(await claimNotificationResponse("n0")).toBe(true);
+    expect(await claimNotificationResponse("n200")).toBe(false);
+  });
+
+  it("keeps refusing the tap Android replays on every relaunch, however many taps come between", async () => {
+    await claimNotificationResponse("first");
+    for (let relaunch = 0; relaunch < 3; relaunch++) {
+      for (let i = 0; i < 150; i++) await claimNotificationResponse(`r${relaunch}-${i}`);
+
+      expect(await claimNotificationResponse("first")).toBe(false);
+    }
+  });
+
+  it("records both of two taps claimed at the same time", async () => {
+    expect(await Promise.all([claimNotificationResponse("a"), claimNotificationResponse("b")])).toEqual([true, true]);
+
+    expect(await claimNotificationResponse("a")).toBe(false);
+    expect(await claimNotificationResponse("b")).toBe(false);
+  });
+
+  it("claims the same tap only once when it is claimed twice at the same time", async () => {
+    expect(await Promise.all([claimNotificationResponse("a"), claimNotificationResponse("a")])).toEqual([true, false]);
+  });
+
+  it("keeps claiming after one claim failed", async () => {
+    jest.mocked(AsyncStorage.getItem).mockRejectedValueOnce(new Error("disk full"));
+    await claimNotificationResponse("a");
+
+    expect(await claimNotificationResponse("b")).toBe(true);
+    expect(await claimNotificationResponse("b")).toBe(false);
+  });
+
+  it("does not write the list again for the tap already at its front", async () => {
+    await claimNotificationResponse("a");
+    jest.mocked(AsyncStorage.setItem).mockClear();
+
+    expect(await claimNotificationResponse("a")).toBe(false);
+    expect(AsyncStorage.setItem).not.toHaveBeenCalled();
+  });
+
+  it("still refuses a handled tap when saving the list fails", async () => {
+    await claimNotificationResponse("a");
+    await claimNotificationResponse("b");
+    jest.mocked(AsyncStorage.setItem).mockRejectedValueOnce(new Error("disk full"));
+
+    expect(await claimNotificationResponse("a")).toBe(false);
+    expect(logger.warn).toHaveBeenCalledWith("Notification tap bookkeeping failed", {
+      errorMessage: "Error: disk full",
+    });
+  });
+
+  it("keeps claiming after a claim rejected outright", async () => {
+    jest.mocked(AsyncStorage.getItem).mockRejectedValueOnce(new Error("disk full"));
+    jest.mocked(logger.warn).mockImplementationOnce(() => {
+      throw new Error("logger down");
+    });
+    await expect(claimNotificationResponse("a")).rejects.toThrow("logger down");
+
+    expect(await claimNotificationResponse("b")).toBe(true);
+  });
+
+  it("logs when the stored list cannot be read", async () => {
+    await AsyncStorage.setItem(KEY, "{trunc");
+    await claimNotificationResponse("a");
+
+    expect(logger.warn).toHaveBeenCalledWith("Handled notification list unreadable, starting over");
+  });
+
+  it("logs nothing for a first tap with no list stored yet", async () => {
+    await claimNotificationResponse("a");
+
+    expect(logger.warn).not.toHaveBeenCalled();
+  });
+
+  it("starts over from a stored value that is not a list of ids", async () => {
+    await AsyncStorage.setItem(KEY, JSON.stringify({ a: 1 }));
+
+    expect(await claimNotificationResponse("a")).toBe(true);
+    expect(await claimNotificationResponse("a")).toBe(false);
+  });
+
+  it("starts over from a stored value that is not JSON", async () => {
+    await AsyncStorage.setItem(KEY, "not json");
+
+    expect(await claimNotificationResponse("a")).toBe(true);
+    expect(await claimNotificationResponse("a")).toBe(false);
+  });
+
+  it("still opens the tap, and logs, when storage fails", async () => {
+    jest.mocked(AsyncStorage.getItem).mockRejectedValueOnce(new Error("disk full"));
+
+    expect(await claimNotificationResponse("a")).toBe(true);
+    expect(logger.warn).toHaveBeenCalledWith("Notification tap bookkeeping failed", {
+      errorMessage: "Error: disk full",
+    });
+  });
+});
+
+describe("giving back a claimed tap", () => {
+  beforeEach(async () => {
+    await AsyncStorage.clear();
+  });
+
+  it("lets the tap be claimed again", async () => {
+    await claimNotificationResponse("a");
+    await releaseNotificationResponse("a");
+
+    expect(await claimNotificationResponse("a")).toBe(true);
+  });
+
+  it("leaves the other handled taps alone", async () => {
+    await claimNotificationResponse("a");
+    await claimNotificationResponse("b");
+    await releaseNotificationResponse("b");
+
+    expect(await claimNotificationResponse("a")).toBe(false);
+  });
+
+  it("waits for a claim still in flight, so the claim does not undo it", async () => {
+    const claim = claimNotificationResponse("a");
+    const release = releaseNotificationResponse("a");
+    await Promise.all([claim, release]);
+
+    expect(await claimNotificationResponse("a")).toBe(true);
+  });
+
+  it("logs, and keeps the queue moving, when storage fails", async () => {
+    jest.mocked(AsyncStorage.getItem).mockRejectedValueOnce(new Error("disk full"));
+
+    await expect(releaseNotificationResponse("a")).resolves.toBeUndefined();
+    expect(logger.warn).toHaveBeenCalledWith("Notification tap bookkeeping failed", {
+      errorMessage: "Error: disk full",
+    });
+    expect(await claimNotificationResponse("b")).toBe(true);
   });
 });

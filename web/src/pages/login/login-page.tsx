@@ -3,6 +3,8 @@
 
 import { DarkModeToggle } from "@/components/dark-mode-toggle";
 import { LoginCard } from "@/components/login/login-card";
+import { Badge } from "@/components/ui/badge";
+import { isStaging } from "@/lib/environment";
 
 // The three legal pages are static files served by the PUBLIC site (site/public/), not
 // by this image and not by any route here — so they need a plain <a> with an absolute
@@ -30,8 +32,9 @@ export default function LoginPage() {
           <div className="aspect-square max-w-40">
             <img src="/icon.png" alt="Stigvidd" />
           </div>
-          <div>
+          <div className="flex items-center gap-2">
             <h1 className="text-foreground text-4xl pt-4">Stigvidd</h1>
+            {isStaging && <Badge variant="destructive">STAGING</Badge>}
           </div>
         </div>
         <LoginCard />

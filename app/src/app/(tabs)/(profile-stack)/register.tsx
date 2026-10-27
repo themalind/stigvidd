@@ -37,11 +37,12 @@ const registerFields = z
   .object({
     nickName: z
       .string({ required_error: "auth.validation.nicknameRequired" })
+      .trim()
       .min(1, "auth.validation.nicknameRequired")
       .min(MIN_NICKNAME_LENGTH, "auth.validation.nicknameTooShort")
       .max(20, "auth.validation.nicknameTooLong")
       .regex(/^[a-zA-Z0-9åäöÅÄÖ_-]+$/, "auth.validation.nicknameInvalidChars"),
-    email: z.string({ required_error: "auth.validation.emailRequired" }).email("auth.validation.emailInvalid"),
+    email: z.string({ required_error: "auth.validation.emailRequired" }).trim().email("auth.validation.emailInvalid"),
     password: z
       .string({ required_error: "auth.validation.passwordRequired" })
       .min(8, "auth.validation.passwordTooShort"),
@@ -143,6 +144,8 @@ export default function RegisterScreen() {
                     value={value}
                     label={t("auth.nickname")}
                     autoCapitalize="words"
+                    autoCorrect={false}
+                    spellCheck={false}
                     theme={{
                       colors: {
                         primary: theme.colors.onSurface,
@@ -178,6 +181,7 @@ export default function RegisterScreen() {
                     value={value}
                     label={t("auth.email")}
                     autoCapitalize="none"
+                    autoCorrect={false}
                     keyboardType="email-address"
                     theme={{
                       colors: {

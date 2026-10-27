@@ -118,6 +118,15 @@ it("asks the backend to mail exactly the address that was typed", async () => {
   expect(mockPasswordReset).toHaveBeenCalledWith(EMAIL);
 });
 
+it("mails the address without the space the keyboard left after it", async () => {
+  show();
+
+  type(`${EMAIL} `);
+  await send();
+
+  expect(mockPasswordReset).toHaveBeenCalledWith(EMAIL);
+});
+
 it("closes and says to check the inbox once the mail is on its way", async () => {
   const { store } = show();
 
@@ -185,6 +194,7 @@ it("leaves the address exactly as it is typed", () => {
   const field = screen.getByTestId("reset-password-email");
   expect(field.props.autoCapitalize).toBe("none");
   expect(field.props.keyboardType).toBe("email-address");
+  expect(field.props.autoCorrect).toBe(false);
 });
 
 it("keeps the modal a fixed share of the screen, on the theme's surface", () => {

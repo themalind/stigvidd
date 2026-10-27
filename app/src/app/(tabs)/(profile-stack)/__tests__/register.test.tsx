@@ -107,6 +107,29 @@ describe("validation errors", () => {
     noErrorUnder("nickname");
   });
 
+  it("accepts a nickname and address the keyboard left a space after, and sends them without it", async () => {
+    renderWithProviders(<RegisterScreen />);
+
+    fillForm({ nickName: "Skogsälvan ", email: " vandrare@example.com " });
+    submit();
+
+    await waitFor(() =>
+      expect(mockRegister).toHaveBeenCalledWith(
+        expect.objectContaining({ nickName: "Skogsälvan", email: "vandrare@example.com" }),
+      ),
+    );
+    noErrorUnder("nickname");
+  });
+
+  it("keeps the keyboard from suggesting words, and the space it adds after one, in the nickname and address", () => {
+    renderWithProviders(<RegisterScreen />);
+
+    for (const field of ["register-nickname", "register-email"]) {
+      expect(screen.getByTestId(field)).toHaveProp("autoCorrect", false);
+    }
+    expect(screen.getByTestId("register-nickname")).toHaveProp("spellCheck", false);
+  });
+
   it("reports the mismatch on the repeat field, not the password field", async () => {
     renderWithProviders(<RegisterScreen />);
 

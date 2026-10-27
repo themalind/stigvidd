@@ -6,6 +6,7 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { registerPushToken, unregisterPushToken } from "@/api/notifications";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Device from "expo-device";
 import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
@@ -34,6 +35,63 @@ export const NOTIFICATION_ROUTES: Record<string, string> = {
   friend_request_accepted: "/(tabs)/(profile-stack)/user/friends",
   hike_share: "/(tabs)/(profile-stack)/user/shared-hikes",
 };
+
+const HANDLED_RESPONSES_KEY = "@stigvidd_handled_notifications";
+const HANDLED_RESPONSES_KEPT = 200;
+
+function parseHandledIds(stored: string | null): string[] {
+  if (stored === null) return [];
+  let handled: unknown;
+  try {
+    handled = JSON.parse(stored);
+  } catch {
+    handled = undefined;
+  }
+  if (Array.isArray(handled)) return handled.filter((id): id is string => typeof id === "string");
+  logger.warn("Handled notification list unreadable, starting over");
+  return [];
+}
+
+// Changes to the list run one at a time: two concurrent read-modify-writes would drop one of the ids. keep-comment: hidden race
+let claimQueue: Promise<unknown> = Promise.resolve();
+
+function enqueue<T>(work: () => Promise<T>): Promise<T> {
+  const next = claimQueue.then(work);
+  claimQueue = next.catch(() => undefined);
+  return next;
+}
+
+// Android restores a killed app with the intent that first opened it, so an old tap comes back as new. keep-comment: hidden platform behaviour
+export function claimNotificationResponse(identifier: string): Promise<boolean> {
+  return enqueue(() => claimNext(identifier));
+}
+
+// A claimed tap that was never opened is given back, so the next sign-in or launch opens it. keep-comment: why a claim can be undone
+export function releaseNotificationResponse(identifier: string): Promise<void> {
+  return enqueue(async () => {
+    try {
+      const ids = parseHandledIds(await AsyncStorage.getItem(HANDLED_RESPONSES_KEY));
+      await AsyncStorage.setItem(HANDLED_RESPONSES_KEY, JSON.stringify(ids.filter((id) => id !== identifier)));
+    } catch (error) {
+      logger.warn("Notification tap bookkeeping failed", { errorMessage: String(error) });
+    }
+  });
+}
+
+async function claimNext(identifier: string): Promise<boolean> {
+  let isNew = true;
+  try {
+    const ids = parseHandledIds(await AsyncStorage.getItem(HANDLED_RESPONSES_KEY));
+    isNew = !ids.includes(identifier);
+    if (ids[0] === identifier) return isNew;
+    // A replayed tap moves to the front, so the one Android keeps replaying is never the one dropped. keep-comment: why a seen id is written again
+    const kept = [identifier, ...ids.filter((id) => id !== identifier)].slice(0, HANDLED_RESPONSES_KEPT);
+    await AsyncStorage.setItem(HANDLED_RESPONSES_KEY, JSON.stringify(kept));
+  } catch (error) {
+    logger.warn("Notification tap bookkeeping failed", { errorMessage: String(error) });
+  }
+  return isNew;
+}
 
 let _currentExpoToken: string | null = null;
 let _tokenListener: Notifications.Subscription | null = null;
