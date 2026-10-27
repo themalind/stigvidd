@@ -3,7 +3,7 @@
 
 import { useState } from "react";
 import { Apple, Mail, Smartphone } from "lucide-react";
-import { contactEmail, install, installLabels, installLinks } from "@/content/site-content";
+import { contactEmail, installLinks, type SiteContent } from "@/content/site-content";
 import { detectPlatform, orderedPlatforms, type Platform } from "@/lib/install-links";
 
 const ICONS = { ios: Apple, android: Smartphone } as const;
@@ -13,7 +13,13 @@ const PRIMARY =
 const SECONDARY =
   "inline-flex items-center gap-2 rounded-base border border-border bg-bg px-6 py-3 font-medium transition-colors hover:bg-surface";
 
-export default function InstallSection() {
+export default function InstallSection({
+  install,
+  labels,
+}: {
+  install: SiteContent["install"];
+  labels: SiteContent["installLabels"];
+}) {
   // Read once, at first render. This is a client-only bundle with no SSR, so the user
   // agent is already there and an effect would only add a second render.
   const [platform] = useState<Platform>(() => detectPlatform(navigator.userAgent));
@@ -47,7 +53,7 @@ export default function InstallSection() {
             return (
               <a key={name} href={url} className={index === 0 ? PRIMARY : SECONDARY}>
                 <Icon aria-hidden="true" className="size-5" />
-                {installLabels[name]}
+                {labels[name]}
               </a>
             );
           })}

@@ -1,9 +1,9 @@
 // SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { hero, phase } from "@/content/site-content";
+import { phase, type SiteContent } from "@/content/site-content";
 
-export default function HeroSection() {
+export default function HeroSection({ hero }: { hero: SiteContent["hero"] }) {
   return (
     <section className="mx-auto max-w-6xl px-5 pt-14 pb-16 md:pt-20 md:pb-24">
       <div className="grid items-center gap-12 lg:grid-cols-[1.1fr_0.9fr]">
@@ -38,7 +38,7 @@ export default function HeroSection() {
         <div className="justify-self-center">
           <img
             src="/screenshots/start-screen-home.webp"
-            alt="Startskärmen i Stigvidd med väder, hälsning och populära promenader nära dig"
+            alt={hero.imageAlt}
             width={320}
             height={693}
             className="w-64 rounded-base border border-border shadow-2xl md:w-80"
