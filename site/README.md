@@ -75,7 +75,7 @@ Everything under `public/` is published by the next merge to `main`, with no opt
 
 ## Screenshots
 
-`public/screenshots/*.webp` are downscaled from the full-size originals in
-[`screenshots/`](../screenshots) at the repo root (1080×2340 JPEGs, ~1 MB each) to 640 px
-WebP, ~40–140 KB. Re-do it with any image tool when the app's screens change; the
-originals stay where they are.
+`public/screenshots/*.webp` are iPhone screenshots (1170×2532 or 1284×2778 PNG) downscaled
+to 640 px wide WebP at quality 80, ~40–100 KB each. The originals are not kept in the repo;
+[`screenshots/`](../screenshots) at the repo root holds an older Android set. Re-do it with
+any image tool when the app's screens change.
