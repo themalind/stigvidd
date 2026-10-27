@@ -31,8 +31,10 @@ const mockInitMapTiler = jest.fn();
 const mockInitMapCache = jest.fn();
 const mockLogError = jest.fn();
 const mockRemoveListener = jest.fn();
+const mockClearLastResponse = jest.fn();
 const mockRemoveAppStateListener = jest.fn();
-const mockPush = jest.fn();
+const mockNavigate = jest.fn();
+const ANCHORED = { withAnchor: true };
 
 // Read inside the hooks, so a test can sign in or take the fonts away before the render.
 let mockAuth: { user: { id: string } | null; isLoading: boolean };
@@ -59,6 +61,7 @@ jest.mock("@expo-google-fonts/inter", () => ({
 jest.mock("expo-notifications", () => ({
   setNotificationHandler: jest.fn(),
   useLastNotificationResponse: () => mockLastResponse,
+  clearLastNotificationResponse: () => mockClearLastResponse(),
   addNotificationReceivedListener: (callback: (notification: unknown) => void) => {
     mockReceived = callback;
     return { remove: mockRemoveListener };
@@ -77,13 +80,12 @@ jest.mock("expo-router", () => {
   const React = require("react");
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { View } = require("react-native");
-  const router = { push: (...args: unknown[]) => mockPush(...args) };
   const Stack = ({ children }: { children: React.ReactNode }) =>
     React.createElement(View, { testID: "root-stack" }, children, mockScreenContent);
   Stack.Screen = function StackScreen() {
     return null;
   };
-  return { Stack, useRouter: () => router };
+  return { Stack, router: { navigate: (...args: unknown[]) => mockNavigate(...args) } };
 });
 
 jest.mock("expo-navigation-bar", () => ({ setButtonStyleAsync: jest.fn() }));
@@ -127,6 +129,13 @@ const { telemetryCalls } = jest.requireMock("@/services/telemetry");
 const USER = { id: "user-1" };
 const INSETS = { top: 47, left: 0, right: 0, bottom: 34 };
 const store = getDefaultStore();
+const storageGetItem = jest.mocked(AsyncStorage.getItem);
+const realGetItem = storageGetItem.getMockImplementation();
+
+function realStorageRead(key: string) {
+  if (!realGetItem) throw new Error("expected the AsyncStorage mock to have an implementation");
+  return realGetItem(key);
+}
 
 function tap(type: string | undefined, identifier = "notif-1") {
   mockLastResponse = { notification: { request: { identifier, content: { data: type ? { type } : {} } } } };
@@ -153,8 +162,9 @@ async function rerender(theme: ThemeChoice = "bivack") {
   });
 }
 
-beforeEach(() => {
+beforeEach(async () => {
   jest.clearAllMocks();
+  await AsyncStorage.clear();
   mockAuth = { user: null, isLoading: false };
   mockFontsLoaded = true;
   mockFontError = null;
@@ -178,6 +188,7 @@ beforeEach(() => {
 
 afterEach(() => {
   jest.restoreAllMocks();
+  if (realGetItem) storageGetItem.mockImplementation(realGetItem);
   Platform.OS = "ios";
   focusManager.setFocused(undefined);
 });
@@ -415,7 +426,7 @@ it("refreshes the lists a notification arriving in the foreground is about", asy
   act(() => mockReceived?.({ request: { content: { data: { type: "friend_request" } } } }));
 
   expect(QueryClient.prototype.invalidateQueries).toHaveBeenCalledWith({ queryKey: ["friends", "incoming"] });
-  expect(mockPush).not.toHaveBeenCalled();
+  expect(mockNavigate).not.toHaveBeenCalled();
 });
 
 it("ignores a foreground notification of a type it knows nothing about", async () => {
@@ -444,8 +455,9 @@ it("opens the screen a tapped notification points at, and refreshes it", async (
   await show();
   await settle();
 
-  expect(mockPush).toHaveBeenCalledWith("/(tabs)/(profile-stack)/user/shared-hikes");
+  expect(mockNavigate).toHaveBeenCalledWith("/(tabs)/(profile-stack)/user/shared-hikes", ANCHORED);
   expect(QueryClient.prototype.invalidateQueries).toHaveBeenCalledWith({ queryKey: ["shared-hikes"] });
+  expect(mockClearLastResponse).toHaveBeenCalledTimes(1);
 });
 
 // A cold start waits for the session before navigating, or it lands on a screen with no account.
@@ -454,12 +466,12 @@ it("holds a tap until the session is back", async () => {
   await show();
   await settle();
 
-  expect(mockPush).not.toHaveBeenCalled();
+  expect(mockNavigate).not.toHaveBeenCalled();
 
   mockAuth = { user: USER, isLoading: false };
   await rerender();
 
-  expect(mockPush).toHaveBeenCalledWith("/(tabs)/(profile-stack)/user/friends");
+  expect(mockNavigate).toHaveBeenCalledWith("/(tabs)/(profile-stack)/user/friends", ANCHORED);
 });
 
 // The OS keeps reporting the same tap after a restart, so it is only acted on once.
@@ -469,14 +481,165 @@ it("acts on the same tap only once", async () => {
   await show();
   await settle();
 
-  expect(mockPush).toHaveBeenCalledTimes(1);
+  expect(mockNavigate).toHaveBeenCalledTimes(1);
 
   // A token refresh hands out a new user object, which is what the effect watches.
   mockAuth = { user: { ...USER }, isLoading: false };
   await rerender();
   await rerender("petroleum");
 
-  expect(mockPush).toHaveBeenCalledTimes(1);
+  expect(mockNavigate).toHaveBeenCalledTimes(1);
+});
+
+it("does not act again on the tap Android hands back when it relaunches a killed app", async () => {
+  tap("hike_share");
+  mockAuth = { user: USER, isLoading: false };
+  const first = await show();
+  await settle();
+  first.unmount();
+
+  await show();
+  await settle();
+
+  expect(mockNavigate).toHaveBeenCalledTimes(1);
+});
+
+it("does not act again on an older tap Android hands back after a newer one was handled", async () => {
+  tap("hike_share");
+  mockAuth = { user: USER, isLoading: false };
+  const first = await show();
+  await settle();
+  first.unmount();
+
+  tap("friend_request", "notif-2");
+  const second = await show();
+  await settle();
+  second.unmount();
+
+  tap("hike_share");
+  await show();
+  await settle();
+
+  expect(mockNavigate).toHaveBeenCalledTimes(2);
+});
+
+it("still acts on a new tap after a restart", async () => {
+  tap("hike_share");
+  mockAuth = { user: USER, isLoading: false };
+  const first = await show();
+  await settle();
+  first.unmount();
+
+  tap("friend_request", "notif-2");
+  await show();
+  await settle();
+
+  expect(mockNavigate).toHaveBeenLastCalledWith("/(tabs)/(profile-stack)/user/friends", ANCHORED);
+});
+
+// Only the first read is held: a later one held forever would jam the module's claim queue for the whole file. keep-comment: hidden cross-test hazard
+function holdFirstClaim() {
+  let release: () => void = () => undefined;
+  let held = false;
+  storageGetItem.mockImplementation((key: string) => {
+    if (key !== "@stigvidd_handled_notifications" || held) return realStorageRead(key);
+    held = true;
+    return new Promise((resolve) => {
+      release = () => resolve(null);
+    });
+  });
+  return () => act(async () => release());
+}
+
+async function signOutDuringClaim() {
+  const releaseClaim = holdFirstClaim();
+  tap("hike_share");
+  mockAuth = { user: USER, isLoading: false };
+  await show();
+
+  mockAuth = { user: null, isLoading: false };
+  await rerender();
+  await releaseClaim();
+  await settle();
+}
+
+it("does not open a tap's screen for a user signed out while the tap was being checked", async () => {
+  await signOutDuringClaim();
+
+  expect(mockNavigate).not.toHaveBeenCalled();
+});
+
+it("does not open a tap's screen for another user who signed in while the tap was being checked", async () => {
+  const releaseClaim = holdFirstClaim();
+  tap("hike_share");
+  mockAuth = { user: USER, isLoading: false };
+  await show();
+
+  mockAuth = { user: { id: "user-2" }, isLoading: false };
+  await rerender();
+  await releaseClaim();
+  await settle();
+
+  expect(mockNavigate).not.toHaveBeenCalled();
+});
+
+it("opens a tap the user was signed out during once they sign back in", async () => {
+  await signOutDuringClaim();
+
+  mockAuth = { user: USER, isLoading: false };
+  await rerender("petroleum");
+  await settle();
+
+  expect(mockNavigate).toHaveBeenCalledTimes(1);
+  expect(mockNavigate).toHaveBeenCalledWith("/(tabs)/(profile-stack)/user/shared-hikes", ANCHORED);
+});
+
+it("opens a tap again on the next launch when navigating to it failed", async () => {
+  mockNavigate.mockImplementationOnce(() => {
+    throw new Error("navigator not ready");
+  });
+  tap("hike_share");
+  mockAuth = { user: USER, isLoading: false };
+  const first = await show();
+  await settle();
+  first.unmount();
+
+  await show();
+  await settle();
+
+  expect(mockNavigate).toHaveBeenCalledTimes(2);
+  expect(mockNavigate).toHaveBeenLastCalledWith("/(tabs)/(profile-stack)/user/shared-hikes", ANCHORED);
+});
+
+it("still opens a tap once, and only once, when storage is broken", async () => {
+  storageGetItem.mockImplementation((key: string) =>
+    key === "@stigvidd_handled_notifications" ? Promise.reject(new Error("disk full")) : realStorageRead(key),
+  );
+  tap("hike_share");
+  mockAuth = { user: USER, isLoading: false };
+  await show();
+  await settle();
+
+  mockAuth = { user: { ...USER }, isLoading: false };
+  await rerender();
+  await rerender("petroleum");
+
+  expect(mockNavigate).toHaveBeenCalledTimes(1);
+});
+
+it("logs a tap it could not navigate to rather than losing it silently", async () => {
+  mockNavigate.mockImplementationOnce(() => {
+    throw new Error("navigator not ready");
+  });
+  tap("hike_share");
+  mockAuth = { user: USER, isLoading: false };
+  await show();
+  await settle();
+
+  expect(mockLogError).toHaveBeenCalledWith("Notification navigation failed", {
+    type: "hike_share",
+    errorMessage: "Error: navigator not ready",
+  });
 });
 
 it("stays put for a tap that carries no type, and for one it cannot place", async () => {
@@ -485,12 +648,12 @@ it("stays put for a tap that carries no type, and for one it cannot place", asyn
   await show();
   await settle();
 
-  expect(mockPush).not.toHaveBeenCalled();
+  expect(mockNavigate).not.toHaveBeenCalled();
 
   tap("kaffepaus", "notif-2");
   await rerender();
 
-  expect(mockPush).not.toHaveBeenCalled();
+  expect(mockNavigate).not.toHaveBeenCalled();
   expect(QueryClient.prototype.invalidateQueries).not.toHaveBeenCalled();
 });
 

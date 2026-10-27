@@ -79,7 +79,7 @@ it("sends someone who is not signed in to the login screen", () => {
 
   press(SIGNED_OUT_ACTION);
 
-  expect(mockNavigate).toHaveBeenCalledWith("/(tabs)/(profile-stack)/login");
+  expect(mockNavigate).toHaveBeenCalledWith("/(tabs)/(profile-stack)/login", { withAnchor: true });
 });
 
 it("sends a signed-in user straight to recording", () => {
@@ -87,7 +87,7 @@ it("sends a signed-in user straight to recording", () => {
 
   press(SIGNED_IN_ACTION);
 
-  expect(mockNavigate).toHaveBeenCalledWith("/(tabs)/(profile-stack)/user/create-hike");
+  expect(mockNavigate).toHaveBeenCalledWith("/(tabs)/(profile-stack)/user/create-hike", { withAnchor: true });
 });
 
 // A second tap while the screen is still there must not push a second copy of it.

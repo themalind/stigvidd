@@ -28,6 +28,10 @@ jest.mock("expo-router", () => ({
   router: { navigate: (...args: unknown[]) => mockNavigate(...args) },
 }));
 
+jest.mock("@/hooks/trail/useOpenLinkedTrail", () => ({
+  useOpenLinkedTrail: () => undefined,
+}));
+
 jest.mock("@/hooks/useUserLocation", () => ({
   useRealUserLocation: () => mockLocation,
 }));

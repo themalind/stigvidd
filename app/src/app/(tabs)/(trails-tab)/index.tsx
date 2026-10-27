@@ -13,6 +13,7 @@ import { TrailFilterModal } from "@/components/trail/trail-list/trail-filter-mod
 import TrailItem from "@/components/trail/trail-list/trail-item";
 import { BORDER_RADIUS } from "@/constants/constants";
 import { TrailShortInfoResponse } from "@/data/types";
+import { useOpenLinkedTrail } from "@/hooks/trail/useOpenLinkedTrail";
 import { useTrailFilters } from "@/hooks/trail/useTrailFilters";
 import { useTrails } from "@/hooks/trail/useTrails";
 import { useRealUserLocation } from "@/hooks/useUserLocation";
@@ -32,6 +33,7 @@ export default function TrailsScreen() {
   const listRef = useRef<FlatList>(null);
   // keep-comment: null without a real fix, which hides the distance sort and the "near me" filter
   const userLocation = useRealUserLocation();
+  useOpenLinkedTrail();
 
   const hikers = theme.dark
     ? require("../../../assets/images/mrHike-light.png")

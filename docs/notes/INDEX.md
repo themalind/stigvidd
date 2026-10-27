@@ -909,3 +909,12 @@ src/api/generated` then fails with "the generated API client is stale" for reaso
   app/ form modals (obstacle, share hike, edit/publish hike, report, reset password): Skicka/Spara button disappears while the
   keyboard is up. Android is softwareKeyboardLayoutMode pan + edgeToEdgeEnabled, not resize; keyboardDidShow height excludes
   the nav bar. Fix: useModalKeyboardLift modalStyle + maxHeight, ScrollView, button pinned below. No dev build needed.
+- [A router.push into a tab that has not mounted yet builds its stack with only the target screen](router-push-into-unmounted-tab-has-no-back.md) —
+  app/ stuck (låst) on a profile screen (Mina delade promenader, vänner) after a push notification (notis) tap or overnight
+  resume (bakgrunden, förgrunden): back (bakåt) goes to the start tab (startskärmen) and the profile tab (profilfliken)
+  press does nothing (händer ingenting). expo-router NotificationHandler push needs withAnchor: true plus
+  unstable_settings anchor profile-page. Android relaunch re-delivers an old notification tap (claimNotificationResponse,
+  AsyncStorage, releaseNotificationResponse). dismissTo rejected: it unmounts live screens and POP_TO is not handled
+  from another tab. Shared trail link (ledlänk, link.stigvidd.se/trail) goes via the list (?trail=, useOpenLinkedTrail,
+  useFocusEffect); never anchor index in the trails tab (app starts on trails). Local notification to test a tap in a
+  dev build. Recipe for renderRouter tests (expo-router/testing-library, getPathname, GatedRoot).
