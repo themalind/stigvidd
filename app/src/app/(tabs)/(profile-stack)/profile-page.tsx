@@ -59,8 +59,8 @@ export default function ProfilePageScreen() {
       logger.error("Sign-out failed", { error: String(e) });
       setError(t("auth.couldNotLogout"));
     }
-    // No navigation needed: logout() flips userAtom → the (profile-stack) guard
-    // swaps the protected screens for the login screen in place.
+    // No navigation needed: logout() flips userAtom → the (profile-stack) guard keep-comment: non-obvious why there is no navigate
+    // swaps the protected screens for the login screen in place. keep-comment: non-obvious why there is no navigate
   }
 
   return (
@@ -130,10 +130,10 @@ export default function ProfilePageScreen() {
           icon={<MaterialIcons name="perm-device-info" size={30} color={theme.colors.onSurfaceVariant} />}
         />
         <View testID="profile-account-actions" style={s.accountActionsContainer}>
-          <Pressable onPress={handleSignOut}>
+          <Pressable hitSlop={24} onPress={handleSignOut}>
             <Text style={s.actionText}>{t("auth.logout")}</Text>
           </Pressable>
-          <Pressable onPress={() => setVisible(true)}>
+          <Pressable hitSlop={24} onPress={() => setVisible(true)}>
             <Text style={s.actionText}>{t("profile.deleteAccount")}</Text>
           </Pressable>
         </View>
